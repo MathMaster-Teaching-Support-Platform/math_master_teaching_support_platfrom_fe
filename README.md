@@ -2,12 +2,6 @@
 
 > An AI-powered teaching support platform designed to help mathematics educators in Vietnam efficiently create, manage, and deliver high-quality educational content with minimal preparation time.
 
-[![License:  MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![React](https://img.shields.io/badge/React-18.x-61dafb? logo=react)](https://reactjs.org)
-[![Node](https://img.shields.io/badge/Node-18.x-339933?logo=node.js)](https://nodejs.org)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178c6? logo=typescript)](https://www.typescriptlang.org)
-[![Code Quality](https://img.shields.io/badge/Code_Quality-SonarQube-4E98F0)](https://www.sonarqube.org)
-
 ## Table of Contents
 
 - [Overview](#overview)
