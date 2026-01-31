@@ -1,12 +1,20 @@
 /* Global CSS Variables */
 :root {
   /* Colors */
-  --primary-color: #1976d2;
-  --secondary-color: #dc004e;
-  --success-color: #4caf50;
-  --warning-color: #ff9800;
-  --error-color: #f44336;
-  --info-color: #2196f3;
+  --primary-color: #667eea;
+  --primary-dark: #764ba2;
+  --secondary-color: #f093fb;
+  --success-color: #43e97b;
+  --warning-color: #fee140;
+  --error-color: #f5576c;
+  --info-color: #4facfe;
+
+  /* Gradient Colors */
+  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --gradient-blue: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  --gradient-green: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  --gradient-orange: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+  --gradient-pink: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
 
   /* Neutral Colors */
   --white: #ffffff;

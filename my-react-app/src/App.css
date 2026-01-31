@@ -1,4 +1,13 @@
+/* App.css - Main Application Styles */
 #root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+.app {
+  width: 100%;
+  min-height: 100vh;
+}
   max-width: 1280px;
   margin: 0 auto;
   padding: 2rem;
