@@ -1,5 +1,9 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import Homepage from '../pages/Homepage';
+import Features from '../pages/Features';
+import About from '../pages/About';
+import Pricing from '../pages/Pricing';
+import Contact from '../pages/Contact';
 import { Login, Register } from '../pages/auth';
 import TeacherDashboard from '../pages/dashboard/teacher/TeacherDashboard';
 import StudentDashboard from '../pages/dashboard/student/StudentDashboard';
@@ -31,6 +35,22 @@ const router = createBrowserRouter([
   {
     path: '/',
     element: <Homepage />,
+  },
+  {
+    path: '/features',
+    element: <Features />,
+  },
+  {
+    path: '/about',
+    element: <About />,
+  },
+  {
+    path: '/pricing',
+    element: <Pricing />,
+  },
+  {
+    path: '/contact',
+    element: <Contact />,
   },
   {
     path: '/login',
