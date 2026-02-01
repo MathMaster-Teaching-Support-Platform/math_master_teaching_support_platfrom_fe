@@ -1,13 +1,19 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './Auth.css';
+import { AuthService } from '../../services/api/auth.service';
+import type { RegisterRequest } from '../../types/auth.types';
 
 const Register: React.FC = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
     password: '',
     confirmPassword: '',
+    phoneNumber: '',
+    gender: 'MALE' as 'MALE' | 'FEMALE' | 'OTHER',
+    dob: '',
     role: 'teacher',
     school: '',
     grade: '',
@@ -15,6 +21,8 @@ const Register: React.FC = () => {
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -54,6 +62,16 @@ const Register: React.FC = () => {
       newErrors.confirmPassword = 'Mật khẩu xác nhận không khớp';
     }
 
+    if (!formData.phoneNumber.trim()) {
+      newErrors.phoneNumber = 'Vui lòng nhập số điện thoại';
+    } else if (!/^[0-9]{10,11}$/.test(formData.phoneNumber)) {
+      newErrors.phoneNumber = 'Số điện thoại không hợp lệ';
+    }
+
+    if (!formData.dob) {
+      newErrors.dob = 'Vui lòng nhập ngày sinh';
+    }
+
     if (!formData.agreeToTerms) {
       newErrors.agreeToTerms = 'Bạn phải đồng ý với điều khoản sử dụng';
     }
@@ -62,12 +80,42 @@ const Register: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (validateForm()) {
-      console.log('Register data:', formData);
-      // Handle registration logic here
+      setIsLoading(true);
+      setSuccessMessage('');
+
+      try {
+        // Prepare data for API
+        const registerData: RegisterRequest = {
+          userName: formData.email, // Using email as username
+          password: formData.password,
+          fullName: formData.fullName,
+          email: formData.email,
+          phoneNumber: formData.phoneNumber,
+          gender: formData.gender,
+          dob: formData.dob,
+        };
+
+        const response = await AuthService.register(registerData);
+
+        if (response.code === 1000) {
+          setSuccessMessage('Đăng ký thành công! Đang chuyển đến trang đăng nhập...');
+
+          // Redirect to login page after 2 seconds
+          setTimeout(() => {
+            navigate('/login');
+          }, 2000);
+        }
+      } catch (error) {
+        setErrors({
+          submit: error instanceof Error ? error.message : 'Đăng ký thất bại. Vui lòng thử lại.',
+        });
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -103,6 +151,10 @@ const Register: React.FC = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="auth-form">
+            {successMessage && <div className="alert alert-success">{successMessage}</div>}
+
+            {errors.submit && <div className="alert alert-error">{errors.submit}</div>}
+
             <div className="form-group">
               <label htmlFor="fullName" className="form-label">
                 Họ và tên <span className="required">*</span>
@@ -115,6 +167,7 @@ const Register: React.FC = () => {
                 placeholder="Nguyễn Văn A"
                 value={formData.fullName}
                 onChange={handleChange}
+                disabled={isLoading}
               />
               {errors.fullName && <span className="form-error">{errors.fullName}</span>}
             </div>
@@ -131,8 +184,62 @@ const Register: React.FC = () => {
                 placeholder="your.email@example.com"
                 value={formData.email}
                 onChange={handleChange}
+                disabled={isLoading}
               />
               {errors.email && <span className="form-error">{errors.email}</span>}
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="phoneNumber" className="form-label">
+                Số điện thoại <span className="required">*</span>
+              </label>
+              <input
+                type="tel"
+                id="phoneNumber"
+                name="phoneNumber"
+                className={`form-control ${errors.phoneNumber ? 'error' : ''}`}
+                placeholder="0912345678"
+                value={formData.phoneNumber}
+                onChange={handleChange}
+                disabled={isLoading}
+              />
+              {errors.phoneNumber && <span className="form-error">{errors.phoneNumber}</span>}
+            </div>
+
+            <div className="form-row-2">
+              <div className="form-group">
+                <label htmlFor="gender" className="form-label">
+                  Giới tính <span className="required">*</span>
+                </label>
+                <select
+                  id="gender"
+                  name="gender"
+                  className="form-control"
+                  value={formData.gender}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                >
+                  <option value="MALE">Nam</option>
+                  <option value="FEMALE">Nữ</option>
+                  <option value="OTHER">Khác</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="dob" className="form-label">
+                  Ngày sinh <span className="required">*</span>
+                </label>
+                <input
+                  type="date"
+                  id="dob"
+                  name="dob"
+                  className={`form-control ${errors.dob ? 'error' : ''}`}
+                  value={formData.dob}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                />
+                {errors.dob && <span className="form-error">{errors.dob}</span>}
+              </div>
             </div>
 
             <div className="form-row-2">
@@ -148,6 +255,7 @@ const Register: React.FC = () => {
                   placeholder="••••••••"
                   value={formData.password}
                   onChange={handleChange}
+                  disabled={isLoading}
                 />
                 {errors.password && <span className="form-error">{errors.password}</span>}
               </div>
@@ -164,6 +272,7 @@ const Register: React.FC = () => {
                   placeholder="••••••••"
                   value={formData.confirmPassword}
                   onChange={handleChange}
+                  disabled={isLoading}
                 />
                 {errors.confirmPassword && (
                   <span className="form-error">{errors.confirmPassword}</span>
@@ -181,6 +290,7 @@ const Register: React.FC = () => {
                 className="form-control"
                 value={formData.role}
                 onChange={handleChange}
+                disabled={isLoading}
               >
                 <option value="teacher">Giáo viên</option>
                 <option value="student">Học sinh</option>
@@ -201,6 +311,7 @@ const Register: React.FC = () => {
                     placeholder="Tên trường"
                     value={formData.school}
                     onChange={handleChange}
+                    disabled={isLoading}
                   />
                 </div>
 
@@ -214,6 +325,7 @@ const Register: React.FC = () => {
                     className="form-control"
                     value={formData.grade}
                     onChange={handleChange}
+                    disabled={isLoading}
                   >
                     <option value="">Chọn cấp học</option>
                     <option value="elementary">Tiểu học (Lớp 1-5)</option>
@@ -231,6 +343,7 @@ const Register: React.FC = () => {
                   name="agreeToTerms"
                   checked={formData.agreeToTerms}
                   onChange={handleChange}
+                  disabled={isLoading}
                 />
                 <span>
                   Tôi đồng ý với{' '}
@@ -246,8 +359,8 @@ const Register: React.FC = () => {
               {errors.agreeToTerms && <span className="form-error">{errors.agreeToTerms}</span>}
             </div>
 
-            <button type="submit" className="btn btn-primary btn-block">
-              Đăng ký
+            <button type="submit" className="btn btn-primary btn-block" disabled={isLoading}>
+              {isLoading ? 'Đang xử lý...' : 'Đăng ký'}
             </button>
 
             <div className="divider">

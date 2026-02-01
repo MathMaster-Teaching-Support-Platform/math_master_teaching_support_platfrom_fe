@@ -1,13 +1,19 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './Auth.css';
+import { AuthService } from '../../services/api/auth.service';
+import type { LoginRequest } from '../../types/auth.types';
 
 const Login: React.FC = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     rememberMe: false,
   });
+
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -15,12 +21,41 @@ const Login: React.FC = () => {
       ...formData,
       [name]: type === 'checkbox' ? checked : value,
     });
+
+    // Clear error when user starts typing
+    if (error) {
+      setError('');
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Login data:', formData);
-    // Handle login logic here
+    setError('');
+    setIsLoading(true);
+
+    try {
+      const loginData: LoginRequest = {
+        email: formData.email,
+        password: formData.password,
+      };
+
+      const response = await AuthService.login(loginData);
+
+      if (response.code === 1000 && response.result.token) {
+        // Save token to localStorage
+        AuthService.saveToken(response.result.token, response.result.expiryTime);
+
+        // Get dashboard URL based on user role from token
+        const dashboardUrl = AuthService.getDashboardUrl();
+        navigate(dashboardUrl);
+      }
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.'
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -54,6 +89,8 @@ const Login: React.FC = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="auth-form">
+            {error && <div className="alert alert-error">{error}</div>}
+
             <div className="form-group">
               <label htmlFor="email" className="form-label">
                 Email
@@ -66,6 +103,7 @@ const Login: React.FC = () => {
                 placeholder="your.email@example.com"
                 value={formData.email}
                 onChange={handleChange}
+                disabled={isLoading}
                 required
               />
             </div>
@@ -82,6 +120,7 @@ const Login: React.FC = () => {
                 placeholder="••••••••"
                 value={formData.password}
                 onChange={handleChange}
+                disabled={isLoading}
                 required
               />
             </div>
@@ -93,6 +132,7 @@ const Login: React.FC = () => {
                   name="rememberMe"
                   checked={formData.rememberMe}
                   onChange={handleChange}
+                  disabled={isLoading}
                 />
                 <span>Ghi nhớ đăng nhập</span>
               </label>
@@ -101,8 +141,8 @@ const Login: React.FC = () => {
               </Link>
             </div>
 
-            <button type="submit" className="btn btn-primary btn-block">
-              Đăng nhập
+            <button type="submit" className="btn btn-primary btn-block" disabled={isLoading}>
+              {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
             </button>
 
             <div className="divider">
