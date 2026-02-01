@@ -1,5 +1,6 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { AuthService } from '../../../services/api/auth.service';
 import './Sidebar.css';
 
 interface SidebarProps {
@@ -8,6 +9,12 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ role }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    AuthService.removeToken();
+    navigate('/login');
+  };
 
   const teacherMenuItems = [
     { path: '/teacher/dashboard', icon: '📊', label: 'Dashboard' },
@@ -70,10 +77,10 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
           <span className="sidebar-icon">⚙️</span>
           <span className="sidebar-label">Cài đặt</span>
         </Link>
-        <Link to="/logout" className="sidebar-item">
+        <button onClick={handleLogout} className="sidebar-item">
           <span className="sidebar-icon">🚪</span>
           <span className="sidebar-label">Đăng xuất</span>
-        </Link>
+        </button>
       </div>
     </aside>
   );

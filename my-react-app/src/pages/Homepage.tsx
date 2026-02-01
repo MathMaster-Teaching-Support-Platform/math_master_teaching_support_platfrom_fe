@@ -16,18 +16,18 @@ const Homepage: React.FC = () => {
               </div>
             </div>
             <div className="navbar-menu">
-              <a href="#features" className="nav-link">
+              <Link to="/features" className="nav-link">
                 Tính năng
-              </a>
-              <a href="#about" className="nav-link">
+              </Link>
+              <Link to="/about" className="nav-link">
                 Về chúng tôi
-              </a>
-              <a href="#pricing" className="nav-link">
+              </Link>
+              <Link to="/pricing" className="nav-link">
                 Giá cả
-              </a>
-              <a href="#contact" className="nav-link">
+              </Link>
+              <Link to="/contact" className="nav-link">
                 Liên hệ
-              </a>
+              </Link>
             </div>
             <div className="navbar-actions">
               <Link to="/login" className="btn btn-outline-white">

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { AuthService } from '../../../services/api/auth.service';
 import './Navbar.css';
 
 interface NavbarProps {
@@ -12,8 +13,15 @@ interface NavbarProps {
 }
 
 const Navbar: React.FC<NavbarProps> = ({ user, notificationCount = 0 }) => {
+  const navigate = useNavigate();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+
+  const handleLogout = () => {
+    AuthService.removeToken();
+    setShowProfileMenu(false);
+    navigate('/login');
+  };
 
   return (
     <nav className="navbar-top">
@@ -77,9 +85,9 @@ const Navbar: React.FC<NavbarProps> = ({ user, notificationCount = 0 }) => {
                   <span>❓</span> Trợ giúp
                 </Link>
                 <hr className="menu-divider" />
-                <Link to="/logout" className="profile-menu-item danger">
+                <button onClick={handleLogout} className="profile-menu-item danger">
                   <span>🚪</span> Đăng xuất
-                </Link>
+                </button>
               </div>
             )}
           </div>
