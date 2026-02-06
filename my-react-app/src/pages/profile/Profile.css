@@ -1,3 +1,7 @@
+/* ========================================
+   PROFILE PAGE - MODERN MINIMAL DESIGN
+   ======================================== */
+
 /* Hide parent sidebar when in profile page */
 body.profile-active .sidebar,
 body.profile-active aside.sidebar {
@@ -13,21 +17,24 @@ body.profile-active .dashboard-layout {
   max-width: 100% !important;
 }
 
-/* Profile Navbar */
+/* ========================================
+   NAVBAR - Clean & Minimal
+   ======================================== */
 .profile-navbar {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  height: 64px;
-  background: white;
-  border-bottom: 1px solid #e5e7eb;
+  height: 70px;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
   z-index: 1000;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.98);
 }
 
 .profile-navbar-content {
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
   height: 100%;
   padding: 0 2rem;
@@ -37,152 +44,399 @@ body.profile-active .dashboard-layout {
 }
 
 .profile-navbar h1 {
-  font-size: 1.5rem;
-  color: #1a1a1a;
+  font-size: 1.375rem;
+  color: #1e293b;
   margin: 0;
   font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .back-button {
-  padding: 0.5rem 1rem;
-  background: #f3f4f6;
-  border: none;
-  border-radius: 6px;
-  color: #374151;
-  font-size: 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  background: transparent;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  color: #64748b;
+  font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 }
 
 .back-button:hover {
-  background: #e5e7eb;
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #475569;
 }
 
-/* Profile Page */
+/* ========================================
+   PROFILE PAGE LAYOUT
+   ======================================== */
 .profile-page {
-  min-height: calc(100vh - 64px);
-  background: #f3f4f6;
-  padding: 2rem;
-  margin-top: 64px;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  padding: 0;
+  margin-top: 70px;
   margin-left: 0 !important;
   width: 100vw !important;
-  position: relative;
-  left: 0;
 }
 
 .profile-container {
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: 280px 1fr;
+  padding: 2.5rem 2rem;
+  display: flex;
   gap: 2rem;
-  align-items: start;
 }
 
+/* ========================================
+   SIDEBAR - Modern Card Style
+   ======================================== */
 .profile-sidebar {
-  background: white;
-  border-radius: 12px;
+  flex: 0 0 260px;
+  background: #ffffff;
+  border-radius: 16px;
   padding: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  height: fit-content;
   position: sticky;
-  top: 2rem;
+  top: 90px;
 }
 
 .profile-sidebar h2 {
-  font-size: 1.25rem;
-  color: #1a1a1a;
-  margin-bottom: 1.5rem;
+  font-size: 1rem;
+  color: #64748b;
+  margin: 0 0 1.25rem 0;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .profile-nav {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.375rem;
 }
 
 .profile-nav-item {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.875rem;
   padding: 0.875rem 1rem;
   border: none;
   background: transparent;
-  border-radius: 8px;
-  font-size: 0.95rem;
+  border-radius: 10px;
+  font-size: 0.9375rem;
   font-weight: 500;
-  color: #555;
+  color: #64748b;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
   text-align: left;
+  position: relative;
 }
 
 .profile-nav-item:hover {
-  background: #f3f4f6;
-  color: #1a1a1a;
+  background: #f8fafc;
+  color: #334155;
 }
 
 .profile-nav-item.active {
-  background: #dbeafe;
-  color: #1e40af;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .profile-nav-item .nav-icon {
   font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
+/* ========================================
+   CONTENT AREA - Clean & Spacious
+   ======================================== */
 .profile-content {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  min-height: 500px;
+  flex: 1;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  min-height: 600px;
 }
 
+/* ========================================
+   LOADING STATE
+   ======================================== */
 .loading {
   text-align: center;
-  padding: 3rem;
-  color: #666;
+  padding: 4rem 2rem;
+  color: #64748b;
+  font-size: 0.9375rem;
 }
 
-/* Responsive */
-@media (max-width: 968px) {
-  .profile-container {
-    grid-template-columns: 1fr;
-  }
-
-  .profile-sidebar {
-    position: static;
-  }
-
-  .profile-nav {
-    flex-direction: row;
-    overflow-x: auto;
-  }
-
-  .profile-nav-item {
-    white-space: nowrap;
-  }
-}
-
-@media (max-width: 640px) {
-  .profile-page {
-    padding: 1rem;
-  }
-
-  .profile-nav {
-    flex-direction: column;
-  }
-}
-
-/* Override nested page styles */
+/* ========================================
+   NESTED COMPONENTS STYLING
+   ======================================== */
 .profile-content .teacher-profile-page,
 .profile-content > div {
   max-width: 100%;
   margin: 0;
-  padding: 0;
+  padding: 2.5rem;
+  background: transparent;
 }
 
 .profile-content .profile-card {
   box-shadow: none;
+  border: none;
   border-radius: 0;
+  padding: 0;
+}
+
+.profile-content .profile-header {
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.profile-content .profile-header h1 {
+  font-size: 1.75rem;
+  color: #1e293b;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+
+/* Tablet (768px - 1024px) */
+@media (max-width: 1024px) {
+  .profile-container {
+    padding: 2rem 1.5rem;
+    gap: 1.5rem;
+  }
+
+  .profile-sidebar {
+    flex: 0 0 220px;
+    padding: 1.25rem;
+  }
+
+  .profile-content .teacher-profile-page,
+  .profile-content > div {
+    padding: 2rem;
+  }
+}
+
+/* Mobile Landscape & Small Tablet (640px - 768px) */
+@media (max-width: 768px) {
+  .profile-navbar-content {
+    padding: 0 1.5rem;
+  }
+
+  .profile-navbar h1 {
+    font-size: 1.125rem;
+  }
+
+  .back-button {
+    padding: 0.5rem 0.875rem;
+    font-size: 0.8125rem;
+  }
+
+  .profile-container {
+    flex-direction: column;
+    padding: 1.5rem 1rem;
+    gap: 1.25rem;
+  }
+
+  .profile-sidebar {
+    flex: none;
+    position: static;
+    padding: 1rem;
+  }
+
+  .profile-sidebar h2 {
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+  }
+
+  .profile-nav {
+    flex-direction: row;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .profile-nav::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .profile-nav::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 2px;
+  }
+
+  .profile-nav::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 2px;
+  }
+
+  .profile-nav-item {
+    white-space: nowrap;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  .profile-nav-item .nav-icon {
+    font-size: 1.125rem;
+  }
+
+  .profile-content {
+    border-radius: 12px;
+  }
+
+  .profile-content .teacher-profile-page,
+  .profile-content > div {
+    padding: 1.5rem;
+  }
+
+  .profile-content .profile-header h1 {
+    font-size: 1.5rem;
+  }
+}
+
+/* Mobile Portrait (320px - 640px) */
+@media (max-width: 640px) {
+  .profile-navbar {
+    height: 60px;
+  }
+
+  .profile-navbar-content {
+    padding: 0 1rem;
+  }
+
+  .profile-navbar h1 {
+    font-size: 1rem;
+  }
+
+  .back-button {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+  }
+
+  .profile-page {
+    margin-top: 60px;
+  }
+
+  .profile-container {
+    padding: 1rem 0.75rem;
+  }
+
+  .profile-sidebar {
+    border-radius: 12px;
+    padding: 0.875rem;
+  }
+
+  .profile-sidebar h2 {
+    font-size: 0.8125rem;
+    margin-bottom: 0.875rem;
+  }
+
+  .profile-nav {
+    gap: 0.375rem;
+  }
+
+  .profile-nav-item {
+    padding: 0.625rem 0.875rem;
+    font-size: 0.8125rem;
+    gap: 0.625rem;
+  }
+
+  .profile-nav-item .nav-icon {
+    font-size: 1rem;
+  }
+
+  .profile-content {
+    border-radius: 12px;
+  }
+
+  .profile-content .teacher-profile-page,
+  .profile-content > div {
+    padding: 1.25rem;
+  }
+
+  .profile-content .profile-header {
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .profile-content .profile-header h1 {
+    font-size: 1.25rem;
+  }
+}
+
+/* Extra Small Mobile (< 360px) */
+@media (max-width: 360px) {
+  .profile-navbar-content {
+    padding: 0 0.75rem;
+  }
+
+  .profile-container {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .profile-content .teacher-profile-page,
+  .profile-content > div {
+    padding: 1rem;
+  }
+
+  .profile-nav-item {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+  }
+}
+
+/* ========================================
+   SMOOTH ANIMATIONS
+   ======================================== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.profile-container {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* ========================================
+   PRINT STYLES
+   ======================================== */
+@media print {
+  .profile-navbar,
+  .back-button,
+  .profile-sidebar {
+    display: none !important;
+  }
+
+  .profile-page {
+    margin-top: 0;
+    background: white;
+  }
+
+  .profile-content {
+    box-shadow: none;
+    border: none;
+  }
 }
