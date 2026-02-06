@@ -30,6 +30,14 @@ import Certificates from '../pages/certificates/Certificates';
 import Calendar from '../pages/calendar/Calendar';
 import CoursePreview from '../pages/preview/CoursePreview';
 import LiveChat from '../pages/chat/LiveChat';
+// Teacher Profile Routes
+import SubmitTeacherProfile from '../pages/teacher-profile/SubmitTeacherProfile';
+import MyTeacherProfile from '../pages/teacher-profile/MyTeacherProfile';
+// Profile Page
+import Profile from '../pages/profile/Profile';
+// Admin Teacher Profile Routes
+import ReviewProfiles from '../pages/admin/ReviewProfiles';
+import SchoolManagement from '../pages/admin/SchoolManagement';
 
 const router = createBrowserRouter([
   {
@@ -84,6 +92,20 @@ const router = createBrowserRouter([
   {
     path: '/chat',
     element: <LiveChat />,
+  },
+  // Profile (includes Teacher Profile management)
+  {
+    path: '/profile',
+    element: <Profile />,
+  },
+  // Backward compatibility routes
+  {
+    path: '/submit-teacher-profile',
+    element: <Profile />,
+  },
+  {
+    path: '/my-teacher-profile',
+    element: <Profile />,
   },
   // Teacher Routes
   {
@@ -166,6 +188,15 @@ const router = createBrowserRouter([
   {
     path: '/admin/subscriptions',
     element: <SubscriptionManagement />,
+  },
+  // Teacher Profile Management (Admin)
+  {
+    path: '/admin/review-profiles',
+    element: <ReviewProfiles />,
+  },
+  {
+    path: '/admin/schools',
+    element: <SchoolManagement />,
   },
   { path: '/admin/settings', element: <ProfileSettings /> },
   {

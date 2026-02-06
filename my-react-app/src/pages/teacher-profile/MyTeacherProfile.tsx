@@ -1,0 +1,398 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { SchoolService } from '../../services/api/school.service';
+import { TeacherProfileService } from '../../services/api/teacher-profile.service';
+import type { School, TeacherProfile, UpdateTeacherProfileRequest } from '../../types';
+import './TeacherProfile.css';
+
+interface MyTeacherProfileProps {
+  onDelete?: () => void;
+}
+
+const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
+  const navigate = useNavigate();
+  const [profile, setProfile] = useState<TeacherProfile | null>(null);
+  const [schools, setSchools] = useState<School[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  const [formData, setFormData] = useState<UpdateTeacherProfileRequest>({
+    schoolId: 0,
+    position: '',
+    certificateUrl: '',
+    identificationDocumentUrl: '',
+    description: '',
+  });
+
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  const loadProfile = async () => {
+    try {
+      const [profileRes, schoolsRes] = await Promise.all([
+        TeacherProfileService.getMyProfile(),
+        SchoolService.getAllSchools(),
+      ]);
+
+      setProfile(profileRes.result);
+      setSchools(schoolsRes.result);
+
+      // Set form data
+      setFormData({
+        schoolId: profileRes.result.schoolId,
+        position: profileRes.result.position,
+        certificateUrl: profileRes.result.certificateUrl || '',
+        identificationDocumentUrl: profileRes.result.identificationDocumentUrl || '',
+        description: profileRes.result.description || '',
+      });
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load profile';
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === 'schoolId' ? parseInt(value) : value,
+    }));
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
+    setSubmitting(true);
+
+    try {
+      if (!formData.schoolId || formData.schoolId === 0) {
+        throw new Error('Please select a school');
+      }
+      if (!formData.position.trim()) {
+        throw new Error('Please enter your position');
+      }
+
+      const response = await TeacherProfileService.updateMyProfile(formData);
+      setProfile(response.result);
+      setEditing(false);
+      setSuccess('Profile updated successfully!');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update profile';
+      setError(errorMessage);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete your teacher profile?')) {
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await TeacherProfileService.deleteMyProfile();
+      if (onDelete) {
+        onDelete();
+      } else {
+        navigate('/profile');
+      }
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete profile';
+      setError(errorMessage);
+      setSubmitting(false);
+    }
+  };
+
+  const canEdit = profile?.status === 'PENDING' || profile?.status === 'REJECTED';
+  const canDelete = profile?.status === 'PENDING' || profile?.status === 'REJECTED';
+
+  if (loading) {
+    return (
+      <div className="teacher-profile-page">
+        <div className="loading">Loading profile...</div>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="teacher-profile-page">
+        <div className="alert alert-warning">
+          No teacher profile found. Would you like to{' '}
+          <a href="/submit-teacher-profile">submit one</a>?
+        </div>
+      </div>
+    );
+  }
+
+  const getStatusBadge = () => {
+    switch (profile.status) {
+      case 'PENDING':
+        return <div className="status-badge status-pending">⏳ Pending Review</div>;
+      case 'APPROVED':
+        return <div className="status-badge status-approved">✅ Approved</div>;
+      case 'REJECTED':
+        return <div className="status-badge status-rejected">❌ Rejected</div>;
+    }
+  };
+
+  const getStatusMessage = () => {
+    switch (profile.status) {
+      case 'PENDING':
+        return (
+          <div className="alert alert-warning">
+            Your profile is currently under review. You will be notified once an admin reviews your
+            application.
+          </div>
+        );
+      case 'APPROVED':
+        return (
+          <div className="alert alert-success">
+            Congratulations! Your teacher profile has been approved. You can now create and manage
+            courses.
+          </div>
+        );
+      case 'REJECTED':
+        return (
+          <div className="alert alert-error">
+            Your profile was rejected. Please review the admin's comments below and update your
+            profile to resubmit.
+          </div>
+        );
+    }
+  };
+
+  if (!editing) {
+    return (
+      <div className="teacher-profile-page">
+        <div className="profile-card">
+          <div className="profile-header">
+            <h1>My Teacher Profile</h1>
+            {getStatusBadge()}
+          </div>
+
+          {error && <div className="alert alert-error">{error}</div>}
+          {success && <div className="alert alert-success">{success}</div>}
+          {getStatusMessage()}
+
+          <div className="profile-info">
+            <div className="info-row">
+              <span className="info-label">Full Name:</span>
+              <span className="info-value">{profile.fullName}</span>
+            </div>
+            <div className="info-row">
+              <span className="info-label">Username:</span>
+              <span className="info-value">{profile.userName}</span>
+            </div>
+            <div className="info-row">
+              <span className="info-label">School:</span>
+              <span className="info-value">{profile.schoolName}</span>
+            </div>
+            <div className="info-row">
+              <span className="info-label">Position:</span>
+              <span className="info-value">{profile.position}</span>
+            </div>
+            {profile.certificateUrl && (
+              <div className="info-row">
+                <span className="info-label">Certificate:</span>
+                <a
+                  href={profile.certificateUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="file-link"
+                >
+                  View Certificate
+                </a>
+              </div>
+            )}
+            {profile.identificationDocumentUrl && (
+              <div className="info-row">
+                <span className="info-label">ID Document:</span>
+                <a
+                  href={profile.identificationDocumentUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="file-link"
+                >
+                  View Document
+                </a>
+              </div>
+            )}
+            {profile.description && (
+              <div className="info-row">
+                <span className="info-label">Description:</span>
+                <span className="info-value">{profile.description}</span>
+              </div>
+            )}
+            <div className="info-row">
+              <span className="info-label">Submitted:</span>
+              <span className="info-value">{new Date(profile.createdAt).toLocaleString()}</span>
+            </div>
+            {profile.reviewedAt && (
+              <div className="info-row">
+                <span className="info-label">Reviewed:</span>
+                <span className="info-value">
+                  {new Date(profile.reviewedAt).toLocaleString()} by {profile.reviewedByName}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {profile.adminComment && (
+            <div className="admin-comment">
+              <strong>Admin Comment:</strong>
+              <p>{profile.adminComment}</p>
+            </div>
+          )}
+
+          <div className="form-actions">
+            <button type="button" className="btn-secondary" onClick={() => navigate(-1)}>
+              Back
+            </button>
+            {canEdit && (
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={() => setEditing(true)}
+                disabled={submitting}
+              >
+                Edit Profile
+              </button>
+            )}
+            {canDelete && (
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={handleDelete}
+                disabled={submitting}
+                style={{ background: '#ef4444', color: 'white' }}
+              >
+                Delete Profile
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Edit mode
+  return (
+    <div className="teacher-profile-page">
+      <div className="profile-card">
+        <div className="profile-header">
+          <h1>Edit Teacher Profile</h1>
+          <p>Update your information and resubmit for review</p>
+        </div>
+
+        {error && <div className="alert alert-error">{error}</div>}
+        {success && <div className="alert alert-success">{success}</div>}
+
+        <form className="profile-form" onSubmit={handleUpdate}>
+          <div className="form-group">
+            <label htmlFor="schoolId">
+              School <span className="required">*</span>
+            </label>
+            <select
+              id="schoolId"
+              name="schoolId"
+              value={formData.schoolId}
+              onChange={handleInputChange}
+              required
+              disabled={submitting}
+            >
+              <option value="0">Select a school</option>
+              {schools.map((school) => (
+                <option key={school.id} value={school.id}>
+                  {school.name} - {school.city}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="position">
+              Position/Title <span className="required">*</span>
+            </label>
+            <input
+              type="text"
+              id="position"
+              name="position"
+              value={formData.position}
+              onChange={handleInputChange}
+              placeholder="e.g., Math Teacher, Senior Lecturer"
+              maxLength={100}
+              required
+              disabled={submitting}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="certificateUrl">Teaching Certificate URL</label>
+            <input
+              type="url"
+              id="certificateUrl"
+              name="certificateUrl"
+              value={formData.certificateUrl}
+              onChange={handleInputChange}
+              placeholder="https://storage.example.com/certificates/cert.pdf"
+              disabled={submitting}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="identificationDocumentUrl">Identification Document URL</label>
+            <input
+              type="url"
+              id="identificationDocumentUrl"
+              name="identificationDocumentUrl"
+              value={formData.identificationDocumentUrl}
+              onChange={handleInputChange}
+              placeholder="https://storage.example.com/id/id-card.jpg"
+              disabled={submitting}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="description">Description</label>
+            <textarea
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleInputChange}
+              placeholder="Tell us about your teaching experience..."
+              maxLength={1000}
+              disabled={submitting}
+            />
+          </div>
+
+          <div className="form-actions">
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => setEditing(false)}
+              disabled={submitting}
+            >
+              Cancel
+            </button>
+            <button type="submit" className="btn-primary" disabled={submitting}>
+              {submitting ? 'Updating...' : 'Update Profile'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default MyTeacherProfile;
