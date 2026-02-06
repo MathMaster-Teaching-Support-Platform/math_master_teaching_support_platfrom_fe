@@ -10,6 +10,10 @@ export interface User {
   grade?: string | number;
 }
 
+// Re-export from other type files
+export * from './auth.types';
+export * from './teacher.types';
+
 export interface Course {
   id: string;
   title: string;

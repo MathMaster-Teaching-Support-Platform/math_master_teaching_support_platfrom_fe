@@ -1,0 +1,188 @@
+/* Hide parent sidebar when in profile page */
+body.profile-active .sidebar,
+body.profile-active aside.sidebar {
+  display: none !important;
+}
+
+/* Make main content full width when sidebar is hidden */
+body.profile-active .main-content,
+body.profile-active main,
+body.profile-active .dashboard-layout {
+  margin-left: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Profile Navbar */
+.profile-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  z-index: 1000;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.profile-navbar-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  height: 100%;
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.profile-navbar h1 {
+  font-size: 1.5rem;
+  color: #1a1a1a;
+  margin: 0;
+  font-weight: 600;
+}
+
+.back-button {
+  padding: 0.5rem 1rem;
+  background: #f3f4f6;
+  border: none;
+  border-radius: 6px;
+  color: #374151;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.back-button:hover {
+  background: #e5e7eb;
+}
+
+/* Profile Page */
+.profile-page {
+  min-height: calc(100vh - 64px);
+  background: #f3f4f6;
+  padding: 2rem;
+  margin-top: 64px;
+  margin-left: 0 !important;
+  width: 100vw !important;
+  position: relative;
+  left: 0;
+}
+
+.profile-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+.profile-sidebar {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 2rem;
+}
+
+.profile-sidebar h2 {
+  font-size: 1.25rem;
+  color: #1a1a1a;
+  margin-bottom: 1.5rem;
+}
+
+.profile-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.profile-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #555;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.profile-nav-item:hover {
+  background: #f3f4f6;
+  color: #1a1a1a;
+}
+
+.profile-nav-item.active {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.profile-nav-item .nav-icon {
+  font-size: 1.25rem;
+}
+
+.profile-content {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  min-height: 500px;
+}
+
+.loading {
+  text-align: center;
+  padding: 3rem;
+  color: #666;
+}
+
+/* Responsive */
+@media (max-width: 968px) {
+  .profile-container {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-sidebar {
+    position: static;
+  }
+
+  .profile-nav {
+    flex-direction: row;
+    overflow-x: auto;
+  }
+
+  .profile-nav-item {
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 640px) {
+  .profile-page {
+    padding: 1rem;
+  }
+
+  .profile-nav {
+    flex-direction: column;
+  }
+}
+
+/* Override nested page styles */
+.profile-content .teacher-profile-page,
+.profile-content > div {
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.profile-content .profile-card {
+  box-shadow: none;
+  border-radius: 0;
+}
