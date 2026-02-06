@@ -31,8 +31,6 @@ import Calendar from '../pages/calendar/Calendar';
 import CoursePreview from '../pages/preview/CoursePreview';
 import LiveChat from '../pages/chat/LiveChat';
 // Teacher Profile Routes
-import SubmitTeacherProfile from '../pages/teacher-profile/SubmitTeacherProfile';
-import MyTeacherProfile from '../pages/teacher-profile/MyTeacherProfile';
 // Profile Page
 import Profile from '../pages/profile/Profile';
 // Admin Teacher Profile Routes
