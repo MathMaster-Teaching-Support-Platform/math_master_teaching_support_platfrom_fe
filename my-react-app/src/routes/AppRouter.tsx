@@ -36,6 +36,8 @@ import Profile from '../pages/profile/Profile';
 // Admin Teacher Profile Routes
 import ReviewProfiles from '../pages/admin/ReviewProfiles';
 import SchoolManagement from '../pages/admin/SchoolManagement';
+import TeacherAssessments from '../pages/assessments/TeacherAssessments';
+import AssessmentDetail from '../pages/assessments/AssessmentDetail';
 
 const router = createBrowserRouter([
   {
@@ -121,6 +123,14 @@ const router = createBrowserRouter([
   {
     path: '/teacher/assignments',
     element: <TeacherAssignments />,
+  },
+  {
+    path: '/teacher/assessments',
+    element: <TeacherAssessments />,
+  },
+  {
+    path: '/teacher/assessments/:id',
+    element: <AssessmentDetail />,
   },
   {
     path: '/teacher/analytics',

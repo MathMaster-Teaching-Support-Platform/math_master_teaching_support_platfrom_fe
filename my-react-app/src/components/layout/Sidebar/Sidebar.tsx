@@ -21,6 +21,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
     { path: '/teacher/courses', icon: '📚', label: 'Khóa học' },
     { path: '/teacher/materials', icon: '📝', label: 'Tài liệu' },
     { path: '/teacher/assignments', icon: '✍️', label: 'Bài tập' },
+    { path: '/teacher/assessments', icon: '📝', label: 'Kiểm tra' },
     { path: '/teacher/students', icon: '👥', label: 'Học sinh' },
     { path: '/teacher/analytics', icon: '📈', label: 'Phân tích' },
     { path: '/teacher/ai-assistant', icon: '🤖', label: 'AI Trợ lý' },
@@ -53,7 +54,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
-        <Link to="/" className="sidebar-logo">
+        <Link to={AuthService.getDashboardUrl()} className="sidebar-logo">
           <span className="logo-icon">∑π</span>
           <span className="logo-text">MathMaster</span>
         </Link>

@@ -94,7 +94,7 @@ export class AuthService {
    */
   static decodeToken(
     token: string
-  ): { sub: string; scope: string; email: string; [key: string]: unknown } | null {
+  ): { sub: string; scope: string; email: string;[key: string]: unknown } | null {
     try {
       const base64Url = token.split('.')[1];
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -121,8 +121,14 @@ export class AuthService {
     const decoded = this.decodeToken(token);
     if (!decoded || !decoded.scope) return null;
 
-    // scope format: "ROLE_USER", "ROLE_ADMIN", "ROLE_TEACHER"
-    const role = decoded.scope.replace('ROLE_', '').toLowerCase();
+    // scope can be a space-separated string containing roles and permissions
+    // e.g., "ROLE_TEACHER VIEW_CONTENT EDIT_CONTENT"
+    const scopes = decoded.scope.split(' ');
+    const roleScope = scopes.find((s) => s.startsWith('ROLE_'));
+
+    if (!roleScope) return null;
+
+    const role = roleScope.replace('ROLE_', '').toLowerCase();
     return role;
   }
 
