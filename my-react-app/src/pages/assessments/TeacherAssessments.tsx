@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { AssessmentService } from '../../services/api/assessment.service';
-import type { AssessmentResponse, AssessmentStatus, AssessmentType } from '../../types';
+import type { AssessmentRequest, AssessmentResponse, AssessmentStatus, AssessmentType } from '../../types';
+import AssessmentModal from './AssessmentModal';
 import './TeacherAssessments.css';
 
 const TeacherAssessments: React.FC = () => {
@@ -11,6 +12,11 @@ const TeacherAssessments: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [filterStatus, setFilterStatus] = useState<AssessmentStatus | 'ALL'>('ALL');
+
+    // Modal state
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
+    const [selectedAssessment, setSelectedAssessment] = useState<AssessmentResponse | null>(null);
 
     const fetchAssessments = async () => {
         try {
@@ -32,13 +38,36 @@ const TeacherAssessments: React.FC = () => {
         fetchAssessments();
     }, [filterStatus]);
 
+    const handleCreate = () => {
+        setModalMode('create');
+        setSelectedAssessment(null);
+        setIsModalOpen(true);
+    };
+
     const handleView = (id: string) => {
         navigate(`/teacher/assessments/${id}`);
     };
 
-    const handleEdit = (id: string) => {
-        // Navigate to editor/builder (using detail page for now as placeholder)
-        navigate(`/teacher/assessments/${id}`);
+    const handleEdit = (assessment: AssessmentResponse) => {
+        setModalMode('edit');
+        setSelectedAssessment(assessment);
+        setIsModalOpen(true);
+    };
+
+    const handleModalSubmit = async (data: AssessmentRequest) => {
+        try {
+            if (modalMode === 'create') {
+                await AssessmentService.createAssessment(data);
+                alert('Tạo bài kiểm tra thành công!');
+            } else if (modalMode === 'edit' && selectedAssessment) {
+                await AssessmentService.updateAssessment(selectedAssessment.id, data);
+                alert('Cập nhật bài kiểm tra thành công!');
+            }
+            fetchAssessments();
+        } catch (err: any) {
+            alert(err.message || 'Lỗi khi lưu bài kiểm tra');
+            throw err;
+        }
     };
 
     const handlePublish = async (id: string) => {
@@ -103,7 +132,7 @@ const TeacherAssessments: React.FC = () => {
                         <h1 className="page-title">📝 Quản lý Kiểm tra</h1>
                         <p className="page-subtitle">Tạo và quản lý các bài kiểm tra, đánh giá học sinh</p>
                     </div>
-                    <button className="btn btn-primary" onClick={() => alert('Chức năng tạo mới đang được cập nhật')}>
+                    <button className="btn btn-primary" onClick={handleCreate}>
                         <span>➕</span> Tạo bài kiểm tra mới
                     </button>
                 </div>
@@ -172,7 +201,7 @@ const TeacherAssessments: React.FC = () => {
                                     <button className="btn btn-sm btn-outline" onClick={() => handleView(assessment.id)}>Xem</button>
                                     {assessment.status === 'DRAFT' && (
                                         <>
-                                            <button className="btn btn-sm btn-outline" onClick={() => handleEdit(assessment.id)}>Sửa</button>
+                                            <button className="btn btn-sm btn-outline" onClick={() => handleEdit(assessment)}>Sửa</button>
                                             <button className="btn btn-sm btn-primary" onClick={() => handlePublish(assessment.id)}>Xuất bản</button>
                                         </>
                                     )}
@@ -185,6 +214,14 @@ const TeacherAssessments: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            <AssessmentModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSubmit={handleModalSubmit}
+                initialData={selectedAssessment}
+                mode={modalMode}
+            />
         </DashboardLayout>
     );
 };
