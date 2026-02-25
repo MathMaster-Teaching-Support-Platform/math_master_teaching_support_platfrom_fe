@@ -21,4 +21,17 @@ export const API_ENDPOINTS = {
   TEACHER_PROFILES_STATUS: '/teacher-profiles/status',
   TEACHER_PROFILES_PENDING_COUNT: '/teacher-profiles/pending/count',
   TEACHER_PROFILES_REVIEW: (profileId: number) => `/teacher-profiles/${profileId}/review`,
+
+  // Assessments
+  ASSESSMENTS: '/assessments',
+  ASSESSMENTS_MY: '/assessments/my',
+  ASSESSMENTS_DETAIL: (id: string) => `/assessments/${id}`,
+  ASSESSMENTS_PREVIEW: (id: string) => `/assessments/${id}/preview`,
+  ASSESSMENTS_PUBLISH_SUMMARY: (id: string) => `/assessments/${id}/publish-summary`,
+  ASSESSMENTS_PUBLISH: (id: string) => `/assessments/${id}/publish`,
+  ASSESSMENTS_UNPUBLISH: (id: string) => `/assessments/${id}/unpublish`,
+  ASSESSMENTS_POINTS_OVERRIDE: (assessmentId: string) => `/assessments/${assessmentId}/points-override`,
+  ASSESSMENTS_CAN_EDIT: (id: string) => `/assessments/${id}/can-edit`,
+  ASSESSMENTS_CAN_DELETE: (id: string) => `/assessments/${id}/can-delete`,
+  ASSESSMENTS_CAN_PUBLISH: (id: string) => `/assessments/${id}/can-publish`,
 };

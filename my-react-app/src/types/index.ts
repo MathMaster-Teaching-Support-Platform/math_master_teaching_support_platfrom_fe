@@ -13,6 +13,7 @@ export interface User {
 // Re-export from other type files
 export * from './auth.types';
 export * from './teacher.types';
+export * from './assessment.types';
 
 export interface Course {
   id: string;
