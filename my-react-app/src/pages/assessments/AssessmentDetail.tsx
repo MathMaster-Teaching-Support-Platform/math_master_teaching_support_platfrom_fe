@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { AssessmentService } from '../../services/api/assessment.service';
-import type { AssessmentResponse } from '../../types';
-import './TeacherAssessments.css'; // Reuse styles or create new ones
+import type { AssessmentResponse, AssessmentRequest } from '../../types';
+import AssessmentModal from './AssessmentModal';
+import './TeacherAssessments.css';
 
 const AssessmentDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -11,32 +12,50 @@ const AssessmentDetail: React.FC = () => {
     const [assessment, setAssessment] = useState<AssessmentResponse | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+    const fetchDetail = async () => {
+        if (!id) return;
+        try {
+            setLoading(true);
+            const response = await AssessmentService.getAssessmentById(id);
+            setAssessment(response.result);
+        } catch (err: any) {
+            setError(err.message || 'Failed to fetch assessment details');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchDetail = async () => {
-            if (!id) return;
-            try {
-                setLoading(true);
-                const response = await AssessmentService.getAssessmentById(id);
-                setAssessment(response.result);
-            } catch (err: any) {
-                setError(err.message || 'Failed to fetch assessment details');
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchDetail();
     }, [id]);
 
-    if (loading) return <DashboardLayout role="teacher" user={{ name: 'Teacher', avatar: '', role: 'teacher' }}><div className="loading-state">Đang tải...</div></DashboardLayout>;
-    if (error) return <DashboardLayout role="teacher" user={{ name: 'Teacher', avatar: '', role: 'teacher' }}><div className="error-state">{error}</div></DashboardLayout>;
-    if (!assessment) return <DashboardLayout role="teacher" user={{ name: 'Teacher', avatar: '', role: 'teacher' }}><div className="empty-state">Không tìm thấy bài kiểm tra</div></DashboardLayout>;
+    const handleEditMetadata = () => {
+        setIsEditModalOpen(true);
+    };
+
+    const handleEditSubmit = async (data: AssessmentRequest) => {
+        if (!id) return;
+        try {
+            await AssessmentService.updateAssessment(id, data);
+            alert('Cập nhật thông tin thành công!');
+            fetchDetail();
+        } catch (err: any) {
+            alert(err.message || 'Lỗi khi cập nhật thông tin');
+            throw err;
+        }
+    };
+
+    if (loading) return <DashboardLayout role="teacher" user={{ name: 'Teacher', avatar: '', role: 'teacher' }} notificationCount={0}><div className="loading-state">Đang tải...</div></DashboardLayout>;
+    if (error) return <DashboardLayout role="teacher" user={{ name: 'Teacher', avatar: '', role: 'teacher' }} notificationCount={0}><div className="error-state">{error}</div></DashboardLayout>;
+    if (!assessment) return <DashboardLayout role="teacher" user={{ name: 'Teacher', avatar: '', role: 'teacher' }} notificationCount={0}><div className="empty-state">Không tìm thấy bài kiểm tra</div></DashboardLayout>;
 
     return (
         <DashboardLayout
             role="teacher"
             user={{ name: 'Teacher', avatar: '', role: 'teacher' }}
+            notificationCount={0}
         >
             <div className="assessment-detail-page" style={{ padding: '2rem' }}>
                 <button className="btn btn-outline" onClick={() => navigate(-1)} style={{ marginBottom: '1rem' }}>
@@ -47,11 +66,18 @@ const AssessmentDetail: React.FC = () => {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div>
                             <h1 style={{ margin: 0 }}>{assessment.title}</h1>
-                            <p style={{ color: '#6b7280', marginTop: '0.5rem' }}>{assessment.description}</p>
+                            <p style={{ color: '#6b7280', marginTop: '0.5rem' }}>{assessment.description || 'Không có mô tả'}</p>
                         </div>
-                        <span className={`status-badge badge-${assessment.status.toLowerCase()}`}>
-                            {assessment.status}
-                        </span>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
+                            <span className={`status-badge badge-${assessment.status.toLowerCase()}`}>
+                                {assessment.status === 'DRAFT' ? 'Nháp' : assessment.status === 'PUBLISHED' ? 'Đã xuất bản' : 'Đã đóng'}
+                            </span>
+                            {assessment.status === 'DRAFT' && (
+                                <button className="btn btn-sm btn-outline" onClick={handleEditMetadata}>
+                                    ✏️ Sửa thông tin
+                                </button>
+                            )}
+                        </div>
                     </div>
 
                     <hr style={{ margin: '1.5rem 0', borderColor: '#f3f4f6' }} />
@@ -82,6 +108,14 @@ const AssessmentDetail: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            <AssessmentModal
+                isOpen={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
+                onSubmit={handleEditSubmit}
+                initialData={assessment}
+                mode="edit"
+            />
         </DashboardLayout>
     );
 };
