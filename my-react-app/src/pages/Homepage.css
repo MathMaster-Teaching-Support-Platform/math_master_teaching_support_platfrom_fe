@@ -163,7 +163,190 @@
   background: #4E4CC6;
   box-shadow: var(--shadow-glow);
   transform: translateY(-1px);
+}/* ══════════════════════════════════
+   UNIQUE APPROACH SECTION
+   ══════════════════════════════════ */
+.unique-approach-section {
+  background: #ffffff;
+  padding-bottom: 2.5rem;
+  overflow: hidden;
 }
+
+.unique-approach__title {
+  display: inline-block;
+  font-family: 'Be Vietnam Pro', 'Sora', sans-serif;
+  font-size: 3rem;
+  font-weight: 600;
+  line-height: 60px;
+  color: #0E0C15;
+  margin-bottom: 2.5rem;
+  text-align: left;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .unique-approach__title {
+    margin-bottom: 5rem;
+    text-align: center;
+  }
+}
+
+@media (min-width: 976px) {
+  .unique-approach__title {
+    font-size: 3.75rem;
+    font-weight: 700;
+    line-height: 1.25;
+    margin-bottom: 120px;
+  }
+}
+
+.unique-approach__title .text-accent {
+  color: #5E5CE6;
+  position: relative;
+}
+
+.unique-approach__content {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 768px) {
+  .unique-approach__content {
+    flex-direction: row;
+  }
+}
+
+.unique-approach__steps {
+  display: grid;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .unique-approach__steps {
+    gap: 3rem;
+  }
+}
+
+.unique-approach__step {
+  display: grid;
+  gap: 0.5rem;
+  width: 335px;
+}
+
+@media (min-width: 768px) {
+  .unique-approach__step {
+    gap: 1rem;
+    width: 357px;
+  }
+}
+
+.step-badge {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 100px;
+  width: fit-content;
+  padding: 4px 12px;
+  font-family: 'Source Code Pro', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #0E0C15;
+  margin-bottom: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  .step-badge {
+    margin-bottom: 0;
+    line-height: 0;
+  }
+}
+
+.step-badge--1 {
+  background-color: #5E5CE6;
+  color: #ffffff;
+}
+
+.step-badge--2 {
+  background-color: #FF9FD3;
+}
+
+.step-badge--3 {
+  background-color: #FFC87D;
+}
+
+.step-title {
+  font-family: 'Be Vietnam Pro', 'Sora', sans-serif;
+  font-size: 32px;
+  line-height: 40px;
+  color: #0E0C15;
+  margin: 0;
+}
+
+@media (min-width: 768px) {
+  .step-title {
+    font-size: 40px;
+    line-height: 52px;
+    font-weight: 600;
+  }
+}
+
+.step-desc {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 15px;
+  line-height: 20px;
+  color: #4D4D4D;
+  margin: 0;
+}
+
+@media (min-width: 768px) {
+  .step-desc {
+    font-size: 18px;
+    line-height: 1.5;
+  }
+}
+
+.unique-approach__phones {
+  width: 100%;
+  position: relative;
+  height: 455px;
+  margin-top: 5rem;
+}
+
+@media (min-width: 768px) {
+  .unique-approach__phones {
+    height: 726px;
+    margin-top: 0;
+  }
+}
+
+.unique-approach__phones img {
+  position: absolute;
+  top: 0;
+  right: -90px;
+  height: 455px;
+  max-width: 432px;
+  object-fit: contain;
+}
+
+@media (min-width: 768px) {
+  .unique-approach__phones img {
+    top: 100px;
+    right: -150px;
+    height: 550px;
+    max-width: 500px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .unique-approach__phones img {
+    top: 0;
+    right: -150px;
+    height: 100%;
+    max-width: 685px;
+  }
+}
+
 /* ══════════════════════════════════
    INTRO / BRANDING SECTION
    ══════════════════════════════════ */

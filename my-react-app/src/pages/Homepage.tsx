@@ -145,6 +145,41 @@ const Homepage: React.FC = () => {
         </div>
       </section>
 
+      {/* Unique Approach Section — matching math-master.org */}
+      <section className="unique-approach-section">
+        <div className="container">
+          <h2 className="unique-approach__title">
+            <span className="gradient-text">Phương pháp</span> giải toán độc đáo
+          </h2>
+          <div className="unique-approach__content">
+            <div className="unique-approach__steps">
+              <div className="unique-approach__step">
+                <div className="step-badge step-badge--1">01</div>
+                <h3 className="step-title">Chụp ảnh.</h3>
+                <p className="step-desc">Chụp ảnh bài toán hoặc nhập thủ công với máy tính thông minh của chúng tôi.</p>
+              </div>
+              <div className="unique-approach__step">
+                <div className="step-badge step-badge--2">02</div>
+                <h3 className="step-title">Giải bài.</h3>
+                <p className="step-desc">Nhận lời giải được xác minh bởi chuyên gia chỉ trong vài giây.</p>
+              </div>
+              <div className="unique-approach__step">
+                <div className="step-badge step-badge--3">03</div>
+                <h3 className="step-title">Học hỏi.</h3>
+                <p className="step-desc">Xem các bước giải chi tiết và nhận giải thích từ chuyên gia.</p>
+              </div>
+            </div>
+            <div className="unique-approach__phones">
+              <img
+                src="https://gcdn.fx2.io/math-master.org/_nuxt/phones.d9bce636.png"
+                alt="Phone mockups"
+                loading="lazy"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Intro / Branding Section — matching math-master.org */}
       <section className="intro-section">
         <div className="container">
