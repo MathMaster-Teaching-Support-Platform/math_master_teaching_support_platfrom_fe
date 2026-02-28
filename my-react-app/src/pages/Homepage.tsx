@@ -65,10 +65,6 @@ const Homepage: React.FC = () => {
         <div className="container">
           <div className="hero-content">
             <div className="hero-text">
-              <div className="hero-badge">
-                <span className="badge-icon">✨</span>
-                <span>Powered by AI</span>
-              </div>
               <h1 className="hero-title">
                 Nền tảng hỗ trợ
                 <br />
