@@ -175,14 +175,20 @@
   display: flex;
   align-items: center;
   overflow: hidden;
+  /* Graph-paper grid background — matching math-master.org */
+  background-color: #F8F8FF;
+  background-image:
+    linear-gradient(rgba(94, 92, 230, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(94, 92, 230, 0.06) 1px, transparent 1px);
+  background-size: 80px 80px;
 }
 
 .hero-bg { display: none; }
 
 /* ── Decorative System ──
-   2 subtle gradient orbs for depth
-   2 stroke-based math SVGs for visual identity
-   → Intentional, cohesive, never competing with content */
+   Multi-colored 3D wireframe shapes (sphere, cylinder, pyramid, cube)
+   + floating math text symbols
+   → Matches math-master.org "sketchbook on graph paper" aesthetic */
 
 .hero-decorations {
   position: absolute;
@@ -215,39 +221,55 @@
 .symbol-11 { top: 65%; left: 8%; font-size: 2.4rem; opacity: 0.18; animation: mathFloat 13s ease-in-out infinite 2s; }
 .symbol-12 { bottom: 25%; right: 35%; font-size: 1.8rem; opacity: 0.25; animation: mathFloat 8s ease-in-out infinite 4.5s; }
 
-/* Geometric wireframe shapes — matching math-master.org */
+/* Geometric wireframe shapes — multi-colored, matching math-master.org */
 .geo-shape {
   position: absolute;
-  color: #5E5CE6;
   pointer-events: none;
   will-change: transform;
   z-index: 1;
 }
 
-.geo-cylinder {
-  top: 2%;
-  left: 3%;
-  width: 150px;
-  height: 180px;
-  opacity: 0.35;
-  animation: mathFloat 12s ease-in-out infinite;
+/* Blue/purple wireframe sphere — top-left area */
+.geo-sphere {
+  top: 4%;
+  left: 28%;
+  width: 100px;
+  height: 100px;
+  color: #5E5CE6;
+  opacity: 0.55;
+  animation: mathFloat 14s ease-in-out infinite;
 }
 
-.geo-pyramid {
-  bottom: 5%;
-  right: 3%;
-  width: 150px;
+/* Orange wireframe cylinder — left side */
+.geo-cylinder {
+  top: 55%;
+  left: 5%;
+  width: 160px;
   height: 160px;
-  opacity: 0.40;
+  color: #FFB347;
+  opacity: 0.60;
+  animation: mathFloat 12s ease-in-out infinite 1s;
+}
+
+/* Pink wireframe pyramid — right side */
+.geo-pyramid {
+  top: 30%;
+  right: 2%;
+  width: 160px;
+  height: 160px;
+  color: #FF6B9C;
+  opacity: 0.55;
   animation: mathFloat 14s ease-in-out infinite 2s;
 }
 
+/* Blue wireframe cube — bottom-right */
 .geo-cube {
-  top: 50%;
-  right: 2%;
-  width: 110px;
+  bottom: 2%;
+  right: 8%;
+  width: 130px;
   height: 130px;
-  opacity: 0.30;
+  color: #5E5CE6;
+  opacity: 0.50;
   animation: mathFloat 10s ease-in-out infinite 4s;
 }
 

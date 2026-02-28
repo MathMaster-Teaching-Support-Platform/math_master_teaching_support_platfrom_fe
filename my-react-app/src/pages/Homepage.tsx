@@ -59,39 +59,45 @@ const Homepage: React.FC = () => {
           <span className="math-symbol symbol-11" aria-hidden="true">∂</span>
           <span className="math-symbol symbol-12" aria-hidden="true">θ</span>
 
-          {/* Geometric wireframe — Cylinder (top-left) */}
+          {/* Geometric wireframe — Sphere (top area, blue) */}
+          <svg className="geo-shape geo-sphere" viewBox="0 0 120 120" fill="none" aria-hidden="true">
+            <circle cx="60" cy="60" r="50" stroke="currentColor" strokeWidth="1.5" />
+            <ellipse cx="60" cy="60" rx="50" ry="18" stroke="currentColor" strokeWidth="1" strokeDasharray="5 3" />
+            <ellipse cx="60" cy="60" rx="18" ry="50" stroke="currentColor" strokeWidth="1" strokeDasharray="5 3" />
+            <line x1="10" y1="60" x2="110" y2="60" stroke="currentColor" strokeWidth="0.6" strokeDasharray="3 3" />
+            <line x1="60" y1="10" x2="60" y2="110" stroke="currentColor" strokeWidth="0.6" strokeDasharray="3 3" />
+          </svg>
+
+          {/* Geometric wireframe — Cylinder (left side, orange) */}
           <svg className="geo-shape geo-cylinder" viewBox="0 0 150 180" fill="none" aria-hidden="true">
-            <ellipse cx="75" cy="30" rx="55" ry="20" stroke="currentColor" strokeWidth="1.2" strokeDasharray="4 3" />
-            <line x1="20" y1="30" x2="20" y2="140" stroke="currentColor" strokeWidth="1.2" />
-            <line x1="130" y1="30" x2="130" y2="140" stroke="currentColor" strokeWidth="1.2" />
-            <ellipse cx="75" cy="140" rx="55" ry="20" stroke="currentColor" strokeWidth="1.2" />
-            <text x="55" y="90" fill="currentColor" fontSize="14" opacity="0.5" fontStyle="italic">b</text>
-            <text x="60" y="165" fill="currentColor" fontSize="14" opacity="0.5" fontStyle="italic">r</text>
+            <ellipse cx="75" cy="30" rx="55" ry="20" stroke="currentColor" strokeWidth="1.5" strokeDasharray="5 3" />
+            <line x1="20" y1="30" x2="20" y2="140" stroke="currentColor" strokeWidth="1.5" />
+            <line x1="130" y1="30" x2="130" y2="140" stroke="currentColor" strokeWidth="1.5" />
+            <ellipse cx="75" cy="140" rx="55" ry="20" stroke="currentColor" strokeWidth="1.5" />
+            <text x="55" y="92" fill="currentColor" fontSize="16" opacity="0.7" fontStyle="italic" fontFamily="serif">b</text>
+            <text x="82" y="168" fill="currentColor" fontSize="16" opacity="0.7" fontStyle="italic" fontFamily="serif">r</text>
           </svg>
 
-          {/* Geometric wireframe — Pyramid/Tetrahedron (bottom-right) */}
+          {/* Geometric wireframe — Pyramid/Tetrahedron (right side, pink) */}
           <svg className="geo-shape geo-pyramid" viewBox="0 0 160 160" fill="none" aria-hidden="true">
-            <polygon points="80,10 20,130 140,130" stroke="currentColor" strokeWidth="1.2" strokeDasharray="5 4" />
-            <line x1="80" y1="10" x2="110" y2="100" stroke="currentColor" strokeWidth="1" strokeDasharray="4 3" />
-            <line x1="20" y1="130" x2="110" y2="100" stroke="currentColor" strokeWidth="1" strokeDasharray="4 3" />
-            <line x1="140" y1="130" x2="110" y2="100" stroke="currentColor" strokeWidth="1" />
-            <text x="72" y="148" fill="currentColor" fontSize="12" opacity="0.5" fontStyle="italic">a</text>
-            <text x="78" y="6" fill="currentColor" fontSize="12" opacity="0.5" fontStyle="italic">a</text>
-            <text x="138" y="148" fill="currentColor" fontSize="12" opacity="0.5" fontStyle="italic">a</text>
+            <polygon points="80,10 20,130 140,130" stroke="currentColor" strokeWidth="1.5" fill="none" strokeDasharray="6 4" />
+            <line x1="80" y1="10" x2="110" y2="100" stroke="currentColor" strokeWidth="1.2" strokeDasharray="5 3" />
+            <line x1="20" y1="130" x2="110" y2="100" stroke="currentColor" strokeWidth="1.2" strokeDasharray="5 3" />
+            <line x1="140" y1="130" x2="110" y2="100" stroke="currentColor" strokeWidth="1.2" />
+            <text x="72" y="150" fill="currentColor" fontSize="14" opacity="0.7" fontStyle="italic" fontFamily="serif">a</text>
           </svg>
 
-          {/* Geometric wireframe — Cube (center-right) */}
+          {/* Geometric wireframe — Cube (bottom-right, blue) */}
           <svg className="geo-shape geo-cube" viewBox="0 0 120 130" fill="none" aria-hidden="true">
-            {/* Front face */}
-            <rect x="10" y="35" width="65" height="65" stroke="currentColor" strokeWidth="1.2" />
-            {/* Back face */}
-            <rect x="40" y="10" width="65" height="65" stroke="currentColor" strokeWidth="1" strokeDasharray="4 3" />
-            {/* Connecting edges */}
-            <line x1="10" y1="35" x2="40" y2="10" stroke="currentColor" strokeWidth="1" />
-            <line x1="75" y1="35" x2="105" y2="10" stroke="currentColor" strokeWidth="1" />
-            <line x1="75" y1="100" x2="105" y2="75" stroke="currentColor" strokeWidth="1" strokeDasharray="4 3" />
-            <line x1="10" y1="100" x2="40" y2="75" stroke="currentColor" strokeWidth="1" strokeDasharray="4 3" />
-            <text x="35" y="125" fill="currentColor" fontSize="12" opacity="0.5" fontStyle="italic">a</text>
+            <rect x="10" y="35" width="65" height="65" stroke="currentColor" strokeWidth="1.5" />
+            <rect x="40" y="10" width="65" height="65" stroke="currentColor" strokeWidth="1.2" strokeDasharray="5 3" />
+            <line x1="10" y1="35" x2="40" y2="10" stroke="currentColor" strokeWidth="1.2" />
+            <line x1="75" y1="35" x2="105" y2="10" stroke="currentColor" strokeWidth="1.2" />
+            <line x1="75" y1="100" x2="105" y2="75" stroke="currentColor" strokeWidth="1" strokeDasharray="5 3" />
+            <line x1="10" y1="100" x2="40" y2="75" stroke="currentColor" strokeWidth="1" strokeDasharray="5 3" />
+            <text x="95" y="5" fill="currentColor" fontSize="14" opacity="0.7" fontStyle="italic" fontFamily="serif">a</text>
+            <text x="110" y="68" fill="currentColor" fontSize="14" opacity="0.7" fontStyle="italic" fontFamily="serif">a</text>
+            <text x="35" y="120" fill="currentColor" fontSize="14" opacity="0.7" fontStyle="italic" fontFamily="serif">a</text>
           </svg>
         </div>
 
