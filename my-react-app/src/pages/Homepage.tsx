@@ -110,6 +110,60 @@ const Homepage: React.FC = () => {
         </div>
       </section>
 
+      {/* Help Section — "Instant help with all things math" */}
+      <section className="help-section">
+        <div className="container">
+          <h2 className="help-title">
+            <span className="gradient-text">Tức thì</span> hỗ trợ mọi vấn đề toán học
+          </h2>
+
+          {/* Row 1 — text left, image right */}
+          <div className="help-row help-row--reverse">
+            <div className="help-image">
+              <img src="https://gcdn.fx2.io/math-master.org/_nuxt/il1.b5161dc8.png" alt="Thuật toán giải toán nâng cao" loading="lazy" />
+            </div>
+            <div className="help-text">
+              <h3 className="help-subtitle">
+                Thuật toán giải toán nâng cao <span className="dot-accent">.</span>
+              </h3>
+              <p className="help-desc">
+                Nhận diện bài toán và đưa ra lời giải theo từng bước trong vài giây.
+              </p>
+            </div>
+          </div>
+
+          {/* Row 2 — image left, text right */}
+          <div className="help-row">
+            <div className="help-image">
+              <img src="https://gcdn.fx2.io/math-master.org/_nuxt/il2.2148ec35.png" alt="Hỗ trợ chuyên gia thời gian thực" loading="lazy" />
+            </div>
+            <div className="help-text">
+              <h3 className="help-subtitle">
+                Hỗ trợ chuyên gia thời gian thực <span className="dot-accent">.</span>
+              </h3>
+              <p className="help-desc">
+                Gia sư toán giỏi nhất hỗ trợ bạn qua chat trực tuyến bất cứ lúc nào.
+              </p>
+            </div>
+          </div>
+
+          {/* Row 3 — text left, image right */}
+          <div className="help-row help-row--reverse">
+            <div className="help-image">
+              <img src="https://gcdn.fx2.io/math-master.org/_nuxt/il3.659889bd.png" alt="Kho kiến thức" loading="lazy" />
+            </div>
+            <div className="help-text">
+              <h3 className="help-subtitle">
+                Kho kiến thức <span className="dot-accent">.</span>
+              </h3>
+              <p className="help-desc">
+                Tài liệu học tập, bảng công thức và bài kiểm tra giúp bạn học toán dễ dàng hơn.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Features Section */}
       <section id="features" className="features-section">
         <div className="container">
