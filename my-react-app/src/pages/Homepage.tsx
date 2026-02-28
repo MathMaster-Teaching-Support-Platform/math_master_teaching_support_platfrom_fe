@@ -228,54 +228,55 @@ const Homepage: React.FC = () => {
         </div>
       </section>
 
-      {/* Testimonials Section */}
+      {/* Testimonials Section — "Students love MathMaster" style */}
       <section className="testimonials-section">
         <div className="container">
           <div className="section-header">
-            <h2 className="section-title">Giáo viên nói gì về MathMaster</h2>
+            <h2 className="section-title">
+              Học sinh <span className="gradient-text">yêu thích</span> MathMaster
+            </h2>
           </div>
           <div className="testimonials-grid">
+            {/* Card 1 — top left */}
             <div className="testimonial-card">
-              <div className="testimonial-rating">★★★★★</div>
               <p className="testimonial-text">
-                "MathMaster đã giúp tôi tiết kiệm hơn 5 giờ mỗi tuần trong việc chuẩn bị bài giảng.
-                Tính năng tạo bài tập tự động rất thông minh và phù hợp với chương trình học."
+                MathMaster đã giúp tôi tiết kiệm hơn 5 giờ mỗi tuần trong việc chuẩn bị bài giảng.
+                Tính năng tạo bài tập tự động rất thông minh và phù hợp với chương trình học.
               </p>
               <div className="testimonial-author">
-                <div className="author-avatar">NT</div>
-                <div className="author-info">
-                  <div className="author-name">Nguyễn Thị Lan</div>
-                  <div className="author-role">Giáo viên THPT, Hà Nội</div>
-                </div>
+                <span className="author-name-inline">Nguyễn Thị Lan</span>
+                <span className="author-dot">•</span>
+                <span className="author-role-inline">Giáo viên</span>
               </div>
+              <div className="bubble-tail"></div>
             </div>
+
+            {/* Card 2 — top right */}
             <div className="testimonial-card">
-              <div className="testimonial-rating">★★★★★</div>
               <p className="testimonial-text">
-                "Công cụ vẽ đồ thị và hình học rất chính xác và dễ sử dụng. Học sinh của tôi hiểu
-                bài nhanh hơn nhiều nhờ hình ảnh trực quan."
+                Công cụ vẽ đồ thị và hình học rất chính xác và dễ sử dụng. Học sinh của tôi hiểu
+                bài nhanh hơn nhiều nhờ hình ảnh trực quan.
               </p>
               <div className="testimonial-author">
-                <div className="author-avatar">PH</div>
-                <div className="author-info">
-                  <div className="author-name">Phạm Văn Hùng</div>
-                  <div className="author-role">Giáo viên THCS, TP.HCM</div>
-                </div>
+                <span className="author-name-inline">Phạm Văn Hùng</span>
+                <span className="author-dot">•</span>
+                <span className="author-role-inline">Giáo viên</span>
               </div>
+              <div className="bubble-tail"></div>
             </div>
-            <div className="testimonial-card">
-              <div className="testimonial-rating">★★★★★</div>
+
+            {/* Card 3 — bottom center */}
+            <div className="testimonial-card testimonial-card--center">
               <p className="testimonial-text">
-                "AI trợ lý toán học như một đồng nghiệp luôn sẵn sàng hỗ trợ. Tôi có thể hỏi bất cứ
-                điều gì về phương pháp giảng dạy và nhận được câu trả lời chất lượng."
+                AI trợ lý toán học như một đồng nghiệp luôn sẵn sàng hỗ trợ. Tôi có thể hỏi bất cứ
+                điều gì về phương pháp giảng dạy và nhận được câu trả lời chất lượng.
               </p>
               <div className="testimonial-author">
-                <div className="author-avatar">LM</div>
-                <div className="author-info">
-                  <div className="author-name">Lê Thị Mai</div>
-                  <div className="author-role">Giáo viên Tiểu học, Đà Nẵng</div>
-                </div>
+                <span className="author-name-inline">Lê Thị Mai</span>
+                <span className="author-dot">•</span>
+                <span className="author-role-inline">Giáo viên</span>
               </div>
+              <div className="bubble-tail"></div>
             </div>
           </div>
         </div>
