@@ -45,10 +45,6 @@ const Homepage: React.FC = () => {
       <section className="hero-section">
         {/* Refined Decorative System — intentional, cohesive, depth-layered */}
         <div className="hero-decorations">
-          {/* Gradient orbs — background depth layer */}
-          <div className="deco-orb orb-1" aria-hidden="true"></div>
-          <div className="deco-orb orb-2" aria-hidden="true"></div>
-
           {/* Stroke-based math line art — top-left */}
           <svg className="deco-math deco-math-1" viewBox="0 0 120 120" fill="none" aria-hidden="true">
             <circle cx="60" cy="60" r="48" stroke="currentColor" strokeWidth="1" opacity="0.3" />
@@ -282,15 +278,25 @@ const Homepage: React.FC = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* CTA Section — light, airy, matching page style */}
       <section className="cta-section">
+        {/* Subtle decorative math strokes */}
+        <svg className="cta-deco cta-deco-1" viewBox="0 0 60 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M30 5 Q15 20, 30 40 Q45 60, 30 75" stroke="currentColor" strokeWidth="1.5" fill="none" />
+          <line x1="20" y1="38" x2="40" y2="42" stroke="currentColor" strokeWidth="1" />
+        </svg>
+        <svg className="cta-deco cta-deco-2" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <text x="10" y="45" fontSize="48" fontFamily="serif" fill="none" stroke="currentColor" strokeWidth="1">Σ</text>
+        </svg>
         <div className="container">
           <div className="cta-content">
-            <h2 className="cta-title">Sẵn sàng nâng cao chất lượng giảng dạy?</h2>
+            <h2 className="cta-title">
+              Sẵn sàng <span className="gradient-text">nâng cao</span> chất lượng giảng dạy?
+            </h2>
             <p className="cta-description">
               Tham gia cùng hàng nghìn giáo viên đang sử dụng MathMaster mỗi ngày
             </p>
-            <Link to="/register" className="btn btn-white-large">
+            <Link to="/register" className="btn btn-cta-primary">
               Đăng ký miễn phí ngay
               <span className="btn-icon">→</span>
             </Link>

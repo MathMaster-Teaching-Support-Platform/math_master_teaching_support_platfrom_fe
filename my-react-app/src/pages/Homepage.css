@@ -191,36 +191,7 @@
   z-index: 0;
 }
 
-/* Gradient orbs — blurred background depth */
-.deco-orb {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
-  will-change: transform;
-}
 
-.orb-1 {
-  width: 480px;
-  height: 480px;
-  background: radial-gradient(circle, rgba(94, 92, 230, 0.10) 0%, transparent 70%);
-  top: -5%;
-  left: -8%;
-  animation: orbDrift 20s ease-in-out infinite;
-}
-
-.orb-2 {
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle, rgba(255, 152, 226, 0.07) 0%, transparent 70%);
-  bottom: -10%;
-  right: -5%;
-  animation: orbDrift 25s ease-in-out infinite 5s;
-}
-
-@keyframes orbDrift {
-  0%, 100% { transform: translate(0, 0); }
-  50% { transform: translate(20px, -15px); }
-}
 
 /* Stroke-based math line art — subtle, integrated */
 .deco-math {
@@ -740,67 +711,106 @@
 .author-avatar { display: none; }
 
 /* ══════════════════════════════════
-   CTA SECTION
+   CTA SECTION — light, airy, premium
    ══════════════════════════════════ */
 .cta-section {
-  padding: 5rem 0;
-  background: var(--c-surface);
+  padding: 7.5rem 0;
+  background: linear-gradient(180deg, #ffffff 0%, #F5F3FF 40%, #EEEDF8 100%);
   text-align: center;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+}
+
+/* Subtle decorative math strokes */
+.cta-deco {
+  position: absolute;
+  color: var(--c-primary);
+  opacity: 0.08;
+  pointer-events: none;
+}
+
+.cta-deco-1 {
+  width: 80px;
+  height: 110px;
+  top: 15%;
+  left: 8%;
+  animation: float 8s ease-in-out infinite;
+}
+
+.cta-deco-2 {
+  width: 70px;
+  height: 70px;
+  bottom: 12%;
+  right: 10%;
+  animation: float 10s ease-in-out infinite reverse;
 }
 
 .cta-content {
-  background: var(--c-primary);
-  border-radius: var(--r-xl);
-  padding: 4rem 3rem;
-  color: #fff;
+  max-width: 580px;
+  margin: 0 auto;
+  position: relative;
 }
 
 .cta-title {
-  font-size: clamp(1.5rem, 3vw, 2.25rem);
+  font-size: clamp(1.75rem, 3.5vw, 2.75rem);
   font-weight: 700;
-  margin: 0 0 0.75rem 0;
+  margin: 0 0 1.25rem 0;
   font-family: var(--f-heading);
-  letter-spacing: -0.5px;
-  line-height: 1.25;
-  color: #ffffff;
+  letter-spacing: -0.8px;
+  line-height: 1.2;
+  color: var(--c-text-1);
 }
 
 .cta-description {
-  font-size: 0.95rem;
-  color: rgba(255, 255, 255, 0.65);
-  margin: 0 0 2rem 0;
+  font-size: 1rem;
+  color: var(--c-text-3);
+  margin: 0 0 2.5rem 0;
+  line-height: 1.7;
+  font-family: var(--f-body);
 }
 
-.btn-white-large {
-  background: #fff;
-  color: var(--c-dark);
-  padding: 0.75rem 2rem;
-  border-radius: var(--r-md);
-  font-size: 0.85rem;
+.btn-cta-primary {
+  background: var(--c-primary);
+  color: #fff;
+  padding: 0.9rem 2.5rem;
+  border-radius: 36px;
+  font-size: 0.9rem;
   font-weight: 600;
   text-decoration: none;
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: none;
-  position: relative;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 20px rgba(94, 92, 230, 0.2);
+  font-family: var(--f-heading);
+  cursor: pointer;
 }
 
-.btn-white-large:hover {
-  background: var(--c-primary);
-  color: #fff;
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-glow);
+.btn-cta-primary:hover {
+  background: #4E4CC6;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 32px rgba(94, 92, 230, 0.3);
+}
+
+.btn-cta-primary .btn-icon {
+  transition: transform 0.2s ease;
+}
+
+.btn-cta-primary:hover .btn-icon {
+  transform: translateX(3px);
 }
 
 .cta-note {
-  margin-top: 1rem;
-  font-size: 0.75rem;
-  opacity: 0.4;
-  position: relative;
+  margin-top: 1.5rem;
+  font-size: 0.82rem;
+  color: var(--c-text-3);
+  font-family: var(--f-body);
 }
+
+/* Remove old btn-white-large */
+.btn-white-large { display: none; }
 
 /* ══════════════════════════════════
    FOOTER — math-master.org style (light)
@@ -1045,8 +1055,7 @@
   .deco-math-1 { width: 80px; height: 80px; opacity: 0.5; }
   .deco-math-2 { width: 70px; height: 70px; opacity: 0.5; }
 
-  .orb-1 { width: 300px; height: 300px; }
-  .orb-2 { width: 250px; height: 250px; }
+
 }
 
 @media (max-width: 480px) {
