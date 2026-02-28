@@ -43,47 +43,24 @@ const Homepage: React.FC = () => {
 
       {/* Hero Section */}
       <section className="hero-section">
-        {/* Decorative Shapes */}
+        {/* Decorative Shapes — using actual math-master.org SVG assets */}
         <div className="hero-decorations">
           {/* Wireframe Sphere — top left */}
-          <svg className="deco-sphere" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="60" cy="60" r="50" stroke="#5B67F1" strokeWidth="1.5" strokeDasharray="6 4" />
-            <ellipse cx="60" cy="60" rx="50" ry="20" stroke="#5B67F1" strokeWidth="1.5" strokeDasharray="6 4" />
-            <ellipse cx="60" cy="60" rx="35" ry="50" stroke="#5B67F1" strokeWidth="1.2" strokeDasharray="4 4" opacity="0.6" />
-            <line x1="10" y1="60" x2="110" y2="60" stroke="#5B67F1" strokeWidth="0.8" strokeDasharray="3 3" opacity="0.4" />
-          </svg>
+          <img className="deco-sphere" src="https://gcdn.fx2.io/math-master.org/_nuxt/1.5ea711ac.svg" alt="" aria-hidden="true" />
 
           {/* Wireframe Pyramid — right side */}
-          <svg className="deco-pyramid" viewBox="0 0 140 160" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M70 10 L130 140 L10 140 Z" stroke="#F472B6" strokeWidth="1.5" strokeDasharray="6 4" fill="none" />
-            <line x1="70" y1="10" x2="70" y2="140" stroke="#F472B6" strokeWidth="1" strokeDasharray="4 4" opacity="0.5" />
-            <path d="M10 140 L70 100 L130 140" stroke="#F472B6" strokeWidth="1" strokeDasharray="4 4" opacity="0.5" />
-          </svg>
+          <img className="deco-pyramid" src="https://gcdn.fx2.io/math-master.org/_nuxt/4.c8a1726e.svg" alt="" aria-hidden="true" />
 
           {/* Wireframe Cylinder — bottom left */}
-          <svg className="deco-cylinder" viewBox="0 0 100 130" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <ellipse cx="50" cy="25" rx="40" ry="18" stroke="#FBBF24" strokeWidth="1.5" strokeDasharray="5 4" />
-            <ellipse cx="50" cy="105" rx="40" ry="18" stroke="#FBBF24" strokeWidth="1.5" strokeDasharray="5 4" />
-            <line x1="10" y1="25" x2="10" y2="105" stroke="#FBBF24" strokeWidth="1.5" strokeDasharray="5 4" />
-            <line x1="90" y1="25" x2="90" y2="105" stroke="#FBBF24" strokeWidth="1.5" strokeDasharray="5 4" />
-            <text x="30" y="72" fontSize="16" fill="#FBBF24" fontFamily="'Source Code Pro', monospace" fontWeight="600" opacity="0.7">b</text>
-            <text x="60" y="55" fontSize="14" fill="#FBBF24" fontFamily="'Source Code Pro', monospace" fontWeight="600" opacity="0.5">r</text>
-          </svg>
+          <img className="deco-cylinder" src="https://gcdn.fx2.io/math-master.org/_nuxt/3.8e558f63.svg" alt="" aria-hidden="true" />
 
           {/* Wireframe Cube — bottom right */}
-          <svg className="deco-cube" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="25" y="25" width="60" height="60" stroke="#5B67F1" strokeWidth="1.5" />
-            <rect x="35" y="15" width="60" height="60" stroke="#5B67F1" strokeWidth="1" opacity="0.5" />
-            <line x1="25" y1="25" x2="35" y2="15" stroke="#5B67F1" strokeWidth="1" opacity="0.5" />
-            <line x1="85" y1="25" x2="95" y2="15" stroke="#5B67F1" strokeWidth="1" opacity="0.5" />
-            <line x1="85" y1="85" x2="95" y2="75" stroke="#5B67F1" strokeWidth="1" opacity="0.5" />
-            <line x1="25" y1="85" x2="35" y2="75" stroke="#5B67F1" strokeWidth="1" opacity="0.5" />
-            <text x="50" y="5" fontSize="14" fill="#5B67F1" fontFamily="'Source Code Pro', monospace" fontWeight="600">a</text>
-            <text x="100" y="35" fontSize="14" fill="#5B67F1" fontFamily="'Source Code Pro', monospace" fontWeight="600">a</text>
-            <text x="100" y="90" fontSize="14" fill="#5B67F1" fontFamily="'Source Code Pro', monospace" fontWeight="600">a</text>
-          </svg>
+          <img className="deco-cube" src="https://gcdn.fx2.io/math-master.org/_nuxt/2.dd00e6c0.svg" alt="" aria-hidden="true" />
 
-          {/* Small floating circles */}
+          {/* QR Code block */}
+          <img className="deco-qr" src="https://gcdn.fx2.io/math-master.org/_nuxt/QR.480c7144.svg" alt="" aria-hidden="true" />
+
+          {/* Small floating dots */}
           <div className="deco-dot dot-1"></div>
           <div className="deco-dot dot-2"></div>
           <div className="deco-dot dot-3"></div>
