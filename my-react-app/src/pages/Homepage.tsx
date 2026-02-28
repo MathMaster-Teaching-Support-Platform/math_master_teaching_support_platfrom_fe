@@ -43,9 +43,9 @@ const Homepage: React.FC = () => {
 
       {/* Hero Section */}
       <section className="hero-section">
-        {/* Refined Decorative System — floating math symbols + stroke art */}
+        {/* Refined Decorative System — floating math symbols + geometric wireframes */}
         <div className="hero-decorations">
-          {/* Floating math symbols */}
+          {/* Floating math text symbols */}
           <span className="math-symbol symbol-1" aria-hidden="true">∑</span>
           <span className="math-symbol symbol-2" aria-hidden="true">π</span>
           <span className="math-symbol symbol-3" aria-hidden="true">∫</span>
@@ -54,21 +54,44 @@ const Homepage: React.FC = () => {
           <span className="math-symbol symbol-6" aria-hidden="true">∞</span>
           <span className="math-symbol symbol-7" aria-hidden="true">±</span>
           <span className="math-symbol symbol-8" aria-hidden="true">÷</span>
+          <span className="math-symbol symbol-9" aria-hidden="true">×</span>
+          <span className="math-symbol symbol-10" aria-hidden="true">≈</span>
+          <span className="math-symbol symbol-11" aria-hidden="true">∂</span>
+          <span className="math-symbol symbol-12" aria-hidden="true">θ</span>
 
-          {/* Stroke-based math line art — top-left */}
-          <svg className="deco-math deco-math-1" viewBox="0 0 120 120" fill="none" aria-hidden="true">
-            <circle cx="60" cy="60" r="48" stroke="currentColor" strokeWidth="1" opacity="0.3" />
-            <ellipse cx="60" cy="60" rx="48" ry="18" stroke="currentColor" strokeWidth="0.8" opacity="0.2" />
-            <ellipse cx="60" cy="60" rx="30" ry="48" stroke="currentColor" strokeWidth="0.8" opacity="0.15" />
+          {/* Geometric wireframe — Cylinder (top-left) */}
+          <svg className="geo-shape geo-cylinder" viewBox="0 0 150 180" fill="none" aria-hidden="true">
+            <ellipse cx="75" cy="30" rx="55" ry="20" stroke="currentColor" strokeWidth="1.2" strokeDasharray="4 3" />
+            <line x1="20" y1="30" x2="20" y2="140" stroke="currentColor" strokeWidth="1.2" />
+            <line x1="130" y1="30" x2="130" y2="140" stroke="currentColor" strokeWidth="1.2" />
+            <ellipse cx="75" cy="140" rx="55" ry="20" stroke="currentColor" strokeWidth="1.2" />
+            <text x="55" y="90" fill="currentColor" fontSize="14" opacity="0.5" fontStyle="italic">b</text>
+            <text x="60" y="165" fill="currentColor" fontSize="14" opacity="0.5" fontStyle="italic">r</text>
           </svg>
 
-          {/* Stroke-based math line art — bottom-right */}
-          <svg className="deco-math deco-math-2" viewBox="0 0 100 100" fill="none" aria-hidden="true">
-            <rect x="20" y="20" width="45" height="45" stroke="currentColor" strokeWidth="1" opacity="0.25" />
-            <rect x="35" y="10" width="45" height="45" stroke="currentColor" strokeWidth="0.8" opacity="0.15" />
-            <line x1="20" y1="20" x2="35" y2="10" stroke="currentColor" strokeWidth="0.6" opacity="0.15" />
-            <line x1="65" y1="20" x2="80" y2="10" stroke="currentColor" strokeWidth="0.6" opacity="0.15" />
-            <line x1="65" y1="65" x2="80" y2="55" stroke="currentColor" strokeWidth="0.6" opacity="0.15" />
+          {/* Geometric wireframe — Pyramid/Tetrahedron (bottom-right) */}
+          <svg className="geo-shape geo-pyramid" viewBox="0 0 160 160" fill="none" aria-hidden="true">
+            <polygon points="80,10 20,130 140,130" stroke="currentColor" strokeWidth="1.2" strokeDasharray="5 4" />
+            <line x1="80" y1="10" x2="110" y2="100" stroke="currentColor" strokeWidth="1" strokeDasharray="4 3" />
+            <line x1="20" y1="130" x2="110" y2="100" stroke="currentColor" strokeWidth="1" strokeDasharray="4 3" />
+            <line x1="140" y1="130" x2="110" y2="100" stroke="currentColor" strokeWidth="1" />
+            <text x="72" y="148" fill="currentColor" fontSize="12" opacity="0.5" fontStyle="italic">a</text>
+            <text x="78" y="6" fill="currentColor" fontSize="12" opacity="0.5" fontStyle="italic">a</text>
+            <text x="138" y="148" fill="currentColor" fontSize="12" opacity="0.5" fontStyle="italic">a</text>
+          </svg>
+
+          {/* Geometric wireframe — Cube (center-right) */}
+          <svg className="geo-shape geo-cube" viewBox="0 0 120 130" fill="none" aria-hidden="true">
+            {/* Front face */}
+            <rect x="10" y="35" width="65" height="65" stroke="currentColor" strokeWidth="1.2" />
+            {/* Back face */}
+            <rect x="40" y="10" width="65" height="65" stroke="currentColor" strokeWidth="1" strokeDasharray="4 3" />
+            {/* Connecting edges */}
+            <line x1="10" y1="35" x2="40" y2="10" stroke="currentColor" strokeWidth="1" />
+            <line x1="75" y1="35" x2="105" y2="10" stroke="currentColor" strokeWidth="1" />
+            <line x1="75" y1="100" x2="105" y2="75" stroke="currentColor" strokeWidth="1" strokeDasharray="4 3" />
+            <line x1="10" y1="100" x2="40" y2="75" stroke="currentColor" strokeWidth="1" strokeDasharray="4 3" />
+            <text x="35" y="125" fill="currentColor" fontSize="12" opacity="0.5" fontStyle="italic">a</text>
           </svg>
         </div>
 
