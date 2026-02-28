@@ -59,7 +59,7 @@ const Homepage: React.FC = () => {
                 Nền tảng hỗ trợ
                 <span className="gradient-text"> giảng dạy toán học</span>
                 <br />
-                thông minh cho giáo viên Việt Nam
+                thông minh
               </h1>
               <p className="hero-description">
                 MathMaster giúp giáo viên tiết kiệm thời gian chuẩn bị bài giảng, tạo bài tập, vẽ đồ
@@ -117,8 +117,8 @@ const Homepage: React.FC = () => {
                     />
                     <defs>
                       <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="#667eea" />
-                        <stop offset="100%" stopColor="#764ba2" />
+                        <stop offset="0%" stopColor="#5B67F1" />
+                        <stop offset="100%" stopColor="#8B5CF6" />
                       </linearGradient>
                     </defs>
                   </svg>
@@ -224,7 +224,6 @@ const Homepage: React.FC = () => {
                 </p>
               </div>
             </div>
-            <div className="step-connector"></div>
             <div className="step-item">
               <div className="step-number">02</div>
               <div className="step-content">
@@ -234,7 +233,6 @@ const Homepage: React.FC = () => {
                 </p>
               </div>
             </div>
-            <div className="step-connector"></div>
             <div className="step-item">
               <div className="step-number">03</div>
               <div className="step-content">
