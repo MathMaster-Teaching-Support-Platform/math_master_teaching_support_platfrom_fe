@@ -164,6 +164,124 @@
   box-shadow: var(--shadow-glow);
   transform: translateY(-1px);
 }
+/* ══════════════════════════════════
+   INTRO / BRANDING SECTION
+   ══════════════════════════════════ */
+.intro-section {
+  padding: 3rem 0 1rem;
+  background: #ffffff;
+}
+
+.intro-content {
+  display: flex;
+  align-items: center;
+  gap: 3rem;
+}
+
+.intro-icon-card {
+  flex-shrink: 0;
+  width: 160px;
+  height: 160px;
+  background: #ffffff;
+  border-radius: 28px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Notebook-style lines inside the icon card */
+.intro-icon-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(
+      transparent,
+      transparent 23px,
+      rgba(200, 200, 220, 0.3) 23px,
+      rgba(200, 200, 220, 0.3) 24px
+    );
+  pointer-events: none;
+}
+
+.intro-math-icon {
+  width: 90px;
+  height: 90px;
+  position: relative;
+  z-index: 1;
+}
+
+.intro-text {
+  flex: 1;
+}
+
+.intro-title {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 3.5rem;
+  font-weight: 800;
+  color: #1a1a2e;
+  margin: 0 0 0.5rem;
+  letter-spacing: -1px;
+}
+
+.intro-title-accent {
+  color: #5E5CE6;
+}
+
+.intro-description {
+  font-family: 'Source Code Pro', 'SF Mono', monospace;
+  font-size: 1.25rem;
+  color: #555;
+  margin: 0 0 1.25rem;
+  line-height: 1.7;
+}
+
+.intro-features {
+  list-style: disc;
+  padding-left: 1.25rem;
+  margin: 0;
+}
+
+.intro-features li {
+  font-family: 'Source Code Pro', 'SF Mono', monospace;
+  font-size: 0.95rem;
+  color: #666;
+  line-height: 1.8;
+}
+
+@media (max-width: 768px) {
+  .intro-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 1.5rem;
+  }
+
+  .intro-icon-card {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto;
+  }
+
+  .intro-math-icon {
+    width: 70px;
+    height: 70px;
+  }
+
+  .intro-title {
+    font-size: 2.5rem;
+  }
+
+  .intro-description {
+    font-size: 1.1rem;
+  }
+
+  .intro-features {
+    text-align: left;
+  }
+}
 
 /* ══════════════════════════════════
    HERO SECTION

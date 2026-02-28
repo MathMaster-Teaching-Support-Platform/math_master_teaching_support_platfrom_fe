@@ -145,6 +145,33 @@ const Homepage: React.FC = () => {
         </div>
       </section>
 
+      {/* Intro / Branding Section — matching math-master.org */}
+      <section className="intro-section">
+        <div className="container">
+          <div className="intro-content">
+            <div className="intro-icon-card">
+              <svg viewBox="0 0 100 100" fill="none" className="intro-math-icon" aria-hidden="true">
+                <text x="8" y="48" fontSize="36" fontWeight="700" fill="#5E5CE6" fontFamily="serif">³</text>
+                <text x="24" y="72" fontSize="52" fontWeight="700" fill="#1a1a2e" fontFamily="serif">√</text>
+                <text x="58" y="72" fontSize="42" fontWeight="800" fill="#5E5CE6" fontFamily="sans-serif">x</text>
+              </svg>
+            </div>
+            <div className="intro-text">
+              <h2 className="intro-title">
+                Math<span className="intro-title-accent">Master</span>
+              </h2>
+              <p className="intro-description">
+                là nền tảng hỗ trợ giảng dạy và học toán. Nền tảng cung cấp cho bạn:
+              </p>
+              <ul className="intro-features">
+                <li>giải pháp từng bước cho mọi bài toán một cách nhanh chóng</li>
+                <li>hỗ trợ toàn diện từ công nghệ AI tiên tiến 24/7</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Help Section — "Instant help with all things math" */}
       <section className="help-section">
         <div className="container">
