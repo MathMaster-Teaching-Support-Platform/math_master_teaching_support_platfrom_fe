@@ -781,6 +781,205 @@
 .author-avatar { display: none; }
 
 /* ══════════════════════════════════
+   UNIQUE FEATURES SECTION
+   ══════════════════════════════════ */
+.unique-section {
+  padding: 5rem 0;
+  background: var(--c-bg);
+  text-align: center;
+}
+
+.unique-title {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 700;
+  margin-bottom: 4rem;
+  font-family: var(--f-heading);
+  color: var(--c-text-1);
+  letter-spacing: -0.8px;
+  line-height: 1.25;
+}
+
+.unique-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  margin-bottom: 4rem;
+}
+
+.unique-card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-xl);
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.unique-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--c-primary);
+}
+
+.unique-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 1.5rem;
+}
+
+.unique-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.unique-card-title {
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--c-text-1);
+  margin-bottom: 0.75rem;
+  font-family: var(--f-heading);
+}
+
+.unique-card-desc {
+  font-size: 0.95rem;
+  color: var(--c-text-3);
+  line-height: 1.6;
+  font-family: var(--f-body);
+}
+
+.unique-mockups {
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.mockup-center {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ══════════════════════════════════
+   SUBJECTS SECTION
+   ══════════════════════════════════ */
+.subjects-section {
+  padding: 5rem 0;
+  background: var(--c-surface);
+  text-align: center;
+}
+
+.subjects-title {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 700;
+  margin-bottom: 3rem;
+  font-family: var(--f-heading);
+  color: var(--c-text-1);
+  letter-spacing: -0.8px;
+  line-height: 1.25;
+}
+
+.subjects-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.subject-pill {
+  display: inline-block;
+  padding: 0.5rem 1.5rem;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-pill);
+  font-size: 1rem;
+  font-family: 'Source Code Pro', monospace;
+  color: var(--c-text-1);
+  background: var(--c-surface);
+  cursor: default;
+  transition: all 0.3s ease;
+}
+
+.subject-pill:hover {
+  background: var(--c-primary);
+  color: #fff;
+  border-color: var(--c-primary);
+  box-shadow: 0 4px 40px 0 rgba(94, 92, 230, 0.4);
+}
+
+/* ══════════════════════════════════
+   TRUSTED SECTION
+   ══════════════════════════════════ */
+.trusted-section {
+  padding: 5rem 0;
+  background: var(--c-bg);
+}
+
+.trusted-header {
+  text-align: center;
+  max-width: 548px;
+  margin: 0 auto 4rem;
+}
+
+.trusted-title {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 700;
+  font-family: var(--f-heading);
+  color: var(--c-text-1);
+  letter-spacing: -0.8px;
+  margin-bottom: 1rem;
+  line-height: 1.25;
+}
+
+.trusted-desc {
+  font-size: 1.05rem;
+  color: var(--c-text-3);
+  line-height: 1.7;
+  font-family: var(--f-body);
+}
+
+.trusted-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.trusted-stat-card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  padding: 2rem 1rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.trusted-stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--c-primary);
+}
+
+.trusted-stat-number {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--c-primary);
+  font-family: var(--f-heading);
+  line-height: 1;
+}
+
+.trusted-stat-label {
+  font-size: 0.85rem;
+  color: var(--c-text-3);
+  font-family: var(--f-body);
+}
+
+/* ══════════════════════════════════
    CTA SECTION — light, airy, premium
    ══════════════════════════════════ */
 .cta-section {

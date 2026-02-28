@@ -278,6 +278,121 @@ const Homepage: React.FC = () => {
         </div>
       </section>
 
+      {/* Unique Features Section — "What makes us unique" */}
+      <section className="unique-section">
+        <div className="container">
+          <h2 className="unique-title">
+            Điều gì làm chúng tôi <span className="gradient-text">khác biệt</span>
+          </h2>
+
+          <div className="unique-grid">
+            {/* Feature 1 */}
+            <div className="unique-card">
+              <div className="unique-icon">
+                <img src="https://gcdn.fx2.io/math-master.org/_nuxt/ic1.49533d61.svg" alt="Quét & Giải" loading="lazy" />
+              </div>
+              <h3 className="unique-card-title">
+                Quét & Giải ngay <span className="dot-accent">.</span>
+              </h3>
+              <p className="unique-card-desc">
+                Chụp ảnh bài toán và nhận lời giải chi tiết từng bước chỉ trong vài giây.
+              </p>
+            </div>
+
+            {/* Feature 2 */}
+            <div className="unique-card">
+              <div className="unique-icon">
+                <img src="https://gcdn.fx2.io/math-master.org/_nuxt/ic2.e78ef101.svg" alt="Gia sư trực tuyến" loading="lazy" />
+              </div>
+              <h3 className="unique-card-title">
+                Gia sư trực tuyến 24/7 <span className="dot-accent">.</span>
+              </h3>
+              <p className="unique-card-desc">
+                Kết nối với gia sư toán chuyên nghiệp bất cứ lúc nào qua chat trực tuyến.
+              </p>
+            </div>
+
+            {/* Feature 3 */}
+            <div className="unique-card">
+              <div className="unique-icon">
+                <img src="https://gcdn.fx2.io/math-master.org/_nuxt/ic3.bd8c7175.svg" alt="Kho bài tập" loading="lazy" />
+              </div>
+              <h3 className="unique-card-title">
+                Kho bài tập phong phú <span className="dot-accent">.</span>
+              </h3>
+              <p className="unique-card-desc">
+                Hàng nghìn bài tập, công thức và bài kiểm tra từ cơ bản đến nâng cao.
+              </p>
+            </div>
+          </div>
+
+          {/* Phone mockups */}
+          <div className="unique-mockups">
+            <img
+              src="https://gcdn.fx2.io/math-master.org/_nuxt/Mockups.74cabfe4.png"
+              alt="MathMaster trên các thiết bị"
+              loading="lazy"
+              className="mockup-center"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Subjects Section — "What subjects does it cover?" */}
+      <section className="subjects-section">
+        <div className="container">
+          <h2 className="subjects-title">
+            Hỗ trợ những <span className="gradient-text">môn học</span> nào?
+          </h2>
+
+          <div className="subjects-grid">
+            {[
+              'Đại số', 'Hình học', 'Giải tích', 'Lượng giác',
+              'Thống kê', 'Xác suất', 'Số học', 'Ma trận',
+              'Tích phân', 'Đạo hàm', 'Phương trình', 'Bất đẳng thức',
+              'Hàm số', 'Tổ hợp', 'Dãy số', 'Logarit'
+            ].map((subject) => (
+              <span key={subject} className="subject-pill">
+                {subject}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Trusted Section — stats & trust */}
+      <section className="trusted-section">
+        <div className="container">
+          <div className="trusted-header">
+            <h2 className="trusted-title">
+              Được <span className="gradient-text">tin tưởng</span> bởi hàng nghìn giáo viên
+            </h2>
+            <p className="trusted-desc">
+              Nền tảng hỗ trợ giảng dạy toán học hàng đầu Việt Nam
+            </p>
+          </div>
+
+          <div className="trusted-stats">
+            <div className="trusted-stat-card">
+              <span className="trusted-stat-number">10K+</span>
+              <span className="trusted-stat-label">Người dùng</span>
+            </div>
+            <div className="trusted-stat-card">
+              <span className="trusted-stat-number">50K+</span>
+              <span className="trusted-stat-label">Bài toán đã giải</span>
+            </div>
+            <div className="trusted-stat-card">
+              <span className="trusted-stat-number">4.8</span>
+              <span className="trusted-stat-label">Đánh giá trung bình</span>
+            </div>
+            <div className="trusted-stat-card">
+              <span className="trusted-stat-number">99%</span>
+              <span className="trusted-stat-label">Độ chính xác</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Testimonials Section — "Students love MathMaster" style */}
       <section className="testimonials-section">
         <div className="container">
