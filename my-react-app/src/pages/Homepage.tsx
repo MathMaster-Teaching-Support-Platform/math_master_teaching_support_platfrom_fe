@@ -43,8 +43,18 @@ const Homepage: React.FC = () => {
 
       {/* Hero Section */}
       <section className="hero-section">
-        {/* Refined Decorative System — intentional, cohesive, depth-layered */}
+        {/* Refined Decorative System — floating math symbols + stroke art */}
         <div className="hero-decorations">
+          {/* Floating math symbols */}
+          <span className="math-symbol symbol-1" aria-hidden="true">∑</span>
+          <span className="math-symbol symbol-2" aria-hidden="true">π</span>
+          <span className="math-symbol symbol-3" aria-hidden="true">∫</span>
+          <span className="math-symbol symbol-4" aria-hidden="true">√</span>
+          <span className="math-symbol symbol-5" aria-hidden="true">Δ</span>
+          <span className="math-symbol symbol-6" aria-hidden="true">∞</span>
+          <span className="math-symbol symbol-7" aria-hidden="true">±</span>
+          <span className="math-symbol symbol-8" aria-hidden="true">÷</span>
+
           {/* Stroke-based math line art — top-left */}
           <svg className="deco-math deco-math-1" viewBox="0 0 120 120" fill="none" aria-hidden="true">
             <circle cx="60" cy="60" r="48" stroke="currentColor" strokeWidth="1" opacity="0.3" />
