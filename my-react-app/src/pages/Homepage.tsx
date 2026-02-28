@@ -43,27 +43,27 @@ const Homepage: React.FC = () => {
 
       {/* Hero Section */}
       <section className="hero-section">
-        {/* Decorative Shapes — using actual math-master.org SVG assets */}
+        {/* Refined Decorative System — intentional, cohesive, depth-layered */}
         <div className="hero-decorations">
-          {/* Wireframe Sphere — top left */}
-          <img className="deco-sphere" src="https://gcdn.fx2.io/math-master.org/_nuxt/1.5ea711ac.svg" alt="" aria-hidden="true" />
+          {/* Gradient orbs — background depth layer */}
+          <div className="deco-orb orb-1" aria-hidden="true"></div>
+          <div className="deco-orb orb-2" aria-hidden="true"></div>
 
-          {/* Wireframe Pyramid — right side */}
-          <img className="deco-pyramid" src="https://gcdn.fx2.io/math-master.org/_nuxt/4.c8a1726e.svg" alt="" aria-hidden="true" />
+          {/* Stroke-based math line art — top-left */}
+          <svg className="deco-math deco-math-1" viewBox="0 0 120 120" fill="none" aria-hidden="true">
+            <circle cx="60" cy="60" r="48" stroke="currentColor" strokeWidth="1" opacity="0.3" />
+            <ellipse cx="60" cy="60" rx="48" ry="18" stroke="currentColor" strokeWidth="0.8" opacity="0.2" />
+            <ellipse cx="60" cy="60" rx="30" ry="48" stroke="currentColor" strokeWidth="0.8" opacity="0.15" />
+          </svg>
 
-          {/* Wireframe Cylinder — bottom left */}
-          <img className="deco-cylinder" src="https://gcdn.fx2.io/math-master.org/_nuxt/3.8e558f63.svg" alt="" aria-hidden="true" />
-
-          {/* Wireframe Cube — bottom right */}
-          <img className="deco-cube" src="https://gcdn.fx2.io/math-master.org/_nuxt/2.dd00e6c0.svg" alt="" aria-hidden="true" />
-
-          {/* QR Code block */}
-          <img className="deco-qr" src="https://gcdn.fx2.io/math-master.org/_nuxt/QR.480c7144.svg" alt="" aria-hidden="true" />
-
-          {/* Small floating dots */}
-          <div className="deco-dot dot-1"></div>
-          <div className="deco-dot dot-2"></div>
-          <div className="deco-dot dot-3"></div>
+          {/* Stroke-based math line art — bottom-right */}
+          <svg className="deco-math deco-math-2" viewBox="0 0 100 100" fill="none" aria-hidden="true">
+            <rect x="20" y="20" width="45" height="45" stroke="currentColor" strokeWidth="1" opacity="0.25" />
+            <rect x="35" y="10" width="45" height="45" stroke="currentColor" strokeWidth="0.8" opacity="0.15" />
+            <line x1="20" y1="20" x2="35" y2="10" stroke="currentColor" strokeWidth="0.6" opacity="0.15" />
+            <line x1="65" y1="20" x2="80" y2="10" stroke="currentColor" strokeWidth="0.6" opacity="0.15" />
+            <line x1="65" y1="65" x2="80" y2="55" stroke="currentColor" strokeWidth="0.6" opacity="0.15" />
+          </svg>
         </div>
 
         <div className="container">
