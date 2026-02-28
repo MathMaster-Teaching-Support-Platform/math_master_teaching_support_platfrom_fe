@@ -43,11 +43,52 @@ const Homepage: React.FC = () => {
 
       {/* Hero Section */}
       <section className="hero-section">
-        <div className="hero-bg">
-          <div className="hero-shape shape-1"></div>
-          <div className="hero-shape shape-2"></div>
-          <div className="hero-shape shape-3"></div>
+        {/* Decorative Shapes */}
+        <div className="hero-decorations">
+          {/* Wireframe Sphere — top left */}
+          <svg className="deco-sphere" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="60" cy="60" r="50" stroke="#5B67F1" strokeWidth="1.5" strokeDasharray="6 4" />
+            <ellipse cx="60" cy="60" rx="50" ry="20" stroke="#5B67F1" strokeWidth="1.5" strokeDasharray="6 4" />
+            <ellipse cx="60" cy="60" rx="35" ry="50" stroke="#5B67F1" strokeWidth="1.2" strokeDasharray="4 4" opacity="0.6" />
+            <line x1="10" y1="60" x2="110" y2="60" stroke="#5B67F1" strokeWidth="0.8" strokeDasharray="3 3" opacity="0.4" />
+          </svg>
+
+          {/* Wireframe Pyramid — right side */}
+          <svg className="deco-pyramid" viewBox="0 0 140 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M70 10 L130 140 L10 140 Z" stroke="#F472B6" strokeWidth="1.5" strokeDasharray="6 4" fill="none" />
+            <line x1="70" y1="10" x2="70" y2="140" stroke="#F472B6" strokeWidth="1" strokeDasharray="4 4" opacity="0.5" />
+            <path d="M10 140 L70 100 L130 140" stroke="#F472B6" strokeWidth="1" strokeDasharray="4 4" opacity="0.5" />
+          </svg>
+
+          {/* Wireframe Cylinder — bottom left */}
+          <svg className="deco-cylinder" viewBox="0 0 100 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <ellipse cx="50" cy="25" rx="40" ry="18" stroke="#FBBF24" strokeWidth="1.5" strokeDasharray="5 4" />
+            <ellipse cx="50" cy="105" rx="40" ry="18" stroke="#FBBF24" strokeWidth="1.5" strokeDasharray="5 4" />
+            <line x1="10" y1="25" x2="10" y2="105" stroke="#FBBF24" strokeWidth="1.5" strokeDasharray="5 4" />
+            <line x1="90" y1="25" x2="90" y2="105" stroke="#FBBF24" strokeWidth="1.5" strokeDasharray="5 4" />
+            <text x="30" y="72" fontSize="16" fill="#FBBF24" fontFamily="'Source Code Pro', monospace" fontWeight="600" opacity="0.7">b</text>
+            <text x="60" y="55" fontSize="14" fill="#FBBF24" fontFamily="'Source Code Pro', monospace" fontWeight="600" opacity="0.5">r</text>
+          </svg>
+
+          {/* Wireframe Cube — bottom right */}
+          <svg className="deco-cube" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="25" y="25" width="60" height="60" stroke="#5B67F1" strokeWidth="1.5" />
+            <rect x="35" y="15" width="60" height="60" stroke="#5B67F1" strokeWidth="1" opacity="0.5" />
+            <line x1="25" y1="25" x2="35" y2="15" stroke="#5B67F1" strokeWidth="1" opacity="0.5" />
+            <line x1="85" y1="25" x2="95" y2="15" stroke="#5B67F1" strokeWidth="1" opacity="0.5" />
+            <line x1="85" y1="85" x2="95" y2="75" stroke="#5B67F1" strokeWidth="1" opacity="0.5" />
+            <line x1="25" y1="85" x2="35" y2="75" stroke="#5B67F1" strokeWidth="1" opacity="0.5" />
+            <text x="50" y="5" fontSize="14" fill="#5B67F1" fontFamily="'Source Code Pro', monospace" fontWeight="600">a</text>
+            <text x="100" y="35" fontSize="14" fill="#5B67F1" fontFamily="'Source Code Pro', monospace" fontWeight="600">a</text>
+            <text x="100" y="90" fontSize="14" fill="#5B67F1" fontFamily="'Source Code Pro', monospace" fontWeight="600">a</text>
+          </svg>
+
+          {/* Small floating circles */}
+          <div className="deco-dot dot-1"></div>
+          <div className="deco-dot dot-2"></div>
+          <div className="deco-dot dot-3"></div>
         </div>
+
         <div className="container">
           <div className="hero-content">
             <div className="hero-text">
@@ -57,7 +98,8 @@ const Homepage: React.FC = () => {
               </div>
               <h1 className="hero-title">
                 Nền tảng hỗ trợ
-                <span className="gradient-text"> giảng dạy toán học</span>
+                <br />
+                <span className="gradient-text">giảng dạy toán học</span>
                 <br />
                 thông minh
               </h1>
@@ -91,47 +133,6 @@ const Homepage: React.FC = () => {
                 </div>
               </div>
             </div>
-            <div className="hero-image">
-              <div className="dashboard-preview">
-                <div className="preview-card card-1">
-                  <div className="card-icon">📊</div>
-                  <div className="card-title">Phân tích học sinh</div>
-                  <div className="card-chart"></div>
-                </div>
-                <div className="preview-card card-2">
-                  <div className="card-icon">📝</div>
-                  <div className="card-title">Tạo bài kiểm tra</div>
-                  <div className="card-content">
-                    <div className="math-equation">∫₀¹ x² dx = ?</div>
-                  </div>
-                </div>
-                <div className="preview-card card-3">
-                  <div className="card-icon">📈</div>
-                  <div className="card-title">Vẽ đồ thị</div>
-                  <svg className="card-graph" viewBox="0 0 100 60">
-                    <path
-                      d="M 0 50 Q 25 10, 50 30 T 100 20"
-                      stroke="url(#gradient)"
-                      strokeWidth="2"
-                      fill="none"
-                    />
-                    <defs>
-                      <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="#5B67F1" />
-                        <stop offset="100%" stopColor="#8B5CF6" />
-                      </linearGradient>
-                    </defs>
-                  </svg>
-                </div>
-              </div>
-              <div className="floating-math-symbols">
-                <span className="math-float float-1">α</span>
-                <span className="math-float float-2">β</span>
-                <span className="math-float float-3">∑</span>
-                <span className="math-float float-4">π</span>
-                <span className="math-float float-5">∫</span>
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -140,7 +141,9 @@ const Homepage: React.FC = () => {
       <section id="features" className="features-section">
         <div className="container">
           <div className="section-header">
-            <h2 className="section-title">Tính năng nổi bật</h2>
+            <h2 className="section-title">
+              <span className="gradient-text">Tính năng</span> nổi bật
+            </h2>
             <p className="section-description">
               Tất cả công cụ bạn cần để giảng dạy toán học hiệu quả
             </p>
@@ -211,7 +214,9 @@ const Homepage: React.FC = () => {
       <section className="how-it-works-section">
         <div className="container">
           <div className="section-header">
-            <h2 className="section-title">Cách hoạt động</h2>
+            <h2 className="section-title">
+              <span className="gradient-text">Cách</span> hoạt động
+            </h2>
             <p className="section-description">Chỉ với 3 bước đơn giản để bắt đầu</p>
           </div>
           <div className="steps-container">
