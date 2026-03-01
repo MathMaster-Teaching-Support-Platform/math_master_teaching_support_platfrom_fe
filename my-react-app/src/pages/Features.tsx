@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import Footer from '../components/Footer';
 import './Homepage.css';
 import './Pages.css';
 
@@ -306,13 +307,7 @@ const Features: React.FC = () => {
       </section>
 
       {/* Footer */}
-      <footer className="homepage-footer">
-        <div className="container">
-          <div className="footer-bottom">
-            <p className="footer-copyright">2026 © MathMaster - SP26SE026. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

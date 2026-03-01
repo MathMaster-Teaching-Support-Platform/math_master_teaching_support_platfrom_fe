@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import Footer from '../components/Footer';
 import './Homepage.css';
 import './Pages.css';
 
@@ -158,11 +159,7 @@ const Pricing: React.FC = () => {
         </div>
       </section>
 
-      <footer className="homepage-footer">
-        <div className="container">
-          <p>&copy; 2026 MathMaster. All rights reserved.</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };
