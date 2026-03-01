@@ -179,56 +179,564 @@
   color: #14B8A6;
 }
 
-/* ==================== ABOUT PAGE ==================== */
-.about-content {
-  padding: 100px 0;
-  background: white;
-}
+/* ==================== ABOUT PAGE — Premium ==================== */
 
-.about-section {
-  max-width: 900px;
-  margin: 0 auto 5rem;
-}
-
-.values-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 2.5rem;
-  margin-top: 3rem;
-}
-
-.value-card {
+/* ── Hero ── */
+.about-hero {
+  padding: 8rem 0 5rem;
+  background: var(--c-bg, #FAFAFF);
   text-align: center;
-  padding: 3rem 2rem;
-  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-  border-radius: 20px;
-  border: 2px solid #e2e8f0;
-  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
 }
 
-.value-card:hover {
-  transform: translateY(-10px);
-  border-color: #667eea;
-  box-shadow: 0 20px 60px rgba(102, 126, 234, 0.15);
+.about-hero-dots {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(94, 92, 230, 0.06) 1px, transparent 1px);
+  background-size: 28px 28px;
+  pointer-events: none;
 }
 
-.value-icon {
-  font-size: 3.5rem;
-  margin-bottom: 1.5rem;
-  display: inline-block;
+.about-hero-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.value-card h3 {
-  font-size: 1.3rem;
+.about-hero-title {
+  font-size: clamp(2.5rem, 5vw, 4rem);
   font-weight: 700;
-  color: #1a202c;
-  margin-bottom: 1rem;
+  line-height: 1.15;
+  letter-spacing: -1.5px;
+  margin: 0 0 1.25rem 0;
+  font-family: 'Be Vietnam Pro', 'Inter', sans-serif;
+  color: var(--c-text-1, #0E0C15);
 }
 
-.value-card p {
-  color: #4a5568;
-  line-height: 1.6;
+.about-hero-desc {
+  font-size: 1.1rem;
+  line-height: 1.7;
+  color: var(--c-text-3, #6E6A80);
+  max-width: 580px;
+  margin: 0 auto;
+}
+
+/* ── Story — Split Layout ── */
+.about-story-section {
+  padding: 5rem 0;
+  background: var(--c-surface, #ffffff);
+  position: relative;
+}
+
+.about-story-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(90%, 800px);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--c-border, rgba(0,0,0,0.06)), transparent);
+}
+
+.about-story-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3.5rem;
+  align-items: center;
+}
+
+.about-story-text {
+  max-width: 520px;
+}
+
+.about-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: var(--c-primary, #5E5CE6);
+  margin-bottom: 1.25rem;
+}
+
+.about-label svg {
+  opacity: 0.7;
+}
+
+.about-label--blue {
+  color: #3B82F6;
+}
+
+.about-heading {
+  font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+  font-weight: 700;
+  color: var(--c-text-1, #0E0C15);
+  margin: 0 0 1.25rem 0;
+  font-family: 'Be Vietnam Pro', 'Inter', sans-serif;
+  line-height: 1.2;
+  letter-spacing: -0.8px;
+}
+
+.about-body {
   font-size: 0.95rem;
+  color: var(--c-text-3, #6E6A80);
+  line-height: 1.8;
+  margin: 0 0 1rem 0;
+}
+
+/* ── Story Visual Card ── */
+.about-story-visual {
+  display: flex;
+  justify-content: center;
+}
+
+.about-visual-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--c-border-soft, rgba(0, 0, 0, 0.04));
+  border-radius: var(--r-xl, 20px);
+  padding: 2.5rem 2rem;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm, 0 2px 8px rgba(0,0,0,0.04));
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  max-width: 380px;
+  width: 100%;
+}
+
+.about-visual-card::before {
+  content: '';
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  top: -60px;
+  right: -60px;
+  background: radial-gradient(circle, rgba(94, 92, 230, 0.1), transparent 70%);
+  filter: blur(30px);
+  pointer-events: none;
+}
+
+.about-visual-card:hover {
+  transform: translateY(-6px);
+  box-shadow:
+    0 4px 16px rgba(94, 92, 230, 0.08),
+    0 12px 40px rgba(94, 92, 230, 0.1);
+  border-color: rgba(94, 92, 230, 0.12);
+}
+
+.about-visual-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(94, 92, 230, 0.12), rgba(133, 141, 255, 0.18));
+  color: var(--c-primary, #5E5CE6);
+  margin-bottom: 1.25rem;
+}
+
+.about-visual-icon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.about-visual-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--c-text-1, #0E0C15);
+  margin: 0 0 0.5rem 0;
+  font-family: 'Be Vietnam Pro', 'Inter', sans-serif;
+  letter-spacing: -0.3px;
+}
+
+.about-visual-desc {
+  font-size: 0.85rem;
+  color: var(--c-text-3, #6E6A80);
+  line-height: 1.6;
+  margin: 0 0 1.5rem 0;
+}
+
+.about-visual-stats {
+  display: flex;
+  gap: 0;
+  border-top: 1px solid var(--c-border-soft, rgba(0, 0, 0, 0.06));
+  padding-top: 1.25rem;
+}
+
+.about-stat {
+  flex: 1;
+  text-align: center;
+  position: relative;
+}
+
+.about-stat:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 10%;
+  height: 80%;
+  width: 1px;
+  background: var(--c-border-soft, rgba(0, 0, 0, 0.06));
+}
+
+.about-stat-num {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--c-primary, #5E5CE6);
+  font-family: 'Be Vietnam Pro', 'Inter', sans-serif;
+  letter-spacing: -0.5px;
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+
+.about-stat-label {
+  font-size: 0.7rem;
+  color: var(--c-text-3, #6E6A80);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  font-weight: 500;
+}
+
+/* ── Vision — Accent Section ── */
+.about-vision-section {
+  padding: 5rem 0;
+  background: var(--c-bg, #FAFAFF);
+  position: relative;
+  overflow: hidden;
+}
+
+.about-vision-card {
+  display: flex;
+  align-items: center;
+  gap: 2.5rem;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--c-border-soft, rgba(0, 0, 0, 0.04));
+  border-radius: var(--r-xl, 20px);
+  padding: 3rem;
+  position: relative;
+  z-index: 1;
+  box-shadow: var(--shadow-sm, 0 2px 8px rgba(0,0,0,0.04));
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.about-vision-card::before {
+  content: '';
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  top: -100px;
+  left: -80px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.08), transparent 70%);
+  filter: blur(40px);
+  pointer-events: none;
+}
+
+.about-vision-card:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 4px 16px rgba(59, 130, 246, 0.06),
+    0 12px 40px rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.12);
+}
+
+.about-vision-icon {
+  flex-shrink: 0;
+  width: 72px;
+  height: 72px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(96, 165, 250, 0.16));
+  color: #3B82F6;
+}
+
+.about-vision-icon svg {
+  width: 34px;
+  height: 34px;
+}
+
+.about-vision-content {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ── Core Values — Bento Grid ── */
+.about-values-section {
+  padding: 5rem 0 6rem;
+  background: var(--c-surface, #ffffff);
+  position: relative;
+}
+
+.about-values-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(90%, 800px);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--c-border, rgba(0,0,0,0.06)), transparent);
+}
+
+.about-section-header {
+  text-align: center;
+  margin-bottom: 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.about-values-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.about-value-card {
+  min-height: 180px;
+}
+
+/* ── Benefits — Why MathMaster ── */
+.about-benefits-section {
+  padding: 5rem 0;
+  background: var(--c-bg, #FAFAFF);
+  position: relative;
+  overflow: hidden;
+}
+
+.about-benefits-desc {
+  font-size: 1rem;
+  color: var(--c-text-3, #6E6A80);
+  max-width: 480px;
+  margin: 0 auto;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.about-benefits-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  position: relative;
+  z-index: 1;
+}
+
+.about-benefit-card {
+  padding: 2rem 1.75rem 1.75rem;
+}
+
+.about-benefit-highlight {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--c-primary-soft, rgba(94, 92, 230, 0.08));
+  border-radius: var(--r-md, 12px);
+  margin-top: auto;
+  position: relative;
+  z-index: 1;
+}
+
+.about-benefit-stat {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--c-primary, #5E5CE6);
+  font-family: 'Be Vietnam Pro', 'Inter', sans-serif;
+  letter-spacing: -0.3px;
+  white-space: nowrap;
+}
+
+.about-benefit-stat-text {
+  font-size: 0.78rem;
+  color: var(--c-text-2, #3F3A52);
+  line-height: 1.4;
+}
+
+/* ── CTA Section ── */
+.about-cta-section {
+  padding: 5rem 0 6rem;
+  background: var(--c-surface, #ffffff);
+  position: relative;
+}
+
+.about-cta-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(90%, 800px);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--c-border, rgba(0,0,0,0.06)), transparent);
+}
+
+.about-cta-card {
+  text-align: center;
+  padding: 4rem 2rem;
+  border-radius: var(--r-xl, 20px);
+  background: var(--c-bg, #FAFAFF);
+  border: 1px solid var(--c-border-soft, rgba(0, 0, 0, 0.04));
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.about-cta-glow {
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  top: -150px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: radial-gradient(circle, rgba(94, 92, 230, 0.06), transparent 70%);
+  filter: blur(50px);
+  pointer-events: none;
+}
+
+.about-cta-title {
+  font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+  font-weight: 700;
+  color: var(--c-text-1, #0E0C15);
+  margin: 0 0 1rem 0;
+  font-family: 'Be Vietnam Pro', 'Inter', sans-serif;
+  line-height: 1.2;
+  letter-spacing: -0.8px;
+}
+
+.about-cta-desc {
+  font-size: 1rem;
+  color: var(--c-text-3, #6E6A80);
+  max-width: 500px;
+  margin: 0 auto 2rem;
+  line-height: 1.7;
+}
+
+.about-cta-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Responsive — About ── */
+@media (max-width: 968px) {
+  .about-story-grid {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+
+  .about-story-text {
+    max-width: 100%;
+  }
+
+  .about-story-visual {
+    order: -1;
+  }
+
+  .about-visual-card {
+    max-width: 100%;
+  }
+
+  .about-vision-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 2.5rem 2rem;
+    gap: 1.5rem;
+  }
+
+  .about-vision-content .about-label {
+    justify-content: center;
+  }
+
+  .about-values-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .about-benefits-grid {
+    grid-template-columns: 1fr;
+    max-width: 420px;
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .about-hero {
+    padding: 5rem 0 3rem;
+  }
+
+  .about-hero-title {
+    font-size: 2rem;
+    letter-spacing: -0.8px;
+  }
+
+  .about-hero-desc {
+    font-size: 0.95rem;
+  }
+
+  .about-story-section,
+  .about-vision-section,
+  .about-values-section,
+  .about-benefits-section,
+  .about-cta-section {
+    padding: 3rem 0;
+  }
+
+  .about-heading {
+    font-size: 1.5rem;
+  }
+
+  .about-vision-card {
+    padding: 2rem 1.5rem;
+  }
+
+  .about-visual-stats {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .about-stat:not(:last-child)::after {
+    display: none;
+  }
+
+  .about-stat {
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--c-border-soft, rgba(0, 0, 0, 0.06));
+  }
+
+  .about-stat:last-child {
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+
+  .about-cta-card {
+    padding: 3rem 1.5rem;
+  }
+
+  .about-cta-title {
+    font-size: 1.5rem;
+  }
 }
 
 /* ==================== PRICING PAGE ==================== */
