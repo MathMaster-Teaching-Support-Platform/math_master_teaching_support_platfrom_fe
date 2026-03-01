@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import Footer from '../components/Footer';
 import './Homepage.css';
@@ -57,6 +57,73 @@ const Pricing: React.FC = () => {
     },
   ];
 
+  /* ── Comparison table data ── */
+  const comparisonFeatures = [
+    { name: 'Số bài giảng/tháng', free: '10', teacher: 'Không giới hạn', school: 'Không giới hạn' },
+    { name: 'Lưu trữ', free: '100MB', teacher: '10GB', school: 'Không giới hạn' },
+    { name: 'Số lớp học', free: '1', teacher: 'Không giới hạn', school: 'Không giới hạn' },
+    { name: 'AI trợ lý', free: 'Cơ bản', teacher: 'Nâng cao', school: 'Nâng cao' },
+    { name: 'Thư viện tài liệu cao cấp', free: false, teacher: true, school: true },
+    { name: 'Xuất file không watermark', free: false, teacher: true, school: true },
+    { name: 'Hỗ trợ ưu tiên', free: false, teacher: true, school: true },
+    { name: 'Không giới hạn tài khoản', free: false, teacher: false, school: true },
+    { name: 'Dashboard quản trị', free: false, teacher: false, school: true },
+    { name: 'API tích hợp', free: false, teacher: false, school: true },
+    { name: 'Đào tạo chuyên biệt', free: false, teacher: false, school: true },
+    { name: 'Tùy chỉnh theo yêu cầu', free: false, teacher: false, school: true },
+  ];
+
+  /* ── Fade-in on scroll (IntersectionObserver) ── */
+  const sectionsRef = useRef<(HTMLElement | null)[]>([]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('pricing-animate-in');
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.12 }
+    );
+
+    sectionsRef.current.forEach((el) => {
+      if (el) {
+        el.style.opacity = '0';
+        observer.observe(el);
+      }
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  const addSectionRef = (index: number) => (el: HTMLElement | null) => {
+    sectionsRef.current[index] = el;
+  };
+
+  /* ── Helper: render comparison cell value ── */
+  const renderCellValue = (value: boolean | string, isFeaturedCol: boolean) => {
+    if (typeof value === 'string') {
+      return (
+        <span className={`pricing-ct-text ${isFeaturedCol ? 'pricing-ct-text--featured' : ''}`}>
+          {value}
+        </span>
+      );
+    }
+    if (value === true) {
+      return (
+        <span className={`pricing-ct-check ${isFeaturedCol ? 'pricing-ct-check--primary' : ''}`}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        </span>
+      );
+    }
+    return <span className="pricing-ct-cross">—</span>;
+  };
+
   return (
     <div className="homepage">
       <header className="homepage-header">
@@ -111,7 +178,7 @@ const Pricing: React.FC = () => {
       </section>
 
       {/* ── Pricing Cards ── */}
-      <section className="pricing-cards-section">
+      <section className="pricing-cards-section" ref={addSectionRef(0)}>
         <div className="container">
           <div className="pricing-cards-grid">
             {plans.map((plan, index) => (
@@ -158,8 +225,40 @@ const Pricing: React.FC = () => {
         </div>
       </section>
 
+      {/* ── Comparison Table ── */}
+      <section className="pricing-comparison-section" ref={addSectionRef(1)}>
+        <div className="container">
+          <div className="pricing-comparison-header">
+            <span className="ft-badge ft-badge--orange" style={{ marginBottom: '1rem' }}>So sánh</span>
+            <h2 className="pricing-comparison-title">
+              So sánh chi tiết <span className="gradient-text">các gói</span>
+            </h2>
+          </div>
+          <div className="pricing-comparison-table-wrap">
+            <div className="pricing-comparison-table">
+              {/* Header */}
+              <div className="pricing-ct-header">
+                <div className="pricing-ct-header-cell">Tính năng</div>
+                <div className="pricing-ct-header-cell">Miễn phí</div>
+                <div className="pricing-ct-header-cell pricing-ct-header-cell--featured">Giáo viên</div>
+                <div className="pricing-ct-header-cell">Trường học</div>
+              </div>
+              {/* Rows */}
+              {comparisonFeatures.map((row, idx) => (
+                <div className="pricing-ct-row" key={idx}>
+                  <div className="pricing-ct-cell">{row.name}</div>
+                  <div className="pricing-ct-cell">{renderCellValue(row.free, false)}</div>
+                  <div className="pricing-ct-cell pricing-ct-cell--featured">{renderCellValue(row.teacher, true)}</div>
+                  <div className="pricing-ct-cell">{renderCellValue(row.school, false)}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── FAQ ── */}
-      <section className="pricing-faq-section">
+      <section className="pricing-faq-section" ref={addSectionRef(2)}>
         <div className="features-bg-dots" aria-hidden="true" />
         <div className="container">
           <div className="pricing-faq-header">
@@ -190,7 +289,7 @@ const Pricing: React.FC = () => {
       </section>
 
       {/* ── CTA ── */}
-      <section className="pricing-cta-section">
+      <section className="pricing-cta-section" ref={addSectionRef(3)}>
         <div className="container">
           <div className="pricing-cta-card">
             <div className="pricing-cta-glow" aria-hidden="true" />
