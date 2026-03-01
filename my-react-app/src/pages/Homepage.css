@@ -846,12 +846,23 @@
 }
 
 /* ══════════════════════════════════
-   FEATURES SECTION — Premium Cards
+   FEATURES SECTION — Bento Grid + Animated Borders
    ══════════════════════════════════ */
 .features-section {
   padding: 7rem 0;
   background: var(--c-surface);
   position: relative;
+  overflow: hidden;
+}
+
+/* Subtle dot pattern background */
+.features-bg-dots {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(94, 92, 230, 0.06) 1px, transparent 1px);
+  background-size: 28px 28px;
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* Subtle top separator line */
@@ -864,6 +875,12 @@
   width: min(90%, 800px);
   height: 1px;
   background: linear-gradient(90deg, transparent, var(--c-border), transparent);
+  z-index: 1;
+}
+
+.features-section .container {
+  position: relative;
+  z-index: 1;
 }
 
 .section-header {
@@ -890,95 +907,262 @@
   line-height: 1.6;
 }
 
-/* ── Feature Cards — Glass + Layered Shadow ── */
-.features-grid {
+/* ── Bento Grid ── */
+.features-bento {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1.25rem;
 }
 
-.feature-card {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+/* ── Feature Card ── */
+.ft-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--c-border-soft);
   border-radius: var(--r-xl);
   padding: 2rem 1.75rem;
-  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
   box-shadow: var(--shadow-xs);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: default;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Subtle gradient sheen on top edge */
-.feature-card::before {
-  content: '';
+/* Gradient glow orb — hidden by default, visible on hover */
+.ft-card__glow {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg,
-    transparent 0%,
-    rgba(94, 92, 230, 0.15) 30%,
-    rgba(94, 92, 230, 0.25) 50%,
-    rgba(94, 92, 230, 0.15) 70%,
-    transparent 100%
-  );
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  top: -40px;
+  right: -40px;
+  background: radial-gradient(circle, rgba(94, 92, 230, 0.12), transparent 70%);
+  filter: blur(30px);
   opacity: 0;
-  transition: opacity 0.35s ease;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+  z-index: 0;
 }
 
-.feature-card:hover {
-  transform: translateY(-6px);
-  box-shadow: var(--shadow-lg);
-  border-color: rgba(94, 92, 230, 0.15);
-}
-
-.feature-card:hover::before {
+.ft-card:hover .ft-card__glow {
   opacity: 1;
 }
 
-.feature-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--r-sm);
+/* Animated gradient border — appears on hover */
+.ft-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--angle, 0deg),
+    transparent 40%,
+    rgba(94, 92, 230, 0.4) 50%,
+    rgba(133, 141, 255, 0.4) 55%,
+    transparent 65%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.ft-card:hover::before {
+  opacity: 1;
+  animation: rotateBorder 3s linear infinite;
+}
+
+@property --angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes rotateBorder {
+  to { --angle: 360deg; }
+}
+
+.ft-card:hover {
+  transform: translateY(-8px);
+  box-shadow:
+    0 4px 16px rgba(94, 92, 230, 0.08),
+    0 12px 40px rgba(94, 92, 230, 0.1);
+  border-color: rgba(94, 92, 230, 0.12);
+}
+
+/* ── Hero card — spans 2 cols ── */
+.ft-card--hero {
+  grid-column: span 2;
+}
+
+.ft-card--hero .ft-card__glow {
+  width: 240px;
+  height: 240px;
+  top: -60px;
+  right: -40px;
+  background: radial-gradient(circle, rgba(94, 92, 230, 0.15), transparent 70%);
+}
+
+/* ── Wide card — spans 2 cols (bottom) ── */
+.ft-card--wide {
+  grid-column: span 2;
+}
+
+.ft-card--wide .ft-card__glow {
+  width: 200px;
+  height: 200px;
+  top: -50px;
+  right: -30px;
+  background: radial-gradient(circle, rgba(20, 184, 166, 0.15), transparent 70%);
+}
+
+/* ── Badge ── */
+.ft-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 0.25rem 0.7rem;
+  border-radius: var(--r-pill);
+  margin-bottom: 1.25rem;
+  width: fit-content;
+  position: relative;
+  z-index: 1;
+}
+
+.ft-badge--purple {
+  background: rgba(94, 92, 230, 0.1);
+  color: #5E5CE6;
+}
+.ft-badge--blue {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3B82F6;
+}
+.ft-badge--green {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10B981;
+}
+.ft-badge--orange {
+  background: rgba(245, 158, 11, 0.1);
+  color: #D97706;
+}
+.ft-badge--pink {
+  background: rgba(236, 72, 153, 0.1);
+  color: #EC4899;
+}
+.ft-badge--teal {
+  background: rgba(20, 184, 166, 0.1);
+  color: #14B8A6;
+}
+
+/* ── Icon ── */
+.ft-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
   margin-bottom: 1.25rem;
   position: relative;
+  z-index: 1;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.icon-purple { background: rgba(94, 92, 230, 0.08); }
-.icon-blue   { background: rgba(59, 130, 246, 0.08); }
-.icon-green  { background: rgba(16, 185, 129, 0.08); }
-.icon-orange { background: rgba(245, 158, 11, 0.08); }
-.icon-pink   { background: rgba(236, 72, 153, 0.08); }
-.icon-teal   { background: rgba(20, 184, 166, 0.08); }
+.ft-card:hover .ft-icon {
+  transform: scale(1.1) rotate(-3deg);
+}
 
-.feature-title {
-  font-size: 1.1rem;
+.ft-icon svg {
+  width: 26px;
+  height: 26px;
+}
+
+.ft-icon--purple {
+  background: linear-gradient(135deg, rgba(94, 92, 230, 0.12), rgba(133, 141, 255, 0.18));
+  color: #5E5CE6;
+}
+.ft-icon--blue {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(96, 165, 250, 0.18));
+  color: #3B82F6;
+}
+.ft-icon--green {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(52, 211, 153, 0.18));
+  color: #10B981;
+}
+.ft-icon--orange {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(251, 191, 36, 0.18));
+  color: #D97706;
+}
+.ft-icon--pink {
+  background: linear-gradient(135deg, rgba(236, 72, 153, 0.12), rgba(244, 114, 182, 0.18));
+  color: #EC4899;
+}
+.ft-icon--teal {
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.12), rgba(45, 212, 191, 0.18));
+  color: #14B8A6;
+}
+
+/* ── Title ── */
+.ft-title {
+  font-size: 1.15rem;
   font-weight: 600;
   color: var(--c-text-1);
   margin: 0 0 0.5rem 0;
   font-family: var(--f-heading);
   letter-spacing: -0.2px;
+  position: relative;
+  z-index: 1;
 }
 
-.feature-title::after {
-  content: ' .';
-  color: var(--c-primary);
-  font-weight: 800;
-}
-
-.feature-description {
+/* ── Description ── */
+.ft-desc {
   font-size: 0.85rem;
   color: var(--c-text-3);
-  line-height: 1.65;
-  margin: 0;
+  line-height: 1.7;
+  margin: 0 0 1.25rem 0;
+  position: relative;
+  z-index: 1;
+  flex: 1;
 }
+
+/* ── Learn more link ── */
+.ft-link {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--c-primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+  transition: color 0.25s ease;
+  margin-top: auto;
+}
+
+.ft-link:hover {
+  color: #4E4CC6;
+}
+
+.ft-arrow {
+  display: inline-block;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ft-card:hover .ft-arrow {
+  transform: translateX(5px);
+}
+
 
 /* ══════════════════════════════════
    HOW IT WORKS
@@ -1613,8 +1797,12 @@
    RESPONSIVE
    ══════════════════════════════════ */
 @media (max-width: 1024px) {
-  .features-grid {
+  .features-bento {
     grid-template-columns: repeat(2, 1fr);
+  }
+  .ft-card--hero,
+  .ft-card--wide {
+    grid-column: span 2;
   }
 
   .testimonials-grid {
@@ -1674,9 +1862,13 @@
     border-bottom: none;
   }
 
-  .features-grid,
+  .features-bento,
   .testimonials-grid {
     grid-template-columns: 1fr;
+  }
+  .ft-card--hero,
+  .ft-card--wide {
+    grid-column: span 1;
   }
 
   .footer-content {
@@ -1709,7 +1901,7 @@
     font-size: 0.9rem;
   }
 
-  .feature-card {
+  .ft-card {
     padding: 1.5rem;
   }
 

@@ -261,8 +261,9 @@ const Homepage: React.FC = () => {
         </div>
       </section>
 
-      {/* Features Section */}
+      {/* Features Section — Bento Grid */}
       <section id="features" className="features-section">
+        <div className="features-bg-dots" aria-hidden="true" />
         <div className="container">
           <div className="section-header">
             <h2 className="section-title">
@@ -272,63 +273,112 @@ const Homepage: React.FC = () => {
               Tất cả công cụ bạn cần để giảng dạy toán học hiệu quả
             </p>
           </div>
-          <div className="features-grid">
-            <div className="feature-card">
-              <div className="feature-icon icon-purple">
-                <span>🤖</span>
+          <div className="features-bento">
+            {/* Hero card — spans 2 cols */}
+            <div className="ft-card ft-card--hero">
+              <div className="ft-card__glow" aria-hidden="true" />
+              <span className="ft-badge ft-badge--purple">AI-Powered</span>
+              <div className="ft-icon ft-icon--purple">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2a4 4 0 0 1 4 4v1a1 1 0 0 0 1 1h1a4 4 0 0 1 0 8h-1a1 1 0 0 0-1 1v1a4 4 0 0 1-8 0v-1a1 1 0 0 0-1-1H6a4 4 0 0 1 0-8h1a1 1 0 0 0 1-1V6a4 4 0 0 1 4-4z" />
+                  <circle cx="12" cy="12" r="2" />
+                </svg>
               </div>
-              <h3 className="feature-title">AI Tạo nội dung</h3>
-              <p className="feature-description">
-                Tự động tạo bài giảng, ví dụ, lý thuyết và lời giải chi tiết với công thức LaTeX
-                chuẩn
+              <h3 className="ft-title">AI Tạo nội dung</h3>
+              <p className="ft-desc">
+                Tự động tạo bài giảng, ví dụ, lý thuyết và lời giải chi tiết với công thức LaTeX chuẩn. Chỉ cần nhập chủ đề — AI lo phần còn lại.
               </p>
+              <span className="ft-link">Tìm hiểu thêm <span className="ft-arrow">→</span></span>
             </div>
-            <div className="feature-card">
-              <div className="feature-icon icon-blue">
-                <span>📚</span>
+
+            {/* Card 2 */}
+            <div className="ft-card">
+              <div className="ft-card__glow" aria-hidden="true" />
+              <span className="ft-badge ft-badge--blue">Smart</span>
+              <div className="ft-icon ft-icon--blue">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                  <line x1="9" y1="7" x2="15" y2="7" />
+                  <line x1="9" y1="11" x2="13" y2="11" />
+                </svg>
               </div>
-              <h3 className="feature-title">Ngân hàng bài tập</h3>
-              <p className="feature-description">
-                Hàng nghìn bài tập từ cơ bản đến nâng cao, tự động điều chỉnh độ khó phù hợp với học
-                sinh
+              <h3 className="ft-title">Ngân hàng bài tập</h3>
+              <p className="ft-desc">
+                Hàng nghìn bài tập từ cơ bản đến nâng cao, tự động điều chỉnh độ khó phù hợp
               </p>
+              <span className="ft-link">Tìm hiểu thêm <span className="ft-arrow">→</span></span>
             </div>
-            <div className="feature-card">
-              <div className="feature-icon icon-green">
-                <span>📊</span>
+
+            {/* Card 3 */}
+            <div className="ft-card">
+              <div className="ft-card__glow" aria-hidden="true" />
+              <span className="ft-badge ft-badge--green">Auto</span>
+              <div className="ft-icon ft-icon--green">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                </svg>
               </div>
-              <h3 className="feature-title">Vẽ đồ thị tự động</h3>
-              <p className="feature-description">
+              <h3 className="ft-title">Vẽ đồ thị tự động</h3>
+              <p className="ft-desc">
                 Tạo đồ thị hàm số, hình học, biểu đồ thống kê chính xác và có thể chỉnh sửa
               </p>
+              <span className="ft-link">Tìm hiểu thêm <span className="ft-arrow">→</span></span>
             </div>
-            <div className="feature-card">
-              <div className="feature-icon icon-orange">
-                <span>🎯</span>
+
+            {/* Card 4 */}
+            <div className="ft-card">
+              <div className="ft-card__glow" aria-hidden="true" />
+              <span className="ft-badge ft-badge--orange">Nhanh</span>
+              <div className="ft-icon ft-icon--orange">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                  <line x1="8" y1="21" x2="16" y2="21" />
+                  <line x1="12" y1="17" x2="12" y2="21" />
+                </svg>
               </div>
-              <h3 className="feature-title">Tài liệu giảng dạy</h3>
-              <p className="feature-description">
+              <h3 className="ft-title">Tài liệu giảng dạy</h3>
+              <p className="ft-desc">
                 Tạo slides, mindmap, đề thi và giáo án chi tiết chỉ trong vài phút
               </p>
+              <span className="ft-link">Tìm hiểu thêm <span className="ft-arrow">→</span></span>
             </div>
-            <div className="feature-card">
-              <div className="feature-icon icon-pink">
-                <span>📁</span>
+
+            {/* Card 5 */}
+            <div className="ft-card">
+              <div className="ft-card__glow" aria-hidden="true" />
+              <span className="ft-badge ft-badge--pink">Tiện lợi</span>
+              <div className="ft-icon ft-icon--pink">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                  <line x1="12" y1="11" x2="12" y2="17" />
+                  <line x1="9" y1="14" x2="15" y2="14" />
+                </svg>
               </div>
-              <h3 className="feature-title">Quản lý tài nguyên</h3>
-              <p className="feature-description">
+              <h3 className="ft-title">Quản lý tài nguyên</h3>
+              <p className="ft-desc">
                 Lưu trữ, tổ chức và chia sẻ tài liệu giảng dạy một cách dễ dàng và khoa học
               </p>
+              <span className="ft-link">Tìm hiểu thêm <span className="ft-arrow">→</span></span>
             </div>
-            <div className="feature-card">
-              <div className="feature-icon icon-teal">
-                <span>💬</span>
+
+            {/* Card 6 — spans 2 cols */}
+            <div className="ft-card ft-card--wide">
+              <div className="ft-card__glow" aria-hidden="true" />
+              <span className="ft-badge ft-badge--teal">24/7</span>
+              <div className="ft-icon ft-icon--teal">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  <path d="M8 10h.01" />
+                  <path d="M12 10h.01" />
+                  <path d="M16 10h.01" />
+                </svg>
               </div>
-              <h3 className="feature-title">Trợ lý AI toán học</h3>
-              <p className="feature-description">
-                Chat với AI để giải đáp thắc mắc, hướng dẫn giải bài tập và tư vấn phương pháp giảng
-                dạy
+              <h3 className="ft-title">Trợ lý AI toán học</h3>
+              <p className="ft-desc">
+                Chat với AI để giải đáp thắc mắc, hướng dẫn giải bài tập và tư vấn phương pháp giảng dạy — luôn sẵn sàng 24/7.
               </p>
+              <span className="ft-link">Tìm hiểu thêm <span className="ft-arrow">→</span></span>
             </div>
           </div>
         </div>
