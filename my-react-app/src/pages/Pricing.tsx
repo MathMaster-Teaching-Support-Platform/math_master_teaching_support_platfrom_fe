@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import Footer from '../components/Footer';
 import './Homepage.css';
-import './Pages.css';
+import './Pricing.css';
 
 const Pricing: React.FC = () => {
   const plans = [
@@ -94,66 +94,120 @@ const Pricing: React.FC = () => {
         </div>
       </header>
 
-      <section className="page-hero">
+      {/* ── Hero ── */}
+      <section className="pricing-hero">
+        <div className="pricing-hero-dots" aria-hidden="true" />
         <div className="container">
-          <h1 className="page-title">
-            Bảng giá <span className="gradient-text">Phù hợp với bạn</span>
-          </h1>
-          <p className="page-subtitle">
-            Chọn gói phù hợp với nhu cầu giảng dạy của bạn. Dùng thử miễn phí 30 ngày!
-          </p>
+          <div className="pricing-hero-content">
+            <span className="ft-badge ft-badge--purple" style={{ marginBottom: '1.25rem' }}>Bảng giá</span>
+            <h1 className="pricing-hero-title">
+              Chọn gói <span className="gradient-text">phù hợp với bạn</span>
+            </h1>
+            <p className="pricing-hero-desc">
+              Dùng thử miễn phí 30 ngày. Nâng cấp hoặc hạ cấp bất kỳ lúc nào.
+            </p>
+          </div>
         </div>
       </section>
 
-      <section className="pricing-section">
+      {/* ── Pricing Cards ── */}
+      <section className="pricing-cards-section">
         <div className="container">
-          <div className="pricing-grid">
+          <div className="pricing-cards-grid">
             {plans.map((plan, index) => (
-              <div key={index} className={`pricing-card ${plan.highlighted ? 'highlighted' : ''}`}>
-                {plan.highlighted && <div className="popular-badge">Phổ biến nhất</div>}
-                <h3 className="plan-name">{plan.name}</h3>
-                <div className="plan-price">
-                  <span className="price">{plan.price}</span>
-                  <span className="period">{plan.period}</span>
+              <div
+                key={index}
+                className={`pricing-plan-card ${plan.highlighted ? 'pricing-plan-card--featured' : ''}`}
+              >
+                {plan.highlighted && (
+                  <div className="pricing-popular-badge">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
+                    Phổ biến nhất
+                  </div>
+                )}
+                <div className="pricing-plan-header">
+                  <h3 className="pricing-plan-name">{plan.name}</h3>
+                  <p className="pricing-plan-desc">{plan.description}</p>
                 </div>
-                <p className="plan-description">{plan.description}</p>
-                <ul className="plan-features">
+                <div className="pricing-plan-price-block">
+                  <span className="pricing-plan-price">{plan.price}</span>
+                  {plan.period && <span className="pricing-plan-period">{plan.period}</span>}
+                </div>
+                <Link
+                  to="/register"
+                  className={`pricing-plan-btn ${plan.highlighted ? 'pricing-plan-btn--primary' : 'pricing-plan-btn--outline'}`}
+                >
+                  {plan.buttonText}
+                </Link>
+                <div className="pricing-plan-divider" />
+                <ul className="pricing-plan-features">
                   {plan.features.map((feature, idx) => (
                     <li key={idx}>
-                      <span className="check-icon">✓</span>
+                      <span className={`pricing-check ${plan.highlighted ? 'pricing-check--primary' : ''}`}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      </span>
                       {feature}
                     </li>
                   ))}
                 </ul>
-                <Link
-                  to="/register"
-                  className={`btn ${plan.highlighted ? 'btn-primary' : 'btn-outline'} btn-block`}
-                >
-                  {plan.buttonText}
-                </Link>
               </div>
             ))}
           </div>
+        </div>
+      </section>
 
-          <div className="pricing-faq">
-            <h2 className="section-title">Câu hỏi thường gặp</h2>
-            <div className="faq-grid">
-              <div className="faq-item">
-                <h4>Có thể thay đổi gói sau khi đăng ký không?</h4>
-                <p>Có, bạn có thể nâng cấp hoặc hạ cấp gói bất kỳ lúc nào.</p>
-              </div>
-              <div className="faq-item">
-                <h4>Có chính sách hoàn tiền không?</h4>
-                <p>Chúng tôi có chính sách hoàn tiền trong vòng 14 ngày nếu không hài lòng.</p>
-              </div>
-              <div className="faq-item">
-                <h4>Thanh toán như thế nào?</h4>
-                <p>Chấp nhận thanh toán qua thẻ, chuyển khoản, hoặc ví điện tử.</p>
-              </div>
-              <div className="faq-item">
-                <h4>Có hỗ trợ đào tạo không?</h4>
-                <p>Gói Trường học có đào tạo chuyên biệt. Các gói khác có tài liệu hướng dẫn.</p>
-              </div>
+      {/* ── FAQ ── */}
+      <section className="pricing-faq-section">
+        <div className="features-bg-dots" aria-hidden="true" />
+        <div className="container">
+          <div className="pricing-faq-header">
+            <span className="ft-badge ft-badge--blue" style={{ marginBottom: '1rem' }}>FAQ</span>
+            <h2 className="pricing-faq-title">
+              Câu hỏi <span className="gradient-text">thường gặp</span>
+            </h2>
+          </div>
+          <div className="pricing-faq-grid">
+            <div className="pricing-faq-card">
+              <h4 className="pricing-faq-q">Có thể thay đổi gói sau khi đăng ký không?</h4>
+              <p className="pricing-faq-a">Có, bạn có thể nâng cấp hoặc hạ cấp gói bất kỳ lúc nào.</p>
+            </div>
+            <div className="pricing-faq-card">
+              <h4 className="pricing-faq-q">Có chính sách hoàn tiền không?</h4>
+              <p className="pricing-faq-a">Chúng tôi có chính sách hoàn tiền trong vòng 14 ngày nếu không hài lòng.</p>
+            </div>
+            <div className="pricing-faq-card">
+              <h4 className="pricing-faq-q">Thanh toán như thế nào?</h4>
+              <p className="pricing-faq-a">Chấp nhận thanh toán qua thẻ, chuyển khoản, hoặc ví điện tử.</p>
+            </div>
+            <div className="pricing-faq-card">
+              <h4 className="pricing-faq-q">Có hỗ trợ đào tạo không?</h4>
+              <p className="pricing-faq-a">Gói Trường học có đào tạo chuyên biệt. Các gói khác có tài liệu hướng dẫn.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA ── */}
+      <section className="pricing-cta-section">
+        <div className="container">
+          <div className="pricing-cta-card">
+            <div className="pricing-cta-glow" aria-hidden="true" />
+            <span className="ft-badge ft-badge--green" style={{ marginBottom: '1rem' }}>Bắt đầu ngay</span>
+            <h2 className="pricing-cta-title">
+              Sẵn sàng tối ưu hóa <span className="gradient-text">bài giảng</span> của bạn?
+            </h2>
+            <p className="pricing-cta-desc">
+              Tham gia cùng hàng nghìn giáo viên đã lựa chọn MathMaster. Dùng thử miễn phí, không cần thẻ tín dụng.
+            </p>
+            <div className="pricing-cta-actions">
+              <Link to="/register" className="btn-primary-large">
+                Đăng ký miễn phí <span className="btn-icon">→</span>
+              </Link>
+              <Link to="/features" className="btn-video">
+                Khám phá tính năng
+              </Link>
             </div>
           </div>
         </div>
