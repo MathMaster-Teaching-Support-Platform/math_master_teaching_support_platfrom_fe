@@ -34,4 +34,9 @@ export const API_ENDPOINTS = {
   ASSESSMENTS_CAN_EDIT: (id: string) => `/assessments/${id}/can-edit`,
   ASSESSMENTS_CAN_DELETE: (id: string) => `/assessments/${id}/can-delete`,
   ASSESSMENTS_CAN_PUBLISH: (id: string) => `/assessments/${id}/can-publish`,
+  ASSESSMENTS_CLOSE: (id: string) => `/assessments/${id}/close`,
+  ASSESSMENTS_CLONE: (id: string) => `/assessments/${id}/clone`,
+  ASSESSMENTS_QUESTIONS: (assessmentId: string) => `/assessments/${assessmentId}/questions`,
+  ASSESSMENTS_QUESTION_REMOVE: (assessmentId: string, questionId: string) =>
+    `/assessments/${assessmentId}/questions/${questionId}`,
 };
