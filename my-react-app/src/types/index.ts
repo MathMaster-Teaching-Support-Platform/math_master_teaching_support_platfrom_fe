@@ -14,6 +14,7 @@ export interface User {
 export * from './auth.types';
 export * from './teacher.types';
 export * from './assessment.types';
+export * from './mindmap.types';
 
 export interface Course {
   id: string;

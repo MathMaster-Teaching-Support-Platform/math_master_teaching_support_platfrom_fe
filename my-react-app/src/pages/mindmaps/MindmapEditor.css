@@ -1,0 +1,441 @@
+.mindmap-editor-page {
+  height: calc(100vh - 60px);
+  display: flex;
+  flex-direction: column;
+  background: #f7fafc;
+}
+
+/* Header */
+.editor-header {
+  background: white;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex: 1;
+}
+
+.btn-back {
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  color: #4a5568;
+  transition: all 0.3s;
+}
+
+.btn-back:hover {
+  background: #edf2f7;
+}
+
+.editor-header h1 {
+  font-size: 1.5rem;
+  color: #1a202c;
+  margin: 0 0 0.25rem 0;
+}
+
+.editor-header p {
+  color: #718096;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.header-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.status-select {
+  padding: 0.5rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: white;
+  color: #4a5568;
+  transition: all 0.3s;
+}
+
+.status-select:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+/* Content */
+.editor-content {
+  flex: 1;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+}
+
+.flow-container {
+  flex: 1;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
+}
+
+/* ReactFlow Custom Styles */
+.mindmap-node-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: center;
+}
+
+.node-icon {
+  font-size: 1.5rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+}
+
+.node-text {
+  line-height: 1.4;
+  word-wrap: break-word;
+  max-width: 180px;
+}
+
+.node-text {
+  line-height: 1.4;
+}
+
+/* Edit Panel */
+.edit-panel {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 320px;
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(0, 0, 0, 0.05);
+  z-index: 10;
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+  backdrop-filter: blur(10px);
+  animation: panelSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes panelSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.edit-panel h3 {
+  margin: 0 0 1.5rem 0;
+  color: #1a202c;
+  font-size: 1.125rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.edit-panel h3::before {
+  content: '✏️';
+  font-size: 1.25rem;
+}
+
+.edit-panel .form-group {
+  margin-bottom: 1.25rem;
+}
+
+.edit-panel .form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #4a5568;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.edit-panel .form-group input,
+.edit-panel .form-group select {
+  width: 100%;
+  padding: 0.625rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  transition: border-color 0.3s;
+}
+
+.edit-panel .form-group input[type='color'] {
+  height: 50px;
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 0.25rem;
+}
+
+.edit-panel .form-group input:focus,
+.edit-panel .form-group select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.panel-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+
+.panel-actions button {
+  flex: 1;
+  padding: 0.75rem;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.panel-actions button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition:
+    width 0.6s,
+    height 0.6s;
+}
+
+.panel-actions button:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.panel-actions .btn-cancel {
+  background: #f7fafc;
+  color: #4a5568;
+  border: 1px solid #e2e8f0;
+}
+
+.panel-actions .btn-cancel:hover {
+  background: #edf2f7;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.panel-actions .btn-delete {
+  background: linear-gradient(135deg, #fc5c7d 0%, #e53e3e 100%);
+  color: white;
+  border: none;
+}
+
+.panel-actions .btn-delete:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(229, 62, 62, 0.3);
+}
+
+.panel-actions .btn-save {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+}
+
+.panel-actions .btn-save:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(102, 126, 234, 0.3);
+}
+
+.panel-actions .btn-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Loading & Error States */
+.mindmap-editor-loading,
+.mindmap-editor-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  text-align: center;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
+}
+
+.loader {
+  width: 60px;
+  height: 60px;
+  border: 5px solid transparent;
+  border-top: 5px solid #667eea;
+  border-right: 5px solid #764ba2;
+  border-radius: 50%;
+  animation: spin 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.mindmap-editor-loading p {
+  color: #4a5568;
+  font-size: 1.125rem;
+  font-weight: 600;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.mindmap-editor-error h2 {
+  color: #e53e3e;
+  margin-bottom: 0.5rem;
+  font-size: 1.5rem;
+}
+
+.mindmap-editor-error p {
+  color: #718096;
+  margin-bottom: 1.5rem;
+}
+
+.mindmap-editor-error button {
+  background: #667eea;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.mindmap-editor-error button:hover {
+  background: #5568d3;
+}
+
+/* ReactFlow Overrides */
+.react-flow__node {
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.react-flow__node:hover {
+  filter: brightness(1.1);
+  transform: scale(1.05) translateY(-2px);
+  z-index: 10;
+}
+
+.react-flow__node.selected {
+  box-shadow:
+    0 0 0 4px rgba(102, 126, 234, 0.4),
+    0 8px 16px rgba(0, 0, 0, 0.15) !important;
+  transform: scale(1.08);
+  z-index: 20;
+}
+
+.react-flow__edge-path {
+  stroke-width: 2;
+  transition: stroke-width 0.3s;
+}
+
+.react-flow__edge:hover .react-flow__edge-path {
+  stroke-width: 3;
+}
+
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke-width: 4 !important;
+  stroke: #667eea !important;
+}
+
+.react-flow__controls {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 10px;
+  overflow: hidden;
+  background: white;
+}
+
+.react-flow__controls-button {
+  border-bottom: 1px solid #e2e8f0;
+  background: white;
+  transition: all 0.2s;
+}
+
+.react-flow__controls-button:hover {
+  background: #f7fafc;
+  transform: scale(1.1);
+}
+
+.react-flow__background {
+  background-color: transparent;
+}
+
+/* Animations for nodes appearing */
+@keyframes nodeAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.react-flow__node {
+  animation: nodeAppear 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .editor-header {
+    padding: 1rem;
+  }
+
+  .header-left {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .edit-panel {
+    width: calc(100% - 2rem);
+    left: 1rem;
+    right: 1rem;
+    top: auto;
+    bottom: 1rem;
+    max-height: 50vh;
+  }
+}
