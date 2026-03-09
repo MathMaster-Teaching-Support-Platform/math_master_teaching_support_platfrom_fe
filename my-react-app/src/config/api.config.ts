@@ -30,7 +30,8 @@ export const API_ENDPOINTS = {
   ASSESSMENTS_PUBLISH_SUMMARY: (id: string) => `/assessments/${id}/publish-summary`,
   ASSESSMENTS_PUBLISH: (id: string) => `/assessments/${id}/publish`,
   ASSESSMENTS_UNPUBLISH: (id: string) => `/assessments/${id}/unpublish`,
-  ASSESSMENTS_POINTS_OVERRIDE: (assessmentId: string) => `/assessments/${assessmentId}/points-override`,
+  ASSESSMENTS_POINTS_OVERRIDE: (assessmentId: string) =>
+    `/assessments/${assessmentId}/points-override`,
   ASSESSMENTS_CAN_EDIT: (id: string) => `/assessments/${id}/can-edit`,
   ASSESSMENTS_CAN_DELETE: (id: string) => `/assessments/${id}/can-delete`,
   ASSESSMENTS_CAN_PUBLISH: (id: string) => `/assessments/${id}/can-publish`,
@@ -39,4 +40,13 @@ export const API_ENDPOINTS = {
   ASSESSMENTS_QUESTIONS: (assessmentId: string) => `/assessments/${assessmentId}/questions`,
   ASSESSMENTS_QUESTION_REMOVE: (assessmentId: string, questionId: string) =>
     `/assessments/${assessmentId}/questions/${questionId}`,
+
+  // Mindmaps
+  MINDMAPS: '/mindmaps',
+  MINDMAPS_GENERATE: '/mindmaps/generate',
+  MINDMAPS_MY: '/mindmaps/my-mindmaps',
+  MINDMAPS_DETAIL: (id: string) => `/mindmaps/${id}`,
+  MINDMAPS_NODES: (mindmapId: string) => `/mindmaps/${mindmapId}/nodes`,
+  MINDMAPS_NODE_DETAIL: (mindmapId: string, nodeId: string) =>
+    `/mindmaps/${mindmapId}/nodes/${nodeId}`,
 };

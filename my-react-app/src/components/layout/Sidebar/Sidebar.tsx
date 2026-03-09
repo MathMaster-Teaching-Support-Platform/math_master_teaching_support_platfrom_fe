@@ -20,6 +20,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
     { path: '/teacher/dashboard', icon: '📊', label: 'Dashboard' },
     { path: '/teacher/courses', icon: '📚', label: 'Khóa học' },
     { path: '/teacher/materials', icon: '📝', label: 'Tài liệu' },
+    { path: '/teacher/mindmaps', icon: '🗺️', label: 'Mindmap' },
     { path: '/teacher/assignments', icon: '✍️', label: 'Bài tập' },
     { path: '/teacher/assessments', icon: '📝', label: 'Kiểm tra' },
     { path: '/teacher/students', icon: '👥', label: 'Học sinh' },

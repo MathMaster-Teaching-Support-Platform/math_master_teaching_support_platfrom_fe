@@ -1,9 +1,11 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../../components/layout/DashboardLayout/DashboardLayout';
 import { mockTeacher, mockCourses, mockAssignments, mockStudents } from '../../../data/mockData';
 import './TeacherDashboard.css';
 
 const TeacherDashboard: React.FC = () => {
+  const navigate = useNavigate();
   const stats = [
     { icon: '👥', label: 'Tổng học sinh', value: mockTeacher.totalStudents, color: '#667eea' },
     { icon: '📚', label: 'Khóa học', value: mockTeacher.totalCourses, color: '#43e97b' },
@@ -203,7 +205,7 @@ const TeacherDashboard: React.FC = () => {
               <span className="qa-icon">🎨</span>
               <span className="qa-label">Tạo slide</span>
             </button>
-            <button className="quick-action-btn">
+            <button className="quick-action-btn" onClick={() => navigate('/teacher/mindmaps')}>
               <span className="qa-icon">🧠</span>
               <span className="qa-label">Tạo mindmap</span>
             </button>
