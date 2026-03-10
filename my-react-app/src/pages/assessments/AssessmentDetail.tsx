@@ -20,8 +20,8 @@ const AssessmentDetail: React.FC = () => {
             setLoading(true);
             const response = await AssessmentService.getAssessmentById(id);
             setAssessment(response.result);
-        } catch (err: any) {
-            setError(err.message || 'Failed to fetch assessment details');
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Failed to fetch assessment details');
         } finally {
             setLoading(false);
         }
@@ -41,8 +41,8 @@ const AssessmentDetail: React.FC = () => {
             await AssessmentService.updateAssessment(id, data);
             alert('Cập nhật thông tin thành công!');
             fetchDetail();
-        } catch (err: any) {
-            alert(err.message || 'Lỗi khi cập nhật thông tin');
+        } catch (err: unknown) {
+            alert(err instanceof Error ? err.message : 'Lỗi khi cập nhật thông tin');
             throw err;
         }
     };

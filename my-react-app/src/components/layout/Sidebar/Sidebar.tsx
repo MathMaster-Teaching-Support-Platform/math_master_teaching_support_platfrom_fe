@@ -21,6 +21,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
     { path: '/teacher/courses', icon: '📚', label: 'Khóa học' },
     { path: '/teacher/materials', icon: '📝', label: 'Tài liệu' },
     { path: '/teacher/mindmaps', icon: '🗺️', label: 'Mindmap' },
+    { path: '/teacher/question-templates', icon: '📄', label: 'Mẫu câu hỏi' },
     { path: '/teacher/assignments', icon: '✍️', label: 'Bài tập' },
     { path: '/teacher/assessments', icon: '📝', label: 'Kiểm tra' },
     { path: '/teacher/students', icon: '👥', label: 'Học sinh' },
