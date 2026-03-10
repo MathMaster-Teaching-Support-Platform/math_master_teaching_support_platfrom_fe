@@ -39,6 +39,7 @@ import SchoolManagement from '../pages/admin/SchoolManagement';
 import TeacherAssessments from '../pages/assessments/TeacherAssessments';
 import AssessmentDetail from '../pages/assessments/AssessmentDetail';
 import { TeacherMindmaps, MindmapEditor } from '../pages/mindmaps';
+import { TemplateDashboard } from '../pages/question-templates/TemplateDashboard';
 
 const router = createBrowserRouter([
   {
@@ -140,6 +141,10 @@ const router = createBrowserRouter([
   {
     path: '/teacher/mindmaps/:id',
     element: <MindmapEditor />,
+  },
+  {
+    path: '/teacher/question-templates',
+    element: <TemplateDashboard />,
   },
   {
     path: '/teacher/analytics',
