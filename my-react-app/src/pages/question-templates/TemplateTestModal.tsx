@@ -40,8 +40,8 @@ export const TemplateTestModal: React.FC<TemplateTestModalProps> = ({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm overflow-y-auto pt-10 pb-10">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl mx-4 flex flex-col max-h-[90vh]">
-                <div className="flex items-center justify-between p-6 border-b border-slate-100 flex-shrink-0">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl mx-4 flex flex-col max-h-[90vh] overflow-hidden">
+                <div className="flex items-center justify-between p-6 border-b border-slate-100 flex-shrink-0 bg-white">
                     <div>
                         <h2 className="text-xl font-bold text-slate-800">Sinh thử câu hỏi</h2>
                         <p className="text-sm text-slate-500 mt-1">Từ mẫu gốc: <span className="font-semibold text-slate-700">{template.name}</span></p>
@@ -56,12 +56,12 @@ export const TemplateTestModal: React.FC<TemplateTestModalProps> = ({
 
                 <div className="p-6 border-b border-slate-100 bg-slate-50 flex-shrink-0 flex flex-wrap gap-5 items-end">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Số lượng sinh nghiệm</label>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1.5">Số lượng sinh nghiệm</label>
                         <input
                             type="number"
                             min={1}
                             max={20}
-                            className="w-32 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                            className="w-32 bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all"
                             value={sampleCount}
                             onChange={(e) => setSampleCount(parseInt(e.target.value) || 1)}
                         />
@@ -74,15 +74,15 @@ export const TemplateTestModal: React.FC<TemplateTestModalProps> = ({
                             onChange={(e) => setUseAI(e.target.checked)}
                             className="accent-indigo-600 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500"
                         />
-                        <span className="font-medium">Sử dụng AI (Gemini) để sinh Distractors và Giải thích</span>
+                        <span className="font-semibold">Sử dụng AI (Gemini) để sinh Distractors và Giải thích</span>
                     </label>
 
                     <button
                         onClick={handleTest}
                         disabled={isLoading}
-                        className="px-5 py-2.5 ml-auto rounded-xl text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-2 transition-colors shadow-sm"
+                        className="px-6 py-2.5 ml-auto rounded-xl text-sm font-bold bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-2 transition-all shadow-sm active:scale-[0.98]"
                     >
-                        {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} className="fill-current" />}
+                        {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Play size={18} className="fill-current" />}
                         {isLoading ? 'Đang sinh...' : 'Chạy thử nghiệm'}
                     </button>
                 </div>

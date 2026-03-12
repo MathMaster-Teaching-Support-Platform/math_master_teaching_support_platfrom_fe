@@ -40,6 +40,8 @@ import TeacherAssessments from '../pages/assessments/TeacherAssessments';
 import AssessmentDetail from '../pages/assessments/AssessmentDetail';
 import { TeacherMindmaps, MindmapEditor } from '../pages/mindmaps';
 import { TemplateDashboard } from '../pages/question-templates/TemplateDashboard';
+import { ExamMatrixDashboard } from '../pages/exam-matrices/ExamMatrixDashboard';
+import ExamMatrixDetailPage from '../pages/exam-matrices/ExamMatrixDetailPage';
 
 const router = createBrowserRouter([
   {
@@ -145,6 +147,14 @@ const router = createBrowserRouter([
   {
     path: '/teacher/question-templates',
     element: <TemplateDashboard />,
+  },
+  {
+    path: '/teacher/exam-matrices',
+    element: <ExamMatrixDashboard />,
+  },
+  {
+    path: '/teacher/exam-matrices/:matrixId',
+    element: <ExamMatrixDetailPage />,
   },
   {
     path: '/teacher/analytics',

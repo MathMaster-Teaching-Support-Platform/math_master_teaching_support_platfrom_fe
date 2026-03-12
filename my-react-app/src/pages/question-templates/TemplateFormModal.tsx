@@ -251,7 +251,7 @@ export const TemplateFormModal: React.FC<TemplateFormModalProps> = ({
                                     <label className="block text-sm font-semibold text-slate-700 mb-1.5">Tên mẫu câu hỏi <span className="text-red-500">*</span></label>
                                     <input
                                         required
-                                        className="w-full border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 focus:outline-none focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all"
                                         value={name}
                                         onChange={(e) => setName(e.target.value)}
                                         placeholder="Ví dụ: Phương trình bậc hai dạng ax^2+bx+c=0"
@@ -261,7 +261,7 @@ export const TemplateFormModal: React.FC<TemplateFormModalProps> = ({
                                 <div>
                                     <label className="block text-sm font-semibold text-slate-700 mb-1.5">Loại câu hỏi</label>
                                     <select
-                                        className="w-full border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 focus:outline-none focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-medium"
                                         value={templateType}
                                         onChange={(e) => setTemplateType(e.target.value as QuestionType)}
                                     >
@@ -276,7 +276,7 @@ export const TemplateFormModal: React.FC<TemplateFormModalProps> = ({
                                 <div>
                                     <label className="block text-sm font-semibold text-slate-700 mb-1.5">Mức độ nhận thức</label>
                                     <select
-                                        className="w-full border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 focus:outline-none focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-medium"
                                         value={cognitiveLevel}
                                         onChange={(e) => setCognitiveLevel(e.target.value as CognitiveLevel)}
                                     >
@@ -293,7 +293,7 @@ export const TemplateFormModal: React.FC<TemplateFormModalProps> = ({
                                     <label className="block text-sm font-semibold text-slate-700 mb-1.5">Mô tả (tuỳ chọn)</label>
                                     <textarea
                                         rows={2}
-                                        className="w-full border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 focus:outline-none focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all resize-none"
                                         value={description}
                                         onChange={(e) => setDescription(e.target.value)}
                                         placeholder="Ghi chú về mẫu câu hỏi này..."
@@ -303,7 +303,7 @@ export const TemplateFormModal: React.FC<TemplateFormModalProps> = ({
                                 <div>
                                     <label className="block text-sm font-semibold text-slate-700 mb-1.5">Từ khóa (Tags)</label>
                                     <input
-                                        className="w-full border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 focus:outline-none focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all"
                                         value={tagsText}
                                         onChange={(e) => setTagsText(e.target.value)}
                                         placeholder="Ví dụ: Toán 9, Đại số, Phương trình (Cách nhau bằng dấu phẩy)"
@@ -316,7 +316,7 @@ export const TemplateFormModal: React.FC<TemplateFormModalProps> = ({
                                             type="checkbox"
                                             checked={isPublic}
                                             onChange={(e) => setIsPublic(e.target.checked)}
-                                            className="accent-indigo-600 w-5 h-5 rounded text-indigo-600 focus:ring-indigo-500"
+                                            className="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500/20"
                                         />
                                         <div>
                                             <span className="font-bold block text-slate-800">Công khai mẫu câu hỏi</span>
@@ -376,7 +376,7 @@ export const TemplateFormModal: React.FC<TemplateFormModalProps> = ({
                                 <textarea
                                     rows={3}
                                     required
-                                    className="w-full border border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow bg-slate-50"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-4 text-sm text-slate-900 focus:outline-none focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all resize-none font-medium leading-relaxed"
                                     value={templateText}
                                     onChange={(e) => setTemplateText(e.target.value)}
                                     placeholder="Giải phương trình: {a}x + {b} = 0"
@@ -389,7 +389,7 @@ export const TemplateFormModal: React.FC<TemplateFormModalProps> = ({
                                 <p className="text-xs text-slate-500 mb-2">Nhập công thức toán học sử dụng các biến số. (Hỗ trợ <code className="bg-slate-100 px-1 py-0.5 rounded">Math.src</code>, <code className="bg-slate-100 px-1 py-0.5 rounded">Math.pow</code>, vv...)</p>
                                 <input
                                     required
-                                    className="w-full border border-emerald-300 bg-emerald-50 text-emerald-900 rounded-xl px-4 py-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-shadow"
+                                    className="w-full bg-emerald-50/50 border border-emerald-200 text-emerald-900 rounded-xl px-4 py-3 text-sm font-mono focus:outline-none focus:bg-emerald-50 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
                                     value={answerFormula}
                                     onChange={(e) => setAnswerFormula(e.target.value)}
                                     placeholder="Ví dụ: (-b + Math.sqrt(b*b - 4*a*c)) / (2*a)"
@@ -468,7 +468,7 @@ export const TemplateFormModal: React.FC<TemplateFormModalProps> = ({
                     <button
                         type="button"
                         onClick={onClose}
-                        className="px-6 py-2.5 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-800 transition-colors"
+                        className="px-6 py-2.5 rounded-xl text-sm font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all active:scale-[0.98]"
                         disabled={isSubmitting}
                     >
                         Hủy
@@ -477,7 +477,7 @@ export const TemplateFormModal: React.FC<TemplateFormModalProps> = ({
                         type="submit"
                         form="template-form"
                         disabled={isSubmitting}
-                        className="px-8 py-2.5 rounded-xl text-sm font-bold bg-indigo-600 text-white hover:bg-indigo-700 hover:shadow-lg disabled:opacity-50 flex items-center gap-2 transition-all transform active:scale-95"
+                        className="px-8 py-2.5 rounded-xl text-sm font-bold bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm hover:shadow active:scale-[0.98] disabled:opacity-50 flex items-center gap-2 transition-all"
                     >
                         {isSubmitting && <Loader2 size={16} className="animate-spin" />}
                         {isSubmitting ? 'Đang lưu...' : (mode === 'create' ? 'Tạo mẫu mới' : 'Lưu thay đổi')}

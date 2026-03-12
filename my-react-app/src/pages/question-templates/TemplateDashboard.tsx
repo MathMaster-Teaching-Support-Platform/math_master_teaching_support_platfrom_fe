@@ -134,14 +134,14 @@ function TemplateCard({
     onTest: () => void;
 }) {
     return (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden flex flex-col group">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col group">
             {/* Card top accent */}
             <div
                 className={`h-1.5 ${template.status === TemplateStatus.PUBLISHED
-                    ? 'bg-emerald-400'
+                    ? 'bg-emerald-500'
                     : template.status === TemplateStatus.ARCHIVED
-                        ? 'bg-amber-400'
-                        : 'bg-slate-300'
+                        ? 'bg-amber-500'
+                        : 'bg-indigo-400'
                     }`}
             />
 
@@ -202,10 +202,10 @@ function TemplateCard({
 
                 {/* Actions */}
                 <div className="flex flex-wrap gap-2 pt-2">
-                    {/* Test Button - Available for all? Or just Published/Draft? Let's say all */}
+                    {/* Test Button - Available for all */}
                     <button
                         onClick={onTest}
-                        className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-colors"
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-indigo-50 text-indigo-700 hover:bg-indigo-100 active:scale-[0.98] transition-all"
                     >
                         <Play size={13} className="fill-current" /> Sinh thử KH
                     </button>
@@ -214,13 +214,13 @@ function TemplateCard({
                         <>
                             <button
                                 onClick={onEdit}
-                                className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 active:scale-[0.98] transition-all"
                             >
                                 <Edit size={13} /> Sửa
                             </button>
                             <button
                                 onClick={onPublish}
-                                className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors ml-auto"
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm hover:shadow active:scale-[0.98] transition-all ml-auto"
                             >
                                 Xuất bản
                             </button>
@@ -231,7 +231,7 @@ function TemplateCard({
                         <>
                             <button
                                 onClick={onArchive}
-                                className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg border border-amber-200 text-amber-600 hover:bg-amber-50 transition-colors ml-auto"
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-white border border-slate-200 text-amber-600 hover:bg-amber-50 hover:border-amber-200 active:scale-[0.98] transition-all ml-auto"
                             >
                                 <Archive size={13} /> Lưu trữ
                             </button>
@@ -244,13 +244,12 @@ function TemplateCard({
                         </>
                     )}
 
-                    {/* Delete is allowed if logic permits (backend deletes it) */}
                     <button
                         onClick={onDelete}
-                        className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors ${template.status === TemplateStatus.DRAFT ? '' : (template.status === TemplateStatus.ARCHIVED ? '' : 'ml-2')}`}
+                        className={`flex items-center justify-center p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors ${template.status === TemplateStatus.DRAFT ? '' : (template.status === TemplateStatus.ARCHIVED ? '' : 'ml-2')}`}
                         title="Xóa mẫu câu hỏi"
                     >
-                        <Trash2 size={13} />
+                        <Trash2 size={16} />
                     </button>
                 </div>
             </div>
@@ -427,8 +426,10 @@ export const TemplateDashboard: React.FC = () => {
                     {/* ── Page Header ─────────────────────────────────────── */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                         <div>
-                            <h1 className="text-2xl font-extrabold text-slate-900 flex items-center gap-2">
-                                <FileText className="text-indigo-600" size={28} />
+                            <h1 className="text-3xl font-extrabold text-slate-900 flex items-center gap-3">
+                                <div className="p-2.5 bg-indigo-100 rounded-xl">
+                                    <FileText className="text-indigo-600" size={24} />
+                                </div>
                                 Quản lý Mẫu Câu hỏi
                             </h1>
                             <p className="text-sm text-slate-500 mt-1">
@@ -438,14 +439,14 @@ export const TemplateDashboard: React.FC = () => {
                         <div className="flex gap-3">
                             <button
                                 onClick={handleImport}
-                                className="inline-flex items-center gap-2 px-4 py-2 bg-white text-slate-700 border border-slate-300 font-semibold text-sm rounded-xl hover:bg-slate-50 shadow-sm transition-colors"
+                                className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-slate-700 border border-slate-200 font-semibold text-sm rounded-xl hover:bg-slate-50 hover:border-slate-300 shadow-sm active:scale-[0.98] transition-all"
                             >
                                 <Upload size={18} />
                                 Import từ File
                             </button>
                             <button
                                 onClick={handleCreate}
-                                className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white font-semibold text-sm rounded-xl hover:bg-indigo-700 shadow-sm transition-colors"
+                                className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white font-semibold text-sm rounded-xl hover:bg-indigo-700 shadow-sm hover:shadow active:scale-[0.98] transition-all"
                             >
                                 <Plus size={18} />
                                 Tạo mẫu mới
@@ -453,51 +454,52 @@ export const TemplateDashboard: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* ── Toolbar ─────────────────────────────────────────── */}
-                    <div className="flex flex-col sm:flex-row gap-3 mb-6">
-                        {/* Search */}
-                        <div className="relative flex-1 max-w-sm">
-                            <Search
-                                size={16}
-                                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                            />
-                            <input
-                                placeholder="Tìm theo tên, mô tả, từ khóa..."
-                                value={search}
-                                onChange={(e) => { setSearch(e.target.value); setPage(0); }}
-                                className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                            />
-                        </div>
+                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 mb-8">
+                        <div className="flex flex-col sm:flex-row gap-4">
+                            {/* Search */}
+                            <div className="relative flex-1 max-w-md">
+                                <Search
+                                    size={18}
+                                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                                />
+                                <input
+                                    placeholder="Tìm theo tên, mô tả, từ khóa..."
+                                    value={search}
+                                    onChange={(e) => { setSearch(e.target.value); setPage(0); }}
+                                    className="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-medium"
+                                />
+                            </div>
 
-                        {/* Status filter tabs */}
-                        <div className="flex gap-1 bg-white border border-slate-200 rounded-lg p-1 overflow-x-auto">
-                            {(['ALL', TemplateStatus.DRAFT, TemplateStatus.PUBLISHED, TemplateStatus.ARCHIVED] as const).map((s) => (
-                                <button
-                                    key={s}
-                                    onClick={() => {
-                                        setFilterStatus(s);
-                                        setPage(0);
-                                    }}
-                                    className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors whitespace-nowrap ${filterStatus === s
-                                        ? 'bg-indigo-600 text-white shadow-sm'
-                                        : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
-                                        }`}
-                                >
-                                    {s === 'ALL'
-                                        ? 'Tất cả'
-                                        : STATUS_CONFIG[s as TemplateStatus].label}
-                                </button>
-                            ))}
-                        </div>
+                            {/* Status filter tabs */}
+                            <div className="flex gap-1.5 bg-slate-50 border border-slate-200 rounded-xl p-1.5 overflow-x-auto">
+                                {(['ALL', TemplateStatus.DRAFT, TemplateStatus.PUBLISHED, TemplateStatus.ARCHIVED] as const).map((s) => (
+                                    <button
+                                        key={s}
+                                        onClick={() => {
+                                            setFilterStatus(s);
+                                            setPage(0);
+                                        }}
+                                        className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all whitespace-nowrap ${filterStatus === s
+                                            ? 'bg-white text-indigo-600 shadow-sm border border-slate-200'
+                                            : 'text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 transparent'
+                                            }`}
+                                    >
+                                        {s === 'ALL'
+                                            ? 'Tất cả'
+                                            : STATUS_CONFIG[s as TemplateStatus].label}
+                                    </button>
+                                ))}
+                            </div>
 
-                        {/* Refresh */}
-                        <button
-                            onClick={() => refetch()}
-                            className="p-2 rounded-lg border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 ml-auto"
-                            title="Làm mới"
-                        >
-                            <RefreshCw size={16} />
-                        </button>
+                            {/* Refresh */}
+                            <button
+                                onClick={() => refetch()}
+                                className="p-2.5 rounded-xl border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-indigo-600 hover:border-indigo-200 transition-all ml-auto active:scale-[0.98]"
+                                title="Làm mới"
+                            >
+                                <RefreshCw size={18} />
+                            </button>
+                        </div>
                     </div>
 
                     {/* ── Content ──────────────────────────────────────────── */}
@@ -522,20 +524,22 @@ export const TemplateDashboard: React.FC = () => {
                             </button>
                         </div>
                     ) : filteredTemplates.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-24 text-slate-400 bg-white rounded-2xl border border-slate-200 border-dashed">
-                            <FileText size={48} className="mb-4 opacity-40 text-indigo-400" />
-                            <p className="text-base font-medium text-slate-600">Không có mẫu câu hỏi nào</p>
-                            <p className="text-sm mt-1 mb-5">
+                        <div className="flex flex-col items-center justify-center py-24 px-6 text-slate-400 bg-white rounded-2xl border border-slate-200 border-dashed max-w-2xl mx-auto shadow-sm">
+                            <div className="w-20 h-20 bg-indigo-50 text-indigo-400 rounded-full flex items-center justify-center mb-6">
+                                <FileText size={40} />
+                            </div>
+                            <p className="text-lg font-bold text-slate-700 mb-2">Chưa có mẫu câu hỏi nào</p>
+                            <p className="text-sm font-medium text-slate-500 text-center mb-8 max-w-md">
                                 {search || filterStatus !== 'ALL'
                                     ? 'Không tìm thấy kết quả phù hợp với bộ lọc.'
-                                    : 'Hãy bắt đầu tạo mẫu câu hỏi đầu tiên của bạn để sinh đề tự động!'}
+                                    : 'Hãy bắt đầu tạo mẫu câu hỏi đầu tiên của bạn để sinh đề tự động bằng AI!'}
                             </p>
                             {(!search && filterStatus === 'ALL') && (
                                 <button
                                     onClick={handleCreate}
-                                    className="px-5 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 shadow-sm"
+                                    className="px-6 py-3 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 shadow-sm hover:shadow active:scale-[0.98] transition-all flex items-center gap-2"
                                 >
-                                    Tạo mẫu câu hỏi
+                                    <Plus size={18} /> Tạo Mẫu Câu Hỏi Đầu Tiên
                                 </button>
                             )}
                         </div>
@@ -581,6 +585,8 @@ export const TemplateDashboard: React.FC = () => {
                         </>
                     )}
                 </div>
+                {/* Spacer at the bottom to breathe */}
+                <div className="h-16"></div>
             </div>
 
             {/* Modals */}
