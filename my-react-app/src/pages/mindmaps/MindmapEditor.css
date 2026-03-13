@@ -57,6 +57,32 @@
   align-items: center;
 }
 
+.interaction-toggle {
+  display: inline-flex;
+  border: 1px solid #d7deed;
+  border-radius: 10px;
+  padding: 0.2rem;
+  background: #f8faff;
+}
+
+.interaction-btn {
+  border: none;
+  background: transparent;
+  color: #475569;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.45rem 0.8rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.interaction-btn.active {
+  background: #ffffff;
+  color: #334155;
+  box-shadow: 0 3px 10px rgba(51, 65, 85, 0.14);
+}
+
 .status-select {
   padding: 0.5rem 1rem;
   border: 2px solid #e2e8f0;
@@ -84,31 +110,58 @@
 
 .flow-container {
   flex: 1;
+  position: relative;
   background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
 }
 
-/* ReactFlow Custom Styles */
-.mindmap-node-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  text-align: center;
+.interaction-hint {
+  position: absolute;
+  top: 0.8rem;
+  left: 0.9rem;
+  z-index: 3;
+  background: rgba(15, 23, 42, 0.72);
+  color: #f8fafc;
+  padding: 0.45rem 0.7rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  max-width: 420px;
+  pointer-events: none;
 }
 
-.node-icon {
-  font-size: 1.5rem;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+.mind-elixir-host {
+  width: 100%;
+  height: 100%;
 }
 
-.node-text {
-  line-height: 1.4;
-  word-wrap: break-word;
-  max-width: 180px;
+.mind-elixir-host .mind-elixir {
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(255, 255, 255, 0.65), transparent 35%),
+    radial-gradient(circle at 80% 10%, rgba(217, 226, 252, 0.6), transparent 40%),
+    linear-gradient(135deg, #f3f5ff 0%, #e9edf7 100%);
+  border-radius: 0;
 }
 
-.node-text {
-  line-height: 1.4;
+.mind-elixir-host .map-container {
+  transition: transform 0.2s ease;
+}
+
+.mind-elixir-host .topic,
+.mind-elixir-host .box {
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(51, 65, 85, 0.14);
+}
+
+.mind-elixir-host .selected {
+  box-shadow:
+    0 0 0 3px rgba(79, 70, 229, 0.28),
+    0 14px 30px rgba(30, 41, 59, 0.18) !important;
+}
+
+.mind-elixir-host .toolbar {
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.16);
 }
 
 /* Edit Panel */
@@ -310,6 +363,14 @@
   animation: pulse 2s ease-in-out infinite;
 }
 
+.loading-slow-hint {
+  font-size: 0.875rem !important;
+  font-weight: 400 !important;
+  color: #718096 !important;
+  margin-top: -0.5rem;
+  animation: none !important;
+}
+
 @keyframes pulse {
   0%,
   100% {
@@ -346,76 +407,17 @@
   background: #5568d3;
 }
 
-/* ReactFlow Overrides */
-.react-flow__node {
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.mindmap-editor-error .error-actions {
+  display: flex;
+  gap: 0.75rem;
 }
 
-.react-flow__node:hover {
-  filter: brightness(1.1);
-  transform: scale(1.05) translateY(-2px);
-  z-index: 10;
+.mindmap-editor-error .btn-retry {
+  background: #2f855a;
 }
 
-.react-flow__node.selected {
-  box-shadow:
-    0 0 0 4px rgba(102, 126, 234, 0.4),
-    0 8px 16px rgba(0, 0, 0, 0.15) !important;
-  transform: scale(1.08);
-  z-index: 20;
-}
-
-.react-flow__edge-path {
-  stroke-width: 2;
-  transition: stroke-width 0.3s;
-}
-
-.react-flow__edge:hover .react-flow__edge-path {
-  stroke-width: 3;
-}
-
-.react-flow__edge.selected .react-flow__edge-path {
-  stroke-width: 4 !important;
-  stroke: #667eea !important;
-}
-
-.react-flow__controls {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  border-radius: 10px;
-  overflow: hidden;
-  background: white;
-}
-
-.react-flow__controls-button {
-  border-bottom: 1px solid #e2e8f0;
-  background: white;
-  transition: all 0.2s;
-}
-
-.react-flow__controls-button:hover {
-  background: #f7fafc;
-  transform: scale(1.1);
-}
-
-.react-flow__background {
-  background-color: transparent;
-}
-
-/* Animations for nodes appearing */
-@keyframes nodeAppear {
-  from {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.react-flow__node {
-  animation: nodeAppear 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+.mindmap-editor-error .btn-retry:hover {
+  background: #276749;
 }
 
 /* Responsive */
@@ -437,5 +439,14 @@
     top: auto;
     bottom: 1rem;
     max-height: 50vh;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .interaction-hint {
+    max-width: calc(100% - 1.8rem);
   }
 }
