@@ -64,19 +64,23 @@ export const TemplateFormModal: React.FC<TemplateFormModalProps> = ({
                 setTemplateType(initialData.templateType || QuestionType.MULTIPLE_CHOICE);
                 setCognitiveLevel(initialData.cognitiveLevel || CognitiveLevel.UNDERSTAND);
                 setIsPublic(initialData.isPublic || false);
-                setTemplateText(initialData.templateText?.vi || initialData.templateText?.en || '');
+                const templateTextObj = initialData.templateText as Record<string, unknown> | undefined;
+                const viText = typeof templateTextObj?.vi === 'string' ? templateTextObj.vi : '';
+                const enText = typeof templateTextObj?.en === 'string' ? templateTextObj.en : '';
+                setTemplateText(viText || enText || '');
                 setAnswerFormula(initialData.answerFormula || '');
                 setTagsText((initialData.tags || []).join(', '));
 
                 // Parse Parameters
                 const parsedParams: ParameterInput[] = [];
                 if (initialData.parameters) {
-                    Object.entries(initialData.parameters).forEach(([key, val]: [string, { type?: string; min?: number; max?: number }]) => {
+                    Object.entries(initialData.parameters as Record<string, unknown>).forEach(([key, val]) => {
+                        const obj = (val as Record<string, unknown>) || {};
                         parsedParams.push({
                             name: key,
-                            type: val.type || 'int',
-                            min: val.min?.toString() || '1',
-                            max: val.max?.toString() || '10'
+                            type: typeof obj.type === 'string' ? obj.type : 'int',
+                            min: typeof obj.min === 'number' ? obj.min.toString() : '1',
+                            max: typeof obj.max === 'number' ? obj.max.toString() : '10'
                         });
                     });
                 }
@@ -85,8 +89,10 @@ export const TemplateFormModal: React.FC<TemplateFormModalProps> = ({
                 // Parse Options
                 const parsedOptions: OptionInput[] = [];
                 if (initialData.optionsGenerator) {
-                    Object.entries(initialData.optionsGenerator).forEach(([key, val]: [string, string]) => {
-                        parsedOptions.push({ key, formula: val });
+                    Object.entries(initialData.optionsGenerator as Record<string, unknown>).forEach(([key, val]) => {
+                        if (typeof val === 'string') {
+                            parsedOptions.push({ key, formula: val });
+                        }
                     });
                 }
                 setOptions(parsedOptions.length > 0 ? parsedOptions : [
@@ -99,8 +105,10 @@ export const TemplateFormModal: React.FC<TemplateFormModalProps> = ({
                 // Parse Difficulty Rules
                 const parsedDifficulty: DifficultyRuleInput[] = [];
                 if (initialData.difficultyRules) {
-                    Object.entries(initialData.difficultyRules).forEach(([key, val]: [string, string]) => {
-                        parsedDifficulty.push({ level: key, condition: val });
+                    Object.entries(initialData.difficultyRules as Record<string, unknown>).forEach(([key, val]) => {
+                        if (typeof val === 'string') {
+                            parsedDifficulty.push({ level: key, condition: val });
+                        }
                     });
                 }
                 setDifficultyRules(parsedDifficulty.length > 0 ? parsedDifficulty : [{ level: 'EASY', condition: '' }]);

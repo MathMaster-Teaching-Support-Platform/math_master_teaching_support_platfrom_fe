@@ -1,7 +1,8 @@
 // ─── Enums ────────────────────────────────────────────────────────────────────
 export type AssessmentType = 'QUIZ' | 'TEST' | 'EXAM' | 'HOMEWORK';
 export type AssessmentStatus = 'DRAFT' | 'PUBLISHED' | 'CLOSED';
-export type AttemptScoringPolicy = 'HIGHEST' | 'LATEST' | 'AVERAGE' | 'FIRST';
+export type AssessmentMode = 'DIRECT' | 'MATRIX_BASED';
+export type AttemptScoringPolicy = 'BEST' | 'LATEST' | 'AVERAGE';
 
 // ─── Request DTOs ─────────────────────────────────────────────────────────────
 export interface AssessmentRequest {
@@ -10,7 +11,7 @@ export interface AssessmentRequest {
     description?: string;
     /** @NotNull */
     assessmentType: AssessmentType;
-    lessonId?: string;
+    lessonIds: string[];
     /** @Min(1) */
     timeLimitMinutes?: number;
     /** @DecimalMin(0) @DecimalMax(100) */
@@ -19,7 +20,8 @@ export interface AssessmentRequest {
     endDate?: string;     // ISO instant
     randomizeQuestions?: boolean;
     showCorrectAnswers?: boolean;
-    hasMatrix?: boolean;
+    assessmentMode?: AssessmentMode;
+    examMatrixId: string;
     allowMultipleAttempts?: boolean;
     /** @Min(1) */
     maxAttempts?: number;
@@ -52,8 +54,8 @@ export interface AssessmentResponse {
     id: string;
     teacherId: string;
     teacherName: string;
-    lessonId?: string;
-    lessonTitle?: string;
+    lessonIds: string[];
+    lessonTitles: string[];
     title: string;
     description?: string;
     assessmentType: AssessmentType;
@@ -63,7 +65,8 @@ export interface AssessmentResponse {
     endDate?: string;
     randomizeQuestions?: boolean;
     showCorrectAnswers?: boolean;
-    hasMatrix?: boolean;
+    assessmentMode?: AssessmentMode;
+    examMatrixId?: string;
     allowMultipleAttempts?: boolean;
     maxAttempts?: number;
     attemptScoringPolicy?: AttemptScoringPolicy;
@@ -90,7 +93,6 @@ export interface AssessmentSummary {
 // ─── Query Params ─────────────────────────────────────────────────────────────
 export interface GetMyAssessmentsParams {
     status?: AssessmentStatus;
-    lessonId?: string;
     page?: number;
     size?: number;
     sortBy?: string;
