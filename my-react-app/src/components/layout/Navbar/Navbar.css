@@ -314,7 +314,7 @@
 }
 
 @media (max-width: 980px) {
-  .navbar-action-btn:nth-child(3) {
+  .help-btn {
     display: none;
   }
 
@@ -329,7 +329,7 @@
 }
 
 @media (max-width: 860px) {
-  .navbar-action-btn:nth-child(2) {
+  .message-btn {
     display: none;
   }
 
