@@ -33,7 +33,12 @@ import { TemplateFormModal } from './TemplateFormModal';
 import { TemplateImportModal } from './TemplateImportModal';
 import { TemplateTestModal } from './TemplateTestModal';
 
-const statusFilters: Array<'ALL' | TemplateStatus> = ['ALL', TemplateStatus.DRAFT, TemplateStatus.PUBLISHED, TemplateStatus.ARCHIVED];
+const statusFilters: Array<'ALL' | TemplateStatus> = [
+  'ALL',
+  TemplateStatus.DRAFT,
+  TemplateStatus.PUBLISHED,
+  TemplateStatus.ARCHIVED,
+];
 
 const statusClass: Record<TemplateStatus, string> = {
   DRAFT: 'badge draft',
@@ -80,7 +85,12 @@ export function TemplateDashboard() {
   const [testOpen, setTestOpen] = useState(false);
   const [selected, setSelected] = useState<QuestionTemplateResponse | null>(null);
 
-  const { data, isLoading, isError, error, refetch } = useGetMyQuestionTemplates(0, 200, 'createdAt', 'DESC');
+  const { data, isLoading, isError, error, refetch } = useGetMyQuestionTemplates(
+    0,
+    200,
+    'createdAt',
+    'DESC'
+  );
 
   const createMutation = useCreateQuestionTemplate();
   const updateMutation = useUpdateQuestionTemplate();
@@ -120,154 +130,193 @@ export function TemplateDashboard() {
   }
 
   return (
-    <DashboardLayout role="teacher" user={{ name: 'Teacher', avatar: '', role: 'teacher' }} notificationCount={0}>
-      <section className="module-page">
-        <header className="page-header">
-          <div>
-            <h2>Mẫu câu hỏi</h2>
-            <p>Quản lý logic tạo câu hỏi tái sử dụng và vòng đời của mẫu.</p>
-          </div>
-          <div className="row" style={{ flexWrap: 'wrap' }}>
-            <button className="btn secondary" onClick={() => setImportOpen(true)}>
-              <Upload size={14} />
-              Nhập file
-            </button>
-            <button
-              className="btn"
-              onClick={() => {
-                setMode('create');
-                setSelected(null);
-                setFormOpen(true);
-              }}
-            >
-              <Plus size={14} />
-              Tạo mẫu mới
-            </button>
-          </div>
-        </header>
-
-        <div className="toolbar">
-          <label className="row" style={{ minWidth: 260 }}>
-            <Search size={15} />
-            <input
-              className="input"
-              style={{ border: 0, padding: 0, width: '100%' }}
-              placeholder="Tìm mẫu câu hỏi"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-          </label>
-
-          <div className="pill-group">
-            {statusFilters.map((item) => (
-              <button key={item} className={`pill-btn ${status === item ? 'active' : ''}`} onClick={() => setStatus(item)}>
-                {statusLabel[item]}
+    <DashboardLayout
+      role="teacher"
+      user={{ name: 'Teacher', avatar: '', role: 'teacher' }}
+      notificationCount={0}
+    >
+      <div className="module-layout-container">
+        <section className="module-page">
+          <header className="page-header">
+            <div>
+              <h2>Mẫu câu hỏi</h2>
+              <p>Quản lý logic tạo câu hỏi tái sử dụng và vòng đời của mẫu.</p>
+            </div>
+            <div className="row" style={{ flexWrap: 'wrap' }}>
+              <button className="btn secondary" onClick={() => setImportOpen(true)}>
+                <Upload size={14} />
+                Nhập file
               </button>
-            ))}
+              <button
+                className="btn"
+                onClick={() => {
+                  setMode('create');
+                  setSelected(null);
+                  setFormOpen(true);
+                }}
+              >
+                <Plus size={14} />
+                Tạo mẫu mới
+              </button>
+            </div>
+          </header>
+
+          <div className="toolbar">
+            <label className="row" style={{ minWidth: 260 }}>
+              <Search size={15} />
+              <input
+                className="input"
+                style={{ border: 0, padding: 0, width: '100%' }}
+                placeholder="Tìm mẫu câu hỏi"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+            </label>
+
+            <div className="pill-group">
+              {statusFilters.map((item) => (
+                <button
+                  key={item}
+                  className={`pill-btn ${status === item ? 'active' : ''}`}
+                  onClick={() => setStatus(item)}
+                >
+                  {statusLabel[item]}
+                </button>
+              ))}
+            </div>
+
+            <button className="btn secondary" onClick={() => void refetch()}>
+              <RefreshCw size={14} />
+              Làm mới
+            </button>
           </div>
 
-          <button className="btn secondary" onClick={() => void refetch()}>
-            <RefreshCw size={14} />
-            Làm mới
-          </button>
-        </div>
+          {isLoading && <div className="empty">Đang tải danh sách mẫu...</div>}
+          {isError && (
+            <div className="empty">
+              {error instanceof Error ? error.message : 'Không thể tải danh sách mẫu'}
+            </div>
+          )}
+          {!isLoading && !isError && filtered.length === 0 && (
+            <div className="empty">Không tìm thấy mẫu phù hợp.</div>
+          )}
 
-        {isLoading && <div className="empty">Đang tải danh sách mẫu...</div>}
-        {isError && <div className="empty">{error instanceof Error ? error.message : 'Không thể tải danh sách mẫu'}</div>}
-        {!isLoading && !isError && filtered.length === 0 && <div className="empty">Không tìm thấy mẫu phù hợp.</div>}
+          {!isLoading && !isError && filtered.length > 0 && (
+            <div className="grid-cards">
+              {filtered.map((template) => (
+                <article key={template.id} className="data-card">
+                  <div className="row">
+                    <span className={statusClass[template.status]}>
+                      {cardStatusLabel[template.status]}
+                    </span>
+                    <button
+                      className="btn secondary"
+                      onClick={() => togglePublicMutation.mutate(template.id)}
+                    >
+                      {template.isPublic ? <Eye size={14} /> : <EyeOff size={14} />}
+                      {template.isPublic ? 'Công khai' : 'Riêng tư'}
+                    </button>
+                  </div>
 
-        {!isLoading && !isError && filtered.length > 0 && (
-          <div className="grid-cards">
-            {filtered.map((template) => (
-              <article key={template.id} className="data-card">
-                <div className="row">
-                  <span className={statusClass[template.status]}>{cardStatusLabel[template.status]}</span>
-                  <button className="btn secondary" onClick={() => togglePublicMutation.mutate(template.id)}>
-                    {template.isPublic ? <Eye size={14} /> : <EyeOff size={14} />}
-                    {template.isPublic ? 'Công khai' : 'Riêng tư'}
-                  </button>
-                </div>
+                  <div>
+                    <h3>{template.name}</h3>
+                    <p className="muted" style={{ marginTop: 6 }}>
+                      {template.description || 'Không có mô tả'}
+                    </p>
+                  </div>
 
-                <div>
-                  <h3>{template.name}</h3>
-                  <p className="muted" style={{ marginTop: 6 }}>{template.description || 'Không có mô tả'}</p>
-                </div>
+                  <div className="row" style={{ justifyContent: 'start', flexWrap: 'wrap' }}>
+                    <span className="muted">
+                      {templateTypeLabel[template.templateType] || template.templateType}
+                    </span>
+                    <span className="muted">
+                      {cognitiveLevelLabel[template.cognitiveLevel] || template.cognitiveLevel}
+                    </span>
+                    <span className="muted">Đã dùng: {template.usageCount ?? 0} lần</span>
+                  </div>
 
-                <div className="row" style={{ justifyContent: 'start', flexWrap: 'wrap' }}>
-                  <span className="muted">{templateTypeLabel[template.templateType] || template.templateType}</span>
-                  <span className="muted">{cognitiveLevelLabel[template.cognitiveLevel] || template.cognitiveLevel}</span>
-                  <span className="muted">Đã dùng: {template.usageCount ?? 0} lần</span>
-                </div>
-
-                <div className="row" style={{ flexWrap: 'wrap' }}>
-                  <button
-                    className="btn secondary"
-                    onClick={() => {
-                      setSelected(template);
-                      setTestOpen(true);
-                    }}
-                  >
-                    <Play size={14} />
-                    Chạy thử
-                  </button>
-
-                  {template.status === TemplateStatus.DRAFT && (
+                  <div className="row" style={{ flexWrap: 'wrap' }}>
                     <button
                       className="btn secondary"
                       onClick={() => {
-                        setMode('edit');
                         setSelected(template);
-                        setFormOpen(true);
+                        setTestOpen(true);
                       }}
                     >
-                      <Pencil size={14} />
-                      Chỉnh sửa
+                      <Play size={14} />
+                      Chạy thử
                     </button>
-                  )}
 
-                  {template.status === TemplateStatus.DRAFT && (
-                    <button className="btn" onClick={() => publishMutation.mutate(template.id)}>
-                      <FileText size={14} />
-                      Xuất bản
+                    {template.status === TemplateStatus.DRAFT && (
+                      <button
+                        className="btn secondary"
+                        onClick={() => {
+                          setMode('edit');
+                          setSelected(template);
+                          setFormOpen(true);
+                        }}
+                      >
+                        <Pencil size={14} />
+                        Chỉnh sửa
+                      </button>
+                    )}
+
+                    {template.status === TemplateStatus.DRAFT && (
+                      <button className="btn" onClick={() => publishMutation.mutate(template.id)}>
+                        <FileText size={14} />
+                        Xuất bản
+                      </button>
+                    )}
+
+                    {template.status === TemplateStatus.PUBLISHED && (
+                      <button
+                        className="btn warn"
+                        onClick={() => archiveMutation.mutate(template.id)}
+                      >
+                        <Archive size={14} />
+                        Lưu trữ
+                      </button>
+                    )}
+
+                    <button
+                      className="btn danger"
+                      onClick={() => deleteMutation.mutate(template.id)}
+                    >
+                      <Trash2 size={14} />
+                      Xóa
                     </button>
-                  )}
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
 
-                  {template.status === TemplateStatus.PUBLISHED && (
-                    <button className="btn warn" onClick={() => archiveMutation.mutate(template.id)}>
-                      <Archive size={14} />
-                      Lưu trữ
-                    </button>
-                  )}
+          <TemplateFormModal
+            isOpen={formOpen}
+            onClose={() => setFormOpen(false)}
+            mode={mode}
+            initialData={selected}
+            onSubmit={saveTemplate}
+          />
 
-                  <button className="btn danger" onClick={() => deleteMutation.mutate(template.id)}>
-                    <Trash2 size={14} />
-                    Xóa
-                  </button>
-                </div>
-              </article>
-            ))}
-          </div>
-        )}
+          <TemplateImportModal
+            isOpen={importOpen}
+            onClose={() => setImportOpen(false)}
+            onUseTemplate={(draft) => {
+              setImportOpen(false);
+              openCreateFromDraft(draft);
+            }}
+          />
 
-        <TemplateFormModal
-          isOpen={formOpen}
-          onClose={() => setFormOpen(false)}
-          mode={mode}
-          initialData={selected}
-          onSubmit={saveTemplate}
-        />
-
-        <TemplateImportModal
-          isOpen={importOpen}
-          onClose={() => setImportOpen(false)}
-          onUseTemplate={(draft) => {
-            setImportOpen(false);
-            openCreateFromDraft(draft);
-          }}
-        />
-
-        {selected && <TemplateTestModal isOpen={testOpen} onClose={() => setTestOpen(false)} template={selected} />}
-      </section>
+          {selected && (
+            <TemplateTestModal
+              isOpen={testOpen}
+              onClose={() => setTestOpen(false)}
+              template={selected}
+            />
+          )}
+        </section>
+      </div>
     </DashboardLayout>
   );
 }

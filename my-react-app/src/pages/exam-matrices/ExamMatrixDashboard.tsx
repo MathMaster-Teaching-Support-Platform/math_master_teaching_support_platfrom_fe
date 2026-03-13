@@ -11,10 +11,19 @@ import {
 } from '../../hooks/useExamMatrix';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import '../../styles/module-refactor.css';
-import { MatrixStatus, type ExamMatrixRequest, type ExamMatrixResponse } from '../../types/examMatrix';
+import {
+  MatrixStatus,
+  type ExamMatrixRequest,
+  type ExamMatrixResponse,
+} from '../../types/examMatrix';
 import { ExamMatrixFormModal } from './ExamMatrixFormModal';
 
-const filters: Array<'ALL' | MatrixStatus> = ['ALL', MatrixStatus.DRAFT, MatrixStatus.APPROVED, MatrixStatus.LOCKED];
+const filters: Array<'ALL' | MatrixStatus> = [
+  'ALL',
+  MatrixStatus.DRAFT,
+  MatrixStatus.APPROVED,
+  MatrixStatus.LOCKED,
+];
 
 const statusClass: Record<MatrixStatus, string> = {
   DRAFT: 'badge draft',
@@ -71,132 +80,150 @@ export function ExamMatrixDashboard() {
   }
 
   return (
-    <DashboardLayout role="teacher" user={{ name: 'Teacher', avatar: '', role: 'teacher' }} notificationCount={0}>
-      <section className="module-page">
-        <header className="page-header">
-          <div>
-            <h2>Ma trận đề</h2>
-            <p>Thiết kế và quản lý chất lượng ma trận trước khi xuất bản bài kiểm tra.</p>
+    <DashboardLayout
+      role="teacher"
+      user={{ name: 'Teacher', avatar: '', role: 'teacher' }}
+      notificationCount={0}
+    >
+      <div className="module-layout-container">
+        <section className="module-page">
+          <header className="page-header">
+            <div>
+              <h2>Ma trận đề</h2>
+              <p>Thiết kế và quản lý chất lượng ma trận trước khi xuất bản bài kiểm tra.</p>
+            </div>
+            <button
+              className="btn"
+              onClick={() => {
+                setMode('create');
+                setSelected(null);
+                setFormOpen(true);
+              }}
+            >
+              <Plus size={16} />
+              Tạo ma trận
+            </button>
+          </header>
+
+          <div className="toolbar">
+            <label className="row" style={{ minWidth: 260 }}>
+              <Search size={15} />
+              <input
+                className="input"
+                style={{ border: '0', padding: 0, width: '100%' }}
+                placeholder="Tìm ma trận"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+            </label>
+
+            <div className="pill-group">
+              {filters.map((filter) => (
+                <button
+                  key={filter}
+                  className={`pill-btn ${statusFilter === filter ? 'active' : ''}`}
+                  onClick={() => setStatusFilter(filter)}
+                >
+                  {filterLabel[filter]}
+                </button>
+              ))}
+            </div>
+
+            <button className="btn secondary" onClick={() => void refetch()}>
+              Làm mới
+            </button>
           </div>
-          <button
-            className="btn"
-            onClick={() => {
-              setMode('create');
-              setSelected(null);
-              setFormOpen(true);
-            }}
-          >
-            <Plus size={16} />
-            Tạo ma trận
-          </button>
-        </header>
-
-        <div className="toolbar">
-          <label className="row" style={{ minWidth: 260 }}>
-            <Search size={15} />
-            <input
-              className="input"
-              style={{ border: '0', padding: 0, width: '100%' }}
-              placeholder="Tìm ma trận"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-          </label>
-
-          <div className="pill-group">
-            {filters.map((filter) => (
-              <button
-                key={filter}
-                className={`pill-btn ${statusFilter === filter ? 'active' : ''}`}
-                onClick={() => setStatusFilter(filter)}
-              >
-                {filterLabel[filter]}
-              </button>
-            ))}
-          </div>
-
-          <button className="btn secondary" onClick={() => void refetch()}>
-            Làm mới
-          </button>
-        </div>
 
           {isLoading && <div className="empty">Đang tải danh sách ma trận...</div>}
-        {isError && (
-            <div className="empty">{error instanceof Error ? error.message : 'Không thể tải danh sách ma trận'}</div>
-        )}
+          {isError && (
+            <div className="empty">
+              {error instanceof Error ? error.message : 'Không thể tải danh sách ma trận'}
+            </div>
+          )}
 
-          {!isLoading && !isError && filtered.length === 0 && <div className="empty">Không có ma trận phù hợp với bộ lọc hiện tại.</div>}
+          {!isLoading && !isError && filtered.length === 0 && (
+            <div className="empty">Không có ma trận phù hợp với bộ lọc hiện tại.</div>
+          )}
 
-        {!isLoading && !isError && filtered.length > 0 && (
-          <div className="grid-cards">
-            {filtered.map((matrix) => (
-              <article key={matrix.id} className="data-card">
-                <div className="row">
-                  <span className={statusClass[matrix.status]}>{cardStatusLabel[matrix.status]}</span>
-                  <span className="muted">{matrix.templateMappingCount} ánh xạ</span>
-                </div>
+          {!isLoading && !isError && filtered.length > 0 && (
+            <div className="grid-cards">
+              {filtered.map((matrix) => (
+                <article key={matrix.id} className="data-card">
+                  <div className="row">
+                    <span className={statusClass[matrix.status]}>
+                      {cardStatusLabel[matrix.status]}
+                    </span>
+                    <span className="muted">{matrix.templateMappingCount} ánh xạ</span>
+                  </div>
 
-                <div>
-                  <h3>{matrix.name}</h3>
-                  <p className="muted" style={{ marginTop: 6 }}>
-                    {matrix.description || 'Không có mô tả'}
-                  </p>
-                </div>
+                  <div>
+                    <h3>{matrix.name}</h3>
+                    <p className="muted" style={{ marginTop: 6 }}>
+                      {matrix.description || 'Không có mô tả'}
+                    </p>
+                  </div>
 
-                <div className="row" style={{ flexWrap: 'wrap' }}>
-                  <button className="btn secondary" onClick={() => navigate(`/teacher/exam-matrices/${matrix.id}`)}>
-                    <Eye size={14} />
-                    Chi tiết
-                  </button>
-
-                  {matrix.status === MatrixStatus.DRAFT && (
+                  <div className="row" style={{ flexWrap: 'wrap' }}>
                     <button
                       className="btn secondary"
-                      onClick={() => {
-                        setMode('edit');
-                        setSelected(matrix);
-                        setFormOpen(true);
-                      }}
+                      onClick={() => navigate(`/teacher/exam-matrices/${matrix.id}`)}
                     >
-                      <Edit size={14} />
-                      Chỉnh sửa
+                      <Eye size={14} />
+                      Chi tiết
                     </button>
-                  )}
 
-                  {matrix.status === MatrixStatus.DRAFT && (
-                    <button className="btn" onClick={() => approveMutation.mutate(matrix.id)}>
-                      <CheckCircle2 size={14} />
-                      Phê duyệt
-                    </button>
-                  )}
+                    {matrix.status === MatrixStatus.DRAFT && (
+                      <button
+                        className="btn secondary"
+                        onClick={() => {
+                          setMode('edit');
+                          setSelected(matrix);
+                          setFormOpen(true);
+                        }}
+                      >
+                        <Edit size={14} />
+                        Chỉnh sửa
+                      </button>
+                    )}
 
-                  {matrix.status === MatrixStatus.APPROVED && (
-                    <button className="btn warn" onClick={() => resetMutation.mutate(matrix.id)}>
-                      <RotateCcw size={14} />
-                      Đặt lại
-                    </button>
-                  )}
+                    {matrix.status === MatrixStatus.DRAFT && (
+                      <button className="btn" onClick={() => approveMutation.mutate(matrix.id)}>
+                        <CheckCircle2 size={14} />
+                        Phê duyệt
+                      </button>
+                    )}
 
-                  {matrix.status !== MatrixStatus.LOCKED && (
-                    <button className="btn danger" onClick={() => deleteMutation.mutate(matrix.id)}>
-                      <Trash2 size={14} />
-                      Xóa
-                    </button>
-                  )}
-                </div>
-              </article>
-            ))}
-          </div>
-        )}
+                    {matrix.status === MatrixStatus.APPROVED && (
+                      <button className="btn warn" onClick={() => resetMutation.mutate(matrix.id)}>
+                        <RotateCcw size={14} />
+                        Đặt lại
+                      </button>
+                    )}
 
-        <ExamMatrixFormModal
-          isOpen={formOpen}
-          mode={mode}
-          initialData={selected}
-          onClose={() => setFormOpen(false)}
-          onSubmit={handleSave}
-        />
-      </section>
+                    {matrix.status !== MatrixStatus.LOCKED && (
+                      <button
+                        className="btn danger"
+                        onClick={() => deleteMutation.mutate(matrix.id)}
+                      >
+                        <Trash2 size={14} />
+                        Xóa
+                      </button>
+                    )}
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+
+          <ExamMatrixFormModal
+            isOpen={formOpen}
+            mode={mode}
+            initialData={selected}
+            onClose={() => setFormOpen(false)}
+            onSubmit={handleSave}
+          />
+        </section>
+      </div>
     </DashboardLayout>
   );
 }

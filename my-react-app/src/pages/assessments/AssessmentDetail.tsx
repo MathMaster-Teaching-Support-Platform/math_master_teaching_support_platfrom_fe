@@ -51,19 +51,29 @@ export default function AssessmentDetail() {
 
   function renderContent() {
     if (isLoading) {
-      return <section className="module-page"><div className="empty">Đang tải chi tiết bài kiểm tra...</div></section>;
+      return (
+        <section className="module-page">
+          <div className="empty">Đang tải chi tiết bài kiểm tra...</div>
+        </section>
+      );
     }
 
     if (isError) {
       return (
         <section className="module-page">
-          <div className="empty">{error instanceof Error ? error.message : 'Không thể tải chi tiết bài kiểm tra'}</div>
+          <div className="empty">
+            {error instanceof Error ? error.message : 'Không thể tải chi tiết bài kiểm tra'}
+          </div>
         </section>
       );
     }
 
     if (!assessment) {
-      return <section className="module-page"><div className="empty">Không tìm thấy bài kiểm tra.</div></section>;
+      return (
+        <section className="module-page">
+          <div className="empty">Không tìm thấy bài kiểm tra.</div>
+        </section>
+      );
     }
 
     return (
@@ -93,7 +103,9 @@ export default function AssessmentDetail() {
           <article className="stat-card">
             <p>Trạng thái</p>
             <h3>{assessmentStatusLabel[assessment.status] || assessment.status}</h3>
-            <span>{assessmentTypeLabel[assessment.assessmentType] || assessment.assessmentType}</span>
+            <span>
+              {assessmentTypeLabel[assessment.assessmentType] || assessment.assessmentType}
+            </span>
           </article>
           <article className="stat-card">
             <p>Câu hỏi</p>
@@ -103,7 +115,12 @@ export default function AssessmentDetail() {
           <article className="stat-card">
             <p>Lượt nộp</p>
             <h3>{assessment.submissionCount}</h3>
-            <span>Chính sách chấm điểm: {scoringPolicyLabel[assessment.attemptScoringPolicy || 'BEST'] || assessment.attemptScoringPolicy || 'BEST'}</span>
+            <span>
+              Chính sách chấm điểm:{' '}
+              {scoringPolicyLabel[assessment.attemptScoringPolicy || 'BEST'] ||
+                assessment.attemptScoringPolicy ||
+                'BEST'}
+            </span>
           </article>
         </div>
 
@@ -124,7 +141,11 @@ export default function AssessmentDetail() {
               </tr>
               <tr>
                 <th>Chế độ tạo đề</th>
-                <td>{assessmentModeLabel[assessment.assessmentMode || 'DIRECT'] || assessment.assessmentMode || 'DIRECT'}</td>
+                <td>
+                  {assessmentModeLabel[assessment.assessmentMode || 'DIRECT'] ||
+                    assessment.assessmentMode ||
+                    'DIRECT'}
+                </td>
               </tr>
               <tr>
                 <th>Ma trận đề</th>
@@ -132,7 +153,15 @@ export default function AssessmentDetail() {
               </tr>
               <tr>
                 <th>Lịch làm bài</th>
-                <td>{assessment.startDate ? new Date(assessment.startDate).toLocaleString() : 'Chưa đặt lịch'} - {assessment.endDate ? new Date(assessment.endDate).toLocaleString() : 'Không giới hạn'}</td>
+                <td>
+                  {assessment.startDate
+                    ? new Date(assessment.startDate).toLocaleString()
+                    : 'Chưa đặt lịch'}{' '}
+                  -{' '}
+                  {assessment.endDate
+                    ? new Date(assessment.endDate).toLocaleString()
+                    : 'Không giới hạn'}
+                </td>
               </tr>
             </tbody>
           </table>
@@ -150,8 +179,12 @@ export default function AssessmentDetail() {
   }
 
   return (
-    <DashboardLayout role="teacher" user={{ name: 'Teacher', avatar: '', role: 'teacher' }} notificationCount={0}>
-      {renderContent()}
+    <DashboardLayout
+      role="teacher"
+      user={{ name: 'Teacher', avatar: '', role: 'teacher' }}
+      notificationCount={0}
+    >
+      <div className="module-layout-container">{renderContent()}</div>
     </DashboardLayout>
   );
 }
