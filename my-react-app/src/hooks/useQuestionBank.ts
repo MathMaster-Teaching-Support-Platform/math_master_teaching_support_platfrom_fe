@@ -17,11 +17,13 @@ export const useGetMyQuestionBanks = (
   page = 0,
   size = 20,
   sortBy = 'createdAt',
-  sortDirection: 'ASC' | 'DESC' = 'DESC'
+  sortDirection: 'ASC' | 'DESC' = 'DESC',
+  enabled = true
 ) =>
   useQuery({
     queryKey: questionBankKeys.mine(page, size, sortBy, sortDirection),
     queryFn: () => questionBankService.getMyQuestionBanks(page, size, sortBy, sortDirection),
+    enabled,
   });
 
 export const useGetQuestionBankById = (id: string, enabled = true) =>

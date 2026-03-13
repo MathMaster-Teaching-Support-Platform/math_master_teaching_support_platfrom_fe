@@ -1,5 +1,6 @@
 import { AlertCircle, CheckCircle2, FileText, UploadCloud, X } from 'lucide-react';
 import { useRef, useState } from 'react';
+import { useGetMyQuestionBanks } from '../../hooks/useQuestionBank';
 import { useImportTemplateFromFile } from '../../hooks/useQuestionTemplate';
 import type { TemplateDraft } from '../../types/questionTemplate';
 
@@ -14,16 +15,20 @@ export function TemplateImportModal({ isOpen, onClose, onUseTemplate }: Props) {
   const [file, setFile] = useState<File | null>(null);
   const [subjectHint, setSubjectHint] = useState('');
   const [contextHint, setContextHint] = useState('');
+  const [questionBankId, setQuestionBankId] = useState('');
   const importMutation = useImportTemplateFromFile();
+  const { data: questionBankData } = useGetMyQuestionBanks(0, 200, 'createdAt', 'DESC', isOpen);
 
   if (!isOpen) return null;
 
   const result = importMutation.data?.result;
+  const questionBanks = questionBankData?.result?.content ?? [];
 
   function reset() {
     setFile(null);
     setSubjectHint('');
     setContextHint('');
+    setQuestionBankId('');
     importMutation.reset();
   }
 
@@ -79,6 +84,21 @@ export function TemplateImportModal({ isOpen, onClose, onUseTemplate }: Props) {
                   <p className="muted" style={{ marginBottom: 6 }}>Gợi ý bối cảnh</p>
                   <input className="input" value={contextHint} onChange={(event) => setContextHint(event.target.value)} />
                 </label>
+                <label>
+                  <p className="muted" style={{ marginBottom: 6 }}>Ngân hàng câu hỏi (tùy chọn)</p>
+                  <select
+                    className="select"
+                    value={questionBankId}
+                    onChange={(event) => setQuestionBankId(event.target.value)}
+                  >
+                    <option value="">Không gán ngân hàng</option>
+                    {questionBanks.map((bank) => (
+                      <option key={bank.id} value={bank.id}>
+                        {bank.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
               </div>
 
               {importMutation.isError && (
@@ -124,7 +144,12 @@ export function TemplateImportModal({ isOpen, onClose, onUseTemplate }: Props) {
               disabled={!file || importMutation.isPending}
               onClick={() => {
                 if (!file) return;
-                importMutation.mutate({ file, subjectHint, contextHint });
+                importMutation.mutate({
+                  file,
+                  subjectHint,
+                  contextHint,
+                  questionBankId: questionBankId || undefined,
+                });
               }}
             >
               {importMutation.isPending ? 'Đang phân tích...' : 'Phân tích file'}
