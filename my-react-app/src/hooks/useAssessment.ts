@@ -13,6 +13,7 @@ import type {
     PointsOverrideRequest,
     CloneAssessmentRequest,
     AddQuestionToAssessmentRequest,
+    GenerateAssessmentFromMatrixRequest,
     ApiResponse,
     PaginatedResponse,
 } from '../types';
@@ -205,6 +206,18 @@ export function useCloneAssessment() {
     return useMutation({
         mutationFn: ({ id, data }: { id: string; data: CloneAssessmentRequest }) =>
             AssessmentService.cloneAssessment(id, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: assessmentKeys.lists() });
+        },
+    });
+}
+
+/** One-step auto-generate assessment from selected exam matrix */
+export function useGenerateAssessmentFromMatrix() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (data: GenerateAssessmentFromMatrixRequest) =>
+            AssessmentService.generateAssessmentFromMatrix(data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: assessmentKeys.lists() });
         },

@@ -1,16 +1,33 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+<<<<<<< Updated upstream
 import { BookOpen, Copy, Lock, Pencil, Plus, RefreshCw, Search, Send, Trash2 } from 'lucide-react';
+=======
+import {
+  BookOpen,
+  Copy,
+  Sparkles,
+  Lock,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Search,
+  Send,
+  Trash2,
+} from 'lucide-react';
+>>>>>>> Stashed changes
 import {
   useCloneAssessment,
   useCloseAssessment,
   useCreateAssessment,
   useDeleteAssessment,
+  useGenerateAssessmentFromMatrix,
   useMyAssessments,
   usePublishAssessment,
   useUnpublishAssessment,
   useUpdateAssessment,
 } from '../../hooks/useAssessment';
+import { useGetMyExamMatrices } from '../../hooks/useExamMatrix';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import type { AssessmentRequest, AssessmentResponse, AssessmentStatus } from '../../types';
 import '../../styles/module-refactor.css';
@@ -109,6 +126,62 @@ function CloneModal({
   );
 }
 
+function GenerateFromMatrixModal({
+  matrixId,
+  setMatrixId,
+  matrices,
+  isLoading,
+  onClose,
+  onConfirm,
+}: {
+  matrixId: string;
+  setMatrixId: (next: string) => void;
+  matrices: Array<{ id: string; name: string; status: string }>;
+  isLoading: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <div className="modal-layer">
+      <div className="modal-card" style={{ width: 'min(520px, 100%)' }}>
+        <div className="modal-header">
+          <div>
+            <h3>Tạo nhanh từ ma trận đề</h3>
+            <p className="muted" style={{ marginTop: 4 }}>
+              Chọn ma trận từ danh sách của bạn, hệ thống sẽ tự tạo assessment và câu hỏi.
+            </p>
+          </div>
+        </div>
+
+        <div className="modal-body">
+          <label>
+            <p className="muted" style={{ marginBottom: 6 }}>Ma trận đề</p>
+            <select
+              className="select"
+              value={matrixId}
+              onChange={(event) => setMatrixId(event.target.value)}
+            >
+              <option value="">Chọn ma trận</option>
+              {matrices.map((matrix) => (
+                <option key={matrix.id} value={matrix.id}>
+                  {matrix.name} ({matrix.status})
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        <div className="modal-footer">
+          <button className="btn secondary" onClick={onClose}>Hủy</button>
+          <button className="btn" disabled={!matrixId || isLoading} onClick={onConfirm}>
+            {isLoading ? 'Đang tạo...' : 'Tạo assessment'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function TeacherAssessments() {
   const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState<'ALL' | AssessmentStatus>('ALL');
@@ -118,6 +191,8 @@ export default function TeacherAssessments() {
   const [mode, setMode] = useState<'create' | 'edit'>('create');
   const [selected, setSelected] = useState<AssessmentResponse | null>(null);
   const [cloneTarget, setCloneTarget] = useState<AssessmentResponse | null>(null);
+  const [generateModalOpen, setGenerateModalOpen] = useState(false);
+  const [selectedMatrixId, setSelectedMatrixId] = useState('');
 
   const { data, isLoading, isError, error, refetch } = useMyAssessments({
     status: statusFilter === 'ALL' ? undefined : statusFilter,
@@ -134,9 +209,12 @@ export default function TeacherAssessments() {
   const closeMutation = useCloseAssessment();
   const deleteMutation = useDeleteAssessment();
   const cloneMutation = useCloneAssessment();
+  const generateFromMatrixMutation = useGenerateAssessmentFromMatrix();
+  const { data: myMatricesData } = useGetMyExamMatrices();
 
   const assessments = data?.result?.content ?? [];
   const totalPages = data?.result?.totalPages ?? 0;
+  const myMatrices = myMatricesData?.result ?? [];
 
   const filtered = useMemo(() => {
     if (!search.trim()) return assessments;
@@ -166,7 +244,21 @@ export default function TeacherAssessments() {
     setCloneTarget(null);
   }
 
+  async function generateFromMatrix() {
+    if (!selectedMatrixId) return;
+    const response = await generateFromMatrixMutation.mutateAsync({
+      examMatrixId: selectedMatrixId,
+    });
+    const generatedAssessmentId = response.result?.id;
+    setGenerateModalOpen(false);
+    setSelectedMatrixId('');
+    if (generatedAssessmentId) {
+      navigate(`/teacher/assessments/${generatedAssessmentId}`);
+    }
+  }
+
   return (
+<<<<<<< Updated upstream
     <DashboardLayout
       role="teacher"
       user={{ name: 'Teacher', avatar: '', role: 'teacher' }}
@@ -179,6 +271,23 @@ export default function TeacherAssessments() {
               <h2>Bài kiểm tra</h2>
               <p>Tạo, xuất bản và quản lý vòng đời bài kiểm tra cho học sinh.</p>
             </div>
+=======
+    <DashboardLayout role="teacher" user={{ name: 'Teacher', avatar: '', role: 'teacher' }} notificationCount={0}>
+      <section className="module-page">
+        <header className="page-header">
+          <div>
+            <h2>Bài kiểm tra</h2>
+            <p>Tạo, xuất bản và quản lý vòng đời bài kiểm tra cho học sinh.</p>
+          </div>
+          <div className="row" style={{ flexWrap: 'wrap' }}>
+            <button
+              className="btn secondary"
+              onClick={() => setGenerateModalOpen(true)}
+            >
+              <Sparkles size={14} />
+              Tạo nhanh từ ma trận
+            </button>
+>>>>>>> Stashed changes
             <button
               className="btn"
               onClick={() => {
@@ -190,6 +299,7 @@ export default function TeacherAssessments() {
               <Plus size={14} />
               Tạo bài kiểm tra
             </button>
+<<<<<<< Updated upstream
           </header>
 
           <div className="toolbar">
@@ -223,6 +333,32 @@ export default function TeacherAssessments() {
               <RefreshCw size={14} />
               Làm mới
             </button>
+=======
+          </div>
+        </header>
+
+        <div className="toolbar">
+          <label className="row" style={{ minWidth: 260 }}>
+            <Search size={15} />
+            <input
+              className="input"
+              style={{ border: 0, padding: 0, width: '100%' }}
+              placeholder="Tìm bài kiểm tra"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+          </label>
+
+          <div className="pill-group">
+            {statusFilters.map((item) => (
+              <button key={item} className={`pill-btn ${statusFilter === item ? 'active' : ''}`} onClick={() => {
+                setStatusFilter(item);
+                setPage(0);
+              }}>
+                {statusLabel[item]}
+              </button>
+            ))}
+>>>>>>> Stashed changes
           </div>
 
           {isLoading && <div className="empty">Đang tải danh sách bài kiểm tra...</div>}
@@ -359,6 +495,7 @@ export default function TeacherAssessments() {
             onClose={() => setOpenForm(false)}
             onSubmit={saveAssessment}
           />
+<<<<<<< Updated upstream
 
           {cloneTarget && (
             <CloneModal
@@ -372,6 +509,30 @@ export default function TeacherAssessments() {
           )}
         </section>{' '}
       </div>{' '}
+=======
+        )}
+
+        {generateModalOpen && (
+          <GenerateFromMatrixModal
+            matrixId={selectedMatrixId}
+            setMatrixId={setSelectedMatrixId}
+            matrices={myMatrices.map((matrix) => ({
+              id: matrix.id,
+              name: matrix.name,
+              status: matrix.status,
+            }))}
+            isLoading={generateFromMatrixMutation.isPending}
+            onClose={() => {
+              setGenerateModalOpen(false);
+              setSelectedMatrixId('');
+            }}
+            onConfirm={() => {
+              void generateFromMatrix();
+            }}
+          />
+        )}
+      </section>
+>>>>>>> Stashed changes
     </DashboardLayout>
   );
 }

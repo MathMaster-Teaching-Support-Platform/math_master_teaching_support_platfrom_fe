@@ -37,6 +37,7 @@ export const API_ENDPOINTS = {
   ASSESSMENTS_CAN_PUBLISH: (id: string) => `/assessments/${id}/can-publish`,
   ASSESSMENTS_CLOSE: (id: string) => `/assessments/${id}/close`,
   ASSESSMENTS_CLONE: (id: string) => `/assessments/${id}/clone`,
+  ASSESSMENTS_GENERATE_FROM_MATRIX: '/assessments/generate-from-matrix',
   ASSESSMENTS_QUESTIONS: (assessmentId: string) => `/assessments/${assessmentId}/questions`,
   ASSESSMENTS_QUESTION_REMOVE: (assessmentId: string, questionId: string) =>
     `/assessments/${assessmentId}/questions/${questionId}`,

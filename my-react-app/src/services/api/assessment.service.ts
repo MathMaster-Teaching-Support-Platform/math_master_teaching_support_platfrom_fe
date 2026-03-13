@@ -8,6 +8,7 @@ import type {
     GetMyAssessmentsParams,
     CloneAssessmentRequest,
     AddQuestionToAssessmentRequest,
+    GenerateAssessmentFromMatrixRequest,
     ApiResponse,
     PaginatedResponse,
 } from '../../types';
@@ -245,6 +246,26 @@ export class AssessmentService {
         if (!response.ok) {
             const error = await response.json();
             throw new Error(error.message || 'Failed to clone assessment');
+        }
+        return response.json();
+    }
+
+    /** POST /assessments/generate-from-matrix */
+    static async generateAssessmentFromMatrix(
+        data: GenerateAssessmentFromMatrixRequest
+    ): Promise<ApiResponse<AssessmentResponse>> {
+        const headers = await this.getHeaders();
+        const response = await fetch(
+            `${API_BASE_URL}${API_ENDPOINTS.ASSESSMENTS_GENERATE_FROM_MATRIX}`,
+            {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(data),
+            }
+        );
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to generate assessment from matrix');
         }
         return response.json();
     }

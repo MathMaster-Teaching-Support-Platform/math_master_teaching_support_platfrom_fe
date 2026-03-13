@@ -49,6 +49,11 @@ export interface AddQuestionToAssessmentRequest {
     pointsOverride?: number;
 }
 
+export interface GenerateAssessmentFromMatrixRequest {
+    examMatrixId: string;
+    reuseApprovedQuestions?: boolean;
+}
+
 // ─── Response DTOs ────────────────────────────────────────────────────────────
 export interface AssessmentResponse {
     id: string;
