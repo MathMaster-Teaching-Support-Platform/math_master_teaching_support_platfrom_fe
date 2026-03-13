@@ -126,7 +126,6 @@ export class AssessmentService {
         const headers = await this.getHeaders();
         const queryParams = new URLSearchParams();
         if (params.status) queryParams.append('status', params.status);
-        if (params.lessonId) queryParams.append('lessonId', params.lessonId);
         if (params.page !== undefined) queryParams.append('page', params.page.toString());
         if (params.size !== undefined) queryParams.append('size', params.size.toString());
         if (params.sortBy) queryParams.append('sortBy', params.sortBy);
@@ -300,5 +299,74 @@ export class AssessmentService {
             throw new Error(error.message || 'Failed to remove question from assessment');
         }
         return response.json();
+    }
+
+    /**
+     * Optional compatibility pre-check for examMatrixId + lessonIds.
+     * This call is only used when VITE_ASSESSMENT_COMPAT_ENDPOINT is configured.
+     * If endpoint is missing/not deployed yet, returns supported=false and allows submit to continue.
+     */
+    static async checkMatrixLessonCompatibility(payload: {
+        examMatrixId: string;
+        lessonIds: string[];
+    }): Promise<{
+        supported: boolean;
+        compatible: boolean;
+        message?: string;
+        incompatibleLessonIds?: string[];
+    }> {
+        const compatEndpoint = import.meta.env.VITE_ASSESSMENT_COMPAT_ENDPOINT as
+            | string
+            | undefined;
+
+        if (!compatEndpoint) {
+            return { supported: false, compatible: true };
+        }
+
+        const headers = await this.getHeaders();
+        const response = await fetch(`${API_BASE_URL}${compatEndpoint}`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(payload),
+        });
+
+        if (response.status === 404 || response.status === 405) {
+            return { supported: false, compatible: true };
+        }
+
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error((error as { message?: string }).message || 'Compatibility check failed');
+        }
+
+        const body = (await response.json()) as
+            | {
+                  compatible?: boolean;
+                  message?: string;
+                  incompatibleLessonIds?: string[];
+              }
+            | {
+                  result?: {
+                      compatible?: boolean;
+                      message?: string;
+                      incompatibleLessonIds?: string[];
+                  };
+                  message?: string;
+              };
+
+        const result =
+            'result' in body && body.result
+                ? body.result
+                : (body as {
+                      compatible?: boolean;
+                      message?: string;
+                      incompatibleLessonIds?: string[];
+                  });
+        return {
+            supported: true,
+            compatible: result.compatible !== false,
+            message: result.message || ('message' in body ? body.message : undefined),
+            incompatibleLessonIds: result.incompatibleLessonIds,
+        };
     }
 }

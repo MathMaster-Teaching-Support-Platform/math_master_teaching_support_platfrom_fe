@@ -41,6 +41,25 @@ export const API_ENDPOINTS = {
   ASSESSMENTS_QUESTION_REMOVE: (assessmentId: string, questionId: string) =>
     `/assessments/${assessmentId}/questions/${questionId}`,
 
+  // Exam matrices
+  EXAM_MATRICES: '/exam-matrices',
+  EXAM_MATRICES_MY: '/exam-matrices/my',
+  EXAM_MATRIX_DETAIL: (matrixId: string) => `/exam-matrices/${matrixId}`,
+  EXAM_MATRIX_BY_ASSESSMENT: (assessmentId: string) => `/exam-matrices/assessment/${assessmentId}`,
+  EXAM_MATRIX_MAPPINGS: (matrixId: string) => `/exam-matrices/${matrixId}/template-mappings`,
+  EXAM_MATRIX_MAPPING_DETAIL: (matrixId: string, mappingId: string) =>
+    `/exam-matrices/${matrixId}/template-mappings/${mappingId}`,
+  EXAM_MATRIX_VALIDATE: (matrixId: string) => `/exam-matrices/${matrixId}/validate`,
+  EXAM_MATRIX_APPROVE: (matrixId: string) => `/exam-matrices/${matrixId}/approve`,
+  EXAM_MATRIX_LOCK: (matrixId: string) => `/exam-matrices/${matrixId}/lock`,
+  EXAM_MATRIX_RESET: (matrixId: string) => `/exam-matrices/${matrixId}/reset`,
+  EXAM_MATRIX_MATCHING_TEMPLATES: (matrixId: string) =>
+    `/exam-matrices/${matrixId}/matching-templates`,
+  EXAM_MATRIX_GENERATE_PREVIEW: (matrixId: string, mappingId: string) =>
+    `/exam-matrices/${matrixId}/template-mappings/${mappingId}/generate-preview`,
+  EXAM_MATRIX_FINALIZE_PREVIEW: (matrixId: string, mappingId: string) =>
+    `/exam-matrices/${matrixId}/template-mappings/${mappingId}/finalize`,
+
   // Mindmaps
   MINDMAPS: '/mindmaps',
   MINDMAPS_GENERATE: '/mindmaps/generate',
@@ -49,4 +68,8 @@ export const API_ENDPOINTS = {
   MINDMAPS_NODES: (mindmapId: string) => `/mindmaps/${mindmapId}/nodes`,
   MINDMAPS_NODE_DETAIL: (mindmapId: string, nodeId: string) =>
     `/mindmaps/${mindmapId}/nodes/${nodeId}`,
+
+  // Lessons
+  LESSONS: '/lessons',
+  LESSON_DETAIL: (lessonId: string) => `/lessons/${lessonId}`,
 };

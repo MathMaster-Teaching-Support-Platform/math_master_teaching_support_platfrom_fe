@@ -14,7 +14,17 @@ export interface User {
 export * from './auth.types';
 export * from './teacher.types';
 export * from './assessment.types';
-export * from './mindmap.types';
+export * from './examMatrix';
+export * from './lesson.types';
+export {
+  type Mindmap,
+  type MindmapNode,
+  type MindmapGenerateRequest,
+  type MindmapGenerateResponse,
+  type MindmapUpdateRequest,
+  type MindmapNodeUpdateRequest,
+  type MindmapNodeCreateRequest,
+} from './mindmap.types';
 
 export interface Course {
   id: string;

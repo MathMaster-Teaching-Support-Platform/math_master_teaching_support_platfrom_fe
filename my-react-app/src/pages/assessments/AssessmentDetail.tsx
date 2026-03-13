@@ -87,7 +87,9 @@ const AssessmentDetail: React.FC = () => {
                             <h3>Thông tin cơ bản</h3>
                             <ul style={{ listStyle: 'none', padding: 0 }}>
                                 <li style={{ marginBottom: '0.5rem' }}><strong>Loại:</strong> {assessment.assessmentType}</li>
-                                <li style={{ marginBottom: '0.5rem' }}><strong>Bài học:</strong> {assessment.lessonTitle || 'N/A'}</li>
+                                <li style={{ marginBottom: '0.5rem' }}><strong>Bài học:</strong> {(assessment.lessonTitles ?? []).join(', ') || 'N/A'}</li>
+                                <li style={{ marginBottom: '0.5rem' }}><strong>Assessment mode:</strong> {assessment.assessmentMode || 'DIRECT'}</li>
+                                <li style={{ marginBottom: '0.5rem' }}><strong>Exam matrix:</strong> {assessment.examMatrixId || 'N/A'}</li>
                                 <li style={{ marginBottom: '0.5rem' }}><strong>Thời gian làm bài:</strong> {assessment.timeLimitMinutes} phút</li>
                                 <li style={{ marginBottom: '0.5rem' }}><strong>Điểm đạt:</strong> {assessment.passingScore}%</li>
                             </ul>
