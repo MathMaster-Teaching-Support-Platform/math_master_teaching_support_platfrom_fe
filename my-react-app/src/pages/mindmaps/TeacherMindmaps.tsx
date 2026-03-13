@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ArrowRight, Network, Sparkles, WandSparkles } from 'lucide-react';
+import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { mockTeacher } from '../../data/mockData';
 import { MindmapService } from '../../services/api/mindmap.service';
 import type { Mindmap } from '../../types';
 import './TeacherMindmaps.css';
@@ -108,145 +111,171 @@ export default function TeacherMindmaps() {
   };
 
   return (
-    <div className="teacher-mindmaps-page">
-      <div className="mindmaps-header">
-        <div>
-          <h1>Mindmap của tôi</h1>
-          <p>Tạo và quản lý mindmap trực quan cho các bài giảng</p>
+    <DashboardLayout
+      role="teacher"
+      user={{ name: mockTeacher.name, avatar: mockTeacher.avatar!, role: 'teacher' }}
+      notificationCount={5}
+    >
+      <div className="teacher-mindmaps-page">
+        <div className="mindmaps-header">
+          <div className="header-copy">
+            <h1>Mindmap của tôi</h1>
+            <p>Tạo và quản lý mindmap trực quan cho các bài giảng toán học sinh động hơn.</p>
+          </div>
+          <button className="btn-generate" onClick={() => setShowGenerator(!showGenerator)}>
+            <Sparkles size={18} />
+            <span>Tạo Mindmap AI</span>
+          </button>
         </div>
-        <button className="btn-generate" onClick={() => setShowGenerator(!showGenerator)}>
-          <span className="icon">✨</span>
-          Tạo Mindmap AI
-        </button>
-      </div>
 
-      {/* Generator Form */}
-      {showGenerator && (
-        <div className="generator-panel">
-          <form onSubmit={handleGenerateMindmap}>
-            <h3>Tạo Mindmap với AI</h3>
-            <div className="form-group">
-              <label>Tiêu đề</label>
-              <input
-                type="text"
-                value={generatorForm.title}
-                onChange={(e) => setGeneratorForm({ ...generatorForm, title: e.target.value })}
-                placeholder="VD: Hình học lớp 9"
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>Mô tả nội dung</label>
-              <textarea
-                value={generatorForm.prompt}
-                onChange={(e) => setGeneratorForm({ ...generatorForm, prompt: e.target.value })}
-                placeholder="VD: Tạo mindmap về Hình học lớp 9, bao gồm các chủ đề: tam giác, tứ giác, đường tròn..."
-                rows={4}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>Số cấp độ</label>
-              <input
-                type="number"
-                min="2"
-                max="5"
-                value={generatorForm.levels}
-                onChange={(e) =>
-                  setGeneratorForm({ ...generatorForm, levels: Number(e.target.value) })
-                }
-              />
-            </div>
-            <div className="form-actions">
-              <button type="button" className="btn-cancel" onClick={() => setShowGenerator(false)}>
-                Hủy
-              </button>
-              <button type="submit" className="btn-submit" disabled={generating}>
-                {generating ? 'Đang tạo...' : 'Tạo Mindmap'}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* Filter */}
-      <div className="mindmaps-filter">
-        <button
-          className={statusFilter === 'ALL' ? 'active' : ''}
-          onClick={() => setStatusFilter('ALL')}
-        >
-          Tất cả
-        </button>
-        <button
-          className={statusFilter === 'DRAFT' ? 'active' : ''}
-          onClick={() => setStatusFilter('DRAFT')}
-        >
-          Nháp
-        </button>
-        <button
-          className={statusFilter === 'PUBLISHED' ? 'active' : ''}
-          onClick={() => setStatusFilter('PUBLISHED')}
-        >
-          Đã xuất bản
-        </button>
-        <button
-          className={statusFilter === 'ARCHIVED' ? 'active' : ''}
-          onClick={() => setStatusFilter('ARCHIVED')}
-        >
-          Lưu trữ
-        </button>
-      </div>
-
-      {/* Content */}
-      {loading ? (
-        <div className="loading">Đang tải...</div>
-      ) : error ? (
-        <div className="error-message">{error}</div>
-      ) : mindmaps.length === 0 ? (
-        <div className="empty-state">
-          <div className="empty-icon">🗺️</div>
-          <h3>Chưa có mindmap nào</h3>
-          <p>Tạo mindmap đầu tiên của bạn với AI ngay bây giờ!</p>
-        </div>
-      ) : (
-        <div className="mindmaps-grid">
-          {mindmaps.map((mindmap) => (
-            <div key={mindmap.id} className="mindmap-card">
-              <div className="card-header">
-                <h3>{mindmap.title}</h3>
-                {getStatusBadge(mindmap.status)}
-              </div>
-              <p className="card-description">{mindmap.description}</p>
-              <div className="card-meta">
-                <span className="meta-item">
-                  <span className="icon">📊</span>
-                  {mindmap.nodeCount} nodes
-                </span>
-                {mindmap.aiGenerated && (
-                  <span className="meta-item ai-badge">
-                    <span className="icon">✨</span>
-                    AI Generated
-                  </span>
-                )}
-              </div>
-              <div className="card-footer">
-                <span className="card-date">{formatDate(mindmap.createdAt)}</span>
-                <div className="card-actions">
-                  <button
-                    className="btn-edit"
-                    onClick={() => navigate(`/teacher/mindmaps/${mindmap.id}`)}
-                  >
-                    Chỉnh sửa
-                  </button>
-                  <button className="btn-delete" onClick={() => handleDelete(mindmap.id)}>
-                    Xóa
-                  </button>
+        {showGenerator && (
+          <div className="generator-panel">
+            <form onSubmit={handleGenerateMindmap}>
+              <div className="generator-heading">
+                <div className="generator-icon">
+                  <WandSparkles size={18} />
+                </div>
+                <div>
+                  <h3>Tạo Mindmap với AI</h3>
+                  <p>Mô tả chủ đề, hệ thống sẽ đề xuất cấu trúc mindmap trực quan cho bạn.</p>
                 </div>
               </div>
-            </div>
-          ))}
+              <div className="form-group">
+                <label>Tiêu đề</label>
+                <input
+                  type="text"
+                  value={generatorForm.title}
+                  onChange={(e) => setGeneratorForm({ ...generatorForm, title: e.target.value })}
+                  placeholder="VD: Hình học lớp 9"
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Mô tả nội dung</label>
+                <textarea
+                  value={generatorForm.prompt}
+                  onChange={(e) => setGeneratorForm({ ...generatorForm, prompt: e.target.value })}
+                  placeholder="VD: Tạo mindmap về Hình học lớp 9, bao gồm các chủ đề: tam giác, tứ giác, đường tròn..."
+                  rows={4}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Số cấp độ</label>
+                <input
+                  type="number"
+                  min="2"
+                  max="5"
+                  value={generatorForm.levels}
+                  onChange={(e) =>
+                    setGeneratorForm({ ...generatorForm, levels: Number(e.target.value) })
+                  }
+                />
+              </div>
+              <div className="form-actions">
+                <button
+                  type="button"
+                  className="btn-cancel"
+                  onClick={() => setShowGenerator(false)}
+                >
+                  Hủy
+                </button>
+                <button type="submit" className="btn-submit" disabled={generating}>
+                  {generating ? 'Đang tạo...' : 'Tạo Mindmap'}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        <div className="mindmaps-filter">
+          <button
+            className={`filter-tab ${statusFilter === 'ALL' ? 'active' : ''}`}
+            onClick={() => setStatusFilter('ALL')}
+          >
+            Tất cả
+          </button>
+          <button
+            className={`filter-tab ${statusFilter === 'DRAFT' ? 'active' : ''}`}
+            onClick={() => setStatusFilter('DRAFT')}
+          >
+            Nháp
+          </button>
+          <button
+            className={`filter-tab ${statusFilter === 'PUBLISHED' ? 'active' : ''}`}
+            onClick={() => setStatusFilter('PUBLISHED')}
+          >
+            Đã xuất bản
+          </button>
+          <button
+            className={`filter-tab ${statusFilter === 'ARCHIVED' ? 'active' : ''}`}
+            onClick={() => setStatusFilter('ARCHIVED')}
+          >
+            Lưu trữ
+          </button>
         </div>
-      )}
-    </div>
+
+        {loading ? (
+          <div className="page-state loading">Đang tải danh sách mindmap...</div>
+        ) : error ? (
+          <div className="page-state error-message">{error}</div>
+        ) : mindmaps.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-visual">
+              <div className="empty-visual-ring">
+                <Network size={54} strokeWidth={1.7} />
+              </div>
+            </div>
+            <h3>Chưa có mindmap nào</h3>
+            <p>
+              Bắt đầu hành trình sáng tạo của bạn. Tạo mindmap đầu tiên bằng AI ngay hôm nay để hệ
+              thống hóa kiến thức dễ dàng hơn.
+            </p>
+            <button className="empty-cta" onClick={() => setShowGenerator(true)}>
+              Bắt đầu ngay
+              <ArrowRight size={16} />
+            </button>
+          </div>
+        ) : (
+          <div className="mindmaps-grid">
+            {mindmaps.map((mindmap) => (
+              <div key={mindmap.id} className="mindmap-card">
+                <div className="card-header">
+                  <h3>{mindmap.title}</h3>
+                  {getStatusBadge(mindmap.status)}
+                </div>
+                <p className="card-description">{mindmap.description}</p>
+                <div className="card-meta">
+                  <span className="meta-item">
+                    <span className="icon">●</span>
+                    {mindmap.nodeCount} nodes
+                  </span>
+                  {mindmap.aiGenerated && (
+                    <span className="meta-item ai-badge">
+                      <Sparkles size={14} />
+                      AI Generated
+                    </span>
+                  )}
+                </div>
+                <div className="card-footer">
+                  <span className="card-date">{formatDate(mindmap.createdAt)}</span>
+                  <div className="card-actions">
+                    <button
+                      className="btn-edit"
+                      onClick={() => navigate(`/teacher/mindmaps/${mindmap.id}`)}
+                    >
+                      Chỉnh sửa
+                    </button>
+                    <button className="btn-delete" onClick={() => handleDelete(mindmap.id)}>
+                      Xóa
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </DashboardLayout>
   );
 }
