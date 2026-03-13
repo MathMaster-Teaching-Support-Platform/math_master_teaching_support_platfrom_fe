@@ -32,7 +32,7 @@ const Certificates: React.FC = () => {
   const certificates: Certificate[] = [
     {
       id: 1,
-      title: 'Chứng chỉ Hoàn thành Khóa học Đại số',
+      title: 'Chứng chỉ Hoàn thành Giáo Trình Đại số',
       course: 'Toán 11 - Đại số',
       issueDate: '15/01/2026',
       score: 9.2,
@@ -41,7 +41,7 @@ const Certificates: React.FC = () => {
     },
     {
       id: 2,
-      title: 'Chứng chỉ Hoàn thành Khóa học Hình học',
+      title: 'Chứng chỉ Hoàn thành Giáo Trình Hình học',
       course: 'Toán 10 - Hình học',
       issueDate: '20/12/2025',
       score: 8.8,
@@ -354,7 +354,7 @@ const Certificates: React.FC = () => {
                     <h2 className="cert-name">{mockStudent.name}</h2>
 
                     <p className="cert-achievement">
-                      Đã hoàn thành xuất sắc khóa học
+                      Đã hoàn thành xuất sắc Giáo Trình
                       <br />
                       <strong>{selectedCertificate.course}</strong>
                       <br />

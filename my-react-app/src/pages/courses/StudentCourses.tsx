@@ -31,10 +31,10 @@ const StudentCourses: React.FC = () => {
       <div className="student-courses-page">
         <div className="page-header">
           <div>
-            <h1 className="page-title">📚 Khóa học của tôi</h1>
-            <p className="page-subtitle">Các khóa học bạn đã đăng ký và đang học</p>
+            <h1 className="page-title">📚 Giáo Trình của tôi</h1>
+            <p className="page-subtitle">Các Giáo Trình bạn đã đăng ký và đang học</p>
           </div>
-          <button className="btn btn-primary">🔍 Khám phá khóa học</button>
+          <button className="btn btn-primary">🔍 Khám phá Giáo Trình</button>
         </div>
 
         {/* Progress Overview */}
@@ -48,7 +48,7 @@ const StudentCourses: React.FC = () => {
             </div>
             <div className="overview-content">
               <div className="overview-value">{enrolledCourses.length}</div>
-              <div className="overview-label">Khóa học đang học</div>
+              <div className="overview-label">Giáo Trình đang học</div>
             </div>
           </div>
           <div className="overview-card">

@@ -244,7 +244,7 @@ export const mockNotifications = [
   {
     id: '1',
     title: 'Bài tập mới được giao',
-    message: 'Bài tập về Mệnh đề đã được thêm vào khóa học Đại số 10',
+    message: 'Bài tập về Mệnh đề đã được thêm vào Giáo Trình Đại số 10',
     type: 'assignment',
     read: false,
     createdAt: '2026-01-31T08:00:00',

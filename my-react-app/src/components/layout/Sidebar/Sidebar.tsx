@@ -47,7 +47,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
 
   const teacherMenuItems: MenuItem[] = [
     { path: '/teacher/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/teacher/courses', icon: BookOpen, label: 'Khóa học' },
+    { path: '/teacher/courses', icon: BookOpen, label: 'Giáo Trình' },
     { path: '/teacher/materials', icon: FolderKanban, label: 'Tài liệu' },
     { path: '/teacher/mindmaps', icon: Workflow, label: 'Mindmap' },
     { path: '/teacher/question-templates', icon: FileQuestion, label: 'Mẫu câu hỏi' },
@@ -62,7 +62,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
 
   const studentMenuItems: MenuItem[] = [
     { path: '/student/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/student/courses', icon: GraduationCap, label: 'Khóa học' },
+    { path: '/student/courses', icon: GraduationCap, label: 'Giáo Trình' },
     { path: '/student/assignments', icon: NotebookTabs, label: 'Bài tập' },
     { path: '/student/grades', icon: FileCheck2, label: 'Điểm số' },
     { path: '/student/roadmap', icon: Workflow, label: 'Lộ trình' },

@@ -6,52 +6,32 @@ import './TeacherDashboard.css';
 
 const TeacherDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const stats = [
-    {
-      icon: '👥',
-      label: 'Tổng học sinh',
-      value: mockTeacher.totalStudents.toLocaleString('vi-VN'),
-      trend: '+12%',
-      trendType: 'up',
-    },
-    {
-      icon: '📚',
-      label: 'Khóa học',
-      value: mockTeacher.totalCourses.toLocaleString('vi-VN'),
-      trend: '-2%',
-      trendType: 'down',
-    },
-    {
-      icon: '📄',
-      label: 'Tài liệu',
-      value: mockTeacher.totalMaterials.toLocaleString('vi-VN'),
-      trend: '+5%',
-      trendType: 'up',
-    },
-  ] as const;
-
-  const teachingProgress = [
-    {
-      course: 'Giải tích lớp 12 - Chương 1',
-      progress: 85,
-    },
-    {
-      course: 'Hình học không gian - Nâng cao',
-      progress: 42,
-    },
-    {
-      course: 'Xác suất thống kê đại cương',
-      progress: 60,
-    },
-  ];
-
-  const completionRate = 78;
-  const completedLessons = mockCourses.reduce((sum, course) => sum + course.lessonsCount, 0);
   const todayLabel = new Date().toLocaleDateString('vi-VN', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
   });
+
+  const stats = [
+    {
+      icon: '👥',
+      title: 'Tổng học sinh',
+      value: mockTeacher.totalStudents,
+      delta: '+12%',
+      up: true,
+    },
+    { icon: '📘', title: 'Giáo Trình', value: mockTeacher.totalCourses, delta: '-2%', up: false },
+    { icon: '📄', title: 'Tài liệu', value: mockTeacher.totalMaterials, delta: '+5%', up: true },
+  ];
+
+  const teachingProgress = [
+    { name: 'Giải tích lớp 12 - Chương 1', value: 85, tone: 'blue' },
+    { name: 'Hình học không gian - Nâng cao', value: 42, tone: 'orange' },
+    { name: 'Xác suất thống kê đại cương', value: 60, tone: 'green' },
+  ] as const;
+
+  const completionRate = 78;
+  const completedLessons = mockCourses.reduce((sum, course) => sum + course.lessonsCount, 0);
 
   return (
     <DashboardLayout
@@ -60,90 +40,87 @@ const TeacherDashboard: React.FC = () => {
       notificationCount={5}
     >
       <div className="teacher-dashboard">
-        <div className="dashboard-header">
+        <header className="dashboard-header">
           <div>
             <h1 className="dashboard-title">Xin chào, {mockTeacher.name}! 👋</h1>
             <p className="dashboard-subtitle">
               Hôm nay bạn có 3 lớp học mới và 2 tài liệu cần phê duyệt.
             </p>
           </div>
-          <div className="date-pill">{todayLabel}</div>
-        </div>
+          <div className="dashboard-date">{todayLabel}</div>
+        </header>
 
-        <div className="stats-grid">
-          {stats.map((stat, index) => (
-            <div key={index} className="stat-card">
-              <div className="stat-top-row">
-                <div className="stat-icon">{stat.icon}</div>
-                <span className={`stat-trend ${stat.trendType}`}>{stat.trend}</span>
+        <section className="stats-grid">
+          {stats.map((item) => (
+            <article key={item.title} className="stat-card">
+              <div className="stat-head">
+                <span className="stat-title">{item.title}</span>
+                <span className="stat-icon">{item.icon}</span>
               </div>
-              <div className="stat-info">
-                <div className="stat-label">{stat.label}</div>
-                <div className="stat-value">{stat.value}</div>
-              </div>
-            </div>
+              <div className="stat-value">{item.value.toLocaleString('vi-VN')}</div>
+              <div className={`stat-delta ${item.up ? 'up' : 'down'}`}>{item.delta} tháng này</div>
+            </article>
           ))}
-        </div>
+        </section>
 
-        <div className="dashboard-main-grid">
-          <section className="dashboard-card progress-card">
-            <div className="card-header">
-              <h2 className="card-title">Tiến độ giảng dạy</h2>
-              <button className="card-link" onClick={() => navigate('/teacher/courses')}>
-                Xem tất cả
-              </button>
-            </div>
+        <section className="dashboard-grid">
+          <article className="dashboard-card progress-card">
+            <h2>Tiến độ giảng dạy</h2>
             <div className="progress-list">
               {teachingProgress.map((item) => (
-                <div key={item.course} className="progress-item">
+                <div key={item.name} className="progress-item">
                   <div className="progress-row">
-                    <span className="progress-course">{item.course}</span>
-                    <span className="progress-percent">{item.progress}%</span>
+                    <span>{item.name}</span>
+                    <strong>{item.value}%</strong>
                   </div>
                   <div className="progress-track">
-                    <div className="progress-fill" style={{ width: `${item.progress}%` }} />
+                    <div
+                      className={`progress-fill ${item.tone}`}
+                      style={{ width: `${item.value}%` }}
+                    />
                   </div>
                 </div>
               ))}
             </div>
-          </section>
+          </article>
 
-          <section className="dashboard-card detail-card">
-            <h2 className="card-title">Thống kê chi tiết</h2>
-            <div className="ring-chart" style={{ ['--value' as string]: `${completionRate}%` }}>
-              <div className="ring-inner">
-                <span className="ring-value">{completionRate}%</span>
-                <span className="ring-label">Hoàn thành</span>
+          <article className="dashboard-card completion-card">
+            <h2>Hoàn thành</h2>
+            <div className="ring" style={{ ['--value' as string]: `${completionRate}%` }}>
+              <div className="ring-center">
+                <div className="ring-value">{completionRate}%</div>
+                <div className="ring-label">Tổng quan</div>
               </div>
             </div>
-            <div className="detail-legend">
-              <div className="legend-item">
-                <span className="legend-dot theory" />
-                <span>Lý thuyết: 45%</span>
+            <div className="ring-meta">
+              <div>
+                <span>Lý thuyết</span>
+                <strong>45%</strong>
               </div>
-              <div className="legend-item">
-                <span className="legend-dot practice" />
-                <span>Bài tập: 33%</span>
+              <div>
+                <span>Bài tập</span>
+                <strong>33%</strong>
               </div>
             </div>
-            <button className="action-btn" onClick={() => navigate('/teacher/materials')}>
-              Tạo tài liệu mới
+          </article>
+        </section>
+
+        <section className="quick-panel">
+          <div className="quick-summary">
+            <div className="quick-title">
+              Đã triển khai {completedLessons} bài học trong tháng này
+            </div>
+            <p>Tăng 15% so với cùng kỳ tháng trước</p>
+          </div>
+          <div className="quick-actions">
+            <button onClick={() => navigate('/teacher/materials')}>Tạo tài liệu mới</button>
+            <button onClick={() => navigate('/teacher/mindmaps')}>Tạo mindmap</button>
+            <button onClick={() => navigate('/teacher/question-templates')}>Tạo mẫu câu hỏi</button>
+            <button className="primary" onClick={() => navigate('/teacher/exam-matrices')}>
+              Lập ma trận đề
             </button>
-            <p className="detail-note">Đã triển khai {completedLessons} bài học trong tháng này.</p>
-          </section>
-        </div>
-
-        <div className="quick-action-row">
-          <button className="quick-btn" onClick={() => navigate('/teacher/mindmaps')}>
-            🧠 Tạo mindmap
-          </button>
-          <button className="quick-btn" onClick={() => navigate('/teacher/question-templates')}>
-            🧩 Tạo mẫu câu hỏi
-          </button>
-          <button className="quick-btn" onClick={() => navigate('/teacher/exam-matrices')}>
-            📐 Lập ma trận đề
-          </button>
-        </div>
+          </div>
+        </section>
       </div>
     </DashboardLayout>
   );

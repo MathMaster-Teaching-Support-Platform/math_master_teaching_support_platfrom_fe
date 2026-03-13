@@ -213,7 +213,7 @@ const TeacherAnalytics: React.FC = () => {
           {/* Course Progress */}
           <div className="analytics-card">
             <div className="card-header">
-              <h3 className="card-title">📚 Tiến độ khóa học</h3>
+              <h3 className="card-title">📚 Tiến độ Giáo Trình</h3>
             </div>
             <div className="course-progress-list">
               {analyticsData.courseProgress.map((course, index) => (
