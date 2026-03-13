@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { AuthService } from '../../../services/api/auth.service';
+import { Link } from 'react-router-dom';
+import { Bell, CircleHelp, MessageSquare, Search } from 'lucide-react';
 import './Navbar.css';
 
 interface NavbarProps {
@@ -13,83 +13,45 @@ interface NavbarProps {
 }
 
 const Navbar: React.FC<NavbarProps> = ({ user, notificationCount = 0 }) => {
-  const navigate = useNavigate();
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
 
-  const handleLogout = () => {
-    AuthService.removeToken();
-    setShowProfileMenu(false);
-    navigate('/login');
-  };
+  const roleLabel =
+    user.role === 'teacher' ? 'Giao vien' : user.role === 'student' ? 'Hoc sinh' : 'Quan tri vien';
 
   return (
     <nav className="navbar-top">
       <div className="navbar-content">
         <div className="navbar-search">
-          <span className="search-icon">🔍</span>
-          <input
-            type="text"
-            placeholder="Tìm kiếm khóa học, tài liệu, bài tập..."
-            className="search-input"
-          />
+          <Search size={17} className="search-icon" />
+          <input type="text" placeholder="Tìm kiếm ..." className="search-input" />
         </div>
 
         <div className="navbar-actions">
           <button
             className="navbar-action-btn"
             onClick={() => setShowNotifications(!showNotifications)}
+            aria-label="Thông báo"
           >
-            <span className="action-icon">🔔</span>
+            <Bell size={18} className="action-icon" />
             {notificationCount > 0 && (
               <span className="notification-badge">{notificationCount}</span>
             )}
           </button>
 
-          <Link to="/messages" className="navbar-action-btn">
-            <span className="action-icon">💬</span>
+          <Link to="/messages" className="navbar-action-btn" aria-label="Tin nhắn">
+            <MessageSquare size={18} className="action-icon" />
           </Link>
 
-          <Link to="/help" className="navbar-action-btn">
-            <span className="action-icon">❓</span>
+          <Link to="/help" className="navbar-action-btn" aria-label="Trợ giúp">
+            <CircleHelp size={18} className="action-icon" />
           </Link>
 
-          <div className="navbar-profile">
-            <button
-              className="profile-trigger"
-              onClick={() => setShowProfileMenu(!showProfileMenu)}
-            >
-              <div className="profile-avatar">{user.avatar}</div>
-              <div className="profile-info">
-                <div className="profile-name">{user.name}</div>
-                <div className="profile-role">
-                  {user.role === 'teacher'
-                    ? 'Giáo viên'
-                    : user.role === 'student'
-                      ? 'Học sinh'
-                      : 'Quản trị viên'}
-                </div>
-              </div>
-              <span className="profile-arrow">▼</span>
-            </button>
-
-            {showProfileMenu && (
-              <div className="profile-menu">
-                <Link to="/profile" className="profile-menu-item">
-                  <span>👤</span> Hồ sơ
-                </Link>
-                <Link to="/settings" className="profile-menu-item">
-                  <span>⚙️</span> Cài đặt
-                </Link>
-                <Link to="/help" className="profile-menu-item">
-                  <span>❓</span> Trợ giúp
-                </Link>
-                <hr className="menu-divider" />
-                <button onClick={handleLogout} className="profile-menu-item danger">
-                  <span>🚪</span> Đăng xuất
-                </button>
-              </div>
-            )}
+          <div className="navbar-user-badge" aria-label="Thông tin người dùng">
+            <div className="navbar-user-avatar">{user.avatar}</div>
+            <div className="navbar-user-meta">
+              <div className="navbar-user-name">{user.name}</div>
+              <div className="navbar-user-role">{roleLabel}</div>
+            </div>
           </div>
         </div>
       </div>
@@ -102,7 +64,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, notificationCount = 0 }) => {
           </div>
           <div className="notifications-list">
             <div className="notification-item unread">
-              <div className="notification-icon">📝</div>
+              <div className="notification-icon">📘</div>
               <div className="notification-content">
                 <div className="notification-title">Bài tập mới</div>
                 <div className="notification-message">Bài tập về Mệnh đề đã được giao</div>
@@ -110,7 +72,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, notificationCount = 0 }) => {
               </div>
             </div>
             <div className="notification-item">
-              <div className="notification-icon">⭐</div>
+              <div className="notification-icon">✅</div>
               <div className="notification-content">
                 <div className="notification-title">Điểm số mới</div>
                 <div className="notification-message">

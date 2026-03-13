@@ -1,48 +1,57 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../../components/layout/DashboardLayout/DashboardLayout';
-import { mockTeacher, mockCourses, mockAssignments, mockStudents } from '../../../data/mockData';
+import { mockTeacher, mockCourses } from '../../../data/mockData';
 import './TeacherDashboard.css';
 
 const TeacherDashboard: React.FC = () => {
   const navigate = useNavigate();
   const stats = [
-    { icon: '👥', label: 'Tổng học sinh', value: mockTeacher.totalStudents, color: '#667eea' },
-    { icon: '📚', label: 'Khóa học', value: mockTeacher.totalCourses, color: '#43e97b' },
-    { icon: '📝', label: 'Tài liệu', value: mockTeacher.totalMaterials, color: '#f093fb' },
-    { icon: '✍️', label: 'Bài tập chờ chấm', value: 12, color: '#fee140' },
+    {
+      icon: '👥',
+      label: 'Tổng học sinh',
+      value: mockTeacher.totalStudents.toLocaleString('vi-VN'),
+      trend: '+12%',
+      trendType: 'up',
+    },
+    {
+      icon: '📚',
+      label: 'Khóa học',
+      value: mockTeacher.totalCourses.toLocaleString('vi-VN'),
+      trend: '-2%',
+      trendType: 'down',
+    },
+    {
+      icon: '📄',
+      label: 'Tài liệu',
+      value: mockTeacher.totalMaterials.toLocaleString('vi-VN'),
+      trend: '+5%',
+      trendType: 'up',
+    },
+  ] as const;
+
+  const teachingProgress = [
+    {
+      course: 'Giải tích lớp 12 - Chương 1',
+      progress: 85,
+    },
+    {
+      course: 'Hình học không gian - Nâng cao',
+      progress: 42,
+    },
+    {
+      course: 'Xác suất thống kê đại cương',
+      progress: 60,
+    },
   ];
 
-  const recentActivities = [
-    {
-      type: 'submit',
-      student: 'Nguyễn Văn A',
-      action: 'đã nộp bài',
-      item: 'Bài tập Mệnh đề',
-      time: '5 phút trước',
-    },
-    {
-      type: 'complete',
-      student: 'Trần Thị B',
-      action: 'đã hoàn thành',
-      item: 'Bài 2: Tập hợp',
-      time: '15 phút trước',
-    },
-    {
-      type: 'question',
-      student: 'Lê Văn C',
-      action: 'đã đặt câu hỏi trong',
-      item: 'Đại số 10',
-      time: '1 giờ trước',
-    },
-    {
-      type: 'submit',
-      student: 'Phạm Thị D',
-      action: 'đã nộp bài',
-      item: 'Kiểm tra 15 phút',
-      time: '2 giờ trước',
-    },
-  ];
+  const completionRate = 78;
+  const completedLessons = mockCourses.reduce((sum, course) => sum + course.lessonsCount, 0);
+  const todayLabel = new Date().toLocaleDateString('vi-VN', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
 
   return (
     <DashboardLayout
@@ -55,23 +64,18 @@ const TeacherDashboard: React.FC = () => {
           <div>
             <h1 className="dashboard-title">Xin chào, {mockTeacher.name}! 👋</h1>
             <p className="dashboard-subtitle">
-              Chào mừng quay trở lại. Đây là tổng quan của bạn hôm nay.
+              Hôm nay bạn có 3 lớp học mới và 2 tài liệu cần phê duyệt.
             </p>
           </div>
-          <button className="btn btn-primary">
-            <span>✨</span> Tạo tài liệu mới
-          </button>
+          <div className="date-pill">{todayLabel}</div>
         </div>
 
-        {/* Stats Grid */}
         <div className="stats-grid">
           {stats.map((stat, index) => (
-            <div key={index} className="stat-card" style={{ borderTopColor: stat.color }}>
-              <div
-                className="stat-icon"
-                style={{ background: `${stat.color}20`, color: stat.color }}
-              >
-                {stat.icon}
+            <div key={index} className="stat-card">
+              <div className="stat-top-row">
+                <div className="stat-icon">{stat.icon}</div>
+                <span className={`stat-trend ${stat.trendType}`}>{stat.trend}</span>
               </div>
               <div className="stat-info">
                 <div className="stat-label">{stat.label}</div>
@@ -81,147 +85,64 @@ const TeacherDashboard: React.FC = () => {
           ))}
         </div>
 
-        <div className="dashboard-grid">
-          {/* Recent Courses */}
-          <div className="dashboard-card">
+        <div className="dashboard-main-grid">
+          <section className="dashboard-card progress-card">
             <div className="card-header">
-              <h2 className="card-title">Khóa học gần đây</h2>
-              <a href="/teacher/courses" className="card-link">
-                Xem tất cả →
-              </a>
+              <h2 className="card-title">Tiến độ giảng dạy</h2>
+              <button className="card-link" onClick={() => navigate('/teacher/courses')}>
+                Xem tất cả
+              </button>
             </div>
-            <div className="courses-list">
-              {mockCourses.slice(0, 3).map((course) => (
-                <div key={course.id} className="course-item">
-                  <div className="course-thumbnail">{course.thumbnail}</div>
-                  <div className="course-info">
-                    <h3 className="course-title">{course.title}</h3>
-                    <p className="course-meta">
-                      {course.lessons} bài học • {course.students} học sinh
-                    </p>
+            <div className="progress-list">
+              {teachingProgress.map((item) => (
+                <div key={item.course} className="progress-item">
+                  <div className="progress-row">
+                    <span className="progress-course">{item.course}</span>
+                    <span className="progress-percent">{item.progress}%</span>
                   </div>
-                  <span className={`course-status status-${course.status}`}>
-                    {course.status === 'active' ? 'Đang mở' : 'Nháp'}
-                  </span>
+                  <div className="progress-track">
+                    <div className="progress-fill" style={{ width: `${item.progress}%` }} />
+                  </div>
                 </div>
               ))}
             </div>
-          </div>
+          </section>
 
-          {/* Pending Assignments */}
-          <div className="dashboard-card">
-            <div className="card-header">
-              <h2 className="card-title">Bài tập cần chấm</h2>
-              <a href="/teacher/assignments" className="card-link">
-                Xem tất cả →
-              </a>
+          <section className="dashboard-card detail-card">
+            <h2 className="card-title">Thống kê chi tiết</h2>
+            <div className="ring-chart" style={{ ['--value' as string]: `${completionRate}%` }}>
+              <div className="ring-inner">
+                <span className="ring-value">{completionRate}%</span>
+                <span className="ring-label">Hoàn thành</span>
+              </div>
             </div>
-            <div className="assignments-list">
-              {mockAssignments
-                .filter((a) => a.status === 'pending')
-                .map((assignment) => (
-                  <div key={assignment.id} className="assignment-item">
-                    <div className="assignment-icon">📝</div>
-                    <div className="assignment-info">
-                      <h3 className="assignment-title">{assignment.title}</h3>
-                      <p className="assignment-course">{assignment.courseName}</p>
-                    </div>
-                    <div className="assignment-actions">
-                      <span className="assignment-count">12 bài nộp</span>
-                      <button className="btn btn-sm btn-outline">Chấm điểm</button>
-                    </div>
-                  </div>
-                ))}
+            <div className="detail-legend">
+              <div className="legend-item">
+                <span className="legend-dot theory" />
+                <span>Lý thuyết: 45%</span>
+              </div>
+              <div className="legend-item">
+                <span className="legend-dot practice" />
+                <span>Bài tập: 33%</span>
+              </div>
             </div>
-          </div>
+            <button className="action-btn" onClick={() => navigate('/teacher/materials')}>
+              Tạo tài liệu mới
+            </button>
+            <p className="detail-note">Đã triển khai {completedLessons} bài học trong tháng này.</p>
+          </section>
         </div>
 
-        <div className="dashboard-grid-2">
-          {/* Top Students */}
-          <div className="dashboard-card">
-            <div className="card-header">
-              <h2 className="card-title">Học sinh xuất sắc</h2>
-            </div>
-            <div className="students-list">
-              {mockStudents.slice(0, 5).map((student, index) => (
-                <div key={student.id} className="student-item">
-                  <div className="student-rank">#{index + 1}</div>
-                  <div className="student-avatar">{student.avatar}</div>
-                  <div className="student-info">
-                    <div className="student-name">{student.name}</div>
-                    <div className="student-progress">
-                      {student.completedLessons}/{student.totalLessons} bài học
-                    </div>
-                  </div>
-                  <div className="student-score">{student.averageScore}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Recent Activities */}
-          <div className="dashboard-card">
-            <div className="card-header">
-              <h2 className="card-title">Hoạt động gần đây</h2>
-            </div>
-            <div className="activities-list">
-              {recentActivities.map((activity, index) => (
-                <div key={index} className="activity-item">
-                  <div className={`activity-icon type-${activity.type}`}>
-                    {activity.type === 'submit' ? '📤' : activity.type === 'complete' ? '✅' : '❓'}
-                  </div>
-                  <div className="activity-content">
-                    <p className="activity-text">
-                      <strong>{activity.student}</strong> {activity.action}{' '}
-                      <span className="activity-item-name">{activity.item}</span>
-                    </p>
-                    <span className="activity-time">{activity.time}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="dashboard-card">
-          <div className="card-header">
-            <h2 className="card-title">Hành động nhanh</h2>
-          </div>
-          <div className="quick-actions">
-            <button className="quick-action-btn">
-              <span className="qa-icon">📚</span>
-              <span className="qa-label">Tạo khóa học</span>
-            </button>
-            <button className="quick-action-btn">
-              <span className="qa-icon">📝</span>
-              <span className="qa-label">Tạo bài tập</span>
-            </button>
-            <button className="quick-action-btn">
-              <span className="qa-icon">📊</span>
-              <span className="qa-label">Tạo đề thi</span>
-            </button>
-            <button className="quick-action-btn">
-              <span className="qa-icon">🎨</span>
-              <span className="qa-label">Tạo slide</span>
-            </button>
-            <button className="quick-action-btn" onClick={() => navigate('/teacher/mindmaps')}>
-              <span className="qa-icon">🧠</span>
-              <span className="qa-label">Tạo mindmap</span>
-            </button>
-            <button className="quick-action-btn">
-              <span className="qa-icon">📈</span>
-              <span className="qa-label">Tạo đồ thị</span>
-            </button>
-            <button className="quick-action-btn">
-              <span className="qa-icon">🤖</span>
-              <span className="qa-label">AI trợ lý</span>
-            </button>
-            <button className="quick-action-btn">
-              <span className="qa-icon">📂</span>
-              <span className="qa-label">Tài nguyên</span>
-            </button>
-          </div>
+        <div className="quick-action-row">
+          <button className="quick-btn" onClick={() => navigate('/teacher/mindmaps')}>
+            🧠 Tạo mindmap
+          </button>
+          <button className="quick-btn" onClick={() => navigate('/teacher/question-templates')}>
+            🧩 Tạo mẫu câu hỏi
+          </button>
+          <button className="quick-btn" onClick={() => navigate('/teacher/exam-matrices')}>
+            📐 Lập ma trận đề
+          </button>
         </div>
       </div>
     </DashboardLayout>
