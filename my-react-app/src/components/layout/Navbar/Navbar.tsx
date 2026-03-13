@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Bell, CircleHelp, MessageSquare, Search } from 'lucide-react';
+import { Bell, CircleHelp, MessageSquare, Search, Wallet } from 'lucide-react';
 import './Navbar.css';
 
 interface NavbarProps {
@@ -17,6 +17,8 @@ const Navbar: React.FC<NavbarProps> = ({ user, notificationCount = 0 }) => {
 
   const roleLabel =
     user.role === 'teacher' ? 'Giao vien' : user.role === 'student' ? 'Hoc sinh' : 'Quan tri vien';
+
+  const walletRoute = '/student/wallet';
 
   return (
     <nav className="navbar-top">
@@ -38,11 +40,15 @@ const Navbar: React.FC<NavbarProps> = ({ user, notificationCount = 0 }) => {
             )}
           </button>
 
-          <Link to="/messages" className="navbar-action-btn" aria-label="Tin nhắn">
+          <Link to={walletRoute} className="navbar-action-btn wallet-btn" aria-label="Ví của tôi">
+            <Wallet size={18} className="action-icon" />
+          </Link>
+
+          <Link to="/messages" className="navbar-action-btn message-btn" aria-label="Tin nhắn">
             <MessageSquare size={18} className="action-icon" />
           </Link>
 
-          <Link to="/help" className="navbar-action-btn" aria-label="Trợ giúp">
+          <Link to="/help" className="navbar-action-btn help-btn" aria-label="Trợ giúp">
             <CircleHelp size={18} className="action-icon" />
           </Link>
 

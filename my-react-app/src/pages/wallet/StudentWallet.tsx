@@ -1,455 +1,435 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ArrowRight, Download, Plus, Search } from 'lucide-react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
-import { mockStudent } from '../../data/mockData';
+import { mockAdmin, mockStudent, mockTeacher } from '../../data/mockData';
+import { AuthService } from '../../services/api/auth.service';
+import { WalletService } from '../../services/api/wallet.service';
+import type { WalletSummary, WalletTransaction } from '../../types/wallet.types';
 import './StudentWallet.css';
 
-interface Transaction {
-  id: number;
-  date: string;
-  type: 'topup' | 'payment' | 'refund';
-  description: string;
-  amount: number;
-  status: 'completed' | 'pending' | 'failed';
-  method?: string;
-}
+type TransactionStatusFilter = 'all' | 'completed' | 'pending' | 'failed';
+
+const PAGE_SIZE = 4;
+
+const STATUS_TO_API: Record<Exclude<TransactionStatusFilter, 'all'>, string> = {
+  completed: 'COMPLETED',
+  pending: 'PENDING',
+  failed: 'FAILED',
+};
+
+const API_FETCH_SIZE = 10;
 
 const StudentWallet: React.FC = () => {
-  const [showTopUpModal, setShowTopUpModal] = useState(false);
-  const [selectedAmount, setSelectedAmount] = useState(100000);
-  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const currentRole = AuthService.getUserRole() || 'student';
 
-  const balance = 850000;
-  const pendingAmount = 50000;
+  const [wallet, setWallet] = useState<WalletSummary | null>(null);
+  const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
+  const [walletLoading, setWalletLoading] = useState(true);
+  const [transactionsLoading, setTransactionsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const transactions: Transaction[] = [
-    {
-      id: 1,
-      date: '2026-01-28',
-      type: 'payment',
-      description: 'Gói Pro - 1 tháng',
-      amount: -199000,
-      status: 'completed',
-      method: 'Ví',
-    },
-    {
-      id: 2,
-      date: '2026-01-25',
-      type: 'topup',
-      description: 'Nạp tiền qua MoMo',
-      amount: 500000,
-      status: 'completed',
-      method: 'MoMo',
-    },
-    {
-      id: 3,
-      date: '2026-01-22',
-      type: 'payment',
-      description: 'Giáo Trình Toán nâng cao',
-      amount: -299000,
-      status: 'completed',
-      method: 'Ví',
-    },
-    {
-      id: 4,
-      date: '2026-01-20',
-      type: 'topup',
-      description: 'Nạp tiền qua Banking',
-      amount: 1000000,
-      status: 'completed',
-      method: 'Banking',
-    },
-    {
-      id: 5,
-      date: '2026-01-18',
-      type: 'refund',
-      description: 'Hoàn tiền Giáo Trình',
-      amount: 150000,
-      status: 'completed',
-      method: 'Ví',
-    },
-    {
-      id: 6,
-      date: '2026-01-15',
-      type: 'payment',
-      description: 'Tài liệu học tập',
-      amount: -49000,
-      status: 'completed',
-      method: 'Ví',
-    },
-    {
-      id: 7,
-      date: '2026-01-12',
-      type: 'topup',
-      description: 'Nạp tiền qua ZaloPay',
-      amount: 200000,
-      status: 'completed',
-      method: 'ZaloPay',
-    },
-    {
-      id: 8,
-      date: '2026-01-10',
-      type: 'payment',
-      description: 'Gói Free - Gia hạn',
-      amount: 0,
-      status: 'completed',
-      method: 'Miễn phí',
-    },
-    {
-      id: 9,
-      date: '2026-01-08',
-      type: 'payment',
-      description: 'Bài kiểm tra nâng cao',
-      amount: -99000,
-      status: 'pending',
-      method: 'Ví',
-    },
-    {
-      id: 10,
-      date: '2026-01-05',
-      type: 'topup',
-      description: 'Nạp tiền qua Visa',
-      amount: 500000,
-      status: 'completed',
-      method: 'Visa',
-    },
-  ];
+  const [amount, setAmount] = useState(100000);
+  const [description, setDescription] = useState('Nạp tiền MathMaster');
+  const [depositing, setDepositing] = useState(false);
 
-  const topUpAmounts = [50000, 100000, 200000, 500000, 1000000, 2000000];
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<TransactionStatusFilter>('all');
+  const [page, setPage] = useState(1);
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-    }).format(amount);
+  const currentUser =
+    currentRole === 'teacher' ? mockTeacher : currentRole === 'admin' ? mockAdmin : mockStudent;
+
+  const layoutRole: 'teacher' | 'student' | 'admin' =
+    currentRole === 'teacher' ? 'teacher' : currentRole === 'admin' ? 'admin' : 'student';
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('vi-VN').format(value);
   };
 
-  const stats = {
-    totalTopUp: transactions
-      .filter((t) => t.type === 'topup' && t.status === 'completed')
-      .reduce((sum, t) => sum + t.amount, 0),
-    totalSpent: Math.abs(
-      transactions
-        .filter((t) => t.type === 'payment' && t.status === 'completed')
-        .reduce((sum, t) => sum + t.amount, 0)
-    ),
-    transactionCount: transactions.filter((t) => t.status === 'completed').length,
+  const normalizeStatus = (status?: string): Exclude<TransactionStatusFilter, 'all'> => {
+    const normalized = (status || '').toLowerCase();
+    if (normalized.includes('pending') || normalized.includes('wait')) return 'pending';
+    if (normalized.includes('fail') || normalized.includes('cancel')) return 'failed';
+    return 'completed';
   };
+
+  const normalizeType = (tx: WalletTransaction): 'deposit' | 'payment' => {
+    const type = (tx.type || '').toLowerCase();
+    if (type.includes('deposit') || type.includes('topup') || type.includes('recharge')) {
+      return 'deposit';
+    }
+    return tx.amount >= 0 ? 'deposit' : 'payment';
+  };
+
+  const formatDate = (raw?: string) => {
+    if (!raw) return '-';
+    const date = new Date(raw);
+    if (Number.isNaN(date.getTime())) return '-';
+
+    const full = date.toLocaleString('vi-VN');
+    const [day = '-', time = '-'] = full.split(' ');
+    return { day, time };
+  };
+
+  const getTransactionCode = (tx: WalletTransaction) => {
+    if (tx.orderCode) return String(tx.orderCode);
+    if (tx.transactionId) return tx.transactionId.slice(-8).toUpperCase();
+    if (tx.transactionCode) return tx.transactionCode;
+    if (tx.id) return `TXN-${String(tx.id).slice(-6)}`;
+    return 'N/A';
+  };
+
+  const loadWallet = async () => {
+    try {
+      setWalletLoading(true);
+      const response = await WalletService.getMyWallet();
+      setWallet(response.result);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Không thể tải ví');
+    } finally {
+      setWalletLoading(false);
+    }
+  };
+
+  const loadTransactions = async (filter: TransactionStatusFilter) => {
+    try {
+      setTransactionsLoading(true);
+      setError(null);
+
+      const response =
+        filter === 'all'
+          ? await WalletService.getTransactions({ page: 0, size: API_FETCH_SIZE })
+          : await WalletService.getTransactionsByStatus(STATUS_TO_API[filter], {
+              page: 0,
+              size: API_FETCH_SIZE,
+            });
+
+      const result = response.result;
+      const list = Array.isArray(result)
+        ? result
+        : 'content' in result && Array.isArray(result.content)
+          ? result.content
+          : [];
+
+      setTransactions(list);
+      setPage(1);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Không thể tải giao dịch');
+    } finally {
+      setTransactionsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadWallet();
+  }, []);
+
+  useEffect(() => {
+    void loadTransactions(statusFilter);
+  }, [statusFilter]);
+
+  const filteredTransactions = useMemo(() => {
+    const keyword = searchTerm.trim().toLowerCase();
+    if (!keyword) return transactions;
+
+    return transactions.filter((tx) => {
+      const code = getTransactionCode(tx).toLowerCase();
+      const text = `${tx.description || ''} ${tx.paymentMethod || ''}`.toLowerCase();
+      return code.includes(keyword) || text.includes(keyword);
+    });
+  }, [searchTerm, transactions]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredTransactions.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+
+  const paginatedTransactions = filteredTransactions.slice(
+    (safePage - 1) * PAGE_SIZE,
+    safePage * PAGE_SIZE
+  );
+  const displayStart = filteredTransactions.length === 0 ? 0 : (safePage - 1) * PAGE_SIZE + 1;
+  const displayEnd = Math.min(safePage * PAGE_SIZE, filteredTransactions.length);
+
+  const totalDeposit = transactions
+    .filter((tx) => normalizeType(tx) === 'deposit' && normalizeStatus(tx.status) === 'completed')
+    .reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
+
+  const handleDeposit = async () => {
+    if (amount < 10000) {
+      setError('Số tiền nạp tối thiểu là 10.000 VND');
+      return;
+    }
+
+    try {
+      setDepositing(true);
+      setError(null);
+
+      const response = await WalletService.deposit({
+        amount,
+        description: description.trim() || 'Nạp tiền MathMaster',
+      });
+
+      const checkoutUrl = response.result.checkoutUrl;
+      window.open(checkoutUrl, '_blank', 'noopener,noreferrer');
+
+      await loadTransactions(statusFilter);
+      await loadWallet();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Không thể tạo thanh toán');
+    } finally {
+      setDepositing(false);
+    }
+  };
+
+  const exportCsv = () => {
+    const rows = filteredTransactions.map((tx) => {
+      const status = normalizeStatus(tx.status);
+      return [
+        tx.createdAt || '',
+        getTransactionCode(tx),
+        normalizeType(tx) === 'deposit' ? 'Nạp tiền' : 'Thanh toán',
+        tx.amount.toString(),
+        status,
+      ];
+    });
+
+    const csv = [['Ngay giao dich', 'Ma giao dich', 'Loai', 'So tien', 'Trang thai'], ...rows]
+      .map((line) => line.join(','))
+      .join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'wallet-transactions.csv';
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const lastUpdated = wallet?.updatedAt ? new Date(wallet.updatedAt).toLocaleString('vi-VN') : null;
 
   return (
     <DashboardLayout
-      role="student"
-      user={{ name: mockStudent.name, avatar: mockStudent.avatar!, role: 'student' }}
+      role={layoutRole}
+      user={{ name: currentUser.name, avatar: currentUser.avatar!, role: layoutRole }}
       notificationCount={5}
     >
       <div className="wallet-page">
-        <div className="page-header">
+        <header className="wallet-header">
           <div>
-            <h1 className="page-title">💳 Ví Của Tôi</h1>
-            <p className="page-subtitle">Quản lý số dư và lịch sử giao dịch</p>
+            <h1>Ví của tôi</h1>
+            <p>Quản lý số dư và theo dõi lịch sử giao dịch của bạn</p>
           </div>
-          <button className="btn btn-primary" onClick={() => setShowTopUpModal(true)}>
-            <span>💰</span> Nạp tiền
+          <button className="btn-report" onClick={exportCsv}>
+            <Download size={16} /> Xuất báo cáo
           </button>
-        </div>
+        </header>
 
-        {/* Balance Card */}
-        <div className="balance-section">
-          <div className="balance-card main">
-            <div className="balance-header">
-              <h3>Số dư khả dụng</h3>
-              <span className="balance-icon">💰</span>
+        {error && <div className="wallet-error">{error}</div>}
+
+        <section className="wallet-overview">
+          <article className="wallet-balance-card">
+            <div className="label">Số dư khả dụng</div>
+            <div className="value">
+              {walletLoading ? '...' : formatCurrency(wallet?.balance || 0)}
             </div>
-            <div className="balance-amount">{formatCurrency(balance)}</div>
-            <div className="balance-pending">Đang chờ: {formatCurrency(pendingAmount)}</div>
-            <div className="balance-actions">
-              <button className="btn btn-primary" onClick={() => setShowTopUpModal(true)}>
-                ➕ Nạp tiền
-              </button>
-              <button className="btn btn-outline">📤 Rút tiền</button>
+            <div className="currency">VND</div>
+            <div className="updated">
+              {lastUpdated ? `Cập nhật lúc: ${lastUpdated}` : 'Đồng bộ thời gian thực'}
             </div>
-          </div>
+          </article>
 
-          <div className="stats-grid">
-            <div className="stat-card">
-              <div
-                className="stat-icon"
-                style={{ background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)' }}
-              >
-                📥
-              </div>
-              <div className="stat-content">
-                <div className="stat-value">{formatCurrency(stats.totalTopUp)}</div>
-                <div className="stat-label">Tổng nạp</div>
-              </div>
-            </div>
+          <article className="wallet-topup-card">
+            <h2>
+              <Plus size={18} /> Nạp tiền nhanh
+            </h2>
 
-            <div className="stat-card">
-              <div
-                className="stat-icon"
-                style={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' }}
-              >
-                📤
-              </div>
-              <div className="stat-content">
-                <div className="stat-value">{formatCurrency(stats.totalSpent)}</div>
-                <div className="stat-label">Đã chi tiêu</div>
-              </div>
-            </div>
-
-            <div className="stat-card">
-              <div
-                className="stat-icon"
-                style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
-              >
-                📊
-              </div>
-              <div className="stat-content">
-                <div className="stat-value">{stats.transactionCount}</div>
-                <div className="stat-label">Giao dịch</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Payment Methods */}
-        <div className="payment-methods-section">
-          <h2 className="section-title">Phương thức thanh toán</h2>
-          <div className="payment-methods-grid">
-            <div className="payment-method-card">
-              <div className="payment-icon">🏦</div>
-              <div className="payment-info">
-                <div className="payment-name">Chuyển khoản ngân hàng</div>
-                <div className="payment-desc">Miễn phí • Xử lý tức thì</div>
-              </div>
-            </div>
-            <div className="payment-method-card">
-              <div className="payment-icon">📱</div>
-              <div className="payment-info">
-                <div className="payment-name">Ví điện tử</div>
-                <div className="payment-desc">MoMo, ZaloPay, VNPay</div>
-              </div>
-            </div>
-            <div className="payment-method-card">
-              <div className="payment-icon">💳</div>
-              <div className="payment-info">
-                <div className="payment-name">Thẻ quốc tế</div>
-                <div className="payment-desc">Visa, Mastercard</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Transaction History */}
-        <div className="transactions-section">
-          <h2 className="section-title">Lịch sử giao dịch</h2>
-          <div className="transactions-list">
-            {transactions.map((transaction) => (
-              <div
-                key={transaction.id}
-                className="transaction-item"
-                onClick={() => setSelectedTransaction(transaction)}
-              >
-                <div className="transaction-icon-wrapper">
-                  <div className={`transaction-icon ${transaction.type}`}>
-                    {transaction.type === 'topup'
-                      ? '📥'
-                      : transaction.type === 'payment'
-                        ? '📤'
-                        : '🔄'}
-                  </div>
-                </div>
-                <div className="transaction-content">
-                  <div className="transaction-description">{transaction.description}</div>
-                  <div className="transaction-meta">
-                    <span className="transaction-date">
-                      {new Date(transaction.date).toLocaleDateString('vi-VN')}
-                    </span>
-                    <span className="transaction-method">{transaction.method}</span>
-                  </div>
-                </div>
-                <div className="transaction-right">
-                  <div
-                    className={`transaction-amount ${transaction.amount > 0 ? 'positive' : 'negative'}`}
-                  >
-                    {transaction.amount > 0 ? '+' : ''}
-                    {formatCurrency(transaction.amount)}
-                  </div>
-                  <span className={`transaction-status ${transaction.status}`}>
-                    {transaction.status === 'completed'
-                      ? '✅ Thành công'
-                      : transaction.status === 'pending'
-                        ? '⏳ Đang xử lý'
-                        : '❌ Thất bại'}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Top Up Modal */}
-        {showTopUpModal && (
-          <div className="modal-overlay" onClick={() => setShowTopUpModal(false)}>
-            <div className="modal" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h2 className="modal-title">💰 Nạp tiền vào ví</h2>
-                <button className="modal-close" onClick={() => setShowTopUpModal(false)}>
-                  ✕
-                </button>
-              </div>
-
-              <div className="modal-body">
-                <div className="current-balance">
-                  <span>Số dư hiện tại:</span>
-                  <span className="balance-value">{formatCurrency(balance)}</span>
-                </div>
-
-                <div className="form-group">
-                  <label>Chọn số tiền</label>
-                  <div className="amount-grid">
-                    {topUpAmounts.map((amount) => (
-                      <button
-                        key={amount}
-                        className={`amount-btn ${selectedAmount === amount ? 'active' : ''}`}
-                        onClick={() => setSelectedAmount(amount)}
-                      >
-                        {formatCurrency(amount)}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label>Hoặc nhập số tiền khác</label>
+            <div className="topup-grid">
+              <div className="field-group">
+                <label htmlFor="amount">Số tiền (VND)</label>
+                <div className="amount-input-wrap">
                   <input
+                    id="amount"
                     type="number"
-                    placeholder="Nhập số tiền"
-                    value={selectedAmount}
-                    onChange={(e) => setSelectedAmount(Number(e.target.value))}
+                    min={10000}
+                    step={1000}
+                    value={amount}
+                    onChange={(e) => setAmount(Number(e.target.value))}
+                    placeholder="VD: 100000"
                   />
-                </div>
-
-                <div className="form-group">
-                  <label>Phương thức thanh toán</label>
-                  <select>
-                    <option>🏦 Chuyển khoản ngân hàng</option>
-                    <option>📱 MoMo</option>
-                    <option>📱 ZaloPay</option>
-                    <option>📱 VNPay</option>
-                    <option>💳 Thẻ Visa/Mastercard</option>
-                  </select>
-                </div>
-
-                <div className="summary-box">
-                  <div className="summary-row">
-                    <span>Số tiền nạp:</span>
-                    <span className="summary-value">{formatCurrency(selectedAmount)}</span>
-                  </div>
-                  <div className="summary-row">
-                    <span>Phí giao dịch:</span>
-                    <span className="summary-value">Miễn phí</span>
-                  </div>
-                  <div className="summary-row total">
-                    <span>Tổng thanh toán:</span>
-                    <span className="summary-value">{formatCurrency(selectedAmount)}</span>
-                  </div>
+                  <span>VND</span>
                 </div>
               </div>
 
-              <div className="modal-footer">
-                <button className="btn btn-outline" onClick={() => setShowTopUpModal(false)}>
-                  Hủy
-                </button>
-                <button className="btn btn-primary">✅ Xác nhận nạp tiền</button>
+              <div className="field-group">
+                <label htmlFor="description">Nội dung chuyển khoản</label>
+                <input
+                  id="description"
+                  type="text"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Nạp tiền MathMaster"
+                />
               </div>
             </div>
-          </div>
-        )}
 
-        {/* Transaction Detail Modal */}
-        {selectedTransaction && (
-          <div className="modal-overlay" onClick={() => setSelectedTransaction(null)}>
-            <div className="modal" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h2 className="modal-title">Chi tiết giao dịch</h2>
-                <button className="modal-close" onClick={() => setSelectedTransaction(null)}>
-                  ✕
+            <div className="topup-actions">
+              <p>Giao dịch an toàn qua cổng thanh toán PayOS.</p>
+              <button className="btn-topup" onClick={handleDeposit} disabled={depositing}>
+                {depositing ? 'Đang tạo link...' : 'Nạp tiền ngay'} <ArrowRight size={16} />
+              </button>
+            </div>
+
+            <div className="quick-values">
+              {[100000, 200000, 500000, 1000000].map((preset) => (
+                <button
+                  key={preset}
+                  className={amount === preset ? 'active' : ''}
+                  onClick={() => setAmount(preset)}
+                >
+                  {formatCurrency(preset)}
                 </button>
+              ))}
+            </div>
+          </article>
+        </section>
+
+        <section className="transactions-panel">
+          <div className="transactions-head">
+            <div>
+              <h2>Lịch sử giao dịch</h2>
+              <p>
+                Tổng nạp thành công: <strong>{formatCurrency(totalDeposit)} VND</strong>
+              </p>
+            </div>
+
+            <div className="transactions-controls">
+              <div className="search-box">
+                <Search size={16} />
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm theo mã giao dịch"
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setPage(1);
+                  }}
+                />
               </div>
 
-              <div className="modal-body">
-                <div className="transaction-detail-header">
-                  <div className={`detail-icon ${selectedTransaction.type}`}>
-                    {selectedTransaction.type === 'topup'
-                      ? '📥'
-                      : selectedTransaction.type === 'payment'
-                        ? '📤'
-                        : '🔄'}
-                  </div>
-                  <div
-                    className={`detail-amount ${selectedTransaction.amount > 0 ? 'positive' : 'negative'}`}
-                  >
-                    {selectedTransaction.amount > 0 ? '+' : ''}
-                    {formatCurrency(selectedTransaction.amount)}
-                  </div>
-                  <span className={`status-badge ${selectedTransaction.status}`}>
-                    {selectedTransaction.status === 'completed'
-                      ? '✅ Thành công'
-                      : selectedTransaction.status === 'pending'
-                        ? '⏳ Đang xử lý'
-                        : '❌ Thất bại'}
-                  </span>
-                </div>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as TransactionStatusFilter)}
+              >
+                <option value="all">Tất cả trạng thái</option>
+                <option value="completed">Thành công</option>
+                <option value="pending">Đang chờ</option>
+                <option value="failed">Thất bại</option>
+              </select>
+            </div>
+          </div>
 
-                <div className="transaction-detail-info">
-                  <div className="info-row">
-                    <span className="info-label">Mã giao dịch:</span>
-                    <span className="info-value">
-                      TXN{selectedTransaction.id.toString().padStart(8, '0')}
-                    </span>
-                  </div>
-                  <div className="info-row">
-                    <span className="info-label">Mô tả:</span>
-                    <span className="info-value">{selectedTransaction.description}</span>
-                  </div>
-                  <div className="info-row">
-                    <span className="info-label">Ngày giao dịch:</span>
-                    <span className="info-value">
-                      {new Date(selectedTransaction.date).toLocaleString('vi-VN')}
-                    </span>
-                  </div>
-                  <div className="info-row">
-                    <span className="info-label">Phương thức:</span>
-                    <span className="info-value">{selectedTransaction.method}</span>
-                  </div>
-                  <div className="info-row">
-                    <span className="info-label">Loại:</span>
-                    <span className="info-value">
-                      {selectedTransaction.type === 'topup'
-                        ? 'Nạp tiền'
-                        : selectedTransaction.type === 'payment'
-                          ? 'Thanh toán'
-                          : 'Hoàn tiền'}
-                    </span>
-                  </div>
-                </div>
-
-                {selectedTransaction.status === 'completed' && (
-                  <div className="detail-actions">
-                    <button className="btn btn-outline">📧 Gửi hóa đơn</button>
-                    <button className="btn btn-outline">📥 Tải xuống</button>
-                  </div>
+          <div className="transactions-table-wrap">
+            <table className="transactions-table">
+              <thead>
+                <tr>
+                  <th>Ngày giao dịch</th>
+                  <th>Mã giao dịch</th>
+                  <th>Loại giao dịch</th>
+                  <th>Số tiền</th>
+                  <th>Trạng thái</th>
+                </tr>
+              </thead>
+              <tbody>
+                {transactionsLoading && (
+                  <tr>
+                    <td colSpan={5} className="empty-row">
+                      Đang tải giao dịch...
+                    </td>
+                  </tr>
                 )}
-              </div>
 
-              <div className="modal-footer">
-                <button className="btn btn-primary" onClick={() => setSelectedTransaction(null)}>
-                  Đóng
-                </button>
-              </div>
-            </div>
+                {!transactionsLoading && paginatedTransactions.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="empty-row">
+                      Không có giao dịch phù hợp.
+                    </td>
+                  </tr>
+                )}
+
+                {!transactionsLoading &&
+                  paginatedTransactions.map((tx) => {
+                    const status = normalizeStatus(tx.status);
+                    const type = normalizeType(tx);
+                    const date = formatDate(tx.transactionDate || tx.createdAt);
+
+                    return (
+                      <tr key={String(tx.transactionId || tx.id || tx.orderCode)}>
+                        <td>
+                          <div className="date-cell">
+                            <strong>{typeof date === 'string' ? date : date.day}</strong>
+                            <span>{typeof date === 'string' ? '-' : date.time}</span>
+                          </div>
+                        </td>
+                        <td className="transaction-code">#{getTransactionCode(tx)}</td>
+                        <td>
+                          <div className={`type-cell ${type}`}>
+                            <span>{type === 'deposit' ? '+' : '-'}</span>
+                            {type === 'deposit' ? 'Nạp tiền' : 'Thanh toán'}
+                          </div>
+                        </td>
+                        <td className={tx.amount >= 0 ? 'amount-positive' : 'amount-negative'}>
+                          {tx.amount > 0 ? '+' : ''}
+                          {formatCurrency(Math.abs(tx.amount))}đ
+                        </td>
+                        <td>
+                          <span className={`status-chip ${status}`}>
+                            {status === 'completed'
+                              ? 'Thành công'
+                              : status === 'pending'
+                                ? 'Đang chờ'
+                                : 'Thất bại'}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+              </tbody>
+            </table>
           </div>
-        )}
+
+          <footer className="transactions-footer">
+            <span>
+              Hiển thị {displayStart}-{displayEnd} trên tổng số {filteredTransactions.length} giao
+              dịch
+            </span>
+
+            <div className="pagination">
+              <button
+                onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                disabled={safePage === 1}
+              >
+                {'<'}
+              </button>
+
+              {Array.from({ length: totalPages }, (_, idx) => idx + 1).map((pageNumber) => (
+                <button
+                  key={pageNumber}
+                  className={pageNumber === safePage ? 'active' : ''}
+                  onClick={() => setPage(pageNumber)}
+                >
+                  {pageNumber}
+                </button>
+              ))}
+
+              <button
+                onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+                disabled={safePage === totalPages}
+              >
+                {'>'}
+              </button>
+            </div>
+          </footer>
+        </section>
       </div>
     </DashboardLayout>
   );

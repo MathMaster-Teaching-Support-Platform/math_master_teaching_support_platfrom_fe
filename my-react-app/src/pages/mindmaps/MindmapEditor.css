@@ -164,6 +164,11 @@
   box-shadow: 0 8px 20px rgba(15, 23, 42, 0.16);
 }
 
+.mind-elixir-host .mind-elixir-toolbar.lt,
+.mind-elixir-host .toolbar.lt {
+  transform: translateY(40px);
+}
+
 /* Edit Panel */
 .edit-panel {
   position: absolute;

@@ -72,4 +72,12 @@ export const API_ENDPOINTS = {
   // Lessons
   LESSONS: '/lessons',
   LESSON_DETAIL: (lessonId: string) => `/lessons/${lessonId}`,
+
+  // Wallet
+  WALLET_MY: '/wallet/my-wallet',
+  WALLET_TRANSACTIONS: '/wallet/transactions',
+  WALLET_TRANSACTIONS_BY_STATUS: (status: string) => `/wallet/transactions/status/${status}`,
+
+  // Payment
+  PAYMENT_DEPOSIT: '/payment/deposit',
 };
