@@ -1,39 +1,93 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import {
-  ReactFlow,
-  type Node,
-  type Edge,
-  Controls,
-  Background,
-  useNodesState,
-  useEdgesState,
-  addEdge,
-  type Connection,
-  MarkerType,
-  Position,
-  BackgroundVariant,
-} from 'reactflow';
-import 'reactflow/dist/style.css';
+import MindElixir from 'mind-elixir';
+import 'mind-elixir/style.css';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockTeacher } from '../../data/mockData';
 import { MindmapService } from '../../services/api/mindmap.service';
 import type { Mindmap, MindmapNode } from '../../types';
 import './MindmapEditor.css';
 
+interface MindElixirNodeData {
+  id: string;
+  topic: string;
+  expanded?: boolean;
+  style?: {
+    color?: string;
+    background?: string;
+  };
+  children?: MindElixirNodeData[];
+}
+
+interface MindElixirData {
+  nodeData: MindElixirNodeData;
+}
+
+interface MindElixirInstance {
+  init: (data: MindElixirData) => void;
+  refresh: (data: MindElixirData) => void;
+  destroy?: () => void;
+  bus: {
+    addListener: (event: string, handler: (nodes: Array<{ id: string }>) => void) => void;
+  };
+}
+
+type InteractionMode = 'DRAG' | 'EDIT';
+
+const ICON_SYMBOLS: Record<string, string> = {
+  lightbulb: '💡',
+  bookmark: '🔖',
+  'check-circle': '✅',
+  'info-circle': 'ℹ️',
+  book: '📚',
+  target: '🎯',
+  star: '⭐',
+  flag: '🚩',
+  heart: '❤️',
+  link: '🔗',
+  sparkles: '✨',
+  fire: '🔥',
+  rocket: '🚀',
+  trophy: '🏆',
+  medal: '🏅',
+  brain: '🧠',
+  bulb: '💡',
+  pencil: '✏️',
+  chart: '📊',
+  dna: '🧬',
+};
+
+const getIconSymbol = (icon: string): string => ICON_SYMBOLS[icon] || '📌';
+
+const flattenNodes = (nodes: MindmapNode[]): MindmapNode[] => {
+  const result: MindmapNode[] = [];
+  nodes.forEach((node) => {
+    result.push(node);
+    if (node.children && node.children.length > 0) {
+      result.push(...flattenNodes(node.children));
+    }
+  });
+  return result;
+};
+
 export default function MindmapEditor() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
   const [mindmap, setMindmap] = useState<Mindmap | null>(null);
+  const [mindmapNodes, setMindmapNodes] = useState<MindmapNode[]>([]);
   const [loading, setLoading] = useState(true);
+  const [slowLoading, setSlowLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const mindContainerRef = useRef<HTMLDivElement | null>(null);
+  const mindInstanceRef = useRef<MindElixirInstance | null>(null);
+  const nodeLookupRef = useRef<Map<string, MindmapNode>>(new Map());
 
-  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [interactionMode, setInteractionMode] = useState<InteractionMode>('DRAG');
+  const interactionModeRef = useRef<InteractionMode>('DRAG');
   const [editForm, setEditForm] = useState({
     content: '',
     color: '#667eea',
@@ -41,233 +95,171 @@ export default function MindmapEditor() {
   });
 
   useEffect(() => {
-    if (id) loadMindmap(id);
-  }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (!id) {
+      setError('Không tìm thấy ID mindmap');
+      setLoading(false);
+      return;
+    }
+
+    loadMindmap(id);
+  }, [id]);
 
   const loadMindmap = async (mindmapId: string) => {
+    const timeoutMs = 120000;
+
     try {
       setLoading(true);
-      const response = await MindmapService.getMindmapById(mindmapId);
+      setSlowLoading(false);
+      setError(null);
+
+      const slowTimer = setTimeout(() => setSlowLoading(true), 15000);
+
+      const response = await Promise.race([
+        MindmapService.getMindmapById(mindmapId),
+        new Promise<never>((_, reject) => {
+          setTimeout(
+            () => reject(new Error('Timeout khi tải mindmap, vui lòng thử lại.')),
+            timeoutMs
+          );
+        }),
+      ]);
+
+      clearTimeout(slowTimer);
       setMindmap(response.result.mindmap);
-      convertToReactFlow(response.result.nodes);
+      setMindmapNodes(response.result.nodes);
+      setSelectedNodeId(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load mindmap');
     } finally {
       setLoading(false);
+      setSlowLoading(false);
     }
   };
 
-  const convertToReactFlow = (mindmapNodes: MindmapNode[]) => {
-    const reactFlowNodes: Node[] = [];
-    const reactFlowEdges: Edge[] = [];
+  const toMindElixirData = useCallback(
+    (nodes: MindmapNode[]): MindElixirData => {
+      const allNodes = flattenNodes(nodes);
+      const nodeMap = new Map<string, MindmapNode>();
+      allNodes.forEach((node) => nodeMap.set(node.id, node));
+      nodeLookupRef.current = nodeMap;
 
-    // Flatten all nodes (including nested children)
-    const flattenNodes = (nodes: MindmapNode[]): MindmapNode[] => {
-      const result: MindmapNode[] = [];
-      nodes.forEach((node) => {
-        result.push(node);
-        if (node.children && node.children.length > 0) {
-          result.push(...flattenNodes(node.children));
-        }
+      const childrenMap = new Map<string, MindmapNode[]>();
+      allNodes.forEach((node) => {
+        if (!node.parentId) return;
+        const siblings = childrenMap.get(node.parentId) || [];
+        siblings.push(node);
+        childrenMap.set(node.parentId, siblings);
       });
-      return result;
-    };
 
-    const allNodes = flattenNodes(mindmapNodes);
+      childrenMap.forEach((siblings) => {
+        siblings.sort((a, b) => a.displayOrder - b.displayOrder);
+      });
 
-    // Create a map for quick lookup
-    const nodeMap = new Map<string, MindmapNode>();
-    allNodes.forEach((node) => nodeMap.set(node.id, node));
-
-    // Find root node (no parent)
-    const rootNode = allNodes.find((n) => !n.parentId);
-    if (!rootNode) return;
-
-    // Build tree structure to get children for each node
-    const childrenMap = new Map<string, MindmapNode[]>();
-    allNodes.forEach((node) => {
-      if (node.parentId) {
-        if (!childrenMap.has(node.parentId)) {
-          childrenMap.set(node.parentId, []);
-        }
-        childrenMap.get(node.parentId)!.push(node);
+      const rootNode = allNodes.find((node) => !node.parentId);
+      if (!rootNode) {
+        return MindElixir.new(mindmap?.title || 'Mindmap mới') as MindElixirData;
       }
-    });
 
-    // Sort children by displayOrder
-    childrenMap.forEach((children) => {
-      children.sort((a, b) => a.displayOrder - b.displayOrder);
-    });
-
-    // Calculate node positions with symmetric layout
-    const nodePositions = new Map<
-      string,
-      { x: number; y: number; side: 'left' | 'right' | 'center' }
-    >();
-    const verticalSpacing = 150;
-    const horizontalSpacing = 350;
-
-    // Place root node at center
-    nodePositions.set(rootNode.id, { x: 0, y: 0, side: 'center' });
-
-    // Get first level children and split them left/right
-    const rootChildren = childrenMap.get(rootNode.id) || [];
-    const leftChildren = rootChildren.filter((_, i) => i % 2 === 0);
-    const rightChildren = rootChildren.filter((_, i) => i % 2 === 1);
-
-    // Layout function with side parameter
-    const layoutBranch = (
-      nodes: MindmapNode[],
-      side: 'left' | 'right',
-      startY: number,
-      level: number
-    ): number => {
-      let currentY = startY;
-
-      nodes.forEach((node) => {
-        const xMultiplier = side === 'left' ? -1 : 1;
-        const x = xMultiplier * level * horizontalSpacing;
-        const y = currentY;
-
-        nodePositions.set(node.id, { x, y, side });
-
-        const children = childrenMap.get(node.id) || [];
-        if (children.length > 0) {
-          const childStartY = currentY - ((children.length - 1) * verticalSpacing) / 2;
-          const endY = layoutBranch(children, side, childStartY, level + 1);
-          currentY = Math.max(currentY, endY);
-        }
-
-        currentY += verticalSpacing;
-      });
-
-      return currentY;
-    };
-
-    // Layout left and right branches
-    const leftStartY = (-(leftChildren.length - 1) * verticalSpacing) / 2;
-    const rightStartY = (-(rightChildren.length - 1) * verticalSpacing) / 2;
-
-    layoutBranch(leftChildren, 'left', leftStartY, 1);
-    layoutBranch(rightChildren, 'right', rightStartY, 1);
-
-    // Create ReactFlow nodes with positions
-    allNodes.forEach((node) => {
-      const pos = nodePositions.get(node.id);
-      if (!pos) return;
-
-      const isRoot = node.id === rootNode.id;
-      const sourcePos =
-        pos.side === 'left'
-          ? Position.Left
-          : pos.side === 'right'
-            ? Position.Right
-            : Position.Right;
-      const targetPos =
-        pos.side === 'left' ? Position.Right : pos.side === 'right' ? Position.Left : Position.Left;
-
-      reactFlowNodes.push({
+      const buildNode = (node: MindmapNode): MindElixirNodeData => ({
         id: node.id,
-        type: 'default',
-        position: { x: pos.x, y: pos.y },
-        data: {
-          label: (
-            <div className="mindmap-node-content">
-              <span className="node-icon">{getIconSymbol(node.icon)}</span>
-              <span className="node-text">{node.content}</span>
-            </div>
-          ),
-          mindmapNode: node,
-        },
+        topic: `${getIconSymbol(node.icon)} ${node.content}`,
+        expanded: true,
         style: {
-          background: isRoot ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : node.color,
-          color: '#fff',
-          border: isRoot ? '3px solid #fff' : '2px solid #fff',
-          borderRadius: isRoot ? '20px' : '12px',
-          padding: isRoot ? '16px 24px' : '12px 16px',
-          fontSize: isRoot ? '16px' : '14px',
-          fontWeight: '600',
-          boxShadow: isRoot
-            ? '0 8px 16px rgba(102, 126, 234, 0.3)'
-            : '0 4px 6px rgba(0, 0, 0, 0.1)',
-          minWidth: isRoot ? '200px' : '180px',
-          textAlign: 'center' as const,
+          color: '#ffffff',
+          background: node.color,
         },
-        sourcePosition: sourcePos,
-        targetPosition: targetPos,
+        children: (childrenMap.get(node.id) || []).map(buildNode),
       });
 
-      if (node.parentId) {
-        const parentPos = nodePositions.get(node.parentId);
-        reactFlowEdges.push({
-          id: `${node.parentId}-${node.id}`,
-          source: node.parentId,
-          target: node.id,
-          type: 'smoothstep',
-          animated: false,
-          style: {
-            stroke: isRoot || !parentPos ? '#667eea' : '#94a3b8',
-            strokeWidth: isRoot || node.parentId === rootNode.id ? 3 : 2,
-          },
-          markerEnd: {
-            type: MarkerType.ArrowClosed,
-            color: isRoot || !parentPos ? '#667eea' : '#94a3b8',
-          },
-        });
-      }
-    });
-
-    setNodes(reactFlowNodes);
-    setEdges(reactFlowEdges);
-  };
-
-  const getIconSymbol = (icon: string): string => {
-    const iconMap: Record<string, string> = {
-      lightbulb: '💡',
-      bookmark: '🔖',
-      'check-circle': '✅',
-      'info-circle': 'ℹ️',
-      book: '📚',
-      target: '🎯',
-      star: '⭐',
-      flag: '🚩',
-      heart: '❤️',
-      link: '🔗',
-      sparkles: '✨',
-      fire: '🔥',
-      rocket: '🚀',
-      trophy: '🏆',
-      medal: '🏅',
-      brain: '🧠',
-      bulb: '💡',
-      pencil: '✏️',
-      chart: '📊',
-      dna: '🧬',
-    };
-    return iconMap[icon] || '📌';
-  };
-
-  const onConnect = useCallback(
-    (params: Connection) => setEdges((eds) => addEdge(params, eds)),
-    [setEdges]
+      return {
+        nodeData: buildNode(rootNode),
+      };
+    },
+    [mindmap?.title]
   );
 
-  const onNodeClick = (_event: React.MouseEvent, node: Node) => {
-    setSelectedNode(node);
-    const mindmapNode = node.data.mindmapNode as MindmapNode;
+  useEffect(() => {
+    interactionModeRef.current = interactionMode;
+    if (interactionMode === 'DRAG') {
+      setSelectedNodeId(null);
+    }
+  }, [interactionMode]);
+
+  useEffect(() => {
+    if (!mindContainerRef.current || !mindmap) return;
+
+    const data = toMindElixirData(mindmapNodes);
+
+    if (!mindInstanceRef.current) {
+      const mind = new MindElixir({
+        el: mindContainerRef.current,
+        direction: MindElixir.SIDE,
+        draggable: true,
+        contextMenu: true,
+        toolBar: true,
+        keypress: true,
+        locale: 'en',
+      });
+
+      mind.init(data);
+
+      mind.bus.addListener('selectNodes', (nodes: Array<{ id: string }>) => {
+        if (interactionModeRef.current !== 'EDIT') {
+          setSelectedNodeId(null);
+          return;
+        }
+
+        const targetNode = nodes?.[0];
+        if (!targetNode?.id) {
+          setSelectedNodeId(null);
+          return;
+        }
+        setSelectedNodeId(targetNode.id);
+      });
+
+      mindInstanceRef.current = mind as MindElixirInstance;
+    } else {
+      mindInstanceRef.current.refresh(data);
+    }
+
+    setSelectedNodeId((prev) => {
+      if (!prev) return null;
+      return nodeLookupRef.current.has(prev) ? prev : null;
+    });
+  }, [mindmap, mindmapNodes, toMindElixirData]);
+
+  useEffect(() => {
+    return () => {
+      if (mindInstanceRef.current?.destroy) {
+        mindInstanceRef.current.destroy();
+      }
+      mindInstanceRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!selectedNodeId) return;
+
+    const mindmapNode = nodeLookupRef.current.get(selectedNodeId);
+    if (!mindmapNode) {
+      setSelectedNodeId(null);
+      return;
+    }
+
     setEditForm({
       content: mindmapNode.content,
       color: mindmapNode.color,
       icon: mindmapNode.icon,
     });
-  };
+  }, [selectedNodeId]);
 
   const handleSaveNode = async () => {
-    if (!selectedNode || !mindmap) return;
+    if (!selectedNodeId || !mindmap) return;
 
     try {
       setSaving(true);
-      const mindmapNode = selectedNode.data.mindmapNode as MindmapNode;
+      const mindmapNode = nodeLookupRef.current.get(selectedNodeId);
+      if (!mindmapNode) return;
 
       await MindmapService.updateNode(mindmap.id, mindmapNode.id, {
         content: editForm.content,
@@ -275,9 +267,8 @@ export default function MindmapEditor() {
         icon: editForm.icon,
       });
 
-      // Reload mindmap
       if (id) await loadMindmap(id);
-      setSelectedNode(null);
+      setSelectedNodeId(null);
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to update node');
     } finally {
@@ -286,16 +277,17 @@ export default function MindmapEditor() {
   };
 
   const handleDeleteNode = async () => {
-    if (!selectedNode || !mindmap) return;
+    if (!selectedNodeId || !mindmap) return;
     if (!confirm('Bạn có chắc chắn muốn xóa node này?')) return;
 
     try {
-      const mindmapNode = selectedNode.data.mindmapNode as MindmapNode;
+      const mindmapNode = nodeLookupRef.current.get(selectedNodeId);
+      if (!mindmapNode) return;
+
       await MindmapService.deleteNode(mindmap.id, mindmapNode.id);
 
-      // Reload mindmap
       if (id) await loadMindmap(id);
-      setSelectedNode(null);
+      setSelectedNodeId(null);
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to delete node');
     }
@@ -322,6 +314,9 @@ export default function MindmapEditor() {
         <div className="mindmap-editor-loading">
           <div className="loader"></div>
           <p>Đang tải mindmap...</p>
+          {slowLoading && (
+            <p className="loading-slow-hint">Server đang xử lý dữ liệu lớn, vui lòng đợi thêm...</p>
+          )}
         </div>
       </DashboardLayout>
     );
@@ -337,7 +332,14 @@ export default function MindmapEditor() {
         <div className="mindmap-editor-error">
           <h2>Lỗi</h2>
           <p>{error || 'Không tìm thấy mindmap'}</p>
-          <button onClick={() => navigate('/teacher/mindmaps')}>Quay lại</button>
+          <div className="error-actions">
+            {id && (
+              <button onClick={() => loadMindmap(id)} className="btn-retry">
+                Thử lại
+              </button>
+            )}
+            <button onClick={() => navigate('/teacher/mindmaps')}>Quay lại</button>
+          </div>
         </div>
       </DashboardLayout>
     );
@@ -361,6 +363,22 @@ export default function MindmapEditor() {
             </div>
           </div>
           <div className="header-actions">
+            <div className="interaction-toggle" role="group" aria-label="Chế độ thao tác">
+              <button
+                type="button"
+                className={`interaction-btn ${interactionMode === 'DRAG' ? 'active' : ''}`}
+                onClick={() => setInteractionMode('DRAG')}
+              >
+                Kéo thả
+              </button>
+              <button
+                type="button"
+                className={`interaction-btn ${interactionMode === 'EDIT' ? 'active' : ''}`}
+                onClick={() => setInteractionMode('EDIT')}
+              >
+                Chỉnh sửa
+              </button>
+            </div>
             <select
               value={mindmap.status}
               onChange={(e) =>
@@ -377,30 +395,15 @@ export default function MindmapEditor() {
 
         <div className="editor-content">
           <div className="flow-container">
-            <ReactFlow
-              nodes={nodes}
-              edges={edges}
-              onNodesChange={onNodesChange}
-              onEdgesChange={onEdgesChange}
-              onConnect={onConnect}
-              onNodeClick={onNodeClick}
-              fitView
-              fitViewOptions={{ padding: 0.2, maxZoom: 1 }}
-              attributionPosition="bottom-left"
-              minZoom={0.1}
-              maxZoom={2}
-              defaultEdgeOptions={{
-                type: 'smoothstep',
-                animated: false,
-              }}
-            >
-              <Controls showInteractive={false} />
-              <Background color="#cbd5e0" gap={20} size={1} variant={BackgroundVariant.Dots} />
-            </ReactFlow>
+            <div className="interaction-hint">
+              {interactionMode === 'DRAG'
+                ? 'Chế độ kéo thả: kéo node để thay đổi cấu trúc mindmap.'
+                : 'Chế độ chỉnh sửa: bấm node để mở panel chỉnh sửa.'}
+            </div>
+            <div ref={mindContainerRef} className="mind-elixir-host" />
           </div>
 
-          {/* Edit Panel */}
-          {selectedNode && (
+          {interactionMode === 'EDIT' && selectedNodeId && (
             <div className="edit-panel">
               <h3>Chỉnh sửa Node</h3>
               <div className="form-group">
@@ -446,7 +449,7 @@ export default function MindmapEditor() {
                 </select>
               </div>
               <div className="panel-actions">
-                <button onClick={() => setSelectedNode(null)} className="btn-cancel">
+                <button onClick={() => setSelectedNodeId(null)} className="btn-cancel">
                   Hủy
                 </button>
                 <button onClick={handleDeleteNode} className="btn-delete">

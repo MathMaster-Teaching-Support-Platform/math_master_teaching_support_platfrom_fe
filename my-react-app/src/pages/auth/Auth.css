@@ -25,15 +25,6 @@
   margin-bottom: 3rem;
 }
 
-.brand-icon {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-  margin-bottom: 1.5rem;
-  font-size: 3rem;
-  animation: float 3s ease-in-out infinite;
-}
-
 .math-symbol {
   display: inline-block;
   font-weight: bold;
@@ -409,10 +400,6 @@
   }
 
   .auth-brand h1 {
-    font-size: 2rem;
-  }
-
-  .brand-icon {
     font-size: 2rem;
   }
 

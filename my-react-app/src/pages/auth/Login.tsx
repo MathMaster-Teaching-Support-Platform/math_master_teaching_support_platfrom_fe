@@ -62,11 +62,6 @@ const Login: React.FC = () => {
     <div className="auth-container">
       <div className="auth-left">
         <div className="auth-brand">
-          <div className="brand-icon">
-            <span className="math-symbol">∑</span>
-            <span className="math-symbol">π</span>
-            <span className="math-symbol">∫</span>
-          </div>
           <h1>MathMaster</h1>
           <p className="brand-tagline">Nền tảng hỗ trợ giảng dạy toán học</p>
         </div>
