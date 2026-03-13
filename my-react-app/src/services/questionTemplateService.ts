@@ -173,11 +173,17 @@ export const questionTemplateService = {
     },
 
     // Import Template from File
-    importTemplateFromFile: async (file: File, subjectHint?: string, contextHint?: string): Promise<ApiResponse<TemplateImportResponse>> => {
+    importTemplateFromFile: async (
+        file: File,
+        subjectHint?: string,
+        contextHint?: string,
+        questionBankId?: string
+    ): Promise<ApiResponse<TemplateImportResponse>> => {
         const formData = new FormData();
         formData.append('file', file);
         if (subjectHint) formData.append('subjectHint', subjectHint);
         if (contextHint) formData.append('contextHint', contextHint);
+        if (questionBankId) formData.append('questionBankId', questionBankId);
 
         const headers: Record<string, string> = { ...getAuthHeaders() };
         delete headers['Content-Type']; // Let browser set multipart boundary

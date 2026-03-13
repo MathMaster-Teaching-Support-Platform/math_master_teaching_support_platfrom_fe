@@ -140,7 +140,16 @@ export const useGenerateAIEnhancedQuestion = () => {
 
 export const useImportTemplateFromFile = () => {
     return useMutation({
-        mutationFn: ({ file, subjectHint, contextHint }: { file: File; subjectHint?: string; contextHint?: string }) =>
-            questionTemplateService.importTemplateFromFile(file, subjectHint, contextHint),
+        mutationFn: ({
+            file,
+            subjectHint,
+            contextHint,
+            questionBankId,
+        }: {
+            file: File;
+            subjectHint?: string;
+            contextHint?: string;
+            questionBankId?: string;
+        }) => questionTemplateService.importTemplateFromFile(file, subjectHint, contextHint, questionBankId),
     });
 };

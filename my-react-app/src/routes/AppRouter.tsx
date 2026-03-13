@@ -42,6 +42,8 @@ import { TeacherMindmaps, MindmapEditor } from '../pages/mindmaps';
 import { TemplateDashboard } from '../pages/question-templates/TemplateDashboard';
 import { ExamMatrixDashboard } from '../pages/exam-matrices/ExamMatrixDashboard';
 import ExamMatrixDetailPage from '../pages/exam-matrices/ExamMatrixDetailPage';
+import { QuestionBankDashboard } from '../pages/question-banks/QuestionBankDashboard';
+import { QuestionBankDetailPage } from '../pages/question-banks/QuestionBankDetailPage';
 
 const router = createBrowserRouter([
   {
@@ -147,6 +149,14 @@ const router = createBrowserRouter([
   {
     path: '/teacher/question-templates',
     element: <TemplateDashboard />,
+  },
+  {
+    path: '/teacher/question-banks',
+    element: <QuestionBankDashboard />,
+  },
+  {
+    path: '/teacher/question-banks/:bankId',
+    element: <QuestionBankDetailPage />,
   },
   {
     path: '/teacher/exam-matrices',

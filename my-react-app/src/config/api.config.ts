@@ -60,6 +60,18 @@ export const API_ENDPOINTS = {
   EXAM_MATRIX_FINALIZE_PREVIEW: (matrixId: string, mappingId: string) =>
     `/exam-matrices/${matrixId}/template-mappings/${mappingId}/finalize`,
 
+  // Question banks
+  QUESTION_BANKS: '/question-banks',
+  QUESTION_BANKS_MY: '/question-banks/my',
+  QUESTION_BANKS_SEARCH: '/question-banks/search',
+  QUESTION_BANK_DETAIL: (id: string) => `/question-banks/${id}`,
+  QUESTION_BANK_TOGGLE_PUBLIC: (id: string) => `/question-banks/${id}/toggle-public`,
+  QUESTION_BANK_CAN_EDIT: (id: string) => `/question-banks/${id}/can-edit`,
+  QUESTION_BANK_CAN_DELETE: (id: string) => `/question-banks/${id}/can-delete`,
+
+  // Questions
+  QUESTIONS_BY_BANK: (bankId: string) => `/api/questions/bank/${bankId}`,
+
   // Mindmaps
   MINDMAPS: '/mindmaps',
   MINDMAPS_GENERATE: '/mindmaps/generate',
