@@ -1,510 +1,419 @@
-import React, { useState, useEffect } from 'react';
+import { Plus, Trash2, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import {
-    type QuestionTemplateRequest,
-    type QuestionTemplateResponse,
-    QuestionType,
-    CognitiveLevel
+  CognitiveLevel,
+  QuestionType,
+  type QuestionTemplateRequest,
+  type QuestionTemplateResponse,
 } from '../../types/questionTemplate';
-import { X, Loader2, Plus, Trash2, Settings2, Sigma, ListChecks, Target, FileText } from 'lucide-react';
 
-interface TemplateFormModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    onSubmit: (data: QuestionTemplateRequest) => Promise<void>;
-    initialData?: QuestionTemplateResponse | null;
-    mode: 'create' | 'edit';
+type ParameterInput = {
+  name: string;
+  type: string;
+  min: string;
+  max: string;
+};
+
+type OptionInput = {
+  key: string;
+  formula: string;
+};
+
+type DifficultyRuleInput = {
+  level: string;
+  condition: string;
+};
+
+type Props = {
+  isOpen: boolean;
+  mode: 'create' | 'edit';
+  initialData?: QuestionTemplateResponse | null;
+  onClose: () => void;
+  onSubmit: (data: QuestionTemplateRequest) => Promise<void>;
+};
+
+function parseTemplateText(value: Record<string, unknown> | undefined): string {
+  const vi = value?.vi;
+  const en = value?.en;
+  if (typeof vi === 'string') return vi;
+  if (typeof en === 'string') return en;
+  return '';
 }
 
-interface ParameterInput {
-    name: string;
-    type: string;
-    min: string;
-    max: string;
-}
+export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit }: Props) {
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [templateType, setTemplateType] = useState<QuestionType>(QuestionType.MULTIPLE_CHOICE);
+  const [cognitiveLevel, setCognitiveLevel] = useState<CognitiveLevel>(CognitiveLevel.UNDERSTAND);
+  const [isPublic, setIsPublic] = useState(false);
+  const [templateText, setTemplateText] = useState('');
+  const [answerFormula, setAnswerFormula] = useState('');
+  const [tags, setTags] = useState('');
+  const [parameters, setParameters] = useState<ParameterInput[]>([]);
+  const [options, setOptions] = useState<OptionInput[]>([]);
+  const [rules, setRules] = useState<DifficultyRuleInput[]>([]);
+  const [saving, setSaving] = useState(false);
 
-interface OptionInput {
-    key: string;
-    formula: string;
-}
+  useEffect(() => {
+    if (!isOpen) return;
 
-interface DifficultyRuleInput {
-    level: string;
-    condition: string;
-}
+    if (mode === 'edit' && initialData) {
+      setName(initialData.name || '');
+      setDescription(initialData.description || '');
+      setTemplateType(initialData.templateType || QuestionType.MULTIPLE_CHOICE);
+      setCognitiveLevel(initialData.cognitiveLevel || CognitiveLevel.UNDERSTAND);
+      setIsPublic(initialData.isPublic ?? false);
+      setTemplateText(parseTemplateText(initialData.templateText));
+      setAnswerFormula(initialData.answerFormula || '');
+      setTags((initialData.tags || []).join(', '));
 
-export const TemplateFormModal: React.FC<TemplateFormModalProps> = ({
-    isOpen,
-    onClose,
-    onSubmit,
-    initialData,
-    mode,
-}) => {
-    // Basic Form State
-    const [name, setName] = useState('');
-    const [description, setDescription] = useState('');
-    const [templateType, setTemplateType] = useState<QuestionType>(QuestionType.MULTIPLE_CHOICE);
-    const [cognitiveLevel, setCognitiveLevel] = useState<CognitiveLevel>(CognitiveLevel.UNDERSTAND);
-    const [isPublic, setIsPublic] = useState(false);
-    const [templateText, setTemplateText] = useState('');
-    const [answerFormula, setAnswerFormula] = useState('');
-    const [tagsText, setTagsText] = useState('');
+      const mappedParameters: ParameterInput[] = Object.entries(initialData.parameters || {}).map(([key, raw]) => {
+        const item = raw as { type?: string; min?: number; max?: number };
+        return {
+          name: key,
+          type: item.type || 'int',
+          min: item.min?.toString() || '1',
+          max: item.max?.toString() || '10',
+        };
+      });
 
-    // Dynamic Lists State
-    const [parameters, setParameters] = useState<ParameterInput[]>([]);
-    const [options, setOptions] = useState<OptionInput[]>([]);
-    const [difficultyRules, setDifficultyRules] = useState<DifficultyRuleInput[]>([]);
+      const mappedOptions: OptionInput[] = Object.entries(initialData.optionsGenerator || {}).map(([key, raw]) => ({
+        key,
+        formula: typeof raw === 'string' ? raw : '',
+      }));
 
-    const [isSubmitting, setIsSubmitting] = useState(false);
+      const mappedRules: DifficultyRuleInput[] = Object.entries(initialData.difficultyRules || {}).map(([level, raw]) => ({
+        level,
+        condition: typeof raw === 'string' ? raw : '',
+      }));
 
-    useEffect(() => {
-        if (isOpen) {
-            if (mode === 'edit' && initialData) {
-                setName(initialData.name || '');
-                setDescription(initialData.description || '');
-                setTemplateType(initialData.templateType || QuestionType.MULTIPLE_CHOICE);
-                setCognitiveLevel(initialData.cognitiveLevel || CognitiveLevel.UNDERSTAND);
-                setIsPublic(initialData.isPublic || false);
-                const templateTextObj = initialData.templateText as Record<string, unknown> | undefined;
-                const viText = typeof templateTextObj?.vi === 'string' ? templateTextObj.vi : '';
-                const enText = typeof templateTextObj?.en === 'string' ? templateTextObj.en : '';
-                setTemplateText(viText || enText || '');
-                setAnswerFormula(initialData.answerFormula || '');
-                setTagsText((initialData.tags || []).join(', '));
+      setParameters(mappedParameters.length ? mappedParameters : [{ name: 'a', type: 'int', min: '1', max: '10' }]);
+      setOptions(mappedOptions.length ? mappedOptions : [{ key: 'A', formula: '' }, { key: 'B', formula: '' }]);
+      setRules(mappedRules.length ? mappedRules : [{ level: 'EASY', condition: '' }]);
+      return;
+    }
 
-                // Parse Parameters
-                const parsedParams: ParameterInput[] = [];
-                if (initialData.parameters) {
-                    Object.entries(initialData.parameters as Record<string, unknown>).forEach(([key, val]) => {
-                        const obj = (val as Record<string, unknown>) || {};
-                        parsedParams.push({
-                            name: key,
-                            type: typeof obj.type === 'string' ? obj.type : 'int',
-                            min: typeof obj.min === 'number' ? obj.min.toString() : '1',
-                            max: typeof obj.max === 'number' ? obj.max.toString() : '10'
-                        });
-                    });
-                }
-                setParameters(parsedParams.length > 0 ? parsedParams : [{ name: 'x', type: 'int', min: '1', max: '10' }]);
+    setName('');
+    setDescription('');
+    setTemplateType(QuestionType.MULTIPLE_CHOICE);
+    setCognitiveLevel(CognitiveLevel.UNDERSTAND);
+    setIsPublic(false);
+    setTemplateText('Giải phương trình: {a}x + {b} = 0');
+    setAnswerFormula('(-b)/a');
+    setTags('đại số, lớp 9');
+    setParameters([
+      { name: 'a', type: 'int', min: '1', max: '10' },
+      { name: 'b', type: 'int', min: '-10', max: '10' },
+    ]);
+    setOptions([
+      { key: 'A', formula: '(-b)/a' },
+      { key: 'B', formula: 'b/a' },
+      { key: 'C', formula: '-a/b' },
+      { key: 'D', formula: 'a+b' },
+    ]);
+    setRules([{ level: 'EASY', condition: 'a < 5' }]);
+  }, [isOpen, initialData, mode]);
 
-                // Parse Options
-                const parsedOptions: OptionInput[] = [];
-                if (initialData.optionsGenerator) {
-                    Object.entries(initialData.optionsGenerator as Record<string, unknown>).forEach(([key, val]) => {
-                        if (typeof val === 'string') {
-                            parsedOptions.push({ key, formula: val });
-                        }
-                    });
-                }
-                setOptions(parsedOptions.length > 0 ? parsedOptions : [
-                    { key: 'A', formula: '' },
-                    { key: 'B', formula: '' },
-                    { key: 'C', formula: '' },
-                    { key: 'D', formula: '' }
-                ]);
+  if (!isOpen) return null;
 
-                // Parse Difficulty Rules
-                const parsedDifficulty: DifficultyRuleInput[] = [];
-                if (initialData.difficultyRules) {
-                    Object.entries(initialData.difficultyRules as Record<string, unknown>).forEach(([key, val]) => {
-                        if (typeof val === 'string') {
-                            parsedDifficulty.push({ level: key, condition: val });
-                        }
-                    });
-                }
-                setDifficultyRules(parsedDifficulty.length > 0 ? parsedDifficulty : [{ level: 'EASY', condition: '' }]);
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
+    setSaving(true);
 
-            } else {
-                // Default Create State
-                setName('');
-                setDescription('');
-                setTemplateType(QuestionType.MULTIPLE_CHOICE);
-                setCognitiveLevel(CognitiveLevel.UNDERSTAND);
-                setIsPublic(false);
-                setTemplateText('Giải phương trình: {a}x + {b} = 0');
-                setAnswerFormula('(-b)/a');
-                setTagsText('Đại số, Lớp 9');
-                setParameters([
-                    { name: 'a', type: 'int', min: '1', max: '10' },
-                    { name: 'b', type: 'int', min: '-10', max: '10' }
-                ]);
-                setOptions([
-                    { key: 'A', formula: '(-b)/a' },
-                    { key: 'B', formula: 'b/a' },
-                    { key: 'C', formula: 'a/b' },
-                    { key: 'D', formula: '(-a)/b' }
-                ]);
-                setDifficultyRules([
-                    { level: 'EASY', condition: 'a < 5 && b < 5' }
-                ]);
-            }
-        }
-    }, [isOpen, initialData, mode]);
+    const mappedParameters: Record<string, unknown> = {};
+    for (const item of parameters) {
+      if (!item.name.trim()) continue;
+      mappedParameters[item.name.trim()] = {
+        type: item.type,
+        min: item.type === 'int' ? Number.parseInt(item.min, 10) : Number.parseFloat(item.min),
+        max: item.type === 'int' ? Number.parseInt(item.max, 10) : Number.parseFloat(item.max),
+      };
+    }
 
-    if (!isOpen) return null;
+    const mappedOptions: Record<string, unknown> = {};
+    for (const option of options) {
+      if (!option.key.trim() || !option.formula.trim()) continue;
+      mappedOptions[option.key.trim()] = option.formula.trim();
+    }
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsSubmitting(true);
+    const mappedRules: Record<string, unknown> = {};
+    for (const rule of rules) {
+      if (!rule.level.trim() || !rule.condition.trim()) continue;
+      mappedRules[rule.level.trim()] = rule.condition.trim();
+    }
 
-        try {
-            // Reconstruct JSON structures from visual builders
-            const finalParameters: Record<string, { type: string; min: number; max: number }> = {};
-            parameters.forEach(p => {
-                if (p.name.trim()) {
-                    finalParameters[p.name.trim()] = {
-                        type: p.type,
-                        min: p.type === 'int' ? parseInt(p.min) : parseFloat(p.min),
-                        max: p.type === 'int' ? parseInt(p.max) : parseFloat(p.max),
-                    };
-                }
-            });
-
-            const finalOptions: Record<string, string> = {};
-            options.forEach(o => {
-                if (o.key.trim() && o.formula.trim()) {
-                    finalOptions[o.key.trim()] = o.formula.trim();
-                }
-            });
-
-            const finalDifficulty: Record<string, string> = {};
-            difficultyRules.forEach(d => {
-                if (d.level.trim() && d.condition.trim()) {
-                    finalDifficulty[d.level.trim()] = d.condition.trim();
-                }
-            });
-
-            const requestData: QuestionTemplateRequest = {
-                name,
-                description,
-                templateType,
-                cognitiveLevel,
-                isPublic,
-                templateText: { "vi": templateText },
-                parameters: finalParameters,
-                answerFormula,
-                optionsGenerator: Object.keys(finalOptions).length > 0 ? finalOptions : undefined,
-                difficultyRules: Object.keys(finalDifficulty).length > 0 ? (finalDifficulty as Record<string, unknown>) : ({} as Record<string, unknown>),
-                tags: tagsText.split(',').map(t => t.trim()).filter(Boolean)
-            };
-
-            await onSubmit(requestData);
-            onClose();
-        } catch (error) {
-            console.error('Lỗi khi submit:', error);
-        } finally {
-            setIsSubmitting(false);
-        }
+    const payload: QuestionTemplateRequest = {
+      name: name.trim(),
+      description: description.trim() || undefined,
+      templateType,
+      templateText: { vi: templateText.trim() },
+      parameters: mappedParameters,
+      answerFormula: answerFormula.trim(),
+      optionsGenerator: Object.keys(mappedOptions).length ? mappedOptions : undefined,
+      difficultyRules: mappedRules,
+      cognitiveLevel,
+      tags: tags.split(',').map((item) => item.trim()).filter(Boolean),
+      isPublic,
     };
 
-    // Helper functions for dynamic lists
-    const addParameter = () => setParameters([...parameters, { name: '', type: 'int', min: '1', max: '10' }]);
-    const updateParameter = (index: number, field: keyof ParameterInput, value: string) => {
-        const newParams = [...parameters];
-        newParams[index][field] = value;
-        setParameters(newParams);
-    };
-    const removeParameter = (index: number) => setParameters(parameters.filter((_, i) => i !== index));
+    try {
+      await onSubmit(payload);
+      onClose();
+    } finally {
+      setSaving(false);
+    }
+  }
 
-    const addOption = () => setOptions([...options, { key: '', formula: '' }]);
-    const updateOption = (index: number, field: keyof OptionInput, value: string) => {
-        const newOpts = [...options];
-        newOpts[index][field] = value;
-        setOptions(newOpts);
-    };
-    const removeOption = (index: number) => setOptions(options.filter((_, i) => i !== index));
+  return (
+    <div className="modal-layer">
+      <div className="modal-card">
+        <div className="modal-header">
+          <div>
+            <h3>{mode === 'create' ? 'Tạo mẫu câu hỏi' : 'Chỉnh sửa mẫu câu hỏi'}</h3>
+            <p className="muted" style={{ marginTop: 4 }}>Cấu hình logic tạo câu hỏi tự động.</p>
+          </div>
+          <button className="icon-btn" onClick={onClose}>
+            <X size={16} />
+          </button>
+        </div>
 
-    const addDifficultyRule = () => setDifficultyRules([...difficultyRules, { level: 'HARD', condition: '' }]);
-    const updateDifficultyRule = (index: number, field: keyof DifficultyRuleInput, value: string) => {
-        const newRules = [...difficultyRules];
-        newRules[index][field] = value;
-        setDifficultyRules(newRules);
-    };
-    const removeDifficultyRule = (index: number) => setDifficultyRules(difficultyRules.filter((_, i) => i !== index));
+        <form onSubmit={submit}>
+          <div className="modal-body">
+            <div className="form-grid">
+              <label>
+                <p className="muted" style={{ marginBottom: 6 }}>Tên mẫu</p>
+                <input className="input" required value={name} onChange={(event) => setName(event.target.value)} />
+              </label>
 
+              <label>
+                <p className="muted" style={{ marginBottom: 6 }}>Loại câu hỏi</p>
+                <select className="select" value={templateType} onChange={(event) => setTemplateType(event.target.value as QuestionType)}>
+                  {Object.values(QuestionType).map((item) => (
+                    <option key={item} value={item}>{item}</option>
+                  ))}
+                </select>
+              </label>
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm overflow-y-auto py-10">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl mx-4 flex flex-col max-h-[90vh]">
+              <label>
+                <p className="muted" style={{ marginBottom: 6 }}>Mức độ nhận thức</p>
+                <select
+                  className="select"
+                  value={cognitiveLevel}
+                  onChange={(event) => setCognitiveLevel(event.target.value as CognitiveLevel)}
+                >
+                  {Object.values(CognitiveLevel).map((item) => (
+                    <option key={item} value={item}>{item}</option>
+                  ))}
+                </select>
+              </label>
 
-                {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-slate-100 flex-shrink-0 bg-white rounded-t-2xl">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
-                            <Settings2 size={24} />
-                        </div>
-                        <div>
-                            <h2 className="text-xl font-bold text-slate-800">
-                                {mode === 'create' ? 'Tạo mẫu câu hỏi mới' : 'Chỉnh sửa mẫu câu hỏi'}
-                            </h2>
-                            <p className="text-sm text-slate-500 mt-1">Cấu hình tham số và thuật toán sinh câu hỏi tự động</p>
-                        </div>
-                    </div>
-                    <button onClick={onClose} className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors">
-                        <X size={24} />
-                    </button>
-                </div>
-
-                <div className="p-0 overflow-y-auto flex-1 custom-scrollbar bg-slate-50/50">
-                    <form id="template-form" onSubmit={handleSubmit} className="p-6 space-y-8">
-
-                        {/* Section 1: Basic Info */}
-                        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
-                            <h3 className="text-base font-bold text-slate-800 flex items-center gap-2 mb-4 border-b pb-3">
-                                <FileText size={18} className="text-indigo-500" />
-                                Thông tin cơ bản
-                            </h3>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                <div className="md:col-span-2">
-                                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">Tên mẫu câu hỏi <span className="text-red-500">*</span></label>
-                                    <input
-                                        required
-                                        className="w-full border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
-                                        value={name}
-                                        onChange={(e) => setName(e.target.value)}
-                                        placeholder="Ví dụ: Phương trình bậc hai dạng ax^2+bx+c=0"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">Loại câu hỏi</label>
-                                    <select
-                                        className="w-full border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
-                                        value={templateType}
-                                        onChange={(e) => setTemplateType(e.target.value as QuestionType)}
-                                    >
-                                        <option value="MULTIPLE_CHOICE">Trắc nghiệm</option>
-                                        <option value="TRUE_FALSE">Đúng/Sai</option>
-                                        <option value="SHORT_ANSWER">Trả lời ngắn</option>
-                                        <option value="ESSAY">Tự luận</option>
-                                        <option value="CODING">Lập trình</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">Mức độ nhận thức</label>
-                                    <select
-                                        className="w-full border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
-                                        value={cognitiveLevel}
-                                        onChange={(e) => setCognitiveLevel(e.target.value as CognitiveLevel)}
-                                    >
-                                        <option value="REMEMBER">Nhận biết</option>
-                                        <option value="UNDERSTAND">Thông hiểu</option>
-                                        <option value="APPLY">Vận dụng</option>
-                                        <option value="ANALYZE">Phân tích</option>
-                                        <option value="EVALUATE">Đánh giá</option>
-                                        <option value="CREATE">Sáng tạo</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">Mô tả (tuỳ chọn)</label>
-                                    <textarea
-                                        rows={2}
-                                        className="w-full border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                        value={description}
-                                        onChange={(e) => setDescription(e.target.value)}
-                                        placeholder="Ghi chú về mẫu câu hỏi này..."
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">Từ khóa (Tags)</label>
-                                    <input
-                                        className="w-full border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                        value={tagsText}
-                                        onChange={(e) => setTagsText(e.target.value)}
-                                        placeholder="Ví dụ: Toán 9, Đại số, Phương trình (Cách nhau bằng dấu phẩy)"
-                                    />
-                                </div>
-
-                                <div className="md:col-span-2 pt-2">
-                                    <label className="flex items-center gap-3 text-sm text-slate-700 cursor-pointer p-3 bg-slate-50 rounded-xl border border-slate-200 hover:bg-slate-100 transition-colors w-max">
-                                        <input
-                                            type="checkbox"
-                                            checked={isPublic}
-                                            onChange={(e) => setIsPublic(e.target.checked)}
-                                            className="accent-indigo-600 w-5 h-5 rounded text-indigo-600 focus:ring-indigo-500"
-                                        />
-                                        <div>
-                                            <span className="font-bold block text-slate-800">Công khai mẫu câu hỏi</span>
-                                            <span className="text-slate-500 text-xs">Cho phép giáo viên khác tìm thấy và sử dụng mẫu này</span>
-                                        </div>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Section 2: Question Structure */}
-                        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
-                            <h3 className="text-base font-bold text-slate-800 flex items-center gap-2 mb-2 border-b pb-3">
-                                <Sigma size={18} className="text-purple-500" />
-                                Cấu trúc & Thuật toán
-                            </h3>
-
-                            {/* Tham số */}
-                            <div className="space-y-3">
-                                <div className="flex justify-between items-center">
-                                    <label className="block text-sm font-bold text-slate-700">1. Khai báo Biến số (Tham số động)</label>
-                                    <button type="button" onClick={addParameter} className="text-xs font-semibold px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 flex items-center gap-1 transition-colors">
-                                        <Plus size={14} /> Thêm biến
-                                    </button>
-                                </div>
-                                <div className="space-y-2">
-                                    {parameters.map((param, index) => (
-                                        <div key={index} className="flex flex-wrap md:flex-nowrap gap-3 items-center bg-slate-50 p-3 rounded-xl border border-slate-200">
-                                            <div className="flex-1 min-w-[100px]">
-                                                <input placeholder="Tên biến (a, b, x)" value={param.name} onChange={(e) => updateParameter(index, 'name', e.target.value)} className="w-full border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 border" required />
-                                            </div>
-                                            <div className="w-full md:w-32">
-                                                <select value={param.type} onChange={(e) => updateParameter(index, 'type', e.target.value)} className="w-full border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 border bg-white">
-                                                    <option value="int">Số nguyên</option>
-                                                    <option value="float">Số thực</option>
-                                                </select>
-                                            </div>
-                                            <div className="w-full md:w-24">
-                                                <input type="number" placeholder="Min" value={param.min} onChange={(e) => updateParameter(index, 'min', e.target.value)} className="w-full border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 border" required />
-                                            </div>
-                                            <div className="w-full md:w-24">
-                                                <input type="number" placeholder="Max" value={param.max} onChange={(e) => updateParameter(index, 'max', e.target.value)} className="w-full border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 border" required />
-                                            </div>
-                                            <button type="button" onClick={() => removeParameter(index)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
-                                                <Trash2 size={16} />
-                                            </button>
-                                        </div>
-                                    ))}
-                                    {parameters.length === 0 && <p className="text-sm text-slate-500 italic p-3 text-center border border-dashed rounded-xl">Chưa có biến số nào được tạo.</p>}
-                                </div>
-                            </div>
-
-                            {/* Nội dung câu hỏi */}
-                            <div className="space-y-2 pt-2 border-t border-slate-100">
-                                <label className="block text-sm font-bold text-slate-700 mb-1">2. Nội dung hiển thị (Đề bài) <span className="text-red-500">*</span></label>
-                                <p className="text-xs text-slate-500 mb-2">Sử dụng dấu ngoặc nhọn <code className="bg-slate-100 px-1 py-0.5 rounded text-indigo-600">{"{tên_biến}"}</code> để chèn biến số vào nội dung.</p>
-                                <textarea
-                                    rows={3}
-                                    required
-                                    className="w-full border border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow bg-slate-50"
-                                    value={templateText}
-                                    onChange={(e) => setTemplateText(e.target.value)}
-                                    placeholder="Giải phương trình: {a}x + {b} = 0"
-                                />
-                            </div>
-
-                            {/* Công thức đáp án */}
-                            <div className="space-y-2 pt-2 border-t border-slate-100">
-                                <label className="block text-sm font-bold text-slate-700 mb-1">3. Thuật toán tính đáp án chính xác <span className="text-red-500">*</span></label>
-                                <p className="text-xs text-slate-500 mb-2">Nhập công thức toán học sử dụng các biến số. (Hỗ trợ <code className="bg-slate-100 px-1 py-0.5 rounded">Math.src</code>, <code className="bg-slate-100 px-1 py-0.5 rounded">Math.pow</code>, vv...)</p>
-                                <input
-                                    required
-                                    className="w-full border border-emerald-300 bg-emerald-50 text-emerald-900 rounded-xl px-4 py-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-shadow"
-                                    value={answerFormula}
-                                    onChange={(e) => setAnswerFormula(e.target.value)}
-                                    placeholder="Ví dụ: (-b + Math.sqrt(b*b - 4*a*c)) / (2*a)"
-                                />
-                            </div>
-
-                        </div>
-
-                        {/* Section 3: Options & Rules */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-                            {/* Trắc nghiệm Option Generator */}
-                            {(templateType === 'MULTIPLE_CHOICE' || templateType === 'TRUE_FALSE') && (
-                                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-                                    <div className="flex justify-between items-center mb-2 border-b pb-3">
-                                        <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
-                                            <ListChecks size={18} className="text-blue-500" />
-                                            Tạo Đáp án (Trắc nghiệm)
-                                        </h3>
-                                        <button type="button" onClick={addOption} className="text-xs font-semibold px-2.5 py-1.5 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 flex items-center gap-1 transition-colors">
-                                            <Plus size={14} /> Thêm
-                                        </button>
-                                    </div>
-                                    <div className="space-y-2 max-h-[250px] overflow-y-auto custom-scrollbar pr-2">
-                                        {options.map((opt, index) => (
-                                            <div key={index} className="flex gap-2 items-center bg-slate-50 p-2 rounded-xl border border-slate-200">
-                                                <input value={opt.key} onChange={(e) => updateOption(index, 'key', e.target.value)} className="w-12 text-center font-bold border-slate-300 rounded-md px-2 py-1.5 text-sm focus:ring-blue-500 border uppercase" placeholder="A" />
-                                                <span className="text-slate-400 font-bold">:</span>
-                                                <input value={opt.formula} onChange={(e) => updateOption(index, 'formula', e.target.value)} className="flex-1 border-slate-300 rounded-md px-3 py-1.5 text-sm font-mono focus:ring-blue-500 border" placeholder="Công thức nhiễu (Ví dụ: b/a)" />
-                                                <button type="button" onClick={() => removeOption(index)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors">
-                                                    <Trash2 size={16} />
-                                                </button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Rules */}
-                            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-                                <div className="flex justify-between items-center mb-2 border-b pb-3">
-                                    <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
-                                        <Target size={18} className="text-amber-500" />
-                                        Luật độ khó
-                                    </h3>
-                                    <button type="button" onClick={addDifficultyRule} className="text-xs font-semibold px-2.5 py-1.5 bg-amber-50 text-amber-700 rounded-lg hover:bg-amber-100 flex items-center gap-1 transition-colors">
-                                        <Plus size={14} /> Thêm
-                                    </button>
-                                </div>
-                                <div className="space-y-2 max-h-[250px] overflow-y-auto custom-scrollbar pr-2">
-                                    {difficultyRules.map((rule, index) => (
-                                        <div key={index} className="flex flex-col gap-2 bg-amber-50/30 p-3 rounded-xl border border-amber-100">
-                                            <div className="flex gap-2 items-center">
-                                                <select value={rule.level} onChange={(e) => updateDifficultyRule(index, 'level', e.target.value)} className="w-1/3 border-slate-300 rounded-md px-2 py-1.5 text-sm font-bold text-amber-900 border bg-white focus:ring-amber-500">
-                                                    <option value="EASY">DỄ (EASY)</option>
-                                                    <option value="NORMAL">TB (NORMAL)</option>
-                                                    <option value="HARD">KHÓ (HARD)</option>
-                                                </select>
-                                                <button type="button" onClick={() => removeDifficultyRule(index)} className="p-1.5 ml-auto text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors">
-                                                    <Trash2 size={16} />
-                                                </button>
-                                            </div>
-                                            <input value={rule.condition} onChange={(e) => updateDifficultyRule(index, 'condition', e.target.value)} className="w-full border-slate-300 rounded-md px-3 py-1.5 text-sm font-mono focus:ring-amber-500 border bg-white" placeholder="Điều kiện (Ví dụ: a < 5 && b < 5)" />
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                        </div>
-
-                    </form>
-                </div>
-
-                {/* Footer */}
-                <div className="p-6 border-t border-slate-100 flex gap-4 justify-end flex-shrink-0 bg-white rounded-b-2xl shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="px-6 py-2.5 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-800 transition-colors"
-                        disabled={isSubmitting}
-                    >
-                        Hủy
-                    </button>
-                    <button
-                        type="submit"
-                        form="template-form"
-                        disabled={isSubmitting}
-                        className="px-8 py-2.5 rounded-xl text-sm font-bold bg-indigo-600 text-white hover:bg-indigo-700 hover:shadow-lg disabled:opacity-50 flex items-center gap-2 transition-all transform active:scale-95"
-                    >
-                        {isSubmitting && <Loader2 size={16} className="animate-spin" />}
-                        {isSubmitting ? 'Đang lưu...' : (mode === 'create' ? 'Tạo mẫu mới' : 'Lưu thay đổi')}
-                    </button>
-                </div>
+              <label>
+                <p className="muted" style={{ marginBottom: 6 }}>Từ khóa</p>
+                <input className="input" value={tags} onChange={(event) => setTags(event.target.value)} />
+              </label>
             </div>
 
-            <style>{`
-            .custom-scrollbar::-webkit-scrollbar {
-                width: 6px;
-            }
-            .custom-scrollbar::-webkit-scrollbar-track {
-                background: transparent;
-            }
-            .custom-scrollbar::-webkit-scrollbar-thumb {
-                background-color: #cbd5e1;
-                border-radius: 10px;
-            }
-            `}</style>
-        </div>
-    );
-};
+            <label>
+              <p className="muted" style={{ marginBottom: 6 }}>Mô tả</p>
+              <textarea className="textarea" rows={2} value={description} onChange={(event) => setDescription(event.target.value)} />
+            </label>
+
+            <label>
+              <p className="muted" style={{ marginBottom: 6 }}>Nội dung câu hỏi</p>
+              <textarea className="textarea" rows={3} required value={templateText} onChange={(event) => setTemplateText(event.target.value)} />
+            </label>
+
+            <label>
+              <p className="muted" style={{ marginBottom: 6 }}>Công thức đáp án</p>
+              <input className="input" required value={answerFormula} onChange={(event) => setAnswerFormula(event.target.value)} />
+            </label>
+
+            <section className="data-card" style={{ minHeight: 0 }}>
+              <div className="row">
+                <h3>Biến số</h3>
+                <button
+                  type="button"
+                  className="btn secondary"
+                  onClick={() => setParameters((prev) => [...prev, { name: '', type: 'int', min: '1', max: '10' }])}
+                >
+                  <Plus size={14} />
+                  Thêm
+                </button>
+              </div>
+
+              {parameters.map((item, index) => (
+                <div key={`${item.name}-${index}`} className="form-grid">
+                  <input
+                    className="input"
+                    placeholder="Tên biến"
+                    value={item.name}
+                    onChange={(event) => {
+                      const next = [...parameters];
+                      next[index] = { ...next[index], name: event.target.value };
+                      setParameters(next);
+                    }}
+                  />
+                  <select
+                    className="select"
+                    value={item.type}
+                    onChange={(event) => {
+                      const next = [...parameters];
+                      next[index] = { ...next[index], type: event.target.value };
+                      setParameters(next);
+                    }}
+                  >
+                    <option value="int">int</option>
+                    <option value="float">float</option>
+                  </select>
+                  <input
+                    className="input"
+                    type="number"
+                    value={item.min}
+                    onChange={(event) => {
+                      const next = [...parameters];
+                      next[index] = { ...next[index], min: event.target.value };
+                      setParameters(next);
+                    }}
+                  />
+                  <div className="row" style={{ justifyContent: 'start' }}>
+                    <input
+                      className="input"
+                      type="number"
+                      value={item.max}
+                      onChange={(event) => {
+                        const next = [...parameters];
+                        next[index] = { ...next[index], max: event.target.value };
+                        setParameters(next);
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="btn danger"
+                      onClick={() => setParameters((prev) => prev.filter((_entry, i) => i !== index))}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </section>
+
+            <section className="data-card" style={{ minHeight: 0 }}>
+              <div className="row">
+                <h3>Bộ sinh lựa chọn</h3>
+                <button
+                  type="button"
+                  className="btn secondary"
+                  onClick={() => setOptions((prev) => [...prev, { key: '', formula: '' }])}
+                >
+                  <Plus size={14} />
+                  Thêm
+                </button>
+              </div>
+
+              {options.map((item, index) => (
+                <div key={`${item.key}-${index}`} className="form-grid">
+                  <input
+                    className="input"
+                    placeholder="Mã lựa chọn"
+                    value={item.key}
+                    onChange={(event) => {
+                      const next = [...options];
+                      next[index] = { ...next[index], key: event.target.value };
+                      setOptions(next);
+                    }}
+                  />
+                  <div className="row" style={{ gridColumn: 'span 3' }}>
+                    <input
+                      className="input"
+                      style={{ width: '100%' }}
+                      placeholder="Công thức"
+                      value={item.formula}
+                      onChange={(event) => {
+                        const next = [...options];
+                        next[index] = { ...next[index], formula: event.target.value };
+                        setOptions(next);
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="btn danger"
+                      onClick={() => setOptions((prev) => prev.filter((_entry, i) => i !== index))}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </section>
+
+            <section className="data-card" style={{ minHeight: 0 }}>
+              <div className="row">
+                <h3>Luật độ khó</h3>
+                <button
+                  type="button"
+                  className="btn secondary"
+                  onClick={() => setRules((prev) => [...prev, { level: 'MEDIUM', condition: '' }])}
+                >
+                  <Plus size={14} />
+                  Thêm
+                </button>
+              </div>
+
+              {rules.map((item, index) => (
+                <div key={`${item.level}-${index}`} className="form-grid">
+                  <select
+                    className="select"
+                    value={item.level}
+                    onChange={(event) => {
+                      const next = [...rules];
+                      next[index] = { ...next[index], level: event.target.value };
+                      setRules(next);
+                    }}
+                  >
+                    <option value="EASY">EASY</option>
+                    <option value="MEDIUM">MEDIUM</option>
+                    <option value="HARD">HARD</option>
+                    <option value="VERY_HARD">VERY_HARD</option>
+                  </select>
+                  <div className="row" style={{ gridColumn: 'span 3' }}>
+                    <input
+                      className="input"
+                      style={{ width: '100%' }}
+                      placeholder="Điều kiện"
+                      value={item.condition}
+                      onChange={(event) => {
+                        const next = [...rules];
+                        next[index] = { ...next[index], condition: event.target.value };
+                        setRules(next);
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="btn danger"
+                      onClick={() => setRules((prev) => prev.filter((_entry, i) => i !== index))}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </section>
+
+            <label className="row" style={{ justifyContent: 'start' }}>
+              <input type="checkbox" checked={isPublic} onChange={(event) => setIsPublic(event.target.checked)} />
+              Công khai mẫu cho giáo viên khác
+            </label>
+          </div>
+
+          <div className="modal-footer">
+            <button type="button" className="btn secondary" onClick={onClose}>Hủy</button>
+            <button type="submit" className="btn" disabled={saving}>
+              {saving ? 'Đang lưu...' : mode === 'create' ? 'Tạo mẫu' : 'Cập nhật mẫu'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}

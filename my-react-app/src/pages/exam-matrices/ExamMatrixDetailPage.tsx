@@ -1,229 +1,233 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { ArrowLeft, CheckCircle2, Plus, RotateCcw, ShieldCheck, Trash2 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-    AlertCircle,
-    ArrowLeft,
-    CheckCircle2,
-    Loader2,
-    Plus,
-    RefreshCw,
-    RotateCcw,
-    ShieldCheck,
-    Trash2,
-} from 'lucide-react';
-import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
-import {
-    useApproveMatrix,
-    useDeleteExamMatrix,
-    useGetExamMatrixById,
-    useGetTemplateMappings,
-    useRemoveTemplateMapping,
-    useResetMatrix,
+  useApproveMatrix,
+  useDeleteExamMatrix,
+  useGetExamMatrixById,
+  useGetTemplateMappings,
+  useRemoveTemplateMapping,
+  useResetMatrix,
 } from '../../hooks/useExamMatrix';
+import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { examMatrixService } from '../../services/examMatrixService';
-import { MatrixStatus } from '../../types/examMatrix';
-import type { MatrixValidationReport, TemplateMappingResponse } from '../../types/examMatrix';
-import { TemplateMappingModal } from './TemplateMappingModal';
+import '../../styles/module-refactor.css';
+import { MatrixStatus, type MatrixValidationReport, type TemplateMappingResponse } from '../../types/examMatrix';
 import { GeneratePreviewModal } from './GeneratePreviewModal';
+import { TemplateMappingModal } from './TemplateMappingModal';
 
-const ExamMatrixDetailPage: React.FC = () => {
-    const { matrixId } = useParams<{ matrixId: string }>();
-    const navigate = useNavigate();
-
-    const [validationReport, setValidationReport] = useState<MatrixValidationReport | null>(null);
-    const [loadingValidation, setLoadingValidation] = useState(false);
-    const [openMappingModal, setOpenMappingModal] = useState(false);
-    const [previewMapping, setPreviewMapping] = useState<TemplateMappingResponse | null>(null);
-
-    const { data, isLoading, isError, refetch } = useGetExamMatrixById(matrixId ?? '', !!matrixId);
-    const { data: mappingData, refetch: refetchMappings } = useGetTemplateMappings(matrixId ?? '', !!matrixId);
-
-    const matrix = data?.result;
-    const mappings = mappingData?.result ?? matrix?.templateMappings ?? [];
-
-    const deleteMatrix = useDeleteExamMatrix();
-    const approveMatrix = useApproveMatrix();
-    const resetMatrix = useResetMatrix();
-    const removeMapping = useRemoveTemplateMapping();
-
-    const canEdit = matrix?.status === MatrixStatus.DRAFT;
-
-    const handleValidate = async () => {
-        if (!matrixId) return;
-        setLoadingValidation(true);
-        try {
-            const response = await examMatrixService.validateMatrix(matrixId);
-            setValidationReport(response.result ?? null);
-        } finally {
-            setLoadingValidation(false);
-        }
-    };
-
-    const handleApprove = async () => {
-        if (!matrixId) return;
-        await approveMatrix.mutateAsync(matrixId);
-        await refetch();
-    };
-
-    const handleReset = async () => {
-        if (!matrixId) return;
-        await resetMatrix.mutateAsync(matrixId);
-        await refetch();
-    };
-
-    const handleDelete = async () => {
-        if (!matrixId) return;
-        await deleteMatrix.mutateAsync(matrixId);
-        navigate('/teacher/exam-matrices');
-    };
-
-    return (
-        <DashboardLayout role="teacher" user={{ name: 'Teacher', avatar: '', role: 'teacher' }} notificationCount={0}>
-            <div className="min-h-screen bg-slate-50">
-                <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-                    <button onClick={() => navigate('/teacher/exam-matrices')} className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700">
-                        <ArrowLeft size={16} /> Quay lại
-                    </button>
-
-                    {isLoading ? (
-                        <div className="py-20 flex justify-center text-slate-400"><Loader2 size={36} className="animate-spin" /></div>
-                    ) : isError || !matrix ? (
-                        <div className="py-20 text-center text-red-500">
-                            <AlertCircle size={32} className="mx-auto mb-3" />
-                            Không thể tải chi tiết ma trận đề.
-                        </div>
-                    ) : (
-                        <>
-                            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-                                <div className="flex items-start justify-between gap-4">
-                                    <div>
-                                        <h1 className="text-2xl font-bold text-slate-900">{matrix.name}</h1>
-                                        <p className="text-sm text-slate-500 mt-1">{matrix.description}</p>
-                                        <p className="text-xs text-slate-400 mt-2">Status: {matrix.status}</p>
-                                    </div>
-                                    <div className="flex flex-wrap gap-2">
-                                        <button onClick={handleValidate} className="px-3 py-2 text-sm border border-slate-300 rounded-lg inline-flex items-center gap-1.5">
-                                            {loadingValidation ? <Loader2 size={14} className="animate-spin" /> : <ShieldCheck size={14} />}
-                                            Validate
-                                        </button>
-                                        <button onClick={() => refetch()} className="p-2 border border-slate-300 rounded-lg"><RefreshCw size={14} /></button>
-                                        {matrix.status === MatrixStatus.DRAFT && (
-                                            <button onClick={handleApprove} className="px-3 py-2 text-sm rounded-lg bg-emerald-600 text-white inline-flex items-center gap-1.5">
-                                                <CheckCircle2 size={14} /> Approve
-                                            </button>
-                                        )}
-                                        {matrix.status === MatrixStatus.APPROVED && (
-                                            <button onClick={handleReset} className="px-3 py-2 text-sm rounded-lg border border-amber-300 text-amber-700 inline-flex items-center gap-1.5">
-                                                <RotateCcw size={14} /> Reset
-                                            </button>
-                                        )}
-                                        {matrix.status !== MatrixStatus.LOCKED && (
-                                            <button onClick={handleDelete} className="px-3 py-2 text-sm rounded-lg border border-red-200 text-red-600 inline-flex items-center gap-1.5">
-                                                <Trash2 size={14} /> Delete
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-
-                            {validationReport && (
-                                <div className={`rounded-2xl border p-5 ${validationReport.canApprove ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
-                                    <p className="font-semibold text-slate-800 mb-2">Validation report</p>
-                                    <p className="text-sm text-slate-600">Errors: {validationReport.errors.length} - Warnings: {validationReport.warnings.length}</p>
-                                    {!!validationReport.errors.length && (
-                                        <ul className="mt-3 text-sm text-red-700 list-disc list-inside">
-                                            {validationReport.errors.map((item, idx) => <li key={idx}>{item}</li>)}
-                                        </ul>
-                                    )}
-                                </div>
-                            )}
-
-                            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-                                <div className="flex items-center justify-between mb-4">
-                                    <h2 className="text-lg font-bold text-slate-800">Template mappings</h2>
-                                    {canEdit && (
-                                        <button onClick={() => setOpenMappingModal(true)} className="px-3 py-2 text-sm rounded-lg bg-indigo-600 text-white inline-flex items-center gap-1.5">
-                                            <Plus size={14} /> Thêm mapping
-                                        </button>
-                                    )}
-                                </div>
-
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-sm">
-                                        <thead>
-                                            <tr className="text-left border-b border-slate-200 text-slate-500">
-                                                <th className="py-2">Template</th>
-                                                <th className="py-2">Level</th>
-                                                <th className="py-2">Số câu</th>
-                                                <th className="py-2">Điểm/câu</th>
-                                                <th className="py-2">Tổng điểm</th>
-                                                <th className="py-2 text-right">Thao tác</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {mappings.map((mapping) => (
-                                                <tr key={mapping.id} className="border-b border-slate-100">
-                                                    <td className="py-2">{mapping.templateName ?? mapping.templateId}</td>
-                                                    <td className="py-2">{mapping.cognitiveLevel}</td>
-                                                    <td className="py-2">{mapping.questionCount}</td>
-                                                    <td className="py-2">{mapping.pointsPerQuestion}</td>
-                                                    <td className="py-2">{mapping.totalPoints}</td>
-                                                    <td className="py-2 text-right">
-                                                        <div className="inline-flex gap-2">
-                                                            <button
-                                                                onClick={() => setPreviewMapping(mapping)}
-                                                                className="px-2 py-1 text-xs border border-indigo-200 text-indigo-700 rounded"
-                                                            >
-                                                                Preview
-                                                            </button>
-                                                            {canEdit && (
-                                                                <button
-                                                                    onClick={async () => {
-                                                                        if (!matrixId) return;
-                                                                        await removeMapping.mutateAsync({ matrixId, mappingId: mapping.id });
-                                                                        await refetchMappings();
-                                                                    }}
-                                                                    className="px-2 py-1 text-xs border border-red-200 text-red-600 rounded"
-                                                                >
-                                                                    Remove
-                                                                </button>
-                                                            )}
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </>
-                    )}
-                </div>
-            </div>
-
-            {matrixId && (
-                <TemplateMappingModal
-                    isOpen={openMappingModal}
-                    onClose={() => setOpenMappingModal(false)}
-                    matrixId={matrixId}
-                    onSuccess={async () => {
-                        setOpenMappingModal(false);
-                        await refetchMappings();
-                    }}
-                />
-            )}
-
-            {matrixId && previewMapping && (
-                <GeneratePreviewModal
-                    isOpen={!!previewMapping}
-                    onClose={() => setPreviewMapping(null)}
-                    matrixId={matrixId}
-                    mapping={previewMapping}
-                    onSuccess={() => void refetchMappings()}
-                />
-            )}
-        </DashboardLayout>
-    );
+const matrixStatusLabel: Record<string, string> = {
+  DRAFT: 'Nháp',
+  APPROVED: 'Đã phê duyệt',
+  LOCKED: 'Đã khóa',
 };
 
-export default ExamMatrixDetailPage;
+const cognitiveLevelLabel: Record<string, string> = {
+  REMEMBER: 'Nhận biết',
+  UNDERSTAND: 'Thông hiểu',
+  APPLY: 'Vận dụng',
+  ANALYZE: 'Phân tích',
+  EVALUATE: 'Đánh giá',
+  CREATE: 'Sáng tạo',
+};
+
+export default function ExamMatrixDetailPage() {
+  const { matrixId } = useParams<{ matrixId: string }>();
+  const navigate = useNavigate();
+
+  const [validation, setValidation] = useState<MatrixValidationReport | null>(null);
+  const [mappingOpen, setMappingOpen] = useState(false);
+  const [previewTarget, setPreviewTarget] = useState<TemplateMappingResponse | null>(null);
+  const [validating, setValidating] = useState(false);
+
+  const { data, isLoading, isError, error, refetch } = useGetExamMatrixById(matrixId ?? '', !!matrixId);
+  const { data: mappingData, refetch: refetchMappings } = useGetTemplateMappings(matrixId ?? '', !!matrixId);
+
+  const approveMutation = useApproveMatrix();
+  const resetMutation = useResetMatrix();
+  const deleteMutation = useDeleteExamMatrix();
+  const removeMappingMutation = useRemoveTemplateMapping();
+
+  const matrix = data?.result;
+  const mappings = mappingData?.result ?? matrix?.templateMappings ?? [];
+
+  const canEdit = matrix?.status === MatrixStatus.DRAFT;
+
+  async function runValidation() {
+    if (!matrixId) return;
+    setValidating(true);
+    try {
+      const result = await examMatrixService.validateMatrix(matrixId);
+      setValidation(result.result ?? null);
+    } finally {
+      setValidating(false);
+    }
+  }
+
+  async function removeMapping(mappingId: string) {
+    if (!matrixId) return;
+    await removeMappingMutation.mutateAsync({ matrixId, mappingId });
+    await refetchMappings();
+  }
+
+  async function removeMatrix() {
+    if (!matrixId) return;
+    await deleteMutation.mutateAsync(matrixId);
+    navigate('/teacher/exam-matrices');
+  }
+
+  return (
+    <DashboardLayout role="teacher" user={{ name: 'Teacher', avatar: '', role: 'teacher' }} notificationCount={0}>
+      <section className="module-page">
+        <button className="btn secondary" onClick={() => navigate('/teacher/exam-matrices')}>
+          <ArrowLeft size={15} />
+          Quay lại danh sách ma trận
+        </button>
+
+        {isLoading && <div className="empty">Đang tải chi tiết ma trận...</div>}
+        {isError && <div className="empty">{error instanceof Error ? error.message : 'Không thể tải chi tiết ma trận'}</div>}
+        {!isLoading && !isError && !matrix && <div className="empty">Không tìm thấy ma trận.</div>}
+
+        {!isLoading && !isError && matrix && (
+          <>
+            <article className="hero-card">
+              <div className="row" style={{ alignItems: 'start', flexWrap: 'wrap' }}>
+                <div>
+                  <p className="hero-kicker">Chi tiết ma trận đề</p>
+                  <h2>{matrix.name}</h2>
+                  <p>{matrix.description || 'Không có mô tả'}</p>
+                </div>
+                <span className={`badge ${matrix.status.toLowerCase()}`}>{matrixStatusLabel[matrix.status] || matrix.status}</span>
+              </div>
+
+              <div className="toolbar" style={{ marginTop: 14, border: '0', padding: 0, background: 'transparent' }}>
+                <button className="btn secondary" onClick={() => void refetch()}>
+                  Làm mới
+                </button>
+                <button className="btn secondary" onClick={() => void runValidation()} disabled={validating}>
+                  <ShieldCheck size={15} />
+                  {validating ? 'Đang kiểm tra...' : 'Kiểm tra'}
+                </button>
+                {matrix.status === MatrixStatus.DRAFT && (
+                  <button className="btn" onClick={() => approveMutation.mutate(matrix.id)}>
+                    <CheckCircle2 size={15} />
+                    Phê duyệt
+                  </button>
+                )}
+                {matrix.status === MatrixStatus.APPROVED && (
+                  <button className="btn warn" onClick={() => resetMutation.mutate(matrix.id)}>
+                    <RotateCcw size={15} />
+                    Đặt lại
+                  </button>
+                )}
+                {matrix.status !== MatrixStatus.LOCKED && (
+                  <button className="btn danger" onClick={() => void removeMatrix()}>
+                    <Trash2 size={15} />
+                    Xóa
+                  </button>
+                )}
+              </div>
+            </article>
+
+            {validation && (
+              <article className="data-card" style={{ minHeight: 0 }}>
+                <div className="row" style={{ alignItems: 'start' }}>
+                  <h3>Báo cáo kiểm tra</h3>
+                  <span className={`badge ${validation.canApprove ? 'approved' : 'closed'}`}>
+                    {validation.canApprove ? 'Sẵn sàng' : 'Cần xử lý'}
+                  </span>
+                </div>
+                <p className="muted">
+                  Lỗi: {validation.errors.length} | Cảnh báo: {validation.warnings.length}
+                </p>
+                {validation.errors.length > 0 && (
+                  <ul style={{ margin: 0, paddingLeft: 18 }}>
+                    {validation.errors.map((item) => (
+                      <li key={item} className="muted" style={{ color: '#9f1239' }}>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </article>
+            )}
+
+            <div className="row" style={{ justifyContent: 'space-between' }}>
+              <h3>Ánh xạ mẫu câu hỏi</h3>
+              {canEdit && (
+                <button className="btn" onClick={() => setMappingOpen(true)}>
+                  <Plus size={15} />
+                  Thêm ánh xạ
+                </button>
+              )}
+            </div>
+
+            {mappings.length === 0 ? (
+              <div className="empty">Ma trận này chưa có ánh xạ mẫu.</div>
+            ) : (
+              <div className="table-wrap">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Mẫu câu hỏi</th>
+                      <th>Mức độ</th>
+                      <th>Số câu</th>
+                      <th>Điểm/câu</th>
+                      <th>Tổng điểm</th>
+                      <th>Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {mappings.map((mapping) => (
+                      <tr key={mapping.id}>
+                        <td>{mapping.templateName ?? mapping.templateId}</td>
+                        <td>{cognitiveLevelLabel[mapping.cognitiveLevel] || mapping.cognitiveLevel}</td>
+                        <td>{mapping.questionCount}</td>
+                        <td>{mapping.pointsPerQuestion}</td>
+                        <td>{mapping.totalPoints}</td>
+                        <td>
+                          <div className="row" style={{ justifyContent: 'start' }}>
+                            <button className="btn secondary" onClick={() => setPreviewTarget(mapping)}>
+                              Xem trước
+                            </button>
+                            {canEdit && (
+                              <button className="btn danger" onClick={() => void removeMapping(mapping.id)}>
+                                Xóa
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </>
+        )}
+
+        {matrixId && (
+          <TemplateMappingModal
+            isOpen={mappingOpen}
+            matrixId={matrixId}
+            onClose={() => setMappingOpen(false)}
+            onSuccess={() => {
+              setMappingOpen(false);
+              void refetchMappings();
+            }}
+          />
+        )}
+
+        {matrixId && previewTarget && (
+          <GeneratePreviewModal
+            isOpen={!!previewTarget}
+            matrixId={matrixId}
+            mapping={previewTarget}
+            onClose={() => setPreviewTarget(null)}
+            onSuccess={() => void refetchMappings()}
+          />
+        )}
+      </section>
+    </DashboardLayout>
+  );
+}

@@ -1,193 +1,183 @@
-import React, { useState } from 'react';
-import { CheckCircle2, Loader2, Sparkles, X } from 'lucide-react';
+import { CheckCircle2, Sparkles, X } from 'lucide-react';
+import { useState } from 'react';
 import { useFinalizePreview, useGeneratePreview } from '../../hooks/useExamMatrix';
 import { QuestionDifficulty } from '../../types/questionTemplate';
 import type {
-    CandidateQuestion,
-    FinalizePreviewQuestionItem,
-    TemplateMappingResponse,
+  CandidateQuestion,
+  FinalizePreviewQuestionItem,
+  TemplateMappingResponse,
 } from '../../types/examMatrix';
 
-interface GeneratePreviewModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    matrixId: string;
-    mapping: TemplateMappingResponse;
-    onSuccess: () => void;
-}
-
-export const GeneratePreviewModal: React.FC<GeneratePreviewModalProps> = ({
-    isOpen,
-    onClose,
-    matrixId,
-    mapping,
-    onSuccess,
-}) => {
-    const [count, setCount] = useState(mapping.questionCount);
-    const [difficulty, setDifficulty] = useState('');
-    const [candidates, setCandidates] = useState<CandidateQuestion[]>([]);
-    const [selected, setSelected] = useState<Set<number>>(new Set());
-    const [step, setStep] = useState<'config' | 'preview' | 'result'>('config');
-    const [savedCount, setSavedCount] = useState<number | null>(null);
-
-    const generatePreview = useGeneratePreview();
-    const finalizePreview = useFinalizePreview();
-
-    if (!isOpen) return null;
-
-    const handleGenerate = async (e: React.FormEvent) => {
-        e.preventDefault();
-        const response = await generatePreview.mutateAsync({
-            matrixId,
-            mappingId: mapping.id,
-            request: {
-                templateId: mapping.templateId,
-                count,
-                ...(difficulty
-                    ? { difficulty: difficulty as typeof QuestionDifficulty[keyof typeof QuestionDifficulty] }
-                    : {}),
-            },
-        });
-
-        const generated = response.result?.candidates ?? [];
-        setCandidates(generated);
-        setSelected(new Set(generated.map((_, idx) => idx)));
-        setStep('preview');
-    };
-
-    const handleFinalize = async () => {
-        const questions: FinalizePreviewQuestionItem[] = candidates
-            .filter((_, idx) => selected.has(idx))
-            .map((item) => ({
-                questionText: item.questionText,
-                questionType: 'MULTIPLE_CHOICE',
-                options: item.options,
-                correctAnswer: item.correctAnswerKey,
-                explanation: item.explanation,
-                difficulty: item.calculatedDifficulty,
-                cognitiveLevel: mapping.cognitiveLevel,
-            }));
-
-        const response = await finalizePreview.mutateAsync({
-            matrixId,
-            mappingId: mapping.id,
-            request: {
-                templateId: mapping.templateId,
-                questions,
-                pointsPerQuestion: mapping.pointsPerQuestion,
-            },
-        });
-
-        setSavedCount(response.result?.savedCount ?? questions.length);
-        setStep('result');
-        onSuccess();
-    };
-
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden flex flex-col">
-                <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-                    <h2 className="font-bold text-slate-800">Sinh câu hỏi từ mapping</h2>
-                    <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100">
-                        <X size={18} />
-                    </button>
-                </div>
-
-                {step === 'config' && (
-                    <form onSubmit={handleGenerate} className="p-6 space-y-4">
-                        <div>
-                            <label className="block text-sm font-semibold text-slate-700 mb-1">Số câu cần sinh</label>
-                            <input
-                                type="number"
-                                min={1}
-                                max={50}
-                                value={count}
-                                onChange={(e) => setCount(Number(e.target.value))}
-                                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-semibold text-slate-700 mb-1">Mức độ khó</label>
-                            <select
-                                value={difficulty}
-                                onChange={(e) => setDifficulty(e.target.value)}
-                                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"
-                            >
-                                <option value="">Tự động</option>
-                                <option value={QuestionDifficulty.EASY}>EASY</option>
-                                <option value={QuestionDifficulty.MEDIUM}>MEDIUM</option>
-                                <option value={QuestionDifficulty.HARD}>HARD</option>
-                                <option value={QuestionDifficulty.VERY_HARD}>VERY_HARD</option>
-                            </select>
-                        </div>
-                        <button
-                            type="submit"
-                            disabled={generatePreview.isPending}
-                            className="inline-flex items-center gap-2 px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg disabled:opacity-50"
-                        >
-                            {generatePreview.isPending ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
-                            {generatePreview.isPending ? 'Đang sinh...' : 'Sinh câu hỏi'}
-                        </button>
-                    </form>
-                )}
-
-                {step === 'preview' && (
-                    <div className="p-6 space-y-4 overflow-y-auto">
-                        <div className="text-sm text-slate-600">Chọn các câu muốn lưu vào CSDL</div>
-                        <div className="space-y-3 max-h-[48vh] overflow-y-auto">
-                            {candidates.map((item, idx) => (
-                                <label key={idx} className="block p-3 rounded-lg border border-slate-200">
-                                    <div className="flex items-start gap-3">
-                                        <input
-                                            type="checkbox"
-                                            checked={selected.has(idx)}
-                                            onChange={(e) => {
-                                                const next = new Set(selected);
-                                                if (e.target.checked) next.add(idx);
-                                                else next.delete(idx);
-                                                setSelected(next);
-                                            }}
-                                        />
-                                        <div>
-                                            <p className="text-sm font-medium text-slate-800">{item.questionText}</p>
-                                            {item.explanation && <p className="text-xs text-slate-500 mt-1">{item.explanation}</p>}
-                                        </div>
-                                    </div>
-                                </label>
-                            ))}
-                        </div>
-                        <div className="flex justify-end gap-3">
-                            <button
-                                onClick={() => setStep('config')}
-                                className="px-4 py-2 text-sm border border-slate-300 rounded-lg"
-                            >
-                                Quay lại
-                            </button>
-                            <button
-                                onClick={handleFinalize}
-                                disabled={finalizePreview.isPending || selected.size === 0}
-                                className="px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg disabled:opacity-50"
-                            >
-                                {finalizePreview.isPending ? 'Đang lưu...' : 'Lưu câu đã chọn'}
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-                {step === 'result' && (
-                    <div className="p-10 text-center">
-                        <CheckCircle2 size={48} className="text-emerald-500 mx-auto mb-3" />
-                        <p className="font-semibold text-slate-800">Đã lưu thành công</p>
-                        <p className="text-sm text-slate-500 mt-1">Số câu đã lưu: {savedCount ?? 0}</p>
-                        <button
-                            onClick={onClose}
-                            className="mt-5 px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg"
-                        >
-                            Đóng
-                        </button>
-                    </div>
-                )}
-            </div>
-        </div>
-    );
+type Props = {
+  isOpen: boolean;
+  matrixId: string;
+  mapping: TemplateMappingResponse;
+  onClose: () => void;
+  onSuccess: () => void;
 };
+
+export function GeneratePreviewModal({ isOpen, matrixId, mapping, onClose, onSuccess }: Props) {
+  const [count, setCount] = useState(mapping.questionCount);
+  const [difficulty, setDifficulty] = useState('');
+  const [candidates, setCandidates] = useState<CandidateQuestion[]>([]);
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [step, setStep] = useState<'config' | 'preview' | 'result'>('config');
+  const [savedCount, setSavedCount] = useState(0);
+
+  const previewMutation = useGeneratePreview();
+  const finalizeMutation = useFinalizePreview();
+
+  if (!isOpen) return null;
+
+  async function generate(event: React.FormEvent) {
+    event.preventDefault();
+    const response = await previewMutation.mutateAsync({
+      matrixId,
+      mappingId: mapping.id,
+      request: {
+        templateId: mapping.templateId,
+        count,
+        ...(difficulty ? { difficulty: difficulty as QuestionDifficulty } : {}),
+      },
+    });
+
+    const rows = response.result?.candidates ?? [];
+    setCandidates(rows);
+    setSelected(new Set(rows.map((_item, index) => index)));
+    setStep('preview');
+  }
+
+  async function finalize() {
+    const questions: FinalizePreviewQuestionItem[] = candidates
+      .filter((_item, index) => selected.has(index))
+      .map((item) => ({
+        questionText: item.questionText,
+        questionType: 'MULTIPLE_CHOICE',
+        options: item.options,
+        correctAnswer: item.correctAnswerKey,
+        explanation: item.explanation,
+        difficulty: item.calculatedDifficulty,
+        cognitiveLevel: mapping.cognitiveLevel,
+      }));
+
+    const result = await finalizeMutation.mutateAsync({
+      matrixId,
+      mappingId: mapping.id,
+      request: {
+        templateId: mapping.templateId,
+        questions,
+        pointsPerQuestion: mapping.pointsPerQuestion,
+      },
+    });
+
+    setSavedCount(result.result?.savedCount ?? questions.length);
+    setStep('result');
+    onSuccess();
+  }
+
+  return (
+    <div className="modal-layer">
+      <div className="modal-card">
+        <div className="modal-header">
+          <div>
+            <h3>Sinh câu hỏi xem trước</h3>
+            <p className="muted" style={{ marginTop: 4 }}>Tạo danh sách câu hỏi ứng viên từ ánh xạ đã chọn.</p>
+          </div>
+          <button className="icon-btn" onClick={onClose}>
+            <X size={16} />
+          </button>
+        </div>
+
+        {step === 'config' && (
+          <form onSubmit={generate}>
+            <div className="modal-body">
+              <div className="form-grid">
+                <label>
+                  <p className="muted" style={{ marginBottom: 6 }}>Số lượng câu hỏi</p>
+                  <input
+                    className="input"
+                    type="number"
+                    min={1}
+                    max={50}
+                    value={count}
+                    onChange={(event) => setCount(Number(event.target.value))}
+                  />
+                </label>
+
+                <label>
+                  <p className="muted" style={{ marginBottom: 6 }}>Độ khó (tùy chọn)</p>
+                  <select
+                    className="select"
+                    value={difficulty}
+                    onChange={(event) => setDifficulty(event.target.value)}
+                  >
+                    <option value="">Tự động</option>
+                    <option value={QuestionDifficulty.EASY}>EASY</option>
+                    <option value={QuestionDifficulty.MEDIUM}>MEDIUM</option>
+                    <option value={QuestionDifficulty.HARD}>HARD</option>
+                    <option value={QuestionDifficulty.VERY_HARD}>VERY_HARD</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button type="button" className="btn secondary" onClick={onClose}>Hủy</button>
+              <button type="submit" className="btn" disabled={previewMutation.isPending}>
+                <Sparkles size={14} />
+                {previewMutation.isPending ? 'Đang sinh...' : 'Sinh câu hỏi'}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {step === 'preview' && (
+          <>
+            <div className="modal-body">
+              {candidates.length === 0 && <div className="empty">Chưa có câu hỏi nào được sinh.</div>}
+              {candidates.map((item, index) => (
+                <label key={`${index}-${item.questionText}`} className="data-card" style={{ minHeight: 0 }}>
+                  <div className="row" style={{ justifyContent: 'start' }}>
+                    <input
+                      type="checkbox"
+                      checked={selected.has(index)}
+                      onChange={(event) => {
+                        const next = new Set(selected);
+                        if (event.target.checked) next.add(index);
+                        else next.delete(index);
+                        setSelected(next);
+                      }}
+                    />
+                    <p>{item.questionText}</p>
+                  </div>
+                  {item.explanation && <p className="muted">{item.explanation}</p>}
+                </label>
+              ))}
+            </div>
+
+            <div className="modal-footer">
+              <button type="button" className="btn secondary" onClick={() => setStep('config')}>Quay lại</button>
+              <button
+                type="button"
+                className="btn"
+                onClick={() => void finalize()}
+                disabled={selected.size === 0 || finalizeMutation.isPending}
+              >
+                {finalizeMutation.isPending ? 'Đang lưu...' : 'Lưu câu đã chọn'}
+              </button>
+            </div>
+          </>
+        )}
+
+        {step === 'result' && (
+          <div className="modal-body" style={{ alignItems: 'center', textAlign: 'center', paddingBottom: 30 }}>
+            <CheckCircle2 size={42} color="#0f766e" />
+            <h3>Lưu thành công</h3>
+            <p className="muted">Đã thêm {savedCount} câu hỏi vào ngân hàng câu hỏi.</p>
+            <button className="btn" onClick={onClose}>Hoàn tất</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

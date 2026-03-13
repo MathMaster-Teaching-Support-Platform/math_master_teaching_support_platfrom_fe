@@ -1,193 +1,185 @@
-import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Loader2, Search, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
+import { useState } from 'react';
 import { useAddTemplateMapping, useListMatchingTemplates } from '../../hooks/useExamMatrix';
 import { CognitiveLevel } from '../../types/questionTemplate';
 import type { AddTemplateMappingRequest, TemplateItem } from '../../types/examMatrix';
 
-interface TemplateMappingModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    matrixId: string;
-    onSuccess: () => void;
-}
-
-const levelOptions = Object.values(CognitiveLevel);
-
-export const TemplateMappingModal: React.FC<TemplateMappingModalProps> = ({
-    isOpen,
-    onClose,
-    matrixId,
-    onSuccess,
-}) => {
-    const [step, setStep] = useState<1 | 2>(1);
-    const [search, setSearch] = useState('');
-    const [page, setPage] = useState(0);
-    const [selectedTemplate, setSelectedTemplate] = useState<TemplateItem | null>(null);
-
-    const [cognitiveLevel, setCognitiveLevel] = useState<
-        (typeof CognitiveLevel)[keyof typeof CognitiveLevel]
-    >(CognitiveLevel.REMEMBER);
-    const [questionCount, setQuestionCount] = useState(5);
-    const [pointsPerQuestion, setPointsPerQuestion] = useState(1);
-
-    const { data, isLoading } = useListMatchingTemplates(
-        matrixId,
-        { q: search || undefined, page, size: 6 },
-        isOpen && step === 1
-    );
-    const addMapping = useAddTemplateMapping();
-
-    if (!isOpen) return null;
-
-    const templates = data?.result?.templates ?? [];
-    const totalFound = data?.result?.totalTemplatesFound ?? 0;
-    const totalPages = Math.max(1, Math.ceil(totalFound / 6));
-
-    const handleSelectTemplate = (template: TemplateItem) => {
-        setSelectedTemplate(template);
-        if (template.cognitiveLevel) {
-            setCognitiveLevel(template.cognitiveLevel);
-        }
-        setStep(2);
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!selectedTemplate) return;
-        const request: AddTemplateMappingRequest = {
-            templateId: selectedTemplate.templateId,
-            cognitiveLevel,
-            questionCount,
-            pointsPerQuestion,
-        };
-        await addMapping.mutateAsync({ matrixId, request });
-        onSuccess();
-        onClose();
-    };
-
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden flex flex-col">
-                <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-                    <h2 className="font-bold text-slate-800">
-                        {step === 1 ? 'Chọn template' : 'Cấu hình mapping'}
-                    </h2>
-                    <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100">
-                        <X size={18} />
-                    </button>
-                </div>
-
-                {step === 1 ? (
-                    <div className="p-6 space-y-4 overflow-y-auto">
-                        <div className="relative">
-                            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                            <input
-                                value={search}
-                                onChange={(e) => {
-                                    setSearch(e.target.value);
-                                    setPage(0);
-                                }}
-                                placeholder="Tìm template..."
-                                className="w-full border border-slate-300 rounded-lg pl-9 pr-3 py-2 text-sm"
-                            />
-                        </div>
-
-                        {isLoading ? (
-                            <div className="py-14 flex justify-center">
-                                <Loader2 className="animate-spin text-slate-400" />
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                {templates.map((template) => (
-                                    <button
-                                        key={template.templateId}
-                                        onClick={() => handleSelectTemplate(template)}
-                                        className="text-left p-3 border border-slate-200 rounded-xl hover:border-indigo-300"
-                                    >
-                                        <p className="font-semibold text-sm text-slate-800">{template.name}</p>
-                                        <p className="text-xs text-slate-500 mt-1 line-clamp-2">{template.description}</p>
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-
-                        <div className="flex items-center justify-center gap-3">
-                            <button
-                                disabled={page === 0}
-                                onClick={() => setPage((prev) => prev - 1)}
-                                className="p-2 border border-slate-200 rounded-lg disabled:opacity-30"
-                            >
-                                <ChevronLeft size={14} />
-                            </button>
-                            <span className="text-xs text-slate-500">Trang {page + 1} / {totalPages}</span>
-                            <button
-                                disabled={page >= totalPages - 1}
-                                onClick={() => setPage((prev) => prev + 1)}
-                                className="p-2 border border-slate-200 rounded-lg disabled:opacity-30"
-                            >
-                                <ChevronRight size={14} />
-                            </button>
-                        </div>
-                    </div>
-                ) : (
-                    <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto">
-                        <div className="p-3 rounded-lg bg-indigo-50 border border-indigo-100 text-sm text-indigo-700">
-                            {selectedTemplate?.name}
-                        </div>
-                        <div>
-                            <label className="block text-sm font-semibold text-slate-700 mb-1">Cognitive level</label>
-                            <select
-                                value={cognitiveLevel}
-                                onChange={(e) => setCognitiveLevel(e.target.value as typeof cognitiveLevel)}
-                                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"
-                            >
-                                {levelOptions.map((level) => (
-                                    <option key={level} value={level}>{level}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-semibold text-slate-700 mb-1">Số câu hỏi</label>
-                                <input
-                                    type="number"
-                                    min={1}
-                                    value={questionCount}
-                                    onChange={(e) => setQuestionCount(Number(e.target.value))}
-                                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-semibold text-slate-700 mb-1">Điểm/câu</label>
-                                <input
-                                    type="number"
-                                    min={0.01}
-                                    step={0.01}
-                                    value={pointsPerQuestion}
-                                    onChange={(e) => setPointsPerQuestion(Number(e.target.value))}
-                                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"
-                                />
-                            </div>
-                        </div>
-                        <div className="flex justify-between pt-2">
-                            <button
-                                type="button"
-                                onClick={() => setStep(1)}
-                                className="px-4 py-2 text-sm border border-slate-300 rounded-lg"
-                            >
-                                Quay lại
-                            </button>
-                            <button
-                                type="submit"
-                                disabled={addMapping.isPending}
-                                className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg disabled:opacity-50"
-                            >
-                                {addMapping.isPending ? 'Đang thêm...' : 'Thêm mapping'}
-                            </button>
-                        </div>
-                    </form>
-                )}
-            </div>
-        </div>
-    );
+type Props = {
+  isOpen: boolean;
+  matrixId: string;
+  onClose: () => void;
+  onSuccess: () => void;
 };
+
+const levels = Object.values(CognitiveLevel);
+
+export function TemplateMappingModal({ isOpen, matrixId, onClose, onSuccess }: Props) {
+  const [step, setStep] = useState<1 | 2>(1);
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(0);
+  const [template, setTemplate] = useState<TemplateItem | null>(null);
+  const [cognitiveLevel, setCognitiveLevel] = useState<CognitiveLevel>(CognitiveLevel.REMEMBER);
+  const [questionCount, setQuestionCount] = useState(5);
+  const [pointsPerQuestion, setPointsPerQuestion] = useState(1);
+
+  const { data, isLoading } = useListMatchingTemplates(
+    matrixId,
+    { q: search || undefined, page, size: 6 },
+    isOpen && step === 1,
+  );
+  const addMutation = useAddTemplateMapping();
+
+  if (!isOpen) return null;
+
+  const templates = data?.result?.templates ?? [];
+  const totalFound = data?.result?.totalTemplatesFound ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalFound / 6));
+
+  function chooseTemplate(item: TemplateItem) {
+    setTemplate(item);
+    if (item.cognitiveLevel) {
+      setCognitiveLevel(item.cognitiveLevel);
+    }
+    setStep(2);
+  }
+
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
+    if (!template) return;
+
+    const payload: AddTemplateMappingRequest = {
+      templateId: template.templateId,
+      cognitiveLevel,
+      questionCount,
+      pointsPerQuestion,
+    };
+    await addMutation.mutateAsync({ matrixId, request: payload });
+    onSuccess();
+    onClose();
+  }
+
+  return (
+    <div className="modal-layer">
+      <div className="modal-card" style={{ width: 'min(860px, 100%)' }}>
+        <div className="modal-header">
+          <div>
+            <h3>{step === 1 ? 'Chọn mẫu câu hỏi' : 'Cấu hình ánh xạ'}</h3>
+            <p className="muted" style={{ marginTop: 4 }}>Liên kết mẫu câu hỏi vào ma trận hiện tại.</p>
+          </div>
+          <button className="icon-btn" onClick={onClose}>
+            <X size={16} />
+          </button>
+        </div>
+
+        {step === 1 ? (
+          <div className="modal-body">
+            <label className="row" style={{ minWidth: 260 }}>
+              <Search size={15} />
+              <input
+                className="input"
+                style={{ border: 0, padding: 0, width: '100%' }}
+                placeholder="Tìm mẫu câu hỏi"
+                value={search}
+                onChange={(event) => {
+                  setSearch(event.target.value);
+                  setPage(0);
+                }}
+              />
+            </label>
+
+            {isLoading ? (
+                <div className="empty">Đang tải danh sách mẫu...</div>
+            ) : templates.length === 0 ? (
+                <div className="empty">Không tìm thấy mẫu nào.</div>
+            ) : (
+              <div className="grid-cards">
+                {templates.map((item) => (
+                  <button
+                    key={item.templateId}
+                    className="data-card"
+                    style={{ textAlign: 'left', minHeight: 0, cursor: 'pointer' }}
+                    onClick={() => chooseTemplate(item)}
+                  >
+                    <h3>{item.name}</h3>
+                    <p className="muted" style={{ marginTop: 6 }}>{item.description || 'Không có mô tả'}</p>
+                    <p className="muted" style={{ marginTop: 4 }}>
+                      {item.templateType} | {item.cognitiveLevel || 'Không xác định'}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className="row" style={{ justifyContent: 'center' }}>
+              <button className="btn secondary" disabled={page === 0} onClick={() => setPage((prev) => prev - 1)}>
+                <ChevronLeft size={14} />
+              </button>
+              <span className="muted">Trang {page + 1} / {totalPages}</span>
+              <button
+                className="btn secondary"
+                disabled={page >= totalPages - 1}
+                onClick={() => setPage((prev) => prev + 1)}
+              >
+                <ChevronRight size={14} />
+              </button>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={submit}>
+            <div className="modal-body">
+              <div className="data-card" style={{ minHeight: 0 }}>
+                <h3>{template?.name}</h3>
+                <p className="muted" style={{ marginTop: 6 }}>{template?.description || 'Không có mô tả'}</p>
+              </div>
+
+              <div className="form-grid">
+                <label>
+                  <p className="muted" style={{ marginBottom: 6 }}>Mức độ nhận thức</p>
+                  <select
+                    className="select"
+                    value={cognitiveLevel}
+                    onChange={(event) => setCognitiveLevel(event.target.value as CognitiveLevel)}
+                  >
+                    {levels.map((level) => (
+                      <option key={level} value={level}>{level}</option>
+                    ))}
+                  </select>
+                </label>
+
+                <label>
+                  <p className="muted" style={{ marginBottom: 6 }}>Số câu hỏi</p>
+                  <input
+                    className="input"
+                    type="number"
+                    min={1}
+                    value={questionCount}
+                    onChange={(event) => setQuestionCount(Number(event.target.value))}
+                  />
+                </label>
+
+                <label>
+                  <p className="muted" style={{ marginBottom: 6 }}>Điểm mỗi câu</p>
+                  <input
+                    className="input"
+                    type="number"
+                    min={0.5}
+                    step={0.5}
+                    value={pointsPerQuestion}
+                    onChange={(event) => setPointsPerQuestion(Number(event.target.value))}
+                  />
+                </label>
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button type="button" className="btn secondary" onClick={() => setStep(1)}>Quay lại</button>
+              <button type="submit" className="btn" disabled={addMutation.isPending}>
+                {addMutation.isPending ? 'Đang thêm...' : 'Thêm ánh xạ'}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
