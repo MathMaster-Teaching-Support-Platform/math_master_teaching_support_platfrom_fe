@@ -183,7 +183,6 @@ const HelpCenter: React.FC = () => {
         {/* Search */}
         <div className="help-search-section">
           <div className="search-container">
-            <div className="search-icon">🔍</div>
             <input
               type="text"
               placeholder="Tìm kiếm câu hỏi, hướng dẫn..."

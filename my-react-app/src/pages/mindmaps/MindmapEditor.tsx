@@ -15,6 +15,8 @@ import {
   BackgroundVariant,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
+import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { mockTeacher } from '../../data/mockData';
 import { MindmapService } from '../../services/api/mindmap.service';
 import type { Mindmap, MindmapNode } from '../../types';
 import './MindmapEditor.css';
@@ -312,134 +314,152 @@ export default function MindmapEditor() {
 
   if (loading) {
     return (
-      <div className="mindmap-editor-loading">
-        <div className="loader"></div>
-        <p>Đang tải mindmap...</p>
-      </div>
+      <DashboardLayout
+        role="teacher"
+        user={{ name: mockTeacher.name, avatar: mockTeacher.avatar!, role: 'teacher' }}
+        notificationCount={5}
+      >
+        <div className="mindmap-editor-loading">
+          <div className="loader"></div>
+          <p>Đang tải mindmap...</p>
+        </div>
+      </DashboardLayout>
     );
   }
 
   if (error || !mindmap) {
     return (
-      <div className="mindmap-editor-error">
-        <h2>Lỗi</h2>
-        <p>{error || 'Không tìm thấy mindmap'}</p>
-        <button onClick={() => navigate('/teacher/mindmaps')}>Quay lại</button>
-      </div>
+      <DashboardLayout
+        role="teacher"
+        user={{ name: mockTeacher.name, avatar: mockTeacher.avatar!, role: 'teacher' }}
+        notificationCount={5}
+      >
+        <div className="mindmap-editor-error">
+          <h2>Lỗi</h2>
+          <p>{error || 'Không tìm thấy mindmap'}</p>
+          <button onClick={() => navigate('/teacher/mindmaps')}>Quay lại</button>
+        </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="mindmap-editor-page">
-      <div className="editor-header">
-        <div className="header-left">
-          <button className="btn-back" onClick={() => navigate('/teacher/mindmaps')}>
-            ← Quay lại
-          </button>
-          <div>
-            <h1>{mindmap.title}</h1>
-            <p>{mindmap.description}</p>
-          </div>
-        </div>
-        <div className="header-actions">
-          <select
-            value={mindmap.status}
-            onChange={(e) =>
-              handleUpdateStatus(e.target.value as 'DRAFT' | 'PUBLISHED' | 'ARCHIVED')
-            }
-            className="status-select"
-          >
-            <option value="DRAFT">Nháp</option>
-            <option value="PUBLISHED">Xuất bản</option>
-            <option value="ARCHIVED">Lưu trữ</option>
-          </select>
-        </div>
-      </div>
-
-      <div className="editor-content">
-        <div className="flow-container">
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            onNodeClick={onNodeClick}
-            fitView
-            fitViewOptions={{ padding: 0.2, maxZoom: 1 }}
-            attributionPosition="bottom-left"
-            minZoom={0.1}
-            maxZoom={2}
-            defaultEdgeOptions={{
-              type: 'smoothstep',
-              animated: false,
-            }}
-          >
-            <Controls showInteractive={false} />
-            <Background color="#cbd5e0" gap={20} size={1} variant={BackgroundVariant.Dots} />
-          </ReactFlow>
-        </div>
-
-        {/* Edit Panel */}
-        {selectedNode && (
-          <div className="edit-panel">
-            <h3>Chỉnh sửa Node</h3>
-            <div className="form-group">
-              <label>Nội dung</label>
-              <input
-                type="text"
-                value={editForm.content}
-                onChange={(e) => setEditForm({ ...editForm, content: e.target.value })}
-              />
-            </div>
-            <div className="form-group">
-              <label>Màu sắc</label>
-              <input
-                type="color"
-                value={editForm.color}
-                onChange={(e) => setEditForm({ ...editForm, color: e.target.value })}
-              />
-            </div>
-            <div className="form-group">
-              <label>Icon</label>
-              <select
-                value={editForm.icon}
-                onChange={(e) => setEditForm({ ...editForm, icon: e.target.value })}
-              >
-                <option value="lightbulb">💡 Lightbulb</option>
-                <option value="brain">🧠 Brain</option>
-                <option value="bookmark">🔖 Bookmark</option>
-                <option value="check-circle">✅ Check</option>
-                <option value="info-circle">ℹ️ Info</option>
-                <option value="book">📚 Book</option>
-                <option value="target">🎯 Target</option>
-                <option value="star">⭐ Star</option>
-                <option value="sparkles">✨ Sparkles</option>
-                <option value="fire">🔥 Fire</option>
-                <option value="rocket">🚀 Rocket</option>
-                <option value="trophy">🏆 Trophy</option>
-                <option value="medal">🏅 Medal</option>
-                <option value="pencil">✏️ Pencil</option>
-                <option value="chart">📊 Chart</option>
-                <option value="flag">🚩 Flag</option>
-                <option value="heart">❤️ Heart</option>
-                <option value="link">🔗 Link</option>
-              </select>
-            </div>
-            <div className="panel-actions">
-              <button onClick={() => setSelectedNode(null)} className="btn-cancel">
-                Hủy
-              </button>
-              <button onClick={handleDeleteNode} className="btn-delete">
-                Xóa
-              </button>
-              <button onClick={handleSaveNode} disabled={saving} className="btn-save">
-                {saving ? 'Đang lưu...' : 'Lưu'}
-              </button>
+    <DashboardLayout
+      role="teacher"
+      user={{ name: mockTeacher.name, avatar: mockTeacher.avatar!, role: 'teacher' }}
+      notificationCount={5}
+    >
+      <div className="mindmap-editor-page">
+        <div className="editor-header">
+          <div className="header-left">
+            <button className="btn-back" onClick={() => navigate('/teacher/mindmaps')}>
+              ← Quay lại
+            </button>
+            <div>
+              <h1>{mindmap.title}</h1>
+              <p>{mindmap.description}</p>
             </div>
           </div>
-        )}
+          <div className="header-actions">
+            <select
+              value={mindmap.status}
+              onChange={(e) =>
+                handleUpdateStatus(e.target.value as 'DRAFT' | 'PUBLISHED' | 'ARCHIVED')
+              }
+              className="status-select"
+            >
+              <option value="DRAFT">Nháp</option>
+              <option value="PUBLISHED">Xuất bản</option>
+              <option value="ARCHIVED">Lưu trữ</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="editor-content">
+          <div className="flow-container">
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              onNodeClick={onNodeClick}
+              fitView
+              fitViewOptions={{ padding: 0.2, maxZoom: 1 }}
+              attributionPosition="bottom-left"
+              minZoom={0.1}
+              maxZoom={2}
+              defaultEdgeOptions={{
+                type: 'smoothstep',
+                animated: false,
+              }}
+            >
+              <Controls showInteractive={false} />
+              <Background color="#cbd5e0" gap={20} size={1} variant={BackgroundVariant.Dots} />
+            </ReactFlow>
+          </div>
+
+          {/* Edit Panel */}
+          {selectedNode && (
+            <div className="edit-panel">
+              <h3>Chỉnh sửa Node</h3>
+              <div className="form-group">
+                <label>Nội dung</label>
+                <input
+                  type="text"
+                  value={editForm.content}
+                  onChange={(e) => setEditForm({ ...editForm, content: e.target.value })}
+                />
+              </div>
+              <div className="form-group">
+                <label>Màu sắc</label>
+                <input
+                  type="color"
+                  value={editForm.color}
+                  onChange={(e) => setEditForm({ ...editForm, color: e.target.value })}
+                />
+              </div>
+              <div className="form-group">
+                <label>Icon</label>
+                <select
+                  value={editForm.icon}
+                  onChange={(e) => setEditForm({ ...editForm, icon: e.target.value })}
+                >
+                  <option value="lightbulb">💡 Lightbulb</option>
+                  <option value="brain">🧠 Brain</option>
+                  <option value="bookmark">🔖 Bookmark</option>
+                  <option value="check-circle">✅ Check</option>
+                  <option value="info-circle">ℹ️ Info</option>
+                  <option value="book">📚 Book</option>
+                  <option value="target">🎯 Target</option>
+                  <option value="star">⭐ Star</option>
+                  <option value="sparkles">✨ Sparkles</option>
+                  <option value="fire">🔥 Fire</option>
+                  <option value="rocket">🚀 Rocket</option>
+                  <option value="trophy">🏆 Trophy</option>
+                  <option value="medal">🏅 Medal</option>
+                  <option value="pencil">✏️ Pencil</option>
+                  <option value="chart">📊 Chart</option>
+                  <option value="flag">🚩 Flag</option>
+                  <option value="heart">❤️ Heart</option>
+                  <option value="link">🔗 Link</option>
+                </select>
+              </div>
+              <div className="panel-actions">
+                <button onClick={() => setSelectedNode(null)} className="btn-cancel">
+                  Hủy
+                </button>
+                <button onClick={handleDeleteNode} className="btn-delete">
+                  Xóa
+                </button>
+                <button onClick={handleSaveNode} disabled={saving} className="btn-save">
+                  {saving ? 'Đang lưu...' : 'Lưu'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }
