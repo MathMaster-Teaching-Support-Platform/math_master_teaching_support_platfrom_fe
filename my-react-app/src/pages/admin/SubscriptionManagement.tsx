@@ -273,7 +273,7 @@ const SubscriptionManagement: React.FC = () => {
                   <label>Tính năng (mỗi tính năng 1 dòng) *</label>
                   <textarea
                     rows={6}
-                    placeholder="Nhập các tính năng, mỗi dòng 1 tính năng&#10;Ví dụ:&#10;Tạo không giới hạn khóa học&#10;AI trợ giảng 24/7&#10;Thống kê chi tiết"
+                    placeholder="Nhập các tính năng, mỗi dòng 1 tính năng&#10;Ví dụ:&#10;Tạo không giới hạn Giáo Trình&#10;AI trợ giảng 24/7&#10;Thống kê chi tiết"
                   ></textarea>
                 </div>
 

@@ -224,7 +224,7 @@ const TeacherStudents: React.FC = () => {
             value={courseFilter}
             onChange={(e) => setCourseFilter(e.target.value)}
           >
-            <option value="all">Tất cả khóa học</option>
+            <option value="all">Tất cả Giáo Trình</option>
             <option value="Toán 11">Toán 11</option>
             <option value="Toán 12">Toán 12</option>
           </select>

@@ -257,7 +257,7 @@ const TeacherAssignments: React.FC = () => {
 
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Khóa học *</label>
+                    <label>Giáo Trình *</label>
                     <select>
                       <option>Toán 10 - Nâng cao</option>
                       <option>Đại số 11</option>

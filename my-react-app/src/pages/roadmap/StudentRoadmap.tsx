@@ -337,7 +337,7 @@ const StudentRoadmap: React.FC = () => {
               <div className="node-card final-card">
                 <div className="final-icon">🎓</div>
                 <div className="final-content">
-                  <h3>Hoàn thành khóa học!</h3>
+                  <h3>Hoàn thành Giáo Trình!</h3>
                   <p>Chúc mừng bạn đã hoàn thành lộ trình học tập</p>
                   <div className="final-reward">
                     <span>🏆 Chứng chỉ hoàn thành</span>
