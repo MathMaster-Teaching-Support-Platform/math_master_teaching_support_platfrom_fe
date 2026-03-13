@@ -26,7 +26,7 @@ const SearchResults: React.FC = () => {
       type: 'course',
       title: 'Toán 11 - Chương trình nâng cao',
       description:
-        'Khóa học toán nâng cao dành cho học sinh lớp 11 bao gồm đại số, giải tích và hình học',
+        'Giáo Trình toán nâng cao dành cho học sinh lớp 11 bao gồm đại số, giải tích và hình học',
       thumbnail: '📐',
       metadata: '45 bài học • 1200 học viên',
       url: '/student/courses/1',
@@ -169,7 +169,7 @@ const SearchResults: React.FC = () => {
           <div className="search-bar-large">
             <input
               type="text"
-              placeholder="Tìm kiếm khóa học, bài học, tài liệu..."
+              placeholder="Tìm kiếm Giáo Trình, bài học, tài liệu..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -206,7 +206,7 @@ const SearchResults: React.FC = () => {
             className={`category-btn ${categoryFilter === 'course' ? 'active' : ''}`}
             onClick={() => setCategoryFilter('course')}
           >
-            📚 Khóa học ({stats.courses})
+            📚 Giáo Trình ({stats.courses})
           </button>
           <button
             className={`category-btn ${categoryFilter === 'lesson' ? 'active' : ''}`}
@@ -250,7 +250,7 @@ const SearchResults: React.FC = () => {
                   <div className="result-content">
                     <div className="result-type-badge">
                       {result.type === 'course'
-                        ? '📚 Khóa học'
+                        ? '📚 Giáo Trình'
                         : result.type === 'lesson'
                           ? '📖 Bài học'
                           : result.type === 'assignment'
@@ -268,7 +268,7 @@ const SearchResults: React.FC = () => {
                   <div className="result-actions">
                     <button className="action-btn primary">
                       {result.type === 'course'
-                        ? '📚 Xem khóa học'
+                        ? '📚 Xem Giáo Trình'
                         : result.type === 'lesson'
                           ? '📖 Học ngay'
                           : result.type === 'assignment'

@@ -41,7 +41,7 @@ const NotificationCenter: React.FC = () => {
       id: 3,
       type: 'course',
       title: 'Bài học mới',
-      message: 'Bài học "Đạo hàm hàm số" đã được thêm vào khóa học Toán 11',
+      message: 'Bài học "Đạo hàm hàm số" đã được thêm vào Giáo Trình Toán 11',
       time: '1 giờ trước',
       read: true,
       priority: 'normal',
@@ -94,8 +94,8 @@ const NotificationCenter: React.FC = () => {
     {
       id: 9,
       type: 'course',
-      title: 'Khóa học mới',
-      message: 'Bạn đã được thêm vào khóa học "Toán nâng cao lớp 12"',
+      title: 'Giáo Trình mới',
+      message: 'Bạn đã được thêm vào Giáo Trình "Toán nâng cao lớp 12"',
       time: '2 ngày trước',
       read: true,
       priority: 'normal',
@@ -260,7 +260,7 @@ const NotificationCenter: React.FC = () => {
             <option value="all">Tất cả loại</option>
             <option value="assignment">📝 Bài tập</option>
             <option value="grade">📊 Điểm số</option>
-            <option value="course">📚 Khóa học</option>
+            <option value="course">📚 Giáo Trình</option>
             <option value="system">⚙️ Hệ thống</option>
             <option value="payment">💰 Thanh toán</option>
             <option value="message">💬 Tin nhắn</option>
@@ -303,7 +303,7 @@ const NotificationCenter: React.FC = () => {
                           : notif.type === 'grade'
                             ? '📊 Điểm số'
                             : notif.type === 'course'
-                              ? '📚 Khóa học'
+                              ? '📚 Giáo Trình'
                               : notif.type === 'system'
                                 ? '⚙️ Hệ thống'
                                 : notif.type === 'payment'

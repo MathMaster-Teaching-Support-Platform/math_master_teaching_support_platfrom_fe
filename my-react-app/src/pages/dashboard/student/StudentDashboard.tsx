@@ -7,7 +7,7 @@ const StudentDashboard: React.FC = () => {
   const stats = [
     {
       icon: '📚',
-      label: 'Khóa học đang học',
+      label: 'Giáo Trình đang học',
       value: mockStudent.enrolledCourses,
       color: '#667eea',
     },
@@ -67,7 +67,7 @@ const StudentDashboard: React.FC = () => {
           {/* My Courses */}
           <div className="dashboard-card">
             <div className="card-header">
-              <h2 className="card-title">Khóa học của tôi</h2>
+              <h2 className="card-title">Giáo Trình của tôi</h2>
               <a href="/student/courses" className="card-link">
                 Xem tất cả →
               </a>
@@ -229,7 +229,7 @@ const StudentDashboard: React.FC = () => {
           <div className="quick-actions">
             <button className="quick-action-btn">
               <span className="qa-icon">📚</span>
-              <span className="qa-label">Khóa học</span>
+              <span className="qa-label">Giáo Trình</span>
             </button>
             <button className="quick-action-btn">
               <span className="qa-icon">✍️</span>

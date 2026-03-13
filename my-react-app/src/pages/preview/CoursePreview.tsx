@@ -37,12 +37,12 @@ const CoursePreview: React.FC = () => {
     language: 'Tiếng Việt',
     thumbnail: '📐',
     description:
-      'Khóa học Toán 11 - Đại Số Nâng Cao được thiết kế đặc biệt để giúp học sinh nắm vững kiến thức Đại số, từ cơ bản đến nâng cao. Với phương pháp giảng dạy sinh động, kết hợp công nghệ AI hỗ trợ, khóa học sẽ giúp bạn tự tin chinh phục mọi dạng bài tập.',
+      'Giáo Trình Toán 11 - Đại Số Nâng Cao được thiết kế đặc biệt để giúp học sinh nắm vững kiến thức Đại số, từ cơ bản đến nâng cao. Với phương pháp giảng dạy sinh động, kết hợp công nghệ AI hỗ trợ, Giáo Trình sẽ giúp bạn tự tin chinh phục mọi dạng bài tập.',
     highlights: [
       'Hơn 85 bài học video chất lượng cao',
       'Hơn 500 bài tập thực hành có lời giải chi tiết',
       'Hệ thống AI Assistant hỗ trợ 24/7',
-      'Chứng chỉ hoàn thành khóa học',
+      'Chứng chỉ hoàn thành Giáo Trình',
       'Truy cập trọn đời',
       'Cộng đồng học tập sôi động',
     ],
@@ -98,7 +98,7 @@ const CoursePreview: React.FC = () => {
       rating: 5,
       date: '2 ngày trước',
       content:
-        'Khóa học rất chi tiết và dễ hiểu. Thầy giảng rất nhiệt tình. Các bài tập phong phú giúp em nắm chắc kiến thức.',
+        'Giáo Trình rất chi tiết và dễ hiểu. Thầy giảng rất nhiệt tình. Các bài tập phong phú giúp em nắm chắc kiến thức.',
     },
     {
       id: 2,
@@ -107,7 +107,7 @@ const CoursePreview: React.FC = () => {
       rating: 5,
       date: '1 tuần trước',
       content:
-        'Đây là khóa học Toán hay nhất em từng học. AI Assistant giúp em giải quyết mọi thắc mắc ngay lập tức.',
+        'Đây là Giáo Trình Toán hay nhất em từng học. AI Assistant giúp em giải quyết mọi thắc mắc ngay lập tức.',
     },
     {
       id: 3,
@@ -124,7 +124,7 @@ const CoursePreview: React.FC = () => {
       avatar: '👨‍🎓',
       rating: 5,
       date: '3 tuần trước',
-      content: 'Giá cả hợp lý, kiến thức đầy đủ. Em đã đạt 9.5 điểm môn Toán nhờ khóa học này!',
+      content: 'Giá cả hợp lý, kiến thức đầy đủ. Em đã đạt 9.5 điểm môn Toán nhờ Giáo Trình này!',
     },
   ];
 
@@ -181,7 +181,7 @@ const CoursePreview: React.FC = () => {
               className={`tab-btn ${activeTab === 'curriculum' ? 'active' : ''}`}
               onClick={() => setActiveTab('curriculum')}
             >
-              Nội dung khóa học
+              Nội dung Giáo Trình
             </button>
             <button
               className={`tab-btn ${activeTab === 'reviews' ? 'active' : ''}`}
@@ -195,7 +195,7 @@ const CoursePreview: React.FC = () => {
           {activeTab === 'overview' && (
             <div className="tab-content">
               <section className="content-section">
-                <h2>Mô tả khóa học</h2>
+                <h2>Mô tả Giáo Trình</h2>
                 <p>{course.description}</p>
               </section>
 
@@ -308,7 +308,7 @@ const CoursePreview: React.FC = () => {
               Đăng ký ngay
             </button>
             <div className="course-includes">
-              <h3>Khóa học bao gồm:</h3>
+              <h3>Giáo Trình bao gồm:</h3>
               <ul>
                 <li>⏱️ {course.duration} video</li>
                 <li>📚 {course.totalLessons} bài học</li>
@@ -329,7 +329,7 @@ const CoursePreview: React.FC = () => {
               <div className="instructor-stats">
                 <div className="stat">⭐ 4.9 Đánh giá</div>
                 <div className="stat">👥 15,234 Học viên</div>
-                <div className="stat">📚 8 Khóa học</div>
+                <div className="stat">📚 8 Giáo Trình</div>
               </div>
             </div>
           </div>
@@ -341,13 +341,13 @@ const CoursePreview: React.FC = () => {
         <div className="modal-overlay" onClick={() => setShowEnrollModal(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>Đăng ký khóa học</h2>
+              <h2>Đăng ký Giáo Trình</h2>
               <button className="modal-close" onClick={() => setShowEnrollModal(false)}>
                 ✕
               </button>
             </div>
             <div className="modal-body">
-              <p>Bạn cần đăng nhập để đăng ký khóa học này.</p>
+              <p>Bạn cần đăng nhập để đăng ký Giáo Trình này.</p>
               <div className="enroll-actions">
                 <a href="/login" className="btn btn-primary">
                   Đăng nhập

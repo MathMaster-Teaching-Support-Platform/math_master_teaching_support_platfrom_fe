@@ -29,7 +29,7 @@ const HelpCenter: React.FC = () => {
   const categories = [
     { id: 'all', name: 'Tất cả', icon: '📚' },
     { id: 'account', name: 'Tài khoản', icon: '👤' },
-    { id: 'courses', name: 'Khóa học', icon: '📖' },
+    { id: 'courses', name: 'Giáo Trình', icon: '📖' },
     { id: 'payment', name: 'Thanh toán', icon: '💳' },
     { id: 'technical', name: 'Kỹ thuật', icon: '⚙️' },
   ];
@@ -45,9 +45,9 @@ const HelpCenter: React.FC = () => {
     },
     {
       id: 2,
-      question: 'Cách đăng ký khóa học mới?',
+      question: 'Cách đăng ký Giáo Trình mới?',
       answer:
-        'Để đăng ký khóa học: 1) Vào trang Khóa học, 2) Chọn khóa học bạn quan tâm, 3) Nhấn "Đăng ký ngay", 4) Chọn gói thanh toán phù hợp, 5) Hoàn tất thanh toán.',
+        'Để đăng ký Giáo Trình: 1) Vào trang Giáo Trình, 2) Chọn Giáo Trình bạn quan tâm, 3) Nhấn "Đăng ký ngay", 4) Chọn gói thanh toán phù hợp, 5) Hoàn tất thanh toán.',
       category: 'courses',
       helpful: 98,
     },
@@ -71,7 +71,7 @@ const HelpCenter: React.FC = () => {
       id: 5,
       question: 'Thời gian học tập có giới hạn không?',
       answer:
-        'Sau khi đăng ký khóa học, bạn có thể truy cập nội dung trong 12 tháng kể từ ngày đăng ký. Các bài tập và tài liệu có thể tải về để sử dụng vĩnh viễn.',
+        'Sau khi đăng ký Giáo Trình, bạn có thể truy cập nội dung trong 12 tháng kể từ ngày đăng ký. Các bài tập và tài liệu có thể tải về để sử dụng vĩnh viễn.',
       category: 'courses',
       helpful: 65,
     },
@@ -87,7 +87,7 @@ const HelpCenter: React.FC = () => {
       id: 7,
       question: 'Chứng chỉ hoàn thành được cấp như thế nào?',
       answer:
-        'Chứng chỉ sẽ được tự động cấp khi bạn hoàn thành 100% nội dung khóa học và đạt điểm trung bình ≥ 7.0 trong các bài kiểm tra. Bạn có thể tải xuống PDF hoặc chia sẻ trực tuyến.',
+        'Chứng chỉ sẽ được tự động cấp khi bạn hoàn thành 100% nội dung Giáo Trình và đạt điểm trung bình ≥ 7.0 trong các bài kiểm tra. Bạn có thể tải xuống PDF hoặc chia sẻ trực tuyến.',
       category: 'courses',
       helpful: 92,
     },
@@ -95,7 +95,7 @@ const HelpCenter: React.FC = () => {
       id: 8,
       question: 'Hoàn tiền trong trường hợp nào?',
       answer:
-        'Bạn có thể yêu cầu hoàn tiền 100% trong vòng 7 ngày đầu nếu chưa hoàn thành quá 20% khóa học. Sau 7 ngày, chúng tôi không hỗ trợ hoàn tiền nhưng có thể chuyển sang khóa học khác.',
+        'Bạn có thể yêu cầu hoàn tiền 100% trong vòng 7 ngày đầu nếu chưa hoàn thành quá 20% Giáo Trình. Sau 7 ngày, chúng tôi không hỗ trợ hoàn tiền nhưng có thể chuyển sang Giáo Trình khác.',
       category: 'payment',
       helpful: 43,
     },
@@ -318,7 +318,7 @@ const HelpCenter: React.FC = () => {
                   <select>
                     <option>Chọn danh mục</option>
                     <option>👤 Tài khoản</option>
-                    <option>📖 Khóa học</option>
+                    <option>📖 Giáo Trình</option>
                     <option>💳 Thanh toán</option>
                     <option>⚙️ Kỹ thuật</option>
                     <option>📝 Khác</option>

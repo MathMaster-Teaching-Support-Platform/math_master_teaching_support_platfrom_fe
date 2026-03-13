@@ -1,23 +1,38 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
+import { Grid2x2, List, Search } from 'lucide-react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockTeacher, mockCourses } from '../../data/mockData';
 import './TeacherCourses.css';
 
+const gradients = [
+  'linear-gradient(135deg, #2d7be7 0%, #4f46e5 100%)',
+  'linear-gradient(135deg, #7c3aed 0%, #d946ef 100%)',
+  'linear-gradient(135deg, #059669 0%, #14b8a6 100%)',
+] as const;
+
 const TeacherCourses: React.FC = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [showCreateModal, setShowCreateModal] = useState(false);
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'draft'>('all');
+  const [search, setSearch] = useState('');
 
-  const filteredCourses = mockCourses.filter((course) => {
-    if (filterStatus === 'all') return true;
-    return filterStatus === 'active' ? course.isPublished : !course.isPublished;
-  });
+  const filteredCourses = useMemo(() => {
+    return mockCourses.filter((course) => {
+      const statusMatch =
+        filterStatus === 'all'
+          ? true
+          : filterStatus === 'active'
+            ? course.isPublished
+            : !course.isPublished;
+      const searchMatch = course.name.toLowerCase().includes(search.toLowerCase());
+      return statusMatch && searchMatch;
+    });
+  }, [filterStatus, search]);
 
-  const courseStats = {
+  const stats = {
     total: mockCourses.length,
     active: mockCourses.filter((c) => c.isPublished).length,
     draft: mockCourses.filter((c) => !c.isPublished).length,
-    totalStudents: mockCourses.reduce((sum, c) => sum + c.studentsEnrolled, 0),
+    students: mockCourses.reduce((sum, c) => sum + c.studentsEnrolled, 0),
   };
 
   return (
@@ -27,234 +42,147 @@ const TeacherCourses: React.FC = () => {
       notificationCount={5}
     >
       <div className="teacher-courses-page">
-        {/* Header */}
-        <div className="courses-header">
-          <div>
-            <h1 className="page-title">📚 Khóa học của tôi</h1>
-            <p className="page-subtitle">Quản lý và theo dõi tất cả khóa học bạn đang giảng dạy</p>
+        <header className="courses-header">
+          <div className="head-left">
+            <h1>📚 Giáo Trình của tôi</h1>
+            <p>Quản lý và theo dõi tất cả Giáo Trình bạn đang giảng dạy</p>
           </div>
-          <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}>
-            <span>➕</span> Tạo khóa học mới
-          </button>
-        </div>
+        </header>
 
-        {/* Stats Cards */}
-        <div className="courses-stats">
-          <div className="stat-card">
-            <div
-              className="stat-icon"
-              style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
-            >
-              📚
+        <section className="courses-stats">
+          <article className="stat-box">
+            <span className="stat-icon blue">📘</span>
+            <div>
+              <div className="stat-label">Tổng giáo trình</div>
+              <strong>{stats.total}</strong>
             </div>
-            <div className="stat-content">
-              <div className="stat-value">{courseStats.total}</div>
-              <div className="stat-label">Tổng khóa học</div>
-            </div>
-          </div>
-          <div className="stat-card">
-            <div
-              className="stat-icon"
-              style={{ background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)' }}
-            >
-              ✅
-            </div>
-            <div className="stat-content">
-              <div className="stat-value">{courseStats.active}</div>
+          </article>
+          <article className="stat-box">
+            <span className="stat-icon green">✅</span>
+            <div>
               <div className="stat-label">Đang hoạt động</div>
+              <strong>{stats.active}</strong>
             </div>
-          </div>
-          <div className="stat-card">
-            <div
-              className="stat-icon"
-              style={{ background: 'linear-gradient(135deg, #ffd89b 0%, #19547b 100%)' }}
-            >
-              📝
-            </div>
-            <div className="stat-content">
-              <div className="stat-value">{courseStats.draft}</div>
+          </article>
+          <article className="stat-box">
+            <span className="stat-icon amber">📝</span>
+            <div>
               <div className="stat-label">Bản nháp</div>
+              <strong>{stats.draft}</strong>
             </div>
-          </div>
-          <div className="stat-card">
-            <div
-              className="stat-icon"
-              style={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' }}
-            >
-              👥
-            </div>
-            <div className="stat-content">
-              <div className="stat-value">{courseStats.totalStudents}</div>
+          </article>
+          <article className="stat-box">
+            <span className="stat-icon violet">👥</span>
+            <div>
               <div className="stat-label">Học viên</div>
+              <strong>{stats.students}</strong>
             </div>
-          </div>
-        </div>
+          </article>
+        </section>
 
-        {/* Filters & View Toggle */}
-        <div className="courses-toolbar">
+        <section className="courses-toolbar">
           <div className="filter-tabs">
             <button
-              className={`filter-tab ${filterStatus === 'all' ? 'active' : ''}`}
+              className={filterStatus === 'all' ? 'active' : ''}
               onClick={() => setFilterStatus('all')}
             >
-              Tất cả ({courseStats.total})
+              Tất cả ({stats.total})
             </button>
             <button
-              className={`filter-tab ${filterStatus === 'active' ? 'active' : ''}`}
+              className={filterStatus === 'active' ? 'active' : ''}
               onClick={() => setFilterStatus('active')}
             >
-              Hoạt động ({courseStats.active})
+              Hoạt động ({stats.active})
             </button>
             <button
-              className={`filter-tab ${filterStatus === 'draft' ? 'active' : ''}`}
+              className={filterStatus === 'draft' ? 'active' : ''}
               onClick={() => setFilterStatus('draft')}
             >
-              Nháp ({courseStats.draft})
+              Nháp ({stats.draft})
             </button>
           </div>
 
-          <div className="view-toggle">
-            <button
-              className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
-              onClick={() => setViewMode('grid')}
-            >
-              🔲 Grid
-            </button>
-            <button
-              className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
-              onClick={() => setViewMode('list')}
-            >
-              📋 List
-            </button>
+          <div className="toolbar-right">
+            <div className="search-box">
+              <Search size={16} />
+              <input
+                type="text"
+                placeholder="Tìm kiếm giáo trình..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <div className="view-toggle" aria-label="Chế độ hiển thị">
+              <button
+                className={viewMode === 'grid' ? 'active' : ''}
+                onClick={() => setViewMode('grid')}
+              >
+                <Grid2x2 size={16} />
+              </button>
+              <button
+                className={viewMode === 'list' ? 'active' : ''}
+                onClick={() => setViewMode('list')}
+              >
+                <List size={16} />
+              </button>
+            </div>
           </div>
-        </div>
+        </section>
 
-        {/* Courses Grid/List */}
-        <div className={`courses-container ${viewMode}`}>
-          {filteredCourses.map((course) => (
-            <div key={course.id} className="course-card">
-              <div className="course-image">
-                <img src={course.thumbnail} alt={course.name} />
-                <div className="course-badge">
-                  {course.isPublished ? (
-                    <span className="badge badge-success">✅ Công khai</span>
-                  ) : (
-                    <span className="badge badge-warning">📝 Nháp</span>
-                  )}
-                </div>
+        <section className={`courses-grid ${viewMode}`}>
+          {filteredCourses.map((course, idx) => (
+            <article key={course.id} className="course-card">
+              <div
+                className="course-cover"
+                style={{ background: gradients[idx % gradients.length] }}
+              >
+                <span className="course-status">
+                  {course.isPublished ? 'CÔNG KHAI' : 'BẢN NHÁP'}
+                </span>
+                <h3>{course.name}</h3>
               </div>
 
-              <div className="course-content">
-                <h3 className="course-title">{course.name}</h3>
-                <p className="course-description">{course.description}</p>
-
-                <div className="course-meta">
-                  <div className="meta-item">
-                    <span className="meta-icon">👥</span>
-                    <span className="meta-text">{course.studentsEnrolled} học viên</span>
+              <div className="course-body">
+                <p className="course-desc">{course.description}</p>
+                <div className="course-metrics">
+                  <div>
+                    <strong>{course.studentsEnrolled}</strong>
+                    <span>Học viên</span>
                   </div>
-                  <div className="meta-item">
-                    <span className="meta-icon">⭐</span>
-                    <span className="meta-text">{course.rating.toFixed(1)}</span>
+                  <div>
+                    <strong>{course.rating.toFixed(1)} ★</strong>
+                    <span>Đánh giá</span>
                   </div>
-                  <div className="meta-item">
-                    <span className="meta-icon">📚</span>
-                    <span className="meta-text">{course.lessonsCount} bài học</span>
+                  <div>
+                    <strong>{course.lessonsCount}</strong>
+                    <span>Bài học</span>
                   </div>
                 </div>
 
                 <div className="course-progress">
-                  <div className="progress-label">
-                    <span>Tiến độ hoàn thành</span>
-                    <span className="progress-percent">{course.completionRate}%</span>
+                  <div className="progress-head">
+                    <span>Tiến độ</span>
+                    <span>{course.completionRate}%</span>
                   </div>
-                  <div className="progress-bar">
-                    <div
-                      className="progress-fill"
-                      style={{ width: `${course.completionRate}%` }}
-                    ></div>
+                  <div className="progress-track">
+                    <div className="progress-fill" style={{ width: `${course.completionRate}%` }} />
                   </div>
                 </div>
 
                 <div className="course-actions">
-                  <button className="btn btn-outline btn-sm">📊 Thống kê</button>
-                  <button className="btn btn-outline btn-sm">✏️ Chỉnh sửa</button>
-                  <button className="btn btn-primary btn-sm">👁️ Xem chi tiết</button>
+                  <button>Chỉnh sửa</button>
+                  <button className="primary">Xem chi tiết</button>
                 </div>
               </div>
-            </div>
+            </article>
           ))}
-        </div>
 
-        {/* Create Course Modal */}
-        {showCreateModal && (
-          <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
-            <div className="modal" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h2 className="modal-title">Tạo khóa học mới</h2>
-                <button className="modal-close" onClick={() => setShowCreateModal(false)}>
-                  ✕
-                </button>
-              </div>
-
-              <div className="modal-body">
-                <div className="form-group">
-                  <label>Tên khóa học *</label>
-                  <input type="text" placeholder="Ví dụ: Đại số 10 - Nâng cao" />
-                </div>
-
-                <div className="form-group">
-                  <label>Mô tả ngắn *</label>
-                  <textarea rows={3} placeholder="Mô tả ngắn gọn về khóa học..."></textarea>
-                </div>
-
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Cấp độ *</label>
-                    <select>
-                      <option>Cơ bản</option>
-                      <option>Trung bình</option>
-                      <option>Nâng cao</option>
-                    </select>
-                  </div>
-
-                  <div className="form-group">
-                    <label>Lớp *</label>
-                    <select>
-                      <option>Lớp 10</option>
-                      <option>Lớp 11</option>
-                      <option>Lớp 12</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label>Ảnh đại diện</label>
-                  <div className="file-upload">
-                    <input type="file" accept="image/*" id="thumbnail" />
-                    <label htmlFor="thumbnail" className="file-upload-label">
-                      📁 Chọn ảnh
-                    </label>
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label className="checkbox-label">
-                    <input type="checkbox" />
-                    <span>Xuất bản ngay sau khi tạo</span>
-                  </label>
-                </div>
-              </div>
-
-              <div className="modal-footer">
-                <button className="btn btn-outline" onClick={() => setShowCreateModal(false)}>
-                  Hủy
-                </button>
-                <button className="btn btn-primary">✅ Tạo khóa học</button>
-              </div>
-            </div>
-          </div>
-        )}
+          <article className="course-add-card">
+            <div className="add-circle">+</div>
+            <h3>Thêm giáo trình</h3>
+            <p>Bắt đầu soạn thảo chương mới</p>
+          </article>
+        </section>
       </div>
     </DashboardLayout>
   );
