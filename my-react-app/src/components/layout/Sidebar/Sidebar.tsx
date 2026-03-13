@@ -1,10 +1,39 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import type { LucideIcon } from 'lucide-react';
+import {
+  LayoutDashboard,
+  BookOpen,
+  FolderKanban,
+  Workflow,
+  FileQuestion,
+  Ruler,
+  ClipboardCheck,
+  FileCheck2,
+  Users,
+  LineChart,
+  Bot,
+  Library,
+  GraduationCap,
+  NotebookTabs,
+  Wallet,
+  CreditCard,
+  ArrowLeftRight,
+  FileStack,
+  Settings,
+  LogOut,
+} from 'lucide-react';
 import { AuthService } from '../../../services/api/auth.service';
 import './Sidebar.css';
 
 interface SidebarProps {
   role: 'teacher' | 'student' | 'admin';
+}
+
+interface MenuItem {
+  path: string;
+  icon: LucideIcon;
+  label: string;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ role }) => {
@@ -16,42 +45,53 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
     navigate('/login');
   };
 
-  const teacherMenuItems = [
-    { path: '/teacher/dashboard', icon: '📊', label: 'Dashboard' },
-    { path: '/teacher/courses', icon: '📚', label: 'Khóa học' },
-    { path: '/teacher/materials', icon: '📝', label: 'Tài liệu' },
-    { path: '/teacher/mindmaps', icon: '🗺️', label: 'Mindmap' },
-    { path: '/teacher/question-templates', icon: '📄', label: 'Mẫu câu hỏi' },
-    { path: '/teacher/assignments', icon: '✍️', label: 'Bài tập' },
-    { path: '/teacher/assessments', icon: '📝', label: 'Kiểm tra' },
-    { path: '/teacher/students', icon: '👥', label: 'Học sinh' },
-    { path: '/teacher/analytics', icon: '📈', label: 'Phân tích' },
-    { path: '/teacher/ai-assistant', icon: '🤖', label: 'AI Trợ lý' },
-    { path: '/teacher/resources', icon: '🗂️', label: 'Tài nguyên' },
+  const teacherMenuItems: MenuItem[] = [
+    { path: '/teacher/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { path: '/teacher/courses', icon: BookOpen, label: 'Khóa học' },
+    { path: '/teacher/materials', icon: FolderKanban, label: 'Tài liệu' },
+    { path: '/teacher/mindmaps', icon: Workflow, label: 'Mindmap' },
+    { path: '/teacher/question-templates', icon: FileQuestion, label: 'Mẫu câu hỏi' },
+    { path: '/teacher/exam-matrices', icon: Ruler, label: 'Ma trận đề' },
+    { path: '/teacher/assignments', icon: ClipboardCheck, label: 'Bài tập' },
+    { path: '/teacher/assessments', icon: FileCheck2, label: 'Kiểm tra' },
+    { path: '/teacher/students', icon: Users, label: 'Học sinh' },
+    { path: '/teacher/analytics', icon: LineChart, label: 'Phân tích' },
+    { path: '/teacher/ai-assistant', icon: Bot, label: 'AI Trợ lý' },
+    { path: '/teacher/resources', icon: Library, label: 'Tài nguyên' },
   ];
 
-  const studentMenuItems = [
-    { path: '/student/dashboard', icon: '📊', label: 'Dashboard' },
-    { path: '/student/courses', icon: '📚', label: 'Khóa học' },
-    { path: '/student/assignments', icon: '✍️', label: 'Bài tập' },
-    { path: '/student/grades', icon: '📝', label: 'Điểm số' },
-    { path: '/student/roadmap', icon: '🗺️', label: 'Lộ trình' },
-    { path: '/student/ai-assistant', icon: '🤖', label: 'AI Trợ lý' },
-    { path: '/student/wallet', icon: '💰', label: 'Ví của tôi' },
+  const studentMenuItems: MenuItem[] = [
+    { path: '/student/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { path: '/student/courses', icon: GraduationCap, label: 'Khóa học' },
+    { path: '/student/assignments', icon: NotebookTabs, label: 'Bài tập' },
+    { path: '/student/grades', icon: FileCheck2, label: 'Điểm số' },
+    { path: '/student/roadmap', icon: Workflow, label: 'Lộ trình' },
+    { path: '/student/ai-assistant', icon: Bot, label: 'AI Trợ lý' },
+    { path: '/student/wallet', icon: Wallet, label: 'Ví của tôi' },
   ];
 
-  const adminMenuItems = [
-    { path: '/admin/dashboard', icon: '📊', label: 'Dashboard' },
-    { path: '/admin/users', icon: '👥', label: 'Người dùng' },
-    { path: '/admin/subscriptions', icon: '💳', label: 'Gói đăng ký' },
-    { path: '/admin/transactions', icon: '💰', label: 'Giao dịch' },
-    { path: '/admin/templates', icon: '📄', label: 'Mẫu' },
-    { path: '/admin/analytics', icon: '📈', label: 'Thống kê' },
-    { path: '/admin/settings', icon: '⚙️', label: 'Cài đặt' },
+  const adminMenuItems: MenuItem[] = [
+    { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { path: '/admin/users', icon: Users, label: 'Người dùng' },
+    { path: '/admin/subscriptions', icon: CreditCard, label: 'Gói đăng ký' },
+    { path: '/admin/transactions', icon: ArrowLeftRight, label: 'Giao dịch' },
+    { path: '/admin/templates', icon: FileStack, label: 'Mẫu' },
+    { path: '/admin/analytics', icon: LineChart, label: 'Thống kê' },
+    { path: '/admin/settings', icon: Settings, label: 'Cài đặt' },
   ];
 
   const menuItems =
     role === 'teacher' ? teacherMenuItems : role === 'student' ? studentMenuItems : adminMenuItems;
+
+  const settingsPath = role === 'teacher' ? '/teacher/settings' : `/${role}/settings`;
+
+  const isActivePath = (itemPath: string) => {
+    if (itemPath.endsWith('/dashboard')) {
+      return location.pathname === itemPath;
+    }
+
+    return location.pathname === itemPath || location.pathname.startsWith(`${itemPath}/`);
+  };
 
   return (
     <aside className="sidebar">
@@ -67,21 +107,30 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
           <Link
             key={item.path}
             to={item.path}
-            className={`sidebar-item ${location.pathname === item.path ? 'active' : ''}`}
+            className={`sidebar-item ${isActivePath(item.path) ? 'active' : ''}`}
           >
-            <span className="sidebar-icon">{item.icon}</span>
+            <span className="sidebar-icon">
+              <item.icon size={18} strokeWidth={2.2} />
+            </span>
             <span className="sidebar-label">{item.label}</span>
           </Link>
         ))}
       </nav>
 
       <div className="sidebar-footer">
-        <Link to="/settings" className="sidebar-item">
-          <span className="sidebar-icon">⚙️</span>
+        <Link
+          to={settingsPath}
+          className={`sidebar-item ${isActivePath(settingsPath) ? 'active' : ''}`}
+        >
+          <span className="sidebar-icon">
+            <Settings size={18} strokeWidth={2.2} />
+          </span>
           <span className="sidebar-label">Cài đặt</span>
         </Link>
         <button onClick={handleLogout} className="sidebar-item">
-          <span className="sidebar-icon">🚪</span>
+          <span className="sidebar-icon">
+            <LogOut size={18} strokeWidth={2.2} />
+          </span>
           <span className="sidebar-label">Đăng xuất</span>
         </button>
       </div>

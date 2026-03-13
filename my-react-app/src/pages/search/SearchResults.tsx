@@ -167,7 +167,6 @@ const SearchResults: React.FC = () => {
         {/* Search Bar */}
         <div className="search-header">
           <div className="search-bar-large">
-            <span className="search-icon">🔍</span>
             <input
               type="text"
               placeholder="Tìm kiếm khóa học, bài học, tài liệu..."
