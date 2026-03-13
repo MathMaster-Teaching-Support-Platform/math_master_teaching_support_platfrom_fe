@@ -197,10 +197,6 @@ const TeacherDashboard: React.FC = () => {
               <span className="qa-icon">📝</span>
               <span className="qa-label">Tạo bài tập</span>
             </button>
-            <button className="quick-action-btn" onClick={() => navigate('/teacher/exam-matrices')}>
-              <span className="qa-icon">📐</span>
-              <span className="qa-label">Ma trận đề</span>
-            </button>
             <button className="quick-action-btn">
               <span className="qa-icon">📊</span>
               <span className="qa-label">Tạo đề thi</span>
