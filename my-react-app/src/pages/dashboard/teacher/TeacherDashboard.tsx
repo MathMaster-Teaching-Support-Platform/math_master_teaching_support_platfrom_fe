@@ -133,6 +133,7 @@ const TeacherDashboard: React.FC = () => {
           </section>
         </div>
 
+<<<<<<< Updated upstream
         <div className="quick-action-row">
           <button className="quick-btn" onClick={() => navigate('/teacher/mindmaps')}>
             🧠 Tạo mindmap
@@ -143,6 +144,51 @@ const TeacherDashboard: React.FC = () => {
           <button className="quick-btn" onClick={() => navigate('/teacher/exam-matrices')}>
             📐 Lập ma trận đề
           </button>
+=======
+        {/* Quick Actions */}
+        <div className="dashboard-card">
+          <div className="card-header">
+            <h2 className="card-title">Hành động nhanh</h2>
+          </div>
+          <div className="quick-actions">
+            <button className="quick-action-btn">
+              <span className="qa-icon">📚</span>
+              <span className="qa-label">Tạo khóa học</span>
+            </button>
+            <button className="quick-action-btn">
+              <span className="qa-icon">📝</span>
+              <span className="qa-label">Tạo bài tập</span>
+            </button>
+            <button className="quick-action-btn">
+              <span className="qa-icon">📊</span>
+              <span className="qa-label">Tạo đề thi</span>
+            </button>
+            <button className="quick-action-btn" onClick={() => navigate('/teacher/exam-matrices')}>
+              <span className="qa-icon">🧩</span>
+              <span className="qa-label">Ma trận đề</span>
+            </button>
+            <button className="quick-action-btn">
+              <span className="qa-icon">🎨</span>
+              <span className="qa-label">Tạo slide</span>
+            </button>
+            <button className="quick-action-btn" onClick={() => navigate('/teacher/mindmaps')}>
+              <span className="qa-icon">🧠</span>
+              <span className="qa-label">Tạo mindmap</span>
+            </button>
+            <button className="quick-action-btn">
+              <span className="qa-icon">📈</span>
+              <span className="qa-label">Tạo đồ thị</span>
+            </button>
+            <button className="quick-action-btn">
+              <span className="qa-icon">🤖</span>
+              <span className="qa-label">AI trợ lý</span>
+            </button>
+            <button className="quick-action-btn">
+              <span className="qa-icon">📂</span>
+              <span className="qa-label">Tài nguyên</span>
+            </button>
+          </div>
+>>>>>>> Stashed changes
         </div>
       </div>
     </DashboardLayout>
