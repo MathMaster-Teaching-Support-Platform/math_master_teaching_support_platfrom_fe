@@ -45,6 +45,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
     navigate('/login');
   };
 
+<<<<<<< Updated upstream
   const teacherMenuItems: MenuItem[] = [
     { path: '/teacher/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/teacher/courses', icon: BookOpen, label: 'Khóa học' },
@@ -58,6 +59,21 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
     { path: '/teacher/analytics', icon: LineChart, label: 'Phân tích' },
     { path: '/teacher/ai-assistant', icon: Bot, label: 'AI Trợ lý' },
     { path: '/teacher/resources', icon: Library, label: 'Tài nguyên' },
+=======
+  const teacherMenuItems = [
+    { path: '/teacher/dashboard', icon: '📊', label: 'Dashboard' },
+    { path: '/teacher/courses', icon: '📚', label: 'Khóa học' },
+    { path: '/teacher/materials', icon: '📝', label: 'Tài liệu' },
+    { path: '/teacher/mindmaps', icon: '🗺️', label: 'Mindmap' },
+    { path: '/teacher/question-templates', icon: '📄', label: 'Mẫu câu hỏi' },
+    { path: '/teacher/exam-matrices', icon: '🧩', label: 'Ma trận đề' },
+    { path: '/teacher/assignments', icon: '✍️', label: 'Bài tập' },
+    { path: '/teacher/assessments', icon: '📝', label: 'Kiểm tra' },
+    { path: '/teacher/students', icon: '👥', label: 'Học sinh' },
+    { path: '/teacher/analytics', icon: '📈', label: 'Phân tích' },
+    { path: '/teacher/ai-assistant', icon: '🤖', label: 'AI Trợ lý' },
+    { path: '/teacher/resources', icon: '🗂️', label: 'Tài nguyên' },
+>>>>>>> Stashed changes
   ];
 
   const studentMenuItems: MenuItem[] = [
@@ -103,6 +119,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
       </div>
 
       <nav className="sidebar-nav">
+<<<<<<< Updated upstream
         {menuItems.map((item) => (
           <Link
             key={item.path}
@@ -115,6 +132,23 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
             <span className="sidebar-label">{item.label}</span>
           </Link>
         ))}
+=======
+        {menuItems.map((item) => {
+          const isActive =
+            location.pathname === item.path ||
+            (item.path !== '/teacher/dashboard' && location.pathname.startsWith(`${item.path}/`));
+          return (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`sidebar-item ${isActive ? 'active' : ''}`}
+            >
+              <span className="sidebar-icon">{item.icon}</span>
+              <span className="sidebar-label">{item.label}</span>
+            </Link>
+          );
+        })}
+>>>>>>> Stashed changes
       </nav>
 
       <div className="sidebar-footer">
