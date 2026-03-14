@@ -260,6 +260,12 @@ const router = createBrowserRouter([
   },
 ]);
 
+import { GoogleOAuthProvider } from '@react-oauth/google';
+
 export default function AppRouter() {
-  return <RouterProvider router={router} />;
+  return (
+    <GoogleOAuthProvider clientId="299660266172-38kfomfcv0pcvrhrg0pas04rhfskqn8u.apps.googleusercontent.com">
+      <RouterProvider router={router} />
+    </GoogleOAuthProvider>
+  );
 }

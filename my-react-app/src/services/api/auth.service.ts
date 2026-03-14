@@ -51,6 +51,27 @@ export class AuthService {
   }
 
   /**
+   * Login with Google
+   */
+  static async googleLogin(token: string): Promise<ApiResponse<LoginResponse>> {
+    const response = await fetch(`${API_BASE_URL}/auth/google`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        accept: '*/*',
+      },
+      body: JSON.stringify({ token }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Google Login failed');
+    }
+
+    return response.json();
+  }
+
+  /**
    * Save token to localStorage
    */
   static saveToken(token: string, expiryTime: string): void {
