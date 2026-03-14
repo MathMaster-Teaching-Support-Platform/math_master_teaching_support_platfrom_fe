@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Auth.css';
 import { AuthService } from '../../services/api/auth.service';
@@ -24,19 +24,72 @@ const Register: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
+  // Goong API states
+  const [schoolSuggestions, setSchoolSuggestions] = useState<any[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isSearchingSchool, setIsSearchingSchool] = useState(false);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autocompleteRef = useRef<HTMLDivElement>(null);
+
+  // Close suggestions on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (autocompleteRef.current && !autocompleteRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
 
-    setFormData({
-      ...formData,
+    setFormData(prev => ({
+      ...prev,
       [name]: type === 'checkbox' ? checked : value,
-    });
+    }));
 
     // Clear error when user starts typing
     if (errors[name]) {
-      setErrors({ ...errors, [name]: '' });
+      setErrors(prev => ({ ...prev, [name]: '' }));
     }
+
+    // Goong API autocomplete for school
+    if (name === 'school') {
+      if (!value.trim()) {
+        setSchoolSuggestions([]);
+        setShowSuggestions(false);
+        return;
+      }
+
+      setIsSearchingSchool(true);
+      setShowSuggestions(true);
+
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = setTimeout(async () => {
+        try {
+          const res = await fetch(`https://rsapi.goong.io/Place/AutoComplete?api_key=Pqo1poLXDFAq43GqCePcCWJjPvTl4cB6y4jG0Ofr&input=${encodeURIComponent(value)}`);
+          const data = await res.json();
+          if (data.status === 'OK') {
+            setSchoolSuggestions(data.predictions || []);
+          } else {
+            setSchoolSuggestions([]);
+          }
+        } catch (error) {
+          console.error('Error fetching schools:', error);
+          setSchoolSuggestions([]);
+        } finally {
+          setIsSearchingSchool(false);
+        }
+      }, 500);
+    }
+  };
+
+  const handleSelectSchool = (schoolName: string) => {
+    setFormData(prev => ({ ...prev, school: schoolName }));
+    setShowSuggestions(false);
   };
 
   const validateForm = () => {
@@ -294,7 +347,7 @@ const Register: React.FC = () => {
 
             {formData.role === 'teacher' && (
               <>
-                <div className="form-group">
+                <div className="form-group autocomplete-wrapper" ref={autocompleteRef}>
                   <label htmlFor="school" className="form-label">
                     Trường
                   </label>
@@ -303,11 +356,41 @@ const Register: React.FC = () => {
                     id="school"
                     name="school"
                     className="form-control"
-                    placeholder="Tên trường"
+                    placeholder="Nhập tên trường (Ví dụ: THPT Lê Quý Đôn)"
                     value={formData.school}
                     onChange={handleChange}
+                    onFocus={() => {
+                      if (formData.school.trim() && schoolSuggestions.length > 0) setShowSuggestions(true);
+                    }}
                     disabled={isLoading}
+                    autoComplete="off"
                   />
+                  {showSuggestions && formData.school.trim() && (
+                    <div className="autocomplete-dropdown">
+                      {isSearchingSchool ? (
+                        <div className="autocomplete-loading">Đang tìm kiếm...</div>
+                      ) : schoolSuggestions.length > 0 ? (
+                        schoolSuggestions.map((suggestion) => (
+                          <div
+                            key={suggestion.place_id}
+                            className="autocomplete-item"
+                            onClick={() => handleSelectSchool(suggestion.description)}
+                          >
+                            <span className="autocomplete-item-main">
+                              {suggestion.structured_formatting?.main_text || suggestion.description}
+                            </span>
+                            {suggestion.structured_formatting?.secondary_text && (
+                              <span className="autocomplete-item-sub">
+                                {suggestion.structured_formatting.secondary_text}
+                              </span>
+                            )}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="autocomplete-loading">Không tìm thấy kết quả</div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div className="form-group">

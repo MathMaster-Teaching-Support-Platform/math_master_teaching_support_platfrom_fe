@@ -1,8 +1,5 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-<<<<<<< Updated upstream
-import { BookOpen, Copy, Lock, Pencil, Plus, RefreshCw, Search, Send, Trash2 } from 'lucide-react';
-=======
 import {
   BookOpen,
   Copy,
@@ -15,7 +12,6 @@ import {
   Send,
   Trash2,
 } from 'lucide-react';
->>>>>>> Stashed changes
 import {
   useCloneAssessment,
   useCloseAssessment,
@@ -258,7 +254,6 @@ export default function TeacherAssessments() {
   }
 
   return (
-<<<<<<< Updated upstream
     <DashboardLayout
       role="teacher"
       user={{ name: 'Teacher', avatar: '', role: 'teacher' }}
@@ -271,35 +266,26 @@ export default function TeacherAssessments() {
               <h2>Bài kiểm tra</h2>
               <p>Tạo, xuất bản và quản lý vòng đời bài kiểm tra cho học sinh.</p>
             </div>
-=======
-    <DashboardLayout role="teacher" user={{ name: 'Teacher', avatar: '', role: 'teacher' }} notificationCount={0}>
-      <section className="module-page">
-        <header className="page-header">
-          <div>
-            <h2>Bài kiểm tra</h2>
-            <p>Tạo, xuất bản và quản lý vòng đời bài kiểm tra cho học sinh.</p>
-          </div>
-          <div className="row" style={{ flexWrap: 'wrap' }}>
-            <button
-              className="btn secondary"
-              onClick={() => setGenerateModalOpen(true)}
-            >
-              <Sparkles size={14} />
-              Tạo nhanh từ ma trận
-            </button>
->>>>>>> Stashed changes
-            <button
-              className="btn"
-              onClick={() => {
-                setMode('create');
-                setSelected(null);
-                setOpenForm(true);
-              }}
-            >
-              <Plus size={14} />
-              Tạo bài kiểm tra
-            </button>
-<<<<<<< Updated upstream
+            <div className="row" style={{ flexWrap: 'wrap' }}>
+              <button
+                className="btn secondary"
+                onClick={() => setGenerateModalOpen(true)}
+              >
+                <Sparkles size={14} />
+                Tạo nhanh từ ma trận
+              </button>
+              <button
+                className="btn"
+                onClick={() => {
+                  setMode('create');
+                  setSelected(null);
+                  setOpenForm(true);
+                }}
+              >
+                <Plus size={14} />
+                Tạo bài kiểm tra
+              </button>
+            </div>
           </header>
 
           <div className="toolbar">
@@ -333,32 +319,6 @@ export default function TeacherAssessments() {
               <RefreshCw size={14} />
               Làm mới
             </button>
-=======
-          </div>
-        </header>
-
-        <div className="toolbar">
-          <label className="row" style={{ minWidth: 260 }}>
-            <Search size={15} />
-            <input
-              className="input"
-              style={{ border: 0, padding: 0, width: '100%' }}
-              placeholder="Tìm bài kiểm tra"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-          </label>
-
-          <div className="pill-group">
-            {statusFilters.map((item) => (
-              <button key={item} className={`pill-btn ${statusFilter === item ? 'active' : ''}`} onClick={() => {
-                setStatusFilter(item);
-                setPage(0);
-              }}>
-                {statusLabel[item]}
-              </button>
-            ))}
->>>>>>> Stashed changes
           </div>
 
           {isLoading && <div className="empty">Đang tải danh sách bài kiểm tra...</div>}
@@ -495,8 +455,6 @@ export default function TeacherAssessments() {
             onClose={() => setOpenForm(false)}
             onSubmit={saveAssessment}
           />
-<<<<<<< Updated upstream
-
           {cloneTarget && (
             <CloneModal
               assessment={cloneTarget}
@@ -507,32 +465,28 @@ export default function TeacherAssessments() {
               }}
             />
           )}
-        </section>{' '}
-      </div>{' '}
-=======
-        )}
 
-        {generateModalOpen && (
-          <GenerateFromMatrixModal
-            matrixId={selectedMatrixId}
-            setMatrixId={setSelectedMatrixId}
-            matrices={myMatrices.map((matrix) => ({
-              id: matrix.id,
-              name: matrix.name,
-              status: matrix.status,
-            }))}
-            isLoading={generateFromMatrixMutation.isPending}
-            onClose={() => {
-              setGenerateModalOpen(false);
-              setSelectedMatrixId('');
-            }}
-            onConfirm={() => {
-              void generateFromMatrix();
-            }}
-          />
-        )}
-      </section>
->>>>>>> Stashed changes
+          {generateModalOpen && (
+            <GenerateFromMatrixModal
+              matrixId={selectedMatrixId}
+              setMatrixId={setSelectedMatrixId}
+              matrices={myMatrices.map((matrix) => ({
+                id: matrix.id,
+                name: matrix.name,
+                status: matrix.status,
+              }))}
+              isLoading={generateFromMatrixMutation.isPending}
+              onClose={() => {
+                setGenerateModalOpen(false);
+                setSelectedMatrixId('');
+              }}
+              onConfirm={() => {
+                void generateFromMatrix();
+              }}
+            />
+          )}
+        </section>
+      </div>
     </DashboardLayout>
   );
 }
