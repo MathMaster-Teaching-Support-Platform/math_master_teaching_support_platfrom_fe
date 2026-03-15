@@ -5,6 +5,7 @@ import type {
   ApiResponse,
   User,
   LoginResponse,
+  RoleSelectionRequest,
 } from '../../types/auth.types';
 
 export class AuthService {
@@ -66,6 +67,31 @@ export class AuthService {
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.message || 'Google Login failed');
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Select user role
+   */
+  static async selectRole(data: RoleSelectionRequest): Promise<ApiResponse<LoginResponse>> {
+    const token = this.getToken();
+    if (!token) throw new Error('Authentication required');
+
+    const response = await fetch(`${API_BASE_URL}/auth/select-role`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        accept: '*/*',
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Role selection failed');
     }
 
     return response.json();
@@ -164,6 +190,8 @@ export class AuthService {
         return '/admin/dashboard';
       case 'teacher':
         return '/teacher/dashboard';
+      case 'guest':
+        return '/select-role';
       case 'user':
       case 'student':
         return '/student/dashboard';

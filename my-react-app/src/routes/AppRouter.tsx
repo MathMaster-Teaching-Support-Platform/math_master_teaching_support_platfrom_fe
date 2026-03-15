@@ -5,6 +5,9 @@ import About from '../pages/About';
 import Pricing from '../pages/Pricing';
 import Contact from '../pages/Contact';
 import { Login, Register } from '../pages/auth';
+import SelectRole from '../pages/auth/SelectRole';
+import TeacherVerification from '../pages/auth/TeacherVerification';
+import StudentOnboarding from '../pages/auth/StudentOnboarding';
 import TeacherDashboard from '../pages/dashboard/teacher/TeacherDashboard';
 import StudentDashboard from '../pages/dashboard/student/StudentDashboard';
 import AdminDashboard from '../pages/dashboard/admin/AdminDashboard';
@@ -35,7 +38,7 @@ import LiveChat from '../pages/chat/LiveChat';
 import Profile from '../pages/profile/Profile';
 // Admin Teacher Profile Routes
 import ReviewProfiles from '../pages/admin/ReviewProfiles';
-import SchoolManagement from '../pages/admin/SchoolManagement';
+// import SchoolManagement from '../pages/admin/SchoolManagement';
 import TeacherAssessments from '../pages/assessments/TeacherAssessments';
 import AssessmentDetail from '../pages/assessments/AssessmentDetail';
 import { TeacherMindmaps, MindmapEditor } from '../pages/mindmaps';
@@ -73,6 +76,18 @@ const router = createBrowserRouter([
   {
     path: '/register',
     element: <Register />,
+  },
+  {
+    path: '/select-role',
+    element: <SelectRole />,
+  },
+  {
+    path: '/onboarding/teacher',
+    element: <TeacherVerification />,
+  },
+  {
+    path: '/onboarding/student',
+    element: <StudentOnboarding />,
   },
   {
     path: '/course/:id',
@@ -236,10 +251,10 @@ const router = createBrowserRouter([
     path: '/admin/review-profiles',
     element: <ReviewProfiles />,
   },
-  {
+  /* {
     path: '/admin/schools',
     element: <SchoolManagement />,
-  },
+  }, */
   { path: '/admin/settings', element: <ProfileSettings /> },
   {
     path: '/admin/*',

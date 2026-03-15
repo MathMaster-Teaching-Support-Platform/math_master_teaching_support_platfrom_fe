@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { SchoolService } from '../../services/api/school.service';
 import { TeacherProfileService } from '../../services/api/teacher-profile.service';
-import type { School, TeacherProfile, UpdateTeacherProfileRequest } from '../../types';
+import type { TeacherProfile, UpdateTeacherProfileRequest } from '../../types';
 import './TeacherProfile.css';
 
 interface MyTeacherProfileProps {
@@ -12,7 +11,6 @@ interface MyTeacherProfileProps {
 const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<TeacherProfile | null>(null);
-  const [schools, setSchools] = useState<School[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -20,10 +18,12 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
   const [success, setSuccess] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<UpdateTeacherProfileRequest>({
-    schoolId: 0,
+    schoolName: '',
+    schoolAddress: '',
+    schoolWebsite: '',
     position: '',
-    certificateUrl: '',
-    identificationDocumentUrl: '',
+    documentUrl: '',
+    documentType: '',
     description: '',
   });
 
@@ -33,21 +33,18 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
 
   const loadProfile = async () => {
     try {
-      const [profileRes, schoolsRes] = await Promise.all([
-        TeacherProfileService.getMyProfile(),
-        SchoolService.getAllSchools(),
-      ]);
-
-      setProfile(profileRes.result);
-      setSchools(schoolsRes.result);
+      const response = await TeacherProfileService.getMyProfile();
+      setProfile(response.result);
 
       // Set form data
       setFormData({
-        schoolId: profileRes.result.schoolId,
-        position: profileRes.result.position,
-        certificateUrl: profileRes.result.certificateUrl || '',
-        identificationDocumentUrl: profileRes.result.identificationDocumentUrl || '',
-        description: profileRes.result.description || '',
+        schoolName: response.result.schoolName,
+        schoolAddress: response.result.schoolAddress || '',
+        schoolWebsite: response.result.schoolWebsite || '',
+        position: response.result.position,
+        documentUrl: response.result.documentUrl,
+        documentType: response.result.documentType,
+        description: response.result.description || '',
       });
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load profile';
@@ -63,7 +60,7 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === 'schoolId' ? parseInt(value) : value,
+      [name]: value,
     }));
   };
 
@@ -74,8 +71,8 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
     setSubmitting(true);
 
     try {
-      if (!formData.schoolId || formData.schoolId === 0) {
-        throw new Error('Please select a school');
+      if (!formData.schoolName.trim()) {
+        throw new Error('Please enter your school name');
       }
       if (!formData.position.trim()) {
         throw new Error('Please enter your position');
@@ -198,36 +195,41 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
               <span className="info-label">School:</span>
               <span className="info-value">{profile.schoolName}</span>
             </div>
+            {profile.schoolAddress && (
+              <div className="info-row">
+                <span className="info-label">Address:</span>
+                <span className="info-value">{profile.schoolAddress}</span>
+              </div>
+            )}
+            {profile.schoolWebsite && (
+              <div className="info-row">
+                <span className="info-label">Website:</span>
+                <span className="info-value">
+                  <a href={profile.schoolWebsite} target="_blank" rel="noopener noreferrer">
+                    {profile.schoolWebsite}
+                  </a>
+                </span>
+              </div>
+            )}
             <div className="info-row">
               <span className="info-label">Position:</span>
               <span className="info-value">{profile.position}</span>
             </div>
-            {profile.certificateUrl && (
-              <div className="info-row">
-                <span className="info-label">Certificate:</span>
-                <a
-                  href={profile.certificateUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="file-link"
-                >
-                  View Certificate
-                </a>
-              </div>
-            )}
-            {profile.identificationDocumentUrl && (
-              <div className="info-row">
-                <span className="info-label">ID Document:</span>
-                <a
-                  href={profile.identificationDocumentUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="file-link"
-                >
-                  View Document
-                </a>
-              </div>
-            )}
+            <div className="info-row">
+              <span className="info-label">Verification Document:</span>
+              <span className="info-value">{profile.documentType}</span>
+            </div>
+            <div className="info-row">
+              <span className="info-label">Document File:</span>
+              <a
+                href={profile.documentUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="file-link"
+              >
+                View Document
+              </a>
+            </div>
             {profile.description && (
               <div className="info-row">
                 <span className="info-label">Description:</span>
@@ -300,24 +302,42 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
 
         <form className="profile-form" onSubmit={handleUpdate}>
           <div className="form-group">
-            <label htmlFor="schoolId">
-              School <span className="required">*</span>
+            <label htmlFor="schoolName">
+              School Name <span className="required">*</span>
             </label>
-            <select
-              id="schoolId"
-              name="schoolId"
-              value={formData.schoolId}
+            <input
+              type="text"
+              id="schoolName"
+              name="schoolName"
+              value={formData.schoolName}
               onChange={handleInputChange}
               required
               disabled={submitting}
-            >
-              <option value="0">Select a school</option>
-              {schools.map((school) => (
-                <option key={school.id} value={school.id}>
-                  {school.name} - {school.city}
-                </option>
-              ))}
-            </select>
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="schoolAddress">School Address</label>
+            <input
+              type="text"
+              id="schoolAddress"
+              name="schoolAddress"
+              value={formData.schoolAddress}
+              onChange={handleInputChange}
+              disabled={submitting}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="schoolWebsite">School Website</label>
+            <input
+              type="url"
+              id="schoolWebsite"
+              name="schoolWebsite"
+              value={formData.schoolWebsite}
+              onChange={handleInputChange}
+              disabled={submitting}
+            />
           </div>
 
           <div className="form-group">
@@ -338,29 +358,35 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="certificateUrl">Teaching Certificate URL</label>
-            <input
-              type="url"
-              id="certificateUrl"
-              name="certificateUrl"
-              value={formData.certificateUrl}
+            <label htmlFor="documentType">
+              Document Type <span className="required">*</span>
+            </label>
+            <select
+              id="documentType"
+              name="documentType"
+              value={formData.documentType}
               onChange={handleInputChange}
-              placeholder="https://storage.example.com/certificates/cert.pdf"
+              required
               disabled={submitting}
-            />
+            >
+              <option value="Payslip">Payslip</option>
+              <option value="Contract">Teaching Contract</option>
+              <option value="Other">Other</option>
+            </select>
           </div>
 
           <div className="form-group">
-            <label htmlFor="identificationDocumentUrl">Identification Document URL</label>
+            <label htmlFor="documentUrl">Document URL</label>
             <input
-              type="url"
-              id="identificationDocumentUrl"
-              name="identificationDocumentUrl"
-              value={formData.identificationDocumentUrl}
+              type="text"
+              id="documentUrl"
+              name="documentUrl"
+              value={formData.documentUrl}
               onChange={handleInputChange}
-              placeholder="https://storage.example.com/id/id-card.jpg"
-              disabled={submitting}
+              readOnly
+              disabled
             />
+            <small>Document files cannot be changed here. Please contact admin if you need to update your verification file.</small>
           </div>
 
           <div className="form-group">

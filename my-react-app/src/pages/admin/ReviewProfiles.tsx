@@ -237,6 +237,19 @@ const ReviewProfiles: React.FC = () => {
                   <p>
                     <strong>School:</strong> {selectedProfile.schoolName}
                   </p>
+                  {selectedProfile.schoolAddress && (
+                    <p>
+                      <strong>Address:</strong> {selectedProfile.schoolAddress}
+                    </p>
+                  )}
+                  {selectedProfile.schoolWebsite && (
+                    <p>
+                      <strong>Website:</strong>{' '}
+                      <a href={selectedProfile.schoolWebsite} target="_blank" rel="noopener noreferrer">
+                        {selectedProfile.schoolWebsite}
+                      </a>
+                    </p>
+                  )}
                   <p>
                     <strong>Position:</strong> {selectedProfile.position}
                   </p>
@@ -249,37 +262,23 @@ const ReviewProfiles: React.FC = () => {
                   </div>
                 )}
 
-                {(selectedProfile.certificateUrl || selectedProfile.identificationDocumentUrl) && (
-                  <div className="detail-section">
-                    <h3>Documents</h3>
-                    {selectedProfile.certificateUrl && (
-                      <p>
-                        <strong>Certificate:</strong>{' '}
-                        <a
-                          href={selectedProfile.certificateUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="file-link"
-                        >
-                          View Certificate
-                        </a>
-                      </p>
-                    )}
-                    {selectedProfile.identificationDocumentUrl && (
-                      <p>
-                        <strong>ID Document:</strong>{' '}
-                        <a
-                          href={selectedProfile.identificationDocumentUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="file-link"
-                        >
-                          View Document
-                        </a>
-                      </p>
-                    )}
-                  </div>
-                )}
+                <div className="detail-section">
+                  <h3>Verification Document</h3>
+                  <p>
+                    <strong>Type:</strong> {selectedProfile.documentType}
+                  </p>
+                  <p>
+                    <strong>File:</strong>{' '}
+                    <a
+                      href={selectedProfile.documentUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="file-link"
+                    >
+                      View Document
+                    </a>
+                  </p>
+                </div>
 
                 <div className="detail-section">
                   <h3>Status & Timeline</h3>

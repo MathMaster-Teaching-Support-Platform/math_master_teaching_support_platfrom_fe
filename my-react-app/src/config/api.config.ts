@@ -9,10 +9,6 @@ export const API_ENDPOINTS = {
   REGISTER: '/auth/register',
   LOGIN: '/auth/login',
 
-  // Schools
-  SCHOOLS: '/schools',
-  SCHOOLS_ALL: '/schools/all',
-  SCHOOLS_SEARCH: '/schools/search',
 
   // Teacher Profiles
   TEACHER_PROFILES: '/teacher-profiles',
@@ -20,7 +16,7 @@ export const API_ENDPOINTS = {
   TEACHER_PROFILES_MY_PROFILE: '/teacher-profiles/my-profile',
   TEACHER_PROFILES_STATUS: '/teacher-profiles/status',
   TEACHER_PROFILES_PENDING_COUNT: '/teacher-profiles/pending/count',
-  TEACHER_PROFILES_REVIEW: (profileId: number) => `/teacher-profiles/${profileId}/review`,
+  TEACHER_PROFILES_REVIEW: (profileId: string) => `/teacher-profiles/${profileId}/review`,
 
   // Assessments
   ASSESSMENTS: '/assessments',

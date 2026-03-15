@@ -14,6 +14,12 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface RoleSelectionRequest {
+  role: string;
+  userName?: string;
+  fullName?: string;
+}
+
 // Response types
 export interface User {
   id: number;
