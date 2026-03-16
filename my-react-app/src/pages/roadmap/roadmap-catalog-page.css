@@ -1,0 +1,40 @@
+.roadmap-catalog-page {
+  display: grid;
+  gap: 1rem;
+}
+
+.roadmap-catalog-page__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.roadmap-catalog-page__header h1 {
+  margin: 0;
+}
+
+.roadmap-catalog-page__header p {
+  margin: 0.45rem 0 0;
+  color: #475569;
+}
+
+.roadmap-catalog-page__dashboard-link {
+  text-decoration: none;
+  border-radius: 8px;
+  background: #0369a1;
+  color: #ffffff;
+  padding: 0.55rem 0.85rem;
+  font-weight: 700;
+}
+
+.roadmap-catalog-page__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.roadmap-catalog-page__state {
+  margin: 0;
+  color: #64748b;
+}

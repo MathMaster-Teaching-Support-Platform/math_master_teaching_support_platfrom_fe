@@ -1,0 +1,34 @@
+.roadmap-progress-bar {
+  width: 100%;
+}
+
+.roadmap-progress-bar__meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  color: #1f2937;
+  font-size: 0.9rem;
+}
+
+.roadmap-progress-bar__track {
+  height: 10px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  overflow: hidden;
+}
+
+.roadmap-progress-bar__fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #0284c7, #0ea5e9);
+  transition: width 0.25s ease;
+}
+
+.roadmap-progress-bar__native {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}

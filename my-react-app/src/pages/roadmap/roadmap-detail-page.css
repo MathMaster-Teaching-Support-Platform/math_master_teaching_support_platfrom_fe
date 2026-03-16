@@ -1,0 +1,30 @@
+.roadmap-detail-page {
+  display: grid;
+  gap: 1rem;
+}
+
+.roadmap-detail-page__header {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 1rem;
+}
+
+.roadmap-detail-page__header h1 {
+  margin: 0;
+}
+
+.roadmap-detail-page__header p {
+  margin: 0.55rem 0 0;
+  color: #475569;
+}
+
+.roadmap-detail-page__modules {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.roadmap-detail-page__state {
+  margin: 0;
+  color: #64748b;
+}

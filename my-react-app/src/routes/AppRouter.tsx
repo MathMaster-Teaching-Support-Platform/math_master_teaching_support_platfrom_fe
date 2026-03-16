@@ -23,6 +23,9 @@ import TeacherAnalytics from '../pages/analytics/TeacherAnalytics';
 import UserManagement from '../pages/admin/UserManagement';
 import SubscriptionManagement from '../pages/admin/SubscriptionManagement';
 import StudentRoadmap from '../pages/roadmap/StudentRoadmap';
+import RoadmapCatalogPage from '../pages/roadmap/RoadmapCatalogPage';
+import RoadmapDetailPage from '../pages/roadmap/RoadmapDetailPage';
+import RoadmapDashboardPage from '../pages/roadmap/RoadmapDashboardPage';
 import StudentWallet from '../pages/wallet/StudentWallet';
 import NotificationCenter from '../pages/notifications/NotificationCenter';
 import SearchResults from '../pages/search/SearchResults';
@@ -38,7 +41,6 @@ import LiveChat from '../pages/chat/LiveChat';
 import Profile from '../pages/profile/Profile';
 // Admin Teacher Profile Routes
 import ReviewProfiles from '../pages/admin/ReviewProfiles';
-// import SchoolManagement from '../pages/admin/SchoolManagement';
 import TeacherAssessments from '../pages/assessments/TeacherAssessments';
 import AssessmentDetail from '../pages/assessments/AssessmentDetail';
 import { TeacherMindmaps, MindmapEditor } from '../pages/mindmaps';
@@ -47,6 +49,9 @@ import { ExamMatrixDashboard } from '../pages/exam-matrices/ExamMatrixDashboard'
 import ExamMatrixDetailPage from '../pages/exam-matrices/ExamMatrixDetailPage';
 import { QuestionBankDashboard } from '../pages/question-banks/QuestionBankDashboard';
 import { QuestionBankDetailPage } from '../pages/question-banks/QuestionBankDetailPage';
+import AdminRoadmapManagementPage from '../pages/admin/AdminRoadmapManagementPage';
+import AdminRoadmapCreatePage from '../pages/admin/AdminRoadmapCreatePage';
+import AdminRoadmapEditPage from '../pages/admin/AdminRoadmapEditPage';
 
 const router = createBrowserRouter([
   {
@@ -92,6 +97,18 @@ const router = createBrowserRouter([
   {
     path: '/course/:id',
     element: <CoursePreview />,
+  },
+  {
+    path: '/dashboard',
+    element: <RoadmapDashboardPage />,
+  },
+  {
+    path: '/roadmaps',
+    element: <RoadmapCatalogPage />,
+  },
+  {
+    path: '/roadmaps/:roadmapId',
+    element: <RoadmapDetailPage />,
   },
   // Shared Routes
   {
@@ -251,10 +268,18 @@ const router = createBrowserRouter([
     path: '/admin/review-profiles',
     element: <ReviewProfiles />,
   },
-  /* {
-    path: '/admin/schools',
-    element: <SchoolManagement />,
-  }, */
+  {
+    path: '/admin/roadmaps',
+    element: <AdminRoadmapManagementPage />,
+  },
+  {
+    path: '/admin/roadmaps/create',
+    element: <AdminRoadmapCreatePage />,
+  },
+  {
+    path: '/admin/roadmaps/edit/:roadmapId',
+    element: <AdminRoadmapEditPage />,
+  },
   { path: '/admin/settings', element: <ProfileSettings /> },
   {
     path: '/admin/*',

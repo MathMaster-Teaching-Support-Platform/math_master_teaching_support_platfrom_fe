@@ -1,0 +1,74 @@
+.roadmap-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 1rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.roadmap-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.roadmap-card__level {
+  margin: 0;
+  color: #0f766e;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.roadmap-card__status {
+  border-radius: 999px;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.roadmap-card__status--published {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.roadmap-card__status--draft {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.roadmap-card__status--archived {
+  background: #e5e7eb;
+  color: #4b5563;
+}
+
+.roadmap-card__title {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #111827;
+}
+
+.roadmap-card__description {
+  margin: 0;
+  color: #4b5563;
+  line-height: 1.5;
+}
+
+.roadmap-card__stats {
+  display: flex;
+  gap: 0.75rem;
+  color: #6b7280;
+  font-size: 0.82rem;
+}
+
+.roadmap-card__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.roadmap-card__cta {
+  text-decoration: none;
+  color: #0369a1;
+  font-weight: 700;
+}

@@ -1,0 +1,33 @@
+.roadmap-dashboard-page {
+  display: grid;
+  gap: 1rem;
+}
+
+.roadmap-dashboard-page__header h1 {
+  margin: 0;
+}
+
+.roadmap-dashboard-page__header p {
+  margin: 0.5rem 0 0;
+  color: #475569;
+}
+
+.roadmap-dashboard-page__actions {
+  display: flex;
+  gap: 0.65rem;
+}
+
+.roadmap-dashboard-page__link {
+  text-decoration: none;
+  border-radius: 8px;
+  border: 1px solid #bae6fd;
+  color: #075985;
+  background: #f0f9ff;
+  padding: 0.5rem 0.8rem;
+  font-weight: 700;
+}
+
+.roadmap-dashboard-page__state {
+  margin: 0;
+  color: #64748b;
+}

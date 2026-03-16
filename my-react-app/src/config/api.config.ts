@@ -82,6 +82,15 @@ export const API_ENDPOINTS = {
   LESSONS: '/lessons',
   LESSON_DETAIL: (lessonId: string) => `/lessons/${lessonId}`,
 
+  // Roadmaps
+  ROADMAPS: '/roadmaps',
+  ROADMAP_DETAIL: (roadmapId: string) => `/roadmaps/${roadmapId}`,
+  ROADMAP_STUDENT: '/roadmaps/student',
+  ROADMAP_STUDENT_DETAIL: (roadmapId: string) => `/roadmaps/${roadmapId}/student-progress`,
+  ROADMAP_PROGRESS: (roadmapId: string) => `/roadmaps/${roadmapId}/progress`,
+  ADMIN_ROADMAPS: '/admin/roadmaps',
+  ADMIN_ROADMAP_DETAIL: (roadmapId: string) => `/admin/roadmaps/${roadmapId}`,
+
   // Wallet
   WALLET_MY: '/wallet/my-wallet',
   WALLET_TRANSACTIONS: '/wallet/transactions',
