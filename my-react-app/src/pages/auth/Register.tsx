@@ -150,6 +150,7 @@ const Register: React.FC = () => {
           phoneNumber: formData.phoneNumber,
           gender: formData.gender,
           dob: formData.dob,
+          role: formData.role,
         };
 
         const response = await AuthService.register(registerData);

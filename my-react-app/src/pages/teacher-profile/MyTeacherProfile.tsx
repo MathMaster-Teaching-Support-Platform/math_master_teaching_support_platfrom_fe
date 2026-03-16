@@ -22,8 +22,6 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
     schoolAddress: '',
     schoolWebsite: '',
     position: '',
-    documentUrl: '',
-    documentType: '',
     description: '',
   });
 
@@ -42,8 +40,6 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
         schoolAddress: response.result.schoolAddress || '',
         schoolWebsite: response.result.schoolWebsite || '',
         position: response.result.position,
-        documentUrl: response.result.documentUrl,
-        documentType: response.result.documentType,
         description: response.result.description || '',
       });
     } catch (err: unknown) {
@@ -215,21 +211,15 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
               <span className="info-label">Position:</span>
               <span className="info-value">{profile.position}</span>
             </div>
-            <div className="info-row">
-              <span className="info-label">Verification Document:</span>
-              <span className="info-value">{profile.documentType}</span>
-            </div>
-            <div className="info-row">
-              <span className="info-label">Document File:</span>
-              <a
-                href={profile.documentUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="file-link"
-              >
-                View Document
-              </a>
-            </div>
+            {profile.verificationDocumentKey && (
+              <div className="info-row">
+                <span className="info-label">Verification Files:</span>
+                <span className="info-value" style={{ fontStyle: 'italic', color: '#64748b' }}>
+                  Zipped package uploaded
+                  {/* Link should point to Minio endpoint if needed, for now just show key or generic message */}
+                </span>
+              </div>
+            )}
             {profile.description && (
               <div className="info-row">
                 <span className="info-label">Description:</span>
@@ -358,35 +348,16 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="documentType">
-              Document Type <span className="required">*</span>
-            </label>
-            <select
-              id="documentType"
-              name="documentType"
-              value={formData.documentType}
-              onChange={handleInputChange}
-              required
-              disabled={submitting}
-            >
-              <option value="Payslip">Payslip</option>
-              <option value="Contract">Teaching Contract</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="documentUrl">Document URL</label>
+            <label htmlFor="verificationDocumentKey">Verification Document Key</label>
             <input
               type="text"
-              id="documentUrl"
-              name="documentUrl"
-              value={formData.documentUrl}
-              onChange={handleInputChange}
+              id="verificationDocumentKey"
+              name="verificationDocumentKey"
+              value={profile.verificationDocumentKey || ''}
               readOnly
               disabled
             />
-            <small>Document files cannot be changed here. Please contact admin if you need to update your verification file.</small>
+            <small>Verification files cannot be changed here. Please contact admin if you need to update your verification files.</small>
           </div>
 
           <div className="form-group">

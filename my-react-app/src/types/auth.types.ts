@@ -7,6 +7,7 @@ export interface RegisterRequest {
   phoneNumber: string;
   gender: 'MALE' | 'FEMALE' | 'OTHER';
   dob: string; // YYYY-MM-DD format
+  role: string;
 }
 
 export interface LoginRequest {
@@ -44,6 +45,7 @@ export interface User {
 export interface LoginResponse {
   token: string;
   expiryTime: string;
+  newRegistration: boolean;
 }
 
 export interface ApiResponse<T> {

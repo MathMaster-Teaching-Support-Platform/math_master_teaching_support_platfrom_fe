@@ -20,12 +20,11 @@ const SubmitTeacherProfile: React.FC<SubmitTeacherProfileProps> = ({ onSuccess }
     schoolAddress: '',
     schoolWebsite: '',
     position: '',
-    documentType: 'Payslip',
     description: '',
   });
 
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [fileName, setFileName] = useState('');
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [fileNames, setFileNames] = useState<string[]>([]);
 
   useEffect(() => {
     checkExistingProfile();
@@ -55,11 +54,12 @@ const SubmitTeacherProfile: React.FC<SubmitTeacherProfileProps> = ({ onSuccess }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (file) {
-          setSelectedFile(file);
-          setFileName(file.name);
-      }
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const fileList = Array.from(files);
+      setSelectedFiles(fileList);
+      setFileNames(fileList.map(f => f.name));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -75,11 +75,11 @@ const SubmitTeacherProfile: React.FC<SubmitTeacherProfileProps> = ({ onSuccess }
       if (!formData.position.trim()) {
         throw new Error('Please enter your position');
       }
-      if (!selectedFile) {
-        throw new Error('Please upload a verification document');
+      if (selectedFiles.length === 0) {
+        throw new Error('Please upload at least one verification document');
       }
 
-      await TeacherProfileService.submitProfile(formData, selectedFile);
+      await TeacherProfileService.submitProfile(formData, selectedFiles);
       setSuccess(true);
 
       // Redirect after 2 seconds or call callback
@@ -99,13 +99,13 @@ const SubmitTeacherProfile: React.FC<SubmitTeacherProfileProps> = ({ onSuccess }
     }
   };
 
-
   return (
     <div className="teacher-profile-page">
       <div className="profile-card">
         <div className="profile-header">
           <h1>Become a Teacher</h1>
           <p>Submit your profile for admin review to unlock teacher features</p>
+          <p className="subtitle">Please upload your Teaching Contract and Payslip for verification</p>
         </div>
 
         {error && <div className="alert alert-error">{error}</div>}
@@ -118,7 +118,7 @@ const SubmitTeacherProfile: React.FC<SubmitTeacherProfileProps> = ({ onSuccess }
         <form className="profile-form" onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="schoolName">
-                <Building size={16} /> School Name <span className="required">*</span>
+              <Building size={16} /> School Name <span className="required">*</span>
             </label>
             <input
               type="text"
@@ -133,37 +133,37 @@ const SubmitTeacherProfile: React.FC<SubmitTeacherProfileProps> = ({ onSuccess }
           </div>
 
           <div className="form-group" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div>
-                <label htmlFor="schoolAddress">
-                    <Globe size={16} /> School Address
-                </label>
-                <input
-                  type="text"
-                  id="schoolAddress"
-                  name="schoolAddress"
-                  value={formData.schoolAddress}
-                  onChange={handleInputChange}
-                  placeholder="e.g., Hòa Lạc, Hà Nội"
-                  disabled={submitting}
-                />
-              </div>
-              <div>
-                <label htmlFor="schoolWebsite"> School Website</label>
-                <input
-                  type="url"
-                  id="schoolWebsite"
-                  name="schoolWebsite"
-                  value={formData.schoolWebsite}
-                  onChange={handleInputChange}
-                  placeholder="e.g., https://fpt.edu.vn"
-                  disabled={submitting}
-                />
-              </div>
+            <div>
+              <label htmlFor="schoolAddress">
+                <Globe size={16} /> School Address
+              </label>
+              <input
+                type="text"
+                id="schoolAddress"
+                name="schoolAddress"
+                value={formData.schoolAddress}
+                onChange={handleInputChange}
+                placeholder="e.g., Hòa Lạc, Hà Nội"
+                disabled={submitting}
+              />
+            </div>
+            <div>
+              <label htmlFor="schoolWebsite"> School Website</label>
+              <input
+                type="url"
+                id="schoolWebsite"
+                name="schoolWebsite"
+                value={formData.schoolWebsite}
+                onChange={handleInputChange}
+                placeholder="e.g., https://fpt.edu.vn"
+                disabled={submitting}
+              />
+            </div>
           </div>
 
           <div className="form-group">
             <label htmlFor="position">
-                <Briefcase size={16} /> Position/Title <span className="required">*</span>
+              <Briefcase size={16} /> Position/Title <span className="required">*</span>
             </label>
             <input
               type="text"
@@ -179,56 +179,46 @@ const SubmitTeacherProfile: React.FC<SubmitTeacherProfileProps> = ({ onSuccess }
           </div>
 
           <div className="form-group">
-            <label>Verification Document <span className="required">*</span></label>
-            <div className="document-type-selector" style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                    <input 
-                        type="radio" 
-                        name="documentType" 
-                        value="Payslip" 
-                        checked={formData.documentType === 'Payslip'}
-                        onChange={handleInputChange}
-                    />
-                    Payslip
-                </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                    <input 
-                        type="radio" 
-                        name="documentType" 
-                        value="Contract" 
-                        checked={formData.documentType === 'Contract'}
-                        onChange={handleInputChange}
-                    />
-                    Teaching Contract
-                </label>
-            </div>
+            <label>Verification Documents (Zip) <span className="required">*</span></label>
+            <p className="form-help" style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '0.5rem' }}>
+              Select multiple files (Contract, Payslip, etc.) to be zipped and uploaded.
+            </p>
 
             <div 
-                className="file-upload-zone"
-                onClick={() => document.getElementById('file-upload')?.click()}
-                style={{
-                    border: '2px dashed #e2e8f0',
-                    borderRadius: '0.5rem',
-                    padding: '2rem',
-                    textAlign: 'center',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    backgroundColor: fileName ? '#f0fff4' : '#f8fafc'
-                }}
+              className="file-upload-zone"
+              onClick={() => document.getElementById('file-upload')?.click()}
+              style={{
+                border: '2px dashed #e2e8f0',
+                borderRadius: '0.5rem',
+                padding: '2rem',
+                textAlign: 'center',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                backgroundColor: fileNames.length > 0 ? '#f0fff4' : '#f8fafc'
+              }}
             >
-                <input 
-                    type="file" 
-                    id="file-upload" 
-                    style={{ display: 'none' }} 
-                    onChange={handleFileChange}
-                    accept=".pdf,.jpg,.jpeg,.png"
-                />
-                <Upload className="upload-icon" size={32} style={{ color: '#667eea', marginBottom: '0.5rem' }} />
-                {fileName ? (
-                    <p style={{ color: '#2f855a', fontWeight: 'bold' }}>{fileName}</p>
-                ) : (
-                    <p>Click or drag to upload your verification file (PDF, JPG, PNG)</p>
-                )}
+              <input 
+                type="file" 
+                id="file-upload" 
+                style={{ display: 'none' }} 
+                onChange={handleFileChange}
+                accept=".pdf,.jpg,.jpeg,.png"
+                multiple
+                disabled={submitting}
+              />
+              <Upload className="upload-icon" size={32} style={{ color: '#667eea', marginBottom: '0.5rem' }} />
+              {fileNames.length > 0 ? (
+                <div style={{ color: '#2f855a', fontWeight: 'bold' }}>
+                  {fileNames.map((name, index) => (
+                    <p key={index} style={{ margin: '0.2rem 0' }}>{name}</p>
+                  ))}
+                  <p style={{ fontSize: '0.8rem', marginTop: '0.5rem', color: '#4a5568' }}>
+                    {fileNames.length} file(s) selected
+                  </p>
+                </div>
+              ) : (
+                <p>Click or drag to upload your verification files (PDF, JPG, PNG)</p>
+              )}
             </div>
           </div>
 

@@ -67,7 +67,7 @@ export const API_ENDPOINTS = {
   QUESTION_BANK_CAN_DELETE: (id: string) => `/question-banks/${id}/can-delete`,
 
   // Questions
-  QUESTIONS_BY_BANK: (bankId: string) => `/api/questions/bank/${bankId}`,
+  QUESTIONS_BY_BANK: (bankId: string) => `/questions/bank/${bankId}`,
 
   // Mindmaps
   MINDMAPS: '/mindmaps',

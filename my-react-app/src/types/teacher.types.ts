@@ -9,8 +9,7 @@ export interface TeacherProfile {
   schoolAddress?: string;
   schoolWebsite?: string;
   position: string;
-  documentUrl: string;
-  documentType: string;
+  verificationDocumentKey?: string;
   description?: string;
   status: ProfileStatus;
   adminComment?: string;
@@ -27,7 +26,6 @@ export interface SubmitTeacherProfileRequest {
   schoolAddress?: string;
   schoolWebsite?: string;
   position: string;
-  documentType: string;
   description?: string;
 }
 
@@ -36,8 +34,6 @@ export interface UpdateTeacherProfileRequest {
   schoolAddress?: string;
   schoolWebsite?: string;
   position: string;
-  documentUrl: string;
-  documentType: string;
   description?: string;
 }
 

@@ -16,7 +16,7 @@ export class TeacherProfileService {
    */
   static async submitProfile(
     data: SubmitTeacherProfileRequest,
-    file: File
+    files: File[]
   ): Promise<ApiResponse<TeacherProfile>> {
     const token = AuthService.getToken();
     if (!token) throw new Error('Authentication required');
@@ -24,7 +24,11 @@ export class TeacherProfileService {
     const formData = new FormData();
     // Wrap the request data in a Blob with application/json type for @RequestPart
     formData.append('request', new Blob([JSON.stringify(data)], { type: 'application/json' }));
-    formData.append('file', file);
+    
+    // Append each file as 'files' to match @RequestPart("files")
+    files.forEach((file) => {
+      formData.append('files', file);
+    });
 
     const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.TEACHER_PROFILES_SUBMIT}`, {
       method: 'POST',

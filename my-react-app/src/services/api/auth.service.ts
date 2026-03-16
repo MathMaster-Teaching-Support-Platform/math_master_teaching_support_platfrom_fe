@@ -190,8 +190,6 @@ export class AuthService {
         return '/admin/dashboard';
       case 'teacher':
         return '/teacher/dashboard';
-      case 'guest':
-        return '/select-role';
       case 'user':
       case 'student':
         return '/student/dashboard';

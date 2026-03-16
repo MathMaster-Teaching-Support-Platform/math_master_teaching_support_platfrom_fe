@@ -71,8 +71,13 @@ const Login: React.FC = () => {
 
       if (authResponse.code === 1000 && authResponse.result.token) {
         AuthService.saveToken(authResponse.result.token, authResponse.result.expiryTime);
-        const dashboardUrl = AuthService.getDashboardUrl();
-        navigate(dashboardUrl);
+        
+        if (authResponse.result.newRegistration) {
+          navigate('/select-role');
+        } else {
+          const dashboardUrl = AuthService.getDashboardUrl();
+          navigate(dashboardUrl);
+        }
       }
     } catch (err) {
       setError(

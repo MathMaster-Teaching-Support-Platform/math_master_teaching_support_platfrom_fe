@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AuthService } from '../../services/api/auth.service';
 import { TeacherProfileService } from '../../services/api/teacher-profile.service';
 import { 
     Upload, 
@@ -59,20 +58,6 @@ const TeacherVerification: React.FC = () => {
 
     useEffect(() => {
         const setup = async () => {
-            const role = AuthService.getUserRole();
-            if (role === 'guest') {
-                try {
-                    const token = AuthService.getToken();
-                    const decoded = AuthService.decodeToken(token!);
-                    await AuthService.selectRole({
-                        role: 'TEACHER',
-                        fullName: decoded?.name as string || '',
-                        userName: (decoded?.email as string || '').split('@')[0] + '_' + Math.random().toString(36).substring(2, 7)
-                    });
-                } catch (err) {
-                    console.error("Auto selectRole failed", err);
-                }
-            }
         };
         setup();
     }, []);
@@ -91,9 +76,8 @@ const TeacherVerification: React.FC = () => {
                 schoolAddress: step3Data.schoolAddress,
                 schoolWebsite: step3Data.schoolWebsite,
                 position: step3Data.position || 'Teacher',
-                documentType: step2Data.documentType,
                 description: `Teacher at ${step3Data.schoolName}`,
-            }, step2Data.selectedFile);
+            }, [step2Data.selectedFile]);
 
             setStep(4);
         } catch (err) {
