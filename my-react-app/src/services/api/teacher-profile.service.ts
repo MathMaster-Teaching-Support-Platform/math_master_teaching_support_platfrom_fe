@@ -226,4 +226,27 @@ export class TeacherProfileService {
 
     return response.json();
   }
+
+  /**
+   * Get download URL for verification document (Admin)
+   */
+  static async getDownloadUrl(profileId: string): Promise<ApiResponse<String>> {
+    const token = AuthService.getToken();
+    if (!token) throw new Error('Authentication required');
+
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.TEACHER_PROFILES_DOWNLOAD(profileId)}`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        accept: '*/*',
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to get download URL');
+    }
+
+    return response.json();
+  }
 }

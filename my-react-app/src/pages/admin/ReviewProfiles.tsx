@@ -90,6 +90,18 @@ const ReviewProfiles: React.FC = () => {
     }
   };
 
+  const handleDownloadDocuments = async (profileId: string) => {
+    try {
+      const response = await TeacherProfileService.getDownloadUrl(profileId);
+      if (response.result) {
+        window.open(response.result as string, '_blank');
+      }
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to get download URL';
+      alert(errorMessage);
+    }
+  };
+
   const getStatusBadgeClass = (status: ProfileStatus) => {
     return `table-status-badge status-${status.toLowerCase()}`;
   };
@@ -265,19 +277,14 @@ const ReviewProfiles: React.FC = () => {
                 <div className="detail-section">
                   <h3>Verification Document</h3>
                   <p>
-                    <strong>Type:</strong> {selectedProfile.documentType}
+                    <strong>Package:</strong> ZIP Archive
                   </p>
-                  <p>
-                    <strong>File:</strong>{' '}
-                    <a
-                      href={selectedProfile.documentUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="file-link"
-                    >
-                      View Document
-                    </a>
-                  </p>
+                  <button 
+                    className="btn-download"
+                    onClick={() => handleDownloadDocuments(selectedProfile.id)}
+                  >
+                    📥 Download Verification Pack
+                  </button>
                 </div>
 
                 <div className="detail-section">

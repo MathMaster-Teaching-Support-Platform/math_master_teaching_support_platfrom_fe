@@ -77,6 +77,8 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
     { path: '/admin/users', icon: Users, label: 'Người dùng' },
     { path: '/admin/subscriptions', icon: CreditCard, label: 'Gói đăng ký' },
     { path: '/admin/transactions', icon: ArrowLeftRight, label: 'Giao dịch' },
+    { path: '/admin/roadmaps', icon: Workflow, label: 'Lộ trình' },
+    { path: '/admin/review-profiles', icon: FileCheck2, label: 'Duyệt Profile' },
     { path: '/admin/templates', icon: FileStack, label: 'Mẫu' },
     { path: '/admin/analytics', icon: LineChart, label: 'Thống kê' },
     { path: '/admin/settings', icon: Settings, label: 'Cài đặt' },
