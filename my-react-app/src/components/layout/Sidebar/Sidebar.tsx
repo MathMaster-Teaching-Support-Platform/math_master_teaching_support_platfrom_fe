@@ -102,16 +102,32 @@ const studentGroups: MenuGroup[] = [
 const adminGroups: MenuGroup[] = [
   {
     label: null,
+    items: [{ path: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' }],
+  },
+  {
+    label: 'Người dùng',
     items: [
-      { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
       { path: '/admin/users', icon: Users, label: 'Người dùng' },
+      { path: '/admin/review-profiles', icon: FileCheck2, label: 'Duyệt Profile' },
+    ],
+  },
+  {
+    label: 'Tài chính',
+    items: [
       { path: '/admin/subscriptions', icon: CreditCard, label: 'Gói đăng ký' },
       { path: '/admin/transactions', icon: ArrowLeftRight, label: 'Giao dịch' },
-      { path: '/admin/roadmaps', icon: Workflow, label: 'Lộ trình' },
-      { path: '/admin/review-profiles', icon: FileCheck2, label: 'Duyệt Profile' },
-      { path: '/admin/templates', icon: FileStack, label: 'Mẫu' },
-      { path: '/admin/analytics', icon: LineChart, label: 'Thống kê' },
     ],
+  },
+  {
+    label: 'Nội dung',
+    items: [
+      { path: '/admin/roadmaps', icon: Workflow, label: 'Lộ trình' },
+      { path: '/admin/templates', icon: FileStack, label: 'Mẫu' },
+    ],
+  },
+  {
+    label: 'Hệ thống',
+    items: [{ path: '/admin/analytics', icon: LineChart, label: 'Thống kê' }],
   },
 ];
 
