@@ -1,13 +1,16 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
-import { useRoadmapDetail, useRoadmaps } from '../../hooks/useRoadmaps';
 import { mockStudent } from '../../data/mockData';
+import { useRoadmapDetail, useRoadmaps } from '../../hooks/useRoadmaps';
 import type { RoadmapCatalogItem, RoadmapTopic } from '../../types';
 import './StudentRoadmap.css';
 
 function normalizeRoadmaps(
-  result: RoadmapCatalogItem[] | { content?: RoadmapCatalogItem[]; items?: RoadmapCatalogItem[] } | undefined
+  result:
+    | RoadmapCatalogItem[]
+    | { content?: RoadmapCatalogItem[]; items?: RoadmapCatalogItem[] }
+    | undefined
 ): RoadmapCatalogItem[] {
   if (Array.isArray(result)) return result;
   if (Array.isArray(result?.content)) return result.content;
@@ -31,9 +34,11 @@ function difficultyLabel(d: string): string {
 }
 
 function findCurrentTopic(topics: RoadmapTopic[]): RoadmapTopic | null {
-  return topics.find(t => t.status === 'IN_PROGRESS')
-    ?? topics.find(t => t.status === 'NOT_STARTED')
-    ?? null;
+  return (
+    topics.find((t) => t.status === 'IN_PROGRESS') ??
+    topics.find((t) => t.status === 'NOT_STARTED') ??
+    null
+  );
 }
 
 const TopicStep: React.FC<{
@@ -62,12 +67,12 @@ const TopicStep: React.FC<{
         isCompleted && 'srp__step--completed',
         isCurrent && 'srp__step--current',
         isLocked && 'srp__step--locked',
-      ].filter(Boolean).join(' ')}
+      ]
+        .filter(Boolean)
+        .join(' ')}
     >
       {/* Vertical connector */}
-      {!isLast && (
-        <div className={`srp__step-line ${isCompleted ? 'srp__step-line--done' : ''}`} />
-      )}
+      {!isLast && <div className={`srp__step-line ${isCompleted ? 'srp__step-line--done' : ''}`} />}
 
       {/* Dot indicator */}
       <div className="srp__step-indicator">
@@ -83,14 +88,10 @@ const TopicStep: React.FC<{
             {difficultyLabel(topic.difficulty)}
           </span>
         </div>
-        {topic.description && (
-          <p className="srp__step-desc">{topic.description}</p>
-        )}
+        {topic.description && <p className="srp__step-desc">{topic.description}</p>}
         <div className="srp__step-meta">
           <span>⏱ {topic.estimatedHours}h</span>
-          {topic.progressPercentage > 0 && (
-            <span>📊 {topic.progressPercentage}%</span>
-          )}
+          {topic.progressPercentage > 0 && <span>📊 {topic.progressPercentage}%</span>}
         </div>
         {isCurrent && (
           <Link to={`/roadmaps/${roadmapId}`} className="srp__continue-btn">
@@ -118,13 +119,13 @@ const StudentRoadmap: React.FC = () => {
     .slice()
     .sort((a, b) => a.sequenceOrder - b.sequenceOrder);
 
-  const currentRoadmap = roadmaps.find(r => r.id === selectedRoadmapId);
+  const currentRoadmap = roadmaps.find((r) => r.id === selectedRoadmapId);
   const currentTopic = findCurrentTopic(selectedTopics);
   const allCompleted =
-    selectedTopics.length > 0 && selectedTopics.every(t => t.status === 'COMPLETED');
+    selectedTopics.length > 0 && selectedTopics.every((t) => t.status === 'COMPLETED');
 
-  const inProgressCount = roadmaps.filter(r => r.status === 'IN_PROGRESS').length;
-  const completedCount = roadmaps.filter(r => r.status === 'COMPLETED').length;
+  const inProgressCount = roadmaps.filter((r) => r.status === 'IN_PROGRESS').length;
+  const completedCount = roadmaps.filter((r) => r.status === 'COMPLETED').length;
   const avgProgress =
     roadmaps.length > 0
       ? Math.round(roadmaps.reduce((s, r) => s + r.progressPercentage, 0) / roadmaps.length)
@@ -176,12 +177,12 @@ const StudentRoadmap: React.FC = () => {
 
             {roadmapsQuery.isLoading && (
               <div className="srp__skeletons">
-                {[1, 2, 3].map(i => <div key={i} className="srp__skeleton" />)}
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="srp__skeleton" />
+                ))}
               </div>
             )}
-            {roadmapsQuery.error && (
-              <p className="srp__empty-text">Không thể tải lộ trình.</p>
-            )}
+            {roadmapsQuery.error && <p className="srp__empty-text">Không thể tải lộ trình.</p>}
 
             {!roadmapsQuery.isLoading && !roadmapsQuery.error && roadmaps.length === 0 && (
               <div className="srp__onboarding">
@@ -191,7 +192,7 @@ const StudentRoadmap: React.FC = () => {
             )}
 
             <div className="srp__list">
-              {roadmaps.map(roadmap => (
+              {roadmaps.map((roadmap) => (
                 <button
                   key={roadmap.id}
                   type="button"
@@ -202,11 +203,15 @@ const StudentRoadmap: React.FC = () => {
                 >
                   <div className="srp__rm-card-row">
                     <div className="srp__rm-icon">
-                      {roadmap.status === 'COMPLETED' ? '✓' : (roadmap.gradeLevel?.charAt(0) ?? '■')}
+                      {roadmap.status === 'COMPLETED'
+                        ? '✓'
+                        : (roadmap.gradeLevel?.charAt(0) ?? '■')}
                     </div>
                     <div className="srp__rm-info">
                       <div className="srp__rm-name">{roadmap.name}</div>
-                      <div className="srp__rm-meta">{roadmap.subject} · Lớp {roadmap.gradeLevel}</div>
+                      <div className="srp__rm-meta">
+                        {roadmap.subject} · Lớp {roadmap.gradeLevel}
+                      </div>
                     </div>
                   </div>
                   <div className="srp__rm-progress">
@@ -238,76 +243,83 @@ const StudentRoadmap: React.FC = () => {
 
             {selectedRoadmapId && selectedRoadmapQuery.isLoading && (
               <div className="srp__skeletons">
-                {[1, 2, 3, 4].map(i => <div key={i} className="srp__skeleton srp__skeleton--tall" />)}
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="srp__skeleton srp__skeleton--tall" />
+                ))}
               </div>
             )}
 
-            {selectedRoadmapId && !selectedRoadmapQuery.isLoading && !selectedRoadmapQuery.error && (
-              <>
-                {/* Overview bar */}
-                {currentRoadmap && (
-                  <div className="srp__overview">
-                    <div className="srp__overview-left">
-                      <h2 className="srp__overview-name">{currentRoadmap.name}</h2>
-                      {currentRoadmap.description && (
-                        <p className="srp__overview-desc">{currentRoadmap.description}</p>
-                      )}
-                    </div>
-                    <div className="srp__overview-right">
-                      <span className="srp__overview-pct">{currentRoadmap.progressPercentage}%</span>
-                      <div className="srp__overview-bar">
-                        <div
-                          className="srp__overview-fill"
-                          style={{ width: `${currentRoadmap.progressPercentage}%` }}
-                        />
+            {selectedRoadmapId &&
+              !selectedRoadmapQuery.isLoading &&
+              !selectedRoadmapQuery.error && (
+                <>
+                  {/* Overview bar */}
+                  {currentRoadmap && (
+                    <div className="srp__overview">
+                      <div className="srp__overview-left">
+                        <h2 className="srp__overview-name">{currentRoadmap.name}</h2>
+                        {currentRoadmap.description && (
+                          <p className="srp__overview-desc">{currentRoadmap.description}</p>
+                        )}
                       </div>
-                      <span className="srp__overview-counts">
-                        {currentRoadmap.completedTopicsCount}/{currentRoadmap.totalTopicsCount} chủ đề
-                      </span>
-                      <Link to={`/roadmaps/${selectedRoadmapId}`} className="srp__detail-link">
-                        Xem bản đồ học tập →
-                      </Link>
+                      <div className="srp__overview-right">
+                        <span className="srp__overview-pct">
+                          {currentRoadmap.progressPercentage}%
+                        </span>
+                        <div className="srp__overview-bar">
+                          <div
+                            className="srp__overview-fill"
+                            style={{ width: `${currentRoadmap.progressPercentage}%` }}
+                          />
+                        </div>
+                        <span className="srp__overview-counts">
+                          {currentRoadmap.completedTopicsCount}/{currentRoadmap.totalTopicsCount}{' '}
+                          chủ đề
+                        </span>
+                        <Link to={`/roadmaps/${selectedRoadmapId}`} className="srp__detail-link">
+                          Xem bản đồ học tập →
+                        </Link>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* Congrats */}
-                {allCompleted && (
-                  <div className="srp__congrats">
-                    <span>🎉</span>
-                    <div>
-                      <h3>Chúc mừng! Bạn đã hoàn thành lộ trình này!</h3>
-                      <p>Tiếp tục với lộ trình mới để phát triển thêm.</p>
+                  {/* Congrats */}
+                  {allCompleted && (
+                    <div className="srp__congrats">
+                      <span>🎉</span>
+                      <div>
+                        <h3>Chúc mừng! Bạn đã hoàn thành lộ trình này!</h3>
+                        <p>Tiếp tục với lộ trình mới để phát triển thêm.</p>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* Topic steps */}
-                {selectedTopics.length > 0 && (
-                  <div className="srp__steps">
-                    {selectedTopics.map((topic, index) => (
-                      <TopicStep
-                        key={topic.id}
-                        topic={topic}
-                        isFirst={index === 0}
-                        isLast={index === selectedTopics.length - 1}
-                        isCurrent={topic.id === currentTopic?.id}
-                        roadmapId={selectedRoadmapId}
-                        stepRef={topic.id === currentTopic?.id ? currentTopicRef : undefined}
-                      />
-                    ))}
-                  </div>
-                )}
+                  {/* Topic steps */}
+                  {selectedTopics.length > 0 && (
+                    <div className="srp__steps">
+                      {selectedTopics.map((topic, index) => (
+                        <TopicStep
+                          key={topic.id}
+                          topic={topic}
+                          isFirst={index === 0}
+                          isLast={index === selectedTopics.length - 1}
+                          isCurrent={topic.id === currentTopic?.id}
+                          roadmapId={selectedRoadmapId}
+                          stepRef={topic.id === currentTopic?.id ? currentTopicRef : undefined}
+                        />
+                      ))}
+                    </div>
+                  )}
 
-                {selectedTopics.length === 0 && (
-                  <div className="srp__empty">
-                    <span className="srp__empty-icon">📚</span>
-                    <h3>Chưa có chủ đề nào</h3>
-                    <p>Lộ trình này chưa có chủ đề nào được thêm.</p>
-                  </div>
-                )}
-              </>
-            )}
+                  {selectedTopics.length === 0 && (
+                    <div className="srp__empty">
+                      <span className="srp__empty-icon">📚</span>
+                      <h3>Chưa có chủ đề nào</h3>
+                      <p>Lộ trình này chưa có chủ đề nào được thêm.</p>
+                    </div>
+                  )}
+                </>
+              )}
           </main>
         </div>
 

@@ -1,14 +1,14 @@
-import { useParams } from 'react-router-dom';
-import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useEffect, useRef, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { mockStudent } from '../../data/mockData';
 import {
   useRoadmapDetail,
   useStudentTopicMaterials,
   useSubmitRoadmapEntryTest,
 } from '../../hooks/useRoadmaps';
 import type { TopicMaterialResourceType } from '../../types';
-import { mockStudent } from '../../data/mockData';
 import './roadmap-detail-page.css';
 
 /* ─────────────────────────────────────────────────────
@@ -90,10 +90,10 @@ export default function RoadmapDetailPage() {
   const pathD = buildSnakePath(rowCount);
 
   const isFinalFinished =
-    sortedTopics.length > 0 && sortedTopics.every(t => finishedTopicIds.includes(t.id));
+    sortedTopics.length > 0 && sortedTopics.every((t) => finishedTopicIds.includes(t.id));
 
   // Index of the first topic not yet finished (the "current" one the student should tackle)
-  const currentTopicIdx = sortedTopics.findIndex(t => !finishedTopicIds.includes(t.id));
+  const currentTopicIdx = sortedTopics.findIndex((t) => !finishedTopicIds.includes(t.id));
 
   // Car sits at the last finished topic (or before the first if nothing done yet)
   let effectiveCarIdx: number;
@@ -114,7 +114,7 @@ export default function RoadmapDetailPage() {
       const len = roadPathRef.current.getTotalLength();
       if (len > 0) setPathLength(len);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathD, isLoading]);
 
   // Auto-scroll to current node
@@ -122,13 +122,13 @@ export default function RoadmapDetailPage() {
     if (!currentNodeRef.current || isLoading) return;
     const timer = setTimeout(
       () => currentNodeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }),
-      600,
+      600
     );
     return () => clearTimeout(timer);
   }, [sortedTopics.length, isLoading]);
 
   const finishTopic = (topicId: string, index: number) => {
-    setFinishedTopicIds(prev => (prev.includes(topicId) ? prev : [...prev, topicId]));
+    setFinishedTopicIds((prev) => (prev.includes(topicId) ? prev : [...prev, topicId]));
     setCarIdx(index);
   };
 
@@ -147,11 +147,7 @@ export default function RoadmapDetailPage() {
           </div>
         )}
 
-        {error && (
-          <div className="rdp__error">
-            Không thể tải lộ trình. Vui lòng thử lại.
-          </div>
-        )}
+        {error && <div className="rdp__error">Không thể tải lộ trình. Vui lòng thử lại.</div>}
 
         {roadmap && (
           <>
@@ -160,9 +156,7 @@ export default function RoadmapDetailPage() {
               <div className="rdp__header-left">
                 <span className="rdp__badge">Lộ trình học tập</span>
                 <h1 className="rdp__title">{roadmap.name}</h1>
-                {roadmap.description && (
-                  <p className="rdp__desc">{roadmap.description}</p>
-                )}
+                {roadmap.description && <p className="rdp__desc">{roadmap.description}</p>}
               </div>
               <div className="rdp__header-right">
                 <div className="rdp__prog-block">
@@ -184,15 +178,16 @@ export default function RoadmapDetailPage() {
                     type="button"
                     className="rdp__cta"
                     onClick={() =>
-                      currentNodeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                      currentNodeRef.current?.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center',
+                      })
                     }
                   >
                     Tiếp tục học →
                   </button>
                 )}
-                {isFinalFinished && (
-                  <span className="rdp__done-badge">🎉 Hoàn thành!</span>
-                )}
+                {isFinalFinished && <span className="rdp__done-badge">🎉 Hoàn thành!</span>}
               </div>
             </div>
 
@@ -209,7 +204,7 @@ export default function RoadmapDetailPage() {
                   className="rdp__entry-input"
                   placeholder="Submission ID"
                   value={submissionId}
-                  onChange={e => setSubmissionId(e.target.value)}
+                  onChange={(e) => setSubmissionId(e.target.value)}
                 />
                 <button
                   type="button"
@@ -283,7 +278,9 @@ export default function RoadmapDetailPage() {
                             isDone && 'rdp__node--done',
                             isCurrent && 'rdp__node--current',
                             isLocked && 'rdp__node--locked',
-                          ].filter(Boolean).join(' ')}
+                          ]
+                            .filter(Boolean)
+                            .join(' ')}
                           style={{ left: `${pos.leftPct}%`, top: `${pos.topPx}px` }}
                         >
                           {/* Circle */}
@@ -298,15 +295,15 @@ export default function RoadmapDetailPage() {
                           <div className="rdp__node-card">
                             <div className="rdp__node-card-top">
                               <strong className="rdp__node-title">{topic.title}</strong>
-                              <span className={`rdp__diff rdp__diff--${topic.difficulty.toLowerCase()}`}>
+                              <span
+                                className={`rdp__diff rdp__diff--${topic.difficulty.toLowerCase()}`}
+                              >
                                 {diffLabel(topic.difficulty)}
                               </span>
                             </div>
                             <div className="rdp__node-meta">
                               <span>⏱ {topic.estimatedHours}h</span>
-                              {isCurrent && (
-                                <span className="rdp__node-cur-tag">Đang học</span>
-                              )}
+                              {isCurrent && <span className="rdp__node-cur-tag">Đang học</span>}
                             </div>
                             <div className="rdp__node-actions">
                               <button
@@ -325,9 +322,7 @@ export default function RoadmapDetailPage() {
                                   Hoàn thành
                                 </button>
                               )}
-                              {isDone && (
-                                <span className="rdp__node-done-tag">✓ Xong</span>
-                              )}
+                              {isDone && <span className="rdp__node-done-tag">✓ Xong</span>}
                             </div>
                           </div>
                         </div>
@@ -368,7 +363,7 @@ export default function RoadmapDetailPage() {
                     <select
                       className="rdp__res-select"
                       value={resourceType}
-                      onChange={e => setResourceType(e.target.value as TopicMaterialResourceType)}
+                      onChange={(e) => setResourceType(e.target.value as TopicMaterialResourceType)}
                     >
                       <option value="LESSON">Bài học</option>
                       <option value="QUESTION">Câu hỏi</option>
@@ -389,16 +384,12 @@ export default function RoadmapDetailPage() {
                   </div>
                 </div>
 
-                {materialsQuery.isLoading && (
-                  <p className="rdp__mat-state">Đang tải tài liệu…</p>
-                )}
-                {materialsQuery.error && (
-                  <p className="rdp__mat-state">Không thể tải tài liệu.</p>
-                )}
+                {materialsQuery.isLoading && <p className="rdp__mat-state">Đang tải tài liệu…</p>}
+                {materialsQuery.error && <p className="rdp__mat-state">Không thể tải tài liệu.</p>}
 
                 {!materialsQuery.isLoading && !materialsQuery.error && (
                   <div className="rdp__mat-list">
-                    {materials.map(m => (
+                    {materials.map((m) => (
                       <div key={m.id} className="rdp__mat-item">
                         <strong className="rdp__mat-name">{m.resourceTitle}</strong>
                         <span className="rdp__mat-meta">
@@ -419,7 +410,7 @@ export default function RoadmapDetailPage() {
         {/* Fireworks */}
         {isFinalFinished && (
           <div className="rdp__fireworks" aria-hidden="true">
-            {[1, 2, 3, 4].map(i => (
+            {[1, 2, 3, 4].map((i) => (
               <div key={i} className={`pyro pyro--${i}`}>
                 <div className="before" />
                 <div className="after" />
