@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import DashboardLayout from '../../../components/layout/DashboardLayout/DashboardLayout';
 import { mockStudent, mockCourses, mockAssignments } from '../../../data/mockData';
 import './StudentDashboard.css';
@@ -118,6 +119,29 @@ const StudentDashboard: React.FC = () => {
         </div>
 
         <div className="dashboard-grid-2">
+          {/* Roadmap */}
+          <div className="dashboard-card roadmap-card">
+            <div className="card-header">
+              <h2 className="card-title">Lộ trình học tập</h2>
+              <Link to="/student/roadmap" className="card-link">
+                Mở roadmap →
+              </Link>
+            </div>
+            <p className="roadmap-subtitle">
+              Theo dõi tiến độ từng chủ đề, mở khóa bài học mới và hoàn thành mục tiêu theo tuần.
+            </p>
+            <div className="roadmap-progress-line">
+              <div className="roadmap-progress-fill" style={{ width: '40%' }}></div>
+            </div>
+            <div className="roadmap-meta">
+              <span>6/15 nội dung đã hoàn thành</span>
+              <span>40%</span>
+            </div>
+            <Link to="/student/roadmap" className="btn btn-primary roadmap-btn">
+              🗺️ Vào lộ trình học
+            </Link>
+          </div>
+
           {/* Learning Progress */}
           <div className="dashboard-card">
             <div className="card-header">
@@ -239,10 +263,10 @@ const StudentDashboard: React.FC = () => {
               <span className="qa-icon">📊</span>
               <span className="qa-label">Điểm số</span>
             </button>
-            <button className="quick-action-btn">
+            <Link to="/student/roadmap" className="quick-action-btn">
               <span className="qa-icon">🗺️</span>
               <span className="qa-label">Lộ trình</span>
-            </button>
+            </Link>
             <button className="quick-action-btn">
               <span className="qa-icon">🤖</span>
               <span className="qa-label">AI Trợ lý</span>

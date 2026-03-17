@@ -96,7 +96,9 @@ const Login: React.FC = () => {
     <div className="auth-container">
       <div className="auth-left">
         <div className="auth-brand">
-          <h1>MathMaster</h1>
+          <Link to="/" className="auth-brand-link" aria-label="Về trang chủ MathMaster">
+            <h1>MathMaster</h1>
+          </Link>
           <p className="brand-tagline">Nền tảng hỗ trợ giảng dạy toán học</p>
         </div>
         <div className="auth-illustration">

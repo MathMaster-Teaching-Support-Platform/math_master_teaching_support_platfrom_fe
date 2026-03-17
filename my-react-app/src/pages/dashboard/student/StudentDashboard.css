@@ -3,6 +3,48 @@
   margin: 0 auto;
 }
 
+.roadmap-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.roadmap-subtitle {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--gray-700);
+  line-height: 1.55;
+}
+
+.roadmap-progress-line {
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--gray-200);
+}
+
+.roadmap-progress-fill {
+  height: 100%;
+  background: var(--gradient-primary);
+  border-radius: inherit;
+}
+
+.roadmap-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8125rem;
+  color: var(--gray-600);
+}
+
+.roadmap-btn {
+  width: fit-content;
+}
+
+.quick-action-btn {
+  text-decoration: none;
+}
+
 /* Progress Bar */
 .progress-bar {
   height: 6px;

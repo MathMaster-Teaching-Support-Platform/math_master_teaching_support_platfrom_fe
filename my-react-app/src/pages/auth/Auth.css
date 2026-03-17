@@ -25,6 +25,16 @@
   margin-bottom: 3rem;
 }
 
+.auth-brand-link {
+  color: inherit;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.auth-brand-link:hover {
+  opacity: 0.92;
+}
+
 .math-symbol {
   display: inline-block;
   font-weight: bold;

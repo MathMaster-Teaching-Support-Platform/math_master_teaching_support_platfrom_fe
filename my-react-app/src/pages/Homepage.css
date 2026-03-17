@@ -1173,7 +1173,7 @@
   position: relative;
 }
 
-.steps-container {
+.how-steps-container {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem;
@@ -1181,7 +1181,7 @@
   margin: 0 auto;
 }
 
-.step-item {
+.how-step-item {
   text-align: left;
   padding: 1.75rem;
   background: var(--c-surface);
@@ -1192,12 +1192,12 @@
   position: relative;
 }
 
-.step-item:hover {
+.how-step-item:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-md);
 }
 
-.step-number {
+.how-step-number {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1210,13 +1210,13 @@
   font-family: var(--f-heading);
 }
 
-.step-item:nth-child(1) .step-number { background: var(--c-primary); }
-.step-item:nth-child(2) .step-number { background: var(--c-accent-pink); color: var(--c-dark); }
-.step-item:nth-child(3) .step-number { background: var(--c-accent-gold); color: var(--c-dark); }
+.how-step-item:nth-child(1) .how-step-number { background: var(--c-primary); }
+.how-step-item:nth-child(2) .how-step-number { background: var(--c-accent-pink); color: var(--c-dark); }
+.how-step-item:nth-child(3) .how-step-number { background: var(--c-accent-gold); color: var(--c-dark); }
 
 .step-connector { display: none; }
 
-.step-title {
+.how-step-title {
   font-size: 1.25rem;
   font-weight: 600;
   color: var(--c-text-1);
@@ -1226,7 +1226,7 @@
   line-height: 1.3;
 }
 
-.step-description {
+.how-step-description {
   font-size: 0.85rem;
   color: var(--c-text-3);
   line-height: 1.65;
@@ -1809,7 +1809,7 @@
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .steps-container {
+  .how-steps-container {
     grid-template-columns: 1fr;
     gap: 1rem;
   }

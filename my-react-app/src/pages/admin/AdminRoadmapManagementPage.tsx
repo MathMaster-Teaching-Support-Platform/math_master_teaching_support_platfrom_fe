@@ -2,11 +2,25 @@ import { Link } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { useAdminRoadmaps } from '../../hooks/useRoadmaps';
 import { mockAdmin } from '../../data/mockData';
+import type { RoadmapCatalogItem } from '../../types';
 import './admin-roadmap-page.css';
+
+function normalizeRoadmaps(
+  result: RoadmapCatalogItem[] | { content?: RoadmapCatalogItem[]; items?: RoadmapCatalogItem[] } | undefined
+): RoadmapCatalogItem[] {
+  if (Array.isArray(result)) return result;
+  if (Array.isArray(result?.content)) return result.content;
+  if (Array.isArray(result?.items)) return result.items;
+  return [];
+}
 
 export default function AdminRoadmapManagementPage() {
   const { data, isLoading, error } = useAdminRoadmaps();
-  const roadmaps = data?.result ?? [];
+  const result = data?.result as
+    | RoadmapCatalogItem[]
+    | { content?: RoadmapCatalogItem[]; items?: RoadmapCatalogItem[] }
+    | undefined;
+  const roadmaps = normalizeRoadmaps(result);
 
   return (
     <DashboardLayout

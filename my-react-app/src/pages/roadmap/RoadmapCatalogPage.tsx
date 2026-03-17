@@ -3,13 +3,27 @@ import { RoadmapCard } from '../../components/roadmap';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { useRoadmaps, useStudentRoadmap } from '../../hooks/useRoadmaps';
 import { mockStudent } from '../../data/mockData';
+import type { RoadmapCatalogItem } from '../../types';
 import './roadmap-catalog-page.css';
+
+function normalizeRoadmaps(
+  result: RoadmapCatalogItem[] | { content?: RoadmapCatalogItem[]; items?: RoadmapCatalogItem[] } | undefined
+): RoadmapCatalogItem[] {
+  if (Array.isArray(result)) return result;
+  if (Array.isArray(result?.content)) return result.content;
+  if (Array.isArray(result?.items)) return result.items;
+  return [];
+}
 
 export default function RoadmapCatalogPage() {
   const { data, isLoading, error } = useRoadmaps();
   const studentRoadmapQuery = useStudentRoadmap();
 
-  const roadmaps = data?.result ?? [];
+  const result = data?.result as
+    | RoadmapCatalogItem[]
+    | { content?: RoadmapCatalogItem[]; items?: RoadmapCatalogItem[] }
+    | undefined;
+  const roadmaps = normalizeRoadmaps(result);
   const activeProgress = studentRoadmapQuery.data?.result.progress;
 
   return (
