@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Sidebar from '../Sidebar/Sidebar';
 import Navbar from '../Navbar/Navbar';
 import './DashboardLayout.css';
@@ -20,9 +20,15 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   user,
   notificationCount,
 }) => {
+  const [collapsed, setCollapsed] = useState(false);
+  const sidebarW = collapsed ? '64px' : '248px';
+
   return (
-    <div className="dashboard-layout">
-      <Sidebar role={role} />
+    <div
+      className="dashboard-layout"
+      style={{ '--sidebar-w': sidebarW } as React.CSSProperties}
+    >
+      <Sidebar role={role} collapsed={collapsed} onToggle={() => setCollapsed((c) => !c)} />
       <div className="dashboard-main">
         <Navbar user={user} notificationCount={notificationCount} />
         <main className="dashboard-content">{children}</main>
