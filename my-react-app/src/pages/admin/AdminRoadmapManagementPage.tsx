@@ -54,7 +54,7 @@ export default function AdminRoadmapManagementPage() {
               <div key={roadmap.id} className="admin-roadmap-page__row">
                 <span>{roadmap.name}</span>
                 <span>{roadmap.status}</span>
-                <span>{roadmap.completedTopicsCount}/{roadmap.totalTopicsCount}</span>
+                <span>{roadmap.totalTopicsCount}</span>
                 <span>
                   <Link to={`/admin/roadmaps/edit/${roadmap.id}`}>Edit</Link>
                 </span>

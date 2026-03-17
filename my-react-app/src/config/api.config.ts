@@ -82,6 +82,10 @@ export const API_ENDPOINTS = {
   // Lessons
   LESSONS: '/lessons',
   LESSON_DETAIL: (lessonId: string) => `/lessons/${lessonId}`,
+  CHAPTER_LESSONS: (chapterId: string) => `/chapters/${chapterId}/lessons`,
+
+  // Chapters
+  CHAPTERS_BY_SUBJECT: (subjectId: string) => `/chapters/subject/${subjectId}`,
 
   // Subjects
   SUBJECTS: '/subjects',

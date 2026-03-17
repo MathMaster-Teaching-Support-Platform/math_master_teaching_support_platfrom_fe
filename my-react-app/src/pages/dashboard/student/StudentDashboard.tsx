@@ -2,9 +2,21 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../../../components/layout/DashboardLayout/DashboardLayout';
 import { mockStudent, mockCourses, mockAssignments } from '../../../data/mockData';
+import { useRoadmaps } from '../../../hooks/useRoadmaps';
+import type { RoadmapCatalogItem } from '../../../types';
 import './StudentDashboard.css';
 
+function normalizeRoadmaps(
+  result: RoadmapCatalogItem[] | { content?: RoadmapCatalogItem[]; items?: RoadmapCatalogItem[] } | undefined
+): RoadmapCatalogItem[] {
+  if (Array.isArray(result)) return result;
+  if (Array.isArray(result?.content)) return result.content;
+  if (Array.isArray(result?.items)) return result.items;
+  return [];
+}
+
 const StudentDashboard: React.FC = () => {
+  const roadmapsQuery = useRoadmaps();
   const stats = [
     {
       icon: '📚',
@@ -26,10 +38,22 @@ const StudentDashboard: React.FC = () => {
     (a) => a.status === 'pending' || a.status === 'upcoming'
   );
 
+  const getAssignmentIcon = (type: string) => {
+    if (type === 'quiz') return '📝';
+    if (type === 'exam') return '📊';
+    return '✍️';
+  };
+
+  const roadmapResult = roadmapsQuery.data?.result as
+    | RoadmapCatalogItem[]
+    | { content?: RoadmapCatalogItem[]; items?: RoadmapCatalogItem[] }
+    | undefined;
+  const roadmapList = normalizeRoadmaps(roadmapResult);
+
   return (
     <DashboardLayout
       role="student"
-      user={{ name: mockStudent.name, avatar: mockStudent.avatar!, role: 'student' }}
+      user={{ name: mockStudent.name, avatar: mockStudent.avatar, role: 'student' }}
       notificationCount={3}
     >
       <div className="student-dashboard">
@@ -48,8 +72,8 @@ const StudentDashboard: React.FC = () => {
 
         {/* Stats Grid */}
         <div className="stats-grid">
-          {stats.map((stat, index) => (
-            <div key={index} className="stat-card" style={{ borderTopColor: stat.color }}>
+          {stats.map((stat) => (
+            <div key={stat.label} className="stat-card" style={{ borderTopColor: stat.color }}>
               <div
                 className="stat-icon"
                 style={{ background: `${stat.color}20`, color: stat.color }}
@@ -101,9 +125,7 @@ const StudentDashboard: React.FC = () => {
             <div className="assignments-list">
               {upcomingAssignments.map((assignment) => (
                 <div key={assignment.id} className="assignment-item">
-                  <div className="assignment-icon">
-                    {assignment.type === 'quiz' ? '📝' : assignment.type === 'exam' ? '📊' : '✍️'}
-                  </div>
+                  <div className="assignment-icon">{getAssignmentIcon(assignment.type)}</div>
                   <div className="assignment-info">
                     <h3 className="assignment-title">{assignment.title}</h3>
                     <p className="assignment-meta">
@@ -119,27 +141,33 @@ const StudentDashboard: React.FC = () => {
         </div>
 
         <div className="dashboard-grid-2">
-          {/* Roadmap */}
-          <div className="dashboard-card roadmap-card">
+          {/* Roadmap list */}
+          <div className="dashboard-card roadmap-list-card">
             <div className="card-header">
-              <h2 className="card-title">Lộ trình học tập</h2>
-              <Link to="/student/roadmap" className="card-link">
-                Mở roadmap →
+              <h2 className="card-title">Danh sách lộ trình</h2>
+              <Link to="/roadmaps" className="card-link">
+                Xem tất cả →
               </Link>
             </div>
-            <p className="roadmap-subtitle">
-              Theo dõi tiến độ từng chủ đề, mở khóa bài học mới và hoàn thành mục tiêu theo tuần.
-            </p>
-            <div className="roadmap-progress-line">
-              <div className="roadmap-progress-fill" style={{ width: '40%' }}></div>
-            </div>
-            <div className="roadmap-meta">
-              <span>6/15 nội dung đã hoàn thành</span>
-              <span>40%</span>
-            </div>
-            <Link to="/student/roadmap" className="btn btn-primary roadmap-btn">
-              🗺️ Vào lộ trình học
-            </Link>
+            {roadmapsQuery.isLoading && <p className="roadmap-subtitle">Đang tải lộ trình...</p>}
+            {roadmapsQuery.error && <p className="roadmap-subtitle">Không thể tải danh sách lộ trình.</p>}
+
+            {!roadmapsQuery.isLoading && !roadmapsQuery.error && (
+              <div className="roadmap-list">
+                {roadmapList.slice(0, 5).map((roadmap) => (
+                  <Link key={roadmap.id} to={`/roadmaps/${roadmap.id}`} className="roadmap-list__item">
+                    <div>
+                      <strong>{roadmap.name}</strong>
+                      <p>{roadmap.subject}</p>
+                    </div>
+                    <span>{roadmap.totalTopicsCount} topics</span>
+                  </Link>
+                ))}
+                {roadmapList.length === 0 && (
+                  <p className="roadmap-subtitle">Chưa có lộ trình nào để chọn.</p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Learning Progress */}
@@ -236,7 +264,7 @@ const StudentDashboard: React.FC = () => {
             </div>
             <div className="streak-calendar">
               {['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'].map((day, i) => (
-                <div key={i} className={`streak-day ${i < 5 ? 'active' : ''}`}>
+                <div key={day} className={`streak-day ${i < 5 ? 'active' : ''}`}>
                   <div className="day-label">{day}</div>
                   <div className="day-indicator">{i < 5 ? '✓' : ''}</div>
                 </div>

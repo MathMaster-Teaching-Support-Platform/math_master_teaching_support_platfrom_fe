@@ -52,6 +52,7 @@ import { QuestionBankDetailPage } from '../pages/question-banks/QuestionBankDeta
 import AdminRoadmapManagementPage from '../pages/admin/AdminRoadmapManagementPage';
 import AdminRoadmapCreatePage from '../pages/admin/AdminRoadmapCreatePage';
 import AdminRoadmapEditPage from '../pages/admin/AdminRoadmapEditPage';
+import AdminRoadmapTopicsPage from '../pages/admin/AdminRoadmapTopicsPage';
 
 const router = createBrowserRouter([
   {
@@ -279,6 +280,10 @@ const router = createBrowserRouter([
   {
     path: '/admin/roadmaps/edit/:roadmapId',
     element: <AdminRoadmapEditPage />,
+  },
+  {
+    path: '/admin/roadmaps/:roadmapId/topics',
+    element: <AdminRoadmapTopicsPage />,
   },
   { path: '/admin/settings', element: <ProfileSettings /> },
   {

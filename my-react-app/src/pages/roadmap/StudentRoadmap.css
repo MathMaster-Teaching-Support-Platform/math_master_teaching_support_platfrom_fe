@@ -3,6 +3,82 @@
   margin: 0 auto;
 }
 
+.student-roadmap-picker {
+  display: grid;
+  grid-template-columns: 0.95fr 1.05fr;
+  gap: 1rem;
+}
+
+.student-roadmap-picker__names,
+.student-roadmap-picker__topics {
+  background: #ffffff;
+  border: 1px solid var(--gray-200);
+  border-radius: 14px;
+  padding: 1rem;
+  display: grid;
+  gap: 0.7rem;
+}
+
+.student-roadmap-picker__names h3,
+.student-roadmap-picker__topics h3 {
+  margin: 0;
+  color: var(--gray-900);
+}
+
+.student-roadmap-picker__name-list,
+.student-roadmap-picker__topic-list {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.student-roadmap-picker__name-item {
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  background: #ffffff;
+  color: var(--gray-900);
+  text-align: left;
+  padding: 0.6rem 0.7rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.student-roadmap-picker__name-item:hover,
+.student-roadmap-picker__name-item--active {
+  border-color: var(--primary-color);
+  background: rgba(102, 126, 234, 0.08);
+}
+
+.student-roadmap-picker__topic-item {
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  padding: 0.6rem 0.7rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.student-roadmap-picker__topic-item strong {
+  color: var(--gray-900);
+  font-size: 0.9rem;
+}
+
+.student-roadmap-picker__topic-item span {
+  color: var(--gray-600);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.student-roadmap-picker__open {
+  text-decoration: none;
+  width: fit-content;
+  padding: 0.55rem 0.8rem;
+  border-radius: 10px;
+  background: var(--primary-color);
+  color: #ffffff;
+  font-weight: 700;
+}
+
 .page-header {
   margin-bottom: 2rem;
 }
@@ -329,7 +405,7 @@
 
 .final-card {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  color: #0f172a;
   text-align: center;
   padding: 2rem;
   border: none;
@@ -537,6 +613,10 @@
 }
 
 @media (max-width: 768px) {
+  .student-roadmap-picker {
+    grid-template-columns: 1fr;
+  }
+
   .progress-overview {
     grid-template-columns: 1fr;
   }

@@ -39,7 +39,86 @@
   gap: 1rem;
 }
 
+.roadmap-catalog-page__name-topic-panel {
+  display: grid;
+  grid-template-columns: 0.95fr 1.05fr;
+  gap: 1rem;
+}
+
+.roadmap-catalog-page__name-list,
+.roadmap-catalog-page__topic-list {
+  border: 1px solid #1f3f76;
+  border-radius: 14px;
+  background: rgba(10, 22, 48, 0.7);
+  padding: 0.9rem;
+  display: grid;
+  gap: 0.7rem;
+}
+
+.roadmap-catalog-page__name-list h3,
+.roadmap-catalog-page__topic-list h3 {
+  margin: 0;
+  color: #eaf2ff;
+}
+
+.roadmap-catalog-page__name-items,
+.roadmap-catalog-page__topic-items {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.roadmap-catalog-page__name-item {
+  border: 1px solid #2a4c8f;
+  border-radius: 10px;
+  background: #102447;
+  color: #dce8ff;
+  text-align: left;
+  padding: 0.55rem 0.65rem;
+  cursor: pointer;
+}
+
+.roadmap-catalog-page__name-item--active {
+  border-color: #4d81e3;
+  background: #17366f;
+}
+
+.roadmap-catalog-page__topic-item {
+  border: 1px solid #284778;
+  border-radius: 10px;
+  background: #0f2243;
+  padding: 0.55rem 0.65rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.roadmap-catalog-page__topic-item strong {
+  color: #eaf2ff;
+  font-size: 0.86rem;
+}
+
+.roadmap-catalog-page__topic-item span {
+  color: #9fb2d8;
+  font-size: 0.78rem;
+}
+
+.roadmap-catalog-page__open-link {
+  width: fit-content;
+  text-decoration: none;
+  border-radius: 10px;
+  background: #234e9f;
+  color: #f8fbff;
+  padding: 0.5rem 0.8rem;
+  font-weight: 700;
+}
+
 .roadmap-catalog-page__state {
   margin: 0;
   color: #9fb2d8;
+}
+
+@media (max-width: 900px) {
+  .roadmap-catalog-page__name-topic-panel {
+    grid-template-columns: 1fr;
+  }
 }

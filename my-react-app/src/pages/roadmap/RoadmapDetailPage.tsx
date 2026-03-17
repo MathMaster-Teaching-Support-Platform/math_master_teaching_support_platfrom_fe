@@ -18,11 +18,41 @@ export default function RoadmapDetailPage() {
   const [submissionId, setSubmissionId] = useState('');
   const [selectedTopicId, setSelectedTopicId] = useState('');
   const [resourceType, setResourceType] = useState<TopicMaterialResourceType>('LESSON');
+  const [finishedTopicIds, setFinishedTopicIds] = useState<string[]>([]);
+  const [carTopicId, setCarTopicId] = useState<string | null>(null);
 
   const roadmap = data?.result;
   const materialsQuery = useStudentTopicMaterials(selectedTopicId, resourceType);
 
   const materials = Array.isArray(materialsQuery.data?.result) ? materialsQuery.data?.result : [];
+  const sortedTopics = (roadmap?.topics ?? [])
+    .slice()
+    .sort((left, right) => left.sequenceOrder - right.sequenceOrder);
+
+  const topicsPerRow = 4;
+  const rowCount = Math.max(1, Math.ceil(sortedTopics.length / topicsPerRow));
+  const roadHeight = Math.max(520, rowCount * 170 + 120);
+
+  const getStopPosition = (index: number) => {
+    const row = Math.floor(index / topicsPerRow);
+    const col = index % topicsPerRow;
+    const visualCol = row % 2 === 1 ? topicsPerRow - 1 - col : col;
+    const step = topicsPerRow > 1 ? 80 / (topicsPerRow - 1) : 0;
+    return {
+      left: `${10 + visualCol * step}%`,
+      top: `${76 + row * 170}px`,
+    };
+  };
+
+  const carTopicIndex = sortedTopics.findIndex((topic) => topic.id === carTopicId);
+  const carPosition = carTopicIndex >= 0 ? getStopPosition(carTopicIndex) : { left: '8%', top: '48px' };
+  const isFinalFinished =
+    sortedTopics.length > 0 && sortedTopics.every((topic) => finishedTopicIds.includes(topic.id));
+
+  const finishTopic = (topicId: string) => {
+    setFinishedTopicIds((previous) => (previous.includes(topicId) ? previous : [...previous, topicId]));
+    setCarTopicId(topicId);
+  };
 
   return (
     <DashboardLayout
@@ -76,29 +106,83 @@ export default function RoadmapDetailPage() {
             <section className="roadmap-detail-page__topics">
               <header className="roadmap-detail-page__topics-header">
                 <h3>Roadmap topics</h3>
-                <p>Select a topic to load linked materials (including linked lessons).</p>
+                <p>Follow the road, finish a topic, and move the car to your newest checkpoint.</p>
               </header>
 
-              <div className="roadmap-detail-page__topics-grid">
-                {roadmap.topics.map((topic) => (
-                  <article key={topic.id} className="roadmap-detail-page__topic-card">
-                    <div className="roadmap-detail-page__topic-top">
-                      <strong>{topic.sequenceOrder}. {topic.title}</strong>
-                      <span>{topic.status}</span>
+              {sortedTopics.length > 0 && (
+                <section className="roadmap-detail-page__road" style={{ minHeight: `${roadHeight}px` }}>
+                  <svg
+                    className="roadmap-detail-page__road-svg"
+                    viewBox={`0 0 1000 ${roadHeight}`}
+                    preserveAspectRatio="none"
+                  >
+                    {Array.from({ length: rowCount }).map((_, row) => {
+                      const y = 95 + row * 170;
+                      const d =
+                        row % 2 === 0
+                          ? `M100,${y} C330,${y - 45} 670,${y + 45} 900,${y}`
+                          : `M900,${y} C670,${y - 45} 330,${y + 45} 100,${y}`;
+
+                      return <path key={`detail-road-row-${y}`} d={d} className="roadmap-detail-page__road-line" />;
+                    })}
+                  </svg>
+
+                  <div className="roadmap-detail-page__road-layer">
+                    {sortedTopics.map((topic, index) => {
+                      const done = finishedTopicIds.includes(topic.id);
+                      return (
+                        <article
+                          key={topic.id}
+                          className={`roadmap-detail-page__road-stop ${
+                            done ? 'roadmap-detail-page__road-stop--finished' : ''
+                          }`}
+                          style={getStopPosition(index)}
+                        >
+                          <span className="roadmap-detail-page__road-number">{topic.sequenceOrder}</span>
+                          <strong>{topic.title}</strong>
+                          <small>
+                            {topic.difficulty} • {topic.estimatedHours}h
+                          </small>
+                          <div className="roadmap-detail-page__road-actions">
+                            <button
+                              type="button"
+                              className="roadmap-detail-page__finish-btn"
+                              disabled={done}
+                              onClick={() => finishTopic(topic.id)}
+                            >
+                              {done ? 'Finished' : 'Finish'}
+                            </button>
+                            <button
+                              type="button"
+                              className="roadmap-detail-page__open-material-btn"
+                              onClick={() => setSelectedTopicId(topic.id)}
+                            >
+                              Materials
+                            </button>
+                          </div>
+                        </article>
+                      );
+                    })}
+
+                    <div className="roadmap-detail-page__car" style={carPosition}>
+                      🚗
                     </div>
-                    <p>{topic.description || 'No description'}</p>
-                    <div className="roadmap-detail-page__topic-meta">
-                      <span>{topic.difficulty}</span>
-                      <span>{topic.estimatedHours}h</span>
-                      <span>{Math.round(topic.progressPercentage)}%</span>
-                    </div>
-                    <button type="button" onClick={() => setSelectedTopicId(topic.id)}>
-                      Open topic materials
-                    </button>
-                  </article>
-                ))}
-              </div>
+
+                  </div>
+                </section>
+              )}
+
+              {sortedTopics.length === 0 && <p className="roadmap-detail-page__state">No topics in this roadmap.</p>}
             </section>
+
+            {isFinalFinished && (
+              <div className="roadmap-detail-page__fireworks-overlay" aria-hidden="true">
+                <div className="pyro"><div className="before"></div><div className="after"></div></div>
+                <div className="pyro"><div className="before"></div><div className="after"></div></div>
+                <div className="pyro"><div className="before"></div><div className="after"></div></div>
+                <div className="pyro"><div className="before"></div><div className="after"></div></div>
+              </div>
+            )}
 
             {selectedTopicId && (
               <section className="roadmap-detail-page__materials">
