@@ -1,10 +1,10 @@
+import type { CredentialResponse } from '@react-oauth/google';
+import { GoogleLogin } from '@react-oauth/google';
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import './Auth.css';
 import { AuthService } from '../../services/api/auth.service';
 import type { RegisterRequest } from '../../types/auth.types';
-import { GoogleLogin } from '@react-oauth/google';
-import type { CredentialResponse } from '@react-oauth/google';
+import './Auth.css';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
@@ -20,8 +20,8 @@ const Register: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: '' }));
   };
 
   const validateForm = (): boolean => {
@@ -99,7 +99,9 @@ const Register: React.FC = () => {
         }
       }
     } catch (err) {
-      setErrors({ submit: err instanceof Error ? err.message : 'Đăng ký Google thất bại. Vui lòng thử lại.' });
+      setErrors({
+        submit: err instanceof Error ? err.message : 'Đăng ký Google thất bại. Vui lòng thử lại.',
+      });
     } finally {
       setIsLoading(false);
     }
@@ -181,7 +183,9 @@ const Register: React.FC = () => {
             {errors.submit && <div className="alert alert-error">{errors.submit}</div>}
 
             <div className="form-group">
-              <label htmlFor="email" className="form-label">Email</label>
+              <label htmlFor="email" className="form-label">
+                Email
+              </label>
               <input
                 type="email"
                 id="email"
@@ -197,7 +201,9 @@ const Register: React.FC = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="password" className="form-label">Mật khẩu</label>
+              <label htmlFor="password" className="form-label">
+                Mật khẩu
+              </label>
               <input
                 type="password"
                 id="password"
@@ -213,7 +219,9 @@ const Register: React.FC = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="confirmPassword" className="form-label">Xác nhận mật khẩu</label>
+              <label htmlFor="confirmPassword" className="form-label">
+                Xác nhận mật khẩu
+              </label>
               <input
                 type="password"
                 id="confirmPassword"
@@ -225,7 +233,9 @@ const Register: React.FC = () => {
                 disabled={isLoading}
                 autoComplete="new-password"
               />
-              {errors.confirmPassword && <span className="form-error">{errors.confirmPassword}</span>}
+              {errors.confirmPassword && (
+                <span className="form-error">{errors.confirmPassword}</span>
+              )}
             </div>
 
             <button

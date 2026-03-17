@@ -1,10 +1,10 @@
+import type { CredentialResponse } from '@react-oauth/google';
+import { GoogleLogin } from '@react-oauth/google';
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import './Auth.css';
 import { AuthService } from '../../services/api/auth.service';
 import type { LoginRequest } from '../../types/auth.types';
-import { GoogleLogin } from '@react-oauth/google';
-import type { CredentialResponse } from '@react-oauth/google';
+import './Auth.css';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -62,7 +62,7 @@ const Login: React.FC = () => {
 
   const handleGoogleSuccess = async (response: CredentialResponse) => {
     if (!response.credential) return;
-    
+
     setError('');
     setIsLoading(true);
 
@@ -71,7 +71,7 @@ const Login: React.FC = () => {
 
       if (authResponse.code === 1000 && authResponse.result.token) {
         AuthService.saveToken(authResponse.result.token, authResponse.result.expiryTime);
-        
+
         if (authResponse.result.newRegistration) {
           navigate('/select-role');
         } else {
@@ -80,9 +80,7 @@ const Login: React.FC = () => {
         }
       }
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Đăng nhập Google thất bại. Vui lòng thử lại.'
-      );
+      setError(err instanceof Error ? err.message : 'Đăng nhập Google thất bại. Vui lòng thử lại.');
     } finally {
       setIsLoading(false);
     }

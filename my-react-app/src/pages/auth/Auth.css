@@ -5,20 +5,20 @@
 @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
 
 :root {
-  --auth-primary: #5E5CE6;
+  --auth-primary: #5e5ce6;
   --auth-primary-soft: rgba(94, 92, 230, 0.08);
   --auth-primary-glow: rgba(94, 92, 230, 0.18);
-  --auth-dark: #0E0C15;
-  --auth-dark-alt: #1A1725;
-  --auth-bg: #FAFAFF;
+  --auth-dark: #0e0c15;
+  --auth-dark-alt: #1a1725;
+  --auth-bg: #fafaff;
   --auth-surface: #ffffff;
-  --auth-text: #0E0C15;
-  --auth-text-body: #3F3A52;
-  --auth-text-muted: #756B85;
-  --auth-border: #E8E5F0;
-  --auth-error: #EF4444;
-  --auth-success: #22C55E;
-  --auth-pink: #FF98E2;
+  --auth-text: #0e0c15;
+  --auth-text-body: #3f3a52;
+  --auth-text-muted: #756b85;
+  --auth-border: #e8e5f0;
+  --auth-error: #ef4444;
+  --auth-success: #22c55e;
+  --auth-pink: #ff98e2;
 }
 
 .auth-container {
@@ -36,7 +36,7 @@
   align-items: flex-start;
   justify-content: center;
   padding: 3.5rem 3.5rem 3rem;
-  background: linear-gradient(150deg, #2D2880 0%, #3730A3 40%, #4F46E5 75%, #1E1B4B 100%);
+  background: linear-gradient(150deg, #2d2880 0%, #3730a3 40%, #4f46e5 75%, #1e1b4b 100%);
   color: white;
   position: relative;
   overflow: hidden;
@@ -47,7 +47,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px);
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.07) 1px, transparent 1px);
   background-size: 28px 28px;
   z-index: 0;
 }
@@ -58,7 +58,7 @@
   position: absolute;
   width: 380px;
   height: 380px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.10) 0%, transparent 65%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 65%);
   border-radius: 50%;
   top: -90px;
   right: -90px;
@@ -83,14 +83,46 @@
   line-height: 1;
 }
 
-.auth-math-sym.ms1 { font-size: 5.5rem; top: 7%;   left: 4%;  }
-.auth-math-sym.ms2 { font-size: 7rem;   top: 2%;   right: 6%; }
-.auth-math-sym.ms3 { font-size: 4rem;   top: 36%;  right: 4%; }
-.auth-math-sym.ms4 { font-size: 3.5rem; top: 53%;  left: 7%;  }
-.auth-math-sym.ms5 { font-size: 5.5rem; bottom: 25%; right: 10%; }
-.auth-math-sym.ms6 { font-size: 4.5rem; bottom: 14%; left: 3%;  }
-.auth-math-sym.ms7 { font-size: 3rem;   top: 23%;  left: 44%; }
-.auth-math-sym.ms8 { font-size: 3.5rem; bottom: 7%;  right: 28%; }
+.auth-math-sym.ms1 {
+  font-size: 5.5rem;
+  top: 7%;
+  left: 4%;
+}
+.auth-math-sym.ms2 {
+  font-size: 7rem;
+  top: 2%;
+  right: 6%;
+}
+.auth-math-sym.ms3 {
+  font-size: 4rem;
+  top: 36%;
+  right: 4%;
+}
+.auth-math-sym.ms4 {
+  font-size: 3.5rem;
+  top: 53%;
+  left: 7%;
+}
+.auth-math-sym.ms5 {
+  font-size: 5.5rem;
+  bottom: 25%;
+  right: 10%;
+}
+.auth-math-sym.ms6 {
+  font-size: 4.5rem;
+  bottom: 14%;
+  left: 3%;
+}
+.auth-math-sym.ms7 {
+  font-size: 3rem;
+  top: 23%;
+  left: 44%;
+}
+.auth-math-sym.ms8 {
+  font-size: 3.5rem;
+  bottom: 7%;
+  right: 28%;
+}
 
 /* Brand block */
 .auth-brand {
@@ -114,7 +146,7 @@
 .auth-logo-mark {
   width: 44px;
   height: 44px;
-  background: linear-gradient(135deg, #5E5CE6, #9896F5);
+  background: linear-gradient(135deg, #5e5ce6, #9896f5);
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -124,7 +156,7 @@
   font-weight: 800;
   color: #fff;
   flex-shrink: 0;
-  box-shadow: 0 4px 16px rgba(94,92,230,0.4);
+  box-shadow: 0 4px 16px rgba(94, 92, 230, 0.4);
 }
 
 .auth-brand h1 {
@@ -226,7 +258,11 @@
   background: var(--auth-bg);
   position: relative;
   /* Radial accent matching Homepage hero */
-  background-image: radial-gradient(ellipse 60% 40% at 80% 20%, rgba(94,92,230,0.07) 0%, transparent 70%);
+  background-image: radial-gradient(
+    ellipse 60% 40% at 80% 20%,
+    rgba(94, 92, 230, 0.07) 0%,
+    transparent 70%
+  );
 }
 
 /* Accent stripe at very top — signature linear/vercel look */
@@ -269,7 +305,9 @@
   background: #ffffff;
   border: 1px solid var(--auth-border);
   border-radius: 20px;
-  box-shadow: 0 2px 4px rgba(14,12,21,0.03), 0 8px 32px rgba(94,92,230,0.08);
+  box-shadow:
+    0 2px 4px rgba(14, 12, 21, 0.03),
+    0 8px 32px rgba(94, 92, 230, 0.08);
 }
 
 /* ---- Header ---- */
@@ -332,10 +370,13 @@
   font-family: 'Inter', sans-serif;
   line-height: 1.5;
   color: var(--auth-text);
-  background: #FAFAFF;
+  background: #fafaff;
   border: 1.5px solid var(--auth-border);
   border-radius: 12px;
-  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s,
+    background 0.2s;
   box-sizing: border-box;
   -webkit-appearance: none;
   appearance: none;
@@ -429,15 +470,15 @@
 }
 
 .alert-success {
-  background: #F0FDF4;
-  color: #14532D;
-  border: 1px solid #BBF7D0;
+  background: #f0fdf4;
+  color: #14532d;
+  border: 1px solid #bbf7d0;
 }
 
 .alert-error {
-  background: #FEF2F2;
-  color: #7F1D1D;
-  border: 1px solid #FECACA;
+  background: #fef2f2;
+  color: #7f1d1d;
+  border: 1px solid #fecaca;
 }
 
 /* ---- Buttons — scoped to override index.css button{} ---- */
@@ -466,7 +507,7 @@
 }
 
 .auth-container .btn-primary {
-  background: linear-gradient(135deg, #5E5CE6 0%, #7B79F7 100%);
+  background: linear-gradient(135deg, #5e5ce6 0%, #7b79f7 100%);
   color: #ffffff !important;
   box-shadow: 0 4px 20px rgba(94, 92, 230, 0.35);
   border: none;
@@ -474,7 +515,7 @@
 }
 
 .auth-container .btn-primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, #4b49d4 0%, #6B69E8 100%);
+  background: linear-gradient(135deg, #4b49d4 0%, #6b69e8 100%);
   transform: translateY(-2px);
   box-shadow: 0 8px 28px rgba(94, 92, 230, 0.45);
 }
@@ -489,13 +530,13 @@
   border: 1.5px solid var(--auth-border) !important;
   border-radius: 100px;
   font-weight: 500;
-  box-shadow: 0 1px 4px rgba(14,12,21,0.04);
+  box-shadow: 0 1px 4px rgba(14, 12, 21, 0.04);
 }
 
 .auth-container .btn-google:hover {
-  background: #F8F7FF !important;
+  background: #f8f7ff !important;
   border-color: var(--auth-primary) !important;
-  box-shadow: 0 2px 8px rgba(94,92,230,0.1);
+  box-shadow: 0 2px 8px rgba(94, 92, 230, 0.1);
 }
 
 /* ---- Divider ---- */

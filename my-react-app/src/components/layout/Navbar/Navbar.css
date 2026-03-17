@@ -1,8 +1,9 @@
 .navbar-top {
-  height: 78px;
-  background: rgba(248, 250, 252, 0.92);
-  border-bottom: 1px solid #e4eaf4;
-  backdrop-filter: blur(8px);
+  height: 68px;
+  background: rgba(250, 250, 255, 0.92);
+  border-bottom: 1px solid #e8e5f0;
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
   position: fixed;
   top: 0;
   left: 272px;
@@ -10,49 +11,13 @@
   z-index: 100;
   display: flex;
   align-items: center;
-  padding: 0 1.25rem;
+  padding: 0 1.5rem;
 }
 
 .navbar-content {
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 1rem;
-}
-
-.navbar-search {
-  flex: 1;
-  min-width: 0;
-  max-width: min(430px, 44vw);
-  position: relative;
-}
-
-.search-icon {
-  position: absolute;
-  right: 0.9rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #64748b;
-  pointer-events: none;
-}
-
-.search-input {
-  width: 100%;
-  height: 44px;
-  padding: 0.75rem 2.6rem 0.75rem 1rem;
-  border: 1px solid #dbe4f0;
-  border-radius: 12px;
-  background: #f1f5f9;
-  font-family: var(--font-heading);
-  font-size: 0.9rem;
-  transition: all var(--transition-fast);
-}
-
-.search-input:focus {
-  outline: none;
-  border-color: #7aa2ff;
-  background: #ffffff;
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
 }
 
 .navbar-actions {
@@ -70,14 +35,14 @@
   height: 38px;
   padding: 0;
   line-height: 1;
-  border: 1px solid #dbe4f0;
+  border: 1px solid #e8e5f0;
   background: #ffffff;
   border-radius: 11px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   text-decoration: none;
-  color: #334155;
+  color: #3f3a52;
   transition: all var(--transition-fast);
 }
 
@@ -91,9 +56,9 @@
 }
 
 .navbar-action-btn:hover {
-  border-color: #bcd0f6;
-  color: #1d4ed8;
-  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.12);
+  border-color: #c5c3f8;
+  color: #5b67f1;
+  box-shadow: 0 8px 18px rgba(91, 103, 241, 0.14);
 }
 
 .notification-badge {
@@ -119,7 +84,7 @@
   gap: 0.55rem;
   max-width: min(100%, 230px);
   padding: 0.35rem 0.45rem;
-  border: 1px solid #dbe4f0;
+  border: 1px solid #e8e5f0;
   background: #ffffff;
   border-radius: 14px;
   min-width: 0;
@@ -129,7 +94,7 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%);
+  background: linear-gradient(135deg, #5b67f1 0%, #8b5cf6 100%);
   color: #ffffff;
   display: inline-flex;
   align-items: center;
@@ -194,7 +159,7 @@
   padding: 0.375rem 0.75rem;
   border: none;
   background: transparent;
-  color: #2563eb;
+  color: #5b67f1;
   font-size: 0.813rem;
   font-weight: 600;
   cursor: pointer;
@@ -203,7 +168,7 @@
 }
 
 .mark-all-read:hover {
-  background: rgba(37, 99, 235, 0.08);
+  background: rgba(91, 103, 241, 0.08);
 }
 
 .notifications-list {
@@ -225,7 +190,7 @@
 }
 
 .notification-item.unread {
-  background: #eef4ff;
+  background: rgba(91, 103, 241, 0.05);
 }
 
 .notification-icon {
@@ -265,11 +230,11 @@
   display: block;
   text-align: center;
   padding: 0.875rem;
-  color: #2563eb;
+  color: #5b67f1;
   text-decoration: none;
   font-size: 0.88rem;
   font-weight: 600;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid #e8e5f0;
   transition: background-color var(--transition-fast);
 }
 
@@ -282,10 +247,6 @@
     padding: 0 1rem;
   }
 
-  .navbar-search {
-    max-width: min(360px, 36vw);
-  }
-
   .navbar-user-badge {
     max-width: 210px;
   }
@@ -296,10 +257,6 @@
 }
 
 @media (max-width: 1100px) {
-  .navbar-search {
-    max-width: min(300px, 33vw);
-  }
-
   .navbar-user-role {
     display: none;
   }
@@ -347,18 +304,8 @@
 @media (max-width: 768px) {
   .navbar-top {
     left: 76px;
-    height: 70px;
+    height: 68px;
     padding: 0 0.85rem;
-  }
-
-  .navbar-search {
-    max-width: 230px;
-  }
-
-  .search-input {
-    height: 40px;
-    font-size: 0.83rem;
-    padding-right: 2.3rem;
   }
 
   .notifications-dropdown {
