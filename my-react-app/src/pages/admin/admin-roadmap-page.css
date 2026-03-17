@@ -54,7 +54,118 @@
   color: #64748b;
 }
 
+.admin-roadmap-page__panel-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.admin-roadmap-page__panel {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 1rem;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.admin-roadmap-page__panel h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.admin-roadmap-page__panel p {
+  margin: 0;
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+.admin-roadmap-page__form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.admin-roadmap-page__form-grid label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  color: #334155;
+}
+
+.admin-roadmap-page__form-grid input,
+.admin-roadmap-page__form-grid textarea {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 0.5rem 0.6rem;
+}
+
+.admin-roadmap-page__form-grid textarea {
+  resize: vertical;
+}
+
+.admin-roadmap-page__checkbox-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.admin-roadmap-page__checkbox-row label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  color: #334155;
+}
+
+.admin-roadmap-page__actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.admin-roadmap-page__button {
+  border: 0;
+  border-radius: 8px;
+  background: #0369a1;
+  color: #ffffff;
+  font-weight: 700;
+  padding: 0.55rem 0.9rem;
+  cursor: pointer;
+}
+
+.admin-roadmap-page__button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.admin-roadmap-page__result-list {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.admin-roadmap-page__result-item {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.55rem 0.7rem;
+  display: grid;
+  gap: 0.2rem;
+}
+
+.admin-roadmap-page__result-item span {
+  color: #475569;
+  font-size: 0.82rem;
+}
+
+.admin-roadmap-page__success {
+  color: #15803d;
+  font-weight: 600;
+}
+
 @media (max-width: 768px) {
+  .admin-roadmap-page__panel-grid,
+  .admin-roadmap-page__form-grid,
+  .admin-roadmap-page__checkbox-row,
   .admin-roadmap-page__row {
     grid-template-columns: 1fr;
   }

@@ -1,6 +1,10 @@
 .roadmap-catalog-page {
   display: grid;
   gap: 1rem;
+  background: radial-gradient(circle at 20% -20%, #132f65 0%, #071229 35%, #050b1b 100%);
+  border: 1px solid #142546;
+  border-radius: 18px;
+  padding: 1rem;
 }
 
 .roadmap-catalog-page__header {
@@ -12,18 +16,19 @@
 
 .roadmap-catalog-page__header h1 {
   margin: 0;
+  color: #eaf2ff;
 }
 
 .roadmap-catalog-page__header p {
   margin: 0.45rem 0 0;
-  color: #475569;
+  color: #9fb2d8;
 }
 
 .roadmap-catalog-page__dashboard-link {
   text-decoration: none;
-  border-radius: 8px;
-  background: #0369a1;
-  color: #ffffff;
+  border-radius: 10px;
+  background: #234e9f;
+  color: #f8fbff;
   padding: 0.55rem 0.85rem;
   font-weight: 700;
 }
@@ -36,5 +41,5 @@
 
 .roadmap-catalog-page__state {
   margin: 0;
-  color: #64748b;
+  color: #9fb2d8;
 }

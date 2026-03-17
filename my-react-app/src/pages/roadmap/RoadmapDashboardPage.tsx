@@ -26,7 +26,7 @@ export default function RoadmapDashboardPage() {
 
         {snapshot && (
           <>
-            <RoadmapDashboard progress={snapshot.progress} roadmapTitle={snapshot.roadmap.title} />
+            <RoadmapDashboard progress={snapshot.progress} roadmapTitle={snapshot.roadmap.name} />
             <div className="roadmap-dashboard-page__actions">
               <Link to="/roadmaps" className="roadmap-dashboard-page__link">
                 View all roadmaps

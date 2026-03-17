@@ -1,10 +1,17 @@
 .roadmap-card {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
+  background: rgba(8, 20, 45, 0.9);
+  border: 1px solid #1c315d;
   border-radius: 14px;
   padding: 1rem;
   display: grid;
   gap: 0.75rem;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.roadmap-card:hover {
+  transform: translateY(-2px);
+  border-color: #3b5ea3;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
 }
 
 .roadmap-card__header {
@@ -15,7 +22,7 @@
 
 .roadmap-card__level {
   margin: 0;
-  color: #0f766e;
+  color: #91c4ff;
   font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -29,36 +36,51 @@
 }
 
 .roadmap-card__status--published {
-  background: #dcfce7;
-  color: #15803d;
+  background: #14532d;
+  color: #ecfdf5;
 }
 
 .roadmap-card__status--draft {
-  background: #fef3c7;
-  color: #b45309;
+  background: #78350f;
+  color: #fffbeb;
 }
 
 .roadmap-card__status--archived {
-  background: #e5e7eb;
-  color: #4b5563;
+  background: #334155;
+  color: #f8fafc;
+}
+
+.roadmap-card__status--generated {
+  background: #0f766e;
+  color: #ecfeff;
+}
+
+.roadmap-card__status--in_progress {
+  background: #1d4ed8;
+  color: #eff6ff;
+}
+
+.roadmap-card__status--completed {
+  background: #14532d;
+  color: #ecfdf5;
 }
 
 .roadmap-card__title {
   margin: 0;
   font-size: 1.1rem;
-  color: #111827;
+  color: #f8fbff;
 }
 
 .roadmap-card__description {
   margin: 0;
-  color: #4b5563;
+  color: #a9bddf;
   line-height: 1.5;
 }
 
 .roadmap-card__stats {
   display: flex;
   gap: 0.75rem;
-  color: #6b7280;
+  color: #9fb2d8;
   font-size: 0.82rem;
 }
 
@@ -69,6 +91,6 @@
 
 .roadmap-card__cta {
   text-decoration: none;
-  color: #0369a1;
+  color: #9ad1ff;
   font-weight: 700;
 }

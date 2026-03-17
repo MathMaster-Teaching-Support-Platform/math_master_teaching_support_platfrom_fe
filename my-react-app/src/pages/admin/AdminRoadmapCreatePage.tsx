@@ -4,6 +4,7 @@ import { AdminRoadmapEditor } from '../../components/roadmap';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { useCreateRoadmap } from '../../hooks/useRoadmaps';
 import { mockAdmin } from '../../data/mockData';
+import type { CreateAdminRoadmapRequest } from '../../types';
 import './admin-roadmap-page.css';
 
 export default function AdminRoadmapCreatePage() {
@@ -31,11 +32,18 @@ export default function AdminRoadmapCreatePage() {
         </header>
 
         <AdminRoadmapEditor
+          mode="create"
           submitting={createRoadmap.isPending}
           onSubmit={(payload) => {
-            createRoadmap.mutate(payload);
+            createRoadmap.mutate(payload as CreateAdminRoadmapRequest);
           }}
         />
+
+        {createRoadmap.error && (
+          <p className="admin-roadmap-page__state">
+            {createRoadmap.error.message || 'Failed to create roadmap.'}
+          </p>
+        )}
       </section>
     </DashboardLayout>
   );

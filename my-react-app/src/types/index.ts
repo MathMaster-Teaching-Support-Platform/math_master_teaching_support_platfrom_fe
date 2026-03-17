@@ -17,6 +17,7 @@ export * from './assessment.types';
 export * from './examMatrix';
 export * from './lesson.types';
 export * from './roadmap.types';
+export * from './subject.types';
 export {
   type Mindmap,
   type MindmapNode,

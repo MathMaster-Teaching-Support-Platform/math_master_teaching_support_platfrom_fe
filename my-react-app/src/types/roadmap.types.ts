@@ -1,22 +1,25 @@
 import type { ApiResponse } from './auth.types';
 
-export type RoadmapLevel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
-export type RoadmapStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+export type RoadmapStatus = 'GENERATED' | 'IN_PROGRESS' | 'COMPLETED' | 'ARCHIVED';
 export type RoadmapLessonStatus = 'LOCKED' | 'IN_PROGRESS' | 'COMPLETED';
+export type QuestionDifficulty = 'EASY' | 'MEDIUM' | 'HARD';
+export type TopicStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'LOCKED';
 
 export interface RoadmapCatalogItem {
   id: string;
-  title: string;
-  slug: string;
-  description: string;
-  thumbnailUrl?: string | null;
-  level: RoadmapLevel;
+  name: string;
+  subjectId: string;
+  studentId: string | null;
+  studentName: string | null;
+  subject: string;
+  gradeLevel: string;
   status: RoadmapStatus;
-  estimatedHours: number;
-  moduleCount: number;
-  lessonCount: number;
-  enrolledStudents: number;
+  progressPercentage: number;
+  completedTopicsCount: number;
+  totalTopicsCount: number;
+  createdAt: string;
   updatedAt: string;
+  description: string;
 }
 
 export interface RoadmapLesson {
@@ -37,10 +40,42 @@ export interface RoadmapModule {
   lessons: RoadmapLesson[];
 }
 
+export interface RoadmapTopic {
+  id: string;
+  title: string;
+  description?: string;
+  status: TopicStatus;
+  difficulty: QuestionDifficulty;
+  sequenceOrder: number;
+  priority: number;
+  progressPercentage: number;
+  estimatedHours: number;
+  topicAssessmentId?: string | null;
+  passThresholdPercentage?: number | null;
+  startedAt?: string | null;
+  completedAt?: string | null;
+  questionTemplates: unknown[];
+  mindmaps: unknown[];
+}
+
+export interface RoadmapStats {
+  totalEstimatedHours: number;
+  easyTopicsCount: number;
+  mediumTopicsCount: number;
+  hardTopicsCount: number;
+  averageProgress: number;
+  lockedTopicsCount: number;
+  daysRemaining: number;
+}
+
 export interface RoadmapDetail extends RoadmapCatalogItem {
-  summary?: string;
-  tags: string[];
-  modules: RoadmapModule[];
+  teacherId?: string | null;
+  generationType?: 'ADMIN_TEMPLATE';
+  estimatedCompletionDays: number;
+  startedAt?: string | null;
+  completedAt?: string | null;
+  topics: RoadmapTopic[];
+  stats?: RoadmapStats;
 }
 
 export interface StudentRoadmapProgress {
@@ -57,19 +92,109 @@ export interface StudentRoadmapSnapshot {
   progress: StudentRoadmapProgress;
 }
 
+export type TopicMaterialResourceType =
+  | 'LESSON'
+  | 'QUESTION'
+  | 'MINDMAP'
+  | 'DOCUMENT'
+  | 'ASSESSMENT'
+  | 'EXAMPLE'
+  | 'PRACTICE';
+
+export interface TopicMaterial {
+  id: string;
+  resourceTitle: string;
+  resourceType: TopicMaterialResourceType;
+  sequenceOrder: number;
+  isRequired: boolean;
+  lessonId: string | null;
+  questionId: string | null;
+  assessmentId: string | null;
+  mindmapId: string | null;
+  chapterId: string | null;
+}
+
+export interface LinkTopicMaterialsByQuestionRequest {
+  questionId: string;
+  includeSlides: boolean;
+  includeQuestions: boolean;
+  includeMindmaps: boolean;
+  includeDocuments: boolean;
+  startSequenceOrder: number;
+}
+
+export interface CreateRoadmapTopicRequest {
+  title: string;
+  description?: string;
+  sequenceOrder: number;
+  priority?: number;
+  estimatedHours?: number;
+  lessonIds: string[];
+  topicAssessmentId?: string;
+  passThresholdPercentage?: number;
+  difficulty: QuestionDifficulty;
+}
+
+export interface RoadmapTopicResponse {
+  id: string;
+  title: string;
+  description?: string;
+  status: TopicStatus;
+  difficulty: QuestionDifficulty;
+  sequenceOrder: number;
+  priority: number;
+  progressPercentage: number;
+  estimatedHours: number;
+  topicAssessmentId?: string | null;
+  passThresholdPercentage?: number | null;
+  startedAt?: string | null;
+  completedAt?: string | null;
+  questionTemplates: unknown[];
+  mindmaps: unknown[];
+}
+
+export interface EntryTestMapping {
+  questionId: string;
+  roadmapTopicId: string;
+  orderIndex: number;
+  weight: number;
+}
+
+export interface CreateRoadmapEntryTestRequest {
+  assessmentId: string;
+  mappings: EntryTestMapping[];
+}
+
+export interface SubmitRoadmapEntryTestRequest {
+  submissionId: string;
+}
+
+export interface SubmitRoadmapEntryTestResult {
+  roadmapId: string;
+  submissionId: string;
+  suggestedTopicId: string;
+  evaluatedQuestions: number;
+  thresholdPercentage: number;
+  evaluatedAt: string;
+}
+
+export interface CreateAdminRoadmapRequest {
+  name: string;
+  subjectId: string;
+  description: string;
+  estimatedDays?: number;
+}
+
+export interface UpdateAdminRoadmapRequest {
+  subjectId?: string;
+  description?: string;
+  estimatedCompletionDays?: number;
+  status?: RoadmapStatus;
+}
+
 export interface UpdateRoadmapProgressRequest {
   lessonId: string;
   status: Extract<RoadmapLessonStatus, 'IN_PROGRESS' | 'COMPLETED'>;
-}
-
-export interface AdminRoadmapPayload {
-  title: string;
-  slug: string;
-  description: string;
-  level: RoadmapLevel;
-  status: RoadmapStatus;
-  estimatedHours: number;
-  tags: string[];
 }
 
 export type RoadmapApiResponse<T> = ApiResponse<T>;

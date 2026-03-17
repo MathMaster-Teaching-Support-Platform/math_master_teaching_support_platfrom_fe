@@ -83,14 +83,24 @@ export const API_ENDPOINTS = {
   LESSONS: '/lessons',
   LESSON_DETAIL: (lessonId: string) => `/lessons/${lessonId}`,
 
+  // Subjects
+  SUBJECTS: '/subjects',
+  SUBJECTS_BY_GRADE: (gradeLevel: string) => `/subjects/grade/${gradeLevel}`,
+
   // Roadmaps
-  ROADMAPS: '/roadmaps',
-  ROADMAP_DETAIL: (roadmapId: string) => `/roadmaps/${roadmapId}`,
+  ROADMAPS: '/student/roadmaps',
+  ROADMAP_DETAIL: (roadmapId: string) => `/student/roadmaps/${roadmapId}`,
   ROADMAP_STUDENT: '/roadmaps/student',
   ROADMAP_STUDENT_DETAIL: (roadmapId: string) => `/roadmaps/${roadmapId}/student-progress`,
   ROADMAP_PROGRESS: (roadmapId: string) => `/roadmaps/${roadmapId}/progress`,
+  ROADMAP_ENTRY_TEST_SUBMIT: (roadmapId: string) => `/student/roadmaps/${roadmapId}/entry-test/submit`,
+  STUDENT_TOPIC_MATERIALS: (topicId: string) => `/student/roadmaps/topics/${topicId}/materials`,
+  STUDENT_TOPIC_MATERIALS_BY_TYPE: (topicId: string, resourceType: string) =>
+    `/student/roadmaps/topics/${topicId}/materials-by-type?resourceType=${resourceType}`,
   ADMIN_ROADMAPS: '/admin/roadmaps',
   ADMIN_ROADMAP_DETAIL: (roadmapId: string) => `/admin/roadmaps/${roadmapId}`,
+  ADMIN_ROADMAP_TOPICS: (roadmapId: string) => `/admin/roadmaps/${roadmapId}/topics`,
+  ADMIN_ROADMAP_ENTRY_TEST: (roadmapId: string) => `/admin/roadmaps/${roadmapId}/entry-test`,
 
   // Wallet
   WALLET_MY: '/wallet/my-wallet',

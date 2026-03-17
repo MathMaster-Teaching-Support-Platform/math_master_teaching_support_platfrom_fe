@@ -1,10 +1,21 @@
 .admin-roadmap-editor {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 14px;
-  padding: 1rem;
+  background: linear-gradient(155deg, #ffffff 0%, #f8fbff 100%);
+  border: 1px solid #d9e4f2;
+  border-radius: 16px;
+  padding: 1.1rem;
   display: grid;
-  gap: 1rem;
+  gap: 1.1rem;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+}
+
+.admin-roadmap-editor__header h3 {
+  margin: 0;
+  color: #0f172a;
+}
+
+.admin-roadmap-editor__header p {
+  margin: 0.45rem 0 0;
+  color: #475569;
 }
 
 .admin-roadmap-editor__fields {
@@ -23,10 +34,11 @@
 .admin-roadmap-editor__field input,
 .admin-roadmap-editor__field textarea,
 .admin-roadmap-editor__field select {
-  border: 1px solid #d1d5db;
+  border: 1px solid #cddbeb;
   border-radius: 10px;
   padding: 0.6rem 0.7rem;
   font: inherit;
+  background: #ffffff;
 }
 
 .admin-roadmap-editor__field--wide {
@@ -40,36 +52,12 @@
 
 .admin-roadmap-editor__actions button {
   border: 0;
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 0.6rem 1rem;
   color: #ffffff;
-  background: #0369a1;
+  background: linear-gradient(135deg, #155eef 0%, #0ea5e9 100%);
   font-weight: 700;
   cursor: pointer;
-}
-
-.admin-roadmap-editor__block {
-  border-top: 1px dashed #d1d5db;
-  padding-top: 0.75rem;
-}
-
-.admin-roadmap-editor__module,
-.admin-roadmap-editor__lesson-group {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 0.6rem;
-  margin-top: 0.6rem;
-}
-
-.admin-roadmap-editor__lesson-group ul {
-  margin: 0.5rem 0 0;
-  padding-left: 1rem;
-}
-
-.admin-roadmap-editor__hint {
-  color: #64748b;
-  margin: 0;
 }
 
 @media (max-width: 768px) {
