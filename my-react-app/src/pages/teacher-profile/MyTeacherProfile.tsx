@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TeacherProfileService } from '../../services/api/teacher-profile.service';
 import type { TeacherProfile, UpdateTeacherProfileRequest } from '../../types';
@@ -33,8 +33,6 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
     try {
       const response = await TeacherProfileService.getMyProfile();
       setProfile(response.result);
-
-      // Set form data
       setFormData({
         schoolName: response.result.schoolName,
         schoolAddress: response.result.schoolAddress || '',
@@ -43,7 +41,7 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
         description: response.result.description || '',
       });
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load profile';
+      const errorMessage = err instanceof Error ? err.message : 'Không thể tải hồ sơ';
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -54,10 +52,7 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleUpdate = async (e: React.FormEvent) => {
@@ -67,19 +62,15 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
     setSubmitting(true);
 
     try {
-      if (!formData.schoolName.trim()) {
-        throw new Error('Please enter your school name');
-      }
-      if (!formData.position.trim()) {
-        throw new Error('Please enter your position');
-      }
+      if (!formData.schoolName.trim()) throw new Error('Vui lòng nhập tên trường');
+      if (!formData.position.trim()) throw new Error('Vui lòng nhập chức vụ');
 
       const response = await TeacherProfileService.updateMyProfile(formData);
       setProfile(response.result);
       setEditing(false);
-      setSuccess('Profile updated successfully!');
+      setSuccess('Cập nhật hồ sơ thành công!');
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update profile';
+      const errorMessage = err instanceof Error ? err.message : 'Không thể cập nhật hồ sơ';
       setError(errorMessage);
     } finally {
       setSubmitting(false);
@@ -87,9 +78,7 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
   };
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete your teacher profile?')) {
-      return;
-    }
+    if (!confirm('Bạn có chắc chắn muốn xóa hồ sơ giáo viên này không?')) return;
 
     setSubmitting(true);
     try {
@@ -100,7 +89,7 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
         navigate('/profile');
       }
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to delete profile';
+      const errorMessage = err instanceof Error ? err.message : 'Không thể xóa hồ sơ';
       setError(errorMessage);
       setSubmitting(false);
     }
@@ -111,18 +100,30 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
 
   if (loading) {
     return (
-      <div className="teacher-profile-page">
-        <div className="loading">Loading profile...</div>
+      <div className="tp-page">
+        <div className="tp-card">
+          <div className="tp-loading">
+            <div className="tp-loading__spinner" />
+            Đang tải hồ sơ...
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!profile) {
     return (
-      <div className="teacher-profile-page">
-        <div className="alert alert-warning">
-          No teacher profile found. Would you like to{' '}
-          <a href="/submit-teacher-profile">submit one</a>?
+      <div className="tp-page">
+        <div className="tp-card">
+          <div className="tp-card-body">
+            <div className="tp-alert tp-alert--warning">
+              <span className="tp-alert__icon">⚠️</span>
+              <span>
+                Không tìm thấy hồ sơ giáo viên. Bạn có muốn{' '}
+                <a href="/submit-teacher-profile">nộp hồ sơ</a> không?
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -131,11 +132,11 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
   const getStatusBadge = () => {
     switch (profile.status) {
       case 'PENDING':
-        return <div className="status-badge status-pending">⏳ Pending Review</div>;
+        return <span className="tp-status-badge tp-status-badge--pending">⏳ Đang xét duyệt</span>;
       case 'APPROVED':
-        return <div className="status-badge status-approved">✅ Approved</div>;
+        return <span className="tp-status-badge tp-status-badge--approved">✓ Đã duyệt</span>;
       case 'REJECTED':
-        return <div className="status-badge status-rejected">❌ Rejected</div>;
+        return <span className="tp-status-badge tp-status-badge--rejected">✕ Bị từ chối</span>;
     }
   };
 
@@ -143,23 +144,32 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
     switch (profile.status) {
       case 'PENDING':
         return (
-          <div className="alert alert-warning">
-            Your profile is currently under review. You will be notified once an admin reviews your
-            application.
+          <div className="tp-alert tp-alert--warning">
+            <span className="tp-alert__icon">⏳</span>
+            <span>
+              Hồ sơ của bạn đang được xem xét. Bạn sẽ được thông báo sau khi quản trị viên hoàn tất
+              việc xét duyệt.
+            </span>
           </div>
         );
       case 'APPROVED':
         return (
-          <div className="alert alert-success">
-            Congratulations! Your teacher profile has been approved. You can now create and manage
-            courses.
+          <div className="tp-alert tp-alert--success">
+            <span className="tp-alert__icon">✓</span>
+            <span>
+              Chúc mừng! Hồ sơ giáo viên của bạn đã được duyệt. Bạn có thể tạo và quản lý khóa học
+              ngay bây giờ.
+            </span>
           </div>
         );
       case 'REJECTED':
         return (
-          <div className="alert alert-error">
-            Your profile was rejected. Please review the admin's comments below and update your
-            profile to resubmit.
+          <div className="tp-alert tp-alert--error">
+            <span className="tp-alert__icon">✕</span>
+            <span>
+              Hồ sơ của bạn đã bị từ chối. Vui lòng xem lại nhận xét từ quản trị viên bên dưới và
+              cập nhật hồ sơ để nộp lại.
+            </span>
           </div>
         );
     }
@@ -167,111 +177,133 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
 
   if (!editing) {
     return (
-      <div className="teacher-profile-page">
-        <div className="profile-card">
-          <div className="profile-header">
-            <h1>My Teacher Profile</h1>
-            {getStatusBadge()}
+      <div className="tp-page">
+        <div className="tp-card">
+          <div className="tp-card-header">
+            <div className="tp-card-header__top">
+              <div>
+                <h1 className="tp-card-header__title">
+                  Hồ sơ <span className="tp-gradient-text">giáo viên</span> của tôi
+                </h1>
+                <p className="tp-card-header__subtitle">
+                  Thông tin được xem xét và xác minh bởi quản trị viên
+                </p>
+              </div>
+              {getStatusBadge()}
+            </div>
           </div>
 
-          {error && <div className="alert alert-error">{error}</div>}
-          {success && <div className="alert alert-success">{success}</div>}
-          {getStatusMessage()}
-
-          <div className="profile-info">
-            <div className="info-row">
-              <span className="info-label">Full Name:</span>
-              <span className="info-value">{profile.fullName}</span>
-            </div>
-            <div className="info-row">
-              <span className="info-label">Username:</span>
-              <span className="info-value">{profile.userName}</span>
-            </div>
-            <div className="info-row">
-              <span className="info-label">School:</span>
-              <span className="info-value">{profile.schoolName}</span>
-            </div>
-            {profile.schoolAddress && (
-              <div className="info-row">
-                <span className="info-label">Address:</span>
-                <span className="info-value">{profile.schoolAddress}</span>
+          <div className="tp-card-body">
+            {error && (
+              <div className="tp-alert tp-alert--error">
+                <span className="tp-alert__icon">✕</span>
+                <span>{error}</span>
               </div>
             )}
-            {profile.schoolWebsite && (
-              <div className="info-row">
-                <span className="info-label">Website:</span>
-                <span className="info-value">
-                  <a href={profile.schoolWebsite} target="_blank" rel="noopener noreferrer">
-                    {profile.schoolWebsite}
-                  </a>
+            {success && (
+              <div className="tp-alert tp-alert--success">
+                <span className="tp-alert__icon">✓</span>
+                <span>{success}</span>
+              </div>
+            )}
+            {getStatusMessage()}
+
+            <p className="tp-section-label">Thông tin cá nhân</p>
+
+            <div className="tp-info-grid">
+              <div className="tp-info-row">
+                <span className="tp-info-label">Họ và tên</span>
+                <span className="tp-info-value">{profile.fullName}</span>
+              </div>
+              <div className="tp-info-row">
+                <span className="tp-info-label">Tên đăng nhập</span>
+                <span className="tp-info-value">{profile.userName}</span>
+              </div>
+              <div className="tp-info-row">
+                <span className="tp-info-label">Trường học</span>
+                <span className="tp-info-value">{profile.schoolName}</span>
+              </div>
+              {profile.schoolAddress && (
+                <div className="tp-info-row">
+                  <span className="tp-info-label">Địa chỉ</span>
+                  <span className="tp-info-value">{profile.schoolAddress}</span>
+                </div>
+              )}
+              {profile.schoolWebsite && (
+                <div className="tp-info-row">
+                  <span className="tp-info-label">Website</span>
+                  <span className="tp-info-value">
+                    <a href={profile.schoolWebsite} target="_blank" rel="noopener noreferrer">
+                      {profile.schoolWebsite}
+                    </a>
+                  </span>
+                </div>
+              )}
+              <div className="tp-info-row">
+                <span className="tp-info-label">Chức vụ</span>
+                <span className="tp-info-value">{profile.position}</span>
+              </div>
+              {profile.verificationDocumentKey && (
+                <div className="tp-info-row">
+                  <span className="tp-info-label">Tài liệu XM</span>
+                  <span className="tp-info-value tp-info-value--muted">Đã tải lên</span>
+                </div>
+              )}
+              {profile.description && (
+                <div className="tp-info-row">
+                  <span className="tp-info-label">Mô tả</span>
+                  <span className="tp-info-value">{profile.description}</span>
+                </div>
+              )}
+              <div className="tp-info-row">
+                <span className="tp-info-label">Ngày nộp</span>
+                <span className="tp-info-value">
+                  {new Date(profile.createdAt).toLocaleString('vi-VN')}
                 </span>
               </div>
-            )}
-            <div className="info-row">
-              <span className="info-label">Position:</span>
-              <span className="info-value">{profile.position}</span>
+              {profile.reviewedAt && (
+                <div className="tp-info-row">
+                  <span className="tp-info-label">Xét duyệt lúc</span>
+                  <span className="tp-info-value">
+                    {new Date(profile.reviewedAt).toLocaleString('vi-VN')} —{' '}
+                    {profile.reviewedByName}
+                  </span>
+                </div>
+              )}
             </div>
-            {profile.verificationDocumentKey && (
-              <div className="info-row">
-                <span className="info-label">Verification Files:</span>
-                <span className="info-value" style={{ fontStyle: 'italic', color: '#64748b' }}>
-                  Zipped package uploaded
-                  {/* Link should point to Minio endpoint if needed, for now just show key or generic message */}
-                </span>
-              </div>
-            )}
-            {profile.description && (
-              <div className="info-row">
-                <span className="info-label">Description:</span>
-                <span className="info-value">{profile.description}</span>
-              </div>
-            )}
-            <div className="info-row">
-              <span className="info-label">Submitted:</span>
-              <span className="info-value">{new Date(profile.createdAt).toLocaleString()}</span>
-            </div>
-            {profile.reviewedAt && (
-              <div className="info-row">
-                <span className="info-label">Reviewed:</span>
-                <span className="info-value">
-                  {new Date(profile.reviewedAt).toLocaleString()} by {profile.reviewedByName}
-                </span>
-              </div>
-            )}
-          </div>
 
-          {profile.adminComment && (
-            <div className="admin-comment">
-              <strong>Admin Comment:</strong>
-              <p>{profile.adminComment}</p>
-            </div>
-          )}
+            {profile.adminComment && (
+              <div className="tp-admin-comment">
+                <p className="tp-admin-comment__title">💬 Nhận xét từ quản trị viên</p>
+                <p className="tp-admin-comment__text">{profile.adminComment}</p>
+              </div>
+            )}
 
-          <div className="form-actions">
-            <button type="button" className="btn-secondary" onClick={() => navigate(-1)}>
-              Back
-            </button>
-            {canEdit && (
-              <button
-                type="button"
-                className="btn-primary"
-                onClick={() => setEditing(true)}
-                disabled={submitting}
-              >
-                Edit Profile
+            <div className="tp-actions">
+              <button type="button" className="tp-btn tp-btn--ghost" onClick={() => navigate(-1)}>
+                ← Quay lại
               </button>
-            )}
-            {canDelete && (
-              <button
-                type="button"
-                className="btn-secondary"
-                onClick={handleDelete}
-                disabled={submitting}
-                style={{ background: '#ef4444', color: 'white' }}
-              >
-                Delete Profile
-              </button>
-            )}
+              {canEdit && (
+                <button
+                  type="button"
+                  className="tp-btn tp-btn--primary"
+                  onClick={() => setEditing(true)}
+                  disabled={submitting}
+                >
+                  Chỉnh sửa hồ sơ
+                </button>
+              )}
+              {canDelete && (
+                <button
+                  type="button"
+                  className="tp-btn tp-btn--danger"
+                  onClick={handleDelete}
+                  disabled={submitting}
+                >
+                  {submitting ? 'Đang xóa...' : 'Xóa hồ sơ'}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -280,113 +312,154 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
 
   // Edit mode
   return (
-    <div className="teacher-profile-page">
-      <div className="profile-card">
-        <div className="profile-header">
-          <h1>Edit Teacher Profile</h1>
-          <p>Update your information and resubmit for review</p>
+    <div className="tp-page">
+      <div className="tp-card">
+        <div className="tp-card-header">
+          <div className="tp-card-header__top">
+            <div>
+              <h1 className="tp-card-header__title">
+                Chỉnh sửa <span className="tp-gradient-text">hồ sơ giáo viên</span>
+              </h1>
+              <p className="tp-card-header__subtitle">
+                Cập nhật thông tin và nộp lại để được xét duyệt
+              </p>
+            </div>
+            {getStatusBadge()}
+          </div>
         </div>
 
-        {error && <div className="alert alert-error">{error}</div>}
-        {success && <div className="alert alert-success">{success}</div>}
+        <div className="tp-card-body">
+          {error && (
+            <div className="tp-alert tp-alert--error">
+              <span className="tp-alert__icon">✕</span>
+              <span>{error}</span>
+            </div>
+          )}
+          {success && (
+            <div className="tp-alert tp-alert--success">
+              <span className="tp-alert__icon">✓</span>
+              <span>{success}</span>
+            </div>
+          )}
 
-        <form className="profile-form" onSubmit={handleUpdate}>
-          <div className="form-group">
-            <label htmlFor="schoolName">
-              School Name <span className="required">*</span>
-            </label>
-            <input
-              type="text"
-              id="schoolName"
-              name="schoolName"
-              value={formData.schoolName}
-              onChange={handleInputChange}
-              required
-              disabled={submitting}
-            />
-          </div>
+          <form className="tp-form" onSubmit={handleUpdate}>
+            <div className="tp-form-group">
+              <label className="tp-label" htmlFor="schoolName">
+                Tên trường <span className="tp-required">*</span>
+              </label>
+              <input
+                className="tp-input"
+                type="text"
+                id="schoolName"
+                name="schoolName"
+                value={formData.schoolName}
+                onChange={handleInputChange}
+                placeholder="VD: Đại học FPT"
+                required
+                disabled={submitting}
+              />
+            </div>
 
-          <div className="form-group">
-            <label htmlFor="schoolAddress">School Address</label>
-            <input
-              type="text"
-              id="schoolAddress"
-              name="schoolAddress"
-              value={formData.schoolAddress}
-              onChange={handleInputChange}
-              disabled={submitting}
-            />
-          </div>
+            <div className="tp-form-grid">
+              <div className="tp-form-group">
+                <label className="tp-label" htmlFor="schoolAddress">
+                  Địa chỉ trường
+                </label>
+                <input
+                  className="tp-input"
+                  type="text"
+                  id="schoolAddress"
+                  name="schoolAddress"
+                  value={formData.schoolAddress}
+                  onChange={handleInputChange}
+                  placeholder="VD: Hòa Lạc, Hà Nội"
+                  disabled={submitting}
+                />
+              </div>
+              <div className="tp-form-group">
+                <label className="tp-label" htmlFor="schoolWebsite">
+                  Website trường
+                </label>
+                <input
+                  className="tp-input"
+                  type="url"
+                  id="schoolWebsite"
+                  name="schoolWebsite"
+                  value={formData.schoolWebsite}
+                  onChange={handleInputChange}
+                  placeholder="VD: https://fpt.edu.vn"
+                  disabled={submitting}
+                />
+              </div>
+            </div>
 
-          <div className="form-group">
-            <label htmlFor="schoolWebsite">School Website</label>
-            <input
-              type="url"
-              id="schoolWebsite"
-              name="schoolWebsite"
-              value={formData.schoolWebsite}
-              onChange={handleInputChange}
-              disabled={submitting}
-            />
-          </div>
+            <div className="tp-form-group">
+              <label className="tp-label" htmlFor="position">
+                Chức vụ / Chức danh <span className="tp-required">*</span>
+              </label>
+              <input
+                className="tp-input"
+                type="text"
+                id="position"
+                name="position"
+                value={formData.position}
+                onChange={handleInputChange}
+                placeholder="VD: Giáo viên toán, Giảng viên cao cấp"
+                maxLength={100}
+                required
+                disabled={submitting}
+              />
+            </div>
 
-          <div className="form-group">
-            <label htmlFor="position">
-              Position/Title <span className="required">*</span>
-            </label>
-            <input
-              type="text"
-              id="position"
-              name="position"
-              value={formData.position}
-              onChange={handleInputChange}
-              placeholder="e.g., Math Teacher, Senior Lecturer"
-              maxLength={100}
-              required
-              disabled={submitting}
-            />
-          </div>
+            <div className="tp-form-group">
+              <label className="tp-label" htmlFor="verificationDocumentKey">
+                Tài liệu xác minh
+              </label>
+              <input
+                className="tp-input tp-input--readonly"
+                type="text"
+                id="verificationDocumentKey"
+                value={profile.verificationDocumentKey || 'Chưa có tài liệu'}
+                readOnly
+                disabled
+              />
+              <p className="tp-form-hint">
+                Tài liệu xác minh không thể thay đổi ở đây. Vui lòng liên hệ quản trị viên nếu cần
+                cập nhật.
+              </p>
+            </div>
 
-          <div className="form-group">
-            <label htmlFor="verificationDocumentKey">Verification Document Key</label>
-            <input
-              type="text"
-              id="verificationDocumentKey"
-              name="verificationDocumentKey"
-              value={profile.verificationDocumentKey || ''}
-              readOnly
-              disabled
-            />
-            <small>Verification files cannot be changed here. Please contact admin if you need to update your verification files.</small>
-          </div>
+            <div className="tp-form-group">
+              <label className="tp-label" htmlFor="description">
+                Mô tả (tuỳ chọn)
+              </label>
+              <textarea
+                className="tp-textarea"
+                id="description"
+                name="description"
+                value={formData.description}
+                onChange={handleInputChange}
+                placeholder="Mô tả kinh nghiệm giảng dạy của bạn..."
+                maxLength={1000}
+                disabled={submitting}
+              />
+            </div>
 
-          <div className="form-group">
-            <label htmlFor="description">Description</label>
-            <textarea
-              id="description"
-              name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              placeholder="Tell us about your teaching experience..."
-              maxLength={1000}
-              disabled={submitting}
-            />
-          </div>
-
-          <div className="form-actions">
-            <button
-              type="button"
-              className="btn-secondary"
-              onClick={() => setEditing(false)}
-              disabled={submitting}
-            >
-              Cancel
-            </button>
-            <button type="submit" className="btn-primary" disabled={submitting}>
-              {submitting ? 'Updating...' : 'Update Profile'}
-            </button>
-          </div>
-        </form>
+            <div className="tp-actions">
+              <button
+                type="button"
+                className="tp-btn tp-btn--ghost"
+                onClick={() => setEditing(false)}
+                disabled={submitting}
+              >
+                Hủy
+              </button>
+              <button type="submit" className="tp-btn tp-btn--primary" disabled={submitting}>
+                {submitting ? 'Đang lưu...' : 'Lưu thay đổi'}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );
