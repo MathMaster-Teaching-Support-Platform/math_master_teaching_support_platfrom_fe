@@ -1,30 +1,30 @@
-import React from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
 import type { LucideIcon } from 'lucide-react';
 import {
-  LayoutDashboard,
-  BookOpen,
-  FolderKanban,
-  Workflow,
-  FileQuestion,
-  Database,
-  Ruler,
-  ClipboardCheck,
-  FileCheck2,
-  Users,
-  LineChart,
-  Bot,
-  Library,
-  GraduationCap,
-  NotebookTabs,
-  Wallet,
-  CreditCard,
   ArrowLeftRight,
-  FileStack,
-  Settings,
-  LogOut,
+  BookOpen,
+  Bot,
   ChevronLeft,
+  ClipboardCheck,
+  CreditCard,
+  Database,
+  FileCheck2,
+  FileQuestion,
+  FileStack,
+  FolderKanban,
+  GraduationCap,
+  LayoutDashboard,
+  Library,
+  LineChart,
+  LogOut,
+  NotebookTabs,
+  Ruler,
+  Settings,
+  Users,
+  Wallet,
+  Workflow,
 } from 'lucide-react';
+import React from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthService } from '../../../services/api/auth.service';
 import './Sidebar.css';
 
@@ -176,10 +176,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role, collapsed, onToggle }) => {
 
       {/* Footer */}
       <div className="sidebar-footer">
-        <Link
-          to={settingsPath}
-          className={`sb-item${isActive(settingsPath) ? ' active' : ''}`}
-        >
+        <Link to={settingsPath} className={`sb-item${isActive(settingsPath) ? ' active' : ''}`}>
           <span className="sb-icon">
             <Settings size={16} strokeWidth={2} />
           </span>

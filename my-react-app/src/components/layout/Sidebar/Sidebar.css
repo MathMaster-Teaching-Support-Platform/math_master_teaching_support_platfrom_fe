@@ -25,7 +25,9 @@
   top: 0;
   z-index: 110;
   flex-shrink: 0;
-  transition: width 0.22s ease, min-width 0.22s ease;
+  transition:
+    width 0.22s ease,
+    min-width 0.22s ease;
   overflow: visible;
 }
 
@@ -100,8 +102,11 @@
   cursor: pointer;
   padding: 0;
   z-index: 120;
-  box-shadow: 2px 0 6px rgba(14,12,21,0.08);
-  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 2px 0 6px rgba(14, 12, 21, 0.08);
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 /* overlap the two chevrons to look like << */
@@ -113,7 +118,7 @@
 .sb-toggle:hover {
   background: var(--sb-primary-soft);
   color: var(--sb-primary);
-  box-shadow: 2px 0 10px rgba(94,92,230,0.18);
+  box-shadow: 2px 0 10px rgba(94, 92, 230, 0.18);
 }
 
 .sidebar--collapsed .sb-toggle {
@@ -179,7 +184,9 @@
   font-size: 0.855rem;
   font-weight: 400;
   cursor: pointer;
-  transition: background 0.14s ease, color 0.14s ease;
+  transition:
+    background 0.14s ease,
+    color 0.14s ease;
   white-space: nowrap;
   line-height: 1;
 }
