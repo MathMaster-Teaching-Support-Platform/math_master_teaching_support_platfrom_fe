@@ -95,24 +95,64 @@ const Login: React.FC = () => {
   return (
     <div className="auth-container">
       <div className="auth-left">
+        <div className="auth-math-bg" aria-hidden="true">
+          <span className="auth-math-sym ms1">∑</span>
+          <span className="auth-math-sym ms2">∫</span>
+          <span className="auth-math-sym ms3">√</span>
+          <span className="auth-math-sym ms4">π</span>
+          <span className="auth-math-sym ms5">∞</span>
+          <span className="auth-math-sym ms6">Δ</span>
+          <span className="auth-math-sym ms7">θ</span>
+          <span className="auth-math-sym ms8">α</span>
+        </div>
+
         <div className="auth-brand">
           <Link to="/" className="auth-brand-link" aria-label="Về trang chủ MathMaster">
-            <h1>MathMaster</h1>
+            <div className="auth-logo-mark">M</div>
+            <div>
+              <h1>MathMaster</h1>
+            </div>
           </Link>
           <p className="brand-tagline">Nền tảng hỗ trợ giảng dạy toán học</p>
         </div>
-        <div className="auth-illustration">
-          <div className="floating-shapes">
-            <div className="shape shape-1">√</div>
-            <div className="shape shape-2">∞</div>
-            <div className="shape shape-3">α</div>
-            <div className="shape shape-4">β</div>
-            <div className="shape shape-5">∆</div>
+        <div className="auth-features">
+          <div className="auth-feature-item">
+            <div className="auth-feature-icon">01</div>
+            <span>Quản lý bài giảng &amp; ngân hàng câu hỏi</span>
+          </div>
+          <div className="auth-feature-item">
+            <div className="auth-feature-icon">02</div>
+            <span>Lộ trình học tập được cá nhân hoá</span>
+          </div>
+          <div className="auth-feature-item">
+            <div className="auth-feature-icon">03</div>
+            <span>Hỗ trợ AI trong giảng dạy &amp; đánh giá</span>
+          </div>
+          <div className="auth-feature-item">
+            <div className="auth-feature-icon">04</div>
+            <span>Thống kê &amp; phân tích kết quả học tập</span>
+          </div>
+        </div>
+        <div className="auth-stats">
+          <div className="auth-stat">
+            <span className="auth-stat-number">1,200+</span>
+            <span className="auth-stat-label">Giáo viên</span>
+          </div>
+          <div className="auth-stat">
+            <span className="auth-stat-number">50K+</span>
+            <span className="auth-stat-label">Học sinh</span>
+          </div>
+          <div className="auth-stat">
+            <span className="auth-stat-number">200K+</span>
+            <span className="auth-stat-label">Câu hỏi</span>
           </div>
         </div>
       </div>
 
       <div className="auth-right">
+        <Link to="/" className="auth-nav-link auth-nav" aria-label="Về trang chủ">
+          ← Trang chủ
+        </Link>
         <div className="auth-card">
           <div className="auth-header">
             <h2>Chào mừng trở lại!</h2>
@@ -173,21 +213,22 @@ const Login: React.FC = () => {
             </div>
 
             <button type="submit" className="btn btn-primary btn-block" disabled={isLoading}>
-              {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+              {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập →'}
             </button>
 
             <div className="divider">
               <span>hoặc</span>
             </div>
 
-            <div className="google-btn-wrapper" style={{ display: 'flex', justifyContent: 'center' }}>
+            <div className="google-btn-wrapper">
               <GoogleLogin
                 onSuccess={handleGoogleSuccess}
                 onError={handleGoogleError}
                 useOneTap
                 theme="outline"
-                shape="rectangular"
+                shape="pill"
                 text="signin_with"
+                locale="vi"
                 size="large"
               />
             </div>
