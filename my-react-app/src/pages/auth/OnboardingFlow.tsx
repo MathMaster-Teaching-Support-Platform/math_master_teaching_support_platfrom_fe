@@ -1,9 +1,18 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
-  User, GraduationCap, Check, Upload, Globe, Mail,
-  Building, Briefcase, ArrowLeft, ArrowRight, Sparkles,
+  ArrowLeft,
+  ArrowRight,
+  Briefcase,
+  Building,
+  Check,
+  Globe,
+  GraduationCap,
+  Mail,
+  Sparkles,
+  Upload,
+  User,
 } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AuthService } from '../../services/api/auth.service';
 import { TeacherProfileService } from '../../services/api/teacher-profile.service';
 import './onboarding-flow.css';
@@ -22,8 +31,18 @@ const OnboardingFlow: React.FC = () => {
 
   // Teacher form data
   const [t1, setT1] = useState({ country: 'Vietnam', email: '' });
-  const [t2, setT2] = useState({ documentType: 'Payslip', fileName: '', file: null as File | null, agreed: false });
-  const [t3, setT3] = useState({ schoolName: '', schoolAddress: '', schoolWebsite: '', position: '' });
+  const [t2, setT2] = useState({
+    documentType: 'Payslip',
+    fileName: '',
+    file: null as File | null,
+    agreed: false,
+  });
+  const [t3, setT3] = useState({
+    schoolName: '',
+    schoolAddress: '',
+    schoolWebsite: '',
+    position: '',
+  });
 
   // Student form data
   const [sd, setSd] = useState({ fullName: '', userName: '' });
@@ -45,38 +64,52 @@ const OnboardingFlow: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  const steps = role === 'TEACHER' ? TEACHER_STEPS : role === 'STUDENT' ? STUDENT_STEPS : ['Vai trò'];
+  const steps =
+    role === 'TEACHER' ? TEACHER_STEPS : role === 'STUDENT' ? STUDENT_STEPS : ['Vai trò'];
 
   const goNext = () => {
     setError('');
-    setStep(s => s + 1);
+    setStep((s) => s + 1);
   };
 
   const goBack = () => {
     setError('');
     if (step === 0) return;
-    if (step === 1 && role !== null) { setRole(null); setStep(0); return; }
-    setStep(s => s - 1);
+    if (step === 1 && role !== null) {
+      setRole(null);
+      setStep(0);
+      return;
+    }
+    setStep((s) => s - 1);
   };
 
   const handleSchoolSearch = (value: string) => {
-    setT3(prev => ({ ...prev, schoolName: value }));
-    if (!value.trim()) { setSuggestions([]); setShowSuggestions(false); return; }
+    setT3((prev) => ({ ...prev, schoolName: value }));
+    if (!value.trim()) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
     setIsSearching(true);
     setShowSuggestions(true);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {
       try {
-        const res = await fetch(`https://rsapi.goong.io/Place/AutoComplete?api_key=Pqo1poLXDFAq43GqCePcCWJjPvTl4cB6y4jG0Ofr&input=${encodeURIComponent(value)}`);
+        const res = await fetch(
+          `https://rsapi.goong.io/Place/AutoComplete?api_key=Pqo1poLXDFAq43GqCePcCWJjPvTl4cB6y4jG0Ofr&input=${encodeURIComponent(value)}`
+        );
         const data = await res.json();
         setSuggestions(data.status === 'OK' ? data.predictions || [] : []);
-      } catch { setSuggestions([]); }
-      finally { setIsSearching(false); }
+      } catch {
+        setSuggestions([]);
+      } finally {
+        setIsSearching(false);
+      }
     }, 500);
   };
 
   const handleSelectSchool = (s: any) => {
-    setT3(prev => ({
+    setT3((prev) => ({
       ...prev,
       schoolName: s.structured_formatting?.main_text || s.description,
       schoolAddress: s.description,
@@ -85,21 +118,29 @@ const OnboardingFlow: React.FC = () => {
   };
 
   const handleFinishTeacher = async () => {
-    if (!t2.file) { setError('Vui lòng chọn file xác thực'); return; }
+    if (!t2.file) {
+      setError('Vui lòng chọn file xác thực');
+      return;
+    }
     setIsLoading(true);
     setError('');
     try {
-      await TeacherProfileService.submitProfile({
-        schoolName: t3.schoolName,
-        schoolAddress: t3.schoolAddress,
-        schoolWebsite: t3.schoolWebsite,
-        position: t3.position || 'Teacher',
-        description: `Teacher at ${t3.schoolName}`,
-      }, [t2.file]);
+      await TeacherProfileService.submitProfile(
+        {
+          schoolName: t3.schoolName,
+          schoolAddress: t3.schoolAddress,
+          schoolWebsite: t3.schoolWebsite,
+          position: t3.position || 'Teacher',
+          description: `Teacher at ${t3.schoolName}`,
+        },
+        [t2.file]
+      );
       goNext(); // step 4 = success
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra.');
-    } finally { setIsLoading(false); }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleFinishStudent = async () => {
@@ -117,37 +158,51 @@ const OnboardingFlow: React.FC = () => {
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra.');
-    } finally { setIsLoading(false); }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   /* ─── STEP RENDERS ─────────────────────────────────────── */
 
   const renderStep0 = () => (
     <div className="ob-step-content fade-in">
-      <h2 className="ob-step-title">Chào mừng đến với <span className="ob-gradient-text">MathMaster</span>!</h2>
+      <h2 className="ob-step-title">
+        Chào mừng đến với <span className="ob-gradient-text">MathMaster</span>!
+      </h2>
       <p className="ob-step-sub">Bạn muốn tham gia với tư cách nào?</p>
       <div className="ob-role-grid">
         <button
           className="ob-role-card"
-          onClick={() => { setRole('TEACHER'); goNext(); }}
+          onClick={() => {
+            setRole('TEACHER');
+            goNext();
+          }}
         >
           <div className="ob-role-icon ob-role-icon--purple">
             <GraduationCap size={32} />
           </div>
           <h3>Giáo viên</h3>
           <p>Tạo bài giảng, quản lý lớp học và theo dõi tiến độ học sinh với AI.</p>
-          <span className="ob-role-arrow"><ArrowRight size={18} /></span>
+          <span className="ob-role-arrow">
+            <ArrowRight size={18} />
+          </span>
         </button>
         <button
           className="ob-role-card"
-          onClick={() => { setRole('STUDENT'); goNext(); }}
+          onClick={() => {
+            setRole('STUDENT');
+            goNext();
+          }}
         >
           <div className="ob-role-icon ob-role-icon--teal">
             <User size={32} />
           </div>
           <h3>Học sinh</h3>
           <p>Học tập thông minh, nhận hỗ trợ từ AI và kết nối với giáo viên.</p>
-          <span className="ob-role-arrow"><ArrowRight size={18} /></span>
+          <span className="ob-role-arrow">
+            <ArrowRight size={18} />
+          </span>
         </button>
       </div>
     </div>
@@ -157,13 +212,19 @@ const OnboardingFlow: React.FC = () => {
   const renderTeacherStep1 = () => (
     <div className="ob-step-content fade-in">
       <h2 className="ob-step-title">Xác thực quyền giảng dạy</h2>
-      <p className="ob-step-sub">MathMaster cung cấp công cụ miễn phí cho giáo viên. Hãy xác thực để bắt đầu.</p>
+      <p className="ob-step-sub">
+        MathMaster cung cấp công cụ miễn phí cho giáo viên. Hãy xác thực để bắt đầu.
+      </p>
       <div className="ob-form">
         <div className="ob-field">
           <label>Quốc gia</label>
           <div className="ob-input-wrap">
             <Globe className="ob-field-icon" size={16} />
-            <select className="ob-input" value={t1.country} onChange={e => setT1({ ...t1, country: e.target.value })}>
+            <select
+              className="ob-input"
+              value={t1.country}
+              onChange={(e) => setT1({ ...t1, country: e.target.value })}
+            >
               <option value="Vietnam">Việt Nam</option>
               <option value="USA">Hoa Kỳ</option>
               <option value="UK">Vương quốc Anh</option>
@@ -175,14 +236,19 @@ const OnboardingFlow: React.FC = () => {
           <div className="ob-input-wrap">
             <Mail className="ob-field-icon" size={16} />
             <input
-              type="email" className="ob-input" placeholder="ten@truonghoc.edu.vn"
-              value={t1.email} onChange={e => setT1({ ...t1, email: e.target.value })}
+              type="email"
+              className="ob-input"
+              placeholder="ten@truonghoc.edu.vn"
+              value={t1.email}
+              onChange={(e) => setT1({ ...t1, email: e.target.value })}
             />
           </div>
         </div>
       </div>
       <div className="ob-actions">
-        <button className="ob-btn ob-btn-ghost" onClick={goBack}><ArrowLeft size={16} /> Quay lại</button>
+        <button className="ob-btn ob-btn-ghost" onClick={goBack}>
+          <ArrowLeft size={16} /> Quay lại
+        </button>
         <button className="ob-btn ob-btn-primary" disabled={!t1.email} onClick={goNext}>
           Tiếp tục <ArrowRight size={16} />
         </button>
@@ -194,12 +260,14 @@ const OnboardingFlow: React.FC = () => {
   const renderTeacherStep2 = () => (
     <div className="ob-step-content fade-in">
       <h2 className="ob-step-title">Tài liệu xác thực</h2>
-      <p className="ob-step-sub">Tải lên hợp đồng giảng dạy hoặc bảng lương có tên bạn và tên trường.</p>
+      <p className="ob-step-sub">
+        Tải lên hợp đồng giảng dạy hoặc bảng lương có tên bạn và tên trường.
+      </p>
       <div className="ob-form">
         <div className="ob-field">
           <label>Loại tài liệu</label>
           <div className="ob-doc-type-row">
-            {['Payslip', 'Contract'].map(dt => (
+            {['Payslip', 'Contract'].map((dt) => (
               <button
                 key={dt}
                 className={`ob-doc-type-btn${t2.documentType === dt ? ' active' : ''}`}
@@ -217,8 +285,10 @@ const OnboardingFlow: React.FC = () => {
             onClick={() => document.getElementById('ob-file-input')?.click()}
           >
             <input
-              id="ob-file-input" type="file" style={{ display: 'none' }}
-              onChange={e => {
+              id="ob-file-input"
+              type="file"
+              style={{ display: 'none' }}
+              onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (file) setT2({ ...t2, fileName: file.name, file });
               }}
@@ -229,13 +299,23 @@ const OnboardingFlow: React.FC = () => {
           </div>
         </div>
         <label className="ob-checkbox-row">
-          <input type="checkbox" checked={t2.agreed} onChange={e => setT2({ ...t2, agreed: e.target.checked })} />
+          <input
+            type="checkbox"
+            checked={t2.agreed}
+            onChange={(e) => setT2({ ...t2, agreed: e.target.checked })}
+          />
           <span>Tôi đồng ý với chính sách bảo mật và xác nhận tài liệu là chính xác.</span>
         </label>
       </div>
       <div className="ob-actions">
-        <button className="ob-btn ob-btn-ghost" onClick={goBack}><ArrowLeft size={16} /> Quay lại</button>
-        <button className="ob-btn ob-btn-primary" disabled={!t2.fileName || !t2.agreed} onClick={goNext}>
+        <button className="ob-btn ob-btn-ghost" onClick={goBack}>
+          <ArrowLeft size={16} /> Quay lại
+        </button>
+        <button
+          className="ob-btn ob-btn-primary"
+          disabled={!t2.fileName || !t2.agreed}
+          onClick={goNext}
+        >
           Tiếp tục <ArrowRight size={16} />
         </button>
       </div>
@@ -253,23 +333,41 @@ const OnboardingFlow: React.FC = () => {
           <div className="ob-input-wrap">
             <Building className="ob-field-icon" size={16} />
             <input
-              type="text" className="ob-input" placeholder="Trường THPT, Đại học…"
-              value={t3.schoolName} onChange={e => handleSchoolSearch(e.target.value)}
-              onFocus={() => { if (t3.schoolName.trim() && suggestions.length > 0) setShowSuggestions(true); }}
+              type="text"
+              className="ob-input"
+              placeholder="Trường THPT, Đại học…"
+              value={t3.schoolName}
+              onChange={(e) => handleSchoolSearch(e.target.value)}
+              onFocus={() => {
+                if (t3.schoolName.trim() && suggestions.length > 0) setShowSuggestions(true);
+              }}
               autoComplete="off"
             />
           </div>
           {showSuggestions && t3.schoolName.trim() && (
             <div className="ob-suggestions">
-              {isSearching ? <div className="ob-suggest-empty">Đang tìm&hellip;</div>
-                : suggestions.length > 0 ? suggestions.map(s => (
-                  <div key={s.place_id} className="ob-suggest-item" onClick={() => handleSelectSchool(s)}>
-                    <span className="ob-suggest-main">{s.structured_formatting?.main_text || s.description}</span>
+              {isSearching ? (
+                <div className="ob-suggest-empty">Đang tìm&hellip;</div>
+              ) : suggestions.length > 0 ? (
+                suggestions.map((s) => (
+                  <div
+                    key={s.place_id}
+                    className="ob-suggest-item"
+                    onClick={() => handleSelectSchool(s)}
+                  >
+                    <span className="ob-suggest-main">
+                      {s.structured_formatting?.main_text || s.description}
+                    </span>
                     {s.structured_formatting?.secondary_text && (
-                      <span className="ob-suggest-sub">{s.structured_formatting.secondary_text}</span>
+                      <span className="ob-suggest-sub">
+                        {s.structured_formatting.secondary_text}
+                      </span>
                     )}
                   </div>
-                )) : <div className="ob-suggest-empty">Không tìm thấy kết quả</div>}
+                ))
+              ) : (
+                <div className="ob-suggest-empty">Không tìm thấy kết quả</div>
+              )}
             </div>
           )}
         </div>
@@ -278,18 +376,26 @@ const OnboardingFlow: React.FC = () => {
           <div className="ob-input-wrap">
             <Globe className="ob-field-icon" size={16} />
             <input
-              type="text" className="ob-input" placeholder="Địa chỉ đầy đủ"
-              value={t3.schoolAddress} onChange={e => setT3({ ...t3, schoolAddress: e.target.value })}
+              type="text"
+              className="ob-input"
+              placeholder="Địa chỉ đầy đủ"
+              value={t3.schoolAddress}
+              onChange={(e) => setT3({ ...t3, schoolAddress: e.target.value })}
             />
           </div>
         </div>
         <div className="ob-field">
-          <label>Website trường <span className="ob-optional">(tuỳ chọn)</span></label>
+          <label>
+            Website trường <span className="ob-optional">(tuỳ chọn)</span>
+          </label>
           <div className="ob-input-wrap">
             <Globe className="ob-field-icon" size={16} />
             <input
-              type="text" className="ob-input" placeholder="https://truong.edu.vn"
-              value={t3.schoolWebsite} onChange={e => setT3({ ...t3, schoolWebsite: e.target.value })}
+              type="text"
+              className="ob-input"
+              placeholder="https://truong.edu.vn"
+              value={t3.schoolWebsite}
+              onChange={(e) => setT3({ ...t3, schoolWebsite: e.target.value })}
             />
           </div>
         </div>
@@ -298,16 +404,31 @@ const OnboardingFlow: React.FC = () => {
           <div className="ob-input-wrap">
             <Briefcase className="ob-field-icon" size={16} />
             <input
-              type="text" className="ob-input" placeholder="Giáo viên Toán"
-              value={t3.position} onChange={e => setT3({ ...t3, position: e.target.value })}
+              type="text"
+              className="ob-input"
+              placeholder="Giáo viên Toán"
+              value={t3.position}
+              onChange={(e) => setT3({ ...t3, position: e.target.value })}
             />
           </div>
         </div>
       </div>
       <div className="ob-actions">
-        <button className="ob-btn ob-btn-ghost" onClick={goBack}><ArrowLeft size={16} /> Quay lại</button>
-        <button className="ob-btn ob-btn-primary" disabled={isLoading || !t3.schoolName || !t3.schoolAddress} onClick={handleFinishTeacher}>
-          {isLoading ? <span className="ob-spinner" /> : <><Sparkles size={16} /> Hoàn thành</>}
+        <button className="ob-btn ob-btn-ghost" onClick={goBack}>
+          <ArrowLeft size={16} /> Quay lại
+        </button>
+        <button
+          className="ob-btn ob-btn-primary"
+          disabled={isLoading || !t3.schoolName || !t3.schoolAddress}
+          onClick={handleFinishTeacher}
+        >
+          {isLoading ? (
+            <span className="ob-spinner" />
+          ) : (
+            <>
+              <Sparkles size={16} /> Hoàn thành
+            </>
+          )}
         </button>
       </div>
     </div>
@@ -321,7 +442,9 @@ const OnboardingFlow: React.FC = () => {
       </div>
       <h2 className="ob-step-title">Hồ sơ đã được gửi!</h2>
       <p className="ob-step-sub ob-success-p">
-        Chúng tôi đang xem xét thông tin của bạn. Bạn sẽ nhận được phản hồi trong vòng <strong>24 – 48 giờ</strong>. Trong thời gian đó, bạn hoàn toàn có thể khám phá và sử dụng MathMaster.
+        Chúng tôi đang xem xét thông tin của bạn. Bạn sẽ nhận được phản hồi trong vòng{' '}
+        <strong>24 – 48 giờ</strong>. Trong thời gian đó, bạn hoàn toàn có thể khám phá và sử dụng
+        MathMaster.
       </p>
       <button className="ob-btn ob-btn-primary ob-btn-lg" onClick={() => navigate('/dashboard')}>
         Bắt đầu khám phá <ArrowRight size={18} />
@@ -340,8 +463,11 @@ const OnboardingFlow: React.FC = () => {
           <div className="ob-input-wrap">
             <User className="ob-field-icon" size={16} />
             <input
-              type="text" className="ob-input" placeholder="Nguyễn Văn A"
-              value={sd.fullName} onChange={e => setSd({ ...sd, fullName: e.target.value })}
+              type="text"
+              className="ob-input"
+              placeholder="Nguyễn Văn A"
+              value={sd.fullName}
+              onChange={(e) => setSd({ ...sd, fullName: e.target.value })}
             />
           </div>
         </div>
@@ -350,20 +476,31 @@ const OnboardingFlow: React.FC = () => {
           <div className="ob-input-wrap">
             <User className="ob-field-icon" size={16} />
             <input
-              type="text" className="ob-input" placeholder="nguyenvana123"
-              value={sd.userName} onChange={e => setSd({ ...sd, userName: e.target.value })}
+              type="text"
+              className="ob-input"
+              placeholder="nguyenvana123"
+              value={sd.userName}
+              onChange={(e) => setSd({ ...sd, userName: e.target.value })}
             />
           </div>
         </div>
       </div>
       <div className="ob-actions">
-        <button className="ob-btn ob-btn-ghost" onClick={goBack}><ArrowLeft size={16} /> Quay lại</button>
+        <button className="ob-btn ob-btn-ghost" onClick={goBack}>
+          <ArrowLeft size={16} /> Quay lại
+        </button>
         <button
           className="ob-btn ob-btn-primary"
           disabled={isLoading || !sd.fullName || !sd.userName}
           onClick={handleFinishStudent}
         >
-          {isLoading ? <span className="ob-spinner" /> : <>Xác nhận <ArrowRight size={16} /></>}
+          {isLoading ? (
+            <span className="ob-spinner" />
+          ) : (
+            <>
+              Xác nhận <ArrowRight size={16} />
+            </>
+          )}
         </button>
       </div>
     </div>
@@ -377,9 +514,13 @@ const OnboardingFlow: React.FC = () => {
       </div>
       <h2 className="ob-step-title">Chào mừng, {sd.fullName}!</h2>
       <p className="ob-step-sub ob-success-p">
-        Tài khoản học sinh của bạn đã sẵn sàng. Hãy bắt đầu hành trình chinh phục toán học cùng <strong>MathMaster</strong>!
+        Tài khoản học sinh của bạn đã sẵn sàng. Hãy bắt đầu hành trình chinh phục toán học cùng{' '}
+        <strong>MathMaster</strong>!
       </p>
-      <button className="ob-btn ob-btn-teal ob-btn-lg" onClick={() => navigate('/student/dashboard')}>
+      <button
+        className="ob-btn ob-btn-teal ob-btn-lg"
+        onClick={() => navigate('/student/dashboard')}
+      >
         Bắt đầu học ngay <ArrowRight size={18} />
       </button>
     </div>
@@ -406,8 +547,10 @@ const OnboardingFlow: React.FC = () => {
     <div className="ob-page">
       {/* Floating math background */}
       <div className="ob-bg-symbols" aria-hidden="true">
-        {['∑','π','∫','√','Δ','∞','±','÷','×','≈','∂','θ'].map((sym, i) => (
-          <span key={i} className={`ob-sym ob-sym-${i + 1}`}>{sym}</span>
+        {['∑', 'π', '∫', '√', 'Δ', '∞', '±', '÷', '×', '≈', '∂', 'θ'].map((sym, i) => (
+          <span key={i} className={`ob-sym ob-sym-${i + 1}`}>
+            {sym}
+          </span>
         ))}
       </div>
       {/* Geometric accents */}
@@ -449,9 +592,7 @@ const OnboardingFlow: React.FC = () => {
         {error && <div className="ob-error">{error}</div>}
 
         {/* Content */}
-        <div className="ob-card-body">
-          {renderContent()}
-        </div>
+        <div className="ob-card-body">{renderContent()}</div>
       </div>
     </div>
   );
