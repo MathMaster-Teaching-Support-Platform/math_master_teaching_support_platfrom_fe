@@ -31,6 +31,15 @@ const OnboardingFlow: React.FC = () => {
 
   // Teacher form data
   const [t1, setT1] = useState({ country: 'Vietnam', email: '' });
+  const [emailError, setEmailError] = useState('');
+
+  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const validateEmail = (val: string): string => {
+    if (!val.trim()) return 'Email không được để trống';
+    if (val.length > 50) return 'Email không được vượt quá 50 ký tự';
+    if (!EMAIL_REGEX.test(val)) return 'Email không hợp lệ';
+    return '';
+  };
   const [t2, setT2] = useState({
     documentType: 'Payslip',
     fileName: '',
@@ -173,7 +182,7 @@ const OnboardingFlow: React.FC = () => {
       <p className="ob-step-sub">Bạn muốn tham gia với tư cách nào?</p>
       <div className="ob-role-grid">
         <button
-          className="ob-role-card"
+          className="ob-role-card ob-role-card--teacher"
           onClick={() => {
             setRole('TEACHER');
             goNext();
@@ -184,12 +193,12 @@ const OnboardingFlow: React.FC = () => {
           </div>
           <h3>Giáo viên</h3>
           <p>Tạo bài giảng, quản lý lớp học và theo dõi tiến độ học sinh với AI.</p>
-          <span className="ob-role-arrow">
-            <ArrowRight size={18} />
+          <span className="ob-role-arrow ob-role-arrow--purple">
+            Chọn vai trò này <ArrowRight size={16} />
           </span>
         </button>
         <button
-          className="ob-role-card"
+          className="ob-role-card ob-role-card--student"
           onClick={() => {
             setRole('STUDENT');
             goNext();
@@ -200,8 +209,8 @@ const OnboardingFlow: React.FC = () => {
           </div>
           <h3>Học sinh</h3>
           <p>Học tập thông minh, nhận hỗ trợ từ AI và kết nối với giáo viên.</p>
-          <span className="ob-role-arrow">
-            <ArrowRight size={18} />
+          <span className="ob-role-arrow ob-role-arrow--teal">
+            Chọn vai trò này <ArrowRight size={16} />
           </span>
         </button>
       </div>
@@ -233,15 +242,27 @@ const OnboardingFlow: React.FC = () => {
         </div>
         <div className="ob-field">
           <label>Email trường hoặc cá nhân</label>
-          <div className="ob-input-wrap">
+          <div className={`ob-input-wrap${emailError ? ' ob-input-wrap--error' : ''}`}>
             <Mail className="ob-field-icon" size={16} />
             <input
               type="email"
-              className="ob-input"
+              className={`ob-input${emailError ? ' ob-input--error' : ''}`}
               placeholder="ten@truonghoc.edu.vn"
+              maxLength={50}
               value={t1.email}
-              onChange={(e) => setT1({ ...t1, email: e.target.value })}
+              onChange={(e) => {
+                const val = e.target.value;
+                setT1({ ...t1, email: val });
+                if (emailError) setEmailError(validateEmail(val));
+              }}
+              onBlur={(e) => setEmailError(validateEmail(e.target.value))}
             />
+          </div>
+          <div className="ob-field-footer">
+            {emailError ? <span className="ob-field-error">{emailError}</span> : <span />}
+            <span className={`ob-char-count${t1.email.length > 45 ? ' ob-char-count--warn' : ''}`}>
+              {t1.email.length}/50
+            </span>
           </div>
         </div>
       </div>
@@ -249,7 +270,18 @@ const OnboardingFlow: React.FC = () => {
         <button className="ob-btn ob-btn-ghost" onClick={goBack}>
           <ArrowLeft size={16} /> Quay lại
         </button>
-        <button className="ob-btn ob-btn-primary" disabled={!t1.email} onClick={goNext}>
+        <button
+          className="ob-btn ob-btn-primary"
+          disabled={!t1.email || !!validateEmail(t1.email)}
+          onClick={() => {
+            const err = validateEmail(t1.email);
+            if (err) {
+              setEmailError(err);
+              return;
+            }
+            goNext();
+          }}
+        >
           Tiếp tục <ArrowRight size={16} />
         </button>
       </div>
