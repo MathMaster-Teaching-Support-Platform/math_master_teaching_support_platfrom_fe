@@ -226,7 +226,6 @@ const Login: React.FC = () => {
                 theme="outline"
                 shape="pill"
                 text="signin_with"
-                locale="vi"
                 size="large"
               />
             </div>

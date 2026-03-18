@@ -258,7 +258,6 @@ const Register: React.FC = () => {
                 theme="outline"
                 shape="pill"
                 text="signup_with"
-                locale="vi"
                 size="large"
               />
             </div>
