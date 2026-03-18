@@ -5,9 +5,7 @@ import About from '../pages/About';
 import Pricing from '../pages/Pricing';
 import Contact from '../pages/Contact';
 import { Login, Register } from '../pages/auth';
-import SelectRole from '../pages/auth/SelectRole';
-import TeacherVerification from '../pages/auth/TeacherVerification';
-import StudentOnboarding from '../pages/auth/StudentOnboarding';
+import OnboardingFlow from '../pages/auth/OnboardingFlow';
 import TeacherDashboard from '../pages/dashboard/teacher/TeacherDashboard';
 import StudentDashboard from '../pages/dashboard/student/StudentDashboard';
 import AdminDashboard from '../pages/dashboard/admin/AdminDashboard';
@@ -85,15 +83,15 @@ const router = createBrowserRouter([
   },
   {
     path: '/select-role',
-    element: <SelectRole />,
+    element: <OnboardingFlow />,
   },
   {
     path: '/onboarding/teacher',
-    element: <TeacherVerification />,
+    element: <OnboardingFlow />,
   },
   {
     path: '/onboarding/student',
-    element: <StudentOnboarding />,
+    element: <OnboardingFlow />,
   },
   {
     path: '/course/:id',
