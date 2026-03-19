@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../../components/layout/DashboardLayout/DashboardLayout';
-import { mockTeacher, mockCourses } from '../../../data/mockData';
+import { mockCourses, mockTeacher } from '../../../data/mockData';
 import './TeacherDashboard.css';
 
 const TeacherDashboard: React.FC = () => {
@@ -25,10 +25,10 @@ const TeacherDashboard: React.FC = () => {
   ];
 
   const teachingProgress = [
-    { name: 'Giải tích lớp 12 - Chương 1', value: 85, tone: 'blue' },
-    { name: 'Hình học không gian - Nâng cao', value: 42, tone: 'orange' },
-    { name: 'Xác suất thống kê đại cương', value: 60, tone: 'green' },
-  ] as const;
+    { name: 'Giải tích lớp 12 - Chương 1', value: 85 },
+    { name: 'Hình học không gian - Nâng cao', value: 42 },
+    { name: 'Xác suất thống kê đại cương', value: 60 },
+  ];
 
   const completionRate = 78;
   const completedLessons = mockCourses.reduce((sum, course) => sum + course.lessonsCount, 0);
@@ -65,7 +65,7 @@ const TeacherDashboard: React.FC = () => {
 
         <section className="dashboard-grid">
           <article className="dashboard-card progress-card">
-            <h2>Tiến độ giảng dạy</h2>
+            <p className="section-label">Tiến độ giảng dạy</p>
             <div className="progress-list">
               {teachingProgress.map((item) => (
                 <div key={item.name} className="progress-item">
@@ -74,10 +74,7 @@ const TeacherDashboard: React.FC = () => {
                     <strong>{item.value}%</strong>
                   </div>
                   <div className="progress-track">
-                    <div
-                      className={`progress-fill ${item.tone}`}
-                      style={{ width: `${item.value}%` }}
-                    />
+                    <div className="progress-fill" style={{ width: `${item.value}%` }} />
                   </div>
                 </div>
               ))}
@@ -85,11 +82,13 @@ const TeacherDashboard: React.FC = () => {
           </article>
 
           <article className="dashboard-card completion-card">
-            <h2>Hoàn thành</h2>
-            <div className="ring" style={{ ['--value' as string]: `${completionRate}%` }}>
-              <div className="ring-center">
-                <div className="ring-value">{completionRate}%</div>
-                <div className="ring-label">Tổng quan</div>
+            <p className="section-label">Hoàn thành</p>
+            <div className="ring-wrap">
+              <div className="ring" style={{ ['--value' as string]: `${completionRate}%` }}>
+                <div className="ring-center">
+                  <div className="ring-value">{completionRate}%</div>
+                  <div className="ring-label">Tổng quan</div>
+                </div>
               </div>
             </div>
             <div className="ring-meta">

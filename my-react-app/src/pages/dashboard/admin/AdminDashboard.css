@@ -3,6 +3,12 @@
   margin: 0 auto;
 }
 
+.dashboard-grid.full-width {
+  grid-template-columns: 1fr;
+  margin-top: 1.5rem;
+  margin-bottom: 0;
+}
+
 .header-actions {
   display: flex;
   gap: 1rem;
@@ -321,6 +327,30 @@
 .status-value {
   font-size: 0.813rem;
   color: var(--gray-600);
+}
+
+.highlight-card {
+  border: 2px solid var(--primary-color);
+  background: linear-gradient(to right, #ffffff, #f0f7ff);
+}
+
+.pending-badge {
+  background: var(--error-color);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.813rem;
+  font-weight: 700;
+}
+
+.card-content p {
+  color: var(--gray-600);
+  margin-bottom: 1.5rem;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: flex-end;
 }
 
 /* Responsive */

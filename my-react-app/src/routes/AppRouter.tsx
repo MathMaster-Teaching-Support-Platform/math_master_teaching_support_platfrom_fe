@@ -1,50 +1,58 @@
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import Homepage from '../pages/Homepage';
-import Features from '../pages/Features';
 import About from '../pages/About';
-import Pricing from '../pages/Pricing';
 import Contact from '../pages/Contact';
-import { Login, Register } from '../pages/auth';
-import TeacherDashboard from '../pages/dashboard/teacher/TeacherDashboard';
-import StudentDashboard from '../pages/dashboard/student/StudentDashboard';
-import AdminDashboard from '../pages/dashboard/admin/AdminDashboard';
+import Features from '../pages/Features';
+import Homepage from '../pages/Homepage';
+import Pricing from '../pages/Pricing';
+import SubscriptionManagement from '../pages/admin/SubscriptionManagement';
+import UserManagement from '../pages/admin/UserManagement';
 import AIAssistant from '../pages/ai/AIAssistant';
 import AISlideGenerator from '../pages/ai/AISlideGenerator';
-import TeacherCourses from '../pages/courses/TeacherCourses';
-import StudentCourses from '../pages/courses/StudentCourses';
-import ProfileSettings from '../pages/settings/ProfileSettings';
-import MaterialsGenerator from '../pages/materials/MaterialsGenerator';
-import TeacherAssignments from '../pages/assignments/TeacherAssignments';
-import StudentAssignments from '../pages/assignments/StudentAssignments';
-import StudentGrades from '../pages/grades/StudentGrades';
 import TeacherAnalytics from '../pages/analytics/TeacherAnalytics';
-import UserManagement from '../pages/admin/UserManagement';
-import SubscriptionManagement from '../pages/admin/SubscriptionManagement';
-import StudentRoadmap from '../pages/roadmap/StudentRoadmap';
-import StudentWallet from '../pages/wallet/StudentWallet';
-import NotificationCenter from '../pages/notifications/NotificationCenter';
-import SearchResults from '../pages/search/SearchResults';
-import TeacherStudents from '../pages/students/TeacherStudents';
-import Forum from '../pages/forum/Forum';
-import HelpCenter from '../pages/help/HelpCenter';
-import Certificates from '../pages/certificates/Certificates';
+import StudentAssignments from '../pages/assignments/StudentAssignments';
+import TeacherAssignments from '../pages/assignments/TeacherAssignments';
+import { Login, Register } from '../pages/auth';
+import OnboardingFlow from '../pages/auth/OnboardingFlow';
 import Calendar from '../pages/calendar/Calendar';
-import CoursePreview from '../pages/preview/CoursePreview';
+import Certificates from '../pages/certificates/Certificates';
 import LiveChat from '../pages/chat/LiveChat';
+import StudentCourses from '../pages/courses/StudentCourses';
+import TeacherCourses from '../pages/courses/TeacherCourses';
+import AdminDashboard from '../pages/dashboard/admin/AdminDashboard';
+import StudentDashboard from '../pages/dashboard/student/StudentDashboard';
+import TeacherDashboard from '../pages/dashboard/teacher/TeacherDashboard';
+import Forum from '../pages/forum/Forum';
+import StudentGrades from '../pages/grades/StudentGrades';
+import HelpCenter from '../pages/help/HelpCenter';
+import MaterialsGenerator from '../pages/materials/MaterialsGenerator';
+import NotificationCenter from '../pages/notifications/NotificationCenter';
+import CoursePreview from '../pages/preview/CoursePreview';
+import RoadmapCatalogPage from '../pages/roadmap/RoadmapCatalogPage';
+import RoadmapDashboardPage from '../pages/roadmap/RoadmapDashboardPage';
+import RoadmapDetailPage from '../pages/roadmap/RoadmapDetailPage';
+import StudentRoadmap from '../pages/roadmap/StudentRoadmap';
+import SearchResults from '../pages/search/SearchResults';
+import ProfileSettings from '../pages/settings/ProfileSettings';
+import TeacherStudents from '../pages/students/TeacherStudents';
+import StudentWallet from '../pages/wallet/StudentWallet';
 // Teacher Profile Routes
 // Profile Page
 import Profile from '../pages/profile/Profile';
 // Admin Teacher Profile Routes
+import AdminRoadmapCreatePage from '../pages/admin/AdminRoadmapCreatePage';
+import AdminRoadmapEditPage from '../pages/admin/AdminRoadmapEditPage';
+import AdminRoadmapManagementPage from '../pages/admin/AdminRoadmapManagementPage';
+import AdminRoadmapTopicsPage from '../pages/admin/AdminRoadmapTopicsPage';
 import ReviewProfiles from '../pages/admin/ReviewProfiles';
-import SchoolManagement from '../pages/admin/SchoolManagement';
-import TeacherAssessments from '../pages/assessments/TeacherAssessments';
 import AssessmentDetail from '../pages/assessments/AssessmentDetail';
-import { TeacherMindmaps, MindmapEditor } from '../pages/mindmaps';
-import { TemplateDashboard } from '../pages/question-templates/TemplateDashboard';
+import TeacherAssessments from '../pages/assessments/TeacherAssessments';
 import { ExamMatrixDashboard } from '../pages/exam-matrices/ExamMatrixDashboard';
 import ExamMatrixDetailPage from '../pages/exam-matrices/ExamMatrixDetailPage';
+import { MindmapEditor, TeacherMindmaps } from '../pages/mindmaps';
 import { QuestionBankDashboard } from '../pages/question-banks/QuestionBankDashboard';
 import { QuestionBankDetailPage } from '../pages/question-banks/QuestionBankDetailPage';
+import { TemplateDashboard } from '../pages/question-templates/TemplateDashboard';
 
 const router = createBrowserRouter([
   {
@@ -76,8 +84,32 @@ const router = createBrowserRouter([
     element: <Register />,
   },
   {
+    path: '/select-role',
+    element: <OnboardingFlow />,
+  },
+  {
+    path: '/onboarding/teacher',
+    element: <OnboardingFlow />,
+  },
+  {
+    path: '/onboarding/student',
+    element: <OnboardingFlow />,
+  },
+  {
     path: '/course/:id',
     element: <CoursePreview />,
+  },
+  {
+    path: '/dashboard',
+    element: <RoadmapDashboardPage />,
+  },
+  {
+    path: '/roadmaps',
+    element: <RoadmapCatalogPage />,
+  },
+  {
+    path: '/roadmaps/:roadmapId',
+    element: <RoadmapDetailPage />,
   },
   // Shared Routes
   {
@@ -239,8 +271,20 @@ const router = createBrowserRouter([
     element: <ReviewProfiles />,
   },
   {
-    path: '/admin/schools',
-    element: <SchoolManagement />,
+    path: '/admin/roadmaps',
+    element: <AdminRoadmapManagementPage />,
+  },
+  {
+    path: '/admin/roadmaps/create',
+    element: <AdminRoadmapCreatePage />,
+  },
+  {
+    path: '/admin/roadmaps/edit/:roadmapId',
+    element: <AdminRoadmapEditPage />,
+  },
+  {
+    path: '/admin/roadmaps/:roadmapId/topics',
+    element: <AdminRoadmapTopicsPage />,
   },
   { path: '/admin/settings', element: <ProfileSettings /> },
   {
@@ -261,8 +305,6 @@ const router = createBrowserRouter([
     ),
   },
 ]);
-
-import { GoogleOAuthProvider } from '@react-oauth/google';
 
 export default function AppRouter() {
   return (

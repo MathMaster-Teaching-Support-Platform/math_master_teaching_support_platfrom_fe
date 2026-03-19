@@ -7,11 +7,18 @@ export interface RegisterRequest {
   phoneNumber: string;
   gender: 'MALE' | 'FEMALE' | 'OTHER';
   dob: string; // YYYY-MM-DD format
+  role: string;
 }
 
 export interface LoginRequest {
   email: string;
   password: string;
+}
+
+export interface RoleSelectionRequest {
+  role: string;
+  userName?: string;
+  fullName?: string;
 }
 
 // Response types
@@ -38,6 +45,7 @@ export interface User {
 export interface LoginResponse {
   token: string;
   expiryTime: string;
+  newRegistration: boolean;
 }
 
 export interface ApiResponse<T> {

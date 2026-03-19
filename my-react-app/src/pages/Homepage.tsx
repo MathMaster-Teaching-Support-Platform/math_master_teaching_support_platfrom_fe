@@ -394,30 +394,30 @@ const Homepage: React.FC = () => {
             </h2>
             <p className="section-description">Chỉ với 3 bước đơn giản để bắt đầu</p>
           </div>
-          <div className="steps-container">
-            <div className="step-item">
-              <div className="step-number">01</div>
-              <div className="step-content">
-                <h3 className="step-title">Đăng ký tài khoản</h3>
-                <p className="step-description">
+          <div className="how-steps-container">
+            <div className="how-step-item">
+              <div className="how-step-number">01</div>
+              <div className="how-step-content">
+                <h3 className="how-step-title">Đăng ký tài khoản</h3>
+                <p className="how-step-description">
                   Tạo tài khoản miễn phí trong vài giây. Không cần thẻ tín dụng.
                 </p>
               </div>
             </div>
-            <div className="step-item">
-              <div className="step-number">02</div>
-              <div className="step-content">
-                <h3 className="step-title">Chọn công cụ</h3>
-                <p className="step-description">
+            <div className="how-step-item">
+              <div className="how-step-number">02</div>
+              <div className="how-step-content">
+                <h3 className="how-step-title">Chọn công cụ</h3>
+                <p className="how-step-description">
                   Chọn công cụ bạn cần: tạo bài giảng, bài tập, đồ thị hoặc đề thi.
                 </p>
               </div>
             </div>
-            <div className="step-item">
-              <div className="step-number">03</div>
-              <div className="step-content">
-                <h3 className="step-title">Tạo và chia sẻ</h3>
-                <p className="step-description">
+            <div className="how-step-item">
+              <div className="how-step-number">03</div>
+              <div className="how-step-content">
+                <h3 className="how-step-title">Tạo và chia sẻ</h3>
+                <p className="how-step-description">
                   AI tự động tạo nội dung chất lượng cao. Xuất file và chia sẻ với học sinh.
                 </p>
               </div>

@@ -4,7 +4,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'teacher' | 'student' | 'admin' | 'guest';
+  role: 'teacher' | 'student' | 'admin';
   avatar?: string;
   school?: string;
   grade?: string | number;
@@ -16,6 +16,9 @@ export * from './teacher.types';
 export * from './assessment.types';
 export * from './examMatrix';
 export * from './lesson.types';
+export * from './chapter.types';
+export * from './roadmap.types';
+export * from './subject.types';
 export {
   type Mindmap,
   type MindmapNode,

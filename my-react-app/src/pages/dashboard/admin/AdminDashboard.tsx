@@ -3,12 +3,26 @@ import DashboardLayout from '../../../components/layout/DashboardLayout/Dashboar
 import {
   mockAdmin,
   mockUsers,
-  mockSubscriptionPlans,
   mockTransactions,
 } from '../../../data/mockData';
+import { TeacherProfileService } from '../../../services/api/teacher-profile.service';
 import './AdminDashboard.css';
 
 const AdminDashboard: React.FC = () => {
+  const [pendingProfiles, setPendingProfiles] = React.useState<number>(0);
+
+  React.useEffect(() => {
+    const fetchPendingCount = async () => {
+      try {
+        const response = await TeacherProfileService.countPendingProfiles();
+        setPendingProfiles(response.result);
+      } catch (error) {
+        console.error('Failed to fetch pending profile count:', error);
+      }
+    };
+    fetchPendingCount();
+  }, []);
+
   const stats = [
     { icon: '👥', label: 'Tổng người dùng', value: '1,930', trend: '+12%', color: '#667eea' },
     { icon: '💰', label: 'Doanh thu tháng', value: '₫45.2M', trend: '+8%', color: '#43e97b' },
@@ -17,7 +31,6 @@ const AdminDashboard: React.FC = () => {
   ];
 
   const recentTransactions = mockTransactions.slice(0, 5);
-  const activePlans = mockSubscriptionPlans.filter((p) => p.status === 'active');
 
   return (
     <DashboardLayout
@@ -108,32 +121,22 @@ const AdminDashboard: React.FC = () => {
               </table>
             </div>
           </div>
+        </div>
 
-          {/* Subscription Plans */}
-          <div className="dashboard-card">
+        <div className="dashboard-grid full-width">
+          {/* Teacher Profile Review - Highlighted */}
+          <div className="dashboard-card highlight-card">
             <div className="card-header">
-              <h2 className="card-title">Gói đăng ký</h2>
-              <a href="/admin/subscriptions" className="card-link">
-                Quản lý →
-              </a>
+              <h2 className="card-title">Duyệt Profile Giáo Viên 🍎</h2>
+              <div className="pending-badge">{pendingProfiles} Chờ duyệt</div>
             </div>
-            <div className="plans-list">
-              {activePlans.map((plan) => (
-                <div key={plan.id} className="plan-item">
-                  <div className="plan-info">
-                    <h3 className="plan-name">{plan.name}</h3>
-                    <p className="plan-price">
-                      {plan.price === 0
-                        ? 'Miễn phí'
-                        : `${plan.price.toLocaleString('vi-VN')}đ/${plan.duration === 'month' ? 'tháng' : 'năm'}`}
-                    </p>
-                  </div>
-                  <div className="plan-users">
-                    <span className="plan-user-count">{plan.users}</span>
-                    <span className="plan-user-label">người dùng</span>
-                  </div>
-                </div>
-              ))}
+            <div className="card-content">
+              <p>Có {pendingProfiles} giáo viên đang chờ xác minh danh tính và bằng cấp.</p>
+              <div className="card-footer">
+                <a href="/admin/review-profiles" className="btn btn-primary">
+                  Duyệt ngay →
+                </a>
+              </div>
             </div>
           </div>
         </div>

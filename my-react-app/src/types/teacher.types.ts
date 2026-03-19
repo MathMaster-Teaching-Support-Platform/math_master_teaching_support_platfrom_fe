@@ -1,34 +1,19 @@
-// Teacher Profile & School types
-
 export type ProfileStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
-export interface School {
-  id: number;
-  name: string;
-  address: string;
-  city: string;
-  district: string;
-  phoneNumber: string;
-  email: string;
-  website: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface TeacherProfile {
-  id: number;
-  userId: number;
+  id: string;
+  userId: string;
   userName: string;
   fullName: string;
-  schoolId: number;
   schoolName: string;
+  schoolAddress?: string;
+  schoolWebsite?: string;
   position: string;
-  certificateUrl?: string;
-  identificationDocumentUrl?: string;
+  verificationDocumentKey?: string;
   description?: string;
   status: ProfileStatus;
   adminComment?: string;
-  reviewedBy?: number;
+  reviewedBy?: string;
   reviewedByName?: string;
   reviewedAt?: string;
   createdAt: string;
@@ -37,44 +22,24 @@ export interface TeacherProfile {
 
 // Request types
 export interface SubmitTeacherProfileRequest {
-  schoolId: number;
+  schoolName: string;
+  schoolAddress?: string;
+  schoolWebsite?: string;
   position: string;
-  certificateUrl?: string;
-  identificationDocumentUrl?: string;
   description?: string;
 }
 
 export interface UpdateTeacherProfileRequest {
-  schoolId: number;
+  schoolName: string;
+  schoolAddress?: string;
+  schoolWebsite?: string;
   position: string;
-  certificateUrl?: string;
-  identificationDocumentUrl?: string;
   description?: string;
 }
 
 export interface ReviewProfileRequest {
   status: 'APPROVED' | 'REJECTED';
   adminComment?: string;
-}
-
-export interface CreateSchoolRequest {
-  name: string;
-  address: string;
-  city: string;
-  district: string;
-  phoneNumber: string;
-  email: string;
-  website: string;
-}
-
-export interface UpdateSchoolRequest {
-  name: string;
-  address: string;
-  city: string;
-  district: string;
-  phoneNumber: string;
-  email: string;
-  website: string;
 }
 
 // Response types

@@ -1,6 +1,6 @@
+import { Bell, CircleHelp, MessageSquare, Wallet } from 'lucide-react';
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Bell, CircleHelp, MessageSquare, Search, Wallet } from 'lucide-react';
 import './Navbar.css';
 
 interface NavbarProps {
@@ -23,11 +23,6 @@ const Navbar: React.FC<NavbarProps> = ({ user, notificationCount = 0 }) => {
   return (
     <nav className="navbar-top">
       <div className="navbar-content">
-        <div className="navbar-search">
-          <Search size={17} className="search-icon" />
-          <input type="text" placeholder="Tìm kiếm ..." className="search-input" />
-        </div>
-
         <div className="navbar-actions">
           <button
             className="navbar-action-btn"

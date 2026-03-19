@@ -15,19 +15,28 @@ export class TeacherProfileService {
    * Submit teacher profile (Student)
    */
   static async submitProfile(
-    data: SubmitTeacherProfileRequest
+    data: SubmitTeacherProfileRequest,
+    files: File[]
   ): Promise<ApiResponse<TeacherProfile>> {
     const token = AuthService.getToken();
     if (!token) throw new Error('Authentication required');
+
+    const formData = new FormData();
+    // Wrap the request data in a Blob with application/json type for @RequestPart
+    formData.append('request', new Blob([JSON.stringify(data)], { type: 'application/json' }));
+    
+    // Append each file as 'files' to match @RequestPart("files")
+    files.forEach((file) => {
+      formData.append('files', file);
+    });
 
     const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.TEACHER_PROFILES_SUBMIT}`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
         accept: '*/*',
       },
-      body: JSON.stringify(data),
+      body: formData,
     });
 
     if (!response.ok) {
@@ -114,7 +123,7 @@ export class TeacherProfileService {
   /**
    * Get profile by ID (Admin)
    */
-  static async getProfileById(profileId: number): Promise<ApiResponse<TeacherProfile>> {
+  static async getProfileById(profileId: string): Promise<ApiResponse<TeacherProfile>> {
     const token = AuthService.getToken();
     if (!token) throw new Error('Authentication required');
 
@@ -191,7 +200,7 @@ export class TeacherProfileService {
    * Review profile (Admin)
    */
   static async reviewProfile(
-    profileId: number,
+    profileId: string,
     data: ReviewProfileRequest
   ): Promise<ApiResponse<TeacherProfile>> {
     const token = AuthService.getToken();
@@ -213,6 +222,29 @@ export class TeacherProfileService {
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.message || 'Failed to review profile');
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Get download URL for verification document (Admin)
+   */
+  static async getDownloadUrl(profileId: string): Promise<ApiResponse<String>> {
+    const token = AuthService.getToken();
+    if (!token) throw new Error('Authentication required');
+
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.TEACHER_PROFILES_DOWNLOAD(profileId)}`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        accept: '*/*',
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to get download URL');
     }
 
     return response.json();
