@@ -153,6 +153,19 @@ export interface RoadmapTopicResponse {
   mindmaps: unknown[];
 }
 
+export interface UpdateRoadmapTopicRequest {
+  title?: string;
+  description?: string;
+  sequenceOrder?: number;
+  priority?: number;
+  estimatedHours?: number;
+  lessonIds?: string[];
+  topicAssessmentId?: string;
+  passThresholdPercentage?: number;
+  difficulty?: QuestionDifficulty;
+  status?: TopicStatus;
+}
+
 export interface EntryTestMapping {
   questionId: string;
   roadmapTopicId: string;

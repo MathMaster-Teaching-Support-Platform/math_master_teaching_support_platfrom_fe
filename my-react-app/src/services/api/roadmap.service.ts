@@ -13,6 +13,7 @@ import type {
   StudentRoadmapSnapshot,
   TopicMaterial,
   TopicMaterialResourceType,
+  UpdateRoadmapTopicRequest,
   UpdateRoadmapProgressRequest,
 } from '../../types';
 import { AuthService } from './auth.service';
@@ -87,7 +88,8 @@ export class RoadmapService {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
-      throw new Error((error as { message?: string }).message || 'Failed to fetch admin roadmap detail');
+      const message = (error as { message?: string }).message || 'Failed to fetch admin roadmap detail';
+      throw new Error(`${response.status} ${response.statusText}: ${message}`);
     }
 
     return response.json();
@@ -203,7 +205,48 @@ export class RoadmapService {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
-      throw new Error((error as { message?: string }).message || 'Failed to add topic to roadmap');
+      const message = (error as { message?: string }).message || 'Failed to add topic to roadmap';
+      throw new Error(`${response.status} ${response.statusText}: ${message}`);
+    }
+
+    return response.json();
+  }
+
+  static async updateRoadmapTopic(
+    roadmapId: string,
+    topicId: string,
+    payload: UpdateRoadmapTopicRequest
+  ): Promise<RoadmapApiResponse<RoadmapTopicResponse>> {
+    const headers = await this.getHeaders();
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ADMIN_ROADMAP_TOPIC_DETAIL(roadmapId, topicId)}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      const message = (error as { message?: string }).message || 'Failed to update roadmap topic';
+      throw new Error(`${response.status} ${response.statusText}: ${message}`);
+    }
+
+    return response.json();
+  }
+
+  static async archiveRoadmapTopic(
+    roadmapId: string,
+    topicId: string
+  ): Promise<RoadmapApiResponse<string>> {
+    const headers = await this.getHeaders();
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ADMIN_ROADMAP_TOPIC_DETAIL(roadmapId, topicId)}`, {
+      method: 'DELETE',
+      headers,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      const message = (error as { message?: string }).message || 'Failed to archive roadmap topic';
+      throw new Error(`${response.status} ${response.statusText}: ${message}`);
     }
 
     return response.json();

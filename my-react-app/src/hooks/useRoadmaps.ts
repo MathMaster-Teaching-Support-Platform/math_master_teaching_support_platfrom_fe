@@ -7,6 +7,7 @@ import type {
   SubmitRoadmapEntryTestRequest,
   TopicMaterialResourceType,
   UpdateAdminRoadmapRequest,
+  UpdateRoadmapTopicRequest,
   UpdateRoadmapProgressRequest,
 } from '../types';
 
@@ -113,6 +114,45 @@ export function useAddRoadmapTopic() {
   return useMutation({
     mutationFn: ({ roadmapId, payload }: { roadmapId: string; payload: CreateRoadmapTopicRequest }) =>
       RoadmapService.addRoadmapTopic(roadmapId, payload),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: roadmapKeys.adminDetail(variables.roadmapId) });
+      queryClient.invalidateQueries({ queryKey: roadmapKeys.detail(variables.roadmapId) });
+      queryClient.invalidateQueries({ queryKey: roadmapKeys.student(variables.roadmapId) });
+      queryClient.invalidateQueries({ queryKey: roadmapKeys.adminList() });
+      queryClient.invalidateQueries({ queryKey: roadmapKeys.list() });
+    },
+  });
+}
+
+export function useUpdateRoadmapTopic() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      roadmapId,
+      topicId,
+      payload,
+    }: {
+      roadmapId: string;
+      topicId: string;
+      payload: UpdateRoadmapTopicRequest;
+    }) => RoadmapService.updateRoadmapTopic(roadmapId, topicId, payload),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: roadmapKeys.adminDetail(variables.roadmapId) });
+      queryClient.invalidateQueries({ queryKey: roadmapKeys.detail(variables.roadmapId) });
+      queryClient.invalidateQueries({ queryKey: roadmapKeys.student(variables.roadmapId) });
+      queryClient.invalidateQueries({ queryKey: roadmapKeys.adminList() });
+      queryClient.invalidateQueries({ queryKey: roadmapKeys.list() });
+    },
+  });
+}
+
+export function useArchiveRoadmapTopic() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ roadmapId, topicId }: { roadmapId: string; topicId: string }) =>
+      RoadmapService.archiveRoadmapTopic(roadmapId, topicId),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: roadmapKeys.adminDetail(variables.roadmapId) });
       queryClient.invalidateQueries({ queryKey: roadmapKeys.detail(variables.roadmapId) });

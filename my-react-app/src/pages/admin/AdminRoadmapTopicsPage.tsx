@@ -4,11 +4,35 @@ import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLa
 import { mockAdmin } from '../../data/mockData';
 import { useChaptersBySubject } from '../../hooks/useChapters';
 import { useLessonsByChapter } from '../../hooks/useLessons';
-import { useAddRoadmapTopic, useAdminRoadmapDetail } from '../../hooks/useRoadmaps';
+import {
+  useAddRoadmapTopic,
+  useAdminRoadmapDetail,
+  useArchiveRoadmapTopic,
+  useUpdateRoadmapTopic,
+} from '../../hooks/useRoadmaps';
+import type { TopicStatus, UpdateRoadmapTopicRequest } from '../../types';
 import './admin-roadmap-page.css';
 import './admin-roadmap-topics-page.css';
 
 type TopicDifficulty = 'EASY' | 'MEDIUM' | 'HARD';
+type TopicFieldKey = keyof UpdateRoadmapTopicRequest;
+
+interface PersistedTopicBaseline {
+  title: string;
+  description: string;
+  difficulty: TopicDifficulty;
+  sequenceOrder: number;
+  priority: number;
+  estimatedHours: number;
+  topicAssessmentId: string;
+  passThresholdPercentage: number;
+  status: TopicStatus;
+}
+
+interface ToastState {
+  type: 'success' | 'error';
+  message: string;
+}
 
 interface TopicNodeDraft {
   clientId: string;
@@ -21,9 +45,12 @@ interface TopicNodeDraft {
   estimatedHours: number;
   topicAssessmentId: string;
   passThresholdPercentage: number;
+  status: TopicStatus;
   selectedChapterId: string;
   selectedLessonIds: string[];
   isDraft: boolean;
+  dirtyFields: TopicFieldKey[];
+  baseline?: PersistedTopicBaseline;
 }
 
 const resequenceNodes = (nodes: TopicNodeDraft[]) =>
@@ -32,16 +59,81 @@ const resequenceNodes = (nodes: TopicNodeDraft[]) =>
     sequenceOrder: index + 1,
   }));
 
+const TOPIC_STATUSES: TopicStatus[] = ['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'LOCKED'];
+
+const extractHttpStatus = (error: unknown) => {
+  if (typeof error === 'object' && error && 'status' in error) {
+    const status = (error as { status?: unknown }).status;
+    if (typeof status === 'number') return status;
+  }
+
+  const message = error instanceof Error ? error.message : '';
+  const statusRegex = /^(\d{3})\b/;
+  const match = statusRegex.exec(message);
+  if (!match) return null;
+
+  return Number(match[1]);
+};
+
+const extractErrorMessage = (error: unknown, fallback: string) => {
+  if (!(error instanceof Error)) return fallback;
+  return error.message.replace(/^\d{3}\s+[^:]+:\s*/, '').trim() || fallback;
+};
+
+const setIfChanged = <T>(
+  payload: UpdateRoadmapTopicRequest,
+  field: TopicFieldKey,
+  value: T,
+  baselineValue: T,
+  dirty: Set<TopicFieldKey>
+) => {
+  if (!dirty.has(field) || value === baselineValue) return;
+
+  Object.assign(payload, { [field]: value });
+};
+
+const buildUpdatePayload = (node: TopicNodeDraft): UpdateRoadmapTopicRequest => {
+  if (node.isDraft || !node.baseline) return {};
+
+  const dirty = new Set(node.dirtyFields);
+  const payload: UpdateRoadmapTopicRequest = {};
+
+  setIfChanged(payload, 'title', node.title, node.baseline.title, dirty);
+  setIfChanged(payload, 'description', node.description, node.baseline.description, dirty);
+  setIfChanged(payload, 'difficulty', node.difficulty, node.baseline.difficulty, dirty);
+  setIfChanged(payload, 'sequenceOrder', node.sequenceOrder, node.baseline.sequenceOrder, dirty);
+  setIfChanged(payload, 'priority', node.priority, node.baseline.priority, dirty);
+  setIfChanged(payload, 'estimatedHours', node.estimatedHours, node.baseline.estimatedHours, dirty);
+  setIfChanged(payload, 'topicAssessmentId', node.topicAssessmentId, node.baseline.topicAssessmentId, dirty);
+  setIfChanged(
+    payload,
+    'passThresholdPercentage',
+    node.passThresholdPercentage,
+    node.baseline.passThresholdPercentage,
+    dirty
+  );
+  setIfChanged(payload, 'status', node.status, node.baseline.status, dirty);
+  if (dirty.has('lessonIds')) {
+    payload.lessonIds = node.selectedLessonIds;
+  }
+
+  return payload;
+};
+
 export default function AdminRoadmapTopicsPage() {
   const { roadmapId = '' } = useParams();
   const navigate = useNavigate();
   const roadmapDetail = useAdminRoadmapDetail(roadmapId);
   const addTopic = useAddRoadmapTopic();
+  const updateTopic = useUpdateRoadmapTopic();
+  const archiveTopic = useArchiveRoadmapTopic();
 
   const [nodes, setNodes] = useState<TopicNodeDraft[]>([]);
   const [activeNodeId, setActiveNodeId] = useState<string | null>(null);
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
   const [isTopicModalOpen, setIsTopicModalOpen] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [toast, setToast] = useState<ToastState | null>(null);
 
   useEffect(() => {
     const topics = roadmapDetail.data?.result.topics;
@@ -60,27 +152,50 @@ export default function AdminRoadmapTopicsPage() {
         estimatedHours: topic.estimatedHours,
         topicAssessmentId: topic.topicAssessmentId ?? '',
         passThresholdPercentage: topic.passThresholdPercentage ?? 70,
+        status: topic.status,
         selectedChapterId: '',
         selectedLessonIds: [],
         isDraft: false,
+        dirtyFields: [],
+        baseline: {
+          title: topic.title,
+          description: topic.description ?? '',
+          difficulty: topic.difficulty,
+          sequenceOrder: topic.sequenceOrder,
+          priority: topic.priority,
+          estimatedHours: topic.estimatedHours,
+          topicAssessmentId: topic.topicAssessmentId ?? '',
+          passThresholdPercentage: topic.passThresholdPercentage ?? 70,
+          status: topic.status,
+        },
       }));
 
     setNodes(mapped);
   }, [roadmapDetail.data?.result.topics]);
 
   useEffect(() => {
-    if (addTopic.isSuccess) {
-      setIsTopicModalOpen(false);
-      setActiveNodeId(null);
+    if (!toast) return;
+
+    const timer = globalThis.setTimeout(() => setToast(null), 3000);
+    return () => globalThis.clearTimeout(timer);
+  }, [toast]);
+
+  useEffect(() => {
+    const status = extractHttpStatus(roadmapDetail.error);
+    if (status === 401) {
+      void navigate('/login', { replace: true });
     }
-  }, [addTopic.isSuccess]);
+  }, [navigate, roadmapDetail.error]);
 
   const activeNode = nodes.find((node) => node.clientId === activeNodeId) ?? null;
+  const deleteTarget = nodes.find((node) => node.clientId === deleteTargetId) ?? null;
+  const isSubmitting = addTopic.isPending || updateTopic.isPending || archiveTopic.isPending;
+
   const subjectId = roadmapDetail.data?.result.subjectId ?? '';
-  const chaptersQuery = useChaptersBySubject(subjectId, isTopicModalOpen && !!activeNode?.isDraft);
+  const chaptersQuery = useChaptersBySubject(subjectId, isTopicModalOpen && !!activeNode);
   const lessonsQuery = useLessonsByChapter(
     activeNode?.selectedChapterId ?? '',
-    isTopicModalOpen && !!activeNode?.isDraft && !!activeNode?.selectedChapterId
+    isTopicModalOpen && !!activeNode?.selectedChapterId
   );
 
   const rowCount = Math.max(1, Math.ceil(nodes.length / 5));
@@ -107,9 +222,11 @@ export default function AdminRoadmapTopicsPage() {
       estimatedHours: 2,
       topicAssessmentId: '',
       passThresholdPercentage: 70,
+      status: 'NOT_STARTED',
       selectedChapterId: '',
       selectedLessonIds: [],
       isDraft: true,
+      dirtyFields: [],
     };
 
     setNodes((previous) => resequenceNodes([...previous, draft]));
@@ -121,10 +238,27 @@ export default function AdminRoadmapTopicsPage() {
     setIsTopicModalOpen(true);
   };
 
-  const updateActiveNode = <K extends keyof TopicNodeDraft>(field: K, value: TopicNodeDraft[K]) => {
+  const updateActiveNode = <K extends keyof TopicNodeDraft>(
+    field: K,
+    value: TopicNodeDraft[K],
+    dirtyField?: TopicFieldKey
+  ) => {
     if (!activeNodeId) return;
     setNodes((previous) =>
-      previous.map((node) => (node.clientId === activeNodeId ? { ...node, [field]: value } : node))
+      previous.map((node) => {
+        if (node.clientId !== activeNodeId) return node;
+
+        const nextDirtyFields =
+          !node.isDraft && dirtyField && !node.dirtyFields.includes(dirtyField)
+            ? [...node.dirtyFields, dirtyField]
+            : node.dirtyFields;
+
+        return {
+          ...node,
+          [field]: value,
+          dirtyFields: nextDirtyFields,
+        };
+      })
     );
   };
 
@@ -154,6 +288,105 @@ export default function AdminRoadmapTopicsPage() {
     }
   };
 
+  const handleMutationError = (error: unknown, fallback: string) => {
+    const status = extractHttpStatus(error);
+    if (status === 401) {
+      setToast({ type: 'error', message: 'Unauthorized. Please sign in again.' });
+      void navigate('/login', { replace: true });
+      return;
+    }
+    if (status === 403) {
+      setToast({ type: 'error', message: 'Forbidden. ADMIN permission is required.' });
+      return;
+    }
+    if (status === 404) {
+      setToast({
+        type: 'error',
+        message: 'Topic or roadmap not found. It may already be archived or linked data is invalid.',
+      });
+      return;
+    }
+
+    setToast({ type: 'error', message: extractErrorMessage(error, fallback) });
+  };
+
+  const saveActiveNode = () => {
+    if (!roadmapId || !activeNode || isSubmitting) return;
+
+    if (activeNode.isDraft) {
+      if (!activeNode.title || activeNode.selectedLessonIds.length === 0) return;
+
+      addTopic.mutate(
+        {
+          roadmapId,
+          payload: {
+            title: activeNode.title,
+            description: activeNode.description,
+            difficulty: activeNode.difficulty,
+            sequenceOrder: activeNode.sequenceOrder,
+            priority: activeNode.priority,
+            estimatedHours: activeNode.estimatedHours,
+            lessonIds: activeNode.selectedLessonIds,
+            topicAssessmentId: activeNode.topicAssessmentId || undefined,
+            passThresholdPercentage: activeNode.passThresholdPercentage,
+          },
+        },
+        {
+          onSuccess: (data) => {
+            setToast({ type: 'success', message: data.message || 'Roadmap topic created successfully' });
+            setIsTopicModalOpen(false);
+            setActiveNodeId(null);
+            void roadmapDetail.refetch();
+          },
+          onError: (error) => handleMutationError(error, 'Failed to create roadmap topic'),
+        }
+      );
+      return;
+    }
+
+    if (!activeNode.persistedId) return;
+
+    const payload = buildUpdatePayload(activeNode);
+    if (Object.keys(payload).length === 0) {
+      setToast({ type: 'error', message: 'No changes detected for this topic.' });
+      return;
+    }
+
+    updateTopic.mutate(
+      { roadmapId, topicId: activeNode.persistedId, payload },
+      {
+        onSuccess: (data) => {
+          setToast({ type: 'success', message: data.message || 'Roadmap topic updated successfully' });
+          setIsTopicModalOpen(false);
+          setActiveNodeId(null);
+          void roadmapDetail.refetch();
+        },
+        onError: (error) => handleMutationError(error, 'Failed to update roadmap topic'),
+      }
+    );
+  };
+
+  const confirmArchiveTopic = () => {
+    if (!roadmapId || !deleteTarget?.persistedId || isSubmitting) return;
+
+    archiveTopic.mutate(
+      {
+        roadmapId,
+        topicId: deleteTarget.persistedId,
+      },
+      {
+        onSuccess: (data) => {
+          setToast({ type: 'success', message: data.message || 'Roadmap topic archived successfully' });
+          setDeleteTargetId(null);
+          setIsTopicModalOpen(false);
+          setActiveNodeId(null);
+          void roadmapDetail.refetch();
+        },
+        onError: (error) => handleMutationError(error, 'Failed to archive roadmap topic'),
+      }
+    );
+  };
+
   const difficultyClass = (difficulty: TopicDifficulty) => {
     if (difficulty === 'MEDIUM') return 'admin-roadmap-page__topic-node--medium';
     if (difficulty === 'HARD') return 'admin-roadmap-page__topic-node--hard';
@@ -163,6 +396,17 @@ export default function AdminRoadmapTopicsPage() {
   const title = useMemo(() => roadmapDetail.data?.result.name ?? 'Roadmap topic builder', [roadmapDetail.data]);
   const chapters = chaptersQuery.data?.result ?? [];
   const lessons = lessonsQuery.data?.result ?? [];
+  const roadmapErrorStatus = extractHttpStatus(roadmapDetail.error);
+  let submitButtonLabel = 'Save changes';
+  if (activeNode?.isDraft) {
+    submitButtonLabel = 'Save topic';
+  }
+  if (updateTopic.isPending) {
+    submitButtonLabel = 'Saving...';
+  }
+  if (addTopic.isPending) {
+    submitButtonLabel = 'Adding...';
+  }
 
   return (
     <DashboardLayout
@@ -174,7 +418,7 @@ export default function AdminRoadmapTopicsPage() {
         <header className="admin-roadmap-topics-page__header">
           <div>
             <h1>Topic road builder</h1>
-            <p>{title} - add nodes first, then click node to edit details.</p>
+            <p>{title} - create, edit, and archive topics directly from this board.</p>
           </div>
           <div className="admin-roadmap-topics-page__header-actions">
             <button
@@ -191,7 +435,12 @@ export default function AdminRoadmapTopicsPage() {
         </header>
 
         {roadmapDetail.isLoading && <p className="admin-roadmap-page__state">Loading roadmap...</p>}
-        {roadmapDetail.error && <p className="admin-roadmap-page__state">Unable to load roadmap.</p>}
+        {roadmapDetail.error && roadmapErrorStatus !== 403 && roadmapErrorStatus !== 401 && (
+          <p className="admin-roadmap-page__state">Unable to load roadmap.</p>
+        )}
+        {roadmapErrorStatus === 403 && (
+          <p className="admin-roadmap-page__state">Forbidden. You need ADMIN access to manage roadmap topics.</p>
+        )}
 
         {!roadmapDetail.isLoading && !roadmapDetail.error && (
           <section className="admin-roadmap-topics-page__snake-road" style={{ minHeight: `${roadHeight}px` }}>
@@ -279,20 +528,36 @@ export default function AdminRoadmapTopicsPage() {
                   <span>Topic title</span>
                   <input
                     value={activeNode.title}
-                    onChange={(event) => updateActiveNode('title', event.target.value)}
-                    disabled={!activeNode.isDraft}
+                    onChange={(event) => updateActiveNode('title', event.target.value, 'title')}
+                    disabled={isSubmitting}
                   />
                 </label>
                 <label>
                   <span>Difficulty</span>
                   <select
                     value={activeNode.difficulty}
-                    onChange={(event) => updateActiveNode('difficulty', event.target.value as TopicDifficulty)}
-                    disabled={!activeNode.isDraft}
+                    onChange={(event) =>
+                      updateActiveNode('difficulty', event.target.value as TopicDifficulty, 'difficulty')
+                    }
+                    disabled={isSubmitting}
                   >
                     <option value="EASY">EASY</option>
                     <option value="MEDIUM">MEDIUM</option>
                     <option value="HARD">HARD</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Status</span>
+                  <select
+                    value={activeNode.status}
+                    onChange={(event) => updateActiveNode('status', event.target.value as TopicStatus, 'status')}
+                    disabled={activeNode.isDraft || isSubmitting}
+                  >
+                    {TOPIC_STATUSES.map((status) => (
+                      <option key={status} value={status}>
+                        {status}
+                      </option>
+                    ))}
                   </select>
                 </label>
                 <label>
@@ -301,9 +566,9 @@ export default function AdminRoadmapTopicsPage() {
                     value={activeNode.selectedChapterId}
                     onChange={(event) => {
                       updateActiveNode('selectedChapterId', event.target.value);
-                      updateActiveNode('selectedLessonIds', []);
+                      updateActiveNode('selectedLessonIds', [], 'lessonIds');
                     }}
-                    disabled={!activeNode.isDraft || chaptersQuery.isLoading || chapters.length === 0}
+                    disabled={isSubmitting || chaptersQuery.isLoading || chapters.length === 0}
                   >
                     <option value="">Select chapter</option>
                     {chapters.map((chapter) => (
@@ -318,8 +583,8 @@ export default function AdminRoadmapTopicsPage() {
                   <textarea
                     rows={3}
                     value={activeNode.description}
-                    onChange={(event) => updateActiveNode('description', event.target.value)}
-                    disabled={!activeNode.isDraft}
+                    onChange={(event) => updateActiveNode('description', event.target.value, 'description')}
+                    disabled={isSubmitting}
                   />
                 </label>
                 <label>
@@ -332,8 +597,10 @@ export default function AdminRoadmapTopicsPage() {
                     type="number"
                     min={1}
                     value={activeNode.priority}
-                    onChange={(event) => updateActiveNode('priority', Number(event.target.value) || 1)}
-                    disabled={!activeNode.isDraft}
+                    onChange={(event) =>
+                      updateActiveNode('priority', Number(event.target.value) || 1, 'priority')
+                    }
+                    disabled={isSubmitting}
                   />
                 </label>
                 <label>
@@ -342,16 +609,20 @@ export default function AdminRoadmapTopicsPage() {
                     type="number"
                     min={1}
                     value={activeNode.estimatedHours}
-                    onChange={(event) => updateActiveNode('estimatedHours', Number(event.target.value) || 1)}
-                    disabled={!activeNode.isDraft}
+                    onChange={(event) =>
+                      updateActiveNode('estimatedHours', Number(event.target.value) || 1, 'estimatedHours')
+                    }
+                    disabled={isSubmitting}
                   />
                 </label>
                 <label>
                   <span>Topic assessment ID (optional)</span>
                   <input
                     value={activeNode.topicAssessmentId}
-                    onChange={(event) => updateActiveNode('topicAssessmentId', event.target.value)}
-                    disabled={!activeNode.isDraft}
+                    onChange={(event) =>
+                      updateActiveNode('topicAssessmentId', event.target.value, 'topicAssessmentId')
+                    }
+                    disabled={isSubmitting}
                   />
                 </label>
                 <label>
@@ -374,13 +645,12 @@ export default function AdminRoadmapTopicsPage() {
                               type="checkbox"
                               checked={activeNode.selectedLessonIds.includes(lesson.id)}
                               onChange={(event) => {
-                                if (!activeNode.isDraft) return;
                                 const next = event.target.checked
                                   ? [...activeNode.selectedLessonIds, lesson.id]
                                   : activeNode.selectedLessonIds.filter((id) => id !== lesson.id);
-                                updateActiveNode('selectedLessonIds', next);
+                                updateActiveNode('selectedLessonIds', next, 'lessonIds');
                               }}
-                              disabled={!activeNode.isDraft}
+                              disabled={isSubmitting}
                             />
                             <span>{lesson.title || lesson.id}</span>
                           </label>
@@ -403,53 +673,91 @@ export default function AdminRoadmapTopicsPage() {
                     max={100}
                     value={activeNode.passThresholdPercentage}
                     onChange={(event) =>
-                      updateActiveNode('passThresholdPercentage', Number(event.target.value) || 70)
+                      updateActiveNode(
+                        'passThresholdPercentage',
+                        Number(event.target.value) || 70,
+                        'passThresholdPercentage'
+                      )
                     }
-                    disabled={!activeNode.isDraft}
+                    disabled={isSubmitting}
                   />
                 </label>
               </div>
 
               <div className="admin-roadmap-page__actions">
-                {activeNode.isDraft ? (
+                <button
+                  type="button"
+                  className="admin-roadmap-page__button"
+                  disabled={
+                    isSubmitting ||
+                    !roadmapId ||
+                    !activeNode.title ||
+                    (activeNode.isDraft && activeNode.selectedLessonIds.length === 0)
+                  }
+                  onClick={saveActiveNode}
+                >
+                  {submitButtonLabel}
+                </button>
+                {!activeNode.isDraft && (
                   <button
                     type="button"
-                    className="admin-roadmap-page__button"
-                    disabled={
-                      addTopic.isPending ||
-                      !activeNode.title ||
-                      activeNode.selectedLessonIds.length === 0 ||
-                      !roadmapId
-                    }
-                    onClick={() => {
-                      if (!roadmapId || !activeNode.title) return;
-                      if (activeNode.selectedLessonIds.length === 0) return;
-
-                      addTopic.mutate({
-                        roadmapId,
-                        payload: {
-                          title: activeNode.title,
-                          description: activeNode.description,
-                          difficulty: activeNode.difficulty,
-                          sequenceOrder: activeNode.sequenceOrder,
-                          priority: activeNode.priority,
-                          estimatedHours: activeNode.estimatedHours,
-                          lessonIds: activeNode.selectedLessonIds,
-                          topicAssessmentId: activeNode.topicAssessmentId || undefined,
-                          passThresholdPercentage: activeNode.passThresholdPercentage,
-                        },
-                      });
-                    }}
+                    className="admin-roadmap-topics-page__archive-button"
+                    disabled={isSubmitting}
+                    onClick={() => setDeleteTargetId(activeNode.clientId)}
                   >
-                    {addTopic.isPending ? 'Adding...' : 'Save topic'}
+                    Archive topic
                   </button>
-                ) : (
-                  <p className="admin-roadmap-page__state">
-                    Existing topic is view-only here. You can drag nodes to reorder visually.
-                  </p>
                 )}
               </div>
             </dialog>
+          </div>
+        )}
+
+        {deleteTarget && !deleteTarget.isDraft && (
+          <div className="admin-roadmap-page__modal-backdrop">
+            <dialog className="admin-roadmap-page__modal admin-roadmap-topics-page__confirm-modal" open>
+              <header className="admin-roadmap-page__modal-header">
+                <h3>Archive topic</h3>
+                <button
+                  type="button"
+                  className="admin-roadmap-page__modal-close"
+                  onClick={() => setDeleteTargetId(null)}
+                  disabled={archiveTopic.isPending}
+                >
+                  Close
+                </button>
+              </header>
+
+              <p className="admin-roadmap-page__state">
+                Confirm archiving topic "{deleteTarget.title}". This keeps history but removes it from active roadmap
+                flow.
+              </p>
+
+              <div className="admin-roadmap-page__actions">
+                <button
+                  type="button"
+                  className="admin-roadmap-page__button"
+                  onClick={() => setDeleteTargetId(null)}
+                  disabled={archiveTopic.isPending}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="admin-roadmap-topics-page__archive-button"
+                  onClick={confirmArchiveTopic}
+                  disabled={archiveTopic.isPending}
+                >
+                  {archiveTopic.isPending ? 'Archiving...' : 'Confirm archive'}
+                </button>
+              </div>
+            </dialog>
+          </div>
+        )}
+
+        {toast && (
+          <div className={`admin-roadmap-topics-page__toast admin-roadmap-topics-page__toast--${toast.type}`}>
+            {toast.message}
           </div>
         )}
       </section>
