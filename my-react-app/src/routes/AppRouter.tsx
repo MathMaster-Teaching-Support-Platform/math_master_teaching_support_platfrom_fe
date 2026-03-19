@@ -1,3 +1,4 @@
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import About from '../pages/About';
 import Contact from '../pages/Contact';
@@ -7,6 +8,7 @@ import Pricing from '../pages/Pricing';
 import SubscriptionManagement from '../pages/admin/SubscriptionManagement';
 import UserManagement from '../pages/admin/UserManagement';
 import AIAssistant from '../pages/ai/AIAssistant';
+import AISlideGenerator from '../pages/ai/AISlideGenerator';
 import TeacherAnalytics from '../pages/analytics/TeacherAnalytics';
 import StudentAssignments from '../pages/assignments/StudentAssignments';
 import TeacherAssignments from '../pages/assignments/TeacherAssignments';
@@ -203,6 +205,7 @@ const router = createBrowserRouter([
   },
   { path: '/teacher/students', element: <TeacherStudents /> },
   { path: '/teacher/ai-assistant', element: <AIAssistant /> },
+  { path: '/teacher/ai-slide-generator', element: <AISlideGenerator /> },
   {
     path: '/teacher/settings',
     element: <ProfileSettings />,
@@ -302,8 +305,6 @@ const router = createBrowserRouter([
     ),
   },
 ]);
-
-import { GoogleOAuthProvider } from '@react-oauth/google';
 
 export default function AppRouter() {
   return (

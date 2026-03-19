@@ -17,6 +17,7 @@ import {
   LineChart,
   LogOut,
   NotebookTabs,
+  Presentation,
   Ruler,
   Settings,
   Users,
@@ -74,6 +75,7 @@ const teacherGroups: MenuGroup[] = [
     label: 'Công cụ',
     items: [
       { path: '/teacher/ai-assistant', icon: Bot, label: 'AI Trợ lý' },
+      { path: '/teacher/ai-slide-generator', icon: Presentation, label: 'AI Slide Gen' },
       { path: '/teacher/resources', icon: Library, label: 'Tài nguyên' },
     ],
   },
