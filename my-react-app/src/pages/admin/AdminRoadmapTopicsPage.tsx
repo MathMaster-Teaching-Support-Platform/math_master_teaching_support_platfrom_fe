@@ -80,7 +80,7 @@ const extractErrorMessage = (error: unknown, fallback: string) => {
   return error.message.replace(/^\d{3}\s+[^:]+:\s*/, '').trim() || fallback;
 };
 
-const setIfChanged = <T>(
+const setIfChanged = <T,>(
   payload: UpdateRoadmapTopicRequest,
   field: TopicFieldKey,
   value: T,
@@ -104,7 +104,13 @@ const buildUpdatePayload = (node: TopicNodeDraft): UpdateRoadmapTopicRequest => 
   setIfChanged(payload, 'sequenceOrder', node.sequenceOrder, node.baseline.sequenceOrder, dirty);
   setIfChanged(payload, 'priority', node.priority, node.baseline.priority, dirty);
   setIfChanged(payload, 'estimatedHours', node.estimatedHours, node.baseline.estimatedHours, dirty);
-  setIfChanged(payload, 'topicAssessmentId', node.topicAssessmentId, node.baseline.topicAssessmentId, dirty);
+  setIfChanged(
+    payload,
+    'topicAssessmentId',
+    node.topicAssessmentId,
+    node.baseline.topicAssessmentId,
+    dirty
+  );
   setIfChanged(
     payload,
     'passThresholdPercentage',
@@ -302,7 +308,8 @@ export default function AdminRoadmapTopicsPage() {
     if (status === 404) {
       setToast({
         type: 'error',
-        message: 'Topic or roadmap not found. It may already be archived or linked data is invalid.',
+        message:
+          'Topic or roadmap not found. It may already be archived or linked data is invalid.',
       });
       return;
     }
@@ -332,8 +339,8 @@ export default function AdminRoadmapTopicsPage() {
           },
         },
         {
-          onSuccess: (data) => {
-            setToast({ type: 'success', message: data.message || 'Roadmap topic created successfully' });
+          onSuccess: () => {
+            setToast({ type: 'success', message: 'Roadmap topic created successfully' });
             setIsTopicModalOpen(false);
             setActiveNodeId(null);
             void roadmapDetail.refetch();
@@ -355,8 +362,8 @@ export default function AdminRoadmapTopicsPage() {
     updateTopic.mutate(
       { roadmapId, topicId: activeNode.persistedId, payload },
       {
-        onSuccess: (data) => {
-          setToast({ type: 'success', message: data.message || 'Roadmap topic updated successfully' });
+        onSuccess: () => {
+          setToast({ type: 'success', message: 'Roadmap topic updated successfully' });
           setIsTopicModalOpen(false);
           setActiveNodeId(null);
           void roadmapDetail.refetch();
@@ -375,8 +382,8 @@ export default function AdminRoadmapTopicsPage() {
         topicId: deleteTarget.persistedId,
       },
       {
-        onSuccess: (data) => {
-          setToast({ type: 'success', message: data.message || 'Roadmap topic archived successfully' });
+        onSuccess: () => {
+          setToast({ type: 'success', message: 'Roadmap topic archived successfully' });
           setDeleteTargetId(null);
           setIsTopicModalOpen(false);
           setActiveNodeId(null);
@@ -393,7 +400,10 @@ export default function AdminRoadmapTopicsPage() {
     return 'admin-roadmap-page__topic-node--easy';
   };
 
-  const title = useMemo(() => roadmapDetail.data?.result.name ?? 'Roadmap topic builder', [roadmapDetail.data]);
+  const title = useMemo(
+    () => roadmapDetail.data?.result.name ?? 'Roadmap topic builder',
+    [roadmapDetail.data]
+  );
   const chapters = chaptersQuery.data?.result ?? [];
   const lessons = lessonsQuery.data?.result ?? [];
   const roadmapErrorStatus = extractHttpStatus(roadmapDetail.error);
@@ -439,11 +449,16 @@ export default function AdminRoadmapTopicsPage() {
           <p className="admin-roadmap-page__state">Unable to load roadmap.</p>
         )}
         {roadmapErrorStatus === 403 && (
-          <p className="admin-roadmap-page__state">Forbidden. You need ADMIN access to manage roadmap topics.</p>
+          <p className="admin-roadmap-page__state">
+            Forbidden. You need ADMIN access to manage roadmap topics.
+          </p>
         )}
 
         {!roadmapDetail.isLoading && !roadmapDetail.error && (
-          <section className="admin-roadmap-topics-page__snake-road" style={{ minHeight: `${roadHeight}px` }}>
+          <section
+            className="admin-roadmap-topics-page__snake-road"
+            style={{ minHeight: `${roadHeight}px` }}
+          >
             <svg
               className="admin-roadmap-topics-page__snake-svg"
               viewBox={`0 0 1000 ${roadHeight}`}
@@ -537,7 +552,11 @@ export default function AdminRoadmapTopicsPage() {
                   <select
                     value={activeNode.difficulty}
                     onChange={(event) =>
-                      updateActiveNode('difficulty', event.target.value as TopicDifficulty, 'difficulty')
+                      updateActiveNode(
+                        'difficulty',
+                        event.target.value as TopicDifficulty,
+                        'difficulty'
+                      )
                     }
                     disabled={isSubmitting}
                   >
@@ -550,7 +569,9 @@ export default function AdminRoadmapTopicsPage() {
                   <span>Status</span>
                   <select
                     value={activeNode.status}
-                    onChange={(event) => updateActiveNode('status', event.target.value as TopicStatus, 'status')}
+                    onChange={(event) =>
+                      updateActiveNode('status', event.target.value as TopicStatus, 'status')
+                    }
                     disabled={activeNode.isDraft || isSubmitting}
                   >
                     {TOPIC_STATUSES.map((status) => (
@@ -583,7 +604,9 @@ export default function AdminRoadmapTopicsPage() {
                   <textarea
                     rows={3}
                     value={activeNode.description}
-                    onChange={(event) => updateActiveNode('description', event.target.value, 'description')}
+                    onChange={(event) =>
+                      updateActiveNode('description', event.target.value, 'description')
+                    }
                     disabled={isSubmitting}
                   />
                 </label>
@@ -610,7 +633,11 @@ export default function AdminRoadmapTopicsPage() {
                     min={1}
                     value={activeNode.estimatedHours}
                     onChange={(event) =>
-                      updateActiveNode('estimatedHours', Number(event.target.value) || 1, 'estimatedHours')
+                      updateActiveNode(
+                        'estimatedHours',
+                        Number(event.target.value) || 1,
+                        'estimatedHours'
+                      )
                     }
                     disabled={isSubmitting}
                   />
@@ -637,29 +664,36 @@ export default function AdminRoadmapTopicsPage() {
                     {activeNode.selectedChapterId && lessonsQuery.error && (
                       <p className="admin-roadmap-page__state">Unable to load lessons.</p>
                     )}
-                    {activeNode.selectedChapterId && !lessonsQuery.isLoading && !lessonsQuery.error && (
-                      <div className="admin-roadmap-topics-page__lesson-list">
-                        {lessons.map((lesson) => (
-                          <label key={lesson.id} className="admin-roadmap-topics-page__lesson-item">
-                            <input
-                              type="checkbox"
-                              checked={activeNode.selectedLessonIds.includes(lesson.id)}
-                              onChange={(event) => {
-                                const next = event.target.checked
-                                  ? [...activeNode.selectedLessonIds, lesson.id]
-                                  : activeNode.selectedLessonIds.filter((id) => id !== lesson.id);
-                                updateActiveNode('selectedLessonIds', next, 'lessonIds');
-                              }}
-                              disabled={isSubmitting}
-                            />
-                            <span>{lesson.title || lesson.id}</span>
-                          </label>
-                        ))}
-                        {lessons.length === 0 && (
-                          <p className="admin-roadmap-page__state">No lessons found in this chapter.</p>
-                        )}
-                      </div>
-                    )}
+                    {activeNode.selectedChapterId &&
+                      !lessonsQuery.isLoading &&
+                      !lessonsQuery.error && (
+                        <div className="admin-roadmap-topics-page__lesson-list">
+                          {lessons.map((lesson) => (
+                            <label
+                              key={lesson.id}
+                              className="admin-roadmap-topics-page__lesson-item"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={activeNode.selectedLessonIds.includes(lesson.id)}
+                                onChange={(event) => {
+                                  const next = event.target.checked
+                                    ? [...activeNode.selectedLessonIds, lesson.id]
+                                    : activeNode.selectedLessonIds.filter((id) => id !== lesson.id);
+                                  updateActiveNode('selectedLessonIds', next, 'lessonIds');
+                                }}
+                                disabled={isSubmitting}
+                              />
+                              <span>{lesson.title || lesson.id}</span>
+                            </label>
+                          ))}
+                          {lessons.length === 0 && (
+                            <p className="admin-roadmap-page__state">
+                              No lessons found in this chapter.
+                            </p>
+                          )}
+                        </div>
+                      )}
                     <p className="admin-roadmap-topics-page__lesson-count">
                       Selected lessons: {activeNode.selectedLessonIds.length}
                     </p>
@@ -715,7 +749,10 @@ export default function AdminRoadmapTopicsPage() {
 
         {deleteTarget && !deleteTarget.isDraft && (
           <div className="admin-roadmap-page__modal-backdrop">
-            <dialog className="admin-roadmap-page__modal admin-roadmap-topics-page__confirm-modal" open>
+            <dialog
+              className="admin-roadmap-page__modal admin-roadmap-topics-page__confirm-modal"
+              open
+            >
               <header className="admin-roadmap-page__modal-header">
                 <h3>Archive topic</h3>
                 <button
@@ -729,8 +766,8 @@ export default function AdminRoadmapTopicsPage() {
               </header>
 
               <p className="admin-roadmap-page__state">
-                Confirm archiving topic "{deleteTarget.title}". This keeps history but removes it from active roadmap
-                flow.
+                Confirm archiving topic "{deleteTarget.title}". This keeps history but removes it
+                from active roadmap flow.
               </p>
 
               <div className="admin-roadmap-page__actions">
@@ -756,7 +793,9 @@ export default function AdminRoadmapTopicsPage() {
         )}
 
         {toast && (
-          <div className={`admin-roadmap-topics-page__toast admin-roadmap-topics-page__toast--${toast.type}`}>
+          <div
+            className={`admin-roadmap-topics-page__toast admin-roadmap-topics-page__toast--${toast.type}`}
+          >
             {toast.message}
           </div>
         )}
