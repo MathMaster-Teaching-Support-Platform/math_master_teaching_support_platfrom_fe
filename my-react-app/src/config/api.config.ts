@@ -1,14 +1,13 @@
 // Sử dụng /api để đi qua Vite proxy (bypass CORS trong development)
 // Trong production, thay đổi thành URL thật của backend
 export const API_BASE_URL = import.meta.env.PROD
-  ? 'http://localhost:8080' // Production URL
+  ? 'http://localhost:8080/api' // Production URL
   : '/api'; // Development: sử dụng proxy
 
 export const API_ENDPOINTS = {
   // Auth
   REGISTER: '/auth/register',
   LOGIN: '/auth/login',
-
 
   // Teacher Profiles
   TEACHER_PROFILES: '/teacher-profiles',
@@ -97,7 +96,8 @@ export const API_ENDPOINTS = {
   ROADMAP_STUDENT: '/roadmaps/student',
   ROADMAP_STUDENT_DETAIL: (roadmapId: string) => `/roadmaps/${roadmapId}/student-progress`,
   ROADMAP_PROGRESS: (roadmapId: string) => `/roadmaps/${roadmapId}/progress`,
-  ROADMAP_ENTRY_TEST_SUBMIT: (roadmapId: string) => `/student/roadmaps/${roadmapId}/entry-test/submit`,
+  ROADMAP_ENTRY_TEST_SUBMIT: (roadmapId: string) =>
+    `/student/roadmaps/${roadmapId}/entry-test/submit`,
   STUDENT_TOPIC_MATERIALS: (topicId: string) => `/student/roadmaps/topics/${topicId}/materials`,
   STUDENT_TOPIC_MATERIALS_BY_TYPE: (topicId: string, resourceType: string) =>
     `/student/roadmaps/topics/${topicId}/materials-by-type?resourceType=${resourceType}`,
