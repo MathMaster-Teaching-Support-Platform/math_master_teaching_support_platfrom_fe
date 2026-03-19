@@ -9,6 +9,7 @@ import TeacherDashboard from '../pages/dashboard/teacher/TeacherDashboard';
 import StudentDashboard from '../pages/dashboard/student/StudentDashboard';
 import AdminDashboard from '../pages/dashboard/admin/AdminDashboard';
 import AIAssistant from '../pages/ai/AIAssistant';
+import AISlideGenerator from '../pages/ai/AISlideGenerator';
 import TeacherCourses from '../pages/courses/TeacherCourses';
 import StudentCourses from '../pages/courses/StudentCourses';
 import ProfileSettings from '../pages/settings/ProfileSettings';
@@ -172,6 +173,7 @@ const router = createBrowserRouter([
   },
   { path: '/teacher/students', element: <TeacherStudents /> },
   { path: '/teacher/ai-assistant', element: <AIAssistant /> },
+  { path: '/teacher/ai-slide-generator', element: <AISlideGenerator /> },
   {
     path: '/teacher/settings',
     element: <ProfileSettings />,

@@ -86,6 +86,15 @@ export const API_ENDPOINTS = {
   LESSONS: '/lessons',
   LESSON_DETAIL: (lessonId: string) => `/lessons/${lessonId}`,
 
+  // Lesson slide generator flow
+  SCHOOL_GRADES: '/school-grades',
+  SUBJECTS_BY_SCHOOL_GRADE: (schoolGradeId: string) => `/subjects/school-grade/${schoolGradeId}`,
+  CHAPTERS_BY_SUBJECT: (subjectId: string) => `/chapters/subject/${subjectId}`,
+  LESSONS_BY_CHAPTER: (chapterId: string) => `/lessons/chapters/${chapterId}/lessons`,
+  LESSON_SLIDES_TEMPLATES: '/lesson-slides/templates',
+  LESSON_SLIDES_GENERATE_CONTENT: '/lesson-slides/generate-content',
+  LESSON_SLIDES_GENERATE_PPTX: '/lesson-slides/generate-pptx-from-json',
+
   // Wallet
   WALLET_MY: '/wallet/my-wallet',
   WALLET_TRANSACTIONS: '/wallet/transactions',

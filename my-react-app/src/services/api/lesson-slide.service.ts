@@ -1,0 +1,179 @@
+import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
+import { AuthService } from './auth.service';
+import type {
+  ApiEnvelope,
+  ChapterBySubject,
+  GeneratePptxRequest,
+  GenerateSlideContentRequest,
+  GenerateSlideContentResult,
+  LessonByChapter,
+  LessonSlideTemplate,
+  SchoolGrade,
+  SubjectByGrade,
+} from '../../types/lessonSlide.types';
+
+interface DownloadPptxResult {
+  blob: Blob;
+  filename: string;
+}
+
+export class LessonSlideService {
+  private static async getAuthHeaders(contentTypeJson = true): Promise<Record<string, string>> {
+    const token = AuthService.getToken();
+    if (!token) throw new Error('Authentication required');
+
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${token}`,
+      accept: '*/*',
+    };
+
+    if (contentTypeJson) {
+      headers['Content-Type'] = 'application/json';
+    }
+
+    return headers;
+  }
+
+  private static async readErrorMessage(response: Response, fallback: string): Promise<string> {
+    const contentType = response.headers.get('content-type') || '';
+
+    if (contentType.includes('application/json')) {
+      const payload = (await response.json().catch(() => ({}))) as {
+        message?: string;
+        error?: string;
+      };
+      return payload.message || payload.error || fallback;
+    }
+
+    const text = await response.text().catch(() => '');
+    return text.trim() || fallback;
+  }
+
+  private static getFilenameFromDisposition(disposition: string | null): string {
+    if (!disposition) return 'lesson-slides.pptx';
+
+    const utf8Match = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+    if (utf8Match?.[1]) {
+      return decodeURIComponent(utf8Match[1]);
+    }
+
+    const asciiMatch = disposition.match(/filename="?([^";]+)"?/i);
+    return asciiMatch?.[1] || 'lesson-slides.pptx';
+  }
+
+  static async getSchoolGrades(activeOnly = true): Promise<ApiEnvelope<SchoolGrade[]>> {
+    const headers = await this.getAuthHeaders(false);
+    const query = new URLSearchParams({ activeOnly: String(activeOnly) });
+
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.SCHOOL_GRADES}?${query}`, {
+      method: 'GET',
+      headers,
+    });
+
+    if (!response.ok) {
+      throw new Error(await this.readErrorMessage(response, 'Failed to fetch school grades'));
+    }
+
+    return response.json();
+  }
+
+  static async getSubjectsBySchoolGrade(
+    schoolGradeId: string
+  ): Promise<ApiEnvelope<SubjectByGrade[]>> {
+    const headers = await this.getAuthHeaders(false);
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.SUBJECTS_BY_SCHOOL_GRADE(schoolGradeId)}`,
+      {
+        method: 'GET',
+        headers,
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(await this.readErrorMessage(response, 'Failed to fetch subjects'));
+    }
+
+    return response.json();
+  }
+
+  static async getChaptersBySubject(subjectId: string): Promise<ApiEnvelope<ChapterBySubject[]>> {
+    const headers = await this.getAuthHeaders(false);
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.CHAPTERS_BY_SUBJECT(subjectId)}`, {
+      method: 'GET',
+      headers,
+    });
+
+    if (!response.ok) {
+      throw new Error(await this.readErrorMessage(response, 'Failed to fetch chapters'));
+    }
+
+    return response.json();
+  }
+
+  static async getLessonsByChapter(chapterId: string): Promise<ApiEnvelope<LessonByChapter[]>> {
+    const headers = await this.getAuthHeaders(false);
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.LESSONS_BY_CHAPTER(chapterId)}`, {
+      method: 'GET',
+      headers,
+    });
+
+    if (!response.ok) {
+      throw new Error(await this.readErrorMessage(response, 'Failed to fetch lessons'));
+    }
+
+    return response.json();
+  }
+
+  static async getTemplates(activeOnly = true): Promise<ApiEnvelope<LessonSlideTemplate[]>> {
+    const headers = await this.getAuthHeaders(false);
+    const query = new URLSearchParams({ activeOnly: String(activeOnly) });
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.LESSON_SLIDES_TEMPLATES}?${query.toString()}`,
+      {
+        method: 'GET',
+        headers,
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(await this.readErrorMessage(response, 'Failed to fetch slide templates'));
+    }
+
+    return response.json();
+  }
+
+  static async generateContent(
+    payload: GenerateSlideContentRequest
+  ): Promise<ApiEnvelope<GenerateSlideContentResult>> {
+    const headers = await this.getAuthHeaders();
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.LESSON_SLIDES_GENERATE_CONTENT}`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error(await this.readErrorMessage(response, 'Failed to generate slide content'));
+    }
+
+    return response.json();
+  }
+
+  static async generatePptx(payload: GeneratePptxRequest): Promise<DownloadPptxResult> {
+    const headers = await this.getAuthHeaders();
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.LESSON_SLIDES_GENERATE_PPTX}`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error(await this.readErrorMessage(response, 'Failed to generate PPTX'));
+    }
+
+    return {
+      blob: await response.blob(),
+      filename: this.getFilenameFromDisposition(response.headers.get('content-disposition')),
+    };
+  }
+}

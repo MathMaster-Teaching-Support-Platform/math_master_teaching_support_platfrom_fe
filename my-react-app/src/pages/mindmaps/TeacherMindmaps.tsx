@@ -4,8 +4,22 @@ import { ArrowRight, Network, Sparkles, WandSparkles } from 'lucide-react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockTeacher } from '../../data/mockData';
 import { MindmapService } from '../../services/api/mindmap.service';
+import { LessonSlideService } from '../../services/api/lesson-slide.service';
 import type { Mindmap } from '../../types';
+import type {
+  ChapterBySubject,
+  LessonByChapter,
+  SchoolGrade,
+  SubjectByGrade,
+} from '../../types/lessonSlide.types';
 import './TeacherMindmaps.css';
+
+const LoadingSpinner = ({ label }: { label: string }) => (
+  <span className="mindmaps-inline-loading" role="status" aria-live="polite">
+    <span className="mindmaps-spinner" aria-hidden="true" />
+    {label}
+  </span>
+);
 
 export default function TeacherMindmaps() {
   const navigate = useNavigate();
@@ -23,7 +37,24 @@ export default function TeacherMindmaps() {
     prompt: '',
     levels: 3,
   });
+  const [activeGeneratorStep, setActiveGeneratorStep] = useState(1);
+  const [schoolGrades, setSchoolGrades] = useState<SchoolGrade[]>([]);
+  const [subjects, setSubjects] = useState<SubjectByGrade[]>([]);
+  const [chapters, setChapters] = useState<ChapterBySubject[]>([]);
+  const [lessons, setLessons] = useState<LessonByChapter[]>([]);
+  const [schoolGradeId, setSchoolGradeId] = useState('');
+  const [subjectId, setSubjectId] = useState('');
+  const [chapterId, setChapterId] = useState('');
+  const [lessonId, setLessonId] = useState('');
+  const [loadingGrades, setLoadingGrades] = useState(false);
+  const [loadingSubjects, setLoadingSubjects] = useState(false);
+  const [loadingChapters, setLoadingChapters] = useState(false);
+  const [loadingLessons, setLoadingLessons] = useState(false);
+  const [generatorError, setGeneratorError] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
+
+  const canProceedStep2 = Boolean(lessonId);
+  const selectedLesson = lessons.find((lesson) => lesson.id === lessonId) || null;
 
   useEffect(() => {
     loadMindmaps();
@@ -57,8 +88,118 @@ export default function TeacherMindmaps() {
     }
   };
 
+  const loadSchoolGrades = async () => {
+    try {
+      setLoadingGrades(true);
+      const response = await LessonSlideService.getSchoolGrades(true);
+      setSchoolGrades(response.result || []);
+    } catch (err) {
+      setGeneratorError(err instanceof Error ? err.message : 'Không thể tải danh sách khối lớp');
+    } finally {
+      setLoadingGrades(false);
+    }
+  };
+
+  const resetGeneratorSelection = () => {
+    setActiveGeneratorStep(1);
+    setSchoolGradeId('');
+    setSubjectId('');
+    setChapterId('');
+    setLessonId('');
+    setSubjects([]);
+    setChapters([]);
+    setLessons([]);
+    setGeneratorError(null);
+    setGeneratorForm({
+      title: '',
+      prompt: '',
+      levels: 3,
+    });
+  };
+
+  const toggleGenerator = () => {
+    const nextShow = !showGenerator;
+    setShowGenerator(nextShow);
+    if (nextShow) {
+      resetGeneratorSelection();
+      if (!schoolGrades.length) {
+        void loadSchoolGrades();
+      }
+    }
+  };
+
+  const handleSchoolGradeChange = async (value: string) => {
+    setSchoolGradeId(value);
+    setSubjectId('');
+    setChapterId('');
+    setLessonId('');
+    setSubjects([]);
+    setChapters([]);
+    setLessons([]);
+    setGeneratorError(null);
+
+    if (!value) return;
+
+    try {
+      setLoadingSubjects(true);
+      const response = await LessonSlideService.getSubjectsBySchoolGrade(value);
+      setSubjects(response.result || []);
+    } catch (err) {
+      setGeneratorError(err instanceof Error ? err.message : 'Không thể tải danh sách môn học');
+    } finally {
+      setLoadingSubjects(false);
+    }
+  };
+
+  const handleSubjectChange = async (value: string) => {
+    setSubjectId(value);
+    setChapterId('');
+    setLessonId('');
+    setChapters([]);
+    setLessons([]);
+    setGeneratorError(null);
+
+    if (!value) return;
+
+    try {
+      setLoadingChapters(true);
+      const response = await LessonSlideService.getChaptersBySubject(value);
+      setChapters(response.result || []);
+    } catch (err) {
+      setGeneratorError(err instanceof Error ? err.message : 'Không thể tải danh sách chương');
+    } finally {
+      setLoadingChapters(false);
+    }
+  };
+
+  const handleChapterChange = async (value: string) => {
+    setChapterId(value);
+    setLessonId('');
+    setLessons([]);
+    setGeneratorError(null);
+
+    if (!value) return;
+
+    try {
+      setLoadingLessons(true);
+      const response = await LessonSlideService.getLessonsByChapter(value);
+      setLessons(response.result || []);
+    } catch (err) {
+      setGeneratorError(err instanceof Error ? err.message : 'Không thể tải danh sách bài học');
+    } finally {
+      setLoadingLessons(false);
+    }
+  };
+
   const handleGenerateMindmap = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!lessonId) {
+      setGeneratorError('Vui lòng chọn đầy đủ Khối, Môn, Chương và Bài học trước khi tạo mindmap.');
+      setActiveGeneratorStep(1);
+      return;
+    }
+
     if (!generatorForm.title.trim() || !generatorForm.prompt.trim()) {
       alert('Vui lòng nhập đầy đủ thông tin');
       return;
@@ -66,9 +207,11 @@ export default function TeacherMindmaps() {
 
     try {
       setGenerating(true);
+      setGeneratorError(null);
       const response = await MindmapService.generateMindmap({
         title: generatorForm.title,
         prompt: generatorForm.prompt,
+        lessonId,
         levels: generatorForm.levels,
       });
 
@@ -122,7 +265,7 @@ export default function TeacherMindmaps() {
             <h1>Mindmap của tôi</h1>
             <p>Tạo và quản lý mindmap trực quan cho các bài giảng toán học sinh động hơn.</p>
           </div>
-          <button className="btn-generate" onClick={() => setShowGenerator(!showGenerator)}>
+          <button className="btn-generate" onClick={toggleGenerator}>
             <Sparkles size={18} />
             <span>Tạo Mindmap AI</span>
           </button>
@@ -137,53 +280,176 @@ export default function TeacherMindmaps() {
                 </div>
                 <div>
                   <h3>Tạo Mindmap với AI</h3>
-                  <p>Mô tả chủ đề, hệ thống sẽ đề xuất cấu trúc mindmap trực quan cho bạn.</p>
+                  <p>Hoàn thành Bước 1 để chọn đúng bài dạy, sau đó cấu hình AI ở Bước 2.</p>
                 </div>
               </div>
-              <div className="form-group">
-                <label>Tiêu đề</label>
-                <input
-                  type="text"
-                  value={generatorForm.title}
-                  onChange={(e) => setGeneratorForm({ ...generatorForm, title: e.target.value })}
-                  placeholder="VD: Hình học lớp 9"
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Mô tả nội dung</label>
-                <textarea
-                  value={generatorForm.prompt}
-                  onChange={(e) => setGeneratorForm({ ...generatorForm, prompt: e.target.value })}
-                  placeholder="VD: Tạo mindmap về Hình học lớp 9, bao gồm các chủ đề: tam giác, tứ giác, đường tròn..."
-                  rows={4}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Số cấp độ</label>
-                <input
-                  type="number"
-                  min="2"
-                  max="5"
-                  value={generatorForm.levels}
-                  onChange={(e) =>
-                    setGeneratorForm({ ...generatorForm, levels: Number(e.target.value) })
-                  }
-                />
-              </div>
-              <div className="form-actions">
-                <button
-                  type="button"
-                  className="btn-cancel"
-                  onClick={() => setShowGenerator(false)}
-                >
-                  Hủy
-                </button>
-                <button type="submit" className="btn-submit" disabled={generating}>
-                  {generating ? 'Đang tạo...' : 'Tạo Mindmap'}
-                </button>
-              </div>
+
+              {activeGeneratorStep === 1 && (
+                <div className="generator-step-block">
+                  <h4 className="generator-step-title">Bước 1: Chọn dữ liệu bài dạy</h4>
+                  <div className="form-group">
+                    <label>Khối (School Grade)</label>
+                    <select
+                      value={schoolGradeId}
+                      onChange={(e) => void handleSchoolGradeChange(e.target.value)}
+                      disabled={loadingGrades}
+                    >
+                      <option value="">-- Chọn khối --</option>
+                      {schoolGrades.map((grade) => (
+                        <option key={grade.id} value={grade.id}>
+                          Khối {grade.gradeLevel} - {grade.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {schoolGradeId && (
+                    <div className="form-group">
+                      <label>Môn học (Subject)</label>
+                      <select
+                        value={subjectId}
+                        onChange={(e) => void handleSubjectChange(e.target.value)}
+                        disabled={loadingSubjects}
+                      >
+                        <option value="">-- Chọn môn học --</option>
+                        {subjects.map((subject) => (
+                          <option key={subject.id} value={subject.id}>
+                            {subject.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {subjectId && (
+                    <div className="form-group">
+                      <label>Chương (Chapter)</label>
+                      <select
+                        value={chapterId}
+                        onChange={(e) => void handleChapterChange(e.target.value)}
+                        disabled={loadingChapters}
+                      >
+                        <option value="">-- Chọn chương --</option>
+                        {chapters.map((chapter) => (
+                          <option key={chapter.id} value={chapter.id}>
+                            {chapter.orderIndex}. {chapter.title}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {chapterId && (
+                    <div className="form-group">
+                      <label>Bài học (Lesson)</label>
+                      <select
+                        value={lessonId}
+                        onChange={(e) => setLessonId(e.target.value)}
+                        disabled={loadingLessons}
+                      >
+                        <option value="">-- Chọn bài học --</option>
+                        {lessons.map((lesson) => (
+                          <option key={lesson.id} value={lesson.id}>
+                            {lesson.orderIndex}. {lesson.title}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {(loadingGrades || loadingSubjects || loadingChapters || loadingLessons) && (
+                    <LoadingSpinner label="Đang tải dữ liệu bài dạy..." />
+                  )}
+
+                  {selectedLesson && (
+                    <p className="generator-selected-lesson">
+                      Bài học đã chọn: {selectedLesson.title}
+                    </p>
+                  )}
+
+                  {generatorError && <p className="generator-error">{generatorError}</p>}
+
+                  <div className="form-actions">
+                    <button
+                      type="button"
+                      className="btn-cancel"
+                      onClick={() => setShowGenerator(false)}
+                    >
+                      Hủy
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-submit"
+                      onClick={() => setActiveGeneratorStep(2)}
+                      disabled={!canProceedStep2}
+                    >
+                      Tiếp tục: Bước 2
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {activeGeneratorStep === 2 && (
+                <div className="generator-step-block">
+                  <h4 className="generator-step-title">Bước 2: Cấu hình AI tạo mindmap</h4>
+
+                  {selectedLesson && (
+                    <p className="generator-selected-lesson">Bài học: {selectedLesson.title}</p>
+                  )}
+
+                  <div className="form-group">
+                    <label>Tiêu đề</label>
+                    <input
+                      type="text"
+                      value={generatorForm.title}
+                      onChange={(e) =>
+                        setGeneratorForm({ ...generatorForm, title: e.target.value })
+                      }
+                      placeholder="VD: Hình học lớp 9"
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Mô tả nội dung</label>
+                    <textarea
+                      value={generatorForm.prompt}
+                      onChange={(e) =>
+                        setGeneratorForm({ ...generatorForm, prompt: e.target.value })
+                      }
+                      placeholder="VD: Tạo mindmap về Hình học lớp 9, bao gồm các chủ đề: tam giác, tứ giác, đường tròn..."
+                      rows={4}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Số cấp độ</label>
+                    <input
+                      type="number"
+                      min="2"
+                      max="5"
+                      value={generatorForm.levels}
+                      onChange={(e) =>
+                        setGeneratorForm({ ...generatorForm, levels: Number(e.target.value) })
+                      }
+                    />
+                  </div>
+
+                  {generatorError && <p className="generator-error">{generatorError}</p>}
+
+                  <div className="form-actions">
+                    <button
+                      type="button"
+                      className="btn-cancel"
+                      onClick={() => setActiveGeneratorStep(1)}
+                    >
+                      ← Quay lại Bước 1
+                    </button>
+                    <button type="submit" className="btn-submit" disabled={generating}>
+                      {generating ? <LoadingSpinner label="Đang tạo mindmap..." /> : 'Tạo Mindmap'}
+                    </button>
+                  </div>
+                </div>
+              )}
             </form>
           </div>
         )}
@@ -231,7 +497,7 @@ export default function TeacherMindmaps() {
               Bắt đầu hành trình sáng tạo của bạn. Tạo mindmap đầu tiên bằng AI ngay hôm nay để hệ
               thống hóa kiến thức dễ dàng hơn.
             </p>
-            <button className="empty-cta" onClick={() => setShowGenerator(true)}>
+            <button className="empty-cta" onClick={toggleGenerator}>
               Bắt đầu ngay
               <ArrowRight size={16} />
             </button>

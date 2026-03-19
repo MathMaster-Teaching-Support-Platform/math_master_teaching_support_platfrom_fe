@@ -14,6 +14,7 @@ import {
   Users,
   LineChart,
   Bot,
+  Presentation,
   Library,
   GraduationCap,
   NotebookTabs,
@@ -59,6 +60,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
     { path: '/teacher/students', icon: Users, label: 'Học sinh' },
     { path: '/teacher/analytics', icon: LineChart, label: 'Phân tích' },
     { path: '/teacher/ai-assistant', icon: Bot, label: 'AI Trợ lý' },
+    { path: '/teacher/ai-slide-generator', icon: Presentation, label: 'AI Slide Gen' },
     { path: '/teacher/resources', icon: Library, label: 'Tài nguyên' },
   ];
 

@@ -8,6 +8,26 @@ import type {
 } from '../../types/auth.types';
 
 export class AuthService {
+  private static async extractErrorMessage(response: Response, fallback: string): Promise<string> {
+    const contentType = response.headers.get('content-type') || '';
+
+    if (contentType.includes('application/json')) {
+      try {
+        const errorJson = await response.json();
+
+        if (errorJson?.message) return String(errorJson.message);
+        if (errorJson?.error) return String(errorJson.error);
+
+        return fallback;
+      } catch {
+        return fallback;
+      }
+    }
+
+    const errorText = await response.text();
+    return errorText?.trim() || fallback;
+  }
+
   /**
    * Register a new user
    */
@@ -22,8 +42,8 @@ export class AuthService {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Registration failed');
+      const message = await this.extractErrorMessage(response, 'Registration failed');
+      throw new Error(message);
     }
 
     return response.json();
@@ -43,8 +63,8 @@ export class AuthService {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Login failed');
+      const message = await this.extractErrorMessage(response, 'Login failed');
+      throw new Error(message);
     }
 
     return response.json();
@@ -64,8 +84,8 @@ export class AuthService {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Google Login failed');
+      const message = await this.extractErrorMessage(response, 'Google Login failed');
+      throw new Error(message);
     }
 
     return response.json();
@@ -115,7 +135,7 @@ export class AuthService {
    */
   static decodeToken(
     token: string
-  ): { sub: string; scope: string; email: string;[key: string]: unknown } | null {
+  ): { sub: string; scope: string; email: string; [key: string]: unknown } | null {
     try {
       const base64Url = token.split('.')[1];
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
