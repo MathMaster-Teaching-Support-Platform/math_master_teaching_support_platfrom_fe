@@ -93,8 +93,11 @@ const AISlideGenerator: React.FC = () => {
   const showLessonStep = Boolean(chapterId);
 
   const canConfigureAi = Boolean(lessonId);
+  const canChooseTemplate = canConfigureAi;
   const loadingAnyCatalog =
     loadingGrades || loadingSubjects || loadingChapters || loadingLessons || loadingTemplates;
+  const visualWizardStep = Math.min(activeWizardStep, 4);
+  const wizardSteps = ['Chọn bài dạy', 'Chọn template', 'Gen nội dung', 'Confirm nội dung'];
 
   const clearGeneratedData = () => {
     setGenerated(null);
@@ -338,8 +341,8 @@ const AISlideGenerator: React.FC = () => {
       setActivePreviewIndex(0);
       setPreparedPptxBlob(null);
       setPreparedPptxFilename('lesson-slides.pptx');
-      setSuccess('Đã tạo nội dung slide bằng AI. Xem trước và chỉnh sửa trước khi tạo file PPTX.');
-      setActiveWizardStep(3);
+      setSuccess('Đã tạo nội dung slide bằng AI. Vui lòng kiểm tra và confirm nội dung.');
+      setActiveWizardStep(4);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Không thể tạo nội dung slide');
     } finally {
@@ -383,7 +386,7 @@ const AISlideGenerator: React.FC = () => {
       setPreparedPptxBlob(response.blob);
       setPreparedPptxFilename(response.filename || 'lesson-slides.pptx');
       setSuccess('PPTX đã sẵn sàng. Bạn có thể xem preview slide và bấm tải khi muốn.');
-      setActiveWizardStep(4);
+      setActiveWizardStep(5);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Không thể tạo PPTX');
     } finally {
@@ -417,10 +420,26 @@ const AISlideGenerator: React.FC = () => {
       <div className="ai-slide-page">
         <div className="ai-slide-header">
           <h1 className="ai-slide-title">AI Slide Generator</h1>
-          <p className="ai-slide-subtitle">
-            Chọn Khối → Môn học → Chương → Bài học để AI tạo nội dung slide. Sau khi AI sinh slide,
-            bạn có thể preview và chỉnh sửa trước khi tải PPTX.
-          </p>
+          <ol className="ai-slide-stepper" aria-label="Tiến trình tạo slide">
+            {wizardSteps.map((stepLabel, index) => {
+              const stepNumber = index + 1;
+              const isDone = visualWizardStep > stepNumber;
+              const isActive = visualWizardStep === stepNumber;
+
+              return (
+                <li
+                  key={stepLabel}
+                  className={`ai-slide-step-item ${isDone ? 'done' : ''} ${isActive ? 'active' : ''}`}
+                  aria-current={isActive ? 'step' : undefined}
+                >
+                  <span className="ai-slide-step-dot" aria-hidden="true">
+                    {stepNumber}
+                  </span>
+                  <span className="ai-slide-step-text">{stepLabel}</span>
+                </li>
+              );
+            })}
+          </ol>
         </div>
 
         {activeWizardStep === 1 && (
@@ -528,7 +547,7 @@ const AISlideGenerator: React.FC = () => {
                   disabled={!canConfigureAi}
                   onClick={() => setActiveWizardStep(2)}
                 >
-                  Tiếp tục: Cấu hình AI →
+                  Tiếp tục: Chọn template →
                 </button>
               </div>
             </div>
@@ -537,7 +556,7 @@ const AISlideGenerator: React.FC = () => {
 
         {activeWizardStep === 2 && (
           <section className="ai-slide-card">
-            <h2>Bước 2: Cấu hình AI tạo nội dung</h2>
+            <h2>Bước 2: Chọn template slide</h2>
             <div
               className="ai-slide-actions"
               style={{ marginBottom: '1rem', justifyContent: 'flex-start' }}
@@ -547,21 +566,10 @@ const AISlideGenerator: React.FC = () => {
               </button>
             </div>
 
-            <fieldset className="ai-slide-fieldset" disabled={!canConfigureAi}>
+            <fieldset className="ai-slide-fieldset" disabled={!canChooseTemplate}>
               <div className="ai-slide-grid ai-slide-config-grid">
                 <label>
-                  <span>Số lượng slide</span>
-                  <input
-                    type="number"
-                    min={1}
-                    max={30}
-                    value={slideCount}
-                    onChange={(e) => setSlideCount(Number(e.target.value || 1))}
-                  />
-                </label>
-
-                <label>
-                  <span>Template slide (dung khi Confirm)</span>
+                  <span>Template slide</span>
                   <select
                     value={templateId}
                     onChange={(e) => setTemplateId(e.target.value)}
@@ -635,6 +643,52 @@ const AISlideGenerator: React.FC = () => {
                 </p>
               )}
 
+              <div className="ai-slide-actions">
+                <button
+                  className="btn btn-primary"
+                  onClick={() => setActiveWizardStep(3)}
+                  disabled={!templateId}
+                >
+                  Tiếp tục: Gen nội dung →
+                </button>
+              </div>
+            </fieldset>
+
+            {loadingAnyCatalog && <LoadingSpinner label="Đang tải dữ liệu danh mục..." />}
+            {selectedLesson && (
+              <p className="ai-slide-info">Bài học đã chọn: {selectedLesson.title}</p>
+            )}
+            {error && <p className="ai-slide-error">{error}</p>}
+            {success && <p className="ai-slide-success">{success}</p>}
+          </section>
+        )}
+
+        {activeWizardStep === 3 && (
+          <section className="ai-slide-card">
+            <h2>Bước 3: Gen nội dung slide bằng AI</h2>
+            <div
+              className="ai-slide-actions"
+              style={{ marginBottom: '1rem', justifyContent: 'flex-start' }}
+            >
+              <button className="btn btn-outline" onClick={() => setActiveWizardStep(2)}>
+                ← Quay lại Template
+              </button>
+            </div>
+
+            <fieldset className="ai-slide-fieldset" disabled={!canConfigureAi}>
+              <div className="ai-slide-grid ai-slide-config-grid">
+                <label>
+                  <span>Số lượng slide</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={30}
+                    value={slideCount}
+                    onChange={(e) => setSlideCount(Number(e.target.value || 1))}
+                  />
+                </label>
+              </div>
+
               <label className="ai-slide-full-width">
                 <span>Additional Prompt</span>
                 <textarea
@@ -649,7 +703,7 @@ const AISlideGenerator: React.FC = () => {
                 <button
                   className="btn btn-primary"
                   onClick={() => void handleGenerateContent()}
-                  disabled={generatingContent}
+                  disabled={generatingContent || !templateId}
                 >
                   {generatingContent ? (
                     <LoadingSpinner label="Đang tạo nội dung..." />
@@ -660,24 +714,25 @@ const AISlideGenerator: React.FC = () => {
               </div>
             </fieldset>
 
-            {loadingAnyCatalog && <LoadingSpinner label="Đang tải dữ liệu danh mục..." />}
-            {selectedLesson && (
-              <p className="ai-slide-info">Bài học đã chọn: {selectedLesson.title}</p>
+            {selectedLesson && selectedTemplate && (
+              <p className="ai-slide-info">
+                Bài học: {selectedLesson.title} | Template: {selectedTemplate.name}
+              </p>
             )}
             {error && <p className="ai-slide-error">{error}</p>}
             {success && <p className="ai-slide-success">{success}</p>}
           </section>
         )}
 
-        {activeWizardStep === 3 && generated && (
+        {activeWizardStep === 4 && generated && (
           <section className="ai-slide-card">
-            <h2>Bước 3: Preview và chỉnh sửa nội dung, sau đó Confirm PPTX</h2>
+            <h2>Bước 4: Confirm và chỉnh sửa nội dung</h2>
             <div
               className="ai-slide-actions"
               style={{ marginBottom: '1rem', justifyContent: 'flex-start' }}
             >
-              <button className="btn btn-outline" onClick={() => setActiveWizardStep(2)}>
-                ← Quay lại Cấu hình AI
+              <button className="btn btn-outline" onClick={() => setActiveWizardStep(3)}>
+                ← Quay lại Gen nội dung
               </button>
             </div>
 
@@ -753,7 +808,11 @@ const AISlideGenerator: React.FC = () => {
                 onClick={() => void handlePreparePptx()}
                 disabled={generatingPptx || !editableSlides.length}
               >
-                {generatingPptx ? <LoadingSpinner label="Đang tạo PPTX..." /> : 'Confirm tạo PPTX'}
+                {generatingPptx ? (
+                  <LoadingSpinner label="Đang tạo PPTX..." />
+                ) : (
+                  'Confirm nội dung và tạo PPTX'
+                )}
               </button>
             </div>
 
@@ -762,15 +821,15 @@ const AISlideGenerator: React.FC = () => {
           </section>
         )}
 
-        {activeWizardStep === 4 && (
+        {activeWizardStep === 5 && (
           <section className="ai-slide-card">
-            <h2>Bước 4: Tải file PPTX</h2>
+            <h2>Bước 5: Tải file PPTX</h2>
             <div
               className="ai-slide-actions"
               style={{ marginBottom: '1rem', justifyContent: 'flex-start' }}
             >
-              <button className="btn btn-outline" onClick={() => setActiveWizardStep(3)}>
-                ← Quay lại Preview
+              <button className="btn btn-outline" onClick={() => setActiveWizardStep(4)}>
+                ← Quay lại Confirm nội dung
               </button>
             </div>
 
