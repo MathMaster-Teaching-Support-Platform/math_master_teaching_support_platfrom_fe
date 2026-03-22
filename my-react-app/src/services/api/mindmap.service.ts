@@ -121,13 +121,10 @@ export class MindmapService {
 
   // ─── NODES ────────────────────────────────────────────────────────────────
 
-  /** POST /mindmaps/{mindmapId}/nodes - Create new node */
-  static async createNode(
-    mindmapId: string,
-    data: MindmapNodeCreateRequest
-  ): Promise<ApiResponse<MindmapNode>> {
+  /** POST /mindmaps/nodes - Create new node */
+  static async createNode(data: MindmapNodeCreateRequest): Promise<ApiResponse<MindmapNode>> {
     const headers = await this.getHeaders();
-    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.MINDMAPS_NODES(mindmapId)}`, {
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.MINDMAPS_NODES}`, {
       method: 'POST',
       headers,
       body: JSON.stringify(data),
@@ -139,21 +136,17 @@ export class MindmapService {
     return response.json();
   }
 
-  /** PUT /mindmaps/{mindmapId}/nodes/{nodeId} - Update node */
+  /** PUT /mindmaps/nodes/{nodeId} - Update node */
   static async updateNode(
-    mindmapId: string,
     nodeId: string,
     data: MindmapNodeUpdateRequest
   ): Promise<ApiResponse<MindmapNode>> {
     const headers = await this.getHeaders();
-    const response = await fetch(
-      `${API_BASE_URL}${API_ENDPOINTS.MINDMAPS_NODE_DETAIL(mindmapId, nodeId)}`,
-      {
-        method: 'PUT',
-        headers,
-        body: JSON.stringify(data),
-      }
-    );
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.MINDMAPS_NODE_DETAIL(nodeId)}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify(data),
+    });
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.message || 'Failed to update node');
@@ -165,7 +158,7 @@ export class MindmapService {
   static async deleteNode(mindmapId: string, nodeId: string): Promise<ApiResponse<void>> {
     const headers = await this.getHeaders();
     const response = await fetch(
-      `${API_BASE_URL}${API_ENDPOINTS.MINDMAPS_NODE_DETAIL(mindmapId, nodeId)}`,
+      `${API_BASE_URL}${API_ENDPOINTS.MINDMAPS_DETAIL(mindmapId)}/nodes/${nodeId}`,
       {
         method: 'DELETE',
         headers,
