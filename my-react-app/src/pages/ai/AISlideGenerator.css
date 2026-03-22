@@ -1,9 +1,17 @@
-.ai-slide-page {
+﻿.ai-slide-page {
   max-width: 1200px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 1.1rem;
+  font-family: var(--font-family);
+}
+
+.ai-slide-page input,
+.ai-slide-page select,
+.ai-slide-page textarea,
+.ai-slide-page button {
+  font-family: inherit;
 }
 
 .ai-slide-header {
@@ -15,12 +23,106 @@
   font-size: 1.8rem;
   font-weight: 800;
   color: var(--gray-900);
+  font-family: var(--font-heading);
 }
 
 .ai-slide-subtitle {
   margin: 0.35rem 0 0;
   color: var(--gray-600);
   line-height: 1.5;
+}
+
+/* Minimal connected stepper */
+.ai-slide-stepper {
+  margin: 0.8rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  align-items: flex-start;
+}
+
+.ai-slide-step-item {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0 0.35rem;
+  color: #64748b;
+  transition: color 0.2s ease;
+}
+
+.ai-slide-step-item::after {
+  content: '';
+  position: absolute;
+  left: calc(50% + 14px);
+  width: calc(100% - 28px);
+  top: 12px;
+  height: 1px;
+  background: #d1d5db;
+}
+
+.ai-slide-step-item:last-child::after {
+  display: none;
+}
+
+.ai-slide-step-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #475569;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.76rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+.ai-slide-step-text {
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: center;
+  white-space: normal;
+}
+
+.ai-slide-step-item.done {
+  color: #1d4ed8;
+}
+
+.ai-slide-step-item.done .ai-slide-step-dot {
+  border-color: #93c5fd;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.ai-slide-step-item.done::after {
+  background: #93c5fd;
+}
+
+.ai-slide-step-item.active {
+  color: #0f172a;
+}
+
+.ai-slide-step-item.active .ai-slide-step-dot {
+  border-color: #3b82f6;
+  background: #3b82f6;
+  color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18);
+}
+
+.ai-slide-step-item.active .ai-slide-step-text {
+  font-weight: 700;
+}
+
+.ai-slide-step-item.active::after {
+  background: linear-gradient(90deg, #93c5fd 0%, #d1d5db 100%);
 }
 
 .ai-slide-card {
@@ -35,6 +137,7 @@
   margin: 0 0 0.85rem;
   font-size: 1.1rem;
   color: var(--gray-900);
+  font-family: var(--font-heading);
 }
 
 .ai-slide-grid {
@@ -51,57 +154,6 @@
 
 .ai-slide-config-grid {
   grid-template-columns: 180px 1fr;
-}
-
-.ai-slide-transaction-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 0.85rem;
-}
-
-.ai-slide-transaction-badges span {
-  border: 1px solid #cbd5e1;
-  background: #f1f5f9;
-  color: #334155;
-  border-radius: 999px;
-  padding: 0.25rem 0.6rem;
-  font-size: 0.78rem;
-  font-weight: 700;
-}
-
-.ai-slide-transaction-badges span.active {
-  border-color: #2563eb;
-  background: #dbeafe;
-  color: #1e3a8a;
-}
-
-.ai-slide-transaction-badges span.done {
-  border-color: #22c55e;
-  background: #dcfce7;
-  color: #166534;
-}
-
-.ai-slide-picked-summary {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
-}
-
-.ai-slide-pill {
-  border: 1px solid #cbd5e1;
-  background: #fff;
-  color: #0f172a;
-  border-radius: 999px;
-  padding: 0.3rem 0.75rem;
-  font-size: 0.8rem;
-  cursor: pointer;
-}
-
-.ai-slide-pill:hover {
-  border-color: #2563eb;
-  color: #1e3a8a;
 }
 
 .ai-slide-page label {
@@ -124,7 +176,6 @@
   border-radius: 10px;
   padding: 0.65rem 0.75rem;
   font-size: 0.92rem;
-  font-family: inherit;
   background: #fff;
   color: #0f172a;
 }
@@ -159,6 +210,77 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.65rem;
+}
+
+/* Keep AI Slide buttons independent from global/module .btn styles */
+.module-layout-container .ai-slide-page .btn,
+.ai-slide-page .btn {
+  border-radius: 12px;
+  border: 1px solid transparent;
+  padding: 0.62rem 1rem;
+  min-height: 40px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  cursor: pointer;
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.18s ease,
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease;
+}
+
+.module-layout-container .ai-slide-page .btn:focus-visible,
+.ai-slide-page .btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+
+.module-layout-container .ai-slide-page .btn-primary,
+.ai-slide-page .btn-primary {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  border-color: #1d4ed8;
+  color: #ffffff;
+  box-shadow: 0 8px 16px rgba(37, 99, 235, 0.24);
+}
+
+.module-layout-container .ai-slide-page .btn-primary:hover:not(:disabled),
+.ai-slide-page .btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+  border-color: #1e40af;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(30, 64, 175, 0.28);
+}
+
+.module-layout-container .ai-slide-page .btn-outline,
+.ai-slide-page .btn-outline {
+  background: #ffffff;
+  border-color: #c7d2fe;
+  color: #1e3a8a;
+  box-shadow: 0 2px 10px rgba(30, 58, 138, 0.08);
+}
+
+.module-layout-container .ai-slide-page .btn-outline:hover:not(:disabled),
+.ai-slide-page .btn-outline:hover:not(:disabled) {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #1e40af;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px rgba(59, 130, 246, 0.18);
+}
+
+.module-layout-container .ai-slide-page .btn:disabled,
+.ai-slide-page .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .ai-slide-template-gallery {
@@ -389,13 +511,37 @@
 }
 
 @media (max-width: 900px) {
+  .ai-slide-stepper {
+    flex-wrap: wrap;
+    gap: 0.55rem 0;
+  }
+
+  .ai-slide-step-item {
+    flex: 1 1 50%;
+    padding: 0 0.35rem;
+  }
+
+  .ai-slide-step-item::after {
+    display: none;
+  }
+
   .ai-slide-grid,
   .ai-slide-config-grid {
     grid-template-columns: 1fr;
   }
 
+  .ai-slide-actions .btn {
+    width: 100%;
+  }
+
   .ai-slide-preview-toolbar {
     flex-direction: column;
     align-items: stretch;
+  }
+}
+
+@media (max-width: 560px) {
+  .ai-slide-step-item {
+    flex-basis: 100%;
   }
 }
