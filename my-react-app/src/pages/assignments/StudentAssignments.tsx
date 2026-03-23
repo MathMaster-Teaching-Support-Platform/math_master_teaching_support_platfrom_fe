@@ -1,24 +1,25 @@
-import React, { useState, useMemo } from 'react';
-import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
+import { AnimatePresence, LayoutGroup, motion } from 'framer-motion';
 import {
-  Clock,
-  Calendar,
-  BookOpen,
-  ChevronRight,
-  Play,
-  Eye,
-  Send,
-  ArrowRight,
-  CheckCircle2,
   AlertTriangle,
+  ArrowRight,
   BarChart2,
-  Flame,
-  Trophy,
-  Command,
-  X,
-  Target,
+  BookOpen,
+  Calendar,
+  CheckCircle2,
   ChevronDown,
+  ChevronRight,
+  Clock,
+  Command,
+  Eye,
+  Flame,
+  Play,
+  Send,
+  Target,
+  Trophy,
+  X,
+  Zap,
 } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockStudent } from '../../data/mockData';
 import './StudentAssignments.css';
@@ -258,6 +259,18 @@ function groupByTimeline(list: EnhancedAssignment[]) {
   };
 }
 
+// ─── Stagger Variants ────────────────────────────────────────────────────────
+const listVariants = {
+  visible: { transition: { staggerChildren: 0.055, delayChildren: 0.05 } },
+  hidden: {},
+};
+const EASE_STD = [0.4, 0, 0.2, 1] as [number, number, number, number];
+const itemVariants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.22, ease: EASE_STD } },
+  exit: { opacity: 0, y: -8, scale: 0.97, transition: { duration: 0.18 } },
+};
+
 // ─── SVG Progress Ring ────────────────────────────────────────────────────────
 const ProgressRing: React.FC<{ pct: number; size?: number; stroke?: number }> = ({
   pct,
@@ -268,12 +281,7 @@ const ProgressRing: React.FC<{ pct: number; size?: number; stroke?: number }> = 
   const circ = 2 * Math.PI * r;
   const offset = circ - (pct / 100) * circ;
   return (
-    <svg
-      width={size}
-      height={size}
-      className="sa-ring-svg"
-      aria-label={`Hoàn thành ${pct}%`}
-    >
+    <svg width={size} height={size} className="sa-ring-svg" aria-label={`Hoàn thành ${pct}%`}>
       <circle
         cx={size / 2}
         cy={size / 2}
@@ -301,7 +309,10 @@ const ProgressRing: React.FC<{ pct: number; size?: number; stroke?: number }> = 
 };
 
 // ─── Task Item ────────────────────────────────────────────────────────────────
-const TaskItem: React.FC<{ assignment: EnhancedAssignment }> = ({ assignment }) => {
+const TaskItem: React.FC<{ assignment: EnhancedAssignment; isNextTarget?: boolean }> = ({
+  assignment,
+  isNextTarget = false,
+}) => {
   const dl = getDeadlineInfo(assignment.dueDate);
   const subj = SUBJECT_STYLE[assignment.subject] ?? SUBJECT_STYLE['Đại số'];
   const st = STATUS_CFG[assignment.status];
@@ -316,13 +327,14 @@ const TaskItem: React.FC<{ assignment: EnhancedAssignment }> = ({ assignment }) 
   return (
     <motion.article
       layout
-      initial={{ opacity: 0, y: 14 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -8, scale: 0.97 }}
-      transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
-      className={`sa-task sa-task--${assignment.status}`}
+      variants={itemVariants}
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+      className={`sa-task sa-task--${assignment.status}${isNextTarget ? ' sa-task--next' : ''}`}
       tabIndex={0}
       aria-label={`${assignment.title} — ${st.label}`}
+      style={assignment.status !== 'completed' ? { backgroundColor: `${st.color}06` } : undefined}
     >
       {/* Left accent bar */}
       <div className="sa-task-bar" style={{ backgroundColor: st.color }} aria-hidden="true" />
@@ -332,10 +344,16 @@ const TaskItem: React.FC<{ assignment: EnhancedAssignment }> = ({ assignment }) 
         {/* Row 1: chips + right actions */}
         <div className="sa-task-row1">
           <div className="sa-task-chips">
-            <span className="sa-chip sa-chip--subject" style={{ background: subj.bg, color: subj.color }}>
+            <span
+              className="sa-chip sa-chip--subject"
+              style={{ background: subj.bg, color: subj.color }}
+            >
               {assignment.subject}
             </span>
-            <span className="sa-chip sa-chip--diff" style={{ background: diff.bg, color: diff.color }}>
+            <span
+              className="sa-chip sa-chip--diff"
+              style={{ background: diff.bg, color: diff.color }}
+            >
               {assignment.difficulty}
             </span>
             <span className="sa-chip sa-chip--type">{typeLabel[assignment.type]}</span>
@@ -354,26 +372,37 @@ const TaskItem: React.FC<{ assignment: EnhancedAssignment }> = ({ assignment }) 
             )}
 
             {/* Score (completed) */}
-            {assignment.status === 'completed' && assignment.score !== null && (() => {
-              const s = assignment.score ?? 0;
-              let scoreCls = 'sa-score--low';
-              if (s >= 80) scoreCls = 'sa-score--high';
-              else if (s >= 60) scoreCls = 'sa-score--mid';
-              return (
-                <span className={`sa-score ${scoreCls}`}>
-                  <Trophy size={10} aria-hidden="true" />
-                  {s}/100
-                </span>
-              );
-            })()}
+            {assignment.status === 'completed' &&
+              assignment.score !== null &&
+              (() => {
+                const s = assignment.score ?? 0;
+                let scoreCls = 'sa-score--low';
+                if (s >= 80) scoreCls = 'sa-score--high';
+                else if (s >= 60) scoreCls = 'sa-score--mid';
+                return (
+                  <span className={`sa-score ${scoreCls}`}>
+                    <Trophy size={10} aria-hidden="true" />
+                    {s}/100
+                  </span>
+                );
+              })()}
 
-            {/* Quick actions — revealed on hover */}
-            <div className="sa-quick-actions" aria-label="Thao tác nhanh">
+            {/* Quick actions — revealed on hover; always visible for next-target */}
+            <div
+              className={`sa-quick-actions${isNextTarget ? ' sa-quick-actions--pinned' : ''}`}
+              aria-label="Thao tác nhanh"
+            >
               {assignment.status === 'in-progress' && (
-                <button className="sa-qa sa-qa--primary" aria-label="Tiếp tục làm bài">
-                  <Play size={11} aria-hidden="true" />
-                  Tiếp tục
-                </button>
+                <>
+                  <button className="sa-qa sa-qa--primary" aria-label="Tiếp tục làm bài">
+                    <Play size={11} aria-hidden="true" />
+                    Tiếp tục
+                  </button>
+                  <button className="sa-qa sa-qa--ghost" aria-label="Xem đề bài">
+                    <Eye size={11} aria-hidden="true" />
+                    Xem đề
+                  </button>
+                </>
               )}
               {assignment.status === 'pending' && (
                 <>
@@ -389,7 +418,7 @@ const TaskItem: React.FC<{ assignment: EnhancedAssignment }> = ({ assignment }) 
               )}
               {assignment.status === 'overdue' && (
                 <>
-                  <button className="sa-qa sa-qa--danger" aria-label="Nộp bài muộn">
+                  <button className="sa-qa sa-qa--primary" aria-label="Nộp bài muộn">
                     <Send size={11} aria-hidden="true" />
                     Nộp muộn
                   </button>
@@ -424,13 +453,19 @@ const TaskItem: React.FC<{ assignment: EnhancedAssignment }> = ({ assignment }) 
             <BookOpen size={11} aria-hidden="true" />
             {assignment.topic}
           </span>
-          <span className="sa-meta-dot" aria-hidden="true">·</span>
+          <span className="sa-meta-dot" aria-hidden="true">
+            ·
+          </span>
           <span className="sa-meta-course">{assignment.courseName}</span>
-          <span className="sa-meta-dot" aria-hidden="true">·</span>
+          <span className="sa-meta-dot" aria-hidden="true">
+            ·
+          </span>
           <span className="sa-meta-time">
             <Clock size={11} aria-hidden="true" />~{assignment.estimatedMinutes} phút
           </span>
-          <span className="sa-meta-dot" aria-hidden="true">·</span>
+          <span className="sa-meta-dot" aria-hidden="true">
+            ·
+          </span>
           <span className="sa-meta-q">
             <Target size={11} aria-hidden="true" />
             {assignment.totalQuestions} câu
@@ -438,19 +473,18 @@ const TaskItem: React.FC<{ assignment: EnhancedAssignment }> = ({ assignment }) 
         </div>
       </div>
 
-      {/* Micro progress bar — in-progress only */}
+      {/* Progress bar — in-progress with gradient, shimmer + status label */}
       {assignment.status === 'in-progress' && (
-        <div
-          className="sa-task-prog"
-          aria-label={`Tiến độ: ${assignment.progress}%`}
-        >
+        <div className="sa-task-prog" aria-label={`Tiến độ: ${assignment.progress}%`}>
           <motion.div
             className="sa-task-prog-fill"
             initial={{ width: 0 }}
             animate={{ width: `${assignment.progress}%` }}
-            transition={{ duration: 1.1, ease: [0.4, 0, 0.2, 1], delay: 0.4 }}
-            style={{ backgroundColor: STATUS_CFG['in-progress'].color }}
+            transition={{ duration: 1.5, ease: [0.4, 0, 0.2, 1], delay: 0.3 }}
           />
+          <span className="sa-task-prog-pct" aria-hidden="true">
+            {assignment.progress}%
+          </span>
         </div>
       )}
     </motion.article>
@@ -464,7 +498,8 @@ const TaskGroup: React.FC<{
   defaultOpen?: boolean;
   icon: React.ReactNode;
   accentColor: string;
-}> = ({ title, items, defaultOpen = true, icon, accentColor }) => {
+  nextTargetId?: string;
+}> = ({ title, items, defaultOpen = true, icon, accentColor, nextTargetId }) => {
   const [open, setOpen] = useState(defaultOpen);
   if (items.length === 0) return null;
 
@@ -507,13 +542,18 @@ const TaskGroup: React.FC<{
             transition={{ duration: 0.28, ease: [0.4, 0, 0.2, 1] }}
             style={{ overflow: 'hidden' }}
           >
-            <div className="sa-group-items">
+            <motion.div
+              className="sa-group-items"
+              variants={listVariants}
+              initial="hidden"
+              animate="visible"
+            >
               <AnimatePresence>
                 {items.map((a) => (
-                  <TaskItem key={a.id} assignment={a} />
+                  <TaskItem key={a.id} assignment={a} isNextTarget={a.id === nextTargetId} />
                 ))}
               </AnimatePresence>
-            </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -540,6 +580,11 @@ const StudentAssignments: React.FC = () => {
   const stats = useMemo(() => {
     const todayEnd = new Date();
     todayEnd.setHours(23, 59, 59, 999);
+    const urgentCount = ASSIGNMENTS.filter((a) => {
+      if (a.status === 'completed') return false;
+      const dl = getDeadlineInfo(a.dueDate);
+      return dl.isUrgent || dl.isOverdue;
+    }).length;
     return {
       total: ASSIGNMENTS.length,
       pending: ASSIGNMENTS.filter((a) => a.status === 'pending').length,
@@ -547,12 +592,24 @@ const StudentAssignments: React.FC = () => {
       completed: ASSIGNMENTS.filter((a) => a.status === 'completed').length,
       overdue: ASSIGNMENTS.filter((a) => a.status === 'overdue').length,
       completionPct: Math.round(
-        (ASSIGNMENTS.filter((a) => a.status === 'completed').length / ASSIGNMENTS.length) * 100,
+        (ASSIGNMENTS.filter((a) => a.status === 'completed').length / ASSIGNMENTS.length) * 100
       ),
       todayDue: ASSIGNMENTS.filter(
-        (a) => a.status !== 'completed' && new Date(a.dueDate) <= todayEnd,
+        (a) => a.status !== 'completed' && new Date(a.dueDate) <= todayEnd
       ).length,
+      urgentCount,
     };
+  }, []);
+
+  // Smart CTA: nearest-deadline incomplete assignment
+  const nextTarget = useMemo(() => {
+    const actionable = ASSIGNMENTS.filter(
+      (a) => a.status === 'pending' || a.status === 'in-progress' || a.status === 'overdue'
+    );
+    return (
+      actionable.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())[0] ??
+      null
+    );
   }, []);
 
   const tabCounts: Record<string, number> = {
@@ -608,12 +665,10 @@ const StudentAssignments: React.FC = () => {
               </span>
               <div>
                 <p className="sa-greet-main">
-                  Chào {getGreeting()},{' '}
-                  <strong>{mockStudent.name.split(' ').pop()}</strong>.
+                  Chào {getGreeting()}, <strong>{mockStudent.name.split(' ').pop()}</strong>.
                 </p>
                 <p className="sa-greet-sub">
-                  Bạn có{' '}
-                  <strong style={{ color: '#FDE68A' }}>{stats.todayDue}</strong> bài tập cần
+                  Bạn có <strong style={{ color: '#FDE68A' }}>{stats.todayDue}</strong> bài tập cần
                   hoàn thành hôm nay.
                 </p>
               </div>
@@ -676,6 +731,42 @@ const StudentAssignments: React.FC = () => {
               </div>
             </div>
           </div>
+
+          {/* CTA Row: Smart Next-Task button + urgency toast */}
+          {nextTarget && (
+            <div className="sa-cta-row">
+              <motion.button
+                className="sa-cta-next"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.4, duration: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                aria-label={`Làm bài tiếp theo: ${nextTarget.title}`}
+              >
+                <Zap size={14} aria-hidden="true" className="sa-cta-ico" />
+                <span className="sa-cta-lbl">Làm bài tiếp theo</span>
+                <span className="sa-cta-title">{nextTarget.title}</span>
+                <ArrowRight size={13} aria-hidden="true" className="sa-cta-arr" />
+              </motion.button>
+
+              {stats.urgentCount > 0 && (
+                <motion.div
+                  className="sa-toast"
+                  initial={{ opacity: 0, x: 12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.55, duration: 0.24, ease: [0.4, 0, 0.2, 1] }}
+                  role="status"
+                  aria-live="polite"
+                >
+                  <span aria-hidden="true">🔥</span>
+                  <span>
+                    <strong>{stats.urgentCount}</strong> bài sắp hết hạn
+                  </span>
+                </motion.div>
+              )}
+            </div>
+          )}
 
           {/* Command Bar */}
           <div className="sa-cmdbar" role="search">
@@ -786,6 +877,7 @@ const StudentAssignments: React.FC = () => {
                 defaultOpen={true}
                 icon={<Flame size={13} />}
                 accentColor="#E11D48"
+                nextTargetId={nextTarget?.id}
               />
               <TaskGroup
                 title="Tuần này"
@@ -793,6 +885,7 @@ const StudentAssignments: React.FC = () => {
                 defaultOpen={true}
                 icon={<Calendar size={13} />}
                 accentColor="#3B82F6"
+                nextTargetId={nextTarget?.id}
               />
               <TaskGroup
                 title="Đã hoàn thành"
