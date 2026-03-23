@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockTeacher } from '../../data/mockData';
+import { AuthService } from '../../services/api/auth.service';
 import './ProfileSettings.css';
 
 const ProfileSettings: React.FC = () => {
+  const rawRole = AuthService.getUserRole();
+  const role: 'teacher' | 'student' | 'admin' =
+    rawRole === 'teacher' ? 'teacher' : rawRole === 'admin' ? 'admin' : 'student';
+
   const [activeTab, setActiveTab] = useState<
     'profile' | 'security' | 'preferences' | 'notifications'
   >('profile');
@@ -28,8 +33,8 @@ const ProfileSettings: React.FC = () => {
 
   return (
     <DashboardLayout
-      role="teacher"
-      user={{ name: mockTeacher.name, avatar: mockTeacher.avatar!, role: 'teacher' }}
+      role={role}
+      user={{ name: mockTeacher.name, avatar: mockTeacher.avatar!, role }}
       notificationCount={5}
     >
       <div className="profile-settings-page">
