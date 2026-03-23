@@ -106,19 +106,12 @@ export const API_ENDPOINTS = {
   STUDENT_TOPIC_MATERIALS: (topicId: string) => `/student/roadmaps/topics/${topicId}/materials`,
   STUDENT_TOPIC_MATERIALS_BY_TYPE: (topicId: string, resourceType: string) =>
     `/student/roadmaps/topics/${topicId}/materials-by-type?resourceType=${resourceType}`,
-  TEACHER_ROADMAPS: '/teacher/roadmaps',
-  TEACHER_ROADMAP_DETAIL: (roadmapId: string) => `/teacher/roadmaps/${roadmapId}`,
-  TEACHER_ROADMAP_TOPICS: (roadmapId: string) => `/teacher/roadmaps/${roadmapId}/topics`,
-  TEACHER_ROADMAP_TOPIC_DETAIL: (roadmapId: string, topicId: string) =>
-    `/teacher/roadmaps/${roadmapId}/topics/${topicId}`,
-  TEACHER_ROADMAP_ENTRY_TEST: (roadmapId: string) => `/teacher/roadmaps/${roadmapId}/entry-test`,
-  // Backward compatibility aliases
-  ADMIN_ROADMAPS: '/teacher/roadmaps',
-  ADMIN_ROADMAP_DETAIL: (roadmapId: string) => `/teacher/roadmaps/${roadmapId}`,
-  ADMIN_ROADMAP_TOPICS: (roadmapId: string) => `/teacher/roadmaps/${roadmapId}/topics`,
+  ADMIN_ROADMAPS: '/admin/roadmaps',
+  ADMIN_ROADMAP_DETAIL: (roadmapId: string) => `/admin/roadmaps/${roadmapId}`,
+  ADMIN_ROADMAP_TOPICS: (roadmapId: string) => `/admin/roadmaps/${roadmapId}/topics`,
   ADMIN_ROADMAP_TOPIC_DETAIL: (roadmapId: string, topicId: string) =>
-    `/teacher/roadmaps/${roadmapId}/topics/${topicId}`,
-  ADMIN_ROADMAP_ENTRY_TEST: (roadmapId: string) => `/teacher/roadmaps/${roadmapId}/entry-test`,
+    `/admin/roadmaps/${roadmapId}/topics/${topicId}`,
+  ADMIN_ROADMAP_ENTRY_TEST: (roadmapId: string) => `/admin/roadmaps/${roadmapId}/entry-test`,
 
   // Lesson slide generator flow
   SCHOOL_GRADES: '/school-grades',

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
-import { mockTeacher } from '../../data/mockData';
+import { mockAdmin } from '../../data/mockData';
 import { useChaptersBySubject } from '../../hooks/useChapters';
 import { useLessonsByChapter } from '../../hooks/useLessons';
 import {
@@ -302,7 +302,7 @@ export default function AdminRoadmapTopicsPage() {
       return;
     }
     if (status === 403) {
-      setToast({ type: 'error', message: 'Forbidden. TEACHER permission is required.' });
+      setToast({ type: 'error', message: 'Forbidden. ADMIN permission is required.' });
       return;
     }
     if (status === 404) {
@@ -420,8 +420,8 @@ export default function AdminRoadmapTopicsPage() {
 
   return (
     <DashboardLayout
-      role="teacher"
-      user={{ name: mockTeacher.name, avatar: mockTeacher.avatar, role: 'teacher' }}
+      role="admin"
+      user={{ name: mockAdmin.name, avatar: mockAdmin.avatar, role: 'admin' }}
       notificationCount={2}
     >
       <section className="admin-roadmap-topics-page">
@@ -434,7 +434,7 @@ export default function AdminRoadmapTopicsPage() {
             <button
               type="button"
               className="admin-roadmap-page__button"
-              onClick={() => navigate(`/teacher/roadmaps/edit/${roadmapId}`)}
+              onClick={() => navigate(`/admin/roadmaps/edit/${roadmapId}`)}
             >
               Back to roadmap edit
             </button>
@@ -449,7 +449,7 @@ export default function AdminRoadmapTopicsPage() {
           <p className="admin-roadmap-page__state">Unable to load roadmap.</p>
         )}
         {roadmapErrorStatus === 403 && (
-          <p className="admin-roadmap-page__state">Forbidden. You need TEACHER access to manage roadmap topics.</p>
+          <p className="admin-roadmap-page__state">Forbidden. You need ADMIN access to manage roadmap topics.</p>
         )}
 
         {!roadmapDetail.isLoading && !roadmapDetail.error && (

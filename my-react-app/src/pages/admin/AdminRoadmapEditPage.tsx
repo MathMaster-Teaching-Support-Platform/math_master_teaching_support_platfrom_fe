@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { AdminRoadmapEditor } from '../../components/roadmap';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { useAdminRoadmapDetail, useUpdateRoadmap } from '../../hooks/useRoadmaps';
-import { mockTeacher } from '../../data/mockData';
+import { mockAdmin } from '../../data/mockData';
 import type { UpdateAdminRoadmapRequest } from '../../types';
 import './admin-roadmap-page.css';
 
@@ -16,14 +16,14 @@ export default function AdminRoadmapEditPage() {
 
   useEffect(() => {
     if (updateRoadmap.isSuccess) {
-      void navigate('/teacher/roadmaps');
+      void navigate('/admin/roadmaps');
     }
   }, [navigate, updateRoadmap.isSuccess]);
 
   return (
     <DashboardLayout
-      role="teacher"
-      user={{ name: mockTeacher.name, avatar: mockTeacher.avatar, role: 'teacher' }}
+      role="admin"
+      user={{ name: mockAdmin.name, avatar: mockAdmin.avatar, role: 'admin' }}
       notificationCount={2}
     >
       <section className="admin-roadmap-page">
@@ -59,7 +59,7 @@ export default function AdminRoadmapEditPage() {
                   <button
                     type="button"
                     className="admin-roadmap-page__button"
-                    onClick={() => navigate(`/teacher/roadmaps/${roadmapId}/topics`)}
+                    onClick={() => navigate(`/admin/roadmaps/${roadmapId}/topics`)}
                   >
                     Open full topic builder
                   </button>
