@@ -203,6 +203,22 @@ const router = createBrowserRouter([
     path: '/teacher/analytics',
     element: <TeacherAnalytics />,
   },
+  {
+    path: '/teacher/roadmaps',
+    element: <AdminRoadmapManagementPage />,
+  },
+  {
+    path: '/teacher/roadmaps/create',
+    element: <AdminRoadmapCreatePage />,
+  },
+  {
+    path: '/teacher/roadmaps/edit/:roadmapId',
+    element: <AdminRoadmapEditPage />,
+  },
+  {
+    path: '/teacher/roadmaps/:roadmapId/topics',
+    element: <AdminRoadmapTopicsPage />,
+  },
   { path: '/teacher/students', element: <TeacherStudents /> },
   { path: '/teacher/ai-assistant', element: <AIAssistant /> },
   { path: '/teacher/ai-slide-generator', element: <AISlideGenerator /> },

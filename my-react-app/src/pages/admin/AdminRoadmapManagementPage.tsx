@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { useAdminRoadmaps } from '../../hooks/useRoadmaps';
-import { mockAdmin } from '../../data/mockData';
+import { mockTeacher } from '../../data/mockData';
 import type { RoadmapCatalogItem } from '../../types';
 import './admin-roadmap-page.css';
 
@@ -24,17 +24,17 @@ export default function AdminRoadmapManagementPage() {
 
   return (
     <DashboardLayout
-      role="admin"
-      user={{ name: mockAdmin.name, avatar: mockAdmin.avatar, role: 'admin' }}
+      role="teacher"
+      user={{ name: mockTeacher.name, avatar: mockTeacher.avatar, role: 'teacher' }}
       notificationCount={2}
     >
       <section className="admin-roadmap-page">
         <header className="admin-roadmap-page__header">
           <div>
-            <h1>Admin Roadmaps</h1>
+            <h1>Teacher Roadmaps</h1>
             <p>Manage roadmap metadata and jump into the editor for updates.</p>
           </div>
-          <Link to="/admin/roadmaps/create" className="admin-roadmap-page__action">
+          <Link to="/teacher/roadmaps/create" className="admin-roadmap-page__action">
             Create roadmap
           </Link>
         </header>
@@ -56,7 +56,7 @@ export default function AdminRoadmapManagementPage() {
                 <span>{roadmap.status}</span>
                 <span>{roadmap.totalTopicsCount}</span>
                 <span>
-                  <Link to={`/admin/roadmaps/edit/${roadmap.id}`}>Edit</Link>
+                  <Link to={`/teacher/roadmaps/edit/${roadmap.id}`}>Edit</Link>
                 </span>
               </div>
             ))}
