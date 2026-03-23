@@ -9,6 +9,11 @@ export const API_ENDPOINTS = {
   REGISTER: '/auth/register',
   LOGIN: '/auth/login',
 
+  // Users (self-service)
+  USERS_MY_INFO: '/users/my-info',
+  USERS_CHANGE_PASSWORD: '/users/change-password',
+  USERS_BY_ID: (userId: string) => `/users/${userId}`,
+
   // Teacher Profiles
   TEACHER_PROFILES: '/teacher-profiles',
   TEACHER_PROFILES_SUBMIT: '/teacher-profiles/submit',
