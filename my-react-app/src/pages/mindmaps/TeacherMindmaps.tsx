@@ -55,6 +55,8 @@ export default function TeacherMindmaps() {
 
   const canProceedStep2 = Boolean(lessonId);
   const selectedLesson = lessons.find((lesson) => lesson.id === lessonId) || null;
+  const generatorSteps = ['Chọn bài dạy', 'Cấu hình AI'];
+  const visualGeneratorStep = Math.max(1, Math.min(activeGeneratorStep, generatorSteps.length));
 
   useEffect(() => {
     loadMindmaps();
@@ -281,6 +283,26 @@ export default function TeacherMindmaps() {
                 <div>
                   <h3>Tạo Mindmap với AI</h3>
                   <p>Hoàn thành Bước 1 để chọn đúng bài dạy, sau đó cấu hình AI ở Bước 2.</p>
+                  <ol className="mindmap-stepper" aria-label="Tiến trình tạo mindmap">
+                    {generatorSteps.map((stepLabel, index) => {
+                      const stepNumber = index + 1;
+                      const isDone = visualGeneratorStep > stepNumber;
+                      const isActive = visualGeneratorStep === stepNumber;
+
+                      return (
+                        <li
+                          key={stepLabel}
+                          className={`mindmap-step-item ${isDone ? 'done' : ''} ${isActive ? 'active' : ''}`}
+                          aria-current={isActive ? 'step' : undefined}
+                        >
+                          <span className="mindmap-step-dot" aria-hidden="true">
+                            {stepNumber}
+                          </span>
+                          <span className="mindmap-step-text">{stepLabel}</span>
+                        </li>
+                      );
+                    })}
+                  </ol>
                 </div>
               </div>
 

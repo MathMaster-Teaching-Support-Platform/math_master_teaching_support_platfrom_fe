@@ -123,6 +123,7 @@ export class AuthService {
   static saveToken(token: string, expiryTime: string): void {
     localStorage.setItem('authToken', token);
     localStorage.setItem('tokenExpiry', expiryTime);
+    window.dispatchEvent(new Event('authChange'));
   }
 
   /**

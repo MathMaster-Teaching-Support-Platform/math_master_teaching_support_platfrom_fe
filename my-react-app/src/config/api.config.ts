@@ -123,4 +123,11 @@ export const API_ENDPOINTS = {
 
   // Payment
   PAYMENT_DEPOSIT: '/payment/deposit',
+
+  // Notifications
+  NOTIFICATIONS_TOKEN: '/v1/notifications/token',
+  NOTIFICATIONS: '/v1/notifications',
+  NOTIFICATIONS_UNREAD_COUNT: '/v1/notifications/unread-count',
+  NOTIFICATIONS_READ_ALL: '/v1/notifications/read-all',
+  NOTIFICATIONS_MARK_READ: (id: string) => `/v1/notifications/${id}/read`,
 };
