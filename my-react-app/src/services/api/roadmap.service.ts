@@ -19,6 +19,15 @@ import type {
 import { AuthService } from './auth.service';
 
 export class RoadmapService {
+  static buildPageQuery(params?: { name?: string; page?: number; size?: number }) {
+    const query = new URLSearchParams();
+    if (params?.name) query.set('name', params.name);
+    if (typeof params?.page === 'number') query.set('page', String(params.page));
+    if (typeof params?.size === 'number') query.set('size', String(params.size));
+    const queryString = query.toString();
+    return queryString ? `?${queryString}` : '';
+  }
+
     private static parseApiError(payload: unknown, fallback: string): Error {
       const p = payload as {
         message?: string;
@@ -49,9 +58,13 @@ export class RoadmapService {
     };
   }
 
-  static async getRoadmaps(): Promise<RoadmapApiResponse<RoadmapCatalogItem[]>> {
+  static async getRoadmaps(params?: {
+    name?: string;
+    page?: number;
+    size?: number;
+  }): Promise<RoadmapApiResponse<RoadmapCatalogItem[]>> {
     const headers = await this.getHeaders();
-    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ROADMAPS}`, {
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ROADMAPS}${this.buildPageQuery(params)}`, {
       method: 'GET',
       headers,
     });
@@ -135,9 +148,13 @@ export class RoadmapService {
     return response.json();
   }
 
-  static async getAdminRoadmaps(): Promise<RoadmapApiResponse<RoadmapCatalogItem[]>> {
+  static async getAdminRoadmaps(params?: {
+    name?: string;
+    page?: number;
+    size?: number;
+  }): Promise<RoadmapApiResponse<RoadmapCatalogItem[]>> {
     const headers = await this.getHeaders();
-    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ADMIN_ROADMAPS}`, {
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ADMIN_ROADMAPS}${this.buildPageQuery(params)}`, {
       method: 'GET',
       headers,
     });
@@ -145,6 +162,21 @@ export class RoadmapService {
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
       throw new Error((error as { message?: string }).message || 'Failed to fetch admin roadmaps');
+    }
+
+    return response.json();
+  }
+
+  static async deleteRoadmap(roadmapId: string): Promise<RoadmapApiResponse<string>> {
+    const headers = await this.getHeaders();
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ADMIN_ROADMAP_DETAIL(roadmapId)}`, {
+      method: 'DELETE',
+      headers,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error((error as { message?: string }).message || 'Failed to archive roadmap');
     }
 
     return response.json();

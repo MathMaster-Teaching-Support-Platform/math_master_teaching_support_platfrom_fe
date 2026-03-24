@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
-import { useAdminRoadmaps } from '../../hooks/useRoadmaps';
+import { useAdminRoadmaps, useDeleteRoadmap } from '../../hooks/useRoadmaps';
 import { mockAdmin } from '../../data/mockData';
 import type { RoadmapCatalogItem } from '../../types';
 import './admin-roadmap-page.css';
@@ -16,6 +16,7 @@ function normalizeRoadmaps(
 
 export default function AdminRoadmapManagementPage() {
   const { data, isLoading, error } = useAdminRoadmaps();
+  const deleteRoadmap = useDeleteRoadmap();
   const result = data?.result as
     | RoadmapCatalogItem[]
     | { content?: RoadmapCatalogItem[]; items?: RoadmapCatalogItem[] }
@@ -57,10 +58,28 @@ export default function AdminRoadmapManagementPage() {
                 <span>{roadmap.totalTopicsCount}</span>
                 <span>
                   <Link to={`/admin/roadmaps/edit/${roadmap.id}`}>Edit</Link>
+                  {' | '}
+                  <button
+                    type="button"
+                    className="admin-roadmap-page__inline-danger"
+                    disabled={deleteRoadmap.isPending}
+                    onClick={() => {
+                      if (!globalThis.confirm(`Archive roadmap \"${roadmap.name}\"?`)) return;
+                      deleteRoadmap.mutate(roadmap.id);
+                    }}
+                  >
+                    Archive
+                  </button>
                 </span>
               </div>
             ))}
           </div>
+        )}
+
+        {deleteRoadmap.error && (
+          <p className="admin-roadmap-page__state">
+            {deleteRoadmap.error.message || 'Failed to archive roadmap.'}
+          </p>
         )}
       </section>
     </DashboardLayout>

@@ -54,6 +54,20 @@
   color: #64748b;
 }
 
+.admin-roadmap-page__inline-danger {
+  border: 0;
+  background: transparent;
+  color: #b91c1c;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+}
+
+.admin-roadmap-page__inline-danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .admin-roadmap-page__road-section {
   border: 1px solid #d9e4f2;
   background: linear-gradient(180deg, #f8fbff 0%, #edf4ff 100%);

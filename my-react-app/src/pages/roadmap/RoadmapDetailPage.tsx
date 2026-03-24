@@ -220,7 +220,8 @@ export default function RoadmapDetailPage() {
               </div>
               {submitEntryTest.data?.result && (
                 <p className="rdp__entry-result">
-                  ✓ Gợi ý chủ đề #{submitEntryTest.data.result.suggestedTopicId} •{' '}
+                  ✓ Gợi ý chủ đề #{submitEntryTest.data.result.suggestedTopicId} • Điểm:{' '}
+                  {submitEntryTest.data.result.scoreOnTen.toFixed(2)}/10 •{' '}
                   {submitEntryTest.data.result.evaluatedQuestions} câu hỏi được đánh giá
                 </p>
               )}
@@ -366,12 +367,10 @@ export default function RoadmapDetailPage() {
                       onChange={(e) => setResourceType(e.target.value as TopicMaterialResourceType)}
                     >
                       <option value="LESSON">Bài học</option>
-                      <option value="QUESTION">Câu hỏi</option>
-                      <option value="MINDMAP">Sơ đồ tư duy</option>
-                      <option value="DOCUMENT">Tài liệu</option>
+                      <option value="SLIDE">Slide</option>
                       <option value="ASSESSMENT">Đánh giá</option>
-                      <option value="EXAMPLE">Ví dụ</option>
-                      <option value="PRACTICE">Luyện tập</option>
+                      <option value="LESSON_PLAN">Giáo án</option>
+                      <option value="MINDMAP">Sơ đồ tư duy</option>
                     </select>
                     <button
                       type="button"

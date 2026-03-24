@@ -50,6 +50,12 @@ export interface RoadmapTopic {
   priority: number;
   progressPercentage: number;
   estimatedHours: number;
+  mark?: number;
+  lessonIds?: string[];
+  slideLessonIds?: string[];
+  assessmentIds?: string[];
+  lessonPlanIds?: string[];
+  mindmapIds?: string[];
   topicAssessmentId?: string | null;
   passThresholdPercentage?: number | null;
   startedAt?: string | null;
@@ -94,12 +100,10 @@ export interface StudentRoadmapSnapshot {
 
 export type TopicMaterialResourceType =
   | 'LESSON'
-  | 'QUESTION'
-  | 'MINDMAP'
-  | 'DOCUMENT'
   | 'ASSESSMENT'
-  | 'EXAMPLE'
-  | 'PRACTICE';
+  | 'MINDMAP'
+  | 'SLIDE'
+  | 'LESSON_PLAN';
 
 export interface TopicMaterial {
   id: string;
@@ -129,7 +133,12 @@ export interface CreateRoadmapTopicRequest {
   sequenceOrder: number;
   priority?: number;
   estimatedHours?: number;
+  mark?: number;
   lessonIds: string[];
+  slideLessonIds?: string[];
+  assessmentIds?: string[];
+  lessonPlanIds?: string[];
+  mindmapIds?: string[];
   topicAssessmentId?: string;
   passThresholdPercentage?: number;
   difficulty: QuestionDifficulty;
@@ -145,6 +154,12 @@ export interface RoadmapTopicResponse {
   priority: number;
   progressPercentage: number;
   estimatedHours: number;
+  mark?: number;
+  lessonIds?: string[];
+  slideLessonIds?: string[];
+  assessmentIds?: string[];
+  lessonPlanIds?: string[];
+  mindmapIds?: string[];
   topicAssessmentId?: string | null;
   passThresholdPercentage?: number | null;
   startedAt?: string | null;
@@ -159,7 +174,12 @@ export interface UpdateRoadmapTopicRequest {
   sequenceOrder?: number;
   priority?: number;
   estimatedHours?: number;
+  mark?: number;
   lessonIds?: string[];
+  slideLessonIds?: string[];
+  assessmentIds?: string[];
+  lessonPlanIds?: string[];
+  mindmapIds?: string[];
   topicAssessmentId?: string;
   passThresholdPercentage?: number;
   difficulty?: QuestionDifficulty;
@@ -186,6 +206,7 @@ export interface SubmitRoadmapEntryTestResult {
   roadmapId: string;
   submissionId: string;
   suggestedTopicId: string;
+  scoreOnTen: number;
   evaluatedQuestions: number;
   thresholdPercentage: number;
   evaluatedAt: string;

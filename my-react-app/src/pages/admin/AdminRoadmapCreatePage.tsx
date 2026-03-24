@@ -27,7 +27,7 @@ export default function AdminRoadmapCreatePage() {
         <header className="admin-roadmap-page__header">
           <div>
             <h1>Create roadmap</h1>
-            <p>Define a roadmap and publish when it is ready for learners.</p>
+            <p>Define roadmap metadata first, then add topics and entry test mappings.</p>
           </div>
         </header>
 
