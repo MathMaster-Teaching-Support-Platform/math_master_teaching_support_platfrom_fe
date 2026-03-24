@@ -1,8 +1,10 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../../components/layout/DashboardLayout/DashboardLayout';
 import { mockStudent, mockCourses, mockAssignments } from '../../../data/mockData';
 import { useRoadmaps } from '../../../hooks/useRoadmaps';
+import { TeacherProfileService } from '../../../services/api/teacher-profile.service';
+import { AuthService } from '../../../services/api/auth.service';
 import type { RoadmapCatalogItem } from '../../../types';
 import './StudentDashboard.css';
 
@@ -16,7 +18,31 @@ function normalizeRoadmaps(
 }
 
 const StudentDashboard: React.FC = () => {
+  const navigate = useNavigate();
   const roadmapsQuery = useRoadmaps();
+  const [isTeacherApproved, setIsTeacherApproved] = React.useState(false);
+
+  React.useEffect(() => {
+    const checkStatus = async () => {
+      // Check if user already has teacher role in token
+      if (AuthService.hasRole('teacher')) {
+        setIsTeacherApproved(true);
+        return;
+      }
+
+      // If not in token, check via API (maybe just approved)
+      try {
+        const res = await TeacherProfileService.getMyProfile();
+        if (res.result.status === 'APPROVED') {
+          setIsTeacherApproved(true);
+        }
+      } catch (err) {
+        // Silent fail if no profile or error
+      }
+    };
+    checkStatus();
+  }, []);
+
   const stats = [
     {
       icon: '📚',
@@ -57,6 +83,28 @@ const StudentDashboard: React.FC = () => {
       notificationCount={3}
     >
       <div className="student-dashboard">
+        {isTeacherApproved && (
+          <div className="teacher-switch-banner">
+            <div className="banner-content">
+              <span className="banner-icon">🎓</span>
+              <div className="banner-text">
+                <h3>Bạn đã được duyệt làm Giáo viên!</h3>
+                <p>Bây giờ bạn có thể bắt đầu tạo nội dung và quản lý lớp học.</p>
+              </div>
+            </div>
+            <button 
+              className="btn btn-primary switch-btn" 
+              onClick={() => {
+                // If they have the role in token, just go. 
+                // If not, we might need a re-login, but for now just navigate
+                navigate('/teacher/dashboard');
+              }}
+            >
+              Chuyển sang giao diện Giáo viên
+            </button>
+          </div>
+        )}
+
         <div className="dashboard-header">
           <div>
             <h1 className="dashboard-title">Chào {mockStudent.name}! 👋</h1>

@@ -180,24 +180,40 @@ export class AuthService {
   }
 
   /**
-   * Get user role from token
+   * Get all user roles from token
    */
-  static getUserRole(): string | null {
+  static getUserRoles(): string[] {
     const token = this.getToken();
-    if (!token) return null;
+    if (!token) return [];
 
     const decoded = this.decodeToken(token);
-    if (!decoded || !decoded.scope) return null;
+    if (!decoded || !decoded.scope) return [];
 
     // scope can be a space-separated string containing roles and permissions
     // e.g., "ROLE_TEACHER VIEW_CONTENT EDIT_CONTENT"
-    const scopes = decoded.scope.split(' ');
-    const roleScope = scopes.find((s) => s.startsWith('ROLE_'));
+    return decoded.scope.split(' ')
+      .filter((s) => s.startsWith('ROLE_'))
+      .map((s) => s.replace('ROLE_', '').toLowerCase());
+  }
 
-    if (!roleScope) return null;
+  /**
+   * Get primary user role from token
+   */
+  static getUserRole(): string | null {
+    const roles = this.getUserRoles();
+    if (roles.length === 0) return null;
 
-    const role = roleScope.replace('ROLE_', '').toLowerCase();
-    return role;
+    // Prioritize admin > teacher > student/user
+    if (roles.includes('admin')) return 'admin';
+    if (roles.includes('teacher')) return 'teacher';
+    return roles[0];
+  }
+
+  /**
+   * Check if user has a specific role
+   */
+  static hasRole(role: string): boolean {
+    return this.getUserRoles().includes(role.toLowerCase());
   }
 
   /**
