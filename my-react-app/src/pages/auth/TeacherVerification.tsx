@@ -25,7 +25,7 @@ const TeacherVerification: React.FC = () => {
     });
 
     const [step2Data, setStep2Data] = useState({
-        documentType: 'Payslip',
+        documentType: 'StaffCard',
         fileName: '',
         selectedFile: null as File | null,
         agreed: false,
@@ -181,40 +181,25 @@ const TeacherVerification: React.FC = () => {
                 </button>
                 <h2 className="step-title" style={{ marginLeft: '1rem', display: 'inline' }}>Tải lên tài liệu xác thực</h2>
             </div>
-            <p className="step-desc" style={{ marginTop: '1rem' }}>Sử dụng hợp đồng giảng dạy hoặc bảng lương có tên bạn và tên trường.</p>
+            <p className="step-desc" style={{ marginTop: '1rem' }}>Sử dụng Thẻ Cán bộ, Công chức, Viên chức (Giáo Viên) có tên bạn và tên trường.</p>
 
             <div className="form-group" style={{ marginTop: '2rem' }}>
                 <label>Loại tài liệu</label>
-                <div className="doc-type-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '0.5rem' }}>
+                <div className="doc-type-grid" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem', marginTop: '0.5rem' }}>
                     <div 
-                        className={`doc-type-item ${step2Data.documentType === 'Payslip' ? 'active' : ''}`}
-                        onClick={() => setStep2Data({...step2Data, documentType: 'Payslip'})}
+                        className="doc-type-item active"
+                        onClick={() => setStep2Data({...step2Data, documentType: 'StaffCard'})}
                         style={{ 
                             padding: '1rem', 
-                            border: '1px solid #e2e8f0', 
+                            border: '1px solid #667eea', 
                             borderRadius: '0.5rem', 
                             textAlign: 'center', 
                             cursor: 'pointer',
-                            background: step2Data.documentType === 'Payslip' ? '#f0f4ff' : 'white',
-                            borderColor: step2Data.documentType === 'Payslip' ? '#667eea' : '#e2e8f0'
+                            background: '#f0f4ff',
+                            borderColor: '#667eea'
                         }}
                     >
-                        Bảng lương
-                    </div>
-                    <div 
-                        className={`doc-type-item ${step2Data.documentType === 'Contract' ? 'active' : ''}`}
-                        onClick={() => setStep2Data({...step2Data, documentType: 'Contract'})}
-                        style={{ 
-                            padding: '1rem', 
-                            border: '1px solid #e2e8f0', 
-                            borderRadius: '0.5rem', 
-                            textAlign: 'center', 
-                            cursor: 'pointer',
-                            background: step2Data.documentType === 'Contract' ? '#f0f4ff' : 'white',
-                            borderColor: step2Data.documentType === 'Contract' ? '#667eea' : '#e2e8f0'
-                        }}
-                    >
-                        Hợp đồng
+                        Thẻ Cán bộ, Công chức, Viên chức (Giáo Viên)
                     </div>
                 </div>
             </div>

@@ -41,7 +41,7 @@ const OnboardingFlow: React.FC = () => {
     return '';
   };
   const [t2, setT2] = useState({
-    documentType: 'Payslip',
+    documentType: 'StaffCard',
     fileName: '',
     file: null as File | null,
     agreed: false,
@@ -293,21 +293,19 @@ const OnboardingFlow: React.FC = () => {
     <div className="ob-step-content fade-in">
       <h2 className="ob-step-title">Tài liệu xác thực</h2>
       <p className="ob-step-sub">
-        Tải lên hợp đồng giảng dạy hoặc bảng lương có tên bạn và tên trường.
+        Tải lên Thẻ Cán bộ, Công chức, Viên chức (Giáo Viên) có tên bạn và tên trường.
       </p>
       <div className="ob-form">
         <div className="ob-field">
           <label>Loại tài liệu</label>
           <div className="ob-doc-type-row">
-            {['Payslip', 'Contract'].map((dt) => (
-              <button
-                key={dt}
-                className={`ob-doc-type-btn${t2.documentType === dt ? ' active' : ''}`}
-                onClick={() => setT2({ ...t2, documentType: dt })}
-              >
-                {dt === 'Payslip' ? 'Bảng lương' : 'Hợp đồng'}
-              </button>
-            ))}
+            <button
+              className="ob-doc-type-btn active"
+              onClick={() => setT2({ ...t2, documentType: 'StaffCard' })}
+              style={{ width: '100%' }}
+            >
+              Thẻ Cán bộ, Công chức, Viên chức (Giáo Viên)
+            </button>
           </div>
         </div>
         <div className="ob-field">

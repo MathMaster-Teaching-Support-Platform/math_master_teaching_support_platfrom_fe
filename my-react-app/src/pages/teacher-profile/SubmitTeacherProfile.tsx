@@ -110,7 +110,7 @@ const SubmitTeacherProfile: React.FC<SubmitTeacherProfileProps> = ({ onSuccess }
           </h1>
           <p className="tp-card-header__subtitle">
             Gửi hồ sơ để quản trị viên xét duyệt và mở khóa tính năng giảng dạy. Vui lòng tải lên
-            hợp đồng giảng dạy và phiếu lương để xác minh.
+            Thẻ Cán bộ, Công chức, Viên chức (Giáo Viên) để xác minh.
           </p>
         </div>
 
@@ -196,7 +196,7 @@ const SubmitTeacherProfile: React.FC<SubmitTeacherProfileProps> = ({ onSuccess }
                 Tài liệu xác minh <span className="tp-required">*</span>
               </label>
               <p className="tp-form-hint">
-                Chọn nhiều file (Hợp đồng giảng dạy, Phiếu lương,...) để nén và tải lên cùng lúc.
+                Chọn file Thẻ Cán bộ, Công chức, Viên chức (Giáo Viên) để tải lên xác minh.
               </p>
               <button
                 type="button"
