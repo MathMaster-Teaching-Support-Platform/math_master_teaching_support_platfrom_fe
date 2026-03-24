@@ -185,7 +185,6 @@ export class MindmapService {
     if (!responseText) {
       return {
         code: response.status,
-        message: 'Delete node success',
         result: undefined,
       };
     }

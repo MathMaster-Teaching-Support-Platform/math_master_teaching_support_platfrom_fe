@@ -26,6 +26,7 @@ export const API_ENDPOINTS = {
   // Assessments
   ASSESSMENTS: '/assessments',
   ASSESSMENTS_MY: '/assessments/my',
+  ASSESSMENTS_SEARCH: '/assessments/search',
   ASSESSMENTS_DETAIL: (id: string) => `/assessments/${id}`,
   ASSESSMENTS_PREVIEW: (id: string) => `/assessments/${id}/preview`,
   ASSESSMENTS_PUBLISH_SUMMARY: (id: string) => `/assessments/${id}/publish-summary`,
@@ -86,6 +87,9 @@ export const API_ENDPOINTS = {
   LESSONS: '/lessons',
   LESSON_DETAIL: (lessonId: string) => `/lessons/${lessonId}`,
   CHAPTER_LESSONS: (chapterId: string) => `/chapters/${chapterId}/lessons`,
+
+  // Documents
+  DOCUMENTS_SEARCH: '/documents/search',
 
   // Chapters
   CHAPTERS_BY_SUBJECT: (subjectId: string) => `/chapters/subject/${subjectId}`,

@@ -13,9 +13,14 @@ import {
   useCreateRoadmapEntryTest,
   useUpdateRoadmapTopic,
 } from '../../hooks/useRoadmaps';
+import { AssessmentService } from '../../services/api/assessment.service';
+import { DocumentService } from '../../services/api/document.service';
 import { MindmapService } from '../../services/api/mindmap.service';
 import type {
-  EntryTestMapping,
+  AssessmentSearchApiResponse,
+  AssessmentSearchItem,
+  SearchDocumentItem,
+  SearchDocumentsApiResponse,
   TopicStatus,
   UpdateRoadmapTopicRequest,
 } from '../../types';
@@ -66,20 +71,12 @@ interface TopicNodeDraft {
   lessonIds: string[];
   slideLessonIds: string[];
   assessmentIds: string[];
+  selectedDocumentLessonId: string;
   lessonPlanIds: string[];
   mindmapIds: string[];
-  lessonPlanRaw: string;
   isDraft: boolean;
   dirtyFields: TopicFieldKey[];
   baseline?: PersistedTopicBaseline;
-}
-
-interface EntryMappingDraft {
-  clientId: string;
-  questionId: string;
-  roadmapTopicId: string;
-  orderIndex: number;
-  weight: number;
 }
 
 const resequenceNodes = (nodes: TopicNodeDraft[]) =>
@@ -109,11 +106,19 @@ const extractErrorMessage = (error: unknown, fallback: string) => {
   return error.message.replace(/^\d{3}\s+[^:]+:\s*/, '').trim() || fallback;
 };
 
-const normalizeIds = (raw: string) =>
-  raw
-    .split(/[\n,]/)
-    .map((id) => id.trim())
-    .filter(Boolean);
+const normalizeAssessmentSearchResults = (payload: AssessmentSearchApiResponse | undefined) => {
+  if (!payload) return [] as AssessmentSearchItem[];
+  if (Array.isArray(payload.assessments)) return payload.assessments;
+  if (Array.isArray(payload.result?.assessments)) return payload.result.assessments;
+  return [] as AssessmentSearchItem[];
+};
+
+const normalizeDocumentResults = (payload: SearchDocumentsApiResponse | undefined) => {
+  if (!payload) return [] as SearchDocumentItem[];
+  if (Array.isArray(payload.documents)) return payload.documents;
+  if (Array.isArray(payload.result?.documents)) return payload.result.documents;
+  return [] as SearchDocumentItem[];
+};
 
 const setIfChanged = <T,>(
   payload: UpdateRoadmapTopicRequest,
@@ -180,13 +185,35 @@ const buildUpdatePayload = (node: TopicNodeDraft): UpdateRoadmapTopicRequest => 
   return payload;
 };
 
-const createEntryMappingDraft = (orderIndex: number): EntryMappingDraft => ({
-  clientId: `map-${Date.now()}-${Math.random().toString(16).slice(2)}`,
-  questionId: '',
-  roadmapTopicId: '',
-  orderIndex,
-  weight: 1,
-});
+const validateTopicMarkOrder = (
+  activeNode: TopicNodeDraft,
+  nodes: TopicNodeDraft[]
+): { valid: true } | { valid: false; message: string } => {
+  const sortedNodes = [...nodes].sort((a, b) => a.sequenceOrder - b.sequenceOrder);
+  const index = sortedNodes.findIndex((node) => node.clientId === activeNode.clientId);
+  if (index < 0) {
+    return { valid: true };
+  }
+
+  const previousNode = index > 0 ? sortedNodes[index - 1] : null;
+  const nextNode = index < sortedNodes.length - 1 ? sortedNodes[index + 1] : null;
+
+  if (previousNode && activeNode.mark <= previousNode.mark) {
+    return {
+      valid: false,
+      message: `Topic ${activeNode.sequenceOrder} mark (${activeNode.mark}) must be larger than topic ${previousNode.sequenceOrder} (${previousNode.mark}).`,
+    };
+  }
+
+  if (nextNode && activeNode.mark >= nextNode.mark) {
+    return {
+      valid: false,
+      message: `Topic ${activeNode.sequenceOrder} mark (${activeNode.mark}) must be smaller than topic ${nextNode.sequenceOrder} (${nextNode.mark}) so next topic stays larger than previous.`,
+    };
+  }
+
+  return { valid: true };
+};
 
 export default function AdminRoadmapTopicsPage() {
   const { roadmapId = '' } = useParams();
@@ -205,7 +232,17 @@ export default function AdminRoadmapTopicsPage() {
   const [toast, setToast] = useState<ToastState | null>(null);
   const [activeMaterialTab, setActiveMaterialTab] = useState<MaterialTab>('LESSON');
   const [entryAssessmentId, setEntryAssessmentId] = useState('');
-  const [entryMappings, setEntryMappings] = useState<EntryMappingDraft[]>([]);
+  const [selectedEntryAssessment, setSelectedEntryAssessment] = useState<AssessmentSearchItem | null>(null);
+  const [entryAssessmentQuery, setEntryAssessmentQuery] = useState('');
+  const [debouncedEntryAssessmentQuery, setDebouncedEntryAssessmentQuery] = useState('');
+
+  useEffect(() => {
+    const timer = globalThis.setTimeout(
+      () => setDebouncedEntryAssessmentQuery(entryAssessmentQuery.trim()),
+      350
+    );
+    return () => globalThis.clearTimeout(timer);
+  }, [entryAssessmentQuery]);
 
   useEffect(() => {
     const topics = roadmapDetail.data?.result.topics;
@@ -237,9 +274,9 @@ export default function AdminRoadmapTopicsPage() {
           lessonIds,
           slideLessonIds,
           assessmentIds,
+          selectedDocumentLessonId: '',
           lessonPlanIds,
           mindmapIds,
-          lessonPlanRaw: lessonPlanIds.join('\n'),
           isDraft: false,
           dirtyFields: [],
           baseline: {
@@ -263,9 +300,6 @@ export default function AdminRoadmapTopicsPage() {
       });
 
     setNodes(mapped);
-    if (entryMappings.length === 0) {
-      setEntryMappings([createEntryMappingDraft(1)]);
-    }
   }, [roadmapDetail.data?.result.topics]);
 
   useEffect(() => {
@@ -309,6 +343,31 @@ export default function AdminRoadmapTopicsPage() {
     enabled: isTopicModalOpen,
   });
 
+  const lessonPlanDocumentsQuery = useQuery({
+    queryKey: [
+      'documents',
+      'search',
+      activeNode?.selectedChapterId ?? '',
+      activeNode?.selectedDocumentLessonId ?? '',
+    ],
+    queryFn: () =>
+      DocumentService.searchDocumentsByChapterLesson(
+        activeNode?.selectedChapterId ?? '',
+        activeNode?.selectedDocumentLessonId ?? ''
+      ),
+    enabled:
+      isTopicModalOpen &&
+      !!activeNode?.selectedChapterId &&
+      !!activeNode?.selectedDocumentLessonId,
+  });
+
+  const entryAssessmentSearchQuery = useQuery({
+    queryKey: ['assessments', 'search', debouncedEntryAssessmentQuery, subjectId],
+    queryFn: () =>
+      AssessmentService.searchAssessments(debouncedEntryAssessmentQuery, subjectId || undefined),
+    enabled: debouncedEntryAssessmentQuery.length >= 2,
+  });
+
   const rowCount = Math.max(1, Math.ceil(nodes.length / 5));
   const roadHeight = Math.max(680, rowCount * 190 + 120);
 
@@ -339,9 +398,9 @@ export default function AdminRoadmapTopicsPage() {
       lessonIds: [],
       slideLessonIds: [],
       assessmentIds: [],
+      selectedDocumentLessonId: '',
       lessonPlanIds: [],
       mindmapIds: [],
-      lessonPlanRaw: '',
       isDraft: true,
       dirtyFields: [],
     };
@@ -381,7 +440,11 @@ export default function AdminRoadmapTopicsPage() {
     );
   };
 
-  const toggleActiveNodeIdList = (field: 'lessonIds' | 'slideLessonIds' | 'assessmentIds' | 'mindmapIds', id: string, checked: boolean) => {
+  const toggleActiveNodeIdList = (
+    field: 'lessonIds' | 'slideLessonIds' | 'assessmentIds' | 'lessonPlanIds' | 'mindmapIds',
+    id: string,
+    checked: boolean
+  ) => {
     if (!activeNode) return;
     const current = activeNode[field];
     const next = checked ? [...current, id] : current.filter((item) => item !== id);
@@ -439,6 +502,12 @@ export default function AdminRoadmapTopicsPage() {
 
   const saveActiveNode = () => {
     if (!roadmapId || !activeNode || isSubmitting) return;
+
+    const markValidation = validateTopicMarkOrder(activeNode, nodes);
+    if (!markValidation.valid) {
+      setToast({ type: 'error', message: markValidation.message });
+      return;
+    }
 
     if (activeNode.isDraft) {
       if (!activeNode.title || activeNode.lessonIds.length === 0) return;
@@ -519,55 +588,10 @@ export default function AdminRoadmapTopicsPage() {
     );
   };
 
-  const updateEntryMapping = <K extends keyof EntryMappingDraft>(
-    clientId: string,
-    field: K,
-    value: EntryMappingDraft[K]
-  ) => {
-    setEntryMappings((previous) =>
-      previous.map((mapping) =>
-        mapping.clientId === clientId
-          ? {
-              ...mapping,
-              [field]: value,
-            }
-          : mapping
-      )
-    );
-  };
-
-  const addEntryMapping = () => {
-    setEntryMappings((previous) => [...previous, createEntryMappingDraft(previous.length + 1)]);
-  };
-
-  const removeEntryMapping = (clientId: string) => {
-    setEntryMappings((previous) =>
-      previous
-        .filter((mapping) => mapping.clientId !== clientId)
-        .map((mapping, index) => ({
-          ...mapping,
-          orderIndex: index + 1,
-        }))
-    );
-  };
-
   const submitEntryTestConfig = () => {
-    if (!roadmapId || !entryAssessmentId.trim()) {
-      setToast({ type: 'error', message: 'Assessment ID is required for entry test.' });
-      return;
-    }
-
-    const validMappings: EntryTestMapping[] = entryMappings
-      .filter((mapping) => mapping.questionId.trim() && mapping.roadmapTopicId.trim())
-      .map((mapping) => ({
-        questionId: mapping.questionId.trim(),
-        roadmapTopicId: mapping.roadmapTopicId.trim(),
-        orderIndex: mapping.orderIndex,
-        weight: mapping.weight,
-      }));
-
-    if (validMappings.length === 0) {
-      setToast({ type: 'error', message: 'At least one mapping is required.' });
+    const selectedAssessmentId = selectedEntryAssessment?.id || entryAssessmentId.trim();
+    if (!roadmapId || !selectedAssessmentId) {
+      setToast({ type: 'error', message: 'Please search and select an assessment first.' });
       return;
     }
 
@@ -575,8 +599,7 @@ export default function AdminRoadmapTopicsPage() {
       {
         roadmapId,
         payload: {
-          assessmentId: entryAssessmentId.trim(),
-          mappings: validMappings,
+          assessmentId: selectedAssessmentId,
         },
       },
       {
@@ -602,6 +625,8 @@ export default function AdminRoadmapTopicsPage() {
   const lessons = lessonsQuery.data?.result ?? [];
   const assessments = assessmentsQuery.data?.result?.content ?? [];
   const mindmaps = mindmapsQuery.data?.result?.content ?? [];
+  const lessonPlanDocuments = normalizeDocumentResults(lessonPlanDocumentsQuery.data);
+  const searchedAssessments = normalizeAssessmentSearchResults(entryAssessmentSearchQuery.data);
   const roadmapErrorStatus = extractHttpStatus(roadmapDetail.error);
   let submitButtonLabel = 'Save changes';
   if (activeNode?.isDraft) {
@@ -720,85 +745,77 @@ export default function AdminRoadmapTopicsPage() {
 
         <section className="admin-roadmap-topics-page__entry-test-card">
           <header>
-            <h3>Entry assessment mapping</h3>
-            <p>Configure one roadmap entry test and map each question to a target topic.</p>
+            <h3>Entry assessment setup</h3>
+            <p>Search assessment by name and select one. Manual ID input is disabled.</p>
           </header>
 
           <label className="admin-roadmap-topics-page__entry-field">
-            <span>Assessment ID</span>
+            <span>Search assessment name</span>
             <input
-              value={entryAssessmentId}
-              onChange={(event) => setEntryAssessmentId(event.target.value)}
-              placeholder="Assessment UUID"
+              value={entryAssessmentQuery}
+              onChange={(event) => setEntryAssessmentQuery(event.target.value)}
+              placeholder="Type assessment title..."
               disabled={createEntryTest.isPending}
             />
           </label>
 
-          <div className="admin-roadmap-topics-page__mapping-list">
-            {entryMappings.map((mapping, index) => (
-              <div key={mapping.clientId} className="admin-roadmap-topics-page__mapping-row">
-                <span className="admin-roadmap-topics-page__mapping-index">#{index + 1}</span>
-                <input
-                  value={mapping.questionId}
-                  onChange={(event) =>
-                    updateEntryMapping(mapping.clientId, 'questionId', event.target.value)
-                  }
-                  placeholder="Question UUID"
-                  disabled={createEntryTest.isPending}
-                />
-                <select
-                  value={mapping.roadmapTopicId}
-                  onChange={(event) =>
-                    updateEntryMapping(mapping.clientId, 'roadmapTopicId', event.target.value)
-                  }
-                  disabled={createEntryTest.isPending}
-                >
-                  <option value="">Select roadmap topic</option>
-                  {nodes
-                    .filter((node) => !!node.persistedId)
-                    .map((node) => (
-                      <option key={node.clientId} value={node.persistedId}>
-                        {node.sequenceOrder}. {node.title}
-                      </option>
-                    ))}
-                </select>
-                <input
-                  type="number"
-                  min={1}
-                  value={mapping.weight}
-                  onChange={(event) =>
-                    updateEntryMapping(mapping.clientId, 'weight', Number(event.target.value) || 1)
-                  }
-                  disabled={createEntryTest.isPending}
-                />
-                <button
-                  type="button"
-                  className="admin-roadmap-topics-page__mapping-remove"
-                  onClick={() => removeEntryMapping(mapping.clientId)}
-                  disabled={createEntryTest.isPending || entryMappings.length === 1}
-                >
-                  Remove
-                </button>
+          {entryAssessmentSearchQuery.isLoading && (
+            <p className="admin-roadmap-page__state">Searching assessments...</p>
+          )}
+          {entryAssessmentSearchQuery.error && (
+            <p className="admin-roadmap-page__state">Failed to search assessments.</p>
+          )}
+
+          {debouncedEntryAssessmentQuery.length >= 2 &&
+            !entryAssessmentSearchQuery.isLoading &&
+            !entryAssessmentSearchQuery.error && (
+              <div className="admin-roadmap-topics-page__search-results">
+                {searchedAssessments.map((assessment) => (
+                  <article
+                    key={assessment.id}
+                    className="admin-roadmap-topics-page__search-result-item"
+                  >
+                    <div>
+                      <strong>{assessment.title}</strong>
+                      <p>{assessment.description || 'No description'}</p>
+                      <small>
+                        Questions: {assessment.questionCount ?? 0}
+                        {assessment.subject ? ` • ${assessment.subject}` : ''}
+                      </small>
+                    </div>
+                    <button
+                      type="button"
+                      className="admin-roadmap-page__button"
+                      onClick={() => {
+                        setEntryAssessmentId(assessment.id);
+                        setSelectedEntryAssessment(assessment);
+                      }}
+                      disabled={createEntryTest.isPending}
+                    >
+                      Select
+                    </button>
+                  </article>
+                ))}
+                {searchedAssessments.length === 0 && (
+                  <p className="admin-roadmap-page__state">No assessments found.</p>
+                )}
               </div>
-            ))}
-          </div>
+            )}
+
+          {selectedEntryAssessment && (
+            <p className="admin-roadmap-page__state">
+              Selected assessment: {selectedEntryAssessment.title}
+            </p>
+          )}
 
           <div className="admin-roadmap-page__actions">
             <button
               type="button"
               className="admin-roadmap-page__button"
-              onClick={addEntryMapping}
-              disabled={createEntryTest.isPending}
-            >
-              Add mapping
-            </button>
-            <button
-              type="button"
-              className="admin-roadmap-page__button"
               onClick={submitEntryTestConfig}
-              disabled={createEntryTest.isPending}
+              disabled={createEntryTest.isPending || !selectedEntryAssessment}
             >
-              {createEntryTest.isPending ? 'Saving...' : 'Save entry test mapping'}
+              {createEntryTest.isPending ? 'Saving...' : 'Save entry test setup'}
             </button>
           </div>
         </section>
@@ -866,6 +883,7 @@ export default function AdminRoadmapTopicsPage() {
                     value={activeNode.selectedChapterId}
                     onChange={(event) => {
                       updateActiveNode('selectedChapterId', event.target.value);
+                      updateActiveNode('selectedDocumentLessonId', '');
                     }}
                     disabled={isSubmitting || chaptersQuery.isLoading || chapters.length === 0}
                   >
@@ -1093,21 +1111,81 @@ export default function AdminRoadmapTopicsPage() {
                 {activeMaterialTab === 'LESSON_PLAN' && (
                   <div className="admin-roadmap-topics-page__lesson-picker">
                     <p className="admin-roadmap-page__state">
-                      Lesson plan list endpoint is not available yet. Paste lesson plan IDs manually.
+                      Select chapter and lesson to search documents by name, then attach documents.
                     </p>
-                    <textarea
-                      rows={5}
-                      value={activeNode.lessonPlanRaw}
-                      onChange={(event) => {
-                        const raw = event.target.value;
-                        updateActiveNode('lessonPlanRaw', raw);
-                        updateActiveNode('lessonPlanIds', normalizeIds(raw), 'lessonPlanIds');
-                      }}
-                      placeholder="One UUID per line or comma-separated"
-                      disabled={isSubmitting}
-                    />
+
+                    <label>
+                      <span>Lesson for documents</span>
+                      <select
+                        value={activeNode.selectedDocumentLessonId}
+                        onChange={(event) =>
+                          updateActiveNode('selectedDocumentLessonId', event.target.value)
+                        }
+                        disabled={
+                          !activeNode.selectedChapterId ||
+                          lessonsQuery.isLoading ||
+                          lessons.length === 0 ||
+                          isSubmitting
+                        }
+                      >
+                        <option value="">Select lesson</option>
+                        {lessons.map((lesson) => (
+                          <option key={lesson.id} value={lesson.id}>
+                            {lesson.title || lesson.id}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+
+                    {!activeNode.selectedChapterId && (
+                      <p className="admin-roadmap-page__state">Choose a chapter first.</p>
+                    )}
+                    {activeNode.selectedChapterId && !activeNode.selectedDocumentLessonId && (
+                      <p className="admin-roadmap-page__state">Choose a lesson to load documents.</p>
+                    )}
+                    {lessonPlanDocumentsQuery.isLoading && (
+                      <p className="admin-roadmap-page__state">Loading documents...</p>
+                    )}
+                    {lessonPlanDocumentsQuery.error && (
+                      <p className="admin-roadmap-page__state">Unable to load documents.</p>
+                    )}
+
+                    {!!activeNode.selectedDocumentLessonId &&
+                      !lessonPlanDocumentsQuery.isLoading &&
+                      !lessonPlanDocumentsQuery.error && (
+                        <div className="admin-roadmap-topics-page__lesson-list">
+                          {lessonPlanDocuments.map((document) => (
+                            <label
+                              key={document.id}
+                              className="admin-roadmap-topics-page__lesson-item"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={activeNode.lessonPlanIds.includes(document.id)}
+                                onChange={(event) =>
+                                  toggleActiveNodeIdList(
+                                    'lessonPlanIds',
+                                    document.id,
+                                    event.target.checked
+                                  )
+                                }
+                                disabled={isSubmitting}
+                              />
+                              <span>
+                                {document.title} ({document.type})
+                              </span>
+                            </label>
+                          ))}
+                          {lessonPlanDocuments.length === 0 && (
+                            <p className="admin-roadmap-page__state">
+                              No documents found for this lesson.
+                            </p>
+                          )}
+                        </div>
+                      )}
+
                     <p className="admin-roadmap-topics-page__lesson-count">
-                      Selected lesson plans: {activeNode.lessonPlanIds.length}
+                      Selected documents: {activeNode.lessonPlanIds.length}
                     </p>
                   </div>
                 )}

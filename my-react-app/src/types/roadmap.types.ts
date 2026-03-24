@@ -186,16 +186,8 @@ export interface UpdateRoadmapTopicRequest {
   status?: TopicStatus;
 }
 
-export interface EntryTestMapping {
-  questionId: string;
-  roadmapTopicId: string;
-  orderIndex: number;
-  weight: number;
-}
-
 export interface CreateRoadmapEntryTestRequest {
   assessmentId: string;
-  mappings: EntryTestMapping[];
 }
 
 export interface SubmitRoadmapEntryTestRequest {
