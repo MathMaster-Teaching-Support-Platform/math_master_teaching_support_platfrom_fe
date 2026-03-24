@@ -79,9 +79,8 @@ export const API_ENDPOINTS = {
   MINDMAPS_GENERATE: '/mindmaps/generate',
   MINDMAPS_MY: '/mindmaps/my-mindmaps',
   MINDMAPS_DETAIL: (id: string) => `/mindmaps/${id}`,
-  MINDMAPS_NODES: (mindmapId: string) => `/mindmaps/${mindmapId}/nodes`,
-  MINDMAPS_NODE_DETAIL: (mindmapId: string, nodeId: string) =>
-    `/mindmaps/${mindmapId}/nodes/${nodeId}`,
+  MINDMAPS_NODES: '/mindmaps/nodes',
+  MINDMAPS_NODE_DETAIL: (nodeId: string) => `/mindmaps/nodes/${nodeId}`,
 
   // Lessons
   LESSONS: '/lessons',

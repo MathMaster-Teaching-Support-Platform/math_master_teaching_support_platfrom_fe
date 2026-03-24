@@ -48,6 +48,7 @@ export interface MindmapUpdateRequest {
 }
 
 export interface MindmapNodeUpdateRequest {
+  mindmapId?: string;
   content?: string;
   color?: string;
   icon?: string;
