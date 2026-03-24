@@ -121,13 +121,10 @@ export class MindmapService {
 
   // ─── NODES ────────────────────────────────────────────────────────────────
 
-  /** POST /mindmaps/{mindmapId}/nodes - Create new node */
-  static async createNode(
-    mindmapId: string,
-    data: MindmapNodeCreateRequest
-  ): Promise<ApiResponse<MindmapNode>> {
+  /** POST /mindmaps/nodes - Create new node */
+  static async createNode(data: MindmapNodeCreateRequest): Promise<ApiResponse<MindmapNode>> {
     const headers = await this.getHeaders();
-    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.MINDMAPS_NODES(mindmapId)}`, {
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.MINDMAPS_NODES}`, {
       method: 'POST',
       headers,
       body: JSON.stringify(data),
@@ -139,21 +136,21 @@ export class MindmapService {
     return response.json();
   }
 
-  /** PUT /mindmaps/{mindmapId}/nodes/{nodeId} - Update node */
+  /** PUT /mindmaps/nodes/{nodeId} - Update node */
   static async updateNode(
     mindmapId: string,
     nodeId: string,
     data: MindmapNodeUpdateRequest
   ): Promise<ApiResponse<MindmapNode>> {
     const headers = await this.getHeaders();
-    const response = await fetch(
-      `${API_BASE_URL}${API_ENDPOINTS.MINDMAPS_NODE_DETAIL(mindmapId, nodeId)}`,
-      {
-        method: 'PUT',
-        headers,
-        body: JSON.stringify(data),
-      }
-    );
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.MINDMAPS_NODE_DETAIL(nodeId)}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({
+        ...data,
+        mindmapId,
+      }),
+    });
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.message || 'Failed to update node');
@@ -161,20 +158,38 @@ export class MindmapService {
     return response.json();
   }
 
-  /** DELETE /mindmaps/{mindmapId}/nodes/{nodeId} */
-  static async deleteNode(mindmapId: string, nodeId: string): Promise<ApiResponse<void>> {
+  /** DELETE /mindmaps/nodes/{nodeId} */
+  static async deleteNode(nodeId: string): Promise<ApiResponse<void>> {
     const headers = await this.getHeaders();
-    const response = await fetch(
-      `${API_BASE_URL}${API_ENDPOINTS.MINDMAPS_NODE_DETAIL(mindmapId, nodeId)}`,
-      {
-        method: 'DELETE',
-        headers,
-      }
-    );
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.MINDMAPS_NODE_DETAIL(nodeId)}`, {
+      method: 'DELETE',
+      headers,
+    });
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to delete node');
+      const errorText = await response.text();
+      let errorMessage = 'Failed to delete node';
+
+      if (errorText) {
+        try {
+          const errorData = JSON.parse(errorText) as { message?: string };
+          errorMessage = errorData.message || errorMessage;
+        } catch {
+          errorMessage = errorText;
+        }
+      }
+
+      throw new Error(errorMessage);
     }
-    return response.json();
+
+    const responseText = await response.text();
+    if (!responseText) {
+      return {
+        code: response.status,
+        message: 'Delete node success',
+        result: undefined,
+      };
+    }
+
+    return JSON.parse(responseText) as ApiResponse<void>;
   }
 }

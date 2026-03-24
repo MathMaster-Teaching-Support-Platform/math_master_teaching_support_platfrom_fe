@@ -33,6 +33,7 @@ interface MindElixirInstance {
 }
 
 type InteractionMode = 'DRAG' | 'EDIT';
+type NodePanelMode = 'EDIT' | 'ADD';
 
 const ICON_SYMBOLS: Record<string, string> = {
   lightbulb: '💡',
@@ -70,6 +71,54 @@ const flattenNodes = (nodes: MindmapNode[]): MindmapNode[] => {
   return result;
 };
 
+const uniqueFlatNodes = (nodes: MindmapNode[]): MindmapNode[] => {
+  const byId = new Map<string, MindmapNode>();
+  flattenNodes(nodes).forEach((node) => {
+    byId.set(node.id, { ...node, children: [] });
+  });
+  return Array.from(byId.values());
+};
+
+const removeNodeAndDescendants = (nodes: MindmapNode[], nodeId: string): MindmapNode[] => {
+  const all = uniqueFlatNodes(nodes);
+  const toRemove = new Set<string>([nodeId]);
+  let changed = true;
+
+  while (changed) {
+    changed = false;
+    all.forEach((node) => {
+      if (node.parentId && toRemove.has(node.parentId) && !toRemove.has(node.id)) {
+        toRemove.add(node.id);
+        changed = true;
+      }
+    });
+  }
+
+  return all.filter((node) => !toRemove.has(node.id));
+};
+
+const getSubtreeDeleteOrder = (nodes: MindmapNode[], rootId: string): string[] => {
+  const all = uniqueFlatNodes(nodes);
+  const childrenMap = new Map<string, string[]>();
+
+  all.forEach((node) => {
+    if (!node.parentId) return;
+    const children = childrenMap.get(node.parentId) || [];
+    children.push(node.id);
+    childrenMap.set(node.parentId, children);
+  });
+
+  const ordered: string[] = [];
+  const visit = (nodeId: string) => {
+    const children = childrenMap.get(nodeId) || [];
+    children.forEach(visit);
+    ordered.push(nodeId);
+  };
+
+  visit(rootId);
+  return ordered;
+};
+
 export default function MindmapEditor() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -82,16 +131,36 @@ export default function MindmapEditor() {
   const [saving, setSaving] = useState(false);
 
   const mindContainerRef = useRef<HTMLDivElement | null>(null);
+  const editPanelRef = useRef<HTMLDivElement | null>(null);
   const mindInstanceRef = useRef<MindElixirInstance | null>(null);
   const nodeLookupRef = useRef<Map<string, MindmapNode>>(new Map());
 
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [nodePanelMode, setNodePanelMode] = useState<NodePanelMode>('EDIT');
   const [interactionMode, setInteractionMode] = useState<InteractionMode>('DRAG');
   const interactionModeRef = useRef<InteractionMode>('DRAG');
   const [editForm, setEditForm] = useState({
     content: '',
     color: '#667eea',
     icon: 'lightbulb',
+  });
+  const [newNodeForm, setNewNodeForm] = useState({
+    content: '',
+    color: '#2563eb',
+    icon: 'book',
+  });
+  const [creatingNode, setCreatingNode] = useState(false);
+  const [deletingNode, setDeletingNode] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    open: boolean;
+    nodeId: string | null;
+    nodeLabel: string;
+    totalNodes: number;
+  }>({
+    open: false,
+    nodeId: null,
+    nodeLabel: '',
+    totalNodes: 0,
   });
 
   useEffect(() => {
@@ -126,7 +195,7 @@ export default function MindmapEditor() {
 
       clearTimeout(slowTimer);
       setMindmap(response.result.mindmap);
-      setMindmapNodes(response.result.nodes);
+      setMindmapNodes(uniqueFlatNodes(response.result.nodes));
       setSelectedNodeId(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load mindmap');
@@ -138,7 +207,7 @@ export default function MindmapEditor() {
 
   const toMindElixirData = useCallback(
     (nodes: MindmapNode[]): MindElixirData => {
-      const allNodes = flattenNodes(nodes);
+      const allNodes = uniqueFlatNodes(nodes);
       const nodeMap = new Map<string, MindmapNode>();
       allNodes.forEach((node) => nodeMap.set(node.id, node));
       nodeLookupRef.current = nodeMap;
@@ -184,6 +253,28 @@ export default function MindmapEditor() {
       setSelectedNodeId(null);
     }
   }, [interactionMode]);
+
+  useEffect(() => {
+    if (interactionMode !== 'EDIT' || !selectedNodeId || deleteConfirm.open) return;
+
+    const handleOutsideClick = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (editPanelRef.current?.contains(target)) return;
+
+      // Ignore clicks inside delete confirmation modal so confirm/cancel can run.
+      if (target instanceof HTMLElement && target.closest('.delete-modal-backdrop')) return;
+
+      // Do not close when clicking inside the mindmap canvas; this allows selecting another node.
+      if (mindContainerRef.current?.contains(target)) return;
+
+      setSelectedNodeId(null);
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, [interactionMode, selectedNodeId, deleteConfirm.open]);
 
   useEffect(() => {
     if (!mindContainerRef.current || !mindmap) return;
@@ -251,7 +342,20 @@ export default function MindmapEditor() {
       color: mindmapNode.color,
       icon: mindmapNode.icon,
     });
+
+    setNewNodeForm((prev) => ({
+      ...prev,
+      color: mindmapNode.color || prev.color,
+    }));
+
+    setNodePanelMode('EDIT');
   }, [selectedNodeId]);
+
+  useEffect(() => {
+    if (!selectedNodeId && deleteConfirm.open) {
+      setDeleteConfirm({ open: false, nodeId: null, nodeLabel: '', totalNodes: 0 });
+    }
+  }, [selectedNodeId, deleteConfirm.open]);
 
   const handleSaveNode = async () => {
     if (!selectedNodeId || !mindmap) return;
@@ -261,35 +365,147 @@ export default function MindmapEditor() {
       const mindmapNode = nodeLookupRef.current.get(selectedNodeId);
       if (!mindmapNode) return;
 
+      const nextContent = editForm.content.trim();
+      if (!nextContent) {
+        alert('Nội dung node không được để trống');
+        return;
+      }
+
+      const previousNodes = uniqueFlatNodes(mindmapNodes);
+      const optimisticNodes = previousNodes.map((node) =>
+        node.id === mindmapNode.id
+          ? {
+              ...node,
+              content: nextContent,
+              color: editForm.color,
+              icon: editForm.icon,
+            }
+          : node
+      );
+
+      setMindmapNodes(optimisticNodes);
+
       await MindmapService.updateNode(mindmap.id, mindmapNode.id, {
-        content: editForm.content,
+        content: nextContent,
         color: editForm.color,
         icon: editForm.icon,
       });
-
-      if (id) await loadMindmap(id);
       setSelectedNodeId(null);
     } catch (err) {
+      if (id) await loadMindmap(id);
       alert(err instanceof Error ? err.message : 'Failed to update node');
     } finally {
       setSaving(false);
     }
   };
 
-  const handleDeleteNode = async () => {
+  const handleCreateChildNode = async () => {
     if (!selectedNodeId || !mindmap) return;
-    if (!confirm('Bạn có chắc chắn muốn xóa node này?')) return;
+
+    const content = newNodeForm.content.trim();
+    if (!content) {
+      alert('Vui lòng nhập nội dung node mới');
+      return;
+    }
+
+    const siblingCount = uniqueFlatNodes(mindmapNodes).filter(
+      (node) => node.parentId === selectedNodeId
+    ).length;
 
     try {
-      const mindmapNode = nodeLookupRef.current.get(selectedNodeId);
-      if (!mindmapNode) return;
+      setCreatingNode(true);
 
-      await MindmapService.deleteNode(mindmap.id, mindmapNode.id);
+      const tempId = `temp-${Date.now()}`;
+      const tempNode: MindmapNode = {
+        id: tempId,
+        mindmapId: mindmap.id,
+        parentId: selectedNodeId,
+        content,
+        color: newNodeForm.color,
+        icon: newNodeForm.icon,
+        displayOrder: siblingCount + 1,
+        children: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
 
-      if (id) await loadMindmap(id);
-      setSelectedNodeId(null);
+      setMindmapNodes((prev) => [...uniqueFlatNodes(prev), tempNode]);
+
+      const response = await MindmapService.createNode({
+        mindmapId: mindmap.id,
+        parentId: selectedNodeId,
+        content,
+        color: newNodeForm.color,
+        icon: newNodeForm.icon,
+        displayOrder: siblingCount + 1,
+      });
+
+      setMindmapNodes((prev) =>
+        uniqueFlatNodes(prev).map((node) =>
+          node.id === tempId ? { ...response.result, children: [] } : node
+        )
+      );
+      setNewNodeForm((prev) => ({ ...prev, content: '' }));
+      setNodePanelMode('EDIT');
     } catch (err) {
+      setMindmapNodes((prev) =>
+        uniqueFlatNodes(prev).filter((node) => !node.id.startsWith('temp-'))
+      );
+      alert(err instanceof Error ? err.message : 'Failed to create node');
+    } finally {
+      setCreatingNode(false);
+    }
+  };
+
+  const handleRequestDeleteNode = () => {
+    if (!selectedNodeId) return;
+
+    const mindmapNode = nodeLookupRef.current.get(selectedNodeId);
+    if (!mindmapNode) return;
+
+    const deleteOrder = getSubtreeDeleteOrder(mindmapNodes, mindmapNode.id);
+    setDeleteConfirm({
+      open: true,
+      nodeId: mindmapNode.id,
+      nodeLabel: mindmapNode.content || 'Node không tên',
+      totalNodes: deleteOrder.length,
+    });
+  };
+
+  const closeDeleteConfirm = () => {
+    if (deletingNode) return;
+    setDeleteConfirm({ open: false, nodeId: null, nodeLabel: '', totalNodes: 0 });
+  };
+
+  const handleDeleteNode = async () => {
+    if (!mindmap || !deleteConfirm.nodeId) return;
+
+    const targetNodeId = deleteConfirm.nodeId;
+    const previousNodes = uniqueFlatNodes(mindmapNodes);
+    const targetNode = previousNodes.find((node) => node.id === targetNodeId);
+
+    if (!targetNode) {
+      setDeleteConfirm({ open: false, nodeId: null, nodeLabel: '', totalNodes: 0 });
+      alert('Không tìm thấy node để xóa, vui lòng thử lại.');
+      return;
+    }
+
+    try {
+      // Close modal and update UI immediately so users see instant feedback.
+      setDeleteConfirm({ open: false, nodeId: null, nodeLabel: '', totalNodes: 0 });
+      setDeletingNode(true);
+      setMindmapNodes(removeNodeAndDescendants(previousNodes, targetNodeId));
+      setSelectedNodeId(null);
+
+      const deleteOrder = getSubtreeDeleteOrder(previousNodes, targetNodeId);
+      for (const nodeId of deleteOrder) {
+        await MindmapService.deleteNode(nodeId);
+      }
+    } catch (err) {
+      if (id) await loadMindmap(id);
       alert(err instanceof Error ? err.message : 'Failed to delete node');
+    } finally {
+      setDeletingNode(false);
     }
   };
 
@@ -404,64 +620,178 @@ export default function MindmapEditor() {
           </div>
 
           {interactionMode === 'EDIT' && selectedNodeId && (
-            <div className="edit-panel">
-              <h3>Chỉnh sửa Node</h3>
-              <div className="form-group">
-                <label>Nội dung</label>
-                <input
-                  type="text"
-                  value={editForm.content}
-                  onChange={(e) => setEditForm({ ...editForm, content: e.target.value })}
-                />
-              </div>
-              <div className="form-group">
-                <label>Màu sắc</label>
-                <input
-                  type="color"
-                  value={editForm.color}
-                  onChange={(e) => setEditForm({ ...editForm, color: e.target.value })}
-                />
-              </div>
-              <div className="form-group">
-                <label>Icon</label>
-                <select
-                  value={editForm.icon}
-                  onChange={(e) => setEditForm({ ...editForm, icon: e.target.value })}
+            <div className="edit-panel" ref={editPanelRef}>
+              <h3>{nodePanelMode === 'EDIT' ? 'Chỉnh sửa Node' : 'Thêm node con'}</h3>
+              <div className="panel-tabs" role="tablist" aria-label="Node actions">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={nodePanelMode === 'EDIT'}
+                  className={`panel-tab ${nodePanelMode === 'EDIT' ? 'active' : ''}`}
+                  onClick={() => setNodePanelMode('EDIT')}
                 >
-                  <option value="lightbulb">💡 Lightbulb</option>
-                  <option value="brain">🧠 Brain</option>
-                  <option value="bookmark">🔖 Bookmark</option>
-                  <option value="check-circle">✅ Check</option>
-                  <option value="info-circle">ℹ️ Info</option>
-                  <option value="book">📚 Book</option>
-                  <option value="target">🎯 Target</option>
-                  <option value="star">⭐ Star</option>
-                  <option value="sparkles">✨ Sparkles</option>
-                  <option value="fire">🔥 Fire</option>
-                  <option value="rocket">🚀 Rocket</option>
-                  <option value="trophy">🏆 Trophy</option>
-                  <option value="medal">🏅 Medal</option>
-                  <option value="pencil">✏️ Pencil</option>
-                  <option value="chart">📊 Chart</option>
-                  <option value="flag">🚩 Flag</option>
-                  <option value="heart">❤️ Heart</option>
-                  <option value="link">🔗 Link</option>
-                </select>
-              </div>
-              <div className="panel-actions">
-                <button onClick={() => setSelectedNodeId(null)} className="btn-cancel">
-                  Hủy
+                  Chỉnh sửa
                 </button>
-                <button onClick={handleDeleteNode} className="btn-delete">
-                  Xóa
-                </button>
-                <button onClick={handleSaveNode} disabled={saving} className="btn-save">
-                  {saving ? 'Đang lưu...' : 'Lưu'}
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={nodePanelMode === 'ADD'}
+                  className={`panel-tab ${nodePanelMode === 'ADD' ? 'active' : ''}`}
+                  onClick={() => setNodePanelMode('ADD')}
+                >
+                  Thêm node
                 </button>
               </div>
+
+              {nodePanelMode === 'EDIT' ? (
+                <>
+                  <div className="form-group">
+                    <label>Nội dung</label>
+                    <input
+                      type="text"
+                      value={editForm.content}
+                      onChange={(e) => setEditForm({ ...editForm, content: e.target.value })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Màu sắc</label>
+                    <input
+                      type="color"
+                      value={editForm.color}
+                      onChange={(e) => setEditForm({ ...editForm, color: e.target.value })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Icon</label>
+                    <select
+                      value={editForm.icon}
+                      onChange={(e) => setEditForm({ ...editForm, icon: e.target.value })}
+                    >
+                      <option value="lightbulb">💡 Lightbulb</option>
+                      <option value="brain">🧠 Brain</option>
+                      <option value="bookmark">🔖 Bookmark</option>
+                      <option value="check-circle">✅ Check</option>
+                      <option value="info-circle">ℹ️ Info</option>
+                      <option value="book">📚 Book</option>
+                      <option value="target">🎯 Target</option>
+                      <option value="star">⭐ Star</option>
+                      <option value="sparkles">✨ Sparkles</option>
+                      <option value="fire">🔥 Fire</option>
+                      <option value="rocket">🚀 Rocket</option>
+                      <option value="trophy">🏆 Trophy</option>
+                      <option value="medal">🏅 Medal</option>
+                      <option value="pencil">✏️ Pencil</option>
+                      <option value="chart">📊 Chart</option>
+                      <option value="flag">🚩 Flag</option>
+                      <option value="heart">❤️ Heart</option>
+                      <option value="link">🔗 Link</option>
+                    </select>
+                  </div>
+                  <div className="panel-actions">
+                    <button onClick={() => setSelectedNodeId(null)} className="btn-cancel">
+                      Hủy
+                    </button>
+                    <button onClick={handleRequestDeleteNode} className="btn-delete">
+                      Xóa
+                    </button>
+                    <button onClick={handleSaveNode} disabled={saving} className="btn-save">
+                      {saving ? 'Đang lưu...' : 'Lưu'}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="add-node-block tab-mode">
+                  <div className="form-group">
+                    <label>Nội dung node mới</label>
+                    <input
+                      type="text"
+                      value={newNodeForm.content}
+                      onChange={(e) => setNewNodeForm({ ...newNodeForm, content: e.target.value })}
+                      placeholder="Nhập nội dung node con..."
+                    />
+                  </div>
+                  <div className="form-group row-inline">
+                    <div>
+                      <label>Màu</label>
+                      <input
+                        type="color"
+                        value={newNodeForm.color}
+                        onChange={(e) => setNewNodeForm({ ...newNodeForm, color: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label>Icon</label>
+                      <select
+                        value={newNodeForm.icon}
+                        onChange={(e) => setNewNodeForm({ ...newNodeForm, icon: e.target.value })}
+                      >
+                        <option value="lightbulb">💡 Lightbulb</option>
+                        <option value="brain">🧠 Brain</option>
+                        <option value="bookmark">🔖 Bookmark</option>
+                        <option value="check-circle">✅ Check</option>
+                        <option value="info-circle">ℹ️ Info</option>
+                        <option value="book">📚 Book</option>
+                        <option value="target">🎯 Target</option>
+                        <option value="star">⭐ Star</option>
+                        <option value="sparkles">✨ Sparkles</option>
+                        <option value="fire">🔥 Fire</option>
+                        <option value="rocket">🚀 Rocket</option>
+                        <option value="trophy">🏆 Trophy</option>
+                        <option value="medal">🏅 Medal</option>
+                        <option value="pencil">✏️ Pencil</option>
+                        <option value="chart">📊 Chart</option>
+                        <option value="flag">🚩 Flag</option>
+                        <option value="heart">❤️ Heart</option>
+                        <option value="link">🔗 Link</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="panel-actions">
+                    <button onClick={() => setSelectedNodeId(null)} className="btn-cancel">
+                      Hủy
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-add-child"
+                      onClick={handleCreateChildNode}
+                      disabled={creatingNode}
+                    >
+                      {creatingNode ? 'Đang thêm node...' : 'Thêm node con'}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
+
+        {deleteConfirm.open && (
+          <div className="delete-modal-backdrop" onClick={closeDeleteConfirm}>
+            <div
+              className="delete-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Xác nhận xóa node"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <h4>Xác nhận xóa node</h4>
+              <p>
+                Bạn sắp xóa node <strong>{deleteConfirm.nodeLabel}</strong>.
+              </p>
+              <p className="delete-modal-impact">
+                Tổng số node sẽ bị xóa: <strong>{deleteConfirm.totalNodes}</strong>
+              </p>
+              <div className="delete-modal-actions">
+                <button className="btn-cancel" onClick={closeDeleteConfirm} disabled={deletingNode}>
+                  Hủy
+                </button>
+                <button className="btn-delete" onClick={handleDeleteNode} disabled={deletingNode}>
+                  {deletingNode ? 'Đang xóa...' : 'Xác nhận xóa'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );
