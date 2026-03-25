@@ -1,12 +1,13 @@
 import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
 import type {
-  RegisterRequest,
-  LoginRequest,
   ApiResponse,
-  User,
+  LoginRequest,
   LoginResponse,
+  RegisterRequest,
+  RegisterResult,
   RoleSelectionRequest,
 } from '../../types/auth.types';
+import { ApiError } from '../../types/auth.types';
 
 export class AuthService {
   private static async extractErrorMessage(response: Response, fallback: string): Promise<string> {
@@ -32,7 +33,7 @@ export class AuthService {
   /**
    * Register a new user
    */
-  static async register(data: RegisterRequest): Promise<ApiResponse<User>> {
+  static async register(data: RegisterRequest): Promise<ApiResponse<RegisterResult>> {
     const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.REGISTER}`, {
       method: 'POST',
       headers: {
@@ -43,8 +44,48 @@ export class AuthService {
     });
 
     if (!response.ok) {
-      const message = await this.extractErrorMessage(response, 'Registration failed');
-      throw new Error(message);
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        try {
+          const errorJson = await response.json();
+          if (typeof errorJson?.code === 'number') {
+            throw new ApiError(errorJson.code, errorJson.message || 'Đăng ký thất bại');
+          }
+        } catch (e) {
+          if (e instanceof ApiError) throw e;
+        }
+      }
+      throw new ApiError(0, 'Đăng ký thất bại. Vui lòng thử lại.');
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Confirm email with token
+   */
+  static async confirmEmail(token: string): Promise<ApiResponse<null>> {
+    const url = new URL(`${API_BASE_URL}${API_ENDPOINTS.CONFIRM_EMAIL}`, window.location.origin);
+    url.searchParams.set('token', token);
+
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: { accept: '*/*' },
+    });
+
+    if (!response.ok) {
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        try {
+          const errorJson = await response.json();
+          if (typeof errorJson?.code === 'number') {
+            throw new ApiError(errorJson.code, errorJson.message || 'Xác nhận email thất bại');
+          }
+        } catch (e) {
+          if (e instanceof ApiError) throw e;
+        }
+      }
+      throw new ApiError(0, 'Xác nhận email thất bại. Vui lòng thử lại.');
     }
 
     return response.json();
@@ -64,8 +105,19 @@ export class AuthService {
     });
 
     if (!response.ok) {
-      const message = await this.extractErrorMessage(response, 'Login failed');
-      throw new Error(message);
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        try {
+          const errorJson = await response.json();
+          if (typeof errorJson?.code === 'number') {
+            throw new ApiError(errorJson.code, errorJson.message || 'Đăng nhập thất bại');
+          }
+        } catch (e) {
+          if (e instanceof ApiError) throw e;
+        }
+      }
+      const message = await this.extractErrorMessage(response, 'Đăng nhập thất bại');
+      throw new ApiError(0, message);
     }
 
     return response.json();
@@ -191,7 +243,8 @@ export class AuthService {
 
     // scope can be a space-separated string containing roles and permissions
     // e.g., "ROLE_TEACHER VIEW_CONTENT EDIT_CONTENT"
-    return decoded.scope.split(' ')
+    return decoded.scope
+      .split(' ')
       .filter((s) => s.startsWith('ROLE_'))
       .map((s) => s.replace('ROLE_', '').toLowerCase());
   }

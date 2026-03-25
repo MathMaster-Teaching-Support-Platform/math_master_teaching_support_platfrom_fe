@@ -8,6 +8,7 @@ export const API_ENDPOINTS = {
   // Auth
   REGISTER: '/auth/register',
   LOGIN: '/auth/login',
+  CONFIRM_EMAIL: '/auth/confirm-email',
 
   // Users (self-service)
   USERS_MY_INFO: '/users/my-info',
@@ -107,8 +108,7 @@ export const API_ENDPOINTS = {
   ROADMAP_ENTRY_TEST_SUBMIT: (roadmapId: string) =>
     `/student/roadmaps/${roadmapId}/entry-test/submit`,
   STUDENT_ROADMAP_FEEDBACK: (roadmapId: string) => `/student/roadmaps/${roadmapId}/feedback`,
-  STUDENT_ROADMAP_FEEDBACK_ME: (roadmapId: string) =>
-    `/student/roadmaps/${roadmapId}/feedback/me`,
+  STUDENT_ROADMAP_FEEDBACK_ME: (roadmapId: string) => `/student/roadmaps/${roadmapId}/feedback/me`,
   STUDENT_TOPIC_MATERIALS: (topicId: string) => `/student/roadmaps/topics/${topicId}/materials`,
   STUDENT_TOPIC_MATERIALS_BY_TYPE: (topicId: string, resourceType: string) =>
     `/student/roadmaps/topics/${topicId}/materials-by-type?resourceType=${resourceType}`,

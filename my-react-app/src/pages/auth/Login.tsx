@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthService } from '../../services/api/auth.service';
 import type { LoginRequest } from '../../types/auth.types';
+import { ApiError } from '../../types/auth.types';
 import './Auth.css';
 
 const Login: React.FC = () => {
@@ -52,9 +53,15 @@ const Login: React.FC = () => {
         navigate(dashboardUrl);
       }
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.'
-      );
+      if (err instanceof ApiError && err.code === 1140) {
+        setError('Tài khoản chưa được kích hoạt. Vui lòng kiểm tra email để xác nhận tài khoản.');
+      } else {
+        setError(
+          err instanceof Error
+            ? err.message
+            : 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.'
+        );
+      }
     } finally {
       setIsLoading(false);
     }
