@@ -4,6 +4,7 @@ import type {
   CreateAdminRoadmapRequest,
   CreateRoadmapEntryTestRequest,
   CreateRoadmapTopicRequest,
+  SubmitRoadmapFeedbackRequest,
   SubmitRoadmapEntryTestRequest,
   TopicMaterialResourceType,
   UpdateAdminRoadmapRequest,
@@ -13,19 +14,23 @@ import type {
 
 export const roadmapKeys = {
   all: ['roadmaps'] as const,
-  list: () => [...roadmapKeys.all, 'list'] as const,
+  list: (name = '', page = 0, size = 20) => [...roadmapKeys.all, 'list', name, page, size] as const,
   detail: (roadmapId: string) => [...roadmapKeys.all, 'detail', roadmapId] as const,
   adminDetail: (roadmapId: string) => [...roadmapKeys.all, 'admin', 'detail', roadmapId] as const,
   student: (roadmapId?: string) => [...roadmapKeys.all, 'student', roadmapId ?? 'current'] as const,
-  adminList: () => [...roadmapKeys.all, 'admin', 'list'] as const,
+  adminList: (name = '', page = 0, size = 20) =>
+    [...roadmapKeys.all, 'admin', 'list', name, page, size] as const,
   topicMaterials: (topicId: string, resourceType?: TopicMaterialResourceType) =>
     [...roadmapKeys.all, 'topic-materials', topicId, resourceType ?? 'ALL'] as const,
+  myFeedback: (roadmapId: string) => [...roadmapKeys.all, 'feedback', 'me', roadmapId] as const,
+  adminFeedback: (roadmapId: string, page = 0, size = 20) =>
+    [...roadmapKeys.all, 'feedback', 'admin', roadmapId, page, size] as const,
 };
 
-export function useRoadmaps() {
+export function useRoadmaps(name = '', page = 0, size = 20) {
   return useQuery({
-    queryKey: roadmapKeys.list(),
-    queryFn: () => RoadmapService.getRoadmaps(),
+    queryKey: roadmapKeys.list(name, page, size),
+    queryFn: () => RoadmapService.getRoadmaps({ name, page, size }),
   });
 }
 
@@ -66,10 +71,10 @@ export function useUpdateRoadmapProgress() {
   });
 }
 
-export function useAdminRoadmaps() {
+export function useAdminRoadmaps(name = '', page = 0, size = 20) {
   return useQuery({
-    queryKey: roadmapKeys.adminList(),
-    queryFn: () => RoadmapService.getAdminRoadmaps(),
+    queryKey: roadmapKeys.adminList(name, page, size),
+    queryFn: () => RoadmapService.getAdminRoadmaps({ name, page, size }),
   });
 }
 
@@ -80,7 +85,7 @@ export function useCreateRoadmap() {
     mutationFn: (payload: CreateAdminRoadmapRequest) => RoadmapService.createRoadmap(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: roadmapKeys.adminList() });
-      queryClient.invalidateQueries({ queryKey: roadmapKeys.list() });
+      queryClient.invalidateQueries({ queryKey: roadmapKeys.list('', 0, 20) });
     },
   });
 }
@@ -95,7 +100,7 @@ export function useUpdateRoadmap() {
       queryClient.invalidateQueries({ queryKey: roadmapKeys.adminList() });
       queryClient.invalidateQueries({ queryKey: roadmapKeys.detail(variables.roadmapId) });
       queryClient.invalidateQueries({ queryKey: roadmapKeys.adminDetail(variables.roadmapId) });
-      queryClient.invalidateQueries({ queryKey: roadmapKeys.list() });
+      queryClient.invalidateQueries({ queryKey: roadmapKeys.list('', 0, 20) });
     },
   });
 }
@@ -119,7 +124,7 @@ export function useAddRoadmapTopic() {
       queryClient.invalidateQueries({ queryKey: roadmapKeys.detail(variables.roadmapId) });
       queryClient.invalidateQueries({ queryKey: roadmapKeys.student(variables.roadmapId) });
       queryClient.invalidateQueries({ queryKey: roadmapKeys.adminList() });
-      queryClient.invalidateQueries({ queryKey: roadmapKeys.list() });
+      queryClient.invalidateQueries({ queryKey: roadmapKeys.list('', 0, 20) });
     },
   });
 }
@@ -142,7 +147,7 @@ export function useUpdateRoadmapTopic() {
       queryClient.invalidateQueries({ queryKey: roadmapKeys.detail(variables.roadmapId) });
       queryClient.invalidateQueries({ queryKey: roadmapKeys.student(variables.roadmapId) });
       queryClient.invalidateQueries({ queryKey: roadmapKeys.adminList() });
-      queryClient.invalidateQueries({ queryKey: roadmapKeys.list() });
+      queryClient.invalidateQueries({ queryKey: roadmapKeys.list('', 0, 20) });
     },
   });
 }
@@ -158,7 +163,19 @@ export function useArchiveRoadmapTopic() {
       queryClient.invalidateQueries({ queryKey: roadmapKeys.detail(variables.roadmapId) });
       queryClient.invalidateQueries({ queryKey: roadmapKeys.student(variables.roadmapId) });
       queryClient.invalidateQueries({ queryKey: roadmapKeys.adminList() });
-      queryClient.invalidateQueries({ queryKey: roadmapKeys.list() });
+      queryClient.invalidateQueries({ queryKey: roadmapKeys.list('', 0, 20) });
+    },
+  });
+}
+
+export function useDeleteRoadmap() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (roadmapId: string) => RoadmapService.deleteRoadmap(roadmapId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: roadmapKeys.adminList() });
+      queryClient.invalidateQueries({ queryKey: roadmapKeys.list('', 0, 20) });
     },
   });
 }
@@ -180,5 +197,34 @@ export function useSubmitRoadmapEntryTest() {
       queryClient.invalidateQueries({ queryKey: roadmapKeys.student(variables.roadmapId) });
       queryClient.invalidateQueries({ queryKey: roadmapKeys.detail(variables.roadmapId) });
     },
+  });
+}
+
+export function useSubmitRoadmapFeedback() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ roadmapId, payload }: { roadmapId: string; payload: SubmitRoadmapFeedbackRequest }) =>
+      RoadmapService.submitRoadmapFeedback(roadmapId, payload),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: roadmapKeys.myFeedback(variables.roadmapId) });
+      queryClient.invalidateQueries({ queryKey: roadmapKeys.adminFeedback(variables.roadmapId) });
+    },
+  });
+}
+
+export function useMyRoadmapFeedback(roadmapId: string) {
+  return useQuery({
+    queryKey: roadmapKeys.myFeedback(roadmapId),
+    queryFn: () => RoadmapService.getMyRoadmapFeedback(roadmapId),
+    enabled: !!roadmapId,
+  });
+}
+
+export function useAdminRoadmapFeedback(roadmapId: string, page = 0, size = 20) {
+  return useQuery({
+    queryKey: roadmapKeys.adminFeedback(roadmapId, page, size),
+    queryFn: () => RoadmapService.getAdminRoadmapFeedback(roadmapId, page, size),
+    enabled: !!roadmapId,
   });
 }

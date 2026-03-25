@@ -26,6 +26,7 @@ export const API_ENDPOINTS = {
   // Assessments
   ASSESSMENTS: '/assessments',
   ASSESSMENTS_MY: '/assessments/my',
+  ASSESSMENTS_SEARCH: '/assessments/search',
   ASSESSMENTS_DETAIL: (id: string) => `/assessments/${id}`,
   ASSESSMENTS_PREVIEW: (id: string) => `/assessments/${id}/preview`,
   ASSESSMENTS_PUBLISH_SUMMARY: (id: string) => `/assessments/${id}/publish-summary`,
@@ -87,6 +88,9 @@ export const API_ENDPOINTS = {
   LESSON_DETAIL: (lessonId: string) => `/lessons/${lessonId}`,
   CHAPTER_LESSONS: (chapterId: string) => `/chapters/${chapterId}/lessons`,
 
+  // Documents
+  DOCUMENTS_SEARCH: '/documents/search',
+
   // Chapters
   CHAPTERS_BY_SUBJECT: (subjectId: string) => `/chapters/subject/${subjectId}`,
 
@@ -102,22 +106,20 @@ export const API_ENDPOINTS = {
   ROADMAP_PROGRESS: (roadmapId: string) => `/roadmaps/${roadmapId}/progress`,
   ROADMAP_ENTRY_TEST_SUBMIT: (roadmapId: string) =>
     `/student/roadmaps/${roadmapId}/entry-test/submit`,
+  STUDENT_ROADMAP_FEEDBACK: (roadmapId: string) => `/student/roadmaps/${roadmapId}/feedback`,
+  STUDENT_ROADMAP_FEEDBACK_ME: (roadmapId: string) =>
+    `/student/roadmaps/${roadmapId}/feedback/me`,
   STUDENT_TOPIC_MATERIALS: (topicId: string) => `/student/roadmaps/topics/${topicId}/materials`,
   STUDENT_TOPIC_MATERIALS_BY_TYPE: (topicId: string, resourceType: string) =>
     `/student/roadmaps/topics/${topicId}/materials-by-type?resourceType=${resourceType}`,
-  TEACHER_ROADMAPS: '/teacher/roadmaps',
-  TEACHER_ROADMAP_DETAIL: (roadmapId: string) => `/teacher/roadmaps/${roadmapId}`,
-  TEACHER_ROADMAP_TOPICS: (roadmapId: string) => `/teacher/roadmaps/${roadmapId}/topics`,
-  TEACHER_ROADMAP_TOPIC_DETAIL: (roadmapId: string, topicId: string) =>
-    `/teacher/roadmaps/${roadmapId}/topics/${topicId}`,
-  TEACHER_ROADMAP_ENTRY_TEST: (roadmapId: string) => `/teacher/roadmaps/${roadmapId}/entry-test`,
-  // Backward compatibility aliases
-  ADMIN_ROADMAPS: '/teacher/roadmaps',
-  ADMIN_ROADMAP_DETAIL: (roadmapId: string) => `/teacher/roadmaps/${roadmapId}`,
-  ADMIN_ROADMAP_TOPICS: (roadmapId: string) => `/teacher/roadmaps/${roadmapId}/topics`,
+  ADMIN_ROADMAPS: '/admin/roadmaps',
+  ADMIN_ROADMAP_DETAIL: (roadmapId: string) => `/admin/roadmaps/${roadmapId}`,
+  ADMIN_ROADMAP_TOPICS: (roadmapId: string) => `/admin/roadmaps/${roadmapId}/topics`,
   ADMIN_ROADMAP_TOPIC_DETAIL: (roadmapId: string, topicId: string) =>
-    `/teacher/roadmaps/${roadmapId}/topics/${topicId}`,
-  ADMIN_ROADMAP_ENTRY_TEST: (roadmapId: string) => `/teacher/roadmaps/${roadmapId}/entry-test`,
+    `/admin/roadmaps/${roadmapId}/topics/${topicId}`,
+  ADMIN_ROADMAP_RESOURCE_OPTIONS: '/admin/roadmaps/resource-options',
+  ADMIN_ROADMAP_FEEDBACK: (roadmapId: string) => `/admin/roadmaps/${roadmapId}/feedback`,
+  ADMIN_ROADMAP_ENTRY_TEST: (roadmapId: string) => `/admin/roadmaps/${roadmapId}/entry-test`,
 
   // Lesson slide generator flow
   SCHOOL_GRADES: '/school-grades',

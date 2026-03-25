@@ -7,7 +7,12 @@ import type {
   RoadmapApiResponse,
   RoadmapCatalogItem,
   RoadmapDetail,
+  RoadmapFeedbackPage,
+  RoadmapFeedbackResponse,
+  RoadmapResourceOption,
+  RoadmapResourceOptionType,
   RoadmapTopicResponse,
+  SubmitRoadmapFeedbackRequest,
   SubmitRoadmapEntryTestRequest,
   SubmitRoadmapEntryTestResult,
   StudentRoadmapSnapshot,
@@ -19,6 +24,15 @@ import type {
 import { AuthService } from './auth.service';
 
 export class RoadmapService {
+  static buildPageQuery(params?: { name?: string; page?: number; size?: number }) {
+    const query = new URLSearchParams();
+    if (params?.name) query.set('name', params.name);
+    if (typeof params?.page === 'number') query.set('page', String(params.page));
+    if (typeof params?.size === 'number') query.set('size', String(params.size));
+    const queryString = query.toString();
+    return queryString ? `?${queryString}` : '';
+  }
+
     private static parseApiError(payload: unknown, fallback: string): Error {
       const p = payload as {
         message?: string;
@@ -49,9 +63,13 @@ export class RoadmapService {
     };
   }
 
-  static async getRoadmaps(): Promise<RoadmapApiResponse<RoadmapCatalogItem[]>> {
+  static async getRoadmaps(params?: {
+    name?: string;
+    page?: number;
+    size?: number;
+  }): Promise<RoadmapApiResponse<RoadmapCatalogItem[]>> {
     const headers = await this.getHeaders();
-    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ROADMAPS}`, {
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ROADMAPS}${this.buildPageQuery(params)}`, {
       method: 'GET',
       headers,
     });
@@ -135,9 +153,13 @@ export class RoadmapService {
     return response.json();
   }
 
-  static async getAdminRoadmaps(): Promise<RoadmapApiResponse<RoadmapCatalogItem[]>> {
+  static async getAdminRoadmaps(params?: {
+    name?: string;
+    page?: number;
+    size?: number;
+  }): Promise<RoadmapApiResponse<RoadmapCatalogItem[]>> {
     const headers = await this.getHeaders();
-    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ADMIN_ROADMAPS}`, {
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ADMIN_ROADMAPS}${this.buildPageQuery(params)}`, {
       method: 'GET',
       headers,
     });
@@ -145,6 +167,21 @@ export class RoadmapService {
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
       throw new Error((error as { message?: string }).message || 'Failed to fetch admin roadmaps');
+    }
+
+    return response.json();
+  }
+
+  static async deleteRoadmap(roadmapId: string): Promise<RoadmapApiResponse<string>> {
+    const headers = await this.getHeaders();
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ADMIN_ROADMAP_DETAIL(roadmapId)}`, {
+      method: 'DELETE',
+      headers,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error((error as { message?: string }).message || 'Failed to archive roadmap');
     }
 
     return response.json();
@@ -271,6 +308,37 @@ export class RoadmapService {
     return response.json();
   }
 
+  static async getRoadmapResourceOptions(params: {
+    type: RoadmapResourceOptionType;
+    chapterId?: string;
+    lessonId?: string;
+    name?: string;
+  }): Promise<RoadmapApiResponse<RoadmapResourceOption[]>> {
+    const headers = await this.getHeaders();
+    const query = new URLSearchParams();
+    query.set('type', params.type);
+    if (params.chapterId) query.set('chapterId', params.chapterId);
+    if (params.lessonId) query.set('lessonId', params.lessonId);
+    if (params.name?.trim()) query.set('name', params.name.trim());
+
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.ADMIN_ROADMAP_RESOURCE_OPTIONS}?${query.toString()}`,
+      {
+        method: 'GET',
+        headers,
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(
+        (error as { message?: string }).message || 'Failed to fetch roadmap resource options'
+      );
+    }
+
+    return response.json();
+  }
+
   static async getStudentTopicMaterials(
     topicId: string,
     resourceType?: TopicMaterialResourceType
@@ -307,6 +375,75 @@ export class RoadmapService {
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
       throw new Error((error as { message?: string }).message || 'Failed to submit roadmap entry test');
+    }
+
+    return response.json();
+  }
+
+  static async submitRoadmapFeedback(
+    roadmapId: string,
+    payload: SubmitRoadmapFeedbackRequest
+  ): Promise<RoadmapApiResponse<RoadmapFeedbackResponse>> {
+    const headers = await this.getHeaders();
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.STUDENT_ROADMAP_FEEDBACK(roadmapId)}`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      const message = (error as { message?: string }).message || 'Failed to submit roadmap feedback';
+      throw new Error(`${response.status} ${response.statusText}: ${message}`);
+    }
+
+    return response.json();
+  }
+
+  static async getMyRoadmapFeedback(
+    roadmapId: string
+  ): Promise<RoadmapApiResponse<RoadmapFeedbackResponse | null>> {
+    const headers = await this.getHeaders();
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.STUDENT_ROADMAP_FEEDBACK_ME(roadmapId)}`, {
+      method: 'GET',
+      headers,
+    });
+
+    if (response.status === 404) {
+      return {
+        code: 1000,
+        result: null,
+      };
+    }
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      const message = (error as { message?: string }).message || 'Failed to fetch my roadmap feedback';
+      throw new Error(`${response.status} ${response.statusText}: ${message}`);
+    }
+
+    return response.json();
+  }
+
+  static async getAdminRoadmapFeedback(
+    roadmapId: string,
+    page = 0,
+    size = 20
+  ): Promise<RoadmapApiResponse<RoadmapFeedbackPage>> {
+    const headers = await this.getHeaders();
+    const query = new URLSearchParams({ page: String(page), size: String(size) });
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.ADMIN_ROADMAP_FEEDBACK(roadmapId)}?${query.toString()}`,
+      {
+        method: 'GET',
+        headers,
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      const message = (error as { message?: string }).message || 'Failed to fetch roadmap feedback list';
+      throw new Error(`${response.status} ${response.statusText}: ${message}`);
     }
 
     return response.json();

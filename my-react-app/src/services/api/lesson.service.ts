@@ -49,9 +49,22 @@ export class LessonService {
     return response.json();
   }
 
-  static async getLessonsByChapter(chapterId: string): Promise<ApiResponse<LessonResponse[]>> {
+  static async getLessonsByChapter(
+    chapterId: string,
+    name?: string
+  ): Promise<ApiResponse<LessonResponse[]>> {
     const headers = await this.getHeaders();
-    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.CHAPTER_LESSONS(chapterId)}`, {
+    const query = new URLSearchParams();
+    if (name?.trim()) {
+      query.set('name', name.trim());
+    }
+
+    const queryString = query.toString();
+    const endpoint = `${API_BASE_URL}${API_ENDPOINTS.LESSONS_BY_CHAPTER(chapterId)}${
+      queryString ? `?${queryString}` : ''
+    }`;
+
+    const response = await fetch(endpoint, {
       method: 'GET',
       headers,
     });

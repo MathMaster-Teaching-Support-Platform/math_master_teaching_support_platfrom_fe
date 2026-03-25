@@ -55,7 +55,6 @@ const teacherGroups: MenuGroup[] = [
     label: 'Nội dung',
     items: [
       { path: '/teacher/courses', icon: BookOpen, label: 'Giáo Trình' },
-      { path: '/teacher/roadmaps', icon: Workflow, label: 'Lộ trình' },
       { path: '/teacher/materials', icon: FolderKanban, label: 'Tài liệu' },
       { path: '/teacher/mindmaps', icon: Workflow, label: 'Mindmap' },
       { path: '/teacher/question-templates', icon: FileQuestion, label: 'Mẫu câu hỏi' },

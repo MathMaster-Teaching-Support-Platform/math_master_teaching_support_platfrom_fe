@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AdminRoadmapEditor } from '../../components/roadmap';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { useCreateRoadmap } from '../../hooks/useRoadmaps';
-import { mockTeacher } from '../../data/mockData';
+import { mockAdmin } from '../../data/mockData';
 import type { CreateAdminRoadmapRequest } from '../../types';
 import './admin-roadmap-page.css';
 
@@ -13,21 +13,21 @@ export default function AdminRoadmapCreatePage() {
 
   useEffect(() => {
     if (createRoadmap.isSuccess) {
-      void navigate('/teacher/roadmaps');
+      void navigate('/admin/roadmaps');
     }
   }, [createRoadmap.isSuccess, navigate]);
 
   return (
     <DashboardLayout
-      role="teacher"
-      user={{ name: mockTeacher.name, avatar: mockTeacher.avatar, role: 'teacher' }}
+      role="admin"
+      user={{ name: mockAdmin.name, avatar: mockAdmin.avatar, role: 'admin' }}
       notificationCount={2}
     >
       <section className="admin-roadmap-page">
         <header className="admin-roadmap-page__header">
           <div>
             <h1>Create roadmap</h1>
-            <p>Define a roadmap and publish when it is ready for learners.</p>
+            <p>Define roadmap metadata first, then add topics and entry test mappings.</p>
           </div>
         </header>
 

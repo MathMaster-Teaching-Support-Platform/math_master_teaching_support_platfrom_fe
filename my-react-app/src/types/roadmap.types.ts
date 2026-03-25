@@ -47,13 +47,14 @@ export interface RoadmapTopic {
   status: TopicStatus;
   difficulty: QuestionDifficulty;
   sequenceOrder: number;
-  priority: number;
-  progressPercentage: number;
-  estimatedHours: number;
+  mark?: number;
+  lessonIds?: string[];
+  slideLessonIds?: string[];
+  assessmentIds?: string[];
+  lessonPlanIds?: string[];
+  mindmapIds?: string[];
   topicAssessmentId?: string | null;
-  passThresholdPercentage?: number | null;
   startedAt?: string | null;
-  completedAt?: string | null;
   questionTemplates: unknown[];
   mindmaps: unknown[];
 }
@@ -94,12 +95,10 @@ export interface StudentRoadmapSnapshot {
 
 export type TopicMaterialResourceType =
   | 'LESSON'
-  | 'QUESTION'
-  | 'MINDMAP'
-  | 'DOCUMENT'
   | 'ASSESSMENT'
-  | 'EXAMPLE'
-  | 'PRACTICE';
+  | 'MINDMAP'
+  | 'SLIDE'
+  | 'LESSON_PLAN';
 
 export interface TopicMaterial {
   id: string;
@@ -127,11 +126,13 @@ export interface CreateRoadmapTopicRequest {
   title: string;
   description?: string;
   sequenceOrder: number;
-  priority?: number;
-  estimatedHours?: number;
+  mark?: number;
   lessonIds: string[];
+  slideLessonIds?: string[];
+  assessmentIds?: string[];
+  lessonPlanIds?: string[];
+  mindmapIds?: string[];
   topicAssessmentId?: string;
-  passThresholdPercentage?: number;
   difficulty: QuestionDifficulty;
 }
 
@@ -142,13 +143,14 @@ export interface RoadmapTopicResponse {
   status: TopicStatus;
   difficulty: QuestionDifficulty;
   sequenceOrder: number;
-  priority: number;
-  progressPercentage: number;
-  estimatedHours: number;
+  mark?: number;
+  lessonIds?: string[];
+  slideLessonIds?: string[];
+  assessmentIds?: string[];
+  lessonPlanIds?: string[];
+  mindmapIds?: string[];
   topicAssessmentId?: string | null;
-  passThresholdPercentage?: number | null;
   startedAt?: string | null;
-  completedAt?: string | null;
   questionTemplates: unknown[];
   mindmaps: unknown[];
 }
@@ -157,25 +159,34 @@ export interface UpdateRoadmapTopicRequest {
   title?: string;
   description?: string;
   sequenceOrder?: number;
-  priority?: number;
-  estimatedHours?: number;
+  mark?: number;
   lessonIds?: string[];
+  slideLessonIds?: string[];
+  assessmentIds?: string[];
+  lessonPlanIds?: string[];
+  mindmapIds?: string[];
   topicAssessmentId?: string;
-  passThresholdPercentage?: number;
   difficulty?: QuestionDifficulty;
   status?: TopicStatus;
 }
 
-export interface EntryTestMapping {
-  questionId: string;
-  roadmapTopicId: string;
-  orderIndex: number;
-  weight: number;
+export type RoadmapResourceOptionType =
+  | 'LESSON'
+  | 'TEMPLATE_SLIDE'
+  | 'MINDMAP'
+  | 'LESSON_PLAN'
+  | 'ASSESSMENT';
+
+export interface RoadmapResourceOption {
+  id: string;
+  name: string;
+  type: RoadmapResourceOptionType;
+  lessonId: string | null;
+  chapterId: string | null;
 }
 
 export interface CreateRoadmapEntryTestRequest {
   assessmentId: string;
-  mappings: EntryTestMapping[];
 }
 
 export interface SubmitRoadmapEntryTestRequest {
@@ -186,9 +197,34 @@ export interface SubmitRoadmapEntryTestResult {
   roadmapId: string;
   submissionId: string;
   suggestedTopicId: string;
+  scoreOnTen: number;
   evaluatedQuestions: number;
   thresholdPercentage: number;
   evaluatedAt: string;
+}
+
+export interface SubmitRoadmapFeedbackRequest {
+  rating: number;
+  content?: string;
+}
+
+export interface RoadmapFeedbackResponse {
+  id: string;
+  roadmapId: string;
+  studentId: string;
+  studentName: string;
+  rating: number;
+  content: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RoadmapFeedbackPage {
+  content: RoadmapFeedbackResponse[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
 }
 
 export interface CreateAdminRoadmapRequest {

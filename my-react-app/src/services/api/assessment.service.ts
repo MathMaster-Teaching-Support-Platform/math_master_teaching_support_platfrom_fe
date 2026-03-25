@@ -3,6 +3,7 @@ import { AuthService } from './auth.service';
 import type {
     AssessmentRequest,
     AssessmentResponse,
+    AssessmentSearchApiResponse,
     PointsOverrideRequest,
     AssessmentSummary,
     GetMyAssessmentsParams,
@@ -139,6 +140,29 @@ export class AssessmentService {
             const error = await response.json();
             throw new Error(error.message || 'Failed to fetch assessments');
         }
+        return response.json();
+    }
+
+    /** GET /assessments/search?query={query}&subjectId={optional} */
+    static async searchAssessments(
+        query: string,
+        subjectId?: string
+    ): Promise<AssessmentSearchApiResponse> {
+        const headers = await this.getHeaders();
+        const queryParams = new URLSearchParams();
+        queryParams.append('query', query);
+        if (subjectId) queryParams.append('subjectId', subjectId);
+
+        const response = await fetch(
+            `${API_BASE_URL}${API_ENDPOINTS.ASSESSMENTS_SEARCH}?${queryParams.toString()}`,
+            { method: 'GET', headers }
+        );
+
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error((error as { message?: string }).message || 'Failed to search assessments');
+        }
+
         return response.json();
     }
 

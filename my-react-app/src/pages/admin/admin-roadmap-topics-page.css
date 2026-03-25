@@ -104,6 +104,108 @@
   cursor: not-allowed;
 }
 
+.admin-roadmap-topics-page__entry-test-card {
+  border: 1px solid #d9e4f2;
+  border-radius: 12px;
+  background: #f8fbff;
+  padding: 0.9rem;
+  display: grid;
+  gap: 0.7rem;
+}
+
+.admin-roadmap-topics-page__entry-test-card h3 {
+  margin: 0;
+}
+
+.admin-roadmap-topics-page__entry-test-card p {
+  margin: 0.35rem 0 0;
+  color: #475569;
+}
+
+.admin-roadmap-topics-page__entry-field {
+  display: grid;
+  gap: 0.35rem;
+  max-width: 420px;
+}
+
+.admin-roadmap-topics-page__entry-field span {
+  font-size: 0.82rem;
+  color: #334155;
+}
+
+.admin-roadmap-topics-page__entry-field input {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 0.5rem 0.6rem;
+}
+
+.admin-roadmap-topics-page__search-results {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.admin-roadmap-topics-page__search-result-item {
+  border: 1px solid #dbe5f4;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 0.65rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.admin-roadmap-topics-page__search-result-item p {
+  margin: 0.3rem 0;
+  color: #475569;
+  font-size: 0.84rem;
+}
+
+.admin-roadmap-topics-page__search-result-item small {
+  color: #334155;
+  font-size: 0.77rem;
+}
+
+.admin-roadmap-topics-page__material-panel {
+  border: 1px solid #dbe5f4;
+  border-radius: 10px;
+  background: #f8fbff;
+  padding: 0.75rem;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.admin-roadmap-topics-page__material-panel h4 {
+  margin: 0;
+}
+
+.admin-roadmap-topics-page__material-panel p {
+  margin: 0.35rem 0 0;
+  color: #475569;
+}
+
+.admin-roadmap-topics-page__material-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.admin-roadmap-topics-page__material-tab {
+  border: 1px solid #bfdbfe;
+  background: #eff6ff;
+  color: #1e3a8a;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 0.35rem 0.65rem;
+  cursor: pointer;
+}
+
+.admin-roadmap-topics-page__material-tab--active {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  color: #ffffff;
+}
+
 .admin-roadmap-topics-page__lesson-picker {
   border: 1px solid #dbe5f4;
   border-radius: 10px;
@@ -214,6 +316,10 @@
 
   .admin-roadmap-topics-page .admin-roadmap-page__modal {
     width: min(560px, calc(100vw - 1rem));
+  }
+
+  .admin-roadmap-topics-page__search-result-item {
+    flex-direction: column;
   }
 
   .admin-roadmap-topics-page .admin-roadmap-page__modal-backdrop {
