@@ -32,6 +32,7 @@ import '../../styles/module-refactor.css';
 import { TemplateFormModal } from './TemplateFormModal';
 import { TemplateImportModal } from './TemplateImportModal';
 import { TemplateTestModal } from './TemplateTestModal';
+import { MathText } from '../../components/common/MathText';
 
 const statusFilters: Array<'ALL' | TemplateStatus> = [
   'ALL',
@@ -219,9 +220,9 @@ export function TemplateDashboard() {
                   </div>
 
                   <div>
-                    <h3>{template.name}</h3>
+                    <h3><MathText text={template.name} /></h3>
                     <p className="muted" style={{ marginTop: 6 }}>
-                      {template.description || 'Không có mô tả'}
+                      <MathText text={template.description || 'Không có mô tả'} />
                     </p>
                   </div>
 

@@ -6,6 +6,7 @@ import {
   type QuestionTemplateRequest,
   type QuestionTemplateResponse,
 } from '../../types/questionTemplate';
+import { MathText } from '../../components/common/MathText';
 
 type ParameterInput = {
   name: string;
@@ -39,6 +40,30 @@ function parseTemplateText(value: Record<string, unknown> | undefined): string {
   if (typeof en === 'string') return en;
   return '';
 }
+
+const cognitiveLevelLabels: Record<CognitiveLevel, string> = {
+  REMEMBER: '1. Nhận biết',
+  UNDERSTAND: '2. Thông hiểu',
+  APPLY: '3. Vận dụng',
+  ANALYZE: '4. Phân tích',
+  EVALUATE: '5. Đánh giá',
+  CREATE: '6. Sáng tạo',
+};
+
+const questionTypeLabels: Record<QuestionType, string> = {
+  MULTIPLE_CHOICE: 'Trắc nghiệm (Nhiều lựa chọn)',
+  TRUE_FALSE: 'Đúng / Sai',
+  SHORT_ANSWER: 'Trả lời ngắn (Tự điền kết quả)',
+  ESSAY: 'Tự luận',
+  CODING: 'Lập trình',
+};
+
+const difficultyLabels: Record<string, string> = {
+  EASY: 'Dễ',
+  MEDIUM: 'Trung bình',
+  HARD: 'Khó',
+  VERY_HARD: 'Rất khó',
+};
 
 export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit }: Props) {
   const [name, setName] = useState('');
@@ -98,7 +123,7 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
     setTemplateType(QuestionType.MULTIPLE_CHOICE);
     setCognitiveLevel(CognitiveLevel.UNDERSTAND);
     setIsPublic(false);
-    setTemplateText('Giải phương trình: {a}x + {b} = 0');
+    setTemplateText('Giải phương trình: {{a}}x + {{b}} = 0');
     setAnswerFormula('(-b)/a');
     setTags('đại số, lớp 9');
     setParameters([
@@ -188,8 +213,8 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
               <label>
                 <p className="muted" style={{ marginBottom: 6 }}>Loại câu hỏi</p>
                 <select className="select" value={templateType} onChange={(event) => setTemplateType(event.target.value as QuestionType)}>
-                  {Object.values(QuestionType).map((item) => (
-                    <option key={item} value={item}>{item}</option>
+                  {Object.entries(questionTypeLabels).map(([key, label]) => (
+                    <option key={key} value={key}>{label}</option>
                   ))}
                 </select>
               </label>
@@ -201,8 +226,8 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
                   value={cognitiveLevel}
                   onChange={(event) => setCognitiveLevel(event.target.value as CognitiveLevel)}
                 >
-                  {Object.values(CognitiveLevel).map((item) => (
-                    <option key={item} value={item}>{item}</option>
+                  {Object.entries(cognitiveLevelLabels).map(([key, label]) => (
+                    <option key={key} value={key}>{label}</option>
                   ))}
                 </select>
               </label>
@@ -216,36 +241,59 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
             <label>
               <p className="muted" style={{ marginBottom: 6 }}>Mô tả</p>
               <textarea className="textarea" rows={2} value={description} onChange={(event) => setDescription(event.target.value)} />
+              {description && (
+                <div className="preview-box">
+                  <MathText text={description} />
+                </div>
+              )}
             </label>
 
             <label>
-              <p className="muted" style={{ marginBottom: 6 }}>Nội dung câu hỏi</p>
-              <textarea className="textarea" rows={3} required value={templateText} onChange={(event) => setTemplateText(event.target.value)} />
+              <p className="muted" style={{ marginBottom: 6 }}>
+                Nội dung câu hỏi 
+                <span style={{ fontSize: '0.8rem', marginLeft: 8, fontWeight: 400 }}>
+                  (Dùng {"{{a}}"}, {"{{b}}"} để chèn biến số. Ví dụ: "Giải: x + {"{{a}}"} = {"{{b}}"}")
+                </span>
+              </p>
+              <textarea className="textarea" rows={3} required placeholder="Ví dụ: Tính giá trị của biểu thức {{a}} + {{b}}?" value={templateText} onChange={(event) => setTemplateText(event.target.value)} />
+              {templateText && (
+                <div className="preview-box">
+                  <MathText text={templateText} />
+                </div>
+              )}
             </label>
 
             <label>
-              <p className="muted" style={{ marginBottom: 6 }}>Công thức đáp án</p>
-              <input className="input" required value={answerFormula} onChange={(event) => setAnswerFormula(event.target.value)} />
+              <p className="muted" style={{ marginBottom: 6 }}>Công thức tính đáp án đúng</p>
+              <input className="input" required placeholder="Ví dụ: a + b" value={answerFormula} onChange={(event) => setAnswerFormula(event.target.value)} />
+              {answerFormula && (
+                <div className="preview-box">
+                  <MathText text={`$${answerFormula.replace(/\$/g, '')}$`} />
+                </div>
+              )}
             </label>
 
-            <section className="data-card" style={{ minHeight: 0 }}>
+            <section className="data-card" style={{ minHeight: 0, border: '1px solid #dbeafe' }}>
               <div className="row">
-                <h3>Biến số</h3>
+                <div>
+                  <h3 style={{ color: '#1e40af' }}>1. Khai báo biến số ngẫu nhiên</h3>
+                  <p className="muted" style={{ fontSize: '0.8rem' }}>Định nghĩa các chữ cái sẽ thay đổi thành số ngẫu nhiên trong câu hỏi.</p>
+                </div>
                 <button
                   type="button"
                   className="btn secondary"
                   onClick={() => setParameters((prev) => [...prev, { name: '', type: 'int', min: '1', max: '10' }])}
                 >
                   <Plus size={14} />
-                  Thêm
+                  Thêm biến
                 </button>
               </div>
 
               {parameters.map((item, index) => (
-                <div key={`${item.name}-${index}`} className="form-grid">
+                <div key={`${item.name}-${index}`} className="form-grid" style={{ gridTemplateColumns: '1fr 0.8fr 1fr 1fr 40px', alignItems: 'center' }}>
                   <input
                     className="input"
-                    placeholder="Tên biến"
+                    placeholder="Tên (a, b...)"
                     value={item.name}
                     onChange={(event) => {
                       const next = [...parameters];
@@ -262,20 +310,24 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
                       setParameters(next);
                     }}
                   >
-                    <option value="int">int</option>
-                    <option value="float">float</option>
+                    <option value="int">Số nguyên</option>
+                    <option value="float">Số thập phân</option>
                   </select>
-                  <input
-                    className="input"
-                    type="number"
-                    value={item.min}
-                    onChange={(event) => {
-                      const next = [...parameters];
-                      next[index] = { ...next[index], min: event.target.value };
-                      setParameters(next);
-                    }}
-                  />
-                  <div className="row" style={{ justifyContent: 'start' }}>
+                  <div className="row">
+                    <span className="muted">Từ:</span>
+                    <input
+                      className="input"
+                      type="number"
+                      value={item.min}
+                      onChange={(event) => {
+                        const next = [...parameters];
+                        next[index] = { ...next[index], min: event.target.value };
+                        setParameters(next);
+                      }}
+                    />
+                  </div>
+                  <div className="row">
+                    <span className="muted">Đến:</span>
                     <input
                       className="input"
                       type="number"
@@ -286,28 +338,32 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
                         setParameters(next);
                       }}
                     />
-                    <button
-                      type="button"
-                      className="btn danger"
-                      onClick={() => setParameters((prev) => prev.filter((_entry, i) => i !== index))}
-                    >
-                      <Trash2 size={14} />
-                    </button>
                   </div>
+                  <button
+                    type="button"
+                    className="btn danger"
+                    style={{ padding: '0.4rem', height: '38px', width: '38px', display: 'flex', justifyContent: 'center' }}
+                    onClick={() => setParameters((prev) => prev.filter((_entry, i) => i !== index))}
+                  >
+                    <Trash2 size={14} />
+                  </button>
                 </div>
               ))}
             </section>
 
-            <section className="data-card" style={{ minHeight: 0 }}>
+            <section className="data-card" style={{ minHeight: 0, border: '1px solid #fef3c7' }}>
               <div className="row">
-                <h3>Bộ sinh lựa chọn</h3>
+                <div>
+                  <h3 style={{ color: '#92400e' }}>2. Cách tính các phương án (Trắc nghiệm)</h3>
+                  <p className="muted" style={{ fontSize: '0.8rem' }}>Viết công thức để máy tính tự tính ra kết quả cho các lựa chọn A, B, C, D.</p>
+                </div>
                 <button
                   type="button"
                   className="btn secondary"
                   onClick={() => setOptions((prev) => [...prev, { key: '', formula: '' }])}
                 >
                   <Plus size={14} />
-                  Thêm
+                  Thêm lựa chọn
                 </button>
               </div>
 
@@ -315,7 +371,7 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
                 <div key={`${item.key}-${index}`} className="form-grid">
                   <input
                     className="input"
-                    placeholder="Mã lựa chọn"
+                    placeholder="Mã (A, B...)"
                     value={item.key}
                     onChange={(event) => {
                       const next = [...options];
@@ -324,17 +380,24 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
                     }}
                   />
                   <div className="row" style={{ gridColumn: 'span 3' }}>
-                    <input
-                      className="input"
-                      style={{ width: '100%' }}
-                      placeholder="Công thức"
-                      value={item.formula}
-                      onChange={(event) => {
-                        const next = [...options];
-                        next[index] = { ...next[index], formula: event.target.value };
-                        setOptions(next);
-                      }}
-                    />
+                    <div style={{ width: '100%' }}>
+                      <input
+                        className="input"
+                        style={{ width: '100%' }}
+                        placeholder="Công thức"
+                        value={item.formula}
+                        onChange={(event) => {
+                          const next = [...options];
+                          next[index] = { ...next[index], formula: event.target.value };
+                          setOptions(next);
+                        }}
+                      />
+                      {item.formula && (
+                        <div className="preview-box">
+                          <MathText text={`$${item.formula.replace(/\$/g, '')}$`} />
+                        </div>
+                      )}
+                    </div>
                     <button
                       type="button"
                       className="btn danger"
@@ -347,16 +410,19 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
               ))}
             </section>
 
-            <section className="data-card" style={{ minHeight: 0 }}>
+            <section className="data-card" style={{ minHeight: 0, border: '1px solid #f1f5f9' }}>
               <div className="row">
-                <h3>Luật độ khó</h3>
+                <div>
+                  <h3 style={{ color: '#334155' }}>3. Tự động phân loại mức độ</h3>
+                  <p className="muted" style={{ fontSize: '0.8rem' }}>Thiết lập điều kiện (Ví dụ: a + b &gt; 50) để tự gán mức độ Khó/Dễ.</p>
+                </div>
                 <button
                   type="button"
                   className="btn secondary"
                   onClick={() => setRules((prev) => [...prev, { level: 'MEDIUM', condition: '' }])}
                 >
                   <Plus size={14} />
-                  Thêm
+                  Thêm luật
                 </button>
               </div>
 
@@ -371,23 +437,29 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
                       setRules(next);
                     }}
                   >
-                    <option value="EASY">EASY</option>
-                    <option value="MEDIUM">MEDIUM</option>
-                    <option value="HARD">HARD</option>
-                    <option value="VERY_HARD">VERY_HARD</option>
+                    {Object.entries(difficultyLabels).map(([key, label]) => (
+                      <option key={key} value={key}>{label}</option>
+                    ))}
                   </select>
                   <div className="row" style={{ gridColumn: 'span 3' }}>
-                    <input
-                      className="input"
-                      style={{ width: '100%' }}
-                      placeholder="Điều kiện"
-                      value={item.condition}
-                      onChange={(event) => {
-                        const next = [...rules];
-                        next[index] = { ...next[index], condition: event.target.value };
-                        setRules(next);
-                      }}
-                    />
+                    <div style={{ width: '100%' }}>
+                      <input
+                        className="input"
+                        style={{ width: '100%' }}
+                        placeholder="Điều kiện"
+                        value={item.condition}
+                        onChange={(event) => {
+                          const next = [...rules];
+                          next[index] = { ...next[index], condition: event.target.value };
+                          setRules(next);
+                        }}
+                      />
+                      {item.condition && (
+                        <div className="preview-box">
+                          <MathText text={item.condition} />
+                        </div>
+                      )}
+                    </div>
                     <button
                       type="button"
                       className="btn danger"

@@ -1,3 +1,5 @@
+import { API_BASE_URL, API_ENDPOINTS } from '../config/api.config';
+import { AuthService } from './api/auth.service';
 import {
     type QuestionTemplateRequest,
     type QuestionTemplateResponse,
@@ -10,10 +12,8 @@ import {
     QuestionType
 } from '../types/questionTemplate';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080'; // Adjust base URL as needed
-
 const getAuthHeaders = () => {
-    const token = localStorage.getItem('authToken'); // Fixed: Match AuthService key
+    const token = AuthService.getToken();
     return {
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -23,7 +23,7 @@ const getAuthHeaders = () => {
 export const questionTemplateService = {
     // Create Question Template
     createQuestionTemplate: async (request: QuestionTemplateRequest): Promise<ApiResponse<QuestionTemplateResponse>> => {
-        const response = await fetch(`${API_BASE_URL}/question-templates`, {
+        const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTION_TEMPLATES}`, {
             method: 'POST',
             headers: getAuthHeaders(),
             body: JSON.stringify(request),
@@ -34,7 +34,7 @@ export const questionTemplateService = {
 
     // Update Question Template
     updateQuestionTemplate: async (id: string, request: QuestionTemplateRequest): Promise<ApiResponse<QuestionTemplateResponse>> => {
-        const response = await fetch(`${API_BASE_URL}/question-templates/${id}`, {
+        const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTION_TEMPLATE_DETAIL(id)}`, {
             method: 'PUT',
             headers: getAuthHeaders(),
             body: JSON.stringify(request),
@@ -45,7 +45,7 @@ export const questionTemplateService = {
 
     // Delete Question Template
     deleteQuestionTemplate: async (id: string): Promise<ApiResponse<void>> => {
-        const response = await fetch(`${API_BASE_URL}/question-templates/${id}`, {
+        const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTION_TEMPLATE_DETAIL(id)}`, {
             method: 'DELETE',
             headers: getAuthHeaders(),
         });
@@ -55,7 +55,7 @@ export const questionTemplateService = {
 
     // Get Question Template by ID
     getQuestionTemplateById: async (id: string): Promise<ApiResponse<QuestionTemplateResponse>> => {
-        const response = await fetch(`${API_BASE_URL}/question-templates/${id}`, {
+        const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTION_TEMPLATE_DETAIL(id)}`, {
             method: 'GET',
             headers: getAuthHeaders(),
         });
@@ -76,7 +76,7 @@ export const questionTemplateService = {
             sortBy,
             sortDirection,
         });
-        const response = await fetch(`${API_BASE_URL}/question-templates/my?${params.toString()}`, {
+        const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTION_TEMPLATES_MY}?${params.toString()}`, {
             method: 'GET',
             headers: getAuthHeaders(),
         });
@@ -110,7 +110,7 @@ export const questionTemplateService = {
         queryParams.append('sortBy', params.sortBy || 'createdAt');
         queryParams.append('sortDirection', params.sortDirection || 'DESC');
 
-        const response = await fetch(`${API_BASE_URL}/question-templates/search?${queryParams.toString()}`, {
+        const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTION_TEMPLATES_SEARCH}?${queryParams.toString()}`, {
             method: 'GET',
             headers: getAuthHeaders(),
         });
@@ -120,7 +120,7 @@ export const questionTemplateService = {
 
     // Toggle Public Status
     togglePublicStatus: async (id: string): Promise<ApiResponse<QuestionTemplateResponse>> => {
-        const response = await fetch(`${API_BASE_URL}/question-templates/${id}/toggle-public`, {
+        const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTION_TEMPLATE_TOGGLE_PUBLIC(id)}`, {
             method: 'PATCH',
             headers: getAuthHeaders(),
         });
@@ -130,7 +130,7 @@ export const questionTemplateService = {
 
     // Publish Template
     publishTemplate: async (id: string): Promise<ApiResponse<QuestionTemplateResponse>> => {
-        const response = await fetch(`${API_BASE_URL}/question-templates/${id}/publish`, {
+        const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTION_TEMPLATE_PUBLISH(id)}`, {
             method: 'PATCH',
             headers: getAuthHeaders(),
         });
@@ -140,7 +140,7 @@ export const questionTemplateService = {
 
     // Archive Template
     archiveTemplate: async (id: string): Promise<ApiResponse<QuestionTemplateResponse>> => {
-        const response = await fetch(`${API_BASE_URL}/question-templates/${id}/archive`, {
+        const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTION_TEMPLATE_ARCHIVE(id)}`, {
             method: 'PATCH',
             headers: getAuthHeaders(),
         });
@@ -154,7 +154,7 @@ export const questionTemplateService = {
             sampleCount: sampleCount.toString(),
             useAI: useAI.toString(),
         });
-        const response = await fetch(`${API_BASE_URL}/question-templates/${id}/test?${params.toString()}`, {
+        const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTION_TEMPLATE_TEST(id)}?${params.toString()}`, {
             method: 'GET',
             headers: getAuthHeaders(),
         });
@@ -164,7 +164,7 @@ export const questionTemplateService = {
 
     // Generate AI Enhanced Question
     generateAIEnhancedQuestion: async (id: string): Promise<ApiResponse<AIEnhancedQuestionResponse>> => {
-        const response = await fetch(`${API_BASE_URL}/question-templates/${id}/generate-ai-enhanced`, {
+        const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTION_TEMPLATE_GENERATE_AI_ENHANCED(id)}`, {
             method: 'POST',
             headers: getAuthHeaders(),
         });
@@ -188,7 +188,7 @@ export const questionTemplateService = {
         const headers: Record<string, string> = { ...getAuthHeaders() };
         delete headers['Content-Type']; // Let browser set multipart boundary
 
-        const response = await fetch(`${API_BASE_URL}/question-templates/import-from-file`, {
+        const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTION_TEMPLATE_IMPORT_FROM_FILE}`, {
             method: 'POST',
             headers,
             body: formData,
