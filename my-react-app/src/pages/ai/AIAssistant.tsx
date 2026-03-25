@@ -1,53 +1,224 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
-import { mockTeacher, mockAIMessages } from '../../data/mockData';
+import {
+  useArchiveChatSession,
+  useChatSessionDetail,
+  useChatSessionMemory,
+  useChatSessionMessages,
+  useChatSessions,
+  useCreateChatSession,
+  useDeleteChatSession,
+  useRenameChatSession,
+  useSendChatMessage,
+} from '../../hooks/useChatSessions';
+import { mockTeacher } from '../../data/mockData';
+import type { ChatMessageResponse } from '../../types';
 import './AIAssistant.css';
 
 const AIAssistant: React.FC = () => {
-  const [messages, setMessages] = useState(mockAIMessages);
+  const [selectedSessionId, setSelectedSessionId] = useState<string>('');
   const [input, setInput] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
+  const [pendingPrompt, setPendingPrompt] = useState('');
+  const [localError, setLocalError] = useState('');
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editingTitle, setEditingTitle] = useState('');
+  const [isSessionPanelOpen, setIsSessionPanelOpen] = useState(true);
 
-  const handleSend = () => {
-    if (!input.trim()) return;
+  const sessionQueryParams = useMemo(() => ({ page: 0, size: 20 }), []);
 
-    const newMessage = {
-      id: `m${messages.length + 1}`,
-      role: 'user' as const,
-      content: input,
-      timestamp: new Date().toISOString(),
-    };
+  const messageQueryParams = useMemo(() => ({ page: 0, size: 50 }), []);
 
-    setMessages([...messages, newMessage]);
-    setInput('');
-    setIsTyping(true);
+  const {
+    data: sessionsData,
+    isLoading: sessionsLoading,
+    error: sessionsError,
+  } = useChatSessions(sessionQueryParams);
 
-    // Simulate AI response
-    setTimeout(() => {
-      const aiResponse = {
-        id: `m${messages.length + 2}`,
-        role: 'assistant' as const,
-        content:
-          'Xin chào! Tôi là AI trợ lý toán học của MathMaster. Tôi có thể giúp bạn:\n\n• Giải các bài toán từ cơ bản đến nâng cao\n• Giải thích các khái niệm toán học\n• Tạo đề bài tập\n• Gợi ý phương pháp giảng dạy\n• Vẽ đồ thị và hình học\n\nBạn cần tôi giúp gì?',
-        timestamp: new Date().toISOString(),
-      };
-      setMessages((prev: typeof mockAIMessages) => [...prev, aiResponse]);
-      setIsTyping(false);
-    }, 1500);
+  const sessions = useMemo(() => sessionsData?.result.content ?? [], [sessionsData]);
+
+  useEffect(() => {
+    if (!selectedSessionId && sessions.length > 0) {
+      setSelectedSessionId(sessions[0].id);
+    }
+  }, [selectedSessionId, sessions]);
+
+  const {
+    data: messagesData,
+    isLoading: messagesLoading,
+    error: messagesError,
+  } = useChatSessionMessages(selectedSessionId, messageQueryParams);
+
+  const { data: sessionDetailData } = useChatSessionDetail(selectedSessionId);
+  const { data: memoryData } = useChatSessionMemory(selectedSessionId);
+  const createSessionMutation = useCreateChatSession();
+  const sendMessageMutation = useSendChatMessage();
+  const renameSessionMutation = useRenameChatSession();
+  const archiveSessionMutation = useArchiveChatSession();
+  const deleteSessionMutation = useDeleteChatSession();
+
+  const selectedSession =
+    sessionDetailData?.result ?? sessions.find((session) => session.id === selectedSessionId);
+  const messages = useMemo(() => messagesData?.result.content ?? [], [messagesData]);
+  const memory = memoryData?.result;
+  const isArchived = selectedSession?.status === 'ARCHIVED';
+  const isSending = sendMessageMutation.isPending;
+
+  useEffect(() => {
+    if (!isEditingTitle) {
+      setEditingTitle(selectedSession?.title ?? '');
+    }
+  }, [isEditingTitle, selectedSession?.title]);
+
+  const displayMessages: ChatMessageResponse[] =
+    pendingPrompt && selectedSessionId
+      ? [
+          ...messages,
+          {
+            id: 'pending-user-message',
+            sessionId: selectedSessionId,
+            userId: '',
+            role: 'USER',
+            content: pendingPrompt,
+            wordCount: pendingPrompt.trim().split(/\s+/).length,
+            model: selectedSession?.model ?? 'gemini-2.5-flash',
+            latencyMs: 0,
+            sequenceNo: messages.length + 1,
+            createdAt: new Date().toISOString(),
+          },
+        ]
+      : messages;
+
+  const getErrorMessage = (error: unknown, fallback: string): string => {
+    if (error instanceof Error && error.message.trim().length > 0) {
+      return error.message;
+    }
+    return fallback;
+  };
+
+  const handleNewChat = async () => {
+    try {
+      setLocalError('');
+      const response = await createSessionMutation.mutateAsync({
+        title: 'New Chat',
+        model: 'gemini-2.5-flash',
+      });
+      setSelectedSessionId(response.result.id);
+      setIsEditingTitle(false);
+      setInput('');
+    } catch (error) {
+      setLocalError(getErrorMessage(error, 'Không thể tạo phiên chat mới.'));
+    }
+  };
+
+  const handleSend = async () => {
+    const prompt = input.trim();
+    if (!prompt) return;
+
+    try {
+      setLocalError('');
+
+      let sessionId = selectedSessionId;
+      if (!sessionId) {
+        const sessionResponse = await createSessionMutation.mutateAsync({
+          title: 'New Chat',
+          model: 'gemini-2.5-flash',
+        });
+        sessionId = sessionResponse.result.id;
+        setSelectedSessionId(sessionId);
+      }
+
+      setPendingPrompt(prompt);
+      setInput('');
+
+      await sendMessageMutation.mutateAsync({
+        sessionId,
+        payload: {
+          prompt,
+          temperature: 0.4,
+          maxOutputTokens: 800,
+        },
+      });
+    } catch (error) {
+      setLocalError(getErrorMessage(error, 'Không thể gửi prompt.'));
+      setInput(prompt);
+    } finally {
+      setPendingPrompt('');
+    }
+  };
+
+  const handleRenameSession = async () => {
+    if (!selectedSessionId) return;
+
+    const nextTitle = editingTitle.trim();
+    if (!nextTitle) {
+      setLocalError('Tiêu đề session không được để trống.');
+      return;
+    }
+
+    try {
+      setLocalError('');
+      await renameSessionMutation.mutateAsync({
+        sessionId: selectedSessionId,
+        payload: { title: nextTitle },
+      });
+      setIsEditingTitle(false);
+    } catch (error) {
+      setLocalError(getErrorMessage(error, 'Không thể đổi tên session.'));
+    }
+  };
+
+  const handleArchiveSession = async () => {
+    if (!selectedSessionId || isArchived) return;
+
+    try {
+      setLocalError('');
+      await archiveSessionMutation.mutateAsync(selectedSessionId);
+    } catch (error) {
+      setLocalError(getErrorMessage(error, 'Không thể archive session.'));
+    }
+  };
+
+  const handleDeleteSession = async () => {
+    if (!selectedSessionId) return;
+
+    const confirmDelete = window.confirm('Bạn có chắc muốn xóa session này không?');
+    if (!confirmDelete) return;
+
+    try {
+      setLocalError('');
+      const removedSessionId = selectedSessionId;
+      await deleteSessionMutation.mutateAsync(removedSessionId);
+      const nextSession = sessions.find((session) => session.id !== removedSessionId);
+      setSelectedSessionId(nextSession?.id ?? '');
+    } catch (error) {
+      setLocalError(getErrorMessage(error, 'Không thể xóa session.'));
+    }
   };
 
   const quickPrompts = [
-    '💡 Giải phương trình bậc 2',
-    '📊 Tạo đề kiểm tra 15 phút',
-    '📈 Vẽ đồ thị hàm số y = x²',
-    '🧠 Giải thích định lý Pythagoras',
-    '✍️ Tạo bài tập về đạo hàm',
-    '📐 Vẽ hình tam giác đều',
+    'Giải phương trình bậc 2',
+    'Tạo đề kiểm tra 15 phút',
+    'Vẽ đồ thị hàm số y = x^2',
+    'Giải thích định lý Pythagoras',
+    'Tạo bài tập về đạo hàm',
+    'Vẽ hình tam giác đều',
   ];
 
   const handleQuickPrompt = (prompt: string) => {
-    setInput(prompt.split(' ').slice(1).join(' '));
+    setInput(prompt);
   };
+
+  const formatDateTime = (value?: string) => {
+    if (!value) return '--';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '--';
+    return date.toLocaleString('vi-VN');
+  };
+
+  const combinedError =
+    localError ||
+    (sessionsError ? getErrorMessage(sessionsError, 'Lỗi tải danh sách session') : '') ||
+    (messagesError ? getErrorMessage(messagesError, 'Lỗi tải lịch sử chat') : '');
 
   return (
     <DashboardLayout
@@ -55,118 +226,230 @@ const AIAssistant: React.FC = () => {
       user={{ name: mockTeacher.name, avatar: mockTeacher.avatar!, role: 'teacher' }}
       notificationCount={5}
     >
-      <div className="ai-assistant-page">
-        <div className="ai-header">
-          <div>
-            <h1 className="page-title">🤖 AI Trợ lý Toán học</h1>
-            <p className="page-subtitle">
-              Trợ lý AI thông minh hỗ trợ bạn trong giảng dạy và học tập toán học
-            </p>
-          </div>
-          <button className="btn btn-outline">
-            <span>🗑️</span> Xóa lịch sử
-          </button>
-        </div>
+      <div className={`gemini-chat-page ${isSessionPanelOpen ? '' : 'session-collapsed'}`}>
+        <section className="gemini-main">
+          <header className="main-header">
+            {isEditingTitle ? (
+              <div className="title-edit-row">
+                <input
+                  value={editingTitle}
+                  onChange={(e) => setEditingTitle(e.target.value)}
+                  maxLength={200}
+                  placeholder="Nhập tiêu đề session"
+                />
+                <button type="button" onClick={() => void handleRenameSession()}>
+                  Lưu
+                </button>
+                <button
+                  type="button"
+                  className="ghost"
+                  onClick={() => {
+                    setIsEditingTitle(false);
+                    setEditingTitle(selectedSession?.title ?? '');
+                  }}
+                >
+                  Hủy
+                </button>
+              </div>
+            ) : (
+              <div className="session-heading">
+                <h1>{selectedSession?.title ?? 'Xin chào! Chúng ta nên bắt đầu từ đâu?'}</h1>
+                <p>
+                  {selectedSession
+                    ? `Model: ${selectedSession.model} · Last update: ${formatDateTime(selectedSession.updatedAt)}`
+                    : 'Tạo một cuộc trò chuyện mới hoặc chọn lại session cũ để xem lịch sử.'}
+                </p>
+              </div>
+            )}
 
-        <div className="ai-container">
-          {/* Chat Section */}
-          <div className="ai-chat-section">
-            <div className="chat-messages">
-              {messages.map((message) => (
-                <div key={message.id} className={`message ${message.role}`}>
-                  <div className="message-avatar">
-                    {message.role === 'user' ? mockTeacher.avatar : '🤖'}
-                  </div>
-                  <div className="message-content">
-                    <div className="message-text">{message.content}</div>
-                    <div className="message-time">
-                      {new Date(message.timestamp).toLocaleTimeString('vi-VN')}
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {isTyping && (
-                <div className="message assistant">
-                  <div className="message-avatar">🤖</div>
-                  <div className="message-content">
-                    <div className="typing-indicator">
-                      <span></span>
-                      <span></span>
-                      <span></span>
-                    </div>
-                  </div>
+            <div className="header-actions">
+              <button
+                type="button"
+                className="ghost"
+                onClick={() => setIsEditingTitle((prev) => !prev)}
+                disabled={!selectedSessionId || renameSessionMutation.isPending}
+              >
+                Rename
+              </button>
+              <button
+                type="button"
+                className="ghost"
+                onClick={() => void handleArchiveSession()}
+                disabled={!selectedSessionId || isArchived || archiveSessionMutation.isPending}
+              >
+                Archive
+              </button>
+              <button
+                type="button"
+                className="danger"
+                onClick={() => void handleDeleteSession()}
+                disabled={!selectedSessionId || deleteSessionMutation.isPending}
+              >
+                Delete
+              </button>
+              <button
+                type="button"
+                className="ghost"
+                onClick={() => setIsSessionPanelOpen((prev) => !prev)}
+              >
+                {isSessionPanelOpen ? 'Thu gọn panel' : 'Mở panel'}
+              </button>
+            </div>
+          </header>
+
+          <div className="message-stream">
+            {combinedError && <div className="error-banner">{combinedError}</div>}
+
+            {!combinedError &&
+              selectedSessionId &&
+              displayMessages.length === 0 &&
+              !messagesLoading && (
+                <div className="empty-state">
+                  <h3>Session này chưa có tin nhắn</h3>
+                  <p>Hãy nhập prompt ở phía dưới để bắt đầu hội thoại.</p>
                 </div>
               )}
+
+            {!combinedError && !selectedSessionId && (
+              <div className="empty-state">
+                <h3>Chào mừng bạn đến AI Assistant</h3>
+                <p>Nhấn "Cuộc trò chuyện mới" ở panel bên phải để bắt đầu.</p>
+              </div>
+            )}
+
+            {displayMessages.map((message) => (
+              <article
+                key={message.id}
+                className={`chat-row ${message.role === 'USER' ? 'chat-user' : 'chat-assistant'}`}
+              >
+                <div className="chat-avatar">{message.role === 'USER' ? 'B' : 'AI'}</div>
+                <div className="chat-body">
+                  <p>{message.content}</p>
+                  <time>{formatDateTime(message.createdAt)}</time>
+                </div>
+              </article>
+            ))}
+
+            {isSending && (
+              <article className="chat-row chat-assistant">
+                <div className="chat-avatar">AI</div>
+                <div className="chat-body typing">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              </article>
+            )}
+          </div>
+
+          <footer className="composer-wrap">
+            <div className="quick-chips" role="list">
+              {quickPrompts.map((prompt) => (
+                <button
+                  type="button"
+                  key={prompt}
+                  className="chip"
+                  onClick={() => handleQuickPrompt(prompt)}
+                >
+                  {prompt}
+                </button>
+              ))}
             </div>
 
-            <div className="chat-input-container">
-              <div className="quick-prompts">
-                {quickPrompts.map((prompt, index) => (
-                  <button
-                    key={index}
-                    className="quick-prompt-btn"
-                    onClick={() => handleQuickPrompt(prompt)}
-                  >
-                    {prompt}
-                  </button>
-                ))}
-              </div>
-              <div className="chat-input">
-                <input
-                  type="text"
-                  placeholder="Nhập câu hỏi hoặc yêu cầu của bạn..."
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                />
-                <button className="send-btn" onClick={handleSend}>
-                  <span>📤</span>
+            <div className="composer-box">
+              <textarea
+                placeholder="Hỏi AI trợ lý toán học..."
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    void handleSend();
+                  }
+                }}
+                disabled={isSending || isArchived || !selectedSessionId}
+              />
+              <div className="composer-actions">
+                <div className="composer-meta">
+                  <span>Messages: {memory?.messageCount ?? 0}</span>
+                  <span>{isArchived ? 'Session archived' : 'Session active'}</span>
+                </div>
+                <button
+                  type="button"
+                  className="send-btn"
+                  onClick={() => void handleSend()}
+                  disabled={isSending || isArchived || !selectedSessionId}
+                >
+                  Gửi
                 </button>
               </div>
             </div>
-          </div>
+          </footer>
+        </section>
 
-          {/* Info Sidebar */}
-          <div className="ai-sidebar">
-            <div className="info-card">
-              <h3 className="info-title">💡 AI có thể giúp bạn</h3>
-              <ul className="info-list">
-                <li>Giải toán từ cơ bản đến nâng cao</li>
-                <li>Tạo đề bài tập và kiểm tra</li>
-                <li>Vẽ đồ thị và hình học</li>
-                <li>Giải thích khái niệm</li>
-                <li>Gợi ý phương pháp giảng dạy</li>
-                <li>Tạo mindmap và sơ đồ</li>
-              </ul>
-            </div>
+        <aside className={`gemini-sidebar right ${isSessionPanelOpen ? '' : 'collapsed'}`}>
+          <button
+            type="button"
+            className="sidebar-toggle-btn"
+            onClick={() => setIsSessionPanelOpen((prev) => !prev)}
+          >
+            {isSessionPanelOpen ? '>' : '<'}
+          </button>
 
-            <div className="info-card">
-              <h3 className="info-title">⚡ Tips</h3>
-              <ul className="info-list">
-                <li>Hỏi câu hỏi cụ thể và rõ ràng</li>
-                <li>Sử dụng ký hiệu toán học chuẩn</li>
-                <li>Yêu cầu giải thích từng bước</li>
-                <li>Lưu lại các câu trả lời hữu ích</li>
-              </ul>
-            </div>
+          {isSessionPanelOpen ? (
+            <>
+              <button
+                type="button"
+                className="new-session-btn"
+                onClick={() => void handleNewChat()}
+                disabled={createSessionMutation.isPending}
+              >
+                + Cuộc trò chuyện mới
+              </button>
 
-            <div className="info-card">
-              <h3 className="info-title">📊 Thống kê</h3>
-              <div className="stats-item">
-                <span className="stats-label">Câu hỏi hôm nay</span>
-                <span className="stats-value">15</span>
+              <div className="session-list-title">Cuộc trò chuyện</div>
+              <div className="session-list">
+                {sessionsLoading && <div className="session-muted">Đang tải sessions...</div>}
+                {!sessionsLoading && sessions.length === 0 && (
+                  <div className="session-muted">Chưa có cuộc trò chuyện nào.</div>
+                )}
+                {sessions.map((session) => (
+                  <button
+                    type="button"
+                    key={session.id}
+                    className={`session-item ${session.id === selectedSessionId ? 'active' : ''}`}
+                    onClick={() => setSelectedSessionId(session.id)}
+                  >
+                    <span className="session-title">{session.title}</span>
+                    <span className="session-subtitle">
+                      {session.status} · {formatDateTime(session.lastMessageAt)}
+                    </span>
+                  </button>
+                ))}
               </div>
-              <div className="stats-item">
-                <span className="stats-label">Tổng câu hỏi</span>
-                <span className="stats-value">234</span>
+
+              <div className="session-footer">
+                <div className="session-muted">Memory limit: {memory?.wordLimit ?? 1000} words</div>
+                <div className="session-muted">Used: {memory?.currentWords ?? 0}</div>
               </div>
-              <div className="stats-item">
-                <span className="stats-label">Thời gian tiết kiệm</span>
-                <span className="stats-value">12.5h</span>
+            </>
+          ) : (
+            <div className="collapsed-actions">
+              <button
+                type="button"
+                className="new-session-btn collapsed"
+                onClick={() => void handleNewChat()}
+                disabled={createSessionMutation.isPending}
+                title="Tạo cuộc trò chuyện mới"
+              >
+                +
+              </button>
+              <div className="collapsed-count" title="Số lượng session">
+                {sessions.length}
               </div>
             </div>
-          </div>
-        </div>
+          )}
+        </aside>
       </div>
     </DashboardLayout>
   );

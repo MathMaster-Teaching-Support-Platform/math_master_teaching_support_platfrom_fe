@@ -96,8 +96,14 @@ const AISlideGenerator: React.FC = () => {
   const canChooseTemplate = canConfigureAi;
   const loadingAnyCatalog =
     loadingGrades || loadingSubjects || loadingChapters || loadingLessons || loadingTemplates;
-  const visualWizardStep = Math.min(activeWizardStep, 4);
-  const wizardSteps = ['Chọn bài dạy', 'Chọn template', 'Gen nội dung', 'Confirm nội dung'];
+  const visualWizardStep = Math.min(activeWizardStep, 5);
+  const wizardSteps = [
+    'Chọn bài dạy',
+    'Chọn template',
+    'Gen nội dung',
+    'Confirm nội dung',
+    'Tải file PPTX',
+  ];
 
   const clearGeneratedData = () => {
     setGenerated(null);
