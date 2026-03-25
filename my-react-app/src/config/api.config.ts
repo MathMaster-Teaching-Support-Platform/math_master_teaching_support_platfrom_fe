@@ -143,4 +143,11 @@ export const API_ENDPOINTS = {
   NOTIFICATIONS_UNREAD_COUNT: '/v1/notifications/unread-count',
   NOTIFICATIONS_READ_ALL: '/v1/notifications/read-all',
   NOTIFICATIONS_MARK_READ: (id: string) => `/v1/notifications/${id}/read`,
+
+  // Chat sessions
+  CHAT_SESSIONS: '/chat-sessions',
+  CHAT_SESSION_DETAIL: (sessionId: string) => `/chat-sessions/${sessionId}`,
+  CHAT_SESSION_MESSAGES: (sessionId: string) => `/chat-sessions/${sessionId}/messages`,
+  CHAT_SESSION_ARCHIVE: (sessionId: string) => `/chat-sessions/${sessionId}/archive`,
+  CHAT_SESSION_MEMORY: (sessionId: string) => `/chat-sessions/${sessionId}/memory`,
 };

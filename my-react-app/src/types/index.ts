@@ -19,6 +19,7 @@ export * from './lesson.types';
 export * from './chapter.types';
 export * from './roadmap.types';
 export * from './subject.types';
+export * from './chat.types';
 export * from './document.types';
 export {
   type Mindmap,

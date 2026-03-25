@@ -9,8 +9,7 @@ import type {
 } from '../../types/wallet.types';
 
 export class WalletService {
-  // Wallet endpoints on backend are served under /api/*.
-  private static readonly WALLET_BASE_URL = `${API_BASE_URL}/api`;
+  private static readonly WALLET_BASE_URL = API_BASE_URL;
 
   private static async getHeaders(includeJsonContentType = false) {
     const token = AuthService.getToken();
