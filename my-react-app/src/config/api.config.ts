@@ -106,6 +106,9 @@ export const API_ENDPOINTS = {
   ROADMAP_PROGRESS: (roadmapId: string) => `/roadmaps/${roadmapId}/progress`,
   ROADMAP_ENTRY_TEST_SUBMIT: (roadmapId: string) =>
     `/student/roadmaps/${roadmapId}/entry-test/submit`,
+  STUDENT_ROADMAP_FEEDBACK: (roadmapId: string) => `/student/roadmaps/${roadmapId}/feedback`,
+  STUDENT_ROADMAP_FEEDBACK_ME: (roadmapId: string) =>
+    `/student/roadmaps/${roadmapId}/feedback/me`,
   STUDENT_TOPIC_MATERIALS: (topicId: string) => `/student/roadmaps/topics/${topicId}/materials`,
   STUDENT_TOPIC_MATERIALS_BY_TYPE: (topicId: string, resourceType: string) =>
     `/student/roadmaps/topics/${topicId}/materials-by-type?resourceType=${resourceType}`,
@@ -114,6 +117,8 @@ export const API_ENDPOINTS = {
   ADMIN_ROADMAP_TOPICS: (roadmapId: string) => `/admin/roadmaps/${roadmapId}/topics`,
   ADMIN_ROADMAP_TOPIC_DETAIL: (roadmapId: string, topicId: string) =>
     `/admin/roadmaps/${roadmapId}/topics/${topicId}`,
+  ADMIN_ROADMAP_RESOURCE_OPTIONS: '/admin/roadmaps/resource-options',
+  ADMIN_ROADMAP_FEEDBACK: (roadmapId: string) => `/admin/roadmaps/${roadmapId}/feedback`,
   ADMIN_ROADMAP_ENTRY_TEST: (roadmapId: string) => `/admin/roadmaps/${roadmapId}/entry-test`,
 
   // Lesson slide generator flow

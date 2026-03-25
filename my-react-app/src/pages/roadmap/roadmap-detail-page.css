@@ -1,5 +1,5 @@
 /* ================================================
-   roadmap-detail-page.css  —  Roadmap Detail
+   roadmap-detail-page.css  ï¿½  Roadmap Detail
    ================================================ */
 
 .rdp {
@@ -223,6 +223,105 @@
   color: var(--success-color);
 }
 
+/* Feedback */
+.rdp__feedback {
+  background: #fff;
+  border: 1px solid var(--gray-200);
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.rdp__feedback-head {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.rdp__feedback-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--gray-800);
+}
+
+.rdp__feedback-subtitle {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--gray-500);
+}
+
+.rdp__stars {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.rdp__star {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #94a3b8;
+  border-radius: 8px;
+  width: 2rem;
+  height: 2rem;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.rdp__star--active {
+  color: #f59e0b;
+  border-color: #fbbf24;
+  background: #fff8e8;
+}
+
+.rdp__feedback-field {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  color: #334155;
+}
+
+.rdp__feedback-field textarea {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 0.55rem 0.65rem;
+  resize: vertical;
+  font-size: 0.875rem;
+}
+
+.rdp__counter {
+  justify-self: end;
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+.rdp__counter--error {
+  color: #b91c1c;
+}
+
+.rdp__feedback-message {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.45rem 0.65rem;
+  border-radius: 8px;
+}
+
+.rdp__feedback-message--success {
+  color: #166534;
+  background: #dcfce7;
+}
+
+.rdp__feedback-message--error {
+  color: #991b1b;
+  background: #fee2e2;
+}
+
+.rdp__feedback-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
 /* \u2500\u2500 Canvas wrapper \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
 .rdp__canvas-wrap {
   background: #fff;
@@ -249,7 +348,7 @@
   margin: 0;
 }
 
-/* Canvas — the interactive map area */
+/* Canvas ï¿½ the interactive map area */
 .rdp__canvas {
   position: relative;
   background: #f8faff;
@@ -366,7 +465,7 @@
   50%       { transform: scale(1.65); opacity: 0; }
 }
 
-/* Node card — shown on hover and always for current */
+/* Node card ï¿½ shown on hover and always for current */
 .rdp__node-card {
   position: absolute;
   top: 50px;

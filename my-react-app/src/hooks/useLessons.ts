@@ -5,7 +5,8 @@ export const lessonKeys = {
   all: ['lessons'] as const,
   list: (gradeLevel: string, subject: string) =>
     [...lessonKeys.all, 'list', gradeLevel, subject] as const,
-  byChapter: (chapterId: string) => [...lessonKeys.all, 'chapter', chapterId] as const,
+  byChapter: (chapterId: string, name = '') =>
+    [...lessonKeys.all, 'chapter', chapterId, name] as const,
 };
 
 export function useLessons(gradeLevel: string, subject: string, enabled = true) {
@@ -16,10 +17,10 @@ export function useLessons(gradeLevel: string, subject: string, enabled = true) 
   });
 }
 
-export function useLessonsByChapter(chapterId: string, enabled = true) {
+export function useLessonsByChapter(chapterId: string, name = '', enabled = true) {
   return useQuery({
-    queryKey: lessonKeys.byChapter(chapterId),
-    queryFn: () => LessonService.getLessonsByChapter(chapterId),
+    queryKey: lessonKeys.byChapter(chapterId, name),
+    queryFn: () => LessonService.getLessonsByChapter(chapterId, name),
     enabled: enabled && !!chapterId,
   });
 }

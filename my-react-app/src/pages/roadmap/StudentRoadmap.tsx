@@ -90,8 +90,7 @@ const TopicStep: React.FC<{
         </div>
         {topic.description && <p className="srp__step-desc">{topic.description}</p>}
         <div className="srp__step-meta">
-          <span>⏱ {topic.estimatedHours}h</span>
-          {topic.progressPercentage > 0 && <span>📊 {topic.progressPercentage}%</span>}
+          {typeof topic.mark === 'number' && <span>🎯 {topic.mark.toFixed(1)}</span>}
         </div>
         {isCurrent && (
           <Link to={`/roadmaps/${roadmapId}`} className="srp__continue-btn">

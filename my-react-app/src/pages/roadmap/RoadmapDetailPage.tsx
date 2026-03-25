@@ -4,7 +4,9 @@ import { useParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockStudent } from '../../data/mockData';
 import {
+  useMyRoadmapFeedback,
   useRoadmapDetail,
+  useSubmitRoadmapFeedback,
   useStudentTopicMaterials,
   useSubmitRoadmapEntryTest,
 } from '../../hooks/useRoadmaps';
@@ -66,18 +68,24 @@ export default function RoadmapDetailPage() {
   const { roadmapId = '' } = useParams();
   const { data, isLoading, error } = useRoadmapDetail(roadmapId);
   const submitEntryTest = useSubmitRoadmapEntryTest();
+  const myFeedbackQuery = useMyRoadmapFeedback(roadmapId);
+  const submitFeedback = useSubmitRoadmapFeedback();
 
   const [submissionId, setSubmissionId] = useState('');
   const [selectedTopicId, setSelectedTopicId] = useState('');
   const [resourceType, setResourceType] = useState<TopicMaterialResourceType>('LESSON');
   const [finishedTopicIds, setFinishedTopicIds] = useState<string[]>([]);
   const [carIdx, setCarIdx] = useState(-1);
+  const [feedbackRating, setFeedbackRating] = useState(0);
+  const [feedbackContent, setFeedbackContent] = useState('');
+  const [feedbackMessage, setFeedbackMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const roadPathRef = useRef<SVGPathElement>(null);
   const currentNodeRef = useRef<HTMLDivElement>(null);
   const [pathLength, setPathLength] = useState(10000);
 
   const roadmap = data?.result;
+  const myFeedback = myFeedbackQuery.data?.result ?? null;
   const materialsQuery = useStudentTopicMaterials(selectedTopicId, resourceType);
   const materials = Array.isArray(materialsQuery.data?.result) ? materialsQuery.data?.result : [];
 
@@ -127,9 +135,65 @@ export default function RoadmapDetailPage() {
     return () => clearTimeout(timer);
   }, [sortedTopics.length, isLoading]);
 
+  useEffect(() => {
+    if (!myFeedback) return;
+    setFeedbackRating(myFeedback.rating);
+    setFeedbackContent(myFeedback.content ?? '');
+  }, [myFeedback]);
+
   const finishTopic = (topicId: string, index: number) => {
     setFinishedTopicIds((prev) => (prev.includes(topicId) ? prev : [...prev, topicId]));
     setCarIdx(index);
+  };
+
+  const feedbackContentLength = feedbackContent.length;
+  const feedbackIsValid = feedbackRating >= 1 && feedbackRating <= 5 && feedbackContentLength <= 2000;
+
+  const submitRoadmapFeedback = () => {
+    if (!roadmapId || !feedbackIsValid) return;
+
+    submitFeedback.mutate(
+      {
+        roadmapId,
+        payload: {
+          rating: feedbackRating,
+          content: feedbackContent.trim(),
+        },
+      },
+      {
+        onSuccess: (response) => {
+          setFeedbackRating(response.result.rating);
+          setFeedbackContent(response.result.content ?? '');
+          setFeedbackMessage({
+            type: 'success',
+            text: myFeedback ? 'Feedback updated successfully.' : 'Feedback submitted successfully.',
+          });
+        },
+        onError: (mutationError) => {
+          const message = mutationError instanceof Error ? mutationError.message : 'Failed to submit feedback';
+          if (message.startsWith('400')) {
+            setFeedbackMessage({
+              type: 'error',
+              text: 'Validation failed. Please choose a rating from 1 to 5 and keep content within 2000 characters.',
+            });
+            return;
+          }
+          if (message.startsWith('401')) {
+            setFeedbackMessage({ type: 'error', text: 'Please sign in to submit feedback.' });
+            return;
+          }
+          if (message.startsWith('403')) {
+            setFeedbackMessage({ type: 'error', text: 'You do not have permission to submit feedback for this roadmap.' });
+            return;
+          }
+          if (message.startsWith('404')) {
+            setFeedbackMessage({ type: 'error', text: 'Roadmap not found.' });
+            return;
+          }
+          setFeedbackMessage({ type: 'error', text: message.replace(/^\d{3}\s+[^:]+:\s*/, '') });
+        },
+      }
+    );
   };
 
   return (
@@ -227,6 +291,75 @@ export default function RoadmapDetailPage() {
               )}
             </div>
 
+            {/* ── Feedback ── */}
+            <div className="rdp__feedback">
+              <div className="rdp__feedback-head">
+                <h3 className="rdp__feedback-title">Roadmap feedback</h3>
+                <p className="rdp__feedback-subtitle">Rate this roadmap and share your thoughts.</p>
+              </div>
+
+              {myFeedbackQuery.isLoading && <p className="rdp__mat-state">Loading your feedback...</p>}
+              {myFeedbackQuery.error && <p className="rdp__mat-state">Unable to load your feedback.</p>}
+
+              {!myFeedbackQuery.isLoading && !myFeedbackQuery.error && (
+                <>
+                  <div className="rdp__stars" role="radiogroup" aria-label="Roadmap rating">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        className={`rdp__star ${feedbackRating >= star ? 'rdp__star--active' : ''}`}
+                        onClick={() => setFeedbackRating(star)}
+                        aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
+                        disabled={submitFeedback.isPending}
+                      >
+                        ★
+                      </button>
+                    ))}
+                  </div>
+
+                  <label className="rdp__feedback-field">
+                    <span>Content (optional)</span>
+                    <textarea
+                      rows={4}
+                      value={feedbackContent}
+                      onChange={(event) => {
+                        setFeedbackContent(event.target.value);
+                        setFeedbackMessage(null);
+                      }}
+                      maxLength={2000}
+                      placeholder="Tell us what helps, what is missing, or what should be improved"
+                      disabled={submitFeedback.isPending}
+                    />
+                    <small className={feedbackContentLength > 2000 ? 'rdp__counter rdp__counter--error' : 'rdp__counter'}>
+                      {feedbackContentLength}/2000
+                    </small>
+                  </label>
+
+                  {feedbackMessage && (
+                    <p className={`rdp__feedback-message rdp__feedback-message--${feedbackMessage.type}`}>
+                      {feedbackMessage.text}
+                    </p>
+                  )}
+
+                  <div className="rdp__feedback-actions">
+                    <button
+                      type="button"
+                      className="rdp__entry-btn"
+                      onClick={submitRoadmapFeedback}
+                      disabled={submitFeedback.isPending || !feedbackIsValid}
+                    >
+                      {submitFeedback.isPending
+                        ? 'Saving...'
+                        : myFeedback
+                          ? 'Update feedback'
+                          : 'Submit feedback'}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+
             {/* ── Road canvas ── */}
             {sortedTopics.length > 0 && (
               <div className="rdp__canvas-wrap">
@@ -303,7 +436,7 @@ export default function RoadmapDetailPage() {
                               </span>
                             </div>
                             <div className="rdp__node-meta">
-                              <span>⏱ {topic.estimatedHours}h</span>
+                              {typeof topic.mark === 'number' && <span>🎯 {topic.mark.toFixed(1)}</span>}
                               {isCurrent && <span className="rdp__node-cur-tag">Đang học</span>}
                             </div>
                             <div className="rdp__node-actions">
