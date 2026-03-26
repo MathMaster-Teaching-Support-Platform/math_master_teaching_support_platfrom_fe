@@ -53,6 +53,7 @@ import { MindmapEditor, TeacherMindmaps } from '../pages/mindmaps';
 import { QuestionBankDashboard } from '../pages/question-banks/QuestionBankDashboard';
 import { QuestionBankDetailPage } from '../pages/question-banks/QuestionBankDetailPage';
 import { TemplateDashboard } from '../pages/question-templates/TemplateDashboard';
+import TeacherLessonPlans from '../pages/lesson-plans/TeacherLessonPlans';
 
 const router = createBrowserRouter([
   {
@@ -158,6 +159,10 @@ const router = createBrowserRouter([
   {
     path: '/teacher/courses',
     element: <TeacherCourses />,
+  },
+  {
+    path: '/teacher/lesson-plans',
+    element: <TeacherLessonPlans />,
   },
   {
     path: '/teacher/materials',

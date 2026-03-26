@@ -129,6 +129,13 @@ export const API_ENDPOINTS = {
   LESSON_SLIDES_GENERATE_CONTENT: '/lesson-slides/generate-content',
   LESSON_SLIDES_GENERATE_PPTX: '/lesson-slides/generate-pptx-from-json',
 
+  // Lesson Plans (Giáo án)
+  LESSON_PLANS: '/lesson-plans',
+  LESSON_PLANS_MY: '/lesson-plans/my',
+  LESSON_PLAN_DETAIL: (id: string) => `/lesson-plans/${id}`,
+  LESSON_PLAN_MY_BY_LESSON: (lessonId: string) => `/lesson-plans/my/lesson/${lessonId}`,
+  LESSON_PLANS_BY_LESSON: (lessonId: string) => `/lesson-plans/lesson/${lessonId}`,
+
   // Wallet
   WALLET_MY: '/wallet/my-wallet',
   WALLET_TRANSACTIONS: '/wallet/transactions',

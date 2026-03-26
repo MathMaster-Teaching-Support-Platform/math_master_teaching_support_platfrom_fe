@@ -21,6 +21,7 @@ export * from './roadmap.types';
 export * from './subject.types';
 export * from './chat.types';
 export * from './document.types';
+export * from './lessonPlan.types';
 export {
   type Mindmap,
   type MindmapNode,

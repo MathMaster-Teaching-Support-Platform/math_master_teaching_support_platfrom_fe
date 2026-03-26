@@ -5,6 +5,7 @@ import {
   Bot,
   ChevronLeft,
   ClipboardCheck,
+  ClipboardList,
   CreditCard,
   Database,
   FileCheck2,
@@ -55,6 +56,7 @@ const teacherGroups: MenuGroup[] = [
     label: 'Nội dung',
     items: [
       { path: '/teacher/courses', icon: BookOpen, label: 'Giáo Trình' },
+      { path: '/teacher/lesson-plans', icon: ClipboardList, label: 'Giáo Án' },
       { path: '/teacher/materials', icon: FolderKanban, label: 'Tài liệu' },
       { path: '/teacher/mindmaps', icon: Workflow, label: 'Mindmap' },
       { path: '/teacher/question-templates', icon: FileQuestion, label: 'Mẫu câu hỏi' },
