@@ -293,6 +293,12 @@ const ProfileSettings: React.FC = () => {
     if (!name) errs.fullName = 'Họ và tên không được để trống';
     else if (name.length < 2) errs.fullName = 'Họ và tên phải có ít nhất 2 ký tự';
     else if (name.length > 50) errs.fullName = 'Họ và tên không được vượt quá 50 ký tự';
+    if (profileForm.dob) {
+      const dobYear = new Date(profileForm.dob).getFullYear();
+      const currentYear = new Date().getFullYear();
+      if (dobYear < currentYear - 100) errs.dob = 'Ngày sinh không hợp lệ (tối đa 100 tuổi)';
+      else if (dobYear > currentYear - 3) errs.dob = 'Ngày sinh không hợp lệ (tối thiểu 3 tuổi)';
+    }
     if (profileForm.avatar && profileForm.avatar.length > 2048)
       errs.avatar = 'URL ảnh quá dài (tối đa 2048 ký tự)';
     setProfileErrors(errs);
@@ -695,10 +701,12 @@ const ProfileSettings: React.FC = () => {
                           value={profileForm.dob}
                           onChange={(v) => {
                             setProfileForm((f) => ({ ...f, dob: v }));
+                            setProfileErrors((e) => ({ ...e, dob: undefined }));
                             setProfileDirty(true);
                           }}
                           icon={<Calendar size={15} aria-hidden="true" />}
                           hint="Không hiển thị công khai với người dùng khác"
+                          error={profileErrors.dob}
                         />
 
                         {userData?.code && (
