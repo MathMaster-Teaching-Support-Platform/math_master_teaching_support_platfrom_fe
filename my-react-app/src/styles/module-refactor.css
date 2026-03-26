@@ -451,3 +451,14 @@
     grid-template-columns: 1fr;
   }
 }
+
+.module-layout-container .preview-box {
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  border: 1px dashed var(--mod-slate-200);
+  border-radius: 8px;
+  background: var(--mod-slate-25);
+  font-size: 0.95rem;
+  color: var(--mod-ink);
+  min-height: 1.5rem;
+}

@@ -2,6 +2,7 @@ import { CheckCircle2, Play, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTestTemplate } from '../../hooks/useQuestionTemplate';
 import type { QuestionTemplateResponse } from '../../types/questionTemplate';
+import { MathText } from '../../components/common/MathText';
 
 type Props = {
   isOpen: boolean;
@@ -84,7 +85,7 @@ export function TemplateTestModal({ isOpen, onClose, template }: Props) {
               {result.samples?.map((sample, index) => (
                 <article key={`${index}-${sample.questionText}`} className="data-card" style={{ minHeight: 0 }}>
                   <p className="muted">Mẫu {index + 1}</p>
-                  <p>{sample.questionText}</p>
+                  <p><MathText text={sample.questionText || ''} /></p>
 
                   {sample.options && (
                     <div className="table-wrap">
@@ -93,7 +94,7 @@ export function TemplateTestModal({ isOpen, onClose, template }: Props) {
                           {Object.entries(sample.options).map(([key, value]) => (
                             <tr key={key}>
                               <td style={{ width: 70 }}>{key}</td>
-                              <td>{value}</td>
+                               <td><MathText text={typeof value === 'string' ? value : String(value)} /></td>
                             </tr>
                           ))}
                         </tbody>

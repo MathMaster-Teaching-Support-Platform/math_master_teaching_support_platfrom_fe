@@ -150,4 +150,17 @@ export const API_ENDPOINTS = {
   CHAT_SESSION_MESSAGES: (sessionId: string) => `/chat-sessions/${sessionId}/messages`,
   CHAT_SESSION_ARCHIVE: (sessionId: string) => `/chat-sessions/${sessionId}/archive`,
   CHAT_SESSION_MEMORY: (sessionId: string) => `/chat-sessions/${sessionId}/memory`,
+
+  // Question templates
+  QUESTION_TEMPLATES: '/question-templates',
+  QUESTION_TEMPLATES_MY: '/question-templates/my',
+  QUESTION_TEMPLATES_SEARCH: '/question-templates/search',
+  QUESTION_TEMPLATE_DETAIL: (id: string) => `/question-templates/${id}`,
+  QUESTION_TEMPLATE_TOGGLE_PUBLIC: (id: string) => `/question-templates/${id}/toggle-public`,
+  QUESTION_TEMPLATE_PUBLISH: (id: string) => `/question-templates/${id}/publish`,
+  QUESTION_TEMPLATE_ARCHIVE: (id: string) => `/question-templates/${id}/archive`,
+  QUESTION_TEMPLATE_TEST: (id: string) => `/question-templates/${id}/test`,
+  QUESTION_TEMPLATE_GENERATE_AI_ENHANCED: (id: string) => `/question-templates/${id}/generate-ai-enhanced`,
+  QUESTION_TEMPLATE_AI_GENERATE_FROM_LESSON: '/question-templates/ai-generate-from-lesson',
+  QUESTION_TEMPLATE_IMPORT_FROM_FILE: '/question-templates/import-from-file',
 };

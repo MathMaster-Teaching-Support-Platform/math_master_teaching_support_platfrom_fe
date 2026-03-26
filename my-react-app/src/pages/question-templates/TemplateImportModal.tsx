@@ -3,6 +3,7 @@ import { useRef, useState } from 'react';
 import { useGetMyQuestionBanks } from '../../hooks/useQuestionBank';
 import { useImportTemplateFromFile } from '../../hooks/useQuestionTemplate';
 import type { TemplateDraft } from '../../types/questionTemplate';
+import { MathText } from '../../components/common/MathText';
 
 type Props = {
   isOpen: boolean;
@@ -124,7 +125,9 @@ export function TemplateImportModal({ isOpen, onClose, onUseTemplate }: Props) {
                   <h3>Mẫu gợi ý</h3>
                   <FileText size={16} />
                 </div>
-                <p className="muted">{result.suggestedTemplate?.name || 'Không nhận diện được tên mẫu'}</p>
+                <p className="muted">
+                  <MathText text={result.suggestedTemplate?.name || 'Không nhận diện được tên mẫu'} />
+                </p>
                 <pre style={{ whiteSpace: 'pre-wrap', margin: 0, fontSize: 12 }}>
                   {JSON.stringify(result.suggestedTemplate, null, 2)}
                 </pre>
