@@ -3,6 +3,7 @@ export type AssessmentType = 'QUIZ' | 'TEST' | 'EXAM' | 'HOMEWORK';
 export type AssessmentStatus = 'DRAFT' | 'PUBLISHED' | 'CLOSED';
 export type AssessmentMode = 'DIRECT' | 'MATRIX_BASED';
 export type AttemptScoringPolicy = 'BEST' | 'LATEST' | 'AVERAGE';
+export type AssessmentSelectionStrategy = 'BANK_FIRST' | 'AI_FIRST' | 'MIXED';
 
 // ─── Request DTOs ─────────────────────────────────────────────────────────────
 export interface AssessmentRequest {
@@ -52,6 +53,25 @@ export interface AddQuestionToAssessmentRequest {
 export interface GenerateAssessmentFromMatrixRequest {
     examMatrixId: string;
     reuseApprovedQuestions?: boolean;
+    selectionStrategy?: AssessmentSelectionStrategy;
+}
+
+export interface AssessmentGenerationSummary {
+    totalQuestionsGenerated?: number;
+    questionsFromBank?: number;
+    questionsFromAi?: number;
+    totalPoints?: number;
+    warnings?: string[];
+    message?: string;
+}
+
+export interface AssessmentQuestionItem {
+    id: string;
+    questionText: string;
+    difficulty?: 'EASY' | 'MEDIUM' | 'HARD';
+    points?: number;
+    questionSourceType?: 'MANUAL' | 'TEMPLATE_GENERATED' | 'AI_GENERATED' | 'BANK_IMPORTED' | 'BANK' | 'AI';
+    source?: 'BANK' | 'AI';
 }
 
 // ─── Response DTOs ────────────────────────────────────────────────────────────
@@ -79,6 +99,7 @@ export interface AssessmentResponse {
     status: AssessmentStatus;
     totalQuestions: number;
     totalPoints: number;
+    generationSummary?: AssessmentGenerationSummary;
     submissionCount: number;
     createdAt: string;
     updatedAt: string;

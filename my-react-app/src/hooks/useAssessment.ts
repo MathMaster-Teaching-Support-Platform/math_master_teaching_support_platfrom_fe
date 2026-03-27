@@ -6,6 +6,7 @@ import {
 } from '@tanstack/react-query';
 import { AssessmentService } from '../services/api/assessment.service';
 import type {
+    AssessmentQuestionItem,
     AssessmentRequest,
     AssessmentResponse,
     AssessmentSummary,
@@ -24,6 +25,7 @@ export const assessmentKeys = {
     lists: () => [...assessmentKeys.all, 'list'] as const,
     myList: (params: GetMyAssessmentsParams) => [...assessmentKeys.lists(), 'my', params] as const,
     detail: (id: string) => [...assessmentKeys.all, 'detail', id] as const,
+    questions: (id: string) => [...assessmentKeys.detail(id), 'questions'] as const,
     preview: (id: string) => [...assessmentKeys.all, 'preview', id] as const,
     publishSummary: (id: string) => [...assessmentKeys.all, 'publish-summary', id] as const,
     canEdit: (id: string) => [...assessmentKeys.all, 'can-edit', id] as const,
@@ -56,6 +58,18 @@ export function useAssessment(
     return useQuery({
         queryKey: assessmentKeys.detail(id),
         queryFn: () => AssessmentService.getAssessmentById(id),
+        enabled: !!id,
+        ...options,
+    });
+}
+
+export function useAssessmentQuestions(
+    id: string,
+    options?: Omit<UseQueryOptions<ApiResponse<AssessmentQuestionItem[]>>, 'queryKey' | 'queryFn'>
+) {
+    return useQuery({
+        queryKey: assessmentKeys.questions(id),
+        queryFn: () => AssessmentService.getAssessmentQuestions(id),
         enabled: !!id,
         ...options,
     });

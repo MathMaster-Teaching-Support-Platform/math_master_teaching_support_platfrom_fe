@@ -138,6 +138,28 @@ export const useGenerateAIEnhancedQuestion = () => {
     });
 };
 
+export const useGenerateQuestions = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({
+            id,
+            count,
+            difficultyDistribution,
+        }: {
+            id: string;
+            count: number;
+            difficultyDistribution: { EASY?: number; MEDIUM?: number; HARD?: number };
+        }) =>
+            questionTemplateService.generateQuestions(id, {
+                count,
+                difficultyDistribution,
+            }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['questions'] });
+        },
+    });
+};
+
 export const useImportTemplateFromFile = () => {
     return useMutation({
         mutationFn: ({

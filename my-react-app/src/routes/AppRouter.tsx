@@ -46,6 +46,7 @@ import AdminRoadmapManagementPage from '../pages/admin/AdminRoadmapManagementPag
 import AdminRoadmapTopicsPage from '../pages/admin/AdminRoadmapTopicsPage';
 import ReviewProfiles from '../pages/admin/ReviewProfiles';
 import AssessmentDetail from '../pages/assessments/AssessmentDetail';
+import AssessmentBuilderFlow from '../pages/assessments/AssessmentBuilderFlow';
 import TeacherAssessments from '../pages/assessments/TeacherAssessments';
 import { ExamMatrixDashboard } from '../pages/exam-matrices/ExamMatrixDashboard';
 import ExamMatrixDetailPage from '../pages/exam-matrices/ExamMatrixDetailPage';
@@ -175,6 +176,10 @@ const router = createBrowserRouter([
   {
     path: '/teacher/assessments',
     element: <TeacherAssessments />,
+  },
+  {
+    path: '/teacher/assessment-builder',
+    element: <AssessmentBuilderFlow />,
   },
   {
     path: '/teacher/assessments/:id',

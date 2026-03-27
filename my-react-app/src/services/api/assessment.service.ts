@@ -1,6 +1,7 @@
 import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
 import { AuthService } from './auth.service';
 import type {
+    AssessmentQuestionItem,
     AssessmentRequest,
     AssessmentResponse,
     AssessmentSearchApiResponse,
@@ -134,7 +135,8 @@ export class AssessmentService {
         if (params.sortDirection) queryParams.append('sortDirection', params.sortDirection);
 
         const qs = queryParams.toString();
-        const url = `${API_BASE_URL}${API_ENDPOINTS.ASSESSMENTS_MY}${qs ? `?${qs}` : ''}`;
+        const suffix = qs ? `?${qs}` : '';
+        const url = `${API_BASE_URL}${API_ENDPOINTS.ASSESSMENTS_MY}${suffix}`;
         const response = await fetch(url, { method: 'GET', headers });
         if (!response.ok) {
             const error = await response.json();
@@ -290,6 +292,22 @@ export class AssessmentService {
         if (!response.ok) {
             const error = await response.json();
             throw new Error(error.message || 'Failed to generate assessment from matrix');
+        }
+        return response.json();
+    }
+
+    /** GET /assessments/{assessmentId}/questions */
+    static async getAssessmentQuestions(
+        assessmentId: string
+    ): Promise<ApiResponse<AssessmentQuestionItem[]>> {
+        const headers = await this.getHeaders();
+        const response = await fetch(
+            `${API_BASE_URL}${API_ENDPOINTS.ASSESSMENTS_QUESTIONS(assessmentId)}`,
+            { method: 'GET', headers }
+        );
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error((error as { message?: string }).message || 'Failed to fetch assessment questions');
         }
         return response.json();
     }

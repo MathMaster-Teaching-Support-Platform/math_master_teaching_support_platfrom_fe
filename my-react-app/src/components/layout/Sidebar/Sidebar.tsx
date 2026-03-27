@@ -20,6 +20,7 @@ import {
   NotebookTabs,
   Presentation,
   Ruler,
+  Sparkles,
   Settings,
   Users,
   Wallet,
@@ -62,6 +63,7 @@ const teacherGroups: MenuGroup[] = [
       { path: '/teacher/question-templates', icon: FileQuestion, label: 'Mẫu câu hỏi' },
       { path: '/teacher/question-banks', icon: Database, label: 'Ngân hàng câu hỏi' },
       { path: '/teacher/exam-matrices', icon: Ruler, label: 'Ma trận đề' },
+      { path: '/teacher/assessment-builder', icon: Sparkles, label: 'AI Builder' },
     ],
   },
   {

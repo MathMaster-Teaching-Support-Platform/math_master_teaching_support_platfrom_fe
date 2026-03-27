@@ -22,6 +22,16 @@ export interface AddTemplateMappingRequest {
     pointsPerQuestion: number;
 }
 
+export interface AddBankMappingRequest {
+    questionBankId: string;
+    difficultyDistribution: {
+        EASY?: number;
+        MEDIUM?: number;
+        HARD?: number;
+    };
+    cognitiveLevel?: CognitiveLevel | string;
+}
+
 export interface GeneratePreviewRequest {
     templateId: string;
     count: number;
@@ -99,6 +109,23 @@ export interface MatrixValidationReport {
     questionsMatchTarget: boolean;
     pointsMatchTarget: boolean;
     allCognitiveLevelsCovered: boolean;
+    aiFallbackLikely?: boolean;
+    bankCoverageByDifficulty?: Record<string, number>;
+}
+
+export interface BankMappingResponse {
+    id: string;
+    examMatrixId: string;
+    questionBankId: string;
+    questionBankName?: string;
+    cognitiveLevel?: string;
+    difficultyDistribution: {
+        EASY?: number;
+        MEDIUM?: number;
+        HARD?: number;
+    };
+    createdAt: string;
+    updatedAt: string;
 }
 
 export interface MappingRequirementsInfo {

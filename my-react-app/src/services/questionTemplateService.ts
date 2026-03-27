@@ -6,6 +6,8 @@ import {
     type TemplateTestResponse,
     type TemplateImportResponse,
     type AIEnhancedQuestionResponse,
+    type GenerateQuestionsRequest,
+    type GeneratedQuestionsBatchResponse,
     type PageResponse,
     type ApiResponse,
     CognitiveLevel,
@@ -159,6 +161,20 @@ export const questionTemplateService = {
             headers: getAuthHeaders(),
         });
         if (!response.ok) throw new Error('Failed to test template');
+        return response.json();
+    },
+
+    // Generate a batch of AI draft questions from template
+    generateQuestions: async (
+        id: string,
+        request: GenerateQuestionsRequest
+    ): Promise<ApiResponse<GeneratedQuestionsBatchResponse>> => {
+        const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTION_TEMPLATE_GENERATE_QUESTIONS(id)}`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(request),
+        });
+        if (!response.ok) throw new Error('Failed to generate questions from template');
         return response.json();
     },
 

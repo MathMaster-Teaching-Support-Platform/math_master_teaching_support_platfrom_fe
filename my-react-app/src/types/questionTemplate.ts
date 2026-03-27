@@ -155,6 +155,22 @@ export interface TemplateTestResponse {
     validationErrors?: string[];
 }
 
+export interface GenerateQuestionsRequest {
+    count: number;
+    difficultyDistribution: {
+        EASY?: number;
+        MEDIUM?: number;
+        HARD?: number;
+    };
+}
+
+export interface GeneratedQuestionsBatchResponse {
+    totalRequested?: number;
+    totalGenerated?: number;
+    generatedQuestionIds?: string[];
+    warnings?: string[];
+}
+
 export interface PageResponse<T> {
     content: T[];
     pageable: {

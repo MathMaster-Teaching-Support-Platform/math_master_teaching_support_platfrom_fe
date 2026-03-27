@@ -5,7 +5,9 @@ import type {
     ExamMatrixResponse,
     ExamMatrixApiResponse,
     AddTemplateMappingRequest,
+    AddBankMappingRequest,
     TemplateMappingResponse,
+    BankMappingResponse,
     MatrixValidationReport,
     MatchingTemplatesResponse,
     ListMatchingTemplatesParams,
@@ -85,6 +87,24 @@ export const examMatrixService = {
         fetch(`${API_BASE_URL}${API_ENDPOINTS.EXAM_MATRIX_MAPPINGS(matrixId)}`, {
             headers: getAuthHeaders(),
         }).then(handleResponse<TemplateMappingResponse[]>),
+
+    addBankMapping: (matrixId: string, request: AddBankMappingRequest) =>
+        fetch(`${API_BASE_URL}${API_ENDPOINTS.EXAM_MATRIX_BANK_MAPPINGS(matrixId)}`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(request),
+        }).then(handleResponse<BankMappingResponse>),
+
+    removeBankMapping: (matrixId: string, mappingId: string) =>
+        fetch(`${API_BASE_URL}${API_ENDPOINTS.EXAM_MATRIX_BANK_MAPPING_DETAIL(matrixId, mappingId)}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders(),
+        }).then(handleResponse<void>),
+
+    getBankMappings: (matrixId: string) =>
+        fetch(`${API_BASE_URL}${API_ENDPOINTS.EXAM_MATRIX_BANK_MAPPINGS(matrixId)}`, {
+            headers: getAuthHeaders(),
+        }).then(handleResponse<BankMappingResponse[]>),
 
     validateMatrix: (matrixId: string) =>
         fetch(`${API_BASE_URL}${API_ENDPOINTS.EXAM_MATRIX_VALIDATE(matrixId)}`, {

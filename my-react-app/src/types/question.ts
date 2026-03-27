@@ -19,3 +19,29 @@ export interface QuestionResponse {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface UpdateQuestionRequest {
+  questionText?: string;
+  options?: Record<string, unknown>;
+  correctAnswer?: string;
+  explanation?: string;
+  points?: number;
+  difficulty?: 'EASY' | 'MEDIUM' | 'HARD';
+  cognitiveLevel?:
+    | 'NHAN_BIET'
+    | 'THONG_HIEU'
+    | 'VAN_DUNG'
+    | 'VAN_DUNG_CAO'
+    | 'REMEMBER'
+    | 'UNDERSTAND'
+    | 'APPLY'
+    | 'ANALYZE'
+    | 'EVALUATE'
+    | 'CREATE';
+  tags?: string[];
+  status?: 'AI_DRAFT' | 'UNDER_REVIEW' | 'APPROVED' | 'ARCHIVED';
+}
+
+export interface BulkApproveRequest {
+  questionIds: string[];
+}

@@ -75,6 +75,10 @@ export const API_ENDPOINTS = {
 
   // Questions
   QUESTIONS_BY_BANK: (bankId: string) => `/questions/bank/${bankId}`,
+  QUESTIONS_BY_TEMPLATE: (templateId: string) => `/questions/template/${templateId}`,
+  QUESTIONS_DETAIL: (questionId: string) => `/questions/${questionId}`,
+  QUESTIONS_APPROVE: (questionId: string) => `/questions/${questionId}/approve`,
+  QUESTIONS_BULK_APPROVE: '/questions/bulk-approve',
 
   // Mindmaps
   MINDMAPS: '/mindmaps',
@@ -167,7 +171,13 @@ export const API_ENDPOINTS = {
   QUESTION_TEMPLATE_PUBLISH: (id: string) => `/question-templates/${id}/publish`,
   QUESTION_TEMPLATE_ARCHIVE: (id: string) => `/question-templates/${id}/archive`,
   QUESTION_TEMPLATE_TEST: (id: string) => `/question-templates/${id}/test`,
+  QUESTION_TEMPLATE_GENERATE_QUESTIONS: (id: string) => `/question-templates/${id}/generate-questions`,
   QUESTION_TEMPLATE_GENERATE_AI_ENHANCED: (id: string) => `/question-templates/${id}/generate-ai-enhanced`,
   QUESTION_TEMPLATE_AI_GENERATE_FROM_LESSON: '/question-templates/ai-generate-from-lesson',
   QUESTION_TEMPLATE_IMPORT_FROM_FILE: '/question-templates/import-from-file',
+
+  // Exam matrix bank mappings (BANK_FIRST flow)
+  EXAM_MATRIX_BANK_MAPPINGS: (matrixId: string) => `/exam-matrices/${matrixId}/bank-mappings`,
+  EXAM_MATRIX_BANK_MAPPING_DETAIL: (matrixId: string, mappingId: string) =>
+    `/exam-matrices/${matrixId}/bank-mappings/${mappingId}`,
 };
