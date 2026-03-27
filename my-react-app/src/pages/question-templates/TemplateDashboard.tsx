@@ -414,7 +414,7 @@ export function TemplateDashboard() {
                       }}
                     >
                       <Play size={14} />
-                      Chạy thử
+                      Tạo câu hỏi
                     </button>
 
                     <button
