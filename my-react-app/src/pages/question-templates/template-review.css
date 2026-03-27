@@ -1,0 +1,124 @@
+.module-layout-container .template-review-modal {
+  width: min(1040px, 100%);
+}
+
+.module-layout-container .template-review-modal__toolbar {
+  display: flex;
+  gap: 0.75rem;
+  align-items: end;
+  flex-wrap: wrap;
+}
+
+.module-layout-container .template-review-modal__selector {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 280px;
+  flex: 1;
+}
+
+.module-layout-container .template-review-modal__list {
+  max-height: 54vh;
+  overflow: auto;
+}
+
+.module-layout-container .template-review-question {
+  gap: 0.65rem;
+}
+
+.module-layout-container .template-review-table {
+  min-width: 920px;
+}
+
+.module-layout-container .template-review-table td {
+  vertical-align: top;
+}
+
+.module-layout-container .template-review-question__status {
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.24rem 0.58rem;
+}
+
+.module-layout-container .template-review-question__status.pending {
+  color: #8a5a10;
+  background: #fff4da;
+  border: 1px solid #f3d195;
+}
+
+.module-layout-container .template-review-question__status.approved {
+  color: #0d845d;
+  background: #e8fff6;
+  border: 1px solid #95e2c4;
+}
+
+.module-layout-container .template-review-question__text {
+  font-size: 0.95rem;
+  color: #142235;
+  line-height: 1.45;
+}
+
+.module-layout-container .template-review-question__explanation {
+  margin: 0.3rem 0 0;
+}
+
+.module-layout-container .template-review-question__actions {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+
+.module-layout-container .template-review-question__options {
+  border: 1px dashed #d4e0ef;
+  border-radius: 10px;
+  padding: 0.65rem 0.72rem;
+  background: #f8fbff;
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.88rem;
+}
+
+.module-layout-container .template-review-toast {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 1400;
+  max-width: min(540px, calc(100vw - 2rem));
+  padding: 0.75rem 0.9rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  box-shadow: 0 12px 24px rgba(11, 26, 46, 0.22);
+}
+
+.module-layout-container .template-review-toast--success {
+  background: #e8fff6;
+  border: 1px solid #96e1c4;
+  color: #0c6a4b;
+}
+
+.module-layout-container .template-review-toast--error {
+  background: #fff1f2;
+  border: 1px solid #f5bec3;
+  color: #9d2d3a;
+}
+
+.module-layout-container .template-review-edit-modal {
+  width: min(760px, 100%);
+}
+
+.module-layout-container .template-review-edit-modal__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+@media (max-width: 768px) {
+  .module-layout-container .template-review-modal__toolbar {
+    align-items: stretch;
+  }
+
+  .module-layout-container .template-review-modal__selector {
+    min-width: 100%;
+  }
+}

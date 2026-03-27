@@ -114,6 +114,19 @@ export function QuestionBankDashboard() {
             </button>
           </header>
 
+          <section className="hero-card">
+            <p className="hero-kicker">Phân tách trách nhiệm</p>
+            <h2>Duyệt, phê duyệt và chỉnh sửa câu hỏi thực hiện tại đây</h2>
+            <div className="row" style={{ flexWrap: 'wrap' }}>
+              <button className="btn secondary" onClick={() => navigate('/teacher/question-templates')}>
+                Mở Mẫu câu hỏi
+              </button>
+              <button className="btn" onClick={() => navigate('/teacher/assessment-builder')}>
+                Sang Trình tạo đề để lắp đề
+              </button>
+            </div>
+          </section>
+
           <div className="toolbar">
             <label className="row" style={{ minWidth: 260 }}>
               <Search size={15} />

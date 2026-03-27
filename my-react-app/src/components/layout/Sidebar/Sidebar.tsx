@@ -60,10 +60,10 @@ const teacherGroups: MenuGroup[] = [
       { path: '/teacher/lesson-plans', icon: ClipboardList, label: 'Giáo Án' },
       { path: '/teacher/materials', icon: FolderKanban, label: 'Tài liệu' },
       { path: '/teacher/mindmaps', icon: Workflow, label: 'Mindmap' },
+      { path: '/teacher/exam-matrices', icon: Ruler, label: 'Ma trận đề' },
       { path: '/teacher/question-templates', icon: FileQuestion, label: 'Mẫu câu hỏi' },
       { path: '/teacher/question-banks', icon: Database, label: 'Ngân hàng câu hỏi' },
-      { path: '/teacher/exam-matrices', icon: Ruler, label: 'Ma trận đề' },
-      { path: '/teacher/assessment-builder', icon: Sparkles, label: 'AI Builder' },
+      { path: '/teacher/assessment-builder', icon: Sparkles, label: 'Trình tạo đề' },
     ],
   },
   {

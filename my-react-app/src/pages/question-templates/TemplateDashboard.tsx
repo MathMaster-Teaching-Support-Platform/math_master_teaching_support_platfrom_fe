@@ -1,6 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Archive,
+  ArrowRight,
+  Check,
+  CheckSquare,
   Eye,
   EyeOff,
   FileText,
@@ -8,9 +11,11 @@ import {
   Play,
   Plus,
   RefreshCw,
+  Save,
   Search,
   Trash2,
   Upload,
+  X,
 } from 'lucide-react';
 import {
   useArchiveTemplate,
@@ -22,17 +27,27 @@ import {
   useUpdateQuestionTemplate,
 } from '../../hooks/useQuestionTemplate';
 import {
+  useApproveQuestion,
+  useBulkApproveQuestions,
+  useDeleteQuestion,
+  useReviewQuestions,
+  useUpdateQuestion,
+} from '../../hooks/useQuestion';
+import {
   TemplateStatus,
   type QuestionTemplateRequest,
   type QuestionTemplateResponse,
   type TemplateDraft,
 } from '../../types/questionTemplate';
+import type { QuestionResponse } from '../../types/question';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import '../../styles/module-refactor.css';
 import { TemplateFormModal } from './TemplateFormModal';
 import { TemplateImportModal } from './TemplateImportModal';
 import { TemplateTestModal } from './TemplateTestModal';
 import { MathText } from '../../components/common/MathText';
+import { useNavigate } from 'react-router-dom';
+import './template-review.css';
 
 const statusFilters: Array<'ALL' | TemplateStatus> = [
   'ALL',
@@ -77,7 +92,16 @@ const cognitiveLevelLabel: Record<string, string> = {
   CREATE: 'Sáng tạo',
 };
 
+const questionStatusLabel: Record<string, string> = {
+  AI_DRAFT: 'Nháp AI',
+  UNDER_REVIEW: 'Chờ duyệt',
+  APPROVED: 'Đã duyệt',
+  ARCHIVED: 'Lưu trữ',
+};
+
 export function TemplateDashboard() {
+  const navigate = useNavigate();
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<'ALL' | TemplateStatus>('ALL');
   const [mode, setMode] = useState<'create' | 'edit'>('create');
@@ -85,6 +109,13 @@ export function TemplateDashboard() {
   const [importOpen, setImportOpen] = useState(false);
   const [testOpen, setTestOpen] = useState(false);
   const [selected, setSelected] = useState<QuestionTemplateResponse | null>(null);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [reviewTemplateId, setReviewTemplateId] = useState('');
+  const [selectedQuestionIds, setSelectedQuestionIds] = useState<Set<string>>(new Set());
+  const [editingQuestion, setEditingQuestion] = useState<QuestionResponse | null>(null);
+  const [editQuestionText, setEditQuestionText] = useState('');
+  const [editCorrectAnswer, setEditCorrectAnswer] = useState('');
+  const [editExplanation, setEditExplanation] = useState('');
 
   const { data, isLoading, isError, error, refetch } = useGetMyQuestionTemplates(
     0,
@@ -99,6 +130,15 @@ export function TemplateDashboard() {
   const publishMutation = usePublishTemplate();
   const archiveMutation = useArchiveTemplate();
   const togglePublicMutation = useTogglePublicStatus();
+  const bulkApproveMutation = useBulkApproveQuestions();
+  const approveQuestionMutation = useApproveQuestion();
+  const updateQuestionMutation = useUpdateQuestion();
+  const deleteQuestionMutation = useDeleteQuestion();
+
+  const reviewQuestionsQuery = useReviewQuestions(
+    reviewTemplateId,
+    reviewOpen && Boolean(reviewTemplateId)
+  );
 
   const templates = data?.result?.content ?? [];
 
@@ -115,6 +155,16 @@ export function TemplateDashboard() {
     });
   }, [search, status, templates]);
 
+  const reviewQuestions = reviewQuestionsQuery.data?.result ?? [];
+
+  useEffect(() => {
+    if (!reviewOpen) return;
+    const defaultSelected = reviewQuestions
+      .filter((question) => question.questionStatus !== 'APPROVED')
+      .map((question) => question.id);
+    setSelectedQuestionIds(new Set(defaultSelected));
+  }, [reviewOpen, reviewQuestions]);
+
   async function saveTemplate(payload: QuestionTemplateRequest) {
     if (mode === 'create') {
       await createMutation.mutateAsync(payload);
@@ -128,6 +178,106 @@ export function TemplateDashboard() {
     setMode('create');
     setSelected(draft as QuestionTemplateResponse | null);
     setFormOpen(true);
+  }
+
+  function openReviewModal(templateId?: string) {
+    setReviewTemplateId(templateId ?? templates[0]?.id ?? '');
+    setReviewOpen(true);
+  }
+
+  async function handleApproveSelectedQuestions() {
+    if (selectedQuestionIds.size === 0) return;
+    try {
+      await bulkApproveMutation.mutateAsync(Array.from(selectedQuestionIds));
+      setToast({
+        type: 'success',
+        message: `Đã phê duyệt ${selectedQuestionIds.size} câu hỏi thành công.`,
+      });
+      setSelectedQuestionIds(new Set());
+      void reviewQuestionsQuery.refetch();
+    } catch (error) {
+      setToast({
+        type: 'error',
+        message: error instanceof Error ? error.message : 'Không thể phê duyệt câu hỏi đã chọn.',
+      });
+    }
+  }
+
+  function toggleQuestionSelection(questionId: string, checked: boolean) {
+    setSelectedQuestionIds((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(questionId);
+      else next.delete(questionId);
+      return next;
+    });
+  }
+
+  function openEditQuestion(question: QuestionResponse) {
+    setEditingQuestion(question);
+    setEditQuestionText(question.questionText ?? '');
+    setEditCorrectAnswer(question.correctAnswer ?? '');
+    setEditExplanation(question.explanation ?? '');
+  }
+
+  function closeEditQuestion() {
+    setEditingQuestion(null);
+    setEditQuestionText('');
+    setEditCorrectAnswer('');
+    setEditExplanation('');
+  }
+
+  async function handleApproveQuestion(questionId: string) {
+    try {
+      await approveQuestionMutation.mutateAsync(questionId);
+      setToast({ type: 'success', message: 'Đã duyệt câu hỏi thành công.' });
+      void reviewQuestionsQuery.refetch();
+    } catch (error) {
+      setToast({
+        type: 'error',
+        message: error instanceof Error ? error.message : 'Không thể duyệt câu hỏi.',
+      });
+    }
+  }
+
+  async function handleDeleteQuestion(questionId: string) {
+    if (!window.confirm('Bạn có chắc muốn xóa câu hỏi này?')) return;
+    try {
+      await deleteQuestionMutation.mutateAsync(questionId);
+      setToast({ type: 'success', message: 'Đã xóa câu hỏi.' });
+      setSelectedQuestionIds((prev) => {
+        const next = new Set(prev);
+        next.delete(questionId);
+        return next;
+      });
+      void reviewQuestionsQuery.refetch();
+    } catch (error) {
+      setToast({
+        type: 'error',
+        message: error instanceof Error ? error.message : 'Không thể xóa câu hỏi.',
+      });
+    }
+  }
+
+  async function handleSaveQuestionEdit() {
+    if (!editingQuestion) return;
+    try {
+      await updateQuestionMutation.mutateAsync({
+        questionId: editingQuestion.id,
+        request: {
+          questionText: editQuestionText,
+          correctAnswer: editCorrectAnswer,
+          explanation: editExplanation,
+        },
+      });
+      setToast({ type: 'success', message: 'Đã cập nhật câu hỏi.' });
+      closeEditQuestion();
+      void reviewQuestionsQuery.refetch();
+    } catch (error) {
+      setToast({
+        type: 'error',
+        message: error instanceof Error ? error.message : 'Không thể cập nhật câu hỏi.',
+      });
+    }
   }
 
   return (
@@ -161,6 +311,25 @@ export function TemplateDashboard() {
               </button>
             </div>
           </header>
+
+          <section className="hero-card">
+            <p className="hero-kicker">Phân tách trách nhiệm</p>
+            <h2>Soạn mẫu và xét duyệt câu hỏi theo mẫu ngay tại đây</h2>
+            <div className="row" style={{ flexWrap: 'wrap' }}>
+              <button className="btn secondary" onClick={() => openReviewModal()}>
+                Xét duyệt theo mẫu <ArrowRight size={14} />
+              </button>
+              <button className="btn secondary" onClick={() => navigate('/teacher/question-banks')}>
+                Sang Ngân hàng câu hỏi để quản lý kho <ArrowRight size={14} />
+              </button>
+              <button className="btn" onClick={() => navigate('/teacher/assessment-builder')}>
+                Tiếp tục lắp đề ở Trình tạo đề
+              </button>
+            </div>
+            <p className="muted" style={{ marginTop: 6 }}>
+              Chọn mẫu câu hỏi, xem trước toàn bộ câu đã sinh từ mẫu đó và phê duyệt nhanh theo lô.
+            </p>
+          </section>
 
           <div className="toolbar">
             <label className="row" style={{ minWidth: 260 }}>
@@ -248,19 +417,13 @@ export function TemplateDashboard() {
                       Chạy thử
                     </button>
 
-                    {template.status === TemplateStatus.DRAFT && (
-                      <button
-                        className="btn secondary"
-                        onClick={() => {
-                          setMode('edit');
-                          setSelected(template);
-                          setFormOpen(true);
-                        }}
-                      >
-                        <Pencil size={14} />
-                        Chỉnh sửa
-                      </button>
-                    )}
+                    <button
+                      className="btn secondary"
+                      onClick={() => openReviewModal(template.id)}
+                    >
+                      <CheckSquare size={14} />
+                      Xét duyệt
+                    </button>
 
                     {template.status === TemplateStatus.DRAFT && (
                       <button className="btn" onClick={() => publishMutation.mutate(template.id)}>
@@ -315,6 +478,279 @@ export function TemplateDashboard() {
               onClose={() => setTestOpen(false)}
               template={selected}
             />
+          )}
+
+          {reviewOpen && (
+            <div className="modal-layer">
+              <div className="modal-card template-review-modal">
+                <div className="modal-header">
+                  <div>
+                    <h3>Xét duyệt câu hỏi theo mẫu</h3>
+                    <p className="muted" style={{ marginTop: 4 }}>
+                      Chọn mẫu để xem trước câu hỏi đã sinh và phê duyệt các câu phù hợp.
+                    </p>
+                  </div>
+                  <button
+                    className="icon-btn"
+                    onClick={() => {
+                      setReviewOpen(false);
+                      setSelectedQuestionIds(new Set());
+                    }}
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+
+                <div className="modal-body">
+                  <div className="template-review-modal__toolbar">
+                    <label className="template-review-modal__selector">
+                      <span className="muted">Mẫu câu hỏi</span>
+                      <select
+                        className="select"
+                        value={reviewTemplateId}
+                        onChange={(event) => {
+                          setReviewTemplateId(event.target.value);
+                          setSelectedQuestionIds(new Set());
+                        }}
+                      >
+                        <option value="">Chọn mẫu câu hỏi</option>
+                        {templates.map((template) => (
+                          <option key={template.id} value={template.id}>
+                            {template.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+
+                    <button
+                      className="btn secondary"
+                      onClick={() => void reviewQuestionsQuery.refetch()}
+                      disabled={!reviewTemplateId || reviewQuestionsQuery.isFetching}
+                    >
+                      <RefreshCw size={14} />
+                      Làm mới danh sách câu
+                    </button>
+                  </div>
+
+                  {!reviewTemplateId && <div className="empty">Hãy chọn một mẫu để bắt đầu xét duyệt.</div>}
+
+                  {reviewTemplateId && reviewQuestionsQuery.isFetching && (
+                    <div className="empty">Đang tải câu hỏi theo mẫu...</div>
+                  )}
+
+                  {reviewTemplateId &&
+                    !reviewQuestionsQuery.isFetching &&
+                    !reviewQuestionsQuery.isError &&
+                    reviewQuestions.length === 0 && (
+                      <div className="empty">Mẫu này chưa có câu hỏi để xét duyệt.</div>
+                    )}
+
+                  {reviewTemplateId && reviewQuestionsQuery.isError && (
+                    <div className="empty">
+                      {reviewQuestionsQuery.error instanceof Error
+                        ? reviewQuestionsQuery.error.message
+                        : 'Không thể tải danh sách câu hỏi theo mẫu.'}
+                    </div>
+                  )}
+
+                  {reviewTemplateId &&
+                    !reviewQuestionsQuery.isFetching &&
+                    !reviewQuestionsQuery.isError &&
+                    reviewQuestions.length > 0 && (
+                      <div className="table-wrap template-review-modal__list">
+                        <table className="table template-review-table">
+                          <thead>
+                            <tr>
+                              <th style={{ width: 46 }}>
+                                <input
+                                  type="checkbox"
+                                  checked={
+                                    reviewQuestions.filter((question) => question.questionStatus !== 'APPROVED')
+                                      .length > 0 &&
+                                    reviewQuestions
+                                      .filter((question) => question.questionStatus !== 'APPROVED')
+                                      .every((question) => selectedQuestionIds.has(question.id))
+                                  }
+                                  onChange={(event) => {
+                                    const isChecked = event.target.checked;
+                                    const next = new Set(selectedQuestionIds);
+                                    reviewQuestions.forEach((question) => {
+                                      if (question.questionStatus === 'APPROVED') return;
+                                      if (isChecked) next.add(question.id);
+                                      else next.delete(question.id);
+                                    });
+                                    setSelectedQuestionIds(next);
+                                  }}
+                                />
+                              </th>
+                              <th>Nội dung câu hỏi</th>
+                              <th style={{ width: 120 }}>Trạng thái</th>
+                              <th style={{ width: 140 }}>Đáp án</th>
+                              <th style={{ width: 290 }}>Thao tác</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {reviewQuestions.map((question) => {
+                              const isApproved = question.questionStatus === 'APPROVED';
+                              return (
+                                <tr key={question.id}>
+                                  <td>
+                                    <input
+                                      type="checkbox"
+                                      checked={selectedQuestionIds.has(question.id)}
+                                      disabled={isApproved}
+                                      onChange={(event) =>
+                                        toggleQuestionSelection(question.id, event.target.checked)
+                                      }
+                                    />
+                                  </td>
+                                  <td>
+                                    <div className="template-review-question__text">
+                                      <MathText text={question.questionText} />
+                                    </div>
+                                    {question.explanation && (
+                                      <p className="muted template-review-question__explanation">
+                                        Giải thích: <MathText text={question.explanation} />
+                                      </p>
+                                    )}
+                                  </td>
+                                  <td>
+                                    <span
+                                      className={`template-review-question__status ${isApproved ? 'approved' : 'pending'}`}
+                                    >
+                                      {questionStatusLabel[question.questionStatus ?? 'UNDER_REVIEW'] ??
+                                        (question.questionStatus ?? 'Chờ duyệt')}
+                                    </span>
+                                  </td>
+                                  <td>{question.correctAnswer || '-'}</td>
+                                  <td>
+                                    <div className="row template-review-question__actions">
+                                      <button
+                                        className="btn secondary"
+                                        onClick={() => openEditQuestion(question)}
+                                      >
+                                        <Pencil size={14} />
+                                        Sửa
+                                      </button>
+                                      <button
+                                        className="btn"
+                                        disabled={isApproved || approveQuestionMutation.isPending}
+                                        onClick={() => void handleApproveQuestion(question.id)}
+                                      >
+                                        <Check size={14} />
+                                        Duyệt
+                                      </button>
+                                      <button
+                                        className="btn danger"
+                                        disabled={deleteQuestionMutation.isPending}
+                                        onClick={() => void handleDeleteQuestion(question.id)}
+                                      >
+                                        <Trash2 size={14} />
+                                        Xóa
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                </div>
+
+                <div className="modal-footer">
+                  <button
+                    type="button"
+                    className="btn secondary"
+                    onClick={() => {
+                      setReviewOpen(false);
+                      setSelectedQuestionIds(new Set());
+                    }}
+                  >
+                    Đóng
+                  </button>
+                  <button
+                    type="button"
+                    className="btn"
+                    disabled={selectedQuestionIds.size === 0 || bulkApproveMutation.isPending}
+                    onClick={() => void handleApproveSelectedQuestions()}
+                  >
+                    <CheckSquare size={14} />
+                    {bulkApproveMutation.isPending
+                      ? 'Đang phê duyệt...'
+                      : `Phê duyệt đã chọn (${selectedQuestionIds.size})`}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {editingQuestion && (
+            <div className="modal-layer">
+              <div className="modal-card template-review-edit-modal">
+                <div className="modal-header">
+                  <div>
+                    <h3>Chỉnh sửa câu hỏi</h3>
+                    <p className="muted" style={{ marginTop: 4 }}>
+                      Cập nhật nội dung trước khi duyệt.
+                    </p>
+                  </div>
+                  <button className="icon-btn" onClick={closeEditQuestion}>
+                    <X size={14} />
+                  </button>
+                </div>
+
+                <div className="modal-body">
+                  <label className="template-review-edit-modal__field">
+                    <span className="muted">Nội dung câu hỏi</span>
+                    <textarea
+                      className="textarea"
+                      rows={4}
+                      value={editQuestionText}
+                      onChange={(event) => setEditQuestionText(event.target.value)}
+                    />
+                  </label>
+                  <label className="template-review-edit-modal__field">
+                    <span className="muted">Đáp án đúng</span>
+                    <input
+                      className="input"
+                      value={editCorrectAnswer}
+                      onChange={(event) => setEditCorrectAnswer(event.target.value)}
+                    />
+                  </label>
+                  <label className="template-review-edit-modal__field">
+                    <span className="muted">Giải thích</span>
+                    <textarea
+                      className="textarea"
+                      rows={3}
+                      value={editExplanation}
+                      onChange={(event) => setEditExplanation(event.target.value)}
+                    />
+                  </label>
+                </div>
+
+                <div className="modal-footer">
+                  <button className="btn secondary" onClick={closeEditQuestion}>
+                    Hủy
+                  </button>
+                  <button
+                    className="btn"
+                    onClick={() => void handleSaveQuestionEdit()}
+                    disabled={updateQuestionMutation.isPending}
+                  >
+                    <Save size={14} />
+                    {updateQuestionMutation.isPending ? 'Đang lưu...' : 'Lưu thay đổi'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {toast && (
+            <div className={`template-review-toast template-review-toast--${toast.type}`}>
+              {toast.message}
+            </div>
           )}
         </section>
       </div>
