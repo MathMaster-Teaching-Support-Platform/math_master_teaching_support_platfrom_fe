@@ -55,6 +55,7 @@ import { QuestionBankDashboard } from '../pages/question-banks/QuestionBankDashb
 import { QuestionBankDetailPage } from '../pages/question-banks/QuestionBankDetailPage';
 import { TemplateDashboard } from '../pages/question-templates/TemplateDashboard';
 import TeacherLessonPlans from '../pages/lesson-plans/TeacherLessonPlans';
+import TeacherCourseLessons from '../pages/courses/TeacherCourseLessons';
 
 const router = createBrowserRouter([
   {
@@ -164,6 +165,10 @@ const router = createBrowserRouter([
   {
     path: '/teacher/lesson-plans',
     element: <TeacherLessonPlans />,
+  },
+  {
+    path: '/teacher/courses/:courseId/lessons',
+    element: <TeacherCourseLessons />,
   },
   {
     path: '/teacher/materials',

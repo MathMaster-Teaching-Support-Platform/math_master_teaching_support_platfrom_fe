@@ -6,7 +6,6 @@ import {
   CheckCircle,
   ChevronRight,
   Clock,
-  Lock,
   Play,
   Search,
   Star,
@@ -15,20 +14,27 @@ import {
 } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
-import { mockCourses, mockStudent } from '../../data/mockData';
+import {
+  useMyEnrollments,
+  usePublicCourses,
+  useEnroll,
+  useDropEnrollment,
+  useCourseProgress,
+  useMarkLessonComplete,
+  useCourseLessons,
+} from '../../hooks/useCourses';
+import { LessonSlideService } from '../../services/api/lesson-slide.service';
+import { VideoUploadService } from '../../services/api/videoUpload.service';
+import type { CourseResponse, EnrollmentResponse } from '../../types';
+import type { SchoolGrade, SubjectByGrade } from '../../types/lessonSlide.types';
 import './StudentCourses.css';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-const FIXED_TIMESTAMP = 1738713600000;
-const WEEKLY_STUDY_DATA = [2.5, 3.5, 1.5, 4, 3, 5.5, 2];
-
-// Course visual themes — gradient + symbol for thumbnail art
 const COURSE_THEMES = [
   {
     gradient: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 60%, #A855F7 100%)',
     symbol: '∑',
     symbolSub: 'ALGEBRA',
-    accentColor: '#818CF8',
     orb1: 'rgba(99,102,241,0.35)',
     orb2: 'rgba(168,85,247,0.25)',
   },
@@ -36,7 +42,6 @@ const COURSE_THEMES = [
     gradient: 'linear-gradient(135deg, #0369A1 0%, #0EA5E9 55%, #06B6D4 100%)',
     symbol: '△',
     symbolSub: 'GEOMETRY',
-    accentColor: '#38BDF8',
     orb1: 'rgba(14,165,233,0.35)',
     orb2: 'rgba(6,182,212,0.25)',
   },
@@ -44,56 +49,15 @@ const COURSE_THEMES = [
     gradient: 'linear-gradient(135deg, #B45309 0%, #F59E0B 50%, #EF4444 100%)',
     symbol: '∫',
     symbolSub: 'CALCULUS',
-    accentColor: '#FB923C',
     orb1: 'rgba(245,158,11,0.40)',
     orb2: 'rgba(239,68,68,0.25)',
   },
 ];
 
-// ─── Utility Components ────────────────────────────────────────────────────────
-
-/** SVG Sparkline */
-const Sparkline: React.FC<{ data: number[]; color: string }> = ({ data, color }) => {
-  const W = 80,
-    H = 32;
-  const max = Math.max(...data);
-  const min = Math.min(...data);
-  const range = max - min || 1;
-  const pts = data.map((v, i) => ({
-    x: (i / (data.length - 1)) * W,
-    y: H - 4 - ((v - min) / range) * (H - 8),
-  }));
-  const polyline = pts.map((p) => `${p.x},${p.y}`).join(' ');
-  const last = pts.at(-1)!;
-  const areaPath =
-    `M${pts[0].x},${H} ` + pts.map((p) => `L${p.x},${p.y}`).join(' ') + ` L${last.x},${H} Z`;
-
-  return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ overflow: 'visible' }}>
-      <defs>
-        <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.25" />
-          <stop offset="100%" stopColor={color} stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <path d={areaPath} fill="url(#sparkGrad)" />
-      <polyline
-        points={polyline}
-        fill="none"
-        stroke={color}
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <circle cx={last.x} cy={last.y} r="3" fill={color} />
-    </svg>
-  );
-};
-
-/** Animated progress bar — animates from 0→value on mount */
+// ─── Animated progress bar ────────────────────────────────────────────────────
 const AnimatedProgressBar: React.FC<{ value: number; color?: string }> = ({
   value,
-  color = 'var(--sc-indigo)',
+  color = 'var(--sc-indigo, #4F46E5)',
 }) => {
   const [width, setWidth] = useState(0);
   useEffect(() => {
@@ -110,240 +74,111 @@ const AnimatedProgressBar: React.FC<{ value: number; color?: string }> = ({
   );
 };
 
-/** Abstract SVG math watermark for hero */
-const MathWatermark: React.FC = () => (
-  <svg
-    className="sc-hero-watermark"
-    viewBox="0 0 600 300"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    aria-hidden="true"
-  >
-    {/* Fibonacci-inspired arcs */}
-    <circle cx="480" cy="60" r="80" stroke="rgba(79,70,229,0.08)" strokeWidth="1.5" fill="none" />
-    <circle cx="480" cy="60" r="50" stroke="rgba(79,70,229,0.06)" strokeWidth="1.5" fill="none" />
-    <circle cx="410" cy="130" r="30" stroke="rgba(59,130,246,0.07)" strokeWidth="1.5" fill="none" />
-    <circle cx="440" cy="100" r="18" stroke="rgba(59,130,246,0.05)" strokeWidth="1.5" fill="none" />
-    {/* Grid dots */}
-    {Array.from({ length: 8 }, (_, col) =>
-      Array.from({ length: 4 }, (__, row) => (
-        <circle
-          key={`dot-${col}-${row}`}
-          cx={col * 70 + 20}
-          cy={row * 70 + 20}
-          r="1.5"
-          fill="rgba(99,102,241,0.12)"
-        />
-      ))
-    )}
-    {/* Sine wave */}
-    <path
-      d="M0,200 Q60,160 120,200 Q180,240 240,200 Q300,160 360,200 Q420,240 480,200 Q540,160 600,200"
-      stroke="rgba(99,102,241,0.07)"
-      strokeWidth="2"
-      fill="none"
-    />
-    {/* Integration symbol */}
-    <text x="520" y="200" fontSize="120" fill="rgba(79,70,229,0.05)" fontFamily="serif">
-      ∫
-    </text>
-  </svg>
-);
-
-/** Course thumbnail — gradient art + math symbol */
+// ─── Course Thumbnail ─────────────────────────────────────────────────────────
 const CourseThumbnail: React.FC<{ themeIndex: number; name: string }> = ({ themeIndex, name }) => {
   const theme = COURSE_THEMES[themeIndex % COURSE_THEMES.length];
   return (
     <div className="sc-thumb" style={{ background: theme.gradient }} aria-label={name}>
-      {/* Decorative orbs */}
       <div className="sc-thumb-orb sc-thumb-orb-1" style={{ background: theme.orb1 }} />
       <div className="sc-thumb-orb sc-thumb-orb-2" style={{ background: theme.orb2 }} />
-      {/* Math symbol */}
       <div className="sc-thumb-symbol">
         <span className="sc-thumb-glyph">{theme.symbol}</span>
         <span className="sc-thumb-sub">{theme.symbolSub}</span>
       </div>
-      {/* Grid overlay */}
-      <svg className="sc-thumb-grid" viewBox="0 0 320 180" xmlns="http://www.w3.org/2000/svg">
-        {Array.from({ length: 7 }, (_, i) => (
-          <line
-            key={`vline-x${i * 54}`}
-            x1={i * 54}
-            y1="0"
-            x2={i * 54}
-            y2="180"
-            stroke="rgba(255,255,255,0.06)"
-            strokeWidth="1"
-          />
-        ))}
-        {Array.from({ length: 5 }, (_, i) => (
-          <line
-            key={`hline-y${i * 45}`}
-            x1="0"
-            y1={i * 45}
-            x2="320"
-            y2={i * 45}
-            stroke="rgba(255,255,255,0.06)"
-            strokeWidth="1"
-          />
-        ))}
-      </svg>
     </div>
   );
 };
 
-// ─── KPI Stat Card ─────────────────────────────────────────────────────────────
-interface StatCardProps {
-  icon: React.ReactNode;
-  iconBg: string;
-  value: string;
-  label: string;
-  delta?: string;
-  deltaUp?: boolean;
-  sparkline?: boolean;
-  index: number;
-}
-const StatCard: React.FC<StatCardProps> = ({
-  icon,
-  iconBg,
-  value,
-  label,
-  delta,
-  deltaUp,
-  sparkline,
-  index,
-}) => (
-  <motion.div
-    className="sc-stat-card"
-    initial={{ opacity: 0, y: 16 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay: 0.1 + index * 0.07, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-    whileHover={{ y: -4, boxShadow: '0 16px 40px -8px rgba(79,70,229,0.18)' }}
-  >
-    <div className="sc-stat-top">
-      <div className="sc-stat-icon-wrap" style={{ background: iconBg }}>
-        {icon}
-      </div>
-      {sparkline && (
-        <div className="sc-stat-spark">
-          <Sparkline data={WEEKLY_STUDY_DATA} color="#4F46E5" />
+// ─── Video Player ─────────────────────────────────────────────────────────────
+const VideoPlayer: React.FC<{
+  courseId: string;
+  courseLessonId: string;
+  title: string;
+  onClose: () => void;
+}> = ({ courseId, courseLessonId, title, onClose }) => {
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    VideoUploadService.getVideoUrl(courseId, courseLessonId)
+      .then((r) => setVideoUrl(r.result))
+      .catch((e) => setError(e instanceof Error ? e.message : 'Không thể tải video'))
+      .finally(() => setLoading(false));
+  }, [courseId, courseLessonId]);
+
+  return (
+    <div
+      style={{
+        position: 'fixed', inset: 0, zIndex: 2000,
+        background: 'rgba(0,0,0,0.88)',
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+        padding: '1rem',
+      }}
+      onClick={onClose}
+    >
+      <div
+        style={{ width: '100%', maxWidth: 900 }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <h3 style={{ color: '#fff', margin: 0, fontSize: '1rem', fontWeight: 700 }}>{title}</h3>
+          <button
+            onClick={onClose}
+            style={{
+              background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 8,
+              color: '#fff', padding: '0.4rem 0.7rem', cursor: 'pointer', fontSize: '0.88rem',
+            }}
+          >
+            ✕ Đóng
+          </button>
         </div>
-      )}
-    </div>
-    <div className="sc-stat-value">{value}</div>
-    <div className="sc-stat-label">{label}</div>
-    {delta && (
-      <div className={`sc-stat-delta ${deltaUp ? 'sc-delta-up' : 'sc-delta-dn'}`}>
-        {deltaUp ? '↑' : '↓'} {delta}
-      </div>
-    )}
-  </motion.div>
-);
 
-// ─── Course Card ───────────────────────────────────────────────────────────────
-interface EnrolledCourse {
-  id: string;
-  name: string;
-  teacher: string;
-  rating: number;
-  lessonsCount: number;
-  studentsEnrolled: number;
-  description: string;
-  progress: number;
-  lastAccessed: string;
-}
-const CourseCard: React.FC<{
-  course: EnrolledCourse;
-  index: number;
-  onSelect: (id: string) => void;
-}> = ({ course, index, onSelect }) => (
-  <motion.div
-    className="sc-course-card"
-    initial={{ opacity: 0, y: 24 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay: 0.25 + index * 0.1, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-    whileHover={{ y: -5 }}
-    onClick={() => onSelect(course.id)}
-    role="button"
-    tabIndex={0}
-    onKeyDown={(e) => e.key === 'Enter' && onSelect(course.id)}
-  >
-    {/* Thumbnail */}
-    <div className="sc-card-thumb-wrap">
-      <CourseThumbnail themeIndex={index} name={course.name} />
-      {/* Hover CTA */}
-      <div className="sc-card-hover-cta">
-        <motion.button
-          className="sc-cta-btn"
-          whileHover={{ scale: 1.04 }}
-          whileTap={{ scale: 0.96 }}
-          onClick={(e) => {
-            e.stopPropagation();
-            onSelect(course.id);
-          }}
-        >
-          <Play size={14} strokeWidth={2.5} />
-          Tiếp tục học
-        </motion.button>
-      </div>
-      {/* Progress badge on thumb */}
-      <div className="sc-prog-badge">{course.progress}%</div>
-    </div>
-
-    {/* Body */}
-    <div className="sc-card-body">
-      <h3 className="sc-card-title">{course.name}</h3>
-      <p className="sc-card-teacher">
-        <span className="sc-teacher-dot" />
-        {course.teacher}
-      </p>
-
-      {/* Badges row */}
-      <div className="sc-card-badges">
-        <span className="sc-badge sc-badge-lessons">
-          <BookOpen size={11} strokeWidth={2.5} />
-          {course.lessonsCount} bài học
-        </span>
-        <span className="sc-badge sc-badge-rating">
-          <Star size={11} strokeWidth={2.5} fill="currentColor" />
-          {course.rating.toFixed(1)}
-        </span>
-      </div>
-
-      {/* Progress */}
-      <div className="sc-card-prog-section">
-        <div className="sc-card-prog-header">
-          <span className="sc-prog-label">Tiến độ</span>
-          <span className="sc-prog-pct">{course.progress}%</span>
+        {/* Video */}
+        <div style={{ background: '#000', borderRadius: 12, overflow: 'hidden', aspectRatio: '16/9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {loading && (
+            <p style={{ color: '#94a3b8' }}>Đang tải video...</p>
+          )}
+          {error && (
+            <p style={{ color: '#f87171' }}>{error}</p>
+          )}
+          {videoUrl && !loading && (
+            <video
+              src={videoUrl}
+              controls
+              autoPlay
+              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+              onError={() => setError('Không thể phát video. Vui lòng thử lại.')}
+            />
+          )}
         </div>
-        <AnimatedProgressBar value={course.progress} />
-      </div>
-
-      {/* Footer */}
-      <div className="sc-card-footer">
-        <span className="sc-last-accessed">
-          {new Date(course.lastAccessed).toLocaleDateString('vi-VN', {
-            day: '2-digit',
-            month: 'short',
-          })}
-        </span>
-        <span className="sc-continue-hint">
-          Xem chi tiết <ChevronRight size={12} strokeWidth={2.5} />
-        </span>
       </div>
     </div>
-  </motion.div>
-);
+  );
+};
 
-// ─── Detail View ───────────────────────────────────────────────────────────────
-const DetailView: React.FC<{
-  course: EnrolledCourse;
+// ─── Progress Detail View ─────────────────────────────────────────────────────
+const ProgressView: React.FC<{
+  enrollment: EnrollmentResponse;
   courseIndex: number;
   onBack: () => void;
-}> = ({ course, courseIndex, onBack }) => {
-  const [activeTab, setActiveTab] = useState(0);
-  const tabs = ['Nội dung', 'Bài tập', 'Điểm số', 'Thảo luận'];
-  const tabIcons = [BookOpen, Award, TrendingUp, Users];
+}> = ({ enrollment, courseIndex, onBack }) => {
+  const { data: progressData, isLoading } = useCourseProgress(enrollment.id);
+  const { data: lessonsData } = useCourseLessons(enrollment.courseId);
+  const markComplete = useMarkLessonComplete();
+  const dropMutation = useDropEnrollment();
+  const [playingLesson, setPlayingLesson] = useState<{ id: string; title: string } | null>(null);
+
+  const progress = progressData?.result;
+  const lessons = lessonsData?.result ?? [];
+
+  const handleDrop = () => {
+    if (window.confirm('Bạn có chắc muốn hủy đăng ký khóa học này?')) {
+      dropMutation.mutate(enrollment.id, { onSuccess: onBack });
+    }
+  };
 
   return (
     <motion.div
@@ -353,178 +188,304 @@ const DetailView: React.FC<{
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
     >
-      {/* Back */}
       <button className="sc-back-btn" onClick={onBack}>
         <ArrowLeft size={16} strokeWidth={2} />
         Quay lại danh sách
       </button>
 
-      {/* Detail header */}
       <div className="sc-detail-header">
         <div className="sc-detail-thumb-wrap">
-          <CourseThumbnail themeIndex={courseIndex} name={course.name} />
+          <CourseThumbnail themeIndex={courseIndex} name={enrollment.courseTitle ?? ''} />
         </div>
         <div className="sc-detail-info">
-          <h2 className="sc-detail-title">{course.name}</h2>
-          <p className="sc-detail-teacher">
-            <Users size={14} /> Giảng viên: <strong>{course.teacher}</strong>
-          </p>
-          <p className="sc-detail-desc">{course.description}</p>
+          <h2 className="sc-detail-title">{enrollment.courseTitle}</h2>
           <div className="sc-detail-badges">
-            <span className="sc-badge sc-badge-rating">
-              <Star size={12} fill="currentColor" /> {course.rating.toFixed(1)}
-            </span>
-            <span className="sc-badge sc-badge-lessons">
-              <BookOpen size={12} /> {course.lessonsCount} bài học
-            </span>
-            <span className="sc-badge sc-badge-students">
-              <Users size={12} /> {course.studentsEnrolled} học viên
+            <span className={`sc-badge ${enrollment.status === 'ACTIVE' ? 'sc-badge-rating' : 'sc-badge-lessons'}`}>
+              {enrollment.status === 'ACTIVE' ? 'Đang học' : 'Đã hủy'}
             </span>
           </div>
-          <div className="sc-detail-prog-wrap">
-            <div className="sc-detail-prog-header">
-              <span>Tiến độ của bạn</span>
-              <strong>{course.progress}%</strong>
+          {progress && (
+            <div className="sc-detail-prog-wrap">
+              <div className="sc-detail-prog-header">
+                <span>Tiến độ của bạn</span>
+                <strong>{progress.completionRate.toFixed(1)}%</strong>
+              </div>
+              <AnimatedProgressBar value={progress.completionRate} />
+              <p style={{ fontSize: '0.8rem', color: '#6b7280', marginTop: '0.25rem' }}>
+                {progress.completedLessons}/{progress.totalLessons} bài học hoàn thành
+              </p>
             </div>
-            <AnimatedProgressBar value={course.progress} />
-          </div>
+          )}
+          {enrollment.status === 'ACTIVE' && (
+            <button
+              className="sc-lesson-btn"
+              style={{ marginTop: '0.75rem', background: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '6px', padding: '0.4rem 0.75rem', cursor: 'pointer' }}
+              onClick={handleDrop}
+              disabled={dropMutation.isPending}
+            >
+              Hủy đăng ký
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="sc-tabs">
-        {tabs.map((t, i) => {
-          const Icon = tabIcons[i];
-          return (
-            <button
-              key={t}
-              className={`sc-tab-btn ${activeTab === i ? 'sc-tab-active' : ''}`}
-              onClick={() => setActiveTab(i)}
-            >
-              <Icon size={14} strokeWidth={2} />
-              {t}
-            </button>
-          );
-        })}
-      </div>
+      {isLoading && <p style={{ padding: '1rem', color: '#6b7280' }}>Đang tải tiến độ...</p>}
 
-      {/* Lesson list (tab 0) */}
-      {activeTab === 0 && (
-        <div className="sc-lessons">
-          <div className="sc-chapter">
-            <div className="sc-chapter-header">
-              <h4 className="sc-chapter-title">Chương 1: Căn bản</h4>
-              <span className="sc-chapter-badge">3/5 bài học</span>
-            </div>
-            {[
-              { status: 'done', title: 'Bài 1: Giới thiệu về phương trình', dur: '15 phút' },
-              { status: 'done', title: 'Bài 2: Phương trình bậc nhất', dur: '20 phút' },
-              { status: 'current', title: 'Bài 3: Giải phương trình bậc nhất', dur: '25 phút' },
-              { status: 'locked', title: 'Bài 4: Bài tập thực hành', dur: '30 phút' },
-              { status: 'locked', title: 'Bài 5: Kiểm tra chương 1', dur: '45 phút' },
-            ].map((l) => (
-              <div key={l.title} className={`sc-lesson-row sc-lesson-${l.status}`}>
+      <div className="sc-lessons">
+        <div className="sc-chapter">
+          <div className="sc-chapter-header">
+            <h4 className="sc-chapter-title">Danh sách bài học</h4>
+            <span className="sc-chapter-badge">{progress?.completedLessons ?? 0}/{lessons.length} bài học</span>
+          </div>
+          {lessons.map((lesson) => {
+            const lessonProgress = progress?.lessons.find((l) => l.courseLessonId === lesson.id);
+            const isCompleted = lessonProgress?.isCompleted ?? false;
+            const status = isCompleted ? 'done' : 'current';
+
+            return (
+              <div key={lesson.id} className={`sc-lesson-row sc-lesson-${status}`}>
                 <div className="sc-lesson-icon">
-                  {l.status === 'done' && <CheckCircle size={18} strokeWidth={2} />}
-                  {l.status === 'current' && <Play size={18} strokeWidth={2} />}
-                  {l.status === 'locked' && <Lock size={18} strokeWidth={2} />}
+                  {isCompleted ? (
+                    <CheckCircle size={18} strokeWidth={2} />
+                  ) : (
+                    <Play size={18} strokeWidth={2} />
+                  )}
                 </div>
                 <div className="sc-lesson-info">
-                  <span className="sc-lesson-title">{l.title}</span>
-                  <span className="sc-lesson-dur">⏱ {l.dur} • Video</span>
+                  <span className="sc-lesson-title">{lesson.videoTitle ?? lesson.lessonTitle ?? 'Bài học'}</span>
+                  {lesson.durationSeconds && (
+                    <span className="sc-lesson-dur">
+                      ⏱ {Math.round(lesson.durationSeconds / 60)} phút • Video
+                    </span>
+                  )}
                 </div>
-                <button
-                  className={`sc-lesson-btn ${l.status === 'current' ? 'sc-lesson-btn-primary' : ''}`}
-                  disabled={l.status === 'locked'}
-                >
-                  {l.status === 'done' && 'Xem lại'}
-                  {l.status === 'current' && 'Tiếp tục'}
-                  {l.status === 'locked' && 'Chưa mở'}
-                </button>
+                <div style={{ display: 'flex', gap: '0.4rem' }}>
+                  {/* Nút xem video */}
+                  {lesson.videoUrl && (
+                    <button
+                      className="sc-lesson-btn sc-lesson-btn-primary"
+                      onClick={() =>
+                        setPlayingLesson({
+                          id: lesson.id,
+                          title: lesson.videoTitle ?? lesson.lessonTitle ?? 'Bài học',
+                        })
+                      }
+                    >
+                      ▶ Xem video
+                    </button>
+                  )}
+                  {/* Nút đánh dấu hoàn thành */}
+                  {!isCompleted && enrollment.status === 'ACTIVE' && (
+                    <button
+                      className="sc-lesson-btn"
+                      style={{ background: '#f0fdf4', color: '#059669', border: '1px solid #bbf7d0' }}
+                      onClick={() =>
+                        markComplete.mutate({ enrollmentId: enrollment.id, courseLessonId: lesson.id })
+                      }
+                      disabled={markComplete.isPending}
+                    >
+                      ✓ Hoàn thành
+                    </button>
+                  )}
+                  {isCompleted && (
+                    <span style={{ fontSize: '0.8rem', color: '#059669', fontWeight: 600, alignSelf: 'center' }}>
+                      ✓ Đã xong
+                    </span>
+                  )}
+                </div>
               </div>
-            ))}
-          </div>
-
-          <div className="sc-chapter">
-            <div className="sc-chapter-header">
-              <h4 className="sc-chapter-title">Chương 2: Nâng cao</h4>
-              <span className="sc-chapter-badge">0/4 bài học</span>
-            </div>
-            <div className="sc-lesson-row sc-lesson-locked">
-              <div className="sc-lesson-icon">
-                <Lock size={18} strokeWidth={2} />
-              </div>
-              <div className="sc-lesson-info">
-                <span className="sc-lesson-title">Bài 6: Phương trình bậc hai</span>
-                <span className="sc-lesson-dur">⏱ 30 phút • Video</span>
-              </div>
-              <button className="sc-lesson-btn" disabled>
-                Chưa mở
-              </button>
-            </div>
-          </div>
+            );
+          })}
+          {lessons.length === 0 && (
+            <p style={{ padding: '1rem', color: '#9ca3af', fontSize: '0.875rem' }}>
+              Chưa có bài học nào trong khóa học này.
+            </p>
+          )}
         </div>
-      )}
+      </div>
 
-      {activeTab !== 0 && (
-        <div className="sc-tab-placeholder">
-          <Award size={40} strokeWidth={1.5} />
-          <p>Tính năng đang được phát triển</p>
-        </div>
+      {/* Video Player overlay */}
+      {playingLesson && (
+        <VideoPlayer
+          courseId={enrollment.courseId}
+          courseLessonId={playingLesson.id}
+          title={playingLesson.title}
+          onClose={() => setPlayingLesson(null)}
+        />
       )}
     </motion.div>
   );
 };
 
+// ─── Enrollment Card ──────────────────────────────────────────────────────────
+const EnrollmentCard: React.FC<{
+  enrollment: EnrollmentResponse;
+  index: number;
+  onSelect: (id: string) => void;
+}> = ({ enrollment, index, onSelect }) => {
+  const { data: progressData } = useCourseProgress(enrollment.id);
+  const progress = progressData?.result;
+  const completionRate = progress?.completionRate ?? 0;
+
+  return (
+    <motion.div
+      className="sc-course-card"
+      initial={{ opacity: 0, y: 24 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.1 + index * 0.08, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+      whileHover={{ y: -5 }}
+      onClick={() => onSelect(enrollment.id)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === 'Enter' && onSelect(enrollment.id)}
+    >
+      <div className="sc-card-thumb-wrap">
+        <CourseThumbnail themeIndex={index} name={enrollment.courseTitle ?? ''} />
+        <div className="sc-prog-badge">{completionRate.toFixed(0)}%</div>
+      </div>
+      <div className="sc-card-body">
+        <h3 className="sc-card-title">{enrollment.courseTitle}</h3>
+        <div className="sc-card-badges">
+          <span className={`sc-badge ${enrollment.status === 'ACTIVE' ? 'sc-badge-rating' : 'sc-badge-lessons'}`}>
+            {enrollment.status === 'ACTIVE' ? 'Đang học' : 'Đã hủy'}
+          </span>
+        </div>
+        <div className="sc-card-prog-section">
+          <div className="sc-card-prog-header">
+            <span className="sc-prog-label">Tiến độ</span>
+            <span className="sc-prog-pct">{completionRate.toFixed(0)}%</span>
+          </div>
+          <AnimatedProgressBar value={completionRate} />
+        </div>
+        <div className="sc-card-footer">
+          <span className="sc-continue-hint">
+            Xem chi tiết <ChevronRight size={12} strokeWidth={2.5} />
+          </span>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+// ─── Public Course Card ───────────────────────────────────────────────────────
+const PublicCourseCard: React.FC<{
+  course: CourseResponse;
+  index: number;
+  onEnroll: (courseId: string) => void;
+  isEnrolling: boolean;
+}> = ({ course, index, onEnroll, isEnrolling }) => (
+  <motion.div
+    className="sc-course-card"
+    initial={{ opacity: 0, y: 24 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay: 0.1 + index * 0.08, duration: 0.4 }}
+    whileHover={{ y: -5 }}
+  >
+    <div className="sc-card-thumb-wrap">
+      <CourseThumbnail themeIndex={index} name={course.title} />
+    </div>
+    <div className="sc-card-body">
+      <h3 className="sc-card-title">{course.title}</h3>
+      <p className="sc-card-teacher">
+        <span className="sc-teacher-dot" />
+        {course.teacherName ?? 'Giáo viên'}
+      </p>
+      <div className="sc-card-badges">
+        <span className="sc-badge sc-badge-lessons">
+          <BookOpen size={11} strokeWidth={2.5} />
+          {course.lessonsCount} bài học
+        </span>
+        <span className="sc-badge sc-badge-rating">
+          <Star size={11} strokeWidth={2.5} fill="currentColor" />
+          {Number(course.rating).toFixed(1)}
+        </span>
+        <span className="sc-badge sc-badge-students">
+          <Users size={11} strokeWidth={2.5} />
+          {course.studentsCount}
+        </span>
+      </div>      <button
+        className="sc-lesson-btn sc-lesson-btn-primary"
+        style={{ marginTop: '0.75rem', width: '100%' }}
+        onClick={() => onEnroll(course.id)}
+        disabled={isEnrolling}
+      >
+        {isEnrolling ? 'Đang đăng ký...' : 'Đăng ký học'}
+      </button>
+    </div>
+  </motion.div>
+);
+
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 const StudentCourses: React.FC = () => {
-  const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
+  const [selectedEnrollmentId, setSelectedEnrollmentId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState<'enrolled' | 'browse'>('enrolled');
+  const [filterGradeId, setFilterGradeId] = useState('');
+  const [filterSubjectId, setFilterSubjectId] = useState('');
+  const [grades, setGrades] = useState<SchoolGrade[]>([]);
+  const [subjects, setSubjects] = useState<SubjectByGrade[]>([]);
 
-  const enrolledCourses = useMemo(
+  const { data: enrollmentsData, isLoading: loadingEnrollments } = useMyEnrollments();
+  const { data: publicCoursesData, isLoading: loadingPublic } = usePublicCourses({
+    schoolGradeId: filterGradeId || undefined,
+    subjectId: filterSubjectId || undefined,
+    keyword: searchQuery || undefined,
+    size: 20,
+  });
+  const enrollMutation = useEnroll();
+
+  // Load school grades for browse filter
+  React.useEffect(() => {
+    LessonSlideService.getSchoolGrades(true)
+      .then((r) => setGrades(r.result || []))
+      .catch(() => {});
+  }, []);
+
+  const handleFilterGradeChange = async (gradeId: string) => {
+    setFilterGradeId(gradeId);
+    setFilterSubjectId('');
+    setSubjects([]);
+    if (!gradeId) return;
+    try {
+      const r = await LessonSlideService.getSubjectsBySchoolGrade(gradeId);
+      setSubjects(r.result || []);
+    } catch {
+      // silent
+    }
+  };
+
+  const enrollments: EnrollmentResponse[] = enrollmentsData?.result ?? [];
+  const publicCourses: CourseResponse[] = publicCoursesData?.result?.content ?? [];
+
+  const filteredEnrollments = useMemo(
     () =>
-      mockCourses.map((course, index) => {
-        const seed = index * 13 + 27;
-        return {
-          ...course,
-          progress: 10 + (seed % 90),
-          lastAccessed: new Date(FIXED_TIMESTAMP - (seed % 7) * 24 * 60 * 60 * 1000).toISOString(),
-        };
-      }),
-    []
+      enrollments.filter((e) =>
+        (e.courseTitle ?? '').toLowerCase().includes(searchQuery.toLowerCase())
+      ),
+    [enrollments, searchQuery]
   );
 
-  const filteredCourses = useMemo(
-    () => enrolledCourses.filter((c) => c.name.toLowerCase().includes(searchQuery.toLowerCase())),
-    [enrolledCourses, searchQuery]
-  );
+  const activeEnrollments = filteredEnrollments.filter((e) => e.status === 'ACTIVE');
+  const avgProgress = 0; // computed per-card via useCourseProgress
 
-  const avgProgress = Math.round(
-    enrolledCourses.reduce((s, c) => s + c.progress, 0) / (enrolledCourses.length || 1)
-  );
-
-  const activeIndex = selectedCourse
-    ? enrolledCourses.findIndex((c) => c.id === selectedCourse)
+  const selectedEnrollment = selectedEnrollmentId
+    ? enrollments.find((e) => e.id === selectedEnrollmentId)
+    : null;
+  const selectedIndex = selectedEnrollmentId
+    ? enrollments.findIndex((e) => e.id === selectedEnrollmentId)
     : -1;
-  const activeCourse = activeIndex >= 0 ? enrolledCourses[activeIndex] : null;
 
-  // Get greeting based on current hour
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Chào buổi sáng';
-    if (hour < 18) return 'Chào buổi chiều';
-    return 'Chào buổi tối';
+  const handleEnroll = (courseId: string) => {
+    enrollMutation.mutate(courseId, {
+      onSuccess: () => setActiveTab('enrolled'),
+    });
   };
 
   return (
-    <DashboardLayout
-      role="student"
-      user={{ name: mockStudent.name, avatar: mockStudent.avatar, role: 'student' }}
-      notificationCount={3}
-    >
+    <DashboardLayout role="student" user={{ name: 'Học sinh', avatar: '', role: 'student' }}>
       <div className="sc-page">
         <AnimatePresence mode="wait">
-          {selectedCourse ? (
+          {selectedEnrollmentId && selectedEnrollment ? (
             <motion.div
               key="detail-view"
               initial={{ opacity: 0 }}
@@ -532,13 +493,11 @@ const StudentCourses: React.FC = () => {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.25 }}
             >
-              {activeCourse && (
-                <DetailView
-                  course={activeCourse}
-                  courseIndex={activeIndex}
-                  onBack={() => setSelectedCourse(null)}
-                />
-              )}
+              <ProgressView
+                enrollment={selectedEnrollment}
+                courseIndex={selectedIndex}
+                onBack={() => setSelectedEnrollmentId(null)}
+              />
             </motion.div>
           ) : (
             <motion.div
@@ -548,21 +507,12 @@ const StudentCourses: React.FC = () => {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.25 }}
             >
-              {/* ── Hero ─────────────────────────────────────────── */}
+              {/* Hero */}
               <div className="sc-hero">
-                <MathWatermark />
                 <div className="sc-hero-glass">
                   <div className="sc-hero-left">
-                    <p className="sc-greeting-time">{getGreeting()},</p>
-                    <h1 className="sc-greeting-name">
-                      {mockStudent.name.split(' ').pop()}
-                      <span className="sc-greeting-wave" aria-hidden="true">
-                        👋
-                      </span>
-                    </h1>
-                    <p className="sc-greeting-sub">
-                      Sẵn sàng chinh phục <span className="sc-highlight">Giải tích</span> hôm nay?
-                    </p>
+                    <h1 className="sc-greeting-name">Giáo trình của tôi</h1>
+                    <p className="sc-greeting-sub">Theo dõi tiến độ và khám phá khóa học mới</p>
                   </div>
                   <div className="sc-hero-right">
                     <div className="sc-searchbar">
@@ -575,92 +525,135 @@ const StudentCourses: React.FC = () => {
                         onChange={(e) => setSearchQuery(e.target.value)}
                         aria-label="Tìm kiếm giáo trình"
                       />
-                      <kbd className="sc-kbd">⌘K</kbd>
                     </div>
-                    <motion.button
-                      className="sc-explore-btn"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.97 }}
-                    >
-                      Khám phá thêm
-                      <ChevronRight size={15} strokeWidth={2.5} />
-                    </motion.button>
                   </div>
                 </div>
               </div>
 
-              {/* ── KPI Row ──────────────────────────────────────── */}
+              {/* KPI Row */}
               <div className="sc-kpi-row">
-                <StatCard
-                  index={0}
-                  icon={<BookOpen size={20} strokeWidth={2} style={{ color: '#4F46E5' }} />}
-                  iconBg="rgba(79,70,229,0.12)"
-                  value={`${enrolledCourses.length}`}
-                  label="Giáo trình đang học"
-                  delta="1 mới tháng này"
-                  deltaUp
-                />
-                <StatCard
-                  index={1}
-                  icon={<TrendingUp size={20} strokeWidth={2} style={{ color: '#10B981' }} />}
-                  iconBg="rgba(16,185,129,0.12)"
-                  value={`${avgProgress}%`}
-                  label="Tiến độ trung bình"
-                  delta="8% so với tuần trước"
-                  deltaUp
-                />
-                <StatCard
-                  index={2}
-                  icon={<Award size={20} strokeWidth={2} style={{ color: '#F59E0B' }} />}
-                  iconBg="rgba(245,158,11,0.12)"
-                  value="12"
-                  label="Bài học hoàn thành"
-                  delta="3 bài tuần này"
-                  deltaUp
-                />
-                <StatCard
-                  index={3}
-                  icon={<Clock size={20} strokeWidth={2} style={{ color: '#3B82F6' }} />}
-                  iconBg="rgba(59,130,246,0.12)"
-                  value="18.5h"
-                  label="Tổng thời gian học"
-                  sparkline
-                />
-              </div>
-
-              {/* ── Section Header ───────────────────────────────── */}
-              <motion.div
-                className="sc-section-header"
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2, duration: 0.35 }}
-              >
-                <div>
-                  <h2 className="sc-section-title">Giáo trình của tôi</h2>
-                  <p className="sc-section-sub">
-                    {filteredCourses.length} giáo trình{' '}
-                    {searchQuery ? `khớp với "${searchQuery}"` : 'đã đăng ký'}
-                  </p>
-                </div>
-              </motion.div>
-
-              {/* ── Course Grid ──────────────────────────────────── */}
-              <div className="sc-course-grid">
-                {filteredCourses.map((course, i) => (
-                  <CourseCard
-                    key={course.id}
-                    course={course}
-                    index={i}
-                    onSelect={setSelectedCourse}
-                  />
-                ))}
-                {filteredCourses.length === 0 && (
-                  <div className="sc-empty">
-                    <Search size={40} strokeWidth={1.5} />
-                    <p>Không tìm thấy giáo trình</p>
+                <div className="sc-stat-card">
+                  <div className="sc-stat-icon-wrap" style={{ background: 'rgba(79,70,229,0.12)' }}>
+                    <BookOpen size={20} strokeWidth={2} style={{ color: '#4F46E5' }} />
                   </div>
-                )}
+                  <div className="sc-stat-value">{activeEnrollments.length}</div>
+                  <div className="sc-stat-label">Đang học</div>
+                </div>
+                <div className="sc-stat-card">
+                  <div className="sc-stat-icon-wrap" style={{ background: 'rgba(16,185,129,0.12)' }}>
+                    <TrendingUp size={20} strokeWidth={2} style={{ color: '#10B981' }} />
+                  </div>
+                  <div className="sc-stat-value">{enrollments.length}</div>
+                  <div className="sc-stat-label">Tổng đăng ký</div>
+                </div>
+                <div className="sc-stat-card">
+                  <div className="sc-stat-icon-wrap" style={{ background: 'rgba(245,158,11,0.12)' }}>
+                    <Award size={20} strokeWidth={2} style={{ color: '#F59E0B' }} />
+                  </div>
+                  <div className="sc-stat-value">{publicCourses.length}</div>
+                  <div className="sc-stat-label">Khóa học mới</div>
+                </div>
+                <div className="sc-stat-card">
+                  <div className="sc-stat-icon-wrap" style={{ background: 'rgba(59,130,246,0.12)' }}>
+                    <Clock size={20} strokeWidth={2} style={{ color: '#3B82F6' }} />
+                  </div>
+                  <div className="sc-stat-value">{avgProgress}%</div>
+                  <div className="sc-stat-label">Tiến độ TB</div>
+                </div>
               </div>
+
+              {/* Tabs */}
+              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem' }}>
+                <button
+                  className={`sc-tab-btn ${activeTab === 'enrolled' ? 'sc-tab-active' : ''}`}
+                  onClick={() => setActiveTab('enrolled')}
+                >
+                  <BookOpen size={14} strokeWidth={2} />
+                  Đã đăng ký ({enrollments.length})
+                </button>
+                <button
+                  className={`sc-tab-btn ${activeTab === 'browse' ? 'sc-tab-active' : ''}`}
+                  onClick={() => setActiveTab('browse')}
+                >
+                  <Search size={14} strokeWidth={2} />
+                  Khám phá
+                </button>
+              </div>
+
+              {/* Enrolled courses */}
+              {activeTab === 'enrolled' && (
+                <>
+                  {loadingEnrollments && (
+                    <p style={{ color: '#6b7280', padding: '1rem' }}>Đang tải...</p>
+                  )}
+                  <div className="sc-course-grid">
+                    {filteredEnrollments.map((enrollment, i) => (
+                      <EnrollmentCard
+                        key={enrollment.id}
+                        enrollment={enrollment}
+                        index={i}
+                        onSelect={setSelectedEnrollmentId}
+                      />
+                    ))}
+                    {filteredEnrollments.length === 0 && !loadingEnrollments && (
+                      <div className="sc-empty">
+                        <BookOpen size={40} strokeWidth={1.5} />
+                        <p>Bạn chưa đăng ký khóa học nào</p>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {/* Browse public courses */}
+              {activeTab === 'browse' && (
+                <>
+                  {/* Filter bar */}
+                  <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+                    <select
+                      value={filterGradeId}
+                      onChange={(e) => void handleFilterGradeChange(e.target.value)}
+                      style={{ padding: '0.5rem 0.75rem', borderRadius: '8px', border: '1px solid #dbe4f0', fontSize: '0.88rem' }}
+                    >
+                      <option value="">Tất cả khối lớp</option>
+                      {grades.map((g) => (
+                        <option key={g.id} value={g.id}>Khối {g.gradeLevel} – {g.name}</option>
+                      ))}
+                    </select>
+                    <select
+                      value={filterSubjectId}
+                      onChange={(e) => setFilterSubjectId(e.target.value)}
+                      disabled={!filterGradeId}
+                      style={{ padding: '0.5rem 0.75rem', borderRadius: '8px', border: '1px solid #dbe4f0', fontSize: '0.88rem' }}
+                    >
+                      <option value="">Tất cả môn học</option>
+                      {subjects.map((s) => (
+                        <option key={s.id} value={s.id}>{s.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  {loadingPublic && (
+                    <p style={{ color: '#6b7280', padding: '1rem' }}>Đang tải...</p>
+                  )}
+                  <div className="sc-course-grid">
+                    {publicCourses.map((course, i) => (
+                      <PublicCourseCard
+                        key={course.id}
+                        course={course}
+                        index={i}
+                        onEnroll={handleEnroll}
+                        isEnrolling={enrollMutation.isPending}
+                      />
+                    ))}
+                    {publicCourses.length === 0 && !loadingPublic && (
+                      <div className="sc-empty">
+                        <Search size={40} strokeWidth={1.5} />
+                        <p>Không tìm thấy khóa học</p>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

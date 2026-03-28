@@ -145,6 +145,13 @@ export const API_ENDPOINTS = {
   LESSON_PLAN_MY_BY_LESSON: (lessonId: string) => `/lesson-plans/my/lesson/${lessonId}`,
   LESSON_PLANS_BY_LESSON: (lessonId: string) => `/lesson-plans/lesson/${lessonId}`,
 
+  // Video Upload (Multipart)
+  COURSE_VIDEO_UPLOAD_INITIATE: (courseId: string) => `/courses/${courseId}/lessons/upload/initiate`,
+  COURSE_VIDEO_UPLOAD_PART_URL: (courseId: string) => `/courses/${courseId}/lessons/upload/part-url`,
+  COURSE_VIDEO_UPLOAD_COMPLETE: (courseId: string) => `/courses/${courseId}/lessons/upload/complete`,
+  COURSE_VIDEO_URL: (courseId: string, courseLessonId: string) =>
+    `/courses/${courseId}/lessons/upload/${courseLessonId}/video-url`,
+
   // Wallet
   WALLET_MY: '/wallet/my-wallet',
   WALLET_TRANSACTIONS: '/wallet/transactions',
@@ -185,4 +192,24 @@ export const API_ENDPOINTS = {
   EXAM_MATRIX_BANK_MAPPINGS: (matrixId: string) => `/exam-matrices/${matrixId}/bank-mappings`,
   EXAM_MATRIX_BANK_MAPPING_DETAIL: (matrixId: string, mappingId: string) =>
     `/exam-matrices/${matrixId}/bank-mappings/${mappingId}`,
+
+  // Courses
+  COURSES: '/courses',
+  COURSES_MY: '/courses/my',
+  COURSE_DETAIL: (courseId: string) => `/courses/${courseId}`,
+  COURSE_PUBLISH: (courseId: string) => `/courses/${courseId}/publish`,
+  COURSE_STUDENTS: (courseId: string) => `/courses/${courseId}/students`,
+  COURSE_LESSONS: (courseId: string) => `/courses/${courseId}/lessons`,
+  COURSE_LESSON_DETAIL: (courseId: string, lessonId: string) =>
+    `/courses/${courseId}/lessons/${lessonId}`,
+
+  // Enrollments
+  COURSE_ENROLL: (courseId: string) => `/courses/${courseId}/enroll`,
+  ENROLLMENTS_MY: '/enrollments/my',
+  ENROLLMENT_DROP: (enrollmentId: string) => `/enrollments/${enrollmentId}`,
+
+  // Progress
+  ENROLLMENT_LESSON_COMPLETE: (enrollmentId: string, courseLessonId: string) =>
+    `/enrollments/${enrollmentId}/lessons/${courseLessonId}/complete`,
+  ENROLLMENT_PROGRESS: (enrollmentId: string) => `/enrollments/${enrollmentId}/progress`,
 };
