@@ -4,13 +4,16 @@ import { useParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockStudent } from '../../data/mockData';
 import {
+  useFinishRoadmapEntryTest,
   useMyRoadmapFeedback,
+  useRoadmapEntryTest,
   useRoadmapDetail,
+  useStartRoadmapEntryTest,
   useSubmitRoadmapFeedback,
-  useStudentTopicMaterials,
   useSubmitRoadmapEntryTest,
+  useStudentTopicMaterials,
 } from '../../hooks/useRoadmaps';
-import type { TopicMaterialResourceType } from '../../types';
+import type { RoadmapEntryTestResultResponse, TopicMaterialResourceType } from '../../types';
 import './roadmap-detail-page.css';
 
 /* ─────────────────────────────────────────────────────
@@ -67,11 +70,20 @@ function diffLabel(d: string) {
 export default function RoadmapDetailPage() {
   const { roadmapId = '' } = useParams();
   const { data, isLoading, error } = useRoadmapDetail(roadmapId);
-  const submitEntryTest = useSubmitRoadmapEntryTest();
+  const entryTestQuery = useRoadmapEntryTest(roadmapId);
+  const startEntryTest = useStartRoadmapEntryTest();
+  const finishEntryTest = useFinishRoadmapEntryTest();
+  const legacySubmitEntryTest = useSubmitRoadmapEntryTest();
   const myFeedbackQuery = useMyRoadmapFeedback(roadmapId);
   const submitFeedback = useSubmitRoadmapFeedback();
 
+  const [attemptId, setAttemptId] = useState('');
   const [submissionId, setSubmissionId] = useState('');
+  const [entryResult, setEntryResult] = useState<RoadmapEntryTestResultResponse | null>(null);
+  const [entryTestMessage, setEntryTestMessage] = useState<{
+    type: 'success' | 'error';
+    text: string;
+  } | null>(null);
   const [selectedTopicId, setSelectedTopicId] = useState('');
   const [resourceType, setResourceType] = useState<TopicMaterialResourceType>('LESSON');
   const [finishedTopicIds, setFinishedTopicIds] = useState<string[]>([]);
@@ -85,6 +97,7 @@ export default function RoadmapDetailPage() {
   const [pathLength, setPathLength] = useState(10000);
 
   const roadmap = data?.result;
+  const entryTest = entryTestQuery.data?.result;
   const myFeedback = myFeedbackQuery.data?.result ?? null;
   const materialsQuery = useStudentTopicMaterials(selectedTopicId, resourceType);
   const materials = Array.isArray(materialsQuery.data?.result) ? materialsQuery.data?.result : [];
@@ -148,6 +161,12 @@ export default function RoadmapDetailPage() {
 
   const feedbackContentLength = feedbackContent.length;
   const feedbackIsValid = feedbackRating >= 1 && feedbackRating <= 5 && feedbackContentLength <= 2000;
+  let feedbackSubmitLabel = 'Submit feedback';
+  if (submitFeedback.isPending) {
+    feedbackSubmitLabel = 'Saving...';
+  } else if (myFeedback) {
+    feedbackSubmitLabel = 'Update feedback';
+  }
 
   const submitRoadmapFeedback = () => {
     if (!roadmapId || !feedbackIsValid) return;
@@ -191,6 +210,70 @@ export default function RoadmapDetailPage() {
             return;
           }
           setFeedbackMessage({ type: 'error', text: message.replace(/^\d{3}\s+[^:]+:\s*/, '') });
+        },
+      }
+    );
+  };
+
+  const startRoadmapEntryTest = () => {
+    if (!roadmapId) return;
+
+    setEntryTestMessage(null);
+    startEntryTest.mutate(
+      { roadmapId },
+      {
+        onSuccess: (response) => {
+          setAttemptId(response.result.attemptId);
+          setEntryResult(null);
+          setEntryTestMessage({
+            type: 'success',
+            text: `Đã bắt đầu bài test. Attempt ID: ${response.result.attemptId}`,
+          });
+        },
+        onError: (mutationError) => {
+          const message = mutationError instanceof Error ? mutationError.message : 'Không thể bắt đầu bài test';
+          setEntryTestMessage({ type: 'error', text: message });
+        },
+      }
+    );
+  };
+
+  const finishRoadmapEntryTest = () => {
+    if (!roadmapId || !attemptId.trim()) return;
+
+    setEntryTestMessage(null);
+    finishEntryTest.mutate(
+      { roadmapId, attemptId: attemptId.trim() },
+      {
+        onSuccess: (response) => {
+          setEntryResult(response.result);
+          setEntryTestMessage({ type: 'success', text: 'Nộp bài thành công.' });
+        },
+        onError: (mutationError) => {
+          const message = mutationError instanceof Error ? mutationError.message : 'Không thể nộp bài';
+          setEntryTestMessage({ type: 'error', text: message });
+        },
+      }
+    );
+  };
+
+  const submitEntryTestLegacy = () => {
+    if (!roadmapId || !submissionId.trim()) return;
+
+    setEntryTestMessage(null);
+    legacySubmitEntryTest.mutate(
+      { roadmapId, payload: { submissionId: submissionId.trim() } },
+      {
+        onSuccess: (response) => {
+          setEntryResult(response.result);
+          setEntryTestMessage({
+            type: 'success',
+            text: 'Nộp bài thành công qua endpoint tương thích cũ.',
+          });
+        },
+        onError: (mutationError) => {
+          const message = mutationError instanceof Error ? mutationError.message : 'Không thể nộp bài';
+          setEntryTestMessage({ type: 'error', text: message });
         },
       }
     );
@@ -259,34 +342,67 @@ export default function RoadmapDetailPage() {
             <div className="rdp__entry">
               <div className="rdp__entry-left">
                 <h3 className="rdp__entry-title">Bài kiểm tra đầu vào</h3>
-                <p className="rdp__entry-desc">
-                  Nộp kết quả bài kiểm tra để nhận gợi ý chủ đề bắt đầu phù hợp
-                </p>
+                <p className="rdp__entry-desc">Bắt đầu bài test để nhận gợi ý chủ đề phù hợp.</p>
+                {entryTestQuery.isLoading && <p className="rdp__mat-state">Đang tải thông tin bài test...</p>}
+                {entryTest && (
+                  <p className="rdp__mat-state">
+                    {entryTest.title} • {entryTest.totalQuestions} câu •{' '}
+                    {entryTest.timeLimitMinutes ? `${entryTest.timeLimitMinutes} phút` : 'Không giới hạn thời gian'}
+                  </p>
+                )}
+                {entryTest && !entryTest.canStart && entryTest.cannotStartReason && (
+                  <p className="rdp__mat-state">{entryTest.cannotStartReason}</p>
+                )}
               </div>
               <div className="rdp__entry-right">
+                <button
+                  type="button"
+                  className="rdp__entry-btn"
+                  disabled={!roadmapId || !entryTest?.canStart || startEntryTest.isPending}
+                  onClick={startRoadmapEntryTest}
+                >
+                  {startEntryTest.isPending ? 'Đang bắt đầu…' : 'Start Entry Test'}
+                </button>
+
                 <input
                   className="rdp__entry-input"
-                  placeholder="Submission ID"
+                  placeholder="Attempt ID"
+                  value={attemptId}
+                  onChange={(e) => setAttemptId(e.target.value)}
+                />
+                <button
+                  type="button"
+                  className="rdp__entry-btn"
+                  disabled={!attemptId.trim() || !roadmapId || finishEntryTest.isPending}
+                  onClick={finishRoadmapEntryTest}
+                >
+                  {finishEntryTest.isPending ? 'Đang nộp…' : 'Finish Attempt'}
+                </button>
+
+                <input
+                  className="rdp__entry-input"
+                  placeholder="Fallback Submission ID"
                   value={submissionId}
                   onChange={(e) => setSubmissionId(e.target.value)}
                 />
                 <button
                   type="button"
                   className="rdp__entry-btn"
-                  disabled={!submissionId || !roadmapId || submitEntryTest.isPending}
-                  onClick={() => {
-                    if (!roadmapId || !submissionId) return;
-                    submitEntryTest.mutate({ roadmapId, payload: { submissionId } });
-                  }}
+                  disabled={!submissionId.trim() || !roadmapId || legacySubmitEntryTest.isPending}
+                  onClick={submitEntryTestLegacy}
                 >
-                  {submitEntryTest.isPending ? 'Đang nộp…' : 'Nộp bài'}
+                  {legacySubmitEntryTest.isPending ? 'Đang nộp fallback…' : 'Fallback Submit'}
                 </button>
               </div>
-              {submitEntryTest.data?.result && (
+
+              {entryTestMessage && (
+                <p className="rdp__entry-result">{entryTestMessage.type === 'success' ? '✓ ' : '⚠ '} {entryTestMessage.text}</p>
+              )}
+
+              {entryResult && (
                 <p className="rdp__entry-result">
-                  ✓ Gợi ý chủ đề #{submitEntryTest.data.result.suggestedTopicId} • Điểm:{' '}
-                  {submitEntryTest.data.result.scoreOnTen.toFixed(2)}/10 •{' '}
-                  {submitEntryTest.data.result.evaluatedQuestions} câu hỏi được đánh giá
+                  ✓ Gợi ý chủ đề #{entryResult.suggestedTopicId} • Điểm: {entryResult.scoreOnTen.toFixed(2)}/10 •{' '}
+                  {entryResult.evaluatedQuestions} câu hỏi được đánh giá
                 </p>
               )}
             </div>
@@ -349,11 +465,7 @@ export default function RoadmapDetailPage() {
                       onClick={submitRoadmapFeedback}
                       disabled={submitFeedback.isPending || !feedbackIsValid}
                     >
-                      {submitFeedback.isPending
-                        ? 'Saving...'
-                        : myFeedback
-                          ? 'Update feedback'
-                          : 'Submit feedback'}
+                      {feedbackSubmitLabel}
                     </button>
                   </div>
                 </>

@@ -109,6 +109,11 @@ export const API_ENDPOINTS = {
   ROADMAP_STUDENT: '/roadmaps/student',
   ROADMAP_STUDENT_DETAIL: (roadmapId: string) => `/roadmaps/${roadmapId}/student-progress`,
   ROADMAP_PROGRESS: (roadmapId: string) => `/roadmaps/${roadmapId}/progress`,
+  ROADMAP_ENTRY_TEST: (roadmapId: string) => `/student/roadmaps/${roadmapId}/entry-test`,
+  ROADMAP_ENTRY_TEST_START: (roadmapId: string) =>
+    `/student/roadmaps/${roadmapId}/entry-test/start`,
+  ROADMAP_ENTRY_TEST_FINISH: (roadmapId: string, attemptId: string) =>
+    `/student/roadmaps/${roadmapId}/entry-test/attempts/${attemptId}/finish`,
   ROADMAP_ENTRY_TEST_SUBMIT: (roadmapId: string) =>
     `/student/roadmaps/${roadmapId}/entry-test/submit`,
   STUDENT_ROADMAP_FEEDBACK: (roadmapId: string) => `/student/roadmaps/${roadmapId}/feedback`,

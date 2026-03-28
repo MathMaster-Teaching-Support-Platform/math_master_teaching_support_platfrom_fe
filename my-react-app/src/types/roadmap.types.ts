@@ -189,6 +189,43 @@ export interface CreateRoadmapEntryTestRequest {
   assessmentId: string;
 }
 
+export interface StudentRoadmapEntryTestInfo {
+  assessmentId: string;
+  title: string;
+  description?: string;
+  timeLimitMinutes?: number;
+  totalQuestions: number;
+  canStart: boolean;
+  cannotStartReason?: string | null;
+}
+
+export interface StartRoadmapEntryTestRequest {
+  ipAddress?: string;
+}
+
+export interface RoadmapEntryTestQuestion {
+  questionId: string;
+  orderIndex: number;
+  questionType: string;
+  questionText: string;
+  options?: Record<string, string>;
+  points: number;
+}
+
+export interface RoadmapEntryTestAttemptStartResponse {
+  attemptId: string;
+  assessmentId: string;
+  attemptNumber: number;
+  startedAt: string;
+  expiresAt: string;
+  timeLimitMinutes: number;
+  totalQuestions: number;
+  instructions?: string;
+  connectionToken?: string;
+  channelName?: string;
+  questions: RoadmapEntryTestQuestion[];
+}
+
 export interface SubmitRoadmapEntryTestRequest {
   submissionId: string;
 }
@@ -202,6 +239,8 @@ export interface SubmitRoadmapEntryTestResult {
   thresholdPercentage: number;
   evaluatedAt: string;
 }
+
+export type RoadmapEntryTestResultResponse = SubmitRoadmapEntryTestResult;
 
 export interface SubmitRoadmapFeedbackRequest {
   rating: number;

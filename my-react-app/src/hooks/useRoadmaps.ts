@@ -4,6 +4,7 @@ import type {
   CreateAdminRoadmapRequest,
   CreateRoadmapEntryTestRequest,
   CreateRoadmapTopicRequest,
+  StartRoadmapEntryTestRequest,
   SubmitRoadmapFeedbackRequest,
   SubmitRoadmapEntryTestRequest,
   TopicMaterialResourceType,
@@ -25,6 +26,7 @@ export const roadmapKeys = {
   myFeedback: (roadmapId: string) => [...roadmapKeys.all, 'feedback', 'me', roadmapId] as const,
   adminFeedback: (roadmapId: string, page = 0, size = 20) =>
     [...roadmapKeys.all, 'feedback', 'admin', roadmapId, page, size] as const,
+  entryTest: (roadmapId: string) => [...roadmapKeys.all, 'entry-test', roadmapId] as const,
 };
 
 export function useRoadmaps(name = '', page = 0, size = 20) {
@@ -184,6 +186,41 @@ export function useCreateRoadmapEntryTest() {
   return useMutation({
     mutationFn: ({ roadmapId, payload }: { roadmapId: string; payload: CreateRoadmapEntryTestRequest }) =>
       RoadmapService.createRoadmapEntryTest(roadmapId, payload),
+  });
+}
+
+export function useRoadmapEntryTest(roadmapId: string) {
+  return useQuery({
+    queryKey: roadmapKeys.entryTest(roadmapId),
+    queryFn: () => RoadmapService.getRoadmapEntryTest(roadmapId),
+    enabled: !!roadmapId,
+  });
+}
+
+export function useStartRoadmapEntryTest() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ roadmapId, payload }: { roadmapId: string; payload?: StartRoadmapEntryTestRequest }) =>
+      RoadmapService.startRoadmapEntryTest(roadmapId, payload),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: roadmapKeys.entryTest(variables.roadmapId) });
+      queryClient.invalidateQueries({ queryKey: roadmapKeys.detail(variables.roadmapId) });
+    },
+  });
+}
+
+export function useFinishRoadmapEntryTest() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ roadmapId, attemptId }: { roadmapId: string; attemptId: string }) =>
+      RoadmapService.finishRoadmapEntryTest(roadmapId, attemptId),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: roadmapKeys.entryTest(variables.roadmapId) });
+      queryClient.invalidateQueries({ queryKey: roadmapKeys.student(variables.roadmapId) });
+      queryClient.invalidateQueries({ queryKey: roadmapKeys.detail(variables.roadmapId) });
+    },
   });
 }
 

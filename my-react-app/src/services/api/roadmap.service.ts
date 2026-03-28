@@ -11,10 +11,13 @@ import type {
   RoadmapFeedbackResponse,
   RoadmapResourceOption,
   RoadmapResourceOptionType,
+  RoadmapEntryTestAttemptStartResponse,
+  RoadmapEntryTestResultResponse,
   RoadmapTopicResponse,
+  StartRoadmapEntryTestRequest,
+  StudentRoadmapEntryTestInfo,
   SubmitRoadmapFeedbackRequest,
   SubmitRoadmapEntryTestRequest,
-  SubmitRoadmapEntryTestResult,
   StudentRoadmapSnapshot,
   TopicMaterial,
   TopicMaterialResourceType,
@@ -308,6 +311,86 @@ export class RoadmapService {
     return response.json();
   }
 
+  static async getRoadmapEntryTest(
+    roadmapId: string
+  ): Promise<RoadmapApiResponse<StudentRoadmapEntryTestInfo>> {
+    const headers = await this.getHeaders();
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ROADMAP_ENTRY_TEST(roadmapId)}`, {
+      method: 'GET',
+      headers,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw this.parseApiError(error, 'Failed to fetch roadmap entry test');
+    }
+
+    const data = (await response.json()) as RoadmapApiResponse<StudentRoadmapEntryTestInfo>;
+    if (data.code !== 1000) {
+      throw this.parseApiError(data, 'Failed to fetch roadmap entry test');
+    }
+
+    return data;
+  }
+
+  static async startRoadmapEntryTest(
+    roadmapId: string,
+    payload?: StartRoadmapEntryTestRequest
+  ): Promise<RoadmapApiResponse<RoadmapEntryTestAttemptStartResponse>> {
+    const headers = await this.getHeaders();
+    const query = new URLSearchParams();
+    if (payload?.ipAddress?.trim()) {
+      query.set('ipAddress', payload.ipAddress.trim());
+    }
+    const queryString = query.toString();
+    const endpoint = `${API_BASE_URL}${API_ENDPOINTS.ROADMAP_ENTRY_TEST_START(roadmapId)}${
+      queryString ? `?${queryString}` : ''
+    }`;
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw this.parseApiError(error, 'Failed to start roadmap entry test');
+    }
+
+    const data = (await response.json()) as RoadmapApiResponse<RoadmapEntryTestAttemptStartResponse>;
+    if (data.code !== 1000) {
+      throw this.parseApiError(data, 'Failed to start roadmap entry test');
+    }
+
+    return data;
+  }
+
+  static async finishRoadmapEntryTest(
+    roadmapId: string,
+    attemptId: string
+  ): Promise<RoadmapApiResponse<RoadmapEntryTestResultResponse>> {
+    const headers = await this.getHeaders();
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.ROADMAP_ENTRY_TEST_FINISH(roadmapId, attemptId)}`,
+      {
+        method: 'POST',
+        headers,
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw this.parseApiError(error, 'Failed to finish roadmap entry test');
+    }
+
+    const data = (await response.json()) as RoadmapApiResponse<RoadmapEntryTestResultResponse>;
+    if (data.code !== 1000) {
+      throw this.parseApiError(data, 'Failed to finish roadmap entry test');
+    }
+
+    return data;
+  }
+
   static async getRoadmapResourceOptions(params: {
     type: RoadmapResourceOptionType;
     chapterId?: string;
@@ -364,7 +447,7 @@ export class RoadmapService {
   static async submitRoadmapEntryTest(
     roadmapId: string,
     payload: SubmitRoadmapEntryTestRequest
-  ): Promise<RoadmapApiResponse<SubmitRoadmapEntryTestResult>> {
+  ): Promise<RoadmapApiResponse<RoadmapEntryTestResultResponse>> {
     const headers = await this.getHeaders();
     const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ROADMAP_ENTRY_TEST_SUBMIT(roadmapId)}`, {
       method: 'POST',
