@@ -80,6 +80,27 @@ const resequenceNodes = (nodes: TopicNodeDraft[]) =>
 
 const TOPIC_STATUSES: TopicStatus[] = ['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'LOCKED'];
 
+const TOPIC_STATUS_LABELS: Record<TopicStatus, string> = {
+  NOT_STARTED: 'Chưa bắt đầu',
+  IN_PROGRESS: 'Đang học',
+  COMPLETED: 'Hoàn thành',
+  LOCKED: 'Đã khóa',
+};
+
+const DIFFICULTY_LABELS: Record<TopicDifficulty, string> = {
+  EASY: 'Dễ',
+  MEDIUM: 'Trung bình',
+  HARD: 'Khó',
+};
+
+const MATERIAL_TAB_LABELS: Record<MaterialTab, string> = {
+  LESSON: 'Bài học',
+  TEMPLATE_SLIDE: 'Slide mẫu',
+  ASSESSMENT: 'Bài kiểm tra',
+  LESSON_PLAN: 'Giáo án',
+  MINDMAP: 'Sơ đồ tư duy',
+};
+
 const extractHttpStatus = (error: unknown) => {
   if (typeof error === 'object' && error && 'status' in error) {
     const status = (error as { status?: unknown }).status;
@@ -101,6 +122,7 @@ const extractErrorMessage = (error: unknown, fallback: string) => {
 
 const normalizeAssessmentSearchResults = (payload: AssessmentSearchApiResponse | undefined) => {
   if (!payload) return [] as AssessmentSearchItem[];
+  if (Array.isArray(payload.result)) return payload.result;
   if (Array.isArray(payload.assessments)) return payload.assessments;
   if (Array.isArray(payload.result?.assessments)) return payload.result.assessments;
   return [] as AssessmentSearchItem[];
@@ -178,14 +200,14 @@ const validateTopicMarkOrder = (
   if (previousNode && activeNode.mark <= previousNode.mark) {
     return {
       valid: false,
-      message: `Topic ${activeNode.sequenceOrder} mark (${activeNode.mark}) must be larger than topic ${previousNode.sequenceOrder} (${previousNode.mark}).`,
+      message: `Điểm mốc của chủ đề ${activeNode.sequenceOrder} (${activeNode.mark}) phải lớn hơn chủ đề ${previousNode.sequenceOrder} (${previousNode.mark}).`,
     };
   }
 
   if (nextNode && activeNode.mark >= nextNode.mark) {
     return {
       valid: false,
-      message: `Topic ${activeNode.sequenceOrder} mark (${activeNode.mark}) must be smaller than topic ${nextNode.sequenceOrder} (${nextNode.mark}) so next topic stays larger than previous.`,
+      message: `Điểm mốc của chủ đề ${activeNode.sequenceOrder} (${activeNode.mark}) phải nhỏ hơn chủ đề ${nextNode.sequenceOrder} (${nextNode.mark}) để giữ thứ tự tăng dần.`,
     };
   }
 
@@ -393,7 +415,10 @@ export default function AdminRoadmapTopicsPage() {
   const entryAssessmentSearchQuery = useQuery({
     queryKey: ['assessments', 'search', debouncedEntryAssessmentQuery, subjectId],
     queryFn: () =>
-      AssessmentService.searchAssessments(debouncedEntryAssessmentQuery, subjectId || undefined),
+      AssessmentService.searchAssessments(
+        debouncedEntryAssessmentQuery,
+        'PUBLIC'
+      ),
     enabled: debouncedEntryAssessmentQuery.length >= 2,
   });
 
@@ -413,7 +438,7 @@ export default function AdminRoadmapTopicsPage() {
   const createDraftNode = () => {
     const draft: TopicNodeDraft = {
       clientId: `draft-${Date.now()}`,
-      title: `Topic ${nodes.length + 1}`,
+      title: `Chủ đề ${nodes.length + 1}`,
       description: '',
       difficulty: 'EASY',
       sequenceOrder: nodes.length + 1,
@@ -516,19 +541,19 @@ export default function AdminRoadmapTopicsPage() {
   const handleMutationError = (error: unknown, fallback: string) => {
     const status = extractHttpStatus(error);
     if (status === 401) {
-      setToast({ type: 'error', message: 'Unauthorized. Please sign in again.' });
+      setToast({ type: 'error', message: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.' });
       void navigate('/login', { replace: true });
       return;
     }
     if (status === 403) {
-      setToast({ type: 'error', message: 'Forbidden. ADMIN permission is required.' });
+      setToast({ type: 'error', message: 'Bạn không có quyền thao tác. Cần quyền ADMIN.' });
       return;
     }
     if (status === 404) {
       setToast({
         type: 'error',
         message:
-          'Topic or roadmap not found. It may already be archived or linked data is invalid.',
+          'Không tìm thấy chủ đề hoặc lộ trình. Có thể dữ liệu đã bị lưu trữ hoặc liên kết không hợp lệ.',
       });
       return;
     }
@@ -567,12 +592,12 @@ export default function AdminRoadmapTopicsPage() {
         },
         {
           onSuccess: () => {
-            setToast({ type: 'success', message: 'Roadmap topic created successfully' });
+            setToast({ type: 'success', message: 'Tạo chủ đề lộ trình thành công.' });
             setIsTopicModalOpen(false);
             setActiveNodeId(null);
             void roadmapDetail.refetch();
           },
-          onError: (error) => handleMutationError(error, 'Failed to create roadmap topic'),
+          onError: (error) => handleMutationError(error, 'Không thể tạo chủ đề lộ trình.'),
         }
       );
       return;
@@ -582,7 +607,7 @@ export default function AdminRoadmapTopicsPage() {
 
     const payload = buildUpdatePayload(activeNode);
     if (Object.keys(payload).length === 0) {
-      setToast({ type: 'error', message: 'No changes detected for this topic.' });
+      setToast({ type: 'error', message: 'Không phát hiện thay đổi cho chủ đề này.' });
       return;
     }
 
@@ -590,12 +615,12 @@ export default function AdminRoadmapTopicsPage() {
       { roadmapId, topicId: activeNode.persistedId, payload },
       {
         onSuccess: () => {
-          setToast({ type: 'success', message: 'Roadmap topic updated successfully' });
+          setToast({ type: 'success', message: 'Cập nhật chủ đề lộ trình thành công.' });
           setIsTopicModalOpen(false);
           setActiveNodeId(null);
           void roadmapDetail.refetch();
         },
-        onError: (error) => handleMutationError(error, 'Failed to update roadmap topic'),
+        onError: (error) => handleMutationError(error, 'Không thể cập nhật chủ đề lộ trình.'),
       }
     );
   };
@@ -610,13 +635,13 @@ export default function AdminRoadmapTopicsPage() {
       },
       {
         onSuccess: () => {
-          setToast({ type: 'success', message: 'Roadmap topic archived successfully' });
+          setToast({ type: 'success', message: 'Lưu trữ chủ đề lộ trình thành công.' });
           setDeleteTargetId(null);
           setIsTopicModalOpen(false);
           setActiveNodeId(null);
           void roadmapDetail.refetch();
         },
-        onError: (error) => handleMutationError(error, 'Failed to archive roadmap topic'),
+        onError: (error) => handleMutationError(error, 'Không thể lưu trữ chủ đề lộ trình.'),
       }
     );
   };
@@ -624,7 +649,7 @@ export default function AdminRoadmapTopicsPage() {
   const submitEntryTestConfig = () => {
     const selectedAssessmentId = selectedEntryAssessment?.id || entryAssessmentId.trim();
     if (!roadmapId || !selectedAssessmentId) {
-      setToast({ type: 'error', message: 'Please search and select an assessment first.' });
+      setToast({ type: 'error', message: 'Vui lòng tìm kiếm và chọn bài kiểm tra trước.' });
       return;
     }
 
@@ -637,9 +662,9 @@ export default function AdminRoadmapTopicsPage() {
       },
       {
         onSuccess: () => {
-          setToast({ type: 'success', message: 'Entry assessment configured successfully.' });
+          setToast({ type: 'success', message: 'Thiết lập bài kiểm tra đầu vào thành công.' });
         },
-        onError: (error) => handleMutationError(error, 'Failed to configure entry assessment'),
+        onError: (error) => handleMutationError(error, 'Không thể thiết lập bài kiểm tra đầu vào.'),
       }
     );
   };
@@ -651,7 +676,7 @@ export default function AdminRoadmapTopicsPage() {
   };
 
   const title = useMemo(
-    () => roadmapDetail.data?.result.name ?? 'Roadmap topic builder',
+    () => roadmapDetail.data?.result.name ?? 'Thiết kế chủ đề lộ trình',
     [roadmapDetail.data]
   );
   const chapters = chaptersQuery.data?.result ?? [];
@@ -662,15 +687,15 @@ export default function AdminRoadmapTopicsPage() {
   const assessmentOptions: RoadmapResourceOption[] = assessmentQuery.data?.result ?? [];
   const searchedAssessments = normalizeAssessmentSearchResults(entryAssessmentSearchQuery.data);
   const roadmapErrorStatus = extractHttpStatus(roadmapDetail.error);
-  let submitButtonLabel = 'Save changes';
+  let submitButtonLabel = 'Lưu thay đổi';
   if (activeNode?.isDraft) {
-    submitButtonLabel = 'Save topic';
+    submitButtonLabel = 'Lưu chủ đề';
   }
   if (updateTopic.isPending) {
-    submitButtonLabel = 'Saving...';
+    submitButtonLabel = 'Đang lưu...';
   }
   if (addTopic.isPending) {
-    submitButtonLabel = 'Adding...';
+    submitButtonLabel = 'Đang thêm...';
   }
 
   return (
@@ -682,8 +707,8 @@ export default function AdminRoadmapTopicsPage() {
       <section className="admin-roadmap-topics-page">
         <header className="admin-roadmap-topics-page__header">
           <div>
-            <h1>Topic road builder</h1>
-            <p>{title} - create, edit, and archive topics directly from this board.</p>
+            <h1>Sơ đồ chủ đề lộ trình</h1>
+            <p>{title} - tạo, chỉnh sửa và lưu trữ chủ đề trực tiếp trên bảng này.</p>
           </div>
           <div className="admin-roadmap-topics-page__header-actions">
             <button
@@ -691,20 +716,20 @@ export default function AdminRoadmapTopicsPage() {
               className="admin-roadmap-page__button"
               onClick={() => navigate(`/admin/roadmaps/edit/${roadmapId}`)}
             >
-              Back to roadmap edit
+              Quay lại chỉnh sửa lộ trình
             </button>
             <button type="button" className="admin-roadmap-page__button" onClick={createDraftNode}>
-              Add topic node
+              Thêm chủ đề
             </button>
           </div>
         </header>
 
-        {roadmapDetail.isLoading && <p className="admin-roadmap-page__state">Loading roadmap...</p>}
+        {roadmapDetail.isLoading && <p className="admin-roadmap-page__state">Đang tải lộ trình...</p>}
         {roadmapDetail.error && roadmapErrorStatus !== 403 && roadmapErrorStatus !== 401 && (
-          <p className="admin-roadmap-page__state">Unable to load roadmap.</p>
+          <p className="admin-roadmap-page__state">Không thể tải lộ trình.</p>
         )}
         {roadmapErrorStatus === 403 && (
-          <p className="admin-roadmap-page__state">Forbidden. You need ADMIN access to manage roadmap topics.</p>
+          <p className="admin-roadmap-page__state">Bạn cần quyền ADMIN để quản lý chủ đề lộ trình.</p>
         )}
 
         {!roadmapDetail.isLoading && !roadmapDetail.error && (
@@ -753,16 +778,16 @@ export default function AdminRoadmapTopicsPage() {
                     )} ${activeNodeId === node.clientId ? 'admin-roadmap-page__topic-node--active' : ''}`}
                   >
                     <span className="admin-roadmap-page__topic-order">{node.sequenceOrder}</span>
-                    {node.isDraft && <em className="admin-roadmap-page__topic-badge">Draft</em>}
+                    {node.isDraft && <em className="admin-roadmap-page__topic-badge">Bản nháp</em>}
                     <strong>{node.title}</strong>
-                    <small>{node.difficulty}</small>
+                    <small>{DIFFICULTY_LABELS[node.difficulty]}</small>
                   </button>
 
                   {node.isDraft && (
                     <button
                       type="button"
                       className="admin-roadmap-topics-page__node-delete"
-                      aria-label="Delete draft topic"
+                      aria-label="Xóa chủ đề nháp"
                       onClick={(event) => {
                         event.stopPropagation();
                         deleteDraftNode(node.clientId);
@@ -779,25 +804,24 @@ export default function AdminRoadmapTopicsPage() {
 
         <section className="admin-roadmap-topics-page__entry-test-card">
           <header>
-            <h3>Entry assessment setup</h3>
-            <p>Search assessment by name and select one. Manual ID input is disabled.</p>
+            <h3>Thiết lập bài kiểm tra đầu vào</h3>
           </header>
 
           <label className="admin-roadmap-topics-page__entry-field">
-            <span>Search assessment name</span>
+            <span>Tìm theo tên bài kiểm tra</span>
             <input
               value={entryAssessmentQuery}
               onChange={(event) => setEntryAssessmentQuery(event.target.value)}
-              placeholder="Type assessment title..."
+              placeholder="Nhập tên bài kiểm tra..."
               disabled={createEntryTest.isPending}
             />
           </label>
 
           {entryAssessmentSearchQuery.isLoading && (
-            <p className="admin-roadmap-page__state">Searching assessments...</p>
+            <p className="admin-roadmap-page__state">Đang tìm bài kiểm tra...</p>
           )}
           {entryAssessmentSearchQuery.error && (
-            <p className="admin-roadmap-page__state">Failed to search assessments.</p>
+            <p className="admin-roadmap-page__state">Không thể tìm bài kiểm tra.</p>
           )}
 
           {debouncedEntryAssessmentQuery.length >= 2 &&
@@ -811,9 +835,9 @@ export default function AdminRoadmapTopicsPage() {
                   >
                     <div>
                       <strong>{assessment.title}</strong>
-                      <p>{assessment.description || 'No description'}</p>
+                      <p>{assessment.description || 'Không có mô tả'}</p>
                       <small>
-                        Questions: {assessment.questionCount ?? 0}
+                        Số câu hỏi: {assessment.questionCount ?? 0}
                         {assessment.subject ? ` • ${assessment.subject}` : ''}
                       </small>
                     </div>
@@ -826,19 +850,19 @@ export default function AdminRoadmapTopicsPage() {
                       }}
                       disabled={createEntryTest.isPending}
                     >
-                      Select
+                      Chọn
                     </button>
                   </article>
                 ))}
                 {searchedAssessments.length === 0 && (
-                  <p className="admin-roadmap-page__state">No assessments found.</p>
+                  <p className="admin-roadmap-page__state">Không tìm thấy bài kiểm tra phù hợp.</p>
                 )}
               </div>
             )}
 
           {selectedEntryAssessment && (
             <p className="admin-roadmap-page__state">
-              Selected assessment: {selectedEntryAssessment.title}
+              Đã chọn: {selectedEntryAssessment.title}
             </p>
           )}
 
@@ -849,7 +873,7 @@ export default function AdminRoadmapTopicsPage() {
               onClick={submitEntryTestConfig}
               disabled={createEntryTest.isPending || !selectedEntryAssessment}
             >
-              {createEntryTest.isPending ? 'Saving...' : 'Save entry test setup'}
+              {createEntryTest.isPending ? 'Đang lưu...' : 'Lưu thiết lập bài kiểm tra đầu vào'}
             </button>
           </div>
         </section>
@@ -858,19 +882,19 @@ export default function AdminRoadmapTopicsPage() {
           <div className="admin-roadmap-page__modal-backdrop">
             <dialog className="admin-roadmap-page__modal" open>
               <header className="admin-roadmap-page__modal-header">
-                <h3>Topic node details</h3>
+                <h3>Chi tiết chủ đề</h3>
                 <button
                   type="button"
                   className="admin-roadmap-page__modal-close"
                   onClick={() => setIsTopicModalOpen(false)}
                 >
-                  Close
+                  Đóng
                 </button>
               </header>
 
               <div className="admin-roadmap-page__form-grid">
                 <label>
-                  <span>Topic title</span>
+                  <span>Tên chủ đề</span>
                   <input
                     value={activeNode.title}
                     onChange={(event) => updateActiveNode('title', event.target.value, 'title')}
@@ -878,7 +902,7 @@ export default function AdminRoadmapTopicsPage() {
                   />
                 </label>
                 <label>
-                  <span>Difficulty</span>
+                  <span>Độ khó</span>
                   <select
                     value={activeNode.difficulty}
                     onChange={(event) =>
@@ -890,13 +914,13 @@ export default function AdminRoadmapTopicsPage() {
                     }
                     disabled={isSubmitting}
                   >
-                    <option value="EASY">EASY</option>
-                    <option value="MEDIUM">MEDIUM</option>
-                    <option value="HARD">HARD</option>
+                    <option value="EASY">Dễ</option>
+                    <option value="MEDIUM">Trung bình</option>
+                    <option value="HARD">Khó</option>
                   </select>
                 </label>
                 <label>
-                  <span>Status</span>
+                  <span>Trạng thái</span>
                   <select
                     value={activeNode.status}
                     onChange={(event) =>
@@ -906,13 +930,13 @@ export default function AdminRoadmapTopicsPage() {
                   >
                     {TOPIC_STATUSES.map((status) => (
                       <option key={status} value={status}>
-                        {status}
+                        {TOPIC_STATUS_LABELS[status]}
                       </option>
                     ))}
                   </select>
                 </label>
                 <label>
-                  <span>Chapter</span>
+                  <span>Chương</span>
                   <select
                     value={activeNode.selectedChapterId}
                     onChange={(event) => {
@@ -922,7 +946,7 @@ export default function AdminRoadmapTopicsPage() {
                     }}
                     disabled={isSubmitting || chaptersQuery.isLoading || chapters.length === 0}
                   >
-                    <option value="">Select chapter</option>
+                    <option value="">Chọn chương</option>
                     {chapters.map((chapter) => (
                       <option key={chapter.id} value={chapter.id}>
                         {chapter.title || chapter.name || chapter.id}
@@ -931,16 +955,16 @@ export default function AdminRoadmapTopicsPage() {
                   </select>
                 </label>
                 <label>
-                  <span>Lesson search keyword</span>
+                  <span>Từ khóa tìm bài học</span>
                   <input
                     value={activeNode.lessonKeyword}
                     onChange={(event) => updateActiveNode('lessonKeyword', event.target.value)}
-                    placeholder="Search lessons by name"
+                    placeholder="Tìm bài học theo tên"
                     disabled={isSubmitting || !activeNode.selectedChapterId}
                   />
                 </label>
                 <label>
-                  <span>Topic description</span>
+                  <span>Mô tả chủ đề</span>
                   <textarea
                     rows={3}
                     value={activeNode.description}
@@ -951,11 +975,11 @@ export default function AdminRoadmapTopicsPage() {
                   />
                 </label>
                 <label>
-                  <span>Sequence order</span>
+                  <span>Thứ tự</span>
                   <input type="number" min={1} value={activeNode.sequenceOrder} readOnly />
                 </label>
                 <label>
-                  <span>Mark (0-10)</span>
+                  <span>Điểm mốc (0-10)</span>
                   <input
                     type="number"
                     min={0}
@@ -969,7 +993,7 @@ export default function AdminRoadmapTopicsPage() {
                   />
                 </label>
                 <label>
-                  <span>Topic assessment ID (optional)</span>
+                  <span>ID bài kiểm tra của chủ đề (không bắt buộc)</span>
                   <input
                     value={activeNode.topicAssessmentId}
                     onChange={(event) =>
@@ -982,8 +1006,8 @@ export default function AdminRoadmapTopicsPage() {
 
               <section className="admin-roadmap-topics-page__material-panel">
                 <header>
-                  <h4>Topic materials</h4>
-                  <p>Select lessons first, then attach template slides, mindmaps, lesson plans, and assessments.</p>
+                  <h4>Tài nguyên chủ đề</h4>
+                  <p>Hãy chọn bài học trước, sau đó gắn slide mẫu, sơ đồ tư duy, giáo án và bài kiểm tra.</p>
                 </header>
 
                 <div className="admin-roadmap-topics-page__material-tabs">
@@ -996,7 +1020,7 @@ export default function AdminRoadmapTopicsPage() {
                       className={`admin-roadmap-topics-page__material-tab ${activeMaterialTab === tab ? 'admin-roadmap-topics-page__material-tab--active' : ''}`}
                       onClick={() => setActiveMaterialTab(tab)}
                     >
-                      {tab}
+                      {MATERIAL_TAB_LABELS[tab]}
                     </button>
                   ))}
                 </div>
@@ -1004,16 +1028,16 @@ export default function AdminRoadmapTopicsPage() {
                 {activeMaterialTab === 'LESSON' && (
                   <div className="admin-roadmap-topics-page__lesson-picker">
                     <p className="admin-roadmap-page__state">
-                      Use chapter and keyword to search lessons, then select one or more lesson IDs.
+                      Dùng chương và từ khóa để tìm bài học, sau đó chọn một hoặc nhiều bài học.
                     </p>
                     {!activeNode.selectedChapterId && (
-                      <p className="admin-roadmap-page__state">Choose a chapter to load lessons.</p>
+                      <p className="admin-roadmap-page__state">Hãy chọn chương để tải danh sách bài học.</p>
                     )}
                     {activeNode.selectedChapterId && lessonsQuery.isLoading && (
-                      <p className="admin-roadmap-page__state">Loading lessons...</p>
+                      <p className="admin-roadmap-page__state">Đang tải bài học...</p>
                     )}
                     {activeNode.selectedChapterId && lessonsQuery.error && (
-                      <p className="admin-roadmap-page__state">Unable to load lessons.</p>
+                      <p className="admin-roadmap-page__state">Không thể tải bài học.</p>
                     )}
                     {activeNode.selectedChapterId && !lessonsQuery.isLoading && !lessonsQuery.error && (
                       <div className="admin-roadmap-topics-page__lesson-list">
@@ -1031,12 +1055,12 @@ export default function AdminRoadmapTopicsPage() {
                           </label>
                         ))}
                         {lessons.length === 0 && (
-                          <p className="admin-roadmap-page__state">No lessons found in this chapter.</p>
+                          <p className="admin-roadmap-page__state">Không tìm thấy bài học trong chương này.</p>
                         )}
                       </div>
                     )}
                     <p className="admin-roadmap-topics-page__lesson-count">
-                      Selected lessons: {activeNode.lessonIds.length}
+                      Đã chọn bài học: {activeNode.lessonIds.length}
                     </p>
                   </div>
                 )}
@@ -1044,18 +1068,18 @@ export default function AdminRoadmapTopicsPage() {
                 {activeMaterialTab !== 'LESSON' && (
                   <div className="admin-roadmap-topics-page__lesson-picker">
                     <label>
-                      <span>Resource search keyword</span>
+                      <span>Từ khóa tìm tài nguyên</span>
                       <input
                         value={activeNode.resourceKeyword}
                         onChange={(event) => updateActiveNode('resourceKeyword', event.target.value)}
-                        placeholder="Search by resource name"
+                        placeholder="Tìm theo tên tài nguyên"
                         disabled={isSubmitting}
                       />
                     </label>
 
                     {activeNode.lessonIds.length > 0 && (
                       <label>
-                        <span>Lesson context</span>
+                        <span>Bối cảnh bài học</span>
                         <select
                           value={activeNode.selectedResourceLessonId}
                           onChange={(event) =>
@@ -1063,7 +1087,7 @@ export default function AdminRoadmapTopicsPage() {
                           }
                           disabled={isSubmitting}
                         >
-                          <option value="">Select lesson</option>
+                          <option value="">Chọn bài học</option>
                           {activeNode.lessonIds.map((lessonId) => {
                             const lesson = lessons.find((item) => item.id === lessonId);
                             return (
@@ -1081,19 +1105,19 @@ export default function AdminRoadmapTopicsPage() {
                 {activeMaterialTab === 'TEMPLATE_SLIDE' && (
                   <div className="admin-roadmap-topics-page__lesson-picker">
                     {!activeNode.selectedChapterId && (
-                      <p className="admin-roadmap-page__state">Choose a chapter before searching template slides.</p>
+                      <p className="admin-roadmap-page__state">Hãy chọn chương trước khi tìm slide mẫu.</p>
                     )}
                     {activeNode.lessonIds.length === 0 && (
-                      <p className="admin-roadmap-page__state">Select at least one lesson first.</p>
+                      <p className="admin-roadmap-page__state">Vui lòng chọn ít nhất một bài học trước.</p>
                     )}
                     {!!activeNode.selectedChapterId && !activeNode.selectedResourceLessonId && (
-                      <p className="admin-roadmap-page__state">Choose lesson context to load template slides.</p>
+                      <p className="admin-roadmap-page__state">Chọn bối cảnh bài học để tải slide mẫu.</p>
                     )}
                     {templateSlideQuery.isLoading && (
-                      <p className="admin-roadmap-page__state">Loading template slides...</p>
+                      <p className="admin-roadmap-page__state">Đang tải slide mẫu...</p>
                     )}
                     {templateSlideQuery.error && (
-                      <p className="admin-roadmap-page__state">Unable to load template slides.</p>
+                      <p className="admin-roadmap-page__state">Không thể tải slide mẫu.</p>
                     )}
                     {!templateSlideQuery.isLoading && !templateSlideQuery.error && (
                       <div className="admin-roadmap-topics-page__lesson-list">
@@ -1111,12 +1135,12 @@ export default function AdminRoadmapTopicsPage() {
                           </label>
                         ))}
                         {templateSlideOptions.length === 0 && (
-                          <p className="admin-roadmap-page__state">No template slides found.</p>
+                          <p className="admin-roadmap-page__state">Không tìm thấy slide mẫu.</p>
                         )}
                       </div>
                     )}
                     <p className="admin-roadmap-topics-page__lesson-count">
-                      Selected template slides: {activeNode.slideLessonIds.length}
+                      Đã chọn slide mẫu: {activeNode.slideLessonIds.length}
                     </p>
                   </div>
                 )}
@@ -1124,16 +1148,16 @@ export default function AdminRoadmapTopicsPage() {
                 {activeMaterialTab === 'LESSON_PLAN' && (
                   <div className="admin-roadmap-topics-page__lesson-picker">
                     {activeNode.lessonIds.length === 0 && (
-                      <p className="admin-roadmap-page__state">Select lessons first to search lesson plans.</p>
+                      <p className="admin-roadmap-page__state">Hãy chọn bài học trước để tìm giáo án.</p>
                     )}
                     {!activeNode.selectedResourceLessonId && activeNode.lessonIds.length > 0 && (
-                      <p className="admin-roadmap-page__state">Choose lesson context to load lesson plans.</p>
+                      <p className="admin-roadmap-page__state">Chọn bối cảnh bài học để tải giáo án.</p>
                     )}
                     {lessonPlanQuery.isLoading && (
-                      <p className="admin-roadmap-page__state">Loading lesson plans...</p>
+                      <p className="admin-roadmap-page__state">Đang tải giáo án...</p>
                     )}
                     {lessonPlanQuery.error && (
-                      <p className="admin-roadmap-page__state">Unable to load lesson plans.</p>
+                      <p className="admin-roadmap-page__state">Không thể tải giáo án.</p>
                     )}
                     {!lessonPlanQuery.isLoading && !lessonPlanQuery.error && (
                       <div className="admin-roadmap-topics-page__lesson-list">
@@ -1151,13 +1175,13 @@ export default function AdminRoadmapTopicsPage() {
                           </label>
                         ))}
                         {lessonPlanOptions.length === 0 && (
-                          <p className="admin-roadmap-page__state">No lesson plans found.</p>
+                          <p className="admin-roadmap-page__state">Không tìm thấy giáo án.</p>
                         )}
                       </div>
                     )}
 
                     <p className="admin-roadmap-topics-page__lesson-count">
-                      Selected lesson plans: {activeNode.lessonPlanIds.length}
+                      Đã chọn giáo án: {activeNode.lessonPlanIds.length}
                     </p>
                   </div>
                 )}
@@ -1165,16 +1189,16 @@ export default function AdminRoadmapTopicsPage() {
                 {activeMaterialTab === 'MINDMAP' && (
                   <div className="admin-roadmap-topics-page__lesson-picker">
                     {activeNode.lessonIds.length === 0 && (
-                      <p className="admin-roadmap-page__state">Select lessons first to search mindmaps.</p>
+                      <p className="admin-roadmap-page__state">Hãy chọn bài học trước để tìm sơ đồ tư duy.</p>
                     )}
                     {!activeNode.selectedResourceLessonId && activeNode.lessonIds.length > 0 && (
-                      <p className="admin-roadmap-page__state">Choose lesson context to load mindmaps.</p>
+                      <p className="admin-roadmap-page__state">Chọn bối cảnh bài học để tải sơ đồ tư duy.</p>
                     )}
                     {mindmapQuery.isLoading && (
-                      <p className="admin-roadmap-page__state">Loading mindmaps...</p>
+                      <p className="admin-roadmap-page__state">Đang tải sơ đồ tư duy...</p>
                     )}
                     {mindmapQuery.error && (
-                      <p className="admin-roadmap-page__state">Unable to load mindmaps.</p>
+                      <p className="admin-roadmap-page__state">Không thể tải sơ đồ tư duy.</p>
                     )}
                     {!mindmapQuery.isLoading && !mindmapQuery.error && (
                       <div className="admin-roadmap-topics-page__lesson-list">
@@ -1192,12 +1216,12 @@ export default function AdminRoadmapTopicsPage() {
                           </label>
                         ))}
                         {mindmapOptions.length === 0 && (
-                          <p className="admin-roadmap-page__state">No mindmaps found.</p>
+                          <p className="admin-roadmap-page__state">Không tìm thấy sơ đồ tư duy.</p>
                         )}
                       </div>
                     )}
                     <p className="admin-roadmap-topics-page__lesson-count">
-                      Selected mindmaps: {activeNode.mindmapIds.length}
+                      Đã chọn sơ đồ tư duy: {activeNode.mindmapIds.length}
                     </p>
                   </div>
                 )}
@@ -1205,13 +1229,13 @@ export default function AdminRoadmapTopicsPage() {
                 {activeMaterialTab === 'ASSESSMENT' && (
                   <div className="admin-roadmap-topics-page__lesson-picker">
                     <p className="admin-roadmap-page__state">
-                      Assessment options are searched globally by name.
+                      Danh sách bài kiểm tra được tìm toàn cục theo tên.
                     </p>
                     {assessmentQuery.isLoading && (
-                      <p className="admin-roadmap-page__state">Loading assessments...</p>
+                      <p className="admin-roadmap-page__state">Đang tải bài kiểm tra...</p>
                     )}
                     {assessmentQuery.error && (
-                      <p className="admin-roadmap-page__state">Unable to load assessments.</p>
+                      <p className="admin-roadmap-page__state">Không thể tải bài kiểm tra.</p>
                     )}
                     {!assessmentQuery.isLoading && !assessmentQuery.error && (
                       <div className="admin-roadmap-topics-page__lesson-list">
@@ -1229,12 +1253,12 @@ export default function AdminRoadmapTopicsPage() {
                           </label>
                         ))}
                         {assessmentOptions.length === 0 && (
-                          <p className="admin-roadmap-page__state">No assessments found.</p>
+                          <p className="admin-roadmap-page__state">Không tìm thấy bài kiểm tra.</p>
                         )}
                       </div>
                     )}
                     <p className="admin-roadmap-topics-page__lesson-count">
-                      Selected assessments: {activeNode.assessmentIds.length}
+                      Đã chọn bài kiểm tra: {activeNode.assessmentIds.length}
                     </p>
                   </div>
                 )}
@@ -1261,7 +1285,7 @@ export default function AdminRoadmapTopicsPage() {
                     disabled={isSubmitting}
                     onClick={() => setDeleteTargetId(activeNode.clientId)}
                   >
-                    Archive topic
+                    Lưu trữ chủ đề
                   </button>
                 )}
               </div>
@@ -1276,20 +1300,20 @@ export default function AdminRoadmapTopicsPage() {
               open
             >
               <header className="admin-roadmap-page__modal-header">
-                <h3>Archive topic</h3>
+                <h3>Lưu trữ chủ đề</h3>
                 <button
                   type="button"
                   className="admin-roadmap-page__modal-close"
                   onClick={() => setDeleteTargetId(null)}
                   disabled={archiveTopic.isPending}
                 >
-                  Close
+                  Đóng
                 </button>
               </header>
 
               <p className="admin-roadmap-page__state">
-                Confirm archiving topic "{deleteTarget.title}". This keeps history but removes it
-                from active roadmap flow.
+                Xác nhận lưu trữ chủ đề "{deleteTarget.title}". Dữ liệu lịch sử vẫn được giữ lại,
+                nhưng chủ đề sẽ bị ẩn khỏi luồng lộ trình đang hoạt động.
               </p>
 
               <div className="admin-roadmap-page__actions">
@@ -1299,7 +1323,7 @@ export default function AdminRoadmapTopicsPage() {
                   onClick={() => setDeleteTargetId(null)}
                   disabled={archiveTopic.isPending}
                 >
-                  Cancel
+                  Hủy
                 </button>
                 <button
                   type="button"
@@ -1307,7 +1331,7 @@ export default function AdminRoadmapTopicsPage() {
                   onClick={confirmArchiveTopic}
                   disabled={archiveTopic.isPending}
                 >
-                  {archiveTopic.isPending ? 'Archiving...' : 'Confirm archive'}
+                  {archiveTopic.isPending ? 'Đang lưu trữ...' : 'Xác nhận lưu trữ'}
                 </button>
               </div>
             </dialog>

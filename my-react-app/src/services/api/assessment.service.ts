@@ -145,15 +145,16 @@ export class AssessmentService {
         return response.json();
     }
 
-    /** GET /assessments/search?query={query}&subjectId={optional} */
+
     static async searchAssessments(
-        query: string,
-        subjectId?: string
+        keyword: string,
+        status?: string
     ): Promise<AssessmentSearchApiResponse> {
         const headers = await this.getHeaders();
         const queryParams = new URLSearchParams();
-        queryParams.append('query', query);
-        if (subjectId) queryParams.append('subjectId', subjectId);
+        queryParams.append('name', keyword);
+        queryParams.append('query', keyword);
+        if (status) queryParams.append('status', status);
 
         const response = await fetch(
             `${API_BASE_URL}${API_ENDPOINTS.ASSESSMENTS_SEARCH}?${queryParams.toString()}`,
