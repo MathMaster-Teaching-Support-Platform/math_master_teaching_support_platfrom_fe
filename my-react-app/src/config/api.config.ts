@@ -213,4 +213,33 @@ export const API_ENDPOINTS = {
   ENROLLMENT_LESSON_COMPLETE: (enrollmentId: string, courseLessonId: string) =>
     `/enrollments/${enrollmentId}/lessons/${courseLessonId}/complete`,
   ENROLLMENT_PROGRESS: (enrollmentId: string) => `/enrollments/${enrollmentId}/progress`,
+
+  // Student Assessments
+  STUDENT_ASSESSMENTS_MY: '/student-assessments/my',
+  STUDENT_ASSESSMENTS_DETAIL: (assessmentId: string) => `/student-assessments/${assessmentId}`,
+  STUDENT_ASSESSMENTS_START: '/student-assessments/start',
+  STUDENT_ASSESSMENTS_UPDATE_ANSWER: '/student-assessments/update-answer',
+  STUDENT_ASSESSMENTS_UPDATE_FLAG: '/student-assessments/update-flag',
+  STUDENT_ASSESSMENTS_SUBMIT: '/student-assessments/submit',
+  STUDENT_ASSESSMENTS_DRAFT_SNAPSHOT: (attemptId: string) => `/student-assessments/draft/${attemptId}`,
+  STUDENT_ASSESSMENTS_SAVE_AND_EXIT: '/student-assessments/save-and-exit',
+
+  // Grading
+  GRADING_QUEUE: '/grading/queue',
+  GRADING_QUEUE_BY_TEACHER: '/grading/queue/my',
+  GRADING_SUBMISSION: (submissionId: string) => `/grading/submissions/${submissionId}`,
+  GRADING_COMPLETE: '/grading/complete',
+  GRADING_OVERRIDE: '/grading/override',
+  GRADING_MANUAL_ADJUSTMENT: '/grading/manual-adjustment',
+  GRADING_ANALYTICS: (assessmentId: string) => `/grading/analytics/${assessmentId}`,
+  GRADING_EXPORT: (assessmentId: string) => `/grading/export/${assessmentId}`,
+  GRADING_RELEASE: (assessmentId: string) => `/grading/release/${assessmentId}`,
+  GRADING_RELEASE_SUBMISSION: (submissionId: string) => `/grading/release/submission/${submissionId}`,
+  GRADING_REGRADE_REQUEST: '/grading/regrade-request',
+  GRADING_REGRADE_RESPOND: '/grading/regrade-request/respond',
+  GRADING_REGRADE_REQUESTS: '/grading/regrade-requests',
+  GRADING_REGRADE_REQUESTS_STUDENT: '/grading/regrade-requests/my',
+  GRADING_INVALIDATE: (submissionId: string) => `/grading/invalidate/${submissionId}`,
+  GRADING_MY_RESULT: (assessmentId: string) => `/grading/my-result/${assessmentId}`,
+  GRADING_AI_REVIEW: (answerId: string) => `/grading/ai-review/${answerId}`,
 };

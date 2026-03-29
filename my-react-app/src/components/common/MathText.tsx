@@ -1,42 +1,73 @@
-import React from 'react';
-import 'katex/dist/katex.min.css';
 import { InlineMath, BlockMath } from 'react-katex';
+import 'katex/dist/katex.min.css';
 
 interface MathTextProps {
   text: string;
+  block?: boolean;
 }
 
 /**
- * A component that renders text containing LaTeX formulas delimited by $ for inline math 
- * and $$ for block math.
+ * Component to render text with LaTeX math formulas
+ * Supports inline math: $formula$ or \(formula\)
+ * Supports block math: $$formula$$ or \[formula\]
  */
-export const MathText: React.FC<MathTextProps> = ({ text }) => {
+export default function MathText({ text, block = false }: MathTextProps) {
   if (!text) return null;
 
-  // Regex to match $...$ or $$...$$
-  const regex = /(\$\$[\s\S]+?\$\$|\$[\s\S]+?\$)/g;
-  const parts = text.split(regex);
+  // If block mode, render as block math
+  if (block) {
+    // Remove $$ or \[ \] delimiters if present
+    const cleanText = text
+      .replace(/^\$\$/, '')
+      .replace(/\$\$$/, '')
+      .replace(/^\\\[/, '')
+      .replace(/\\\]$/, '');
+    return <BlockMath math={cleanText} />;
+  }
 
+  // Parse inline math: $...$ or \(...\)
+  const parts: (string | { type: 'math'; content: string })[] = [];
+  let currentText = text;
+  let lastIndex = 0;
+
+  // Regex to match $...$ or \(...\)
+  const mathRegex = /\$([^$]+)\$|\\\(([^)]+)\\\)/g;
+  let match;
+
+  while ((match = mathRegex.exec(currentText)) !== null) {
+    // Add text before math
+    if (match.index > lastIndex) {
+      parts.push(currentText.substring(lastIndex, match.index));
+    }
+
+    // Add math content
+    const mathContent = match[1] || match[2];
+    parts.push({ type: 'math', content: mathContent });
+
+    lastIndex = match.index + match[0].length;
+  }
+
+  // Add remaining text
+  if (lastIndex < currentText.length) {
+    parts.push(currentText.substring(lastIndex));
+  }
+
+  // If no math found, return plain text
+  if (parts.length === 0) {
+    return <span>{text}</span>;
+  }
+
+  // Render mixed text and math
   return (
-    <>
-      {parts.map((part, i) => {
-        if (!part) return null;
-        
-        if (part.startsWith('$$') && part.endsWith('$$')) {
-          // Block math: $$ ... $$
-          const formula = part.slice(2, -2).trim();
-          if (!formula) return null;
-          return <BlockMath key={i} math={formula} />;
-        } else if (part.startsWith('$') && part.endsWith('$')) {
-          // Inline math: $ ... $
-          const formula = part.slice(1, -1).trim();
-          if (!formula) return null;
-          return <InlineMath key={i} math={formula} />;
+    <span>
+      {parts.map((part, index) => {
+        if (typeof part === 'string') {
+          return <span key={index}>{part}</span>;
+        } else {
+          return <InlineMath key={index} math={part.content} />;
         }
-        
-        // Regular text
-        return <span key={i}>{part}</span>;
       })}
-    </>
+    </span>
   );
-};
+}
+

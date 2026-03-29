@@ -327,15 +327,19 @@ const StudentDashboard: React.FC = () => {
             <h2 className="card-title">Truy cập nhanh</h2>
           </div>
           <div className="quick-actions">
-            <button className="quick-action-btn">
+            <button className="quick-action-btn" onClick={() => navigate('/student/courses')}>
               <span className="qa-icon">📚</span>
               <span className="qa-label">Giáo Trình</span>
             </button>
-            <button className="quick-action-btn">
+            <button className="quick-action-btn" onClick={() => navigate('/student/assignments')}>
               <span className="qa-icon">✍️</span>
               <span className="qa-label">Bài tập</span>
             </button>
-            <button className="quick-action-btn">
+            <button className="quick-action-btn" onClick={() => navigate('/student/assessments')}>
+              <span className="qa-icon">📝</span>
+              <span className="qa-label">Bài kiểm tra</span>
+            </button>
+            <button className="quick-action-btn" onClick={() => navigate('/student/grades')}>
               <span className="qa-icon">📊</span>
               <span className="qa-label">Điểm số</span>
             </button>
@@ -347,7 +351,7 @@ const StudentDashboard: React.FC = () => {
               <span className="qa-icon">🤖</span>
               <span className="qa-label">AI Trợ lý</span>
             </button>
-            <button className="quick-action-btn">
+            <button className="quick-action-btn" onClick={() => navigate('/student/wallet')}>
               <span className="qa-icon">💰</span>
               <span className="qa-label">Ví</span>
             </button>

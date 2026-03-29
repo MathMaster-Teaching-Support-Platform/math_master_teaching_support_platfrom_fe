@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { ArrowLeft, Eye, EyeOff, Pencil, RefreshCw, Search, Trash2 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import MathText from '../../components/common/MathText';
 import { useGetQuestionsByBank } from '../../hooks/useQuestion';
 import {
   useDeleteQuestionBank,
@@ -203,7 +204,7 @@ export function QuestionBankDetailPage() {
                     <tbody>
                       {filteredQuestions.map((question) => (
                         <tr key={question.id}>
-                          <td>{question.questionText}</td>
+                          <td><MathText text={question.questionText} /></td>
                           <td>
                             {questionTypeLabel[question.questionType] || question.questionType}
                           </td>

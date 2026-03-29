@@ -56,6 +56,20 @@ import { QuestionBankDetailPage } from '../pages/question-banks/QuestionBankDeta
 import { TemplateDashboard } from '../pages/question-templates/TemplateDashboard';
 import TeacherLessonPlans from '../pages/lesson-plans/TeacherLessonPlans';
 import TeacherCourseLessons from '../pages/courses/TeacherCourseLessons';
+// Student Assessment Routes
+import {
+  StudentAssessmentList,
+  AssessmentDetail as StudentAssessmentDetail,
+  TakeAssessment,
+  AssessmentResult,
+} from '../pages/student-assessments';
+// Grading Routes
+import {
+  GradingQueue,
+  GradingDetail,
+  GradingAnalytics,
+  RegradeRequestList,
+} from '../pages/grading';
 
 const router = createBrowserRouter([
   {
@@ -222,6 +236,23 @@ const router = createBrowserRouter([
     path: '/teacher/analytics',
     element: <TeacherAnalytics />,
   },
+  // Grading Routes
+  {
+    path: '/teacher/grading',
+    element: <GradingQueue />,
+  },
+  {
+    path: '/teacher/grading/:submissionId',
+    element: <GradingDetail />,
+  },
+  {
+    path: '/teacher/grading/analytics',
+    element: <GradingAnalytics />,
+  },
+  {
+    path: '/teacher/grading/regrade-requests',
+    element: <RegradeRequestList />,
+  },
   { path: '/teacher/students', element: <TeacherStudents /> },
   { path: '/teacher/ai-assistant', element: <AIAssistant /> },
   { path: '/teacher/ai-slide-generator', element: <AISlideGenerator /> },
@@ -265,6 +296,23 @@ const router = createBrowserRouter([
   {
     path: '/student/calendar',
     element: <Calendar />,
+  },
+  // Student Assessment Routes
+  {
+    path: '/student/assessments',
+    element: <StudentAssessmentList />,
+  },
+  {
+    path: '/student/assessments/:assessmentId',
+    element: <StudentAssessmentDetail />,
+  },
+  {
+    path: '/student/assessments/:assessmentId/take',
+    element: <TakeAssessment />,
+  },
+  {
+    path: '/student/assessments/result/:submissionId',
+    element: <AssessmentResult />,
   },
   {
     path: '/student/settings',

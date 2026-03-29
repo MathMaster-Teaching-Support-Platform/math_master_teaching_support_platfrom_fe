@@ -1,6 +1,7 @@
 import { CheckCircle2, Sparkles, X } from 'lucide-react';
 import { useState } from 'react';
 import { useFinalizePreview, useGeneratePreview } from '../../hooks/useExamMatrix';
+import MathText from '../../components/common/MathText';
 import { QuestionDifficulty } from '../../types/questionTemplate';
 import type {
   CandidateQuestion,
@@ -148,7 +149,7 @@ export function GeneratePreviewModal({ isOpen, matrixId, mapping, onClose, onSuc
                         setSelected(next);
                       }}
                     />
-                    <p>{item.questionText}</p>
+                    <p><MathText text={item.questionText} /></p>
                   </div>
                   {item.explanation && <p className="muted">{item.explanation}</p>}
                 </label>
