@@ -16,6 +16,8 @@ import type {
 import { AuthService } from './auth.service';
 
 export class ChatSessionService {
+  private static readonly DEFAULT_BACKEND_URL = 'http://localhost:8080';
+
   private static buildQuery(params?: Record<string, string | number | undefined>): string {
     if (!params) return '';
 
@@ -59,11 +61,37 @@ export class ChatSessionService {
     return body as T;
   }
 
+  private static resolveBackendHint(): string {
+    if (API_BASE_URL.startsWith('http')) {
+      return API_BASE_URL;
+    }
+
+    const proxyTarget = import.meta.env.VITE_API_PROXY_TARGET;
+    if (typeof proxyTarget === 'string' && proxyTarget.trim().length > 0) {
+      return `${proxyTarget.replace(/\/$/, '')}/api`;
+    }
+
+    return `${this.DEFAULT_BACKEND_URL}/api`;
+  }
+
+  private static async fetchWithGuard(input: string, init: RequestInit): Promise<Response> {
+    try {
+      return await fetch(input, init);
+    } catch (error) {
+      if (error instanceof TypeError) {
+        throw new Error(
+          `Khong the ket noi backend (${this.resolveBackendHint()}). Vui long kiem tra BE da chay dung port chua.`
+        );
+      }
+      throw error;
+    }
+  }
+
   static async createSession(
     payload?: CreateChatSessionRequest
   ): Promise<ChatApiResponse<ChatSessionResponse>> {
     const headers = await this.getHeaders();
-    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.CHAT_SESSIONS}`, {
+    const response = await this.fetchWithGuard(`${API_BASE_URL}${API_ENDPOINTS.CHAT_SESSIONS}`, {
       method: 'POST',
       headers,
       body: JSON.stringify(payload ?? {}),
@@ -88,10 +116,13 @@ export class ChatSessionService {
       direction: params?.direction,
     });
 
-    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.CHAT_SESSIONS}${query}`, {
-      method: 'GET',
-      headers,
-    });
+    const response = await this.fetchWithGuard(
+      `${API_BASE_URL}${API_ENDPOINTS.CHAT_SESSIONS}${query}`,
+      {
+        method: 'GET',
+        headers,
+      }
+    );
 
     return this.parseResponse<ChatApiResponse<ChatPageResponse<ChatSessionResponse>>>(
       response,
@@ -101,10 +132,13 @@ export class ChatSessionService {
 
   static async getSessionDetail(sessionId: string): Promise<ChatApiResponse<ChatSessionResponse>> {
     const headers = await this.getHeaders();
-    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.CHAT_SESSION_DETAIL(sessionId)}`, {
-      method: 'GET',
-      headers,
-    });
+    const response = await this.fetchWithGuard(
+      `${API_BASE_URL}${API_ENDPOINTS.CHAT_SESSION_DETAIL(sessionId)}`,
+      {
+        method: 'GET',
+        headers,
+      }
+    );
 
     return this.parseResponse<ChatApiResponse<ChatSessionResponse>>(
       response,
@@ -124,7 +158,7 @@ export class ChatSessionService {
       direction: params?.direction,
     });
 
-    const response = await fetch(
+    const response = await this.fetchWithGuard(
       `${API_BASE_URL}${API_ENDPOINTS.CHAT_SESSION_MESSAGES(sessionId)}${query}`,
       {
         method: 'GET',
@@ -143,7 +177,7 @@ export class ChatSessionService {
     payload: SendChatMessageRequest
   ): Promise<ChatApiResponse<ChatExchangeResponse>> {
     const headers = await this.getHeaders();
-    const response = await fetch(
+    const response = await this.fetchWithGuard(
       `${API_BASE_URL}${API_ENDPOINTS.CHAT_SESSION_MESSAGES(sessionId)}`,
       {
         method: 'POST',
@@ -163,11 +197,14 @@ export class ChatSessionService {
     payload: RenameChatSessionRequest
   ): Promise<ChatApiResponse<ChatSessionResponse>> {
     const headers = await this.getHeaders();
-    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.CHAT_SESSION_DETAIL(sessionId)}`, {
-      method: 'PATCH',
-      headers,
-      body: JSON.stringify(payload),
-    });
+    const response = await this.fetchWithGuard(
+      `${API_BASE_URL}${API_ENDPOINTS.CHAT_SESSION_DETAIL(sessionId)}`,
+      {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify(payload),
+      }
+    );
 
     return this.parseResponse<ChatApiResponse<ChatSessionResponse>>(
       response,
@@ -177,7 +214,7 @@ export class ChatSessionService {
 
   static async archiveSession(sessionId: string): Promise<ChatApiResponse<ChatSessionResponse>> {
     const headers = await this.getHeaders();
-    const response = await fetch(
+    const response = await this.fetchWithGuard(
       `${API_BASE_URL}${API_ENDPOINTS.CHAT_SESSION_ARCHIVE(sessionId)}`,
       {
         method: 'PATCH',
@@ -193,20 +230,26 @@ export class ChatSessionService {
 
   static async deleteSession(sessionId: string): Promise<ChatApiResponse<void>> {
     const headers = await this.getHeaders();
-    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.CHAT_SESSION_DETAIL(sessionId)}`, {
-      method: 'DELETE',
-      headers,
-    });
+    const response = await this.fetchWithGuard(
+      `${API_BASE_URL}${API_ENDPOINTS.CHAT_SESSION_DETAIL(sessionId)}`,
+      {
+        method: 'DELETE',
+        headers,
+      }
+    );
 
     return this.parseResponse<ChatApiResponse<void>>(response, 'Failed to delete chat session');
   }
 
   static async getMemoryInfo(sessionId: string): Promise<ChatApiResponse<ChatMemoryInfo>> {
     const headers = await this.getHeaders();
-    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.CHAT_SESSION_MEMORY(sessionId)}`, {
-      method: 'GET',
-      headers,
-    });
+    const response = await this.fetchWithGuard(
+      `${API_BASE_URL}${API_ENDPOINTS.CHAT_SESSION_MEMORY(sessionId)}`,
+      {
+        method: 'GET',
+        headers,
+      }
+    );
 
     return this.parseResponse<ChatApiResponse<ChatMemoryInfo>>(
       response,

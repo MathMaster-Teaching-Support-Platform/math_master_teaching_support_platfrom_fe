@@ -1,6 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChatSessionService } from '../services/api/chat-session.service';
 import type {
+  ChatApiResponse,
+  ChatMemoryInfo,
+  ChatMessageResponse,
+  ChatPageResponse,
   ChatMessageQueryParams,
   ChatSessionQueryParams,
   CreateChatSessionRequest,
@@ -10,6 +14,11 @@ import type {
 
 export const chatSessionKeys = {
   all: ['chat-sessions'] as const,
+  lists: () => [...chatSessionKeys.all, 'list'] as const,
+  details: () => [...chatSessionKeys.all, 'detail'] as const,
+  messagesBySession: (sessionId: string) =>
+    [...chatSessionKeys.all, 'messages', sessionId] as const,
+  memories: () => [...chatSessionKeys.all, 'memory'] as const,
   list: (params?: ChatSessionQueryParams) => [...chatSessionKeys.all, 'list', params] as const,
   detail: (sessionId: string) => [...chatSessionKeys.all, 'detail', sessionId] as const,
   messages: (sessionId: string, params?: ChatMessageQueryParams) =>
@@ -65,11 +74,47 @@ export function useSendChatMessage() {
   return useMutation({
     mutationFn: ({ sessionId, payload }: { sessionId: string; payload: SendChatMessageRequest }) =>
       ChatSessionService.sendMessage(sessionId, payload),
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: chatSessionKeys.list() });
-      queryClient.invalidateQueries({ queryKey: chatSessionKeys.detail(variables.sessionId) });
-      queryClient.invalidateQueries({ queryKey: chatSessionKeys.messages(variables.sessionId) });
-      queryClient.invalidateQueries({ queryKey: chatSessionKeys.memory(variables.sessionId) });
+    onSuccess: (data, variables) => {
+      const sessionId = variables.sessionId;
+      const { userMessage, assistantMessage, memory } = data.result;
+
+      queryClient.setQueriesData<ChatApiResponse<ChatPageResponse<ChatMessageResponse>>>(
+        { queryKey: chatSessionKeys.messagesBySession(sessionId) },
+        (current) => {
+          if (!current) return current;
+
+          const nextMessages = [userMessage, assistantMessage].filter(
+            (message): message is ChatMessageResponse => !!message
+          );
+
+          const mergedMap = new Map(
+            (current.result.content ?? []).map((message) => [message.id, message] as const)
+          );
+          nextMessages.forEach((message) => mergedMap.set(message.id, message));
+
+          const mergedContent = Array.from(mergedMap.values()).sort(
+            (a, b) => a.sequenceNo - b.sequenceNo
+          );
+
+          return {
+            ...current,
+            result: {
+              ...current.result,
+              content: mergedContent,
+              totalElements: mergedContent.length,
+            },
+          };
+        }
+      );
+
+      queryClient.setQueryData<ChatApiResponse<ChatMemoryInfo>>(chatSessionKeys.memory(sessionId), {
+        code: data.code,
+        message: data.message,
+        result: memory,
+      });
+
+      queryClient.invalidateQueries({ queryKey: chatSessionKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: chatSessionKeys.detail(sessionId) });
     },
   });
 }
@@ -86,7 +131,7 @@ export function useRenameChatSession() {
       payload: RenameChatSessionRequest;
     }) => ChatSessionService.renameSession(sessionId, payload),
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: chatSessionKeys.list() });
+      queryClient.invalidateQueries({ queryKey: chatSessionKeys.lists() });
       queryClient.invalidateQueries({ queryKey: chatSessionKeys.detail(variables.sessionId) });
     },
   });
@@ -98,7 +143,7 @@ export function useArchiveChatSession() {
   return useMutation({
     mutationFn: (sessionId: string) => ChatSessionService.archiveSession(sessionId),
     onSuccess: (_data, sessionId) => {
-      queryClient.invalidateQueries({ queryKey: chatSessionKeys.list() });
+      queryClient.invalidateQueries({ queryKey: chatSessionKeys.lists() });
       queryClient.invalidateQueries({ queryKey: chatSessionKeys.detail(sessionId) });
       queryClient.invalidateQueries({ queryKey: chatSessionKeys.memory(sessionId) });
     },
@@ -111,9 +156,9 @@ export function useDeleteChatSession() {
   return useMutation({
     mutationFn: (sessionId: string) => ChatSessionService.deleteSession(sessionId),
     onSuccess: (_data, sessionId) => {
-      queryClient.invalidateQueries({ queryKey: chatSessionKeys.list() });
+      queryClient.invalidateQueries({ queryKey: chatSessionKeys.lists() });
       queryClient.removeQueries({ queryKey: chatSessionKeys.detail(sessionId) });
-      queryClient.removeQueries({ queryKey: chatSessionKeys.messages(sessionId) });
+      queryClient.removeQueries({ queryKey: chatSessionKeys.messagesBySession(sessionId) });
       queryClient.removeQueries({ queryKey: chatSessionKeys.memory(sessionId) });
     },
   });
