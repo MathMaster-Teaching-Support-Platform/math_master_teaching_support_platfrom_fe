@@ -4,7 +4,6 @@ import type {
   CreateAdminRoadmapRequest,
   CreateRoadmapEntryTestRequest,
   CreateRoadmapTopicRequest,
-  StartRoadmapEntryTestRequest,
   SubmitRoadmapFeedbackRequest,
   SubmitRoadmapEntryTestRequest,
   TopicMaterialResourceType,
@@ -201,8 +200,8 @@ export function useStartRoadmapEntryTest() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ roadmapId, payload }: { roadmapId: string; payload?: StartRoadmapEntryTestRequest }) =>
-      RoadmapService.startRoadmapEntryTest(roadmapId, payload),
+    mutationFn: ({ roadmapId }: { roadmapId: string }) =>
+      RoadmapService.startRoadmapEntryTest(roadmapId),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: roadmapKeys.entryTest(variables.roadmapId) });
       queryClient.invalidateQueries({ queryKey: roadmapKeys.detail(variables.roadmapId) });

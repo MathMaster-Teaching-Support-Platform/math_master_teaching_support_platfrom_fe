@@ -199,10 +199,6 @@ export interface StudentRoadmapEntryTestInfo {
   cannotStartReason?: string | null;
 }
 
-export interface StartRoadmapEntryTestRequest {
-  ipAddress?: string;
-}
-
 export interface RoadmapEntryTestQuestion {
   questionId: string;
   orderIndex: number;

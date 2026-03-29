@@ -14,7 +14,6 @@ import type {
   RoadmapEntryTestAttemptStartResponse,
   RoadmapEntryTestResultResponse,
   RoadmapTopicResponse,
-  StartRoadmapEntryTestRequest,
   StudentRoadmapEntryTestInfo,
   SubmitRoadmapFeedbackRequest,
   SubmitRoadmapEntryTestRequest,
@@ -334,20 +333,10 @@ export class RoadmapService {
   }
 
   static async startRoadmapEntryTest(
-    roadmapId: string,
-    payload?: StartRoadmapEntryTestRequest
+    roadmapId: string
   ): Promise<RoadmapApiResponse<RoadmapEntryTestAttemptStartResponse>> {
     const headers = await this.getHeaders();
-    const query = new URLSearchParams();
-    if (payload?.ipAddress?.trim()) {
-      query.set('ipAddress', payload.ipAddress.trim());
-    }
-    const queryString = query.toString();
-    const endpoint = `${API_BASE_URL}${API_ENDPOINTS.ROADMAP_ENTRY_TEST_START(roadmapId)}${
-      queryString ? `?${queryString}` : ''
-    }`;
-
-    const response = await fetch(endpoint, {
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ROADMAP_ENTRY_TEST_START(roadmapId)}`, {
       method: 'POST',
       headers,
     });
