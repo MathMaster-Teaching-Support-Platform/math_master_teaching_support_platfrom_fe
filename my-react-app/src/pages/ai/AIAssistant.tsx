@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Menu, SquarePen } from 'lucide-react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import {
   useArchiveChatSession,
@@ -22,7 +23,8 @@ const AIAssistant: React.FC = () => {
   const [localError, setLocalError] = useState('');
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editingTitle, setEditingTitle] = useState('');
-  const [isSessionPanelOpen, setIsSessionPanelOpen] = useState(true);
+  const [isSessionPanelOpen, setIsSessionPanelOpen] = useState(false);
+  const hasBootstrappedSession = useRef(false);
 
   const sessionQueryParams = useMemo(() => ({ page: 0, size: 20 }), []);
 
@@ -36,17 +38,10 @@ const AIAssistant: React.FC = () => {
 
   const sessions = useMemo(() => sessionsData?.result.content ?? [], [sessionsData]);
 
-  useEffect(() => {
-    if (!selectedSessionId && sessions.length > 0) {
-      setSelectedSessionId(sessions[0].id);
-    }
-  }, [selectedSessionId, sessions]);
-
-  const {
-    data: messagesData,
-    isLoading: messagesLoading,
-    error: messagesError,
-  } = useChatSessionMessages(selectedSessionId, messageQueryParams);
+  const { data: messagesData, error: messagesError } = useChatSessionMessages(
+    selectedSessionId,
+    messageQueryParams
+  );
 
   const { data: sessionDetailData } = useChatSessionDetail(selectedSessionId);
   const { data: memoryData } = useChatSessionMemory(selectedSessionId);
@@ -109,6 +104,14 @@ const AIAssistant: React.FC = () => {
       setLocalError(getErrorMessage(error, 'Không thể tạo phiên chat mới.'));
     }
   };
+
+  useEffect(() => {
+    if (hasBootstrappedSession.current) return;
+    hasBootstrappedSession.current = true;
+    void handleNewChat();
+    // Intentionally run once per page mount to always start with a new session.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSend = async () => {
     const prompt = input.trim();
@@ -219,6 +222,7 @@ const AIAssistant: React.FC = () => {
     localError ||
     (sessionsError ? getErrorMessage(sessionsError, 'Lỗi tải danh sách session') : '') ||
     (messagesError ? getErrorMessage(messagesError, 'Lỗi tải lịch sử chat') : '');
+  const hasConversationStarted = displayMessages.length > 0 || isSending;
 
   return (
     <DashboardLayout
@@ -253,12 +257,7 @@ const AIAssistant: React.FC = () => {
               </div>
             ) : (
               <div className="session-heading">
-                <h1>{selectedSession?.title ?? 'Xin chào! Chúng ta nên bắt đầu từ đâu?'}</h1>
-                <p>
-                  {selectedSession
-                    ? `Model: ${selectedSession.model} · Last update: ${formatDateTime(selectedSession.updatedAt)}`
-                    : 'Tạo một cuộc trò chuyện mới hoặc chọn lại session cũ để xem lịch sử.'}
-                </p>
+                <h1>{selectedSession?.title ?? 'Cuộc trò chuyện mới'}</h1>
               </div>
             )}
 
@@ -287,35 +286,11 @@ const AIAssistant: React.FC = () => {
               >
                 Delete
               </button>
-              <button
-                type="button"
-                className="ghost"
-                onClick={() => setIsSessionPanelOpen((prev) => !prev)}
-              >
-                {isSessionPanelOpen ? 'Thu gọn panel' : 'Mở panel'}
-              </button>
             </div>
           </header>
 
           <div className="message-stream">
             {combinedError && <div className="error-banner">{combinedError}</div>}
-
-            {!combinedError &&
-              selectedSessionId &&
-              displayMessages.length === 0 &&
-              !messagesLoading && (
-                <div className="empty-state">
-                  <h3>Session này chưa có tin nhắn</h3>
-                  <p>Hãy nhập prompt ở phía dưới để bắt đầu hội thoại.</p>
-                </div>
-              )}
-
-            {!combinedError && !selectedSessionId && (
-              <div className="empty-state">
-                <h3>Chào mừng bạn đến AI Assistant</h3>
-                <p>Nhấn "Cuộc trò chuyện mới" ở panel bên phải để bắt đầu.</p>
-              </div>
-            )}
 
             {displayMessages.map((message) => (
               <article
@@ -343,20 +318,22 @@ const AIAssistant: React.FC = () => {
           </div>
 
           <footer className="composer-wrap">
-            <div className="quick-chips" role="list">
-              {quickPrompts.map((prompt) => (
-                <button
-                  type="button"
-                  key={prompt}
-                  className="chip"
-                  onClick={() => handleQuickPrompt(prompt)}
-                >
-                  {prompt}
-                </button>
-              ))}
-            </div>
+            {!hasConversationStarted && (
+              <div className="quick-chips" role="list">
+                {quickPrompts.map((prompt) => (
+                  <button
+                    type="button"
+                    key={prompt}
+                    className="chip"
+                    onClick={() => handleQuickPrompt(prompt)}
+                  >
+                    {prompt}
+                  </button>
+                ))}
+              </div>
+            )}
 
-            <div className="composer-box">
+            <div className={`composer-box ${hasConversationStarted ? 'compact' : ''}`}>
               <textarea
                 placeholder="Hỏi AI trợ lý toán học..."
                 value={input}
@@ -367,18 +344,14 @@ const AIAssistant: React.FC = () => {
                     void handleSend();
                   }
                 }}
-                disabled={isSending || isArchived || !selectedSessionId}
+                disabled={isSending || isArchived}
               />
               <div className="composer-actions">
-                <div className="composer-meta">
-                  <span>Messages: {memory?.messageCount ?? 0}</span>
-                  <span>{isArchived ? 'Session archived' : 'Session active'}</span>
-                </div>
                 <button
                   type="button"
                   className="send-btn"
                   onClick={() => void handleSend()}
-                  disabled={isSending || isArchived || !selectedSessionId}
+                  disabled={isSending || isArchived}
                 >
                   Gửi
                 </button>
@@ -390,65 +363,65 @@ const AIAssistant: React.FC = () => {
         <aside className={`gemini-sidebar right ${isSessionPanelOpen ? '' : 'collapsed'}`}>
           <button
             type="button"
-            className="sidebar-toggle-btn"
+            className="sidebar-toggle-btn sidebar-icon-btn"
             onClick={() => setIsSessionPanelOpen((prev) => !prev)}
+            title={isSessionPanelOpen ? 'Thu gọn panel session' : 'Mở panel session'}
+            aria-label={isSessionPanelOpen ? 'Thu gọn panel session' : 'Mở panel session'}
           >
-            {isSessionPanelOpen ? '>' : '<'}
+            <Menu size={19} strokeWidth={2.25} />
           </button>
 
-          {isSessionPanelOpen ? (
-            <>
-              <button
-                type="button"
-                className="new-session-btn"
-                onClick={() => void handleNewChat()}
-                disabled={createSessionMutation.isPending}
-              >
-                + Cuộc trò chuyện mới
-              </button>
+          <div
+            className={`session-panel-expanded ${isSessionPanelOpen ? 'is-visible' : 'is-hidden'}`}
+          >
+            <button
+              type="button"
+              className="new-session-btn"
+              onClick={() => void handleNewChat()}
+              disabled={createSessionMutation.isPending}
+            >
+              + Cuộc trò chuyện mới
+            </button>
 
-              <div className="session-list-title">Cuộc trò chuyện</div>
-              <div className="session-list">
-                {sessionsLoading && <div className="session-muted">Đang tải sessions...</div>}
-                {!sessionsLoading && sessions.length === 0 && (
-                  <div className="session-muted">Chưa có cuộc trò chuyện nào.</div>
-                )}
-                {sessions.map((session) => (
-                  <button
-                    type="button"
-                    key={session.id}
-                    className={`session-item ${session.id === selectedSessionId ? 'active' : ''}`}
-                    onClick={() => setSelectedSessionId(session.id)}
-                  >
-                    <span className="session-title">{session.title}</span>
-                    <span className="session-subtitle">
-                      {session.status} · {formatDateTime(session.lastMessageAt)}
-                    </span>
-                  </button>
-                ))}
-              </div>
-
-              <div className="session-footer">
-                <div className="session-muted">Memory limit: {memory?.wordLimit ?? 1000} words</div>
-                <div className="session-muted">Used: {memory?.currentWords ?? 0}</div>
-              </div>
-            </>
-          ) : (
-            <div className="collapsed-actions">
-              <button
-                type="button"
-                className="new-session-btn collapsed"
-                onClick={() => void handleNewChat()}
-                disabled={createSessionMutation.isPending}
-                title="Tạo cuộc trò chuyện mới"
-              >
-                +
-              </button>
-              <div className="collapsed-count" title="Số lượng session">
-                {sessions.length}
-              </div>
+            <div className="session-list-title">Cuộc trò chuyện</div>
+            <div className="session-list">
+              {sessionsLoading && <div className="session-muted">Đang tải sessions...</div>}
+              {!sessionsLoading && sessions.length === 0 && (
+                <div className="session-muted">Chưa có cuộc trò chuyện nào.</div>
+              )}
+              {sessions.map((session) => (
+                <button
+                  type="button"
+                  key={session.id}
+                  className={`session-item ${session.id === selectedSessionId ? 'active' : ''}`}
+                  onClick={() => setSelectedSessionId(session.id)}
+                >
+                  <span className="session-title">{session.title}</span>
+                  <span className="session-subtitle">
+                    {session.status} · {formatDateTime(session.lastMessageAt)}
+                  </span>
+                </button>
+              ))}
             </div>
-          )}
+
+            <div className="session-footer">
+              <div className="session-muted">Memory limit: {memory?.wordLimit ?? 1000} words</div>
+              <div className="session-muted">Used: {memory?.currentWords ?? 0}</div>
+            </div>
+          </div>
+
+          <div className={`collapsed-actions ${isSessionPanelOpen ? 'is-hidden' : 'is-visible'}`}>
+            <button
+              type="button"
+              className="new-session-btn collapsed sidebar-icon-btn"
+              onClick={() => void handleNewChat()}
+              disabled={createSessionMutation.isPending}
+              title="Tạo cuộc trò chuyện mới"
+              aria-label="Tạo cuộc trò chuyện mới"
+            >
+              <SquarePen size={19} strokeWidth={2.1} />
+            </button>
+          </div>
         </aside>
       </div>
     </DashboardLayout>
