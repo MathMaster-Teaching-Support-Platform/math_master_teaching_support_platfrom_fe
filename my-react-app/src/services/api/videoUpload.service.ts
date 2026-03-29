@@ -132,24 +132,41 @@ export class VideoUploadService {
       const end = Math.min(start + CHUNK_SIZE, file.size);
       const chunk = file.slice(start, end);
 
-      // Get presigned URL for this chunk
-      const urlRes = await this.getPartUploadUrl(courseId, uploadId, objectKey, partNumber);
-      const { presignedUrl } = urlRes.result;
-
-      // Upload chunk directly to MinIO
-      const uploadRes = await fetch(presignedUrl, {
-        method: 'PUT',
-        body: chunk,
-        headers: { 'Content-Type': file.type },
-      });
+      // Upload chunk via backend proxy (avoids CORS issues with MinIO)
+      const headers = await this.getHeaders();
+      // Remove Content-Type to let browser set it, but keep other headers
+      const uploadHeaders: Record<string, string> = {
+        'Authorization': headers['Authorization'],
+        'accept': headers['accept']
+      };
+      
+      const uploadRes = await fetch(
+        `${API_BASE_URL}${API_ENDPOINTS.COURSE_VIDEO_UPLOAD_PART(courseId)}?uploadId=${encodeURIComponent(uploadId)}&objectKey=${encodeURIComponent(objectKey)}&partNumber=${partNumber}`,
+        {
+          method: 'POST',
+          headers: uploadHeaders,
+          body: chunk,
+        }
+      );
 
       if (!uploadRes.ok) {
-        throw new Error(`Failed to upload chunk ${partNumber}`);
+        throw new Error(`Failed to upload chunk ${partNumber}: ${uploadRes.status} ${uploadRes.statusText}`);
       }
 
-      // ETag is returned in response header
-      const eTag = uploadRes.headers.get('ETag') ?? uploadRes.headers.get('etag') ?? '';
-      parts.push({ partNumber, eTag: eTag.replace(/"/g, '') });
+      const uploadData = await uploadRes.json();
+      console.log(`Part ${partNumber} response:`, uploadData);
+      
+      // Backend returns 'etag' (lowercase) not 'eTag'
+      let eTag = uploadData.result?.etag || uploadData.result?.eTag;
+      
+      if (!eTag) {
+        console.error('Upload response:', uploadData);
+        throw new Error(`No ETag returned for chunk ${partNumber}`);
+      }
+
+      // Remove quotes if present (S3 returns ETags with quotes)
+      eTag = eTag.replace(/^"|"$/g, '');
+      parts.push({ partNumber, eTag });
 
       const percent = Math.round((partNumber / totalChunks) * 100);
       callbacks?.onProgress(percent);

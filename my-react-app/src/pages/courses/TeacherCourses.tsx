@@ -162,8 +162,8 @@ const TeacherCourses: React.FC = () => {
         filterStatus === 'all'
           ? true
           : filterStatus === 'active'
-            ? course.isPublished
-            : !course.isPublished;
+            ? course.published
+            : !course.published;
       const searchMatch = course.title.toLowerCase().includes(search.toLowerCase());
       return statusMatch && searchMatch;
     });
@@ -171,8 +171,8 @@ const TeacherCourses: React.FC = () => {
 
   const stats = {
     total: courses.length,
-    active: courses.filter((c) => c.isPublished).length,
-    draft: courses.filter((c) => !c.isPublished).length,
+    active: courses.filter((c) => c.published).length,
+    draft: courses.filter((c) => !c.published).length,
     students: courses.reduce((sum, c) => sum + c.studentsCount, 0),
   };
 
@@ -183,7 +183,7 @@ const TeacherCourses: React.FC = () => {
   };
 
   const handleTogglePublish = (course: CourseResponse) => {
-    publishMutation.mutate({ courseId: course.id, data: { published: !course.isPublished } });
+    publishMutation.mutate({ courseId: course.id, data: { published: !course.published } });
   };
 
   const handleDelete = (courseId: string) => {
@@ -276,12 +276,11 @@ const TeacherCourses: React.FC = () => {
         <section className={`courses-grid ${viewMode}`}>
           {filteredCourses.map((course, idx) => (
             <article key={course.id} className="course-card">
-              <div
-                className="course-cover"
+              <div className="course-cover"
                 style={{ background: gradients[idx % gradients.length] }}
               >
                 <span className="course-status">
-                  {course.isPublished ? 'CÔNG KHAI' : 'BẢN NHÁP'}
+                  {course.published ? 'CÔNG KHAI' : 'BẢN NHÁP'}
                 </span>
                 <h3>{course.title}</h3>
               </div>
@@ -314,7 +313,7 @@ const TeacherCourses: React.FC = () => {
                     onClick={() => handleTogglePublish(course)}
                     disabled={publishMutation.isPending}
                   >
-                    {course.isPublished ? 'Ẩn' : 'Công khai'}
+                    {course.published ? 'Ẩn' : 'Công khai'}
                   </button>
                   <button
                     onClick={() => handleDelete(course.id)}

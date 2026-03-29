@@ -17,7 +17,8 @@ export interface CourseResponse {
   title: string;
   description: string | null;
   thumbnailUrl: string | null;
-  isPublished: boolean;
+  published: boolean; // Backend returns 'published', not 'isPublished'
+  isPublished: boolean; // Alias for compatibility
   rating: number;
   studentsCount: number;
   lessonsCount: number;

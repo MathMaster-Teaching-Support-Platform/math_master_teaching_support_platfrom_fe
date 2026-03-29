@@ -148,6 +148,7 @@ export const API_ENDPOINTS = {
   // Video Upload (Multipart)
   COURSE_VIDEO_UPLOAD_INITIATE: (courseId: string) => `/courses/${courseId}/lessons/upload/initiate`,
   COURSE_VIDEO_UPLOAD_PART_URL: (courseId: string) => `/courses/${courseId}/lessons/upload/part-url`,
+  COURSE_VIDEO_UPLOAD_PART: (courseId: string) => `/courses/${courseId}/lessons/upload/upload-part`,
   COURSE_VIDEO_UPLOAD_COMPLETE: (courseId: string) => `/courses/${courseId}/lessons/upload/complete`,
   COURSE_VIDEO_URL: (courseId: string, courseLessonId: string) =>
     `/courses/${courseId}/lessons/upload/${courseLessonId}/video-url`,
