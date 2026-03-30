@@ -1,15 +1,14 @@
-import { useQuery, useMutation, useQueryClient, type UseQueryOptions } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, type UseQueryOptions } from '@tanstack/react-query';
 import { StudentAssessmentService } from '../services/studentAssessment.service';
-import type {
-  StudentAssessmentResponse,
-  AttemptStartResponse,
-  StartAssessmentRequest,
-  AnswerUpdateRequest,
-  FlagUpdateRequest,
-  SubmitAssessmentRequest,
-  DraftSnapshotResponse,
-} from '../types/studentAssessment.types';
 import type { ApiResponse, PaginatedResponse } from '../types';
+import type {
+  AnswerUpdateRequest,
+  DraftSnapshotResponse,
+  FlagUpdateRequest,
+  StartAssessmentRequest,
+  StudentAssessmentResponse,
+  SubmitAssessmentRequest,
+} from '../types/studentAssessment.types';
 
 // Query Keys
 export const studentAssessmentKeys = {
@@ -50,10 +49,7 @@ export function useMyAssessments(
 /** Get assessment details */
 export function useAssessmentDetails(
   assessmentId: string,
-  options?: Omit<
-    UseQueryOptions<ApiResponse<StudentAssessmentResponse>>,
-    'queryKey' | 'queryFn'
-  >
+  options?: Omit<UseQueryOptions<ApiResponse<StudentAssessmentResponse>>, 'queryKey' | 'queryFn'>
 ) {
   return useQuery({
     queryKey: studentAssessmentKeys.detail(assessmentId),
@@ -81,15 +77,15 @@ export function useDraftSnapshot(
 /** Start assessment */
 export function useStartAssessment() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (request: StartAssessmentRequest) =>
       StudentAssessmentService.startAssessment(request),
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       // Invalidate assessments list to update attempt count
       queryClient.invalidateQueries({ queryKey: studentAssessmentKeys.lists() });
-      queryClient.invalidateQueries({ 
-        queryKey: studentAssessmentKeys.detail(variables.assessmentId) 
+      queryClient.invalidateQueries({
+        queryKey: studentAssessmentKeys.detail(variables.assessmentId),
       });
     },
   });
@@ -98,8 +94,7 @@ export function useStartAssessment() {
 /** Update answer (auto-save) */
 export function useUpdateAnswer() {
   return useMutation({
-    mutationFn: (request: AnswerUpdateRequest) =>
-      StudentAssessmentService.updateAnswer(request),
+    mutationFn: (request: AnswerUpdateRequest) => StudentAssessmentService.updateAnswer(request),
     // Don't invalidate queries to avoid refetch during typing
   });
 }
@@ -107,15 +102,14 @@ export function useUpdateAnswer() {
 /** Update flag */
 export function useUpdateFlag() {
   return useMutation({
-    mutationFn: (request: FlagUpdateRequest) =>
-      StudentAssessmentService.updateFlag(request),
+    mutationFn: (request: FlagUpdateRequest) => StudentAssessmentService.updateFlag(request),
   });
 }
 
 /** Submit assessment */
 export function useSubmitAssessment() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (request: SubmitAssessmentRequest) =>
       StudentAssessmentService.submitAssessment(request),
@@ -129,7 +123,6 @@ export function useSubmitAssessment() {
 /** Save and exit */
 export function useSaveAndExit() {
   return useMutation({
-    mutationFn: (attemptId: string) =>
-      StudentAssessmentService.saveAndExit(attemptId),
+    mutationFn: (attemptId: string) => StudentAssessmentService.saveAndExit(attemptId),
   });
 }

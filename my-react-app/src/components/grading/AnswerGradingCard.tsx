@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { Sparkles } from 'lucide-react';
+import { useState } from 'react';
 import type { AnswerGradeResponse, ManualGradeRequest } from '../../types/grading.types';
 import MathText from '../common/MathText';
 
@@ -22,7 +22,7 @@ export default function AnswerGradingCard({
 }: AnswerGradingCardProps) {
   const [points, setPoints] = useState(grade?.pointsEarned ?? answer.pointsEarned ?? 0);
   const [feedback, setFeedback] = useState(grade?.feedback ?? answer.feedback ?? '');
-  const [isCorrect, setIsCorrect] = useState(grade?.isCorrect ?? answer.isCorrect ?? false);
+  const [isCorrect, _setIsCorrect] = useState(grade?.isCorrect ?? answer.isCorrect ?? false);
 
   const handlePointsChange = (value: number) => {
     const clampedValue = Math.max(0, Math.min(answer.maxPoints, value));
@@ -161,7 +161,9 @@ export default function AnswerGradingCard({
             marginTop: 16,
           }}
         >
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 16, marginBottom: 12 }}>
+          <div
+            style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 16, marginBottom: 12 }}
+          >
             <div>
               <label>
                 <p className="muted" style={{ marginBottom: 6, fontSize: '0.875rem' }}>
@@ -225,9 +227,7 @@ export default function AnswerGradingCard({
                 Điểm: {answer.pointsEarned} / {answer.maxPoints}
               </p>
               {answer.feedback && (
-                <p style={{ marginTop: 8, fontSize: '0.875rem' }}>
-                  Nhận xét: {answer.feedback}
-                </p>
+                <p style={{ marginTop: 8, fontSize: '0.875rem' }}>Nhận xét: {answer.feedback}</p>
               )}
             </div>
             <span
