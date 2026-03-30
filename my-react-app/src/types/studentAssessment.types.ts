@@ -4,21 +4,22 @@ export interface StudentAssessmentResponse {
   title: string;
   description?: string;
   assessmentType: 'QUIZ' | 'TEST' | 'EXAM' | 'HOMEWORK';
-  timeLimitMinutes?: number;
-  passingScore?: number;
-  startDate?: string;
-  endDate?: string;
   totalQuestions: number;
   totalPoints: number;
-  attemptCount: number;
+  timeLimitMinutes?: number;
+  passingScore?: number; // Added back - BE now returns this
+  dueDate?: string;
+  startDate?: string;
+  endDate?: string;
+  status?: string; // AssessmentStatus from BE
+  
+  studentStatus: 'UPCOMING' | 'IN_PROGRESS' | 'COMPLETED';
+  currentAttemptId?: string;
+  attemptNumber?: number; // Changed from attemptCount to match BE
   maxAttempts?: number;
   allowMultipleAttempts: boolean;
   canStart: boolean;
   cannotStartReason?: string;
-  studentStatus: 'UPCOMING' | 'IN_PROGRESS' | 'COMPLETED';
-  lastAttemptScore?: number;
-  lastAttemptPercentage?: number;
-  bestScore?: number;
 }
 
 export interface AttemptStartResponse {
@@ -41,7 +42,7 @@ export interface AttemptQuestionResponse {
   orderIndex: number;
   questionText: string;
   questionType: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER' | 'ESSAY' | 'CODING';
-  options?: Record<string, string>;
+  options?: Record<string, unknown>; // Changed from string to unknown to match BE
   points: number;
 }
 
@@ -56,9 +57,10 @@ export interface AnswerUpdateRequest {
 export interface AnswerAckResponse {
   type: 'ack' | 'flag_ack';
   questionId: string;
+  serverTimestamp?: string; // Changed from savedAt to match BE
   sequenceNumber?: number;
-  savedAt: string;
   success: boolean;
+  message?: string;
 }
 
 export interface FlagUpdateRequest {
@@ -76,11 +78,11 @@ export interface DraftSnapshotResponse {
   attemptId: string;
   answers: Record<string, string | Record<string, unknown>>;
   flags: Record<string, boolean>;
-  timeRemaining?: number;
-  progress: {
-    answered: number;
-    total: number;
-  };
+  startedAt?: string;
+  expiresAt?: string;
+  timeRemainingSeconds?: number; // Changed from timeRemaining to match BE
+  answeredCount?: number;
+  totalQuestions?: number;
 }
 
 export interface StartAssessmentRequest {

@@ -45,7 +45,7 @@ import '../../styles/module-refactor.css';
 import { TemplateFormModal } from './TemplateFormModal';
 import { TemplateImportModal } from './TemplateImportModal';
 import { TemplateTestModal } from './TemplateTestModal';
-import { MathText } from '../../components/common/MathText';
+import MathText from '../../components/common/MathText';
 import { useNavigate } from 'react-router-dom';
 import './template-review.css';
 

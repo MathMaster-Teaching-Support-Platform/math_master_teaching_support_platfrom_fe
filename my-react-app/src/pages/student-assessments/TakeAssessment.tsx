@@ -25,8 +25,11 @@ export default function TakeAssessment() {
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [flags, setFlags] = useState<Record<string, boolean>>({});
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
+  const [isResumed, setIsResumed] = useState(false);
   const sequenceRef = useRef(0);
+  const pendingSavesRef = useRef<Promise<any>[]>([]);
 
   const startMutation = useStartAssessment();
   const updateAnswerMutation = useUpdateAnswer();
@@ -56,18 +59,32 @@ export default function TakeAssessment() {
   }, [assessmentId]);
 
   // Load draft snapshot if resuming
-  const { data: draftData } = useDraftSnapshot(attemptData?.attemptId || '', {
+  const { data: draftData, isError: draftError } = useDraftSnapshot(attemptData?.attemptId || '', {
     enabled: !!attemptData?.attemptId,
+    onError: (error) => {
+      console.error('Failed to load draft snapshot:', error);
+      // Continue anyway - user can still take the assessment
+    },
   });
 
   useEffect(() => {
     if (draftData?.result) {
-      setAnswers(draftData.result.answers || {});
-      setFlags(draftData.result.flags || {});
+      const loadedAnswers = draftData.result.answers || {};
+      const loadedFlags = draftData.result.flags || {};
+      
+      setAnswers(loadedAnswers);
+      setFlags(loadedFlags);
+      
+      // Show notification if resuming with existing answers
+      if (Object.keys(loadedAnswers).length > 0 && !isResumed) {
+        setIsResumed(true);
+        console.log('Đã khôi phục bài làm trước đó với', Object.keys(loadedAnswers).length, 'câu trả lời');
+        // You can add toast notification here if you have a toast library
+      }
     }
-  }, [draftData]);
+  }, [draftData, isResumed]);
 
-  // Debounced auto-save
+  // Debounced auto-save with pending saves tracking
   const saveTimeoutRef = useRef<NodeJS.Timeout>();
   const handleAnswerChange = useCallback(
     (questionId: string, value: any) => {
@@ -80,22 +97,31 @@ export default function TakeAssessment() {
         clearTimeout(saveTimeoutRef.current);
       }
 
+      setIsSaving(true);
+
       // Schedule save
       saveTimeoutRef.current = setTimeout(() => {
-        updateAnswerMutation.mutate(
+        const savePromise = updateAnswerMutation.mutateAsync(
           {
             attemptId: attemptData.attemptId,
             questionId,
             answerValue: value,
             clientTimestamp: new Date().toISOString(),
             sequenceNumber: ++sequenceRef.current,
-          },
-          {
-            onSuccess: () => {
-              setLastSaved(new Date());
-            },
           }
-        );
+        ).then(() => {
+          setLastSaved(new Date());
+          setIsSaving(false);
+          // Remove from pending saves
+          pendingSavesRef.current = pendingSavesRef.current.filter(p => p !== savePromise);
+        }).catch((error) => {
+          console.error('Failed to save answer:', error);
+          setIsSaving(false);
+          pendingSavesRef.current = pendingSavesRef.current.filter(p => p !== savePromise);
+        });
+
+        // Track pending save
+        pendingSavesRef.current.push(savePromise);
       }, 1000);
     },
     [attemptData, updateAnswerMutation]
@@ -117,9 +143,27 @@ export default function TakeAssessment() {
     [attemptData, flags, updateFlagMutation]
   );
 
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = useCallback(async () => {
     if (!attemptData?.attemptId) return;
 
+    // Clear debounce timer and flush any pending saves
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+      setIsSaving(false);
+    }
+
+    // Wait for all pending saves to complete
+    if (pendingSavesRef.current.length > 0) {
+      console.log('Waiting for', pendingSavesRef.current.length, 'pending saves...');
+      try {
+        await Promise.all(pendingSavesRef.current);
+        console.log('All pending saves completed');
+      } catch (error) {
+        console.error('Some saves failed, but continuing with submit:', error);
+      }
+    }
+
+    // Now submit
     submitMutation.mutate(
       {
         attemptId: attemptData.attemptId,
@@ -129,6 +173,10 @@ export default function TakeAssessment() {
         onSuccess: () => {
           // Navigate to result page with submissionId
           navigate(`/student/assessments/result/${attemptData.submissionId}`);
+        },
+        onError: (error) => {
+          console.error('Failed to submit assessment:', error);
+          // You can add toast notification here
         },
       }
     );
@@ -194,7 +242,13 @@ export default function TakeAssessment() {
               </p>
             </div>
             <div className="row" style={{ gap: 16 }}>
-              {lastSaved && (
+              {isSaving && (
+                <span className="muted" style={{ fontSize: '0.875rem', color: 'var(--primary-color)' }}>
+                  <Save size={14} style={{ marginRight: 4 }} />
+                  Đang lưu...
+                </span>
+              )}
+              {!isSaving && lastSaved && (
                 <span className="muted" style={{ fontSize: '0.875rem' }}>
                   <Save size={14} style={{ marginRight: 4 }} />
                   Đã lưu {lastSaved.toLocaleTimeString('vi-VN')}
@@ -205,6 +259,26 @@ export default function TakeAssessment() {
               )}
             </div>
           </header>
+
+          {/* Resume notification banner */}
+          {isResumed && (
+            <div 
+              style={{ 
+                padding: 12, 
+                backgroundColor: 'var(--primary-color-light)', 
+                borderRadius: 8, 
+                marginTop: 16,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8
+              }}
+            >
+              <AlertCircle size={16} style={{ color: 'var(--primary-color)' }} />
+              <span style={{ fontSize: '0.875rem' }}>
+                Đã khôi phục bài làm trước đó với {answeredCount} câu trả lời
+              </span>
+            </div>
+          )}
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: 24, marginTop: 24 }}>
             {/* Main content */}

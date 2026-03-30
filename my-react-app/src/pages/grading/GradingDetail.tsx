@@ -60,7 +60,7 @@ export default function GradingDetail() {
           if (manualAdjustment !== 0 && adjustmentReason.trim()) {
             addManualAdjustmentMutation.mutate({
               submissionId,
-              adjustmentPoints: manualAdjustment,
+              adjustmentAmount: manualAdjustment, // Fixed: changed from adjustmentPoints
               reason: adjustmentReason,
             });
           }

@@ -2,13 +2,26 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Download, TrendingUp } from 'lucide-react';
 import { useGradingAnalytics, useExportGrades } from '../../hooks/useGrading';
+import { useQuery } from '@tanstack/react-query';
+import { AssessmentService } from '../../services/api/assessment.service';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
-import MathText from '../../components/common/MathText';
 import '../../styles/module-refactor.css';
 
 export default function GradingAnalytics() {
   const navigate = useNavigate();
   const [assessmentId, setAssessmentId] = useState('');
+
+  // Fetch list of published assessments
+  const { data: assessmentsData } = useQuery({
+    queryKey: ['my-assessments', 'PUBLISHED'],
+    queryFn: () => AssessmentService.getMyAssessments({ 
+      page: 0, 
+      size: 100,
+      status: 'PUBLISHED'
+    }),
+  });
+
+  const assessments = assessmentsData?.result?.content ?? [];
 
   const { data, isLoading, isError } = useGradingAnalytics(assessmentId, {
     enabled: !!assessmentId,
@@ -52,14 +65,19 @@ export default function GradingAnalytics() {
               <p className="muted" style={{ marginBottom: 6 }}>
                 Chọn bài kiểm tra
               </p>
-              <input
+              <select
                 className="input"
-                type="text"
                 value={assessmentId}
                 onChange={(e) => setAssessmentId(e.target.value)}
-                placeholder="Nhập ID bài kiểm tra"
                 style={{ maxWidth: 400 }}
-              />
+              >
+                <option value="">-- Chọn bài kiểm tra --</option>
+                {assessments.map((assessment) => (
+                  <option key={assessment.id} value={assessment.id}>
+                    {assessment.title} ({assessment.assessmentType})
+                  </option>
+                ))}
+              </select>
             </label>
           </div>
 
@@ -95,10 +113,10 @@ export default function GradingAnalytics() {
                   <p className="muted" style={{ fontSize: '0.875rem', marginBottom: 8 }}>
                     Đã chấm
                   </p>
-                  <h2>{analytics.gradedCount}</h2>
+                  <h2>{analytics.gradedSubmissions}</h2>
                   <p className="muted" style={{ fontSize: '0.875rem', marginTop: 4 }}>
                     {analytics.totalSubmissions > 0
-                      ? ((analytics.gradedCount / analytics.totalSubmissions) * 100).toFixed(0)
+                      ? ((analytics.gradedSubmissions / analytics.totalSubmissions) * 100).toFixed(0)
                       : 0}%
                   </p>
                 </div>
@@ -114,7 +132,7 @@ export default function GradingAnalytics() {
                   <p className="muted" style={{ fontSize: '0.875rem', marginBottom: 8 }}>
                     Chờ chấm
                   </p>
-                  <h2 style={{ color: 'var(--warning-color)' }}>{analytics.pendingCount}</h2>
+                  <h2 style={{ color: 'var(--warning-color)' }}>{analytics.pendingSubmissions}</h2>
                 </div>
 
                 <div
@@ -173,7 +191,7 @@ export default function GradingAnalytics() {
                   <div>
                     <p className="muted" style={{ fontSize: '0.875rem' }}>Thời gian TB</p>
                     <p style={{ fontSize: '1.5rem', fontWeight: 600, marginTop: 4 }}>
-                      {Math.floor(analytics.averageTimeSpent / 60)} phút
+                      {Math.floor(analytics.averageTimeSpentSeconds / 60)} phút
                     </p>
                   </div>
                 </div>
@@ -190,18 +208,37 @@ export default function GradingAnalytics() {
                     marginBottom: 24,
                   }}
                 >
-                  <h3 style={{ marginBottom: 16 }}>Phân bố điểm</h3>
+                  <h3 style={{ marginBottom: 16 }}>Phân bố điểm (Thang điểm 10)</h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                     {Object.entries(analytics.scoreDistribution)
-                      .sort(([a], [b]) => a.localeCompare(b))
+                      .sort(([a], [b]) => {
+                        // Sort by numeric value
+                        const aNum = parseFloat(a.split('-')[0]);
+                        const bNum = parseFloat(b.split('-')[0]);
+                        return aNum - bNum;
+                      })
                       .map(([range, count]) => {
                         const percentage = (count / analytics.totalSubmissions) * 100;
+                        
+                        // Map ranges to Vietnamese labels
+                        const rangeLabels: Record<string, { label: string; color: string }> = {
+                          '0-2': { label: 'Kém', color: 'var(--danger-color)' },
+                          '2-4': { label: 'Yếu', color: 'var(--warning-color)' },
+                          '4-6': { label: 'Trung bình', color: 'var(--info-color)' },
+                          '6-8': { label: 'Khá', color: 'var(--primary-color)' },
+                          '8-10': { label: 'Giỏi', color: 'var(--success-color)' },
+                        };
+                        
+                        const rangeInfo = rangeLabels[range] || { label: '', color: 'var(--primary-color)' };
+                        
                         return (
                           <div key={range}>
                             <div className="row" style={{ justifyContent: 'space-between', marginBottom: 4 }}>
-                              <span>{range}</span>
+                              <span style={{ fontWeight: 500 }}>
+                                {range} - <span style={{ color: rangeInfo.color }}>{rangeInfo.label}</span>
+                              </span>
                               <span className="muted">
-                                {count} ({percentage.toFixed(0)}%)
+                                {count} học sinh ({percentage.toFixed(0)}%)
                               </span>
                             </div>
                             <div
@@ -216,7 +253,7 @@ export default function GradingAnalytics() {
                                 style={{
                                   height: '100%',
                                   width: `${percentage}%`,
-                                  backgroundColor: 'var(--primary-color)',
+                                  backgroundColor: rangeInfo.color,
                                   transition: 'width 0.3s',
                                 }}
                               />
@@ -228,8 +265,8 @@ export default function GradingAnalytics() {
                 </div>
               )}
 
-              {/* Question analytics */}
-              {analytics.questionAnalytics && analytics.questionAnalytics.length > 0 && (
+              {/* Question difficulty (from BE) */}
+              {analytics.questionDifficulty && Object.keys(analytics.questionDifficulty).length > 0 && (
                 <div
                   style={{
                     padding: 24,
@@ -240,34 +277,29 @@ export default function GradingAnalytics() {
                 >
                   <h3 style={{ marginBottom: 16 }}>
                     <TrendingUp size={20} style={{ marginRight: 8 }} />
-                    Phân tích từng câu hỏi
+                    Độ khó câu hỏi
                   </h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                    {analytics.questionAnalytics.map((qa, index) => (
+                    {Object.entries(analytics.questionDifficulty).map(([questionId, difficulty], index) => (
                       <div
-                        key={qa.questionId}
+                        key={questionId}
                         style={{
                           padding: 16,
                           backgroundColor: 'var(--bg-secondary)',
                           borderRadius: 6,
                         }}
                       >
-                        <h4 style={{ marginBottom: 8 }}>Câu {index + 1}</h4>
-                        <p style={{ marginBottom: 12, fontSize: '0.875rem' }}><MathText text={qa.questionText} /></p>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+                        <h4 style={{ marginBottom: 8 }}>Câu {index + 1} (ID: {questionId})</h4>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
                           <div>
-                            <p className="muted" style={{ fontSize: '0.75rem' }}>Điểm TB</p>
-                            <p style={{ fontWeight: 600 }}>{qa.averageScore.toFixed(1)}</p>
+                            <p className="muted" style={{ fontSize: '0.75rem' }}>Độ khó</p>
+                            <p style={{ fontWeight: 600 }}>{(difficulty * 100).toFixed(1)}%</p>
                           </div>
                           <div>
                             <p className="muted" style={{ fontSize: '0.75rem' }}>Tỷ lệ đúng</p>
                             <p style={{ fontWeight: 600, color: 'var(--success-color)' }}>
-                              {qa.successRate.toFixed(1)}%
+                              {((1 - difficulty) * 100).toFixed(1)}%
                             </p>
-                          </div>
-                          <div>
-                            <p className="muted" style={{ fontSize: '0.75rem' }}>Số lượt làm</p>
-                            <p style={{ fontWeight: 600 }}>{qa.totalAttempts}</p>
                           </div>
                         </div>
                       </div>

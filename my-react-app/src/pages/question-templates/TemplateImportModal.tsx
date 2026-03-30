@@ -3,7 +3,7 @@ import { useRef, useState } from 'react';
 import { useGetMyQuestionBanks } from '../../hooks/useQuestionBank';
 import { useImportTemplateFromFile } from '../../hooks/useQuestionTemplate';
 import type { TemplateDraft } from '../../types/questionTemplate';
-import { MathText } from '../../components/common/MathText';
+import MathText from '../../components/common/MathText';
 
 type Props = {
   isOpen: boolean;

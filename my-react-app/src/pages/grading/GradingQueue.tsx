@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Clock, FileText, RefreshCw, Search, User } from 'lucide-react';
+import { Clock, FileText, LineChart, RefreshCw, Search, User } from 'lucide-react';
 import { useGradingQueue } from '../../hooks/useGrading';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import type { GradingSubmissionResponse } from '../../types/grading.types';
@@ -59,6 +59,22 @@ export default function GradingQueue() {
             <div>
               <h2>Hàng đợi chấm bài</h2>
               <p>Chấm điểm và đánh giá bài làm của học sinh.</p>
+            </div>
+            <div className="row" style={{ gap: 8 }}>
+              <button 
+                className="btn secondary" 
+                onClick={() => navigate('/teacher/grading/analytics')}
+              >
+                <LineChart size={14} />
+                Phân tích
+              </button>
+              <button 
+                className="btn secondary" 
+                onClick={() => navigate('/teacher/grading/regrade-requests')}
+              >
+                <RefreshCw size={14} />
+                Yêu cầu chấm lại
+              </button>
             </div>
           </header>
 

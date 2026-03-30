@@ -27,15 +27,17 @@ export interface AnswerGradeResponse {
   answerId: string;
   questionId: string;
   questionText: string;
-  questionType: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER' | 'ESSAY' | 'CODING';
-  studentAnswer?: string | Record<string, unknown>;
+  answerText?: string;
   correctAnswer?: string;
   isCorrect?: boolean;
   pointsEarned?: number;
   maxPoints: number;
   feedback?: string;
-  needsManualGrading: boolean;
-  aiReviews?: AiReviewResponse[];
+  isManuallyAdjusted?: boolean;
+  gradedAt?: string;
+  // FE-only fields (not in BE response, will be undefined)
+  questionType?: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER' | 'ESSAY' | 'CODING';
+  needsManualGrading?: boolean;
 }
 
 export interface AiReviewResponse {
@@ -65,24 +67,22 @@ export interface GradeOverrideRequest {
 
 export interface ManualAdjustmentRequest {
   submissionId: string;
-  adjustmentPoints: number;
+  adjustmentAmount: number; // Changed from adjustmentPoints to match BE
   reason: string;
 }
 
 export interface GradingAnalyticsResponse {
-  assessmentId: string;
-  assessmentTitle: string;
   totalSubmissions: number;
-  gradedCount: number;
-  pendingCount: number;
+  gradedSubmissions: number; // Changed from gradedCount to match BE
+  pendingSubmissions: number; // Changed from pendingCount to match BE
   averageScore: number;
   medianScore: number;
   highestScore: number;
   lowestScore: number;
   passRate: number;
   scoreDistribution: Record<string, number>;
-  averageTimeSpent: number;
-  questionAnalytics: QuestionAnalytics[];
+  questionDifficulty?: Record<string, number>; // Added from BE
+  averageTimeSpentSeconds: number; // Changed from averageTimeSpent to match BE
 }
 
 export interface QuestionAnalytics {
@@ -94,7 +94,7 @@ export interface QuestionAnalytics {
 }
 
 export interface RegradeRequestResponse {
-  requestId: string;
+  id: string; // Changed from requestId to match BE
   submissionId: string;
   questionId: string;
   studentId: string;
@@ -104,6 +104,7 @@ export interface RegradeRequestResponse {
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
   teacherResponse?: string;
   reviewedBy?: string;
+  reviewerName?: string; // Added from BE
   reviewedAt?: string;
   createdAt: string;
 }

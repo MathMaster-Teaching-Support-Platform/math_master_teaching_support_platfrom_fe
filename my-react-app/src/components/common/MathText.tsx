@@ -8,48 +8,42 @@ interface MathTextProps {
 
 /**
  * Component to render text with LaTeX math formulas
- * Supports inline math: $formula$ or \(formula\)
- * Supports block math: $$formula$$ or \[formula\]
+ * Supports inline math: $formula$
+ * Supports block math: $$formula$$
  */
-function MathText({ text, block = false }: MathTextProps) {
+export default function MathText({ text, block = false }: MathTextProps) {
   if (!text) return null;
 
   // If block mode, render as block math
   if (block) {
-    // Remove $$ or \[ \] delimiters if present
-    const cleanText = text
-      .replace(/^\$\$/, '')
-      .replace(/\$\$$/, '')
-      .replace(/^\\\[/, '')
-      .replace(/\\\]$/, '');
+    const cleanText = text.replace(/^\$\$/, '').replace(/\$\$$/, '');
     return <BlockMath math={cleanText} />;
   }
 
-  // Parse inline math: $...$ or \(...\)
+  // Parse inline math: $...$
   const parts: (string | { type: 'math'; content: string })[] = [];
-  let currentText = text;
+  const mathRegex = /\$([^$]+)\$/g;
   let lastIndex = 0;
-
-  // Regex to match $...$ or \(...\)
-  const mathRegex = /\$([^$]+)\$|\\\(([^)]+)\\\)/g;
   let match;
 
-  while ((match = mathRegex.exec(currentText)) !== null) {
+  while ((match = mathRegex.exec(text)) !== null) {
     // Add text before math
     if (match.index > lastIndex) {
-      parts.push(currentText.substring(lastIndex, match.index));
+      parts.push(text.substring(lastIndex, match.index));
     }
 
     // Add math content
-    const mathContent = match[1] || match[2];
-    parts.push({ type: 'math', content: mathContent });
+    const mathContent = match[1];
+    if (mathContent) {
+      parts.push({ type: 'math', content: mathContent });
+    }
 
     lastIndex = match.index + match[0].length;
   }
 
   // Add remaining text
-  if (lastIndex < currentText.length) {
-    parts.push(currentText.substring(lastIndex));
+  if (lastIndex < text.length) {
+    parts.push(text.substring(lastIndex));
   }
 
   // If no math found, return plain text
@@ -59,7 +53,7 @@ function MathText({ text, block = false }: MathTextProps) {
 
   // Render mixed text and math
   return (
-    <span>
+    <>
       {parts.map((part, index) => {
         if (typeof part === 'string') {
           return <span key={index}>{part}</span>;
@@ -67,9 +61,6 @@ function MathText({ text, block = false }: MathTextProps) {
           return <InlineMath key={index} math={part.content} />;
         }
       })}
-    </span>
+    </>
   );
 }
-
-export { MathText };
-export default MathText;

@@ -90,9 +90,7 @@ export default function AnswerGradingCard({
             whiteSpace: 'pre-wrap',
           }}
         >
-          {typeof answer.studentAnswer === 'string'
-            ? answer.studentAnswer || '(Không có câu trả lời)'
-            : JSON.stringify(answer.studentAnswer, null, 2)}
+          {answer.answerText || '(Không có câu trả lời)'}
         </div>
       </div>
 
@@ -114,7 +112,7 @@ export default function AnswerGradingCard({
         </div>
       )}
 
-      {/* AI Reviews */}
+      {/* AI Reviews - Not yet implemented in BE
       {answer.aiReviews && answer.aiReviews.length > 0 && (
         <div style={{ marginBottom: 16 }}>
           <p className="muted" style={{ fontSize: '0.875rem', marginBottom: 6 }}>
@@ -150,6 +148,7 @@ export default function AnswerGradingCard({
           ))}
         </div>
       )}
+      */}
 
       {/* Grading section */}
       {!isAlreadyGraded && (

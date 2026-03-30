@@ -181,9 +181,7 @@ export default function AssessmentResult() {
                         whiteSpace: 'pre-wrap',
                       }}
                     >
-                      {typeof answer.studentAnswer === 'string'
-                        ? answer.studentAnswer || '(Không có câu trả lời)'
-                        : JSON.stringify(answer.studentAnswer)}
+                      {answer.answerText || '(Không có câu trả lời)'}
                     </p>
                   </div>
 
@@ -221,6 +219,7 @@ export default function AssessmentResult() {
                     </div>
                   )}
 
+                  {/* AI Reviews - Not yet implemented in BE
                   {answer.aiReviews && answer.aiReviews.length > 0 && (
                     <div style={{ marginBottom: 12 }}>
                       <p className="muted" style={{ fontSize: '0.875rem', marginBottom: 4 }}>
@@ -248,6 +247,7 @@ export default function AssessmentResult() {
                       ))}
                     </div>
                   )}
+                  */}
 
                   {result.gradesReleased && (
                     <button

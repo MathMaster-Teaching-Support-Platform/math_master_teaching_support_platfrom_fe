@@ -201,16 +201,8 @@ function AssessmentCard({
       {assessment.allowMultipleAttempts && (
         <div className="row" style={{ justifyContent: 'start' }}>
           <span className="muted">
-            Lần làm: {assessment.attemptCount}
+            Lần làm: {assessment.attemptNumber || 0}
             {assessment.maxAttempts ? ` / ${assessment.maxAttempts}` : ''}
-          </span>
-        </div>
-      )}
-
-      {assessment.lastAttemptScore !== undefined && (
-        <div className="row" style={{ justifyContent: 'start' }}>
-          <span>
-            Điểm gần nhất: {assessment.lastAttemptScore} ({assessment.lastAttemptPercentage?.toFixed(1)}%)
           </span>
         </div>
       )}
@@ -231,7 +223,7 @@ function AssessmentCard({
 
         {assessment.canStart && (
           <button className="btn" onClick={onStart}>
-            {assessment.attemptCount > 0 ? 'Làm lại' : 'Bắt đầu'}
+            {(assessment.attemptNumber || 0) > 0 ? 'Làm lại' : 'Bắt đầu'}
           </button>
         )}
 

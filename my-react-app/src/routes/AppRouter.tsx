@@ -71,6 +71,8 @@ import {
   GradingAnalytics,
   RegradeRequestList,
 } from '../pages/grading';
+// Test Components
+import MathTextTest from '../components/common/MathTextTest';
 
 const router = createBrowserRouter([
   {
@@ -362,6 +364,11 @@ const router = createBrowserRouter([
   {
     path: '/admin/*',
     element: <AdminDashboard />,
+  },
+  // Test Routes (remove in production)
+  {
+    path: '/test/math-text',
+    element: <MathTextTest />,
   },
   // Add more routes as needed
   {

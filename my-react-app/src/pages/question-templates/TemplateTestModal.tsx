@@ -2,7 +2,7 @@ import { CheckCircle2, Play, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTestTemplate } from '../../hooks/useQuestionTemplate';
 import type { QuestionTemplateResponse } from '../../types/questionTemplate';
-import { MathText } from '../../components/common/MathText';
+import MathText from '../../components/common/MathText';
 
 type Props = {
   isOpen: boolean;

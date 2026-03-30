@@ -134,7 +134,7 @@ export default function AssessmentDetail() {
           </div>
 
           {/* Attempt History */}
-          {assessment.allowMultipleAttempts && assessment.attemptCount > 0 && (
+          {assessment.allowMultipleAttempts && (assessment.attemptNumber || 0) > 0 && (
             <div
               style={{
                 padding: 24,
@@ -152,33 +152,15 @@ export default function AssessmentDetail() {
                     Số lần đã làm
                   </p>
                   <span style={{ fontWeight: 600 }}>
-                    {assessment.attemptCount}
+                    {assessment.attemptNumber || 0}
                     {assessment.maxAttempts ? ` / ${assessment.maxAttempts}` : ''}
                   </span>
                 </div>
-
-                {assessment.lastAttemptScore !== undefined && (
-                  <div>
-                    <p className="muted" style={{ fontSize: '0.875rem', marginBottom: 4 }}>
-                      Điểm lần gần nhất
-                    </p>
-                    <span style={{ fontWeight: 600 }}>
-                      {assessment.lastAttemptScore} ({assessment.lastAttemptPercentage?.toFixed(1)}%)
-                    </span>
-                  </div>
-                )}
-
-                {assessment.bestScore !== undefined && (
-                  <div>
-                    <p className="muted" style={{ fontSize: '0.875rem', marginBottom: 4 }}>
-                      Điểm cao nhất
-                    </p>
-                    <span style={{ fontWeight: 600, color: 'var(--success-color)' }}>
-                      {assessment.bestScore}
-                    </span>
-                  </div>
-                )}
               </div>
+              
+              <p className="muted" style={{ marginTop: 16, fontSize: '0.875rem' }}>
+                Xem chi tiết điểm số trong phần kết quả sau khi hoàn thành bài kiểm tra
+              </p>
             </div>
           )}
 
@@ -214,7 +196,7 @@ export default function AssessmentDetail() {
               style={{ minWidth: 200 }}
             >
               <Play size={14} />
-              {assessment.attemptCount > 0 ? 'Làm lại' : 'Bắt đầu làm bài'}
+              {(assessment.attemptNumber || 0) > 0 ? 'Làm lại' : 'Bắt đầu làm bài'}
             </button>
           </div>
         </section>

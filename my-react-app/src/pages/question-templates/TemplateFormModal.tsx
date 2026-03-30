@@ -6,7 +6,7 @@ import {
   type QuestionTemplateRequest,
   type QuestionTemplateResponse,
 } from '../../types/questionTemplate';
-import { MathText } from '../../components/common/MathText';
+import MathText from '../../components/common/MathText';
 
 type ParameterInput = {
   name: string;
