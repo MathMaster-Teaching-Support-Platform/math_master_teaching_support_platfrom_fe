@@ -1,20 +1,20 @@
-import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
 import { AlertCircle, ChevronLeft, ChevronRight, Flag, Save } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import QuestionDisplay from '../../components/assessment/QuestionDisplay';
+import QuestionNavigator from '../../components/assessment/QuestionNavigator';
+import Timer from '../../components/assessment/Timer';
+import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import {
+  useDraftSnapshot,
+  useSaveAndExit,
   useStartAssessment,
+  useSubmitAssessment,
   useUpdateAnswer,
   useUpdateFlag,
-  useSubmitAssessment,
-  useSaveAndExit,
-  useDraftSnapshot,
 } from '../../hooks/useStudentAssessment';
-import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
-import Timer from '../../components/assessment/Timer';
-import QuestionNavigator from '../../components/assessment/QuestionNavigator';
-import QuestionDisplay from '../../components/assessment/QuestionDisplay';
-import type { AttemptStartResponse } from '../../types/studentAssessment.types';
 import '../../styles/module-refactor.css';
+import type { AttemptStartResponse } from '../../types/studentAssessment.types';
 
 export default function TakeAssessment() {
   const { assessmentId } = useParams<{ assessmentId: string }>();
@@ -185,14 +185,11 @@ export default function TakeAssessment() {
   const handleSaveAndExit = useCallback(() => {
     if (!attemptData?.attemptId) return;
 
-    saveAndExitMutation.mutate(
-      { attemptId: attemptData.attemptId },
-      {
-        onSuccess: () => {
-          navigate('/student/assessments');
-        },
-      }
-    );
+    saveAndExitMutation.mutate(attemptData.attemptId, {
+      onSuccess: () => {
+        navigate('/student/assessments');
+      },
+    });
   }, [attemptData, saveAndExitMutation, navigate]);
 
   const handleAutoSubmit = useCallback(() => {
@@ -206,12 +203,18 @@ export default function TakeAssessment() {
   }, [attemptData, submitMutation, navigate]);
 
   const currentQuestion = attemptData?.questions[currentIndex];
-  const answeredCount = Object.keys(answers).filter((k) => answers[k] !== undefined && answers[k] !== '').length;
+  const answeredCount = Object.keys(answers).filter(
+    (k) => answers[k] !== undefined && answers[k] !== ''
+  ).length;
   const totalQuestions = attemptData?.questions.length || 0;
 
   if (startMutation.isPending) {
     return (
-      <DashboardLayout role="student" user={{ name: 'Student', avatar: '', role: 'student' }} notificationCount={0}>
+      <DashboardLayout
+        role="student"
+        user={{ name: 'Student', avatar: '', role: 'student' }}
+        notificationCount={0}
+      >
         <div className="module-layout-container">
           <div className="empty">Đang khởi tạo bài kiểm tra...</div>
         </div>
@@ -221,7 +224,11 @@ export default function TakeAssessment() {
 
   if (!attemptData || !currentQuestion) {
     return (
-      <DashboardLayout role="student" user={{ name: 'Student', avatar: '', role: 'student' }} notificationCount={0}>
+      <DashboardLayout
+        role="student"
+        user={{ name: 'Student', avatar: '', role: 'student' }}
+        notificationCount={0}
+      >
         <div className="module-layout-container">
           <div className="empty">Không thể tải bài kiểm tra</div>
         </div>
@@ -230,11 +237,18 @@ export default function TakeAssessment() {
   }
 
   return (
-    <DashboardLayout role="student" user={{ name: 'Student', avatar: '', role: 'student' }} notificationCount={0}>
+    <DashboardLayout
+      role="student"
+      user={{ name: 'Student', avatar: '', role: 'student' }}
+      notificationCount={0}
+    >
       <div className="module-layout-container">
         <section className="module-page" style={{ maxWidth: '100%' }}>
           {/* Header */}
-          <header className="page-header" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: 16 }}>
+          <header
+            className="page-header"
+            style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: 16 }}
+          >
             <div>
               <h2>{attemptData.instructions || 'Bài kiểm tra'}</h2>
               <p className="muted">
@@ -280,7 +294,9 @@ export default function TakeAssessment() {
             </div>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: 24, marginTop: 24 }}>
+          <div
+            style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: 24, marginTop: 24 }}
+          >
             {/* Main content */}
             <div>
               <QuestionDisplay
@@ -304,7 +320,9 @@ export default function TakeAssessment() {
                   className="btn secondary"
                   onClick={() => handleFlagToggle(currentQuestion.questionId)}
                   style={{
-                    backgroundColor: flags[currentQuestion.questionId] ? 'var(--warning-color)' : undefined,
+                    backgroundColor: flags[currentQuestion.questionId]
+                      ? 'var(--warning-color)'
+                      : undefined,
                     color: flags[currentQuestion.questionId] ? 'white' : undefined,
                   }}
                 >
@@ -369,10 +387,20 @@ export default function TakeAssessment() {
                 </div>
 
                 <div className="modal-body">
-                  <div className="row" style={{ gap: 8, padding: 12, backgroundColor: 'var(--bg-secondary)', borderRadius: 8 }}>
+                  <div
+                    className="row"
+                    style={{
+                      gap: 8,
+                      padding: 12,
+                      backgroundColor: 'var(--bg-secondary)',
+                      borderRadius: 8,
+                    }}
+                  >
                     <AlertCircle size={16} style={{ color: 'var(--warning-color)' }} />
                     <div>
-                      <p>Đã trả lời: {answeredCount} / {totalQuestions} câu</p>
+                      <p>
+                        Đã trả lời: {answeredCount} / {totalQuestions} câu
+                      </p>
                       {answeredCount < totalQuestions && (
                         <p className="muted" style={{ marginTop: 4, fontSize: '0.875rem' }}>
                           Bạn còn {totalQuestions - answeredCount} câu chưa trả lời

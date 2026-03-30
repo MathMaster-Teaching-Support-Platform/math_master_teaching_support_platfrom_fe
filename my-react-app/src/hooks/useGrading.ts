@@ -1,16 +1,16 @@
-import { useQuery, useMutation, useQueryClient, type UseQueryOptions } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, type UseQueryOptions } from '@tanstack/react-query';
 import { GradingService } from '../services/grading.service';
+import type { ApiResponse, PaginatedResponse } from '../types';
 import type {
-  GradingSubmissionResponse,
   CompleteGradingRequest,
   GradeOverrideRequest,
-  ManualAdjustmentRequest,
   GradingAnalyticsResponse,
-  RegradeRequestResponse,
+  GradingSubmissionResponse,
+  ManualAdjustmentRequest,
   RegradeRequestCreationRequest,
+  RegradeRequestResponse,
   RegradeResponseRequest,
 } from '../types/grading.types';
-import type { ApiResponse, PaginatedResponse } from '../types';
 
 // Query Keys
 export const gradingKeys = {
@@ -22,7 +22,8 @@ export const gradingKeys = {
   analytics: () => [...gradingKeys.all, 'analytics'] as const,
   analytic: (assessmentId: string) => [...gradingKeys.analytics(), assessmentId] as const,
   regradeRequests: () => [...gradingKeys.all, 'regrade'] as const,
-  regradeRequest: (filters: Record<string, unknown>) => [...gradingKeys.regradeRequests(), filters] as const,
+  regradeRequest: (filters: Record<string, unknown>) =>
+    [...gradingKeys.regradeRequests(), filters] as const,
   myResult: (submissionId: string) => [...gradingKeys.all, 'my-result', submissionId] as const,
   pendingCount: () => [...gradingKeys.all, 'pending-count'] as const,
 };
@@ -31,7 +32,7 @@ export const gradingKeys = {
 
 /** Get grading queue */
 export function useGradingQueue(
-  params: { page?: number; size?: number },
+  params: { page?: number; size?: number; status?: string },
   options?: Omit<
     UseQueryOptions<ApiResponse<PaginatedResponse<GradingSubmissionResponse>>>,
     'queryKey' | 'queryFn'
@@ -148,15 +149,14 @@ export function usePendingCount(
 /** Complete grading */
 export function useCompleteGrading() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: (request: CompleteGradingRequest) =>
-      GradingService.completeGrading(request),
+    mutationFn: (request: CompleteGradingRequest) => GradingService.completeGrading(request),
     onSuccess: (_data, variables) => {
       // Invalidate grading queue and submission
       queryClient.invalidateQueries({ queryKey: gradingKeys.queues() });
-      queryClient.invalidateQueries({ 
-        queryKey: gradingKeys.submission(variables.submissionId) 
+      queryClient.invalidateQueries({
+        queryKey: gradingKeys.submission(variables.submissionId),
       });
       queryClient.invalidateQueries({ queryKey: gradingKeys.pendingCount() });
     },
@@ -166,10 +166,9 @@ export function useCompleteGrading() {
 /** Override grade */
 export function useOverrideGrade() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: (request: GradeOverrideRequest) =>
-      GradingService.overrideGrade(request),
+    mutationFn: (request: GradeOverrideRequest) => GradingService.overrideGrade(request),
     onSuccess: () => {
       // Invalidate all grading queries
       queryClient.invalidateQueries({ queryKey: gradingKeys.all });
@@ -180,13 +179,12 @@ export function useOverrideGrade() {
 /** Add manual adjustment */
 export function useAddManualAdjustment() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: (request: ManualAdjustmentRequest) =>
-      GradingService.addManualAdjustment(request),
+    mutationFn: (request: ManualAdjustmentRequest) => GradingService.addManualAdjustment(request),
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ 
-        queryKey: gradingKeys.submission(variables.submissionId) 
+      queryClient.invalidateQueries({
+        queryKey: gradingKeys.submission(variables.submissionId),
       });
     },
   });
@@ -195,10 +193,9 @@ export function useAddManualAdjustment() {
 /** Release grades */
 export function useReleaseGrades() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: (assessmentId: string) =>
-      GradingService.releaseGrades(assessmentId),
+    mutationFn: (assessmentId: string) => GradingService.releaseGrades(assessmentId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: gradingKeys.all });
     },
@@ -208,13 +205,12 @@ export function useReleaseGrades() {
 /** Release grades for submission */
 export function useReleaseGradesForSubmission() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: (submissionId: string) =>
-      GradingService.releaseGradesForSubmission(submissionId),
+    mutationFn: (submissionId: string) => GradingService.releaseGradesForSubmission(submissionId),
     onSuccess: (_data, submissionId) => {
-      queryClient.invalidateQueries({ 
-        queryKey: gradingKeys.submission(submissionId) 
+      queryClient.invalidateQueries({
+        queryKey: gradingKeys.submission(submissionId),
       });
     },
   });
@@ -223,7 +219,7 @@ export function useReleaseGradesForSubmission() {
 /** Create regrade request */
 export function useCreateRegradeRequest() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (request: RegradeRequestCreationRequest) =>
       GradingService.createRegradeRequest(request),
@@ -236,7 +232,7 @@ export function useCreateRegradeRequest() {
 /** Respond to regrade request */
 export function useRespondToRegradeRequest() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (request: RegradeResponseRequest) =>
       GradingService.respondToRegradeRequest(request),
@@ -250,13 +246,13 @@ export function useRespondToRegradeRequest() {
 /** Invalidate submission */
 export function useInvalidateSubmission() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: ({ submissionId, reason }: { submissionId: string; reason?: string }) =>
       GradingService.invalidateSubmission(submissionId, reason),
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ 
-        queryKey: gradingKeys.submission(variables.submissionId) 
+      queryClient.invalidateQueries({
+        queryKey: gradingKeys.submission(variables.submissionId),
       });
       queryClient.invalidateQueries({ queryKey: gradingKeys.queues() });
     },
@@ -266,14 +262,13 @@ export function useInvalidateSubmission() {
 /** Trigger AI review */
 export function useTriggerAiReview() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: (submissionId: string) =>
-      GradingService.triggerAiReview(submissionId),
+    mutationFn: (submissionId: string) => GradingService.triggerAiReview(submissionId),
     onSuccess: (_data, submissionId) => {
       // Refetch submission to get AI reviews
-      queryClient.invalidateQueries({ 
-        queryKey: gradingKeys.submission(submissionId) 
+      queryClient.invalidateQueries({
+        queryKey: gradingKeys.submission(submissionId),
       });
     },
   });
@@ -284,7 +279,7 @@ export function useExportGrades() {
   return useMutation({
     mutationFn: async (assessmentId: string) => {
       const blob = await GradingService.exportGrades(assessmentId);
-      
+
       // Create download link
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -294,7 +289,7 @@ export function useExportGrades() {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-      
+
       return { success: true };
     },
   });
