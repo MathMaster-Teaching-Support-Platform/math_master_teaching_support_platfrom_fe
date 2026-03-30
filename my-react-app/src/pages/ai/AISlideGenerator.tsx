@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { BlockMath, InlineMath } from 'react-katex';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { API_BASE_URL } from '../../config/api.config';
 import { mockTeacher } from '../../data/mockData';
@@ -9,10 +10,12 @@ import type {
   GenerateSlideContentResult,
   LessonByChapter,
   LessonSlideItem,
+  LessonSlideOutputFormat,
   LessonSlideTemplate,
   SchoolGrade,
   SubjectByGrade,
 } from '../../types/lessonSlide.types';
+import 'katex/dist/katex.min.css';
 import './AISlideGenerator.css';
 
 const LoadingSpinner: React.FC<{ label: string }> = ({ label }) => (
@@ -33,6 +36,81 @@ const getTemplatePreviewUrl = (previewImage?: string | null): string | null => {
   return `${API_BASE_URL}${normalizedPath}`;
 };
 
+type MathSegment =
+  | { type: 'text'; value: string }
+  | { type: 'inline-math'; value: string }
+  | { type: 'block-math'; value: string };
+
+const normalizeOutputFormat = (value?: string): LessonSlideOutputFormat => {
+  if (value === 'LATEX' || value === 'HYBRID') {
+    return value;
+  }
+
+  return 'PLAIN_TEXT';
+};
+
+const supportsMathRendering = (outputFormat: LessonSlideOutputFormat): boolean =>
+  outputFormat === 'LATEX' || outputFormat === 'HYBRID';
+
+const parseMathSegments = (text: string): MathSegment[] => {
+  if (!text) return [{ type: 'text', value: '' }];
+
+  const segments: MathSegment[] = [];
+  const mathRegex = /\\\[([\s\S]+?)\\\]|\\\(([\s\S]+?)\\\)|\$\$([\s\S]+?)\$\$|\$([^$\n]+?)\$/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = mathRegex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      segments.push({ type: 'text', value: text.slice(lastIndex, match.index) });
+    }
+
+    if (match[1] !== undefined || match[3] !== undefined) {
+      segments.push({ type: 'block-math', value: (match[1] ?? match[3] ?? '').trim() });
+    } else {
+      segments.push({ type: 'inline-math', value: (match[2] ?? match[4] ?? '').trim() });
+    }
+
+    lastIndex = match.index + match[0].length;
+  }
+
+  if (lastIndex < text.length) {
+    segments.push({ type: 'text', value: text.slice(lastIndex) });
+  }
+
+  return segments.length ? segments : [{ type: 'text', value: text }];
+};
+
+const renderSlideText = (
+  text: string,
+  outputFormat: LessonSlideOutputFormat,
+  keyPrefix: string
+): React.ReactNode => {
+  if (!text) return null;
+
+  if (!supportsMathRendering(outputFormat)) {
+    return text;
+  }
+
+  return parseMathSegments(text).map((segment, index) => {
+    const key = `${keyPrefix}-${index}`;
+
+    if (segment.type === 'text') {
+      return <span key={key}>{segment.value}</span>;
+    }
+
+    if (segment.type === 'block-math') {
+      return (
+        <span key={key} className="ai-slide-math-block">
+          <BlockMath math={segment.value} />
+        </span>
+      );
+    }
+
+    return <InlineMath key={key} math={segment.value} />;
+  });
+};
+
 const AISlideGenerator: React.FC = () => {
   const [schoolGrades, setSchoolGrades] = useState<SchoolGrade[]>([]);
   const [subjects, setSubjects] = useState<SubjectByGrade[]>([]);
@@ -46,6 +124,7 @@ const AISlideGenerator: React.FC = () => {
 
   const [slideCount, setSlideCount] = useState(10);
   const [additionalPrompt, setAdditionalPrompt] = useState('');
+  const [outputFormat, setOutputFormat] = useState<LessonSlideOutputFormat>('PLAIN_TEXT');
   const [templateId, setTemplateId] = useState('');
   const [templates, setTemplates] = useState<LessonSlideTemplate[]>([]);
   const [templatePreviewBlobUrls, setTemplatePreviewBlobUrls] = useState<Record<string, string>>(
@@ -86,6 +165,11 @@ const AISlideGenerator: React.FC = () => {
   const currentPreviewSlide = useMemo(
     () => editableSlides[activePreviewIndex] || null,
     [editableSlides, activePreviewIndex]
+  );
+
+  const resolvedOutputFormat = useMemo(
+    () => normalizeOutputFormat(generated?.outputFormat || outputFormat),
+    [generated?.outputFormat, outputFormat]
   );
 
   const showSubjectStep = Boolean(schoolGradeId);
@@ -340,10 +424,16 @@ const AISlideGenerator: React.FC = () => {
         lessonId,
         slideCount,
         additionalPrompt: additionalPrompt.trim() || undefined,
+        outputFormat,
       });
 
-      setGenerated(response.result);
-      setEditableSlides(response.result.slides || []);
+      const normalizedResult: GenerateSlideContentResult = {
+        ...response.result,
+        outputFormat: normalizeOutputFormat(response.result.outputFormat),
+      };
+
+      setGenerated(normalizedResult);
+      setEditableSlides(normalizedResult.slides || []);
       setActivePreviewIndex(0);
       setPreparedPptxBlob(null);
       setPreparedPptxFilename('lesson-slides.pptx');
@@ -705,6 +795,21 @@ const AISlideGenerator: React.FC = () => {
                 />
               </label>
 
+              <label className="ai-slide-full-width">
+                <span>Định dạng đầu ra</span>
+                <select
+                  value={outputFormat}
+                  onChange={(e) => setOutputFormat(e.target.value as LessonSlideOutputFormat)}
+                >
+                  <option value="PLAIN_TEXT">PLAIN_TEXT</option>
+                  <option value="LATEX">LATEX</option>
+                  <option value="HYBRID">HYBRID</option>
+                </select>
+                <small className="ai-slide-format-hint">
+                  LATEX/HYBRID sẽ render công thức với delimiters \(...\) và \[...\].
+                </small>
+              </label>
+
               <div className="ai-slide-actions">
                 <button
                   className="btn btn-primary"
@@ -744,7 +849,8 @@ const AISlideGenerator: React.FC = () => {
 
             <p className="ai-slide-info">
               Lesson: <strong>{generated.lessonTitle}</strong> | Số slide:{' '}
-              <strong>{generated.slideCount}</strong>
+              <strong>{generated.slideCount}</strong> | Output format:{' '}
+              <strong>{resolvedOutputFormat}</strong>
             </p>
 
             {currentPreviewSlide && (
@@ -772,9 +878,21 @@ const AISlideGenerator: React.FC = () => {
                 </div>
 
                 <article className="ai-slide-preview-canvas">
-                  <h3>{currentPreviewSlide.heading || 'Chưa có tiêu đề'}</h3>
-                  <p>{currentPreviewSlide.content || 'Chưa có nội dung'}</p>
-                  <span>{currentPreviewSlide.slideType}</span>
+                  <div className="ai-slide-preview-heading" role="heading" aria-level={3}>
+                    {renderSlideText(
+                      currentPreviewSlide.heading || 'Chưa có tiêu đề',
+                      resolvedOutputFormat,
+                      `heading-${currentPreviewSlide.slideNumber}`
+                    )}
+                  </div>
+                  <div className="ai-slide-preview-content">
+                    {renderSlideText(
+                      currentPreviewSlide.content || 'Chưa có nội dung',
+                      resolvedOutputFormat,
+                      `content-${currentPreviewSlide.slideNumber}`
+                    )}
+                  </div>
+                  <span className="ai-slide-preview-tag">{currentPreviewSlide.slideType}</span>
                 </article>
 
                 <div className="ai-slide-item">

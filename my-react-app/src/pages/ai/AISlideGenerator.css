@@ -192,6 +192,13 @@
   margin-top: 0.85rem;
 }
 
+.ai-slide-format-hint {
+  margin-top: 0.35rem;
+  color: #64748b;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
 .ai-slide-fieldset {
   border: 0;
   margin: 0;
@@ -458,20 +465,34 @@
   gap: 0.65rem;
 }
 
-.ai-slide-preview-canvas h3 {
+.ai-slide-preview-heading {
   margin: 0;
   color: #0f172a;
   font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.35;
+  white-space: pre-wrap;
 }
 
-.ai-slide-preview-canvas p {
+.ai-slide-preview-content {
   margin: 0;
   line-height: 1.55;
   color: #334155;
   white-space: pre-wrap;
 }
 
-.ai-slide-preview-canvas span {
+.ai-slide-preview-heading .katex,
+.ai-slide-preview-content .katex {
+  font-size: 1em;
+}
+
+.ai-slide-math-block {
+  display: block;
+  margin: 0.45rem 0;
+  overflow-x: auto;
+}
+
+.ai-slide-preview-tag {
   align-self: flex-start;
   border-radius: 999px;
   background: #e0e7ff;
