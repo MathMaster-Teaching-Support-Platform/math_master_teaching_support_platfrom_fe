@@ -11,7 +11,7 @@ interface MathTextProps {
  * Supports inline math: $formula$ or \(formula\)
  * Supports block math: $$formula$$ or \[formula\]
  */
-export default function MathText({ text, block = false }: MathTextProps) {
+function MathText({ text, block = false }: MathTextProps) {
   if (!text) return null;
 
   // If block mode, render as block math
@@ -71,3 +71,5 @@ export default function MathText({ text, block = false }: MathTextProps) {
   );
 }
 
+export { MathText };
+export default MathText;

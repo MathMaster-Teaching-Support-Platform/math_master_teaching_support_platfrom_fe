@@ -67,6 +67,8 @@ export interface LessonSlideTemplate {
   updatedAt?: string;
 }
 
+export type LessonSlideOutputFormat = 'PLAIN_TEXT' | 'LATEX' | 'HYBRID';
+
 export interface GenerateSlideContentRequest {
   schoolGradeId: string;
   subjectId: string;
@@ -74,6 +76,7 @@ export interface GenerateSlideContentRequest {
   lessonId: string;
   slideCount: number;
   additionalPrompt?: string;
+  outputFormat?: LessonSlideOutputFormat;
 }
 
 export interface GenerateSlideContentResult {
@@ -82,6 +85,7 @@ export interface GenerateSlideContentResult {
   lessonId: string;
   lessonTitle: string;
   slideCount: number;
+  outputFormat?: LessonSlideOutputFormat;
   slides: LessonSlideItem[];
 }
 
