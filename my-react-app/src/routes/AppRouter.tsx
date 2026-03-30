@@ -32,6 +32,7 @@ import RoadmapCatalogPage from '../pages/roadmap/RoadmapCatalogPage';
 import RoadmapDashboardPage from '../pages/roadmap/RoadmapDashboardPage';
 import RoadmapDetailPage from '../pages/roadmap/RoadmapDetailPage';
 import StudentRoadmap from '../pages/roadmap/StudentRoadmap';
+import TakeRoadmapEntryTest from '../pages/roadmap/TakeRoadmapEntryTest';
 import SearchResults from '../pages/search/SearchResults';
 import ProfileSettings from '../pages/settings/ProfileSettings';
 import TeacherStudents from '../pages/students/TeacherStudents';
@@ -131,6 +132,10 @@ const router = createBrowserRouter([
   {
     path: '/roadmaps/:roadmapId',
     element: <RoadmapDetailPage />,
+  },
+  {
+    path: '/roadmaps/:roadmapId/entry-test/take',
+    element: <TakeRoadmapEntryTest />,
   },
   // Shared Routes
   {

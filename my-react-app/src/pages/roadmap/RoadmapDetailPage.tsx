@@ -1,19 +1,18 @@
 import { motion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockStudent } from '../../data/mockData';
+import { useEnroll, useMyEnrollments } from '../../hooks/useCourses';
 import {
-  useFinishRoadmapEntryTest,
+  useRoadmapEntryTestActiveAttempt,
   useMyRoadmapFeedback,
   useRoadmapEntryTest,
   useRoadmapDetail,
-  useStartRoadmapEntryTest,
   useSubmitRoadmapFeedback,
-  useSubmitRoadmapEntryTest,
   useStudentTopicMaterials,
 } from '../../hooks/useRoadmaps';
-import type { RoadmapEntryTestResultResponse, TopicMaterialResourceType } from '../../types';
+import type { RoadmapTopic, TopicMaterialResourceType } from '../../types';
 import './roadmap-detail-page.css';
 
 /* ─────────────────────────────────────────────────────
@@ -64,26 +63,147 @@ function diffLabel(d: string) {
   return m[d] ?? d;
 }
 
+function getEntryAssessmentStatusLabel(status?: string) {
+  switch (status) {
+    case 'IN_PROGRESS':
+      return 'Đang làm';
+    case 'COMPLETED':
+      return 'Đã hoàn thành';
+    default:
+      return 'Sẵn sàng';
+  }
+}
+
+function getEntryActionLabel(status?: string) {
+  if (status === 'IN_PROGRESS') return 'Tiếp tục bài làm';
+  if (status === 'COMPLETED') return 'Đã hoàn thành';
+  return 'Bắt đầu bài test';
+}
+
+function getFeedbackErrorText(message: string) {
+  if (message.startsWith('400')) {
+    return 'Validation failed. Please choose a rating from 1 to 5 and keep content within 2000 characters.';
+  }
+  if (message.startsWith('401')) {
+    return 'Please sign in to submit feedback.';
+  }
+  if (message.startsWith('403')) {
+    return 'You do not have permission to submit feedback for this roadmap.';
+  }
+  if (message.startsWith('404')) {
+    return 'Roadmap not found.';
+  }
+  return message.replace(/^\d{3}\s+[^:]+:\s*/, '');
+}
+
+function getFeedbackSubmitLabel(isPending: boolean, hasFeedback: boolean) {
+  if (isPending) return 'Saving...';
+  if (hasFeedback) return 'Update feedback';
+  return 'Submit feedback';
+}
+
+function shouldNavigateToCourseOnEnrollError(message: string) {
+  const normalized = message.toLowerCase();
+  return (
+    normalized.includes('already') ||
+    normalized.includes('already enrolled') ||
+    normalized.includes('đã đăng ký')
+  );
+}
+
+function getTopicCourseButtonLabel(title: string, isPending: boolean, isEnrolled: boolean) {
+  const prefix = isEnrolled ? 'Mở' : 'ĐK + Mở';
+  if (isPending) return 'Đang xử lý...';
+  return `${prefix}: ${title}`;
+}
+
+function getTopicCourses(topic: RoadmapTopic): Array<{ id: string; title: string }> {
+  if (Array.isArray(topic.courses) && topic.courses.length > 0) {
+    return topic.courses;
+  }
+
+  if (Array.isArray(topic.courseIds) && topic.courseIds.length > 0) {
+    return topic.courseIds.map((id) => ({ id, title: id }));
+  }
+
+  return [];
+}
+
+function resolveEntryTestState(params: {
+  entryStatus?: 'UPCOMING' | 'IN_PROGRESS' | 'COMPLETED';
+  entryActiveAttemptId?: string | null;
+  activeAttemptId?: string | null;
+}) {
+  const hasActiveAttempt = Boolean(params.activeAttemptId || params.entryActiveAttemptId);
+  const resolvedEntryStatus =
+    params.entryStatus === 'IN_PROGRESS' && !hasActiveAttempt ? 'UPCOMING' : params.entryStatus;
+  const hasInProgressAttempt = resolvedEntryStatus === 'IN_PROGRESS' && hasActiveAttempt;
+
+  return {
+    resolvedEntryStatus,
+    hasInProgressAttempt,
+  };
+}
+
+function openLinkedCourseWithAutoEnroll(params: {
+  courseId: string | null | undefined;
+  isEnrolled: boolean;
+  navigate: (path: string) => void | Promise<void>;
+  setCourseActionMessage: (value: { type: 'success' | 'error'; text: string } | null) => void;
+  enroll: (
+    courseId: string,
+    options: {
+      onSuccess: () => void;
+      onError: (error: unknown) => void;
+    }
+  ) => void;
+}) {
+  if (!params.courseId) {
+    params.setCourseActionMessage({
+      type: 'error',
+      text: 'Chủ đề này chưa liên kết khóa học.',
+    });
+    return;
+  }
+
+  params.setCourseActionMessage(null);
+  if (params.isEnrolled) {
+    params.navigate(`/course/${params.courseId}`);
+    return;
+  }
+
+  params.enroll(params.courseId, {
+    onSuccess: () => {
+      params.setCourseActionMessage({
+        type: 'success',
+        text: 'Đăng ký khóa học thành công. Đang mở khóa học...',
+      });
+      params.navigate(`/course/${params.courseId}`);
+    },
+    onError: (error) => {
+      const message = error instanceof Error ? error.message : 'Không thể đăng ký khóa học';
+      if (shouldNavigateToCourseOnEnrollError(message)) {
+        params.navigate(`/course/${params.courseId}`);
+        return;
+      }
+      params.setCourseActionMessage({ type: 'error', text: message });
+    },
+  });
+}
+
 /* ─────────────────────────────────────────────────────
    Main component
 ───────────────────────────────────────────────────── */
 export default function RoadmapDetailPage() {
   const { roadmapId = '' } = useParams();
+  const navigate = useNavigate();
   const { data, isLoading, error } = useRoadmapDetail(roadmapId);
   const entryTestQuery = useRoadmapEntryTest(roadmapId);
-  const startEntryTest = useStartRoadmapEntryTest();
-  const finishEntryTest = useFinishRoadmapEntryTest();
-  const legacySubmitEntryTest = useSubmitRoadmapEntryTest();
   const myFeedbackQuery = useMyRoadmapFeedback(roadmapId);
   const submitFeedback = useSubmitRoadmapFeedback();
+  const myEnrollmentsQuery = useMyEnrollments();
+  const enrollMutation = useEnroll();
 
-  const [attemptId, setAttemptId] = useState('');
-  const [submissionId, setSubmissionId] = useState('');
-  const [entryResult, setEntryResult] = useState<RoadmapEntryTestResultResponse | null>(null);
-  const [entryTestMessage, setEntryTestMessage] = useState<{
-    type: 'success' | 'error';
-    text: string;
-  } | null>(null);
   const [selectedTopicId, setSelectedTopicId] = useState('');
   const [resourceType, setResourceType] = useState<TopicMaterialResourceType>('LESSON');
   const [finishedTopicIds, setFinishedTopicIds] = useState<string[]>([]);
@@ -91,6 +211,10 @@ export default function RoadmapDetailPage() {
   const [feedbackRating, setFeedbackRating] = useState(0);
   const [feedbackContent, setFeedbackContent] = useState('');
   const [feedbackMessage, setFeedbackMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [courseActionMessage, setCourseActionMessage] = useState<{
+    type: 'success' | 'error';
+    text: string;
+  } | null>(null);
 
   const roadPathRef = useRef<SVGPathElement>(null);
   const currentNodeRef = useRef<HTMLDivElement>(null);
@@ -98,6 +222,9 @@ export default function RoadmapDetailPage() {
 
   const roadmap = data?.result;
   const entryTest = entryTestQuery.data?.result;
+  const entryStatus = entryTest?.studentStatus;
+  const activeAttemptQuery = useRoadmapEntryTestActiveAttempt(roadmapId);
+  const activeAttempt = activeAttemptQuery.data?.result;
   const myFeedback = myFeedbackQuery.data?.result ?? null;
   const materialsQuery = useStudentTopicMaterials(selectedTopicId, resourceType);
   const materials = Array.isArray(materialsQuery.data?.result) ? materialsQuery.data?.result : [];
@@ -161,12 +288,7 @@ export default function RoadmapDetailPage() {
 
   const feedbackContentLength = feedbackContent.length;
   const feedbackIsValid = feedbackRating >= 1 && feedbackRating <= 5 && feedbackContentLength <= 2000;
-  let feedbackSubmitLabel = 'Submit feedback';
-  if (submitFeedback.isPending) {
-    feedbackSubmitLabel = 'Saving...';
-  } else if (myFeedback) {
-    feedbackSubmitLabel = 'Update feedback';
-  }
+  const feedbackSubmitLabel = getFeedbackSubmitLabel(submitFeedback.isPending, Boolean(myFeedback));
 
   const submitRoadmapFeedback = () => {
     if (!roadmapId || !feedbackIsValid) return;
@@ -190,93 +312,38 @@ export default function RoadmapDetailPage() {
         },
         onError: (mutationError) => {
           const message = mutationError instanceof Error ? mutationError.message : 'Failed to submit feedback';
-          if (message.startsWith('400')) {
-            setFeedbackMessage({
-              type: 'error',
-              text: 'Validation failed. Please choose a rating from 1 to 5 and keep content within 2000 characters.',
-            });
-            return;
-          }
-          if (message.startsWith('401')) {
-            setFeedbackMessage({ type: 'error', text: 'Please sign in to submit feedback.' });
-            return;
-          }
-          if (message.startsWith('403')) {
-            setFeedbackMessage({ type: 'error', text: 'You do not have permission to submit feedback for this roadmap.' });
-            return;
-          }
-          if (message.startsWith('404')) {
-            setFeedbackMessage({ type: 'error', text: 'Roadmap not found.' });
-            return;
-          }
-          setFeedbackMessage({ type: 'error', text: message.replace(/^\d{3}\s+[^:]+:\s*/, '') });
+          setFeedbackMessage({ type: 'error', text: getFeedbackErrorText(message) });
         },
       }
     );
   };
 
-  const startRoadmapEntryTest = () => {
+  const canOpenEntryAssessment = Boolean(entryTest?.assessmentId);
+  const { resolvedEntryStatus, hasInProgressAttempt } = resolveEntryTestState({
+    entryStatus,
+    entryActiveAttemptId: entryTest?.activeAttemptId,
+    activeAttemptId: activeAttempt?.attemptId,
+  });
+  const canStartEntryAssessment = entryTest?.canStart ?? false;
+  const activeCourseIdSet = new Set(
+    (myEnrollmentsQuery.data?.result ?? [])
+      .filter((enrollment) => enrollment.status === 'ACTIVE')
+      .map((enrollment) => enrollment.courseId)
+  );
+
+  const openEntryAssessment = () => {
     if (!roadmapId) return;
-
-    setEntryTestMessage(null);
-    startEntryTest.mutate(
-      { roadmapId },
-      {
-        onSuccess: (response) => {
-          setAttemptId(response.result.attemptId);
-          setEntryResult(null);
-          setEntryTestMessage({
-            type: 'success',
-            text: `Đã bắt đầu bài test. Attempt ID: ${response.result.attemptId}`,
-          });
-        },
-        onError: (mutationError) => {
-          const message = mutationError instanceof Error ? mutationError.message : 'Không thể bắt đầu bài test';
-          setEntryTestMessage({ type: 'error', text: message });
-        },
-      }
-    );
+    navigate(`/roadmaps/${roadmapId}/entry-test/take`);
   };
 
-  const finishRoadmapEntryTest = () => {
-    if (!roadmapId || !attemptId.trim()) return;
-
-    setEntryTestMessage(null);
-    finishEntryTest.mutate(
-      { roadmapId, attemptId: attemptId.trim() },
-      {
-        onSuccess: (response) => {
-          setEntryResult(response.result);
-          setEntryTestMessage({ type: 'success', text: 'Nộp bài thành công.' });
-        },
-        onError: (mutationError) => {
-          const message = mutationError instanceof Error ? mutationError.message : 'Không thể nộp bài';
-          setEntryTestMessage({ type: 'error', text: message });
-        },
-      }
-    );
-  };
-
-  const submitEntryTestLegacy = () => {
-    if (!roadmapId || !submissionId.trim()) return;
-
-    setEntryTestMessage(null);
-    legacySubmitEntryTest.mutate(
-      { roadmapId, payload: { submissionId: submissionId.trim() } },
-      {
-        onSuccess: (response) => {
-          setEntryResult(response.result);
-          setEntryTestMessage({
-            type: 'success',
-            text: 'Nộp bài thành công qua endpoint tương thích cũ.',
-          });
-        },
-        onError: (mutationError) => {
-          const message = mutationError instanceof Error ? mutationError.message : 'Không thể nộp bài';
-          setEntryTestMessage({ type: 'error', text: message });
-        },
-      }
-    );
+  const openTopicCourse = (courseId?: string | null) => {
+    openLinkedCourseWithAutoEnroll({
+      courseId,
+      isEnrolled: Boolean(courseId && activeCourseIdSet.has(courseId)),
+      navigate,
+      setCourseActionMessage,
+      enroll: enrollMutation.mutate,
+    });
   };
 
   return (
@@ -320,6 +387,12 @@ export default function RoadmapDetailPage() {
                     />
                   </div>
                 </div>
+                {courseActionMessage && (
+                  <p className="rdp__mat-state">
+                    {courseActionMessage.type === 'success' ? '✓ ' : '⚠ '}
+                    {courseActionMessage.text}
+                  </p>
+                )}
                 {currentTopicIdx >= 0 && !isFinalFinished && (
                   <button
                     type="button"
@@ -342,13 +415,23 @@ export default function RoadmapDetailPage() {
             <div className="rdp__entry">
               <div className="rdp__entry-left">
                 <h3 className="rdp__entry-title">Bài kiểm tra đầu vào</h3>
-                <p className="rdp__entry-desc">Bắt đầu bài test để nhận gợi ý chủ đề phù hợp.</p>
-                {entryTestQuery.isLoading && <p className="rdp__mat-state">Đang tải thông tin bài test...</p>}
+                <p className="rdp__entry-desc">Luồng độc lập theo roadmap entry-test API, hỗ trợ resume khi thoát giữa chừng.</p>
+                {(entryTestQuery.isLoading || activeAttemptQuery.isLoading) && (
+                  <p className="rdp__mat-state">Đang tải thông tin bài test...</p>
+                )}
                 {entryTest && (
                   <p className="rdp__mat-state">
                     {entryTest.title} • {entryTest.totalQuestions} câu •{' '}
                     {entryTest.timeLimitMinutes ? `${entryTest.timeLimitMinutes} phút` : 'Không giới hạn thời gian'}
                   </p>
+                )}
+                {resolvedEntryStatus && (
+                  <p className="rdp__mat-state">
+                    Trạng thái hiện tại: {getEntryAssessmentStatusLabel(resolvedEntryStatus)}
+                  </p>
+                )}
+                {activeAttempt?.attemptId && (
+                  <p className="rdp__mat-state">Attempt đang làm: {activeAttempt.attemptId}</p>
                 )}
                 {entryTest && !entryTest.canStart && entryTest.cannotStartReason && (
                   <p className="rdp__mat-state">{entryTest.cannotStartReason}</p>
@@ -358,52 +441,15 @@ export default function RoadmapDetailPage() {
                 <button
                   type="button"
                   className="rdp__entry-btn"
-                  disabled={!roadmapId || !entryTest?.canStart || startEntryTest.isPending}
-                  onClick={startRoadmapEntryTest}
+                  disabled={!canOpenEntryAssessment || (!hasInProgressAttempt && !canStartEntryAssessment)}
+                  onClick={openEntryAssessment}
                 >
-                  {startEntryTest.isPending ? 'Đang bắt đầu…' : 'Start Entry Test'}
-                </button>
-
-                <input
-                  className="rdp__entry-input"
-                  placeholder="Attempt ID"
-                  value={attemptId}
-                  onChange={(e) => setAttemptId(e.target.value)}
-                />
-                <button
-                  type="button"
-                  className="rdp__entry-btn"
-                  disabled={!attemptId.trim() || !roadmapId || finishEntryTest.isPending}
-                  onClick={finishRoadmapEntryTest}
-                >
-                  {finishEntryTest.isPending ? 'Đang nộp…' : 'Finish Attempt'}
-                </button>
-
-                <input
-                  className="rdp__entry-input"
-                  placeholder="Fallback Submission ID"
-                  value={submissionId}
-                  onChange={(e) => setSubmissionId(e.target.value)}
-                />
-                <button
-                  type="button"
-                  className="rdp__entry-btn"
-                  disabled={!submissionId.trim() || !roadmapId || legacySubmitEntryTest.isPending}
-                  onClick={submitEntryTestLegacy}
-                >
-                  {legacySubmitEntryTest.isPending ? 'Đang nộp fallback…' : 'Fallback Submit'}
+                  {getEntryActionLabel(resolvedEntryStatus)}
                 </button>
               </div>
 
-              {entryTestMessage && (
-                <p className="rdp__entry-result">{entryTestMessage.type === 'success' ? '✓ ' : '⚠ '} {entryTestMessage.text}</p>
-              )}
-
-              {entryResult && (
-                <p className="rdp__entry-result">
-                  ✓ Gợi ý chủ đề #{entryResult.suggestedTopicId} • Điểm: {entryResult.scoreOnTen.toFixed(2)}/10 •{' '}
-                  {entryResult.evaluatedQuestions} câu hỏi được đánh giá
-                </p>
+              {!canOpenEntryAssessment && !entryTestQuery.isLoading && (
+                <p className="rdp__entry-result">⚠ Chưa có assessmentId cho bài test đầu vào. Cần BE trả về assessmentId để khởi tạo luồng làm bài.</p>
               )}
             </div>
 
@@ -512,6 +558,8 @@ export default function RoadmapDetailPage() {
                       const pos = nodePos(index);
                       const isDone = finishedTopicIds.includes(topic.id);
                       const isCurrent = index === currentTopicIdx;
+                      const topicCourses = getTopicCourses(topic);
+                      const hasCourseLink = topicCourses.length > 0;
                       // A topic is only visually locked when it's neither done nor the current one
                       const isLocked = topic.status === 'LOCKED' && !isDone && !isCurrent;
 
@@ -549,6 +597,7 @@ export default function RoadmapDetailPage() {
                             </div>
                             <div className="rdp__node-meta">
                               {typeof topic.mark === 'number' && <span>🎯 {topic.mark.toFixed(1)}</span>}
+                              {topicCourses.length > 0 && <span>📘 {topicCourses.length} khóa học</span>}
                               {isCurrent && <span className="rdp__node-cur-tag">Đang học</span>}
                             </div>
                             <div className="rdp__node-actions">
@@ -559,6 +608,24 @@ export default function RoadmapDetailPage() {
                               >
                                 Tài liệu
                               </button>
+                              {hasCourseLink && (
+                                topicCourses.map((course) => (
+                                  <button
+                                    key={course.id}
+                                    type="button"
+                                    className="rdp__node-btn rdp__node-btn--mat"
+                                    onClick={() => openTopicCourse(course.id)}
+                                    disabled={enrollMutation.isPending}
+                                    title={course.title}
+                                  >
+                                    {getTopicCourseButtonLabel(
+                                      course.title,
+                                      enrollMutation.isPending,
+                                      activeCourseIdSet.has(course.id)
+                                    )}
+                                  </button>
+                                ))
+                              )}
                               {!isDone && !isLocked && (
                                 <button
                                   type="button"

@@ -13,10 +13,12 @@ import {
   useUpdateRoadmapTopic,
 } from '../../hooks/useRoadmaps';
 import { AssessmentService } from '../../services/api/assessment.service';
+import { CourseService } from '../../services/api/course.service';
 import { RoadmapService } from '../../services/api/roadmap.service';
 import type {
   AssessmentSearchApiResponse,
   AssessmentSearchItem,
+  CourseResponse,
   RoadmapResourceOption,
   TopicStatus,
   UpdateRoadmapTopicRequest,
@@ -26,7 +28,13 @@ import './admin-roadmap-topics-page.css';
 
 type TopicDifficulty = 'EASY' | 'MEDIUM' | 'HARD';
 type TopicFieldKey = keyof UpdateRoadmapTopicRequest;
-type MaterialTab = 'LESSON' | 'TEMPLATE_SLIDE' | 'ASSESSMENT' | 'LESSON_PLAN' | 'MINDMAP';
+type MaterialTab =
+  | 'LESSON'
+  | 'TEMPLATE_SLIDE'
+  | 'ASSESSMENT'
+  | 'LESSON_PLAN'
+  | 'MINDMAP'
+  | 'COURSE';
 
 interface PersistedTopicBaseline {
   title: string;
@@ -35,6 +43,7 @@ interface PersistedTopicBaseline {
   sequenceOrder: number;
   mark: number;
   topicAssessmentId: string;
+  courseIds: string[];
   status: TopicStatus;
   lessonIds: string[];
   slideLessonIds: string[];
@@ -57,6 +66,7 @@ interface TopicNodeDraft {
   sequenceOrder: number;
   mark: number;
   topicAssessmentId: string;
+  courseIds: string[];
   status: TopicStatus;
   selectedChapterId: string;
   lessonKeyword: string;
@@ -99,6 +109,7 @@ const MATERIAL_TAB_LABELS: Record<MaterialTab, string> = {
   ASSESSMENT: 'Bài kiểm tra',
   LESSON_PLAN: 'Giáo án',
   MINDMAP: 'Sơ đồ tư duy',
+  COURSE: 'Khóa học',
 };
 
 const extractHttpStatus = (error: unknown) => {
@@ -163,6 +174,9 @@ const buildUpdatePayload = (node: TopicNodeDraft): UpdateRoadmapTopicRequest => 
     node.baseline.topicAssessmentId,
     dirty
   );
+  if (dirty.has('courseIds') && !areSameIds(node.courseIds, node.baseline.courseIds)) {
+    payload.courseIds = node.courseIds;
+  }
   setIfChanged(payload, 'status', node.status, node.baseline.status, dirty);
 
   if (dirty.has('lessonIds') && !areSameIds(node.lessonIds, node.baseline.lessonIds)) {
@@ -255,6 +269,7 @@ export default function AdminRoadmapTopicsPage() {
         const slideLessonIds = topic.slideLessonIds ?? [];
         const assessmentIds = topic.assessmentIds ?? [];
         const mindmapIds = topic.mindmapIds ?? [];
+        const courseIds = topic.courseIds ?? topic.courses?.map((course) => course.id) ?? [];
 
         return {
           clientId: `persisted-${topic.id}`,
@@ -265,6 +280,7 @@ export default function AdminRoadmapTopicsPage() {
           sequenceOrder: topic.sequenceOrder,
           mark: topic.mark ?? 0,
           topicAssessmentId: topic.topicAssessmentId ?? '',
+          courseIds,
           status: topic.status,
           selectedChapterId: '',
           lessonKeyword: '',
@@ -284,6 +300,7 @@ export default function AdminRoadmapTopicsPage() {
             sequenceOrder: topic.sequenceOrder,
             mark: topic.mark ?? 0,
             topicAssessmentId: topic.topicAssessmentId ?? '',
+            courseIds,
             status: topic.status,
             lessonIds,
             slideLessonIds,
@@ -412,6 +429,17 @@ export default function AdminRoadmapTopicsPage() {
     enabled: isTopicModalOpen && activeMaterialTab === 'ASSESSMENT',
   });
 
+  const courseQuery = useQuery({
+    queryKey: ['courses', 'public', subjectId, debouncedResourceKeyword],
+    queryFn: () =>
+      CourseService.getPublicCourses({
+        subjectId: subjectId || undefined,
+        keyword: debouncedResourceKeyword || undefined,
+        size: 30,
+      }),
+    enabled: isTopicModalOpen && activeMaterialTab === 'COURSE',
+  });
+
   const entryAssessmentSearchQuery = useQuery({
     queryKey: ['assessments', 'search', debouncedEntryAssessmentQuery, subjectId],
     queryFn: () =>
@@ -444,6 +472,7 @@ export default function AdminRoadmapTopicsPage() {
       sequenceOrder: nodes.length + 1,
       mark: 0,
       topicAssessmentId: '',
+      courseIds: [],
       status: 'NOT_STARTED',
       selectedChapterId: '',
       lessonKeyword: '',
@@ -494,7 +523,13 @@ export default function AdminRoadmapTopicsPage() {
   };
 
   const toggleActiveNodeIdList = (
-    field: 'lessonIds' | 'slideLessonIds' | 'assessmentIds' | 'lessonPlanIds' | 'mindmapIds',
+    field:
+      | 'lessonIds'
+      | 'slideLessonIds'
+      | 'assessmentIds'
+      | 'lessonPlanIds'
+      | 'mindmapIds'
+      | 'courseIds',
     id: string,
     checked: boolean
   ) => {
@@ -588,6 +623,7 @@ export default function AdminRoadmapTopicsPage() {
             lessonPlanIds: activeNode.lessonPlanIds,
             mindmapIds: activeNode.mindmapIds,
             topicAssessmentId: activeNode.topicAssessmentId || undefined,
+            courseIds: activeNode.courseIds,
           },
         },
         {
@@ -685,6 +721,7 @@ export default function AdminRoadmapTopicsPage() {
   const mindmapOptions: RoadmapResourceOption[] = mindmapQuery.data?.result ?? [];
   const lessonPlanOptions: RoadmapResourceOption[] = lessonPlanQuery.data?.result ?? [];
   const assessmentOptions: RoadmapResourceOption[] = assessmentQuery.data?.result ?? [];
+  const courseOptions: CourseResponse[] = courseQuery.data?.result?.content ?? [];
   const searchedAssessments = normalizeAssessmentSearchResults(entryAssessmentSearchQuery.data);
   const roadmapErrorStatus = extractHttpStatus(roadmapDetail.error);
   let submitButtonLabel = 'Lưu thay đổi';
@@ -1012,7 +1049,7 @@ export default function AdminRoadmapTopicsPage() {
 
                 <div className="admin-roadmap-topics-page__material-tabs">
                   {(
-                    ['LESSON', 'TEMPLATE_SLIDE', 'ASSESSMENT', 'LESSON_PLAN', 'MINDMAP'] as MaterialTab[]
+                    ['LESSON', 'TEMPLATE_SLIDE', 'ASSESSMENT', 'LESSON_PLAN', 'MINDMAP', 'COURSE'] as MaterialTab[]
                   ).map((tab) => (
                     <button
                       key={tab}
@@ -1077,7 +1114,7 @@ export default function AdminRoadmapTopicsPage() {
                       />
                     </label>
 
-                    {activeNode.lessonIds.length > 0 && (
+                    {activeMaterialTab !== 'COURSE' && activeNode.lessonIds.length > 0 && (
                       <label>
                         <span>Bối cảnh bài học</span>
                         <select
@@ -1259,6 +1296,43 @@ export default function AdminRoadmapTopicsPage() {
                     )}
                     <p className="admin-roadmap-topics-page__lesson-count">
                       Đã chọn bài kiểm tra: {activeNode.assessmentIds.length}
+                    </p>
+                  </div>
+                )}
+
+                {activeMaterialTab === 'COURSE' && (
+                  <div className="admin-roadmap-topics-page__lesson-picker">
+                    <p className="admin-roadmap-page__state">
+                      Danh sách khóa học theo môn học của roadmap và từ khóa tìm kiếm.
+                    </p>
+                    {courseQuery.isLoading && (
+                      <p className="admin-roadmap-page__state">Đang tải khóa học...</p>
+                    )}
+                    {courseQuery.error && (
+                      <p className="admin-roadmap-page__state">Không thể tải khóa học.</p>
+                    )}
+                    {!courseQuery.isLoading && !courseQuery.error && (
+                      <div className="admin-roadmap-topics-page__lesson-list">
+                        {courseOptions.map((course) => (
+                          <label key={course.id} className="admin-roadmap-topics-page__lesson-item">
+                            <input
+                              type="checkbox"
+                              checked={activeNode.courseIds.includes(course.id)}
+                              onChange={(event) =>
+                                toggleActiveNodeIdList('courseIds', course.id, event.target.checked)
+                              }
+                              disabled={isSubmitting}
+                            />
+                            <span>{course.title}</span>
+                          </label>
+                        ))}
+                        {courseOptions.length === 0 && (
+                          <p className="admin-roadmap-page__state">Không tìm thấy khóa học.</p>
+                        )}
+                      </div>
+                    )}
+                    <p className="admin-roadmap-topics-page__lesson-count">
+                      Đã chọn khóa học: {activeNode.courseIds.length}
                     </p>
                   </div>
                 )}

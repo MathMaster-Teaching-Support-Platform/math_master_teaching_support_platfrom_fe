@@ -112,6 +112,16 @@ export const API_ENDPOINTS = {
   ROADMAP_ENTRY_TEST: (roadmapId: string) => `/student/roadmaps/${roadmapId}/entry-test`,
   ROADMAP_ENTRY_TEST_START: (roadmapId: string) =>
     `/student/roadmaps/${roadmapId}/entry-test/start`,
+  ROADMAP_ENTRY_TEST_ACTIVE_ATTEMPT: (roadmapId: string) =>
+    `/student/roadmaps/${roadmapId}/entry-test/active-attempt`,
+  ROADMAP_ENTRY_TEST_ANSWER: (roadmapId: string, attemptId: string) =>
+    `/student/roadmaps/${roadmapId}/entry-test/attempts/${attemptId}/answers`,
+  ROADMAP_ENTRY_TEST_FLAG: (roadmapId: string, attemptId: string) =>
+    `/student/roadmaps/${roadmapId}/entry-test/attempts/${attemptId}/flags`,
+  ROADMAP_ENTRY_TEST_SNAPSHOT: (roadmapId: string, attemptId: string) =>
+    `/student/roadmaps/${roadmapId}/entry-test/attempts/${attemptId}/snapshot`,
+  ROADMAP_ENTRY_TEST_SAVE_EXIT: (roadmapId: string, attemptId: string) =>
+    `/student/roadmaps/${roadmapId}/entry-test/attempts/${attemptId}/save-exit`,
   ROADMAP_ENTRY_TEST_FINISH: (roadmapId: string, attemptId: string) =>
     `/student/roadmaps/${roadmapId}/entry-test/attempts/${attemptId}/finish`,
   ROADMAP_ENTRY_TEST_SUBMIT: (roadmapId: string) =>

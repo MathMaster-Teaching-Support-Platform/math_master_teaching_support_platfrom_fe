@@ -2,6 +2,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { RoadmapService } from '../services/api/roadmap.service';
 import type {
   CreateAdminRoadmapRequest,
+  RoadmapEntryTestAnswerRequest,
+  RoadmapEntryTestFlagRequest,
   CreateRoadmapEntryTestRequest,
   CreateRoadmapTopicRequest,
   SubmitRoadmapFeedbackRequest,
@@ -26,6 +28,10 @@ export const roadmapKeys = {
   adminFeedback: (roadmapId: string, page = 0, size = 20) =>
     [...roadmapKeys.all, 'feedback', 'admin', roadmapId, page, size] as const,
   entryTest: (roadmapId: string) => [...roadmapKeys.all, 'entry-test', roadmapId] as const,
+  entryTestActiveAttempt: (roadmapId: string) =>
+    [...roadmapKeys.all, 'entry-test', roadmapId, 'active-attempt'] as const,
+  entryTestSnapshot: (roadmapId: string, attemptId: string) =>
+    [...roadmapKeys.all, 'entry-test', roadmapId, 'snapshot', attemptId] as const,
 };
 
 export function useRoadmaps(name = '', page = 0, size = 20) {
@@ -204,7 +210,65 @@ export function useStartRoadmapEntryTest() {
       RoadmapService.startRoadmapEntryTest(roadmapId),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: roadmapKeys.entryTest(variables.roadmapId) });
+      queryClient.invalidateQueries({ queryKey: roadmapKeys.entryTestActiveAttempt(variables.roadmapId) });
       queryClient.invalidateQueries({ queryKey: roadmapKeys.detail(variables.roadmapId) });
+    },
+  });
+}
+
+export function useRoadmapEntryTestActiveAttempt(roadmapId: string) {
+  return useQuery({
+    queryKey: roadmapKeys.entryTestActiveAttempt(roadmapId),
+    queryFn: () => RoadmapService.getRoadmapEntryTestActiveAttempt(roadmapId),
+    enabled: !!roadmapId,
+  });
+}
+
+export function useRoadmapEntryTestSnapshot(roadmapId: string, attemptId: string) {
+  return useQuery({
+    queryKey: roadmapKeys.entryTestSnapshot(roadmapId, attemptId),
+    queryFn: () => RoadmapService.getRoadmapEntryTestSnapshot(roadmapId, attemptId),
+    enabled: !!roadmapId && !!attemptId,
+  });
+}
+
+export function useUpdateRoadmapEntryTestAnswer() {
+  return useMutation({
+    mutationFn: ({
+      roadmapId,
+      attemptId,
+      payload,
+    }: {
+      roadmapId: string;
+      attemptId: string;
+      payload: RoadmapEntryTestAnswerRequest;
+    }) => RoadmapService.updateRoadmapEntryTestAnswer(roadmapId, attemptId, payload),
+  });
+}
+
+export function useUpdateRoadmapEntryTestFlag() {
+  return useMutation({
+    mutationFn: ({
+      roadmapId,
+      attemptId,
+      payload,
+    }: {
+      roadmapId: string;
+      attemptId: string;
+      payload: RoadmapEntryTestFlagRequest;
+    }) => RoadmapService.updateRoadmapEntryTestFlag(roadmapId, attemptId, payload),
+  });
+}
+
+export function useSaveAndExitRoadmapEntryTest() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ roadmapId, attemptId }: { roadmapId: string; attemptId: string }) =>
+      RoadmapService.saveAndExitRoadmapEntryTest(roadmapId, attemptId),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: roadmapKeys.entryTest(variables.roadmapId) });
+      queryClient.invalidateQueries({ queryKey: roadmapKeys.entryTestActiveAttempt(variables.roadmapId) });
     },
   });
 }
@@ -217,6 +281,7 @@ export function useFinishRoadmapEntryTest() {
       RoadmapService.finishRoadmapEntryTest(roadmapId, attemptId),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: roadmapKeys.entryTest(variables.roadmapId) });
+      queryClient.invalidateQueries({ queryKey: roadmapKeys.entryTestActiveAttempt(variables.roadmapId) });
       queryClient.invalidateQueries({ queryKey: roadmapKeys.student(variables.roadmapId) });
       queryClient.invalidateQueries({ queryKey: roadmapKeys.detail(variables.roadmapId) });
     },

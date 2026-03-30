@@ -48,6 +48,11 @@ export interface RoadmapTopic {
   difficulty: QuestionDifficulty;
   sequenceOrder: number;
   mark?: number;
+  courseIds?: string[];
+  courses?: Array<{
+    id: string;
+    title: string;
+  }>;
   lessonIds?: string[];
   slideLessonIds?: string[];
   assessmentIds?: string[];
@@ -127,6 +132,7 @@ export interface CreateRoadmapTopicRequest {
   description?: string;
   sequenceOrder: number;
   mark?: number;
+  courseIds?: string[];
   lessonIds: string[];
   slideLessonIds?: string[];
   assessmentIds?: string[];
@@ -144,6 +150,11 @@ export interface RoadmapTopicResponse {
   difficulty: QuestionDifficulty;
   sequenceOrder: number;
   mark?: number;
+  courseIds?: string[];
+  courses?: Array<{
+    id: string;
+    title: string;
+  }>;
   lessonIds?: string[];
   slideLessonIds?: string[];
   assessmentIds?: string[];
@@ -160,6 +171,7 @@ export interface UpdateRoadmapTopicRequest {
   description?: string;
   sequenceOrder?: number;
   mark?: number;
+  courseIds?: string[];
   lessonIds?: string[];
   slideLessonIds?: string[];
   assessmentIds?: string[];
@@ -193,8 +205,16 @@ export interface StudentRoadmapEntryTestInfo {
   assessmentId: string;
   title: string;
   description?: string;
+  totalPoints?: number;
   timeLimitMinutes?: number;
+  startDate?: string;
+  endDate?: string;
   totalQuestions: number;
+  studentStatus?: 'UPCOMING' | 'IN_PROGRESS' | 'COMPLETED';
+  activeAttemptId?: string | null;
+  attemptNumber?: number;
+  maxAttempts?: number;
+  allowMultipleAttempts?: boolean;
   canStart: boolean;
   cannotStartReason?: string | null;
 }
@@ -202,7 +222,7 @@ export interface StudentRoadmapEntryTestInfo {
 export interface RoadmapEntryTestQuestion {
   questionId: string;
   orderIndex: number;
-  questionType: string;
+  questionType: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER' | 'ESSAY' | 'CODING';
   questionText: string;
   options?: Record<string, string>;
   points: number;
@@ -210,6 +230,7 @@ export interface RoadmapEntryTestQuestion {
 
 export interface RoadmapEntryTestAttemptStartResponse {
   attemptId: string;
+  submissionId?: string;
   assessmentId: string;
   attemptNumber: number;
   startedAt: string;
@@ -220,6 +241,53 @@ export interface RoadmapEntryTestAttemptStartResponse {
   connectionToken?: string;
   channelName?: string;
   questions: RoadmapEntryTestQuestion[];
+}
+
+export interface RoadmapEntryTestAnswerRequest {
+  questionId: string;
+  answerValue: string | Record<string, unknown>;
+  clientTimestamp: string;
+  sequenceNumber: number;
+}
+
+export interface RoadmapEntryTestFlagRequest {
+  questionId: string;
+  flagged: boolean;
+}
+
+export interface RoadmapEntryTestAnswerAckResponse {
+  type: 'ack' | 'flag_ack';
+  questionId: string;
+  serverTimestamp?: string;
+  sequenceNumber?: number;
+  success: boolean;
+  message?: string;
+}
+
+export interface RoadmapEntryTestSnapshotProgress {
+  answeredCount: number;
+  totalQuestions: number;
+  completionPercentage: number;
+}
+
+export interface RoadmapEntryTestSnapshotResponse {
+  attemptId: string;
+  answers: Record<string, string | Record<string, unknown>>;
+  flags: Record<string, boolean>;
+  startedAt?: string;
+  expiresAt?: string;
+  timeRemainingSeconds?: number;
+  progress: RoadmapEntryTestSnapshotProgress;
+}
+
+export interface RoadmapEntryTestActiveAttemptResponse {
+  assessmentId: string;
+  studentStatus: 'UPCOMING' | 'IN_PROGRESS' | 'COMPLETED';
+  attemptId: string | null;
+  startedAt?: string;
+  expiresAt?: string;
+  timeRemainingSeconds?: number;
+  progress?: RoadmapEntryTestSnapshotProgress;
 }
 
 export interface SubmitRoadmapEntryTestRequest {
