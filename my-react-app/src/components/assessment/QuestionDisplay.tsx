@@ -42,7 +42,7 @@ export default function QuestionDisplay({ question, answer, onAnswerChange }: Qu
                 style={{ marginRight: 12 }}
               />
               <span>
-                <MathText text={value} />
+                <MathText text={String(value)} />
               </span>
             </label>
           ))}

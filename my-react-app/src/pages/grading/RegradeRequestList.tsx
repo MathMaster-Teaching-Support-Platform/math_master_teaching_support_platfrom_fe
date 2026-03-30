@@ -70,7 +70,7 @@ export default function RegradeRequestList() {
 
     respondMutation.mutate(
       {
-        requestId: respondingRequest.requestId,
+        requestId: respondingRequest.id,
         status: responseStatus,
         teacherResponse,
         newPoints: responseStatus === 'APPROVED' ? newPoints : undefined,
@@ -148,7 +148,7 @@ export default function RegradeRequestList() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {filtered.map((request) => (
                 <RegradeRequestCard
-                  key={request.requestId}
+                  key={request.id}
                   request={request}
                   onRespond={() => setRespondingRequest(request)}
                   onViewSubmission={() => navigate(`/teacher/grading/${request.submissionId}`)}

@@ -59,12 +59,8 @@ export default function TakeAssessment() {
   }, [assessmentId]);
 
   // Load draft snapshot if resuming
-  const { data: draftData, isError: draftError } = useDraftSnapshot(attemptData?.attemptId || '', {
+  const { data: draftData } = useDraftSnapshot(attemptData?.attemptId || '', {
     enabled: !!attemptData?.attemptId,
-    onError: (error) => {
-      console.error('Failed to load draft snapshot:', error);
-      // Continue anyway - user can still take the assessment
-    },
   });
 
   useEffect(() => {
@@ -85,7 +81,7 @@ export default function TakeAssessment() {
   }, [draftData, isResumed]);
 
   // Debounced auto-save with pending saves tracking
-  const saveTimeoutRef = useRef<NodeJS.Timeout>();
+  const saveTimeoutRef = useRef<number | undefined>(undefined);
   const handleAnswerChange = useCallback(
     (questionId: string, value: any) => {
       setAnswers((prev) => ({ ...prev, [questionId]: value }));
