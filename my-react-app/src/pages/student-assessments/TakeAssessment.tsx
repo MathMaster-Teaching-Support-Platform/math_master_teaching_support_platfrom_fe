@@ -1,5 +1,5 @@
 import { AlertCircle, ChevronLeft, ChevronRight, Flag, Save } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import QuestionDisplay from '../../components/assessment/QuestionDisplay';
 import QuestionNavigator from '../../components/assessment/QuestionNavigator';
@@ -30,6 +30,8 @@ export default function TakeAssessment() {
   const [isResumed, setIsResumed] = useState(false);
   const sequenceRef = useRef(0);
   const pendingSavesRef = useRef<Promise<any>[]>([]);
+  const hasSubmittedRef = useRef(false);
+  const saveTimeoutRef = useRef<number | undefined>(undefined);
 
   const startMutation = useStartAssessment();
   const updateAnswerMutation = useUpdateAnswer();
@@ -81,7 +83,49 @@ export default function TakeAssessment() {
   }, [draftData, isResumed]);
 
   // Debounced auto-save with pending saves tracking
-  const saveTimeoutRef = useRef<number | undefined>(undefined);
+  const removePendingSave = useCallback((promise: Promise<any>) => {
+    pendingSavesRef.current = pendingSavesRef.current.filter((trackedPromise) => trackedPromise !== promise);
+  }, []);
+
+  const clearDebounceTimer = useCallback(() => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+      setIsSaving(false);
+    }
+  }, []);
+
+  const waitForPendingSaves = useCallback(async (errorMessage: string) => {
+    if (pendingSavesRef.current.length === 0) return;
+
+    try {
+      await Promise.all(pendingSavesRef.current);
+    } catch (error) {
+      console.error(errorMessage, error);
+    }
+  }, []);
+
+  const submitAttempt = useCallback(
+    async (confirmed: boolean) => {
+      if (!attemptData?.attemptId || hasSubmittedRef.current) return;
+      hasSubmittedRef.current = true;
+
+      clearDebounceTimer();
+      await waitForPendingSaves('Some saves failed before submit:');
+
+      try {
+        await submitMutation.mutateAsync({
+          attemptId: attemptData.attemptId,
+          confirmed,
+        });
+        navigate(`/student/assessments/result/${attemptData.submissionId}`);
+      } catch (error) {
+        hasSubmittedRef.current = false;
+        console.error('Failed to submit assessment:', error);
+      }
+    },
+    [attemptData, clearDebounceTimer, waitForPendingSaves, submitMutation, navigate]
+  );
+
   const handleAnswerChange = useCallback(
     (questionId: string, value: any) => {
       setAnswers((prev) => ({ ...prev, [questionId]: value }));
@@ -109,18 +153,18 @@ export default function TakeAssessment() {
           setLastSaved(new Date());
           setIsSaving(false);
           // Remove from pending saves
-          pendingSavesRef.current = pendingSavesRef.current.filter(p => p !== savePromise);
+          removePendingSave(savePromise);
         }).catch((error) => {
           console.error('Failed to save answer:', error);
           setIsSaving(false);
-          pendingSavesRef.current = pendingSavesRef.current.filter(p => p !== savePromise);
+          removePendingSave(savePromise);
         });
 
         // Track pending save
         pendingSavesRef.current.push(savePromise);
       }, 1000);
     },
-    [attemptData, updateAnswerMutation]
+    [attemptData, updateAnswerMutation, removePendingSave]
   );
 
   const handleFlagToggle = useCallback(
@@ -140,43 +184,8 @@ export default function TakeAssessment() {
   );
 
   const handleSubmit = useCallback(async () => {
-    if (!attemptData?.attemptId) return;
-
-    // Clear debounce timer and flush any pending saves
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-      setIsSaving(false);
-    }
-
-    // Wait for all pending saves to complete
-    if (pendingSavesRef.current.length > 0) {
-      console.log('Waiting for', pendingSavesRef.current.length, 'pending saves...');
-      try {
-        await Promise.all(pendingSavesRef.current);
-        console.log('All pending saves completed');
-      } catch (error) {
-        console.error('Some saves failed, but continuing with submit:', error);
-      }
-    }
-
-    // Now submit
-    submitMutation.mutate(
-      {
-        attemptId: attemptData.attemptId,
-        confirmed: true,
-      },
-      {
-        onSuccess: () => {
-          // Navigate to result page with submissionId
-          navigate(`/student/assessments/result/${attemptData.submissionId}`);
-        },
-        onError: (error) => {
-          console.error('Failed to submit assessment:', error);
-          // You can add toast notification here
-        },
-      }
-    );
-  }, [attemptData, submitMutation, navigate]);
+    await submitAttempt(true);
+  }, [submitAttempt]);
 
   const handleSaveAndExit = useCallback(() => {
     if (!attemptData?.attemptId) return;
@@ -188,15 +197,23 @@ export default function TakeAssessment() {
     });
   }, [attemptData, saveAndExitMutation, navigate]);
 
-  const handleAutoSubmit = useCallback(() => {
-    if (!attemptData?.attemptId) return;
-    submitMutation.mutate({
-      attemptId: attemptData.attemptId,
-      confirmed: false,
-    });
-    // Navigate to result page with submissionId
-    navigate(`/student/assessments/result/${attemptData.submissionId}`);
-  }, [attemptData, submitMutation, navigate]);
+  const handleAutoSubmit = useCallback(async () => {
+    await submitAttempt(false);
+  }, [submitAttempt]);
+
+  const countdownExpiresAt = useMemo(() => {
+    if (!attemptData) return null;
+
+    if (typeof attemptData.timeLimitMinutes === 'number' && attemptData.timeLimitMinutes > 0) {
+      const startedAtMs = new Date(attemptData.startedAt).getTime();
+      if (!Number.isNaN(startedAtMs)) {
+        return new Date(startedAtMs + attemptData.timeLimitMinutes * 60 * 1000).toISOString();
+      }
+    }
+
+    // Backward-compatible fallback for existing API responses.
+    return attemptData.expiresAt || null;
+  }, [attemptData]);
 
   const currentQuestion = attemptData?.questions[currentIndex];
   const answeredCount = Object.keys(answers).filter(
@@ -264,8 +281,10 @@ export default function TakeAssessment() {
                   Đã lưu {lastSaved.toLocaleTimeString('vi-VN')}
                 </span>
               )}
-              {attemptData.expiresAt && (
-                <Timer expiresAt={attemptData.expiresAt} onExpire={handleAutoSubmit} />
+              {typeof attemptData.timeLimitMinutes === 'number' &&
+                attemptData.timeLimitMinutes > 0 &&
+                countdownExpiresAt && (
+                <Timer expiresAt={countdownExpiresAt} onExpire={handleAutoSubmit} />
               )}
             </div>
           </header>
