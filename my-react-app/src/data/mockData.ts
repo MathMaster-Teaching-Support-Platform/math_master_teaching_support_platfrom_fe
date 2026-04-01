@@ -2,7 +2,7 @@
 
 export const mockTeacher = {
   id: '1',
-  name: 'Nguyễn Văn An',
+  name: 'Phạm Đăng Khôi',
   email: 'nguyenvanan@email.com',
   role: 'teacher',
   avatar: 'NT',
@@ -16,7 +16,7 @@ export const mockTeacher = {
 
 export const mockStudent = {
   id: '2',
-  name: 'Trần Thị Bình',
+  name: 'Phạm Đăng Khôi',
   email: 'tranthibinh@email.com',
   role: 'student',
   avatar: 'TB',
@@ -53,7 +53,7 @@ export const mockCourses = [
     rating: 4.5,
     lessonsCount: 12,
     completionRate: 75,
-    teacher: 'Nguyễn Văn An',
+    teacher: 'Phạm Đăng Khôi',
   },
   {
     id: '2',
@@ -72,7 +72,7 @@ export const mockCourses = [
     rating: 4.8,
     lessonsCount: 15,
     completionRate: 65,
-    teacher: 'Nguyễn Văn An',
+    teacher: 'Phạm Đăng Khôi',
   },
   {
     id: '3',
@@ -91,7 +91,7 @@ export const mockCourses = [
     rating: 4.7,
     lessonsCount: 20,
     completionRate: 80,
-    teacher: 'Nguyễn Văn An',
+    teacher: 'Phạm Đăng Khôi',
   },
 ];
 

@@ -34,7 +34,7 @@ const MOCK_GRADES: CourseGrade[] = [
   {
     courseId: '1',
     courseName: 'Đại số 10 — Mệnh đề và Tập hợp',
-    teacher: 'Nguyễn Văn An',
+    teacher: 'Phạm Đăng Khôi',
     subjectColor: '#818cf8',
     assignments: [
       {
@@ -52,7 +52,7 @@ const MOCK_GRADES: CourseGrade[] = [
   {
     courseId: '2',
     courseName: 'Hình học 11 — Quan hệ vuông góc',
-    teacher: 'Nguyễn Văn An',
+    teacher: 'Phạm Đăng Khôi',
     subjectColor: '#34d399',
     assignments: [
       {
@@ -70,7 +70,7 @@ const MOCK_GRADES: CourseGrade[] = [
   {
     courseId: '3',
     courseName: 'Giải tích 12 — Hàm số và Đạo hàm',
-    teacher: 'Trần Thị Mai',
+    teacher: 'Phạm Đăng Khôi',
     subjectColor: '#fbbf24',
     assignments: [
       {
@@ -87,7 +87,7 @@ const MOCK_GRADES: CourseGrade[] = [
   },
 ];
 
-const STUDENT = { name: 'Trần Thị Bình', avatar: 'TB', rank: 3, classSize: 30 };
+const STUDENT = { name: 'Phạm Đăng Khôi', avatar: 'TB', rank: 3, classSize: 30 };
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
 function calcAvg(assignments: Assignment[]): number {
