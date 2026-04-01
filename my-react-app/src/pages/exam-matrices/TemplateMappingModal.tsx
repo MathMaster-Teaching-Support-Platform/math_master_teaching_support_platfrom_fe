@@ -1,6 +1,10 @@
 import { ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
 import { useState } from 'react';
-import { useAddTemplateMapping, useListMatchingTemplates } from '../../hooks/useExamMatrix';
+import {
+  useAddTemplateMapping,
+  useAddTemplateMappingsBatch,
+  useListMatchingTemplates,
+} from '../../hooks/useExamMatrix';
 import { CognitiveLevel } from '../../types/questionTemplate';
 import type { AddTemplateMappingRequest, TemplateItem } from '../../types/examMatrix';
 
@@ -13,14 +17,16 @@ type Props = {
 
 const levels = Object.values(CognitiveLevel);
 
-export function TemplateMappingModal({ isOpen, matrixId, onClose, onSuccess }: Props) {
+export function TemplateMappingModal({ isOpen, matrixId, onClose, onSuccess }: Readonly<Props>) {
   const [step, setStep] = useState<1 | 2>(1);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
   const [template, setTemplate] = useState<TemplateItem | null>(null);
+  const [selectedTemplateIds, setSelectedTemplateIds] = useState<Set<string>>(new Set());
   const [cognitiveLevel, setCognitiveLevel] = useState<CognitiveLevel>(CognitiveLevel.REMEMBER);
   const [questionCount, setQuestionCount] = useState(5);
   const [pointsPerQuestion, setPointsPerQuestion] = useState(1);
+  const [error, setError] = useState<string | null>(null);
 
   const { data, isLoading } = useListMatchingTemplates(
     matrixId,
@@ -28,12 +34,50 @@ export function TemplateMappingModal({ isOpen, matrixId, onClose, onSuccess }: P
     isOpen && step === 1,
   );
   const addMutation = useAddTemplateMapping();
+  const addBatchMutation = useAddTemplateMappingsBatch();
 
   if (!isOpen) return null;
 
   const templates = data?.result?.templates ?? [];
   const totalFound = data?.result?.totalTemplatesFound ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalFound / 6));
+
+  let stepOneList: React.ReactNode = null;
+  if (isLoading) {
+    stepOneList = <div className="empty">Đang tải danh sách mẫu...</div>;
+  } else if (templates.length === 0) {
+    stepOneList = <div className="empty">Không tìm thấy mẫu nào.</div>;
+  } else {
+    stepOneList = (
+      <div className="grid-cards">
+        {templates.map((item) => (
+          <div key={item.templateId} className="data-card" style={{ minHeight: 0 }}>
+            <label className="row" style={{ justifyContent: 'space-between' }}>
+              <strong>{item.name}</strong>
+              <input
+                type="checkbox"
+                checked={selectedTemplateIds.has(item.templateId)}
+                onChange={(event) =>
+                  toggleTemplateSelection(item.templateId, event.target.checked)
+                }
+              />
+            </label>
+            <p className="muted" style={{ marginTop: 6 }}>{item.description || 'Không có mô tả'}</p>
+            <p className="muted" style={{ marginTop: 4 }}>
+              {item.templateType} | {item.cognitiveLevel || 'Không xác định'}
+            </p>
+            <button
+              className="btn secondary"
+              style={{ marginTop: 10 }}
+              onClick={() => chooseTemplate(item)}
+            >
+              Cấu hình chi tiết
+            </button>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   function chooseTemplate(item: TemplateItem) {
     setTemplate(item);
@@ -43,8 +87,35 @@ export function TemplateMappingModal({ isOpen, matrixId, onClose, onSuccess }: P
     setStep(2);
   }
 
-  async function submit(event: React.FormEvent) {
+  function toggleTemplateSelection(templateId: string, checked: boolean) {
+    setSelectedTemplateIds((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(templateId);
+      else next.delete(templateId);
+      return next;
+    });
+  }
+
+  async function submitBatch() {
+    if (selectedTemplateIds.size === 0) return;
+    setError(null);
+    try {
+      await addBatchMutation.mutateAsync({
+        matrixId,
+        request: {
+          templateIds: Array.from(selectedTemplateIds),
+        },
+      });
+      onSuccess();
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Không thể thêm ánh xạ theo lô');
+    }
+  }
+
+  async function submit(event: React.BaseSyntheticEvent) {
     event.preventDefault();
+    setError(null);
     if (!template) return;
 
     const payload: AddTemplateMappingRequest = {
@@ -53,9 +124,13 @@ export function TemplateMappingModal({ isOpen, matrixId, onClose, onSuccess }: P
       questionCount,
       pointsPerQuestion,
     };
-    await addMutation.mutateAsync({ matrixId, request: payload });
-    onSuccess();
-    onClose();
+    try {
+      await addMutation.mutateAsync({ matrixId, request: payload });
+      onSuccess();
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Không thể thêm ánh xạ');
+    }
   }
 
   return (
@@ -73,6 +148,7 @@ export function TemplateMappingModal({ isOpen, matrixId, onClose, onSuccess }: P
 
         {step === 1 ? (
           <div className="modal-body">
+            {error && <p style={{ color: '#be123c', fontSize: 13 }}>{error}</p>}
             <label className="row" style={{ minWidth: 260 }}>
               <Search size={15} />
               <input
@@ -87,28 +163,18 @@ export function TemplateMappingModal({ isOpen, matrixId, onClose, onSuccess }: P
               />
             </label>
 
-            {isLoading ? (
-                <div className="empty">Đang tải danh sách mẫu...</div>
-            ) : templates.length === 0 ? (
-                <div className="empty">Không tìm thấy mẫu nào.</div>
-            ) : (
-              <div className="grid-cards">
-                {templates.map((item) => (
-                  <button
-                    key={item.templateId}
-                    className="data-card"
-                    style={{ textAlign: 'left', minHeight: 0, cursor: 'pointer' }}
-                    onClick={() => chooseTemplate(item)}
-                  >
-                    <h3>{item.name}</h3>
-                    <p className="muted" style={{ marginTop: 6 }}>{item.description || 'Không có mô tả'}</p>
-                    <p className="muted" style={{ marginTop: 4 }}>
-                      {item.templateType} | {item.cognitiveLevel || 'Không xác định'}
-                    </p>
-                  </button>
-                ))}
-              </div>
-            )}
+            {stepOneList}
+
+            <div className="row" style={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
+              <span className="muted">Đã chọn: {selectedTemplateIds.size} template</span>
+              <button
+                className="btn"
+                onClick={() => void submitBatch()}
+                disabled={selectedTemplateIds.size === 0 || addBatchMutation.isPending}
+              >
+                {addBatchMutation.isPending ? 'Đang thêm theo lô...' : 'Thêm theo lô'}
+              </button>
+            </div>
 
             <div className="row" style={{ justifyContent: 'center' }}>
               <button className="btn secondary" disabled={page === 0} onClick={() => setPage((prev) => prev - 1)}>
@@ -127,6 +193,7 @@ export function TemplateMappingModal({ isOpen, matrixId, onClose, onSuccess }: P
         ) : (
           <form onSubmit={submit}>
             <div className="modal-body">
+              {error && <p style={{ color: '#be123c', fontSize: 13 }}>{error}</p>}
               <div className="data-card" style={{ minHeight: 0 }}>
                 <h3>{template?.name}</h3>
                 <p className="muted" style={{ marginTop: 6 }}>{template?.description || 'Không có mô tả'}</p>

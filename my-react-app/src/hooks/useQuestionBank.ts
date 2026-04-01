@@ -11,6 +11,7 @@ export const questionBankKeys = {
     [...questionBankKeys.all, 'search', params] as const,
   canEdit: (id: string) => [...questionBankKeys.all, 'can-edit', id] as const,
   canDelete: (id: string) => [...questionBankKeys.all, 'can-delete', id] as const,
+  templates: (id: string) => [...questionBankKeys.all, 'templates', id] as const,
 };
 
 export const useGetMyQuestionBanks = (
@@ -57,6 +58,13 @@ export const useCanDeleteQuestionBank = (id: string, enabled = true) =>
     enabled: !!id && enabled,
   });
 
+export const useGetQuestionBankTemplates = (id: string, enabled = true) =>
+  useQuery({
+    queryKey: questionBankKeys.templates(id),
+    queryFn: () => questionBankService.getTemplatesByQuestionBank(id),
+    enabled: !!id && enabled,
+  });
+
 export const useCreateQuestionBank = () => {
   const qc = useQueryClient();
   return useMutation({
@@ -96,6 +104,32 @@ export const useToggleQuestionBankPublicStatus = () => {
     mutationFn: (id: string) => questionBankService.togglePublicStatus(id),
     onSuccess: (_, id) => {
       qc.invalidateQueries({ queryKey: questionBankKeys.detail(id) });
+      qc.invalidateQueries({ queryKey: questionBankKeys.all });
+    },
+  });
+};
+
+export const useMapTemplateToQuestionBank = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, templateId }: { id: string; templateId: string }) =>
+      questionBankService.mapTemplateToQuestionBank(id, templateId),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: questionBankKeys.templates(vars.id) });
+      qc.invalidateQueries({ queryKey: questionBankKeys.detail(vars.id) });
+      qc.invalidateQueries({ queryKey: questionBankKeys.all });
+    },
+  });
+};
+
+export const useUnmapTemplateFromQuestionBank = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, templateId }: { id: string; templateId: string }) =>
+      questionBankService.unmapTemplateFromQuestionBank(id, templateId),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: questionBankKeys.templates(vars.id) });
+      qc.invalidateQueries({ queryKey: questionBankKeys.detail(vars.id) });
       qc.invalidateQueries({ queryKey: questionBankKeys.all });
     },
   });

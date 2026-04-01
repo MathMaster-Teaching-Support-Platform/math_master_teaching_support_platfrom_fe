@@ -79,7 +79,7 @@ export function QuestionBankDashboard() {
   }
 
   async function handleDelete(bank: QuestionBankResponse) {
-    const confirmed = window.confirm(
+    const confirmed = globalThis.confirm(
       `Xóa ngân hàng "${bank.name}"? Hành động này sẽ gỡ liên kết câu hỏi khỏi ngân hàng.`
     );
     if (!confirmed) return;
@@ -193,6 +193,9 @@ export function QuestionBankDashboard() {
 
                   <div className="row" style={{ justifyContent: 'start', flexWrap: 'wrap' }}>
                     <span className="muted">Giáo viên: {bank.teacherName || 'Không xác định'}</span>
+                    <span className="muted">
+                      Chapter: {bank.chapterTitle || bank.chapterId || 'Chưa gán chapter'}
+                    </span>
                   </div>
 
                   <div className="row" style={{ flexWrap: 'wrap' }}>

@@ -1,7 +1,10 @@
+import type { QuestionTemplateResponse } from './questionTemplate';
+
 export interface QuestionBankRequest {
   name: string;
   description?: string;
   isPublic?: boolean;
+  chapterId?: string | null;
 }
 
 export interface QuestionBankResponse {
@@ -11,10 +14,19 @@ export interface QuestionBankResponse {
   name: string;
   description?: string;
   isPublic: boolean;
+  chapterId?: string | null;
+  chapterTitle?: string | null;
   questionCount: number;
   createdAt: string;
   updatedAt: string;
 }
+
+export interface QuestionBankTemplateMappingRequest {
+  questionBankId: string;
+  templateId: string;
+}
+
+export type QuestionBankTemplatesResponse = QuestionTemplateResponse[];
 
 export interface PageResponse<T> {
   content: T[];

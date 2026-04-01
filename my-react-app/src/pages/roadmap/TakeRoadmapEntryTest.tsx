@@ -151,8 +151,12 @@ export default function TakeRoadmapEntryTest() {
     finishMutation.mutate(
       { roadmapId, attemptId: attemptData.attemptId },
       {
-        onSuccess: () => {
-          navigate(`/roadmaps/${roadmapId}`);
+        onSuccess: (response) => {
+          navigate(`/roadmaps/${roadmapId}`, {
+            state: {
+              entryTestResult: response.result,
+            },
+          });
         },
       }
     );

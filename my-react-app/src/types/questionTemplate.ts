@@ -1,4 +1,8 @@
 export const CognitiveLevel = {
+    NHAN_BIET: 'NHAN_BIET',
+    THONG_HIEU: 'THONG_HIEU',
+    VAN_DUNG: 'VAN_DUNG',
+    VAN_DUNG_CAO: 'VAN_DUNG_CAO',
     REMEMBER: 'REMEMBER',
     UNDERSTAND: 'UNDERSTAND',
     APPLY: 'APPLY',
@@ -28,15 +32,19 @@ export interface QuestionTemplateRequest {
     name: string;
     description?: string;
     templateType: QuestionType;
+    templateVariant?: string;
     templateText: Record<string, unknown>;
     parameters: Record<string, unknown>;
     answerFormula: string;
     optionsGenerator?: Record<string, unknown>;
     difficultyRules: Record<string, unknown>;
+    topic?: string;
+    difficulty?: string;
     constraints?: string[];
     cognitiveLevel: CognitiveLevel;
     tags: string[];
     isPublic?: boolean;
+    questionBankId?: string | null;
 }
 
 export interface QuestionTemplateResponse {
@@ -46,11 +54,14 @@ export interface QuestionTemplateResponse {
     name: string;
     description?: string;
     templateType: QuestionType;
+    templateVariant?: string;
     templateText: Record<string, unknown>;
     parameters: Record<string, unknown>;
     answerFormula: string;
     optionsGenerator?: Record<string, unknown>;
     difficultyRules: Record<string, unknown>;
+    topic?: string;
+    difficulty?: string;
     constraints?: string[];
     cognitiveLevel: CognitiveLevel;
     tags: string[];
@@ -60,6 +71,7 @@ export interface QuestionTemplateResponse {
     avgSuccessRate?: number;
     createdAt: string;
     updatedAt: string;
+    questionBankId?: string | null;
 }
 
 export interface AIEnhancedQuestionResponse {

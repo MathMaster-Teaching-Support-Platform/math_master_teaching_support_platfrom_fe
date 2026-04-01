@@ -10,7 +10,7 @@ type Props = {
   onSubmit: (data: ExamMatrixRequest) => Promise<void>;
 };
 
-export function ExamMatrixFormModal({ isOpen, mode, initialData, onClose, onSubmit }: Props) {
+export function ExamMatrixFormModal({ isOpen, mode, initialData, onClose, onSubmit }: Readonly<Props>) {
   const [formData, setFormData] = useState<ExamMatrixRequest>({
     name: '',
     description: '',
@@ -34,7 +34,11 @@ export function ExamMatrixFormModal({ isOpen, mode, initialData, onClose, onSubm
 
   if (!isOpen) return null;
 
-  async function submit(event: React.FormEvent) {
+  let submitLabel = 'Cập nhật';
+  if (saving) submitLabel = 'Đang lưu...';
+  else if (mode === 'create') submitLabel = 'Tạo mới';
+
+  async function submit(event: React.BaseSyntheticEvent) {
     event.preventDefault();
     setSaving(true);
     setError(null);
@@ -128,7 +132,7 @@ export function ExamMatrixFormModal({ isOpen, mode, initialData, onClose, onSubm
                 type="checkbox"
                 checked={formData.isReusable ?? false}
                 onChange={(event) => setFormData({ ...formData, isReusable: event.target.checked })}
-              />
+              />{' '}
               Cho phép tái sử dụng
             </label>
           </div>
@@ -136,7 +140,7 @@ export function ExamMatrixFormModal({ isOpen, mode, initialData, onClose, onSubm
           <div className="modal-footer">
             <button type="button" className="btn secondary" onClick={onClose}>Hủy</button>
             <button type="submit" className="btn" disabled={saving}>
-              {saving ? 'Đang lưu...' : mode === 'create' ? 'Tạo mới' : 'Cập nhật'}
+              {submitLabel}
             </button>
           </div>
         </form>

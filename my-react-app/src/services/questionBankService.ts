@@ -5,6 +5,7 @@ import type {
   PageResponse,
   QuestionBankRequest,
   QuestionBankResponse,
+  QuestionBankTemplatesResponse,
   SearchQuestionBanksParams,
 } from '../types/questionBank';
 
@@ -106,4 +107,21 @@ export const questionBankService = {
     fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTION_BANK_CAN_DELETE(id)}`, {
       headers: getAuthHeaders(),
     }).then(handleResponse<boolean>),
+
+  getTemplatesByQuestionBank: (id: string) =>
+    fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTION_BANK_TEMPLATES(id)}`, {
+      headers: getAuthHeaders(),
+    }).then(handleResponse<QuestionBankTemplatesResponse>),
+
+  mapTemplateToQuestionBank: (id: string, templateId: string) =>
+    fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTION_BANK_TEMPLATE_MAP(id, templateId)}`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    }).then(handleResponse<QuestionBankTemplatesResponse[number]>),
+
+  unmapTemplateFromQuestionBank: (id: string, templateId: string) =>
+    fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTION_BANK_TEMPLATE_MAP(id, templateId)}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    }).then(handleResponse<void>),
 };

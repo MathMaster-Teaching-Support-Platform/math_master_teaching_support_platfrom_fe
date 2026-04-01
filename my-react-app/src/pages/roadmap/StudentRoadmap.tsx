@@ -33,10 +33,18 @@ function difficultyLabel(d: string): string {
   return map[d] ?? d;
 }
 
+function isTopicUnlocked(topic: RoadmapTopic): boolean {
+  if (typeof topic.unlocked === 'boolean') {
+    return topic.unlocked;
+  }
+  return topic.status !== 'LOCKED';
+}
+
 function findCurrentTopic(topics: RoadmapTopic[]): RoadmapTopic | null {
   return (
-    topics.find((t) => t.status === 'IN_PROGRESS') ??
-    topics.find((t) => t.status === 'NOT_STARTED') ??
+    topics.find((t) => t.status === 'IN_PROGRESS' && isTopicUnlocked(t)) ??
+    topics.find((t) => t.status === 'NOT_STARTED' && isTopicUnlocked(t)) ??
+    topics.find((t) => isTopicUnlocked(t) && t.status !== 'COMPLETED') ??
     null
   );
 }
@@ -50,7 +58,7 @@ const TopicStep: React.FC<{
   stepRef?: React.Ref<HTMLDivElement>;
 }> = ({ topic, isFirst, isLast, isCurrent, roadmapId, stepRef }) => {
   const isCompleted = topic.status === 'COMPLETED';
-  const isLocked = topic.status === 'LOCKED';
+  const isLocked = !isTopicUnlocked(topic);
 
   let dotContent: React.ReactNode;
   if (isCompleted) dotContent = '✓';

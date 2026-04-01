@@ -48,6 +48,8 @@ export interface RoadmapTopic {
   difficulty: QuestionDifficulty;
   sequenceOrder: number;
   mark?: number;
+  requiredPoint?: number;
+  unlocked?: boolean;
   courseIds?: string[];
   courses?: Array<{
     id: string;
@@ -78,6 +80,7 @@ export interface RoadmapDetail extends RoadmapCatalogItem {
   teacherId?: string | null;
   generationType?: 'ADMIN_TEMPLATE';
   estimatedCompletionDays: number;
+  studentBestScore?: number;
   startedAt?: string | null;
   completedAt?: string | null;
   topics: RoadmapTopic[];
@@ -150,6 +153,8 @@ export interface RoadmapTopicResponse {
   difficulty: QuestionDifficulty;
   sequenceOrder: number;
   mark?: number;
+  requiredPoint?: number;
+  unlocked?: boolean;
   courseIds?: string[];
   courses?: Array<{
     id: string;
@@ -294,14 +299,19 @@ export interface SubmitRoadmapEntryTestRequest {
   submissionId: string;
 }
 
+export interface RoadmapUnlockedTopicItem {
+  id: string;
+  name: string;
+  requiredPoint: number;
+}
+
 export interface SubmitRoadmapEntryTestResult {
   roadmapId: string;
   submissionId: string;
-  suggestedTopicId: string;
-  scoreOnTen: number;
-  evaluatedQuestions: number;
-  thresholdPercentage: number;
-  evaluatedAt: string;
+  score: number;
+  studentBestScore: number;
+  unlockedTopics: RoadmapUnlockedTopicItem[];
+  newlyUnlockedTopics: RoadmapUnlockedTopicItem[];
 }
 
 export type RoadmapEntryTestResultResponse = SubmitRoadmapEntryTestResult;

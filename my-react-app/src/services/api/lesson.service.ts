@@ -34,6 +34,21 @@ export class LessonService {
     return response.json();
   }
 
+  static async getAllLessons(): Promise<ApiResponse<LessonResponse[]>> {
+    const headers = await this.getHeaders();
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.LESSONS}`, {
+      method: 'GET',
+      headers,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error((error as { message?: string }).message || 'Failed to fetch all lessons');
+    }
+
+    return response.json();
+  }
+
   static async getLessonById(lessonId: string): Promise<ApiResponse<LessonResponse>> {
     const headers = await this.getHeaders();
     const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.LESSON_DETAIL(lessonId)}`, {

@@ -14,12 +14,48 @@ import {
     QuestionType
 } from '../types/questionTemplate';
 
+type ErrorResponse = {
+    code?: number;
+    message?: string;
+};
+
+export class QuestionTemplateApiError extends Error {
+    status: number;
+    code?: number;
+
+    constructor(message: string, status: number, code?: number) {
+        super(message);
+        this.name = 'QuestionTemplateApiError';
+        this.status = status;
+        this.code = code;
+    }
+}
+
 const getAuthHeaders = () => {
     const token = AuthService.getToken();
     return {
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
     };
+};
+
+const parseResponse = async <T>(response: Response, fallbackMessage: string): Promise<T> => {
+    if (!response.ok) {
+        let errorMessage = fallbackMessage;
+        let errorCode: number | undefined;
+
+        try {
+            const payload = (await response.json()) as ErrorResponse;
+            if (payload?.message) errorMessage = payload.message;
+            if (typeof payload?.code === 'number') errorCode = payload.code;
+        } catch {
+            // Keep fallback message when server does not return JSON payload.
+        }
+
+        throw new QuestionTemplateApiError(errorMessage, response.status, errorCode);
+    }
+
+    return response.json() as Promise<T>;
 };
 
 export const questionTemplateService = {
@@ -30,8 +66,7 @@ export const questionTemplateService = {
             headers: getAuthHeaders(),
             body: JSON.stringify(request),
         });
-        if (!response.ok) throw new Error('Failed to create question template');
-        return response.json();
+        return parseResponse<ApiResponse<QuestionTemplateResponse>>(response, 'Không thể tạo question template');
     },
 
     // Update Question Template
@@ -41,8 +76,7 @@ export const questionTemplateService = {
             headers: getAuthHeaders(),
             body: JSON.stringify(request),
         });
-        if (!response.ok) throw new Error('Failed to update question template');
-        return response.json();
+        return parseResponse<ApiResponse<QuestionTemplateResponse>>(response, 'Không thể cập nhật question template');
     },
 
     // Delete Question Template
@@ -51,8 +85,7 @@ export const questionTemplateService = {
             method: 'DELETE',
             headers: getAuthHeaders(),
         });
-        if (!response.ok) throw new Error('Failed to delete question template');
-        return response.json();
+        return parseResponse<ApiResponse<void>>(response, 'Không thể xóa question template');
     },
 
     // Get Question Template by ID
@@ -61,8 +94,7 @@ export const questionTemplateService = {
             method: 'GET',
             headers: getAuthHeaders(),
         });
-        if (!response.ok) throw new Error('Failed to fetch question template');
-        return response.json();
+        return parseResponse<ApiResponse<QuestionTemplateResponse>>(response, 'Không thể lấy chi tiết question template');
     },
 
     // Get My Question Templates
@@ -82,8 +114,7 @@ export const questionTemplateService = {
             method: 'GET',
             headers: getAuthHeaders(),
         });
-        if (!response.ok) throw new Error('Failed to fetch my question templates');
-        return response.json();
+        return parseResponse<ApiResponse<PageResponse<QuestionTemplateResponse>>>(response, 'Không thể lấy danh sách question template của tôi');
     },
 
     // Search Question Templates
@@ -116,8 +147,7 @@ export const questionTemplateService = {
             method: 'GET',
             headers: getAuthHeaders(),
         });
-        if (!response.ok) throw new Error('Failed to search question templates');
-        return response.json();
+        return parseResponse<ApiResponse<PageResponse<QuestionTemplateResponse>>>(response, 'Không thể tìm kiếm question template');
     },
 
     // Toggle Public Status
@@ -126,8 +156,7 @@ export const questionTemplateService = {
             method: 'PATCH',
             headers: getAuthHeaders(),
         });
-        if (!response.ok) throw new Error('Failed to toggle public status');
-        return response.json();
+        return parseResponse<ApiResponse<QuestionTemplateResponse>>(response, 'Không thể đổi trạng thái công khai của template');
     },
 
     // Publish Template
@@ -136,8 +165,7 @@ export const questionTemplateService = {
             method: 'PATCH',
             headers: getAuthHeaders(),
         });
-        if (!response.ok) throw new Error('Failed to publish template');
-        return response.json();
+        return parseResponse<ApiResponse<QuestionTemplateResponse>>(response, 'Không thể xuất bản template');
     },
 
     // Archive Template
@@ -146,8 +174,7 @@ export const questionTemplateService = {
             method: 'PATCH',
             headers: getAuthHeaders(),
         });
-        if (!response.ok) throw new Error('Failed to archive template');
-        return response.json();
+        return parseResponse<ApiResponse<QuestionTemplateResponse>>(response, 'Không thể lưu trữ template');
     },
 
     // Test Existing Template
@@ -160,8 +187,7 @@ export const questionTemplateService = {
             method: 'GET',
             headers: getAuthHeaders(),
         });
-        if (!response.ok) throw new Error('Failed to test template');
-        return response.json();
+        return parseResponse<ApiResponse<TemplateTestResponse>>(response, 'Không thể test template');
     },
 
     // Generate a batch of AI draft questions from template
@@ -174,8 +200,7 @@ export const questionTemplateService = {
             headers: getAuthHeaders(),
             body: JSON.stringify(request),
         });
-        if (!response.ok) throw new Error('Failed to generate questions from template');
-        return response.json();
+        return parseResponse<ApiResponse<GeneratedQuestionsBatchResponse>>(response, 'Không thể tạo câu hỏi từ template');
     },
 
     // Generate AI Enhanced Question
@@ -184,8 +209,7 @@ export const questionTemplateService = {
             method: 'POST',
             headers: getAuthHeaders(),
         });
-        if (!response.ok) throw new Error('Failed to generate AI enhanced question');
-        return response.json();
+        return parseResponse<ApiResponse<AIEnhancedQuestionResponse>>(response, 'Không thể tạo AI enhanced question');
     },
 
     // Import Template from File
@@ -209,7 +233,6 @@ export const questionTemplateService = {
             headers,
             body: formData,
         });
-        if (!response.ok) throw new Error('Failed to import template from file');
-        return response.json();
+        return parseResponse<ApiResponse<TemplateImportResponse>>(response, 'Không thể import template từ file');
     },
 };

@@ -69,6 +69,9 @@ export const API_ENDPOINTS = {
   QUESTION_BANKS_MY: '/question-banks/my',
   QUESTION_BANKS_SEARCH: '/question-banks/search',
   QUESTION_BANK_DETAIL: (id: string) => `/question-banks/${id}`,
+  QUESTION_BANK_TEMPLATES: (id: string) => `/question-banks/${id}/templates`,
+  QUESTION_BANK_TEMPLATE_MAP: (id: string, templateId: string) =>
+    `/question-banks/${id}/templates/${templateId}`,
   QUESTION_BANK_TOGGLE_PUBLIC: (id: string) => `/question-banks/${id}/toggle-public`,
   QUESTION_BANK_CAN_EDIT: (id: string) => `/question-banks/${id}/can-edit`,
   QUESTION_BANK_CAN_DELETE: (id: string) => `/question-banks/${id}/can-delete`,
@@ -199,10 +202,9 @@ export const API_ENDPOINTS = {
   QUESTION_TEMPLATE_AI_GENERATE_FROM_LESSON: '/question-templates/ai-generate-from-lesson',
   QUESTION_TEMPLATE_IMPORT_FROM_FILE: '/question-templates/import-from-file',
 
-  // Exam matrix bank mappings (BANK_FIRST flow)
-  EXAM_MATRIX_BANK_MAPPINGS: (matrixId: string) => `/exam-matrices/${matrixId}/bank-mappings`,
-  EXAM_MATRIX_BANK_MAPPING_DETAIL: (matrixId: string, mappingId: string) =>
-    `/exam-matrices/${matrixId}/bank-mappings/${mappingId}`,
+  // Exam matrix template batch mapping
+  EXAM_MATRIX_TEMPLATE_MAPPINGS_BATCH: (matrixId: string) =>
+    `/exam-matrices/${matrixId}/template-mappings/batch`,
 
   // Courses
   COURSES: '/courses',

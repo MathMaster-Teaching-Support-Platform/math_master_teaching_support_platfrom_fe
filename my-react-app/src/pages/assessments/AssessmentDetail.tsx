@@ -1,7 +1,12 @@
 import { ArrowLeft, Pencil } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useAssessment, useUpdateAssessment } from '../../hooks/useAssessment';
+import {
+  useAssessment,
+  useAssessmentQuestions,
+  useSetPointsOverride,
+  useUpdateAssessment,
+} from '../../hooks/useAssessment';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import '../../styles/module-refactor.css';
 import type { AssessmentRequest } from '../../types';
@@ -31,22 +36,91 @@ const scoringPolicyLabel: Record<string, string> = {
   AVERAGE: 'Điểm trung bình',
 };
 
+function getQuestionId(question: { questionId: string; id?: string }) {
+  return question.questionId || question.id || '';
+}
+
 export default function AssessmentDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
   const [openEdit, setOpenEdit] = useState(false);
+  const [pointsDraft, setPointsDraft] = useState<Record<string, string>>({});
 
   const { data, isLoading, isError, error, refetch } = useAssessment(id ?? '');
+  const {
+    data: questionsData,
+    isLoading: questionsLoading,
+    isError: questionsError,
+    error: questionsErrorValue,
+    refetch: refetchQuestions,
+  } = useAssessmentQuestions(id ?? '', {
+    enabled: !!id,
+  });
   const updateMutation = useUpdateAssessment();
+  const pointsOverrideMutation = useSetPointsOverride();
 
   const assessment = data?.result;
+  const questions = questionsData?.result ?? [];
 
   async function save(payload: AssessmentRequest) {
     if (!id) return;
     await updateMutation.mutateAsync({ id, data: payload });
     setOpenEdit(false);
     await refetch();
+  }
+
+  function getDraftValue(question: { questionId: string; id?: string; pointsOverride?: number | null }) {
+    const questionId = getQuestionId(question);
+    if (questionId in pointsDraft) return pointsDraft[questionId];
+    if (typeof question.pointsOverride === 'number') return String(question.pointsOverride);
+    return '';
+  }
+
+  function updatePointsDraft(questionId: string, value: string) {
+    setPointsDraft((prev) => ({
+      ...prev,
+      [questionId]: value,
+    }));
+  }
+
+  async function savePointsOverride(questionId: string) {
+    const rawValue = pointsDraft[questionId];
+    const trimmedValue = rawValue?.trim() ?? '';
+
+    if (trimmedValue === '') {
+      await pointsOverrideMutation.mutateAsync({
+        assessmentId: id ?? '',
+        data: {
+          questionId,
+          pointsOverride: null,
+        },
+      });
+    } else {
+      const pointsValue = Number(trimmedValue);
+      if (Number.isNaN(pointsValue) || pointsValue < 0) return;
+      await pointsOverrideMutation.mutateAsync({
+        assessmentId: id ?? '',
+        data: {
+          questionId,
+          pointsOverride: pointsValue,
+        },
+      });
+    }
+
+    await Promise.all([refetchQuestions(), refetch()]);
+  }
+
+  async function clearPointsOverride(questionId: string) {
+    await pointsOverrideMutation.mutateAsync({
+      assessmentId: id ?? '',
+      data: {
+        questionId,
+        pointsOverride: null,
+      },
+    });
+    setPointsDraft((prev) => ({ ...prev, [questionId]: '' }));
+    await Promise.all([refetchQuestions(), refetch()]);
   }
 
   function renderContent() {
@@ -166,6 +240,82 @@ export default function AssessmentDetail() {
             </tbody>
           </table>
         </div>
+
+        <article className="data-card" style={{ marginTop: 16 }}>
+          <div className="row" style={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
+            <h3>Câu hỏi trong bài kiểm tra</h3>
+            <span className="muted">Có thể chỉnh điểm từng câu bằng pointsOverride</span>
+          </div>
+
+          {questionsLoading && <div className="empty">Đang tải danh sách câu hỏi...</div>}
+          {questionsError && (
+            <div className="empty">
+              {questionsErrorValue instanceof Error
+                ? questionsErrorValue.message
+                : 'Không thể tải câu hỏi trong bài kiểm tra.'}
+            </div>
+          )}
+          {!questionsLoading && !questionsError && questions.length === 0 && (
+            <div className="empty">Bài kiểm tra chưa có câu hỏi.</div>
+          )}
+
+          {!questionsLoading && !questionsError && questions.length > 0 && (
+            <div className="table-wrap">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th style={{ width: 80 }}>STT</th>
+                    <th>Nội dung câu hỏi</th>
+                    <th style={{ width: 150 }}>Điểm hiện tại</th>
+                    <th style={{ width: 180 }}>Điểm override</th>
+                    <th style={{ width: 260 }}>Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {questions.map((question) => {
+                    const questionId = getQuestionId(question);
+                    return (
+                      <tr key={questionId}>
+                        <td>{question.orderIndex}</td>
+                        <td>{question.questionText}</td>
+                        <td>{question.points ?? 0}</td>
+                        <td>
+                          <input
+                            className="input"
+                            type="number"
+                            min={0}
+                            step={0.25}
+                            value={getDraftValue(question)}
+                            onChange={(event) => updatePointsDraft(questionId, event.target.value)}
+                            placeholder="Để trống = dùng điểm gốc"
+                          />
+                        </td>
+                        <td>
+                          <div className="row" style={{ justifyContent: 'start' }}>
+                            <button
+                              className="btn"
+                              onClick={() => void savePointsOverride(questionId)}
+                              disabled={assessment.status !== 'DRAFT' || pointsOverrideMutation.isPending}
+                            >
+                              Lưu điểm
+                            </button>
+                            <button
+                              className="btn secondary"
+                              onClick={() => void clearPointsOverride(questionId)}
+                              disabled={assessment.status !== 'DRAFT' || pointsOverrideMutation.isPending}
+                            >
+                              Xóa override
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </article>
 
         <AssessmentModal
           isOpen={openEdit}

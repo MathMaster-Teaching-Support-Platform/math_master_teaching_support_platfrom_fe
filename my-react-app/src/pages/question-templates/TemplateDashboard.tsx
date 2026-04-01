@@ -48,6 +48,7 @@ import { TemplateTestModal } from './TemplateTestModal';
 import MathText from '../../components/common/MathText';
 import { useNavigate } from 'react-router-dom';
 import './template-review.css';
+import { questionTemplateService } from '../../services/questionTemplateService';
 
 const statusFilters: Array<'ALL' | TemplateStatus> = [
   'ALL',
@@ -84,6 +85,10 @@ const templateTypeLabel: Record<string, string> = {
 };
 
 const cognitiveLevelLabel: Record<string, string> = {
+  NHAN_BIET: 'Nhận biết',
+  THONG_HIEU: 'Thông hiểu',
+  VAN_DUNG: 'Vận dụng',
+  VAN_DUNG_CAO: 'Vận dụng cao',
   REMEMBER: 'Nhận biết',
   UNDERSTAND: 'Thông hiểu',
   APPLY: 'Vận dụng',
@@ -116,6 +121,7 @@ export function TemplateDashboard() {
   const [editQuestionText, setEditQuestionText] = useState('');
   const [editCorrectAnswer, setEditCorrectAnswer] = useState('');
   const [editExplanation, setEditExplanation] = useState('');
+  const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
 
   const { data, isLoading, isError, error, refetch } = useGetMyQuestionTemplates(
     0,
@@ -174,6 +180,24 @@ export function TemplateDashboard() {
     await updateMutation.mutateAsync({ id: selected.id, request: payload });
   }
 
+  async function openEditTemplate(templateId: string) {
+    setEditingTemplateId(templateId);
+    try {
+      const detail = await questionTemplateService.getQuestionTemplateById(templateId);
+      if (!detail.result) throw new Error('Không lấy được chi tiết template.');
+      setMode('edit');
+      setSelected(detail.result);
+      setFormOpen(true);
+    } catch (error) {
+      setToast({
+        type: 'error',
+        message: error instanceof Error ? error.message : 'Không thể tải chi tiết template để chỉnh sửa.',
+      });
+    } finally {
+      setEditingTemplateId(null);
+    }
+  }
+
   function openCreateFromDraft(draft?: TemplateDraft) {
     setMode('create');
     setSelected(draft as QuestionTemplateResponse | null);
@@ -201,6 +225,45 @@ export function TemplateDashboard() {
         message: error instanceof Error ? error.message : 'Không thể phê duyệt câu hỏi đã chọn.',
       });
     }
+  }
+
+  async function handleDeleteSelectedQuestions() {
+    const questionIds = Array.from(selectedQuestionIds);
+    if (questionIds.length === 0) return;
+    if (!globalThis.confirm(`Bạn có chắc muốn xóa ${questionIds.length} câu hỏi đã chọn?`)) return;
+
+    const deleteResults = await Promise.allSettled(
+      questionIds.map((questionId) => deleteQuestionMutation.mutateAsync(questionId))
+    );
+
+    const failedCount = deleteResults.filter((result) => result.status === 'rejected').length;
+    const successCount = deleteResults.length - failedCount;
+
+    if (successCount > 0) {
+      setSelectedQuestionIds(new Set());
+      void reviewQuestionsQuery.refetch();
+    }
+
+    if (failedCount === 0) {
+      setToast({
+        type: 'success',
+        message: `Đã xóa ${successCount} câu hỏi thành công.`,
+      });
+      return;
+    }
+
+    if (successCount === 0) {
+      setToast({
+        type: 'error',
+        message: 'Không thể xóa các câu hỏi đã chọn. Vui lòng thử lại.',
+      });
+      return;
+    }
+
+    setToast({
+      type: 'error',
+      message: `Đã xóa ${successCount} câu hỏi, thất bại ${failedCount} câu.`,
+    });
   }
 
   function toggleQuestionSelection(questionId: string, checked: boolean) {
@@ -240,7 +303,7 @@ export function TemplateDashboard() {
   }
 
   async function handleDeleteQuestion(questionId: string) {
-    if (!window.confirm('Bạn có chắc muốn xóa câu hỏi này?')) return;
+    if (!globalThis.confirm('Bạn có chắc muốn xóa câu hỏi này?')) return;
     try {
       await deleteQuestionMutation.mutateAsync(questionId);
       setToast({ type: 'success', message: 'Đã xóa câu hỏi.' });
@@ -425,6 +488,15 @@ export function TemplateDashboard() {
                       Xét duyệt
                     </button>
 
+                    <button
+                      className="btn secondary"
+                      onClick={() => void openEditTemplate(template.id)}
+                      disabled={editingTemplateId === template.id}
+                    >
+                      <Pencil size={14} />
+                      {editingTemplateId === template.id ? 'Đang tải...' : 'Chỉnh sửa'}
+                    </button>
+
                     {template.status === TemplateStatus.DRAFT && (
                       <button className="btn" onClick={() => publishMutation.mutate(template.id)}>
                         <FileText size={14} />
@@ -565,8 +637,7 @@ export function TemplateDashboard() {
                                 <input
                                   type="checkbox"
                                   checked={
-                                    reviewQuestions.filter((question) => question.questionStatus !== 'APPROVED')
-                                      .length > 0 &&
+                                    reviewQuestions.some((question) => question.questionStatus !== 'APPROVED') &&
                                     reviewQuestions
                                       .filter((question) => question.questionStatus !== 'APPROVED')
                                       .every((question) => selectedQuestionIds.has(question.id))
@@ -669,6 +740,17 @@ export function TemplateDashboard() {
                     }}
                   >
                     Đóng
+                  </button>
+                  <button
+                    type="button"
+                    className="btn danger"
+                    disabled={selectedQuestionIds.size === 0 || deleteQuestionMutation.isPending}
+                    onClick={() => void handleDeleteSelectedQuestions()}
+                  >
+                    <Trash2 size={14} />
+                    {deleteQuestionMutation.isPending
+                      ? 'Đang xóa...'
+                      : `Xóa đã chọn (${selectedQuestionIds.size})`}
                   </button>
                   <button
                     type="button"

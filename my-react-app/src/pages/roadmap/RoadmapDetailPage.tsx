@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockStudent } from '../../data/mockData';
 import { useEnroll, useMyEnrollments } from '../../hooks/useCourses';
@@ -12,7 +12,11 @@ import {
   useSubmitRoadmapFeedback,
   useStudentTopicMaterials,
 } from '../../hooks/useRoadmaps';
-import type { RoadmapTopic, TopicMaterialResourceType } from '../../types';
+import type {
+  RoadmapEntryTestResultResponse,
+  RoadmapTopic,
+  TopicMaterialResourceType,
+} from '../../types';
 import './roadmap-detail-page.css';
 
 /* ─────────────────────────────────────────────────────
@@ -129,6 +133,13 @@ function getTopicCourses(topic: RoadmapTopic): Array<{ id: string; title: string
   return [];
 }
 
+function isTopicUnlocked(topic: RoadmapTopic): boolean {
+  if (typeof topic.unlocked === 'boolean') {
+    return topic.unlocked;
+  }
+  return topic.status !== 'LOCKED';
+}
+
 function resolveEntryTestState(params: {
   entryStatus?: 'UPCOMING' | 'IN_PROGRESS' | 'COMPLETED';
   entryActiveAttemptId?: string | null;
@@ -196,6 +207,7 @@ function openLinkedCourseWithAutoEnroll(params: {
 ───────────────────────────────────────────────────── */
 export default function RoadmapDetailPage() {
   const { roadmapId = '' } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const { data, isLoading, error } = useRoadmapDetail(roadmapId);
   const entryTestQuery = useRoadmapEntryTest(roadmapId);
@@ -221,6 +233,9 @@ export default function RoadmapDetailPage() {
   const [pathLength, setPathLength] = useState(10000);
 
   const roadmap = data?.result;
+  const entryResult =
+    (location.state as { entryTestResult?: RoadmapEntryTestResultResponse } | null)?.entryTestResult ??
+    null;
   const entryTest = entryTestQuery.data?.result;
   const entryStatus = entryTest?.studentStatus;
   const activeAttemptQuery = useRoadmapEntryTestActiveAttempt(roadmapId);
@@ -228,6 +243,12 @@ export default function RoadmapDetailPage() {
   const myFeedback = myFeedbackQuery.data?.result ?? null;
   const materialsQuery = useStudentTopicMaterials(selectedTopicId, resourceType);
   const materials = Array.isArray(materialsQuery.data?.result) ? materialsQuery.data?.result : [];
+  const newlyUnlockedTopics = entryResult?.newlyUnlockedTopics ?? [];
+  const unlockedTopicsFromResult = entryResult?.unlockedTopics ?? [];
+  const bestScore =
+    typeof roadmap?.studentBestScore === 'number'
+      ? roadmap.studentBestScore
+      : entryResult?.studentBestScore;
 
   const sortedTopics = (roadmap?.topics ?? [])
     .slice()
@@ -241,7 +262,9 @@ export default function RoadmapDetailPage() {
     sortedTopics.length > 0 && sortedTopics.every((t) => finishedTopicIds.includes(t.id));
 
   // Index of the first topic not yet finished (the "current" one the student should tackle)
-  const currentTopicIdx = sortedTopics.findIndex((t) => !finishedTopicIds.includes(t.id));
+  const currentTopicIdx = sortedTopics.findIndex(
+    (t) => isTopicUnlocked(t) && !finishedTopicIds.includes(t.id)
+  );
 
   // Car sits at the last finished topic (or before the first if nothing done yet)
   let effectiveCarIdx: number;
@@ -393,6 +416,11 @@ export default function RoadmapDetailPage() {
                     {courseActionMessage.text}
                   </p>
                 )}
+                {typeof bestScore === 'number' && (
+                  <div className="rdp__best-score">
+                    Điểm cao nhất entry test: <strong>{bestScore}</strong>
+                  </div>
+                )}
                 {currentTopicIdx >= 0 && !isFinalFinished && (
                   <button
                     type="button"
@@ -450,6 +478,25 @@ export default function RoadmapDetailPage() {
 
               {!canOpenEntryAssessment && !entryTestQuery.isLoading && (
                 <p className="rdp__entry-result">⚠ Chưa có assessmentId cho bài test đầu vào. Cần BE trả về assessmentId để khởi tạo luồng làm bài.</p>
+              )}
+
+              {newlyUnlockedTopics.length > 0 && (
+                <div className="rdp__unlock-result">
+                  <p className="rdp__unlock-title">🎉 Bạn vừa mở khóa chủ đề mới</p>
+                  <div className="rdp__unlock-list">
+                    {newlyUnlockedTopics.map((topic) => (
+                      <span key={topic.id} className="rdp__unlock-chip">
+                        {topic.name} (mốc {topic.requiredPoint})
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {unlockedTopicsFromResult.length > 0 && (
+                <p className="rdp__entry-result">
+                  Đã mở khóa {unlockedTopicsFromResult.length} chủ đề theo điểm tốt nhất hiện tại.
+                </p>
               )}
             </div>
 
@@ -560,8 +607,7 @@ export default function RoadmapDetailPage() {
                       const isCurrent = index === currentTopicIdx;
                       const topicCourses = getTopicCourses(topic);
                       const hasCourseLink = topicCourses.length > 0;
-                      // A topic is only visually locked when it's neither done nor the current one
-                      const isLocked = topic.status === 'LOCKED' && !isDone && !isCurrent;
+                      const isLocked = !isDone && !isTopicUnlocked(topic);
 
                       return (
                         <div

@@ -34,7 +34,7 @@ export interface PointsOverrideRequest {
     /** @NotNull */
     questionId: string;
     /** @DecimalMin(0) */
-    pointsOverride?: number;
+    pointsOverride?: number | null;
 }
 
 export interface CloneAssessmentRequest {
@@ -66,8 +66,16 @@ export interface AssessmentGenerationSummary {
 }
 
 export interface AssessmentQuestionItem {
-    id: string;
+    id?: string;
+    questionId: string;
+    orderIndex: number;
+    pointsOverride?: number | null;
+    questionType?: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER' | 'ESSAY' | 'CODING';
     questionText: string;
+    options?: Record<string, string>;
+    correctAnswer?: string;
+    explanation?: string;
+    createdAt?: string;
     difficulty?: 'EASY' | 'MEDIUM' | 'HARD';
     points?: number;
     questionSourceType?: 'MANUAL' | 'TEMPLATE_GENERATED' | 'AI_GENERATED' | 'BANK_IMPORTED' | 'BANK' | 'AI';

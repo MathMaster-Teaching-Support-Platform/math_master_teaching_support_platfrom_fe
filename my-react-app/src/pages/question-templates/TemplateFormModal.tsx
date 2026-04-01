@@ -33,6 +33,13 @@ type Props = {
   onSubmit: (data: QuestionTemplateRequest) => Promise<void>;
 };
 
+type ValidationResult = {
+  normalizedName: string;
+  normalizedTemplateText: string;
+  normalizedAnswerFormula: string;
+  normalizedTags: string[];
+};
+
 function parseTemplateText(value: Record<string, unknown> | undefined): string {
   const vi = value?.vi;
   const en = value?.en;
@@ -41,13 +48,83 @@ function parseTemplateText(value: Record<string, unknown> | undefined): string {
   return '';
 }
 
+function validateFormInput(input: {
+  name: string;
+  templateText: string;
+  answerFormula: string;
+  tags: string;
+}): { error?: string; result?: ValidationResult } {
+  const normalizedName = input.name.trim();
+  if (!normalizedName) return { error: 'Tên mẫu là bắt buộc.' };
+  if (normalizedName.length > 255) return { error: 'Tên mẫu không được vượt quá 255 ký tự.' };
+
+  const normalizedTemplateText = input.templateText.trim();
+  if (!normalizedTemplateText) return { error: 'Nội dung template là bắt buộc.' };
+
+  const normalizedAnswerFormula = input.answerFormula.trim();
+  if (!normalizedAnswerFormula) return { error: 'Công thức đáp án là bắt buộc.' };
+
+  const normalizedTags = input.tags
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  if (normalizedTags.length === 0) {
+    return { error: 'Bạn cần nhập ít nhất một tag cho template.' };
+  }
+
+  return {
+    result: {
+      normalizedName,
+      normalizedTemplateText,
+      normalizedAnswerFormula,
+      normalizedTags,
+    },
+  };
+}
+
+function buildParameters(parameters: ParameterInput[]): Record<string, unknown> {
+  const mappedParameters: Record<string, unknown> = {};
+  for (const item of parameters) {
+    if (!item.name.trim()) continue;
+    mappedParameters[item.name.trim()] = {
+      type: item.type,
+      min: item.type === 'int' ? Number.parseInt(item.min, 10) : Number.parseFloat(item.min),
+      max: item.type === 'int' ? Number.parseInt(item.max, 10) : Number.parseFloat(item.max),
+    };
+  }
+  return mappedParameters;
+}
+
+function buildOptions(options: OptionInput[]): Record<string, unknown> {
+  const mappedOptions: Record<string, unknown> = {};
+  for (const option of options) {
+    if (!option.key.trim() || !option.formula.trim()) continue;
+    mappedOptions[option.key.trim()] = option.formula.trim();
+  }
+  return mappedOptions;
+}
+
+function buildDifficultyRules(rules: DifficultyRuleInput[]): Record<string, unknown> {
+  const mappedRules: Record<string, unknown> = {};
+  for (const rule of rules) {
+    if (!rule.level.trim() || !rule.condition.trim()) continue;
+    mappedRules[rule.level.trim()] = rule.condition.trim();
+  }
+  return mappedRules;
+}
+
 const cognitiveLevelLabels: Record<CognitiveLevel, string> = {
+  NHAN_BIET: '1. Nhận biết',
+  THONG_HIEU: '2. Thông hiểu',
+  VAN_DUNG: '3. Vận dụng',
+  VAN_DUNG_CAO: '4. Vận dụng cao',
   REMEMBER: '1. Nhận biết',
   UNDERSTAND: '2. Thông hiểu',
   APPLY: '3. Vận dụng',
-  ANALYZE: '4. Phân tích',
-  EVALUATE: '5. Đánh giá',
-  CREATE: '6. Sáng tạo',
+  ANALYZE: '5. Phân tích',
+  EVALUATE: '6. Đánh giá',
+  CREATE: '7. Sáng tạo',
 };
 
 const questionTypeLabels: Record<QuestionType, string> = {
@@ -65,11 +142,11 @@ const difficultyLabels: Record<string, string> = {
   VERY_HARD: 'Rất khó',
 };
 
-export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit }: Props) {
+export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit }: Readonly<Props>) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [templateType, setTemplateType] = useState<QuestionType>(QuestionType.MULTIPLE_CHOICE);
-  const [cognitiveLevel, setCognitiveLevel] = useState<CognitiveLevel>(CognitiveLevel.UNDERSTAND);
+  const [cognitiveLevel, setCognitiveLevel] = useState<CognitiveLevel>(CognitiveLevel.THONG_HIEU);
   const [isPublic, setIsPublic] = useState(false);
   const [templateText, setTemplateText] = useState('');
   const [answerFormula, setAnswerFormula] = useState('');
@@ -78,15 +155,17 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
   const [options, setOptions] = useState<OptionInput[]>([]);
   const [rules, setRules] = useState<DifficultyRuleInput[]>([]);
   const [saving, setSaving] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isOpen) return;
 
     if (mode === 'edit' && initialData) {
+      setSubmitError(null);
       setName(initialData.name || '');
       setDescription(initialData.description || '');
       setTemplateType(initialData.templateType || QuestionType.MULTIPLE_CHOICE);
-      setCognitiveLevel(initialData.cognitiveLevel || CognitiveLevel.UNDERSTAND);
+      setCognitiveLevel(initialData.cognitiveLevel || CognitiveLevel.THONG_HIEU);
       setIsPublic(initialData.isPublic ?? false);
       setTemplateText(parseTemplateText(initialData.templateText));
       setAnswerFormula(initialData.answerFormula || '');
@@ -119,9 +198,10 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
     }
 
     setName('');
+    setSubmitError(null);
     setDescription('');
     setTemplateType(QuestionType.MULTIPLE_CHOICE);
-    setCognitiveLevel(CognitiveLevel.UNDERSTAND);
+    setCognitiveLevel(CognitiveLevel.THONG_HIEU);
     setIsPublic(false);
     setTemplateText('Giải phương trình: {{a}}x + {{b}} = 0');
     setAnswerFormula('(-b)/a');
@@ -141,49 +221,75 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
 
   if (!isOpen) return null;
 
-  async function submit(event: React.FormEvent) {
+  let submitLabel = 'Cập nhật mẫu';
+  if (saving) submitLabel = 'Đang lưu...';
+  else if (mode === 'create') submitLabel = 'Tạo mẫu';
+
+  const removeParameterAt = (indexToRemove: number) => {
+    setParameters((prev) => prev.filter((_entry, index) => index !== indexToRemove));
+  };
+
+  const removeOptionAt = (indexToRemove: number) => {
+    setOptions((prev) => prev.filter((_entry, index) => index !== indexToRemove));
+  };
+
+  const removeRuleAt = (indexToRemove: number) => {
+    setRules((prev) => prev.filter((_entry, index) => index !== indexToRemove));
+  };
+
+  async function submit(event: React.BaseSyntheticEvent) {
     event.preventDefault();
+    setSubmitError(null);
+
+    const validation = validateFormInput({
+      name,
+      templateText,
+      answerFormula,
+      tags,
+    });
+    if (validation.error || !validation.result) {
+      setSubmitError(validation.error || 'Dữ liệu mẫu chưa hợp lệ.');
+      return;
+    }
+
     setSaving(true);
 
-    const mappedParameters: Record<string, unknown> = {};
-    for (const item of parameters) {
-      if (!item.name.trim()) continue;
-      mappedParameters[item.name.trim()] = {
-        type: item.type,
-        min: item.type === 'int' ? Number.parseInt(item.min, 10) : Number.parseFloat(item.min),
-        max: item.type === 'int' ? Number.parseInt(item.max, 10) : Number.parseFloat(item.max),
-      };
+    const mappedParameters = buildParameters(parameters);
+    const mappedOptions = buildOptions(options);
+    const mappedRules = buildDifficultyRules(rules);
+
+    if (Object.keys(mappedParameters).length === 0) {
+      setSubmitError('Bạn cần khai báo ít nhất một tham số trong mục parameters.');
+      setSaving(false);
+      return;
     }
 
-    const mappedOptions: Record<string, unknown> = {};
-    for (const option of options) {
-      if (!option.key.trim() || !option.formula.trim()) continue;
-      mappedOptions[option.key.trim()] = option.formula.trim();
-    }
-
-    const mappedRules: Record<string, unknown> = {};
-    for (const rule of rules) {
-      if (!rule.level.trim() || !rule.condition.trim()) continue;
-      mappedRules[rule.level.trim()] = rule.condition.trim();
+    if (Object.keys(mappedRules).length === 0) {
+      setSubmitError('Bạn cần khai báo ít nhất một difficulty rule hợp lệ.');
+      setSaving(false);
+      return;
     }
 
     const payload: QuestionTemplateRequest = {
-      name: name.trim(),
+      name: validation.result.normalizedName,
       description: description.trim() || undefined,
       templateType,
-      templateText: { vi: templateText.trim() },
+      templateText: { vi: validation.result.normalizedTemplateText },
       parameters: mappedParameters,
-      answerFormula: answerFormula.trim(),
+      answerFormula: validation.result.normalizedAnswerFormula,
       optionsGenerator: Object.keys(mappedOptions).length ? mappedOptions : undefined,
       difficultyRules: mappedRules,
       cognitiveLevel,
-      tags: tags.split(',').map((item) => item.trim()).filter(Boolean),
+      tags: validation.result.normalizedTags,
       isPublic,
+      questionBankId: initialData?.questionBankId ?? null,
     };
 
     try {
       await onSubmit(payload);
       onClose();
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : 'Không thể lưu mẫu câu hỏi. Vui lòng thử lại.');
     } finally {
       setSaving(false);
     }
@@ -250,7 +356,7 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
 
             <label>
               <p className="muted" style={{ marginBottom: 6 }}>
-                Nội dung câu hỏi 
+                Nội dung câu hỏi{' '}
                 <span style={{ fontSize: '0.8rem', marginLeft: 8, fontWeight: 400 }}>
                   (Dùng {"{{a}}"}, {"{{b}}"} để chèn biến số. Ví dụ: "Giải: x + {"{{a}}"} = {"{{b}}"}")
                 </span>
@@ -268,7 +374,7 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
               <input className="input" required placeholder="Ví dụ: a + b" value={answerFormula} onChange={(event) => setAnswerFormula(event.target.value)} />
               {answerFormula && (
                 <div className="preview-box">
-                  <MathText text={`$${answerFormula.replace(/\$/g, '')}$`} />
+                  <MathText text={`$${answerFormula.replaceAll('$', '')}$`} />
                 </div>
               )}
             </label>
@@ -343,7 +449,7 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
                     type="button"
                     className="btn danger"
                     style={{ padding: '0.4rem', height: '38px', width: '38px', display: 'flex', justifyContent: 'center' }}
-                    onClick={() => setParameters((prev) => prev.filter((_entry, i) => i !== index))}
+                    onClick={() => removeParameterAt(index)}
                   >
                     <Trash2 size={14} />
                   </button>
@@ -394,14 +500,14 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
                       />
                       {item.formula && (
                         <div className="preview-box">
-                          <MathText text={`$${item.formula.replace(/\$/g, '')}$`} />
+                          <MathText text={`$${item.formula.replaceAll('$', '')}$`} />
                         </div>
                       )}
                     </div>
                     <button
                       type="button"
                       className="btn danger"
-                      onClick={() => setOptions((prev) => prev.filter((_entry, i) => i !== index))}
+                      onClick={() => removeOptionAt(index)}
                     >
                       <Trash2 size={14} />
                     </button>
@@ -463,7 +569,7 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
                     <button
                       type="button"
                       className="btn danger"
-                      onClick={() => setRules((prev) => prev.filter((_entry, i) => i !== index))}
+                      onClick={() => removeRuleAt(index)}
                     >
                       <Trash2 size={14} />
                     </button>
@@ -473,15 +579,21 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
             </section>
 
             <label className="row" style={{ justifyContent: 'start' }}>
-              <input type="checkbox" checked={isPublic} onChange={(event) => setIsPublic(event.target.checked)} />
+              <input type="checkbox" checked={isPublic} onChange={(event) => setIsPublic(event.target.checked)} />{' '}
               Công khai mẫu cho giáo viên khác
             </label>
+
+            {submitError && (
+              <div className="empty" style={{ color: '#b91c1c', marginTop: 0 }}>
+                {submitError}
+              </div>
+            )}
           </div>
 
           <div className="modal-footer">
             <button type="button" className="btn secondary" onClick={onClose}>Hủy</button>
             <button type="submit" className="btn" disabled={saving}>
-              {saving ? 'Đang lưu...' : mode === 'create' ? 'Tạo mẫu' : 'Cập nhật mẫu'}
+              {submitLabel}
             </button>
           </div>
         </form>

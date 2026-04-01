@@ -1,14 +1,18 @@
 import { X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useGetExamMatrixById, useGetMyExamMatrices } from '../../hooks/useExamMatrix';
-import { useLessons } from '../../hooks/useLessons';
+import { useLessonsByChapter } from '../../hooks/useLessons';
+import { useSubjects } from '../../hooks/useSubjects';
+import { useChaptersBySubject } from '../../hooks/useChapters';
 import { AssessmentService } from '../../services/api/assessment.service';
+import { LessonService } from '../../services/api/lesson.service';
 import type {
   AssessmentMode,
   AssessmentRequest,
   AssessmentResponse,
   AssessmentType,
   AttemptScoringPolicy,
+  LessonResponse,
 } from '../../types';
 
 type Props = {
@@ -36,18 +40,25 @@ const defaultForm: AssessmentRequest = {
   showScoreImmediately: true,
 };
 
-export default function AssessmentModal({ isOpen, mode, initialData, onClose, onSubmit }: Props) {
-  const [gradeLevel, setGradeLevel] = useState('Lớp 10');
-  const [subject, setSubject] = useState('Toán');
+export default function AssessmentModal({ isOpen, mode, initialData, onClose, onSubmit }: Readonly<Props>) {
+  const [selectedSubjectId, setSelectedSubjectId] = useState('');
+  const [selectedChapterId, setSelectedChapterId] = useState('');
   const [lessonSearch, setLessonSearch] = useState('');
   const [formData, setFormData] = useState<AssessmentRequest>(defaultForm);
+  const [persistedLessons, setPersistedLessons] = useState<LessonResponse[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [compatibilityHint, setCompatibilityHint] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   const { data: matrixData } = useGetMyExamMatrices();
   const { data: selectedMatrixData } = useGetExamMatrixById(formData.examMatrixId, !!formData.examMatrixId && isOpen);
-  const { data: lessonsData, isLoading: loadingLessons } = useLessons(gradeLevel, subject, isOpen);
+  const { data: subjectsData } = useSubjects();
+  const { data: chaptersData } = useChaptersBySubject(selectedSubjectId, !!selectedSubjectId && isOpen);
+  const { data: lessonsData, isLoading: loadingLessons } = useLessonsByChapter(
+    selectedChapterId,
+    lessonSearch,
+    !!selectedChapterId && isOpen
+  );
 
   useEffect(() => {
     if (!isOpen) return;
@@ -76,23 +87,66 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
     }
 
     setLessonSearch('');
+    setSelectedSubjectId('');
+    setSelectedChapterId('');
     setError(null);
     setCompatibilityHint(null);
     setSaving(false);
   }, [isOpen, mode, initialData]);
 
   const matrices = matrixData?.result ?? [];
+  const subjects = subjectsData?.result ?? [];
+  const chapters = chaptersData?.result ?? [];
   const lessons = lessonsData?.result ?? [];
+  const lessonMap = useMemo(() => {
+    const map = new Map<string, LessonResponse>();
+    lessons.forEach((lesson) => map.set(lesson.id, lesson));
+    persistedLessons.forEach((lesson) => map.set(lesson.id, lesson));
+    return map;
+  }, [lessons, persistedLessons]);
+  const mergedLessons = useMemo(() => Array.from(lessonMap.values()), [lessonMap]);
 
-  const filteredLessons = useMemo(() => {
-    if (!lessonSearch.trim()) return lessons;
-    const q = lessonSearch.toLowerCase();
-    return lessons.filter((item) => (item.title || '').toLowerCase().includes(q) || item.id.toLowerCase().includes(q));
-  }, [lessons, lessonSearch]);
+  useEffect(() => {
+    if (!isOpen || mode !== 'edit') {
+      setPersistedLessons([]);
+      return;
+    }
+
+    const lessonIds = initialData?.lessonIds ?? [];
+    if (lessonIds.length === 0) {
+      setPersistedLessons([]);
+      return;
+    }
+
+    let cancelled = false;
+    Promise.all(
+      lessonIds.map(async (lessonId) => {
+        try {
+          const response = await LessonService.getLessonById(lessonId);
+          return response.result;
+        } catch {
+          return undefined;
+        }
+      })
+    ).then((results) => {
+      if (cancelled) return;
+      setPersistedLessons(results.filter((lesson): lesson is LessonResponse => !!lesson));
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, mode, initialData?.lessonIds]);
+
+  const filteredLessons = useMemo(() => mergedLessons, [mergedLessons]);
+
+  let submitLabel = 'Cập nhật bài kiểm tra';
+  if (saving) submitLabel = 'Đang lưu...';
+  else if (mode === 'create') submitLabel = 'Tạo bài kiểm tra';
 
   if (!isOpen) return null;
 
-  async function submit(event: React.FormEvent) {
+  async function submit(event: React.BaseSyntheticEvent) {
     event.preventDefault();
     setError(null);
     setCompatibilityHint(null);
@@ -102,14 +156,14 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
       return;
     }
 
-    if (formData.lessonIds.length === 0) {
+    if (mode === 'create' && formData.lessonIds.length === 0) {
       setError('Vui lòng chọn ít nhất một bài học.');
       return;
     }
 
-    const availableLessonIds = new Set(lessons.map((item) => item.id));
+    const availableLessonIds = new Set(mergedLessons.map((item) => item.id));
     const invalidLesson = formData.lessonIds.find((id) => !availableLessonIds.has(id));
-    if (invalidLesson) {
+    if (formData.lessonIds.length > 0 && invalidLesson) {
       setError('Có bài học đã chọn không nằm trong danh sách hiện tại.');
       return;
     }
@@ -119,23 +173,25 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
       return;
     }
 
-    try {
-      const compatibility = await AssessmentService.checkMatrixLessonCompatibility({
-        examMatrixId: formData.examMatrixId,
-        lessonIds: formData.lessonIds,
-      });
+    if (formData.lessonIds.length > 0) {
+      try {
+        const compatibility = await AssessmentService.checkMatrixLessonCompatibility({
+          examMatrixId: formData.examMatrixId,
+          lessonIds: formData.lessonIds,
+        });
 
-      if (compatibility.supported && !compatibility.compatible) {
-        setError(compatibility.message || 'Danh sách bài học không tương thích với ma trận đã chọn.');
+        if (compatibility.supported && !compatibility.compatible) {
+          setError(compatibility.message || 'Danh sách bài học không tương thích với ma trận đã chọn.');
+          return;
+        }
+
+        if (!compatibility.supported) {
+          setCompatibilityHint('Backend chưa hỗ trợ endpoint kiểm tra tương thích, hệ thống sẽ kiểm tra theo cách mặc định.');
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Không thể kiểm tra tương thích giữa ma trận và bài học.');
         return;
       }
-
-      if (!compatibility.supported) {
-        setCompatibilityHint('Backend chưa hỗ trợ endpoint kiểm tra tương thích, hệ thống sẽ kiểm tra theo cách mặc định.');
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Không thể kiểm tra tương thích giữa ma trận và bài học.');
-      return;
     }
 
     setSaving(true);
@@ -239,12 +295,36 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
             <section className="data-card" style={{ minHeight: 0 }}>
               <div className="form-grid">
                 <label>
-                  <p className="muted" style={{ marginBottom: 6 }}>Khối lớp</p>
-                  <input className="input" value={gradeLevel} onChange={(event) => setGradeLevel(event.target.value)} />
-                </label>
-                <label>
                   <p className="muted" style={{ marginBottom: 6 }}>Môn học</p>
-                  <input className="input" value={subject} onChange={(event) => setSubject(event.target.value)} />
+                  <select
+                    className="select"
+                    value={selectedSubjectId}
+                    onChange={(event) => {
+                      setSelectedSubjectId(event.target.value);
+                      setSelectedChapterId('');
+                    }}
+                  >
+                    <option value="">Chọn môn học</option>
+                    {subjects.map((subject) => (
+                      <option key={subject.id} value={subject.id}>{subject.name}</option>
+                    ))}
+                  </select>
+                </label>
+
+                <label>
+                  <p className="muted" style={{ marginBottom: 6 }}>Chapter</p>
+                  <select
+                    className="select"
+                    value={selectedChapterId}
+                    onChange={(event) => setSelectedChapterId(event.target.value)}
+                  >
+                    <option value="">Chọn chapter</option>
+                    {chapters.map((chapter) => (
+                      <option key={chapter.id} value={chapter.id}>
+                        {chapter.title || chapter.name || chapter.id}
+                      </option>
+                    ))}
+                  </select>
                 </label>
               </div>
 
@@ -344,7 +424,7 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
                   type="checkbox"
                   checked={formData.randomizeQuestions || false}
                   onChange={(event) => setFormData({ ...formData, randomizeQuestions: event.target.checked })}
-                />
+                />{' '}
                 Trộn thứ tự câu hỏi
               </label>
 
@@ -353,7 +433,7 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
                   type="checkbox"
                   checked={formData.showCorrectAnswers || false}
                   onChange={(event) => setFormData({ ...formData, showCorrectAnswers: event.target.checked })}
-                />
+                />{' '}
                 Hiển thị đáp án đúng
               </label>
 
@@ -362,7 +442,7 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
                   type="checkbox"
                   checked={formData.allowMultipleAttempts || false}
                   onChange={(event) => setFormData({ ...formData, allowMultipleAttempts: event.target.checked })}
-                />
+                />{' '}
                 Cho phép làm nhiều lần
               </label>
 
@@ -371,7 +451,7 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
                   type="checkbox"
                   checked={formData.showScoreImmediately || false}
                   onChange={(event) => setFormData({ ...formData, showScoreImmediately: event.target.checked })}
-                />
+                />{' '}
                 Hiển thị điểm ngay sau khi nộp
               </label>
             </div>
@@ -380,7 +460,7 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
           <div className="modal-footer">
             <button type="button" className="btn secondary" onClick={onClose}>Hủy</button>
             <button type="submit" className="btn" disabled={saving}>
-              {saving ? 'Đang lưu...' : mode === 'create' ? 'Tạo bài kiểm tra' : 'Cập nhật bài kiểm tra'}
+              {submitLabel}
             </button>
           </div>
         </form>

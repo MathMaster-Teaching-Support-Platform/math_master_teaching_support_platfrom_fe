@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { examMatrixService } from '../services/examMatrixService';
 import type {
-    AddBankMappingRequest,
+    AddTemplateBatchRequest,
     AddTemplateMappingRequest,
     ExamMatrixRequest,
     FinalizePreviewRequest,
@@ -15,7 +15,6 @@ export const examMatrixKeys = {
     detail: (id: string) => [...examMatrixKeys.all, 'detail', id] as const,
     mappings: (matrixId: string) => [...examMatrixKeys.detail(matrixId), 'mappings'] as const,
     validation: (matrixId: string) => [...examMatrixKeys.detail(matrixId), 'validation'] as const,
-    bankMappings: (matrixId: string) => [...examMatrixKeys.detail(matrixId), 'bank-mappings'] as const,
     matchingTemplates: (matrixId: string, params: ListMatchingTemplatesParams) =>
         [...examMatrixKeys.detail(matrixId), 'matching-templates', params] as const,
 };
@@ -49,13 +48,6 @@ export const useValidateMatrix = (matrixId: string, enabled = false) =>
 
 export const useMatrixValidation = (matrixId: string, enabled = true) =>
     useValidateMatrix(matrixId, enabled);
-
-export const useGetBankMappings = (matrixId: string, enabled = true) =>
-    useQuery({
-        queryKey: examMatrixKeys.bankMappings(matrixId),
-        queryFn: () => examMatrixService.getBankMappings(matrixId),
-        enabled: !!matrixId && enabled,
-    });
 
 export const useListMatchingTemplates = (
     matrixId: string,
@@ -129,31 +121,13 @@ export const useRemoveTemplateMapping = () => {
     });
 };
 
-export const useAddBankMapping = () => {
+export const useAddTemplateMappingsBatch = () => {
     const qc = useQueryClient();
     return useMutation({
-        mutationFn: ({
-            matrixId,
-            request,
-        }: {
-            matrixId: string;
-            request: AddBankMappingRequest;
-        }) => examMatrixService.addBankMapping(matrixId, request),
+        mutationFn: ({ matrixId, request }: { matrixId: string; request: AddTemplateBatchRequest }) =>
+            examMatrixService.addTemplateMappingsBatch(matrixId, request),
         onSuccess: (_, vars) => {
-            qc.invalidateQueries({ queryKey: examMatrixKeys.bankMappings(vars.matrixId) });
-            qc.invalidateQueries({ queryKey: examMatrixKeys.validation(vars.matrixId) });
-            qc.invalidateQueries({ queryKey: examMatrixKeys.detail(vars.matrixId) });
-        },
-    });
-};
-
-export const useRemoveBankMapping = () => {
-    const qc = useQueryClient();
-    return useMutation({
-        mutationFn: ({ matrixId, mappingId }: { matrixId: string; mappingId: string }) =>
-            examMatrixService.removeBankMapping(matrixId, mappingId),
-        onSuccess: (_, vars) => {
-            qc.invalidateQueries({ queryKey: examMatrixKeys.bankMappings(vars.matrixId) });
+            qc.invalidateQueries({ queryKey: examMatrixKeys.mappings(vars.matrixId) });
             qc.invalidateQueries({ queryKey: examMatrixKeys.validation(vars.matrixId) });
             qc.invalidateQueries({ queryKey: examMatrixKeys.detail(vars.matrixId) });
         },
