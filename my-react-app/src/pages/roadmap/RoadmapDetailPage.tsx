@@ -140,6 +140,92 @@ function isTopicUnlocked(topic: RoadmapTopic): boolean {
   return topic.status !== 'LOCKED';
 }
 
+function findNearestTopicIndexByScore(topics: RoadmapTopic[], score?: number): number {
+  if (typeof score !== 'number' || Number.isNaN(score)) {
+    return -1;
+  }
+
+  let nearestIdx = -1;
+  let nearestRequired = Number.NEGATIVE_INFINITY;
+
+  topics.forEach((topic, index) => {
+    if (typeof topic.requiredPoint !== 'number') {
+      return;
+    }
+    if (topic.requiredPoint <= score && topic.requiredPoint >= nearestRequired) {
+      nearestRequired = topic.requiredPoint;
+      nearestIdx = index;
+    }
+  });
+
+  return nearestIdx;
+}
+
+function resolveDefaultOpenTopicIndex(params: {
+  latestRoadmapNodeIdx: number;
+  nearestTopicByScoreIdx: number;
+  currentTopicIdx: number;
+}) {
+  if (params.currentTopicIdx >= 0) {
+    return params.currentTopicIdx;
+  }
+  if (params.nearestTopicByScoreIdx >= 0) {
+    return params.nearestTopicByScoreIdx;
+  }
+  return params.latestRoadmapNodeIdx;
+}
+
+function resolveAutoSelectedTopicId(
+  topics: RoadmapTopic[],
+  selectedTopicId: string,
+  defaultOpenTopicIdx: number
+) {
+  if (topics.length === 0) {
+    return '';
+  }
+
+  const selectedTopicStillExists = topics.some((topic) => topic.id === selectedTopicId);
+  if (selectedTopicId && selectedTopicStillExists) {
+    return selectedTopicId;
+  }
+
+  const safeIdx = Math.max(0, Math.min(defaultOpenTopicIdx, topics.length - 1));
+  return topics[safeIdx].id;
+}
+
+function getLatestReachableTopicIndex(params: {
+  topicsLength: number;
+  scoreUnlockedTopicIdx: number;
+  completionUnlockedTopicIdx: number;
+}) {
+  const baselineUnlockedTopicIdx = params.topicsLength > 0 ? 0 : -1;
+  return Math.max(
+    baselineUnlockedTopicIdx,
+    params.scoreUnlockedTopicIdx,
+    params.completionUnlockedTopicIdx
+  );
+}
+
+function getRoadProgressFraction(topicsLength: number, latestRoadmapNodeIdx: number) {
+  if (topicsLength <= 0 || latestRoadmapNodeIdx < 0) {
+    return 0;
+  }
+  if (topicsLength === 1) {
+    return 1;
+  }
+  return Math.max(0, latestRoadmapNodeIdx) / (topicsLength - 1);
+}
+
+function syncCarIndexWithLatest(prevCarIdx: number, latestRoadmapNodeIdx: number) {
+  if (latestRoadmapNodeIdx < 0) {
+    return -1;
+  }
+  if (prevCarIdx < 0) {
+    return latestRoadmapNodeIdx;
+  }
+  return Math.min(prevCarIdx, latestRoadmapNodeIdx);
+}
+
 function resolveEntryTestState(params: {
   entryStatus?: 'UPCOMING' | 'IN_PROGRESS' | 'COMPLETED';
   entryActiveAttemptId?: string | null;
@@ -261,22 +347,52 @@ export default function RoadmapDetailPage() {
   const isFinalFinished =
     sortedTopics.length > 0 && sortedTopics.every((t) => finishedTopicIds.includes(t.id));
 
-  // Index of the first topic not yet finished (the "current" one the student should tackle)
-  const currentTopicIdx = sortedTopics.findIndex(
-    (t) => isTopicUnlocked(t) && !finishedTopicIds.includes(t.id)
-  );
+  const latestUnlockedTopicIdx = sortedTopics.reduce((latestIdx, topic, index) => {
+    if (isTopicUnlocked(topic)) {
+      return index;
+    }
+    return latestIdx;
+  }, -1);
 
-  // Car sits at the last finished topic (or before the first if nothing done yet)
+  const nearestTopicByScoreIdx = findNearestTopicIndexByScore(sortedTopics, bestScore);
+  const scoreUnlockedTopicIdx =
+    nearestTopicByScoreIdx >= 0 ? nearestTopicByScoreIdx : latestUnlockedTopicIdx;
+
+  const maxFinishedTopicIdx = sortedTopics.reduce((maxIdx, topic, index) => {
+    if (finishedTopicIds.includes(topic.id)) {
+      return index;
+    }
+    return maxIdx;
+  }, -1);
+
+  const completionUnlockedTopicIdx =
+    maxFinishedTopicIdx >= 0 ? Math.min(sortedTopics.length - 1, maxFinishedTopicIdx + 1) : -1;
+
+  // Car always stands on highest reachable topic (entry score + completion progress),
+  // with the first topic as a guaranteed baseline.
+  const latestRoadmapNodeIdx = getLatestReachableTopicIndex({
+    topicsLength: sortedTopics.length,
+    scoreUnlockedTopicIdx,
+    completionUnlockedTopicIdx,
+  });
+  const currentTopicIdx = latestRoadmapNodeIdx;
+
+  const defaultOpenTopicIdx = resolveDefaultOpenTopicIndex({
+    latestRoadmapNodeIdx,
+    nearestTopicByScoreIdx,
+    currentTopicIdx,
+  });
+
   let effectiveCarIdx: number;
   if (carIdx >= 0) {
     effectiveCarIdx = carIdx;
   } else {
-    effectiveCarIdx = currentTopicIdx > 0 ? currentTopicIdx - 1 : -1;
+    effectiveCarIdx = latestRoadmapNodeIdx;
   }
+  const activeVisualTopicIdx = effectiveCarIdx;
   const carNodePos = effectiveCarIdx >= 0 ? nodePos(effectiveCarIdx) : null;
 
-  const completedFraction =
-    sortedTopics.length > 0 ? finishedTopicIds.length / sortedTopics.length : 0;
+  const completedFraction = getRoadProgressFraction(sortedTopics.length, latestRoadmapNodeIdx);
   const dashOffset = pathLength * (1 - completedFraction);
 
   // Measure the SVG path once it renders
@@ -285,7 +401,6 @@ export default function RoadmapDetailPage() {
       const len = roadPathRef.current.getTotalLength();
       if (len > 0) setPathLength(len);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathD, isLoading]);
 
   // Auto-scroll to current node
@@ -304,8 +419,35 @@ export default function RoadmapDetailPage() {
     setFeedbackContent(myFeedback.content ?? '');
   }, [myFeedback]);
 
+  useEffect(() => {
+    setCarIdx((prev) => syncCarIndexWithLatest(prev, latestRoadmapNodeIdx));
+  }, [latestRoadmapNodeIdx]);
+
+  useEffect(() => {
+    const nextSelectedTopicId = resolveAutoSelectedTopicId(
+      sortedTopics,
+      selectedTopicId,
+      defaultOpenTopicIdx
+    );
+    if (nextSelectedTopicId !== selectedTopicId) {
+      setSelectedTopicId(nextSelectedTopicId);
+    }
+  }, [defaultOpenTopicIdx, selectedTopicId, sortedTopics]);
+
   const finishTopic = (topicId: string, index: number) => {
     setFinishedTopicIds((prev) => (prev.includes(topicId) ? prev : [...prev, topicId]));
+    const nextTopic = sortedTopics[index + 1] ?? sortedTopics[index];
+    if (nextTopic) {
+      setSelectedTopicId(nextTopic.id);
+      setCarIdx(index + 1);
+    }
+  };
+
+  const moveCarToTopic = (index: number, topicId: string) => {
+    if (index < 0 || index > latestRoadmapNodeIdx) {
+      return;
+    }
+    setSelectedTopicId(topicId);
     setCarIdx(index);
   };
 
@@ -421,7 +563,7 @@ export default function RoadmapDetailPage() {
                     Điểm cao nhất entry test: <strong>{bestScore}</strong>
                   </div>
                 )}
-                {currentTopicIdx >= 0 && !isFinalFinished && (
+                {activeVisualTopicIdx >= 0 && !isFinalFinished && (
                   <button
                     type="button"
                     className="rdp__cta"
@@ -442,8 +584,8 @@ export default function RoadmapDetailPage() {
             {/* ── Entry test ── */}
             <div className="rdp__entry">
               <div className="rdp__entry-left">
-                <h3 className="rdp__entry-title">Bài kiểm tra đầu vào</h3>
-                <p className="rdp__entry-desc">Luồng độc lập theo roadmap entry-test API, hỗ trợ resume khi thoát giữa chừng.</p>
+                <h3 className="rdp__entry-title">Bài kiểm tra level hiện tại</h3>
+                <p className="rdp__entry-desc">Test năng lực tại level đang học trên roadmap, hỗ trợ resume khi thoát giữa chừng.</p>
                 {(entryTestQuery.isLoading || activeAttemptQuery.isLoading) && (
                   <p className="rdp__mat-state">Đang tải thông tin bài test...</p>
                 )}
@@ -604,10 +746,11 @@ export default function RoadmapDetailPage() {
                     {sortedTopics.map((topic, index) => {
                       const pos = nodePos(index);
                       const isDone = finishedTopicIds.includes(topic.id);
-                      const isCurrent = index === currentTopicIdx;
+                      const isCurrent = index === activeVisualTopicIdx;
                       const topicCourses = getTopicCourses(topic);
                       const hasCourseLink = topicCourses.length > 0;
-                      const isLocked = !isDone && !isTopicUnlocked(topic);
+                      const isLocked = !isDone && index > latestRoadmapNodeIdx;
+                      const canMoveCar = index <= latestRoadmapNodeIdx;
 
                       return (
                         <div
@@ -624,11 +767,22 @@ export default function RoadmapDetailPage() {
                           style={{ left: `${pos.leftPct}%`, top: `${pos.topPx}px` }}
                         >
                           {/* Circle */}
-                          <div className="rdp__node-circle">
+                          <button
+                            type="button"
+                            className={[
+                              'rdp__node-circle',
+                              canMoveCar && 'rdp__node-circle--clickable',
+                            ]
+                              .filter(Boolean)
+                              .join(' ')}
+                            onClick={() => moveCarToTopic(index, topic.id)}
+                            disabled={!canMoveCar}
+                            aria-label={canMoveCar ? `Đi tới mốc ${topic.sequenceOrder}: ${topic.title}` : undefined}
+                          >
                             {isDone && '✓'}
                             {!isDone && isLocked && '🔒'}
                             {!isDone && !isLocked && topic.sequenceOrder}
-                          </div>
+                          </button>
                           {isCurrent && <div className="rdp__node-pulse" />}
 
                           {/* Card */}
