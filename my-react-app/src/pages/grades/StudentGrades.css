@@ -1,425 +1,662 @@
-.student-grades-page {
-  max-width: 1400px;
+﻿/* ─── Google Fonts ──────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap');
+
+/* ─── Design Tokens ─────────────────────────────────────────────────────────── */
+:root {
+  --gp-bg:        #0f1729;
+  --gp-card:      #131e36;
+  --gp-border:    rgba(255, 255, 255, 0.07);
+  --gp-border2:   rgba(255, 255, 255, 0.12);
+  --gp-text-1:    #e2e8f0;
+  --gp-text-2:    #94a3b8;
+  --gp-text-3:    #475569;
+  --gp-font-ui:   'Be Vietnam Pro', 'Segoe UI', sans-serif;
+  --gp-font-hero: 'Cormorant Garamond', Georgia, serif;
+}
+
+/* ─── Page Shell ────────────────────────────────────────────────────────────── */
+.gp-page {
+  font-family: var(--gp-font-ui);
+  background: var(--gp-bg);
+  color: var(--gp-text-1);
+  margin: -1.5rem -1.75rem -1.75rem;
+  min-height: calc(100vh - 68px);
+  overflow-x: hidden;
+}
+
+/* ─── Hero Banner ───────────────────────────────────────────────────────────── */
+.gp-hero {
+  position: relative;
+  padding: 3.5rem 2.5rem 3rem;
+  background: linear-gradient(135deg, #0a1020 0%, #162040 55%, #0a1020 100%);
+  overflow: hidden;
+}
+
+.gp-hero-glow {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 80% at 15% 50%, rgba(129,140,248,0.12) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 60% at 78% 40%, rgba(52,211,153,0.07) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.gp-hero-noise {
+  position: absolute;
+  inset: 0;
+  opacity: 0.035;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+
+.gp-hero-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 3rem;
+  max-width: 1200px;
   margin: 0 auto;
 }
 
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 2rem;
-}
-
-/* Overview */
-.grades-overview {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-}
-
-.overview-card {
-  background: white;
-  border-radius: 16px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-  transition: transform 0.2s;
-}
-
-.overview-card:hover {
-  transform: translateY(-2px);
-}
-
-.overview-card.highlight {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-
-.overview-icon {
-  font-size: 2.5rem;
-  flex-shrink: 0;
-}
-
-.overview-content {
-  flex: 1;
-}
-
-.overview-label {
-  font-size: 0.875rem;
-  opacity: 0.9;
-  margin-bottom: 0.25rem;
-}
-
-.overview-card.highlight .overview-label {
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.overview-value {
-  font-size: 1.75rem;
-  font-weight: 800;
-  line-height: 1;
-}
-
-.overview-value.large {
-  font-size: 2.5rem;
-}
-
-.overview-subtitle {
-  font-size: 0.875rem;
-  margin-top: 0.25rem;
-  opacity: 0.9;
-}
-
-/* Toolbar */
-.grades-toolbar {
-  background: white;
-  border-radius: 12px;
-  padding: 1.25rem 1.5rem;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.course-filter {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.course-filter label {
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: var(--gray-700);
-}
-
-.course-filter select {
-  padding: 0.625rem 1rem;
-  border: 2px solid var(--gray-300);
-  border-radius: 8px;
-  font-size: 0.9375rem;
-  background: white;
-  cursor: pointer;
-  min-width: 250px;
-  transition: all 0.2s;
-}
-
-.course-filter select:focus {
-  outline: none;
-  border-color: var(--primary-color);
-}
-
-/* Grades List */
-.grades-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-}
-
-.course-grade-card {
-  background: white;
-  border-radius: 16px;
-  padding: 2rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.course-grade-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 2px solid var(--gray-200);
-}
-
-.header-left {
-  flex: 1;
-}
-
-.course-grade-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--gray-900);
-  margin: 0 0 0.5rem 0;
-}
-
-.course-teacher {
-  font-size: 0.9375rem;
-  color: var(--gray-600);
-  margin: 0;
-}
-
-.course-average {
-  text-align: center;
-  padding: 1rem 1.5rem;
-  border-radius: 12px;
-  min-width: 100px;
-}
-
-.course-average.excellent {
-  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-  color: white;
-}
-
-.course-average.good {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-
-.course-average.average {
-  background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
-  color: white;
-}
-
-.course-average.poor {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  color: white;
-}
-
-.average-label {
-  font-size: 0.813rem;
-  opacity: 0.9;
-  margin-bottom: 0.25rem;
-}
-
-.average-value {
-  font-size: 2rem;
-  font-weight: 800;
-  line-height: 1;
-}
-
-/* Table */
-.assignments-table {
-  margin-bottom: 2rem;
-  overflow-x: auto;
-}
-
-.assignments-table table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.assignments-table th {
-  background: var(--gray-50);
-  padding: 1rem;
-  text-align: left;
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: var(--gray-700);
-  border-bottom: 2px solid var(--gray-200);
-}
-
-.assignments-table td {
-  padding: 1rem;
-  border-bottom: 1px solid var(--gray-200);
-  font-size: 0.9375rem;
-}
-
-.assignment-name {
-  font-weight: 600;
-  color: var(--gray-900);
-}
-
-.score-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.score-value {
-  font-weight: 700;
-  padding: 0.25rem 0.75rem;
-  border-radius: 6px;
-  display: inline-block;
-}
-
-.score-value.high {
-  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-  color: white;
-}
-
-.score-value.medium {
-  background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
-  color: white;
-}
-
-.score-value.low {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  color: white;
-}
-
-.score-bar {
-  height: 4px;
-  background: var(--gray-200);
-  border-radius: 2px;
-  overflow: hidden;
-  max-width: 150px;
-}
-
-.score-fill {
-  height: 100%;
-  background: var(--gradient-primary);
-  border-radius: 2px;
-  transition: width 0.3s;
-}
-
-.contribution {
-  font-weight: 700;
-  color: var(--primary-color);
-}
-
-/* Grade Breakdown */
-.grade-breakdown {
-  background: var(--gray-50);
-  padding: 1.5rem;
-  border-radius: 12px;
-}
-
-.breakdown-title {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--gray-900);
-  margin: 0 0 1.5rem 0;
-}
-
-.breakdown-chart {
-  display: flex;
-  gap: 1rem;
-  align-items: flex-end;
-  height: 150px;
-}
-
-.chart-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  flex: 1;
-}
-
-.chart-bar {
-  width: 100%;
-  background: var(--gradient-primary);
-  border-radius: 8px 8px 0 0;
+.gp-arc-wrapper {
   position: relative;
-  min-height: 20px;
+  flex-shrink: 0;
+  width: 180px;
+  height: 180px;
+}
+
+.gp-arc-svg { display: block; }
+
+.gp-arc-center {
+  position: absolute;
+  inset: 0;
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  padding-top: 0.5rem;
-  transition: height 0.3s;
+  pointer-events: none;
 }
 
-.chart-label {
-  color: white;
+.gp-gpa-num {
+  font-family: var(--gp-font-hero);
+  font-size: 2.75rem;
   font-weight: 700;
-  font-size: 0.875rem;
+  line-height: 1;
+  letter-spacing: -0.02em;
 }
 
-.chart-name {
-  font-size: 0.75rem;
-  color: var(--gray-600);
-  text-align: center;
-  line-height: 1.2;
-}
-
-/* Legend */
-.grade-legend {
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.legend-title {
+.gp-gpa-denom {
+  font-family: var(--gp-font-hero);
   font-size: 1rem;
-  font-weight: 700;
-  color: var(--gray-900);
-  margin: 0 0 1rem 0;
+  color: var(--gp-text-3);
+  margin-top: 2px;
 }
 
-.legend-items {
+.gp-hero-text { flex: 1; }
+
+.gp-hero-eyebrow {
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gp-text-3);
+  margin: 0 0 0.5rem;
+}
+
+.gp-hero-title {
+  font-family: var(--gp-font-hero);
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  color: var(--gp-text-1);
+  margin: 0 0 1.25rem;
+}
+
+.gp-hero-chips {
   display: flex;
-  gap: 2rem;
+  align-items: center;
+  gap: 0.75rem;
   flex-wrap: wrap;
 }
 
-.legend-item {
+.gp-grade-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 1rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  background: color-mix(in srgb, var(--chip-color) 18%, transparent);
+  color: var(--chip-color);
+  border: 1px solid color-mix(in srgb, var(--chip-color) 40%, transparent);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--chip-color) 30%, transparent);
+}
+
+.gp-rank-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.10);
+  color: var(--gp-text-2);
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.gp-hero-actions { flex-shrink: 0; }
+
+.gp-export-btn {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.4rem;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.22);
+  color: var(--gp-text-1);
+  font-family: var(--gp-font-ui);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  white-space: nowrap;
+}
+
+.gp-export-btn:hover:not(:disabled) {
+  border-color: rgba(255,255,255,0.4);
+  background: rgba(255,255,255,0.06);
+}
+
+.gp-export-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.gp-btn-shimmer {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 55%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.09), transparent);
+  transform: skewX(-18deg);
+  transition: left 0s;
+  pointer-events: none;
+}
+
+.gp-export-btn:hover:not(:disabled) .gp-btn-shimmer {
+  left: 160%;
+  transition: left 0.65s ease;
+}
+
+.gp-spinner {
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: gp-spin 0.7s linear infinite;
+}
+
+@keyframes gp-spin { to { transform: rotate(360deg); } }
+
+/* ─── Stats Row ─────────────────────────────────────────────────────────────── */
+.gp-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  padding: 1.75rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.gp-stat-card {
+  background: rgba(255,255,255,0.03);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--gp-border);
+  border-radius: 14px;
+  padding: 1.25rem 1.4rem;
   display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: border-color 0.2s, background 0.2s, transform 0.2s;
+  opacity: 0;
+  transform: translateY(18px);
+}
+
+.gp-stat-card:hover {
+  border-color: var(--gp-border2);
+  background: rgba(255,255,255,0.055);
+  transform: translateY(-2px) !important;
+}
+
+.gp-mounted .gp-stat-card {
+  animation: gp-slide-up 0.5s cubic-bezier(0.22,1,0.36,1) both;
+}
+
+.gp-stat-icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.05);
+}
+
+.gp-stat-body { min-width: 0; }
+
+.gp-stat-label {
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gp-text-3);
+  margin: 0 0 0.2rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gp-stat-value {
+  font-family: var(--gp-font-hero);
+  font-size: 1.65rem;
+  font-weight: 700;
+  line-height: 1.1;
+  margin: 0 0 0.1rem;
+}
+
+.gp-stat-sub {
+  font-size: 0.7rem;
+  color: var(--gp-text-3);
+  margin: 0;
+}
+
+/* ─── Filter Tabs ───────────────────────────────────────────────────────────── */
+.gp-tabs {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.25rem 2rem 1.25rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  flex-wrap: wrap;
+}
+
+.gp-tab {
+  padding: 0.45rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: transparent;
+  color: var(--gp-text-2);
+  font-family: var(--gp-font-ui);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.gp-tab:hover {
+  border-color: rgba(255,255,255,0.25);
+  color: var(--gp-text-1);
+  background: rgba(255,255,255,0.04);
+}
+
+.gp-tab-active {
+  background: color-mix(in srgb, var(--tab-c) 22%, transparent);
+  border-color: color-mix(in srgb, var(--tab-c) 50%, transparent);
+  color: var(--tab-c);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--tab-c) 20%, transparent);
+}
+
+/* ─── Grade Cards ───────────────────────────────────────────────────────────── */
+.gp-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 0 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.gp-card {
+  position: relative;
+  background: var(--gp-card);
+  border: 1px solid var(--gp-border);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.gp-card:hover {
+  border-color: color-mix(in srgb, var(--sc) 35%, transparent);
+  box-shadow: 0 0 30px color-mix(in srgb, var(--sc) 10%, transparent);
+}
+
+.gp-mounted .gp-card {
+  animation: gp-slide-up 0.55s cubic-bezier(0.22,1,0.36,1) both;
+}
+
+.gp-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+  background: var(--sc);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--sc) 60%, transparent);
+}
+
+.gp-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.5rem 1.5rem 1rem 1.75rem;
+}
+
+.gp-card-title-block { flex: 1; min-width: 0; }
+
+.gp-card-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--gp-text-1);
+  margin: 0 0 0.6rem;
+  line-height: 1.3;
+}
+
+.gp-teacher-chip {
+  display: inline-flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-.legend-color {
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
+.gp-teacher-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
 }
 
-.legend-color.excellent {
-  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+.gp-teacher-name {
+  font-size: 0.8rem;
+  color: var(--gp-text-2);
 }
 
-.legend-color.good {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.gp-avg-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.6rem 1rem;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--ac) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ac) 30%, transparent);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--ac) 15%, transparent);
+  flex-shrink: 0;
+  min-width: 88px;
+  text-align: center;
 }
 
-.legend-color.average {
-  background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+.gp-avg-lbl {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gp-text-3);
+  margin-bottom: 0.15rem;
 }
 
-.legend-color.poor {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+.gp-avg-val {
+  font-family: var(--gp-font-hero);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--ac);
+  line-height: 1;
 }
 
-.legend-text {
-  font-size: 0.875rem;
-  color: var(--gray-700);
+.gp-avg-grade {
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--ac);
+  opacity: 0.8;
+  margin-top: 0.15rem;
 }
 
-/* Responsive */
+/* ─── Table ─────────────────────────────────────────────────────────────────── */
+.gp-table-wrap {
+  padding: 0 1.5rem 0 1.75rem;
+  overflow-x: auto;
+}
+
+.gp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+}
+
+.gp-table thead tr { border-bottom: 1px solid var(--gp-border); }
+
+.gp-table th {
+  padding: 0.6rem 0.75rem;
+  text-align: left;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gp-text-3);
+  white-space: nowrap;
+}
+
+.gp-table td {
+  padding: 0.75rem;
+  vertical-align: middle;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+
+.gp-row { transition: background 0.15s; }
+
+.gp-row:nth-child(even) { background: rgba(255,255,255,0.018); }
+
+.gp-row:hover {
+  background: color-mix(in srgb, var(--rc) 8%, transparent);
+  box-shadow: inset 3px 0 0 var(--rc);
+}
+
+.gp-assn-name {
+  color: var(--gp-text-1);
+  font-weight: 500;
+  min-width: 220px;
+}
+
+.gp-date { color: var(--gp-text-2); white-space: nowrap; }
+
+.gp-weight-pill {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.10);
+  font-size: 0.75rem;
+  color: var(--gp-text-2);
+  white-space: nowrap;
+}
+
+.gp-score-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 100px;
+}
+
+.gp-score-num { font-weight: 600; font-size: 0.85rem; }
+
+.gp-score-track {
+  height: 4px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.gp-score-bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.9s cubic-bezier(0.22,1,0.36,1) 0.2s;
+}
+
+.gp-contrib { font-weight: 600; font-size: 0.84rem; }
+
+/* ─── Bar Chart Section ─────────────────────────────────────────────────────── */
+.gp-chart-section {
+  padding: 1.25rem 1.5rem 1.5rem 1.75rem;
+  border-top: 1px solid var(--gp-border);
+  margin-top: 0.5rem;
+}
+
+.gp-chart-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gp-text-3);
+  margin: 0 0 1rem;
+}
+
+.gp-chart-wrap { border-radius: 10px; overflow: hidden; }
+
+.gp-chart-tooltip {
+  background: #1e2d4a;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  font-family: var(--gp-font-ui);
+  min-width: 180px;
+}
+
+.gp-tt-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--gp-text-1);
+  margin: 0 0 0.4rem;
+  line-height: 1.3;
+}
+
+.gp-tt-score,
+.gp-tt-weight,
+.gp-tt-contrib {
+  font-size: 0.78rem;
+  color: var(--gp-text-2);
+  margin: 0 0 0.2rem;
+}
+
+/* ─── Legend ────────────────────────────────────────────────────────────────── */
+.gp-legend {
+  padding: 2rem 2rem 3rem;
+  max-width: 1200px;
+  margin: 1.5rem auto 0;
+  border-top: 1px solid var(--gp-border);
+}
+
+.gp-legend-title {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gp-text-3);
+  margin: 0 0 1rem;
+}
+
+.gp-legend-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+}
+
+.gp-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.gp-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.gp-legend-range { font-size: 0.78rem; color: var(--gp-text-2); }
+.gp-legend-grade { font-size: 0.78rem; font-weight: 600; }
+
+/* ─── Export Toast ──────────────────────────────────────────────────────────── */
+.gp-toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.75rem 1.4rem;
+  border-radius: 12px;
+  background: #1a2e1a;
+  border: 1px solid rgba(52,211,153,0.35);
+  color: #34d399;
+  font-family: var(--gp-font-ui);
+  font-size: 0.85rem;
+  font-weight: 500;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 20px rgba(52,211,153,0.15);
+  z-index: 9999;
+  animation: gp-toast-in 0.3s cubic-bezier(0.22,1,0.36,1);
+}
+
+@keyframes gp-toast-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(12px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* ─── Entrance Animation ────────────────────────────────────────────────────── */
+@keyframes gp-slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Responsive ────────────────────────────────────────────────────────────── */
 @media (max-width: 1024px) {
-  .grades-overview {
-    grid-template-columns: 1fr 1fr;
-  }
+  .gp-stats { grid-template-columns: repeat(2, 1fr); }
 }
 
-@media (max-width: 768px) {
-  .page-header {
-    flex-direction: column;
-    gap: 1rem;
-  }
+@media (max-width: 860px) {
+  .gp-hero { padding: 2.5rem 1.5rem 2rem; }
+  .gp-hero-inner { flex-wrap: wrap; gap: 2rem; }
+  .gp-hero-actions { width: 100%; }
+  .gp-stats { padding: 1.5rem 1rem; gap: 0.75rem; }
+  .gp-tabs, .gp-cards, .gp-legend { padding-left: 1rem; padding-right: 1rem; }
+  .gp-card-head { flex-wrap: wrap; padding: 1.25rem 1.25rem 0.75rem 1.5rem; }
+}
 
-  .grades-overview {
-    grid-template-columns: 1fr;
-  }
-
-  .course-grade-header {
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .course-average {
-    align-self: flex-start;
-  }
-
-  .assignments-table {
-    font-size: 0.813rem;
-  }
-
-  .assignments-table th,
-  .assignments-table td {
-    padding: 0.75rem 0.5rem;
-  }
-
-  .breakdown-chart {
-    height: 120px;
-  }
-
-  .legend-items {
-    flex-direction: column;
-    gap: 0.75rem;
-  }
+@media (max-width: 640px) {
+  .gp-page { margin: -1.5rem -1rem -1rem; }
+  .gp-stats { grid-template-columns: repeat(2, 1fr); }
+  .gp-hero-title { font-size: 2.25rem; }
+  .gp-gpa-num { font-size: 2.2rem; }
+  .gp-arc-wrapper { width: 150px; height: 150px; }
 }
