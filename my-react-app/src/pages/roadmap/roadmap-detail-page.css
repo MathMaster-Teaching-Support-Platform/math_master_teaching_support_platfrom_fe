@@ -457,6 +457,7 @@
 
 /* Node circle */
 .rdp__node-circle {
+  appearance: none;
   width: 44px;
   height: 44px;
   border-radius: 50%;
@@ -472,7 +473,20 @@
   position: relative;
   z-index: 2;
   transition: all var(--transition-base);
+  cursor: default;
+}
+
+.rdp__node-circle--clickable {
   cursor: pointer;
+}
+
+.rdp__node-circle:focus-visible {
+  outline: 3px solid rgba(91, 103, 241, 0.35);
+  outline-offset: 3px;
+}
+
+.rdp__node-circle:disabled {
+  cursor: not-allowed;
 }
 
 .rdp__node--done .rdp__node-circle {
