@@ -52,6 +52,15 @@ const normalizeOutputFormat = (value?: string): LessonSlideOutputFormat => {
 const supportsMathRendering = (outputFormat: LessonSlideOutputFormat): boolean =>
   outputFormat === 'LATEX' || outputFormat === 'HYBRID';
 
+const OUTPUT_FORMAT_LABELS: Record<LessonSlideOutputFormat, string> = {
+  PLAIN_TEXT: 'Text',
+  LATEX: 'Latex',
+  HYBRID: 'Hybrid',
+};
+
+const getOutputFormatLabel = (format: LessonSlideOutputFormat): string =>
+  OUTPUT_FORMAT_LABELS[format];
+
 const parseMathSegments = (text: string): MathSegment[] => {
   if (!text) return [{ type: 'text', value: '' }];
 
@@ -801,13 +810,10 @@ const AISlideGenerator: React.FC = () => {
                   value={outputFormat}
                   onChange={(e) => setOutputFormat(e.target.value as LessonSlideOutputFormat)}
                 >
-                  <option value="PLAIN_TEXT">PLAIN_TEXT</option>
-                  <option value="LATEX">LATEX</option>
-                  <option value="HYBRID">HYBRID</option>
+                  <option value="PLAIN_TEXT">Text</option>
+                  <option value="LATEX">Latex</option>
+                  <option value="HYBRID">Hybrid</option>
                 </select>
-                <small className="ai-slide-format-hint">
-                  LATEX/HYBRID sẽ render công thức với delimiters \(...\) và \[...\].
-                </small>
               </label>
 
               <div className="ai-slide-actions">
@@ -850,7 +856,7 @@ const AISlideGenerator: React.FC = () => {
             <p className="ai-slide-info">
               Lesson: <strong>{generated.lessonTitle}</strong> | Số slide:{' '}
               <strong>{generated.slideCount}</strong> | Output format:{' '}
-              <strong>{resolvedOutputFormat}</strong>
+              <strong>{getOutputFormatLabel(resolvedOutputFormat)}</strong>
             </p>
 
             {currentPreviewSlide && (
