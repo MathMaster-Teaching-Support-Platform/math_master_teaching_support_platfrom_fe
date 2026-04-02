@@ -9,6 +9,7 @@ import type {
   ChapterBySubject,
   GenerateSlideContentResult,
   LessonByChapter,
+  LessonSlideEquationMode,
   LessonSlideItem,
   LessonSlideOutputFormat,
   LessonSlideTemplate,
@@ -58,8 +59,16 @@ const OUTPUT_FORMAT_LABELS: Record<LessonSlideOutputFormat, string> = {
   HYBRID: 'Hybrid',
 };
 
+const EQUATION_MODE_LABELS: Record<LessonSlideEquationMode, string> = {
+  OMML: 'OMML (Office Equation)',
+  IMAGE: 'Image (render cong thuc thanh anh)',
+  PLAIN_TEXT: 'Plain Text',
+};
+
 const getOutputFormatLabel = (format: LessonSlideOutputFormat): string =>
   OUTPUT_FORMAT_LABELS[format];
+
+const getEquationModeLabel = (mode: LessonSlideEquationMode): string => EQUATION_MODE_LABELS[mode];
 
 const parseMathSegments = (text: string): MathSegment[] => {
   if (!text) return [{ type: 'text', value: '' }];
@@ -88,6 +97,80 @@ const parseMathSegments = (text: string): MathSegment[] => {
   }
 
   return segments.length ? segments : [{ type: 'text', value: text }];
+};
+
+const replaceInlineLatexCommands = (input: string): string => {
+  if (!input) return input;
+
+  return input
+    .replace(/\\textbf\{([^{}]+)\}/g, '$1')
+    .replace(/\\textit\{([^{}]+)\}/g, '$1')
+    .replace(/\\emph\{([^{}]+)\}/g, '$1')
+    .replace(/\\quad/g, ' ')
+    .replace(/\\cdot/g, ' * ')
+    .replace(/\\times/g, ' x ')
+    .replace(/\\ne/g, ' != ')
+    .replace(/\\leq/g, ' <= ')
+    .replace(/\\geq/g, ' >= ')
+    .replace(/\\in/g, ' in ')
+    .replace(/\\mathbb\{Z\}/g, 'Z')
+    .replace(/\\mathbb\{N\}/g, 'N')
+    .replace(/\\mathbb\{Q\}/g, 'Q')
+    .replace(/\\mathbb\{R\}/g, 'R')
+    .replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/g, '($1)/($2)');
+};
+
+const normalizeLatexForPptx = (input: string): string => {
+  if (!input) return input;
+
+  const normalized = input
+    .replace(/\\\\/g, '\\')
+    .replace(/\$\$([\s\S]+?)\$\$/g, (_, expr: string) => replaceInlineLatexCommands(expr.trim()))
+    .replace(/\$([^$\n]+?)\$/g, (_, expr: string) => replaceInlineLatexCommands(expr.trim()))
+    .replace(/\\\(([^)]+?)\\\)/g, (_, expr: string) => replaceInlineLatexCommands(expr.trim()))
+    .replace(/\\\[([\s\S]+?)\\\]/g, (_, expr: string) => replaceInlineLatexCommands(expr.trim()))
+    .replace(/\\\{/g, '{')
+    .replace(/\\\}/g, '}')
+    .replace(/\\_/g, '_')
+    .replace(/\\%/g, '%')
+    .replace(/\\&/g, '&')
+    .replace(/\\#/g, '#')
+    .replace(/\\\$/g, '$')
+    .replace(/\\,/g, ' ')
+    .replace(/\\;/g, ' ')
+    .replace(/\\!/g, '')
+    .replace(/\\:/g, ':')
+    .replace(/\\\n/g, '\n')
+    .replace(/\\\\/g, '\n')
+    .replace(/\\[a-zA-Z]+/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .replace(/\n[ \t]+/g, '\n')
+    .trim();
+
+  return replaceInlineLatexCommands(normalized)
+    .replace(/\s{2,}/g, ' ')
+    .replace(/\n[ \t]+/g, '\n')
+    .trim();
+};
+
+const wrapBareLatexForOfficeMath = (input: string): string => {
+  if (!input) return input;
+
+  const normalized = input.replace(/\\n/g, '\n');
+  const latexChunkRegex =
+    /(\\(?:frac|cdot|times|sqrt|sum|int|alpha|beta|gamma|delta|theta|lambda|pi|sigma|omega|mathbb|in|neq|ne|leq|geq|pm|mp|div|Box)(?:\{[^{}]*\})*(?:\s*[_^]\{?[^\s{}]+\}?)?(?:\s*[_^]\{?[^\s{}]+\}?)?)/g;
+
+  return normalized.replace(latexChunkRegex, (chunk, _cmd, offset, fullText) => {
+    const before = fullText.slice(0, offset);
+    const after = fullText.slice(offset + chunk.length);
+    const inDollarMath = before.lastIndexOf('$') > before.lastIndexOf('\n') && after.includes('$');
+
+    if (inDollarMath) {
+      return chunk;
+    }
+
+    return `$${chunk}$`;
+  });
 };
 
 const renderSlideText = (
@@ -134,6 +217,7 @@ const AISlideGenerator: React.FC = () => {
   const [slideCount, setSlideCount] = useState(10);
   const [additionalPrompt, setAdditionalPrompt] = useState('');
   const [outputFormat, setOutputFormat] = useState<LessonSlideOutputFormat>('PLAIN_TEXT');
+  const [equationMode, setEquationMode] = useState<LessonSlideEquationMode>('OMML');
   const [templateId, setTemplateId] = useState('');
   const [templates, setTemplates] = useState<LessonSlideTemplate[]>([]);
   const [templatePreviewBlobUrls, setTemplatePreviewBlobUrls] = useState<Record<string, string>>(
@@ -482,15 +566,37 @@ const AISlideGenerator: React.FC = () => {
 
     setGeneratingPptx(true);
     try {
+      const outputFormatForPptx: LessonSlideOutputFormat =
+        equationMode === 'PLAIN_TEXT'
+          ? 'PLAIN_TEXT'
+          : resolvedOutputFormat === 'PLAIN_TEXT'
+            ? 'LATEX'
+            : resolvedOutputFormat;
+
+      const slidesForPptx =
+        equationMode === 'PLAIN_TEXT'
+          ? editableSlides.map((slide) => ({
+              ...slide,
+              heading: normalizeLatexForPptx(slide.heading || ''),
+              content: normalizeLatexForPptx(slide.content || ''),
+            }))
+          : editableSlides.map((slide) => ({
+              ...slide,
+              heading: wrapBareLatexForOfficeMath(slide.heading || ''),
+              content: wrapBareLatexForOfficeMath(slide.content || ''),
+            }));
+
       const response = await LessonSlideService.generatePptx({
         lessonId,
         templateId,
-        slides: editableSlides,
+        outputFormat: outputFormatForPptx,
+        equationMode,
+        slides: slidesForPptx,
       });
 
       setPreparedPptxBlob(response.blob);
       setPreparedPptxFilename(response.filename || 'lesson-slides.pptx');
-      setSuccess('PPTX đã sẵn sàng. Bạn có thể xem preview slide và bấm tải khi muốn.');
+      setSuccess(`PPTX da san sang voi che do cong thuc: ${getEquationModeLabel(equationMode)}.`);
       setActiveWizardStep(5);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Không thể tạo PPTX');
@@ -858,6 +964,22 @@ const AISlideGenerator: React.FC = () => {
               <strong>{generated.slideCount}</strong> | Output format:{' '}
               <strong>{getOutputFormatLabel(resolvedOutputFormat)}</strong>
             </p>
+
+            <label className="ai-slide-full-width">
+              <span>Cach xuat cong thuc cho PowerPoint</span>
+              <select
+                value={equationMode}
+                onChange={(e) => setEquationMode(e.target.value as LessonSlideEquationMode)}
+              >
+                <option value="OMML">OMML (Office Equation, khuyen nghi)</option>
+                <option value="IMAGE">IMAGE (ve cong thuc thanh anh)</option>
+                <option value="PLAIN_TEXT">PLAIN_TEXT (khong khuyen nghi)</option>
+              </select>
+              <p className="ai-slide-format-hint">
+                OMML giu cong thuc dang Equation native cua Office. IMAGE dung khi cong thuc phuc
+                tap.
+              </p>
+            </label>
 
             {currentPreviewSlide && (
               <div className="ai-slide-preview-wrap">

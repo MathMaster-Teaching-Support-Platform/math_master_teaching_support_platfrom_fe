@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import MindElixir from 'mind-elixir';
+import html2canvas from 'html2canvas';
 import 'mind-elixir/style.css';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockTeacher } from '../../data/mockData';
@@ -129,6 +130,7 @@ export default function MindmapEditor() {
   const [slowLoading, setSlowLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [exportingImage, setExportingImage] = useState(false);
 
   const mindContainerRef = useRef<HTMLDivElement | null>(null);
   const editPanelRef = useRef<HTMLDivElement | null>(null);
@@ -520,6 +522,53 @@ export default function MindmapEditor() {
     }
   };
 
+  const handleExportImage = async () => {
+    if (!mindContainerRef.current) return;
+
+    try {
+      setExportingImage(true);
+
+      // Wait one frame to ensure the latest layout/interaction updates are reflected.
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => resolve());
+      });
+
+      const mindElement =
+        (mindContainerRef.current.querySelector('.map-container') as HTMLElement | null) ||
+        (mindContainerRef.current.querySelector('.mind-elixir') as HTMLElement | null) ||
+        (mindContainerRef.current.firstElementChild as HTMLElement | null) ||
+        mindContainerRef.current;
+
+      if (!mindElement || mindElement.clientWidth === 0 || mindElement.clientHeight === 0) {
+        alert('Sơ đồ chưa sẵn sàng để xuất ảnh. Vui lòng thử lại sau vài giây.');
+        return;
+      }
+
+      const canvas = await html2canvas(mindElement, {
+        backgroundColor: '#f3f5ff',
+        scale: Math.min(window.devicePixelRatio || 1, 2),
+        useCORS: true,
+        logging: false,
+      });
+
+      const safeTitle = (mindmap?.title || 'mindmap')
+        .trim()
+        .replace(/[<>:"/\\|?*\x00-\x1F]/g, '')
+        .replace(/\s+/g, '-')
+        .toLowerCase();
+      const fileName = `${safeTitle || 'mindmap'}-${new Date().toISOString().slice(0, 10)}.png`;
+
+      const downloadLink = document.createElement('a');
+      downloadLink.href = canvas.toDataURL('image/png');
+      downloadLink.download = fileName;
+      downloadLink.click();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Không thể xuất ảnh mindmap');
+    } finally {
+      setExportingImage(false);
+    }
+  };
+
   if (loading) {
     return (
       <DashboardLayout
@@ -595,6 +644,14 @@ export default function MindmapEditor() {
                 Chỉnh sửa
               </button>
             </div>
+            <button
+              type="button"
+              className="btn-export-image"
+              onClick={handleExportImage}
+              disabled={exportingImage}
+            >
+              {exportingImage ? 'Đang xuất ảnh...' : 'Xuất ảnh PNG'}
+            </button>
             <select
               value={mindmap.status}
               onChange={(e) =>

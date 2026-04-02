@@ -68,6 +68,7 @@ export interface LessonSlideTemplate {
 }
 
 export type LessonSlideOutputFormat = 'PLAIN_TEXT' | 'LATEX' | 'HYBRID';
+export type LessonSlideEquationMode = 'OMML' | 'IMAGE' | 'PLAIN_TEXT';
 
 export interface GenerateSlideContentRequest {
   schoolGradeId: string;
@@ -92,6 +93,8 @@ export interface GenerateSlideContentResult {
 export interface GeneratePptxRequest {
   lessonId: string;
   templateId: string;
+  outputFormat?: LessonSlideOutputFormat;
+  equationMode?: LessonSlideEquationMode;
   slides: LessonSlideItem[];
 }
 
