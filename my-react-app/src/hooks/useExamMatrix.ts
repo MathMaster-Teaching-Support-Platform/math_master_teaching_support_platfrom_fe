@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { examMatrixService } from '../services/examMatrixService';
 import type {
+    BuildExamMatrixRequest,
+    ExamMatrixRowRequest,
     AddTemplateBatchRequest,
     AddTemplateMappingRequest,
     ExamMatrixRequest,
@@ -13,6 +15,7 @@ export const examMatrixKeys = {
     all: ['examMatrices'] as const,
     mine: () => [...examMatrixKeys.all, 'my'] as const,
     detail: (id: string) => [...examMatrixKeys.all, 'detail', id] as const,
+    table: (matrixId: string) => [...examMatrixKeys.detail(matrixId), 'table'] as const,
     mappings: (matrixId: string) => [...examMatrixKeys.detail(matrixId), 'mappings'] as const,
     validation: (matrixId: string) => [...examMatrixKeys.detail(matrixId), 'validation'] as const,
     matchingTemplates: (matrixId: string, params: ListMatchingTemplatesParams) =>
@@ -29,6 +32,13 @@ export const useGetExamMatrixById = (matrixId: string, enabled = true) =>
     useQuery({
         queryKey: examMatrixKeys.detail(matrixId),
         queryFn: () => examMatrixService.getExamMatrixById(matrixId),
+        enabled: !!matrixId && enabled,
+    });
+
+export const useGetExamMatrixTable = (matrixId: string, enabled = true) =>
+    useQuery({
+        queryKey: examMatrixKeys.table(matrixId),
+        queryFn: () => examMatrixService.getExamMatrixTable(matrixId),
         enabled: !!matrixId && enabled,
     });
 
@@ -70,6 +80,16 @@ export const useCreateExamMatrix = () => {
     });
 };
 
+export const useBuildExamMatrix = () => {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (request: BuildExamMatrixRequest) => examMatrixService.buildExamMatrix(request),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: examMatrixKeys.mine() });
+        },
+    });
+};
+
 export const useUpdateExamMatrix = () => {
     const qc = useQueryClient();
     return useMutation({
@@ -88,6 +108,30 @@ export const useDeleteExamMatrix = () => {
         mutationFn: (matrixId: string) => examMatrixService.deleteExamMatrix(matrixId),
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: examMatrixKeys.mine() });
+        },
+    });
+};
+
+export const useAddExamMatrixRow = () => {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: ({ matrixId, request }: { matrixId: string; request: ExamMatrixRowRequest }) =>
+            examMatrixService.addExamMatrixRow(matrixId, request),
+        onSuccess: (_, vars) => {
+            qc.invalidateQueries({ queryKey: examMatrixKeys.table(vars.matrixId) });
+            qc.invalidateQueries({ queryKey: examMatrixKeys.detail(vars.matrixId) });
+        },
+    });
+};
+
+export const useRemoveExamMatrixRow = () => {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: ({ matrixId, rowId }: { matrixId: string; rowId: string }) =>
+            examMatrixService.removeExamMatrixRow(matrixId, rowId),
+        onSuccess: (_, vars) => {
+            qc.invalidateQueries({ queryKey: examMatrixKeys.table(vars.matrixId) });
+            qc.invalidateQueries({ queryKey: examMatrixKeys.detail(vars.matrixId) });
         },
     });
 };

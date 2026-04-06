@@ -50,6 +50,10 @@ export const API_ENDPOINTS = {
   EXAM_MATRICES_MY: '/exam-matrices/my',
   EXAM_MATRIX_DETAIL: (matrixId: string) => `/exam-matrices/${matrixId}`,
   EXAM_MATRIX_BY_ASSESSMENT: (assessmentId: string) => `/exam-matrices/assessment/${assessmentId}`,
+  EXAM_MATRIX_BUILD: '/exam-matrices/build',
+  EXAM_MATRIX_TABLE: (matrixId: string) => `/exam-matrices/${matrixId}/table`,
+  EXAM_MATRIX_ROWS: (matrixId: string) => `/exam-matrices/${matrixId}/rows`,
+  EXAM_MATRIX_ROW_DETAIL: (matrixId: string, rowId: string) => `/exam-matrices/${matrixId}/rows/${rowId}`,
   EXAM_MATRIX_MAPPINGS: (matrixId: string) => `/exam-matrices/${matrixId}/template-mappings`,
   EXAM_MATRIX_MAPPING_DETAIL: (matrixId: string, mappingId: string) =>
     `/exam-matrices/${matrixId}/template-mappings/${mappingId}`,

@@ -1,9 +1,12 @@
 import { API_BASE_URL, API_ENDPOINTS } from '../config/api.config';
 import { AuthService } from './api/auth.service';
 import type {
+    BuildExamMatrixRequest,
     ExamMatrixRequest,
     ExamMatrixResponse,
     ExamMatrixApiResponse,
+    ExamMatrixRowRequest,
+    ExamMatrixTableResponse,
     AddTemplateMappingRequest,
     AddTemplateBatchRequest,
     TemplateMappingResponse,
@@ -34,6 +37,13 @@ async function handleResponse<T>(res: Response): Promise<ExamMatrixApiResponse<T
 }
 
 export const examMatrixService = {
+    buildExamMatrix: (request: BuildExamMatrixRequest) =>
+        fetch(`${API_BASE_URL}${API_ENDPOINTS.EXAM_MATRIX_BUILD}`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(request),
+        }).then(handleResponse<ExamMatrixResponse>),
+
     createExamMatrix: (request: ExamMatrixRequest) =>
         fetch(`${API_BASE_URL}${API_ENDPOINTS.EXAM_MATRICES}`, {
             method: 'POST',
@@ -58,6 +68,11 @@ export const examMatrixService = {
             headers: getAuthHeaders(),
         }).then(handleResponse<ExamMatrixResponse>),
 
+    getExamMatrixTable: (matrixId: string) =>
+        fetch(`${API_BASE_URL}${API_ENDPOINTS.EXAM_MATRIX_TABLE(matrixId)}`, {
+            headers: getAuthHeaders(),
+        }).then(handleResponse<ExamMatrixTableResponse>),
+
     getMyExamMatrices: () =>
         fetch(`${API_BASE_URL}${API_ENDPOINTS.EXAM_MATRICES_MY}`, {
             headers: getAuthHeaders(),
@@ -68,6 +83,19 @@ export const examMatrixService = {
             method: 'DELETE',
             headers: getAuthHeaders(),
         }).then(handleResponse<void>),
+
+    addExamMatrixRow: (matrixId: string, request: ExamMatrixRowRequest) =>
+        fetch(`${API_BASE_URL}${API_ENDPOINTS.EXAM_MATRIX_ROWS(matrixId)}`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(request),
+        }).then(handleResponse<ExamMatrixTableResponse>),
+
+    removeExamMatrixRow: (matrixId: string, rowId: string) =>
+        fetch(`${API_BASE_URL}${API_ENDPOINTS.EXAM_MATRIX_ROW_DETAIL(matrixId, rowId)}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders(),
+        }).then(handleResponse<ExamMatrixTableResponse>),
 
     addTemplateMapping: (matrixId: string, request: AddTemplateMappingRequest) =>
         fetch(`${API_BASE_URL}${API_ENDPOINTS.EXAM_MATRIX_MAPPINGS(matrixId)}`, {

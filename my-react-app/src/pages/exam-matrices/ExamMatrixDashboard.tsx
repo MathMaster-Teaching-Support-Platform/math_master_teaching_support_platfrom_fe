@@ -3,7 +3,7 @@ import { CheckCircle2, Edit, Eye, Plus, RotateCcw, Search, Trash2 } from 'lucide
 import { useNavigate } from 'react-router-dom';
 import {
   useApproveMatrix,
-  useCreateExamMatrix,
+  useBuildExamMatrix,
   useDeleteExamMatrix,
   useGetMyExamMatrices,
   useResetMatrix,
@@ -53,7 +53,7 @@ export function ExamMatrixDashboard() {
   const [selected, setSelected] = useState<ExamMatrixResponse | null>(null);
 
   const { data, isLoading, isError, error, refetch } = useGetMyExamMatrices();
-  const createMutation = useCreateExamMatrix();
+  const buildMutation = useBuildExamMatrix();
   const updateMutation = useUpdateExamMatrix();
   const deleteMutation = useDeleteExamMatrix();
   const approveMutation = useApproveMatrix();
@@ -72,7 +72,7 @@ export function ExamMatrixDashboard() {
 
   async function handleSave(payload: ExamMatrixRequest) {
     if (mode === 'create') {
-      await createMutation.mutateAsync(payload);
+      await buildMutation.mutateAsync(payload);
       return;
     }
     if (!selected) return;
@@ -107,11 +107,8 @@ export function ExamMatrixDashboard() {
 
           <section className="hero-card">
             <p className="hero-kicker">Luồng làm việc</p>
-            <h2>Thiết kế blueprint trước, điều phối lắp đề sau</h2>
+            <h2>Thiết kế blueprint trước, tạo đề sau</h2>
             <div className="row" style={{ flexWrap: 'wrap' }}>
-              <button className="btn secondary" onClick={() => navigate('/teacher/question-templates')}>
-                Mở Mẫu câu hỏi
-              </button>
               <button className="btn secondary" onClick={() => navigate('/teacher/question-banks')}>
                 Mở Ngân hàng câu hỏi
               </button>
@@ -169,7 +166,7 @@ export function ExamMatrixDashboard() {
                     <span className={statusClass[matrix.status]}>
                       {cardStatusLabel[matrix.status]}
                     </span>
-                    <span className="muted">{matrix.templateMappingCount} ánh xạ</span>
+                      <span className="muted">{matrix.rowCount ?? matrix.templateMappingCount ?? 0} dòng ma trận</span>
                   </div>
 
                   <div>

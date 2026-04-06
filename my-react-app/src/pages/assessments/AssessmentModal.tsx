@@ -168,8 +168,9 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
       return;
     }
 
-    if ((selectedMatrixData?.result?.templateMappingCount ?? 0) === 0) {
-      setError('Ma trận đã chọn chưa có ánh xạ mẫu câu hỏi.');
+    const matrixRowCount = selectedMatrixData?.result?.rowCount ?? selectedMatrixData?.result?.templateMappingCount ?? 0;
+    if (matrixRowCount === 0) {
+      setError('Ma trận đã chọn chưa có dòng blueprint câu hỏi.');
       return;
     }
 
