@@ -12,6 +12,9 @@ export interface QuestionResponse {
   cognitiveLevel?: 'REMEMBER' | 'UNDERSTAND' | 'APPLY' | 'ANALYZE' | 'EVALUATE' | 'CREATE';
   questionStatus?: 'AI_DRAFT' | 'UNDER_REVIEW' | 'APPROVED' | 'ARCHIVED';
   questionSourceType?: 'MANUAL' | 'TEMPLATE_GENERATED' | 'AI_GENERATED' | 'BANK_IMPORTED';
+  canonicalQuestionId?: string;
+  solutionSteps?: string;
+  diagramData?: Record<string, unknown>;
   tags?: string[];
   templateId?: string;
   questionBankId?: string;

@@ -15,6 +15,7 @@ import type {
     CloneAssessmentRequest,
     AddQuestionToAssessmentRequest,
     GenerateAssessmentFromMatrixRequest,
+    GenerateQuestionsForAssessmentRequest,
     ApiResponse,
     PaginatedResponse,
 } from '../types';
@@ -233,6 +234,24 @@ export function useGenerateAssessmentFromMatrix() {
         mutationFn: (data: GenerateAssessmentFromMatrixRequest) =>
             AssessmentService.generateAssessmentFromMatrix(data),
         onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: assessmentKeys.lists() });
+        },
+    });
+}
+
+export function useGenerateQuestionsForAssessment() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({
+            assessmentId,
+            data,
+        }: {
+            assessmentId: string;
+            data: GenerateQuestionsForAssessmentRequest;
+        }) => AssessmentService.generateQuestionsForAssessment(assessmentId, data),
+        onSuccess: (_data, { assessmentId }) => {
+            queryClient.invalidateQueries({ queryKey: assessmentKeys.detail(assessmentId) });
+            queryClient.invalidateQueries({ queryKey: assessmentKeys.questions(assessmentId) });
             queryClient.invalidateQueries({ queryKey: assessmentKeys.lists() });
         },
     });

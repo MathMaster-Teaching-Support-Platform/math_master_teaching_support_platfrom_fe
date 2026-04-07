@@ -11,6 +11,7 @@ import type {
     CloneAssessmentRequest,
     AddQuestionToAssessmentRequest,
     GenerateAssessmentFromMatrixRequest,
+    GenerateQuestionsForAssessmentRequest,
     ApiResponse,
     PaginatedResponse,
 } from '../../types';
@@ -293,6 +294,27 @@ export class AssessmentService {
         if (!response.ok) {
             const error = await response.json();
             throw new Error(error.message || 'Failed to generate assessment from matrix');
+        }
+        return response.json();
+    }
+
+    /** POST /assessments/{assessmentId}/generate */
+    static async generateQuestionsForAssessment(
+        assessmentId: string,
+        data: GenerateQuestionsForAssessmentRequest
+    ): Promise<ApiResponse<AssessmentResponse>> {
+        const headers = await this.getHeaders();
+        const response = await fetch(
+            `${API_BASE_URL}${API_ENDPOINTS.ASSESSMENTS_GENERATE(assessmentId)}`,
+            {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(data),
+            }
+        );
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error((error as { message?: string }).message || 'Failed to generate questions from matrix');
         }
         return response.json();
     }

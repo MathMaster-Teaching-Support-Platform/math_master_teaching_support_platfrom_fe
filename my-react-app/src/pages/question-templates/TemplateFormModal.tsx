@@ -2,10 +2,12 @@ import { Plus, Trash2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import {
   CognitiveLevel,
+  QuestionGenerationMode,
   QuestionType,
   type QuestionTemplateRequest,
   type QuestionTemplateResponse,
 } from '../../types/questionTemplate';
+import { useGetCanonicalQuestionById, useGetMyCanonicalQuestions } from '../../hooks/useCanonicalQuestion';
 import MathText from '../../components/common/MathText';
 
 type ParameterInput = {
@@ -53,6 +55,8 @@ function validateFormInput(input: {
   templateText: string;
   answerFormula: string;
   tags: string;
+  generationMode: string;
+  canonicalQuestionId: string;
 }): { error?: string; result?: ValidationResult } {
   const normalizedName = input.name.trim();
   if (!normalizedName) return { error: 'Tên mẫu là bắt buộc.' };
@@ -71,6 +75,10 @@ function validateFormInput(input: {
 
   if (normalizedTags.length === 0) {
     return { error: 'Bạn cần nhập ít nhất một tag cho template.' };
+  }
+
+  if (input.generationMode === QuestionGenerationMode.AI_FROM_CANONICAL && !input.canonicalQuestionId.trim()) {
+    return { error: 'Chế độ AI_FROM_CANONICAL yêu cầu chọn canonical question.' };
   }
 
   return {
@@ -154,8 +162,21 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
   const [parameters, setParameters] = useState<ParameterInput[]>([]);
   const [options, setOptions] = useState<OptionInput[]>([]);
   const [rules, setRules] = useState<DifficultyRuleInput[]>([]);
+  const [generationMode, setGenerationMode] = useState<
+    (typeof QuestionGenerationMode)[keyof typeof QuestionGenerationMode]
+  >(QuestionGenerationMode.PARAMETRIC);
+  const [canonicalQuestionId, setCanonicalQuestionId] = useState('');
+  const [solutionTemplate, setSolutionTemplate] = useState('');
+  const [diagramTemplateRaw, setDiagramTemplateRaw] = useState('{}');
+  const [variableDefinitionsRaw, setVariableDefinitionsRaw] = useState('{}');
   const [saving, setSaving] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const canonicalQuery = useGetMyCanonicalQuestions(0, 100, 'createdAt', 'DESC');
+  const canonicalDetailQuery = useGetCanonicalQuestionById(
+    canonicalQuestionId,
+    Boolean(canonicalQuestionId) && generationMode === QuestionGenerationMode.AI_FROM_CANONICAL
+  );
 
   useEffect(() => {
     if (!isOpen) return;
@@ -170,6 +191,11 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
       setTemplateText(parseTemplateText(initialData.templateText));
       setAnswerFormula(initialData.answerFormula || '');
       setTags((initialData.tags || []).join(', '));
+      setGenerationMode(initialData.generationMode || QuestionGenerationMode.PARAMETRIC);
+      setCanonicalQuestionId(initialData.canonicalQuestionId || '');
+      setSolutionTemplate(initialData.solutionTemplate || '');
+      setDiagramTemplateRaw(JSON.stringify(initialData.diagramTemplate || {}, null, 2));
+      setVariableDefinitionsRaw(JSON.stringify(initialData.variableDefinitions || {}, null, 2));
 
       const mappedParameters: ParameterInput[] = Object.entries(initialData.parameters || {}).map(([key, raw]) => {
         const item = raw as { type?: string; min?: number; max?: number };
@@ -206,6 +232,11 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
     setTemplateText('Giải phương trình: {{a}}x + {{b}} = 0');
     setAnswerFormula('(-b)/a');
     setTags('đại số, lớp 9');
+    setGenerationMode(QuestionGenerationMode.PARAMETRIC);
+    setCanonicalQuestionId('');
+    setSolutionTemplate('x = (-{{b}})/{{a}}');
+    setDiagramTemplateRaw('{}');
+    setVariableDefinitionsRaw('{}');
     setParameters([
       { name: 'a', type: 'int', min: '1', max: '10' },
       { name: 'b', type: 'int', min: '-10', max: '10' },
@@ -246,6 +277,8 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
       templateText,
       answerFormula,
       tags,
+      generationMode,
+      canonicalQuestionId,
     });
     if (validation.error || !validation.result) {
       setSubmitError(validation.error || 'Dữ liệu mẫu chưa hợp lệ.');
@@ -257,6 +290,24 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
     const mappedParameters = buildParameters(parameters);
     const mappedOptions = buildOptions(options);
     const mappedRules = buildDifficultyRules(rules);
+    let mappedDiagramTemplate: Record<string, unknown> | undefined;
+    let mappedVariableDefinitions: Record<string, unknown> | undefined;
+
+    try {
+      mappedDiagramTemplate = diagramTemplateRaw.trim() ? JSON.parse(diagramTemplateRaw) : undefined;
+    } catch {
+      setSubmitError('diagramTemplate phải là JSON hợp lệ.');
+      setSaving(false);
+      return;
+    }
+
+    try {
+      mappedVariableDefinitions = variableDefinitionsRaw.trim() ? JSON.parse(variableDefinitionsRaw) : undefined;
+    } catch {
+      setSubmitError('variableDefinitions phải là JSON hợp lệ.');
+      setSaving(false);
+      return;
+    }
 
     if (Object.keys(mappedParameters).length === 0) {
       setSubmitError('Bạn cần khai báo ít nhất một tham số trong mục parameters.');
@@ -283,6 +334,13 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
       tags: validation.result.normalizedTags,
       isPublic,
       questionBankId: initialData?.questionBankId ?? null,
+      generationMode,
+      canonicalQuestionId:
+        generationMode === QuestionGenerationMode.AI_FROM_CANONICAL ? canonicalQuestionId || null : null,
+      solutionTemplate: solutionTemplate.trim() || undefined,
+      diagramTemplate: mappedDiagramTemplate,
+      variableDefinitions:
+        generationMode === QuestionGenerationMode.PARAMETRIC ? mappedVariableDefinitions : undefined,
     };
 
     try {
@@ -370,6 +428,54 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
             </label>
 
             <label>
+              <p className="muted" style={{ marginBottom: 6 }}>Generation Mode</p>
+              <select
+                className="select"
+                value={generationMode}
+                onChange={(event) =>
+                  setGenerationMode(
+                    event.target.value as (typeof QuestionGenerationMode)[keyof typeof QuestionGenerationMode]
+                  )
+                }
+              >
+                <option value={QuestionGenerationMode.PARAMETRIC}>PARAMETRIC</option>
+                <option value={QuestionGenerationMode.AI_FROM_CANONICAL}>AI_FROM_CANONICAL</option>
+              </select>
+            </label>
+
+            {generationMode === QuestionGenerationMode.AI_FROM_CANONICAL && (
+              <label>
+                <p className="muted" style={{ marginBottom: 6 }}>
+                  Canonical Question{' '}
+                  <span title="Canonical Question = bài toán gốc do giáo viên định nghĩa">ⓘ</span>
+                </p>
+                <select
+                  className="select"
+                  value={canonicalQuestionId}
+                  onChange={(event) => setCanonicalQuestionId(event.target.value)}
+                >
+                  <option value="">Chọn canonical question</option>
+                  {(canonicalQuery.data?.result?.content || []).map((canonical) => (
+                    <option key={canonical.id} value={canonical.id}>
+                      {canonical.title}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+
+            {generationMode === QuestionGenerationMode.AI_FROM_CANONICAL && canonicalDetailQuery.data?.result && (
+              <section className="data-card" style={{ minHeight: 0, border: '1px solid #d1fae5' }}>
+                <h3 style={{ color: '#065f46' }}>Preview canonical question</h3>
+                <p><MathText text={canonicalDetailQuery.data.result.problemText} /></p>
+                <p className="muted" style={{ marginTop: 8 }}>Lời giải:</p>
+                <div className="preview-box">
+                  <MathText text={canonicalDetailQuery.data.result.solutionSteps} />
+                </div>
+              </section>
+            )}
+
+            <label>
               <p className="muted" style={{ marginBottom: 6 }}>Công thức tính đáp án đúng</p>
               <input className="input" required placeholder="Ví dụ: a + b" value={answerFormula} onChange={(event) => setAnswerFormula(event.target.value)} />
               {answerFormula && (
@@ -378,6 +484,46 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
                 </div>
               )}
             </label>
+
+            <label>
+              <p className="muted" style={{ marginBottom: 6 }}>Solution Template (LaTeX)</p>
+              <textarea
+                className="textarea"
+                rows={3}
+                value={solutionTemplate}
+                onChange={(event) => setSolutionTemplate(event.target.value)}
+                placeholder="Ví dụ: x = ({{c}} - {{b}})/{{a}}"
+              />
+              {solutionTemplate && (
+                <div className="preview-box">
+                  <MathText text={solutionTemplate} />
+                </div>
+              )}
+            </label>
+
+            <label>
+              <p className="muted" style={{ marginBottom: 6 }}>Diagram Template (JSON)</p>
+              <textarea
+                className="textarea"
+                rows={4}
+                value={diagramTemplateRaw}
+                onChange={(event) => setDiagramTemplateRaw(event.target.value)}
+                placeholder='{"type":"number_line"}'
+              />
+            </label>
+
+            {generationMode === QuestionGenerationMode.PARAMETRIC && (
+              <label>
+                <p className="muted" style={{ marginBottom: 6 }}>Variable Definitions (JSON)</p>
+                <textarea
+                  className="textarea"
+                  rows={4}
+                  value={variableDefinitionsRaw}
+                  onChange={(event) => setVariableDefinitionsRaw(event.target.value)}
+                  placeholder='{"a":"He so cua x"}'
+                />
+              </label>
+            )}
 
             <section className="data-card" style={{ minHeight: 0, border: '1px solid #dbeafe' }}>
               <div className="row">

@@ -460,7 +460,28 @@ export function QuestionBankDetailPage() {
                     <tbody>
                       {filteredQuestions.map((question) => (
                         <tr key={question.id}>
-                          <td><MathText text={question.questionText} /></td>
+                          <td>
+                            <MathText text={question.questionText} />
+                            <div className="row" style={{ justifyContent: 'start', flexWrap: 'wrap', marginTop: 6 }}>
+                              {question.questionSourceType === 'AI_GENERATED' && <span className="badge draft">AI Generated</span>}
+                              {question.questionSourceType === 'TEMPLATE_GENERATED' && <span className="badge approved">Parametric</span>}
+                              {question.canonicalQuestionId && <span className="badge published">From Canonical</span>}
+                            </div>
+                            {question.solutionSteps && (
+                              <div className="preview-box" style={{ marginTop: 8 }}>
+                                <p className="muted" style={{ marginBottom: 6 }}>Solution Steps</p>
+                                <MathText text={question.solutionSteps} />
+                              </div>
+                            )}
+                            {question.diagramData && (
+                              <div className="preview-box" style={{ marginTop: 8 }}>
+                                <p className="muted" style={{ marginBottom: 6 }}>Diagram</p>
+                                <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
+                                  {JSON.stringify(question.diagramData, null, 2)}
+                                </pre>
+                              </div>
+                            )}
+                          </td>
                           <td>
                             {questionTypeLabel[question.questionType] || question.questionType}
                           </td>

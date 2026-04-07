@@ -41,6 +41,7 @@ export const API_ENDPOINTS = {
   ASSESSMENTS_CLOSE: (id: string) => `/assessments/${id}/close`,
   ASSESSMENTS_CLONE: (id: string) => `/assessments/${id}/clone`,
   ASSESSMENTS_GENERATE_FROM_MATRIX: '/assessments/generate-from-matrix',
+  ASSESSMENTS_GENERATE: (assessmentId: string) => `/assessments/${assessmentId}/generate`,
   ASSESSMENTS_QUESTIONS: (assessmentId: string) => `/assessments/${assessmentId}/questions`,
   ASSESSMENTS_QUESTION_REMOVE: (assessmentId: string, questionId: string) =>
     `/assessments/${assessmentId}/questions/${questionId}`,
@@ -205,6 +206,11 @@ export const API_ENDPOINTS = {
   QUESTION_TEMPLATE_GENERATE_AI_ENHANCED: (id: string) => `/question-templates/${id}/generate-ai-enhanced`,
   QUESTION_TEMPLATE_AI_GENERATE_FROM_LESSON: '/question-templates/ai-generate-from-lesson',
   QUESTION_TEMPLATE_IMPORT_FROM_FILE: '/question-templates/import-from-file',
+
+  // Canonical questions
+  CANONICAL_QUESTIONS: '/canonical-questions',
+  CANONICAL_QUESTIONS_MY: '/canonical-questions/my',
+  CANONICAL_QUESTION_DETAIL: (id: string) => `/canonical-questions/${id}`,
 
   // Exam matrix template batch mapping
   EXAM_MATRIX_TEMPLATE_MAPPINGS_BATCH: (matrixId: string) =>

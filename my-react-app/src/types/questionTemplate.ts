@@ -28,6 +28,12 @@ export const TemplateStatus = {
 } as const;
 export type TemplateStatus = typeof TemplateStatus[keyof typeof TemplateStatus];
 
+export const QuestionGenerationMode = {
+    PARAMETRIC: 'PARAMETRIC',
+    AI_FROM_CANONICAL: 'AI_FROM_CANONICAL',
+} as const;
+export type QuestionGenerationMode = typeof QuestionGenerationMode[keyof typeof QuestionGenerationMode];
+
 export interface QuestionTemplateRequest {
     name: string;
     description?: string;
@@ -45,6 +51,11 @@ export interface QuestionTemplateRequest {
     tags: string[];
     isPublic?: boolean;
     questionBankId?: string | null;
+    generationMode?: QuestionGenerationMode;
+    canonicalQuestionId?: string | null;
+    solutionTemplate?: string;
+    diagramTemplate?: Record<string, unknown>;
+    variableDefinitions?: Record<string, unknown>;
 }
 
 export interface QuestionTemplateResponse {
@@ -72,6 +83,11 @@ export interface QuestionTemplateResponse {
     createdAt: string;
     updatedAt: string;
     questionBankId?: string | null;
+    generationMode?: QuestionGenerationMode;
+    canonicalQuestionId?: string | null;
+    solutionTemplate?: string;
+    diagramTemplate?: Record<string, unknown>;
+    variableDefinitions?: Record<string, unknown>;
 }
 
 export interface AIEnhancedQuestionResponse {
@@ -157,6 +173,9 @@ export interface GeneratedQuestionSample {
     usedParameters?: Record<string, unknown>;
     analysisResult?: Record<string, unknown>;
     answerCalculation?: string;
+    canonicalQuestionId?: string;
+    solutionSteps?: string;
+    diagramData?: Record<string, unknown>;
 }
 
 export interface TemplateTestResponse {
@@ -174,6 +193,8 @@ export interface GenerateQuestionsRequest {
         MEDIUM?: number;
         HARD?: number;
     };
+    generationMode?: QuestionGenerationMode;
+    canonicalQuestionId?: string;
 }
 
 export interface GeneratedQuestionsBatchResponse {

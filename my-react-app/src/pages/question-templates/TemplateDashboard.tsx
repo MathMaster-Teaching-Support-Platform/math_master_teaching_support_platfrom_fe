@@ -27,6 +27,10 @@ import {
   useUpdateQuestionTemplate,
 } from '../../hooks/useQuestionTemplate';
 import {
+  useCreateCanonicalQuestion,
+  useGetMyCanonicalQuestions,
+} from '../../hooks/useCanonicalQuestion';
+import {
   useApproveQuestion,
   useBulkApproveQuestions,
   useDeleteQuestion,
@@ -45,6 +49,8 @@ import '../../styles/module-refactor.css';
 import { TemplateFormModal } from './TemplateFormModal';
 import { TemplateImportModal } from './TemplateImportModal';
 import { TemplateTestModal } from './TemplateTestModal';
+import { TemplateGenerateModal } from './TemplateGenerateModal';
+import { CanonicalQuestionModal } from './CanonicalQuestionModal';
 import MathText from '../../components/common/MathText';
 import { useNavigate } from 'react-router-dom';
 import './template-review.css';
@@ -115,6 +121,9 @@ export function TemplateDashboard() {
   const [testOpen, setTestOpen] = useState(false);
   const [selected, setSelected] = useState<QuestionTemplateResponse | null>(null);
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [canonicalOpen, setCanonicalOpen] = useState(false);
+  const [generateOpen, setGenerateOpen] = useState(false);
+  const [generateTemplate, setGenerateTemplate] = useState<QuestionTemplateResponse | null>(null);
   const [reviewTemplateId, setReviewTemplateId] = useState('');
   const [selectedQuestionIds, setSelectedQuestionIds] = useState<Set<string>>(new Set());
   const [editingQuestion, setEditingQuestion] = useState<QuestionResponse | null>(null);
@@ -129,6 +138,7 @@ export function TemplateDashboard() {
     'createdAt',
     'DESC'
   );
+  const { data: canonicalData } = useGetMyCanonicalQuestions(0, 20, 'createdAt', 'DESC');
 
   const createMutation = useCreateQuestionTemplate();
   const updateMutation = useUpdateQuestionTemplate();
@@ -140,6 +150,7 @@ export function TemplateDashboard() {
   const approveQuestionMutation = useApproveQuestion();
   const updateQuestionMutation = useUpdateQuestion();
   const deleteQuestionMutation = useDeleteQuestion();
+  const createCanonicalMutation = useCreateCanonicalQuestion();
 
   const reviewQuestionsQuery = useReviewQuestions(
     reviewTemplateId,
@@ -162,6 +173,7 @@ export function TemplateDashboard() {
   }, [search, status, templates]);
 
   const reviewQuestions = reviewQuestionsQuery.data?.result ?? [];
+  const canonicalQuestions = canonicalData?.result?.content ?? [];
 
   useEffect(() => {
     if (!reviewOpen) return;
@@ -361,6 +373,10 @@ export function TemplateDashboard() {
                 <Upload size={14} />
                 Nhập file
               </button>
+              <button className="btn secondary" onClick={() => setCanonicalOpen(true)}>
+                <Plus size={14} />
+                Tạo Canonical
+              </button>
               <button
                 className="btn"
                 onClick={() => {
@@ -378,6 +394,9 @@ export function TemplateDashboard() {
           <section className="hero-card">
             <p className="hero-kicker">Phân tách trách nhiệm</p>
             <h2>Soạn mẫu và xét duyệt câu hỏi theo mẫu ngay tại đây</h2>
+            <p className="muted" style={{ marginTop: 6 }}>
+              Canonical Question = bài toán gốc do giáo viên định nghĩa.
+            </p>
             <div className="row" style={{ flexWrap: 'wrap' }}>
               <button className="btn secondary" onClick={() => openReviewModal()}>
                 Xét duyệt theo mẫu <ArrowRight size={14} />
@@ -392,6 +411,46 @@ export function TemplateDashboard() {
             <p className="muted" style={{ marginTop: 6 }}>
               Chọn mẫu câu hỏi, xem trước toàn bộ câu đã sinh từ mẫu đó và phê duyệt nhanh theo lô.
             </p>
+          </section>
+
+          <section className="data-card" style={{ minHeight: 0 }}>
+            <div className="row" style={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
+              <div>
+                <h3>Canonical Questions gần đây</h3>
+                <p className="muted">Nguồn semantic cho chế độ AI_FROM_CANONICAL.</p>
+              </div>
+              <button className="btn secondary" onClick={() => setCanonicalOpen(true)}>
+                <Plus size={14} />
+                Tạo mới
+              </button>
+            </div>
+
+            {canonicalQuestions.length === 0 && (
+              <div className="empty">Bạn chưa có canonical question nào.</div>
+            )}
+
+            {canonicalQuestions.length > 0 && (
+              <div className="table-wrap" style={{ marginTop: 10 }}>
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Tiêu đề</th>
+                      <th style={{ width: 180 }}>Problem Type</th>
+                      <th style={{ width: 130 }}>Độ khó</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {canonicalQuestions.map((canonical) => (
+                      <tr key={canonical.id}>
+                        <td>{canonical.title}</td>
+                        <td>{canonical.problemType}</td>
+                        <td>{canonical.difficulty}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </section>
 
           <div className="toolbar">
@@ -472,12 +531,23 @@ export function TemplateDashboard() {
                     <button
                       className="btn secondary"
                       onClick={() => {
+                        setGenerateTemplate(template);
+                        setGenerateOpen(true);
+                      }}
+                    >
+                      <Play size={14} />
+                      Sinh câu hỏi
+                    </button>
+
+                    <button
+                      className="btn secondary"
+                      onClick={() => {
                         setSelected(template);
                         setTestOpen(true);
                       }}
                     >
-                      <Play size={14} />
-                      Tạo câu hỏi
+                      <Eye size={14} />
+                      Chạy thử
                     </button>
 
                     <button
@@ -551,6 +621,25 @@ export function TemplateDashboard() {
               template={selected}
             />
           )}
+
+          {generateTemplate && (
+            <TemplateGenerateModal
+              isOpen={generateOpen}
+              onClose={() => setGenerateOpen(false)}
+              template={generateTemplate}
+              onGenerated={(message) => setToast({ type: 'success', message })}
+            />
+          )}
+
+          <CanonicalQuestionModal
+            isOpen={canonicalOpen}
+            onClose={() => setCanonicalOpen(false)}
+            submitting={createCanonicalMutation.isPending}
+            onSubmit={async (payload) => {
+              await createCanonicalMutation.mutateAsync(payload);
+              setToast({ type: 'success', message: 'Tạo canonical question thành công.' });
+            }}
+          />
 
           {reviewOpen && (
             <div className="modal-layer">
@@ -679,10 +768,35 @@ export function TemplateDashboard() {
                                     <div className="template-review-question__text">
                                       <MathText text={question.questionText} />
                                     </div>
+                                    <div className="row" style={{ justifyContent: 'start', flexWrap: 'wrap', marginTop: 6 }}>
+                                      {question.questionSourceType === 'AI_GENERATED' && (
+                                        <span className="badge draft">AI Generated</span>
+                                      )}
+                                      {question.questionSourceType === 'TEMPLATE_GENERATED' && (
+                                        <span className="badge approved">Parametric</span>
+                                      )}
+                                      {question.canonicalQuestionId && (
+                                        <span className="badge published">From Canonical</span>
+                                      )}
+                                    </div>
                                     {question.explanation && (
                                       <p className="muted template-review-question__explanation">
                                         Giải thích: <MathText text={question.explanation} />
                                       </p>
+                                    )}
+                                    {question.solutionSteps && (
+                                      <div className="preview-box" style={{ marginTop: 8 }}>
+                                        <p className="muted" style={{ marginBottom: 6 }}>Solution Steps</p>
+                                        <MathText text={question.solutionSteps} />
+                                      </div>
+                                    )}
+                                    {question.diagramData && (
+                                      <div className="preview-box" style={{ marginTop: 8 }}>
+                                        <p className="muted" style={{ marginBottom: 6 }}>Diagram Data</p>
+                                        <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
+                                          {JSON.stringify(question.diagramData, null, 2)}
+                                        </pre>
+                                      </div>
                                     )}
                                   </td>
                                   <td>

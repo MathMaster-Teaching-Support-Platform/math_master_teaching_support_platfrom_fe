@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { questionTemplateService } from '../services/questionTemplateService';
 import {
     type QuestionTemplateRequest,
+    type QuestionGenerationMode,
     CognitiveLevel,
     QuestionType
 } from '../types/questionTemplate';
@@ -145,14 +146,20 @@ export const useGenerateQuestions = () => {
             id,
             count,
             difficultyDistribution,
+            generationMode,
+            canonicalQuestionId,
         }: {
             id: string;
             count: number;
             difficultyDistribution: { EASY?: number; MEDIUM?: number; HARD?: number };
+            generationMode?: QuestionGenerationMode;
+            canonicalQuestionId?: string;
         }) =>
             questionTemplateService.generateQuestions(id, {
                 count,
                 difficultyDistribution,
+                generationMode,
+                canonicalQuestionId,
             }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['questions'] });

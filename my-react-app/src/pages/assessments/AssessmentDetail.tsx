@@ -4,10 +4,12 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
   useAssessment,
   useAssessmentQuestions,
+  useGenerateQuestionsForAssessment,
   useSetPointsOverride,
   useUpdateAssessment,
 } from '../../hooks/useAssessment';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import MathText from '../../components/common/MathText';
 import '../../styles/module-refactor.css';
 import type { AssessmentRequest } from '../../types';
 import AssessmentModal from './AssessmentModal';
@@ -46,6 +48,7 @@ export default function AssessmentDetail() {
 
   const [openEdit, setOpenEdit] = useState(false);
   const [pointsDraft, setPointsDraft] = useState<Record<string, string>>({});
+  const [generateError, setGenerateError] = useState<string | null>(null);
 
   const { data, isLoading, isError, error, refetch } = useAssessment(id ?? '');
   const {
@@ -59,6 +62,7 @@ export default function AssessmentDetail() {
   });
   const updateMutation = useUpdateAssessment();
   const pointsOverrideMutation = useSetPointsOverride();
+  const generateMutation = useGenerateQuestionsForAssessment();
 
   const assessment = data?.result;
   const questions = questionsData?.result ?? [];
@@ -121,6 +125,34 @@ export default function AssessmentDetail() {
     });
     setPointsDraft((prev) => ({ ...prev, [questionId]: '' }));
     await Promise.all([refetchQuestions(), refetch()]);
+  }
+
+  async function generateFromMatrix() {
+    if (!assessment?.id || !assessment.examMatrixId) return;
+    setGenerateError(null);
+
+    try {
+      await generateMutation.mutateAsync({
+        assessmentId: assessment.id,
+        data: {
+          examMatrixId: assessment.examMatrixId,
+          reuseApprovedQuestions: true,
+          selectionStrategy: 'BANK_FIRST',
+        },
+      });
+      await Promise.all([refetchQuestions(), refetch()]);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Không thể generate câu hỏi từ matrix.';
+      const normalized = message.toUpperCase();
+      if (
+        normalized.includes('INSUFFICIENT_QUESTIONS_AVAILABLE') ||
+        normalized.includes('INSUFFICIENT QUESTIONS')
+      ) {
+        setGenerateError('Không đủ câu hỏi trong ngân hàng theo cấu trúc đề. Vui lòng bổ sung thêm câu hỏi.');
+        return;
+      }
+      setGenerateError(message);
+    }
   }
 
   function renderContent() {
@@ -244,8 +276,35 @@ export default function AssessmentDetail() {
         <article className="data-card" style={{ marginTop: 16 }}>
           <div className="row" style={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
             <h3>Câu hỏi trong bài kiểm tra</h3>
-            <span className="muted">Có thể chỉnh điểm từng câu bằng pointsOverride</span>
+            <div className="row" style={{ justifyContent: 'start', flexWrap: 'wrap' }}>
+              <span className="muted">Có thể chỉnh điểm từng câu bằng pointsOverride</span>
+              {assessment.status === 'DRAFT' && assessment.assessmentMode === 'MATRIX_BASED' && assessment.examMatrixId && (
+                <button
+                  className="btn"
+                  onClick={() => void generateFromMatrix()}
+                  disabled={generateMutation.isPending}
+                >
+                  {generateMutation.isPending ? 'Đang generate...' : 'Generate from Matrix'}
+                </button>
+              )}
+            </div>
           </div>
+
+          {generateError && <div className="empty" style={{ color: '#b91c1c' }}>{generateError}</div>}
+          {assessment.generationSummary && (
+            <div className="preview-box" style={{ marginBottom: 12 }}>
+              <p className="muted" style={{ marginBottom: 6 }}>
+                totalQuestionsGenerated: {assessment.generationSummary.totalQuestionsGenerated ?? 0}
+              </p>
+              {(assessment.generationSummary.warnings || []).length > 0 && (
+                <ul style={{ margin: 0, paddingLeft: 18 }}>
+                  {(assessment.generationSummary.warnings || []).map((warning) => (
+                    <li key={warning}>{warning}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
 
           {questionsLoading && <div className="empty">Đang tải danh sách câu hỏi...</div>}
           {questionsError && (
@@ -277,7 +336,28 @@ export default function AssessmentDetail() {
                     return (
                       <tr key={questionId}>
                         <td>{question.orderIndex}</td>
-                        <td>{question.questionText}</td>
+                        <td>
+                          <MathText text={question.questionText} />
+                          <div className="row" style={{ justifyContent: 'start', flexWrap: 'wrap', marginTop: 6 }}>
+                            {question.questionSourceType === 'AI_GENERATED' && <span className="badge draft">AI Generated</span>}
+                            {question.questionSourceType === 'TEMPLATE_GENERATED' && <span className="badge approved">Parametric</span>}
+                            {question.canonicalQuestionId && <span className="badge published">Generated from Canonical</span>}
+                          </div>
+                          {question.solutionSteps && (
+                            <div className="preview-box" style={{ marginTop: 8 }}>
+                              <p className="muted" style={{ marginBottom: 6 }}>Solution Steps</p>
+                              <MathText text={question.solutionSteps} />
+                            </div>
+                          )}
+                          {question.diagramData && (
+                            <div className="preview-box" style={{ marginTop: 8 }}>
+                              <p className="muted" style={{ marginBottom: 6 }}>Diagram</p>
+                              <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
+                                {JSON.stringify(question.diagramData, null, 2)}
+                              </pre>
+                            </div>
+                          )}
+                        </td>
                         <td>{question.points ?? 0}</td>
                         <td>
                           <input

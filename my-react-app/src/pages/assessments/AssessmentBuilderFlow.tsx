@@ -10,7 +10,6 @@ import {
   usePublishSummary,
 } from '../../hooks/useAssessment';
 import { useGetMyExamMatrices } from '../../hooks/useExamMatrix';
-import type { AssessmentSelectionStrategy } from '../../types/assessment.types';
 import { MatrixStatus } from '../../types/examMatrix';
 import '../../styles/module-refactor.css';
 import './assessment-builder-flow.css';
@@ -20,28 +19,9 @@ type ToastState = {
   message: string;
 };
 
-const strategyOptions: Array<{ value: AssessmentSelectionStrategy; label: string; hint: string }> = [
-  {
-    value: 'BANK_FIRST',
-    label: 'Ưu tiên ngân hàng',
-    hint: 'Ưu tiên lấy câu hỏi đã duyệt từ Ngân hàng câu hỏi.',
-  },
-  {
-    value: 'MIXED',
-    label: 'Kết hợp',
-    hint: 'Lấy từ ngân hàng trước, phần thiếu sẽ bổ sung bằng nội dung sinh tự động.',
-  },
-  {
-    value: 'AI_FIRST',
-    label: 'Ưu tiên AI',
-    hint: 'Ưu tiên nội dung sinh từ AI và mẫu để tạo nháp nhanh.',
-  },
-];
-
 export default function AssessmentBuilderFlow() {
   const navigate = useNavigate();
   const [selectedMatrixId, setSelectedMatrixId] = useState('');
-  const [selectionStrategy, setSelectionStrategy] = useState<AssessmentSelectionStrategy>('MIXED');
   const [generatedAssessmentId, setGeneratedAssessmentId] = useState('');
   const [toast, setToast] = useState<ToastState | null>(null);
 
@@ -62,6 +42,9 @@ export default function AssessmentBuilderFlow() {
   const generatedAssessment = assessmentQuery.data?.result;
   const generatedQuestions = questionsQuery.data?.result ?? [];
   const publishSummary = summaryQuery.data?.result;
+  let publishButtonLabel = 'Xuất bản đề';
+  if (publishMutation.isPending) publishButtonLabel = 'Đang xuất bản...';
+  else if (generatedAssessment?.status === 'PUBLISHED') publishButtonLabel = 'Đã xuất bản';
 
   async function handleGenerate() {
     if (!selectedMatrixId || generateMutation.isPending) return;
@@ -69,7 +52,7 @@ export default function AssessmentBuilderFlow() {
     try {
       const response = await generateMutation.mutateAsync({
         examMatrixId: selectedMatrixId,
-        selectionStrategy,
+        selectionStrategy: 'BANK_FIRST',
         reuseApprovedQuestions: true,
       });
       const createdId = response.result.id;
@@ -79,9 +62,15 @@ export default function AssessmentBuilderFlow() {
         message: 'Đã tạo đề nháp thành công. Tiếp tục bước rà soát cuối và xuất bản.',
       });
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Không thể tạo đề nháp.';
+      const normalized = message.toUpperCase();
       setToast({
         type: 'error',
-        message: error instanceof Error ? error.message : 'Không thể tạo đề nháp.',
+        message:
+          normalized.includes('INSUFFICIENT_QUESTIONS_AVAILABLE') ||
+          normalized.includes('INSUFFICIENT QUESTIONS')
+            ? 'Không đủ câu hỏi trong ngân hàng theo cấu trúc đề. Vui lòng bổ sung thêm câu hỏi.'
+            : message,
       });
     }
   }
@@ -158,7 +147,7 @@ export default function AssessmentBuilderFlow() {
             <article className="data-card">
               <h3>Bước 1: Lắp ráp đề nháp từ ma trận</h3>
               <p className="muted">
-                Chọn ma trận đã duyệt và chiến lược chọn câu hỏi. Hệ thống tạo đề nháp từ tài nguyên đã được quản trị.
+                Chọn ma trận đã duyệt. Hệ thống chỉ chọn câu hỏi từ Question Bank theo rule của ma trận.
               </p>
 
               <label>
@@ -178,27 +167,13 @@ export default function AssessmentBuilderFlow() {
                 </select>
               </label>
 
-              <label>
-                <p className="muted" style={{ marginBottom: 6 }}>Chiến lược chọn câu hỏi</p>
-                <select
-                  className="select"
-                  value={selectionStrategy}
-                  onChange={(event) => setSelectionStrategy(event.target.value as AssessmentSelectionStrategy)}
-                >
-                  {strategyOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <p className="muted" style={{ marginTop: -4 }}>
-                {strategyOptions.find((option) => option.value === selectionStrategy)?.hint}
+              <p className="muted" style={{ marginTop: 8 }}>
+                Generation Mode: BANK_FIRST (cố định). Không dùng AI trong bước tạo assessment từ matrix.
               </p>
 
               <div className="row" style={{ flexWrap: 'wrap' }}>
                 <button className="btn" onClick={() => void handleGenerate()} disabled={!selectedMatrixId || generateMutation.isPending}>
-                  {generateMutation.isPending ? 'Đang tạo...' : 'Tạo đề nháp'}
+                  {generateMutation.isPending ? 'Đang tạo...' : 'Generate from Matrix'}
                 </button>
                 <button className="btn secondary" onClick={() => navigate('/teacher/exam-matrices')}>
                   Quản lý ma trận
@@ -236,6 +211,22 @@ export default function AssessmentBuilderFlow() {
                     </div>
                   </div>
 
+                  {generatedAssessment?.generationSummary && (
+                    <div className="data-card" style={{ minHeight: 0 }}>
+                      <h3>Kết quả Generate from Matrix</h3>
+                      <p className="muted">
+                        totalQuestionsGenerated: {generatedAssessment.generationSummary.totalQuestionsGenerated ?? 0}
+                      </p>
+                      {(generatedAssessment.generationSummary.warnings || []).length > 0 && (
+                        <ul style={{ margin: 0, paddingLeft: 18 }}>
+                          {(generatedAssessment.generationSummary.warnings || []).map((warning) => (
+                            <li key={warning}>{warning}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  )}
+
                   {publishSummary && (
                     <div className={`assessment-builder-flow__publish-summary ${publishSummary.canPublish ? 'ok' : 'warn'}`}>
                       <div className="row">
@@ -255,7 +246,7 @@ export default function AssessmentBuilderFlow() {
                       onClick={() => void handlePublish()}
                       disabled={!publishSummary?.canPublish || publishMutation.isPending || generatedAssessment?.status === 'PUBLISHED'}
                     >
-                      {publishMutation.isPending ? 'Đang xuất bản...' : generatedAssessment?.status === 'PUBLISHED' ? 'Đã xuất bản' : 'Xuất bản đề'}
+                      {publishButtonLabel}
                     </button>
                   </div>
                 </>
