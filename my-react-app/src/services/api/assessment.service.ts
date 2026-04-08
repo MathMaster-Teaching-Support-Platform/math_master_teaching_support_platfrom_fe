@@ -388,6 +388,23 @@ export class AssessmentService {
     }
 
     /**
+     * Workaround update for assessment question when BE has no PUT endpoint.
+     * Strategy: remove existing question then add it back with new order/points.
+     */
+    static async updateAssessmentQuestionWorkaround(
+        assessmentId: string,
+        questionId: string,
+        data: { orderIndex?: number; pointsOverride?: number | null }
+    ): Promise<ApiResponse<AssessmentResponse>> {
+        await this.removeQuestion(assessmentId, questionId);
+        return this.addQuestion(assessmentId, {
+            questionId,
+            orderIndex: data.orderIndex,
+            pointsOverride: data.pointsOverride === null ? undefined : data.pointsOverride,
+        });
+    }
+
+    /**
      * Optional compatibility pre-check for examMatrixId + lessonIds.
      * This call is only used when VITE_ASSESSMENT_COMPAT_ENDPOINT is configured.
      * If endpoint is missing/not deployed yet, returns supported=false and allows submit to continue.

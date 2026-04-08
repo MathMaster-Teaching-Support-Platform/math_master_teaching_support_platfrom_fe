@@ -1,12 +1,38 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { questionService } from '../services/questionService';
-import type { UpdateQuestionRequest } from '../types/question';
+import type { CreateQuestionRequest, GetMyQuestionsParams, UpdateQuestionRequest } from '../types/question';
 
 export const questionKeys = {
   all: ['questions'] as const,
+  myList: (params: GetMyQuestionsParams) => [...questionKeys.all, 'my', params] as const,
+  detail: (questionId: string) => [...questionKeys.all, 'detail', questionId] as const,
   byBank: (bankId: string, page: number, size: number) =>
     [...questionKeys.all, 'by-bank', bankId, { page, size }] as const,
   byTemplate: (templateId: string) => [...questionKeys.all, 'by-template', templateId] as const,
+};
+
+export const useGetMyQuestions = (params: GetMyQuestionsParams = {}, enabled = true) =>
+  useQuery({
+    queryKey: questionKeys.myList(params),
+    queryFn: () => questionService.getMyQuestions(params),
+    enabled,
+  });
+
+export const useGetQuestionById = (questionId: string, enabled = true) =>
+  useQuery({
+    queryKey: questionKeys.detail(questionId),
+    queryFn: () => questionService.getQuestionById(questionId),
+    enabled: !!questionId && enabled,
+  });
+
+export const useCreateQuestion = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (request: CreateQuestionRequest) => questionService.createQuestion(request),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: questionKeys.all });
+    },
+  });
 };
 
 export const useGetQuestionsByBank = (bankId: string, page = 0, size = 20, enabled = true) =>

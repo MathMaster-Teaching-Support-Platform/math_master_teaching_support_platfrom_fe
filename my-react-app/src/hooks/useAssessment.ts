@@ -270,6 +270,7 @@ export function useAddQuestion() {
         }) => AssessmentService.addQuestion(assessmentId, data),
         onSuccess: (_data, { assessmentId }) => {
             queryClient.invalidateQueries({ queryKey: assessmentKeys.detail(assessmentId) });
+            queryClient.invalidateQueries({ queryKey: assessmentKeys.questions(assessmentId) });
             queryClient.invalidateQueries({ queryKey: assessmentKeys.publishSummary(assessmentId) });
         },
     });
@@ -288,6 +289,28 @@ export function useRemoveQuestion() {
         }) => AssessmentService.removeQuestion(assessmentId, questionId),
         onSuccess: (_data, { assessmentId }) => {
             queryClient.invalidateQueries({ queryKey: assessmentKeys.detail(assessmentId) });
+            queryClient.invalidateQueries({ queryKey: assessmentKeys.questions(assessmentId) });
+            queryClient.invalidateQueries({ queryKey: assessmentKeys.publishSummary(assessmentId) });
+        },
+    });
+}
+
+/** Update assessment-question with workaround (delete + add) when BE has no PUT endpoint */
+export function useUpdateAssessmentQuestionWorkaround() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({
+            assessmentId,
+            questionId,
+            data,
+        }: {
+            assessmentId: string;
+            questionId: string;
+            data: { orderIndex?: number; pointsOverride?: number | null };
+        }) => AssessmentService.updateAssessmentQuestionWorkaround(assessmentId, questionId, data),
+        onSuccess: (_data, { assessmentId }) => {
+            queryClient.invalidateQueries({ queryKey: assessmentKeys.detail(assessmentId) });
+            queryClient.invalidateQueries({ queryKey: assessmentKeys.questions(assessmentId) });
             queryClient.invalidateQueries({ queryKey: assessmentKeys.publishSummary(assessmentId) });
         },
     });

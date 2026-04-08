@@ -2,6 +2,8 @@ import { API_BASE_URL, API_ENDPOINTS } from '../config/api.config';
 import { AuthService } from './api/auth.service';
 import type {
   BulkApproveRequest,
+  CreateQuestionRequest,
+  GetMyQuestionsParams,
   QuestionResponse,
   UpdateQuestionRequest,
 } from '../types/question';
@@ -25,6 +27,31 @@ async function handleResponse<T>(res: Response): Promise<ApiResponse<T>> {
 }
 
 export const questionService = {
+  createQuestion: (request: CreateQuestionRequest) =>
+    fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTIONS}`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(request),
+    }).then(handleResponse<QuestionResponse>),
+
+  getQuestionById: (questionId: string) =>
+    fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTIONS_DETAIL(questionId)}`, {
+      headers: getAuthHeaders(),
+    }).then(handleResponse<QuestionResponse>),
+
+  getMyQuestions: (params: GetMyQuestionsParams = {}) => {
+    const query = new URLSearchParams({
+      page: String(params.page ?? 0),
+      size: String(params.size ?? 20),
+      sortBy: params.sortBy ?? 'createdAt',
+      sortDirection: params.sortDirection ?? 'DESC',
+    });
+
+    return fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTIONS}?${query.toString()}`, {
+      headers: getAuthHeaders(),
+    }).then(handleResponse<PageResponse<QuestionResponse>>);
+  },
+
   getQuestionsByBank: (bankId: string, page = 0, size = 20) => {
     const params = new URLSearchParams({
       page: String(page),
