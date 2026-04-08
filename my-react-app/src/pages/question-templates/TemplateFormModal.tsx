@@ -219,7 +219,7 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
 
       setParameters(mappedParameters.length ? mappedParameters : [{ name: 'a', type: 'int', min: '1', max: '10' }]);
       setOptions(mappedOptions.length ? mappedOptions : [{ key: 'A', formula: '' }, { key: 'B', formula: '' }]);
-      setRules(mappedRules.length ? mappedRules : [{ level: 'EASY', condition: '' }]);
+      setRules(mappedRules);
       return;
     }
 
@@ -247,7 +247,7 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
       { key: 'C', formula: '-a/b' },
       { key: 'D', formula: 'a+b' },
     ]);
-    setRules([{ level: 'EASY', condition: 'a < 5' }]);
+    setRules([]);
   }, [isOpen, initialData, mode]);
 
   if (!isOpen) return null;
@@ -315,12 +315,6 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
       return;
     }
 
-    if (Object.keys(mappedRules).length === 0) {
-      setSubmitError('Bạn cần khai báo ít nhất một difficulty rule hợp lệ.');
-      setSaving(false);
-      return;
-    }
-
     const payload: QuestionTemplateRequest = {
       name: validation.result.normalizedName,
       description: description.trim() || undefined,
@@ -329,7 +323,7 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
       parameters: mappedParameters,
       answerFormula: validation.result.normalizedAnswerFormula,
       optionsGenerator: Object.keys(mappedOptions).length ? mappedOptions : undefined,
-      difficultyRules: mappedRules,
+      difficultyRules: Object.keys(mappedRules).length > 0 ? mappedRules : undefined,
       cognitiveLevel,
       tags: validation.result.normalizedTags,
       isPublic,
@@ -665,8 +659,8 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
             <section className="data-card" style={{ minHeight: 0, border: '1px solid #f1f5f9' }}>
               <div className="row">
                 <div>
-                  <h3 style={{ color: '#334155' }}>3. Tự động phân loại mức độ</h3>
-                  <p className="muted" style={{ fontSize: '0.8rem' }}>Thiết lập điều kiện (Ví dụ: a + b &gt; 50) để tự gán mức độ Khó/Dễ.</p>
+                  <h3 style={{ color: '#334155' }}>3. Tự động phân loại mức độ (tùy chọn)</h3>
+                  <p className="muted" style={{ fontSize: '0.8rem' }}>Có thể bỏ trống. Nếu không khai báo rule, backend sẽ fallback difficulty mặc định.</p>
                 </div>
                 <button
                   type="button"

@@ -43,7 +43,7 @@ export interface QuestionTemplateRequest {
     parameters: Record<string, unknown>;
     answerFormula: string;
     optionsGenerator?: Record<string, unknown>;
-    difficultyRules: Record<string, unknown>;
+    difficultyRules?: Record<string, unknown>;
     topic?: string;
     difficulty?: string;
     constraints?: string[];
@@ -70,7 +70,7 @@ export interface QuestionTemplateResponse {
     parameters: Record<string, unknown>;
     answerFormula: string;
     optionsGenerator?: Record<string, unknown>;
-    difficultyRules: Record<string, unknown>;
+    difficultyRules?: Record<string, unknown>;
     topic?: string;
     difficulty?: string;
     constraints?: string[];
