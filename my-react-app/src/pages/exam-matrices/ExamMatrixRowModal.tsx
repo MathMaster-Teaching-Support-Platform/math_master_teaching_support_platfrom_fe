@@ -10,7 +10,7 @@ const LEVELS: MatrixCognitiveLevel[] = ['NB', 'TH', 'VD', 'VDC'];
 
 type CellDraft = {
   questionCount: number;
-  pointsPerQuestion: number;
+  scorePercent: number;
 };
 
 type CellDraftMap = Record<MatrixCognitiveLevel, CellDraft>;
@@ -19,18 +19,26 @@ type Props = {
   isOpen: boolean;
   matrixId: string;
   subjectId?: string;
+  matrixTotalPointsTarget?: number;
   onClose: () => void;
   onSuccess: () => void;
 };
 
 const defaultCells: CellDraftMap = {
-  NB: { questionCount: 0, pointsPerQuestion: 0 },
-  TH: { questionCount: 0, pointsPerQuestion: 0 },
-  VD: { questionCount: 0, pointsPerQuestion: 0 },
-  VDC: { questionCount: 0, pointsPerQuestion: 0 },
+  NB: { questionCount: 0, scorePercent: 0 },
+  TH: { questionCount: 0, scorePercent: 0 },
+  VD: { questionCount: 0, scorePercent: 0 },
+  VDC: { questionCount: 0, scorePercent: 0 },
 };
 
-export function ExamMatrixRowModal({ isOpen, matrixId, subjectId, onClose, onSuccess }: Readonly<Props>) {
+export function ExamMatrixRowModal({
+  isOpen,
+  matrixId,
+  subjectId,
+  matrixTotalPointsTarget,
+  onClose,
+  onSuccess,
+}: Readonly<Props>) {
   const [chapterId, setChapterId] = useState('');
   const [lessonId, setLessonId] = useState('');
   const [questionBankId, setQuestionBankId] = useState('');
@@ -53,6 +61,11 @@ export function ExamMatrixRowModal({ isOpen, matrixId, subjectId, onClose, onSuc
     const selected = chapters.find((item) => item.id === chapterId);
     return selected?.title || selected?.name || chapterId;
   }, [chapters, chapterId]);
+
+  const totalPercent = useMemo(
+    () => LEVELS.reduce((sum, level) => sum + (cells[level].scorePercent || 0), 0),
+    [cells],
+  );
 
   useEffect(() => {
     if (!isOpen) return;
@@ -84,7 +97,7 @@ export function ExamMatrixRowModal({ isOpen, matrixId, subjectId, onClose, onSuc
   if (!isOpen) return null;
 
   const activeCells = LEVELS.filter(
-    (level) => cells[level].questionCount > 0 && cells[level].pointsPerQuestion > 0,
+    (level) => cells[level].questionCount > 0 && cells[level].scorePercent > 0,
   );
 
   async function submit(event: React.BaseSyntheticEvent) {
@@ -107,17 +120,34 @@ export function ExamMatrixRowModal({ isOpen, matrixId, subjectId, onClose, onSuc
     }
 
     if (activeCells.length === 0) {
-      setError('Mỗi dòng cần ít nhất 1 ô có số câu và điểm/câu > 0.');
+      setError('Mỗi dòng cần ít nhất 1 ô có số câu và phổ điểm (%) > 0.');
       return;
     }
 
     const hasInvalidCell = LEVELS.some(
-      (level) => cells[level].questionCount < 0 || cells[level].pointsPerQuestion < 0,
+      (level) =>
+        cells[level].questionCount < 0 ||
+        cells[level].scorePercent < 0 ||
+        cells[level].scorePercent > 100,
     );
     if (hasInvalidCell) {
-      setError('Số câu và điểm/câu phải lớn hơn hoặc bằng 0.');
+      setError('Số câu phải >= 0 và phổ điểm phải nằm trong khoảng 0-100.');
       return;
     }
+
+    if (totalPercent <= 0) {
+      setError('Tổng phổ điểm phải lớn hơn 0%.');
+      return;
+    }
+
+    if (totalPercent > 100) {
+      setError('Tổng phổ điểm vượt quá 100%. Vui lòng điều chỉnh lại.');
+      return;
+    }
+
+    const examTotalPoints = matrixTotalPointsTarget && matrixTotalPointsTarget > 0
+      ? matrixTotalPointsTarget
+      : 10;
 
     const payload: ExamMatrixRowRequest = {
       chapterId,
@@ -126,11 +156,17 @@ export function ExamMatrixRowModal({ isOpen, matrixId, subjectId, onClose, onSuc
       questionDifficulty,
       questionTypeName: questionTypeName.trim(),
       referenceQuestions: referenceQuestions.trim() || undefined,
-      cells: LEVELS.filter((level) => cells[level].questionCount > 0 && cells[level].pointsPerQuestion > 0).map(
+      cells: LEVELS.filter((level) => cells[level].questionCount > 0 && cells[level].scorePercent > 0).map(
         (level) => ({
           cognitiveLevel: level,
           questionCount: cells[level].questionCount,
-          pointsPerQuestion: cells[level].pointsPerQuestion,
+          pointsPerQuestion: Number(
+            (
+              (examTotalPoints * cells[level].scorePercent) /
+              100 /
+              cells[level].questionCount
+            ).toFixed(4),
+          ),
         }),
       ),
     };
@@ -264,7 +300,7 @@ export function ExamMatrixRowModal({ isOpen, matrixId, subjectId, onClose, onSuc
                   <tr>
                     <th>Mức độ</th>
                     <th>Số câu</th>
-                    <th>Điểm / câu</th>
+                    <th>Phổ điểm (%)</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -293,14 +329,15 @@ export function ExamMatrixRowModal({ isOpen, matrixId, subjectId, onClose, onSuc
                           className="input"
                           type="number"
                           min={0}
-                          step={0.05}
-                          value={cells[level].pointsPerQuestion}
+                          max={100}
+                          step={0.1}
+                          value={cells[level].scorePercent}
                           onChange={(event) =>
                             setCells((prev) => ({
                               ...prev,
                               [level]: {
                                 ...prev[level],
-                                pointsPerQuestion: Number(event.target.value),
+                                scorePercent: Number(event.target.value),
                               },
                             }))
                           }
@@ -311,6 +348,13 @@ export function ExamMatrixRowModal({ isOpen, matrixId, subjectId, onClose, onSuc
                 </tbody>
               </table>
             </div>
+
+            <p className="muted" style={{ marginTop: 6 }}>
+              Tổng phổ điểm hiện tại: <strong>{totalPercent.toFixed(1)}%</strong>
+              {matrixTotalPointsTarget && matrixTotalPointsTarget > 0
+                ? ` | Quy đổi theo tổng điểm mục tiêu: ${matrixTotalPointsTarget}`
+                : ' | Ma trận chưa có tổng điểm mục tiêu, FE tạm quy đổi theo tổng điểm mặc định 10.'}
+            </p>
 
             <p className="muted" style={{ marginTop: 4 }}>
               Chương đang chọn: <strong>{chapterLabel || 'Chưa chọn'}</strong>. Hệ thống sẽ chọn câu ngẫu nhiên từ ngân hàng câu hỏi.

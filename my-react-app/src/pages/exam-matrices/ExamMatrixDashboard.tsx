@@ -3,7 +3,7 @@ import { CheckCircle2, Edit, Eye, Plus, RotateCcw, Search, Trash2 } from 'lucide
 import { useNavigate } from 'react-router-dom';
 import {
   useApproveMatrix,
-  useBuildExamMatrix,
+  useCreateExamMatrix,
   useDeleteExamMatrix,
   useGetMyExamMatrices,
   useResetMatrix,
@@ -53,7 +53,7 @@ export function ExamMatrixDashboard() {
   const [selected, setSelected] = useState<ExamMatrixResponse | null>(null);
 
   const { data, isLoading, isError, error, refetch } = useGetMyExamMatrices();
-  const buildMutation = useBuildExamMatrix();
+  const createMutation = useCreateExamMatrix();
   const updateMutation = useUpdateExamMatrix();
   const deleteMutation = useDeleteExamMatrix();
   const approveMutation = useApproveMatrix();
@@ -72,7 +72,11 @@ export function ExamMatrixDashboard() {
 
   async function handleSave(payload: ExamMatrixRequest) {
     if (mode === 'create') {
-      await buildMutation.mutateAsync(payload);
+      const response = await createMutation.mutateAsync(payload);
+      const newMatrixId = response.result?.id;
+      if (newMatrixId) {
+        navigate(`/teacher/exam-matrices/${newMatrixId}`);
+      }
       return;
     }
     if (!selected) return;
@@ -101,13 +105,16 @@ export function ExamMatrixDashboard() {
               }}
             >
               <Plus size={16} />
-              Tạo ma trận
+              Tạo draft ma trận
             </button>
           </header>
 
           <section className="hero-card">
             <p className="hero-kicker">Luồng làm việc</p>
-            <h2>Thiết kế blueprint trước, tạo đề sau</h2>
+            <h2>Tạo draft trước, thêm cột phân bố sau</h2>
+            <p className="muted" style={{ marginTop: 8 }}>
+              Bước 1 tạo ma trận chỉ cần tên. Bước 2 vào chi tiết để thêm cột/dòng và phổ điểm (%).
+            </p>
             <div className="row" style={{ flexWrap: 'wrap' }}>
               <button className="btn secondary" onClick={() => navigate('/teacher/question-banks')}>
                 Mở Ngân hàng câu hỏi

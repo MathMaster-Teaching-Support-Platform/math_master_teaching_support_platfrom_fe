@@ -321,6 +321,7 @@ export default function ExamMatrixDetailPage() {
               isOpen={rowModalOpen}
               matrixId={matrixId}
               subjectId={matrix?.subjectId ?? table?.subjectId}
+              matrixTotalPointsTarget={matrix?.totalPointsTarget}
               onClose={() => {
                 setRowModalOpen(false);
               }}
