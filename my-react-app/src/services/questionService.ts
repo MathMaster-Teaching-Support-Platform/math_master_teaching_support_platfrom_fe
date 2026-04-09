@@ -47,6 +47,14 @@ export const questionService = {
       sortDirection: params.sortDirection ?? 'DESC',
     });
 
+    if (params.searchName?.trim()) {
+      query.set('name', params.searchName.trim());
+    }
+
+    if (params.searchTag?.trim()) {
+      query.set('tag', params.searchTag.trim());
+    }
+
     return fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTIONS}?${query.toString()}`, {
       headers: getAuthHeaders(),
     }).then(handleResponse<PageResponse<QuestionResponse>>);

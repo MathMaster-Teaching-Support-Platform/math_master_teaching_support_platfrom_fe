@@ -2,7 +2,7 @@ import { X } from 'lucide-react';
 import { useState } from 'react';
 import MathText from '../../components/common/MathText';
 import type {
-  CanonicalQuestionDifficulty,
+  CanonicalCognitiveLevel,
   CanonicalQuestionRequest,
 } from '../../types/canonicalQuestion';
 
@@ -13,7 +13,18 @@ type Props = {
   submitting: boolean;
 };
 
-const difficulties: CanonicalQuestionDifficulty[] = ['EASY', 'MEDIUM', 'HARD'];
+const cognitiveLevels: CanonicalCognitiveLevel[] = [
+  'NHAN_BIET',
+  'THONG_HIEU',
+  'VAN_DUNG',
+  'VAN_DUNG_CAO',
+  'REMEMBER',
+  'UNDERSTAND',
+  'APPLY',
+  'ANALYZE',
+  'EVALUATE',
+  'CREATE',
+];
 
 export function CanonicalQuestionModal({
   isOpen,
@@ -24,9 +35,9 @@ export function CanonicalQuestionModal({
   const [title, setTitle] = useState('');
   const [problemText, setProblemText] = useState('');
   const [solutionSteps, setSolutionSteps] = useState('');
-  const [diagramDefinitionRaw, setDiagramDefinitionRaw] = useState('{}');
+  const [diagramDefinitionRaw, setDiagramDefinitionRaw] = useState('');
   const [problemType, setProblemType] = useState('SHORT_ANSWER');
-  const [difficulty, setDifficulty] = useState<CanonicalQuestionDifficulty>('MEDIUM');
+  const [cognitiveLevel, setCognitiveLevel] = useState<CanonicalCognitiveLevel>('THONG_HIEU');
   const [error, setError] = useState<string | null>(null);
 
   if (!isOpen) return null;
@@ -45,15 +56,7 @@ export function CanonicalQuestionModal({
       return;
     }
 
-    let diagramDefinition: Record<string, unknown> | undefined;
-    if (diagramDefinitionRaw.trim()) {
-      try {
-        diagramDefinition = JSON.parse(diagramDefinitionRaw);
-      } catch {
-        setError('diagramDefinition phải là JSON hợp lệ.');
-        return;
-      }
-    }
+    const diagramDefinition = diagramDefinitionRaw.trim() || undefined;
 
     try {
       await onSubmit({
@@ -62,15 +65,15 @@ export function CanonicalQuestionModal({
         solutionSteps: solutionSteps.trim(),
         diagramDefinition,
         problemType: problemType.trim(),
-        difficulty,
+        cognitiveLevel,
       });
 
       setTitle('');
       setProblemText('');
       setSolutionSteps('');
-      setDiagramDefinitionRaw('{}');
+      setDiagramDefinitionRaw('');
       setProblemType('SHORT_ANSWER');
-      setDifficulty('MEDIUM');
+      setCognitiveLevel('THONG_HIEU');
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Không thể tạo canonical question.');
@@ -106,13 +109,13 @@ export function CanonicalQuestionModal({
                 <input className="input" value={problemType} onChange={(event) => setProblemType(event.target.value)} />
               </label>
               <label>
-                <p className="muted" style={{ marginBottom: 6 }}>Độ khó</p>
+                <p className="muted" style={{ marginBottom: 6 }}>Muc do nhan thuc</p>
                 <select
                   className="select"
-                  value={difficulty}
-                  onChange={(event) => setDifficulty(event.target.value as CanonicalQuestionDifficulty)}
+                  value={cognitiveLevel}
+                  onChange={(event) => setCognitiveLevel(event.target.value as CanonicalCognitiveLevel)}
                 >
-                  {difficulties.map((item) => (
+                  {cognitiveLevels.map((item) => (
                     <option key={item} value={item}>{item}</option>
                   ))}
                 </select>
@@ -150,12 +153,13 @@ export function CanonicalQuestionModal({
             </label>
 
             <label>
-              <p className="muted" style={{ marginBottom: 6 }}>Diagram Definition (JSON)</p>
+              <p className="muted" style={{ marginBottom: 6 }}>Diagram Definition (LaTeX text)</p>
               <textarea
                 className="textarea"
                 rows={4}
                 value={diagramDefinitionRaw}
                 onChange={(event) => setDiagramDefinitionRaw(event.target.value)}
+                placeholder="Vi du: \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}"
               />
             </label>
           </div>

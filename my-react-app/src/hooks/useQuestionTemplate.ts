@@ -145,19 +145,16 @@ export const useGenerateQuestions = () => {
         mutationFn: ({
             id,
             count,
-            difficultyDistribution,
             generationMode,
             canonicalQuestionId,
         }: {
             id: string;
             count: number;
-            difficultyDistribution: { EASY?: number; MEDIUM?: number; HARD?: number };
             generationMode?: QuestionGenerationMode;
             canonicalQuestionId?: string;
         }) =>
             questionTemplateService.generateQuestions(id, {
                 count,
-                difficultyDistribution,
                 generationMode,
                 canonicalQuestionId,
             }),

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { canonicalQuestionService } from '../services/canonicalQuestionService';
 import type { CanonicalQuestionRequest } from '../types/canonicalQuestion';
+import type { GenerateQuestionsFromCanonicalRequest } from '../types/questionTemplate';
 
 export const canonicalQuestionKeys = {
   all: ['canonicalQuestions'] as const,
@@ -35,6 +36,22 @@ export const useCreateCanonicalQuestion = () => {
       canonicalQuestionService.createCanonicalQuestion(request),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: canonicalQuestionKeys.all });
+    },
+  });
+};
+
+export const useGenerateQuestionsFromCanonical = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      canonicalId,
+      request,
+    }: {
+      canonicalId: string;
+      request: GenerateQuestionsFromCanonicalRequest;
+    }) => canonicalQuestionService.generateQuestionsFromCanonical(canonicalId, request),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['questions'] });
     },
   });
 };

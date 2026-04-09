@@ -63,6 +63,8 @@ export interface GetMyQuestionsParams {
   size?: number;
   sortBy?: string;
   sortDirection?: 'ASC' | 'DESC';
+  searchName?: string;
+  searchTag?: string;
 }
 
 export interface UpdateQuestionRequest {

@@ -1,5 +1,5 @@
 import { X } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useGenerateQuestions } from '../../hooks/useQuestionTemplate';
 import { useGetCanonicalQuestionById, useGetMyCanonicalQuestions } from '../../hooks/useCanonicalQuestion';
 import {
@@ -22,14 +22,9 @@ export function TemplateGenerateModal({
   onGenerated,
 }: Readonly<Props>) {
   const [count, setCount] = useState(5);
-  const [easy, setEasy] = useState(2);
-  const [medium, setMedium] = useState(2);
-  const [hard, setHard] = useState(1);
   const [generationMode, setGenerationMode] = useState<
     (typeof QuestionGenerationMode)[keyof typeof QuestionGenerationMode]
-  >(
-    template.generationMode || QuestionGenerationMode.PARAMETRIC
-  );
+  >(QuestionGenerationMode.PARAMETRIC);
   const [canonicalQuestionId, setCanonicalQuestionId] = useState(template.canonicalQuestionId || '');
   const [error, setError] = useState<string | null>(null);
 
@@ -40,16 +35,14 @@ export function TemplateGenerateModal({
     Boolean(canonicalQuestionId) && generationMode === QuestionGenerationMode.AI_FROM_CANONICAL
   );
 
-  const distributionSum = useMemo(() => easy + medium + hard, [easy, medium, hard]);
-
   if (!isOpen) return null;
 
   async function submit(event: React.BaseSyntheticEvent) {
     event.preventDefault();
     setError(null);
 
-    if (distributionSum !== count) {
-      setError('Tổng difficultyDistribution phải bằng count.');
+    if (!Number.isFinite(count) || count < 1) {
+      setError('Count bat buoc va phai >= 1.');
       return;
     }
 
@@ -62,11 +55,6 @@ export function TemplateGenerateModal({
       const response = await generateMutation.mutateAsync({
         id: template.id,
         count,
-        difficultyDistribution: {
-          EASY: easy,
-          MEDIUM: medium,
-          HARD: hard,
-        },
         generationMode,
         canonicalQuestionId:
           generationMode === QuestionGenerationMode.AI_FROM_CANONICAL
@@ -126,39 +114,7 @@ export function TemplateGenerateModal({
                   onChange={(event) => setCount(Number(event.target.value))}
                 />
               </label>
-              <label>
-                <p className="muted" style={{ marginBottom: 6 }}>EASY</p>
-                <input
-                  className="input"
-                  type="number"
-                  min={0}
-                  value={easy}
-                  onChange={(event) => setEasy(Number(event.target.value))}
-                />
-              </label>
-              <label>
-                <p className="muted" style={{ marginBottom: 6 }}>MEDIUM</p>
-                <input
-                  className="input"
-                  type="number"
-                  min={0}
-                  value={medium}
-                  onChange={(event) => setMedium(Number(event.target.value))}
-                />
-              </label>
-              <label>
-                <p className="muted" style={{ marginBottom: 6 }}>HARD</p>
-                <input
-                  className="input"
-                  type="number"
-                  min={0}
-                  value={hard}
-                  onChange={(event) => setHard(Number(event.target.value))}
-                />
-              </label>
             </div>
-
-            <p className="muted">Tổng phân phối hiện tại: {distributionSum} / {count}</p>
 
             {generationMode === QuestionGenerationMode.AI_FROM_CANONICAL && (
               <label>
@@ -192,8 +148,14 @@ export function TemplateGenerateModal({
 
           <div className="modal-footer">
             <button type="button" className="btn secondary" onClick={onClose}>Đóng</button>
-            <button type="submit" className="btn" disabled={generateMutation.isPending}>
-              {generateMutation.isPending ? 'Đang sinh...' : 'Sinh câu hỏi'}
+            <button
+              type="submit"
+              className="btn"
+              disabled={generateMutation.isPending}
+            >
+              {generateMutation.isPending
+                ? 'Đang sinh...'
+                : 'Sinh câu hỏi'}
             </button>
           </div>
         </form>

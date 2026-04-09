@@ -28,6 +28,8 @@ export const TemplateStatus = {
 } as const;
 export type TemplateStatus = typeof TemplateStatus[keyof typeof TemplateStatus];
 
+export type DiagramValue = string | Record<string, unknown> | null;
+
 export const QuestionGenerationMode = {
     PARAMETRIC: 'PARAMETRIC',
     AI_FROM_CANONICAL: 'AI_FROM_CANONICAL',
@@ -43,19 +45,14 @@ export interface QuestionTemplateRequest {
     parameters: Record<string, unknown>;
     answerFormula: string;
     optionsGenerator?: Record<string, unknown>;
-    difficultyRules?: Record<string, unknown>;
     topic?: string;
-    difficulty?: string;
     constraints?: string[];
     cognitiveLevel: CognitiveLevel;
     tags: string[];
     isPublic?: boolean;
     questionBankId?: string | null;
-    generationMode?: QuestionGenerationMode;
     canonicalQuestionId?: string | null;
-    solutionTemplate?: string;
-    diagramTemplate?: Record<string, unknown>;
-    variableDefinitions?: Record<string, unknown>;
+    diagramTemplate?: DiagramValue;
 }
 
 export interface QuestionTemplateResponse {
@@ -70,9 +67,7 @@ export interface QuestionTemplateResponse {
     parameters: Record<string, unknown>;
     answerFormula: string;
     optionsGenerator?: Record<string, unknown>;
-    difficultyRules?: Record<string, unknown>;
     topic?: string;
-    difficulty?: string;
     constraints?: string[];
     cognitiveLevel: CognitiveLevel;
     tags: string[];
@@ -83,11 +78,8 @@ export interface QuestionTemplateResponse {
     createdAt: string;
     updatedAt: string;
     questionBankId?: string | null;
-    generationMode?: QuestionGenerationMode;
     canonicalQuestionId?: string | null;
-    solutionTemplate?: string;
-    diagramTemplate?: Record<string, unknown>;
-    variableDefinitions?: Record<string, unknown>;
+    diagramTemplate?: DiagramValue;
 }
 
 export interface AIEnhancedQuestionResponse {
@@ -131,7 +123,6 @@ export interface TemplateDraft {
     parameters?: Record<string, unknown>;
     answerFormula?: string;
     optionsGenerator?: Record<string, unknown>;
-    difficultyRules?: Record<string, string>;
     cognitiveLevel?: CognitiveLevel;
     tags?: string[];
 }
@@ -175,7 +166,7 @@ export interface GeneratedQuestionSample {
     answerCalculation?: string;
     canonicalQuestionId?: string;
     solutionSteps?: string;
-    diagramData?: Record<string, unknown>;
+    diagramData?: DiagramValue;
 }
 
 export interface TemplateTestResponse {
@@ -188,13 +179,13 @@ export interface TemplateTestResponse {
 
 export interface GenerateQuestionsRequest {
     count: number;
-    difficultyDistribution: {
-        EASY?: number;
-        MEDIUM?: number;
-        HARD?: number;
-    };
     generationMode?: QuestionGenerationMode;
     canonicalQuestionId?: string;
+}
+
+export interface GenerateQuestionsFromCanonicalRequest {
+    templateId: string;
+    count: number;
 }
 
 export interface GeneratedQuestionsBatchResponse {

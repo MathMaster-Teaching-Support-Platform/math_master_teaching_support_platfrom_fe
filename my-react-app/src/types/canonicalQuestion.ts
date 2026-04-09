@@ -1,12 +1,24 @@
-export type CanonicalQuestionDifficulty = 'EASY' | 'MEDIUM' | 'HARD';
+export type CanonicalCognitiveLevel =
+  | 'NHAN_BIET'
+  | 'THONG_HIEU'
+  | 'VAN_DUNG'
+  | 'VAN_DUNG_CAO'
+  | 'REMEMBER'
+  | 'UNDERSTAND'
+  | 'APPLY'
+  | 'ANALYZE'
+  | 'EVALUATE'
+  | 'CREATE';
+
+export type CanonicalDiagramValue = string | Record<string, unknown> | null;
 
 export interface CanonicalQuestionRequest {
   title: string;
   problemText: string;
   solutionSteps: string;
-  diagramDefinition?: Record<string, unknown>;
+  diagramDefinition?: CanonicalDiagramValue;
   problemType: string;
-  difficulty: CanonicalQuestionDifficulty;
+  cognitiveLevel: CanonicalCognitiveLevel;
 }
 
 export interface CanonicalQuestionResponse {
@@ -16,9 +28,9 @@ export interface CanonicalQuestionResponse {
   title: string;
   problemText: string;
   solutionSteps: string;
-  diagramDefinition?: Record<string, unknown>;
+  diagramDefinition?: CanonicalDiagramValue;
   problemType: string;
-  difficulty: CanonicalQuestionDifficulty;
+  cognitiveLevel: CanonicalCognitiveLevel;
   createdAt?: string;
   updatedAt?: string;
 }

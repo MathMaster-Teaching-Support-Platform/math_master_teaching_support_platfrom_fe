@@ -6,6 +6,10 @@ import type {
   CanonicalQuestionResponse,
   PageResponse,
 } from '../types/canonicalQuestion';
+import type {
+  GenerateQuestionsFromCanonicalRequest,
+  GeneratedQuestionsBatchResponse,
+} from '../types/questionTemplate';
 
 type ErrorResponse = {
   code?: number;
@@ -85,6 +89,24 @@ export const canonicalQuestionService = {
     return parseResponse<ApiResponse<CanonicalQuestionResponse>>(
       response,
       'Không thể lấy canonical question'
+    );
+  },
+
+  generateQuestionsFromCanonical: async (
+    canonicalId: string,
+    request: GenerateQuestionsFromCanonicalRequest
+  ): Promise<ApiResponse<GeneratedQuestionsBatchResponse>> => {
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.CANONICAL_QUESTION_GENERATE_QUESTIONS(canonicalId)}`,
+      {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(request),
+      }
+    );
+    return parseResponse<ApiResponse<GeneratedQuestionsBatchResponse>>(
+      response,
+      'Không thể sinh câu hỏi từ canonical flow'
     );
   },
 };

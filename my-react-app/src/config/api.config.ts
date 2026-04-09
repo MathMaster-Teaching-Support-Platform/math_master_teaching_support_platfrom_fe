@@ -212,6 +212,11 @@ export const API_ENDPOINTS = {
   CANONICAL_QUESTIONS: '/canonical-questions',
   CANONICAL_QUESTIONS_MY: '/canonical-questions/my',
   CANONICAL_QUESTION_DETAIL: (id: string) => `/canonical-questions/${id}`,
+  CANONICAL_QUESTION_GENERATE_QUESTIONS: (id: string) =>
+    `/canonical-questions/${id}/generate-questions`,
+
+  // Latex render via backend proxy (QuickLaTeX)
+  LATEX_RENDER: '/latex/render',
 
   // Exam matrix template batch mapping
   EXAM_MATRIX_TEMPLATE_MAPPINGS_BATCH: (matrixId: string) =>
