@@ -51,7 +51,7 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
   const [saving, setSaving] = useState(false);
 
   const { data: matrixData } = useGetMyExamMatrices();
-  const { data: selectedMatrixData } = useGetExamMatrixById(formData.examMatrixId, !!formData.examMatrixId && isOpen);
+  useGetExamMatrixById(formData.examMatrixId, !!formData.examMatrixId && isOpen);
   const { data: subjectsData } = useSubjects();
   const { data: chaptersData } = useChaptersBySubject(selectedSubjectId, !!selectedSubjectId && isOpen);
   const { data: lessonsData, isLoading: loadingLessons } = useLessonsByChapter(
@@ -165,12 +165,6 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
     const invalidLesson = formData.lessonIds.find((id) => !availableLessonIds.has(id));
     if (formData.lessonIds.length > 0 && invalidLesson) {
       setError('Có bài học đã chọn không nằm trong danh sách hiện tại.');
-      return;
-    }
-
-    const matrixRowCount = selectedMatrixData?.result?.rowCount ?? selectedMatrixData?.result?.templateMappingCount ?? 0;
-    if (matrixRowCount === 0) {
-      setError('Ma trận đã chọn chưa có dòng blueprint câu hỏi.');
       return;
     }
 

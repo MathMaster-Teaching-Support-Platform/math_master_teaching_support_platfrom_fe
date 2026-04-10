@@ -5,7 +5,7 @@ import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLa
 import {
   useCreateQuestionBank,
   useDeleteQuestionBank,
-  useSearchQuestionBanks,
+  useGetMyQuestionBanks,
   useToggleQuestionBankPublicStatus,
   useUpdateQuestionBank,
 } from '../../hooks/useQuestionBank';
@@ -33,17 +33,13 @@ export function QuestionBankDashboard() {
   const [mode, setMode] = useState<'create' | 'edit'>('create');
   const [selected, setSelected] = useState<QuestionBankResponse | null>(null);
 
-  const isPublic = visibilityFilter === 'ALL' ? undefined : visibilityFilter === 'PUBLIC';
-  const searchTerm = search.trim() || undefined;
-
-  const { data, isLoading, isError, error, refetch } = useSearchQuestionBanks({
-    isPublic,
-    searchTerm,
+  const { data, isLoading, isError, error, refetch } = useGetMyQuestionBanks(
     page,
     size,
-    sortBy: 'createdAt',
-    sortDirection: 'DESC',
-  });
+    'createdAt',
+    'DESC',
+    true,
+  );
 
   const createMutation = useCreateQuestionBank();
   const updateMutation = useUpdateQuestionBank();

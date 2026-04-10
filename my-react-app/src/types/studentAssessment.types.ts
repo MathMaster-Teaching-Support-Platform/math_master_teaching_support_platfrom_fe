@@ -44,6 +44,11 @@ export interface AttemptQuestionResponse {
   questionType: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER' | 'ESSAY' | 'CODING';
   options?: Record<string, unknown>; // Changed from string to unknown to match BE
   points: number;
+  diagramData?: Record<string, unknown> | string | null;
+  diagramUrl?: string;
+  diagramLatex?: string;
+  latexContent?: string;
+  answerFormula?: string;
 }
 
 export interface AnswerUpdateRequest {

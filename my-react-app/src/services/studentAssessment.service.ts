@@ -3,6 +3,7 @@ import { AuthService } from './api/auth.service';
 import type {
   StudentAssessmentResponse,
   AttemptStartResponse,
+  AttemptQuestionResponse,
   StartAssessmentRequest,
   AnswerUpdateRequest,
   AnswerAckResponse,
@@ -13,6 +14,113 @@ import type {
 import type { ApiResponse, PaginatedResponse } from '../types';
 
 export class StudentAssessmentService {
+  private static toRecord(value: unknown): Record<string, unknown> {
+    return value && typeof value === 'object' ? (value as Record<string, unknown>) : {};
+  }
+
+  private static toArray<T = unknown>(value: unknown): T[] {
+    return Array.isArray(value) ? (value as T[]) : [];
+  }
+
+  private static pickString(...values: unknown[]): string | undefined {
+    for (const value of values) {
+      if (typeof value === 'string' && value.trim()) return value;
+      if (typeof value === 'number') return String(value);
+    }
+    return undefined;
+  }
+
+  private static pickNumber(...values: unknown[]): number {
+    for (const value of values) {
+      if (typeof value === 'number' && Number.isFinite(value)) return value;
+      if (typeof value === 'string') {
+        const parsed = Number(value);
+        if (Number.isFinite(parsed)) return parsed;
+      }
+    }
+    return 0;
+  }
+
+  private static normalizeAttemptQuestion(rawQuestion: unknown): AttemptQuestionResponse {
+    const question = this.toRecord(rawQuestion);
+    const nestedQuestion = this.toRecord(question.question ?? question.questionData ?? question.question_data);
+    const diagramData =
+      question.diagramData
+      ?? question.diagram_data
+      ?? nestedQuestion.diagramData
+      ?? nestedQuestion.diagram_data
+      ?? nestedQuestion.diagramDefinition
+      ?? nestedQuestion.diagram_definition
+      ?? null;
+
+    return {
+      questionId: this.pickString(
+        question.questionId,
+        question.question_id,
+        question.id,
+        nestedQuestion.questionId,
+        nestedQuestion.question_id,
+        nestedQuestion.id,
+      ) || '',
+      orderIndex: this.pickNumber(question.orderIndex, question.order_index),
+      questionText:
+        this.pickString(
+          question.questionText,
+          question.question_text,
+          nestedQuestion.questionText,
+          nestedQuestion.question_text,
+        ) || '',
+      questionType:
+        (this.pickString(question.questionType, question.question_type, nestedQuestion.questionType, nestedQuestion.question_type) as AttemptQuestionResponse['questionType'])
+        || 'MULTIPLE_CHOICE',
+      options:
+        (this.toRecord(question.options).constructor === Object && Object.keys(this.toRecord(question.options)).length > 0
+          ? this.toRecord(question.options)
+          : this.toRecord(nestedQuestion.options)),
+      points: this.pickNumber(question.points, question.pointsOverride, question.points_override, nestedQuestion.points),
+      diagramData: diagramData as AttemptQuestionResponse['diagramData'],
+      diagramUrl: this.pickString(
+        question.diagramUrl,
+        question.diagram_url,
+        nestedQuestion.diagramUrl,
+        nestedQuestion.diagram_url,
+      ),
+      diagramLatex: this.pickString(
+        question.diagramLatex,
+        question.diagram_latex,
+        nestedQuestion.diagramLatex,
+        nestedQuestion.diagram_latex,
+      ),
+      latexContent: this.pickString(
+        question.latexContent,
+        question.latex_content,
+        nestedQuestion.latexContent,
+        nestedQuestion.latex_content,
+      ),
+      answerFormula: this.pickString(
+        question.answerFormula,
+        question.answer_formula,
+        nestedQuestion.answerFormula,
+        nestedQuestion.answer_formula,
+      ),
+    };
+  }
+
+  private static normalizeStartAttemptResponse(
+    payload: ApiResponse<AttemptStartResponse>
+  ): ApiResponse<AttemptStartResponse> {
+    const result = payload.result;
+    if (!result) return payload;
+
+    return {
+      ...payload,
+      result: {
+        ...result,
+        questions: this.toArray(result.questions).map((question) => this.normalizeAttemptQuestion(question)),
+      },
+    };
+  }
+
   private static async getHeaders() {
     const token = AuthService.getToken();
     if (!token) throw new Error('Authentication required');
@@ -87,7 +195,8 @@ export class StudentAssessmentService {
       throw new Error(error.message || 'Failed to start assessment');
     }
 
-    return response.json();
+    const payload = (await response.json()) as ApiResponse<AttemptStartResponse>;
+    return this.normalizeStartAttemptResponse(payload);
   }
 
   // Update answer
