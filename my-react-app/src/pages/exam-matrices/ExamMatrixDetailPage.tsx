@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ArrowLeft, CheckCircle2, Plus, RotateCcw, ShieldCheck, Trash2 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
@@ -54,6 +54,11 @@ function getRowCell(row: ExamMatrixTableRow, level: MatrixLevel) {
   return { questionCount, pointsPerQuestion };
 }
 
+function pickDisplayValue(...values: Array<string | number | null | undefined>) {
+  const found = values.find((value) => value !== undefined && value !== null && String(value).trim() !== '');
+  return found !== undefined && found !== null ? String(found) : '-';
+}
+
 export default function ExamMatrixDetailPage() {
   const { matrixId } = useParams<{ matrixId: string }>();
   const navigate = useNavigate();
@@ -61,6 +66,7 @@ export default function ExamMatrixDetailPage() {
   const [validation, setValidation] = useState<MatrixValidationReport | null>(null);
   const [rowModalOpen, setRowModalOpen] = useState(false);
   const [validating, setValidating] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const { data, isLoading, isError, error, refetch } = useGetExamMatrixById(
     matrixId ?? '',
@@ -80,7 +86,43 @@ export default function ExamMatrixDetailPage() {
   const table = tableData?.result;
   const chapters = table?.chapters ?? [];
 
+  const tableRows = useMemo(() => {
+    return chapters.flatMap((chapter) =>
+      chapter.rows.map((row) => ({
+        ...row,
+        chapterName: row.chapterName || row.chapter_name || chapter.chapterName || 'N/A',
+      })),
+    );
+  }, [chapters]);
+
+  const tableTotals = useMemo(() => {
+    let nb = 0;
+    let th = 0;
+    let vd = 0;
+    let vdc = 0;
+    let total = 0;
+
+    for (const row of tableRows) {
+      nb += getRowCell(row, 'NB').questionCount;
+      th += getRowCell(row, 'TH').questionCount;
+      vd += getRowCell(row, 'VD').questionCount;
+      vdc += getRowCell(row, 'VDC').questionCount;
+      total += row.rowTotalQuestions;
+    }
+
+    return { nb, th, vd, vdc, total };
+  }, [tableRows]);
+
   const canEdit = matrix?.status === MatrixStatus.DRAFT;
+
+  async function refreshMatrix() {
+    setRefreshing(true);
+    try {
+      await Promise.all([refetch(), refetchTable()]);
+    } finally {
+      setRefreshing(false);
+    }
+  }
 
   async function runValidation() {
     if (!matrixId) return;
@@ -148,11 +190,12 @@ export default function ExamMatrixDetailPage() {
                   className="toolbar"
                   style={{ marginTop: 14, border: '0', padding: 0, background: 'transparent' }}
                 >
-                  <button className="btn secondary" onClick={() => void refetch()}>
-                    Làm mới thông tin
-                  </button>
-                  <button className="btn secondary" onClick={() => void refetchTable()}>
-                    Làm mới bảng
+                  <button
+                    className="btn secondary"
+                    onClick={() => void refreshMatrix()}
+                    disabled={refreshing}
+                  >
+                    {refreshing ? 'Đang làm mới...' : 'Làm mới ma trận'}
                   </button>
                   <button
                     className="btn secondary"
@@ -216,98 +259,72 @@ export default function ExamMatrixDetailPage() {
                 )}
               </div>
 
-              {chapters.length === 0 ? (
+              {tableRows.length === 0 ? (
                 <div className="empty">Ma trận chưa có dòng nào. Hãy thêm dòng từ ngân hàng câu hỏi.</div>
               ) : (
                 <div className="table-wrap">
                   <table className="table matrix-table">
                     <thead>
                       <tr>
+                        <th>Lớp</th>
+                        <th>Môn</th>
+                        <th>Chương</th>
+                        <th>Bank</th>
                         <th>Dạng bài</th>
                         <th className="matrix-level-header matrix-level-header--nb" title="questions will be randomly selected from Question Bank">NB</th>
                         <th className="matrix-level-header matrix-level-header--th" title="questions will be randomly selected from Question Bank">TH</th>
                         <th className="matrix-level-header matrix-level-header--vd" title="questions will be randomly selected from Question Bank">VD</th>
                         <th className="matrix-level-header matrix-level-header--vdc" title="questions will be randomly selected from Question Bank">VDC</th>
-                        <th>Tổng câu</th>
-                        <th>Tổng điểm</th>
-                        <th>Thao tác</th>
+                        <th>Tổng dạng bài</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {chapters.map((chapter, chapterIndex) => (
-                        <Fragment key={`chapter-${chapter.chapterId ?? chapterIndex}`}>
-                          <tr className="matrix-chapter-row">
-                            <td colSpan={8}>
-                              <strong>{chapter.chapterName || `Chương ${chapterIndex + 1}`}</strong>
-                            </td>
-                          </tr>
-
-                          {chapter.rows.map((row) => (
-                            <tr key={row.rowId}>
-                              <td>
-                                <div>
-                                  <strong>{row.questionTypeName}</strong>
-                                  {row.referenceQuestions && (
-                                    <p className="muted" style={{ marginTop: 4, fontSize: 12 }}>
-                                      {row.referenceQuestions}
-                                    </p>
-                                  )}
-                                </div>
+                      {tableRows.map((row) => (
+                        <tr key={row.rowId}>
+                          <td>{pickDisplayValue(row.schoolGradeName, row.school_grade_name, row.gradeLevel, row.grade_level, row.schoolGrade, row.school_grade, matrix?.gradeLevel, table?.gradeLevel)}</td>
+                          <td>{pickDisplayValue(row.subjectName, row.subject_name, row.subject, matrix?.subjectName, table?.subjectName)}</td>
+                          <td>{pickDisplayValue(row.chapterName, row.chapter_name, row.chapter)}</td>
+                          <td>
+                            <div>{row.questionBankName || row.questionBankId || '-'}</div>
+                            {canEdit && (
+                              <button className="btn danger" style={{ marginTop: 6 }} onClick={() => void removeRow(row.rowId)}>
+                                Xóa
+                              </button>
+                            )}
+                          </td>
+                          <td>
+                            <div>
+                              <strong>{row.questionTypeName}</strong>
+                              {row.referenceQuestions && (
+                                <p className="muted" style={{ marginTop: 4, fontSize: 12 }}>
+                                  {row.referenceQuestions}
+                                </p>
+                              )}
+                            </div>
+                          </td>
+                          {cognitiveOrder.map((level) => {
+                            const cell = getRowCell(row, level);
+                            const isEmpty = cell.questionCount <= 0;
+                            return (
+                              <td
+                                key={`${row.rowId}-${level}`}
+                                className={isEmpty ? 'matrix-cell matrix-cell--empty' : 'matrix-cell'}
+                              >
+                                <strong>{cell.questionCount || 0}</strong>
                               </td>
-                              {cognitiveOrder.map((level) => {
-                                const cell = getRowCell(row, level);
-                                const isEmpty = cell.questionCount <= 0;
-                                return (
-                                  <td
-                                    key={`${row.rowId}-${level}`}
-                                    className={isEmpty ? 'matrix-cell matrix-cell--empty' : 'matrix-cell'}
-                                  >
-                                    <div className="matrix-cell__count">{cell.questionCount || 0}</div>
-                                    {cell.pointsPerQuestion > 0 && (
-                                      <div className="matrix-cell__point">({cell.pointsPerQuestion}đ)</div>
-                                    )}
-                                  </td>
-                                );
-                              })}
-                              <td><strong>{row.rowTotalQuestions}</strong></td>
-                              <td><strong>{row.rowTotalPoints}</strong></td>
-                              <td>
-                                {canEdit && (
-                                  <button
-                                    className="btn danger"
-                                    onClick={() => void removeRow(row.rowId)}
-                                  >
-                                    Xóa
-                                  </button>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-
-                          <tr className="matrix-total-row" key={`chapter-total-${chapter.chapterId ?? chapterIndex}`}>
-                            <td><strong>Tổng chương</strong></td>
-                            {cognitiveOrder.map((level) => (
-                              <td key={`chapter-total-${chapter.chapterId ?? chapterIndex}-${level}`}>
-                                <strong>{getLevelCount(chapter.totalByCognitive, level)}</strong>
-                              </td>
-                            ))}
-                            <td><strong>{chapter.chapterTotalQuestions}</strong></td>
-                            <td><strong>{chapter.chapterTotalPoints}</strong></td>
-                            <td />
-                          </tr>
-                        </Fragment>
+                            );
+                          })}
+                          <td><strong>{row.rowTotalQuestions}</strong></td>
+                        </tr>
                       ))}
 
                       <tr className="matrix-grand-total-row">
-                        <td><strong>Tổng toàn ma trận</strong></td>
-                        {cognitiveOrder.map((level) => (
-                          <td key={`grand-total-${level}`}>
-                            <strong>{getLevelCount(table?.grandTotalByCognitive, level)}</strong>
-                          </td>
-                        ))}
-                        <td><strong>{table?.grandTotalQuestions ?? 0}</strong></td>
-                        <td><strong>{table?.grandTotalPoints ?? 0}</strong></td>
-                        <td />
+                        <td colSpan={5}><strong>Tổng</strong></td>
+                        <td><strong>{tableTotals.nb}</strong></td>
+                        <td><strong>{tableTotals.th}</strong></td>
+                        <td><strong>{tableTotals.vd}</strong></td>
+                        <td><strong>{tableTotals.vdc}</strong></td>
+                        <td><strong>{tableTotals.total}</strong></td>
                       </tr>
                     </tbody>
                   </table>
@@ -320,6 +337,7 @@ export default function ExamMatrixDetailPage() {
             <ExamMatrixRowModal
               isOpen={rowModalOpen}
               matrixId={matrixId}
+              matrixGradeLevel={matrix?.gradeLevel ?? table?.gradeLevel}
               subjectId={matrix?.subjectId ?? table?.subjectId}
               matrixTotalPointsTarget={matrix?.totalPointsTarget}
               onClose={() => {

@@ -1,6 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { questionService } from '../services/questionService';
-import type { CreateQuestionRequest, GetMyQuestionsParams, UpdateQuestionRequest } from '../types/question';
+import type {
+  CreateQuestionRequest,
+  GetMyQuestionsParams,
+  QuestionType,
+  SearchQuestionsParams,
+  UpdateQuestionRequest,
+} from '../types/question';
 
 export const questionKeys = {
   all: ['questions'] as const,
@@ -8,6 +14,7 @@ export const questionKeys = {
   detail: (questionId: string) => [...questionKeys.all, 'detail', questionId] as const,
   byBank: (bankId: string, page: number, size: number) =>
     [...questionKeys.all, 'by-bank', bankId, { page, size }] as const,
+  search: (params: SearchQuestionsParams) => [...questionKeys.all, 'search', params] as const,
   byTemplate: (templateId: string) => [...questionKeys.all, 'by-template', templateId] as const,
 };
 
@@ -41,6 +48,29 @@ export const useGetQuestionsByBank = (bankId: string, page = 0, size = 20, enabl
     queryFn: () => questionService.getQuestionsByBank(bankId, page, size),
     enabled: !!bankId && enabled,
   });
+
+export const useSearchQuestions = (
+  params: {
+    search?: string;
+    type?: QuestionType | '';
+    page?: number;
+    size?: number;
+  },
+  enabled = true
+) => {
+  const normalizedParams: SearchQuestionsParams = {
+    search: params.search,
+    type: params.type || undefined,
+    page: params.page ?? 0,
+    size: params.size ?? 20,
+  };
+
+  return useQuery({
+    queryKey: questionKeys.search(normalizedParams),
+    queryFn: () => questionService.searchQuestions(normalizedParams),
+    enabled,
+  });
+};
 
 export const useReviewQuestions = (templateId: string, enabled = true) =>
   useQuery({
@@ -89,6 +119,28 @@ export const useDeleteQuestion = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (questionId: string) => questionService.deleteQuestion(questionId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: questionKeys.all });
+    },
+  });
+};
+
+export const useBatchAssignQuestionsToBank = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ bankId, questionIds }: { bankId: string; questionIds: string[] }) =>
+      questionService.batchAssignQuestionsToBank(bankId, { questionIds }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: questionKeys.all });
+    },
+  });
+};
+
+export const useBatchRemoveQuestionsFromBank = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ bankId, questionIds }: { bankId: string; questionIds: string[] }) =>
+      questionService.batchRemoveQuestionsFromBank(bankId, { questionIds }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: questionKeys.all });
     },

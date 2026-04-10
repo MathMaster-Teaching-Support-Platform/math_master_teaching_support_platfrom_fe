@@ -7,16 +7,7 @@ import type {
     ExamMatrixApiResponse,
     ExamMatrixRowRequest,
     ExamMatrixTableResponse,
-    AddTemplateMappingRequest,
-    AddTemplateBatchRequest,
-    TemplateMappingResponse,
     MatrixValidationReport,
-    MatchingTemplatesResponse,
-    ListMatchingTemplatesParams,
-    GeneratePreviewRequest,
-    PreviewCandidatesResponse,
-    FinalizePreviewRequest,
-    FinalizePreviewResponse,
 } from '../types/examMatrix';
 
 const getAuthHeaders = (): Record<string, string> => {
@@ -97,31 +88,6 @@ export const examMatrixService = {
             headers: getAuthHeaders(),
         }).then(handleResponse<ExamMatrixTableResponse>),
 
-    addTemplateMapping: (matrixId: string, request: AddTemplateMappingRequest) =>
-        fetch(`${API_BASE_URL}${API_ENDPOINTS.EXAM_MATRIX_MAPPINGS(matrixId)}`, {
-            method: 'POST',
-            headers: getAuthHeaders(),
-            body: JSON.stringify(request),
-        }).then(handleResponse<TemplateMappingResponse>),
-
-    removeTemplateMapping: (matrixId: string, mappingId: string) =>
-        fetch(`${API_BASE_URL}${API_ENDPOINTS.EXAM_MATRIX_MAPPING_DETAIL(matrixId, mappingId)}`, {
-            method: 'DELETE',
-            headers: getAuthHeaders(),
-        }).then(handleResponse<void>),
-
-    getTemplateMappings: (matrixId: string) =>
-        fetch(`${API_BASE_URL}${API_ENDPOINTS.EXAM_MATRIX_MAPPINGS(matrixId)}`, {
-            headers: getAuthHeaders(),
-        }).then(handleResponse<TemplateMappingResponse[]>),
-
-    addTemplateMappingsBatch: (matrixId: string, request: AddTemplateBatchRequest) =>
-        fetch(`${API_BASE_URL}${API_ENDPOINTS.EXAM_MATRIX_TEMPLATE_MAPPINGS_BATCH(matrixId)}`, {
-            method: 'POST',
-            headers: getAuthHeaders(),
-            body: JSON.stringify(request),
-        }).then(handleResponse<TemplateMappingResponse[]>),
-
     validateMatrix: (matrixId: string) =>
         fetch(`${API_BASE_URL}${API_ENDPOINTS.EXAM_MATRIX_VALIDATE(matrixId)}`, {
             headers: getAuthHeaders(),
@@ -144,30 +110,4 @@ export const examMatrixService = {
             method: 'POST',
             headers: getAuthHeaders(),
         }).then(handleResponse<ExamMatrixResponse>),
-
-    listMatchingTemplates: (matrixId: string, params: ListMatchingTemplatesParams = {}) => {
-        const query = new URLSearchParams();
-        if (params.q) query.set('q', params.q);
-        if (params.page !== undefined) query.set('page', String(params.page));
-        if (params.size !== undefined) query.set('size', String(params.size));
-        if (params.onlyMine !== undefined) query.set('onlyMine', String(params.onlyMine));
-        if (params.publicOnly !== undefined) query.set('publicOnly', String(params.publicOnly));
-        return fetch(`${API_BASE_URL}${API_ENDPOINTS.EXAM_MATRIX_MATCHING_TEMPLATES(matrixId)}?${query}`, {
-            headers: getAuthHeaders(),
-        }).then(handleResponse<MatchingTemplatesResponse>);
-    },
-
-    generatePreview: (matrixId: string, mappingId: string, request: GeneratePreviewRequest) =>
-        fetch(`${API_BASE_URL}${API_ENDPOINTS.EXAM_MATRIX_GENERATE_PREVIEW(matrixId, mappingId)}`, {
-            method: 'POST',
-            headers: getAuthHeaders(),
-            body: JSON.stringify(request),
-        }).then(handleResponse<PreviewCandidatesResponse>),
-
-    finalizePreview: (matrixId: string, mappingId: string, request: FinalizePreviewRequest) =>
-        fetch(`${API_BASE_URL}${API_ENDPOINTS.EXAM_MATRIX_FINALIZE_PREVIEW(matrixId, mappingId)}`, {
-            method: 'POST',
-            headers: getAuthHeaders(),
-            body: JSON.stringify(request),
-        }).then(handleResponse<FinalizePreviewResponse>),
 };

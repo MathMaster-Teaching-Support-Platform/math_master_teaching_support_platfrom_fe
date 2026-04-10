@@ -2,22 +2,31 @@ import { X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useChaptersBySubject } from '../../hooks/useChapters';
 import { useAddExamMatrixRow } from '../../hooks/useExamMatrix';
-import { useGetMyQuestionBanks } from '../../hooks/useQuestionBank';
-import { useLessonsByChapter } from '../../hooks/useLessons';
+import { useSearchQuestionBanks } from '../../hooks/useQuestionBank';
+import { useSubjects, useSubjectsByGrade } from '../../hooks/useSubjects';
 import type { ExamMatrixRowRequest, MatrixCognitiveLevel } from '../../types/examMatrix';
 
-const LEVELS: MatrixCognitiveLevel[] = ['NB', 'TH', 'VD', 'VDC'];
+type UiCognitiveLevel = 'NB' | 'TH' | 'VD' | 'VDC';
+
+const LEVELS: UiCognitiveLevel[] = ['NB', 'TH', 'VD', 'VDC'];
+
+const BACKEND_COGNITIVE_LEVEL: Record<UiCognitiveLevel, MatrixCognitiveLevel> = {
+  NB: 'NHAN_BIET',
+  TH: 'THONG_HIEU',
+  VD: 'VAN_DUNG',
+  VDC: 'VAN_DUNG_CAO',
+};
 
 type CellDraft = {
   questionCount: number;
-  scorePercent: number;
 };
 
-type CellDraftMap = Record<MatrixCognitiveLevel, CellDraft>;
+type CellDraftMap = Record<UiCognitiveLevel, CellDraft>;
 
 type Props = {
   isOpen: boolean;
   matrixId: string;
+  matrixGradeLevel?: string;
   subjectId?: string;
   matrixTotalPointsTarget?: number;
   onClose: () => void;
@@ -25,80 +34,139 @@ type Props = {
 };
 
 const defaultCells: CellDraftMap = {
-  NB: { questionCount: 0, scorePercent: 0 },
-  TH: { questionCount: 0, scorePercent: 0 },
-  VD: { questionCount: 0, scorePercent: 0 },
-  VDC: { questionCount: 0, scorePercent: 0 },
+  NB: { questionCount: 0 },
+  TH: { questionCount: 0 },
+  VD: { questionCount: 0 },
+  VDC: { questionCount: 0 },
 };
 
 export function ExamMatrixRowModal({
   isOpen,
   matrixId,
+  matrixGradeLevel,
   subjectId,
   matrixTotalPointsTarget,
   onClose,
   onSuccess,
 }: Readonly<Props>) {
+  const [gradeLevel, setGradeLevel] = useState('');
+  const [selectedSubjectId, setSelectedSubjectId] = useState('');
   const [chapterId, setChapterId] = useState('');
-  const [lessonId, setLessonId] = useState('');
   const [questionBankId, setQuestionBankId] = useState('');
-  const [questionDifficulty, setQuestionDifficulty] = useState<'EASY' | 'MEDIUM' | 'HARD'>('MEDIUM');
-  const [questionTypeName, setQuestionTypeName] = useState('');
-  const [referenceQuestions, setReferenceQuestions] = useState('');
+  const [questionBankSearch, setQuestionBankSearch] = useState('');
   const [cells, setCells] = useState<CellDraftMap>(defaultCells);
   const [error, setError] = useState<string | null>(null);
 
   const addRowMutation = useAddExamMatrixRow();
-  const chapterQuery = useChaptersBySubject(subjectId ?? '', isOpen && !!subjectId);
-  const lessonQuery = useLessonsByChapter(chapterId, '', isOpen && !!chapterId);
-  const questionBanksQuery = useGetMyQuestionBanks(0, 100, 'createdAt', 'DESC', isOpen);
+  const subjectsQuery = useSubjects();
+  const subjectsByGradeQuery = useSubjectsByGrade(gradeLevel, isOpen && !!gradeLevel);
+  const chapterQuery = useChaptersBySubject(selectedSubjectId, isOpen && !!selectedSubjectId);
+  const questionBanksQuery = useSearchQuestionBanks(
+    {
+      searchTerm: questionBankSearch || undefined,
+      chapterId: chapterId || undefined,
+      subjectId: selectedSubjectId || undefined,
+      gradeLevel: gradeLevel || undefined,
+      mineOnly: true,
+      page: 0,
+      size: 20,
+      sortBy: 'updatedAt',
+      sortDirection: 'DESC',
+    },
+    isOpen && !!chapterId,
+  );
 
   const chapters = chapterQuery.data?.result ?? [];
-  const lessons = lessonQuery.data?.result ?? [];
+  const subjectsByGrade = subjectsByGradeQuery.data?.result ?? [];
+  const allSubjects = subjectsQuery.data?.result ?? [];
   const questionBanks = questionBanksQuery.data?.result?.content ?? [];
+
+  const subjectOptions = gradeLevel ? subjectsByGrade : allSubjects;
+
+  const gradeSuggestions = useMemo(() => {
+    const gradeFromApi = new Set<string>();
+
+    for (const subject of allSubjects) {
+      if (typeof subject.primaryGradeLevel === 'number') {
+        gradeFromApi.add(String(subject.primaryGradeLevel));
+      }
+      if (Array.isArray(subject.gradeLevels)) {
+        subject.gradeLevels.forEach((level) => gradeFromApi.add(String(level)));
+      }
+      if (typeof subject.gradeMin === 'number' && typeof subject.gradeMax === 'number') {
+        for (let level = subject.gradeMin; level <= subject.gradeMax; level += 1) {
+          gradeFromApi.add(String(level));
+        }
+      }
+    }
+
+    const defaults = ['10', '11', '12'];
+    if (matrixGradeLevel) {
+      gradeFromApi.add(matrixGradeLevel);
+    }
+
+    return Array.from(new Set([...defaults, ...Array.from(gradeFromApi)])).sort((a, b) =>
+      a.localeCompare(b),
+    );
+  }, [allSubjects, matrixGradeLevel]);
 
   const chapterLabel = useMemo(() => {
     const selected = chapters.find((item) => item.id === chapterId);
     return selected?.title || selected?.name || chapterId;
   }, [chapters, chapterId]);
 
-  const totalPercent = useMemo(
-    () => LEVELS.reduce((sum, level) => sum + (cells[level].scorePercent || 0), 0),
+  const selectedQuestionBank = useMemo(
+    () => questionBanks.find((item) => item.id === questionBankId),
+    [questionBanks, questionBankId],
+  );
+
+  const rowTotalQuestions = useMemo(
+    () => LEVELS.reduce((sum, level) => sum + (cells[level].questionCount || 0), 0),
     [cells],
   );
 
   useEffect(() => {
     if (!isOpen) return;
-    setLessonId('');
-    setQuestionTypeName('');
-    setReferenceQuestions('');
-    setQuestionDifficulty('MEDIUM');
+    setGradeLevel(matrixGradeLevel ?? '');
+    setSelectedSubjectId(subjectId ?? '');
+    setQuestionBankSearch('');
     setError(null);
     setCells(defaultCells);
-    if (!subjectId) {
-      setChapterId('');
-    }
-  }, [isOpen, subjectId]);
+    setChapterId('');
+  }, [isOpen, subjectId, matrixGradeLevel]);
 
   useEffect(() => {
     if (!isOpen) return;
     if (chapters.length > 0 && !chapterId) {
       setChapterId(chapters[0].id);
+      return;
+    }
+    if (chapters.length === 0) {
+      setChapterId('');
     }
   }, [isOpen, chapters, chapterId]);
 
   useEffect(() => {
     if (!isOpen) return;
+    if (subjectOptions.length > 0 && !selectedSubjectId) {
+      setSelectedSubjectId(subjectOptions[0].id);
+    }
+  }, [isOpen, subjectOptions, selectedSubjectId]);
+
+  useEffect(() => {
+    if (!isOpen) return;
     if (questionBanks.length > 0 && !questionBankId) {
       setQuestionBankId(questionBanks[0].id);
+      return;
+    }
+    if (questionBanks.length === 0) {
+      setQuestionBankId('');
     }
   }, [isOpen, questionBanks, questionBankId]);
 
   if (!isOpen) return null;
 
-  const activeCells = LEVELS.filter(
-    (level) => cells[level].questionCount > 0 && cells[level].scorePercent > 0,
-  );
+  const activeCells = LEVELS.filter((level) => cells[level].questionCount > 0);
 
   async function submit(event: React.BaseSyntheticEvent) {
     event.preventDefault();
@@ -114,59 +182,29 @@ export function ExamMatrixRowModal({
       return;
     }
 
-    if (!questionTypeName.trim()) {
-      setError('Vui lòng nhập dạng bài.');
-      return;
-    }
-
     if (activeCells.length === 0) {
-      setError('Mỗi dòng cần ít nhất 1 ô có số câu và phổ điểm (%) > 0.');
+      setError('Mỗi dòng cần ít nhất 1 mức độ có số câu > 0.');
       return;
     }
 
     const hasInvalidCell = LEVELS.some(
-      (level) =>
-        cells[level].questionCount < 0 ||
-        cells[level].scorePercent < 0 ||
-        cells[level].scorePercent > 100,
+      (level) => cells[level].questionCount < 0,
     );
     if (hasInvalidCell) {
-      setError('Số câu phải >= 0 và phổ điểm phải nằm trong khoảng 0-100.');
+      setError('Số câu phải >= 0.');
       return;
     }
-
-    if (totalPercent <= 0) {
-      setError('Tổng phổ điểm phải lớn hơn 0%.');
-      return;
-    }
-
-    if (totalPercent > 100) {
-      setError('Tổng phổ điểm vượt quá 100%. Vui lòng điều chỉnh lại.');
-      return;
-    }
-
-    const examTotalPoints = matrixTotalPointsTarget && matrixTotalPointsTarget > 0
-      ? matrixTotalPointsTarget
-      : 10;
 
     const payload: ExamMatrixRowRequest = {
       chapterId,
-      ...(lessonId ? { lessonId } : {}),
       questionBankId,
-      questionDifficulty,
-      questionTypeName: questionTypeName.trim(),
-      referenceQuestions: referenceQuestions.trim() || undefined,
-      cells: LEVELS.filter((level) => cells[level].questionCount > 0 && cells[level].scorePercent > 0).map(
+      questionDifficulty: 'MEDIUM',
+      questionTypeName: selectedQuestionBank?.name?.trim() || 'Dạng bài theo bank',
+      cells: LEVELS.filter((level) => cells[level].questionCount > 0).map(
         (level) => ({
-          cognitiveLevel: level,
+          cognitiveLevel: BACKEND_COGNITIVE_LEVEL[level],
           questionCount: cells[level].questionCount,
-          pointsPerQuestion: Number(
-            (
-              (examTotalPoints * cells[level].scorePercent) /
-              100 /
-              cells[level].questionCount
-            ).toFixed(4),
-          ),
+          pointsPerQuestion: Number(((matrixTotalPointsTarget && matrixTotalPointsTarget > 0 ? matrixTotalPointsTarget : 10) / rowTotalQuestions).toFixed(4)),
         }),
       ),
     };
@@ -199,115 +237,102 @@ export function ExamMatrixRowModal({
           <div className="modal-body">
             {error && <p style={{ color: '#be123c', fontSize: 13 }}>{error}</p>}
 
-            <div className="form-grid">
-              <label>
-                <p className="muted" style={{ marginBottom: 6 }}>Chương</p>
-                <select
-                  className="select"
-                  value={chapterId}
-                  onChange={(event) => {
-                    setChapterId(event.target.value);
-                    setLessonId('');
-                  }}
-                  required
-                  disabled={chapterQuery.isLoading || !subjectId}
-                >
-                  {!subjectId && <option value="">Không có dữ liệu môn học trong ma trận</option>}
-                  {subjectId && chapters.length === 0 && <option value="">Không có chương</option>}
-                  {chapters.map((chapter) => (
-                    <option key={chapter.id} value={chapter.id}>
-                      {chapter.title || chapter.name || chapter.id}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label>
-                <p className="muted" style={{ marginBottom: 6 }}>Bài học (tùy chọn)</p>
-                <select
-                  className="select"
-                  value={lessonId}
-                  onChange={(event) => setLessonId(event.target.value)}
-                  disabled={!chapterId || lessonQuery.isLoading}
-                >
-                  <option value="">Tất cả bài trong chương</option>
-                  {lessons.map((lesson) => (
-                    <option key={lesson.id} value={lesson.id}>
-                      {lesson.title || lesson.id}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label>
-                <p className="muted" style={{ marginBottom: 6 }}>Ngân hàng câu hỏi</p>
-                <select
-                  className="select"
-                  value={questionBankId}
-                  onChange={(event) => setQuestionBankId(event.target.value)}
-                  required
-                  disabled={questionBanksQuery.isLoading}
-                >
-                  {questionBanks.length === 0 && <option value="">Không có ngân hàng câu hỏi</option>}
-                  {questionBanks.map((bank) => (
-                    <option key={bank.id} value={bank.id}>
-                      {bank.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label>
-                <p className="muted" style={{ marginBottom: 6 }}>Độ khó</p>
-                <select
-                  className="select"
-                  value={questionDifficulty}
-                  onChange={(event) => setQuestionDifficulty(event.target.value as 'EASY' | 'MEDIUM' | 'HARD')}
-                >
-                  <option value="EASY">EASY</option>
-                  <option value="MEDIUM">MEDIUM</option>
-                  <option value="HARD">HARD</option>
-                </select>
-              </label>
-            </div>
-
-            <div className="form-grid">
-              <label>
-                <p className="muted" style={{ marginBottom: 6 }}>Dạng bài</p>
-                <input
-                  className="input"
-                  required
-                  placeholder="Ví dụ: Đơn điệu của hàm số"
-                  value={questionTypeName}
-                  onChange={(event) => setQuestionTypeName(event.target.value)}
-                />
-              </label>
-
-              <label>
-                <p className="muted" style={{ marginBottom: 6 }}>Gợi ý câu tham chiếu (tùy chọn)</p>
-                <input
-                  className="input"
-                  placeholder="Ví dụ: Câu 1-3 SGK"
-                  value={referenceQuestions}
-                  onChange={(event) => setReferenceQuestions(event.target.value)}
-                />
-              </label>
-            </div>
-
             <div className="table-wrap">
               <table className="table">
                 <thead>
                   <tr>
-                    <th>Mức độ</th>
-                    <th>Số câu</th>
-                    <th>Phổ điểm (%)</th>
+                    <th>Lớp</th>
+                    <th>Môn</th>
+                    <th>Chương</th>
+                    <th>Bank</th>
+                    <th>NB</th>
+                    <th>TH</th>
+                    <th>VD</th>
+                    <th>VDC</th>
+                    <th>Tổng dạng bài</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {LEVELS.map((level) => (
-                    <tr key={level}>
-                      <td><strong>{level}</strong></td>
-                      <td>
+                  <tr>
+                    <td>
+                      <input
+                        className="input"
+                        list="matrix-grade-suggestions"
+                        value={gradeLevel}
+                        onChange={(event) => {
+                          setGradeLevel(event.target.value);
+                          setSelectedSubjectId('');
+                          setChapterId('');
+                          setQuestionBankId('');
+                        }}
+                        placeholder="12"
+                      />
+                      <datalist id="matrix-grade-suggestions">
+                        {gradeSuggestions.map((grade) => (
+                          <option key={grade} value={grade} />
+                        ))}
+                      </datalist>
+                    </td>
+                    <td>
+                      <select
+                        className="select"
+                        value={selectedSubjectId}
+                        onChange={(event) => {
+                          setSelectedSubjectId(event.target.value);
+                          setChapterId('');
+                          setQuestionBankId('');
+                        }}
+                        disabled={(gradeLevel ? subjectsByGradeQuery.isLoading : subjectsQuery.isLoading) || subjectOptions.length === 0}
+                      >
+                        {subjectOptions.length === 0 && <option value="">Chọn lớp trước</option>}
+                        {subjectOptions.map((subject) => (
+                          <option key={subject.id} value={subject.id}>{subject.name}</option>
+                        ))}
+                      </select>
+                    </td>
+                    <td>
+                      <select
+                        className="select"
+                        value={chapterId}
+                        onChange={(event) => setChapterId(event.target.value)}
+                        required
+                        disabled={chapterQuery.isLoading || !selectedSubjectId}
+                      >
+                        {!selectedSubjectId && <option value="">Chọn môn trước</option>}
+                        {selectedSubjectId && chapters.length === 0 && <option value="">Không có chương</option>}
+                        {chapters.map((chapter) => (
+                          <option key={chapter.id} value={chapter.id}>
+                            {chapter.title || chapter.name || chapter.id}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td>
+                      <input
+                        className="input"
+                        placeholder="Tìm bank..."
+                        value={questionBankSearch}
+                        onChange={(event) => setQuestionBankSearch(event.target.value)}
+                        style={{ marginBottom: 6 }}
+                      />
+                      <select
+                        className="select"
+                        value={questionBankId}
+                        onChange={(event) => setQuestionBankId(event.target.value)}
+                        required
+                        disabled={questionBanksQuery.isLoading || !chapterId}
+                      >
+                        {!chapterId && <option value="">Chọn chương trước</option>}
+                        {chapterId && questionBanks.length === 0 && <option value="">Không có bank phù hợp</option>}
+                        {questionBanks.map((bank) => (
+                          <option key={bank.id} value={bank.id}>
+                            {bank.name}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    {LEVELS.map((level) => (
+                      <td key={level}>
                         <input
                           className="input"
                           type="number"
@@ -324,36 +349,15 @@ export function ExamMatrixRowModal({
                           }
                         />
                       </td>
-                      <td>
-                        <input
-                          className="input"
-                          type="number"
-                          min={0}
-                          max={100}
-                          step={0.1}
-                          value={cells[level].scorePercent}
-                          onChange={(event) =>
-                            setCells((prev) => ({
-                              ...prev,
-                              [level]: {
-                                ...prev[level],
-                                scorePercent: Number(event.target.value),
-                              },
-                            }))
-                          }
-                        />
-                      </td>
-                    </tr>
-                  ))}
+                    ))}
+                    <td><strong>{rowTotalQuestions}</strong></td>
+                  </tr>
                 </tbody>
               </table>
             </div>
 
             <p className="muted" style={{ marginTop: 6 }}>
-              Tổng phổ điểm hiện tại: <strong>{totalPercent.toFixed(1)}%</strong>
-              {matrixTotalPointsTarget && matrixTotalPointsTarget > 0
-                ? ` | Quy đổi theo tổng điểm mục tiêu: ${matrixTotalPointsTarget}`
-                : ' | Ma trận chưa có tổng điểm mục tiêu, FE tạm quy đổi theo tổng điểm mặc định 10.'}
+              Tổng dạng bài (số câu): <strong>{rowTotalQuestions}</strong>
             </p>
 
             <p className="muted" style={{ marginTop: 4 }}>

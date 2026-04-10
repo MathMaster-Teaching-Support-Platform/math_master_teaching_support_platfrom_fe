@@ -67,6 +67,17 @@ export interface GetMyQuestionsParams {
   searchTag?: string;
 }
 
+export interface SearchQuestionsParams {
+  search?: string;
+  type?: QuestionType;
+  page?: number;
+  size?: number;
+}
+
+export interface QuestionIdsBatchRequest {
+  questionIds: string[];
+}
+
 export interface UpdateQuestionRequest {
   questionText?: string;
   options?: Record<string, unknown>;

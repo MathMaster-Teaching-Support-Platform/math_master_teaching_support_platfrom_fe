@@ -4,7 +4,9 @@ import type {
   BulkApproveRequest,
   CreateQuestionRequest,
   GetMyQuestionsParams,
+  QuestionIdsBatchRequest,
   QuestionResponse,
+  SearchQuestionsParams,
   UpdateQuestionRequest,
 } from '../types/question';
 import type { ApiResponse, PageResponse } from '../types/questionBank';
@@ -69,6 +71,42 @@ export const questionService = {
     return fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTIONS_BY_BANK(bankId)}?${params.toString()}`, {
       headers: getAuthHeaders(),
     }).then(handleResponse<PageResponse<QuestionResponse>>);
+  },
+
+  searchQuestions: (params: SearchQuestionsParams = {}) => {
+    const query = new URLSearchParams({
+      page: String(params.page ?? 0),
+      size: String(params.size ?? 20),
+    });
+
+    if (params.search?.trim()) {
+      query.set('search', params.search.trim());
+    }
+
+    if (params.type) {
+      query.set('type', params.type);
+    }
+
+    return fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTIONS_SEARCH}?${query.toString()}`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    }).then(handleResponse<PageResponse<QuestionResponse>>);
+  },
+
+  batchAssignQuestionsToBank: (bankId: string, request: QuestionIdsBatchRequest) => {
+    return fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTIONS_BATCH_ASSIGN_TO_BANK(bankId)}`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(request),
+    }).then(handleResponse<number>);
+  },
+
+  batchRemoveQuestionsFromBank: (bankId: string, request: QuestionIdsBatchRequest) => {
+    return fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTIONS_BATCH_REMOVE_FROM_BANK(bankId)}`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(request),
+    }).then(handleResponse<number>);
   },
 
   getQuestionsByTemplate: (templateId: string) =>

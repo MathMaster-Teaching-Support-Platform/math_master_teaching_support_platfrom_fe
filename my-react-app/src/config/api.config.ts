@@ -55,19 +55,10 @@ export const API_ENDPOINTS = {
   EXAM_MATRIX_TABLE: (matrixId: string) => `/exam-matrices/${matrixId}/table`,
   EXAM_MATRIX_ROWS: (matrixId: string) => `/exam-matrices/${matrixId}/rows`,
   EXAM_MATRIX_ROW_DETAIL: (matrixId: string, rowId: string) => `/exam-matrices/${matrixId}/rows/${rowId}`,
-  EXAM_MATRIX_MAPPINGS: (matrixId: string) => `/exam-matrices/${matrixId}/template-mappings`,
-  EXAM_MATRIX_MAPPING_DETAIL: (matrixId: string, mappingId: string) =>
-    `/exam-matrices/${matrixId}/template-mappings/${mappingId}`,
   EXAM_MATRIX_VALIDATE: (matrixId: string) => `/exam-matrices/${matrixId}/validate`,
   EXAM_MATRIX_APPROVE: (matrixId: string) => `/exam-matrices/${matrixId}/approve`,
   EXAM_MATRIX_LOCK: (matrixId: string) => `/exam-matrices/${matrixId}/lock`,
   EXAM_MATRIX_RESET: (matrixId: string) => `/exam-matrices/${matrixId}/reset`,
-  EXAM_MATRIX_MATCHING_TEMPLATES: (matrixId: string) =>
-    `/exam-matrices/${matrixId}/matching-templates`,
-  EXAM_MATRIX_GENERATE_PREVIEW: (matrixId: string, mappingId: string) =>
-    `/exam-matrices/${matrixId}/template-mappings/${mappingId}/generate-preview`,
-  EXAM_MATRIX_FINALIZE_PREVIEW: (matrixId: string, mappingId: string) =>
-    `/exam-matrices/${matrixId}/template-mappings/${mappingId}/finalize`,
 
   // Question banks
   QUESTION_BANKS: '/question-banks',
@@ -83,7 +74,10 @@ export const API_ENDPOINTS = {
 
   // Questions
   QUESTIONS: '/questions',
+  QUESTIONS_SEARCH: '/questions/search',
   QUESTIONS_BY_BANK: (bankId: string) => `/questions/bank/${bankId}`,
+  QUESTIONS_BATCH_ASSIGN_TO_BANK: (bankId: string) => `/questions/bank/${bankId}/batch-assign`,
+  QUESTIONS_BATCH_REMOVE_FROM_BANK: (bankId: string) => `/questions/bank/${bankId}/batch-remove`,
   QUESTIONS_BY_TEMPLATE: (templateId: string) => `/questions/template/${templateId}`,
   QUESTIONS_DETAIL: (questionId: string) => `/questions/${questionId}`,
   QUESTIONS_APPROVE: (questionId: string) => `/questions/${questionId}/approve`,
@@ -217,10 +211,6 @@ export const API_ENDPOINTS = {
 
   // Latex render via backend proxy (QuickLaTeX)
   LATEX_RENDER: '/latex/render',
-
-  // Exam matrix template batch mapping
-  EXAM_MATRIX_TEMPLATE_MAPPINGS_BATCH: (matrixId: string) =>
-    `/exam-matrices/${matrixId}/template-mappings/batch`,
 
   // Courses
   COURSES: '/courses',

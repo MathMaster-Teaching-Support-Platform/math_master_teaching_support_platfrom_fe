@@ -3,12 +3,7 @@ import { examMatrixService } from '../services/examMatrixService';
 import type {
     BuildExamMatrixRequest,
     ExamMatrixRowRequest,
-    AddTemplateBatchRequest,
-    AddTemplateMappingRequest,
     ExamMatrixRequest,
-    FinalizePreviewRequest,
-    GeneratePreviewRequest,
-    ListMatchingTemplatesParams,
 } from '../types/examMatrix';
 
 export const examMatrixKeys = {
@@ -16,10 +11,7 @@ export const examMatrixKeys = {
     mine: () => [...examMatrixKeys.all, 'my'] as const,
     detail: (id: string) => [...examMatrixKeys.all, 'detail', id] as const,
     table: (matrixId: string) => [...examMatrixKeys.detail(matrixId), 'table'] as const,
-    mappings: (matrixId: string) => [...examMatrixKeys.detail(matrixId), 'mappings'] as const,
     validation: (matrixId: string) => [...examMatrixKeys.detail(matrixId), 'validation'] as const,
-    matchingTemplates: (matrixId: string, params: ListMatchingTemplatesParams) =>
-        [...examMatrixKeys.detail(matrixId), 'matching-templates', params] as const,
 };
 
 export const useGetMyExamMatrices = () =>
@@ -42,13 +34,6 @@ export const useGetExamMatrixTable = (matrixId: string, enabled = true) =>
         enabled: !!matrixId && enabled,
     });
 
-export const useGetTemplateMappings = (matrixId: string, enabled = true) =>
-    useQuery({
-        queryKey: examMatrixKeys.mappings(matrixId),
-        queryFn: () => examMatrixService.getTemplateMappings(matrixId),
-        enabled: !!matrixId && enabled,
-    });
-
 export const useValidateMatrix = (matrixId: string, enabled = false) =>
     useQuery({
         queryKey: examMatrixKeys.validation(matrixId),
@@ -58,17 +43,6 @@ export const useValidateMatrix = (matrixId: string, enabled = false) =>
 
 export const useMatrixValidation = (matrixId: string, enabled = true) =>
     useValidateMatrix(matrixId, enabled);
-
-export const useListMatchingTemplates = (
-    matrixId: string,
-    params: ListMatchingTemplatesParams = {},
-    enabled = true
-) =>
-    useQuery({
-        queryKey: examMatrixKeys.matchingTemplates(matrixId, params),
-        queryFn: () => examMatrixService.listMatchingTemplates(matrixId, params),
-        enabled: !!matrixId && enabled,
-    });
 
 export const useCreateExamMatrix = () => {
     const qc = useQueryClient();
@@ -136,48 +110,6 @@ export const useRemoveExamMatrixRow = () => {
     });
 };
 
-export const useAddTemplateMapping = () => {
-    const qc = useQueryClient();
-    return useMutation({
-        mutationFn: ({
-            matrixId,
-            request,
-        }: {
-            matrixId: string;
-            request: AddTemplateMappingRequest;
-        }) => examMatrixService.addTemplateMapping(matrixId, request),
-        onSuccess: (_, vars) => {
-            qc.invalidateQueries({ queryKey: examMatrixKeys.mappings(vars.matrixId) });
-            qc.invalidateQueries({ queryKey: examMatrixKeys.detail(vars.matrixId) });
-        },
-    });
-};
-
-export const useRemoveTemplateMapping = () => {
-    const qc = useQueryClient();
-    return useMutation({
-        mutationFn: ({ matrixId, mappingId }: { matrixId: string; mappingId: string }) =>
-            examMatrixService.removeTemplateMapping(matrixId, mappingId),
-        onSuccess: (_, vars) => {
-            qc.invalidateQueries({ queryKey: examMatrixKeys.mappings(vars.matrixId) });
-            qc.invalidateQueries({ queryKey: examMatrixKeys.detail(vars.matrixId) });
-        },
-    });
-};
-
-export const useAddTemplateMappingsBatch = () => {
-    const qc = useQueryClient();
-    return useMutation({
-        mutationFn: ({ matrixId, request }: { matrixId: string; request: AddTemplateBatchRequest }) =>
-            examMatrixService.addTemplateMappingsBatch(matrixId, request),
-        onSuccess: (_, vars) => {
-            qc.invalidateQueries({ queryKey: examMatrixKeys.mappings(vars.matrixId) });
-            qc.invalidateQueries({ queryKey: examMatrixKeys.validation(vars.matrixId) });
-            qc.invalidateQueries({ queryKey: examMatrixKeys.detail(vars.matrixId) });
-        },
-    });
-};
-
 export const useApproveMatrix = () => {
     const qc = useQueryClient();
     return useMutation({
@@ -196,38 +128,6 @@ export const useResetMatrix = () => {
         onSuccess: (_, matrixId) => {
             qc.invalidateQueries({ queryKey: examMatrixKeys.detail(matrixId) });
             qc.invalidateQueries({ queryKey: examMatrixKeys.mine() });
-        },
-    });
-};
-
-export const useGeneratePreview = () =>
-    useMutation({
-        mutationFn: ({
-            matrixId,
-            mappingId,
-            request,
-        }: {
-            matrixId: string;
-            mappingId: string;
-            request: GeneratePreviewRequest;
-        }) => examMatrixService.generatePreview(matrixId, mappingId, request),
-    });
-
-export const useFinalizePreview = () => {
-    const qc = useQueryClient();
-    return useMutation({
-        mutationFn: ({
-            matrixId,
-            mappingId,
-            request,
-        }: {
-            matrixId: string;
-            mappingId: string;
-            request: FinalizePreviewRequest;
-        }) => examMatrixService.finalizePreview(matrixId, mappingId, request),
-        onSuccess: (_, vars) => {
-            qc.invalidateQueries({ queryKey: examMatrixKeys.detail(vars.matrixId) });
-            qc.invalidateQueries({ queryKey: examMatrixKeys.mappings(vars.matrixId) });
         },
     });
 };
