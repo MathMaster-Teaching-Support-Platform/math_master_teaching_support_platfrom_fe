@@ -1,5 +1,5 @@
 import { Plus, Trash2, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   CognitiveLevel,
   QuestionType,
@@ -13,6 +13,7 @@ type ParameterInput = {
   type: string;
   min: string;
   max: string;
+  constraint: string;
 };
 
 type OptionInput = {
@@ -31,9 +32,45 @@ type Props = {
 type ValidationResult = {
   normalizedName: string;
   normalizedTemplateText: string;
-  normalizedAnswerFormula: string;
+  normalizedAnswerFormula?: string;
   normalizedTags: string[];
 };
+
+type ActiveMathField =
+  | { kind: 'name' }
+  | { kind: 'description' }
+  | { kind: 'tags' }
+  | { kind: 'templateText' }
+  | { kind: 'answerFormula' }
+  | { kind: 'diagramTemplateRaw' }
+  | { kind: 'parameterName'; index: number }
+  | { kind: 'parameterMin'; index: number }
+  | { kind: 'parameterMax'; index: number }
+  | { kind: 'parameterConstraint'; index: number }
+  | { kind: 'optionKey'; index: number }
+  | { kind: 'optionFormula'; index: number };
+
+type MathSnippet = {
+  label: string;
+  snippet: string;
+  caretOffset: number;
+};
+
+type ActiveFieldContext = {
+  value: string;
+  setValue: (value: string) => void;
+  element: HTMLInputElement | HTMLTextAreaElement | null;
+};
+
+const mathSnippets: MathSnippet[] = [
+  { label: 'Fraction', snippet: String.raw`\frac{}{}`, caretOffset: 6 },
+  { label: 'Square root', snippet: String.raw`\sqrt{}`, caretOffset: 6 },
+  { label: 'Power', snippet: '^{}', caretOffset: 2 },
+  { label: 'Subscript', snippet: '_{}', caretOffset: 2 },
+  { label: 'Pi', snippet: String.raw`\pi`, caretOffset: 3 },
+  { label: 'Infinity', snippet: String.raw`\infty`, caretOffset: 7 },
+  { label: 'Integral', snippet: String.raw`\int_{}^{}`, caretOffset: 6 },
+];
 
 function parseTemplateText(value: Record<string, unknown> | undefined): string {
   const vi = value?.vi;
@@ -57,7 +94,6 @@ function validateFormInput(input: {
   if (!normalizedTemplateText) return { error: 'Nội dung template là bắt buộc.' };
 
   const normalizedAnswerFormula = input.answerFormula.trim();
-  if (!normalizedAnswerFormula) return { error: 'Công thức đáp án là bắt buộc.' };
 
   const normalizedTags = input.tags
     .split(',')
@@ -72,7 +108,7 @@ function validateFormInput(input: {
     result: {
       normalizedName,
       normalizedTemplateText,
-      normalizedAnswerFormula,
+      normalizedAnswerFormula: normalizedAnswerFormula || undefined,
       normalizedTags,
     },
   };
@@ -82,10 +118,12 @@ function buildParameters(parameters: ParameterInput[]): Record<string, unknown> 
   const mappedParameters: Record<string, unknown> = {};
   for (const item of parameters) {
     if (!item.name.trim()) continue;
+    const normalizedConstraint = item.constraint.trim();
     mappedParameters[item.name.trim()] = {
       type: item.type,
       min: item.type === 'int' ? Number.parseInt(item.min, 10) : Number.parseFloat(item.min),
       max: item.type === 'int' ? Number.parseInt(item.max, 10) : Number.parseFloat(item.max),
+      ...(normalizedConstraint ? { constraint: normalizedConstraint } : {}),
     };
   }
   return mappedParameters;
@@ -135,6 +173,19 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
   const [diagramTemplateRaw, setDiagramTemplateRaw] = useState('');
   const [saving, setSaving] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [activeMathField, setActiveMathField] = useState<ActiveMathField>({ kind: 'templateText' });
+  const nameRef = useRef<HTMLInputElement | null>(null);
+  const descriptionRef = useRef<HTMLTextAreaElement | null>(null);
+  const tagsRef = useRef<HTMLInputElement | null>(null);
+  const templateTextRef = useRef<HTMLTextAreaElement | null>(null);
+  const answerFormulaRef = useRef<HTMLInputElement | null>(null);
+  const diagramTemplateRef = useRef<HTMLTextAreaElement | null>(null);
+  const parameterNameRefs = useRef<Record<number, HTMLInputElement | null>>({});
+  const parameterMinRefs = useRef<Record<number, HTMLInputElement | null>>({});
+  const parameterMaxRefs = useRef<Record<number, HTMLInputElement | null>>({});
+  const parameterConstraintRefs = useRef<Record<number, HTMLInputElement | null>>({});
+  const optionKeyRefs = useRef<Record<number, HTMLInputElement | null>>({});
+  const optionFormulaRefs = useRef<Record<number, HTMLInputElement | null>>({});
 
   useEffect(() => {
     if (!isOpen) return;
@@ -158,12 +209,13 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
       }
 
       const mappedParameters: ParameterInput[] = Object.entries(initialData.parameters || {}).map(([key, raw]) => {
-        const item = raw as { type?: string; min?: number; max?: number };
+        const item = raw as { type?: string; min?: number; max?: number; constraint?: string };
         return {
           name: key,
           type: item.type || 'int',
           min: item.min?.toString() || '1',
           max: item.max?.toString() || '10',
+          constraint: item.constraint || '',
         };
       });
 
@@ -172,7 +224,7 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
         formula: typeof raw === 'string' ? raw : '',
       }));
 
-      setParameters(mappedParameters.length ? mappedParameters : [{ name: 'a', type: 'int', min: '1', max: '10' }]);
+      setParameters(mappedParameters.length ? mappedParameters : [{ name: 'a', type: 'int', min: '1', max: '10', constraint: '' }]);
       setOptions(mappedOptions.length ? mappedOptions : [{ key: 'A', formula: '' }, { key: 'B', formula: '' }]);
       return;
     }
@@ -188,8 +240,8 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
     setTags('đại số, lớp 9');
     setDiagramTemplateRaw('');
     setParameters([
-      { name: 'a', type: 'int', min: '1', max: '10' },
-      { name: 'b', type: 'int', min: '-10', max: '10' },
+      { name: 'a', type: 'int', min: '1', max: '10', constraint: '' },
+      { name: 'b', type: 'int', min: '-10', max: '10', constraint: '' },
     ]);
     setOptions([
       { key: 'A', formula: '(-b)/a' },
@@ -211,6 +263,155 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
 
   const removeOptionAt = (indexToRemove: number) => {
     setOptions((prev) => prev.filter((_entry, index) => index !== indexToRemove));
+  };
+
+  const setOptionFormulaAt = (optionIndex: number, nextValue: string) => {
+    setOptions((prev) => prev.map((entry, idx) => (idx === optionIndex ? { ...entry, formula: nextValue } : entry)));
+  };
+
+  const setOptionKeyAt = (optionIndex: number, nextValue: string) => {
+    setOptions((prev) => prev.map((entry, idx) => (idx === optionIndex ? { ...entry, key: nextValue } : entry)));
+  };
+
+  const setParameterFieldAt = (
+    parameterIndex: number,
+    field: 'name' | 'min' | 'max' | 'constraint',
+    nextValue: string
+  ) => {
+    setParameters((prev) => prev.map((entry, idx) => (idx === parameterIndex ? { ...entry, [field]: nextValue } : entry)));
+  };
+
+  const getStaticFieldContext = (): ActiveFieldContext | null => {
+    switch (activeMathField.kind) {
+      case 'name':
+        return { value: name, setValue: setName, element: nameRef.current };
+      case 'description':
+        return { value: description, setValue: setDescription, element: descriptionRef.current };
+      case 'tags':
+        return { value: tags, setValue: setTags, element: tagsRef.current };
+      case 'templateText':
+        return { value: templateText, setValue: setTemplateText, element: templateTextRef.current };
+      case 'answerFormula':
+        return { value: answerFormula, setValue: setAnswerFormula, element: answerFormulaRef.current };
+      case 'diagramTemplateRaw':
+        return { value: diagramTemplateRaw, setValue: setDiagramTemplateRaw, element: diagramTemplateRef.current };
+      default:
+        return null;
+    }
+  };
+
+  const getIndexedFieldContext = (): ActiveFieldContext | null => {
+    if (!('index' in activeMathField)) return null;
+
+    const index = activeMathField.index;
+    switch (activeMathField.kind) {
+      case 'parameterName': {
+        const item = parameters[index];
+        if (!item) return null;
+        return {
+          value: item.name,
+          setValue: (nextValue: string) => setParameterFieldAt(index, 'name', nextValue),
+          element: parameterNameRefs.current[index] || null,
+        };
+      }
+      case 'parameterMin': {
+        const item = parameters[index];
+        if (!item) return null;
+        return {
+          value: item.min,
+          setValue: (nextValue: string) => setParameterFieldAt(index, 'min', nextValue),
+          element: parameterMinRefs.current[index] || null,
+        };
+      }
+      case 'parameterMax': {
+        const item = parameters[index];
+        if (!item) return null;
+        return {
+          value: item.max,
+          setValue: (nextValue: string) => setParameterFieldAt(index, 'max', nextValue),
+          element: parameterMaxRefs.current[index] || null,
+        };
+      }
+      case 'parameterConstraint': {
+        const item = parameters[index];
+        if (!item) return null;
+        return {
+          value: item.constraint,
+          setValue: (nextValue: string) => setParameterFieldAt(index, 'constraint', nextValue),
+          element: parameterConstraintRefs.current[index] || null,
+        };
+      }
+      case 'optionKey': {
+        const item = options[index];
+        if (!item) return null;
+        return {
+          value: item.key,
+          setValue: (nextValue: string) => setOptionKeyAt(index, nextValue),
+          element: optionKeyRefs.current[index] || null,
+        };
+      }
+      case 'optionFormula': {
+        const item = options[index];
+        if (!item) return null;
+        return {
+          value: item.formula,
+          setValue: (nextValue: string) => setOptionFormulaAt(index, nextValue),
+          element: optionFormulaRefs.current[index] || null,
+        };
+      }
+      default:
+        return null;
+    }
+  };
+
+  const getActiveFieldContext = (): ActiveFieldContext | null => {
+    return getStaticFieldContext() || getIndexedFieldContext();
+  };
+
+  const applyInsertAtCursor = (snippet: string, caretOffset = snippet.length) => {
+    const context = getActiveFieldContext();
+    if (!context?.element) return;
+
+    const { element, value, setValue } = context;
+    const start = element.selectionStart ?? value.length;
+    const end = element.selectionEnd ?? value.length;
+
+    const nextValue = `${value.slice(0, start)}${snippet}${value.slice(end)}`;
+    const nextCaret = start + caretOffset;
+
+    setValue(nextValue);
+    requestAnimationFrame(() => {
+      element.focus();
+      element.setSelectionRange(nextCaret, nextCaret);
+    });
+  };
+
+  const handleInsertMath = () => {
+    const context = getActiveFieldContext();
+    if (!context?.element) return;
+
+    const { element, value, setValue } = context;
+    const start = element.selectionStart ?? value.length;
+    const end = element.selectionEnd ?? value.length;
+
+    if (start !== end) {
+      const selectedText = value.slice(start, end);
+      const wrapped = `$${selectedText}$`;
+      const nextValue = `${value.slice(0, start)}${wrapped}${value.slice(end)}`;
+      const nextCaret = start + wrapped.length;
+      setValue(nextValue);
+      requestAnimationFrame(() => {
+        element.focus();
+        element.setSelectionRange(nextCaret, nextCaret);
+      });
+      return;
+    }
+
+    applyInsertAtCursor('$$', 1);
+  };
+
+  const keepFocusOnToolbarClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
   };
 
   async function submit(event: React.BaseSyntheticEvent) {
@@ -246,7 +447,7 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
       templateType,
       templateText: { vi: validation.result.normalizedTemplateText },
       parameters: mappedParameters,
-      answerFormula: validation.result.normalizedAnswerFormula,
+      answerFormula: validation.result.normalizedAnswerFormula || '',
       optionsGenerator: Object.keys(mappedOptions).length ? mappedOptions : undefined,
       cognitiveLevel,
       tags: validation.result.normalizedTags,
@@ -283,7 +484,14 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
             <div className="form-grid">
               <label>
                 <p className="muted" style={{ marginBottom: 6 }}>Tên mẫu</p>
-                <input className="input" required value={name} onChange={(event) => setName(event.target.value)} />
+                <input
+                  ref={nameRef}
+                  className="input"
+                  required
+                  value={name}
+                  onFocus={() => setActiveMathField({ kind: 'name' })}
+                  onChange={(event) => setName(event.target.value)}
+                />
               </label>
 
               <label>
@@ -310,13 +518,26 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
 
               <label>
                 <p className="muted" style={{ marginBottom: 6 }}>Từ khóa</p>
-                <input className="input" value={tags} onChange={(event) => setTags(event.target.value)} />
+                <input
+                  ref={tagsRef}
+                  className="input"
+                  value={tags}
+                  onFocus={() => setActiveMathField({ kind: 'tags' })}
+                  onChange={(event) => setTags(event.target.value)}
+                />
               </label>
             </div>
 
             <label>
               <p className="muted" style={{ marginBottom: 6 }}>Mô tả</p>
-              <textarea className="textarea" rows={2} value={description} onChange={(event) => setDescription(event.target.value)} />
+              <textarea
+                ref={descriptionRef}
+                className="textarea"
+                rows={2}
+                value={description}
+                onFocus={() => setActiveMathField({ kind: 'description' })}
+                onChange={(event) => setDescription(event.target.value)}
+              />
               {description && (
                 <div className="preview-box">
                   <MathText text={description} />
@@ -331,7 +552,16 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
                   (Dùng {"{{a}}"}, {"{{b}}"} để chèn biến số. Ví dụ: "Giải: x + {"{{a}}"} = {"{{b}}"}")
                 </span>
               </p>
-              <textarea className="textarea" rows={3} required placeholder="Ví dụ: Tính giá trị của biểu thức {{a}} + {{b}}?" value={templateText} onChange={(event) => setTemplateText(event.target.value)} />
+              <textarea
+                ref={templateTextRef}
+                className="textarea"
+                rows={3}
+                required
+                placeholder="Ví dụ: Tính giá trị của biểu thức {{a}} + {{b}}?"
+                value={templateText}
+                onFocus={() => setActiveMathField({ kind: 'templateText' })}
+                onChange={(event) => setTemplateText(event.target.value)}
+              />
               {templateText && (
                 <div className="preview-box">
                   <MathText text={templateText} />
@@ -341,10 +571,17 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
 
             <label>
               <p className="muted" style={{ marginBottom: 6 }}>Công thức tính đáp án đúng</p>
-              <input className="input" required placeholder="Ví dụ: a + b" value={answerFormula} onChange={(event) => setAnswerFormula(event.target.value)} />
+              <input
+                ref={answerFormulaRef}
+                className="input"
+                placeholder="Ví dụ: a + b"
+                value={answerFormula}
+                onFocus={() => setActiveMathField({ kind: 'answerFormula' })}
+                onChange={(event) => setAnswerFormula(event.target.value)}
+              />
               {answerFormula && (
                 <div className="preview-box">
-                  <MathText text={`$${answerFormula.replaceAll('$', '')}$`} />
+                  <MathText text={answerFormula} />
                 </div>
               )}
             </label>
@@ -352,9 +589,11 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
             <label>
               <p className="muted" style={{ marginBottom: 6 }}>Diagram Template (LaTeX text)</p>
               <textarea
+                ref={diagramTemplateRef}
                 className="textarea"
                 rows={4}
                 value={diagramTemplateRaw}
+                onFocus={() => setActiveMathField({ kind: 'diagramTemplateRaw' })}
                 onChange={(event) => setDiagramTemplateRaw(event.target.value)}
                 placeholder="Vi du: \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}"
               />
@@ -369,7 +608,7 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
                 <button
                   type="button"
                   className="btn secondary"
-                  onClick={() => setParameters((prev) => [...prev, { name: '', type: 'int', min: '1', max: '10' }])}
+                  onClick={() => setParameters((prev) => [...prev, { name: '', type: 'int', min: '1', max: '10', constraint: '' }])}
                 >
                   <Plus size={14} />
                   Thêm biến
@@ -377,11 +616,15 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
               </div>
 
               {parameters.map((item, index) => (
-                <div key={`${item.name}-${index}`} className="form-grid" style={{ gridTemplateColumns: '1fr 0.8fr 1fr 1fr 40px', alignItems: 'center' }}>
+                <div key={`${item.name}-${index}`} className="form-grid" style={{ gridTemplateColumns: '1fr 0.8fr 1fr 1fr 1.6fr 40px', alignItems: 'center' }}>
                   <input
+                    ref={(node) => {
+                      parameterNameRefs.current[index] = node;
+                    }}
                     className="input"
                     placeholder="Tên (a, b...)"
                     value={item.name}
+                    onFocus={() => setActiveMathField({ kind: 'parameterName', index })}
                     onChange={(event) => {
                       const next = [...parameters];
                       next[index] = { ...next[index], name: event.target.value };
@@ -403,9 +646,13 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
                   <div className="row">
                     <span className="muted">Từ:</span>
                     <input
+                      ref={(node) => {
+                        parameterMinRefs.current[index] = node;
+                      }}
                       className="input"
                       type="number"
                       value={item.min}
+                      onFocus={() => setActiveMathField({ kind: 'parameterMin', index })}
                       onChange={(event) => {
                         const next = [...parameters];
                         next[index] = { ...next[index], min: event.target.value };
@@ -416,9 +663,13 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
                   <div className="row">
                     <span className="muted">Đến:</span>
                     <input
+                      ref={(node) => {
+                        parameterMaxRefs.current[index] = node;
+                      }}
                       className="input"
                       type="number"
                       value={item.max}
+                      onFocus={() => setActiveMathField({ kind: 'parameterMax', index })}
                       onChange={(event) => {
                         const next = [...parameters];
                         next[index] = { ...next[index], max: event.target.value };
@@ -426,6 +677,20 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
                       }}
                     />
                   </div>
+                  <input
+                    ref={(node) => {
+                      parameterConstraintRefs.current[index] = node;
+                    }}
+                    className="input"
+                    placeholder="Constraint (vd: a != 0)"
+                    value={item.constraint}
+                    onFocus={() => setActiveMathField({ kind: 'parameterConstraint', index })}
+                    onChange={(event) => {
+                      const next = [...parameters];
+                      next[index] = { ...next[index], constraint: event.target.value };
+                      setParameters(next);
+                    }}
+                  />
                   <button
                     type="button"
                     className="btn danger"
@@ -457,9 +722,13 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
               {options.map((item, index) => (
                 <div key={`${item.key}-${index}`} className="form-grid">
                   <input
+                    ref={(node) => {
+                      optionKeyRefs.current[index] = node;
+                    }}
                     className="input"
                     placeholder="Mã (A, B...)"
                     value={item.key}
+                    onFocus={() => setActiveMathField({ kind: 'optionKey', index })}
                     onChange={(event) => {
                       const next = [...options];
                       next[index] = { ...next[index], key: event.target.value };
@@ -469,10 +738,14 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
                   <div className="row" style={{ gridColumn: 'span 3' }}>
                     <div style={{ width: '100%' }}>
                       <input
+                        ref={(node) => {
+                          optionFormulaRefs.current[index] = node;
+                        }}
                         className="input"
                         style={{ width: '100%' }}
                         placeholder="Công thức"
                         value={item.formula}
+                        onFocus={() => setActiveMathField({ kind: 'optionFormula', index })}
                         onChange={(event) => {
                           const next = [...options];
                           next[index] = { ...next[index], formula: event.target.value };
@@ -481,7 +754,7 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
                       />
                       {item.formula && (
                         <div className="preview-box">
-                          <MathText text={`$${item.formula.replaceAll('$', '')}$`} />
+                          <MathText text={item.formula} />
                         </div>
                       )}
                     </div>
@@ -507,6 +780,44 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
                 {submitError}
               </div>
             )}
+          </div>
+
+          <div
+            style={{
+              position: 'sticky',
+              bottom: 0,
+              zIndex: 2,
+              marginTop: '0.5rem',
+              borderTop: '1px solid #e2e8f0',
+              background: '#ffffff',
+              padding: '0.75rem 1rem',
+            }}
+          >
+            <div className="row" style={{ gap: '0.5rem', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                className="btn secondary"
+                onMouseDown={keepFocusOnToolbarClick}
+                onClick={handleInsertMath}
+              >
+                Insert Math
+              </button>
+              {mathSnippets.map((entry) => (
+                <button
+                  key={entry.label}
+                  type="button"
+                  className="btn secondary"
+                  style={{ padding: '0.35rem 0.55rem' }}
+                  onMouseDown={keepFocusOnToolbarClick}
+                  onClick={() => applyInsertAtCursor(entry.snippet, entry.caretOffset)}
+                >
+                  {entry.label}
+                </button>
+              ))}
+            </div>
+            <p className="muted" style={{ marginTop: 8, marginBottom: 0, fontSize: '0.8rem' }}>
+              Thanh cong cu sticky: focus vao o can nhap, sau do bam nut de chen cong thuc vao dung vi tri con tro.
+            </p>
           </div>
 
           <div className="modal-footer">
