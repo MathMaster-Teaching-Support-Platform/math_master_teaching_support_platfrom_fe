@@ -1,8 +1,13 @@
-// Sử dụng /api để đi qua Vite proxy (bypass CORS trong development)
-// Trong production, thay đổi thành URL thật của backend
-export const API_BASE_URL = import.meta.env.PROD
-  ? 'http://localhost:8080/api' // Production URL
-  : '/api'; // Development: sử dụng proxy
+const normalizeUrl = (url?: string): string => {
+  if (!url) return '';
+  return url.trim().replace(/\/$/, '');
+};
+
+// Development: /api đi qua Vite proxy.
+// Production: dùng VITE_API_BASE_URL để gọi backend đã deploy.
+const envApiBaseUrl = normalizeUrl(import.meta.env.VITE_API_BASE_URL);
+
+export const API_BASE_URL = import.meta.env.PROD ? envApiBaseUrl : envApiBaseUrl || '/api';
 
 export const API_ENDPOINTS = {
   // Auth

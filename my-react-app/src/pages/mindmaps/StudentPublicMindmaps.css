@@ -1,0 +1,122 @@
+.student-public-mindmaps-page {
+  padding: 24px;
+}
+
+.student-public-mindmaps-header {
+  margin-bottom: 16px;
+}
+
+.student-public-mindmaps-header p {
+  margin-top: 6px;
+  color: #475569;
+}
+
+.student-public-mindmaps-filters {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.student-public-mindmaps-filters input,
+.student-public-mindmaps-filters select {
+  width: 100%;
+  border: 1px solid #dbe3ee;
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #ffffff;
+}
+
+.student-public-mindmaps-filters button {
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #ffffff;
+  color: #0f172a;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.student-public-mindmaps-filters button:hover {
+  background: #f8fafc;
+}
+
+.student-public-mindmaps-filters .btn-reset-filter {
+  background: #f8fafc;
+  color: #334155;
+}
+
+.state-text {
+  margin: 8px 0;
+  color: #334155;
+}
+
+.state-text--error {
+  color: #b91c1c;
+}
+
+.student-public-mindmaps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.mindmap-card-public {
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 14px;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mindmap-card-public h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.mindmap-card-public p {
+  margin: 0;
+  color: #475569;
+  min-height: 40px;
+}
+
+.mindmap-card-public-meta {
+  display: flex;
+  justify-content: space-between;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.mindmap-card-public-btn {
+  margin-top: auto;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #2563eb;
+  color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mindmap-card-public-btn:hover {
+  background: #1d4ed8;
+}
+
+@media (max-width: 900px) {
+  .student-public-mindmaps-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .student-public-mindmaps-page {
+    padding: 14px;
+  }
+
+  .student-public-mindmaps-filters {
+    grid-template-columns: 1fr;
+  }
+}
