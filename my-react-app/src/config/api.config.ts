@@ -215,6 +215,9 @@ export const API_ENDPOINTS = {
     `/question-templates/${id}/generate-ai-enhanced`,
   QUESTION_TEMPLATE_AI_GENERATE_FROM_LESSON: '/question-templates/ai-generate-from-lesson',
   QUESTION_TEMPLATE_IMPORT_FROM_FILE: '/question-templates/import-from-file',
+  QUESTION_TEMPLATE_BULK_IMPORT_TEMPLATE: '/question-templates/bulk-import/template',
+  QUESTION_TEMPLATE_BULK_IMPORT_PREVIEW: '/question-templates/bulk-import/preview',
+  QUESTION_TEMPLATE_BULK_IMPORT_SUBMIT: '/question-templates/bulk-import/submit',
 
   // Canonical questions
   CANONICAL_QUESTIONS: '/canonical-questions',
