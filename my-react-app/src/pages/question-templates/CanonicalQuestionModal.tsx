@@ -1,13 +1,16 @@
 import { X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import MathText from '../../components/common/MathText';
 import type {
   CanonicalCognitiveLevel,
   CanonicalQuestionRequest,
+  CanonicalQuestionResponse,
 } from '../../types/canonicalQuestion';
 
 type Props = {
   isOpen: boolean;
+  mode: 'create' | 'edit';
+  initialData?: CanonicalQuestionResponse | null;
   onClose: () => void;
   onSubmit: (payload: CanonicalQuestionRequest) => Promise<void>;
   submitting: boolean;
@@ -28,6 +31,8 @@ const cognitiveLevels: CanonicalCognitiveLevel[] = [
 
 export function CanonicalQuestionModal({
   isOpen,
+  mode,
+  initialData,
   onClose,
   onSubmit,
   submitting,
@@ -39,6 +44,40 @@ export function CanonicalQuestionModal({
   const [problemType, setProblemType] = useState('SHORT_ANSWER');
   const [cognitiveLevel, setCognitiveLevel] = useState<CanonicalCognitiveLevel>('THONG_HIEU');
   const [error, setError] = useState<string | null>(null);
+
+  let submitLabel = 'Lưu Canonical';
+  if (mode === 'create') submitLabel = 'Tạo Canonical';
+  if (submitting) submitLabel = 'Đang lưu...';
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    setError(null);
+
+    if (mode === 'edit' && initialData) {
+      let nextDiagramDefinition = '';
+      if (typeof initialData.diagramDefinition === 'string') {
+        nextDiagramDefinition = initialData.diagramDefinition;
+      } else if (initialData.diagramDefinition) {
+        nextDiagramDefinition = JSON.stringify(initialData.diagramDefinition, null, 2);
+      }
+
+      setTitle(initialData.title || '');
+      setProblemText(initialData.problemText || '');
+      setSolutionSteps(initialData.solutionSteps || '');
+      setDiagramDefinitionRaw(nextDiagramDefinition);
+      setProblemType(initialData.problemType || 'SHORT_ANSWER');
+      setCognitiveLevel(initialData.cognitiveLevel || 'THONG_HIEU');
+      return;
+    }
+
+    setTitle('');
+    setProblemText('');
+    setSolutionSteps('');
+    setDiagramDefinitionRaw('');
+    setProblemType('SHORT_ANSWER');
+    setCognitiveLevel('THONG_HIEU');
+  }, [isOpen, mode, initialData]);
 
   if (!isOpen) return null;
 
@@ -68,15 +107,9 @@ export function CanonicalQuestionModal({
         cognitiveLevel,
       });
 
-      setTitle('');
-      setProblemText('');
-      setSolutionSteps('');
-      setDiagramDefinitionRaw('');
-      setProblemType('SHORT_ANSWER');
-      setCognitiveLevel('THONG_HIEU');
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Không thể tạo canonical question.');
+      setError(err instanceof Error ? err.message : 'Không thể lưu canonical question.');
     }
   }
 
@@ -85,7 +118,7 @@ export function CanonicalQuestionModal({
       <div className="modal-card" style={{ width: 'min(900px, 100%)' }}>
         <div className="modal-header">
           <div>
-            <h3>Tạo Canonical Question</h3>
+            <h3>{mode === 'create' ? 'Tạo Canonical Question' : 'Cập nhật Canonical Question'}</h3>
             <p className="muted" style={{ marginTop: 4 }}>
               Canonical Question = bài toán gốc do giáo viên định nghĩa.
             </p>
@@ -167,7 +200,7 @@ export function CanonicalQuestionModal({
           <div className="modal-footer">
             <button type="button" className="btn secondary" onClick={onClose}>Hủy</button>
             <button type="submit" className="btn" disabled={submitting}>
-              {submitting ? 'Đang tạo...' : 'Tạo Canonical'}
+              {submitLabel}
             </button>
           </div>
         </form>

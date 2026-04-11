@@ -162,6 +162,35 @@ function extractDiagram(question: AttemptQuestionResponse): {
   };
 }
 
+function extractOptionText(value: unknown): string {
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number') return String(value);
+
+  const record = toRecord(value);
+  const rawText = pickString(
+    record.latex,
+    record.tex,
+    record.formula,
+    record.expression,
+    record.math,
+    record.content,
+    record.text,
+    record.label,
+    record.value,
+  );
+
+  if (rawText) return rawText;
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
+}
+
+function normalizeOptionMathText(value: unknown): string {
+  return extractOptionText(value);
+}
+
 export default function QuestionDisplay({ question, answer, onAnswerChange }: Readonly<QuestionDisplayProps>) {
   const diagram = extractDiagram(question);
   const optionalLatex = normalizeLatexInput(pickString(question.latexContent, question.answerFormula));
@@ -252,7 +281,9 @@ export default function QuestionDisplay({ question, answer, onAnswerChange }: Re
       {question.questionType === 'MULTIPLE_CHOICE' && question.options && (
         <div style={{ display: 'grid', gridTemplateColumns: shouldRenderDiagram ? '1.5fr 1fr' : '1fr', gap: 16 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {Object.entries(question.options).map(([key, value]) => (
+            {Object.entries(question.options).map(([key, value]) => {
+              const optionText = normalizeOptionMathText(value);
+              return (
               <label
                 key={key}
                 className="row"
@@ -274,10 +305,11 @@ export default function QuestionDisplay({ question, answer, onAnswerChange }: Re
                   style={{ marginRight: 12 }}
                 />
                 <span>
-                  <MathText text={String(value)} />
+                  <MathText text={optionText} />
                 </span>
               </label>
-            ))}
+              );
+            })}
           </div>
 
           {shouldRenderDiagram && (

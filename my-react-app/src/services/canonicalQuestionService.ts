@@ -2,10 +2,12 @@ import { API_BASE_URL, API_ENDPOINTS } from '../config/api.config';
 import { AuthService } from './api/auth.service';
 import type {
   ApiResponse,
+  CanonicalQuestionPagingParams,
   CanonicalQuestionRequest,
   CanonicalQuestionResponse,
   PageResponse,
 } from '../types/canonicalQuestion';
+import type { QuestionResponse } from '../types/question';
 import type {
   GenerateQuestionsFromCanonicalRequest,
   GeneratedQuestionsBatchResponse,
@@ -89,6 +91,56 @@ export const canonicalQuestionService = {
     return parseResponse<ApiResponse<CanonicalQuestionResponse>>(
       response,
       'Không thể lấy canonical question'
+    );
+  },
+
+  updateCanonicalQuestion: async (
+    id: string,
+    request: CanonicalQuestionRequest
+  ): Promise<ApiResponse<CanonicalQuestionResponse>> => {
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.CANONICAL_QUESTION_DETAIL(id)}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(request),
+    });
+    return parseResponse<ApiResponse<CanonicalQuestionResponse>>(
+      response,
+      'Không thể cập nhật canonical question'
+    );
+  },
+
+  deleteCanonicalQuestion: async (id: string): Promise<ApiResponse<void>> => {
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.CANONICAL_QUESTION_DETAIL(id)}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    return parseResponse<ApiResponse<void>>(
+      response,
+      'Không thể xóa canonical question'
+    );
+  },
+
+  getQuestionsByCanonicalQuestion: async (
+    id: string,
+    params: CanonicalQuestionPagingParams = {}
+  ): Promise<ApiResponse<PageResponse<QuestionResponse>>> => {
+    const query = new URLSearchParams({
+      page: String(params.page ?? 0),
+      size: String(params.size ?? 20),
+      sortBy: params.sortBy ?? 'createdAt',
+      sortDirection: params.sortDirection ?? 'DESC',
+    });
+
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.CANONICAL_QUESTION_QUESTIONS(id)}?${query.toString()}`,
+      {
+        method: 'GET',
+        headers: getAuthHeaders(),
+      }
+    );
+    return parseResponse<ApiResponse<PageResponse<QuestionResponse>>>(
+      response,
+      'Không thể lấy danh sách câu hỏi theo canonical question'
     );
   },
 
