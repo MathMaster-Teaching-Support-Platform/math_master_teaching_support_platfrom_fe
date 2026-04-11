@@ -41,10 +41,12 @@ import StudentWallet from '../pages/wallet/StudentWallet';
 // Profile Page
 import Profile from '../pages/profile/Profile';
 // Admin Teacher Profile Routes
+import AdminAnalytics from '../pages/admin/AdminAnalytics';
 import AdminRoadmapCreatePage from '../pages/admin/AdminRoadmapCreatePage';
 import AdminRoadmapEditPage from '../pages/admin/AdminRoadmapEditPage';
 import AdminRoadmapManagementPage from '../pages/admin/AdminRoadmapManagementPage';
 import AdminRoadmapTopicsPage from '../pages/admin/AdminRoadmapTopicsPage';
+import AdminTransactions from '../pages/admin/AdminTransactions';
 import ReviewProfiles from '../pages/admin/ReviewProfiles';
 import AssessmentBuilderFlow from '../pages/assessments/AssessmentBuilderFlow';
 import AssessmentDetail from '../pages/assessments/AssessmentDetail';
@@ -619,6 +621,22 @@ const router = createBrowserRouter([
     element: (
       <PrivateRoute>
         <AdminRoadmapTopicsPage />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/admin/transactions',
+    element: (
+      <PrivateRoute>
+        <AdminTransactions />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/admin/analytics',
+    element: (
+      <PrivateRoute>
+        <AdminAnalytics />
       </PrivateRoute>
     ),
   },

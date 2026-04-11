@@ -1,0 +1,342 @@
+﻿/* ─── Page ─────────────────────────────────────────────────────────────────── */
+.admin-analytics-page {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ─── Page Header ─────────────────────────────────────────────────────────── */
+.ana-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1.75rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.ana-page-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--gray-900);
+  margin: 0 0 0.375rem;
+}
+
+.ana-page-subtitle {
+  font-size: 0.9375rem;
+  color: var(--gray-600);
+  margin: 0;
+}
+
+.ana-export-btn {
+  padding: 0.6rem 1.25rem;
+  background: var(--gradient-primary, linear-gradient(135deg, #667eea, #764ba2));
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    opacity 0.2s,
+    transform 0.2s;
+}
+
+.ana-export-btn:hover {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+/* ─── Section Nav ──────────────────────────────────────────────────────────── */
+.ana-section-nav {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.75rem;
+  background: var(--gray-100);
+  border-radius: 14px;
+  padding: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.ana-section-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.ana-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1.125rem;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--gray-600);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.ana-nav-btn:hover {
+  color: var(--gray-900);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.ana-nav-btn--active {
+  background: var(--white);
+  color: var(--primary-color, #667eea);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ─── KPI Grid (Overview 8-card grid) ────────────────────────────────────── */
+.ana-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.125rem;
+  margin-bottom: 1.75rem;
+}
+
+@media (max-width: 1100px) {
+  .ana-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .ana-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ana-kpi-card {
+  background: var(--white);
+  border-radius: 16px;
+  border: 1px solid var(--gray-200);
+  border-top: 3px solid transparent;
+  padding: 1.25rem 1.375rem;
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  transition:
+    box-shadow 0.2s,
+    transform 0.2s;
+}
+
+.ana-kpi-card:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.ana-kpi-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.ana-kpi-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.ana-kpi-label {
+  font-size: 0.78rem;
+  color: var(--gray-600);
+  font-weight: 500;
+  margin-bottom: 0.2rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ana-kpi-value {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--gray-900);
+  line-height: 1.2;
+}
+
+.ana-kpi-sub {
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-top: 0.2rem;
+}
+
+.ana-kpi-sub.positive {
+  color: #22c55e;
+}
+.ana-kpi-sub.neutral {
+  color: var(--gray-500);
+}
+
+/* ─── Inline KPI Row (section headers) ───────────────────────────────────── */
+.ana-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.125rem;
+  margin-bottom: 1.75rem;
+}
+
+@media (max-width: 1000px) {
+  .ana-kpi-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 540px) {
+  .ana-kpi-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ana-inline-kpi {
+  background: var(--white);
+  border-radius: 14px;
+  border: 1px solid var(--gray-200);
+  border-left: 4px solid transparent;
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  transition:
+    box-shadow 0.2s,
+    transform 0.2s;
+}
+
+.ana-inline-kpi:hover {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.ana-inline-kpi-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.ana-inline-kpi-value {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--gray-900);
+  line-height: 1.25;
+}
+
+.ana-inline-kpi-label {
+  font-size: 0.78rem;
+  color: var(--gray-600);
+  font-weight: 500;
+  margin-top: 0.15rem;
+}
+
+/* ─── Card ─────────────────────────────────────────────────────────────────── */
+.ana-card {
+  background: var(--white);
+  border-radius: 16px;
+  border: 1px solid var(--gray-200);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+.ana-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 1.375rem 1.5rem 1rem;
+  border-bottom: 1px solid var(--gray-100);
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.ana-card-title {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin: 0 0 0.25rem;
+}
+
+.ana-card-subtitle {
+  font-size: 0.8125rem;
+  color: var(--gray-500);
+  margin: 0;
+}
+
+.ana-chart-body {
+  padding: 1.25rem 1.5rem 1.375rem;
+}
+
+.ana-chart-body--center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ─── Two column grid ─────────────────────────────────────────────────────── */
+.ana-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 900px) {
+  .ana-two-col {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ana-two-col .ana-card {
+  margin-bottom: 0;
+}
+
+/* ─── Custom Tooltip ──────────────────────────────────────────────────────── */
+.ana-tooltip {
+  background: var(--gray-900);
+  border-radius: 10px;
+  padding: 0.625rem 0.875rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  font-size: 0.8125rem;
+  color: white;
+  min-width: 140px;
+}
+
+.ana-tooltip-label {
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: #cbd5e1;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ana-tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.3rem;
+}
+
+.ana-tooltip-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.ana-tooltip-name {
+  color: #94a3b8;
+  flex: 1;
+}
+
+.ana-tooltip-value {
+  font-weight: 700;
+  color: white;
+}
