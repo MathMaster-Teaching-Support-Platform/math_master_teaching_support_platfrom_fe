@@ -3,15 +3,18 @@
 
 /* ─── Design Tokens ─────────────────────────────────────────────────────────── */
 :root {
-  --gp-bg:        #0f1729;
-  --gp-card:      #131e36;
-  --gp-border:    rgba(255, 255, 255, 0.07);
-  --gp-border2:   rgba(255, 255, 255, 0.12);
-  --gp-text-1:    #e2e8f0;
-  --gp-text-2:    #94a3b8;
-  --gp-text-3:    #475569;
-  --gp-font-ui:   'Be Vietnam Pro', 'Segoe UI', sans-serif;
-  --gp-font-hero: 'Cormorant Garamond', Georgia, serif;
+  --gp-primary:      #5e5ce6;
+  --gp-primary-soft: rgba(94, 92, 230, 0.08);
+  --gp-bg:           #f7f6fb;
+  --gp-surface:      #ffffff;
+  --gp-border:       #e8e5f0;
+  --gp-border2:      #d1cde8;
+  --gp-text-1:       #0e0c15;
+  --gp-text-2:       #3f3a52;
+  --gp-text-3:       #756b85;
+  --gp-text-4:       #9ca3af;
+  --gp-font-ui:      'Be Vietnam Pro', 'Segoe UI', sans-serif;
+  --gp-font-hero:    'Cormorant Garamond', Georgia, serif;
 }
 
 /* ─── Page Shell ────────────────────────────────────────────────────────────── */
@@ -27,8 +30,9 @@
 /* ─── Hero Banner ───────────────────────────────────────────────────────────── */
 .gp-hero {
   position: relative;
-  padding: 3.5rem 2.5rem 3rem;
-  background: linear-gradient(135deg, #0a1020 0%, #162040 55%, #0a1020 100%);
+  padding: 3rem 2.5rem 2.5rem;
+  background: var(--gp-surface);
+  border-bottom: 1px solid var(--gp-border);
   overflow: hidden;
 }
 
@@ -36,19 +40,12 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 60% 80% at 15% 50%, rgba(129,140,248,0.12) 0%, transparent 70%),
-    radial-gradient(ellipse 40% 60% at 78% 40%, rgba(52,211,153,0.07) 0%, transparent 60%);
+    radial-gradient(ellipse 50% 70% at 5% 50%, rgba(94,92,230,0.06) 0%, transparent 70%),
+    radial-gradient(ellipse 35% 50% at 90% 40%, rgba(6,182,212,0.05) 0%, transparent 60%);
   pointer-events: none;
 }
 
-.gp-hero-noise {
-  position: absolute;
-  inset: 0;
-  opacity: 0.035;
-  pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-size: 180px 180px;
-}
+.gp-hero-noise { display: none; }
 
 .gp-hero-inner {
   position: relative;
@@ -68,6 +65,11 @@
 }
 
 .gp-arc-svg { display: block; }
+
+/* Override the dark track inside the SVG at the component level via CSS filter */
+.gp-arc-svg circle:first-of-type {
+  stroke: var(--gp-border);
+}
 
 .gp-arc-center {
   position: absolute;
@@ -90,7 +92,7 @@
 .gp-gpa-denom {
   font-family: var(--gp-font-hero);
   font-size: 1rem;
-  color: var(--gp-text-3);
+  color: var(--gp-text-4);
   margin-top: 2px;
 }
 
@@ -130,10 +132,9 @@
   font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.04em;
-  background: color-mix(in srgb, var(--chip-color) 18%, transparent);
+  background: color-mix(in srgb, var(--chip-color) 12%, transparent);
   color: var(--chip-color);
-  border: 1px solid color-mix(in srgb, var(--chip-color) 40%, transparent);
-  box-shadow: 0 0 16px color-mix(in srgb, var(--chip-color) 30%, transparent);
+  border: 1px solid color-mix(in srgb, var(--chip-color) 30%, transparent);
 }
 
 .gp-rank-chip {
@@ -142,8 +143,8 @@
   gap: 0.4rem;
   padding: 0.35rem 0.85rem;
   border-radius: 999px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.10);
+  background: var(--gp-bg);
+  border: 1px solid var(--gp-border);
   color: var(--gp-text-2);
   font-size: 0.78rem;
   font-weight: 500;
@@ -160,19 +161,20 @@
   padding: 0.65rem 1.4rem;
   border-radius: 10px;
   background: transparent;
-  border: 1px solid rgba(255,255,255,0.22);
-  color: var(--gp-text-1);
+  border: 1px solid var(--gp-border2);
+  color: var(--gp-text-2);
   font-family: var(--gp-font-ui);
   font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
-  transition: border-color 0.2s, background 0.2s;
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
   white-space: nowrap;
 }
 
 .gp-export-btn:hover:not(:disabled) {
-  border-color: rgba(255,255,255,0.4);
-  background: rgba(255,255,255,0.06);
+  border-color: var(--gp-primary);
+  color: var(--gp-primary);
+  background: var(--gp-primary-soft);
 }
 
 .gp-export-btn:disabled {
@@ -186,7 +188,7 @@
   left: -100%;
   width: 55%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.09), transparent);
+  background: linear-gradient(90deg, transparent, rgba(94,92,230,0.07), transparent);
   transform: skewX(-18deg);
   transition: left 0s;
   pointer-events: none;
@@ -201,8 +203,8 @@
   display: inline-block;
   width: 13px;
   height: 13px;
-  border: 2px solid rgba(255,255,255,0.3);
-  border-top-color: #fff;
+  border: 2px solid var(--gp-border);
+  border-top-color: var(--gp-primary);
   border-radius: 50%;
   animation: gp-spin 0.7s linear infinite;
 }
@@ -220,23 +222,21 @@
 }
 
 .gp-stat-card {
-  background: rgba(255,255,255,0.03);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: var(--gp-surface);
   border: 1px solid var(--gp-border);
   border-radius: 14px;
   padding: 1.25rem 1.4rem;
   display: flex;
   align-items: center;
   gap: 1rem;
-  transition: border-color 0.2s, background 0.2s, transform 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
   opacity: 0;
   transform: translateY(18px);
 }
 
 .gp-stat-card:hover {
   border-color: var(--gp-border2);
-  background: rgba(255,255,255,0.055);
+  box-shadow: 0 6px 22px rgba(0,0,0,0.07);
   transform: translateY(-2px) !important;
 }
 
@@ -252,7 +252,7 @@
   align-items: center;
   justify-content: center;
   border-radius: 10px;
-  background: rgba(255,255,255,0.05);
+  background: var(--gp-bg);
 }
 
 .gp-stat-body { min-width: 0; }
@@ -262,7 +262,7 @@
   font-weight: 500;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--gp-text-3);
+  color: var(--gp-text-4);
   margin: 0 0 0.2rem;
   white-space: nowrap;
   overflow: hidden;
@@ -279,7 +279,7 @@
 
 .gp-stat-sub {
   font-size: 0.7rem;
-  color: var(--gp-text-3);
+  color: var(--gp-text-4);
   margin: 0;
 }
 
@@ -296,9 +296,9 @@
 .gp-tab {
   padding: 0.45rem 1.1rem;
   border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.12);
-  background: transparent;
-  color: var(--gp-text-2);
+  border: 1px solid var(--gp-border);
+  background: var(--gp-surface);
+  color: var(--gp-text-3);
   font-family: var(--gp-font-ui);
   font-size: 0.82rem;
   font-weight: 500;
@@ -308,16 +308,16 @@
 }
 
 .gp-tab:hover {
-  border-color: rgba(255,255,255,0.25);
+  border-color: var(--gp-border2);
   color: var(--gp-text-1);
-  background: rgba(255,255,255,0.04);
+  background: var(--gp-bg);
 }
 
 .gp-tab-active {
-  background: color-mix(in srgb, var(--tab-c) 22%, transparent);
-  border-color: color-mix(in srgb, var(--tab-c) 50%, transparent);
+  background: color-mix(in srgb, var(--tab-c) 10%, white);
+  border-color: color-mix(in srgb, var(--tab-c) 40%, transparent);
   color: var(--tab-c);
-  box-shadow: 0 0 12px color-mix(in srgb, var(--tab-c) 20%, transparent);
+  font-weight: 600;
 }
 
 /* ─── Grade Cards ───────────────────────────────────────────────────────────── */
@@ -332,7 +332,7 @@
 
 .gp-card {
   position: relative;
-  background: var(--gp-card);
+  background: var(--gp-surface);
   border: 1px solid var(--gp-border);
   border-radius: 16px;
   overflow: hidden;
@@ -342,8 +342,8 @@
 }
 
 .gp-card:hover {
-  border-color: color-mix(in srgb, var(--sc) 35%, transparent);
-  box-shadow: 0 0 30px color-mix(in srgb, var(--sc) 10%, transparent);
+  border-color: color-mix(in srgb, var(--sc) 28%, var(--gp-border));
+  box-shadow: 0 6px 28px rgba(0,0,0,0.07);
 }
 
 .gp-mounted .gp-card {
@@ -356,7 +356,6 @@
   left: 0; top: 0; bottom: 0;
   width: 4px;
   background: var(--sc);
-  box-shadow: 0 0 14px color-mix(in srgb, var(--sc) 60%, transparent);
 }
 
 .gp-card-head {
@@ -398,7 +397,7 @@
 
 .gp-teacher-name {
   font-size: 0.8rem;
-  color: var(--gp-text-2);
+  color: var(--gp-text-3);
 }
 
 .gp-avg-badge {
@@ -407,9 +406,8 @@
   align-items: center;
   padding: 0.6rem 1rem;
   border-radius: 12px;
-  background: color-mix(in srgb, var(--ac) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--ac) 30%, transparent);
-  box-shadow: 0 0 18px color-mix(in srgb, var(--ac) 15%, transparent);
+  background: color-mix(in srgb, var(--ac) 8%, white);
+  border: 1px solid color-mix(in srgb, var(--ac) 25%, var(--gp-border));
   flex-shrink: 0;
   min-width: 88px;
   text-align: center;
@@ -420,7 +418,7 @@
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--gp-text-3);
+  color: var(--gp-text-4);
   margin-bottom: 0.15rem;
 }
 
@@ -436,7 +434,7 @@
   font-size: 0.68rem;
   font-weight: 500;
   color: var(--ac);
-  opacity: 0.8;
+  opacity: 0.85;
   margin-top: 0.15rem;
 }
 
@@ -461,22 +459,24 @@
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--gp-text-3);
+  color: var(--gp-text-4);
   white-space: nowrap;
 }
 
 .gp-table td {
   padding: 0.75rem;
   vertical-align: middle;
-  border-bottom: 1px solid rgba(255,255,255,0.03);
+  border-bottom: 1px solid var(--gp-border);
 }
+
+.gp-table tbody tr:last-child td { border-bottom: none; }
 
 .gp-row { transition: background 0.15s; }
 
-.gp-row:nth-child(even) { background: rgba(255,255,255,0.018); }
+.gp-row:nth-child(even) { background: #faf9fd; }
 
 .gp-row:hover {
-  background: color-mix(in srgb, var(--rc) 8%, transparent);
+  background: color-mix(in srgb, var(--rc) 6%, white);
   box-shadow: inset 3px 0 0 var(--rc);
 }
 
@@ -486,16 +486,16 @@
   min-width: 220px;
 }
 
-.gp-date { color: var(--gp-text-2); white-space: nowrap; }
+.gp-date { color: var(--gp-text-3); white-space: nowrap; }
 
 .gp-weight-pill {
   display: inline-block;
   padding: 0.2rem 0.6rem;
   border-radius: 999px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.10);
+  background: var(--gp-bg);
+  border: 1px solid var(--gp-border);
   font-size: 0.75rem;
-  color: var(--gp-text-2);
+  color: var(--gp-text-3);
   white-space: nowrap;
 }
 
@@ -510,7 +510,7 @@
 
 .gp-score-track {
   height: 4px;
-  background: rgba(255,255,255,0.08);
+  background: var(--gp-border);
   border-radius: 4px;
   overflow: hidden;
 }
@@ -535,18 +535,18 @@
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--gp-text-3);
+  color: var(--gp-text-4);
   margin: 0 0 1rem;
 }
 
 .gp-chart-wrap { border-radius: 10px; overflow: hidden; }
 
 .gp-chart-tooltip {
-  background: #1e2d4a;
-  border: 1px solid rgba(255,255,255,0.12);
+  background: var(--gp-surface);
+  border: 1px solid var(--gp-border);
   border-radius: 10px;
   padding: 0.75rem 1rem;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.10);
   font-family: var(--gp-font-ui);
   min-width: 180px;
 }
@@ -563,7 +563,7 @@
 .gp-tt-weight,
 .gp-tt-contrib {
   font-size: 0.78rem;
-  color: var(--gp-text-2);
+  color: var(--gp-text-3);
   margin: 0 0 0.2rem;
 }
 
@@ -580,7 +580,7 @@
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--gp-text-3);
+  color: var(--gp-text-4);
   margin: 0 0 1rem;
 }
 
@@ -603,7 +603,7 @@
   flex-shrink: 0;
 }
 
-.gp-legend-range { font-size: 0.78rem; color: var(--gp-text-2); }
+.gp-legend-range { font-size: 0.78rem; color: var(--gp-text-3); }
 .gp-legend-grade { font-size: 0.78rem; font-weight: 600; }
 
 /* ─── Export Toast ──────────────────────────────────────────────────────────── */
@@ -617,13 +617,13 @@
   gap: 0.55rem;
   padding: 0.75rem 1.4rem;
   border-radius: 12px;
-  background: #1a2e1a;
-  border: 1px solid rgba(52,211,153,0.35);
-  color: #34d399;
+  background: var(--gp-surface);
+  border: 1px solid rgba(5,150,105,0.30);
+  color: #059669;
   font-family: var(--gp-font-ui);
   font-size: 0.85rem;
   font-weight: 500;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 20px rgba(52,211,153,0.15);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
   z-index: 9999;
   animation: gp-toast-in 0.3s cubic-bezier(0.22,1,0.36,1);
 }

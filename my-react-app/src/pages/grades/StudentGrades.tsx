@@ -237,7 +237,7 @@ const ArcProgress: React.FC<ArcProps> = ({ value, max = 10, color, animate }) =>
         </filter>
       </defs>
       {/* Track */}
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="10" />
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#e8e5f0" strokeWidth="10" />
       {/* Fill */}
       <circle
         cx={cx}
@@ -593,11 +593,7 @@ const GradesPage: React.FC = () => {
                         barCategoryGap="32%"
                         margin={{ top: 10, right: 48, bottom: 0, left: 0 }}
                       >
-                        <CartesianGrid
-                          strokeDasharray="3 3"
-                          stroke="rgba(255,255,255,0.05)"
-                          vertical={false}
-                        />
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e8e5f0" vertical={false} />
                         <XAxis
                           dataKey="name"
                           tick={{ fill: '#64748b', fontSize: 11, fontFamily: 'Be Vietnam Pro' }}
@@ -614,7 +610,7 @@ const GradesPage: React.FC = () => {
                         />
                         <Tooltip
                           content={<ChartTooltip />}
-                          cursor={{ fill: 'rgba(255,255,255,0.03)' }}
+                          cursor={{ fill: 'rgba(94,92,230,0.05)' }}
                         />
                         <ReferenceLine
                           y={avg}
