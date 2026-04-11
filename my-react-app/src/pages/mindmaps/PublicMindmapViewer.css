@@ -1,0 +1,80 @@
+.public-mindmap-page {
+  min-height: 100vh;
+  padding: 24px;
+  background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+}
+
+.public-mindmap-header {
+  max-width: 1100px;
+  margin: 0 auto 16px;
+  padding: 20px 22px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+}
+
+.public-mindmap-badge {
+  display: inline-block;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #1d4ed8;
+}
+
+.public-mindmap-header h1 {
+  margin: 0;
+  color: #0f172a;
+}
+
+.public-mindmap-header p {
+  margin: 8px 0 0;
+  color: #475569;
+}
+
+.public-mindmap-canvas-wrap {
+  max-width: 1100px;
+  margin: 0 auto;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+}
+
+.public-mindmap-canvas {
+  min-height: 70vh;
+  overflow: auto;
+}
+
+.public-mindmap-state {
+  max-width: 1100px;
+  margin: 24px auto;
+  padding: 18px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #1e293b;
+}
+
+.public-mindmap-state--error {
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+@media (max-width: 768px) {
+  .public-mindmap-page {
+    padding: 14px;
+  }
+
+  .public-mindmap-header,
+  .public-mindmap-state {
+    padding: 14px;
+  }
+
+  .public-mindmap-canvas {
+    min-height: 62vh;
+  }
+}
