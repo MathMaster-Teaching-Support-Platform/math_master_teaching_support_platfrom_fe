@@ -11,6 +11,7 @@ import type {
     CloneAssessmentRequest,
     AddQuestionToAssessmentRequest,
     GenerateAssessmentFromMatrixRequest,
+    GenerateQuestionsForAssessmentRequest,
     ApiResponse,
     PaginatedResponse,
 } from '../../types';
@@ -297,6 +298,27 @@ export class AssessmentService {
         return response.json();
     }
 
+    /** POST /assessments/{assessmentId}/generate */
+    static async generateQuestionsForAssessment(
+        assessmentId: string,
+        data: GenerateQuestionsForAssessmentRequest
+    ): Promise<ApiResponse<AssessmentResponse>> {
+        const headers = await this.getHeaders();
+        const response = await fetch(
+            `${API_BASE_URL}${API_ENDPOINTS.ASSESSMENTS_GENERATE(assessmentId)}`,
+            {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(data),
+            }
+        );
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error((error as { message?: string }).message || 'Failed to generate questions from matrix');
+        }
+        return response.json();
+    }
+
     /** GET /assessments/{assessmentId}/questions */
     static async getAssessmentQuestions(
         assessmentId: string
@@ -363,6 +385,23 @@ export class AssessmentService {
             throw new Error(error.message || 'Failed to remove question from assessment');
         }
         return response.json();
+    }
+
+    /**
+     * Workaround update for assessment question when BE has no PUT endpoint.
+     * Strategy: remove existing question then add it back with new order/points.
+     */
+    static async updateAssessmentQuestionWorkaround(
+        assessmentId: string,
+        questionId: string,
+        data: { orderIndex?: number; pointsOverride?: number | null }
+    ): Promise<ApiResponse<AssessmentResponse>> {
+        await this.removeQuestion(assessmentId, questionId);
+        return this.addQuestion(assessmentId, {
+            questionId,
+            orderIndex: data.orderIndex,
+            pointsOverride: data.pointsOverride === null ? undefined : data.pointsOverride,
+        });
     }
 
     /**

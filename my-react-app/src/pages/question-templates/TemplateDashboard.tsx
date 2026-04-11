@@ -27,6 +27,10 @@ import {
   useUpdateQuestionTemplate,
 } from '../../hooks/useQuestionTemplate';
 import {
+  useCreateCanonicalQuestion,
+  useGetMyCanonicalQuestions,
+} from '../../hooks/useCanonicalQuestion';
+import {
   useApproveQuestion,
   useBulkApproveQuestions,
   useDeleteQuestion,
@@ -45,7 +49,11 @@ import '../../styles/module-refactor.css';
 import { TemplateFormModal } from './TemplateFormModal';
 import { TemplateImportModal } from './TemplateImportModal';
 import { TemplateTestModal } from './TemplateTestModal';
+import { TemplateGenerateModal } from './TemplateGenerateModal';
+import { CanonicalGenerateModal } from './CanonicalGenerateModal';
+import { CanonicalQuestionModal } from './CanonicalQuestionModal';
 import MathText from '../../components/common/MathText';
+import LatexRenderer from '../../components/common/LatexRenderer';
 import { useNavigate } from 'react-router-dom';
 import './template-review.css';
 import { questionTemplateService } from '../../services/questionTemplateService';
@@ -104,6 +112,72 @@ const questionStatusLabel: Record<string, string> = {
   ARCHIVED: 'Lưu trữ',
 };
 
+function extractDiagramLatexStrings(diagramData: unknown): string[] {
+  const values: string[] = [];
+
+  const visit = (node: unknown, keyName = '') => {
+    if (typeof node === 'string') {
+      const trimmed = node.trim();
+      if (!trimmed) return;
+
+      // Skip unresolved template placeholders in preview stage.
+      if (trimmed.includes('{{') || trimmed.includes('}}')) return;
+
+      // Ignore metadata-like tokens, e.g. function_graph, near_miss.
+      const looksLikeIdentifier = /^[a-zA-Z]+(?:_[a-zA-Z0-9]+)+$/.test(trimmed);
+      if (looksLikeIdentifier) return;
+
+      const keyLooksLatex = /latex|tex|equation|formula|expression|math/i.test(keyName);
+      const hasLatexSyntax = /\$[^$]+\$|\\[a-zA-Z]+/.test(trimmed);
+      const hasMathOperators = /[=+\-*/^]/.test(trimmed);
+      const hasMathSymbols = /\d|[xyabcnm]|π|√/i.test(trimmed);
+
+      if (keyLooksLatex || hasLatexSyntax || (hasMathOperators && hasMathSymbols)) {
+        values.push(trimmed);
+      }
+      return;
+    }
+
+    if (Array.isArray(node)) {
+      node.forEach((item) => visit(item, keyName));
+      return;
+    }
+
+    if (node && typeof node === 'object') {
+      Object.entries(node as Record<string, unknown>).forEach(([key, value]) => {
+        visit(value, key);
+      });
+    }
+  };
+
+  visit(diagramData);
+  return Array.from(new Set(values)).slice(0, 6);
+}
+
+function extractPrimaryDiagramLatex(diagramData: unknown): string | null {
+  if (typeof diagramData === 'string') {
+    const value = diagramData.trim();
+    if (!value) return null;
+    return value;
+  }
+
+  if (!diagramData || typeof diagramData !== 'object' || Array.isArray(diagramData)) {
+    return null;
+  }
+
+  const record = diagramData as Record<string, unknown>;
+  const directCandidates = ['latex', 'tex', 'equation', 'formula', 'expression', 'math', 'diagram'];
+  for (const key of directCandidates) {
+    const value = record[key];
+    if (typeof value === 'string' && value.trim()) {
+      return value.trim();
+    }
+  }
+
+  const discovered = extractDiagramLatexStrings(record);
+  return discovered[0]?.trim() ?? null;
+}
+
 export function TemplateDashboard() {
   const navigate = useNavigate();
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -115,9 +189,15 @@ export function TemplateDashboard() {
   const [testOpen, setTestOpen] = useState(false);
   const [selected, setSelected] = useState<QuestionTemplateResponse | null>(null);
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [canonicalOpen, setCanonicalOpen] = useState(false);
+  const [canonicalGenerateOpen, setCanonicalGenerateOpen] = useState(false);
+  const [canonicalGenerateId, setCanonicalGenerateId] = useState('');
+  const [generateOpen, setGenerateOpen] = useState(false);
+  const [generateTemplate, setGenerateTemplate] = useState<QuestionTemplateResponse | null>(null);
   const [reviewTemplateId, setReviewTemplateId] = useState('');
   const [selectedQuestionIds, setSelectedQuestionIds] = useState<Set<string>>(new Set());
   const [editingQuestion, setEditingQuestion] = useState<QuestionResponse | null>(null);
+  const [activeDiagram, setActiveDiagram] = useState<unknown>(null);
   const [editQuestionText, setEditQuestionText] = useState('');
   const [editCorrectAnswer, setEditCorrectAnswer] = useState('');
   const [editExplanation, setEditExplanation] = useState('');
@@ -129,6 +209,7 @@ export function TemplateDashboard() {
     'createdAt',
     'DESC'
   );
+  const { data: canonicalData } = useGetMyCanonicalQuestions(0, 20, 'createdAt', 'DESC');
 
   const createMutation = useCreateQuestionTemplate();
   const updateMutation = useUpdateQuestionTemplate();
@@ -140,6 +221,7 @@ export function TemplateDashboard() {
   const approveQuestionMutation = useApproveQuestion();
   const updateQuestionMutation = useUpdateQuestion();
   const deleteQuestionMutation = useDeleteQuestion();
+  const createCanonicalMutation = useCreateCanonicalQuestion();
 
   const reviewQuestionsQuery = useReviewQuestions(
     reviewTemplateId,
@@ -162,6 +244,9 @@ export function TemplateDashboard() {
   }, [search, status, templates]);
 
   const reviewQuestions = reviewQuestionsQuery.data?.result ?? [];
+  const canonicalQuestions = canonicalData?.result?.content ?? [];
+  const activeDiagramLatexCode = extractPrimaryDiagramLatex(activeDiagram);
+  const activeDiagramLatexValues = activeDiagram ? extractDiagramLatexStrings(activeDiagram) : [];
 
   useEffect(() => {
     if (!reviewOpen) return;
@@ -170,6 +255,17 @@ export function TemplateDashboard() {
       .map((question) => question.id);
     setSelectedQuestionIds(new Set(defaultSelected));
   }, [reviewOpen, reviewQuestions]);
+
+  useEffect(() => {
+    if (!toast) return;
+    const timeoutId = globalThis.setTimeout(() => {
+      setToast(null);
+    }, toast.type === 'error' ? 5500 : 3200);
+
+    return () => {
+      globalThis.clearTimeout(timeoutId);
+    };
+  }, [toast]);
 
   async function saveTemplate(payload: QuestionTemplateRequest) {
     if (mode === 'create') {
@@ -361,6 +457,10 @@ export function TemplateDashboard() {
                 <Upload size={14} />
                 Nhập file
               </button>
+              <button className="btn secondary" onClick={() => setCanonicalOpen(true)}>
+                <Plus size={14} />
+                Tạo Canonical
+              </button>
               <button
                 className="btn"
                 onClick={() => {
@@ -378,9 +478,25 @@ export function TemplateDashboard() {
           <section className="hero-card">
             <p className="hero-kicker">Phân tách trách nhiệm</p>
             <h2>Soạn mẫu và xét duyệt câu hỏi theo mẫu ngay tại đây</h2>
+            <p className="muted" style={{ marginTop: 6 }}>
+              Canonical Question = bài toán gốc do giáo viên định nghĩa.
+            </p>
             <div className="row" style={{ flexWrap: 'wrap' }}>
               <button className="btn secondary" onClick={() => openReviewModal()}>
                 Xét duyệt theo mẫu <ArrowRight size={14} />
+              </button>
+              <button
+                className="btn secondary"
+                onClick={() => {
+                  if (canonicalQuestions.length === 0) {
+                    setToast({ type: 'error', message: 'Can tao canonical question truoc khi generate theo canonical flow.' });
+                    return;
+                  }
+                  setCanonicalGenerateId(canonicalQuestions[0]?.id ?? '');
+                  setCanonicalGenerateOpen(true);
+                }}
+              >
+                Generate tu Canonical <ArrowRight size={14} />
               </button>
               <button className="btn secondary" onClick={() => navigate('/teacher/question-banks')}>
                 Sang Ngân hàng câu hỏi để quản lý kho <ArrowRight size={14} />
@@ -392,6 +508,61 @@ export function TemplateDashboard() {
             <p className="muted" style={{ marginTop: 6 }}>
               Chọn mẫu câu hỏi, xem trước toàn bộ câu đã sinh từ mẫu đó và phê duyệt nhanh theo lô.
             </p>
+          </section>
+
+          <section className="data-card" style={{ minHeight: 0 }}>
+            <div className="row" style={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
+              <div>
+                <h3>Canonical Questions gần đây</h3>
+                <p className="muted">Nguồn semantic cho chế độ AI_FROM_CANONICAL.</p>
+              </div>
+              <button className="btn secondary" onClick={() => setCanonicalOpen(true)}>
+                <Plus size={14} />
+                Tạo mới
+              </button>
+            </div>
+
+            {canonicalQuestions.length === 0 && (
+              <div className="empty">Bạn chưa có canonical question nào.</div>
+            )}
+
+            {canonicalQuestions.length > 0 && (
+              <div className="table-wrap" style={{ marginTop: 10 }}>
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Tiêu đề</th>
+                      <th style={{ width: 180 }}>Problem Type</th>
+                      <th style={{ width: 180 }}>Muc do nhan thuc</th>
+                      <th style={{ width: 180 }}>Thao tac</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {canonicalQuestions.map((canonical) => (
+                      <tr key={canonical.id}>
+                        <td>{canonical.title}</td>
+                        <td>{canonical.problemType}</td>
+                        <td>
+                          {cognitiveLevelLabel[canonical.cognitiveLevel] || canonical.cognitiveLevel}
+                        </td>
+                        <td>
+                          <button
+                            className="btn secondary"
+                            onClick={() => {
+                              setCanonicalGenerateId(canonical.id);
+                              setCanonicalGenerateOpen(true);
+                            }}
+                          >
+                            <Play size={14} />
+                            Generate
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </section>
 
           <div className="toolbar">
@@ -472,12 +643,23 @@ export function TemplateDashboard() {
                     <button
                       className="btn secondary"
                       onClick={() => {
+                        setGenerateTemplate(template);
+                        setGenerateOpen(true);
+                      }}
+                    >
+                      <Play size={14} />
+                      Sinh câu hỏi
+                    </button>
+
+                    <button
+                      className="btn secondary"
+                      onClick={() => {
                         setSelected(template);
                         setTestOpen(true);
                       }}
                     >
-                      <Play size={14} />
-                      Tạo câu hỏi
+                      <Eye size={14} />
+                      Chạy thử
                     </button>
 
                     <button
@@ -551,6 +733,33 @@ export function TemplateDashboard() {
               template={selected}
             />
           )}
+
+          {generateTemplate && (
+            <TemplateGenerateModal
+              isOpen={generateOpen}
+              onClose={() => setGenerateOpen(false)}
+              template={generateTemplate}
+              onGenerated={(message) => setToast({ type: 'success', message })}
+            />
+          )}
+
+          <CanonicalGenerateModal
+            isOpen={canonicalGenerateOpen}
+            onClose={() => setCanonicalGenerateOpen(false)}
+            canonicalId={canonicalGenerateId}
+            templates={templates}
+            onGenerated={(message) => setToast({ type: 'success', message })}
+          />
+
+          <CanonicalQuestionModal
+            isOpen={canonicalOpen}
+            onClose={() => setCanonicalOpen(false)}
+            submitting={createCanonicalMutation.isPending}
+            onSubmit={async (payload) => {
+              await createCanonicalMutation.mutateAsync(payload);
+              setToast({ type: 'success', message: 'Tạo canonical question thành công.' });
+            }}
+          />
 
           {reviewOpen && (
             <div className="modal-layer">
@@ -663,6 +872,11 @@ export function TemplateDashboard() {
                           <tbody>
                             {reviewQuestions.map((question) => {
                               const isApproved = question.questionStatus === 'APPROVED';
+                              const questionDiagramData = question.diagramData as unknown;
+                              const questionDiagramLatexCode = extractPrimaryDiagramLatex(questionDiagramData);
+                              const questionDiagramLatexValues = questionDiagramData
+                                ? extractDiagramLatexStrings(questionDiagramData)
+                                : [];
                               return (
                                 <tr key={question.id}>
                                   <td>
@@ -679,10 +893,75 @@ export function TemplateDashboard() {
                                     <div className="template-review-question__text">
                                       <MathText text={question.questionText} />
                                     </div>
+                                    <div className="row" style={{ justifyContent: 'start', flexWrap: 'wrap', marginTop: 6 }}>
+                                      {question.questionSourceType === 'AI_GENERATED' && (
+                                        <span className="badge draft">AI Generated</span>
+                                      )}
+                                      {question.questionSourceType === 'TEMPLATE_GENERATED' && (
+                                        <span className="badge approved">Parametric</span>
+                                      )}
+                                      {question.canonicalQuestionId && (
+                                        <span className="badge published">From Canonical</span>
+                                      )}
+                                    </div>
                                     {question.explanation && (
                                       <p className="muted template-review-question__explanation">
                                         Giải thích: <MathText text={question.explanation} />
                                       </p>
+                                    )}
+                                    {question.solutionSteps && (
+                                      <div className="preview-box" style={{ marginTop: 8 }}>
+                                        <p className="muted" style={{ marginBottom: 6 }}>Solution Steps</p>
+                                        <MathText text={question.solutionSteps} />
+                                      </div>
+                                    )}
+                                    {Boolean(questionDiagramData) && (
+                                      <div className="preview-box" style={{ marginTop: 8 }}>
+                                        <p className="muted" style={{ marginBottom: 6 }}>Diagram Data</p>
+                                        <button
+                                          type="button"
+                                          className="btn secondary"
+                                          style={{ marginBottom: 8 }}
+                                          onClick={() => setActiveDiagram(questionDiagramData)}
+                                        >
+                                          Xem phong to
+                                        </button>
+
+                                        <button
+                                          type="button"
+                                          className="btn secondary"
+                                          onClick={() => setActiveDiagram(questionDiagramData)}
+                                          style={{
+                                            cursor: 'zoom-in',
+                                            width: '100%',
+                                            textAlign: 'left',
+                                            padding: 0,
+                                            border: 'none',
+                                            background: 'transparent',
+                                            boxShadow: 'none',
+                                            color: 'inherit',
+                                          }}
+                                        >
+                                          {questionDiagramLatexCode && <LatexRenderer latex={questionDiagramLatexCode} />}
+                                          {!questionDiagramLatexCode && questionDiagramLatexValues.length > 0 && (
+                                            <div style={{ marginBottom: 8 }}>
+                                              <p className="muted" style={{ marginBottom: 6 }}>
+                                                LaTeX Preview
+                                              </p>
+                                              <div className="row" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 8 }}>
+                                                {questionDiagramLatexValues.map((latexValue) => (
+                                                  <div key={`${question.id}-latex-${latexValue}`} className="preview-box">
+                                                    <LatexRenderer latex={latexValue} />
+                                                  </div>
+                                                ))}
+                                              </div>
+                                            </div>
+                                          )}
+                                          {!questionDiagramLatexCode && questionDiagramLatexValues.length === 0 && (
+                                            <p className="muted">Khong co du lieu preview cho diagram nay.</p>
+                                          )}
+                                        </button>
+                                      </div>
                                     )}
                                   </td>
                                   <td>
@@ -829,10 +1108,58 @@ export function TemplateDashboard() {
             </div>
           )}
 
-          {toast && (
-            <div className={`template-review-toast template-review-toast--${toast.type}`}>
-              {toast.message}
+          {activeDiagram != null && (
+            <div className="modal-layer">
+              <button
+                type="button"
+                aria-label="Dong preview"
+                onClick={() => setActiveDiagram(null)}
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background: 'transparent',
+                  border: 'none',
+                  padding: 0,
+                }}
+              />
+              <div className="modal-card" style={{ width: 'min(1100px, 96vw)', position: 'relative', zIndex: 1 }}>
+                <div className="modal-header">
+                  <div>
+                    <h3>Diagram Preview</h3>
+                    <p className="muted" style={{ marginTop: 4 }}>Bam ra ngoai hoac nut X de dong.</p>
+                  </div>
+                  <button className="icon-btn" onClick={() => setActiveDiagram(null)}>
+                    <X size={14} />
+                  </button>
+                </div>
+                <div className="modal-body">
+                  {activeDiagramLatexCode && <LatexRenderer latex={activeDiagramLatexCode} />}
+                  {!activeDiagramLatexCode && activeDiagramLatexValues.length > 0 && (
+                    <div className="row" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 10 }}>
+                      {activeDiagramLatexValues.map((latexValue) => (
+                        <div key={`diagram-modal-latex-${latexValue}`} className="preview-box">
+                          <LatexRenderer latex={latexValue} />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {!activeDiagramLatexCode && activeDiagramLatexValues.length === 0 && (
+                    <div className="empty">Khong co du lieu preview de hien thi.</div>
+                  )}
+                </div>
+              </div>
             </div>
+          )}
+
+          {toast && (
+            <button
+              type="button"
+              className={`template-review-toast template-review-toast--${toast.type}`}
+              onClick={() => setToast(null)}
+              style={{ border: 'none' }}
+            >
+              {toast.message}
+            </button>
           )}
         </section>
       </div>

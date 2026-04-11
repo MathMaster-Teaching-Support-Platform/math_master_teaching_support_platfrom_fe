@@ -1,13 +1,18 @@
 import { ArrowLeft, Pencil } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import MathText from '../../components/common/MathText';
+import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import {
+  useAddQuestion,
   useAssessment,
   useAssessmentQuestions,
+  useGenerateQuestionsForAssessment,
+  useRemoveQuestion,
   useSetPointsOverride,
   useUpdateAssessment,
+  useUpdateAssessmentQuestionWorkaround,
 } from '../../hooks/useAssessment';
-import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import '../../styles/module-refactor.css';
 import type { AssessmentRequest } from '../../types';
 import AssessmentModal from './AssessmentModal';
@@ -46,6 +51,12 @@ export default function AssessmentDetail() {
 
   const [openEdit, setOpenEdit] = useState(false);
   const [pointsDraft, setPointsDraft] = useState<Record<string, string>>({});
+  const [orderDraft, setOrderDraft] = useState<Record<string, string>>({});
+  const [newQuestionId, setNewQuestionId] = useState('');
+  const [newOrderIndex, setNewOrderIndex] = useState('');
+  const [newPointsOverride, setNewPointsOverride] = useState('');
+  const [generateError, setGenerateError] = useState<string | null>(null);
+  const [questionCrudError, setQuestionCrudError] = useState<string | null>(null);
 
   const { data, isLoading, isError, error, refetch } = useAssessment(id ?? '');
   const {
@@ -58,7 +69,11 @@ export default function AssessmentDetail() {
     enabled: !!id,
   });
   const updateMutation = useUpdateAssessment();
+  const addQuestionMutation = useAddQuestion();
+  const removeQuestionMutation = useRemoveQuestion();
+  const updateAssessmentQuestionMutation = useUpdateAssessmentQuestionWorkaround();
   const pointsOverrideMutation = useSetPointsOverride();
+  const generateMutation = useGenerateQuestionsForAssessment();
 
   const assessment = data?.result;
   const questions = questionsData?.result ?? [];
@@ -70,7 +85,11 @@ export default function AssessmentDetail() {
     await refetch();
   }
 
-  function getDraftValue(question: { questionId: string; id?: string; pointsOverride?: number | null }) {
+  function getDraftValue(question: {
+    questionId: string;
+    id?: string;
+    pointsOverride?: number | null;
+  }) {
     const questionId = getQuestionId(question);
     if (questionId in pointsDraft) return pointsDraft[questionId];
     if (typeof question.pointsOverride === 'number') return String(question.pointsOverride);
@@ -82,6 +101,95 @@ export default function AssessmentDetail() {
       ...prev,
       [questionId]: value,
     }));
+  }
+
+  function getOrderDraftValue(question: { questionId: string; id?: string; orderIndex: number }) {
+    const questionId = getQuestionId(question);
+    if (questionId in orderDraft) return orderDraft[questionId];
+    return String(question.orderIndex);
+  }
+
+  function updateOrderDraft(questionId: string, value: string) {
+    setOrderDraft((prev) => ({
+      ...prev,
+      [questionId]: value,
+    }));
+  }
+
+  async function addQuestionToAssessment() {
+    if (!id) return;
+    const normalizedQuestionId = newQuestionId.trim();
+    if (!normalizedQuestionId) {
+      setQuestionCrudError('Vui lòng nhập Question ID.');
+      return;
+    }
+
+    const parsedOrderIndex = newOrderIndex.trim() ? Number(newOrderIndex) : undefined;
+    if (newOrderIndex.trim() && (Number.isNaN(parsedOrderIndex) || parsedOrderIndex! < 1)) {
+      setQuestionCrudError('orderIndex phải là số nguyên dương.');
+      return;
+    }
+
+    const parsedPoints = newPointsOverride.trim() ? Number(newPointsOverride) : undefined;
+    if (newPointsOverride.trim() && (Number.isNaN(parsedPoints) || parsedPoints! < 0)) {
+      setQuestionCrudError('pointsOverride phải >= 0.');
+      return;
+    }
+
+    setQuestionCrudError(null);
+    await addQuestionMutation.mutateAsync({
+      assessmentId: id,
+      data: {
+        questionId: normalizedQuestionId,
+        orderIndex: parsedOrderIndex,
+        pointsOverride: parsedPoints,
+      },
+    });
+    setNewQuestionId('');
+    setNewOrderIndex('');
+    setNewPointsOverride('');
+    await Promise.all([refetchQuestions(), refetch()]);
+  }
+
+  async function removeQuestionFromAssessment(questionId: string) {
+    if (!id) return;
+    setQuestionCrudError(null);
+    await removeQuestionMutation.mutateAsync({ assessmentId: id, questionId });
+    await Promise.all([refetchQuestions(), refetch()]);
+  }
+
+  async function updateAssessmentQuestion(questionId: string) {
+    if (!id) return;
+    const orderRaw = orderDraft[questionId]?.trim();
+    const pointsRaw = pointsDraft[questionId]?.trim();
+
+    if (!orderRaw && !pointsRaw) {
+      setQuestionCrudError('Vui lòng nhập orderIndex hoặc pointsOverride để cập nhật.');
+      return;
+    }
+
+    const nextOrder = orderRaw ? Number(orderRaw) : undefined;
+    if (orderRaw && (Number.isNaN(nextOrder) || (nextOrder !== undefined && nextOrder < 1))) {
+      setQuestionCrudError('orderIndex phải là số nguyên dương.');
+      return;
+    }
+
+    const nextPoints = pointsRaw ? Number(pointsRaw) : null;
+    if (pointsRaw && (Number.isNaN(nextPoints) || (nextPoints !== null && nextPoints < 0))) {
+      setQuestionCrudError('pointsOverride phải >= 0.');
+      return;
+    }
+
+    setQuestionCrudError(null);
+    await updateAssessmentQuestionMutation.mutateAsync({
+      assessmentId: id,
+      questionId,
+      data: {
+        orderIndex: nextOrder,
+        pointsOverride: nextPoints,
+      },
+    });
+    await Promise.all([refetchQuestions(), refetch()]);
   }
 
   async function savePointsOverride(questionId: string) {
@@ -121,6 +229,37 @@ export default function AssessmentDetail() {
     });
     setPointsDraft((prev) => ({ ...prev, [questionId]: '' }));
     await Promise.all([refetchQuestions(), refetch()]);
+  }
+
+  async function generateFromMatrix() {
+    if (!assessment?.id || !assessment.examMatrixId) return;
+    setGenerateError(null);
+
+    try {
+      await generateMutation.mutateAsync({
+        assessmentId: assessment.id,
+        data: {
+          examMatrixId: assessment.examMatrixId,
+          reuseApprovedQuestions: true,
+          selectionStrategy: 'BANK_FIRST',
+        },
+      });
+      await Promise.all([refetchQuestions(), refetch()]);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Không thể generate câu hỏi từ matrix.';
+      const normalized = message.toUpperCase();
+      if (
+        normalized.includes('INSUFFICIENT_QUESTIONS_AVAILABLE') ||
+        normalized.includes('INSUFFICIENT QUESTIONS')
+      ) {
+        setGenerateError(
+          'Không đủ câu hỏi trong ngân hàng theo cấu trúc đề. Vui lòng bổ sung thêm câu hỏi.'
+        );
+        return;
+      }
+      setGenerateError(message);
+    }
   }
 
   function renderContent() {
@@ -244,8 +383,89 @@ export default function AssessmentDetail() {
         <article className="data-card" style={{ marginTop: 16 }}>
           <div className="row" style={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
             <h3>Câu hỏi trong bài kiểm tra</h3>
-            <span className="muted">Có thể chỉnh điểm từng câu bằng pointsOverride</span>
+            <div className="row" style={{ justifyContent: 'start', flexWrap: 'wrap' }}>
+              <span className="muted">Có thể chỉnh điểm từng câu bằng pointsOverride</span>
+              {assessment.status === 'DRAFT' &&
+                assessment.assessmentMode === 'MATRIX_BASED' &&
+                assessment.examMatrixId && (
+                  <button
+                    className="btn"
+                    onClick={() => void generateFromMatrix()}
+                    disabled={generateMutation.isPending}
+                  >
+                    {generateMutation.isPending ? 'Đang generate...' : 'Generate from Matrix'}
+                  </button>
+                )}
+            </div>
           </div>
+
+          {generateError && (
+            <div className="empty" style={{ color: '#b91c1c' }}>
+              {generateError}
+            </div>
+          )}
+          {questionCrudError && (
+            <div className="empty" style={{ color: '#b91c1c' }}>
+              {questionCrudError}
+            </div>
+          )}
+
+          {assessment.status === 'DRAFT' && (
+            <div className="preview-box" style={{ marginBottom: 12 }}>
+              <p className="muted" style={{ marginBottom: 8 }}>
+                Thêm câu hỏi vào assessment (manual)
+              </p>
+              <div className="row" style={{ flexWrap: 'wrap', justifyContent: 'start' }}>
+                <input
+                  className="input"
+                  style={{ minWidth: 220 }}
+                  placeholder="Question ID"
+                  value={newQuestionId}
+                  onChange={(event) => setNewQuestionId(event.target.value)}
+                />
+                <input
+                  className="input"
+                  style={{ width: 140 }}
+                  type="number"
+                  min={1}
+                  placeholder="Order"
+                  value={newOrderIndex}
+                  onChange={(event) => setNewOrderIndex(event.target.value)}
+                />
+                <input
+                  className="input"
+                  style={{ width: 160 }}
+                  type="number"
+                  min={0}
+                  step={0.25}
+                  placeholder="Points override"
+                  value={newPointsOverride}
+                  onChange={(event) => setNewPointsOverride(event.target.value)}
+                />
+                <button
+                  className="btn"
+                  onClick={() => void addQuestionToAssessment()}
+                  disabled={addQuestionMutation.isPending}
+                >
+                  {addQuestionMutation.isPending ? 'Đang thêm...' : 'Thêm câu hỏi'}
+                </button>
+              </div>
+            </div>
+          )}
+          {assessment.generationSummary && (
+            <div className="preview-box" style={{ marginBottom: 12 }}>
+              <p className="muted" style={{ marginBottom: 6 }}>
+                totalQuestionsGenerated: {assessment.generationSummary.totalQuestionsGenerated ?? 0}
+              </p>
+              {(assessment.generationSummary.warnings || []).length > 0 && (
+                <ul style={{ margin: 0, paddingLeft: 18 }}>
+                  {(assessment.generationSummary.warnings || []).map((warning) => (
+                    <li key={warning}>{warning}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
 
           {questionsLoading && <div className="empty">Đang tải danh sách câu hỏi...</div>}
           {questionsError && (
@@ -266,9 +486,10 @@ export default function AssessmentDetail() {
                   <tr>
                     <th style={{ width: 80 }}>STT</th>
                     <th>Nội dung câu hỏi</th>
+                    <th style={{ width: 160 }}>Order mới</th>
                     <th style={{ width: 150 }}>Điểm hiện tại</th>
                     <th style={{ width: 180 }}>Điểm override</th>
-                    <th style={{ width: 260 }}>Thao tác</th>
+                    <th style={{ width: 360 }}>Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -277,7 +498,51 @@ export default function AssessmentDetail() {
                     return (
                       <tr key={questionId}>
                         <td>{question.orderIndex}</td>
-                        <td>{question.questionText}</td>
+                        <td>
+                          <MathText text={question.questionText} />
+                          <div
+                            className="row"
+                            style={{ justifyContent: 'start', flexWrap: 'wrap', marginTop: 6 }}
+                          >
+                            {question.questionSourceType === 'AI_GENERATED' && (
+                              <span className="badge draft">AI Generated</span>
+                            )}
+                            {question.questionSourceType === 'TEMPLATE_GENERATED' && (
+                              <span className="badge approved">Parametric</span>
+                            )}
+                            {question.canonicalQuestionId && (
+                              <span className="badge published">Generated from Canonical</span>
+                            )}
+                          </div>
+                          {question.solutionSteps && (
+                            <div className="preview-box" style={{ marginTop: 8 }}>
+                              <p className="muted" style={{ marginBottom: 6 }}>
+                                Solution Steps
+                              </p>
+                              <MathText text={question.solutionSteps} />
+                            </div>
+                          )}
+                          {question.diagramData && (
+                            <div className="preview-box" style={{ marginTop: 8 }}>
+                              <p className="muted" style={{ marginBottom: 6 }}>
+                                Diagram
+                              </p>
+                              <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
+                                {JSON.stringify(question.diagramData, null, 2)}
+                              </pre>
+                            </div>
+                          )}
+                        </td>
+                        <td>
+                          <input
+                            className="input"
+                            type="number"
+                            min={1}
+                            value={getOrderDraftValue(question)}
+                            onChange={(event) => updateOrderDraft(questionId, event.target.value)}
+                            placeholder="Order index"
+                          />
+                        </td>
                         <td>{question.points ?? 0}</td>
                         <td>
                           <input
@@ -293,18 +558,43 @@ export default function AssessmentDetail() {
                         <td>
                           <div className="row" style={{ justifyContent: 'start' }}>
                             <button
+                              className="btn secondary"
+                              onClick={() => void updateAssessmentQuestion(questionId)}
+                              disabled={
+                                assessment.status !== 'DRAFT' ||
+                                updateAssessmentQuestionMutation.isPending
+                              }
+                            >
+                              {updateAssessmentQuestionMutation.isPending
+                                ? 'Đang cập nhật...'
+                                : 'Cập nhật'}
+                            </button>
+                            <button
                               className="btn"
                               onClick={() => void savePointsOverride(questionId)}
-                              disabled={assessment.status !== 'DRAFT' || pointsOverrideMutation.isPending}
+                              disabled={
+                                assessment.status !== 'DRAFT' || pointsOverrideMutation.isPending
+                              }
                             >
                               Lưu điểm
                             </button>
                             <button
                               className="btn secondary"
                               onClick={() => void clearPointsOverride(questionId)}
-                              disabled={assessment.status !== 'DRAFT' || pointsOverrideMutation.isPending}
+                              disabled={
+                                assessment.status !== 'DRAFT' || pointsOverrideMutation.isPending
+                              }
                             >
                               Xóa override
+                            </button>
+                            <button
+                              className="btn danger"
+                              onClick={() => void removeQuestionFromAssessment(questionId)}
+                              disabled={
+                                assessment.status !== 'DRAFT' || removeQuestionMutation.isPending
+                              }
+                            >
+                              {removeQuestionMutation.isPending ? 'Đang xóa...' : 'Xóa câu hỏi'}
                             </button>
                           </div>
                         </td>

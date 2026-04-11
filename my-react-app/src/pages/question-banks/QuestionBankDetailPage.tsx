@@ -3,21 +3,22 @@ import { ArrowLeft, Eye, EyeOff, Link2, Pencil, RefreshCw, Search, Trash2, Unlin
 import { useNavigate, useParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import MathText from '../../components/common/MathText';
-import { useGetQuestionsByBank } from '../../hooks/useQuestion';
+import {
+  useBatchAssignQuestionsToBank,
+  useBatchRemoveQuestionsFromBank,
+  useGetQuestionsByBank,
+  useSearchQuestions,
+} from '../../hooks/useQuestion';
 import {
   useDeleteQuestionBank,
   useGetQuestionBankById,
-  useGetQuestionBankTemplates,
-  useMapTemplateToQuestionBank,
   useToggleQuestionBankPublicStatus,
-  useUnmapTemplateFromQuestionBank,
   useUpdateQuestionBank,
 } from '../../hooks/useQuestionBank';
 import type { QuestionResponse } from '../../types/question';
 import type { QuestionBankRequest } from '../../types/questionBank';
 import '../../styles/module-refactor.css';
 import { QuestionBankFormModal } from './QuestionBankFormModal';
-import { useGetMyQuestionTemplates } from '../../hooks/useQuestionTemplate';
 
 const questionTypeLabel: Record<string, string> = {
   MULTIPLE_CHOICE: 'Trắc nghiệm',
@@ -38,14 +39,16 @@ export function QuestionBankDetailPage() {
   const navigate = useNavigate();
 
   const [search, setSearch] = useState('');
+  const [questionSearchKeyword, setQuestionSearchKeyword] = useState('');
+  const [questionSearchType, setQuestionSearchType] = useState<QuestionResponse['questionType'] | ''>('');
+  const [questionSearchPage, setQuestionSearchPage] = useState(0);
+  const [questionSearchSize] = useState(10);
+  const [selectedQuestionIds, setSelectedQuestionIds] = useState<Set<string>>(new Set());
+  const [batchMessage, setBatchMessage] = useState<string | null>(null);
+  const [batchError, setBatchError] = useState<string | null>(null);
   const [questionPage, setQuestionPage] = useState(0);
   const [pageSize] = useState(20);
   const [formOpen, setFormOpen] = useState(false);
-  const [templateSearch, setTemplateSearch] = useState('');
-  const [selectedTemplateId, setSelectedTemplateId] = useState('');
-  const [selectedTemplateIds, setSelectedTemplateIds] = useState<Set<string>>(new Set());
-  const [mappingMessage, setMappingMessage] = useState<string | null>(null);
-  const [mappingError, setMappingError] = useState<string | null>(null);
 
   const { data, isLoading, isError, error, refetch } = useGetQuestionBankById(
     bankId ?? '',
@@ -58,40 +61,33 @@ export function QuestionBankDetailPage() {
     error: questionsErrorValue,
     refetch: refetchQuestions,
   } = useGetQuestionsByBank(bankId ?? '', questionPage, pageSize, !!bankId);
-  const { data: mappedTemplatesData, refetch: refetchMappedTemplates } = useGetQuestionBankTemplates(
-    bankId ?? '',
+  const {
+    data: searchQuestionsData,
+    isLoading: searchQuestionsLoading,
+    isError: searchQuestionsError,
+    error: searchQuestionsErrorValue,
+    refetch: refetchSearchQuestions,
+  } = useSearchQuestions(
+    {
+      search: questionSearchKeyword,
+      type: questionSearchType,
+      page: questionSearchPage,
+      size: questionSearchSize,
+    },
     !!bankId
   );
-  const { data: myTemplatesData } = useGetMyQuestionTemplates(0, 200, 'createdAt', 'DESC');
 
   const updateMutation = useUpdateQuestionBank();
   const deleteMutation = useDeleteQuestionBank();
+  const batchAssignQuestionsMutation = useBatchAssignQuestionsToBank();
+  const batchRemoveQuestionsMutation = useBatchRemoveQuestionsFromBank();
   const togglePublicMutation = useToggleQuestionBankPublicStatus();
-  const mapTemplateMutation = useMapTemplateToQuestionBank();
-  const unmapTemplateMutation = useUnmapTemplateFromQuestionBank();
 
   const bank = data?.result;
   const questions = questionsData?.result?.content ?? [];
   const totalQuestionPages = questionsData?.result?.totalPages ?? 0;
-  const mappedTemplates = mappedTemplatesData?.result ?? [];
-  const myTemplates = myTemplatesData?.result?.content ?? [];
-
-  const unmappedTemplates = useMemo(() => {
-    const mappedIds = new Set(mappedTemplates.map((template) => template.id));
-    return myTemplates.filter((template) => !mappedIds.has(template.id));
-  }, [mappedTemplates, myTemplates]);
-
-  const filteredUnmappedTemplates = useMemo(() => {
-    if (!templateSearch.trim()) return unmappedTemplates;
-    const query = templateSearch.toLowerCase();
-    return unmappedTemplates.filter((template) => {
-      return (
-        template.name.toLowerCase().includes(query) ||
-        (template.description?.toLowerCase().includes(query) ?? false) ||
-        template.id.toLowerCase().includes(query)
-      );
-    });
-  }, [templateSearch, unmappedTemplates]);
+  const searchedQuestions = searchQuestionsData?.result?.content ?? [];
+  const totalSearchQuestionPages = searchQuestionsData?.result?.totalPages ?? 0;
 
   const filteredQuestions = useMemo(() => {
     if (!search.trim()) return questions;
@@ -105,6 +101,16 @@ export function QuestionBankDetailPage() {
       );
     });
   }, [questions, search]);
+
+  const allSearchedSelected = useMemo(() => {
+    return (
+      searchedQuestions.length > 0 &&
+      searchedQuestions.every((question) => selectedQuestionIds.has(question.id))
+    );
+  }, [searchedQuestions, selectedQuestionIds]);
+
+  const hasPendingBatchAction =
+    batchAssignQuestionsMutation.isPending || batchRemoveQuestionsMutation.isPending;
 
   async function handleSave(payload: QuestionBankRequest) {
     if (!bankId) return;
@@ -122,63 +128,45 @@ export function QuestionBankDetailPage() {
     navigate('/teacher/question-banks');
   }
 
-  async function handleMapTemplate() {
-    if (!bankId || !selectedTemplateId) return;
-    setMappingError(null);
-    setMappingMessage(null);
+  async function handleBatchAssignQuestions() {
+    if (!bankId || selectedQuestionIds.size === 0) return;
+    setBatchError(null);
+    setBatchMessage(null);
+
+    const uniqueQuestionIds = Array.from(new Set(selectedQuestionIds));
+
     try {
-      await mapTemplateMutation.mutateAsync({ id: bankId, templateId: selectedTemplateId });
-      setSelectedTemplateId('');
-      setTemplateSearch('');
-      setSelectedTemplateIds(new Set());
-      await refetchMappedTemplates();
-      setMappingMessage('Đã gán template vào question bank.');
+      const response = await batchAssignQuestionsMutation.mutateAsync({
+        bankId,
+        questionIds: uniqueQuestionIds,
+      });
+      const updatedCount = response.result ?? uniqueQuestionIds.length;
+      setBatchMessage(`Đã cập nhật ${updatedCount} câu hỏi.`);
+      setSelectedQuestionIds(new Set());
+      await Promise.all([refetch(), refetchQuestions(), refetchSearchQuestions()]);
     } catch (error) {
-      setMappingError(error instanceof Error ? error.message : 'Không thể gán template vào question bank.');
+      setBatchError(error instanceof Error ? error.message : 'Không thể thêm câu hỏi vào question bank.');
     }
   }
 
-  async function handleMapSelectedTemplates() {
-    if (!bankId || selectedTemplateIds.size === 0) return;
-    setMappingError(null);
-    setMappingMessage(null);
+  async function handleBatchRemoveQuestions() {
+    if (!bankId || selectedQuestionIds.size === 0) return;
+    setBatchError(null);
+    setBatchMessage(null);
 
-    const templateIds = Array.from(selectedTemplateIds);
-    const results = await Promise.allSettled(
-      templateIds.map((templateId) => mapTemplateMutation.mutateAsync({ id: bankId, templateId }))
-    );
+    const uniqueQuestionIds = Array.from(new Set(selectedQuestionIds));
 
-    const failedCount = results.filter((result) => result.status === 'rejected').length;
-    const successCount = results.length - failedCount;
-
-    setSelectedTemplateIds(new Set());
-    setSelectedTemplateId('');
-    setTemplateSearch('');
-    await refetchMappedTemplates();
-
-    if (failedCount === 0) {
-      setMappingMessage(`Đã gán ${successCount} template thành công.`);
-      return;
-    }
-
-    if (successCount === 0) {
-      setMappingError('Không thể gán template đã chọn. Vui lòng kiểm tra quyền truy cập.');
-      return;
-    }
-
-    setMappingError(`Đã gán ${successCount} template, thất bại ${failedCount} template.`);
-  }
-
-  async function handleUnmapTemplate(templateId: string) {
-    if (!bankId) return;
-    setMappingError(null);
-    setMappingMessage(null);
     try {
-      await unmapTemplateMutation.mutateAsync({ id: bankId, templateId });
-      await refetchMappedTemplates();
-      setMappingMessage('Đã gỡ template khỏi question bank.');
+      const response = await batchRemoveQuestionsMutation.mutateAsync({
+        bankId,
+        questionIds: uniqueQuestionIds,
+      });
+      const updatedCount = response.result ?? 0;
+      setBatchMessage(`Đã cập nhật ${updatedCount} câu hỏi.`);
+      setSelectedQuestionIds(new Set());
+      await Promise.all([refetch(), refetchQuestions(), refetchSearchQuestions()]);
     } catch (error) {
-      setMappingError(error instanceof Error ? error.message : 'Không thể gỡ template khỏi question bank.');
+      setBatchError(error instanceof Error ? error.message : 'Không thể gỡ câu hỏi khỏi question bank.');
     }
   }
 
@@ -276,62 +264,85 @@ export function QuestionBankDetailPage() {
               <article className="data-card" style={{ marginBottom: 16 }}>
                 <div className="row" style={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
                   <div>
-                    <h3>Template Mapping</h3>
-                    <p className="muted">Một question bank có thể gán nhiều question template.</p>
+                    <h3>Tìm câu hỏi và cập nhật theo lô</h3>
+                    <p className="muted">Dùng search để chọn nhiều câu hỏi rồi thêm/gỡ khỏi question bank hiện tại.</p>
                   </div>
-                  <span className="muted">Đã gán: {mappedTemplates.length}</span>
+                  <span className="muted">Đã chọn: {selectedQuestionIds.size}</span>
                 </div>
 
                 <div className="form-grid" style={{ marginTop: 12 }}>
                   <label>
-                    <p className="muted" style={{ marginBottom: 6 }}>Tìm template</p>
+                    <p className="muted" style={{ marginBottom: 6 }}>Từ khóa</p>
                     <input
                       className="input"
-                      value={templateSearch}
-                      onChange={(event) => setTemplateSearch(event.target.value)}
-                      placeholder="Tìm theo tên, mô tả, hoặc templateId"
+                      placeholder="Ví dụ: hàm số, phương trình, giới hạn..."
+                      value={questionSearchKeyword}
+                      onChange={(event) => {
+                        setQuestionSearchKeyword(event.target.value);
+                        setQuestionSearchPage(0);
+                      }}
                     />
                   </label>
-
                   <label>
-                    <p className="muted" style={{ marginBottom: 6 }}>Template khả dụng</p>
+                    <p className="muted" style={{ marginBottom: 6 }}>Loại câu hỏi</p>
                     <select
                       className="select"
-                      value={selectedTemplateId}
-                      onChange={(event) => setSelectedTemplateId(event.target.value)}
+                      value={questionSearchType}
+                      onChange={(event) => {
+                        setQuestionSearchType(event.target.value as QuestionResponse['questionType'] | '');
+                        setQuestionSearchPage(0);
+                      }}
                     >
-                      <option value="">Chọn template để gán</option>
-                      {filteredUnmappedTemplates.map((template) => (
-                        <option key={template.id} value={template.id}>
-                          {template.name} ({template.id.slice(0, 8)})
-                        </option>
-                      ))}
+                      <option value="">Tất cả</option>
+                      <option value="MULTIPLE_CHOICE">Trắc nghiệm</option>
+                      <option value="TRUE_FALSE">Đúng/Sai</option>
+                      <option value="SHORT_ANSWER">Trả lời ngắn</option>
+                      <option value="ESSAY">Tự luận</option>
+                      <option value="CODING">Lập trình</option>
                     </select>
                   </label>
                 </div>
 
-                <div className="row" style={{ flexWrap: 'wrap', marginTop: 10 }}>
-                  <button
-                    className="btn secondary"
-                    onClick={() => void handleMapTemplate()}
-                    disabled={!selectedTemplateId || mapTemplateMutation.isPending}
-                  >
-                    <Link2 size={14} />
-                    {mapTemplateMutation.isPending ? 'Đang gán...' : 'Gán template đã chọn'}
+                <div className="row" style={{ flexWrap: 'wrap', marginTop: 12 }}>
+                  <button className="btn secondary" onClick={() => void refetchSearchQuestions()}>
+                    <RefreshCw size={14} />
+                    Làm mới kết quả search
                   </button>
                   <button
                     className="btn"
-                    onClick={() => void handleMapSelectedTemplates()}
-                    disabled={selectedTemplateIds.size === 0 || mapTemplateMutation.isPending}
+                    onClick={() => void handleBatchAssignQuestions()}
+                    disabled={selectedQuestionIds.size === 0 || hasPendingBatchAction}
                   >
                     <Link2 size={14} />
-                    {mapTemplateMutation.isPending
-                      ? 'Đang gán theo lô...'
-                      : `Gán nhiều template (${selectedTemplateIds.size})`}
+                    {batchAssignQuestionsMutation.isPending
+                      ? 'Đang thêm theo lô...'
+                      : `Thêm vào bank (${selectedQuestionIds.size})`}
+                  </button>
+                  <button
+                    className="btn danger"
+                    onClick={() => void handleBatchRemoveQuestions()}
+                    disabled={selectedQuestionIds.size === 0 || hasPendingBatchAction}
+                  >
+                    <Unlink2 size={14} />
+                    {batchRemoveQuestionsMutation.isPending
+                      ? 'Đang gỡ theo lô...'
+                      : `Gỡ khỏi bank (${selectedQuestionIds.size})`}
                   </button>
                 </div>
 
-                {filteredUnmappedTemplates.length > 0 && (
+                {searchQuestionsLoading && (
+                  <div className="empty" style={{ marginTop: 12 }}>Đang tìm câu hỏi...</div>
+                )}
+
+                {searchQuestionsError && (
+                  <div className="empty" style={{ marginTop: 12 }}>
+                    {searchQuestionsErrorValue instanceof Error
+                      ? searchQuestionsErrorValue.message
+                      : 'Không thể tìm câu hỏi'}
+                  </div>
+                )}
+
+                {!searchQuestionsLoading && !searchQuestionsError && searchedQuestions.length > 0 && (
                   <div className="table-wrap" style={{ marginTop: 12 }}>
                     <table className="table">
                       <thead>
@@ -339,97 +350,91 @@ export function QuestionBankDetailPage() {
                           <th style={{ width: 50 }}>
                             <input
                               type="checkbox"
-                              checked={
-                                filteredUnmappedTemplates.length > 0 &&
-                                filteredUnmappedTemplates.every((template) =>
-                                  selectedTemplateIds.has(template.id)
-                                )
-                              }
+                              checked={allSearchedSelected}
                               onChange={(event) => {
                                 const checked = event.target.checked;
                                 if (!checked) {
-                                  setSelectedTemplateIds(new Set());
+                                  setSelectedQuestionIds(new Set());
                                   return;
                                 }
-                                setSelectedTemplateIds(new Set(filteredUnmappedTemplates.map((item) => item.id)));
+                                setSelectedQuestionIds(new Set(searchedQuestions.map((question) => question.id)));
                               }}
                             />
                           </th>
-                          <th>Tên template</th>
-                          <th style={{ width: 280 }}>Template ID</th>
+                          <th>Câu hỏi</th>
+                          <th style={{ width: 150 }}>Loại</th>
+                          <th style={{ width: 180 }}>Trạng thái</th>
+                          <th style={{ width: 220 }}>Thuộc bank</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {filteredUnmappedTemplates.slice(0, 30).map((template) => (
-                          <tr key={template.id}>
-                            <td>
-                              <input
-                                type="checkbox"
-                                checked={selectedTemplateIds.has(template.id)}
-                                onChange={(event) => {
-                                  const checked = event.target.checked;
-                                  setSelectedTemplateIds((prev) => {
-                                    const next = new Set(prev);
-                                    if (checked) next.add(template.id);
-                                    else next.delete(template.id);
-                                    return next;
-                                  });
-                                }}
-                              />
-                            </td>
-                            <td>{template.name}</td>
-                            <td>{template.id}</td>
-                          </tr>
-                        ))}
+                        {searchedQuestions.map((question) => {
+                          const isInCurrentBank = question.questionBankId === bankId;
+                          return (
+                            <tr key={question.id}>
+                              <td>
+                                <input
+                                  type="checkbox"
+                                  checked={selectedQuestionIds.has(question.id)}
+                                  onChange={(event) => {
+                                    const checked = event.target.checked;
+                                    setSelectedQuestionIds((prev) => {
+                                      const next = new Set(prev);
+                                      if (checked) next.add(question.id);
+                                      else next.delete(question.id);
+                                      return next;
+                                    });
+                                  }}
+                                />
+                              </td>
+                              <td>
+                                <MathText text={question.questionText} />
+                                <p className="muted" style={{ margin: 0 }}>{question.id}</p>
+                              </td>
+                              <td>{questionTypeLabel[question.questionType] || question.questionType}</td>
+                              <td>{question.questionStatus || '-'}</td>
+                              <td>
+                                {isInCurrentBank
+                                  ? 'Bank hiện tại'
+                                  : question.questionBankName || question.questionBankId || 'Chưa gán'}
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
                 )}
 
-                {mappedTemplates.length > 0 && (
-                  <div className="table-wrap" style={{ marginTop: 12 }}>
-                    <table className="table">
-                      <thead>
-                        <tr>
-                          <th>Template đã gán</th>
-                          <th style={{ width: 200 }}>Trạng thái</th>
-                          <th style={{ width: 220 }}>Thao tác</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {mappedTemplates.map((template) => (
-                          <tr key={template.id}>
-                            <td>
-                              <div>{template.name}</div>
-                              <p className="muted" style={{ margin: 0 }}>{template.id}</p>
-                            </td>
-                            <td>{template.status}</td>
-                            <td>
-                              <button
-                                className="btn danger"
-                                onClick={() => void handleUnmapTemplate(template.id)}
-                                disabled={unmapTemplateMutation.isPending}
-                              >
-                                <Unlink2 size={14} />
-                                Gỡ mapping
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                {!searchQuestionsLoading && !searchQuestionsError && searchedQuestions.length === 0 && (
+                  <div className="empty" style={{ marginTop: 12 }}>Không tìm thấy câu hỏi phù hợp.</div>
+                )}
+
+                {totalSearchQuestionPages > 1 && (
+                  <div className="row" style={{ justifyContent: 'center', marginTop: 12 }}>
+                    <button
+                      className="btn secondary"
+                      disabled={questionSearchPage === 0}
+                      onClick={() => setQuestionSearchPage((prev) => prev - 1)}
+                    >
+                      Trước
+                    </button>
+                    <span className="muted">Trang {questionSearchPage + 1} / {totalSearchQuestionPages}</span>
+                    <button
+                      className="btn secondary"
+                      disabled={questionSearchPage >= totalSearchQuestionPages - 1}
+                      onClick={() => setQuestionSearchPage((prev) => prev + 1)}
+                    >
+                      Sau
+                    </button>
                   </div>
                 )}
 
-                {mappedTemplates.length === 0 && (
-                  <div className="empty" style={{ marginTop: 12 }}>Question bank này chưa gán template nào.</div>
+                {batchMessage && (
+                  <div className="empty" style={{ marginTop: 12, color: '#166534' }}>{batchMessage}</div>
                 )}
-
-                {mappingMessage && (
-                  <div className="empty" style={{ marginTop: 12, color: '#166534' }}>{mappingMessage}</div>
-                )}
-                {mappingError && (
-                  <div className="empty" style={{ marginTop: 12, color: '#b91c1c' }}>{mappingError}</div>
+                {batchError && (
+                  <div className="empty" style={{ marginTop: 12, color: '#b91c1c' }}>{batchError}</div>
                 )}
               </article>
 
@@ -460,7 +465,28 @@ export function QuestionBankDetailPage() {
                     <tbody>
                       {filteredQuestions.map((question) => (
                         <tr key={question.id}>
-                          <td><MathText text={question.questionText} /></td>
+                          <td>
+                            <MathText text={question.questionText} />
+                            <div className="row" style={{ justifyContent: 'start', flexWrap: 'wrap', marginTop: 6 }}>
+                              {question.questionSourceType === 'AI_GENERATED' && <span className="badge draft">AI Generated</span>}
+                              {question.questionSourceType === 'TEMPLATE_GENERATED' && <span className="badge approved">Parametric</span>}
+                              {question.canonicalQuestionId && <span className="badge published">From Canonical</span>}
+                            </div>
+                            {question.solutionSteps && (
+                              <div className="preview-box" style={{ marginTop: 8 }}>
+                                <p className="muted" style={{ marginBottom: 6 }}>Solution Steps</p>
+                                <MathText text={question.solutionSteps} />
+                              </div>
+                            )}
+                            {question.diagramData && (
+                              <div className="preview-box" style={{ marginTop: 8 }}>
+                                <p className="muted" style={{ marginBottom: 6 }}>Diagram</p>
+                                <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
+                                  {JSON.stringify(question.diagramData, null, 2)}
+                                </pre>
+                              </div>
+                            )}
+                          </td>
                           <td>
                             {questionTypeLabel[question.questionType] || question.questionType}
                           </td>

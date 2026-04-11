@@ -56,6 +56,12 @@ export interface GenerateAssessmentFromMatrixRequest {
     selectionStrategy?: AssessmentSelectionStrategy;
 }
 
+export interface GenerateQuestionsForAssessmentRequest {
+    examMatrixId: string;
+    reuseApprovedQuestions?: boolean;
+    selectionStrategy?: AssessmentSelectionStrategy;
+}
+
 export interface AssessmentGenerationSummary {
     totalQuestionsGenerated?: number;
     questionsFromBank?: number;
@@ -75,6 +81,9 @@ export interface AssessmentQuestionItem {
     options?: Record<string, string>;
     correctAnswer?: string;
     explanation?: string;
+    solutionSteps?: string;
+    diagramData?: Record<string, unknown>;
+    canonicalQuestionId?: string;
     createdAt?: string;
     difficulty?: 'EASY' | 'MEDIUM' | 'HARD';
     points?: number;

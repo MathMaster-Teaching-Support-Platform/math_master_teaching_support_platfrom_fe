@@ -348,6 +348,59 @@
   border-bottom: none;
 }
 
+.module-layout-container .matrix-level-header {
+  text-align: center;
+}
+
+.module-layout-container .matrix-level-header--nb {
+  background: #f3f8ff;
+}
+
+.module-layout-container .matrix-level-header--th {
+  background: #eaf4ff;
+}
+
+.module-layout-container .matrix-level-header--vd {
+  background: #dcecff;
+}
+
+.module-layout-container .matrix-level-header--vdc {
+  background: #d0e4ff;
+}
+
+.module-layout-container .matrix-cell {
+  text-align: center;
+  min-width: 86px;
+}
+
+.module-layout-container .matrix-cell__count {
+  font-weight: 700;
+  color: var(--mod-ink);
+}
+
+.module-layout-container .matrix-cell__point {
+  font-size: 0.78rem;
+  color: var(--mod-slate-500);
+}
+
+.module-layout-container .matrix-cell--empty {
+  background: #fff6f6;
+  color: #b05a64;
+}
+
+.module-layout-container .matrix-chapter-row td {
+  background: #f6f9ff;
+  color: #365079;
+}
+
+.module-layout-container .matrix-total-row td {
+  background: #fbfcff;
+}
+
+.module-layout-container .matrix-grand-total-row td {
+  background: #edf4ff;
+}
+
 .module-layout-container .empty {
   border: 1px dashed #c8d8ee;
   border-radius: 14px;

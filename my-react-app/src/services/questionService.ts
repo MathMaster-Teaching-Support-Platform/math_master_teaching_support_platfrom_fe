@@ -2,7 +2,11 @@ import { API_BASE_URL, API_ENDPOINTS } from '../config/api.config';
 import { AuthService } from './api/auth.service';
 import type {
   BulkApproveRequest,
+  CreateQuestionRequest,
+  GetMyQuestionsParams,
+  QuestionIdsBatchRequest,
   QuestionResponse,
+  SearchQuestionsParams,
   UpdateQuestionRequest,
 } from '../types/question';
 import type { ApiResponse, PageResponse } from '../types/questionBank';
@@ -25,6 +29,39 @@ async function handleResponse<T>(res: Response): Promise<ApiResponse<T>> {
 }
 
 export const questionService = {
+  createQuestion: (request: CreateQuestionRequest) =>
+    fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTIONS}`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(request),
+    }).then(handleResponse<QuestionResponse>),
+
+  getQuestionById: (questionId: string) =>
+    fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTIONS_DETAIL(questionId)}`, {
+      headers: getAuthHeaders(),
+    }).then(handleResponse<QuestionResponse>),
+
+  getMyQuestions: (params: GetMyQuestionsParams = {}) => {
+    const query = new URLSearchParams({
+      page: String(params.page ?? 0),
+      size: String(params.size ?? 20),
+      sortBy: params.sortBy ?? 'createdAt',
+      sortDirection: params.sortDirection ?? 'DESC',
+    });
+
+    if (params.searchName?.trim()) {
+      query.set('name', params.searchName.trim());
+    }
+
+    if (params.searchTag?.trim()) {
+      query.set('tag', params.searchTag.trim());
+    }
+
+    return fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTIONS}?${query.toString()}`, {
+      headers: getAuthHeaders(),
+    }).then(handleResponse<PageResponse<QuestionResponse>>);
+  },
+
   getQuestionsByBank: (bankId: string, page = 0, size = 20) => {
     const params = new URLSearchParams({
       page: String(page),
@@ -34,6 +71,42 @@ export const questionService = {
     return fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTIONS_BY_BANK(bankId)}?${params.toString()}`, {
       headers: getAuthHeaders(),
     }).then(handleResponse<PageResponse<QuestionResponse>>);
+  },
+
+  searchQuestions: (params: SearchQuestionsParams = {}) => {
+    const query = new URLSearchParams({
+      page: String(params.page ?? 0),
+      size: String(params.size ?? 20),
+    });
+
+    if (params.search?.trim()) {
+      query.set('search', params.search.trim());
+    }
+
+    if (params.type) {
+      query.set('type', params.type);
+    }
+
+    return fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTIONS_SEARCH}?${query.toString()}`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    }).then(handleResponse<PageResponse<QuestionResponse>>);
+  },
+
+  batchAssignQuestionsToBank: (bankId: string, request: QuestionIdsBatchRequest) => {
+    return fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTIONS_BATCH_ASSIGN_TO_BANK(bankId)}`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(request),
+    }).then(handleResponse<number>);
+  },
+
+  batchRemoveQuestionsFromBank: (bankId: string, request: QuestionIdsBatchRequest) => {
+    return fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTIONS_BATCH_REMOVE_FROM_BANK(bankId)}`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(request),
+    }).then(handleResponse<number>);
   },
 
   getQuestionsByTemplate: (templateId: string) =>

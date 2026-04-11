@@ -66,6 +66,10 @@ export interface ApiResponse<T> {
 export interface SearchQuestionBanksParams {
   isPublic?: boolean;
   searchTerm?: string;
+  chapterId?: string;
+  subjectId?: string;
+  gradeLevel?: string;
+  mineOnly?: boolean;
   page?: number;
   size?: number;
   sortBy?: string;

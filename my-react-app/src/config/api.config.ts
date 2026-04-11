@@ -46,6 +46,7 @@ export const API_ENDPOINTS = {
   ASSESSMENTS_CLOSE: (id: string) => `/assessments/${id}/close`,
   ASSESSMENTS_CLONE: (id: string) => `/assessments/${id}/clone`,
   ASSESSMENTS_GENERATE_FROM_MATRIX: '/assessments/generate-from-matrix',
+  ASSESSMENTS_GENERATE: (assessmentId: string) => `/assessments/${assessmentId}/generate`,
   ASSESSMENTS_QUESTIONS: (assessmentId: string) => `/assessments/${assessmentId}/questions`,
   ASSESSMENTS_QUESTION_REMOVE: (assessmentId: string, questionId: string) =>
     `/assessments/${assessmentId}/questions/${questionId}`,
@@ -55,19 +56,15 @@ export const API_ENDPOINTS = {
   EXAM_MATRICES_MY: '/exam-matrices/my',
   EXAM_MATRIX_DETAIL: (matrixId: string) => `/exam-matrices/${matrixId}`,
   EXAM_MATRIX_BY_ASSESSMENT: (assessmentId: string) => `/exam-matrices/assessment/${assessmentId}`,
-  EXAM_MATRIX_MAPPINGS: (matrixId: string) => `/exam-matrices/${matrixId}/template-mappings`,
-  EXAM_MATRIX_MAPPING_DETAIL: (matrixId: string, mappingId: string) =>
-    `/exam-matrices/${matrixId}/template-mappings/${mappingId}`,
+  EXAM_MATRIX_BUILD: '/exam-matrices/build',
+  EXAM_MATRIX_TABLE: (matrixId: string) => `/exam-matrices/${matrixId}/table`,
+  EXAM_MATRIX_ROWS: (matrixId: string) => `/exam-matrices/${matrixId}/rows`,
+  EXAM_MATRIX_ROW_DETAIL: (matrixId: string, rowId: string) =>
+    `/exam-matrices/${matrixId}/rows/${rowId}`,
   EXAM_MATRIX_VALIDATE: (matrixId: string) => `/exam-matrices/${matrixId}/validate`,
   EXAM_MATRIX_APPROVE: (matrixId: string) => `/exam-matrices/${matrixId}/approve`,
   EXAM_MATRIX_LOCK: (matrixId: string) => `/exam-matrices/${matrixId}/lock`,
   EXAM_MATRIX_RESET: (matrixId: string) => `/exam-matrices/${matrixId}/reset`,
-  EXAM_MATRIX_MATCHING_TEMPLATES: (matrixId: string) =>
-    `/exam-matrices/${matrixId}/matching-templates`,
-  EXAM_MATRIX_GENERATE_PREVIEW: (matrixId: string, mappingId: string) =>
-    `/exam-matrices/${matrixId}/template-mappings/${mappingId}/generate-preview`,
-  EXAM_MATRIX_FINALIZE_PREVIEW: (matrixId: string, mappingId: string) =>
-    `/exam-matrices/${matrixId}/template-mappings/${mappingId}/finalize`,
 
   // Question banks
   QUESTION_BANKS: '/question-banks',
@@ -82,7 +79,11 @@ export const API_ENDPOINTS = {
   QUESTION_BANK_CAN_DELETE: (id: string) => `/question-banks/${id}/can-delete`,
 
   // Questions
+  QUESTIONS: '/questions',
+  QUESTIONS_SEARCH: '/questions/search',
   QUESTIONS_BY_BANK: (bankId: string) => `/questions/bank/${bankId}`,
+  QUESTIONS_BATCH_ASSIGN_TO_BANK: (bankId: string) => `/questions/bank/${bankId}/batch-assign`,
+  QUESTIONS_BATCH_REMOVE_FROM_BANK: (bankId: string) => `/questions/bank/${bankId}/batch-remove`,
   QUESTIONS_BY_TEMPLATE: (templateId: string) => `/questions/template/${templateId}`,
   QUESTIONS_DETAIL: (questionId: string) => `/questions/${questionId}`,
   QUESTIONS_APPROVE: (questionId: string) => `/questions/${questionId}/approve`,
@@ -212,9 +213,15 @@ export const API_ENDPOINTS = {
   QUESTION_TEMPLATE_AI_GENERATE_FROM_LESSON: '/question-templates/ai-generate-from-lesson',
   QUESTION_TEMPLATE_IMPORT_FROM_FILE: '/question-templates/import-from-file',
 
-  // Exam matrix template batch mapping
-  EXAM_MATRIX_TEMPLATE_MAPPINGS_BATCH: (matrixId: string) =>
-    `/exam-matrices/${matrixId}/template-mappings/batch`,
+  // Canonical questions
+  CANONICAL_QUESTIONS: '/canonical-questions',
+  CANONICAL_QUESTIONS_MY: '/canonical-questions/my',
+  CANONICAL_QUESTION_DETAIL: (id: string) => `/canonical-questions/${id}`,
+  CANONICAL_QUESTION_GENERATE_QUESTIONS: (id: string) =>
+    `/canonical-questions/${id}/generate-questions`,
+
+  // Latex render via backend proxy (QuickLaTeX)
+  LATEX_RENDER: '/latex/render',
 
   // Courses
   COURSES: '/courses',
@@ -246,6 +253,14 @@ export const API_ENDPOINTS = {
   STUDENT_ASSESSMENTS_DRAFT_SNAPSHOT: (attemptId: string) =>
     `/student-assessments/draft/${attemptId}`,
   STUDENT_ASSESSMENTS_SAVE_AND_EXIT: '/student-assessments/save-and-exit',
+
+  // Admin Dashboard
+  ADMIN_DASHBOARD_STATS: '/admin/dashboard/stats',
+  ADMIN_USERS_RECENT: '/users/admin/recent',
+  ADMIN_TRANSACTIONS: '/admin/transactions',
+  ADMIN_DASHBOARD_REVENUE_BY_MONTH: '/admin/dashboard/revenue-by-month',
+  ADMIN_DASHBOARD_QUICK_STATS: '/admin/dashboard/quick-stats',
+  ADMIN_SYSTEM_STATUS: '/admin/system/status',
 
   // Grading
   GRADING_QUEUE: '/grading/queue',
