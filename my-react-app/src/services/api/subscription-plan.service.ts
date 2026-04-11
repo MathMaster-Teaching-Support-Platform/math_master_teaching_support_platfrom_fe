@@ -2,16 +2,9 @@ import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
 import type { ApiResponse } from '../../types/auth.types';
 import { AuthService } from './auth.service';
 
-
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type BillingCycle =
-  | 'FOREVER'
-  | 'MONTH'
-  | 'THREE_MONTHS'
-  | 'SIX_MONTHS'
-  | 'YEAR'
-  | 'CUSTOM';
+export type BillingCycle = 'FOREVER' | 'MONTH' | 'THREE_MONTHS' | 'SIX_MONTHS' | 'YEAR' | 'CUSTOM';
 
 export type PlanStatus = 'ACTIVE' | 'INACTIVE';
 

@@ -8,14 +8,17 @@
 > **Base URL:** `http://<host>`  
 > ⚠️ Không có prefix `/api/` — tất cả admin endpoint bắt đầu từ `/admin/...`  
 > **Response wrapper:** Tất cả response wrap bởi `ApiResponse<T>`:
+>
 > ```json
 > { "code": 1000, "message": null, "result": <data> }
 > ```
+>
 > - `code: 1000` = thành công; không có field `success` hay `data` — FE đọc từ `result`
 >
 > **3 gói** căn chỉnh với `Pricing.tsx` (trang public):
+>
 > - **Miễn phí** — 0đ / forever
-> - **Giáo viên** — 199,000đ/tháng  
+> - **Giáo viên** — 199,000đ/tháng
 > - **Trường học** — `price: null` → hiển thị "Liên hệ"
 
 ---
@@ -52,7 +55,13 @@ GET /admin/subscription-plans
       "featured": false,
       "isPublic": true,
       "status": "ACTIVE",
-      "features": ["Tạo tối đa 10 bài giảng/tháng", "Lưu trữ 100MB", "Quản lý 1 lớp học", "AI trợ lý cơ bản", "Hỗ trợ email"],
+      "features": [
+        "Tạo tối đa 10 bài giảng/tháng",
+        "Lưu trữ 100MB",
+        "Quản lý 1 lớp học",
+        "AI trợ lý cơ bản",
+        "Hỗ trợ email"
+      ],
       "stats": { "activeUsers": 1250, "revenueThisMonth": 0, "growthPercent": 0.0 },
       "createdAt": "2025-01-01T00:00:00Z",
       "updatedAt": "2026-04-01T00:00:00Z"
@@ -68,7 +77,13 @@ GET /admin/subscription-plans
       "featured": true,
       "isPublic": true,
       "status": "ACTIVE",
-      "features": ["Tạo không giới hạn bài giảng", "Lưu trữ 10GB", "Quản lý không giới hạn lớp học", "AI trợ lý nâng cao", "Hỗ trợ ưu tiên"],
+      "features": [
+        "Tạo không giới hạn bài giảng",
+        "Lưu trữ 10GB",
+        "Quản lý không giới hạn lớp học",
+        "AI trợ lý nâng cao",
+        "Hỗ trợ ưu tiên"
+      ],
       "stats": { "activeUsers": 450, "revenueThisMonth": 89550000, "growthPercent": 12.3 },
       "createdAt": "2025-01-01T00:00:00Z",
       "updatedAt": "2026-04-01T00:00:00Z"
@@ -84,7 +99,11 @@ GET /admin/subscription-plans
       "featured": false,
       "isPublic": true,
       "status": "ACTIVE",
-      "features": ["Tất cả tính năng gói Giáo viên", "Không giới hạn tài khoản", "Lưu trữ không giới hạn"],
+      "features": [
+        "Tất cả tính năng gói Giáo viên",
+        "Không giới hạn tài khoản",
+        "Lưu trữ không giới hạn"
+      ],
       "stats": { "activeUsers": 30, "revenueThisMonth": 150000000, "growthPercent": 8.0 },
       "createdAt": "2025-01-01T00:00:00Z",
       "updatedAt": "2026-04-01T00:00:00Z"
@@ -139,15 +158,15 @@ POST /admin/subscription-plans
 }
 ```
 
-| Field          | Type                        | Bắt buộc | Mô tả                                                       |
-|----------------|-----------------------------|----------|-------------------------------------------------------------|
-| `name`         | string                      | ✅        | Không rỗng; slug tự động sinh từ đây (FE không cần gửi slug) |
-| `description`  | string                      | ❌        |                                                             |
-| `price`        | number (>= 0) hoặc `null`   | ❌        | `null` = enterprise/liên hệ; `0` = miễn phí                 |
-| `billingCycle` | enum string                 | ✅        | `FOREVER` \| `MONTH` \| `THREE_MONTHS` \| `SIX_MONTHS` \| `YEAR` \| `CUSTOM` |
-| `features`     | string[]                    | ✅        | Ít nhất 1 phần tử không rỗng                               |
-| `featured`     | boolean                     | ❌        | Default `false`                                             |
-| `isPublic`     | boolean                     | ❌        | Default `true`                                              |
+| Field          | Type                      | Bắt buộc | Mô tả                                                                        |
+| -------------- | ------------------------- | -------- | ---------------------------------------------------------------------------- |
+| `name`         | string                    | ✅       | Không rỗng; slug tự động sinh từ đây (FE không cần gửi slug)                 |
+| `description`  | string                    | ❌       |                                                                              |
+| `price`        | number (>= 0) hoặc `null` | ❌       | `null` = enterprise/liên hệ; `0` = miễn phí                                  |
+| `billingCycle` | enum string               | ✅       | `FOREVER` \| `MONTH` \| `THREE_MONTHS` \| `SIX_MONTHS` \| `YEAR` \| `CUSTOM` |
+| `features`     | string[]                  | ✅       | Ít nhất 1 phần tử không rỗng                                                 |
+| `featured`     | boolean                   | ❌       | Default `false`                                                              |
+| `isPublic`     | boolean                   | ❌       | Default `true`                                                               |
 
 ### Response — 201 Created
 
@@ -220,16 +239,16 @@ PUT /admin/subscription-plans/:planId
 }
 ```
 
-| Field          | Type                               | Bắt buộc | Mô tả                                     |
-|----------------|------------------------------------|----------|-------------------------------------------|
-| `name`         | string (not blank)                 | ✅        | Nếu gửi → slug được tái sinh tự động      |
-| `description`  | string                             | ❌        |                                           |
-| `price`        | number (>= 0) hoặc `null`          | ❌        |                                           |
-| `billingCycle` | enum string                        | ❌        |                                           |
-| `features`     | string[]                           | ❌        | Nếu gửi phải có ít nhất 1 phần tử        |
-| `featured`     | boolean                            | ❌        |                                           |
-| `isPublic`     | boolean                            | ❌        |                                           |
-| `status`       | `"ACTIVE"` \| `"INACTIVE"`         | ❌        | Dùng để deactivate plan                   |
+| Field          | Type                       | Bắt buộc | Mô tả                                |
+| -------------- | -------------------------- | -------- | ------------------------------------ |
+| `name`         | string (not blank)         | ✅       | Nếu gửi → slug được tái sinh tự động |
+| `description`  | string                     | ❌       |                                      |
+| `price`        | number (>= 0) hoặc `null`  | ❌       |                                      |
+| `billingCycle` | enum string                | ❌       |                                      |
+| `features`     | string[]                   | ❌       | Nếu gửi phải có ít nhất 1 phần tử    |
+| `featured`     | boolean                    | ❌       |                                      |
+| `isPublic`     | boolean                    | ❌       |                                      |
+| `status`       | `"ACTIVE"` \| `"INACTIVE"` | ❌       | Dùng để deactivate plan              |
 
 ### Response — 200 OK
 
@@ -302,9 +321,9 @@ GET /admin/subscription-plans/stats
 
 ### Query Params
 
-| Param   | Type   | Bắt buộc | Mô tả                                                       |
-|---------|--------|----------|-------------------------------------------------------------|
-| `month` | string | ❌        | Format `YYYY-MM`, mặc định tháng hiện tại (UTC). ⚠️ Không có `compareWith` — BE luôn so sánh với tháng liền trước |
+| Param   | Type   | Bắt buộc | Mô tả                                                                                                             |
+| ------- | ------ | -------- | ----------------------------------------------------------------------------------------------------------------- |
+| `month` | string | ❌       | Format `YYYY-MM`, mặc định tháng hiện tại (UTC). ⚠️ Không có `compareWith` — BE luôn so sánh với tháng liền trước |
 
 ### Response — 200 OK
 
@@ -353,14 +372,14 @@ GET /admin/subscription-plans/subscriptions
 
 ### Query Params
 
-| Param    | Type   | Bắt buộc | Mô tả                                                                                   |
-|----------|--------|----------|-----------------------------------------------------------------------------------------|
-| `page`   | number | ❌        | **0-indexed** (mặc định `0`) ⚠️ khác FE đề xuất 1-indexed                              |
-| `size`   | number | ❌        | Mặc định `10` ⚠️ tên là `size` không phải `limit`                                      |
-| `status` | string | ❌        | `"ACTIVE"` \| `"EXPIRED"` \| `"CANCELLED"` \| `"all"` — case-insensitive; không truyền = không lọc |
-| `planId` | UUID   | ❌        | Lọc theo plan                                                                           |
-| `sortBy` | string | ❌        | Mặc định `"createdAt"`                                                                  |
-| `order`  | string | ❌        | `"ASC"` \| `"DESC"`, mặc định `"DESC"`                                                 |
+| Param    | Type   | Bắt buộc | Mô tả                                                                                              |
+| -------- | ------ | -------- | -------------------------------------------------------------------------------------------------- |
+| `page`   | number | ❌       | **0-indexed** (mặc định `0`) ⚠️ khác FE đề xuất 1-indexed                                          |
+| `size`   | number | ❌       | Mặc định `10` ⚠️ tên là `size` không phải `limit`                                                  |
+| `status` | string | ❌       | `"ACTIVE"` \| `"EXPIRED"` \| `"CANCELLED"` \| `"all"` — case-insensitive; không truyền = không lọc |
+| `planId` | UUID   | ❌       | Lọc theo plan                                                                                      |
+| `sortBy` | string | ❌       | Mặc định `"createdAt"`                                                                             |
+| `order`  | string | ❌       | `"ASC"` \| `"DESC"`, mặc định `"DESC"`                                                             |
 
 ### Response — 200 OK
 
@@ -401,6 +420,7 @@ GET /admin/subscription-plans/subscriptions
 ```
 
 > ⚠️ **Pagination shape khác FE đề xuất** (Spring Data `Page<T>`):
+>
 > - `content` thay vì `items`
 > - `totalElements` thay vì `total`
 > - `pageable.pageNumber` (0-indexed) thay vì `pagination.page` (1-indexed)
@@ -424,23 +444,23 @@ GET /admin/subscription-plans/subscriptions
 
 ## Bảng thay đổi so với FE spec ban đầu
 
-| Feature                      | FE đề xuất                                       | BE thực tế                                                    |
-|------------------------------|--------------------------------------------------|---------------------------------------------------------------|
-| Base path                    | `/api/admin/...`                                 | `/admin/...` (không có `/api/`)                               |
-| Response wrapper             | `{ success, data }`                              | `{ code: 1000, result }` — đọc từ `result`                    |
-| Recent subs endpoint         | `/api/admin/subscriptions`                       | `/admin/subscription-plans/subscriptions`                     |
-| Pagination param             | `page` (1-indexed), `limit`                      | `page` (0-indexed), `size`                                    |
-| Pagination response          | `items`, `total`, `pagination.page`              | `content`, `totalElements`, `pageable.pageNumber`             |
-| `billingCycle` values        | `"month"`, `"3months"`, `"6months"`, `"year"`    | `MONTH`, `THREE_MONTHS`, `SIX_MONTHS`, `YEAR`, `FOREVER`, `CUSTOM` |
-| `isFeatured` field           | `isFeatured`                                     | `featured` (tên khác)                                         |
-| `price: null` cho enterprise | [UNKNOWN]                                        | ✅ Dùng `price: null` — không có `contactSales`               |
-| Slug generation              | [UNKNOWN]                                        | ✅ BE tự sinh từ `name`                                       |
-| Thay đổi giá khi có subscriber | [UNKNOWN]                                      | ✅ Cho phép — áp dụng cho subscription mới                    |
-| Xóa plan có active subscribers | [UNKNOWN]                                     | ❌ 400 `code: 1156` — phải deactivate trước                   |
-| `compareWith` param (stats)  | Có                                               | Không có — luôn so với tháng liền trước                       |
-| Period stats mặc định        | [UNKNOWN]                                        | ✅ Tháng hiện tại UTC                                         |
-| Endpoint gia hạn             | [UNKNOWN]                                        | ⏳ Chưa có — backlog                                          |
-| API chi tiết subscription    | [UNKNOWN]                                        | ✅ Không cần — dùng data trong row                            |
+| Feature                        | FE đề xuất                                    | BE thực tế                                                         |
+| ------------------------------ | --------------------------------------------- | ------------------------------------------------------------------ |
+| Base path                      | `/api/admin/...`                              | `/admin/...` (không có `/api/`)                                    |
+| Response wrapper               | `{ success, data }`                           | `{ code: 1000, result }` — đọc từ `result`                         |
+| Recent subs endpoint           | `/api/admin/subscriptions`                    | `/admin/subscription-plans/subscriptions`                          |
+| Pagination param               | `page` (1-indexed), `limit`                   | `page` (0-indexed), `size`                                         |
+| Pagination response            | `items`, `total`, `pagination.page`           | `content`, `totalElements`, `pageable.pageNumber`                  |
+| `billingCycle` values          | `"month"`, `"3months"`, `"6months"`, `"year"` | `MONTH`, `THREE_MONTHS`, `SIX_MONTHS`, `YEAR`, `FOREVER`, `CUSTOM` |
+| `isFeatured` field             | `isFeatured`                                  | `featured` (tên khác)                                              |
+| `price: null` cho enterprise   | [UNKNOWN]                                     | ✅ Dùng `price: null` — không có `contactSales`                    |
+| Slug generation                | [UNKNOWN]                                     | ✅ BE tự sinh từ `name`                                            |
+| Thay đổi giá khi có subscriber | [UNKNOWN]                                     | ✅ Cho phép — áp dụng cho subscription mới                         |
+| Xóa plan có active subscribers | [UNKNOWN]                                     | ❌ 400 `code: 1156` — phải deactivate trước                        |
+| `compareWith` param (stats)    | Có                                            | Không có — luôn so với tháng liền trước                            |
+| Period stats mặc định          | [UNKNOWN]                                     | ✅ Tháng hiện tại UTC                                              |
+| Endpoint gia hạn               | [UNKNOWN]                                     | ⏳ Chưa có — backlog                                               |
+| API chi tiết subscription      | [UNKNOWN]                                     | ✅ Không cần — dùng data trong row                                 |
 
 ---
 
@@ -448,20 +468,21 @@ GET /admin/subscription-plans/subscriptions
 
 **Cập nhật:** 2026-04-11 — FE Dev hoàn tất vòng 1
 
-| Feature                     | Vòng | Trạng thái FE  | Ghi chú                                                                 |
-|-----------------------------|------|----------------|-------------------------------------------------------------------------|
-| Danh sách gói               | 1    | ✅ Done         | `getPlans()` — loading / error / empty states đủ                        |
-| Tạo gói mới                 | 1    | ✅ Done         | Form đầy đủ (tên, mô tả, giá/liên hệ, billingCycle, features, flags), error `1155` handled |
-| Cập nhật gói                | 1    | ⚠️ Partial      | Service method `updatePlan()` sẵn sàng, modal UI chỉnh sửa chưa implement |
-| Xóa gói                     | 1    | ✅ Done         | `confirm()` dialog + error `1156` hiển thị thông báo rõ ràng            |
-| Thống kê doanh thu          | 1    | ✅ Done         | `getStats()` — 4 metric cards với trend; lỗi non-blocking (stats null)  |
-| Recent Subscriptions table  | 1    | ✅ Done         | `getSubscriptions()` — real data, pagination 0-indexed mapped, empty state |
-| Plan badge CSS mapping      | 1    | ✅ Done         | `planSlugToBadgeClass()` map `mien-phi→free`, `giao-vien→pro`, `truong-hoc→enterprise` |
-| Gia hạn subscription        | —    | ⏳ Backlog      | Endpoint chưa có từ BE — nút 🔄 disabled với `title="Tính năng đang phát triển"` |
-| `price: null` → "Liên hệ"  | 1    | ✅ Done         | `formatPrice()` util xử lý `null`                                       |
-| `featured` badge            | 1    | ✅ Done         | Dùng `plan.featured` thay vì `plan.name === 'Pro'`                      |
+| Feature                    | Vòng | Trạng thái FE | Ghi chú                                                                                    |
+| -------------------------- | ---- | ------------- | ------------------------------------------------------------------------------------------ |
+| Danh sách gói              | 1    | ✅ Done       | `getPlans()` — loading / error / empty states đủ                                           |
+| Tạo gói mới                | 1    | ✅ Done       | Form đầy đủ (tên, mô tả, giá/liên hệ, billingCycle, features, flags), error `1155` handled |
+| Cập nhật gói               | 1    | ⚠️ Partial    | Service method `updatePlan()` sẵn sàng, modal UI chỉnh sửa chưa implement                  |
+| Xóa gói                    | 1    | ✅ Done       | `confirm()` dialog + error `1156` hiển thị thông báo rõ ràng                               |
+| Thống kê doanh thu         | 1    | ✅ Done       | `getStats()` — 4 metric cards với trend; lỗi non-blocking (stats null)                     |
+| Recent Subscriptions table | 1    | ✅ Done       | `getSubscriptions()` — real data, pagination 0-indexed mapped, empty state                 |
+| Plan badge CSS mapping     | 1    | ✅ Done       | `planSlugToBadgeClass()` map `mien-phi→free`, `giao-vien→pro`, `truong-hoc→enterprise`     |
+| Gia hạn subscription       | —    | ⏳ Backlog    | Endpoint chưa có từ BE — nút 🔄 disabled với `title="Tính năng đang phát triển"`           |
+| `price: null` → "Liên hệ"  | 1    | ✅ Done       | `formatPrice()` util xử lý `null`                                                          |
+| `featured` badge           | 1    | ✅ Done       | Dùng `plan.featured` thay vì `plan.name === 'Pro'`                                         |
 
 ### Files thay đổi (Vòng 1)
+
 - `src/config/api.config.ts` — thêm 4 endpoints mới
 - `src/services/api/subscription-plan.service.ts` — tạo mới: types + service methods + utils
 - `src/pages/admin/SubscriptionManagement.tsx` — rewrite hoàn toàn: bỏ mọi mock data, tích hợp API thật

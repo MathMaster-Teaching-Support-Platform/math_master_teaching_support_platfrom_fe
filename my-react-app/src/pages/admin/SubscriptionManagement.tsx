@@ -1,17 +1,17 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockAdmin } from '../../data/mockData';
 import {
   SubscriptionPlanService,
-  planSlugToBadgeClass,
   formatPrice,
-  type SubscriptionPlan,
-  type UserSubscription,
-  type RevenueStats,
-  type CreatePlanPayload,
-  type UpdatePlanPayload,
-  type PlanStatus,
+  planSlugToBadgeClass,
   type BillingCycle,
+  type CreatePlanPayload,
+  type PlanStatus,
+  type RevenueStats,
+  type SubscriptionPlan,
+  type UpdatePlanPayload,
+  type UserSubscription,
 } from '../../services/api/subscription-plan.service';
 import './SubscriptionManagement.css';
 
@@ -242,10 +242,14 @@ const SubscriptionManagement: React.FC = () => {
 
   const statusLabel = (status: string) => {
     switch (status) {
-      case 'ACTIVE': return '✅ Hoạt động';
-      case 'EXPIRED': return '⏸️ Hết hạn';
-      case 'CANCELLED': return '🚫 Đã hủy';
-      default: return status;
+      case 'ACTIVE':
+        return '✅ Hoạt động';
+      case 'EXPIRED':
+        return '⏸️ Hết hạn';
+      case 'CANCELLED':
+        return '🚫 Đã hủy';
+      default:
+        return status;
     }
   };
 
@@ -277,12 +281,19 @@ const SubscriptionManagement: React.FC = () => {
             </div>
             <div className="stat-content">
               <div className="stat-value">
-                {statsLoading ? '...' : revenueStats ? formatCurrency(revenueStats.totalRevenue) : '—'}
+                {statsLoading
+                  ? '...'
+                  : revenueStats
+                    ? formatCurrency(revenueStats.totalRevenue)
+                    : '—'}
               </div>
               <div className="stat-label">Tổng doanh thu</div>
               {revenueStats && (
-                <div className={`stat-trend ${revenueStats.totalRevenueTrend >= 0 ? 'positive' : 'negative'}`}>
-                  {revenueStats.totalRevenueTrend >= 0 ? '+' : ''}{revenueStats.totalRevenueTrend.toFixed(1)}% so với tháng trước
+                <div
+                  className={`stat-trend ${revenueStats.totalRevenueTrend >= 0 ? 'positive' : 'negative'}`}
+                >
+                  {revenueStats.totalRevenueTrend >= 0 ? '+' : ''}
+                  {revenueStats.totalRevenueTrend.toFixed(1)}% so với tháng trước
                 </div>
               )}
             </div>
@@ -300,8 +311,11 @@ const SubscriptionManagement: React.FC = () => {
               </div>
               <div className="stat-label">Người dùng trả phí</div>
               {revenueStats && (
-                <div className={`stat-trend ${revenueStats.totalPaidUsersTrend >= 0 ? 'positive' : 'negative'}`}>
-                  {revenueStats.totalPaidUsersTrend >= 0 ? '+' : ''}{revenueStats.totalPaidUsersTrend.toFixed(1)}% so với tháng trước
+                <div
+                  className={`stat-trend ${revenueStats.totalPaidUsersTrend >= 0 ? 'positive' : 'negative'}`}
+                >
+                  {revenueStats.totalPaidUsersTrend >= 0 ? '+' : ''}
+                  {revenueStats.totalPaidUsersTrend.toFixed(1)}% so với tháng trước
                 </div>
               )}
             </div>
@@ -315,7 +329,11 @@ const SubscriptionManagement: React.FC = () => {
             </div>
             <div className="stat-content">
               <div className="stat-value">
-                {statsLoading ? '...' : revenueStats ? formatCurrency(revenueStats.avgRevenuePerUser) : '—'}
+                {statsLoading
+                  ? '...'
+                  : revenueStats
+                    ? formatCurrency(revenueStats.avgRevenuePerUser)
+                    : '—'}
               </div>
               <div className="stat-label">Doanh thu TB/người</div>
             </div>
@@ -329,7 +347,11 @@ const SubscriptionManagement: React.FC = () => {
             </div>
             <div className="stat-content">
               <div className="stat-value">
-                {statsLoading ? '...' : revenueStats ? `${revenueStats.conversionRate.toFixed(1)}%` : '—'}
+                {statsLoading
+                  ? '...'
+                  : revenueStats
+                    ? `${revenueStats.conversionRate.toFixed(1)}%`
+                    : '—'}
               </div>
               <div className="stat-label">Tỷ lệ chuyển đổi</div>
             </div>
@@ -341,7 +363,9 @@ const SubscriptionManagement: React.FC = () => {
           <h2 className="section-title">Các gói đăng ký</h2>
 
           {plansError && (
-            <div className="error-banner">⚠️ {plansError} <button onClick={fetchPlans}>Thử lại</button></div>
+            <div className="error-banner">
+              ⚠️ {plansError} <button onClick={fetchPlans}>Thử lại</button>
+            </div>
           )}
 
           {plansLoading ? (
@@ -358,7 +382,11 @@ const SubscriptionManagement: React.FC = () => {
                     <h3 className="plan-name">{plan.name}</h3>
                     <div className="plan-price">
                       <span className="price-amount">{formatPrice(plan.price)}</span>
-                      {plan.price !== null && <span className="price-period">/{plan.billingCycle === 'YEAR' ? 'năm' : 'tháng'}</span>}
+                      {plan.price !== null && (
+                        <span className="price-period">
+                          /{plan.billingCycle === 'YEAR' ? 'năm' : 'tháng'}
+                        </span>
+                      )}
                     </div>
                     <p className="plan-description">{plan.description}</p>
                   </div>
@@ -370,7 +398,9 @@ const SubscriptionManagement: React.FC = () => {
                         <li key={i}>✅ {feature}</li>
                       ))}
                       {plan.features.length > 5 && (
-                        <li className="more-features">+{plan.features.length - 5} tính năng khác</li>
+                        <li className="more-features">
+                          +{plan.features.length - 5} tính năng khác
+                        </li>
                       )}
                     </ul>
                   </div>
@@ -401,7 +431,9 @@ const SubscriptionManagement: React.FC = () => {
           <h2 className="section-title">Đăng ký gần đây</h2>
 
           {subsError && (
-            <div className="error-banner">⚠️ {subsError} <button onClick={() => fetchSubscriptions(subsPage)}>Thử lại</button></div>
+            <div className="error-banner">
+              ⚠️ {subsError} <button onClick={() => fetchSubscriptions(subsPage)}>Thử lại</button>
+            </div>
           )}
 
           <div className="subscriptions-table-container">
@@ -420,11 +452,15 @@ const SubscriptionManagement: React.FC = () => {
               <tbody>
                 {subsLoading ? (
                   <tr>
-                    <td colSpan={7} className="table-loading">Đang tải...</td>
+                    <td colSpan={7} className="table-loading">
+                      Đang tải...
+                    </td>
                   </tr>
                 ) : subscriptions.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="table-empty">Không có đăng ký nào.</td>
+                    <td colSpan={7} className="table-empty">
+                      Không có đăng ký nào.
+                    </td>
                   </tr>
                 ) : (
                   subscriptions.map((sub) => (
@@ -453,11 +489,7 @@ const SubscriptionManagement: React.FC = () => {
                       </td>
                       <td>
                         <div className="action-buttons">
-                          <button
-                            className="action-btn"
-                            title="Tính năng đang phát triển"
-                            disabled
-                          >
+                          <button className="action-btn" title="Tính năng đang phát triển" disabled>
                             🔄
                           </button>
                         </div>
@@ -479,7 +511,9 @@ const SubscriptionManagement: React.FC = () => {
               >
                 ← Trước
               </button>
-              <span className="page-info">Trang {subsPage + 1} / {subsTotalPages}</span>
+              <span className="page-info">
+                Trang {subsPage + 1} / {subsTotalPages}
+              </span>
               <button
                 className="btn btn-outline"
                 disabled={subsPage >= subsTotalPages - 1}
@@ -497,7 +531,9 @@ const SubscriptionManagement: React.FC = () => {
             <div className="modal" onClick={(e) => e.stopPropagation()}>
               <div className="modal-header">
                 <h2 className="modal-title">Chỉnh sửa gói: {editingPlan.name}</h2>
-                <button className="modal-close" onClick={() => setEditingPlan(null)}>✕</button>
+                <button className="modal-close" onClick={() => setEditingPlan(null)}>
+                  ✕
+                </button>
               </div>
 
               <div className="modal-body">
@@ -529,7 +565,9 @@ const SubscriptionManagement: React.FC = () => {
                         type="number"
                         disabled={editPriceIsContact}
                         value={editPriceIsContact ? '' : (editForm.price ?? 0)}
-                        onChange={(e) => setEditForm((f) => ({ ...f, price: Number(e.target.value) }))}
+                        onChange={(e) =>
+                          setEditForm((f) => ({ ...f, price: Number(e.target.value) }))
+                        }
                       />
                       <label style={{ whiteSpace: 'nowrap', fontWeight: 'normal' }}>
                         <input
@@ -546,10 +584,14 @@ const SubscriptionManagement: React.FC = () => {
                     <label>Thời hạn</label>
                     <select
                       value={editForm.billingCycle ?? 'MONTH'}
-                      onChange={(e) => setEditForm((f) => ({ ...f, billingCycle: e.target.value as BillingCycle }))}
+                      onChange={(e) =>
+                        setEditForm((f) => ({ ...f, billingCycle: e.target.value as BillingCycle }))
+                      }
                     >
                       {BILLING_CYCLE_OPTIONS.map((opt) => (
-                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -559,7 +601,9 @@ const SubscriptionManagement: React.FC = () => {
                   <label>Trạng thái</label>
                   <select
                     value={editForm.status ?? 'ACTIVE'}
-                    onChange={(e) => setEditForm((f) => ({ ...f, status: e.target.value as PlanStatus }))}
+                    onChange={(e) =>
+                      setEditForm((f) => ({ ...f, status: e.target.value as PlanStatus }))
+                    }
                   >
                     <option value="ACTIVE">✅ ACTIVE — Đang hoạt động</option>
                     <option value="INACTIVE">⏸️ INACTIVE — Vô hiệu hóa</option>
@@ -617,11 +661,23 @@ const SubscriptionManagement: React.FC = () => {
 
         {/* Create Plan Modal */}
         {showCreateModal && (
-          <div className="modal-overlay" onClick={() => { setShowCreateModal(false); setCreateError(null); }}>
+          <div
+            className="modal-overlay"
+            onClick={() => {
+              setShowCreateModal(false);
+              setCreateError(null);
+            }}
+          >
             <div className="modal" onClick={(e) => e.stopPropagation()}>
               <div className="modal-header">
                 <h2 className="modal-title">Tạo gói đăng ký mới</h2>
-                <button className="modal-close" onClick={() => { setShowCreateModal(false); setCreateError(null); }}>
+                <button
+                  className="modal-close"
+                  onClick={() => {
+                    setShowCreateModal(false);
+                    setCreateError(null);
+                  }}
+                >
                   ✕
                 </button>
               </div>
@@ -658,7 +714,9 @@ const SubscriptionManagement: React.FC = () => {
                         placeholder="0"
                         disabled={priceIsContact}
                         value={priceIsContact ? '' : (createForm.price ?? 0)}
-                        onChange={(e) => setCreateForm((f) => ({ ...f, price: Number(e.target.value) }))}
+                        onChange={(e) =>
+                          setCreateForm((f) => ({ ...f, price: Number(e.target.value) }))
+                        }
                       />
                       <label style={{ whiteSpace: 'nowrap', fontWeight: 'normal' }}>
                         <input
@@ -675,10 +733,17 @@ const SubscriptionManagement: React.FC = () => {
                     <label>Thời hạn *</label>
                     <select
                       value={createForm.billingCycle}
-                      onChange={(e) => setCreateForm((f) => ({ ...f, billingCycle: e.target.value as BillingCycle }))}
+                      onChange={(e) =>
+                        setCreateForm((f) => ({
+                          ...f,
+                          billingCycle: e.target.value as BillingCycle,
+                        }))
+                      }
                     >
                       {BILLING_CYCLE_OPTIONS.map((opt) => (
-                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -717,7 +782,10 @@ const SubscriptionManagement: React.FC = () => {
               <div className="modal-footer">
                 <button
                   className="btn btn-outline"
-                  onClick={() => { setShowCreateModal(false); setCreateError(null); }}
+                  onClick={() => {
+                    setShowCreateModal(false);
+                    setCreateError(null);
+                  }}
                   disabled={createLoading}
                 >
                   Hủy
@@ -757,8 +825,8 @@ const SubscriptionManagement: React.FC = () => {
                   </div>
                   <p>{selectedPlan.description}</p>
                   <div style={{ marginTop: '8px', fontSize: '0.85rem', color: '#888' }}>
-                    Slug: <code>{selectedPlan.slug}</code> &nbsp;|&nbsp;
-                    Trạng thái: <strong>{selectedPlan.status}</strong> &nbsp;|&nbsp;
+                    Slug: <code>{selectedPlan.slug}</code> &nbsp;|&nbsp; Trạng thái:{' '}
+                    <strong>{selectedPlan.status}</strong> &nbsp;|&nbsp;
                     {selectedPlan.featured ? '⭐ Gói nổi bật' : 'Gói thường'}
                   </div>
                 </div>
