@@ -46,34 +46,35 @@ import AdminRoadmapEditPage from '../pages/admin/AdminRoadmapEditPage';
 import AdminRoadmapManagementPage from '../pages/admin/AdminRoadmapManagementPage';
 import AdminRoadmapTopicsPage from '../pages/admin/AdminRoadmapTopicsPage';
 import ReviewProfiles from '../pages/admin/ReviewProfiles';
-import AssessmentDetail from '../pages/assessments/AssessmentDetail';
 import AssessmentBuilderFlow from '../pages/assessments/AssessmentBuilderFlow';
+import AssessmentDetail from '../pages/assessments/AssessmentDetail';
 import TeacherAssessments from '../pages/assessments/TeacherAssessments';
+import TeacherCourseLessons from '../pages/courses/TeacherCourseLessons';
 import { ExamMatrixDashboard } from '../pages/exam-matrices/ExamMatrixDashboard';
 import ExamMatrixDetailPage from '../pages/exam-matrices/ExamMatrixDetailPage';
+import TeacherLessonPlans from '../pages/lesson-plans/TeacherLessonPlans';
 import { MindmapEditor, TeacherMindmaps } from '../pages/mindmaps';
 import { QuestionBankDashboard } from '../pages/question-banks/QuestionBankDashboard';
 import { QuestionBankDetailPage } from '../pages/question-banks/QuestionBankDetailPage';
-import TeacherQuestionManagementPage from '../pages/questions/TeacherQuestionManagementPage';
 import { TemplateDashboard } from '../pages/question-templates/TemplateDashboard';
-import TeacherLessonPlans from '../pages/lesson-plans/TeacherLessonPlans';
-import TeacherCourseLessons from '../pages/courses/TeacherCourseLessons';
+import TeacherQuestionManagementPage from '../pages/questions/TeacherQuestionManagementPage';
 // Student Assessment Routes
 import {
-  StudentAssessmentList,
-  AssessmentDetail as StudentAssessmentDetail,
-  TakeAssessment,
   AssessmentResult,
+  AssessmentDetail as StudentAssessmentDetail,
+  StudentAssessmentList,
+  TakeAssessment,
 } from '../pages/student-assessments';
 // Grading Routes
 import {
-  GradingQueue,
-  GradingDetail,
   GradingAnalytics,
+  GradingDetail,
+  GradingQueue,
   RegradeRequestList,
 } from '../pages/grading';
 // Test Components
 import MathTextTest from '../components/common/MathTextTest';
+import PrivateRoute from './PrivateRoute';
 
 const router = createBrowserRouter([
   {
@@ -126,249 +127,516 @@ const router = createBrowserRouter([
   },
   {
     path: '/dashboard',
-    element: <RoadmapDashboardPage />,
+    element: (
+      <PrivateRoute>
+        <RoadmapDashboardPage />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/roadmaps',
-    element: <RoadmapCatalogPage />,
+    element: (
+      <PrivateRoute>
+        <RoadmapCatalogPage />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/roadmaps/:roadmapId',
-    element: <RoadmapDetailPage />,
+    element: (
+      <PrivateRoute>
+        <RoadmapDetailPage />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/roadmaps/:roadmapId/entry-test/take',
-    element: <TakeRoadmapEntryTest />,
+    element: (
+      <PrivateRoute>
+        <TakeRoadmapEntryTest />
+      </PrivateRoute>
+    ),
   },
-  // Shared Routes
+  // Shared Routes (require login)
   {
     path: '/notifications',
-    element: <NotificationCenter />,
+    element: (
+      <PrivateRoute>
+        <NotificationCenter />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/search',
-    element: <SearchResults />,
+    element: (
+      <PrivateRoute>
+        <SearchResults />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/forum',
-    element: <Forum />,
+    element: (
+      <PrivateRoute>
+        <Forum />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/help',
-    element: <HelpCenter />,
+    element: (
+      <PrivateRoute>
+        <HelpCenter />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/chat',
-    element: <LiveChat />,
+    element: (
+      <PrivateRoute>
+        <LiveChat />
+      </PrivateRoute>
+    ),
   },
   // Profile (includes Teacher Profile management)
   {
     path: '/profile',
-    element: <Profile />,
+    element: (
+      <PrivateRoute>
+        <Profile />
+      </PrivateRoute>
+    ),
   },
   // Backward compatibility routes
   {
     path: '/submit-teacher-profile',
-    element: <Profile />,
+    element: (
+      <PrivateRoute>
+        <Profile />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/my-teacher-profile',
-    element: <Profile />,
+    element: (
+      <PrivateRoute>
+        <Profile />
+      </PrivateRoute>
+    ),
   },
   // Teacher Routes
   {
     path: '/teacher/dashboard',
-    element: <TeacherDashboard />,
+    element: (
+      <PrivateRoute>
+        <TeacherDashboard />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/teacher/courses',
-    element: <TeacherCourses />,
+    element: (
+      <PrivateRoute>
+        <TeacherCourses />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/teacher/lesson-plans',
-    element: <TeacherLessonPlans />,
+    element: (
+      <PrivateRoute>
+        <TeacherLessonPlans />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/teacher/courses/:courseId/lessons',
-    element: <TeacherCourseLessons />,
+    element: (
+      <PrivateRoute>
+        <TeacherCourseLessons />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/teacher/materials',
-    element: <MaterialsGenerator />,
+    element: (
+      <PrivateRoute>
+        <MaterialsGenerator />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/teacher/assignments',
-    element: <TeacherAssignments />,
+    element: (
+      <PrivateRoute>
+        <TeacherAssignments />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/teacher/assessments',
-    element: <TeacherAssessments />,
+    element: (
+      <PrivateRoute>
+        <TeacherAssessments />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/teacher/assessment-builder',
-    element: <AssessmentBuilderFlow />,
+    element: (
+      <PrivateRoute>
+        <AssessmentBuilderFlow />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/teacher/assessments/:id',
-    element: <AssessmentDetail />,
+    element: (
+      <PrivateRoute>
+        <AssessmentDetail />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/teacher/mindmaps',
-    element: <TeacherMindmaps />,
+    element: (
+      <PrivateRoute>
+        <TeacherMindmaps />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/teacher/mindmaps/:id',
-    element: <MindmapEditor />,
+    element: (
+      <PrivateRoute>
+        <MindmapEditor />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/teacher/question-templates',
-    element: <TemplateDashboard />,
+    element: (
+      <PrivateRoute>
+        <TemplateDashboard />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/teacher/question-banks',
-    element: <QuestionBankDashboard />,
+    element: (
+      <PrivateRoute>
+        <QuestionBankDashboard />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/teacher/question-banks/:bankId',
-    element: <QuestionBankDetailPage />,
+    element: (
+      <PrivateRoute>
+        <QuestionBankDetailPage />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/teacher/questions',
-    element: <TeacherQuestionManagementPage />,
+    element: (
+      <PrivateRoute>
+        <TeacherQuestionManagementPage />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/teacher/exam-matrices',
-    element: <ExamMatrixDashboard />,
+    element: (
+      <PrivateRoute>
+        <ExamMatrixDashboard />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/teacher/exam-matrices/:matrixId',
-    element: <ExamMatrixDetailPage />,
+    element: (
+      <PrivateRoute>
+        <ExamMatrixDetailPage />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/teacher/analytics',
-    element: <TeacherAnalytics />,
+    element: (
+      <PrivateRoute>
+        <TeacherAnalytics />
+      </PrivateRoute>
+    ),
   },
   // Grading Routes
   {
     path: '/teacher/grading',
-    element: <GradingQueue />,
+    element: (
+      <PrivateRoute>
+        <GradingQueue />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/teacher/grading/:submissionId',
-    element: <GradingDetail />,
+    element: (
+      <PrivateRoute>
+        <GradingDetail />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/teacher/grading/analytics',
-    element: <GradingAnalytics />,
+    element: (
+      <PrivateRoute>
+        <GradingAnalytics />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/teacher/grading/regrade-requests',
-    element: <RegradeRequestList />,
+    element: (
+      <PrivateRoute>
+        <RegradeRequestList />
+      </PrivateRoute>
+    ),
   },
-  { path: '/teacher/students', element: <TeacherStudents /> },
-  { path: '/teacher/ai-assistant', element: <AIAssistant /> },
-  { path: '/teacher/ai-slide-generator', element: <AISlideGenerator /> },
+  {
+    path: '/teacher/students',
+    element: (
+      <PrivateRoute>
+        <TeacherStudents />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/teacher/ai-assistant',
+    element: (
+      <PrivateRoute>
+        <AIAssistant />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/teacher/ai-slide-generator',
+    element: (
+      <PrivateRoute>
+        <AISlideGenerator />
+      </PrivateRoute>
+    ),
+  },
   {
     path: '/teacher/settings',
-    element: <ProfileSettings />,
+    element: (
+      <PrivateRoute>
+        <ProfileSettings />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/teacher/*',
-    element: <TeacherDashboard />,
+    element: (
+      <PrivateRoute>
+        <TeacherDashboard />
+      </PrivateRoute>
+    ),
   },
   // Student Routes
   {
     path: '/student/dashboard',
-    element: <StudentDashboard />,
+    element: (
+      <PrivateRoute>
+        <StudentDashboard />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/student/courses',
-    element: <StudentCourses />,
+    element: (
+      <PrivateRoute>
+        <StudentCourses />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/student/assignments',
-    element: <StudentAssignments />,
+    element: (
+      <PrivateRoute>
+        <StudentAssignments />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/student/grades',
-    element: <StudentGrades />,
+    element: (
+      <PrivateRoute>
+        <StudentGrades />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/student/roadmap',
-    element: <StudentRoadmap />,
+    element: (
+      <PrivateRoute>
+        <StudentRoadmap />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/student/wallet',
-    element: <StudentWallet />,
+    element: (
+      <PrivateRoute>
+        <StudentWallet />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/student/certificates',
-    element: <Certificates />,
+    element: (
+      <PrivateRoute>
+        <Certificates />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/student/calendar',
-    element: <Calendar />,
+    element: (
+      <PrivateRoute>
+        <Calendar />
+      </PrivateRoute>
+    ),
   },
   // Student Assessment Routes
   {
     path: '/student/assessments',
-    element: <StudentAssessmentList />,
+    element: (
+      <PrivateRoute>
+        <StudentAssessmentList />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/student/assessments/:assessmentId',
-    element: <StudentAssessmentDetail />,
+    element: (
+      <PrivateRoute>
+        <StudentAssessmentDetail />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/student/assessments/:assessmentId/take',
-    element: <TakeAssessment />,
+    element: (
+      <PrivateRoute>
+        <TakeAssessment />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/student/assessments/result/:submissionId',
-    element: <AssessmentResult />,
+    element: (
+      <PrivateRoute>
+        <AssessmentResult />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/student/settings',
-    element: <ProfileSettings />,
+    element: (
+      <PrivateRoute>
+        <ProfileSettings />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/student/*',
-    element: <StudentDashboard />,
+    element: (
+      <PrivateRoute>
+        <StudentDashboard />
+      </PrivateRoute>
+    ),
   },
   // Admin Routes
   {
     path: '/admin/dashboard',
-    element: <AdminDashboard />,
+    element: (
+      <PrivateRoute>
+        <AdminDashboard />
+      </PrivateRoute>
+    ),
   },
-  { path: '/admin/users', element: <UserManagement /> },
+  {
+    path: '/admin/users',
+    element: (
+      <PrivateRoute>
+        <UserManagement />
+      </PrivateRoute>
+    ),
+  },
   {
     path: '/admin/subscriptions',
-    element: <SubscriptionManagement />,
+    element: (
+      <PrivateRoute>
+        <SubscriptionManagement />
+      </PrivateRoute>
+    ),
   },
   // Teacher Profile Management (Admin)
   {
     path: '/admin/review-profiles',
-    element: <ReviewProfiles />,
+    element: (
+      <PrivateRoute>
+        <ReviewProfiles />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/admin/roadmaps',
-    element: <AdminRoadmapManagementPage />,
+    element: (
+      <PrivateRoute>
+        <AdminRoadmapManagementPage />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/admin/roadmaps/create',
-    element: <AdminRoadmapCreatePage />,
+    element: (
+      <PrivateRoute>
+        <AdminRoadmapCreatePage />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/admin/roadmaps/edit/:roadmapId',
-    element: <AdminRoadmapEditPage />,
+    element: (
+      <PrivateRoute>
+        <AdminRoadmapEditPage />
+      </PrivateRoute>
+    ),
   },
   {
     path: '/admin/roadmaps/:roadmapId/topics',
-    element: <AdminRoadmapTopicsPage />,
+    element: (
+      <PrivateRoute>
+        <AdminRoadmapTopicsPage />
+      </PrivateRoute>
+    ),
   },
-  { path: '/admin/settings', element: <ProfileSettings /> },
+  {
+    path: '/admin/settings',
+    element: (
+      <PrivateRoute>
+        <ProfileSettings />
+      </PrivateRoute>
+    ),
+  },
   {
     path: '/admin/*',
-    element: <AdminDashboard />,
+    element: (
+      <PrivateRoute>
+        <AdminDashboard />
+      </PrivateRoute>
+    ),
   },
   // Test Routes (remove in production)
   {
