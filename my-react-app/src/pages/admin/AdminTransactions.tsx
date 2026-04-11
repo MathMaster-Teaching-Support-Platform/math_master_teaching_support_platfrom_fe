@@ -1,250 +1,285 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
 import { mockAdmin } from '../../data/mockData';
+import { AuthService } from '../../services/api/auth.service';
 import './AdminTransactions.css';
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-
-interface MockTransaction {
+interface AdminTransaction {
   id: string;
   userId: string;
   userName: string;
   userEmail: string;
+  planId?: string | null;
   planName: string;
   amount: number;
   status: 'completed' | 'pending' | 'failed';
   paymentMethod: string;
-  orderCode: string;
+  orderCode: string | number;
   createdAt: string;
 }
-
-const MOCK_TRANSACTIONS: MockTransaction[] = [
-  {
-    id: 'txn-001a2b3c',
-    userId: 'u-101',
-    userName: 'Nguyễn Văn An',
-    userEmail: 'an.nguyen@gmail.com',
-    planName: 'Gói Pro - 1 tháng',
-    amount: 99000,
-    status: 'completed',
-    paymentMethod: 'payos',
-    orderCode: 'ORD-2026-0001',
-    createdAt: '2026-04-11T08:23:11Z',
-  },
-  {
-    id: 'txn-002c4d5e',
-    userId: 'u-102',
-    userName: 'Trần Thị Bình',
-    userEmail: 'binh.tran@yahoo.com',
-    planName: 'Gói Pro - 3 tháng',
-    amount: 279000,
-    status: 'completed',
-    paymentMethod: 'payos',
-    orderCode: 'ORD-2026-0002',
-    createdAt: '2026-04-11T09:05:44Z',
-  },
-  {
-    id: 'txn-003f6g7h',
-    userId: 'u-103',
-    userName: 'Lê Minh Cường',
-    userEmail: 'cuong.le@outlook.com',
-    planName: 'Gói Premium - 1 năm',
-    amount: 990000,
-    status: 'completed',
-    paymentMethod: 'payos',
-    orderCode: 'ORD-2026-0003',
-    createdAt: '2026-04-10T14:41:00Z',
-  },
-  {
-    id: 'txn-004i8j9k',
-    userId: 'u-104',
-    userName: 'Phạm Thị Duyên',
-    userEmail: 'duyen.pham@gmail.com',
-    planName: 'Gói Pro - 1 tháng',
-    amount: 99000,
-    status: 'pending',
-    paymentMethod: 'payos',
-    orderCode: 'ORD-2026-0004',
-    createdAt: '2026-04-10T16:22:33Z',
-  },
-  {
-    id: 'txn-005l0m1n',
-    userId: 'u-105',
-    userName: 'Hoàng Đức Hiếu',
-    userEmail: 'hieu.hoang@student.edu.vn',
-    planName: 'Gói Pro - 6 tháng',
-    amount: 549000,
-    status: 'failed',
-    paymentMethod: 'payos',
-    orderCode: 'ORD-2026-0005',
-    createdAt: '2026-04-10T10:09:55Z',
-  },
-  {
-    id: 'txn-006p2q3r',
-    userId: 'u-106',
-    userName: 'Vũ Thanh Liêm',
-    userEmail: 'liem.vu@gmail.com',
-    planName: 'Gói Premium - 6 tháng',
-    amount: 1350000,
-    status: 'completed',
-    paymentMethod: 'payos',
-    orderCode: 'ORD-2026-0006',
-    createdAt: '2026-04-09T11:30:00Z',
-  },
-  {
-    id: 'txn-007s4t5u',
-    userId: 'u-107',
-    userName: 'Đặng Thị Mai',
-    userEmail: 'mai.dang@teacher.edu.vn',
-    planName: 'Gói Pro - 1 tháng',
-    amount: 99000,
-    status: 'completed',
-    paymentMethod: 'payos',
-    orderCode: 'ORD-2026-0007',
-    createdAt: '2026-04-09T08:15:22Z',
-  },
-  {
-    id: 'txn-008v6w7x',
-    userId: 'u-108',
-    userName: 'Bùi Quốc Nam',
-    userEmail: 'nam.bui@gmail.com',
-    planName: 'Gói Pro - 3 tháng',
-    amount: 279000,
-    status: 'completed',
-    paymentMethod: 'payos',
-    orderCode: 'ORD-2026-0008',
-    createdAt: '2026-04-08T19:45:01Z',
-  },
-  {
-    id: 'txn-009y8z9a',
-    userId: 'u-109',
-    userName: 'Ngô Nhật Quang',
-    userEmail: 'quang.ngo@gmail.com',
-    planName: 'Gói Premium - 1 năm',
-    amount: 990000,
-    status: 'pending',
-    paymentMethod: 'payos',
-    orderCode: 'ORD-2026-0009',
-    createdAt: '2026-04-08T13:12:50Z',
-  },
-  {
-    id: 'txn-010b1c2d',
-    userId: 'u-110',
-    userName: 'Trịnh Khánh Linh',
-    userEmail: 'linh.trinh@yahoo.com',
-    planName: 'Gói Pro - 1 tháng',
-    amount: 99000,
-    status: 'failed',
-    paymentMethod: 'payos',
-    orderCode: 'ORD-2026-0010',
-    createdAt: '2026-04-08T07:58:39Z',
-  },
-  {
-    id: 'txn-011e3f4g',
-    userId: 'u-111',
-    userName: 'Lý Thành Đức',
-    userEmail: 'duc.ly@gmail.com',
-    planName: 'Gói Pro - 6 tháng',
-    amount: 549000,
-    status: 'completed',
-    paymentMethod: 'payos',
-    orderCode: 'ORD-2026-0011',
-    createdAt: '2026-04-07T15:27:10Z',
-  },
-  {
-    id: 'txn-012h5i6j',
-    userId: 'u-112',
-    userName: 'Phan Thị Hồng',
-    userEmail: 'hong.phan@student.edu.vn',
-    planName: 'Gói Pro - 1 tháng',
-    amount: 99000,
-    status: 'completed',
-    paymentMethod: 'payos',
-    orderCode: 'ORD-2026-0012',
-    createdAt: '2026-04-07T10:03:21Z',
-  },
-  {
-    id: 'txn-013k7l8m',
-    userId: 'u-113',
-    userName: 'Cao Minh Tuấn',
-    userEmail: 'tuan.cao@teacher.edu.vn',
-    planName: 'Gói Premium - 6 tháng',
-    amount: 1350000,
-    status: 'completed',
-    paymentMethod: 'payos',
-    orderCode: 'ORD-2026-0013',
-    createdAt: '2026-04-06T09:44:00Z',
-  },
-  {
-    id: 'txn-014n9o0p',
-    userId: 'u-114',
-    userName: 'Đinh Thị Lan',
-    userEmail: 'lan.dinh@gmail.com',
-    planName: 'Gói Pro - 3 tháng',
-    amount: 279000,
-    status: 'failed',
-    paymentMethod: 'payos',
-    orderCode: 'ORD-2026-0014',
-    createdAt: '2026-04-06T17:11:44Z',
-  },
-  {
-    id: 'txn-015q1r2s',
-    userId: 'u-115',
-    userName: 'Hồ Văn Phúc',
-    userEmail: 'phuc.ho@gmail.com',
-    planName: 'Gói Premium - 1 năm',
-    amount: 990000,
-    status: 'completed',
-    paymentMethod: 'payos',
-    orderCode: 'ORD-2026-0015',
-    createdAt: '2026-04-05T12:00:00Z',
-  },
-];
 
 const PAGE_SIZE = 10;
 
 type StatusFilter = 'all' | 'completed' | 'pending' | 'failed';
 
+interface ApiResponse<T> {
+  code: number;
+  message?: string;
+  result: T;
+}
+
+interface TransactionsPageResult {
+  items: AdminTransaction[];
+  totalItems: number;
+  totalPages: number;
+  currentPage: number;
+}
+
+interface TransactionStats {
+  total: number;
+  completed: number;
+  pending: number;
+  failed: number;
+  totalRevenue: number;
+}
+
+const DEFAULT_STATS: TransactionStats = {
+  total: 0,
+  completed: 0,
+  pending: 0,
+  failed: 0,
+  totalRevenue: 0,
+};
+
+const extractErrorMessage = async (res: Response, fallback: string): Promise<string> => {
+  const contentType = res.headers.get('content-type') || '';
+  if (contentType.includes('application/json')) {
+    const json = await res.json().catch(() => null);
+    if (json?.message) return String(json.message);
+  }
+  return fallback;
+};
+
+const parseApiResponse = async <T,>(res: Response): Promise<T> => {
+  const payload = (await res.json().catch(() => null)) as ApiResponse<T> | null;
+  if (!res.ok) {
+    throw new Error(payload?.message || `HTTP ${res.status}`);
+  }
+  if (payload?.code !== 1000) {
+    throw new Error(payload?.message || `Lỗi hệ thống (code: ${payload?.code ?? 'unknown'})`);
+  }
+  return payload.result;
+};
+
+const authHeaders = (): Record<string, string> => {
+  const token = AuthService.getToken();
+  if (!token) throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+  return {
+    Authorization: `Bearer ${token}`,
+    accept: '*/*',
+  };
+};
+
+const formatCurrency = (amount: number): string =>
+  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+
+const formatDate = (iso: string): string =>
+  new Date(iso).toLocaleString('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+const statusLabel = (s: AdminTransaction['status']): string => {
+  if (s === 'completed') return 'Thành công';
+  if (s === 'pending') return 'Đang xử lý';
+  return 'Thất bại';
+};
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const AdminTransactions: React.FC = () => {
+  const [transactions, setTransactions] = useState<AdminTransaction[]>([]);
+  const [stats, setStats] = useState<TransactionStats>(DEFAULT_STATS);
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [page, setPage] = useState(0);
-  const [selectedTxn, setSelectedTxn] = useState<MockTransaction | null>(null);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalItems, setTotalItems] = useState(0);
+  const [selectedTxn, setSelectedTxn] = useState<AdminTransaction | null>(null);
 
-  // ── Derived stats ──────────────────────────────────────────────────────────
-  const stats = useMemo(() => {
-    const all = MOCK_TRANSACTIONS;
-    const completed = all.filter((t) => t.status === 'completed');
-    const pending = all.filter((t) => t.status === 'pending');
-    const failed = all.filter((t) => t.status === 'failed');
-    const totalRevenue = completed.reduce((s, t) => s + t.amount, 0);
-    return {
-      total: all.length,
-      completed: completed.length,
-      pending: pending.length,
-      failed: failed.length,
-      totalRevenue,
+  const [listLoading, setListLoading] = useState(false);
+  const [statsLoading, setStatsLoading] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
+  const [detailLoadingId, setDetailLoadingId] = useState<string | null>(null);
+
+  const [listError, setListError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const timer = globalThis.setTimeout(() => {
+      setDebouncedSearch(search.trim());
+    }, 350);
+
+    return () => {
+      globalThis.clearTimeout(timer);
     };
+  }, [search]);
+
+  const fetchTransactions = useCallback(async () => {
+    setListLoading(true);
+    setListError(null);
+
+    try {
+      const params = new URLSearchParams({
+        page: String(page),
+        size: String(PAGE_SIZE),
+        sortBy: 'createdAt',
+        order: 'DESC',
+      });
+
+      if (statusFilter !== 'all') params.set('status', statusFilter);
+      if (debouncedSearch) params.set('search', debouncedSearch);
+
+      const requestUrl = `${API_BASE_URL}${API_ENDPOINTS.ADMIN_TRANSACTIONS}?${params.toString()}`;
+
+      const res = await fetch(requestUrl, {
+        method: 'GET',
+        headers: authHeaders(),
+      });
+
+      const result = await parseApiResponse<TransactionsPageResult>(res);
+      setTotalPages(result.totalPages);
+      setTotalItems(result.totalItems);
+
+      // Keep FE page aligned with server paging to avoid empty list due to stale page state.
+      if (result.totalPages > 0 && result.currentPage >= result.totalPages) {
+        setPage(0);
+        return;
+      }
+
+      if (result.currentPage !== page) {
+        setPage(result.currentPage);
+        return;
+      }
+
+      setTransactions(result.items);
+    } catch (error) {
+      setTransactions([]);
+      setTotalPages(0);
+      setTotalItems(0);
+      setListError(error instanceof Error ? error.message : 'Không thể tải danh sách giao dịch.');
+    } finally {
+      setListLoading(false);
+    }
+  }, [debouncedSearch, page, statusFilter]);
+
+  const fetchStats = useCallback(async () => {
+    setStatsLoading(true);
+
+    try {
+      const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ADMIN_TRANSACTIONS_STATS}`, {
+        method: 'GET',
+        headers: authHeaders(),
+      });
+
+      const result = await parseApiResponse<TransactionStats>(res);
+      setStats(result);
+    } catch (error) {
+      setStats(DEFAULT_STATS);
+    } finally {
+      setStatsLoading(false);
+    }
   }, []);
 
-  // ── Filtering ──────────────────────────────────────────────────────────────
-  const filtered = useMemo(() => {
-    return MOCK_TRANSACTIONS.filter((t) => {
-      const matchSearch =
-        !search ||
-        t.userName.toLowerCase().includes(search.toLowerCase()) ||
-        t.userEmail.toLowerCase().includes(search.toLowerCase()) ||
-        t.orderCode.toLowerCase().includes(search.toLowerCase()) ||
-        t.planName.toLowerCase().includes(search.toLowerCase());
-      const matchStatus = statusFilter === 'all' || t.status === statusFilter;
-      return matchSearch && matchStatus;
-    });
-  }, [search, statusFilter]);
+  useEffect(() => {
+    void fetchTransactions();
+  }, [fetchTransactions]);
 
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-  const paginated = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  useEffect(() => {
+    void fetchStats();
+  }, [fetchStats]);
+
+  const pageStart = useMemo(() => {
+    if (totalItems === 0) return 0;
+    return page * PAGE_SIZE + 1;
+  }, [page, totalItems]);
+
+  const pageEnd = useMemo(() => {
+    if (totalItems === 0) return 0;
+    return Math.min((page + 1) * PAGE_SIZE, totalItems);
+  }, [page, totalItems]);
+
+  const tableRows = useMemo(() => {
+    if (listLoading) {
+      return (
+        <tr>
+          <td colSpan={8} className="txn-empty">
+            Đang tải giao dịch...
+          </td>
+        </tr>
+      );
+    }
+
+    if (listError) {
+      return (
+        <tr>
+          <td colSpan={8} className="txn-empty">
+            {listError}
+          </td>
+        </tr>
+      );
+    }
+
+    if (transactions.length === 0) {
+      return (
+        <tr>
+          <td colSpan={8} className="txn-empty">
+            Không tìm thấy giao dịch nào phù hợp.
+          </td>
+        </tr>
+      );
+    }
+
+    return transactions.map((txn) => (
+      <tr key={txn.id}>
+        <td className="txn-order-code">{String(txn.orderCode)}</td>
+        <td>
+          <div className="txn-user-cell">
+            <div className="txn-user-avatar">{txn.userName.charAt(0)}</div>
+            <div>
+              <div className="txn-user-name">{txn.userName}</div>
+              <div className="txn-user-email">{txn.userEmail}</div>
+            </div>
+          </div>
+        </td>
+        <td className="txn-plan-name">{txn.planName}</td>
+        <td className="txn-amount">{formatCurrency(txn.amount)}</td>
+        <td>
+          <span className="txn-payment-badge">💳 {txn.paymentMethod}</span>
+        </td>
+        <td>
+          <span className={`txn-status-badge txn-status-badge--${txn.status}`}>
+            {statusLabel(txn.status)}
+          </span>
+        </td>
+        <td className="txn-date">{formatDate(txn.createdAt)}</td>
+        <td>
+          <button
+            className="txn-btn-detail"
+            title="Xem chi tiết"
+            disabled={detailLoadingId === txn.id}
+            onClick={() => handleOpenDetail(txn.id)}
+          >
+            {detailLoadingId === txn.id ? '⏳ Đang tải...' : '👁️ Chi tiết'}
+          </button>
+        </td>
+      </tr>
+    ));
+  }, [detailLoadingId, listError, listLoading, transactions]);
 
   const handleFilterChange = (s: StatusFilter) => {
     setStatusFilter(s);
@@ -256,23 +291,78 @@ const AdminTransactions: React.FC = () => {
     setPage(0);
   };
 
-  // ── Formatters ─────────────────────────────────────────────────────────────
-  const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+  const displayStat = (value: number): string => {
+    if (statsLoading) return '...';
+    return value.toLocaleString('vi-VN');
+  };
 
-  const formatDate = (iso: string) =>
-    new Date(iso).toLocaleString('vi-VN', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+  const displayRevenue = (): string => {
+    if (statsLoading) return '...';
+    return formatCurrency(stats.totalRevenue);
+  };
 
-  const statusLabel = (s: MockTransaction['status']): string => {
-    if (s === 'completed') return 'Thành công';
-    if (s === 'pending') return 'Đang xử lý';
-    return 'Thất bại';
+  const exportButtonLabel = exportLoading ? '⏳ Đang xuất...' : '📥 Xuất CSV';
+
+  const handleRefresh = async () => {
+    await Promise.all([fetchTransactions(), fetchStats()]);
+  };
+
+  const handleExportCsv = async () => {
+    setExportLoading(true);
+
+    try {
+      const params = new URLSearchParams();
+      if (statusFilter !== 'all') params.set('status', statusFilter);
+      if (search.trim()) params.set('search', search.trim());
+      const query = params.toString() ? `?${params.toString()}` : '';
+
+      const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ADMIN_TRANSACTIONS_EXPORT}${query}`, {
+        method: 'GET',
+        headers: authHeaders(),
+      });
+
+      if (!res.ok) {
+        const message = await extractErrorMessage(res, `Export thất bại (HTTP ${res.status})`);
+        throw new Error(message);
+      }
+
+      const blob = await res.blob();
+      const disposition = res.headers.get('content-disposition') || '';
+      const fileNameMatch = /filename="?([^"]+)"?/i.exec(disposition);
+      const fileName = fileNameMatch?.[1] ?? 'transactions.csv';
+
+      const url = globalThis.URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = fileName;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      globalThis.URL.revokeObjectURL(url);
+    } catch {
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
+  const handleOpenDetail = async (transactionId: string) => {
+    setDetailLoadingId(transactionId);
+
+    try {
+      const res = await fetch(
+        `${API_BASE_URL}${API_ENDPOINTS.ADMIN_TRANSACTION_DETAIL(transactionId)}`,
+        {
+          method: 'GET',
+          headers: authHeaders(),
+        }
+      );
+
+      const result = await parseApiResponse<AdminTransaction>(res);
+      setSelectedTxn(result);
+    } catch {
+    } finally {
+      setDetailLoadingId(null);
+    }
   };
 
   return (
@@ -289,8 +379,12 @@ const AdminTransactions: React.FC = () => {
             <p className="page-subtitle">Theo dõi toàn bộ lịch sử thanh toán trên hệ thống</p>
           </div>
           <div className="header-actions">
-            <button className="btn btn-outline">📥 Xuất CSV</button>
-            <button className="btn btn-primary">🔄 Làm mới</button>
+            <button className="btn btn-outline" onClick={handleExportCsv} disabled={exportLoading}>
+              {exportButtonLabel}
+            </button>
+            <button className="btn btn-primary" onClick={handleRefresh}>
+              🔄 Làm mới
+            </button>
           </div>
         </div>
 
@@ -305,7 +399,7 @@ const AdminTransactions: React.FC = () => {
             </div>
             <div className="txn-stat-info">
               <div className="txn-stat-label">Tổng giao dịch</div>
-              <div className="txn-stat-value">{stats.total.toLocaleString('vi-VN')}</div>
+              <div className="txn-stat-value">{displayStat(stats.total)}</div>
             </div>
           </div>
           <div className="txn-stat-card" style={{ borderTopColor: '#43e97b' }}>
@@ -317,7 +411,7 @@ const AdminTransactions: React.FC = () => {
             </div>
             <div className="txn-stat-info">
               <div className="txn-stat-label">Thành công</div>
-              <div className="txn-stat-value">{stats.completed.toLocaleString('vi-VN')}</div>
+              <div className="txn-stat-value">{displayStat(stats.completed)}</div>
             </div>
           </div>
           <div className="txn-stat-card" style={{ borderTopColor: '#fbbf24' }}>
@@ -329,7 +423,7 @@ const AdminTransactions: React.FC = () => {
             </div>
             <div className="txn-stat-info">
               <div className="txn-stat-label">Đang xử lý</div>
-              <div className="txn-stat-value">{stats.pending.toLocaleString('vi-VN')}</div>
+              <div className="txn-stat-value">{displayStat(stats.pending)}</div>
             </div>
           </div>
           <div className="txn-stat-card" style={{ borderTopColor: '#f56565' }}>
@@ -341,7 +435,7 @@ const AdminTransactions: React.FC = () => {
             </div>
             <div className="txn-stat-info">
               <div className="txn-stat-label">Thất bại</div>
-              <div className="txn-stat-value">{stats.failed.toLocaleString('vi-VN')}</div>
+              <div className="txn-stat-value">{displayStat(stats.failed)}</div>
             </div>
           </div>
           <div
@@ -356,9 +450,7 @@ const AdminTransactions: React.FC = () => {
             </div>
             <div className="txn-stat-info">
               <div className="txn-stat-label">Tổng doanh thu (đã thu)</div>
-              <div className="txn-stat-value txn-stat-value--lg">
-                {formatCurrency(stats.totalRevenue)}
-              </div>
+              <div className="txn-stat-value txn-stat-value--lg">{displayRevenue()}</div>
             </div>
           </div>
         </div>
@@ -383,11 +475,7 @@ const AdminTransactions: React.FC = () => {
                 onClick={() => handleFilterChange(s)}
               >
                 {s === 'all' ? 'Tất cả' : statusLabel(s)}
-                <span className="txn-tab-count">
-                  {s === 'all'
-                    ? MOCK_TRANSACTIONS.length
-                    : MOCK_TRANSACTIONS.filter((t) => t.status === s).length}
-                </span>
+                <span className="txn-tab-count">{s === 'all' ? stats.total : stats[s]}</span>
               </button>
             ))}
           </div>
@@ -409,50 +497,7 @@ const AdminTransactions: React.FC = () => {
                   <th>Hành động</th>
                 </tr>
               </thead>
-              <tbody>
-                {paginated.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="txn-empty">
-                      Không tìm thấy giao dịch nào phù hợp.
-                    </td>
-                  </tr>
-                ) : (
-                  paginated.map((txn) => (
-                    <tr key={txn.id}>
-                      <td className="txn-order-code">{txn.orderCode}</td>
-                      <td>
-                        <div className="txn-user-cell">
-                          <div className="txn-user-avatar">{txn.userName.charAt(0)}</div>
-                          <div>
-                            <div className="txn-user-name">{txn.userName}</div>
-                            <div className="txn-user-email">{txn.userEmail}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="txn-plan-name">{txn.planName}</td>
-                      <td className="txn-amount">{formatCurrency(txn.amount)}</td>
-                      <td>
-                        <span className="txn-payment-badge">💳 PayOS</span>
-                      </td>
-                      <td>
-                        <span className={`txn-status-badge txn-status-badge--${txn.status}`}>
-                          {statusLabel(txn.status)}
-                        </span>
-                      </td>
-                      <td className="txn-date">{formatDate(txn.createdAt)}</td>
-                      <td>
-                        <button
-                          className="txn-btn-detail"
-                          title="Xem chi tiết"
-                          onClick={() => setSelectedTxn(txn)}
-                        >
-                          👁️ Chi tiết
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
+              <tbody>{tableRows}</tbody>
             </table>
           </div>
 
@@ -460,8 +505,7 @@ const AdminTransactions: React.FC = () => {
           {totalPages > 1 && (
             <div className="txn-pagination">
               <span className="txn-pagination-info">
-                Hiển thị {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, filtered.length)}{' '}
-                / {filtered.length} giao dịch
+                Hiển thị {pageStart}–{pageEnd} / {totalItems} giao dịch
               </span>
               <div className="txn-pagination-btns">
                 <button
@@ -483,7 +527,7 @@ const AdminTransactions: React.FC = () => {
                 <button
                   className="txn-page-btn"
                   disabled={page === totalPages - 1}
-                  onClick={() => setPage((p) => p + 1)}
+                  onClick={() => setPage((p) => Math.min(p + 1, totalPages - 1))}
                 >
                   Sau ›
                 </button>
@@ -494,14 +538,8 @@ const AdminTransactions: React.FC = () => {
 
         {/* Detail Modal */}
         {selectedTxn && (
-          <div
-            className="txn-modal-overlay"
-            onClick={() => setSelectedTxn(null)}
-            onKeyDown={(e) => {
-              if (e.key === 'Escape') setSelectedTxn(null);
-            }}
-          >
-            <dialog open className="txn-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="txn-modal-overlay">
+            <dialog open className="txn-modal">
               <div className="txn-modal-header">
                 <h2 className="txn-modal-title">Chi tiết giao dịch</h2>
                 <button className="txn-modal-close" onClick={() => setSelectedTxn(null)}>
@@ -515,7 +553,9 @@ const AdminTransactions: React.FC = () => {
                 </div>
                 <div className="txn-detail-row">
                   <span className="txn-detail-label">Mã đơn hàng</span>
-                  <span className="txn-detail-value monospace">{selectedTxn.orderCode}</span>
+                  <span className="txn-detail-value monospace">
+                    {String(selectedTxn.orderCode)}
+                  </span>
                 </div>
                 <div className="txn-detail-row">
                   <span className="txn-detail-label">Người dùng</span>
@@ -537,7 +577,7 @@ const AdminTransactions: React.FC = () => {
                 </div>
                 <div className="txn-detail-row">
                   <span className="txn-detail-label">Phương thức</span>
-                  <span className="txn-detail-value">💳 PayOS</span>
+                  <span className="txn-detail-value">💳 {selectedTxn.paymentMethod}</span>
                 </div>
                 <div className="txn-detail-row">
                   <span className="txn-detail-label">Trạng thái</span>

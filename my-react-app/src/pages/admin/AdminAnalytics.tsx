@@ -415,7 +415,10 @@ const AdminAnalytics: React.FC = () => {
                         ))}
                       </Pie>
                       <Tooltip
-                        formatter={(v) => { const n = typeof v === 'number' ? v : 0; return [`${n.toLocaleString('vi-VN')} đăng ký`, ''] as [string, string]; }}
+                        formatter={(v) => {
+                          const n = typeof v === 'number' ? v : 0;
+                          return [`${n.toLocaleString('vi-VN')} đăng ký`, ''] as [string, string];
+                        }}
                       />
                       <Legend
                         layout="vertical"
@@ -589,7 +592,12 @@ const AdminAnalytics: React.FC = () => {
                         align="right"
                         wrapperStyle={{ fontSize: 12 }}
                       />
-                      <Tooltip formatter={(v) => { const n = typeof v === 'number' ? v : 0; return [`${n}%`, 'Retention'] as [string, string]; }} />
+                      <Tooltip
+                        formatter={(v) => {
+                          const n = typeof v === 'number' ? v : 0;
+                          return [`${n}%`, 'Retention'] as [string, string];
+                        }}
+                      />
                     </RadialBarChart>
                   </ResponsiveContainer>
                 </div>
@@ -772,7 +780,10 @@ const AdminAnalytics: React.FC = () => {
                         ))}
                       </Pie>
                       <Tooltip
-                        formatter={(v) => { const n = typeof v === 'number' ? v : 0; return [n.toLocaleString('vi-VN'), 'Giao dịch'] as [string, string]; }}
+                        formatter={(v) => {
+                          const n = typeof v === 'number' ? v : 0;
+                          return [n.toLocaleString('vi-VN'), 'Giao dịch'] as [string, string];
+                        }}
                       />
                       <Legend wrapperStyle={{ fontSize: 12 }} />
                     </PieChart>
@@ -809,7 +820,12 @@ const AdminAnalytics: React.FC = () => {
                       tickLine={false}
                       axisLine={false}
                     />
-                    <Tooltip formatter={(v) => { const n = typeof v === 'number' ? v : 0; return [fmtCurrency(n), 'Doanh thu'] as [string, string]; }} />
+                    <Tooltip
+                      formatter={(v) => {
+                        const n = typeof v === 'number' ? v : 0;
+                        return [fmtCurrency(n), 'Doanh thu'] as [string, string];
+                      }}
+                    />
                     <Bar dataKey="revenue" name="Doanh thu" radius={[0, 6, 6, 0]}>
                       {PLAN_SALES.map((p) => (
                         <Cell key={p.name} fill={p.fill} />
