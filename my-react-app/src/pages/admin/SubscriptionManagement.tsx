@@ -1,43 +1,252 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
-import { mockAdmin, mockSubscriptionPlans } from '../../data/mockData';
+import { mockAdmin } from '../../data/mockData';
+import {
+  SubscriptionPlanService,
+  planSlugToBadgeClass,
+  formatPrice,
+  type SubscriptionPlan,
+  type UserSubscription,
+  type RevenueStats,
+  type CreatePlanPayload,
+  type UpdatePlanPayload,
+  type PlanStatus,
+  type BillingCycle,
+} from '../../services/api/subscription-plan.service';
 import './SubscriptionManagement.css';
 
-// Fixed timestamp for consistent data generation
-const FIXED_TIMESTAMP = 1738713600000; // Feb 5, 2026
+const BILLING_CYCLE_OPTIONS: { label: string; value: BillingCycle }[] = [
+  { label: '1 tháng', value: 'MONTH' },
+  { label: '3 tháng', value: 'THREE_MONTHS' },
+  { label: '6 tháng', value: 'SIX_MONTHS' },
+  { label: '1 năm', value: 'YEAR' },
+  { label: 'Mãi mãi (Miễn phí)', value: 'FOREVER' },
+  { label: 'Tuỳ chỉnh (Doanh nghiệp)', value: 'CUSTOM' },
+];
+
+const INITIAL_CREATE_FORM: CreatePlanPayload = {
+  name: '',
+  description: '',
+  price: 0,
+  billingCycle: 'MONTH',
+  features: [],
+  featured: false,
+  isPublic: true,
+};
+
+const formatCurrency = (amount: number) =>
+  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 
 const SubscriptionManagement: React.FC = () => {
-  const subscriptionData = useMemo(() => {
-    return mockSubscriptionPlans.map((plan, index) => {
-      const seed = index * 17 + 53;
-      return {
-        ...plan,
-        description: `Gói ${plan.name} - Tốt nhất cho ${plan.name === 'Basic' ? 'cá nhân' : plan.name === 'Pro' ? 'giáo viên' : 'tổ chức'}`,
-        activeUsers: 50 + (seed % 500),
-        revenue: 10000000 + (seed % 50000000),
-        growth: ((seed % 25) - 5).toFixed(1),
-      };
-    });
-  }, []);
+  // ── Plans state ─────────────────────────────────────────────────────────────
+  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
+  const [plansLoading, setPlansLoading] = useState(true);
+  const [plansError, setPlansError] = useState<string | null>(null);
 
-  const [selectedPlan, setSelectedPlan] = useState<(typeof subscriptionData)[0] | null>(null);
+  // ── Revenue stats state ──────────────────────────────────────────────────────
+  const [revenueStats, setRevenueStats] = useState<RevenueStats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+
+  // ── Subscriptions table state ────────────────────────────────────────────────
+  const [subscriptions, setSubscriptions] = useState<UserSubscription[]>([]);
+  const [subsLoading, setSubsLoading] = useState(true);
+  const [subsError, setSubsError] = useState<string | null>(null);
+  const [subsPage, setSubsPage] = useState(0); // 0-indexed per BE
+  const [subsTotalPages, setSubsTotalPages] = useState(1);
+
+  // ── Modal state ──────────────────────────────────────────────────────────────
+  const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
-  const stats = {
-    totalRevenue: subscriptionData.reduce((sum, plan) => sum + plan.revenue, 0),
-    totalUsers: subscriptionData.reduce((sum, plan) => sum + plan.activeUsers, 0),
-    avgRevenue: Math.floor(
-      subscriptionData.reduce((sum, plan) => sum + plan.revenue, 0) /
-        subscriptionData.reduce((sum, plan) => sum + plan.activeUsers, 0)
-    ),
-    conversionRate: 23.5,
+  // ── Create form state ────────────────────────────────────────────────────────
+  const [createForm, setCreateForm] = useState<CreatePlanPayload>(INITIAL_CREATE_FORM);
+  const [featuresText, setFeaturesText] = useState('');
+  const [priceIsContact, setPriceIsContact] = useState(false);
+  const [createLoading, setCreateLoading] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+
+  // ── Edit form state ─────────────────────────────────────────────────────────
+  const [editingPlan, setEditingPlan] = useState<SubscriptionPlan | null>(null);
+  const [editForm, setEditForm] = useState<UpdatePlanPayload>({});
+  const [editFeaturesText, setEditFeaturesText] = useState('');
+  const [editPriceIsContact, setEditPriceIsContact] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+
+  // ── Delete state ─────────────────────────────────────────────────────────────
+  const [deletingPlanId, setDeletingPlanId] = useState<string | null>(null);
+
+  // ── Data fetching ────────────────────────────────────────────────────────────
+  const fetchPlans = useCallback(async () => {
+    setPlansLoading(true);
+    setPlansError(null);
+    try {
+      const res = await SubscriptionPlanService.getPlans();
+      setPlans(res.result);
+    } catch (err: unknown) {
+      setPlansError(err instanceof Error ? err.message : 'Không thể tải danh sách gói.');
+    } finally {
+      setPlansLoading(false);
+    }
+  }, []);
+
+  const fetchStats = useCallback(async () => {
+    setStatsLoading(true);
+    try {
+      const res = await SubscriptionPlanService.getStats();
+      setRevenueStats(res.result);
+    } catch {
+      // Stats failure is non-blocking; keep null
+    } finally {
+      setStatsLoading(false);
+    }
+  }, []);
+
+  const fetchSubscriptions = useCallback(async (page: number) => {
+    setSubsLoading(true);
+    setSubsError(null);
+    try {
+      const res = await SubscriptionPlanService.getSubscriptions({ page, size: 10 });
+      setSubscriptions(res.result.content);
+      setSubsTotalPages(res.result.totalPages);
+    } catch (err: unknown) {
+      setSubsError(err instanceof Error ? err.message : 'Không thể tải danh sách đăng ký.');
+    } finally {
+      setSubsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPlans();
+    fetchStats();
+  }, [fetchPlans, fetchStats]);
+
+  useEffect(() => {
+    fetchSubscriptions(subsPage);
+  }, [subsPage, fetchSubscriptions]);
+
+  // ── Create plan handler ──────────────────────────────────────────────────────
+  const handleCreateSubmit = async () => {
+    if (!createForm.name.trim()) {
+      setCreateError('Tên gói không được để trống.');
+      return;
+    }
+    const features = featuresText
+      .split('\n')
+      .map((f) => f.trim())
+      .filter(Boolean);
+    if (features.length === 0) {
+      setCreateError('Vui lòng nhập ít nhất 1 tính năng.');
+      return;
+    }
+    setCreateLoading(true);
+    setCreateError(null);
+    try {
+      await SubscriptionPlanService.createPlan({
+        ...createForm,
+        price: priceIsContact ? null : createForm.price,
+        features,
+      });
+      setShowCreateModal(false);
+      setCreateForm(INITIAL_CREATE_FORM);
+      setFeaturesText('');
+      setPriceIsContact(false);
+      fetchPlans();
+    } catch (err: unknown) {
+      const e = err as Error & { code?: number };
+      if (e.code === 1155) {
+        setCreateError('Tên gói đã tồn tại, vui lòng chọn tên khác.');
+      } else {
+        setCreateError(e.message || 'Tạo gói thất bại. Vui lòng thử lại.');
+      }
+    } finally {
+      setCreateLoading(false);
+    }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-    }).format(amount);
+  // ── Open edit modal (pre-fill form from plan) ─────────────────────────────────
+  const openEditModal = (plan: SubscriptionPlan) => {
+    setEditingPlan(plan);
+    setEditPriceIsContact(plan.price === null);
+    setEditFeaturesText(plan.features.join('\n'));
+    setEditForm({
+      name: plan.name,
+      description: plan.description,
+      price: plan.price,
+      billingCycle: plan.billingCycle,
+      featured: plan.featured,
+      isPublic: plan.isPublic,
+      status: plan.status,
+    });
+    setEditError(null);
+  };
+
+  // ── Edit plan handler ─────────────────────────────────────────────────────────
+  const handleEditSubmit = async () => {
+    if (!editingPlan) return;
+    if (!editForm.name?.trim()) {
+      setEditError('Tên gói không được để trống.');
+      return;
+    }
+    const features = editFeaturesText
+      .split('\n')
+      .map((f) => f.trim())
+      .filter(Boolean);
+    if (features.length === 0) {
+      setEditError('Vui lòng nhập ít nhất 1 tính năng.');
+      return;
+    }
+    setEditLoading(true);
+    setEditError(null);
+    try {
+      await SubscriptionPlanService.updatePlan(editingPlan.id, {
+        ...editForm,
+        price: editPriceIsContact ? null : editForm.price,
+        features,
+      });
+      setEditingPlan(null);
+      fetchPlans();
+    } catch (err: unknown) {
+      const e = err as Error & { code?: number };
+      if (e.code === 1155) {
+        setEditError('Tên gói đã tồn tại, vui lòng chọn tên khác.');
+      } else {
+        setEditError(e.message || 'Cập nhật thất bại. Vui lòng thử lại.');
+      }
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  // ── Delete plan handler ──────────────────────────────────────────────────────
+  const handleDeletePlan = async (plan: SubscriptionPlan) => {
+    if (!window.confirm(`Xóa gói "${plan.name}"? Hành động này không thể hoàn tác.`)) return;
+    setDeletingPlanId(plan.id);
+    try {
+      await SubscriptionPlanService.deletePlan(plan.id);
+      setSelectedPlan(null);
+      fetchPlans();
+    } catch (err: unknown) {
+      const e = err as Error & { code?: number };
+      if (e.code === 1156) {
+        alert(
+          'Không thể xóa gói này vì vẫn còn người dùng đang sử dụng.\nHãy vô hiệu hóa gói trước (Chỉnh sửa → Status: INACTIVE), sau khi toàn bộ đăng ký hết hạn mới có thể xóa.'
+        );
+      } else {
+        alert(e.message || 'Xóa thất bại. Vui lòng thử lại.');
+      }
+    } finally {
+      setDeletingPlanId(null);
+    }
+  };
+
+  const statusLabel = (status: string) => {
+    switch (status) {
+      case 'ACTIVE': return '✅ Hoạt động';
+      case 'EXPIRED': return '⏸️ Hết hạn';
+      case 'CANCELLED': return '🚫 Đã hủy';
+      default: return status;
+    }
   };
 
   return (
@@ -67,9 +276,15 @@ const SubscriptionManagement: React.FC = () => {
               💰
             </div>
             <div className="stat-content">
-              <div className="stat-value">{formatCurrency(stats.totalRevenue)}</div>
+              <div className="stat-value">
+                {statsLoading ? '...' : revenueStats ? formatCurrency(revenueStats.totalRevenue) : '—'}
+              </div>
               <div className="stat-label">Tổng doanh thu</div>
-              <div className="stat-trend positive">+12.5% so với tháng trước</div>
+              {revenueStats && (
+                <div className={`stat-trend ${revenueStats.totalRevenueTrend >= 0 ? 'positive' : 'negative'}`}>
+                  {revenueStats.totalRevenueTrend >= 0 ? '+' : ''}{revenueStats.totalRevenueTrend.toFixed(1)}% so với tháng trước
+                </div>
+              )}
             </div>
           </div>
           <div className="stat-card">
@@ -80,9 +295,15 @@ const SubscriptionManagement: React.FC = () => {
               👥
             </div>
             <div className="stat-content">
-              <div className="stat-value">{stats.totalUsers}</div>
+              <div className="stat-value">
+                {statsLoading ? '...' : revenueStats ? revenueStats.totalPaidUsers : '—'}
+              </div>
               <div className="stat-label">Người dùng trả phí</div>
-              <div className="stat-trend positive">+8.3%</div>
+              {revenueStats && (
+                <div className={`stat-trend ${revenueStats.totalPaidUsersTrend >= 0 ? 'positive' : 'negative'}`}>
+                  {revenueStats.totalPaidUsersTrend >= 0 ? '+' : ''}{revenueStats.totalPaidUsersTrend.toFixed(1)}% so với tháng trước
+                </div>
+              )}
             </div>
           </div>
           <div className="stat-card">
@@ -93,9 +314,10 @@ const SubscriptionManagement: React.FC = () => {
               📊
             </div>
             <div className="stat-content">
-              <div className="stat-value">{formatCurrency(stats.avgRevenue)}</div>
+              <div className="stat-value">
+                {statsLoading ? '...' : revenueStats ? formatCurrency(revenueStats.avgRevenuePerUser) : '—'}
+              </div>
               <div className="stat-label">Doanh thu TB/người</div>
-              <div className="stat-trend positive">+4.2%</div>
             </div>
           </div>
           <div className="stat-card">
@@ -106,9 +328,10 @@ const SubscriptionManagement: React.FC = () => {
               📈
             </div>
             <div className="stat-content">
-              <div className="stat-value">{stats.conversionRate}%</div>
+              <div className="stat-value">
+                {statsLoading ? '...' : revenueStats ? `${revenueStats.conversionRate.toFixed(1)}%` : '—'}
+              </div>
               <div className="stat-label">Tỷ lệ chuyển đổi</div>
-              <div className="stat-trend positive">+2.1%</div>
             </div>
           </div>
         </div>
@@ -116,62 +339,71 @@ const SubscriptionManagement: React.FC = () => {
         {/* Subscription Plans */}
         <div className="plans-section">
           <h2 className="section-title">Các gói đăng ký</h2>
-          <div className="plans-grid">
-            {subscriptionData.map((plan, index) => (
-              <div key={index} className={`plan-card ${plan.name === 'Pro' ? 'featured' : ''}`}>
-                {plan.name === 'Pro' && <div className="featured-badge">⭐ Phổ biến nhất</div>}
 
-                <div className="plan-header">
-                  <h3 className="plan-name">{plan.name}</h3>
-                  <div className="plan-price">
-                    <span className="price-amount">{formatCurrency(plan.price)}</span>
-                    <span className="price-period">/tháng</span>
-                  </div>
-                  <p className="plan-description">{plan.description}</p>
-                </div>
+          {plansError && (
+            <div className="error-banner">⚠️ {plansError} <button onClick={fetchPlans}>Thử lại</button></div>
+          )}
 
-                <div className="plan-metrics">
-                  <div className="metric">
-                    <div className="metric-label">Người dùng</div>
-                    <div className="metric-value">{plan.activeUsers}</div>
-                    <div
-                      className={`metric-change ${parseFloat(plan.growth) > 0 ? 'positive' : 'negative'}`}
-                    >
-                      {parseFloat(plan.growth) > 0 ? '↑' : '↓'} {Math.abs(parseFloat(plan.growth))}%
+          {plansLoading ? (
+            <div className="loading-placeholder">Đang tải danh sách gói...</div>
+          ) : plans.length === 0 && !plansError ? (
+            <div className="empty-state">Chưa có gói đăng ký nào. Hãy tạo gói đầu tiên!</div>
+          ) : (
+            <div className="plans-grid">
+              {plans.map((plan) => (
+                <div key={plan.id} className={`plan-card ${plan.featured ? 'featured' : ''}`}>
+                  {plan.featured && <div className="featured-badge">⭐ Phổ biến nhất</div>}
+
+                  <div className="plan-header">
+                    <h3 className="plan-name">{plan.name}</h3>
+                    <div className="plan-price">
+                      <span className="price-amount">{formatPrice(plan.price)}</span>
+                      {plan.price !== null && <span className="price-period">/{plan.billingCycle === 'YEAR' ? 'năm' : 'tháng'}</span>}
                     </div>
+                    <p className="plan-description">{plan.description}</p>
                   </div>
-                  <div className="metric">
-                    <div className="metric-label">Doanh thu</div>
-                    <div className="metric-value">{formatCurrency(plan.revenue)}</div>
+
+                  <div className="plan-features">
+                    <h4 className="features-title">Tính năng:</h4>
+                    <ul className="features-list">
+                      {plan.features.slice(0, 5).map((feature, i) => (
+                        <li key={i}>✅ {feature}</li>
+                      ))}
+                      {plan.features.length > 5 && (
+                        <li className="more-features">+{plan.features.length - 5} tính năng khác</li>
+                      )}
+                    </ul>
+                  </div>
+
+                  <div className="plan-actions">
+                    <button className="btn btn-outline" onClick={() => setSelectedPlan(plan)}>
+                      👁️ Chi tiết
+                    </button>
+                    <button className="btn btn-outline" onClick={() => openEditModal(plan)}>
+                      ✏️ Chỉnh sửa
+                    </button>
+                    <button
+                      className="btn btn-outline btn-danger"
+                      onClick={() => handleDeletePlan(plan)}
+                      disabled={deletingPlanId === plan.id}
+                    >
+                      {deletingPlanId === plan.id ? '...' : '🗑️ Xóa'}
+                    </button>
                   </div>
                 </div>
-
-                <div className="plan-features">
-                  <h4 className="features-title">Tính năng:</h4>
-                  <ul className="features-list">
-                    {plan.features.slice(0, 5).map((feature: string, i: number) => (
-                      <li key={i}>✅ {feature}</li>
-                    ))}
-                    {plan.features.length > 5 && (
-                      <li className="more-features">+{plan.features.length - 5} tính năng khác</li>
-                    )}
-                  </ul>
-                </div>
-
-                <div className="plan-actions">
-                  <button className="btn btn-outline" onClick={() => setSelectedPlan(plan)}>
-                    👁️ Chi tiết
-                  </button>
-                  <button className="btn btn-outline">✏️ Chỉnh sửa</button>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Recent Subscriptions */}
         <div className="recent-subscriptions">
           <h2 className="section-title">Đăng ký gần đây</h2>
+
+          {subsError && (
+            <div className="error-banner">⚠️ {subsError} <button onClick={() => fetchSubscriptions(subsPage)}>Thử lại</button></div>
+          )}
+
           <div className="subscriptions-table-container">
             <table className="subscriptions-table">
               <thead>
@@ -186,85 +418,268 @@ const SubscriptionManagement: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {[...Array(10)].map((_, i) => {
-                  const plan = mockSubscriptionPlans[i % 3];
-                  const seed = i * 19 + 41;
-                  const startDate = new Date(FIXED_TIMESTAMP - (seed % 30) * 24 * 60 * 60 * 1000);
-                  const endDate = new Date(startDate.getTime() + 30 * 24 * 60 * 60 * 1000);
-                  const status = seed % 10 !== 0 ? 'active' : 'expired';
-
-                  return (
-                    <tr key={i}>
+                {subsLoading ? (
+                  <tr>
+                    <td colSpan={7} className="table-loading">Đang tải...</td>
+                  </tr>
+                ) : subscriptions.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="table-empty">Không có đăng ký nào.</td>
+                  </tr>
+                ) : (
+                  subscriptions.map((sub) => (
+                    <tr key={sub.id}>
                       <td className="user-cell">
-                        <div className="user-avatar">{String.fromCharCode(65 + (i % 26))}</div>
+                        <div className="user-avatar">{sub.user.name.charAt(0).toUpperCase()}</div>
                         <div className="user-info">
-                          <div className="user-name">Người dùng {i + 1}</div>
-                          <div className="user-email">user{i + 1}@example.com</div>
+                          <div className="user-name">{sub.user.name}</div>
+                          <div className="user-email">{sub.user.email}</div>
                         </div>
                       </td>
                       <td>
-                        <span className={`plan-badge ${plan.name.toLowerCase()}`}>{plan.name}</span>
+                        <span className={`plan-badge ${planSlugToBadgeClass(sub.plan.slug)}`}>
+                          {sub.plan.name}
+                        </span>
                       </td>
-                      <td>{startDate.toLocaleDateString('vi-VN')}</td>
-                      <td>{endDate.toLocaleDateString('vi-VN')}</td>
-                      <td className="amount-cell">{formatCurrency(plan.price)}</td>
+                      <td>{new Date(sub.startDate).toLocaleDateString('vi-VN')}</td>
                       <td>
-                        <span className={`status-badge ${status}`}>
-                          {status === 'active' ? '✅ Hoạt động' : '⏸️ Hết hạn'}
+                        {sub.endDate ? new Date(sub.endDate).toLocaleDateString('vi-VN') : '—'}
+                      </td>
+                      <td className="amount-cell">{formatPrice(sub.amount)}</td>
+                      <td>
+                        <span className={`status-badge ${sub.status.toLowerCase()}`}>
+                          {statusLabel(sub.status)}
                         </span>
                       </td>
                       <td>
                         <div className="action-buttons">
-                          <button className="action-btn" title="Gia hạn">
+                          <button
+                            className="action-btn"
+                            title="Tính năng đang phát triển"
+                            disabled
+                          >
                             🔄
-                          </button>
-                          <button className="action-btn" title="Chi tiết">
-                            👁️
                           </button>
                         </div>
                       </td>
                     </tr>
-                  );
-                })}
+                  ))
+                )}
               </tbody>
             </table>
           </div>
+
+          {/* Pagination */}
+          {subsTotalPages > 1 && (
+            <div className="pagination">
+              <button
+                className="btn btn-outline"
+                disabled={subsPage === 0}
+                onClick={() => setSubsPage((p) => p - 1)}
+              >
+                ← Trước
+              </button>
+              <span className="page-info">Trang {subsPage + 1} / {subsTotalPages}</span>
+              <button
+                className="btn btn-outline"
+                disabled={subsPage >= subsTotalPages - 1}
+                onClick={() => setSubsPage((p) => p + 1)}
+              >
+                Sau →
+              </button>
+            </div>
+          )}
         </div>
+
+        {/* Edit Plan Modal */}
+        {editingPlan && (
+          <div className="modal-overlay" onClick={() => setEditingPlan(null)}>
+            <div className="modal" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h2 className="modal-title">Chỉnh sửa gói: {editingPlan.name}</h2>
+                <button className="modal-close" onClick={() => setEditingPlan(null)}>✕</button>
+              </div>
+
+              <div className="modal-body">
+                {editError && <div className="form-error">⚠️ {editError}</div>}
+
+                <div className="form-group">
+                  <label>Tên gói *</label>
+                  <input
+                    type="text"
+                    value={editForm.name ?? ''}
+                    onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Mô tả</label>
+                  <textarea
+                    rows={3}
+                    value={editForm.description ?? ''}
+                    onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))}
+                  />
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Giá (VNĐ)</label>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <input
+                        type="number"
+                        disabled={editPriceIsContact}
+                        value={editPriceIsContact ? '' : (editForm.price ?? 0)}
+                        onChange={(e) => setEditForm((f) => ({ ...f, price: Number(e.target.value) }))}
+                      />
+                      <label style={{ whiteSpace: 'nowrap', fontWeight: 'normal' }}>
+                        <input
+                          type="checkbox"
+                          checked={editPriceIsContact}
+                          onChange={(e) => setEditPriceIsContact(e.target.checked)}
+                          style={{ marginRight: '4px' }}
+                        />
+                        Liên hệ
+                      </label>
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label>Thời hạn</label>
+                    <select
+                      value={editForm.billingCycle ?? 'MONTH'}
+                      onChange={(e) => setEditForm((f) => ({ ...f, billingCycle: e.target.value as BillingCycle }))}
+                    >
+                      {BILLING_CYCLE_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Trạng thái</label>
+                  <select
+                    value={editForm.status ?? 'ACTIVE'}
+                    onChange={(e) => setEditForm((f) => ({ ...f, status: e.target.value as PlanStatus }))}
+                  >
+                    <option value="ACTIVE">✅ ACTIVE — Đang hoạt động</option>
+                    <option value="INACTIVE">⏸️ INACTIVE — Vô hiệu hóa</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Tính năng (mỗi tính năng 1 dòng) *</label>
+                  <textarea
+                    rows={6}
+                    value={editFeaturesText}
+                    onChange={(e) => setEditFeaturesText(e.target.value)}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={editForm.featured ?? false}
+                      onChange={(e) => setEditForm((f) => ({ ...f, featured: e.target.checked }))}
+                    />
+                    <span>Đặt làm gói nổi bật</span>
+                  </label>
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={editForm.isPublic ?? true}
+                      onChange={(e) => setEditForm((f) => ({ ...f, isPublic: e.target.checked }))}
+                    />
+                    <span>Hiển thị trên trang chính</span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="modal-footer">
+                <button
+                  className="btn btn-outline"
+                  onClick={() => setEditingPlan(null)}
+                  disabled={editLoading}
+                >
+                  Hủy
+                </button>
+                <button
+                  className="btn btn-primary"
+                  onClick={handleEditSubmit}
+                  disabled={editLoading}
+                >
+                  {editLoading ? '⏳ Đang lưu...' : '💾 Lưu thay đổi'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Create Plan Modal */}
         {showCreateModal && (
-          <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
+          <div className="modal-overlay" onClick={() => { setShowCreateModal(false); setCreateError(null); }}>
             <div className="modal" onClick={(e) => e.stopPropagation()}>
               <div className="modal-header">
                 <h2 className="modal-title">Tạo gói đăng ký mới</h2>
-                <button className="modal-close" onClick={() => setShowCreateModal(false)}>
+                <button className="modal-close" onClick={() => { setShowCreateModal(false); setCreateError(null); }}>
                   ✕
                 </button>
               </div>
 
               <div className="modal-body">
+                {createError && <div className="form-error">⚠️ {createError}</div>}
+
                 <div className="form-group">
                   <label>Tên gói *</label>
-                  <input type="text" placeholder="Ví dụ: Premium" />
+                  <input
+                    type="text"
+                    placeholder="Ví dụ: Premium"
+                    value={createForm.name}
+                    onChange={(e) => setCreateForm((f) => ({ ...f, name: e.target.value }))}
+                  />
                 </div>
 
                 <div className="form-group">
                   <label>Mô tả</label>
-                  <textarea rows={3} placeholder="Mô tả ngắn về gói đăng ký"></textarea>
+                  <textarea
+                    rows={3}
+                    placeholder="Mô tả ngắn về gói đăng ký"
+                    value={createForm.description ?? ''}
+                    onChange={(e) => setCreateForm((f) => ({ ...f, description: e.target.value }))}
+                  />
                 </div>
 
                 <div className="form-row">
                   <div className="form-group">
                     <label>Giá (VNĐ) *</label>
-                    <input type="number" placeholder="0" />
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <input
+                        type="number"
+                        placeholder="0"
+                        disabled={priceIsContact}
+                        value={priceIsContact ? '' : (createForm.price ?? 0)}
+                        onChange={(e) => setCreateForm((f) => ({ ...f, price: Number(e.target.value) }))}
+                      />
+                      <label style={{ whiteSpace: 'nowrap', fontWeight: 'normal' }}>
+                        <input
+                          type="checkbox"
+                          checked={priceIsContact}
+                          onChange={(e) => setPriceIsContact(e.target.checked)}
+                          style={{ marginRight: '4px' }}
+                        />
+                        Liên hệ
+                      </label>
+                    </div>
                   </div>
                   <div className="form-group">
                     <label>Thời hạn *</label>
-                    <select>
-                      <option>1 tháng</option>
-                      <option>3 tháng</option>
-                      <option>6 tháng</option>
-                      <option>1 năm</option>
+                    <select
+                      value={createForm.billingCycle}
+                      onChange={(e) => setCreateForm((f) => ({ ...f, billingCycle: e.target.value as BillingCycle }))}
+                    >
+                      {BILLING_CYCLE_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      ))}
                     </select>
                   </div>
                 </div>
@@ -274,26 +689,46 @@ const SubscriptionManagement: React.FC = () => {
                   <textarea
                     rows={6}
                     placeholder="Nhập các tính năng, mỗi dòng 1 tính năng&#10;Ví dụ:&#10;Tạo không giới hạn Giáo Trình&#10;AI trợ giảng 24/7&#10;Thống kê chi tiết"
-                  ></textarea>
+                    value={featuresText}
+                    onChange={(e) => setFeaturesText(e.target.value)}
+                  />
                 </div>
 
                 <div className="form-group">
                   <label className="checkbox-label">
-                    <input type="checkbox" />
+                    <input
+                      type="checkbox"
+                      checked={createForm.featured ?? false}
+                      onChange={(e) => setCreateForm((f) => ({ ...f, featured: e.target.checked }))}
+                    />
                     <span>Đặt làm gói nổi bật</span>
                   </label>
                   <label className="checkbox-label">
-                    <input type="checkbox" />
+                    <input
+                      type="checkbox"
+                      checked={createForm.isPublic ?? true}
+                      onChange={(e) => setCreateForm((f) => ({ ...f, isPublic: e.target.checked }))}
+                    />
                     <span>Hiển thị trên trang chính</span>
                   </label>
                 </div>
               </div>
 
               <div className="modal-footer">
-                <button className="btn btn-outline" onClick={() => setShowCreateModal(false)}>
+                <button
+                  className="btn btn-outline"
+                  onClick={() => { setShowCreateModal(false); setCreateError(null); }}
+                  disabled={createLoading}
+                >
                   Hủy
                 </button>
-                <button className="btn btn-primary">✅ Tạo gói</button>
+                <button
+                  className="btn btn-primary"
+                  onClick={handleCreateSubmit}
+                  disabled={createLoading}
+                >
+                  {createLoading ? '⏳ Đang tạo...' : '✅ Tạo gói'}
+                </button>
               </div>
             </div>
           </div>
@@ -313,36 +748,25 @@ const SubscriptionManagement: React.FC = () => {
               <div className="modal-body">
                 <div className="plan-detail-header">
                   <div className="detail-price">
-                    <span className="price-amount">{formatCurrency(selectedPlan.price)}</span>
-                    <span className="price-period">/tháng</span>
+                    <span className="price-amount">{formatPrice(selectedPlan.price)}</span>
+                    {selectedPlan.price !== null && (
+                      <span className="price-period">
+                        /{selectedPlan.billingCycle === 'YEAR' ? 'năm' : 'tháng'}
+                      </span>
+                    )}
                   </div>
                   <p>{selectedPlan.description}</p>
-                </div>
-
-                <div className="plan-detail-stats">
-                  <div className="detail-stat">
-                    <div className="stat-label">Người dùng đang dùng</div>
-                    <div className="stat-value">{selectedPlan.activeUsers}</div>
-                  </div>
-                  <div className="detail-stat">
-                    <div className="stat-label">Doanh thu tháng này</div>
-                    <div className="stat-value">{formatCurrency(selectedPlan.revenue)}</div>
-                  </div>
-                  <div className="detail-stat">
-                    <div className="stat-label">Tăng trưởng</div>
-                    <div
-                      className={`stat-value ${parseFloat(selectedPlan.growth) > 0 ? 'positive' : 'negative'}`}
-                    >
-                      {parseFloat(selectedPlan.growth) > 0 ? '↑' : '↓'}{' '}
-                      {Math.abs(parseFloat(selectedPlan.growth))}%
-                    </div>
+                  <div style={{ marginTop: '8px', fontSize: '0.85rem', color: '#888' }}>
+                    Slug: <code>{selectedPlan.slug}</code> &nbsp;|&nbsp;
+                    Trạng thái: <strong>{selectedPlan.status}</strong> &nbsp;|&nbsp;
+                    {selectedPlan.featured ? '⭐ Gói nổi bật' : 'Gói thường'}
                   </div>
                 </div>
 
                 <div className="plan-features-full">
                   <h4>Danh sách tính năng đầy đủ:</h4>
                   <ul>
-                    {selectedPlan.features.map((feature: string, i: number) => (
+                    {selectedPlan.features.map((feature, i) => (
                       <li key={i}>✅ {feature}</li>
                     ))}
                   </ul>
@@ -351,10 +775,13 @@ const SubscriptionManagement: React.FC = () => {
                 <div className="plan-actions-section">
                   <h4>Hành động quản lý</h4>
                   <div className="action-buttons-grid">
-                    <button className="btn btn-outline">✏️ Chỉnh sửa gói</button>
-                    <button className="btn btn-outline">💰 Thay đổi giá</button>
-                    <button className="btn btn-outline">📊 Xem báo cáo</button>
-                    <button className="btn btn-outline">🗑️ Xóa gói</button>
+                    <button
+                      className="btn btn-outline btn-danger"
+                      onClick={() => handleDeletePlan(selectedPlan)}
+                      disabled={deletingPlanId === selectedPlan.id}
+                    >
+                      {deletingPlanId === selectedPlan.id ? '⏳ Đang xóa...' : '🗑️ Xóa gói'}
+                    </button>
                   </div>
                 </div>
               </div>

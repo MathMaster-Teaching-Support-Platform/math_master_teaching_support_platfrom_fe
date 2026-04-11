@@ -270,6 +270,12 @@ export const API_ENDPOINTS = {
   USERS_ENABLE: (userId: string) => `/users/${userId}/enable`,
   USERS_DISABLE: (userId: string) => `/users/${userId}/disable`,
 
+  // Admin Subscription Plans
+  ADMIN_SUBSCRIPTION_PLANS: '/admin/subscription-plans',
+  ADMIN_SUBSCRIPTION_PLAN_DETAIL: (planId: string) => `/admin/subscription-plans/${planId}`,
+  ADMIN_SUBSCRIPTION_PLANS_STATS: '/admin/subscription-plans/stats',
+  ADMIN_SUBSCRIPTION_PLANS_SUBSCRIPTIONS: '/admin/subscription-plans/subscriptions',
+
   // Admin Dashboard
   ADMIN_DASHBOARD_STATS: '/admin/dashboard/stats',
   ADMIN_USERS_RECENT: '/users/admin/recent',
