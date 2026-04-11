@@ -54,7 +54,8 @@ export const API_ENDPOINTS = {
   EXAM_MATRIX_BUILD: '/exam-matrices/build',
   EXAM_MATRIX_TABLE: (matrixId: string) => `/exam-matrices/${matrixId}/table`,
   EXAM_MATRIX_ROWS: (matrixId: string) => `/exam-matrices/${matrixId}/rows`,
-  EXAM_MATRIX_ROW_DETAIL: (matrixId: string, rowId: string) => `/exam-matrices/${matrixId}/rows/${rowId}`,
+  EXAM_MATRIX_ROW_DETAIL: (matrixId: string, rowId: string) =>
+    `/exam-matrices/${matrixId}/rows/${rowId}`,
   EXAM_MATRIX_VALIDATE: (matrixId: string) => `/exam-matrices/${matrixId}/validate`,
   EXAM_MATRIX_APPROVE: (matrixId: string) => `/exam-matrices/${matrixId}/approve`,
   EXAM_MATRIX_LOCK: (matrixId: string) => `/exam-matrices/${matrixId}/lock`,
@@ -159,10 +160,13 @@ export const API_ENDPOINTS = {
   LESSON_PLANS_BY_LESSON: (lessonId: string) => `/lesson-plans/lesson/${lessonId}`,
 
   // Video Upload (Multipart)
-  COURSE_VIDEO_UPLOAD_INITIATE: (courseId: string) => `/courses/${courseId}/lessons/upload/initiate`,
-  COURSE_VIDEO_UPLOAD_PART_URL: (courseId: string) => `/courses/${courseId}/lessons/upload/part-url`,
+  COURSE_VIDEO_UPLOAD_INITIATE: (courseId: string) =>
+    `/courses/${courseId}/lessons/upload/initiate`,
+  COURSE_VIDEO_UPLOAD_PART_URL: (courseId: string) =>
+    `/courses/${courseId}/lessons/upload/part-url`,
   COURSE_VIDEO_UPLOAD_PART: (courseId: string) => `/courses/${courseId}/lessons/upload/upload-part`,
-  COURSE_VIDEO_UPLOAD_COMPLETE: (courseId: string) => `/courses/${courseId}/lessons/upload/complete`,
+  COURSE_VIDEO_UPLOAD_COMPLETE: (courseId: string) =>
+    `/courses/${courseId}/lessons/upload/complete`,
   COURSE_VIDEO_URL: (courseId: string, courseLessonId: string) =>
     `/courses/${courseId}/lessons/upload/${courseLessonId}/video-url`,
 
@@ -197,8 +201,10 @@ export const API_ENDPOINTS = {
   QUESTION_TEMPLATE_PUBLISH: (id: string) => `/question-templates/${id}/publish`,
   QUESTION_TEMPLATE_ARCHIVE: (id: string) => `/question-templates/${id}/archive`,
   QUESTION_TEMPLATE_TEST: (id: string) => `/question-templates/${id}/test`,
-  QUESTION_TEMPLATE_GENERATE_QUESTIONS: (id: string) => `/question-templates/${id}/generate-questions`,
-  QUESTION_TEMPLATE_GENERATE_AI_ENHANCED: (id: string) => `/question-templates/${id}/generate-ai-enhanced`,
+  QUESTION_TEMPLATE_GENERATE_QUESTIONS: (id: string) =>
+    `/question-templates/${id}/generate-questions`,
+  QUESTION_TEMPLATE_GENERATE_AI_ENHANCED: (id: string) =>
+    `/question-templates/${id}/generate-ai-enhanced`,
   QUESTION_TEMPLATE_AI_GENERATE_FROM_LESSON: '/question-templates/ai-generate-from-lesson',
   QUESTION_TEMPLATE_IMPORT_FROM_FILE: '/question-templates/import-from-file',
 
@@ -239,8 +245,17 @@ export const API_ENDPOINTS = {
   STUDENT_ASSESSMENTS_UPDATE_ANSWER: '/student-assessments/update-answer',
   STUDENT_ASSESSMENTS_UPDATE_FLAG: '/student-assessments/update-flag',
   STUDENT_ASSESSMENTS_SUBMIT: '/student-assessments/submit',
-  STUDENT_ASSESSMENTS_DRAFT_SNAPSHOT: (attemptId: string) => `/student-assessments/draft/${attemptId}`,
+  STUDENT_ASSESSMENTS_DRAFT_SNAPSHOT: (attemptId: string) =>
+    `/student-assessments/draft/${attemptId}`,
   STUDENT_ASSESSMENTS_SAVE_AND_EXIT: '/student-assessments/save-and-exit',
+
+  // Admin Dashboard
+  ADMIN_DASHBOARD_STATS: '/admin/dashboard/stats',
+  ADMIN_USERS_RECENT: '/users/admin/recent',
+  ADMIN_TRANSACTIONS: '/admin/transactions',
+  ADMIN_DASHBOARD_REVENUE_BY_MONTH: '/admin/dashboard/revenue-by-month',
+  ADMIN_DASHBOARD_QUICK_STATS: '/admin/dashboard/quick-stats',
+  ADMIN_SYSTEM_STATUS: '/admin/system/status',
 
   // Grading
   GRADING_QUEUE: '/grading/queue',
@@ -252,7 +267,8 @@ export const API_ENDPOINTS = {
   GRADING_ANALYTICS: (assessmentId: string) => `/grading/analytics/${assessmentId}`,
   GRADING_EXPORT: (assessmentId: string) => `/grading/export/${assessmentId}`,
   GRADING_RELEASE: (assessmentId: string) => `/grading/release/${assessmentId}`,
-  GRADING_RELEASE_SUBMISSION: (submissionId: string) => `/grading/release/submission/${submissionId}`,
+  GRADING_RELEASE_SUBMISSION: (submissionId: string) =>
+    `/grading/release/submission/${submissionId}`,
   GRADING_REGRADE_REQUEST: '/grading/regrade-request',
   GRADING_REGRADE_RESPOND: '/grading/regrade-request/respond',
   GRADING_REGRADE_REQUESTS: '/grading/regrade-requests',
