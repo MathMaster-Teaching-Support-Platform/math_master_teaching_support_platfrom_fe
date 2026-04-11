@@ -47,6 +47,7 @@ const OnboardingFlow: React.FC = () => {
     agreed: false,
   });
   const [t3, setT3] = useState({
+    fullName: '',
     schoolName: '',
     schoolAddress: '',
     schoolWebsite: '',
@@ -131,11 +132,16 @@ const OnboardingFlow: React.FC = () => {
       setError('Vui lòng chọn file xác thực');
       return;
     }
+    if (!t3.fullName.trim()) {
+      setError('Vui lòng nhập họ và tên');
+      return;
+    }
     setIsLoading(true);
     setError('');
     try {
       await TeacherProfileService.submitProfile(
         {
+          fullName: t3.fullName,
           schoolName: t3.schoolName,
           schoolAddress: t3.schoolAddress,
           schoolWebsite: t3.schoolWebsite,
@@ -358,6 +364,19 @@ const OnboardingFlow: React.FC = () => {
       <h2 className="ob-step-title">Thông tin trường học</h2>
       <p className="ob-step-sub">Cho chúng tôi biết bạn đang công tác ở đâu.</p>
       <div className="ob-form ob-form--two-col">
+        <div className="ob-field" style={{ gridColumn: '1 / -1' }}>
+          <label>Họ và tên</label>
+          <div className="ob-input-wrap">
+            <User className="ob-field-icon" size={16} />
+            <input
+              type="text"
+              className="ob-input"
+              placeholder="Nguyễn Văn A"
+              value={t3.fullName}
+              onChange={(e) => setT3({ ...t3, fullName: e.target.value })}
+            />
+          </div>
+        </div>
         <div className="ob-field" ref={autocompleteRef} style={{ position: 'relative' }}>
           <label>Tên trường</label>
           <div className="ob-input-wrap">
@@ -449,7 +468,7 @@ const OnboardingFlow: React.FC = () => {
         </button>
         <button
           className="ob-btn ob-btn-primary"
-          disabled={isLoading || !t3.schoolName || !t3.schoolAddress}
+          disabled={isLoading || !t3.fullName || !t3.schoolName || !t3.schoolAddress}
           onClick={handleFinishTeacher}
         >
           {isLoading ? (

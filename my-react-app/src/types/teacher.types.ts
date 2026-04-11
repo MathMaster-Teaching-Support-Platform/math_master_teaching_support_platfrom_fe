@@ -27,6 +27,7 @@ export interface TeacherProfile {
 
 // Request types
 export interface SubmitTeacherProfileRequest {
+  fullName: string; // Required for OCR verification
   schoolName: string;
   schoolAddress?: string;
   schoolWebsite?: string;
@@ -35,6 +36,7 @@ export interface SubmitTeacherProfileRequest {
 }
 
 export interface UpdateTeacherProfileRequest {
+  fullName: string; // Required for OCR verification
   schoolName: string;
   schoolAddress?: string;
   schoolWebsite?: string;
@@ -57,10 +59,11 @@ export interface OcrComparisonResult {
 
 export interface FieldComparison {
   fieldName: string;
-  submittedValue: string;
+  profileValue: string; // Changed from submittedValue
   ocrValue: string;
   matches: boolean;
-  similarity: number; // 0-1 score
+  similarity: number; // 0-100 percentage (not 0-1)
+  notes?: string; // Added for validation messages
 }
 
 // Async OCR job types

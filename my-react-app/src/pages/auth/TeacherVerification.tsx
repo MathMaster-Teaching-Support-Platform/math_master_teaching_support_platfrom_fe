@@ -8,7 +8,8 @@ import {
     Mail, 
     Globe, 
     Briefcase,
-    Building as BuildingIcon
+    Building as BuildingIcon,
+    User
 } from 'lucide-react';
 import './TeacherVerification.css';
 
@@ -32,6 +33,7 @@ const TeacherVerification: React.FC = () => {
     });
 
     const [step3Data, setStep3Data] = useState({
+        fullName: '',
         schoolName: '',
         schoolAddress: '',
         schoolWebsite: '',
@@ -67,11 +69,16 @@ const TeacherVerification: React.FC = () => {
             setError('Vui lòng chọn file xác thực');
             return;
         }
+        if (!step3Data.fullName.trim()) {
+            setError('Vui lòng nhập họ và tên');
+            return;
+        }
 
         setIsLoading(true);
         setError('');
         try {
             await TeacherProfileService.submitProfile({
+                fullName: step3Data.fullName,
                 schoolName: step3Data.schoolName,
                 schoolAddress: step3Data.schoolAddress,
                 schoolWebsite: step3Data.schoolWebsite,
@@ -261,6 +268,20 @@ const TeacherVerification: React.FC = () => {
                 <h2 className="step-title" style={{ marginLeft: '1rem', display: 'inline' }}>Thông tin trường học</h2>
             </div>
             
+            <div className="form-group">
+                <label>Họ và tên</label>
+                <div className="input-with-icon">
+                    <User className="field-icon" size={18} />
+                    <input 
+                        type="text" 
+                        className="form-control" 
+                        placeholder="Nguyễn Văn A"
+                        value={step3Data.fullName}
+                        onChange={(e) => setStep3Data({...step3Data, fullName: e.target.value})}
+                    />
+                </div>
+            </div>
+            
             <div className="form-group autocomplete-wrapper" ref={autocompleteRef} style={{ marginTop: '2rem' }}>
                 <label>Tên trường</label>
                 <div className="input-with-icon">
@@ -351,7 +372,7 @@ const TeacherVerification: React.FC = () => {
                 className="btn btn-primary btn-block" 
                 style={{ marginTop: '2.5rem' }}
                 onClick={handleFinish}
-                disabled={isLoading || !step3Data.schoolName || !step3Data.schoolAddress}
+                disabled={isLoading || !step3Data.fullName || !step3Data.schoolName || !step3Data.schoolAddress}
             >
                 {isLoading ? 'Đang gửi hồ sơ...' : 'Hoàn thành'}
             </button>

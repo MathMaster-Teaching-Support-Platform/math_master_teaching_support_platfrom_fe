@@ -948,3 +948,28 @@
 .rpd-ocr-field-values span:last-child {
   color: var(--rp-text-2);
 }
+
+/* Critical field highlighting */
+.rpd-ocr-field--critical {
+  border-color: #fca5a5;
+  background: #fef2f2;
+}
+
+.rpd-ocr-missing {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.rpd-ocr-field-notes {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  padding-top: 0.25rem;
+  border-top: 1px solid var(--rp-border);
+  margin-top: 0.375rem;
+}
+
+.rpd-ocr-field-notes span:last-child {
+  color: var(--rp-text-3);
+  font-style: italic;
+}

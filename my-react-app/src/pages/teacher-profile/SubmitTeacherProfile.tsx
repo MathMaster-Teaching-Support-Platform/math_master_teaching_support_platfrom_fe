@@ -16,6 +16,7 @@ const SubmitTeacherProfile: React.FC<SubmitTeacherProfileProps> = ({ onSuccess }
   const [success, setSuccess] = useState(false);
 
   const [formData, setFormData] = useState<SubmitTeacherProfileRequest>({
+    fullName: '',
     schoolName: '',
     schoolAddress: '',
     schoolWebsite: '',
@@ -63,6 +64,7 @@ const SubmitTeacherProfile: React.FC<SubmitTeacherProfileProps> = ({ onSuccess }
     setSubmitting(true);
 
     try {
+      if (!formData.fullName.trim()) throw new Error('Vui lòng nhập họ và tên');
       if (!formData.schoolName.trim()) throw new Error('Vui lòng nhập tên trường');
       if (!formData.position.trim()) throw new Error('Vui lòng nhập chức vụ');
       if (selectedFiles.length === 0)
@@ -124,6 +126,27 @@ const SubmitTeacherProfile: React.FC<SubmitTeacherProfileProps> = ({ onSuccess }
 
           <form className="tp-form" onSubmit={handleSubmit}>
             <div className="tp-form-group">
+              <label className="tp-label" htmlFor="fullName">
+                Họ và tên <span className="tp-required">*</span>
+              </label>
+              <input
+                className="tp-input"
+                type="text"
+                id="fullName"
+                name="fullName"
+                value={formData.fullName}
+                onChange={handleInputChange}
+                placeholder="VD: Nguyễn Văn A"
+                maxLength={100}
+                required
+                disabled={submitting}
+              />
+              <p className="tp-form-hint">
+                Họ tên phải khớp chính xác với thông tin trên Thẻ Giáo viên để OCR xác minh
+              </p>
+            </div>
+
+            <div className="tp-form-group">
               <label className="tp-label" htmlFor="schoolName">
                 Tên trường <span className="tp-required">*</span>
               </label>
@@ -184,11 +207,14 @@ const SubmitTeacherProfile: React.FC<SubmitTeacherProfileProps> = ({ onSuccess }
                 name="position"
                 value={formData.position}
                 onChange={handleInputChange}
-                placeholder="VD: Giáo viên toán, Giảng viên cao cấp"
+                placeholder="VD: Giáo viên Toán, Giảng viên Khoa Toán"
                 maxLength={100}
                 required
                 disabled={submitting}
               />
+              <p className="tp-form-hint">
+                Phải có từ "Giáo viên" hoặc "Giảng viên" + "Toán" để hệ thống OCR xác minh
+              </p>
             </div>
 
             <div className="tp-form-group">

@@ -39,7 +39,8 @@ function formatDateTime(iso: string) {
     minute: '2-digit',
   });
 }
-function getInitials(name: string) {
+function getInitials(name: string | null | undefined) {
+  if (!name) return '??';
   return name
     .split(' ')
     .map((w) => w[0])
@@ -224,9 +225,9 @@ const ReviewProfiles: React.FC = () => {
   const filteredProfiles = profiles.filter((p) => {
     const q = search.toLowerCase();
     return (
-      p.fullName.toLowerCase().includes(q) ||
-      p.userName.toLowerCase().includes(q) ||
-      p.schoolName.toLowerCase().includes(q)
+      (p.fullName?.toLowerCase() || '').includes(q) ||
+      (p.userName?.toLowerCase() || '').includes(q) ||
+      (p.schoolName?.toLowerCase() || '').includes(q)
     );
   });
 
@@ -498,31 +499,43 @@ const ReviewProfiles: React.FC = () => {
                           <div className={`rpd-ocr-match ${ocrResult.isMatch ? 'rpd-ocr-match--yes' : 'rpd-ocr-match--no'}`}>
                             {ocrResult.isMatch ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
                             <span>
-                              {ocrResult.isMatch ? 'Khớp' : 'Không khớp'} ({ocrResult.matchScore.toFixed(1)}%)
+                              {ocrResult.isMatch ? 'Đạt yêu cầu' : 'Không đạt'} ({ocrResult.matchScore.toFixed(0)}%)
                             </span>
                           </div>
                           
                           <p className="rpd-ocr-summary">{ocrResult.summary}</p>
                           
                           <div className="rpd-ocr-fields">
-                            <h4>Chi tiết so sánh:</h4>
+                            <h4>🔴 3 Trường bắt buộc phải có:</h4>
                             {ocrResult.fieldComparisons.map((field, idx) => (
-                              <div key={idx} className="rpd-ocr-field">
+                              <div key={idx} className={`rpd-ocr-field ${field.matches ? '' : 'rpd-ocr-field--critical'}`}>
                                 <div className="rpd-ocr-field-header">
-                                  <span className="rpd-ocr-field-name">{field.fieldName}</span>
+                                  <span className="rpd-ocr-field-name">
+                                    {idx === 0 && '1️⃣ Họ và tên'}
+                                    {idx === 1 && '2️⃣ Chức danh + Chuyên môn Toán'}
+                                    {idx === 2 && '3️⃣ Tên trường/Cơ sở giáo dục'}
+                                  </span>
                                   <span className={`rpd-ocr-field-status ${field.matches ? 'rpd-ocr-field-status--match' : 'rpd-ocr-field-status--mismatch'}`}>
-                                    {field.matches ? '✓' : '✗'} {(field.similarity * 100).toFixed(0)}%
+                                    {field.matches ? '✅ ĐẠT' : '❌ KHÔNG ĐẠT'}
                                   </span>
                                 </div>
                                 <div className="rpd-ocr-field-values">
                                   <div>
-                                    <span className="rpd-ocr-field-label">Đã nộp:</span>
-                                    <span>{field.submittedValue}</span>
+                                    <span className="rpd-ocr-field-label">Yêu cầu:</span>
+                                    <span>{field.profileValue || 'N/A'}</span>
                                   </div>
                                   <div>
-                                    <span className="rpd-ocr-field-label">OCR:</span>
-                                    <span>{field.ocrValue}</span>
+                                    <span className="rpd-ocr-field-label">OCR đọc được:</span>
+                                    <span className={field.ocrValue ? '' : 'rpd-ocr-missing'}>
+                                      {field.ocrValue || '⚠️ Không đọc được'}
+                                    </span>
                                   </div>
+                                  {field.notes && (
+                                    <div className="rpd-ocr-field-notes">
+                                      <span className="rpd-ocr-field-label">Ghi chú:</span>
+                                      <span>{field.notes}</span>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             ))}
