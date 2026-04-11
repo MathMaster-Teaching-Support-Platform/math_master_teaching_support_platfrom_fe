@@ -94,6 +94,9 @@ export const API_ENDPOINTS = {
   MINDMAPS_GENERATE: '/mindmaps/generate',
   MINDMAPS_MY: '/mindmaps/my-mindmaps',
   MINDMAPS_DETAIL: (id: string) => `/mindmaps/${id}`,
+  MINDMAPS_PUBLIC_LIST: '/mindmaps/public',
+  MINDMAPS_PUBLIC_DETAIL: (id: string) => `/mindmaps/public/${id}`,
+  MINDMAPS_PUBLIC_BY_LESSON: (lessonId: string) => `/mindmaps/public/lesson/${lessonId}`,
   MINDMAPS_NODES: '/mindmaps/nodes',
   MINDMAPS_NODE_DETAIL: (nodeId: string) => `/mindmaps/nodes/${nodeId}`,
 

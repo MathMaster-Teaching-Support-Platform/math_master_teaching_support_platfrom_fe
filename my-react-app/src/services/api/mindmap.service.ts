@@ -13,6 +13,12 @@ import type {
 } from '../../types';
 
 export class MindmapService {
+  private static getPublicHeaders() {
+    return {
+      accept: '*/*',
+    };
+  }
+
   private static async getHeaders() {
     const token = AuthService.getToken();
     if (!token) throw new Error('Authentication required');
@@ -115,6 +121,51 @@ export class MindmapService {
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.message || 'Failed to fetch mindmap');
+    }
+    return response.json();
+  }
+
+  /** GET /mindmaps/public/{id} - Get public mindmap by ID */
+  static async getPublicMindmapById(id: string): Promise<ApiResponse<MindmapGenerateResponse>> {
+    const headers = this.getPublicHeaders();
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.MINDMAPS_PUBLIC_DETAIL(id)}`, {
+      method: 'GET',
+      headers,
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to fetch public mindmap');
+    }
+    return response.json();
+  }
+
+  /** GET /mindmaps/public/lesson/{lessonId} - Get published mindmaps by lesson */
+  static async getPublicMindmapsByLesson(
+    lessonId: string,
+    params?: {
+      page?: number;
+      size?: number;
+      sortBy?: string;
+      direction?: 'ASC' | 'DESC';
+    }
+  ): Promise<ApiResponse<PaginatedResponse<Mindmap>>> {
+    const headers = this.getPublicHeaders();
+    const queryParams = new URLSearchParams();
+    if (params?.page !== undefined) queryParams.set('page', params.page.toString());
+    if (params?.size !== undefined) queryParams.set('size', params.size.toString());
+    if (params?.sortBy) queryParams.set('sortBy', params.sortBy);
+    if (params?.direction) queryParams.set('direction', params.direction);
+
+    const url = `${API_BASE_URL}${API_ENDPOINTS.MINDMAPS_PUBLIC_BY_LESSON(lessonId)}${
+      queryParams.toString() ? `?${queryParams.toString()}` : ''
+    }`;
+    const response = await fetch(url, {
+      method: 'GET',
+      headers,
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to fetch public mindmaps');
     }
     return response.json();
   }
