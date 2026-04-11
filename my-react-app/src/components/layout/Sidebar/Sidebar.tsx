@@ -22,8 +22,8 @@ import {
   Ruler,
   Sparkles,
   Settings,
+  ShieldCheck,
   Users,
-  Wallet,
   Workflow,
 } from 'lucide-react';
 import React from 'react';
@@ -100,10 +100,9 @@ const studentGroups: MenuGroup[] = [
     ],
   },
   {
-    label: 'Công cụ',
+    label: 'Giáo viên',
     items: [
-      { path: '/student/ai-assistant', icon: Bot, label: 'AI Trợ lý' },
-      { path: '/student/wallet', icon: Wallet, label: 'Ví của tôi' },
+      { path: '/submit-teacher-profile', icon: ShieldCheck, label: 'Đăng ký Giáo viên' },
     ],
   },
 ];

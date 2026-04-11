@@ -1,3 +1,4 @@
+import { Settings, ShieldCheck } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TeacherProfileService } from '../../services/api/teacher-profile.service';
@@ -75,21 +76,21 @@ const Profile: React.FC = () => {
       <div className="profile-page">
         <div className="profile-container">
           <div className="profile-sidebar">
-            <h2>Settings</h2>
+            <h2>Cài đặt</h2>
             <nav className="profile-nav">
               <button
                 className={`profile-nav-item ${activeTab === 'account' ? 'active' : ''}`}
                 onClick={() => handleTabChange('account')}
               >
-                <span className="nav-icon">👤</span>
-                Account Settings
+                <span className="nav-icon"><Settings size={16} strokeWidth={2} /></span>
+                Tài khoản
               </button>
               <button
                 className={`profile-nav-item ${activeTab === 'teacher-profile' ? 'active' : ''}`}
                 onClick={() => handleTabChange('teacher-profile')}
               >
-                <span className="nav-icon">👨‍🏫</span>
-                Teacher Profile
+                <span className="nav-icon"><ShieldCheck size={16} strokeWidth={2} /></span>
+                Hồ sơ Giáo viên
               </button>
             </nav>
           </div>
