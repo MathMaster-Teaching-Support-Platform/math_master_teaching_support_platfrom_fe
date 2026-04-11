@@ -20,9 +20,9 @@ import {
   NotebookTabs,
   Presentation,
   Ruler,
-  Sparkles,
   Settings,
   ShieldCheck,
+  Sparkles,
   Users,
   Workflow,
 } from 'lucide-react';
@@ -101,9 +101,7 @@ const studentGroups: MenuGroup[] = [
   },
   {
     label: 'Giáo viên',
-    items: [
-      { path: '/submit-teacher-profile', icon: ShieldCheck, label: 'Đăng ký Giáo viên' },
-    ],
+    items: [{ path: '/submit-teacher-profile', icon: ShieldCheck, label: 'Đăng ký Giáo viên' }],
   },
 ];
 
@@ -178,7 +176,15 @@ const Sidebar: React.FC<SidebarProps> = ({ role, collapsed, onToggle }) => {
 
       {/* Role Switcher */}
       {role !== 'admin' && AuthService.hasRole('teacher') && (
-        <div className="sb-group sb-role-switcher" style={{ marginTop: '0', borderBottom: '1px solid var(--gray-200)', paddingBottom: '0.5rem', marginBottom: '0.5rem' }}>
+        <div
+          className="sb-group sb-role-switcher"
+          style={{
+            marginTop: '0',
+            borderBottom: '1px solid var(--gray-200)',
+            paddingBottom: '0.5rem',
+            marginBottom: '0.5rem',
+          }}
+        >
           <Link
             to={role === 'student' ? '/teacher/dashboard' : '/student/dashboard'}
             className="sb-item sb-item--switch"
@@ -187,8 +193,16 @@ const Sidebar: React.FC<SidebarProps> = ({ role, collapsed, onToggle }) => {
             <span className="sb-icon">
               <ArrowLeftRight size={16} strokeWidth={2.5} />
             </span>
-            {!collapsed && <span className="sb-label">{role === 'student' ? 'Giao diện Giáo viên' : 'Giao diện Học sinh'}</span>}
-            {collapsed && <span className="sb-tooltip">{role === 'student' ? 'Giao diện Giáo viên' : 'Giao diện Học sinh'}</span>}
+            {!collapsed && (
+              <span className="sb-label">
+                {role === 'student' ? 'Giao diện Giáo viên' : 'Giao diện Học sinh'}
+              </span>
+            )}
+            {collapsed && (
+              <span className="sb-tooltip">
+                {role === 'student' ? 'Giao diện Giáo viên' : 'Giao diện Học sinh'}
+              </span>
+            )}
           </Link>
         </div>
       )}
