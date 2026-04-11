@@ -1,6 +1,9 @@
+import 'katex/dist/katex.min.css';
+import { ChevronRight, Menu, Pencil, Plus, Sparkles, SquarePen, Trash2, Archive } from 'lucide-react';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Menu, SquarePen } from 'lucide-react';
+import { BlockMath, InlineMath } from 'react-katex';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { mockTeacher } from '../../data/mockData';
 import {
   useArchiveChatSession,
   useChatSessionDetail,
@@ -12,9 +15,70 @@ import {
   useRenameChatSession,
   useSendChatMessage,
 } from '../../hooks/useChatSessions';
-import { mockTeacher } from '../../data/mockData';
 import type { ChatMessageResponse } from '../../types';
 import './AIAssistant.css';
+
+type MathSegment =
+  | { type: 'text'; value: string }
+  | { type: 'inline-math'; value: string }
+  | { type: 'block-math'; value: string };
+
+function parseMathSegments(text: string): MathSegment[] {
+  if (!text) return [{ type: 'text', value: '' }];
+  const segments: MathSegment[] = [];
+  const mathRegex = /\\\[([\s\S]+?)\\\]|\\\(([\s\S]+?)\\\)|\$\$([\s\S]+?)\$\$|\$([^$\n]+?)\$/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+  while ((match = mathRegex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      segments.push({ type: 'text', value: text.slice(lastIndex, match.index) });
+    }
+    if (match[1] !== undefined || match[3] !== undefined) {
+      segments.push({ type: 'block-math', value: (match[1] ?? match[3] ?? '').trim() });
+    } else {
+      segments.push({ type: 'inline-math', value: (match[2] ?? match[4] ?? '').trim() });
+    }
+    lastIndex = match.index + match[0].length;
+  }
+  if (lastIndex < text.length) {
+    segments.push({ type: 'text', value: text.slice(lastIndex) });
+  }
+  return segments.length ? segments : [{ type: 'text', value: text }];
+}
+
+const ChatMessageContent: React.FC<{ content: string }> = ({ content }) => {
+  const segments = parseMathSegments(content);
+  return (
+    <div className="chat-content-rich">
+      {segments.map((seg, i) => {
+        if (seg.type === 'block-math') {
+          return (
+            <div key={i} className="math-block-wrap">
+              <BlockMath
+                math={seg.value}
+                renderError={() => <code className="math-error">{`$$${seg.value}$$`}</code>}
+              />
+            </div>
+          );
+        }
+        if (seg.type === 'inline-math') {
+          return (
+            <InlineMath
+              key={i}
+              math={seg.value}
+              renderError={() => <code className="math-error">{`$${seg.value}$`}</code>}
+            />
+          );
+        }
+        return (
+          <span key={i} style={{ whiteSpace: 'pre-wrap' }}>
+            {seg.value}
+          </span>
+        );
+      })}
+    </div>
+  );
+};
 
 const AIAssistant: React.FC = () => {
   const [selectedSessionId, setSelectedSessionId] = useState<string>('');
@@ -25,6 +89,7 @@ const AIAssistant: React.FC = () => {
   const [editingTitle, setEditingTitle] = useState('');
   const [isSessionPanelOpen, setIsSessionPanelOpen] = useState(false);
   const hasBootstrappedSession = useRef(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const sessionQueryParams = useMemo(() => ({ page: 0, size: 20 }), []);
 
@@ -82,6 +147,10 @@ const AIAssistant: React.FC = () => {
           },
         ]
       : messages;
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [displayMessages.length, isSending]);
 
   const getErrorMessage = (error: unknown, fallback: string): string => {
     if (error instanceof Error && error.message.trim().length > 0) {
@@ -241,12 +310,16 @@ const AIAssistant: React.FC = () => {
                   maxLength={200}
                   placeholder="Nhập tiêu đề session"
                 />
-                <button type="button" onClick={() => void handleRenameSession()}>
+                <button
+                  type="button"
+                  className="header-btn primary"
+                  onClick={() => void handleRenameSession()}
+                >
                   Lưu
                 </button>
                 <button
                   type="button"
-                  className="ghost"
+                  className="header-btn ghost"
                   onClick={() => {
                     setIsEditingTitle(false);
                     setEditingTitle(selectedSession?.title ?? '');
@@ -264,27 +337,33 @@ const AIAssistant: React.FC = () => {
             <div className="header-actions">
               <button
                 type="button"
-                className="ghost"
+                className="header-btn ghost"
                 onClick={() => setIsEditingTitle((prev) => !prev)}
                 disabled={!selectedSessionId || renameSessionMutation.isPending}
+                title="Đổi tên"
               >
-                Rename
+                <Pencil size={15} />
+                <span>Rename</span>
               </button>
               <button
                 type="button"
-                className="ghost"
+                className="header-btn ghost"
                 onClick={() => void handleArchiveSession()}
                 disabled={!selectedSessionId || isArchived || archiveSessionMutation.isPending}
+                title="Lưu trữ"
               >
-                Archive
+                <Archive size={15} />
+                <span>Archive</span>
               </button>
               <button
                 type="button"
-                className="danger"
+                className="header-btn danger"
                 onClick={() => void handleDeleteSession()}
                 disabled={!selectedSessionId || deleteSessionMutation.isPending}
+                title="Xóa"
               >
-                Delete
+                <Trash2 size={15} />
+                <span>Delete</span>
               </button>
             </div>
           </header>
@@ -292,14 +371,29 @@ const AIAssistant: React.FC = () => {
           <div className="message-stream">
             {combinedError && <div className="error-banner">{combinedError}</div>}
 
+            {!hasConversationStarted && (
+              <div className="empty-state-welcome">
+                <div className="welcome-icon">
+                  <Sparkles size={36} />
+                </div>
+                <h2>Trợ lý Toán học AI</h2>
+                <p>
+                  Hỏi bất kỳ câu hỏi toán học nào — giải phương trình, chứng minh, tạo đề kiểm
+                  tra...
+                </p>
+              </div>
+            )}
+
             {displayMessages.map((message) => (
               <article
                 key={message.id}
                 className={`chat-row ${message.role === 'USER' ? 'chat-user' : 'chat-assistant'}`}
               >
-                <div className="chat-avatar">{message.role === 'USER' ? 'B' : 'AI'}</div>
+                <div className="chat-avatar">
+                  {message.role === 'USER' ? (mockTeacher.name?.[0] ?? 'B') : 'AI'}
+                </div>
                 <div className="chat-body">
-                  <p>{message.content}</p>
+                  <ChatMessageContent content={message.content} />
                   <time>{formatDateTime(message.createdAt)}</time>
                 </div>
               </article>
@@ -315,6 +409,7 @@ const AIAssistant: React.FC = () => {
                 </div>
               </article>
             )}
+            <div ref={messagesEndRef} />
           </div>
 
           <footer className="composer-wrap">
@@ -351,9 +446,11 @@ const AIAssistant: React.FC = () => {
                   type="button"
                   className="send-btn"
                   onClick={() => void handleSend()}
-                  disabled={isSending || isArchived}
+                  disabled={isSending || isArchived || !input.trim()}
+                  title="Gửi (Enter)"
+                  aria-label="Gửi"
                 >
-                  Gửi
+                  <ChevronRight size={18} strokeWidth={2.5} />
                 </button>
               </div>
             </div>
@@ -380,7 +477,8 @@ const AIAssistant: React.FC = () => {
               onClick={() => void handleNewChat()}
               disabled={createSessionMutation.isPending}
             >
-              + Cuộc trò chuyện mới
+              <Plus size={16} />
+              <span>Cuộc trò chuyện mới</span>
             </button>
 
             <div className="session-list-title">Cuộc trò chuyện</div>
@@ -405,8 +503,14 @@ const AIAssistant: React.FC = () => {
             </div>
 
             <div className="session-footer">
-              <div className="session-muted">Memory limit: {memory?.wordLimit ?? 1000} words</div>
-              <div className="session-muted">Used: {memory?.currentWords ?? 0}</div>
+              <div className="session-footer-item">
+                <span className="session-footer-label">Memory limit</span>
+                <span className="session-footer-value">{memory?.wordLimit ?? 1000} words</span>
+              </div>
+              <div className="session-footer-item">
+                <span className="session-footer-label">Used</span>
+                <span className="session-footer-value">{memory?.currentWords ?? 0} words</span>
+              </div>
             </div>
           </div>
 

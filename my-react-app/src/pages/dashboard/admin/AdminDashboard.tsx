@@ -56,9 +56,9 @@ const AdminDashboard: React.FC = () => {
       if (unread.status === 'fulfilled') setNotificationCount(unread.value);
       applyApiResult(stats, setDashboardStats);
       if (stats.status === 'rejected') setFetchError('Không thể tải thống kê tổng quan.');
-      applyApiResult(users, (page) => setRecentUsers(page.content));
+      applyApiResult(users, (page) => setRecentUsers(page.content ?? []));
       applyApiResult(pending, setPendingProfiles);
-      applyApiResult(txns, (page) => setTransactions(page.content));
+      applyApiResult(txns, (page) => setTransactions(page.content ?? []));
       applyApiResult(revenue, (data) => setRevenueMonthly(data.monthly));
       applyApiResult(quick, setQuickStats);
       applyApiResult(sysStatus, (data) => setSystemServices(data.services));
@@ -172,7 +172,7 @@ const AdminDashboard: React.FC = () => {
 
   const renderTransactionsTable = () => {
     if (loading) return <p style={{ padding: '1rem', color: '#718096' }}>Đang tải...</p>;
-    if (transactions.length === 0)
+    if (!transactions || transactions.length === 0)
       return <p style={{ padding: '1rem', color: '#718096' }}>Chưa có giao dịch nào.</p>;
     return (
       <table>

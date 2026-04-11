@@ -10,6 +10,21 @@
   margin-bottom: 2rem;
 }
 
+.page-title {
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin: 0 0 0.25rem;
+  letter-spacing: -0.02em;
+}
+
+.page-subtitle {
+  font-size: 0.875rem;
+  color: var(--gray-500);
+  margin: 0;
+}
+
 /* Stats */
 .assignments-stats {
   display: grid;
@@ -24,22 +39,24 @@
   padding: 1.5rem;
   display: flex;
   gap: 1rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s;
+  border: 1px solid var(--gray-200);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .stat-card:hover {
   transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 .stat-icon {
-  width: 60px;
-  height: 60px;
-  border-radius: 12px;
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.75rem;
+  flex-shrink: 0;
 }
 
 .stat-content {
@@ -78,24 +95,26 @@
 
 .filter-tab {
   padding: 0.625rem 1.25rem;
-  border: 2px solid var(--gray-300);
+  border: 1.5px solid var(--gray-200);
   background: white;
-  border-radius: 8px;
-  font-size: 0.9375rem;
+  border-radius: 10px;
+  font-size: 0.875rem;
   font-weight: 600;
-  color: var(--gray-700);
+  color: var(--gray-600);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s;
 }
 
 .filter-tab:hover {
   border-color: var(--primary-color);
+  color: var(--primary-color);
+  background: #f5f3ff;
 }
 
 .filter-tab.active {
-  background: var(--gradient-primary);
+  background: var(--primary-color);
   color: white;
-  border-color: transparent;
+  border-color: var(--primary-color);
 }
 
 .toolbar-actions {
@@ -105,23 +124,25 @@
 
 .search-input {
   padding: 0.625rem 1rem;
-  border: 2px solid var(--gray-300);
-  border-radius: 8px;
-  font-size: 0.9375rem;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 10px;
+  font-size: 0.875rem;
   min-width: 250px;
-  transition: all 0.2s;
+  transition: all 0.15s;
+  background: white;
 }
 
 .search-input:focus {
   outline: none;
   border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(91, 103, 241, 0.12);
 }
 
 .sort-select {
   padding: 0.625rem 1rem;
-  border: 2px solid var(--gray-300);
-  border-radius: 8px;
-  font-size: 0.9375rem;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 10px;
+  font-size: 0.875rem;
   background: white;
   cursor: pointer;
 }
@@ -137,12 +158,13 @@
   background: white;
   border-radius: 16px;
   padding: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s;
+  border: 1px solid var(--gray-200);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s;
 }
 
 .assignment-card:hover {
-  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.15);
+  box-shadow: var(--shadow-md);
 }
 
 .assignment-header {
@@ -206,7 +228,10 @@
 }
 
 .info-icon {
-  font-size: 1.125rem;
+  display: flex;
+  align-items: center;
+  color: var(--gray-400);
+  flex-shrink: 0;
 }
 
 /* Progress */
@@ -256,7 +281,7 @@
 }
 
 .progress-fill.graded {
-  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(90deg, #5B67F1 0%, #8B5CF6 100%);
 }
 
 .progress-percent {
@@ -303,12 +328,13 @@
 
 .modal {
   background: white;
-  border-radius: 16px;
+  border-radius: 20px;
   max-width: 600px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--gray-200);
 }
 
 .modal.large {
@@ -377,7 +403,7 @@
 .form-group select:focus {
   outline: none;
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  box-shadow: 0 0 0 3px rgba(91, 103, 241, 0.12);
 }
 
 .form-row {

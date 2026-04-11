@@ -12,7 +12,7 @@
 }
 
 .btn-primary:hover:not(:disabled) {
-  background-color: #1565c0;
+  background-color: var(--primary-dark);
   box-shadow: var(--shadow-md);
 }
 

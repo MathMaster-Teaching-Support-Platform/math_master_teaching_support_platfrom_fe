@@ -1,3 +1,21 @@
+import {
+  AlertTriangle,
+  BarChart3,
+  BookOpen,
+  Calendar,
+  CheckCircle2,
+  Clock,
+  Edit3,
+  Eye,
+  FileText,
+  HourglassIcon,
+  Paperclip,
+  Plus,
+  Save,
+  Timer,
+  Trophy,
+  X,
+} from 'lucide-react';
 import React, { useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockTeacher, mockAssignments } from '../../data/mockData';
@@ -36,11 +54,11 @@ const TeacherAssignments: React.FC = () => {
       <div className="teacher-assignments-page">
         <div className="page-header">
           <div>
-            <h1 className="page-title">📝 Quản lý Bài Tập</h1>
+            <h1 className="page-title">Quản lý Bài Tập</h1>
             <p className="page-subtitle">Tạo, phân công và chấm điểm bài tập cho học sinh</p>
           </div>
           <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}>
-            <span>➕</span> Tạo bài tập mới
+            <Plus size={16} strokeWidth={2.5} /> Tạo bài tập mới
           </button>
         </div>
 
@@ -49,9 +67,9 @@ const TeacherAssignments: React.FC = () => {
           <div className="stat-card">
             <div
               className="stat-icon"
-              style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
+              style={{ background: 'linear-gradient(135deg, #5B67F1 0%, #8B5CF6 100%)' }}
             >
-              📝
+              <FileText size={24} color="#fff" />
             </div>
             <div className="stat-content">
               <div className="stat-value">{stats.total}</div>
@@ -61,9 +79,9 @@ const TeacherAssignments: React.FC = () => {
           <div className="stat-card">
             <div
               className="stat-icon"
-              style={{ background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)' }}
+              style={{ background: 'linear-gradient(135deg, #10B981 0%, #14B8A6 100%)' }}
             >
-              ⏳
+              <HourglassIcon size={24} color="#fff" />
             </div>
             <div className="stat-content">
               <div className="stat-value">{stats.active}</div>
@@ -73,9 +91,9 @@ const TeacherAssignments: React.FC = () => {
           <div className="stat-card">
             <div
               className="stat-icon"
-              style={{ background: 'linear-gradient(135deg, #ffd89b 0%, #19547b 100%)' }}
+              style={{ background: 'linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)' }}
             >
-              ⏰
+              <Clock size={24} color="#fff" />
             </div>
             <div className="stat-content">
               <div className="stat-value">{stats.pending}</div>
@@ -85,9 +103,9 @@ const TeacherAssignments: React.FC = () => {
           <div className="stat-card">
             <div
               className="stat-icon"
-              style={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' }}
+              style={{ background: 'linear-gradient(135deg, #8B5CF6 0%, #F472B6 100%)' }}
             >
-              📊
+              <Trophy size={24} color="#fff" />
             </div>
             <div className="stat-content">
               <div className="stat-value">{stats.avgCompletion}%</div>
@@ -120,7 +138,7 @@ const TeacherAssignments: React.FC = () => {
           </div>
 
           <div className="toolbar-actions">
-            <input type="text" placeholder="🔍 Tìm kiếm bài tập..." className="search-input" />
+            <input type="text" placeholder="Tìm kiếm bài tập..." className="search-input" />
             <select className="sort-select">
               <option>Mới nhất</option>
               <option>Deadline gần</option>
@@ -145,31 +163,31 @@ const TeacherAssignments: React.FC = () => {
                   <div className="assignment-title-section">
                     <h3 className="assignment-title">{assignment.title}</h3>
                     <span className={`assignment-status ${isOverdue ? 'overdue' : 'active'}`}>
-                      {isOverdue ? '⏰ Đã kết thúc' : `⏳ Còn ${daysLeft} ngày`}
+                      {isOverdue ? 'Đã kết thúc' : `Còn ${daysLeft} ngày`}
                     </span>
                   </div>
                   <div className="assignment-actions">
-                    <button className="btn btn-outline btn-sm">📊 Thống kê</button>
-                    <button className="btn btn-outline btn-sm">✏️ Sửa</button>
-                    <button className="btn btn-primary btn-sm">👁️ Xem chi tiết</button>
+                    <button className="btn btn-outline btn-sm"><BarChart3 size={14} /> Thống kê</button>
+                    <button className="btn btn-outline btn-sm"><Edit3 size={14} /> Sửa</button>
+                    <button className="btn btn-primary btn-sm"><Eye size={14} /> Xem chi tiết</button>
                   </div>
                 </div>
 
                 <div className="assignment-info">
                   <div className="info-item">
-                    <span className="info-icon">📚</span>
+                    <span className="info-icon"><BookOpen size={15} /></span>
                     <span className="info-text">{assignment.courseName}</span>
                   </div>
                   <div className="info-item">
-                    <span className="info-icon">⏱️</span>
+                    <span className="info-icon"><Timer size={15} /></span>
                     <span className="info-text">{assignment.duration} phút</span>
                   </div>
                   <div className="info-item">
-                    <span className="info-icon">📅</span>
+                    <span className="info-icon"><Calendar size={15} /></span>
                     <span className="info-text">Hạn: {deadline.toLocaleDateString('vi-VN')}</span>
                   </div>
                   <div className="info-item">
-                    <span className="info-icon">💯</span>
+                    <span className="info-icon"><Trophy size={15} /></span>
                     <span className="info-text">Điểm tối đa: {assignment.maxScore}</span>
                   </div>
                 </div>
@@ -221,7 +239,7 @@ const TeacherAssignments: React.FC = () => {
 
                 {assignment.gradedSubmissions < assignment.totalSubmissions && (
                   <div className="assignment-alert">
-                    <span className="alert-icon">⚠️</span>
+                    <span className="alert-icon"><AlertTriangle size={18} /></span>
                     <span className="alert-text">
                       Còn {assignment.totalSubmissions - assignment.gradedSubmissions} bài chưa chấm
                     </span>
@@ -240,7 +258,7 @@ const TeacherAssignments: React.FC = () => {
               <div className="modal-header">
                 <h2 className="modal-title">Tạo bài tập mới</h2>
                 <button className="modal-close" onClick={() => setShowCreateModal(false)}>
-                  ✕
+                  <X size={16} />
                 </button>
               </div>
 
@@ -301,7 +319,7 @@ const TeacherAssignments: React.FC = () => {
                   <div className="file-upload">
                     <input type="file" id="assignment-file" />
                     <label htmlFor="assignment-file" className="file-upload-label">
-                      📎 Chọn tệp
+                      <Paperclip size={14} /> Chọn tệp
                     </label>
                   </div>
                 </div>
@@ -323,11 +341,9 @@ const TeacherAssignments: React.FC = () => {
               </div>
 
               <div className="modal-footer">
-                <button className="btn btn-outline" onClick={() => setShowCreateModal(false)}>
-                  Hủy
-                </button>
-                <button className="btn btn-outline">💾 Lưu nháp</button>
-                <button className="btn btn-primary">✅ Tạo và phân công</button>
+                <button className="btn btn-outline">Hủy</button>
+                <button className="btn btn-outline"><Save size={14} /> Lưu nháp</button>
+                <button className="btn btn-primary"><CheckCircle2 size={14} /> Tạo và phân công</button>
               </div>
             </div>
           </div>
