@@ -54,6 +54,7 @@ import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLa
 import '../../styles/module-refactor.css';
 import { TemplateFormModal } from './TemplateFormModal';
 import { TemplateImportModal } from './TemplateImportModal';
+import { TemplateBulkImportModal } from './TemplateBulkImportModal';
 import { TemplateTestModal } from './TemplateTestModal';
 import { TemplateGenerateModal } from './TemplateGenerateModal';
 import { CanonicalGenerateModal } from './CanonicalGenerateModal';
@@ -192,6 +193,7 @@ export function TemplateDashboard() {
   const [mode, setMode] = useState<'create' | 'edit'>('create');
   const [formOpen, setFormOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [bulkImportOpen, setBulkImportOpen] = useState(false);
   const [testOpen, setTestOpen] = useState(false);
   const [selected, setSelected] = useState<QuestionTemplateResponse | null>(null);
   const [reviewOpen, setReviewOpen] = useState(false);
@@ -557,6 +559,10 @@ export function TemplateDashboard() {
               <p>Quản lý logic tạo câu hỏi tái sử dụng và vòng đời của mẫu.</p>
             </div>
             <div className="row" style={{ flexWrap: 'wrap' }}>
+              <button className="btn secondary" onClick={() => setBulkImportOpen(true)}>
+                <Upload size={14} />
+                Bulk Import
+              </button>
               <button className="btn secondary" onClick={() => setImportOpen(true)}>
                 <Upload size={14} />
                 Nhập file
@@ -863,6 +869,15 @@ export function TemplateDashboard() {
             onUseTemplate={(draft) => {
               setImportOpen(false);
               openCreateFromDraft(draft);
+            }}
+          />
+
+          <TemplateBulkImportModal
+            isOpen={bulkImportOpen}
+            onClose={() => setBulkImportOpen(false)}
+            onSuccess={() => {
+              setBulkImportOpen(false);
+              void refetch();
             }}
           />
 
