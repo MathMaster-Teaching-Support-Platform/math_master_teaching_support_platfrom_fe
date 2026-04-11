@@ -48,3 +48,10 @@ export interface ApiResponse<T> {
   message?: string;
   result?: T;
 }
+
+export interface CanonicalQuestionPagingParams {
+  page?: number;
+  size?: number;
+  sortBy?: string;
+  sortDirection?: 'ASC' | 'DESC';
+}

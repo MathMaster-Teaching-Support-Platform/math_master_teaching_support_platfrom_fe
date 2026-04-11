@@ -220,6 +220,7 @@ export const API_ENDPOINTS = {
   CANONICAL_QUESTIONS: '/canonical-questions',
   CANONICAL_QUESTIONS_MY: '/canonical-questions/my',
   CANONICAL_QUESTION_DETAIL: (id: string) => `/canonical-questions/${id}`,
+  CANONICAL_QUESTION_QUESTIONS: (id: string) => `/canonical-questions/${id}/questions`,
   CANONICAL_QUESTION_GENERATE_QUESTIONS: (id: string) =>
     `/canonical-questions/${id}/generate-questions`,
 
