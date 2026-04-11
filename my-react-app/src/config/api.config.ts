@@ -257,6 +257,19 @@ export const API_ENDPOINTS = {
     `/student-assessments/draft/${attemptId}`,
   STUDENT_ASSESSMENTS_SAVE_AND_EXIT: '/student-assessments/save-and-exit',
 
+  // Admin User Management
+  ADMIN_USERS: '/admin/users',
+  ADMIN_USERS_BY_ID: (userId: string) => `/admin/users/${userId}`,
+  ADMIN_USERS_STATUS: (userId: string) => `/admin/users/${userId}/status`,
+  ADMIN_USERS_RESET_PASSWORD: (userId: string) => `/admin/users/${userId}/reset-password`,
+  ADMIN_USERS_SEND_EMAIL: (userId: string) => `/admin/users/${userId}/send-email`,
+  ADMIN_USERS_EXPORT: '/admin/users/export',
+  USERS_CREATE: '/users',
+  USERS_UPDATE: (userId: string) => `/users/${userId}`,
+  USERS_DELETE: (userId: string) => `/users/${userId}`,
+  USERS_ENABLE: (userId: string) => `/users/${userId}/enable`,
+  USERS_DISABLE: (userId: string) => `/users/${userId}/disable`,
+
   // Admin Dashboard
   ADMIN_DASHBOARD_STATS: '/admin/dashboard/stats',
   ADMIN_USERS_RECENT: '/users/admin/recent',
