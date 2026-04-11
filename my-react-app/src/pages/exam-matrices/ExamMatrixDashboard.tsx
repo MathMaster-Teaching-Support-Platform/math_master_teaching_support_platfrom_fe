@@ -1,6 +1,7 @@
-import { useState } from 'react';
 import { CheckCircle2, Edit, Eye, Plus, RotateCcw, Search, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import {
   useApproveMatrix,
   useCreateExamMatrix,
@@ -9,7 +10,6 @@ import {
   useResetMatrix,
   useUpdateExamMatrix,
 } from '../../hooks/useExamMatrix';
-import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import '../../styles/module-refactor.css';
 import {
   MatrixStatus,
@@ -173,7 +173,7 @@ export function ExamMatrixDashboard() {
                     <span className={statusClass[matrix.status]}>
                       {cardStatusLabel[matrix.status]}
                     </span>
-                      <span className="muted">{matrix.rowCount ?? matrix.templateMappingCount ?? 0} dòng ma trận</span>
+                    <span className="muted">{matrix.rowCount ?? 0} dòng ma trận</span>
                   </div>
 
                   <div>

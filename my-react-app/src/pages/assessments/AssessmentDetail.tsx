@@ -1,6 +1,8 @@
 import { ArrowLeft, Pencil } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import MathText from '../../components/common/MathText';
+import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import {
   useAddQuestion,
   useAssessment,
@@ -8,11 +10,9 @@ import {
   useGenerateQuestionsForAssessment,
   useRemoveQuestion,
   useSetPointsOverride,
-  useUpdateAssessmentQuestionWorkaround,
   useUpdateAssessment,
+  useUpdateAssessmentQuestionWorkaround,
 } from '../../hooks/useAssessment';
-import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
-import MathText from '../../components/common/MathText';
 import '../../styles/module-refactor.css';
 import type { AssessmentRequest } from '../../types';
 import AssessmentModal from './AssessmentModal';
@@ -85,7 +85,11 @@ export default function AssessmentDetail() {
     await refetch();
   }
 
-  function getDraftValue(question: { questionId: string; id?: string; pointsOverride?: number | null }) {
+  function getDraftValue(question: {
+    questionId: string;
+    id?: string;
+    pointsOverride?: number | null;
+  }) {
     const questionId = getQuestionId(question);
     if (questionId in pointsDraft) return pointsDraft[questionId];
     if (typeof question.pointsOverride === 'number') return String(question.pointsOverride);
@@ -165,13 +169,13 @@ export default function AssessmentDetail() {
     }
 
     const nextOrder = orderRaw ? Number(orderRaw) : undefined;
-    if (orderRaw && (Number.isNaN(nextOrder) || nextOrder < 1)) {
+    if (orderRaw && (Number.isNaN(nextOrder) || (nextOrder !== undefined && nextOrder < 1))) {
       setQuestionCrudError('orderIndex phải là số nguyên dương.');
       return;
     }
 
     const nextPoints = pointsRaw ? Number(pointsRaw) : null;
-    if (pointsRaw && (Number.isNaN(nextPoints) || nextPoints < 0)) {
+    if (pointsRaw && (Number.isNaN(nextPoints) || (nextPoints !== null && nextPoints < 0))) {
       setQuestionCrudError('pointsOverride phải >= 0.');
       return;
     }
@@ -242,13 +246,16 @@ export default function AssessmentDetail() {
       });
       await Promise.all([refetchQuestions(), refetch()]);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Không thể generate câu hỏi từ matrix.';
+      const message =
+        error instanceof Error ? error.message : 'Không thể generate câu hỏi từ matrix.';
       const normalized = message.toUpperCase();
       if (
         normalized.includes('INSUFFICIENT_QUESTIONS_AVAILABLE') ||
         normalized.includes('INSUFFICIENT QUESTIONS')
       ) {
-        setGenerateError('Không đủ câu hỏi trong ngân hàng theo cấu trúc đề. Vui lòng bổ sung thêm câu hỏi.');
+        setGenerateError(
+          'Không đủ câu hỏi trong ngân hàng theo cấu trúc đề. Vui lòng bổ sung thêm câu hỏi.'
+        );
         return;
       }
       setGenerateError(message);
@@ -378,24 +385,36 @@ export default function AssessmentDetail() {
             <h3>Câu hỏi trong bài kiểm tra</h3>
             <div className="row" style={{ justifyContent: 'start', flexWrap: 'wrap' }}>
               <span className="muted">Có thể chỉnh điểm từng câu bằng pointsOverride</span>
-              {assessment.status === 'DRAFT' && assessment.assessmentMode === 'MATRIX_BASED' && assessment.examMatrixId && (
-                <button
-                  className="btn"
-                  onClick={() => void generateFromMatrix()}
-                  disabled={generateMutation.isPending}
-                >
-                  {generateMutation.isPending ? 'Đang generate...' : 'Generate from Matrix'}
-                </button>
-              )}
+              {assessment.status === 'DRAFT' &&
+                assessment.assessmentMode === 'MATRIX_BASED' &&
+                assessment.examMatrixId && (
+                  <button
+                    className="btn"
+                    onClick={() => void generateFromMatrix()}
+                    disabled={generateMutation.isPending}
+                  >
+                    {generateMutation.isPending ? 'Đang generate...' : 'Generate from Matrix'}
+                  </button>
+                )}
             </div>
           </div>
 
-          {generateError && <div className="empty" style={{ color: '#b91c1c' }}>{generateError}</div>}
-          {questionCrudError && <div className="empty" style={{ color: '#b91c1c' }}>{questionCrudError}</div>}
+          {generateError && (
+            <div className="empty" style={{ color: '#b91c1c' }}>
+              {generateError}
+            </div>
+          )}
+          {questionCrudError && (
+            <div className="empty" style={{ color: '#b91c1c' }}>
+              {questionCrudError}
+            </div>
+          )}
 
           {assessment.status === 'DRAFT' && (
             <div className="preview-box" style={{ marginBottom: 12 }}>
-              <p className="muted" style={{ marginBottom: 8 }}>Thêm câu hỏi vào assessment (manual)</p>
+              <p className="muted" style={{ marginBottom: 8 }}>
+                Thêm câu hỏi vào assessment (manual)
+              </p>
               <div className="row" style={{ flexWrap: 'wrap', justifyContent: 'start' }}>
                 <input
                   className="input"
@@ -481,20 +500,33 @@ export default function AssessmentDetail() {
                         <td>{question.orderIndex}</td>
                         <td>
                           <MathText text={question.questionText} />
-                          <div className="row" style={{ justifyContent: 'start', flexWrap: 'wrap', marginTop: 6 }}>
-                            {question.questionSourceType === 'AI_GENERATED' && <span className="badge draft">AI Generated</span>}
-                            {question.questionSourceType === 'TEMPLATE_GENERATED' && <span className="badge approved">Parametric</span>}
-                            {question.canonicalQuestionId && <span className="badge published">Generated from Canonical</span>}
+                          <div
+                            className="row"
+                            style={{ justifyContent: 'start', flexWrap: 'wrap', marginTop: 6 }}
+                          >
+                            {question.questionSourceType === 'AI_GENERATED' && (
+                              <span className="badge draft">AI Generated</span>
+                            )}
+                            {question.questionSourceType === 'TEMPLATE_GENERATED' && (
+                              <span className="badge approved">Parametric</span>
+                            )}
+                            {question.canonicalQuestionId && (
+                              <span className="badge published">Generated from Canonical</span>
+                            )}
                           </div>
                           {question.solutionSteps && (
                             <div className="preview-box" style={{ marginTop: 8 }}>
-                              <p className="muted" style={{ marginBottom: 6 }}>Solution Steps</p>
+                              <p className="muted" style={{ marginBottom: 6 }}>
+                                Solution Steps
+                              </p>
                               <MathText text={question.solutionSteps} />
                             </div>
                           )}
                           {question.diagramData && (
                             <div className="preview-box" style={{ marginTop: 8 }}>
-                              <p className="muted" style={{ marginBottom: 6 }}>Diagram</p>
+                              <p className="muted" style={{ marginBottom: 6 }}>
+                                Diagram
+                              </p>
                               <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
                                 {JSON.stringify(question.diagramData, null, 2)}
                               </pre>
@@ -528,28 +560,39 @@ export default function AssessmentDetail() {
                             <button
                               className="btn secondary"
                               onClick={() => void updateAssessmentQuestion(questionId)}
-                              disabled={assessment.status !== 'DRAFT' || updateAssessmentQuestionMutation.isPending}
+                              disabled={
+                                assessment.status !== 'DRAFT' ||
+                                updateAssessmentQuestionMutation.isPending
+                              }
                             >
-                              {updateAssessmentQuestionMutation.isPending ? 'Đang cập nhật...' : 'Cập nhật'}
+                              {updateAssessmentQuestionMutation.isPending
+                                ? 'Đang cập nhật...'
+                                : 'Cập nhật'}
                             </button>
                             <button
                               className="btn"
                               onClick={() => void savePointsOverride(questionId)}
-                              disabled={assessment.status !== 'DRAFT' || pointsOverrideMutation.isPending}
+                              disabled={
+                                assessment.status !== 'DRAFT' || pointsOverrideMutation.isPending
+                              }
                             >
                               Lưu điểm
                             </button>
                             <button
                               className="btn secondary"
                               onClick={() => void clearPointsOverride(questionId)}
-                              disabled={assessment.status !== 'DRAFT' || pointsOverrideMutation.isPending}
+                              disabled={
+                                assessment.status !== 'DRAFT' || pointsOverrideMutation.isPending
+                              }
                             >
                               Xóa override
                             </button>
                             <button
                               className="btn danger"
                               onClick={() => void removeQuestionFromAssessment(questionId)}
-                              disabled={assessment.status !== 'DRAFT' || removeQuestionMutation.isPending}
+                              disabled={
+                                assessment.status !== 'DRAFT' || removeQuestionMutation.isPending
+                              }
                             >
                               {removeQuestionMutation.isPending ? 'Đang xóa...' : 'Xóa câu hỏi'}
                             </button>
