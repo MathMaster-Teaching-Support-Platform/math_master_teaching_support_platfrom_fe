@@ -27,6 +27,7 @@ export interface AdminUserItem {
 
 export interface UserStats {
   total: number;
+  admins: number;
   teachers: number;
   students: number;
   active: number;
@@ -48,7 +49,8 @@ export interface AdminUsersResult {
 export interface ListUsersParams {
   page?: number;
   pageSize?: number;
-  role?: 'TEACHER' | 'STUDENT' | 'ADMIN' | 'all';
+  /** STUDENT_ONLY = has STUDENT role but does NOT have TEACHER role */
+  role?: 'TEACHER' | 'STUDENT' | 'STUDENT_ONLY' | 'ADMIN' | 'all';
   search?: string;
   status?: 'ACTIVE' | 'INACTIVE' | 'all';
 }
@@ -114,7 +116,7 @@ function buildQuery(params: Record<string, string | number | undefined>): string
 
 export const userManagementService = {
   async listUsers(params: ListUsersParams = {}): Promise<AdminUsersResult> {
-    const { page = 0, pageSize = 20, role, search, status } = params;
+    const { page = 0, pageSize = 10, role, search, status } = params;
     const query = buildQuery({ page, pageSize, role, search, status });
     const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ADMIN_USERS}${query}`, {
       headers: getAuthHeaders(),

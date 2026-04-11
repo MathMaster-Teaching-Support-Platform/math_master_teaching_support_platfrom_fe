@@ -9,24 +9,33 @@ import {
 } from '../../services/userManagement.service';
 import './UserManagement.css';
 
-const ROLE_FILTER_MAP: Record<'all' | 'teacher' | 'student', ListUsersParams['role']> = {
+const ROLE_FILTER_MAP: Record<'all' | 'admin' | 'teacher' | 'student', ListUsersParams['role']> = {
   all: 'all',
+  admin: 'ADMIN',
   teacher: 'TEACHER',
-  student: 'STUDENT',
+  student: 'STUDENT_ONLY',
 };
 
+const ROLE_PRIORITY: Record<UserRole, number> = { ADMIN: 3, TEACHER: 2, STUDENT: 1 };
+
+const getHighestRole = (roles: UserRole[]): UserRole =>
+  roles.reduce(
+    (highest, r) => (ROLE_PRIORITY[r] > ROLE_PRIORITY[highest] ? r : highest),
+    'STUDENT' as UserRole
+  );
+
 const UserManagement: React.FC = () => {
-  const [filterRole, setFilterRole] = useState<'all' | 'teacher' | 'student'>('all');
+  const [filterRole, setFilterRole] = useState<'all' | 'admin' | 'teacher' | 'student'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<AdminUserItem | null>(null);
 
   // List state
   const [users, setUsers] = useState<AdminUserItem[]>([]);
-  const [stats, setStats] = useState({ total: 0, teachers: 0, students: 0, active: 0 });
+  const [stats, setStats] = useState({ total: 0, admins: 0, teachers: 0, students: 0, active: 0 });
   const [pagination, setPagination] = useState({
     page: 0,
-    pageSize: 20,
+    pageSize: 10,
     totalItems: 0,
     totalPages: 1,
   });
@@ -196,7 +205,7 @@ const UserManagement: React.FC = () => {
   };
 
   const getRoleLabel = (roles: UserRole[]) => {
-    const role = roles[0];
+    const role = getHighestRole(roles);
     switch (role) {
       case 'TEACHER':
         return '\uD83D\uDC68\u200D\uD83C\uDFEB Giao vien';
@@ -210,7 +219,7 @@ const UserManagement: React.FC = () => {
   };
 
   const getRoleBadgeClass = (roles: UserRole[]) => {
-    const role = roles[0];
+    const role = getHighestRole(roles);
     switch (role) {
       case 'TEACHER':
         return 'teacher';
@@ -252,6 +261,18 @@ const UserManagement: React.FC = () => {
             <div className="stat-content">
               <div className="stat-value">{stats.total}</div>
               <div className="stat-label">Tong nguoi dung</div>
+            </div>
+          </div>
+          <div className="stat-card">
+            <div
+              className="stat-icon"
+              style={{ background: 'linear-gradient(135deg, #f7971e 0%, #ffd200 100%)' }}
+            >
+              &#128104;&#8205;&#128187;
+            </div>
+            <div className="stat-content">
+              <div className="stat-value">{stats.admins}</div>
+              <div className="stat-label">Admin</div>
             </div>
           </div>
           <div className="stat-card">
@@ -300,6 +321,12 @@ const UserManagement: React.FC = () => {
               onClick={() => setFilterRole('all')}
             >
               Tat ca ({stats.total})
+            </button>
+            <button
+              className={`filter-tab ${filterRole === 'admin' ? 'active' : ''}`}
+              onClick={() => setFilterRole('admin')}
+            >
+              Admin ({stats.admins})
             </button>
             <button
               className={`filter-tab ${filterRole === 'teacher' ? 'active' : ''}`}
