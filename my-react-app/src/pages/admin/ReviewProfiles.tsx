@@ -8,6 +8,7 @@ import {
   FileText,
   Globe,
   MapPin,
+  Scan,
   Search,
   UserCheck,
   UserX,
@@ -18,7 +19,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { DashboardLayout } from '../../components/layout';
 import { mockAdmin } from '../../data/mockData';
 import { TeacherProfileService } from '../../services/api/teacher-profile.service';
-import type { ProfileStatus, TeacherProfile } from '../../types';
+import type { ProfileStatus, TeacherProfile, OcrComparisonResult } from '../../types';
 import './ReviewProfiles.css';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -98,6 +99,12 @@ const ReviewProfiles: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
+  // OCR verification states
+  const [ocrVerifying, setOcrVerifying] = useState(false);
+  const [ocrProgress, setOcrProgress] = useState(0);
+  const [ocrResult, setOcrResult] = useState<OcrComparisonResult | null>(null);
+  const [ocrError, setOcrError] = useState<string | null>(null);
+
   const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3500);
@@ -144,6 +151,9 @@ const ReviewProfiles: React.FC = () => {
     setSelectedProfile(profile);
     setReviewAction(null);
     setAdminComment('');
+    setOcrResult(null);
+    setOcrError(null);
+    setOcrProgress(0);
   };
 
   const handleReviewSubmit = async () => {
@@ -174,6 +184,40 @@ const ReviewProfiles: React.FC = () => {
       if (res.result) window.open(res.result as string, '_blank');
     } catch {
       showToast('Không thể lấy link tải hồ sơ', 'error');
+    }
+  };
+
+  const handleOcrVerify = async () => {
+    if (!selectedProfile) return;
+    
+    setOcrVerifying(true);
+    setOcrError(null);
+    setOcrResult(null);
+    setOcrProgress(0);
+
+    try {
+      // Start OCR job
+      const jobResponse = await TeacherProfileService.verifyProfileWithOcr(selectedProfile.id);
+      const jobId = jobResponse.result.jobId;
+
+      // Poll until complete
+      const result = await TeacherProfileService.pollOcrJobUntilComplete(
+        jobId,
+        (progress, status) => {
+          setOcrProgress(progress);
+          console.log(`OCR Progress: ${progress}% - Status: ${status}`);
+        }
+      );
+
+      setOcrResult(result);
+      setOcrProgress(100);
+      showToast('Xác minh OCR hoàn tất!', 'success');
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Xác minh OCR thất bại';
+      setOcrError(errorMsg);
+      showToast(errorMsg, 'error');
+    } finally {
+      setOcrVerifying(false);
     }
   };
 
@@ -413,6 +457,80 @@ const ReviewProfiles: React.FC = () => {
                     <Download size={14} />
                     Tải hồ sơ xác minh
                   </button>
+
+                  {/* OCR Verification */}
+                  {selectedProfile.status === 'PENDING' && (
+                    <section className="rpd-section">
+                      <h3 className="rpd-section-title">
+                        <Scan size={12} /> Xác minh OCR
+                      </h3>
+                      
+                      <button
+                        className="rpd-ocr-btn"
+                        onClick={handleOcrVerify}
+                        disabled={ocrVerifying}
+                      >
+                        <Scan size={14} />
+                        {ocrVerifying ? `Đang xác minh... ${ocrProgress}%` : 'Xác minh với OCR'}
+                      </button>
+
+                      {ocrVerifying && (
+                        <div className="rpd-ocr-progress">
+                          <div className="rpd-ocr-progress-bar">
+                            <div 
+                              className="rpd-ocr-progress-fill" 
+                              style={{ width: `${ocrProgress}%` }}
+                            />
+                          </div>
+                          <p className="rpd-ocr-progress-text">{ocrProgress}%</p>
+                        </div>
+                      )}
+
+                      {ocrError && (
+                        <div className="rpd-ocr-error">
+                          <XCircle size={14} />
+                          {ocrError}
+                        </div>
+                      )}
+
+                      {ocrResult && (
+                        <div className="rpd-ocr-result">
+                          <div className={`rpd-ocr-match ${ocrResult.isMatch ? 'rpd-ocr-match--yes' : 'rpd-ocr-match--no'}`}>
+                            {ocrResult.isMatch ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
+                            <span>
+                              {ocrResult.isMatch ? 'Khớp' : 'Không khớp'} ({ocrResult.matchScore.toFixed(1)}%)
+                            </span>
+                          </div>
+                          
+                          <p className="rpd-ocr-summary">{ocrResult.summary}</p>
+                          
+                          <div className="rpd-ocr-fields">
+                            <h4>Chi tiết so sánh:</h4>
+                            {ocrResult.fieldComparisons.map((field, idx) => (
+                              <div key={idx} className="rpd-ocr-field">
+                                <div className="rpd-ocr-field-header">
+                                  <span className="rpd-ocr-field-name">{field.fieldName}</span>
+                                  <span className={`rpd-ocr-field-status ${field.matches ? 'rpd-ocr-field-status--match' : 'rpd-ocr-field-status--mismatch'}`}>
+                                    {field.matches ? '✓' : '✗'} {(field.similarity * 100).toFixed(0)}%
+                                  </span>
+                                </div>
+                                <div className="rpd-ocr-field-values">
+                                  <div>
+                                    <span className="rpd-ocr-field-label">Đã nộp:</span>
+                                    <span>{field.submittedValue}</span>
+                                  </div>
+                                  <div>
+                                    <span className="rpd-ocr-field-label">OCR:</span>
+                                    <span>{field.ocrValue}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </section>
+                  )}
 
                   {/* Review actions — only for PENDING */}
                   {selectedProfile.status === 'PENDING' && (

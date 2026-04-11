@@ -6,6 +6,9 @@ import type {
   UpdateTeacherProfileRequest,
   ReviewProfileRequest,
   ProfileStatus,
+  OcrComparisonResult,
+  OcrJobResponse,
+  OcrJobResult,
   ApiResponse,
   PaginatedResponse,
 } from '../../types';
@@ -245,6 +248,176 @@ export class TeacherProfileService {
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.message || 'Failed to get download URL');
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Verify profile with Gemini OCR (Admin) - Async
+   * Returns job ID immediately for polling
+   */
+  static async verifyProfileWithOcr(
+    profileId: string
+  ): Promise<ApiResponse<OcrJobResponse>> {
+    const token = AuthService.getToken();
+    if (!token) throw new Error('Authentication required');
+
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.TEACHER_PROFILES_OCR_VERIFY(profileId)}`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          accept: '*/*',
+        },
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to start OCR verification');
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Get OCR job status (Admin)
+   */
+  static async getOcrJobStatus(jobId: string): Promise<ApiResponse<OcrJobResult>> {
+    const token = AuthService.getToken();
+    if (!token) throw new Error('Authentication required');
+
+    const response = await fetch(
+      `${API_BASE_URL}/teacher-profiles/ocr-jobs/${jobId}/status`,
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          accept: '*/*',
+        },
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to get job status');
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Get OCR job result (Admin)
+   */
+  static async getOcrJobResult(jobId: string): Promise<ApiResponse<OcrComparisonResult>> {
+    const token = AuthService.getToken();
+    if (!token) throw new Error('Authentication required');
+
+    const response = await fetch(
+      `${API_BASE_URL}/teacher-profiles/ocr-jobs/${jobId}/result`,
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          accept: '*/*',
+        },
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to get job result');
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Poll OCR job until completion (Admin)
+   * Helper method that polls the job status until it's completed or failed
+   */
+  static async pollOcrJobUntilComplete(
+    jobId: string,
+    onProgress?: (progress: number, status: string) => void,
+    pollInterval: number = 2000,
+    maxAttempts: number = 150 // 5 minutes max (150 * 2s)
+  ): Promise<OcrComparisonResult> {
+    return new Promise((resolve, reject) => {
+      let attempts = 0;
+
+      const interval = setInterval(async () => {
+        try {
+          attempts++;
+
+          if (attempts > maxAttempts) {
+            clearInterval(interval);
+            reject(new Error('OCR job polling timeout - exceeded maximum attempts'));
+            return;
+          }
+
+          const response = await this.getOcrJobStatus(jobId);
+          const jobResult = response.result;
+
+          // Update progress callback
+          if (onProgress) {
+            onProgress(jobResult.progress, jobResult.status);
+          }
+
+          // Check terminal states
+          if (jobResult.status === 'COMPLETED') {
+            clearInterval(interval);
+            if (jobResult.result) {
+              resolve(jobResult.result);
+            } else {
+              // Fetch full result if not included in status
+              const resultResponse = await this.getOcrJobResult(jobId);
+              resolve(resultResponse.result);
+            }
+          } else if (jobResult.status === 'FAILED') {
+            clearInterval(interval);
+            reject(new Error(jobResult.errorMessage || 'OCR verification failed'));
+          } else if (jobResult.status === 'CANCELLED') {
+            clearInterval(interval);
+            reject(new Error('OCR verification was cancelled'));
+          }
+          // Continue polling for PENDING and PROCESSING states
+        } catch (error) {
+          clearInterval(interval);
+          reject(error);
+        }
+      }, pollInterval);
+    });
+  }
+
+  /**
+   * Review profile with optional OCR verification (Admin)
+   */
+  static async reviewProfileWithOcr(
+    profileId: string,
+    data: ReviewProfileRequest,
+    performOcr: boolean = true
+  ): Promise<ApiResponse<TeacherProfile>> {
+    const token = AuthService.getToken();
+    if (!token) throw new Error('Authentication required');
+
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.TEACHER_PROFILES_REVIEW_WITH_OCR(profileId)}?performOcr=${performOcr}`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          accept: '*/*',
+        },
+        body: JSON.stringify(data),
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to review profile with OCR');
     }
 
     return response.json();

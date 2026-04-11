@@ -28,6 +28,8 @@ export const API_ENDPOINTS = {
   TEACHER_PROFILES_PENDING_COUNT: '/teacher-profiles/pending/count',
   TEACHER_PROFILES_REVIEW: (profileId: string) => `/teacher-profiles/${profileId}/review`,
   TEACHER_PROFILES_DOWNLOAD: (profileId: string) => `/teacher-profiles/${profileId}/download`,
+  TEACHER_PROFILES_OCR_VERIFY: (profileId: string) => `/teacher-profiles/${profileId}/ocr-verify`,
+  TEACHER_PROFILES_REVIEW_WITH_OCR: (profileId: string) => `/teacher-profiles/${profileId}/review-with-ocr`,
 
   // Assessments
   ASSESSMENTS: '/assessments',
