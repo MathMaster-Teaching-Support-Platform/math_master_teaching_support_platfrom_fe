@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import DashboardLayout from '../components/layout/DashboardLayout/DashboardLayout';
 import Footer from '../components/Footer';
+import { mockAdmin, mockStudent, mockTeacher } from '../data/mockData';
 import { AuthService } from '../services/api/auth.service';
 import {
   SubscriptionPlanService,
@@ -15,6 +17,11 @@ import './Pricing.css';
 
 const Pricing: React.FC = () => {
   const isAuthenticated = AuthService.isAuthenticated();
+  const currentRole = AuthService.getUserRole() || 'student';
+  const layoutRole: 'teacher' | 'student' | 'admin' =
+    currentRole === 'teacher' ? 'teacher' : currentRole === 'admin' ? 'admin' : 'student';
+  const currentUser =
+    layoutRole === 'teacher' ? mockTeacher : layoutRole === 'admin' ? mockAdmin : mockStudent;
   const [userPlans, setUserPlans] = useState<SubscriptionPlan[]>([]);
   const [activeSubscription, setActiveSubscription] = useState<MySubscriptionResponse | null>(null);
   const [wallet, setWallet] = useState<WalletSummary | null>(null);
@@ -222,6 +229,121 @@ const Pricing: React.FC = () => {
     }
     return <span className="pricing-ct-cross">—</span>;
   };
+
+  if (isAuthenticated) {
+    return (
+      <DashboardLayout
+        role={layoutRole}
+        user={{ name: currentUser.name, avatar: currentUser.avatar!, role: layoutRole }}
+        notificationCount={5}
+      >
+        <div className="homepage">
+          <section className="pricing-hero">
+            <div className="pricing-hero-dots" aria-hidden="true" />
+            <div className="container">
+              <div className="pricing-hero-content">
+                <span className="ft-badge ft-badge--purple" style={{ marginBottom: '1.25rem' }}>
+                  Bảng giá
+                </span>
+                <h1 className="pricing-hero-title">Subscription & Token</h1>
+                <p className="pricing-hero-desc">
+                  Mua gói bằng ví và theo dõi token còn lại theo subscription active.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section className="pricing-cards-section">
+            <div className="container">
+              <div className="pricing-comparison-header" style={{ marginBottom: '1.2rem' }}>
+                <span className="ft-badge ft-badge--green" style={{ marginBottom: '1rem' }}>
+                  Subscription + Token
+                </span>
+                <h2 className="pricing-comparison-title">Mua gói bằng ví</h2>
+                {wallet && (
+                  <p className="pricing-hero-desc" style={{ marginTop: '0.4rem' }}>
+                    So du vi: <strong>{formatPrice(wallet.balance)}</strong>
+                    {activeSubscription && (
+                      <>
+                        {' '}
+                        | Goi active: <strong>{activeSubscription.planName}</strong> | Token con
+                        lai: <strong>{activeSubscription.tokenRemaining}</strong>
+                      </>
+                    )}
+                  </p>
+                )}
+              </div>
+
+              {loadingSubscriptionData && <p>Dang tai du lieu goi...</p>}
+              {subscriptionError && (
+                <p style={{ color: '#dc2626', fontWeight: 600, marginBottom: '1rem' }}>
+                  {subscriptionError}
+                </p>
+              )}
+              {subscriptionSuccess && (
+                <p style={{ color: '#16a34a', fontWeight: 600, marginBottom: '1rem' }}>
+                  {subscriptionSuccess}
+                </p>
+              )}
+
+              {!loadingSubscriptionData && userPlans.length > 0 && (
+                <div className="pricing-cards-grid">
+                  {userPlans.map((plan) => {
+                    const price = plan.price ?? 0;
+                    const walletBalance = wallet?.balance ?? 0;
+                    const isInsufficientBalance = price > 0 && walletBalance < price;
+                    const isCurrentPlan = activeSubscription?.planId === plan.id;
+
+                    return (
+                      <div
+                        key={plan.id}
+                        className={`pricing-plan-card ${plan.featured ? 'pricing-plan-card--featured' : ''}`}
+                      >
+                        <div className="pricing-plan-header">
+                          <h3 className="pricing-plan-name">{plan.name}</h3>
+                          <p className="pricing-plan-desc">
+                            {plan.description || 'Goi dang ky cho nguoi dung'}
+                          </p>
+                        </div>
+                        <div className="pricing-plan-price-block">
+                          <span className="pricing-plan-price">{formatPrice(plan.price)}</span>
+                          <span className="pricing-plan-period">
+                            /{plan.billingCycle.toLowerCase()}
+                          </span>
+                        </div>
+                        <p className="pricing-plan-desc" style={{ marginBottom: '0.75rem' }}>
+                          Token quota: <strong>{plan.tokenQuota}</strong>
+                        </p>
+                        <button
+                          type="button"
+                          className={`pricing-plan-btn ${plan.featured ? 'pricing-plan-btn--primary' : 'pricing-plan-btn--outline'}`}
+                          onClick={() => void handlePurchase(plan)}
+                          disabled={
+                            !!purchasingPlanId || isCurrentPlan || isInsufficientBalance || !price
+                          }
+                          title={isInsufficientBalance ? 'So du vi khong du' : undefined}
+                        >
+                          {isCurrentPlan
+                            ? 'Dang su dung'
+                            : purchasingPlanId === plan.id
+                              ? 'Dang mua...'
+                              : isInsufficientBalance
+                                ? 'So du khong du'
+                                : !price
+                                  ? 'Khong mua truc tiep'
+                                  : 'Mua bang vi'}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </section>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <div className="homepage">
