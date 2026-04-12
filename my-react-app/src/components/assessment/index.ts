@@ -1,3 +1,3 @@
-export { default as Timer } from './Timer';
-export { default as QuestionNavigator } from './QuestionNavigator';
-export { default as QuestionDisplay } from './QuestionDisplay';
+export { QuestionCard } from './QuestionCard';
+export { EditableField } from './EditableField';
+export { ScoreDisplay } from './ScoreDisplay';
