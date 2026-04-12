@@ -472,4 +472,46 @@ export class AssessmentService {
             incompatibleLessonIds: result.incompatibleLessonIds,
         };
     }
+
+    /** GET /assessments/lessons/{lessonId}/assessments */
+    static async getAssessmentsByLesson(lessonId: string): Promise<ApiResponse<AssessmentResponse[]>> {
+        const headers = await this.getHeaders();
+        const response = await fetch(
+            `${API_BASE_URL}${API_ENDPOINTS.ASSESSMENTS}/lessons/${lessonId}/assessments`,
+            { method: 'GET', headers }
+        );
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to get assessments by lesson');
+        }
+        return response.json();
+    }
+
+    /** POST /assessments/{assessmentId}/lessons/{lessonId} */
+    static async linkAssessmentToLesson(assessmentId: string, lessonId: string): Promise<ApiResponse<void>> {
+        const headers = await this.getHeaders();
+        const response = await fetch(
+            `${API_BASE_URL}${API_ENDPOINTS.ASSESSMENTS}/${assessmentId}/lessons/${lessonId}`,
+            { method: 'POST', headers }
+        );
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to link assessment to lesson');
+        }
+        return response.json();
+    }
+
+    /** DELETE /assessments/{assessmentId}/lessons/{lessonId} */
+    static async unlinkAssessmentFromLesson(assessmentId: string, lessonId: string): Promise<ApiResponse<void>> {
+        const headers = await this.getHeaders();
+        const response = await fetch(
+            `${API_BASE_URL}${API_ENDPOINTS.ASSESSMENTS}/${assessmentId}/lessons/${lessonId}`,
+            { method: 'DELETE', headers }
+        );
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to unlink assessment from lesson');
+        }
+        return response.json();
+    }
 }

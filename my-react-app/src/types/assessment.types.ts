@@ -109,6 +109,8 @@ export interface AssessmentResponse {
     showCorrectAnswers?: boolean;
     assessmentMode?: AssessmentMode;
     examMatrixId?: string;
+    examMatrixName?: string;
+    examMatrixGradeLevel?: number;
     allowMultipleAttempts?: boolean;
     maxAttempts?: number;
     attemptScoringPolicy?: AttemptScoringPolicy;

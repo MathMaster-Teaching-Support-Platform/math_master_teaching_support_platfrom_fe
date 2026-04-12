@@ -315,3 +315,37 @@ export function useUpdateAssessmentQuestionWorkaround() {
         },
     });
 }
+
+/** Get all assessments linked to a specific lesson */
+export function useAssessmentsByLesson(lessonId: string | undefined, options?: any) {
+    return useQuery({
+        queryKey: ['assessments', 'lesson', lessonId],
+        queryFn: () => AssessmentService.getAssessmentsByLesson(lessonId!),
+        enabled: !!lessonId,
+        ...options,
+    });
+}
+
+/** Link an assessment to a lesson */
+export function useLinkAssessmentToLesson() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ assessmentId, lessonId }: { assessmentId: string; lessonId: string }) =>
+            AssessmentService.linkAssessmentToLesson(assessmentId, lessonId),
+        onSuccess: (_data, { lessonId }) => {
+            queryClient.invalidateQueries({ queryKey: ['assessments', 'lesson', lessonId] });
+        },
+    });
+}
+
+/** Unlink an assessment from a lesson */
+export function useUnlinkAssessmentFromLesson() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ assessmentId, lessonId }: { assessmentId: string; lessonId: string }) =>
+            AssessmentService.unlinkAssessmentFromLesson(assessmentId, lessonId),
+        onSuccess: (_data, { lessonId }) => {
+            queryClient.invalidateQueries({ queryKey: ['assessments', 'lesson', lessonId] });
+        },
+    });
+}

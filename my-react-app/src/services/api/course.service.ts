@@ -1,20 +1,23 @@
 import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
 import { AuthService } from './auth.service';
 import type {
+  AddAssessmentToCourseRequest,
   ApiResponse,
-  PaginatedResponse,
-  CourseResponse,
+  CourseAssessmentResponse,
   CourseLessonResponse,
-  EnrollmentResponse,
-  StudentProgressResponse,
-  LessonProgressItem,
-  StudentInCourseResponse,
+  CourseResponse,
   CreateCourseRequest,
-  UpdateCourseRequest,
   CreateCourseLessonRequest,
-  UpdateCourseLessonRequest,
-  PublishCourseRequest,
+  EnrollmentResponse,
   GetPublicCoursesParams,
+  LessonProgressItem,
+  PaginatedResponse,
+  PublishCourseRequest,
+  StudentInCourseResponse,
+  StudentProgressResponse,
+  UpdateCourseAssessmentRequest,
+  UpdateCourseRequest,
+  UpdateCourseLessonRequest,
 } from '../../types';
 
 export class CourseService {
@@ -235,6 +238,63 @@ export class CourseService {
     const res = await fetch(
       `${API_BASE_URL}${API_ENDPOINTS.ENROLLMENT_PROGRESS(enrollmentId)}`,
       { method: 'GET', headers }
+    );
+    return this.handleResponse(res);
+  }
+
+  // ─── Course Assessments ───────────────────────────────────────────────────
+
+  static async addAssessmentToCourse(
+    courseId: string,
+    data: AddAssessmentToCourseRequest
+  ): Promise<ApiResponse<CourseAssessmentResponse>> {
+    const headers = await this.getHeaders();
+    const res = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.COURSE_DETAIL(courseId)}/assessments`,
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(data),
+      }
+    );
+    return this.handleResponse(res);
+  }
+
+  static async getCourseAssessments(
+    courseId: string
+  ): Promise<ApiResponse<CourseAssessmentResponse[]>> {
+    const res = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.COURSE_DETAIL(courseId)}/assessments`,
+      { method: 'GET' }
+    );
+    return this.handleResponse(res);
+  }
+
+  static async updateCourseAssessment(
+    courseId: string,
+    assessmentId: string,
+    data: UpdateCourseAssessmentRequest
+  ): Promise<ApiResponse<CourseAssessmentResponse>> {
+    const headers = await this.getHeaders();
+    const res = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.COURSE_DETAIL(courseId)}/assessments/${assessmentId}`,
+      {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify(data),
+      }
+    );
+    return this.handleResponse(res);
+  }
+
+  static async removeAssessmentFromCourse(
+    courseId: string,
+    assessmentId: string
+  ): Promise<ApiResponse<void>> {
+    const headers = await this.getHeaders();
+    const res = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.COURSE_DETAIL(courseId)}/assessments/${assessmentId}`,
+      { method: 'DELETE', headers }
     );
     return this.handleResponse(res);
   }

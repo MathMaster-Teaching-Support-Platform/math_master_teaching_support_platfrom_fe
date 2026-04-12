@@ -277,12 +277,38 @@
   font-family: var(--font-heading);
   font-size: 0.84rem;
   font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.course-actions button:hover:not(:disabled) {
+  background: #eef2f7;
+  transform: translateY(-1px);
+}
+
+.course-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .course-actions button.primary {
   background: #2d7be7;
   color: #ffffff;
   border-color: #2d7be7;
+}
+
+.course-actions button.primary:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.course-actions button.danger {
+  background: #fee2e2;
+  color: #dc2626;
+  border: none;
+}
+
+.course-actions button.danger:hover:not(:disabled) {
+  background: #fecaca;
 }
 
 .course-add-card {

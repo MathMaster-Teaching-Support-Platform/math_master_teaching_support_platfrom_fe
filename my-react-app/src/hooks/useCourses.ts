@@ -1,10 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CourseService } from '../services/api/course.service';
 import type {
+  AddAssessmentToCourseRequest,
   CreateCourseRequest,
   CreateCourseLessonRequest,
   GetPublicCoursesParams,
   PublishCourseRequest,
+  UpdateCourseAssessmentRequest,
   UpdateCourseRequest,
   UpdateCourseLessonRequest,
 } from '../types';
@@ -194,5 +196,62 @@ export function useMarkLessonComplete() {
     }) => CourseService.markLessonComplete(enrollmentId, courseLessonId),
     onSuccess: (_data, { enrollmentId }) =>
       qc.invalidateQueries({ queryKey: courseKeys.progress(enrollmentId) }),
+  });
+}
+
+
+// ─── Course Assessment Hooks ──────────────────────────────────────────────────
+
+export function useCourseAssessments(courseId: string) {
+  return useQuery({
+    queryKey: [...courseKeys.detail(courseId), 'assessments'],
+    queryFn: () => CourseService.getCourseAssessments(courseId),
+    enabled: !!courseId,
+  });
+}
+
+export function useAddAssessmentToCourse() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      courseId,
+      data,
+    }: {
+      courseId: string;
+      data: AddAssessmentToCourseRequest;
+    }) => CourseService.addAssessmentToCourse(courseId, data),
+    onSuccess: (_data, { courseId }) => {
+      qc.invalidateQueries({ queryKey: [...courseKeys.detail(courseId), 'assessments'] });
+      qc.invalidateQueries({ queryKey: courseKeys.detail(courseId) });
+    },
+  });
+}
+
+export function useUpdateCourseAssessment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      courseId,
+      assessmentId,
+      data,
+    }: {
+      courseId: string;
+      assessmentId: string;
+      data: UpdateCourseAssessmentRequest;
+    }) => CourseService.updateCourseAssessment(courseId, assessmentId, data),
+    onSuccess: (_data, { courseId }) =>
+      qc.invalidateQueries({ queryKey: [...courseKeys.detail(courseId), 'assessments'] }),
+  });
+}
+
+export function useRemoveAssessmentFromCourse() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ courseId, assessmentId }: { courseId: string; assessmentId: string }) =>
+      CourseService.removeAssessmentFromCourse(courseId, assessmentId),
+    onSuccess: (_data, { courseId }) => {
+      qc.invalidateQueries({ queryKey: [...courseKeys.detail(courseId), 'assessments'] });
+      qc.invalidateQueries({ queryKey: courseKeys.detail(courseId) });
+    },
   });
 }

@@ -121,3 +121,37 @@ export interface GetPublicCoursesParams {
   page?: number;
   size?: number;
 }
+
+// Course Assessment Types
+export interface CourseAssessmentResponse {
+  id: string;
+  courseId: string;
+  assessmentId: string;
+  orderIndex: number | null;
+  isRequired: boolean;
+  createdAt: string;
+  updatedAt: string;
+  // Denormalized assessment fields
+  assessmentTitle: string | null;
+  assessmentDescription: string | null;
+  assessmentType: 'QUIZ' | 'TEST' | 'EXAM' | 'HOMEWORK' | null;
+  assessmentStatus: 'DRAFT' | 'PUBLISHED' | 'CLOSED' | null;
+  timeLimitMinutes: number | null;
+  passingScore: number | null;
+  startDate: string | null;
+  endDate: string | null;
+  totalQuestions: number | null;
+  totalPoints: number | null;
+  submissionCount: number | null;
+}
+
+export interface AddAssessmentToCourseRequest {
+  assessmentId: string;
+  orderIndex?: number;
+  isRequired?: boolean;
+}
+
+export interface UpdateCourseAssessmentRequest {
+  orderIndex?: number;
+  isRequired?: boolean;
+}

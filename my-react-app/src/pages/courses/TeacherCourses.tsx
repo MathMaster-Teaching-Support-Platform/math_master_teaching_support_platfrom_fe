@@ -307,7 +307,7 @@ const TeacherCourses: React.FC = () => {
                     onClick={() => navigate(`/teacher/courses/${course.id}/lessons`)}
                     className="primary"
                   >
-                    Quản lý bài học
+                    Quản lý giáo trình
                   </button>
                   <button
                     onClick={() => handleTogglePublish(course)}
