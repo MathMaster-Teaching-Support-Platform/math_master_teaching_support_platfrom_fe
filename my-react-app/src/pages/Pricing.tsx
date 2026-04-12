@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../components/layout/DashboardLayout/DashboardLayout';
 import Footer from '../components/Footer';
 import { mockAdmin, mockStudent, mockTeacher } from '../data/mockData';
@@ -16,6 +16,7 @@ import './Homepage.css';
 import './Pricing.css';
 
 const Pricing: React.FC = () => {
+  const navigate = useNavigate();
   const isAuthenticated = AuthService.isAuthenticated();
   const currentRole = AuthService.getUserRole() || 'student';
   const layoutRole: 'teacher' | 'student' | 'admin' =
@@ -148,7 +149,7 @@ const Pricing: React.FC = () => {
         }
       } catch (error) {
         setSubscriptionError(
-          error instanceof Error ? error.message : 'Khong the tai du lieu goi dang ky.'
+          error instanceof Error ? error.message : 'Không thể tải dữ liệu gói đăng ký.'
         );
       } finally {
         setLoadingSubscriptionData(false);
@@ -160,12 +161,14 @@ const Pricing: React.FC = () => {
 
   const handlePurchase = async (plan: SubscriptionPlan) => {
     if (!plan.price || plan.price <= 0) {
-      setSubscriptionError('Goi nay khong ho tro mua truc tiep.');
+      setSubscriptionError('Gói này không hỗ trợ mua trực tiếp.');
       return;
     }
 
     if ((wallet?.balance ?? 0) < plan.price) {
-      setSubscriptionError('So du khong du de mua goi nay.');
+      setSubscriptionError('Số dư ví không đủ để mua gói này.');
+      alert('Số dư ví không đủ. Bạn sẽ được chuyển tới trang nạp tiền.');
+      navigate('/student/wallet');
       return;
     }
 
@@ -181,15 +184,17 @@ const Pricing: React.FC = () => {
       ]);
       setWallet(walletRes.result || null);
       setActiveSubscription(subscriptionRes.result || null);
-      setSubscriptionSuccess('Mua goi thanh cong. Token da duoc cap nhat.');
+      setSubscriptionSuccess('Mua gói thành công. Token đã được cập nhật.');
     } catch (error) {
       const apiError = error as Error & { code?: number };
       if (apiError.code === 1029) {
-        setSubscriptionError('So du khong du');
+        setSubscriptionError('Số dư ví không đủ.');
+        alert('Số dư ví không đủ. Bạn sẽ được chuyển tới trang nạp tiền.');
+        navigate('/student/wallet');
       } else if (apiError.code === 1163) {
-        setSubscriptionError('Goi khong ho tro mua truc tiep');
+        setSubscriptionError('Gói không hỗ trợ mua trực tiếp.');
       } else {
-        setSubscriptionError(apiError.message || 'Mua goi that bai, vui long thu lai.');
+        setSubscriptionError(apiError.message || 'Mua gói thất bại, vui lòng thử lại.');
       }
     } finally {
       setPurchasingPlanId(null);
@@ -262,19 +267,19 @@ const Pricing: React.FC = () => {
                 <h2 className="pricing-comparison-title">Mua gói bằng ví</h2>
                 {wallet && (
                   <p className="pricing-hero-desc" style={{ marginTop: '0.4rem' }}>
-                    So du vi: <strong>{formatPrice(wallet.balance)}</strong>
+                    Số dư ví: <strong>{formatPrice(wallet.balance)}</strong>
                     {activeSubscription && (
                       <>
                         {' '}
-                        | Goi active: <strong>{activeSubscription.planName}</strong> | Token con
-                        lai: <strong>{activeSubscription.tokenRemaining}</strong>
+                        | Gói active: <strong>{activeSubscription.planName}</strong> | Token còn
+                        lại: <strong>{activeSubscription.tokenRemaining}</strong>
                       </>
                     )}
                   </p>
                 )}
               </div>
 
-              {loadingSubscriptionData && <p>Dang tai du lieu goi...</p>}
+              {loadingSubscriptionData && <p>Đang tải dữ liệu gói...</p>}
               {subscriptionError && (
                 <p style={{ color: '#dc2626', fontWeight: 600, marginBottom: '1rem' }}>
                   {subscriptionError}
@@ -302,7 +307,7 @@ const Pricing: React.FC = () => {
                         <div className="pricing-plan-header">
                           <h3 className="pricing-plan-name">{plan.name}</h3>
                           <p className="pricing-plan-desc">
-                            {plan.description || 'Goi dang ky cho nguoi dung'}
+                            {plan.description || 'Gói đăng ký cho người dùng'}
                           </p>
                         </div>
                         <div className="pricing-plan-price-block">
@@ -318,20 +323,16 @@ const Pricing: React.FC = () => {
                           type="button"
                           className={`pricing-plan-btn ${plan.featured ? 'pricing-plan-btn--primary' : 'pricing-plan-btn--outline'}`}
                           onClick={() => void handlePurchase(plan)}
-                          disabled={
-                            !!purchasingPlanId || isCurrentPlan || isInsufficientBalance || !price
-                          }
-                          title={isInsufficientBalance ? 'So du vi khong du' : undefined}
+                          disabled={!!purchasingPlanId || isCurrentPlan || !price}
+                          title={isInsufficientBalance ? 'Số dư ví không đủ' : undefined}
                         >
                           {isCurrentPlan
-                            ? 'Dang su dung'
+                            ? 'Đang sử dụng'
                             : purchasingPlanId === plan.id
-                              ? 'Dang mua...'
-                              : isInsufficientBalance
-                                ? 'So du khong du'
-                                : !price
-                                  ? 'Khong mua truc tiep'
-                                  : 'Mua bang vi'}
+                              ? 'Đang mua...'
+                              : !price
+                                ? 'Không mua trực tiếp'
+                                : 'Mua ngay'}
                         </button>
                       </div>
                     );
