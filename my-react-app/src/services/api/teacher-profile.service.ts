@@ -77,19 +77,28 @@ export class TeacherProfileService {
    * Update my profile (Student)
    */
   static async updateMyProfile(
-    data: UpdateTeacherProfileRequest
+    data: UpdateTeacherProfileRequest,
+    files?: File[]
   ): Promise<ApiResponse<TeacherProfile>> {
     const token = AuthService.getToken();
     if (!token) throw new Error('Authentication required');
+
+    const formData = new FormData();
+    formData.append('request', new Blob([JSON.stringify(data)], { type: 'application/json' }));
+    
+    if (files && files.length > 0) {
+      files.forEach((file) => {
+        formData.append('files', file);
+      });
+    }
 
     const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.TEACHER_PROFILES_MY_PROFILE}`, {
       method: 'PUT',
       headers: {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
         accept: '*/*',
       },
-      body: JSON.stringify(data),
+      body: formData,
     });
 
     if (!response.ok) {

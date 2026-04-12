@@ -1,5 +1,5 @@
 import { Upload } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TeacherProfileService } from '../../services/api/teacher-profile.service';
 import type { SubmitTeacherProfileRequest } from '../../types';
@@ -27,8 +27,22 @@ const SubmitTeacherProfile: React.FC<SubmitTeacherProfileProps> = ({ onSuccess }
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [fileNames, setFileNames] = useState<string[]>([]);
 
+  // Goong API States
+  const [schoolSuggestions, setSchoolSuggestions] = useState<any[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isSearchingSchool, setIsSearchingSchool] = useState(false);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autocompleteRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     checkExistingProfile();
+    const handleClickOutside = (event: MouseEvent) => {
+        if (autocompleteRef.current && !autocompleteRef.current.contains(event.target as Node)) {
+            setShowSuggestions(false);
+        }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const checkExistingProfile = async () => {
@@ -47,6 +61,46 @@ const SubmitTeacherProfile: React.FC<SubmitTeacherProfileProps> = ({ onSuccess }
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSchoolSearch = (value: string) => {
+    setFormData(prev => ({ ...prev, schoolName: value }));
+
+    if (!value.trim()) {
+        setSchoolSuggestions([]);
+        setShowSuggestions(false);
+        return;
+    }
+
+    setIsSearchingSchool(true);
+    setShowSuggestions(true);
+
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    debounceTimerRef.current = setTimeout(async () => {
+        try {
+            const res = await fetch(`https://rsapi.goong.io/Place/AutoComplete?api_key=Pqo1poLXDFAq43GqCePcCWJjPvTl4cB6y4jG0Ofr&input=${encodeURIComponent(value)}`);
+            const data = await res.json();
+            if (data.status === 'OK') {
+                setSchoolSuggestions(data.predictions || []);
+            } else {
+                setSchoolSuggestions([]);
+            }
+        } catch (error) {
+            console.error('Error fetching schools:', error);
+            setSchoolSuggestions([]);
+        } finally {
+            setIsSearchingSchool(false);
+        }
+    }, 500);
+  };
+
+  const handleSelectSchool = (suggestion: any) => {
+    setFormData(prev => ({ 
+        ...prev, 
+        schoolName: suggestion.structured_formatting?.main_text || suggestion.description,
+        schoolAddress: suggestion.description 
+    }));
+    setShowSuggestions(false);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -146,7 +200,7 @@ const SubmitTeacherProfile: React.FC<SubmitTeacherProfileProps> = ({ onSuccess }
               </p>
             </div>
 
-            <div className="tp-form-group">
+            <div className="tp-form-group autocomplete-wrapper" ref={autocompleteRef}>
               <label className="tp-label" htmlFor="schoolName">
                 Tên trường <span className="tp-required">*</span>
               </label>
@@ -156,11 +210,41 @@ const SubmitTeacherProfile: React.FC<SubmitTeacherProfileProps> = ({ onSuccess }
                 id="schoolName"
                 name="schoolName"
                 value={formData.schoolName}
-                onChange={handleInputChange}
+                onChange={(e) => handleSchoolSearch(e.target.value)}
+                onFocus={() => {
+                    if (formData.schoolName.trim() && schoolSuggestions.length > 0) setShowSuggestions(true);
+                }}
+                autoComplete="off"
                 placeholder="VD: Đại học FPT"
                 required
                 disabled={submitting}
               />
+              {showSuggestions && formData.schoolName.trim() && (
+                  <div className="autocomplete-dropdown">
+                      {isSearchingSchool ? (
+                          <div className="autocomplete-loading">Đang tìm kiếm...</div>
+                      ) : schoolSuggestions.length > 0 ? (
+                          schoolSuggestions.map((suggestion) => (
+                              <div 
+                                  key={suggestion.place_id} 
+                                  className="autocomplete-item"
+                                  onClick={() => handleSelectSchool(suggestion)}
+                              >
+                                  <span className="autocomplete-item-main">
+                                      {suggestion.structured_formatting?.main_text || suggestion.description}
+                                  </span>
+                                  {suggestion.structured_formatting?.secondary_text && (
+                                      <span className="autocomplete-item-sub">
+                                          {suggestion.structured_formatting.secondary_text}
+                                      </span>
+                                  )}
+                              </div>
+                          ))
+                      ) : (
+                          <div className="autocomplete-loading">Không tìm thấy kết quả</div>
+                      )}
+                  </div>
+              )}
             </div>
 
             <div className="tp-form-grid">

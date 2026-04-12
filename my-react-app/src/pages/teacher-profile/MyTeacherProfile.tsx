@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Upload } from 'lucide-react';
 import { TeacherProfileService } from '../../services/api/teacher-profile.service';
 import type { TeacherProfile, UpdateTeacherProfileRequest } from '../../types';
 import './TeacherProfile.css';
@@ -25,6 +26,26 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
     position: '',
     description: '',
   });
+
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [fileNames, setFileNames] = useState<string[]>([]);
+  
+  // Goong API States
+  const [schoolSuggestions, setSchoolSuggestions] = useState<any[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isSearchingSchool, setIsSearchingSchool] = useState(false);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autocompleteRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+        if (autocompleteRef.current && !autocompleteRef.current.contains(event.target as Node)) {
+            setShowSuggestions(false);
+        }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     loadProfile();
@@ -57,6 +78,55 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleSchoolSearch = (value: string) => {
+    setFormData(prev => ({ ...prev, schoolName: value }));
+
+    if (!value.trim()) {
+        setSchoolSuggestions([]);
+        setShowSuggestions(false);
+        return;
+    }
+
+    setIsSearchingSchool(true);
+    setShowSuggestions(true);
+
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    debounceTimerRef.current = setTimeout(async () => {
+        try {
+            const res = await fetch(`https://rsapi.goong.io/Place/AutoComplete?api_key=Pqo1poLXDFAq43GqCePcCWJjPvTl4cB6y4jG0Ofr&input=${encodeURIComponent(value)}`);
+            const data = await res.json();
+            if (data.status === 'OK') {
+                setSchoolSuggestions(data.predictions || []);
+            } else {
+                setSchoolSuggestions([]);
+            }
+        } catch (error) {
+            console.error('Error fetching schools:', error);
+            setSchoolSuggestions([]);
+        } finally {
+            setIsSearchingSchool(false);
+        }
+    }, 500);
+  };
+
+  const handleSelectSchool = (suggestion: any) => {
+    setFormData(prev => ({ 
+        ...prev, 
+        schoolName: suggestion.structured_formatting?.main_text || suggestion.description,
+        schoolAddress: suggestion.description 
+    }));
+    setShowSuggestions(false);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const fileList = Array.from(files);
+      setSelectedFiles(fileList);
+      setFileNames(fileList.map((f) => f.name));
+    }
+  };
+
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -64,10 +134,11 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
     setSubmitting(true);
 
     try {
+      if (!formData.fullName.trim()) throw new Error('Vui lòng nhập họ và tên');
       if (!formData.schoolName.trim()) throw new Error('Vui lòng nhập tên trường');
       if (!formData.position.trim()) throw new Error('Vui lòng nhập chức vụ');
 
-      const response = await TeacherProfileService.updateMyProfile(formData);
+      const response = await TeacherProfileService.updateMyProfile(formData, selectedFiles);
       setProfile(response.result);
       setEditing(false);
       setSuccess('Cập nhật hồ sơ thành công!');
@@ -346,6 +417,27 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
 
           <form className="tp-form" onSubmit={handleUpdate}>
             <div className="tp-form-group">
+              <label className="tp-label" htmlFor="fullName">
+                Họ và tên <span className="tp-required">*</span>
+              </label>
+              <input
+                className="tp-input"
+                type="text"
+                id="fullName"
+                name="fullName"
+                value={formData.fullName}
+                onChange={handleInputChange}
+                placeholder="VD: Nguyễn Văn A"
+                maxLength={100}
+                required
+                disabled={submitting}
+              />
+              <p className="tp-form-hint">
+                Họ tên phải khớp chính xác với thông tin trên Thẻ Giáo viên
+              </p>
+            </div>
+
+            <div className="tp-form-group autocomplete-wrapper" ref={autocompleteRef}>
               <label className="tp-label" htmlFor="schoolName">
                 Tên trường <span className="tp-required">*</span>
               </label>
@@ -355,11 +447,41 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
                 id="schoolName"
                 name="schoolName"
                 value={formData.schoolName}
-                onChange={handleInputChange}
+                onChange={(e) => handleSchoolSearch(e.target.value)}
+                onFocus={() => {
+                    if (formData.schoolName.trim() && schoolSuggestions.length > 0) setShowSuggestions(true);
+                }}
+                autoComplete="off"
                 placeholder="VD: Đại học FPT"
                 required
                 disabled={submitting}
               />
+              {showSuggestions && formData.schoolName.trim() && (
+                  <div className="autocomplete-dropdown">
+                      {isSearchingSchool ? (
+                          <div className="autocomplete-loading">Đang tìm kiếm...</div>
+                      ) : schoolSuggestions.length > 0 ? (
+                          schoolSuggestions.map((suggestion) => (
+                              <div 
+                                  key={suggestion.place_id} 
+                                  className="autocomplete-item"
+                                  onClick={() => handleSelectSchool(suggestion)}
+                              >
+                                  <span className="autocomplete-item-main">
+                                      {suggestion.structured_formatting?.main_text || suggestion.description}
+                                  </span>
+                                  {suggestion.structured_formatting?.secondary_text && (
+                                      <span className="autocomplete-item-sub">
+                                          {suggestion.structured_formatting.secondary_text}
+                                      </span>
+                                  )}
+                              </div>
+                          ))
+                      ) : (
+                          <div className="autocomplete-loading">Không tìm thấy kết quả</div>
+                      )}
+                  </div>
+              )}
             </div>
 
             <div className="tp-form-grid">
@@ -414,21 +536,51 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
             </div>
 
             <div className="tp-form-group">
-              <label className="tp-label" htmlFor="verificationDocumentKey">
-                Tài liệu xác minh
+              <label className="tp-label" htmlFor="file-upload">
+                Tài liệu xác minh mới (Tuỳ chọn)
               </label>
-              <input
-                className="tp-input tp-input--readonly"
-                type="text"
-                id="verificationDocumentKey"
-                value={profile.verificationDocumentKey || 'Chưa có tài liệu'}
-                readOnly
-                disabled
-              />
               <p className="tp-form-hint">
-                Tài liệu xác minh không thể thay đổi ở đây. Vui lòng liên hệ quản trị viên nếu cần
-                cập nhật.
+                Tải lên Thẻ Cán bộ, Công chức, Viên chức (Giáo Viên) NẾU BẠN CẦN THAY ĐỔI. Nếu không chọn, hệ thống sẽ sử dụng ảnh cũ.
               </p>
+              <button
+                type="button"
+                className={`tp-file-zone ${fileNames.length > 0 ? 'tp-file-zone--filled' : ''}`}
+                onClick={() => document.getElementById('file-upload')?.click()}
+                onKeyDown={(e) =>
+                  e.key === 'Enter' && document.getElementById('file-upload')?.click()
+                }
+                aria-label="Tải lên tài liệu xác minh"
+              >
+                <input
+                  type="file"
+                  id="file-upload"
+                  style={{ display: 'none' }}
+                  onChange={handleFileChange}
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  multiple
+                  disabled={submitting}
+                />
+                <div className="tp-file-zone__icon">
+                  <Upload size={28} />
+                </div>
+                {fileNames.length > 0 ? (
+                  <div className="tp-file-zone__files">
+                    {fileNames.map((name) => (
+                      <span key={name} className="tp-file-zone__file-name">
+                        {name}
+                      </span>
+                    ))}
+                    <span className="tp-file-zone__file-count">
+                      {fileNames.length} file đã chọn
+                    </span>
+                  </div>
+                ) : (
+                  <>
+                    <p className="tp-file-zone__title">Nhấn để tải lên tài liệu mới</p>
+                    <p className="tp-file-zone__subtitle">PDF, JPG, PNG được hỗ trợ</p>
+                  </>
+                )}
+              </button>
             </div>
 
             <div className="tp-form-group">
