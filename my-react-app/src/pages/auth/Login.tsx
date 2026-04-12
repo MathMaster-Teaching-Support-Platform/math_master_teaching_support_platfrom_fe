@@ -365,6 +365,79 @@ const Login: React.FC = () => {
 
       {/* ── Right panel ── */}
       <div className="auth-right">
+        {/* Animated math decorations */}
+        <div className="auth-right-deco" aria-hidden="true">
+          {/* Floating formula chips */}
+          <span className="rdeco-chip rdeco-chip--1">
+            e<sup>iπ</sup> + 1 = 0
+          </span>
+          <span className="rdeco-chip rdeco-chip--2">∫₀^∞ e⁻ˣ dx = 1</span>
+          <span className="rdeco-chip rdeco-chip--3">a² + b² = c²</span>
+          <span className="rdeco-chip rdeco-chip--4">lim(x→∞)</span>
+
+          {/* Animated SVG — orbiting ring */}
+          <svg
+            className="rdeco-orbit"
+            viewBox="0 0 200 200"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle
+              cx="100"
+              cy="100"
+              r="70"
+              stroke="rgba(94,92,230,0.12)"
+              strokeWidth="1.5"
+              strokeDasharray="6 4"
+            />
+            <circle
+              cx="100"
+              cy="100"
+              r="45"
+              stroke="rgba(94,92,230,0.08)"
+              strokeWidth="1"
+              strokeDasharray="4 5"
+            />
+            <circle
+              className="rdeco-dot rdeco-dot--a"
+              cx="170"
+              cy="100"
+              r="5"
+              fill="rgba(94,92,230,0.45)"
+            />
+            <circle
+              className="rdeco-dot rdeco-dot--b"
+              cx="55"
+              cy="100"
+              r="3.5"
+              fill="rgba(192,132,252,0.4)"
+            />
+          </svg>
+
+          {/* Animated SVG — parabola trace */}
+          <svg
+            className="rdeco-parabola"
+            viewBox="0 0 180 100"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M10,90 Q90,5 170,90"
+              stroke="rgba(94,92,230,0.2)"
+              strokeWidth="1.5"
+              strokeDasharray="5 4"
+              strokeLinecap="round"
+            />
+            <circle className="rdeco-tracer" r="4" fill="rgba(94,92,230,0.55)" />
+          </svg>
+
+          {/* Floating symbols */}
+          <span className="rdeco-sym rdeco-sym--1">∑</span>
+          <span className="rdeco-sym rdeco-sym--2">∞</span>
+          <span className="rdeco-sym rdeco-sym--3">θ</span>
+          <span className="rdeco-sym rdeco-sym--4">∂</span>
+        </div>
+
         <Link to="/" className="auth-nav-link auth-nav" aria-label="Về trang chủ">
           ← Trang chủ
         </Link>

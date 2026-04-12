@@ -297,6 +297,8 @@
   border: none;
   border-radius: 0;
   box-shadow: none;
+  position: relative;
+  z-index: 1;
 }
 
 /* Inner wrapper keeps form at readable width */
@@ -699,6 +701,172 @@
 @keyframes auth-spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+/* ---- Right panel animated decorations ---- */
+.auth-right-deco {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+/* Formula chips */
+.rdeco-chip {
+  position: absolute;
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-size: 0.72rem;
+  font-style: italic;
+  color: rgba(94, 92, 230, 0.55);
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(94, 92, 230, 0.15);
+  border-radius: 6px;
+  padding: 0.2rem 0.55rem;
+  backdrop-filter: blur(4px);
+  white-space: nowrap;
+  animation: rdeco-float 7s ease-in-out infinite;
+}
+
+.rdeco-chip--1 {
+  top: 10%;
+  left: 4%;
+  animation-delay: 0s;
+  animation-duration: 8s;
+}
+.rdeco-chip--2 {
+  top: 18%;
+  right: 5%;
+  animation-delay: 1.5s;
+  animation-duration: 9s;
+}
+.rdeco-chip--3 {
+  bottom: 22%;
+  left: 6%;
+  animation-delay: 3s;
+  animation-duration: 7.5s;
+}
+.rdeco-chip--4 {
+  bottom: 12%;
+  right: 7%;
+  animation-delay: 2s;
+  animation-duration: 10s;
+}
+
+@keyframes rdeco-float {
+  0%,
+  100% {
+    transform: translateY(0px) rotate(-1deg);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translateY(-10px) rotate(1deg);
+    opacity: 1;
+  }
+}
+
+/* Orbiting ring SVG */
+.rdeco-orbit {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  top: 50%;
+  right: -60px;
+  transform: translateY(-50%);
+  animation: rdeco-spin-slow 18s linear infinite;
+  opacity: 0.7;
+}
+
+@keyframes rdeco-spin-slow {
+  from {
+    transform: translateY(-50%) rotate(0deg);
+  }
+  to {
+    transform: translateY(-50%) rotate(360deg);
+  }
+}
+
+/* Dots on the orbit ring animate at a different rate via the parent SVG rotation — 
+   so they appear to orbit the center naturally */
+
+/* Parabola trace */
+.rdeco-parabola {
+  position: absolute;
+  width: 200px;
+  bottom: 8%;
+  left: 2%;
+  opacity: 0.6;
+}
+
+.rdeco-tracer {
+  offset-path: path('M10,90 Q90,5 170,90');
+  offset-distance: 0%;
+  animation: rdeco-trace 4s ease-in-out infinite alternate;
+}
+
+@keyframes rdeco-trace {
+  from {
+    offset-distance: 0%;
+  }
+  to {
+    offset-distance: 100%;
+  }
+}
+
+/* Floating math symbols */
+.rdeco-sym {
+  position: absolute;
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-style: italic;
+  color: rgba(94, 92, 230, 0.1);
+  user-select: none;
+  font-weight: 400;
+  animation: rdeco-drift 12s ease-in-out infinite;
+}
+
+.rdeco-sym--1 {
+  font-size: 5rem;
+  top: 5%;
+  left: 30%;
+  animation-delay: 0s;
+  animation-duration: 13s;
+}
+.rdeco-sym--2 {
+  font-size: 4rem;
+  top: 40%;
+  left: 8%;
+  animation-delay: 2s;
+  animation-duration: 11s;
+}
+.rdeco-sym--3 {
+  font-size: 3.5rem;
+  bottom: 30%;
+  right: 12%;
+  animation-delay: 4s;
+  animation-duration: 14s;
+}
+.rdeco-sym--4 {
+  font-size: 3rem;
+  top: 65%;
+  left: 40%;
+  animation-delay: 1.5s;
+  animation-duration: 10s;
+}
+
+@keyframes rdeco-drift {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.5;
+  }
+  33% {
+    transform: translate(6px, -8px) scale(1.04);
+    opacity: 0.8;
+  }
+  66% {
+    transform: translate(-4px, 5px) scale(0.97);
+    opacity: 0.4;
   }
 }
 
