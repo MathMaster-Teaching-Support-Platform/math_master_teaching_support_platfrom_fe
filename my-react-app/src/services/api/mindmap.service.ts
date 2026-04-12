@@ -13,6 +13,17 @@ import type {
 } from '../../types';
 
 export class MindmapService {
+  private static async throwApiError(response: Response, fallback: string): Promise<never> {
+    const payload = await response.json().catch(() => ({}));
+    const error = new Error(
+      (payload as { message?: string }).message || (payload as { error?: string }).error || fallback
+    ) as Error & { code?: number };
+    if (typeof (payload as { code?: unknown }).code === 'number') {
+      error.code = (payload as { code: number }).code;
+    }
+    throw error;
+  }
+
   private static getPublicHeaders() {
     return {
       accept: '*/*',
@@ -42,8 +53,7 @@ export class MindmapService {
       body: JSON.stringify(data),
     });
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to generate mindmap');
+      return this.throwApiError(response, 'Failed to generate mindmap');
     }
     return response.json();
   }

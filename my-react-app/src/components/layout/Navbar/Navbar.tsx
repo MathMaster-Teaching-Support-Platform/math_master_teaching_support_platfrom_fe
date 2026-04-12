@@ -1,7 +1,12 @@
 import { Bell, CircleHelp, MessageSquare, Wallet } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useNotificationsContext } from '../../../context/NotificationContext';
+import { AuthService } from '../../../services/api/auth.service';
+import {
+  SUBSCRIPTION_UPDATED_EVENT,
+  SubscriptionPlanService,
+} from '../../../services/api/subscription-plan.service';
 import './Navbar.css';
 
 interface NavbarProps {
@@ -15,12 +20,52 @@ interface NavbarProps {
 
 const Navbar: React.FC<NavbarProps> = ({ user }) => {
   const [showNotifications, setShowNotifications] = useState(false);
+  const [tokenRemaining, setTokenRemaining] = useState<number | null>(null);
   const { unreadCount, notifications, markAllAsRead } = useNotificationsContext();
 
   const roleLabel =
     user.role === 'teacher' ? 'Giao vien' : user.role === 'student' ? 'Hoc sinh' : 'Quan tri vien';
 
   const walletRoute = '/student/wallet';
+
+  useEffect(() => {
+    if (!AuthService.isAuthenticated()) {
+      return;
+    }
+
+    let mounted = true;
+
+    const fetchToken = async () => {
+      try {
+        const res = await SubscriptionPlanService.getMySubscription();
+        if (!mounted) return;
+        setTokenRemaining(res.result.tokenRemaining);
+      } catch {
+        if (!mounted) return;
+        setTokenRemaining(null);
+      }
+    };
+
+    void fetchToken();
+
+    const handleRefresh = () => {
+      void fetchToken();
+    };
+
+    window.addEventListener(SUBSCRIPTION_UPDATED_EVENT, handleRefresh);
+    window.addEventListener('authChange', handleRefresh);
+
+    const timer = window.setInterval(() => {
+      void fetchToken();
+    }, 60000);
+
+    return () => {
+      mounted = false;
+      window.removeEventListener(SUBSCRIPTION_UPDATED_EVENT, handleRefresh);
+      window.removeEventListener('authChange', handleRefresh);
+      window.clearInterval(timer);
+    };
+  }, []);
 
   return (
     <nav className="navbar-top">
@@ -32,14 +77,19 @@ const Navbar: React.FC<NavbarProps> = ({ user }) => {
             aria-label="Thông báo"
           >
             <Bell size={18} className="action-icon" />
-            {unreadCount > 0 && (
-              <span className="notification-badge">{unreadCount}</span>
-            )}
+            {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}
           </button>
 
           <Link to={walletRoute} className="navbar-action-btn wallet-btn" aria-label="Ví của tôi">
             <Wallet size={18} className="action-icon" />
           </Link>
+
+          {tokenRemaining !== null && (
+            <Link to="/pricing" className="token-chip" aria-label="Token subscription còn lại">
+              <span className="token-chip-label">Token</span>
+              <strong>{tokenRemaining}</strong>
+            </Link>
+          )}
 
           <Link to="/messages" className="navbar-action-btn message-btn" aria-label="Tin nhắn">
             <MessageSquare size={18} className="action-icon" />
@@ -63,23 +113,35 @@ const Navbar: React.FC<NavbarProps> = ({ user }) => {
         <div className="notifications-dropdown">
           <div className="notifications-header">
             <h3>Thông báo</h3>
-            <button className="mark-all-read" onClick={() => markAllAsRead()}>Đánh dấu đã đọc</button>
+            <button className="mark-all-read" onClick={() => markAllAsRead()}>
+              Đánh dấu đã đọc
+            </button>
           </div>
           <div className="notifications-list">
             {notifications.slice(0, 3).map((notif) => (
               <div key={notif.id} className={`notification-item ${!notif.read ? 'unread' : ''}`}>
                 <div className="notification-icon">
-                  {notif.type === 'assignment' ? '📘' : notif.type === 'grade' ? '✅' : notif.type === 'PROFILE_VERIFICATION' ? '🛡️' : '🔔'}
+                  {notif.type === 'assignment'
+                    ? '📘'
+                    : notif.type === 'grade'
+                      ? '✅'
+                      : notif.type === 'PROFILE_VERIFICATION'
+                        ? '🛡️'
+                        : '🔔'}
                 </div>
                 <div className="notification-content">
                   <div className="notification-title">{notif.title}</div>
                   <div className="notification-message">{notif.content}</div>
-                  <div className="notification-time">{new Date(notif.createdAt).toLocaleDateString()}</div>
+                  <div className="notification-time">
+                    {new Date(notif.createdAt).toLocaleDateString()}
+                  </div>
                 </div>
               </div>
             ))}
             {notifications.length === 0 && (
-              <div style={{ padding: '1rem', textAlign: 'center', color: '#999' }}>Chưa có thông báo nào</div>
+              <div style={{ padding: '1rem', textAlign: 'center', color: '#999' }}>
+                Chưa có thông báo nào
+              </div>
             )}
           </div>
           <Link to="/notifications" className="view-all-notifications">

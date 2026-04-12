@@ -29,7 +29,8 @@ export const API_ENDPOINTS = {
   TEACHER_PROFILES_REVIEW: (profileId: string) => `/teacher-profiles/${profileId}/review`,
   TEACHER_PROFILES_DOWNLOAD: (profileId: string) => `/teacher-profiles/${profileId}/download`,
   TEACHER_PROFILES_OCR_VERIFY: (profileId: string) => `/teacher-profiles/${profileId}/ocr-verify`,
-  TEACHER_PROFILES_REVIEW_WITH_OCR: (profileId: string) => `/teacher-profiles/${profileId}/review-with-ocr`,
+  TEACHER_PROFILES_REVIEW_WITH_OCR: (profileId: string) =>
+    `/teacher-profiles/${profileId}/review-with-ocr`,
 
   // Assessments
   ASSESSMENTS: '/assessments',
@@ -281,6 +282,10 @@ export const API_ENDPOINTS = {
   ADMIN_SUBSCRIPTION_PLAN_DETAIL: (planId: string) => `/admin/subscription-plans/${planId}`,
   ADMIN_SUBSCRIPTION_PLANS_STATS: '/admin/subscription-plans/stats',
   ADMIN_SUBSCRIPTION_PLANS_SUBSCRIPTIONS: '/admin/subscription-plans/subscriptions',
+
+  // User Subscriptions
+  SUBSCRIPTIONS_ME: '/subscriptions/me',
+  SUBSCRIPTIONS_PURCHASE: (planId: string) => `/subscriptions/purchase/${planId}`,
 
   // Admin Dashboard
   ADMIN_DASHBOARD_STATS: '/admin/dashboard/stats',

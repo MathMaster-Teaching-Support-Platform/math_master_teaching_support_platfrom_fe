@@ -29,6 +29,7 @@ const INITIAL_CREATE_FORM: CreatePlanPayload = {
   description: '',
   price: 0,
   billingCycle: 'MONTH',
+  tokenQuota: 0,
   features: [],
   featured: false,
   isPublic: true,
@@ -174,6 +175,7 @@ const SubscriptionManagement: React.FC = () => {
       description: plan.description,
       price: plan.price,
       billingCycle: plan.billingCycle,
+      tokenQuota: plan.tokenQuota,
       featured: plan.featured,
       isPublic: plan.isPublic,
       status: plan.status,
@@ -389,6 +391,7 @@ const SubscriptionManagement: React.FC = () => {
                       )}
                     </div>
                     <p className="plan-description">{plan.description}</p>
+                    <p className="plan-description">Token quota: {plan.tokenQuota}</p>
                   </div>
 
                   <div className="plan-features">
@@ -595,6 +598,20 @@ const SubscriptionManagement: React.FC = () => {
                       ))}
                     </select>
                   </div>
+                  <div className="form-group">
+                    <label>Token quota</label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={editForm.tokenQuota ?? 0}
+                      onChange={(e) =>
+                        setEditForm((f) => ({
+                          ...f,
+                          tokenQuota: Math.max(0, Number(e.target.value || 0)),
+                        }))
+                      }
+                    />
+                  </div>
                 </div>
 
                 <div className="form-group">
@@ -747,6 +764,21 @@ const SubscriptionManagement: React.FC = () => {
                       ))}
                     </select>
                   </div>
+                  <div className="form-group">
+                    <label>Token quota *</label>
+                    <input
+                      type="number"
+                      min={0}
+                      placeholder="0"
+                      value={createForm.tokenQuota}
+                      onChange={(e) =>
+                        setCreateForm((f) => ({
+                          ...f,
+                          tokenQuota: Math.max(0, Number(e.target.value || 0)),
+                        }))
+                      }
+                    />
+                  </div>
                 </div>
 
                 <div className="form-group">
@@ -827,7 +859,8 @@ const SubscriptionManagement: React.FC = () => {
                   <div style={{ marginTop: '8px', fontSize: '0.85rem', color: '#888' }}>
                     Slug: <code>{selectedPlan.slug}</code> &nbsp;|&nbsp; Trạng thái:{' '}
                     <strong>{selectedPlan.status}</strong> &nbsp;|&nbsp;
-                    {selectedPlan.featured ? '⭐ Gói nổi bật' : 'Gói thường'}
+                    {selectedPlan.featured ? '⭐ Gói nổi bật' : 'Gói thường'} &nbsp;|&nbsp; Token
+                    quota: <strong>{selectedPlan.tokenQuota}</strong>
                   </div>
                 </div>
 
