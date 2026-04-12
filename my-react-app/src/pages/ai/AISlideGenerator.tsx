@@ -1,10 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { BlockMath, InlineMath } from 'react-katex';
+import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { API_BASE_URL } from '../../config/api.config';
 import { mockTeacher } from '../../data/mockData';
 import { AuthService } from '../../services/api/auth.service';
 import { LessonSlideService } from '../../services/api/lesson-slide.service';
+import { notifySubscriptionUpdated } from '../../services/api/subscription-plan.service';
 import type {
   ChapterBySubject,
   GenerateSlideContentResult,
@@ -204,6 +206,7 @@ const renderSlideText = (
 };
 
 const AISlideGenerator: React.FC = () => {
+  const navigate = useNavigate();
   const [schoolGrades, setSchoolGrades] = useState<SchoolGrade[]>([]);
   const [subjects, setSubjects] = useState<SubjectByGrade[]>([]);
   const [chapters, setChapters] = useState<ChapterBySubject[]>([]);
@@ -530,10 +533,24 @@ const AISlideGenerator: React.FC = () => {
       setActivePreviewIndex(0);
       setPreparedPptxBlob(null);
       setPreparedPptxFilename('lesson-slides.pptx');
+      notifySubscriptionUpdated();
       setSuccess('Đã tạo nội dung slide bằng AI. Vui lòng kiểm tra và confirm nội dung.');
       setActiveWizardStep(4);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Không thể tạo nội dung slide');
+      const apiError = err as Error & { code?: number };
+      if (apiError.code === 1164) {
+        setError('Ban chua co goi active. Vui long mua goi truoc khi dung AI Slide.');
+        if (window.confirm('Ban chua co goi active. Mo trang mua goi ngay?')) {
+          navigate('/pricing');
+        }
+      } else if (apiError.code === 1165) {
+        setError('Token khong du (Slide can 3 token/lan). Vui long mua goi hoac nap them vi.');
+        if (window.confirm('Token khong du. Mo trang vi de nap tien?')) {
+          navigate('/student/wallet');
+        }
+      } else {
+        setError(err instanceof Error ? err.message : 'Không thể tạo nội dung slide');
+      }
     } finally {
       setGeneratingContent(false);
     }

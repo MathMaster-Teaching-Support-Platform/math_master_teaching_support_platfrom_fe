@@ -5,10 +5,14 @@ export interface ApiResponse<T> {
 }
 
 export interface WalletSummary {
+  walletId?: string;
+  userId?: string;
   id?: string;
   balance: number;
+  status?: 'ACTIVE' | 'INACTIVE' | string;
   pendingBalance?: number;
   currency?: string;
+  createdAt?: string;
   updatedAt?: string;
 }
 

@@ -25,10 +25,27 @@ export interface SubscriptionPlan {
   featured: boolean;
   isPublic: boolean;
   status: PlanStatus;
+  tokenQuota: number;
   features: string[];
   stats: PlanStats;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface MySubscriptionResponse {
+  subscriptionId: string;
+  planId: string;
+  planName: string;
+  planSlug: string;
+  billingCycle: BillingCycle;
+  status: SubscriptionStatus;
+  startDate: string;
+  endDate: string;
+  amount: number;
+  currency: string;
+  tokenQuota: number;
+  tokenRemaining: number;
+  paymentMethod: string;
 }
 
 export interface RevenueStats {
@@ -85,6 +102,7 @@ export interface CreatePlanPayload {
   description?: string;
   price: number | null;
   billingCycle: BillingCycle;
+  tokenQuota: number;
   features: string[];
   featured?: boolean;
   isPublic?: boolean;
@@ -95,10 +113,17 @@ export interface UpdatePlanPayload {
   description?: string;
   price?: number | null;
   billingCycle?: BillingCycle;
+  tokenQuota?: number;
   features?: string[];
   featured?: boolean;
   isPublic?: boolean;
   status?: PlanStatus;
+}
+
+export const SUBSCRIPTION_UPDATED_EVENT = 'subscriptionUpdated';
+
+export function notifySubscriptionUpdated(): void {
+  window.dispatchEvent(new Event(SUBSCRIPTION_UPDATED_EVENT));
 }
 
 export interface GetSubscriptionsParams {
@@ -141,6 +166,32 @@ export const SubscriptionPlanService = {
       headers: authHeaders(),
     });
     return parseResponse<SubscriptionPlan[]>(res);
+  },
+
+  async getUserPlans(): Promise<ApiResponse<SubscriptionPlan[]>> {
+    const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ADMIN_SUBSCRIPTION_PLANS}`, {
+      method: 'GET',
+      headers: authHeaders(),
+    });
+    return parseResponse<SubscriptionPlan[]>(res);
+  },
+
+  async getMySubscription(): Promise<ApiResponse<MySubscriptionResponse>> {
+    const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.SUBSCRIPTIONS_ME}`, {
+      method: 'GET',
+      headers: authHeaders(),
+    });
+    return parseResponse<MySubscriptionResponse>(res);
+  },
+
+  async purchasePlan(planId: string): Promise<ApiResponse<MySubscriptionResponse>> {
+    const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.SUBSCRIPTIONS_PURCHASE(planId)}`, {
+      method: 'POST',
+      headers: authHeaders(),
+    });
+    const parsed = await parseResponse<MySubscriptionResponse>(res);
+    notifySubscriptionUpdated();
+    return parsed;
   },
 
   async createPlan(payload: CreatePlanPayload): Promise<ApiResponse<SubscriptionPlan>> {

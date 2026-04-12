@@ -74,6 +74,7 @@ const teacherGroups: MenuGroup[] = [
       { path: '/teacher/assessments', icon: FileCheck2, label: 'Kiểm tra' },
       { path: '/teacher/grading', icon: FileStack, label: 'Chấm bài' },
       { path: '/teacher/students', icon: Users, label: 'Học sinh' },
+      { path: '/pricing', icon: CreditCard, label: 'Gói đăng ký' },
       { path: '/teacher/analytics', icon: LineChart, label: 'Phân tích' },
     ],
   },
@@ -97,6 +98,7 @@ const studentGroups: MenuGroup[] = [
       { path: '/student/assessments', icon: FileCheck2, label: 'Bài kiểm tra' },
       { path: '/student/grades', icon: LineChart, label: 'Điểm số' },
       { path: '/student/roadmap', icon: Workflow, label: 'Lộ trình' },
+      { path: '/pricing', icon: CreditCard, label: 'Gói đăng ký' },
     ],
   },
   {

@@ -18,6 +18,41 @@ interface DownloadPptxResult {
 }
 
 export class LessonSlideService {
+  private static buildApiError(
+    message: string,
+    code?: number
+  ): Error & {
+    code?: number;
+  } {
+    const error = new Error(message) as Error & { code?: number };
+    if (typeof code === 'number') {
+      error.code = code;
+    }
+    return error;
+  }
+
+  private static async parseApiError(
+    response: Response,
+    fallback: string
+  ): Promise<{ message: string; code?: number }> {
+    const contentType = response.headers.get('content-type') || '';
+
+    if (contentType.includes('application/json')) {
+      const payload = (await response.json().catch(() => ({}))) as {
+        message?: string;
+        error?: string;
+        code?: number;
+      };
+      return {
+        message: payload.message || payload.error || fallback,
+        code: payload.code,
+      };
+    }
+
+    const text = await response.text().catch(() => '');
+    return { message: text.trim() || fallback };
+  }
+
   private static async getAuthHeaders(contentTypeJson = true): Promise<Record<string, string>> {
     const token = AuthService.getToken();
     if (!token) throw new Error('Authentication required');
@@ -153,7 +188,8 @@ export class LessonSlideService {
     });
 
     if (!response.ok) {
-      throw new Error(await this.readErrorMessage(response, 'Failed to generate slide content'));
+      const parsedError = await this.parseApiError(response, 'Failed to generate slide content');
+      throw this.buildApiError(parsedError.message, parsedError.code);
     }
 
     return response.json();

@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { BlockMath, InlineMath } from 'react-katex';
+import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockTeacher } from '../../data/mockData';
 import {
@@ -24,6 +25,7 @@ import {
   useRenameChatSession,
   useSendChatMessage,
 } from '../../hooks/useChatSessions';
+import { notifySubscriptionUpdated } from '../../services/api/subscription-plan.service';
 import type { ChatMessageResponse } from '../../types';
 import './AIAssistant.css';
 
@@ -90,6 +92,7 @@ const ChatMessageContent: React.FC<{ content: string }> = ({ content }) => {
 };
 
 const AIAssistant: React.FC = () => {
+  const navigate = useNavigate();
   const [selectedSessionId, setSelectedSessionId] = useState<string>('');
   const [input, setInput] = useState('');
   const [pendingPrompt, setPendingPrompt] = useState('');
@@ -219,8 +222,22 @@ const AIAssistant: React.FC = () => {
           maxOutputTokens: 800,
         },
       });
+      notifySubscriptionUpdated();
     } catch (error) {
-      setLocalError(getErrorMessage(error, 'Không thể gửi prompt.'));
+      const apiError = error as Error & { code?: number };
+      if (apiError.code === 1164) {
+        setLocalError('Ban chua co goi active. Vui long mua goi de tiep tuc su dung AI.');
+        if (window.confirm('Ban chua co goi active. Mo trang mua goi ngay?')) {
+          navigate('/pricing');
+        }
+      } else if (apiError.code === 1165) {
+        setLocalError('Token cua goi da het. Vui long mua them goi hoac nap tien.');
+        if (window.confirm('Token da het. Mo trang goi va vi de nap/mua ngay?')) {
+          navigate('/student/wallet');
+        }
+      } else {
+        setLocalError(getErrorMessage(error, 'Không thể gửi prompt.'));
+      }
       setInput(prompt);
     } finally {
       setPendingPrompt('');

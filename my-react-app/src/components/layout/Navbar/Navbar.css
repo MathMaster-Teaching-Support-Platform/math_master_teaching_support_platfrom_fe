@@ -91,6 +91,30 @@
   min-width: 0;
 }
 
+.token-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid #d8d3f3;
+  background: linear-gradient(135deg, #f8f5ff 0%, #eef4ff 100%);
+  color: #2f2750;
+  text-decoration: none;
+  font-size: 0.78rem;
+  line-height: 1;
+}
+
+.token-chip:hover {
+  border-color: #b6adf0;
+  box-shadow: 0 7px 16px rgba(91, 103, 241, 0.12);
+}
+
+.token-chip-label {
+  opacity: 0.72;
+  font-weight: 600;
+}
+
 .navbar-user-avatar {
   width: 34px;
   height: 34px;

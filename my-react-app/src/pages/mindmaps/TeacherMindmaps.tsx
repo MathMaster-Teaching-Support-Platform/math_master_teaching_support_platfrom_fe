@@ -4,6 +4,7 @@ import { ArrowRight, Network, Sparkles, WandSparkles } from 'lucide-react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockTeacher } from '../../data/mockData';
 import { MindmapService } from '../../services/api/mindmap.service';
+import { notifySubscriptionUpdated } from '../../services/api/subscription-plan.service';
 import { LessonSlideService } from '../../services/api/lesson-slide.service';
 import type { Mindmap } from '../../types';
 import type {
@@ -216,11 +217,25 @@ export default function TeacherMindmaps() {
         lessonId,
         levels: generatorForm.levels,
       });
+      notifySubscriptionUpdated();
 
       // Navigate to editor
       navigate(`/teacher/mindmaps/${response.result.mindmap.id}`);
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to generate mindmap');
+      const apiError = err as Error & { code?: number };
+      if (apiError.code === 1164) {
+        setGeneratorError('Ban chua co goi active. Vui long mua goi truoc khi dung AI Mindmap.');
+        if (window.confirm('Ban chua co goi active. Mo trang mua goi ngay?')) {
+          navigate('/pricing');
+        }
+      } else if (apiError.code === 1165) {
+        setGeneratorError('Token khong du de tao mindmap. Vui long mua goi hoac nap them vi.');
+        if (window.confirm('Token khong du. Mo trang vi de nap tien?')) {
+          navigate('/student/wallet');
+        }
+      } else {
+        alert(err instanceof Error ? err.message : 'Failed to generate mindmap');
+      }
     } finally {
       setGenerating(false);
     }
