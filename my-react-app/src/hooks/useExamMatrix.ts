@@ -2,8 +2,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { examMatrixService } from '../services/examMatrixService';
 import type {
     BuildExamMatrixRequest,
+    GenerateAssessmentByPercentageRequest,
     ExamMatrixRowRequest,
     ExamMatrixRequest,
+    UpdateMatrixPercentagesRequest,
 } from '../types/examMatrix';
 
 export const examMatrixKeys = {
@@ -129,5 +131,26 @@ export const useResetMatrix = () => {
             qc.invalidateQueries({ queryKey: examMatrixKeys.detail(matrixId) });
             qc.invalidateQueries({ queryKey: examMatrixKeys.mine() });
         },
+    });
+};
+
+export const useUpdateMatrixPercentages = () => {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: ({ matrixId, request }: { matrixId: string; request: UpdateMatrixPercentagesRequest }) =>
+            examMatrixService.updatePercentages(matrixId, request),
+        onSuccess: (_, vars) => {
+            qc.invalidateQueries({ queryKey: examMatrixKeys.detail(vars.matrixId) });
+            qc.invalidateQueries({ queryKey: examMatrixKeys.table(vars.matrixId) });
+            qc.invalidateQueries({ queryKey: examMatrixKeys.validation(vars.matrixId) });
+            qc.invalidateQueries({ queryKey: examMatrixKeys.mine() });
+        },
+    });
+};
+
+export const useGenerateAssessmentByPercentage = () => {
+    return useMutation({
+        mutationFn: (request: GenerateAssessmentByPercentageRequest) =>
+            examMatrixService.generateAssessmentByPercentage(request),
     });
 };

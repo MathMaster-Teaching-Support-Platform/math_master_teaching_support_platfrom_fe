@@ -216,6 +216,15 @@
   background: #fef3c7;
 }
 
+.matrix-row--percentage-config {
+  background: #eefbf5;
+  border-top: 2px solid #0f766e;
+}
+
+.matrix-row--percentage-config:hover {
+  background: #e2f9ef;
+}
+
 /* ============================================
    CELL STYLING
    ============================================ */
@@ -384,6 +393,104 @@
   align-items: center;
   justify-content: center;
   height: 100%;
+}
+
+.matrix-td--percentage-label {
+  text-align: left;
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #6ee7b7;
+}
+
+.matrix-percentage-hint {
+  margin: 4px 8px 0;
+  font-size: 12px;
+  color: #047857;
+}
+
+.matrix-td--percentage-cell,
+.matrix-td--percentage-total-cell {
+  background: #ecfdf5;
+  position: relative;
+}
+
+.matrix-percentage-input {
+  width: 100%;
+  border: 1px solid #10b981;
+  border-radius: 4px;
+  padding: 6px 22px 6px 6px;
+  text-align: right;
+  font-size: 13px;
+  font-weight: 700;
+  color: #065f46;
+  background: #fff;
+}
+
+.matrix-percentage-input:focus {
+  outline: 2px solid rgba(16, 185, 129, 0.25);
+  border-color: #059669;
+}
+
+.matrix-percentage-input:disabled {
+  background: #f0fdf4;
+  color: #6b7280;
+}
+
+.matrix-percentage-input--total {
+  padding-right: 6px;
+}
+
+.matrix-percentage-suffix {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 12px;
+  color: #047857;
+  font-weight: 700;
+}
+
+.matrix-percentage-preview {
+  margin: 5px 0 0;
+  font-size: 11px;
+  color: #047857;
+  text-align: right;
+}
+
+.matrix-percentage-error {
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: #b91c1c;
+  text-align: right;
+}
+
+.matrix-td--percentage-total-value {
+  background: #d1fae5;
+  border-left: 2px solid #10b981;
+}
+
+.matrix-td--percentage-action {
+  background: #ecfdf5;
+}
+
+.matrix-save-percentage-btn {
+  width: 100%;
+  border: 1px solid #059669;
+  border-radius: 4px;
+  padding: 8px 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  background: #10b981;
+  cursor: pointer;
+}
+
+.matrix-save-percentage-btn:hover:not(:disabled) {
+  background: #059669;
+}
+
+.matrix-save-percentage-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 /* Actions cell */

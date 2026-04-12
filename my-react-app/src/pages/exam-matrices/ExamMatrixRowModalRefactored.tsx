@@ -4,41 +4,16 @@ import { useChaptersBySubject } from '../../hooks/useChapters';
 import { useAddExamMatrixRow } from '../../hooks/useExamMatrix';
 import { useSearchQuestionBanks } from '../../hooks/useQuestionBank';
 import { useSubjects, useSubjectsByGrade } from '../../hooks/useSubjects';
-import type { ExamMatrixRowRequest, MatrixCognitiveLevel } from '../../types/examMatrix';
+import type { ExamMatrixRowRequest } from '../../types/examMatrix';
 import './exam-matrix-row-modal.css';
-
-type UiCognitiveLevel = 'NB' | 'TH' | 'VD' | 'VDC';
-
-const LEVELS: UiCognitiveLevel[] = ['NB', 'TH', 'VD', 'VDC'];
-
-const BACKEND_COGNITIVE_LEVEL: Record<UiCognitiveLevel, MatrixCognitiveLevel> = {
-  NB: 'NHAN_BIET',
-  TH: 'THONG_HIEU',
-  VD: 'VAN_DUNG',
-  VDC: 'VAN_DUNG_CAO',
-};
-
-type CellDraft = {
-  questionCount: number;
-};
-
-type CellDraftMap = Record<UiCognitiveLevel, CellDraft>;
 
 type Props = {
   isOpen: boolean;
   matrixId: string;
   matrixGradeLevel?: string;
   subjectId?: string;
-  matrixTotalPointsTarget?: number;
   onClose: () => void;
   onSuccess: () => void;
-};
-
-const defaultCells: CellDraftMap = {
-  NB: { questionCount: 0 },
-  TH: { questionCount: 0 },
-  VD: { questionCount: 0 },
-  VDC: { questionCount: 0 },
 };
 
 export function ExamMatrixRowModalRefactored({
@@ -46,7 +21,6 @@ export function ExamMatrixRowModalRefactored({
   matrixId,
   matrixGradeLevel,
   subjectId,
-  matrixTotalPointsTarget,
   onClose,
   onSuccess,
 }: Readonly<Props>) {
@@ -55,7 +29,6 @@ export function ExamMatrixRowModalRefactored({
   const [chapterId, setChapterId] = useState('');
   const [questionBankId, setQuestionBankId] = useState('');
   const [questionBankSearch, setQuestionBankSearch] = useState('');
-  const [cells, setCells] = useState<CellDraftMap>(defaultCells);
   const [error, setError] = useState<string | null>(null);
 
   const addRowMutation = useAddExamMatrixRow();
@@ -116,18 +89,12 @@ export function ExamMatrixRowModalRefactored({
     [questionBanks, questionBankId],
   );
 
-  const rowTotalQuestions = useMemo(
-    () => LEVELS.reduce((sum, level) => sum + (cells[level].questionCount || 0), 0),
-    [cells],
-  );
-
   useEffect(() => {
     if (!isOpen) return;
     setGradeLevel(matrixGradeLevel ?? '');
     setSelectedSubjectId(subjectId ?? '');
     setQuestionBankSearch('');
     setError(null);
-    setCells(defaultCells);
     setChapterId('');
   }, [isOpen, subjectId, matrixGradeLevel]);
 
@@ -162,8 +129,6 @@ export function ExamMatrixRowModalRefactored({
 
   if (!isOpen) return null;
 
-  const activeCells = LEVELS.filter((level) => cells[level].questionCount > 0);
-
   async function submit(event: React.BaseSyntheticEvent) {
     event.preventDefault();
     setError(null);
@@ -178,33 +143,12 @@ export function ExamMatrixRowModalRefactored({
       return;
     }
 
-    if (activeCells.length === 0) {
-      setError('Mỗi dòng cần ít nhất 1 mức độ có số câu > 0.');
-      return;
-    }
-
-    const hasInvalidCell = LEVELS.some((level) => cells[level].questionCount < 0);
-    if (hasInvalidCell) {
-      setError('Số câu phải >= 0.');
-      return;
-    }
-
     const payload: ExamMatrixRowRequest = {
       chapterId,
       questionBankId,
       questionDifficulty: 'MEDIUM',
-      questionTypeName: selectedQuestionBank?.name?.trim() || 'Dạng bài theo bank',
-      cells: LEVELS.filter((level) => cells[level].questionCount > 0).map((level) => ({
-        cognitiveLevel: BACKEND_COGNITIVE_LEVEL[level],
-        questionCount: cells[level].questionCount,
-        pointsPerQuestion: Number(
-          (
-            (matrixTotalPointsTarget && matrixTotalPointsTarget > 0
-              ? matrixTotalPointsTarget
-              : 10) / rowTotalQuestions
-          ).toFixed(4),
-        ),
-      })),
+      questionTypeName: selectedQuestionBank?.name?.trim() || 'Bank mapping',
+      cells: [],
     };
 
     try {
@@ -227,11 +171,11 @@ export function ExamMatrixRowModalRefactored({
   };
 
   return (
-    <div className="matrix-modal-overlay" onClick={onClose}>
-      <div className="matrix-modal-container" onClick={(e) => e.stopPropagation()}>
+    <div className="matrix-modal-overlay">
+      <div className="matrix-modal-container">
         {/* Compact Header */}
         <div className="matrix-modal-header">
-          <h3 className="matrix-modal-title">Thêm dòng ma trận</h3>
+          <h3 className="matrix-modal-title">Thêm dòng ngân hàng câu hỏi</h3>
           <button className="matrix-modal-close" onClick={onClose} type="button">
             <X size={18} />
           </button>
@@ -243,6 +187,9 @@ export function ExamMatrixRowModalRefactored({
 
           {/* Matrix Row Input */}
           <div className="matrix-row-editor">
+            <p className="matrix-row-note">
+              Dòng này chỉ dùng để map ngân hàng câu hỏi. Số câu sẽ được phân bổ theo phần trăm ở dòng tổng của bảng ma trận.
+            </p>
             <table className="matrix-row-table">
               <thead>
                 <tr>
@@ -250,11 +197,7 @@ export function ExamMatrixRowModalRefactored({
                   <th className="matrix-row-th matrix-row-th--subject">Môn</th>
                   <th className="matrix-row-th matrix-row-th--chapter">Chương</th>
                   <th className="matrix-row-th matrix-row-th--bank">Bank</th>
-                  <th className="matrix-row-th matrix-row-th--level matrix-row-th--nb">NB</th>
-                  <th className="matrix-row-th matrix-row-th--level matrix-row-th--th">TH</th>
-                  <th className="matrix-row-th matrix-row-th--level matrix-row-th--vd">VD</th>
-                  <th className="matrix-row-th matrix-row-th--level matrix-row-th--vdc">VDC</th>
-                  <th className="matrix-row-th matrix-row-th--total">Tổng</th>
+                  <th className="matrix-row-th matrix-row-th--total">Loại dòng</th>
                 </tr>
               </thead>
               <tbody>
@@ -359,31 +302,8 @@ export function ExamMatrixRowModalRefactored({
                     </div>
                   </td>
 
-                  {/* Cognitive Levels */}
-                  {LEVELS.map((level) => (
-                    <td key={level} className="matrix-row-td matrix-row-td--level">
-                      <input
-                        className="matrix-row-input matrix-row-input--number"
-                        type="number"
-                        min={0}
-                        value={cells[level].questionCount}
-                        onChange={(e) =>
-                          setCells((prev) => ({
-                            ...prev,
-                            [level]: {
-                              ...prev[level],
-                              questionCount: Number(e.target.value),
-                            },
-                          }))
-                        }
-                        onKeyDown={handleKeyDown}
-                      />
-                    </td>
-                  ))}
-
-                  {/* Total */}
                   <td className="matrix-row-td matrix-row-td--total">
-                    <div className="matrix-row-total">{rowTotalQuestions}</div>
+                    <div className="matrix-row-total">Mapping bank</div>
                   </td>
                 </tr>
               </tbody>
@@ -400,7 +320,7 @@ export function ExamMatrixRowModalRefactored({
               className="matrix-modal-btn matrix-modal-btn--primary"
               disabled={addRowMutation.isPending}
             >
-              {addRowMutation.isPending ? 'Đang thêm...' : 'Thêm'}
+              {addRowMutation.isPending ? 'Đang thêm...' : 'Thêm bank vào ma trận'}
             </button>
           </div>
         </form>

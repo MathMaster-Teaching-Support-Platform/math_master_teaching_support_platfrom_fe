@@ -112,9 +112,7 @@ export function ExamMatrixDashboard() {
           <section className="hero-card">
             <p className="hero-kicker">Luồng làm việc</p>
             <h2>Tạo draft trước, thêm cột phân bố sau</h2>
-            <p className="muted" style={{ marginTop: 8 }}>
-              Bước 1 tạo ma trận chỉ cần tên. Bước 2 vào chi tiết để thêm cột/dòng và phổ điểm (%).
-            </p>
+          
             <div className="row" style={{ flexWrap: 'wrap' }}>
               <button className="btn secondary" onClick={() => navigate('/teacher/question-banks')}>
                 Mở Ngân hàng câu hỏi

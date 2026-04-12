@@ -9,8 +9,8 @@ export interface ExamMatrixRequest {
     name: string;
     description?: string;
     isReusable?: boolean;
-    totalQuestionsTarget?: number;
-    totalPointsTarget?: number;
+    totalQuestionsTarget?: number | null;
+    totalPointsTarget?: number | null;
 }
 
 export interface BuildExamMatrixRequest extends ExamMatrixRequest {
@@ -128,6 +128,7 @@ export interface ExamMatrixResponse {
     isReusable: boolean;
     totalQuestionsTarget?: number;
     totalPointsTarget?: number;
+    cognitiveLevelPercentages?: MatrixCognitiveDistribution;
     gradeLevel?: string;
     subjectId?: string;
     subjectName?: string;
@@ -151,6 +152,51 @@ export interface MatrixValidationReport {
     allCognitiveLevelsCovered: boolean;
     aiFallbackLikely?: boolean;
     bankCoverageByDifficulty?: Record<string, number>;
+    totalBankMappings?: number;
+}
+
+export type PercentageCognitiveLevel =
+    | 'NHAN_BIET'
+    | 'THONG_HIEU'
+    | 'VAN_DUNG'
+    | 'VAN_DUNG_CAO';
+
+export interface UpdateMatrixPercentagesRequest {
+    totalQuestionsTarget: number;
+    cognitiveLevelPercentages: Record<PercentageCognitiveLevel, number>;
+}
+
+export interface GenerateAssessmentByPercentageRequest {
+    examMatrixId: string;
+    totalQuestions: number;
+    cognitiveLevelPercentages: Record<PercentageCognitiveLevel, number>;
+    assessmentTitle?: string;
+    assessmentDescription?: string;
+    randomizeQuestions?: boolean;
+    reuseApprovedQuestions?: boolean;
+    timeLimitMinutes?: number;
+    passingScore?: number;
+}
+
+export interface CognitiveLevelDistribution {
+    cognitiveLevel: PercentageCognitiveLevel;
+    requestedPercentage: number;
+    requestedCount: number;
+    actualCount: number;
+    availableInBank: number;
+    status: 'SUCCESS' | 'INSUFFICIENT';
+    message: string;
+}
+
+export interface PercentageBasedGenerationResponse {
+    assessmentId: string;
+    assessmentTitle: string;
+    totalQuestionsRequested: number;
+    totalQuestionsGenerated: number;
+    totalPoints: number;
+    distribution: CognitiveLevelDistribution[];
+    warnings: string[] | null;
+    success: boolean;
 }
 
 export interface ExamMatrixApiResponse<T> {

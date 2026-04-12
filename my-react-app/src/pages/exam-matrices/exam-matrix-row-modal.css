@@ -78,6 +78,13 @@
   flex: 1;
 }
 
+.matrix-row-note {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: #0f766e;
+  font-weight: 500;
+}
+
 /* Matrix Row Table - Excel-like */
 .matrix-row-table {
   width: 100%;

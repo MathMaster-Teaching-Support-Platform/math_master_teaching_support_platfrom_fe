@@ -7,7 +7,10 @@ import type {
     ExamMatrixApiResponse,
     ExamMatrixRowRequest,
     ExamMatrixTableResponse,
+    GenerateAssessmentByPercentageRequest,
     MatrixValidationReport,
+    PercentageBasedGenerationResponse,
+    UpdateMatrixPercentagesRequest,
 } from '../types/examMatrix';
 
 const getAuthHeaders = (): Record<string, string> => {
@@ -92,6 +95,20 @@ export const examMatrixService = {
         fetch(`${API_BASE_URL}${API_ENDPOINTS.EXAM_MATRIX_VALIDATE(matrixId)}`, {
             headers: getAuthHeaders(),
         }).then(handleResponse<MatrixValidationReport>),
+
+    updatePercentages: (matrixId: string, request: UpdateMatrixPercentagesRequest) =>
+        fetch(`${API_BASE_URL}${API_ENDPOINTS.EXAM_MATRIX_PERCENTAGES(matrixId)}`, {
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(request),
+        }).then(handleResponse<ExamMatrixResponse>),
+
+    generateAssessmentByPercentage: (request: GenerateAssessmentByPercentageRequest) =>
+        fetch(`${API_BASE_URL}${API_ENDPOINTS.ASSESSMENTS_GENERATE_BY_PERCENTAGE}`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(request),
+        }).then(handleResponse<PercentageBasedGenerationResponse>),
 
     approveMatrix: (matrixId: string) =>
         fetch(`${API_BASE_URL}${API_ENDPOINTS.EXAM_MATRIX_APPROVE(matrixId)}`, {

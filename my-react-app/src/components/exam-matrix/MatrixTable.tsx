@@ -4,13 +4,23 @@ import type { ExamMatrixTableRow, ExamMatrixTableChapter } from '../../types/exa
 import { EditableCell } from './EditableCell';
 import './matrix-table.css';
 
+type PercentageLevel = 'NHAN_BIET' | 'THONG_HIEU' | 'VAN_DUNG' | 'VAN_DUNG_CAO';
+
+export interface PercentageDraftValues {
+  totalQuestionsTarget: number;
+  cognitiveLevelPercentages: Record<PercentageLevel, number>;
+}
+
 interface MatrixTableProps {
   chapters: ExamMatrixTableChapter[];
   gradeLevel?: string;
   subjectName?: string;
   canEdit: boolean;
   onRemoveRow: (rowId: string) => Promise<void>;
-  onUpdateCell?: (rowId: string, level: string, questionCount: number, pointsPerQuestion: number) => Promise<void>;
+  percentageDraft?: PercentageDraftValues;
+  onChangePercentageDraft?: (draft: PercentageDraftValues) => void;
+  onSavePercentages?: () => Promise<void>;
+  savingPercentages?: boolean;
 }
 
 const cognitiveOrder = ['NB', 'TH', 'VD', 'VDC'] as const;
@@ -51,29 +61,34 @@ export function MatrixTable({
   subjectName: _subjectName,
   canEdit,
   onRemoveRow,
-}: MatrixTableProps) {
+  percentageDraft,
+  onChangePercentageDraft,
+  onSavePercentages,
+  savingPercentages,
+}: Readonly<MatrixTableProps>) {
   const [deletingRowId, setDeletingRowId] = useState<string | null>(null);
+  const handleCellChange = (_newValue: number) => undefined;
 
   // Calculate totals
   const { columnTotals, chapterTotals, grandTotal } = useMemo(() => {
     const columnTotals = { NB: 0, TH: 0, VD: 0, VDC: 0, total: 0 };
     const chapterTotals: Record<string, { NB: number; TH: number; VD: number; VDC: number; total: number }> = {};
 
-    chapters.forEach((chapter) => {
+    for (const chapter of chapters) {
       const chapterId = chapter.chapterId || chapter.chapterName || '';
       chapterTotals[chapterId] = { NB: 0, TH: 0, VD: 0, VDC: 0, total: 0 };
 
-      chapter.rows.forEach((row) => {
-        cognitiveOrder.forEach((level) => {
+      for (const row of chapter.rows) {
+        for (const level of cognitiveOrder) {
           const count = getLevelCount(row, level);
           columnTotals[level] += count;
           chapterTotals[chapterId][level] += count;
-        });
+        }
         const rowTotal = row.rowTotalQuestions || 0;
         columnTotals.total += rowTotal;
         chapterTotals[chapterId].total += rowTotal;
-      });
-    });
+      }
+    }
 
     return {
       columnTotals,
@@ -82,8 +97,58 @@ export function MatrixTable({
     };
   }, [chapters]);
 
+  const totalPercentage = useMemo(() => {
+    if (!percentageDraft) return 0;
+    const p = percentageDraft.cognitiveLevelPercentages;
+    return p.NHAN_BIET + p.THONG_HIEU + p.VAN_DUNG + p.VAN_DUNG_CAO;
+  }, [percentageDraft]);
+
+  const estimatedDistribution = useMemo(() => {
+    if (!percentageDraft) {
+      return {
+        NHAN_BIET: 0,
+        THONG_HIEU: 0,
+        VAN_DUNG: 0,
+        VAN_DUNG_CAO: 0,
+      };
+    }
+    const totalQuestions = Number.isFinite(percentageDraft.totalQuestionsTarget)
+      ? Math.max(0, percentageDraft.totalQuestionsTarget)
+      : 0;
+    const p = percentageDraft.cognitiveLevelPercentages;
+    return {
+      NHAN_BIET: Math.round((totalQuestions * p.NHAN_BIET) / 100),
+      THONG_HIEU: Math.round((totalQuestions * p.THONG_HIEU) / 100),
+      VAN_DUNG: Math.round((totalQuestions * p.VAN_DUNG) / 100),
+      VAN_DUNG_CAO: Math.round((totalQuestions * p.VAN_DUNG_CAO) / 100),
+    };
+  }, [percentageDraft]);
+
+  const canShowPercentageControls = !!percentageDraft;
+
+  const isPercentageTotalValid = Math.abs(totalPercentage - 100) <= 0.01;
+
+  const updateDraft = (partial: Partial<PercentageDraftValues>) => {
+    if (!percentageDraft || !onChangePercentageDraft) return;
+    onChangePercentageDraft({
+      ...percentageDraft,
+      ...partial,
+    });
+  };
+
+  const updateLevel = (level: PercentageLevel, value: number) => {
+    if (!percentageDraft || !onChangePercentageDraft) return;
+    onChangePercentageDraft({
+      ...percentageDraft,
+      cognitiveLevelPercentages: {
+        ...percentageDraft.cognitiveLevelPercentages,
+        [level]: value,
+      },
+    });
+  };
+
   const handleRemoveRow = async (rowId: string) => {
-    if (!window.confirm('Bạn có chắc muốn xóa dòng này?')) return;
+    if (!globalThis.confirm('Bạn có chắc muốn xóa dòng này?')) return;
     setDeletingRowId(rowId);
     try {
       await onRemoveRow(rowId);
@@ -165,9 +230,9 @@ export function MatrixTable({
                   'N/A';
                 
                 // Get chapter name from multiple possible sources
-                const displayChapter = chapterName !== 'Chương không xác định' 
-                  ? chapterName 
-                  : (row.chapterName || row.chapter || 'Chương không xác định');
+                const displayChapter = chapterName === 'Chương không xác định'
+                  ? (row.chapterName || row.chapter || 'Chương không xác định')
+                  : chapterName;
 
                 return (
                   <tr
@@ -225,10 +290,7 @@ export function MatrixTable({
                           <EditableCell
                             value={count}
                             editable={canEdit}
-                            onChange={(newValue: number) => {
-                              // Handle cell update
-                              console.log('Update cell:', row.rowId, level, newValue);
-                            }}
+                            onChange={handleCellChange}
                           />
                         </td>
                       );
@@ -303,6 +365,117 @@ export function MatrixTable({
               </td>
               {canEdit && <td className="matrix-td matrix-td--actions"></td>}
             </tr>
+
+            {canShowPercentageControls && (
+              <tr className="matrix-row matrix-row--percentage-config">
+                <td className="matrix-td matrix-td--percentage-label" colSpan={4}>
+                  <div className="matrix-grand-total-label">
+                    CẤU HÌNH PHẦN TRĂM
+                  </div>
+                  <p className="matrix-percentage-hint">
+                    Nhập % theo mức độ và tổng số câu cần tạo ở dòng này.
+                  </p>
+                </td>
+
+                <td className="matrix-td matrix-td--percentage-cell">
+                  <input
+                    className="matrix-percentage-input"
+                    type="number"
+                    min={0}
+                    max={100}
+                    step={0.1}
+                    value={percentageDraft.cognitiveLevelPercentages.NHAN_BIET}
+                    disabled={!canEdit}
+                    onChange={(event) => updateLevel('NHAN_BIET', Number(event.target.value))}
+                  />
+                  <span className="matrix-percentage-suffix">%</span>
+                  <p className="matrix-percentage-preview">~ {estimatedDistribution.NHAN_BIET} câu</p>
+                </td>
+
+                <td className="matrix-td matrix-td--percentage-cell">
+                  <input
+                    className="matrix-percentage-input"
+                    type="number"
+                    min={0}
+                    max={100}
+                    step={0.1}
+                    value={percentageDraft.cognitiveLevelPercentages.THONG_HIEU}
+                    disabled={!canEdit}
+                    onChange={(event) => updateLevel('THONG_HIEU', Number(event.target.value))}
+                  />
+                  <span className="matrix-percentage-suffix">%</span>
+                  <p className="matrix-percentage-preview">~ {estimatedDistribution.THONG_HIEU} câu</p>
+                </td>
+
+                <td className="matrix-td matrix-td--percentage-cell">
+                  <input
+                    className="matrix-percentage-input"
+                    type="number"
+                    min={0}
+                    max={100}
+                    step={0.1}
+                    value={percentageDraft.cognitiveLevelPercentages.VAN_DUNG}
+                    disabled={!canEdit}
+                    onChange={(event) => updateLevel('VAN_DUNG', Number(event.target.value))}
+                  />
+                  <span className="matrix-percentage-suffix">%</span>
+                  <p className="matrix-percentage-preview">~ {estimatedDistribution.VAN_DUNG} câu</p>
+                </td>
+
+                <td className="matrix-td matrix-td--percentage-cell">
+                  <input
+                    className="matrix-percentage-input"
+                    type="number"
+                    min={0}
+                    max={100}
+                    step={0.1}
+                    value={percentageDraft.cognitiveLevelPercentages.VAN_DUNG_CAO}
+                    disabled={!canEdit}
+                    onChange={(event) => updateLevel('VAN_DUNG_CAO', Number(event.target.value))}
+                  />
+                  <span className="matrix-percentage-suffix">%</span>
+                  <p className="matrix-percentage-preview">~ {estimatedDistribution.VAN_DUNG_CAO} câu</p>
+                </td>
+
+                <td className="matrix-td matrix-td--percentage-total-cell">
+                  <input
+                    className="matrix-percentage-input matrix-percentage-input--total"
+                    type="number"
+                    min={1}
+                    max={200}
+                    step={1}
+                    value={percentageDraft.totalQuestionsTarget}
+                    disabled={!canEdit}
+                    onChange={(event) =>
+                      updateDraft({
+                        totalQuestionsTarget: Number(event.target.value),
+                      })
+                    }
+                  />
+                  <p className="matrix-percentage-preview">Tổng %: {totalPercentage.toFixed(1)}%</p>
+                  {!isPercentageTotalValid && (
+                    <p className="matrix-percentage-error">Tổng phần trăm phải bằng 100%</p>
+                  )}
+                </td>
+
+                <td className="matrix-td matrix-td--total-chapter matrix-td--percentage-total-value">
+                  <div className="matrix-grand-total-cell">{percentageDraft.totalQuestionsTarget}</div>
+                </td>
+
+                {canEdit && (
+                  <td className="matrix-td matrix-td--actions matrix-td--percentage-action">
+                    <button
+                      className="matrix-save-percentage-btn"
+                      onClick={() => void onSavePercentages?.()}
+                      disabled={savingPercentages || !isPercentageTotalValid || !onSavePercentages}
+                      title="Lưu cấu hình phần trăm"
+                    >
+                      {savingPercentages ? 'Đang lưu...' : 'Lưu %'}
+                    </button>
+                  </td>
+                )}
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

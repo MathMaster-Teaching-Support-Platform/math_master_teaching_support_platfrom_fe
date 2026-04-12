@@ -49,6 +49,7 @@ export const API_ENDPOINTS = {
   ASSESSMENTS_CLOSE: (id: string) => `/assessments/${id}/close`,
   ASSESSMENTS_CLONE: (id: string) => `/assessments/${id}/clone`,
   ASSESSMENTS_GENERATE_FROM_MATRIX: '/assessments/generate-from-matrix',
+  ASSESSMENTS_GENERATE_BY_PERCENTAGE: '/assessments/generate-by-percentage',
   ASSESSMENTS_GENERATE: (assessmentId: string) => `/assessments/${assessmentId}/generate`,
   ASSESSMENTS_QUESTIONS: (assessmentId: string) => `/assessments/${assessmentId}/questions`,
   ASSESSMENTS_QUESTION_REMOVE: (assessmentId: string, questionId: string) =>
@@ -65,6 +66,7 @@ export const API_ENDPOINTS = {
   EXAM_MATRIX_ROW_DETAIL: (matrixId: string, rowId: string) =>
     `/exam-matrices/${matrixId}/rows/${rowId}`,
   EXAM_MATRIX_VALIDATE: (matrixId: string) => `/exam-matrices/${matrixId}/validate`,
+  EXAM_MATRIX_PERCENTAGES: (matrixId: string) => `/exam-matrices/${matrixId}/percentages`,
   EXAM_MATRIX_APPROVE: (matrixId: string) => `/exam-matrices/${matrixId}/approve`,
   EXAM_MATRIX_LOCK: (matrixId: string) => `/exam-matrices/${matrixId}/lock`,
   EXAM_MATRIX_RESET: (matrixId: string) => `/exam-matrices/${matrixId}/reset`,
