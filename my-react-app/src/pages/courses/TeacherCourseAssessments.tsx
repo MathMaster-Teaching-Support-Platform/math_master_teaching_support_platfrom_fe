@@ -1,6 +1,5 @@
-import { useState, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
 import {
+  AlertCircle,
   ArrowLeft,
   CheckCircle2,
   Clock,
@@ -10,19 +9,20 @@ import {
   Search,
   Trash2,
   X,
-  AlertCircle,
 } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { useMyAssessments } from '../../hooks/useAssessment';
 import {
+  useAddAssessmentToCourse,
   useCourseAssessments,
   useCourseDetail,
   useRemoveAssessmentFromCourse,
   useUpdateCourseAssessment,
-  useAddAssessmentToCourse,
 } from '../../hooks/useCourses';
-import { useMyAssessments } from '../../hooks/useAssessment';
-import type { CourseAssessmentResponse, AddAssessmentToCourseRequest } from '../../types';
 import '../../styles/module-refactor.css';
+import type { AddAssessmentToCourseRequest, CourseAssessmentResponse } from '../../types';
 import './TeacherCourses.css';
 
 // ─── Add Assessment Modal ─────────────────────────────────────────────────────
@@ -59,8 +59,7 @@ function AddAssessmentModal({
     const q = search.toLowerCase();
     return available.filter(
       (a) =>
-        a.title.toLowerCase().includes(q) ||
-        (a.description?.toLowerCase().includes(q) ?? false)
+        a.title.toLowerCase().includes(q) || (a.description?.toLowerCase().includes(q) ?? false)
     );
   }, [available, search]);
 
@@ -141,7 +140,8 @@ function AddAssessmentModal({
                   className={`assessment-select-card ${selectedId === assessment.id ? 'selected' : ''}`}
                   onClick={() => setSelectedId(assessment.id)}
                   style={{
-                    border: selectedId === assessment.id ? '2px solid #2d7be7' : '1px solid #dbe4f0',
+                    border:
+                      selectedId === assessment.id ? '2px solid #2d7be7' : '1px solid #dbe4f0',
                     borderRadius: 10,
                     padding: '0.85rem',
                     cursor: 'pointer',
@@ -184,7 +184,14 @@ function AddAssessmentModal({
 
           {/* Settings */}
           {selected && (
-            <div style={{ marginTop: '1.25rem', padding: '1rem', background: '#f8fafc', borderRadius: 10 }}>
+            <div
+              style={{
+                marginTop: '1.25rem',
+                padding: '1rem',
+                background: '#f8fafc',
+                borderRadius: 10,
+              }}
+            >
               <h4 style={{ margin: '0 0 0.75rem', fontSize: '0.9rem', fontWeight: 700 }}>
                 Cài đặt
               </h4>
@@ -347,8 +354,8 @@ export default function TeacherCourseAssessments() {
               </button>
               <h2>📋 Đánh giá — {course?.title ?? '...'}</h2>
               <p>
-                {course?.subjectName} • Khối {course?.gradeLevel} •{' '}
-                {assessments.length} bài kiểm tra
+                {course?.subjectName} • Khối {course?.gradeLevel} • {assessments.length} bài kiểm
+                tra
               </p>
             </div>
             <button className="btn" onClick={() => setShowAddModal(true)}>
@@ -381,9 +388,17 @@ export default function TeacherCourseAssessments() {
 
           {!isLoading && assessments.length === 0 && (
             <div className="empty">
-              <FileText size={40} strokeWidth={1.5} style={{ marginBottom: 12, color: '#94a3b8' }} />
+              <FileText
+                size={40}
+                strokeWidth={1.5}
+                style={{ marginBottom: 12, color: '#94a3b8' }}
+              />
               <p>Chưa có bài kiểm tra nào. Hãy thêm bài kiểm tra đầu tiên!</p>
-              <button className="btn" style={{ marginTop: 12 }} onClick={() => setShowAddModal(true)}>
+              <button
+                className="btn"
+                style={{ marginTop: 12 }}
+                onClick={() => setShowAddModal(true)}
+              >
                 <Plus size={14} />
                 Thêm bài kiểm tra
               </button>
@@ -411,7 +426,10 @@ export default function TeacherCourseAssessments() {
                     <div className="row" style={{ gap: 12 }}>
                       <GripVertical size={18} style={{ color: '#94a3b8', flexShrink: 0 }} />
                       <div style={{ flex: 1 }}>
-                        <div className="row" style={{ justifyContent: 'space-between', marginBottom: 8 }}>
+                        <div
+                          className="row"
+                          style={{ justifyContent: 'space-between', marginBottom: 8 }}
+                        >
                           <div className="row" style={{ gap: 8 }}>
                             <span className={statusClass[assessment.assessmentStatus ?? 'DRAFT']}>
                               {statusLabel[assessment.assessmentStatus ?? 'DRAFT']}
@@ -422,7 +440,11 @@ export default function TeacherCourseAssessments() {
                             {assessment.isRequired && (
                               <span
                                 className="badge"
-                                style={{ background: '#fef3c7', color: '#92400e', fontSize: '0.72rem' }}
+                                style={{
+                                  background: '#fef3c7',
+                                  color: '#92400e',
+                                  fontSize: '0.72rem',
+                                }}
                               >
                                 Bắt buộc
                               </span>
@@ -443,7 +465,10 @@ export default function TeacherCourseAssessments() {
                           </p>
                         )}
 
-                        <div className="row" style={{ gap: 16, fontSize: '0.82rem', color: '#64748b' }}>
+                        <div
+                          className="row"
+                          style={{ gap: 16, fontSize: '0.82rem', color: '#64748b' }}
+                        >
                           <span>📝 {assessment.totalQuestions ?? 0} câu</span>
                           <span>⭐ {assessment.totalPoints ?? 0} điểm</span>
                           {assessment.timeLimitMinutes && (
@@ -452,12 +477,11 @@ export default function TeacherCourseAssessments() {
                               {assessment.timeLimitMinutes} phút
                             </span>
                           )}
-                          {assessment.startDate && (
-                            <span>📅 {fmtDate(assessment.startDate)}</span>
-                          )}
-                          {assessment.submissionCount !== null && assessment.submissionCount > 0 && (
-                            <span>👥 {assessment.submissionCount} bài nộp</span>
-                          )}
+                          {assessment.startDate && <span>📅 {fmtDate(assessment.startDate)}</span>}
+                          {assessment.submissionCount !== null &&
+                            assessment.submissionCount > 0 && (
+                              <span>👥 {assessment.submissionCount} bài nộp</span>
+                            )}
                         </div>
 
                         <div className="row" style={{ gap: 8, marginTop: 12 }}>
@@ -472,7 +496,9 @@ export default function TeacherCourseAssessments() {
                           <button
                             className="btn secondary"
                             style={{ padding: '0.4rem 0.75rem', fontSize: '0.82rem' }}
-                            onClick={() => navigate(`/teacher/assessments/${assessment.assessmentId}`)}
+                            onClick={() =>
+                              navigate(`/teacher/assessments/${assessment.assessmentId}`)
+                            }
                           >
                             Xem chi tiết
                           </button>
