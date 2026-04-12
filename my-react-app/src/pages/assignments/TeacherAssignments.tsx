@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import React, { useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
-import { mockTeacher, mockAssignments } from '../../data/mockData';
+import { mockAssignments, mockTeacher } from '../../data/mockData';
 import './TeacherAssignments.css';
 
 const TeacherAssignments: React.FC = () => {
@@ -167,27 +167,41 @@ const TeacherAssignments: React.FC = () => {
                     </span>
                   </div>
                   <div className="assignment-actions">
-                    <button className="btn btn-outline btn-sm"><BarChart3 size={14} /> Thống kê</button>
-                    <button className="btn btn-outline btn-sm"><Edit3 size={14} /> Sửa</button>
-                    <button className="btn btn-primary btn-sm"><Eye size={14} /> Xem chi tiết</button>
+                    <button className="btn btn-outline btn-sm">
+                      <BarChart3 size={14} /> Thống kê
+                    </button>
+                    <button className="btn btn-outline btn-sm">
+                      <Edit3 size={14} /> Sửa
+                    </button>
+                    <button className="btn btn-primary btn-sm">
+                      <Eye size={14} /> Xem chi tiết
+                    </button>
                   </div>
                 </div>
 
                 <div className="assignment-info">
                   <div className="info-item">
-                    <span className="info-icon"><BookOpen size={15} /></span>
+                    <span className="info-icon">
+                      <BookOpen size={15} />
+                    </span>
                     <span className="info-text">{assignment.courseName}</span>
                   </div>
                   <div className="info-item">
-                    <span className="info-icon"><Timer size={15} /></span>
+                    <span className="info-icon">
+                      <Timer size={15} />
+                    </span>
                     <span className="info-text">{assignment.duration} phút</span>
                   </div>
                   <div className="info-item">
-                    <span className="info-icon"><Calendar size={15} /></span>
+                    <span className="info-icon">
+                      <Calendar size={15} />
+                    </span>
                     <span className="info-text">Hạn: {deadline.toLocaleDateString('vi-VN')}</span>
                   </div>
                   <div className="info-item">
-                    <span className="info-icon"><Trophy size={15} /></span>
+                    <span className="info-icon">
+                      <Trophy size={15} />
+                    </span>
                     <span className="info-text">Điểm tối đa: {assignment.maxScore}</span>
                   </div>
                 </div>
@@ -239,7 +253,9 @@ const TeacherAssignments: React.FC = () => {
 
                 {assignment.gradedSubmissions < assignment.totalSubmissions && (
                   <div className="assignment-alert">
-                    <span className="alert-icon"><AlertTriangle size={18} /></span>
+                    <span className="alert-icon">
+                      <AlertTriangle size={18} />
+                    </span>
                     <span className="alert-text">
                       Còn {assignment.totalSubmissions - assignment.gradedSubmissions} bài chưa chấm
                     </span>
@@ -342,8 +358,12 @@ const TeacherAssignments: React.FC = () => {
 
               <div className="modal-footer">
                 <button className="btn btn-outline">Hủy</button>
-                <button className="btn btn-outline"><Save size={14} /> Lưu nháp</button>
-                <button className="btn btn-primary"><CheckCircle2 size={14} /> Tạo và phân công</button>
+                <button className="btn btn-outline">
+                  <Save size={14} /> Lưu nháp
+                </button>
+                <button className="btn btn-primary">
+                  <CheckCircle2 size={14} /> Tạo và phân công
+                </button>
               </div>
             </div>
           </div>

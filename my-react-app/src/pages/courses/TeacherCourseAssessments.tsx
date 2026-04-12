@@ -293,12 +293,12 @@ export default function TeacherCourseAssessments() {
       updateMutation.mutateAsync({
         courseId: courseId!,
         assessmentId: draggedItem.assessmentId,
-        data: { orderIndex: targetItem.orderIndex },
+        data: { orderIndex: targetItem.orderIndex ?? undefined },
       }),
       updateMutation.mutateAsync({
         courseId: courseId!,
         assessmentId: targetItem.assessmentId,
-        data: { orderIndex: draggedItem.orderIndex },
+        data: { orderIndex: draggedItem.orderIndex ?? undefined },
       }),
     ]);
 

@@ -1,5 +1,14 @@
 import 'katex/dist/katex.min.css';
-import { ChevronRight, Menu, Pencil, Plus, Sparkles, SquarePen, Trash2, Archive } from 'lucide-react';
+import {
+  Archive,
+  ChevronRight,
+  Menu,
+  Pencil,
+  Plus,
+  Sparkles,
+  SquarePen,
+  Trash2,
+} from 'lucide-react';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { BlockMath, InlineMath } from 'react-katex';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';

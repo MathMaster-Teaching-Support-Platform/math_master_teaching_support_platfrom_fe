@@ -318,7 +318,7 @@ export function useUpdateAssessmentQuestionWorkaround() {
 
 /** Get all assessments linked to a specific lesson */
 export function useAssessmentsByLesson(lessonId: string | undefined, options?: any) {
-    return useQuery({
+    return useQuery<ApiResponse<AssessmentResponse[]>>({
         queryKey: ['assessments', 'lesson', lessonId],
         queryFn: () => AssessmentService.getAssessmentsByLesson(lessonId!),
         enabled: !!lessonId,

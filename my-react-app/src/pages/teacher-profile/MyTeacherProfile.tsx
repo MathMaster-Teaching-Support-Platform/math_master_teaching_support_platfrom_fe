@@ -18,6 +18,7 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
   const [success, setSuccess] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<UpdateTeacherProfileRequest>({
+    fullName: '',
     schoolName: '',
     schoolAddress: '',
     schoolWebsite: '',
@@ -34,6 +35,7 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
       const response = await TeacherProfileService.getMyProfile();
       setProfile(response.result);
       setFormData({
+        fullName: response.result.fullName || '',
         schoolName: response.result.schoolName,
         schoolAddress: response.result.schoolAddress || '',
         schoolWebsite: response.result.schoolWebsite || '',

@@ -41,7 +41,9 @@
   gap: 1rem;
   border: 1px solid var(--gray-200);
   box-shadow: var(--shadow-sm);
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
 }
 
 .stat-card:hover {
@@ -281,7 +283,7 @@
 }
 
 .progress-fill.graded {
-  background: linear-gradient(90deg, #5B67F1 0%, #8B5CF6 100%);
+  background: linear-gradient(90deg, #5b67f1 0%, #8b5cf6 100%);
 }
 
 .progress-percent {
