@@ -538,6 +538,94 @@
   max-width: 320px;
 }
 
+/* ---- Confirm Email status panel ---- */
+.ce-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 2.5rem 1rem 2rem;
+  gap: 0;
+}
+
+.ce-status__icon-wrap {
+  margin-bottom: 1.5rem;
+}
+
+.ce-status__icon {
+  width: 72px;
+  height: 72px;
+  animation: reg-success-pop 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.ce-status__title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 0.6rem;
+}
+
+.ce-status__body {
+  font-size: 0.9rem;
+  color: #4b5563;
+  line-height: 1.65;
+  margin: 0 0 1.5rem;
+  max-width: 320px;
+}
+
+/* loading spinner */
+.ce-status__spinner {
+  width: 56px;
+  height: 56px;
+  border: 3px solid rgba(94, 92, 230, 0.15);
+  border-top-color: #5e5ce6;
+  border-radius: 50%;
+  animation: ce-spin 0.9s linear infinite;
+  margin-bottom: 1.5rem;
+}
+
+@keyframes ce-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* countdown badge */
+.ce-status__countdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+  font-size: 0.82rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  margin-bottom: 1.5rem;
+}
+
+.ce-status__countdown strong {
+  font-variant-numeric: tabular-nums;
+  min-width: 1.6ch;
+}
+
+.ce-status__btn {
+  width: 100%;
+  max-width: 320px;
+}
+
+/* error two-button row */
+.ce-status__actions {
+  display: flex;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 320px;
+}
+
+.ce-status__btn--half {
+  flex: 1;
+}
+
 /* ---- Buttons — scoped to override index.css button{} ---- */
 .auth-container .btn {
   display: inline-flex;
@@ -574,6 +662,17 @@
 .auth-container .btn-primary:hover:not(:disabled) {
   background: #4a48d0;
   box-shadow: 0 4px 20px rgba(94, 92, 230, 0.4);
+}
+
+.auth-container .btn-outline {
+  background: transparent;
+  color: #5e5ce6 !important;
+  border: 1.5px solid #5e5ce6;
+  box-shadow: none;
+}
+
+.auth-container .btn-outline:hover:not(:disabled) {
+  background: rgba(94, 92, 230, 0.06);
 }
 
 .auth-container .btn-block {
