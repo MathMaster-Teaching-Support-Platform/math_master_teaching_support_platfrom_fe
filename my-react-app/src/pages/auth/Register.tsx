@@ -482,7 +482,14 @@ const Register: React.FC = () => {
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"
                   >
-                    <circle cx="26" cy="26" r="25" stroke="#22c55e" strokeWidth="2" fill="rgba(34,197,94,0.08)" />
+                    <circle
+                      cx="26"
+                      cy="26"
+                      r="25"
+                      stroke="#22c55e"
+                      strokeWidth="2"
+                      fill="rgba(34,197,94,0.08)"
+                    />
                     <path
                       d="M15 26.5l8 8 14-16"
                       stroke="#22c55e"
@@ -497,7 +504,16 @@ const Register: React.FC = () => {
                   Vui lòng kiểm tra hộp thư và nhấp vào liên kết xác nhận để kích hoạt tài khoản.
                 </p>
                 <div className="reg-success__hint">
-                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+                  <svg
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    width="16"
+                    height="16"
+                  >
                     <rect x="2" y="5" width="16" height="12" rx="2" />
                     <polyline points="2,5 10,12 18,5" />
                   </svg>
