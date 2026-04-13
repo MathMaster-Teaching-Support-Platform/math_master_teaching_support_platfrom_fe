@@ -10,8 +10,37 @@
   border-bottom: 1.5px solid var(--mod-slate-100);
 }
 
+.module-layout-container .view-toggle button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+  height: 34px;
+  padding: 0 0.72rem;
+  border: 1.5px solid transparent;
+  background: transparent;
+  color: var(--mod-slate-400);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.module-layout-container .view-toggle button:hover:not(.active) {
+  background: #e2eaff;
+  color: var(--mod-primary);
+}
+
+.module-layout-container .view-toggle button.active {
+  background: #fff;
+  color: var(--mod-primary);
+  border-color: #c5d6ff;
+  box-shadow: 0 1px 4px rgba(31, 94, 255, 0.14);
+}
+
 /* ── Skeleton ────────────────────────────────────────────── */
-.module-layout-container .lp-skeleton-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1.1rem;

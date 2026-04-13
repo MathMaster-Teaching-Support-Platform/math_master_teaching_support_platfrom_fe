@@ -5,8 +5,6 @@ import {
   ChevronRight,
   ClipboardList,
   FileText,
-  Grid2x2,
-  List,
   Pencil,
   Plus,
   Search,
@@ -612,7 +610,6 @@ function LessonPlanDetail({
 
 export default function TeacherLessonPlans() {
   const [search, setSearch] = useState('');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [filterStatus, setFilterStatus] = useState<'all' | 'withObjectives' | 'withMaterials'>(
     'all'
   );
@@ -758,23 +755,6 @@ export default function TeacherLessonPlans() {
                 </button>
               ))}
             </div>
-
-            <div className="view-toggle" style={{ marginLeft: 'auto' }}>
-              <button
-                className={viewMode === 'grid' ? 'active' : ''}
-                onClick={() => setViewMode('grid')}
-              >
-                <Grid2x2 size={15} />
-                Lưới
-              </button>
-              <button
-                className={viewMode === 'list' ? 'active' : ''}
-                onClick={() => setViewMode('list')}
-              >
-                <List size={15} />
-                Danh sách
-              </button>
-            </div>
           </div>
 
           {/* ── Summary bar ── */}
@@ -826,7 +806,7 @@ export default function TeacherLessonPlans() {
 
           {/* ── Grid ── */}
           {!isLoading && !isError && filtered.length > 0 && (
-            <div className={`grid-cards${viewMode === 'list' ? ' lp-list-view' : ''}`}>
+            <div className="grid-cards">
               {filtered.map((plan, idx) => (
                 <article key={plan.id} className="data-card lp-plan-card">
                   <div
