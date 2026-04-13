@@ -35,11 +35,26 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--ob-bg-from) 0%, #1c1a2e 50%, var(--ob-bg-to) 100%);
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 10%, rgba(94, 92, 230, 0.18) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 80%, rgba(20, 184, 166, 0.13) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 40% at 60% 30%, rgba(167, 139, 250, 0.1) 0%, transparent 50%),
+    linear-gradient(145deg, #16133d 0%, #1e1b4b 30%, #1a1832 60%, #111827 100%);
   font-family: var(--ob-font);
   position: relative;
   padding: 1.5rem;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Subtle dot-grid overlay */
+.ob-page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* ── Logo ───────────────────────────────────────────────────────── */
@@ -80,7 +95,7 @@
   position: absolute;
   font-family: 'Be Vietnam Pro', Georgia, serif;
   font-weight: 300;
-  color: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.065);
   user-select: none;
   animation: ob-float linear infinite;
 }
@@ -172,19 +187,19 @@
 @keyframes ob-float {
   0% {
     transform: translateY(0px) rotate(0deg);
-    opacity: 0.04;
+    opacity: 0.065;
   }
   33% {
     transform: translateY(-20px) rotate(5deg);
-    opacity: 0.07;
+    opacity: 0.1;
   }
   66% {
     transform: translateY(10px) rotate(-4deg);
-    opacity: 0.04;
+    opacity: 0.065;
   }
   100% {
     transform: translateY(0px) rotate(0deg);
-    opacity: 0.04;
+    opacity: 0.065;
   }
 }
 
@@ -196,18 +211,39 @@
   z-index: 0;
 }
 .ob-geo-1 {
-  width: 500px;
-  height: 500px;
-  top: -120px;
-  right: -120px;
-  background: radial-gradient(circle, rgba(94, 92, 230, 0.12) 0%, transparent 70%);
+  width: 600px;
+  height: 600px;
+  top: -150px;
+  right: -150px;
+  background: radial-gradient(
+    circle,
+    rgba(94, 92, 230, 0.22) 0%,
+    rgba(94, 92, 230, 0.06) 50%,
+    transparent 70%
+  );
+  filter: blur(40px);
 }
 .ob-geo-2 {
-  width: 400px;
-  height: 400px;
-  bottom: -100px;
-  left: -80px;
-  background: radial-gradient(circle, rgba(20, 184, 166, 0.08) 0%, transparent 70%);
+  width: 500px;
+  height: 500px;
+  bottom: -120px;
+  left: -100px;
+  background: radial-gradient(
+    circle,
+    rgba(20, 184, 166, 0.18) 0%,
+    rgba(20, 184, 166, 0.05) 50%,
+    transparent 70%
+  );
+  filter: blur(40px);
+}
+.ob-geo-3 {
+  width: 350px;
+  height: 350px;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(167, 139, 250, 0.08) 0%, transparent 65%);
+  filter: blur(30px);
 }
 
 /* ── Main card ──────────────────────────────────────────────────── */
@@ -863,6 +899,106 @@
   color: var(--ob-text);
 }
 
+/* ── Mascot guide ───────────────────────────────────────────────── */
+.ob-mascot {
+  position: fixed;
+  bottom: 2rem;
+  right: 2.5rem;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+  animation: ob-mascot-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes ob-mascot-in {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.ob-mascot-bubble {
+  background: white;
+  color: #1e1b4b;
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.5;
+  padding: 0.65rem 1rem;
+  border-radius: 16px 16px 4px 16px;
+  max-width: 220px;
+  text-align: left;
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.18),
+    0 1px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
+  animation: ob-bubble-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  border: 1px solid rgba(94, 92, 230, 0.15);
+  /* Tail pointer via pseudo-element */
+}
+
+.ob-mascot-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  right: 28px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 0px solid transparent;
+  border-top: 9px solid white;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.08));
+}
+
+@keyframes ob-bubble-in {
+  from {
+    opacity: 0;
+    transform: scale(0.7) translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateX(0);
+  }
+}
+
+@keyframes ob-text-swap {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ob-mascot-text {
+  display: block;
+  animation: ob-text-swap 0.22s ease both;
+}
+
+.ob-mascot-avatar {
+  width: 80px;
+  height: 88px;
+  animation: ob-mascot-idle 3s ease-in-out infinite;
+  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.3));
+}
+
+@keyframes ob-mascot-idle {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
 /* ── Responsive ────────────────────────────────────────────────── */
 @media (max-width: 640px) {
   .ob-card {
@@ -887,5 +1023,17 @@
   }
   .ob-step-line {
     margin-bottom: 0;
+  }
+  .ob-mascot {
+    bottom: 1rem;
+    right: 1rem;
+  }
+  .ob-mascot-avatar {
+    width: 60px;
+    height: 66px;
+  }
+  .ob-mascot-bubble {
+    max-width: 160px;
+    font-size: 0.75rem;
   }
 }

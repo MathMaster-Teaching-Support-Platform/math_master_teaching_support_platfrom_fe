@@ -22,12 +22,74 @@ type Role = 'TEACHER' | 'STUDENT' | null;
 const TEACHER_STEPS = ['Vai trò', 'Xác thực', 'Tài liệu', 'Trường học', 'Hoàn tất'];
 const STUDENT_STEPS = ['Vai trò', 'Hồ sơ', 'Hoàn tất'];
 
+const MASCOT_MESSAGES: Record<string, string> = {
+  step0: 'Xin chào! Mình là Max 🦉 Bạn muốn tham gia với vai trò nào?',
+  step0_teacher: '👩‍🏫 Giáo viên — tạo bài giảng, quản lý lớp học với AI siêu xịn!',
+  step0_student: '🎓 Học sinh — học thông minh hơn mỗi ngày cùng AI!',
+  teacher_1: 'Hãy nhập email để xác thực quyền giảng dạy nhé!',
+  teacher_2: 'Tải lên thẻ giáo viên — chỉ mất vài giây thôi!',
+  teacher_3: 'Bước cuối rồi! Thêm thông tin trường là xong!',
+  teacher_4: 'Hồ sơ đã gửi! Chờ chúng tôi xét duyệt nhé! 🎉',
+  student_1: 'Điền tên của bạn để bắt đầu hành trình toán học!',
+  student_2: 'Chúc mừng! Bạn đã sẵn sàng chinh phục toán học! 🎉',
+};
+
+const MascotOwl: React.FC = () => (
+  <svg
+    width="72"
+    height="80"
+    viewBox="0 0 72 80"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden="true"
+  >
+    {/* Graduation cap */}
+    <polygon points="36,4 14,14 58,14" fill="#4f46e5" />
+    <rect x="14" y="13" width="44" height="5" rx="2.5" fill="#4338ca" />
+    <line x1="55" y1="14" x2="60" y2="26" stroke="#4338ca" strokeWidth="2" strokeLinecap="round" />
+    <circle cx="61" cy="28" r="3.5" fill="#a78bfa" />
+    {/* Ear tufts */}
+    <ellipse cx="22" cy="27" rx="5" ry="7" fill="#fbbf24" transform="rotate(-15 22 27)" />
+    <ellipse cx="50" cy="27" rx="5" ry="7" fill="#fbbf24" transform="rotate(15 50 27)" />
+    {/* Body */}
+    <ellipse cx="36" cy="54" rx="20" ry="22" fill="#fde68a" />
+    {/* Chest */}
+    <ellipse cx="36" cy="58" rx="12" ry="14" fill="#fef3c7" />
+    {/* Eyes */}
+    <circle cx="27" cy="46" r="8.5" fill="white" />
+    <circle cx="45" cy="46" r="8.5" fill="white" />
+    <circle cx="27" cy="46" r="5" fill="#1e1b4b" />
+    <circle cx="45" cy="46" r="5" fill="#1e1b4b" />
+    <circle cx="28.5" cy="44.5" r="1.8" fill="white" />
+    <circle cx="46.5" cy="44.5" r="1.8" fill="white" />
+    {/* Beak */}
+    <ellipse cx="36" cy="53" rx="3.5" ry="2.5" fill="#f59e0b" />
+    {/* Wings */}
+    <ellipse cx="14" cy="58" rx="8" ry="12" fill="#fbbf24" transform="rotate(-18 14 58)" />
+    <ellipse cx="58" cy="58" rx="8" ry="12" fill="#fbbf24" transform="rotate(18 58 58)" />
+    {/* Feet */}
+    <path
+      d="M27 75 L23 80 M27 75 L27 80 M27 75 L31 80"
+      stroke="#f59e0b"
+      strokeWidth="2"
+      strokeLinecap="round"
+    />
+    <path
+      d="M45 75 L41 80 M45 75 L45 80 M45 75 L49 80"
+      stroke="#f59e0b"
+      strokeWidth="2"
+      strokeLinecap="round"
+    />
+  </svg>
+);
+
 const OnboardingFlow: React.FC = () => {
   const navigate = useNavigate();
   const [role, setRole] = useState<Role>(null);
   const [step, setStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [hoveredRole, setHoveredRole] = useState<'TEACHER' | 'STUDENT' | null>(null);
 
   // Teacher form data
   const [t1, setT1] = useState({ country: 'Vietnam', email: '' });
@@ -195,6 +257,8 @@ const OnboardingFlow: React.FC = () => {
             setRole('TEACHER');
             goNext();
           }}
+          onMouseEnter={() => setHoveredRole('TEACHER')}
+          onMouseLeave={() => setHoveredRole(null)}
         >
           <div className="ob-role-icon ob-role-icon--purple">
             <GraduationCap size={32} />
@@ -211,6 +275,8 @@ const OnboardingFlow: React.FC = () => {
             setRole('STUDENT');
             goNext();
           }}
+          onMouseEnter={() => setHoveredRole('STUDENT')}
+          onMouseLeave={() => setHoveredRole(null)}
         >
           <div className="ob-role-icon ob-role-icon--teal">
             <User size={32} />
@@ -594,6 +660,20 @@ const OnboardingFlow: React.FC = () => {
 
   const isSuccess = (role === 'TEACHER' && step === 4) || (role === 'STUDENT' && step === 2);
 
+  const getMascotMessage = (): string => {
+    if (step === 0) {
+      if (hoveredRole === 'TEACHER') return MASCOT_MESSAGES.step0_teacher;
+      if (hoveredRole === 'STUDENT') return MASCOT_MESSAGES.step0_student;
+      return MASCOT_MESSAGES.step0;
+    }
+    if (role === 'TEACHER') return MASCOT_MESSAGES[`teacher_${step}`] ?? '';
+    if (role === 'STUDENT') return MASCOT_MESSAGES[`student_${step}`] ?? '';
+    return '';
+  };
+  const mascotMsg = getMascotMessage();
+  // key changes only on step/role transitions, not on hover (to avoid full remount flashes)
+  const mascotStepKey = `${role}-${step}`;
+
   return (
     <div className="ob-page">
       {/* Floating math background */}
@@ -607,12 +687,27 @@ const OnboardingFlow: React.FC = () => {
       {/* Geometric accents */}
       <div className="ob-geo ob-geo-1" aria-hidden="true" />
       <div className="ob-geo ob-geo-2" aria-hidden="true" />
+      <div className="ob-geo ob-geo-3" aria-hidden="true" />
 
       {/* Logo */}
       <a href="/" className="ob-logo">
         <span className="ob-logo-icon">∑π</span>
         <span className="ob-logo-text">MathMaster</span>
       </a>
+
+      {/* Mascot guide */}
+      {mascotMsg && (
+        <div className="ob-mascot" key={mascotStepKey}>
+          <div className="ob-mascot-bubble">
+            <span className="ob-mascot-text" key={mascotMsg}>
+              {mascotMsg}
+            </span>
+          </div>
+          <div className="ob-mascot-avatar">
+            <MascotOwl />
+          </div>
+        </div>
+      )}
 
       {/* Main card */}
       <div className="ob-card">
