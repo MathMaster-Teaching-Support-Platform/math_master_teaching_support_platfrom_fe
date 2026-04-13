@@ -229,7 +229,9 @@ export default function TakeAssessment() {
         notificationCount={0}
       >
         <div className="module-layout-container">
-          <div className="empty">Đang khởi tạo bài kiểm tra...</div>
+          <div className="page-spinner">
+            <div className="spinner-ring" />
+          </div>
         </div>
       </DashboardLayout>
     );

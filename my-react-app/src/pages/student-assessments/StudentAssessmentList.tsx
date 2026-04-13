@@ -1,13 +1,23 @@
+import {
+  AlertCircle,
+  BookOpen,
+  CheckCircle2,
+  Clock,
+  FileText,
+  Hourglass,
+  RefreshCw,
+  Search,
+  X,
+} from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertCircle, BookOpen, CheckCircle2, Clock, FileText, Hourglass, RefreshCw, Search } from 'lucide-react';
-import { useMyAssessments } from '../../hooks/useStudentAssessment';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
-import type { StudentAssessmentResponse } from '../../types/studentAssessment.types';
+import { useMyAssessments } from '../../hooks/useStudentAssessment';
 import '../../styles/module-refactor.css';
+import type { StudentAssessmentResponse } from '../../types/studentAssessment.types';
 
 const statusFilters = ['ALL', 'UPCOMING', 'IN_PROGRESS', 'COMPLETED'] as const;
-type StatusFilter = typeof statusFilters[number];
+type StatusFilter = (typeof statusFilters)[number];
 
 const statusLabel: Record<string, string> = {
   ALL: 'Tất cả',
@@ -41,10 +51,11 @@ export default function StudentAssessmentList() {
     size: 20,
   });
 
-  const assessments = data?.result?.content ?? [];
   const totalPages = data?.result?.totalPages ?? 0;
 
   const filtered = useMemo(() => {
+    const assessments = data?.result?.content ?? [];
+
     if (!search.trim()) return assessments;
     const q = search.toLowerCase();
     return assessments.filter(
@@ -52,7 +63,16 @@ export default function StudentAssessmentList() {
         item.title.toLowerCase().includes(q) ||
         (item.description?.toLowerCase().includes(q) ?? false)
     );
-  }, [assessments, search]);
+  }, [data?.result?.content, search]);
+
+  const summary = useMemo(
+    () => ({
+      UPCOMING: filtered.filter((item) => item.studentStatus === 'UPCOMING').length,
+      IN_PROGRESS: filtered.filter((item) => item.studentStatus === 'IN_PROGRESS').length,
+      COMPLETED: filtered.filter((item) => item.studentStatus === 'COMPLETED').length,
+    }),
+    [filtered]
+  );
 
   return (
     <DashboardLayout
@@ -63,25 +83,32 @@ export default function StudentAssessmentList() {
       <div className="module-layout-container">
         <section className="module-page">
           <header className="page-header">
-            <div>
-              <div className="row" style={{ gap: '0.6rem', marginBottom: 6 }}>
-                <h2>Bài kiểm tra của tôi</h2>
-                {!isLoading && !isError && (
-                  <span className="count-chip">{filtered.length}</span>
-                )}
-              </div>
-              <p>Xem và làm các bài kiểm tra được giao cho bạn.</p>
+            <div className="row" style={{ gap: '0.6rem' }}>
+              <h2>Bài kiểm tra của tôi</h2>
+              {!isLoading && !isError && <span className="count-chip">{filtered.length}</span>}
             </div>
           </header>
 
           <div className="toolbar">
             <label className="search-box">
-              <Search size={15} style={{ color: 'var(--mod-slate-300)', flexShrink: 0 }} />
+              <span className="search-box__icon" aria-hidden="true">
+                <Search size={15} />
+              </span>
               <input
                 placeholder="Tìm kiếm bài kiểm tra..."
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
               />
+              {search && (
+                <button
+                  type="button"
+                  className="search-box__clear"
+                  aria-label="Xóa nội dung tìm kiếm"
+                  onClick={() => setSearch('')}
+                >
+                  <X size={14} />
+                </button>
+              )}
             </label>
 
             <div className="pill-group">
@@ -99,11 +126,39 @@ export default function StudentAssessmentList() {
               ))}
             </div>
 
-            <button className="btn secondary" style={{ marginLeft: 'auto' }} onClick={() => void refetch()}>
+            <button
+              className="btn secondary"
+              style={{ marginLeft: 'auto' }}
+              onClick={() => void refetch()}
+            >
               <RefreshCw size={14} />
               Làm mới
             </button>
           </div>
+
+          {!isLoading && !isError && filtered.length > 0 && (
+            <div className="assessment-summary-bar">
+              <div className="summary-item summary-item--primary">
+                <span className="summary-label">Tổng</span>
+                <strong className="summary-value">{filtered.length}</strong>
+              </div>
+              <div className="summary-item">
+                <span className="summary-dot summary-dot--upcoming" />
+                <span className="summary-label">Sắp tới</span>
+                <strong className="summary-value">{summary.UPCOMING}</strong>
+              </div>
+              <div className="summary-item">
+                <span className="summary-dot summary-dot--progress" />
+                <span className="summary-label">Đang làm</span>
+                <strong className="summary-value">{summary.IN_PROGRESS}</strong>
+              </div>
+              <div className="summary-item">
+                <span className="summary-dot summary-dot--completed" />
+                <span className="summary-label">Hoàn thành</span>
+                <strong className="summary-value">{summary.COMPLETED}</strong>
+              </div>
+            </div>
+          )}
 
           {isLoading && (
             <div className="empty">
@@ -114,8 +169,13 @@ export default function StudentAssessmentList() {
 
           {isError && (
             <div className="empty">
-              <AlertCircle size={28} style={{ opacity: 0.5, marginBottom: 8, color: 'var(--mod-danger)' }} />
-              <p>{error instanceof Error ? error.message : 'Không thể tải danh sách bài kiểm tra'}</p>
+              <AlertCircle
+                size={28}
+                style={{ opacity: 0.5, marginBottom: 8, color: 'var(--mod-danger)' }}
+              />
+              <p>
+                {error instanceof Error ? error.message : 'Không thể tải danh sách bài kiểm tra'}
+              </p>
             </div>
           )}
 
@@ -171,10 +231,25 @@ function AssessmentCard({
   onViewDetail,
   onStart,
 }: {
-  assessment: StudentAssessmentResponse;
-  onViewDetail: () => void;
-  onStart: () => void;
+  readonly assessment: StudentAssessmentResponse;
+  readonly onViewDetail: () => void;
+  readonly onStart: () => void;
 }) {
+  const [navigating, setNavigating] = useState(false);
+  const [starting, setStarting] = useState(false);
+
+  const handleViewDetail = () => {
+    if (navigating) return;
+    setNavigating(true);
+    setTimeout(() => onViewDetail(), 2400);
+  };
+
+  const handleStart = () => {
+    if (starting) return;
+    setStarting(true);
+    setTimeout(() => onStart(), 2400);
+  };
+
   const dueDate = assessment.endDate ? new Date(assessment.endDate) : null;
   const isOverdue = dueDate && dueDate < new Date();
 
@@ -193,11 +268,7 @@ function AssessmentCard({
       {/* Title + description */}
       <div>
         <h3>{assessment.title}</h3>
-        {assessment.description && (
-          <p className="muted" style={{ marginTop: 5, fontSize: '0.88rem', lineHeight: 1.45 }}>
-            {assessment.description}
-          </p>
-        )}
+        {assessment.description && <p className="card-desc">{assessment.description}</p>}
       </div>
 
       <hr className="card-divider" />
@@ -249,20 +320,34 @@ function AssessmentCard({
       <hr className="card-divider" />
 
       {/* Actions */}
-      <div className="row" style={{ flexWrap: 'wrap' }}>
-        <button className="btn secondary" onClick={onViewDetail}>
-          <BookOpen size={14} />
-          Chi tiết
+      <div className="card-actions">
+        <button
+          className={`btn secondary${navigating ? ' btn--navigating' : ''}`}
+          onClick={handleViewDetail}
+          disabled={navigating}
+        >
+          {navigating ? (
+            <span className="circle-loader">
+              <svg width="18" height="18" viewBox="0 0 20 20">
+                <circle className="cl-track" cx="10" cy="10" r="9" />
+                <circle className="cl-fill" cx="10" cy="10" r="9" />
+              </svg>
+              Đang mở...
+            </span>
+          ) : (
+            <>
+              <BookOpen size={14} />
+              Chi tiết
+            </>
+          )}
         </button>
 
         {assessment.canStart && (
-          <button className="btn" onClick={onStart}>
-            {(assessment.attemptNumber || 0) > 0 ? (
-              <><RefreshCw size={14} /> Làm lại</>
-            ) : (
-              'Bắt đầu'
-            )}
-          </button>
+          <StartButton
+            starting={starting}
+            isRetry={(assessment.attemptNumber || 0) > 0}
+            onClick={handleStart}
+          />
         )}
 
         {!assessment.canStart && assessment.cannotStartReason && (
@@ -270,5 +355,41 @@ function AssessmentCard({
         )}
       </div>
     </article>
+  );
+}
+
+function StartButton({
+  starting,
+  isRetry,
+  onClick,
+}: {
+  readonly starting: boolean;
+  readonly isRetry: boolean;
+  readonly onClick: () => void;
+}) {
+  if (starting) {
+    return (
+      <button className="btn btn--navigating" disabled>
+        <span className="circle-loader">
+          <svg width="18" height="18" viewBox="0 0 20 20">
+            <circle className="cl-track" cx="10" cy="10" r="9" />
+            <circle className="cl-fill" cx="10" cy="10" r="9" />
+          </svg>
+          Đang mở...
+        </span>
+      </button>
+    );
+  }
+  if (isRetry) {
+    return (
+      <button className="btn" onClick={onClick}>
+        <RefreshCw size={14} /> Làm lại
+      </button>
+    );
+  }
+  return (
+    <button className="btn" onClick={onClick}>
+      Bắt đầu
+    </button>
   );
 }
