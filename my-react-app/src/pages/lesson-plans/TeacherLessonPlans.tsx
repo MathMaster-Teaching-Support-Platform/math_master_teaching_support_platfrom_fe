@@ -1,42 +1,60 @@
-import { useEffect, useState } from 'react';
 import {
-  ArrowRight,
+  AlertCircle,
   BookOpen,
+  CalendarDays,
   ChevronRight,
   ClipboardList,
+  FileText,
+  Grid2x2,
+  List,
   Pencil,
   Plus,
-  RefreshCw,
   Search,
   Target,
   Trash2,
   X,
 } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import {
-  useMyLessonPlans,
   useCreateLessonPlan,
-  useUpdateLessonPlan,
   useDeleteLessonPlan,
+  useMyLessonPlans,
+  useUpdateLessonPlan,
 } from '../../hooks/useLessonPlans';
 import { LessonSlideService } from '../../services/api/lesson-slide.service';
+import '../../styles/module-refactor.css';
 import type {
-  LessonPlanResponse,
   CreateLessonPlanRequest,
+  LessonPlanResponse,
   UpdateLessonPlanRequest,
 } from '../../types';
 import type {
-  SchoolGrade,
-  SubjectByGrade,
   ChapterBySubject,
   LessonByChapter,
+  SchoolGrade,
+  SubjectByGrade,
 } from '../../types/lessonSlide.types';
 import './TeacherLessonPlans.css';
+
+const coverGradients = [
+  'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
+  'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)',
+  'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)',
+  'linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)',
+  'linear-gradient(135deg, #ecfeff 0%, #cffafe 100%)',
+  'linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%)',
+] as const;
+
+const coverAccents = ['#1d4ed8', '#047857', '#6d28d9', '#c2410c', '#0f766e', '#be185d'] as const;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const splitLines = (val: string) =>
-  val.split('\n').map((s) => s.trim()).filter(Boolean);
+  val
+    .split('\n')
+    .map((s) => s.trim())
+    .filter(Boolean);
 
 const fmtDate = (iso: string) =>
   new Date(iso).toLocaleDateString('vi-VN', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -89,40 +107,53 @@ function CreateLessonPlanModal({
 
   const handleGradeChange = async (val: string) => {
     setGradeId(val);
-    setSubjectId(''); setChapterId(''); setLessonId('');
-    setSubjects([]); setChapters([]); setLessons([]);
+    setSubjectId('');
+    setChapterId('');
+    setLessonId('');
+    setSubjects([]);
+    setChapters([]);
+    setLessons([]);
     setSelectedLesson(null);
     if (!val) return;
     setLoadingSubjects(true);
     try {
       const r = await LessonSlideService.getSubjectsBySchoolGrade(val);
       setSubjects(r.result || []);
-    } finally { setLoadingSubjects(false); }
+    } finally {
+      setLoadingSubjects(false);
+    }
   };
 
   const handleSubjectChange = async (val: string) => {
     setSubjectId(val);
-    setChapterId(''); setLessonId('');
-    setChapters([]); setLessons([]);
+    setChapterId('');
+    setLessonId('');
+    setChapters([]);
+    setLessons([]);
     setSelectedLesson(null);
     if (!val) return;
     setLoadingChapters(true);
     try {
       const r = await LessonSlideService.getChaptersBySubject(val);
       setChapters(r.result || []);
-    } finally { setLoadingChapters(false); }
+    } finally {
+      setLoadingChapters(false);
+    }
   };
 
   const handleChapterChange = async (val: string) => {
     setChapterId(val);
-    setLessonId(''); setLessons([]);
+    setLessonId('');
+    setLessons([]);
     setSelectedLesson(null);
     if (!val) return;
     setLoadingLessons(true);
     try {
       const r = await LessonSlideService.getLessonsByChapter(val);
       setLessons(r.result || []);
-    } finally { setLoadingLessons(false); }
+    } finally {
+      setLoadingLessons(false);
+    }
   };
 
   const handleLessonChange = (val: string) => {
@@ -175,7 +206,9 @@ function CreateLessonPlanModal({
           {step === 1 && (
             <>
               <div className="lp-field">
-                <label>Khối lớp <span>*</span></label>
+                <label>
+                  Khối lớp <span>*</span>
+                </label>
                 <select
                   className="lp-input"
                   value={gradeId}
@@ -184,14 +217,18 @@ function CreateLessonPlanModal({
                 >
                   <option value="">{loadingGrades ? 'Đang tải...' : '-- Chọn khối --'}</option>
                   {grades.map((g) => (
-                    <option key={g.id} value={g.id}>Khối {g.gradeLevel} – {g.name}</option>
+                    <option key={g.id} value={g.id}>
+                      Khối {g.gradeLevel} – {g.name}
+                    </option>
                   ))}
                 </select>
               </div>
 
               {gradeId && (
                 <div className="lp-field">
-                  <label>Môn học <span>*</span></label>
+                  <label>
+                    Môn học <span>*</span>
+                  </label>
                   <select
                     className="lp-input"
                     value={subjectId}
@@ -200,7 +237,9 @@ function CreateLessonPlanModal({
                   >
                     <option value="">{loadingSubjects ? 'Đang tải...' : '-- Chọn môn --'}</option>
                     {subjects.map((s) => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -208,16 +247,22 @@ function CreateLessonPlanModal({
 
               {subjectId && (
                 <div className="lp-field">
-                  <label>Chương <span>*</span></label>
+                  <label>
+                    Chương <span>*</span>
+                  </label>
                   <select
                     className="lp-input"
                     value={chapterId}
                     onChange={(e) => void handleChapterChange(e.target.value)}
                     disabled={loadingChapters}
                   >
-                    <option value="">{loadingChapters ? 'Đang tải...' : '-- Chọn chương --'}</option>
+                    <option value="">
+                      {loadingChapters ? 'Đang tải...' : '-- Chọn chương --'}
+                    </option>
                     {chapters.map((c) => (
-                      <option key={c.id} value={c.id}>{c.orderIndex}. {c.title}</option>
+                      <option key={c.id} value={c.id}>
+                        {c.orderIndex}. {c.title}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -225,16 +270,22 @@ function CreateLessonPlanModal({
 
               {chapterId && (
                 <div className="lp-field">
-                  <label>Bài học <span>*</span></label>
+                  <label>
+                    Bài học <span>*</span>
+                  </label>
                   <select
                     className="lp-input"
                     value={lessonId}
                     onChange={(e) => handleLessonChange(e.target.value)}
                     disabled={loadingLessons}
                   >
-                    <option value="">{loadingLessons ? 'Đang tải...' : '-- Chọn bài học --'}</option>
+                    <option value="">
+                      {loadingLessons ? 'Đang tải...' : '-- Chọn bài học --'}
+                    </option>
                     {lessons.map((l) => (
-                      <option key={l.id} value={l.id}>{l.orderIndex}. {l.title}</option>
+                      <option key={l.id} value={l.id}>
+                        {l.orderIndex}. {l.title}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -243,7 +294,9 @@ function CreateLessonPlanModal({
               {selectedLesson && (
                 <div className="lp-selected-lesson">
                   <BookOpen size={14} />
-                  <span>Đã chọn: <strong>{selectedLesson.title}</strong></span>
+                  <span>
+                    Đã chọn: <strong>{selectedLesson.title}</strong>
+                  </span>
                 </div>
               )}
             </>
@@ -259,7 +312,9 @@ function CreateLessonPlanModal({
                 <textarea
                   className="lp-textarea"
                   rows={4}
-                  placeholder={'Học sinh hiểu được khái niệm phương trình bậc nhất\nHọc sinh vận dụng giải được bài tập cơ bản'}
+                  placeholder={
+                    'Học sinh hiểu được khái niệm phương trình bậc nhất\nHọc sinh vận dụng giải được bài tập cơ bản'
+                  }
                   value={objectives}
                   onChange={(e) => setObjectives(e.target.value)}
                 />
@@ -318,7 +373,9 @@ function CreateLessonPlanModal({
         <div className="lp-modal-footer">
           {step === 1 ? (
             <>
-              <button className="lp-btn lp-btn-secondary" onClick={onClose}>Hủy</button>
+              <button className="lp-btn lp-btn-secondary" onClick={onClose}>
+                Hủy
+              </button>
               <button
                 className="lp-btn lp-btn-primary"
                 disabled={!lessonId}
@@ -333,11 +390,7 @@ function CreateLessonPlanModal({
               <button className="lp-btn lp-btn-secondary" onClick={() => setStep(1)}>
                 ← Quay lại
               </button>
-              <button
-                className="lp-btn lp-btn-primary"
-                disabled={isLoading}
-                onClick={handleSubmit}
-              >
+              <button className="lp-btn lp-btn-primary" disabled={isLoading} onClick={handleSubmit}>
                 {isLoading ? 'Đang lưu...' : 'Tạo giáo án'}
               </button>
             </>
@@ -382,47 +435,78 @@ function EditLessonPlanModal({
 
         <div className="lp-modal-body">
           <div className="lp-field">
-            <label>Mục tiêu bài học <span className="lp-field-hint">(mỗi dòng một mục tiêu)</span></label>
-            <textarea className="lp-textarea" rows={4}
+            <label>
+              Mục tiêu bài học <span className="lp-field-hint">(mỗi dòng một mục tiêu)</span>
+            </label>
+            <textarea
+              className="lp-textarea"
+              rows={4}
               placeholder={'Học sinh hiểu được...\nHọc sinh vận dụng được...'}
-              value={objectives} onChange={(e) => setObjectives(e.target.value)} />
+              value={objectives}
+              onChange={(e) => setObjectives(e.target.value)}
+            />
           </div>
           <div className="lp-field">
-            <label>Tài liệu & thiết bị <span className="lp-field-hint">(mỗi dòng một mục)</span></label>
-            <textarea className="lp-textarea" rows={3}
+            <label>
+              Tài liệu & thiết bị <span className="lp-field-hint">(mỗi dòng một mục)</span>
+            </label>
+            <textarea
+              className="lp-textarea"
+              rows={3}
               placeholder={'Sách giáo khoa trang 45\nBảng phụ'}
-              value={materials} onChange={(e) => setMaterials(e.target.value)} />
+              value={materials}
+              onChange={(e) => setMaterials(e.target.value)}
+            />
           </div>
           <div className="lp-field">
             <label>Phương pháp giảng dạy</label>
-            <textarea className="lp-textarea" rows={3}
+            <textarea
+              className="lp-textarea"
+              rows={3}
               placeholder="Thuyết trình kết hợp thảo luận nhóm..."
-              value={strategy} onChange={(e) => setStrategy(e.target.value)} />
+              value={strategy}
+              onChange={(e) => setStrategy(e.target.value)}
+            />
           </div>
           <div className="lp-field">
             <label>Phương pháp đánh giá</label>
-            <textarea className="lp-textarea" rows={2}
+            <textarea
+              className="lp-textarea"
+              rows={2}
               placeholder="Kiểm tra miệng, bài tập về nhà..."
-              value={assessment} onChange={(e) => setAssessment(e.target.value)} />
+              value={assessment}
+              onChange={(e) => setAssessment(e.target.value)}
+            />
           </div>
           <div className="lp-field">
             <label>Ghi chú thêm</label>
-            <textarea className="lp-textarea" rows={2}
+            <textarea
+              className="lp-textarea"
+              rows={2}
               placeholder="Lưu ý đặc biệt..."
-              value={notes} onChange={(e) => setNotes(e.target.value)} />
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+            />
           </div>
         </div>
 
         <div className="lp-modal-footer">
-          <button className="lp-btn lp-btn-secondary" onClick={onClose}>Hủy</button>
-          <button className="lp-btn lp-btn-primary" disabled={isLoading}
-            onClick={() => onSubmit({
-              objectives: splitLines(objectives),
-              materialsNeeded: splitLines(materials),
-              teachingStrategy: strategy.trim() || undefined,
-              assessmentMethods: assessment.trim() || undefined,
-              notes: notes.trim() || undefined,
-            })}>
+          <button className="lp-btn lp-btn-secondary" onClick={onClose}>
+            Hủy
+          </button>
+          <button
+            className="lp-btn lp-btn-primary"
+            disabled={isLoading}
+            onClick={() =>
+              onSubmit({
+                objectives: splitLines(objectives),
+                materialsNeeded: splitLines(materials),
+                teachingStrategy: strategy.trim() || undefined,
+                assessmentMethods: assessment.trim() || undefined,
+                notes: notes.trim() || undefined,
+              })
+            }
+          >
             {isLoading ? 'Đang lưu...' : 'Lưu thay đổi'}
           </button>
         </div>
@@ -528,215 +612,327 @@ function LessonPlanDetail({
 
 export default function TeacherLessonPlans() {
   const [search, setSearch] = useState('');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'withObjectives' | 'withMaterials'>(
+    'all'
+  );
   const [openCreate, setOpenCreate] = useState(false);
   const [editing, setEditing] = useState<LessonPlanResponse | null>(null);
   const [viewing, setViewing] = useState<LessonPlanResponse | null>(null);
 
-  const { data, isLoading, isError, error, refetch } = useMyLessonPlans();
+  const { data, isLoading, isError, error } = useMyLessonPlans();
   const createMutation = useCreateLessonPlan();
   const updateMutation = useUpdateLessonPlan();
   const deleteMutation = useDeleteLessonPlan();
 
-  const plans = data?.result ?? [];
+  const plans = useMemo(() => data?.result ?? [], [data]);
 
-  const filtered = plans.filter((p) => {
-    const q = search.toLowerCase();
-    return (
-      !q ||
-      p.lessonTitle?.toLowerCase().includes(q) ||
-      p.teachingStrategy?.toLowerCase().includes(q) ||
-      p.notes?.toLowerCase().includes(q)
-    );
-  });
+  const filtered = useMemo(() => {
+    return plans.filter((p) => {
+      let statusMatch = true;
+      if (filterStatus === 'withObjectives')
+        statusMatch = !!(p.objectives && p.objectives.length > 0);
+      else if (filterStatus === 'withMaterials')
+        statusMatch = !!(p.materialsNeeded && p.materialsNeeded.length > 0);
 
-  const stats = {
-    total: plans.length,
-    withObjectives: plans.filter((p) => p.objectives && p.objectives.length > 0).length,
-    withMaterials: plans.filter((p) => p.materialsNeeded && p.materialsNeeded.length > 0).length,
-    withNotes: plans.filter((p) => p.notes).length,
-  };
+      const q = search.toLowerCase();
+      const searchMatch =
+        !q ||
+        p.lessonTitle?.toLowerCase().includes(q) ||
+        p.teachingStrategy?.toLowerCase().includes(q) ||
+        p.notes?.toLowerCase().includes(q);
+
+      return statusMatch && searchMatch;
+    });
+  }, [plans, filterStatus, search]);
+
+  const stats = useMemo(
+    () => ({
+      total: plans.length,
+      withObjectives: plans.filter((p) => p.objectives && p.objectives.length > 0).length,
+      withMaterials: plans.filter((p) => p.materialsNeeded && p.materialsNeeded.length > 0).length,
+      withNotes: plans.filter((p) => p.notes).length,
+    }),
+    [plans]
+  );
+
+  const filterTabs = [
+    { id: 'all' as const, label: `Tất cả (${stats.total})` },
+    { id: 'withObjectives' as const, label: `Có mục tiêu (${stats.withObjectives})` },
+    { id: 'withMaterials' as const, label: `Có tài liệu (${stats.withMaterials})` },
+  ];
 
   return (
-    <DashboardLayout
-      role="teacher"
-      user={{ name: 'Teacher', avatar: '', role: 'teacher' }}
-      notificationCount={0}
-    >
-      <div className="lesson-plans-page">
-        {/* ── Header ── */}
-        <header className="lp-header">
-          <div className="lp-header-copy">
-            <h1>📋 Giáo án của tôi</h1>
-            <p>Soạn và quản lý kế hoạch giảng dạy chi tiết cho từng bài học.</p>
-          </div>
-          <button
-            className="lp-btn-create"
-            onClick={() => setOpenCreate(true)}
-          >
-            <Plus size={18} />
-            Soạn giáo án mới
-          </button>
-        </header>
+    <DashboardLayout role="teacher" user={{ name: 'Teacher', avatar: '', role: 'teacher' }}>
+      <div className="module-layout-container">
+        <section className="module-page">
+          {/* ── Header ── */}
+          <header className="page-header lp-header-row">
+            <div className="header-stack">
+              <div className="header-kicker">Lesson plan management</div>
+              <div className="row" style={{ gap: '0.6rem' }}>
+                <h2>Giáo án của tôi</h2>
+                {!isLoading && <span className="count-chip">{plans.length}</span>}
+              </div>
+              <p className="header-sub">
+                {stats.withObjectives} có mục tiêu • {stats.total} tổng giáo án
+              </p>
+            </div>
+            <button className="btn" onClick={() => setOpenCreate(true)}>
+              <Plus size={16} />
+              Soạn giáo án mới
+            </button>
+          </header>
 
-        {/* ── Stats ── */}
-        <div className="lp-stats">
-          <div className="lp-stat-card">
-            <span className="lp-stat-icon blue">📋</span>
-            <div>
-              <div className="lp-stat-label">Tổng giáo án</div>
-              <span className="lp-stat-value">{stats.total}</span>
+          {/* ── Stats ── */}
+          <div className="stats-grid">
+            <div className="stat-card stat-blue">
+              <div className="stat-icon-wrap">
+                <ClipboardList size={20} />
+              </div>
+              <div>
+                <h3>{stats.total}</h3>
+                <p>Tổng giáo án</p>
+              </div>
+            </div>
+            <div className="stat-card stat-emerald">
+              <div className="stat-icon-wrap">
+                <Target size={20} />
+              </div>
+              <div>
+                <h3>{stats.withObjectives}</h3>
+                <p>Có mục tiêu</p>
+              </div>
+            </div>
+            <div className="stat-card stat-amber">
+              <div className="stat-icon-wrap">
+                <BookOpen size={20} />
+              </div>
+              <div>
+                <h3>{stats.withMaterials}</h3>
+                <p>Có tài liệu</p>
+              </div>
+            </div>
+            <div className="stat-card stat-violet">
+              <div className="stat-icon-wrap">
+                <FileText size={20} />
+              </div>
+              <div>
+                <h3>{stats.withNotes}</h3>
+                <p>Có ghi chú</p>
+              </div>
             </div>
           </div>
-          <div className="lp-stat-card">
-            <span className="lp-stat-icon green">🎯</span>
-            <div>
-              <div className="lp-stat-label">Có mục tiêu</div>
-              <span className="lp-stat-value">{stats.withObjectives}</span>
-            </div>
-          </div>
-          <div className="lp-stat-card">
-            <span className="lp-stat-icon amber">📦</span>
-            <div>
-              <div className="lp-stat-label">Có tài liệu</div>
-              <span className="lp-stat-value">{stats.withMaterials}</span>
-            </div>
-          </div>
-          <div className="lp-stat-card">
-            <span className="lp-stat-icon violet">💡</span>
-            <div>
-              <div className="lp-stat-label">Có ghi chú</div>
-              <span className="lp-stat-value">{stats.withNotes}</span>
-            </div>
-          </div>
-        </div>
 
-        {/* ── Toolbar ── */}
-        <div className="lp-toolbar">
-          <div className="lp-search">
-            <Search size={15} />
-            <input
-              type="text"
-              placeholder="Tìm theo tên bài học, phương pháp..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-          <button className="lp-btn-refresh" onClick={() => void refetch()}>
-            <RefreshCw size={14} />
-            Làm mới
-          </button>
-        </div>
+          {/* ── Toolbar ── */}
+          <div className="toolbar">
+            <label className="search-box">
+              <span className="search-box__icon" aria-hidden="true">
+                <Search size={15} />
+              </span>
+              <input
+                placeholder="Tìm theo tên bài học, phương pháp..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+              {search && (
+                <button
+                  type="button"
+                  className="search-box__clear"
+                  aria-label="Xóa nội dung tìm kiếm"
+                  onClick={() => setSearch('')}
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </label>
 
-        {/* ── States ── */}
-        {isLoading && (
-          <div className="lp-state">
-            <p>Đang tải danh sách giáo án...</p>
-          </div>
-        )}
-
-        {isError && (
-          <div className="lp-state">
-            <p style={{ color: '#dc2626' }}>
-              {error instanceof Error ? error.message : 'Không thể tải danh sách giáo án.'}
-            </p>
-          </div>
-        )}
-
-        {!isLoading && !isError && filtered.length === 0 && (
-          <div className="lp-state">
-            <div className="lp-empty-icon">
-              <ClipboardList size={56} strokeWidth={1.5} />
+            <div className="pill-group">
+              {filterTabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  className={`pill-btn${filterStatus === tab.id ? ' active' : ''}`}
+                  onClick={() => setFilterStatus(tab.id)}
+                >
+                  {tab.label}
+                </button>
+              ))}
             </div>
-            <h3>{search ? 'Không tìm thấy kết quả' : 'Chưa có giáo án nào'}</h3>
-            <p>
-              {search
-                ? `Không có giáo án nào khớp với "${search}". Thử từ khóa khác nhé.`
-                : 'Bắt đầu soạn giáo án đầu tiên để lên kế hoạch giảng dạy hiệu quả hơn.'}
-            </p>
-            {!search && (
+
+            <div className="view-toggle" style={{ marginLeft: 'auto' }}>
               <button
-                className="lp-empty-cta"
-                onClick={() => setOpenCreate(true)}
+                className={viewMode === 'grid' ? 'active' : ''}
+                onClick={() => setViewMode('grid')}
               >
-                Soạn giáo án đầu tiên
-                <ArrowRight size={16} />
+                <Grid2x2 size={15} />
+                Lưới
               </button>
-            )}
+              <button
+                className={viewMode === 'list' ? 'active' : ''}
+                onClick={() => setViewMode('list')}
+              >
+                <List size={15} />
+                Danh sách
+              </button>
+            </div>
           </div>
-        )}
 
-        {/* ── Cards ── */}
-        {!isLoading && !isError && filtered.length > 0 && (
-          <div className="lp-grid">
-            {filtered.map((plan) => (
-              <article key={plan.id} className="lp-card">
-                <div className="lp-card-accent" />
-                <div className="lp-card-body">
-                  <div className="lp-card-top">
-                    <h3 className="lp-card-title">
-                      {plan.lessonTitle ?? `Bài học: ${plan.lessonId.slice(0, 8)}…`}
-                    </h3>
-                    <span className="lp-card-date">{fmtDate(plan.updatedAt)}</span>
-                  </div>
+          {/* ── Summary bar ── */}
+          {!isLoading && !isError && plans.length > 0 && (
+            <div className="assessment-summary-bar">
+              <div className="summary-item summary-item--primary">
+                <span className="summary-label">Hiển thị</span>
+                <strong className="summary-value">
+                  {filtered.length} / {plans.length}
+                </strong>
+              </div>
+              <div className="summary-item">
+                <span className="summary-dot summary-dot--progress" />
+                <span className="summary-label">Có mục tiêu</span>
+                <strong className="summary-value">{stats.withObjectives}</strong>
+              </div>
+              <div className="summary-item">
+                <span className="summary-dot summary-dot--completed" />
+                <span className="summary-label">Có tài liệu</span>
+                <strong className="summary-value">{stats.withMaterials}</strong>
+              </div>
+              <div className="summary-item">
+                <span className="summary-dot summary-dot--upcoming" />
+                <span className="summary-label">Có ghi chú</span>
+                <strong className="summary-value">{stats.withNotes}</strong>
+              </div>
+            </div>
+          )}
 
-                  {plan.teachingStrategy && (
-                    <p className="lp-card-strategy">{plan.teachingStrategy}</p>
-                  )}
+          {/* ── Loading ── */}
+          {isLoading && (
+            <div className="lp-skeleton-grid">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="lp-skeleton-card" />
+              ))}
+            </div>
+          )}
 
-                  {plan.objectives && plan.objectives.length > 0 && (
-                    <div className="lp-objectives">
-                      {plan.objectives.slice(0, 2).map((obj, i) => (
-                        <span key={i} className="lp-obj-chip" title={obj}>
-                          {obj}
-                        </span>
-                      ))}
-                      {plan.objectives.length > 2 && (
-                        <span className="lp-obj-more">+{plan.objectives.length - 2} mục tiêu</span>
-                      )}
-                    </div>
-                  )}
+          {/* ── Error ── */}
+          {isError && (
+            <div className="empty">
+              <AlertCircle
+                size={28}
+                style={{ opacity: 0.5, marginBottom: 8, color: 'var(--mod-danger)' }}
+              />
+              <p>{error instanceof Error ? error.message : 'Không thể tải danh sách giáo án.'}</p>
+            </div>
+          )}
 
-                  <div className="lp-card-meta">
-                    {plan.materialsNeeded && plan.materialsNeeded.length > 0 && (
-                      <span className="lp-meta-item">
-                        <BookOpen size={13} />
-                        {plan.materialsNeeded.length} tài liệu
-                      </span>
-                    )}
-                    {plan.objectives && plan.objectives.length > 0 && (
-                      <span className="lp-meta-item">
-                        <Target size={13} />
-                        {plan.objectives.length} mục tiêu
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="lp-card-footer">
-                  <button className="lp-btn lp-btn-primary" onClick={() => setViewing(plan)}>
-                    <BookOpen size={14} />
-                    Xem chi tiết
-                  </button>
-                  <button className="lp-btn lp-btn-secondary" onClick={() => setEditing(plan)}>
-                    <Pencil size={14} />
-                    Chỉnh sửa
-                  </button>                  <button
-                    className="lp-btn lp-btn-danger"
-                    disabled={deleteMutation.isPending}
-                    onClick={() => {
-                      if (confirm('Bạn có chắc muốn xóa giáo án này không?')) {
-                        deleteMutation.mutate(plan.id);
-                      }
+          {/* ── Grid ── */}
+          {!isLoading && !isError && filtered.length > 0 && (
+            <div className={`grid-cards${viewMode === 'list' ? ' lp-list-view' : ''}`}>
+              {filtered.map((plan, idx) => (
+                <article key={plan.id} className="data-card lp-plan-card">
+                  <div
+                    className="lp-plan-cover"
+                    style={{
+                      background: coverGradients[idx % coverGradients.length],
+                      color: coverAccents[idx % coverAccents.length],
                     }}
                   >
-                    <Trash2 size={14} />
-                    Xóa
-                  </button>
-                </div>
-              </article>
-            ))}
-          </div>
-        )}
+                    <div className="lp-cover-overlay" />
+                    <div className="lp-cover-index">#{String(idx + 1).padStart(2, '0')}</div>
+                    <span className="lp-date-badge">
+                      <CalendarDays size={11} />
+                      {fmtDate(plan.updatedAt)}
+                    </span>
+                    <h3 className="lp-cover-title">
+                      {plan.lessonTitle ?? `Bài học: ${plan.lessonId.slice(0, 8)}…`}
+                    </h3>
+                  </div>
+
+                  <div className="lp-card-body">
+                    <p className="lp-card-desc">
+                      {plan.teachingStrategy || 'Chưa có phương pháp giảng dạy cho giáo án này.'}
+                    </p>
+
+                    <div className="lp-card-metrics">
+                      {plan.objectives && plan.objectives.length > 0 && (
+                        <div className="lp-metric">
+                          <Target size={13} />
+                          <span>{plan.objectives.length} mục tiêu</span>
+                        </div>
+                      )}
+                      {plan.materialsNeeded && plan.materialsNeeded.length > 0 && (
+                        <div className="lp-metric">
+                          <BookOpen size={13} />
+                          <span>{plan.materialsNeeded.length} tài liệu</span>
+                        </div>
+                      )}
+                      {plan.notes && (
+                        <div className="lp-metric">
+                          <FileText size={13} />
+                          <span>Có ghi chú</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {plan.objectives && plan.objectives.length > 0 && (
+                      <div className="lp-objectives">
+                        {plan.objectives.slice(0, 2).map((obj, i) => (
+                          <span key={i} className="lp-obj-chip" title={obj}>
+                            {obj}
+                          </span>
+                        ))}
+                        {plan.objectives.length > 2 && (
+                          <span className="lp-obj-more">
+                            +{plan.objectives.length - 2} mục tiêu
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="lp-card-actions">
+                      <button className="lp-action-primary" onClick={() => setViewing(plan)}>
+                        <BookOpen size={14} /> Xem chi tiết
+                      </button>
+                      <button className="lp-action-toggle" onClick={() => setEditing(plan)}>
+                        <Pencil size={14} /> Sửa
+                      </button>
+                      <button
+                        className="lp-action-danger"
+                        onClick={() => {
+                          if (globalThis.confirm('Bạn có chắc muốn xóa giáo án này không?')) {
+                            deleteMutation.mutate(plan.id);
+                          }
+                        }}
+                        disabled={deleteMutation.isPending}
+                        aria-label="Xóa giáo án"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+
+          {/* ── Empty: filtered ── */}
+          {!isLoading && !isError && filtered.length === 0 && plans.length > 0 && (
+            <div className="empty">
+              <Search size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
+              <p>Không tìm thấy giáo án{search ? ` khớp với "${search}"` : ' với bộ lọc này'}.</p>
+            </div>
+          )}
+
+          {/* ── Empty: no plans ── */}
+          {!isLoading && !isError && plans.length === 0 && (
+            <div className="empty">
+              <ClipboardList size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
+              <p>Bạn chưa có giáo án nào. Hãy soạn giáo án để bắt đầu giảng dạy.</p>
+              <button className="btn" onClick={() => setOpenCreate(true)}>
+                <Plus size={16} /> Soạn giáo án đầu tiên
+              </button>
+            </div>
+          )}
+        </section>
       </div>
 
       {/* ── Modals ── */}
@@ -767,7 +963,10 @@ export default function TeacherLessonPlans() {
         <LessonPlanDetail
           plan={viewing}
           onClose={() => setViewing(null)}
-          onEdit={() => { setEditing(viewing); setViewing(null); }}
+          onEdit={() => {
+            setEditing(viewing);
+            setViewing(null);
+          }}
         />
       )}
     </DashboardLayout>
