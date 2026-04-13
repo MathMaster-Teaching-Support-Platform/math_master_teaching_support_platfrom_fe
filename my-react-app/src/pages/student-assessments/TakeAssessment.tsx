@@ -31,7 +31,7 @@ export default function TakeAssessment() {
   const sequenceRef = useRef(0);
   const pendingSavesRef = useRef<Promise<any>[]>([]);
   const hasSubmittedRef = useRef(false);
-  const saveTimeoutRef = useRef<number | undefined>(undefined);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const startMutation = useStartAssessment();
   const updateAnswerMutation = useUpdateAnswer();
@@ -94,8 +94,9 @@ export default function TakeAssessment() {
   }, []);
 
   const clearDebounceTimer = useCallback(() => {
-    if (saveTimeoutRef.current) {
+    if (saveTimeoutRef.current !== null) {
       clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = null;
       setIsSaving(false);
     }
   }, []);
@@ -139,8 +140,9 @@ export default function TakeAssessment() {
       if (!attemptData?.attemptId) return;
 
       // Clear previous timeout
-      if (saveTimeoutRef.current) {
+      if (saveTimeoutRef.current !== null) {
         clearTimeout(saveTimeoutRef.current);
+        saveTimeoutRef.current = null;
       }
 
       setIsSaving(true);
