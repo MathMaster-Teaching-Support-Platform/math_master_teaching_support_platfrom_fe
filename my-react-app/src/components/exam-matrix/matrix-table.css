@@ -108,13 +108,8 @@
 }
 
 .matrix-th--total-type {
-  width: 70px;
-  min-width: 70px;
-}
-
-.matrix-th--total-chapter {
-  width: 70px;
-  min-width: 70px;
+  width: 140px;
+  min-width: 140px;
 }
 
 .matrix-th--actions {
@@ -348,8 +343,7 @@
 }
 
 /* Total cells */
-.matrix-td--total-type,
-.matrix-td--total-chapter {
+.matrix-td--total-type {
   background: #fef3c7;
   font-weight: 700;
   font-size: 14px;
@@ -357,8 +351,7 @@
   border-left: 2px solid #92400e;
 }
 
-.matrix-total-cell,
-.matrix-chapter-total-cell {
+.matrix-total-cell {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -480,12 +473,12 @@
   font-size: 12px;
   font-weight: 700;
   color: #fff;
-  background: #10b981;
+  background: #047857;
   cursor: pointer;
 }
 
 .matrix-save-percentage-btn:hover:not(:disabled) {
-  background: #059669;
+  background: #065f46;
 }
 
 .matrix-save-percentage-btn:disabled {
@@ -684,7 +677,6 @@
   .matrix-td--chapter,
   .matrix-td--level,
   .matrix-td--total-type,
-  .matrix-td--total-chapter,
   .matrix-row--grand-total {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;

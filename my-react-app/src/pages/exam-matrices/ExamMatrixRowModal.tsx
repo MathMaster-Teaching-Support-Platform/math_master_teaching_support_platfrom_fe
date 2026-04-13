@@ -198,7 +198,6 @@ export function ExamMatrixRowModal({
     const payload: ExamMatrixRowRequest = {
       chapterId,
       questionBankId,
-      questionDifficulty: 'MEDIUM',
       questionTypeName: selectedQuestionBank?.name?.trim() || 'Dạng bài theo bank',
       cells: LEVELS.filter((level) => cells[level].questionCount > 0).map(
         (level) => ({

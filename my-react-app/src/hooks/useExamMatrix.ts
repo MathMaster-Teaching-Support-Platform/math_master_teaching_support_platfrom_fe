@@ -1,11 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { examMatrixService } from '../services/examMatrixService';
 import type {
+    BatchUpsertMatrixRowCellsRequest,
     BuildExamMatrixRequest,
     GenerateAssessmentByPercentageRequest,
     ExamMatrixRowRequest,
     ExamMatrixRequest,
-    UpdateMatrixPercentagesRequest,
 } from '../types/examMatrix';
 
 export const examMatrixKeys = {
@@ -134,11 +134,11 @@ export const useResetMatrix = () => {
     });
 };
 
-export const useUpdateMatrixPercentages = () => {
+export const useBatchUpsertMatrixRowCells = () => {
     const qc = useQueryClient();
     return useMutation({
-        mutationFn: ({ matrixId, request }: { matrixId: string; request: UpdateMatrixPercentagesRequest }) =>
-            examMatrixService.updatePercentages(matrixId, request),
+        mutationFn: ({ matrixId, request }: { matrixId: string; request: BatchUpsertMatrixRowCellsRequest }) =>
+            examMatrixService.batchUpsertExamMatrixRowCells(matrixId, request),
         onSuccess: (_, vars) => {
             qc.invalidateQueries({ queryKey: examMatrixKeys.detail(vars.matrixId) });
             qc.invalidateQueries({ queryKey: examMatrixKeys.table(vars.matrixId) });

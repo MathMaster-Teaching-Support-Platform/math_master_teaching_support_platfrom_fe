@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ArrowLeft, CheckCircle2, Plus, RotateCcw, ShieldCheck, Trash2 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   useApproveMatrix,
+  useBatchUpsertMatrixRowCells,
   useDeleteExamMatrix,
   useGetExamMatrixById,
   useGetExamMatrixTable,
@@ -15,6 +16,8 @@ import { examMatrixService } from '../../services/examMatrixService';
 import '../../styles/module-refactor.css';
 import {
   MatrixStatus,
+  type BatchUpsertMatrixRowCellsRequest,
+  type MatrixCognitiveDistribution,
   type MatrixValidationReport,
 } from '../../types/examMatrix';
 import { ExamMatrixRowModalRefactored } from './ExamMatrixRowModalRefactored';
@@ -25,6 +28,28 @@ const matrixStatusLabel: Record<string, string> = {
   LOCKED: 'Đã khóa',
 };
 
+function getPercentageValue(
+  distribution: MatrixCognitiveDistribution | undefined,
+  level: 'NHAN_BIET' | 'THONG_HIEU' | 'VAN_DUNG' | 'VAN_DUNG_CAO',
+): number {
+  if (!distribution) return 0;
+  if (level === 'NHAN_BIET') {
+    return Number(distribution.NHAN_BIET ?? distribution.NB ?? distribution.REMEMBER ?? 0);
+  }
+  if (level === 'THONG_HIEU') {
+    return Number(distribution.THONG_HIEU ?? distribution.TH ?? distribution.UNDERSTAND ?? 0);
+  }
+  if (level === 'VAN_DUNG') {
+    return Number(distribution.VAN_DUNG ?? distribution.VD ?? distribution.APPLY ?? 0);
+  }
+  return Number(distribution.VAN_DUNG_CAO ?? distribution.VDC ?? distribution.ANALYZE ?? 0);
+}
+
+function toPercent(value: number, total: number): number {
+  if (total <= 0) return 0;
+  return Number(((value / total) * 100).toFixed(2));
+}
+
 export default function ExamMatrixDetailPageRefactored() {
   const { matrixId } = useParams<{ matrixId: string }>();
   const navigate = useNavigate();
@@ -33,6 +58,15 @@ export default function ExamMatrixDetailPageRefactored() {
   const [rowModalOpen, setRowModalOpen] = useState(false);
   const [validating, setValidating] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [percentageDraft, setPercentageDraft] = useState({
+    totalQuestionsTarget: 40,
+    cognitiveLevelPercentages: {
+      NHAN_BIET: 25,
+      THONG_HIEU: 25,
+      VAN_DUNG: 25,
+      VAN_DUNG_CAO: 25,
+    },
+  });
 
   const { data, isLoading, isError, error, refetch } = useGetExamMatrixById(
     matrixId ?? '',
@@ -47,12 +81,86 @@ export default function ExamMatrixDetailPageRefactored() {
   const resetMutation = useResetMatrix();
   const deleteMutation = useDeleteExamMatrix();
   const removeRowMutation = useRemoveExamMatrixRow();
+  const upsertBatchCellsMutation = useBatchUpsertMatrixRowCells();
 
   const matrix = data?.result;
   const table = tableData?.result;
   const chapters = table?.chapters ?? [];
 
   const canEdit = matrix?.status === MatrixStatus.DRAFT;
+
+  useEffect(() => {
+    if (!matrix) return;
+
+    const totalQuestionsTarget = Number(matrix.totalQuestionsTarget ?? table?.grandTotalQuestions ?? 40);
+    const fromServer = matrix.cognitiveLevelPercentages;
+
+    const pFromMatrix = {
+      NHAN_BIET: getPercentageValue(fromServer, 'NHAN_BIET'),
+      THONG_HIEU: getPercentageValue(fromServer, 'THONG_HIEU'),
+      VAN_DUNG: getPercentageValue(fromServer, 'VAN_DUNG'),
+      VAN_DUNG_CAO: getPercentageValue(fromServer, 'VAN_DUNG_CAO'),
+    };
+    const matrixTotal =
+      pFromMatrix.NHAN_BIET +
+      pFromMatrix.THONG_HIEU +
+      pFromMatrix.VAN_DUNG +
+      pFromMatrix.VAN_DUNG_CAO;
+    const hasMatrixPercentages =
+      matrixTotal > 0 &&
+      matrixTotal <= 100.01 &&
+      Object.values(pFromMatrix).every((value) => value >= 0 && value <= 100);
+
+    if (hasMatrixPercentages) {
+      setPercentageDraft({
+        totalQuestionsTarget,
+        cognitiveLevelPercentages: pFromMatrix,
+      });
+      return;
+    }
+
+    const fromTable = table?.grandTotalByCognitive;
+    const cFromTable = {
+      NHAN_BIET: getPercentageValue(fromTable, 'NHAN_BIET'),
+      THONG_HIEU: getPercentageValue(fromTable, 'THONG_HIEU'),
+      VAN_DUNG: getPercentageValue(fromTable, 'VAN_DUNG'),
+      VAN_DUNG_CAO: getPercentageValue(fromTable, 'VAN_DUNG_CAO'),
+    };
+    const tableTotal =
+      cFromTable.NHAN_BIET +
+      cFromTable.THONG_HIEU +
+      cFromTable.VAN_DUNG +
+      cFromTable.VAN_DUNG_CAO;
+
+    if (tableTotal > 0) {
+      setPercentageDraft({
+        totalQuestionsTarget: Math.max(1, tableTotal),
+        cognitiveLevelPercentages: {
+          NHAN_BIET: toPercent(cFromTable.NHAN_BIET, tableTotal),
+          THONG_HIEU: toPercent(cFromTable.THONG_HIEU, tableTotal),
+          VAN_DUNG: toPercent(cFromTable.VAN_DUNG, tableTotal),
+          VAN_DUNG_CAO: toPercent(cFromTable.VAN_DUNG_CAO, tableTotal),
+        },
+      });
+      return;
+    }
+
+    setPercentageDraft({
+      totalQuestionsTarget,
+      cognitiveLevelPercentages: {
+        NHAN_BIET: 25,
+        THONG_HIEU: 25,
+        VAN_DUNG: 25,
+        VAN_DUNG_CAO: 25,
+      },
+    });
+  }, [matrix, table]);
+
+  async function handleSavePercentages(request: BatchUpsertMatrixRowCellsRequest) {
+    if (!matrixId) return;
+    await upsertBatchCellsMutation.mutateAsync({ matrixId, request });
+    await refetchTable();
+  }
 
   async function refreshMatrix() {
     setRefreshing(true);
@@ -82,21 +190,21 @@ export default function ExamMatrixDetailPageRefactored() {
 
   async function removeMatrix() {
     if (!matrixId) return;
-    if (!window.confirm('Bạn có chắc muốn xóa ma trận này?')) return;
+    if (!globalThis.confirm('Bạn có chắc muốn xóa ma trận này?')) return;
     await deleteMutation.mutateAsync(matrixId);
     navigate('/teacher/exam-matrices');
   }
 
   async function handleApprove() {
     if (!matrix?.id) return;
-    if (!window.confirm('Bạn có chắc muốn phê duyệt ma trận này? Sau khi phê duyệt, bạn không thể chỉnh sửa.')) return;
+    if (!globalThis.confirm('Bạn có chắc muốn phê duyệt ma trận này? Sau khi phê duyệt, bạn không thể chỉnh sửa.')) return;
     await approveMutation.mutateAsync(matrix.id);
     await refetch();
   }
 
   async function handleReset() {
     if (!matrix?.id) return;
-    if (!window.confirm('Bạn có chắc muốn đặt lại ma trận về trạng thái nháp?')) return;
+    if (!globalThis.confirm('Bạn có chắc muốn đặt lại ma trận về trạng thái nháp?')) return;
     await resetMutation.mutateAsync(matrix.id);
     await refetch();
   }
@@ -237,8 +345,8 @@ export default function ExamMatrixDetailPageRefactored() {
                         Lỗi cần sửa:
                       </p>
                       <ul style={{ margin: 0, paddingLeft: 20 }}>
-                        {validation.errors.map((item, idx) => (
-                          <li key={idx} style={{ color: '#dc2626', fontSize: 13, marginBottom: 4 }}>
+                        {validation.errors.map((item) => (
+                          <li key={`error-${item}`} style={{ color: '#dc2626', fontSize: 13, marginBottom: 4 }}>
                             {item}
                           </li>
                         ))}
@@ -251,8 +359,8 @@ export default function ExamMatrixDetailPageRefactored() {
                         Cảnh báo:
                       </p>
                       <ul style={{ margin: 0, paddingLeft: 20 }}>
-                        {validation.warnings.map((item, idx) => (
-                          <li key={idx} style={{ color: '#f59e0b', fontSize: 13, marginBottom: 4 }}>
+                        {validation.warnings.map((item) => (
+                          <li key={`warning-${item}`} style={{ color: '#f59e0b', fontSize: 13, marginBottom: 4 }}>
                             {item}
                           </li>
                         ))}
@@ -283,8 +391,13 @@ export default function ExamMatrixDetailPageRefactored() {
                 chapters={chapters}
                 gradeLevel={matrix.gradeLevel || table?.gradeLevel}
                 subjectName={matrix.subjectName || table?.subjectName}
+                matrixTotalPointsTarget={matrix.totalPointsTarget}
                 canEdit={canEdit}
                 onRemoveRow={removeRow}
+                percentageDraft={percentageDraft}
+                onChangePercentageDraft={setPercentageDraft}
+                onSavePercentages={handleSavePercentages}
+                savingPercentages={upsertBatchCellsMutation.isPending}
               />
             </>
           )}
@@ -296,7 +409,6 @@ export default function ExamMatrixDetailPageRefactored() {
               matrixId={matrixId}
               matrixGradeLevel={matrix?.gradeLevel ?? table?.gradeLevel}
               subjectId={matrix?.subjectId ?? table?.subjectId}
-              matrixTotalPointsTarget={matrix?.totalPointsTarget}
               onClose={() => {
                 setRowModalOpen(false);
               }}

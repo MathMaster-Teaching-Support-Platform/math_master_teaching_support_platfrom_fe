@@ -146,7 +146,6 @@ export function ExamMatrixRowModalRefactored({
     const payload: ExamMatrixRowRequest = {
       chapterId,
       questionBankId,
-      questionDifficulty: 'MEDIUM',
       questionTypeName: selectedQuestionBank?.name?.trim() || 'Bank mapping',
       cells: [],
     };

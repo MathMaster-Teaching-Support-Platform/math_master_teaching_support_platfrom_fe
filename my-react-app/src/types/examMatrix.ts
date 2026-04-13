@@ -53,11 +53,30 @@ export interface ExamMatrixRowRequest {
     chapterId: string;
     lessonId?: string;
     questionBankId: string;
-    questionDifficulty: 'EASY' | 'MEDIUM' | 'HARD';
+    questionDifficulty?: 'EASY' | 'MEDIUM' | 'HARD';
     questionTypeName: string;
     referenceQuestions?: string;
     orderIndex?: number;
-    cells: ExamMatrixRowCellRequest[];
+    cells?: ExamMatrixRowCellRequest[];
+}
+
+export interface MatrixCellRequest {
+    cognitiveLevel: MatrixCognitiveLevel;
+    questionCount: number;
+    pointsPerQuestion: number;
+}
+
+export interface UpdateMatrixRowCellsRequest {
+    cells: MatrixCellRequest[];
+}
+
+export interface BatchUpsertMatrixRowCellsItem {
+    rowId: string;
+    cells: MatrixCellRequest[];
+}
+
+export interface BatchUpsertMatrixRowCellsRequest {
+    rows: BatchUpsertMatrixRowCellsItem[];
 }
 
 export interface ExamMatrixRowCellResponse {
@@ -160,11 +179,6 @@ export type PercentageCognitiveLevel =
     | 'THONG_HIEU'
     | 'VAN_DUNG'
     | 'VAN_DUNG_CAO';
-
-export interface UpdateMatrixPercentagesRequest {
-    totalQuestionsTarget: number;
-    cognitiveLevelPercentages: Record<PercentageCognitiveLevel, number>;
-}
 
 export interface GenerateAssessmentByPercentageRequest {
     examMatrixId: string;

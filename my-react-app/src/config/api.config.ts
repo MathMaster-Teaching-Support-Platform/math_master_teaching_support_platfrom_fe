@@ -65,8 +65,11 @@ export const API_ENDPOINTS = {
   EXAM_MATRIX_ROWS: (matrixId: string) => `/exam-matrices/${matrixId}/rows`,
   EXAM_MATRIX_ROW_DETAIL: (matrixId: string, rowId: string) =>
     `/exam-matrices/${matrixId}/rows/${rowId}`,
+  EXAM_MATRIX_ROW_CELLS: (matrixId: string, rowId: string) =>
+    `/exam-matrices/${matrixId}/rows/${rowId}/cells`,
+  EXAM_MATRIX_ROWS_CELLS_BATCH: (matrixId: string) =>
+    `/exam-matrices/${matrixId}/rows/cells:batch`,
   EXAM_MATRIX_VALIDATE: (matrixId: string) => `/exam-matrices/${matrixId}/validate`,
-  EXAM_MATRIX_PERCENTAGES: (matrixId: string) => `/exam-matrices/${matrixId}/percentages`,
   EXAM_MATRIX_APPROVE: (matrixId: string) => `/exam-matrices/${matrixId}/approve`,
   EXAM_MATRIX_LOCK: (matrixId: string) => `/exam-matrices/${matrixId}/lock`,
   EXAM_MATRIX_RESET: (matrixId: string) => `/exam-matrices/${matrixId}/reset`,

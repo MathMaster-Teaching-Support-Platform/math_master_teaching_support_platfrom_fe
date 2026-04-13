@@ -1,6 +1,7 @@
 import { API_BASE_URL, API_ENDPOINTS } from '../config/api.config';
 import { AuthService } from './api/auth.service';
 import type {
+    BatchUpsertMatrixRowCellsRequest,
     BuildExamMatrixRequest,
     ExamMatrixRequest,
     ExamMatrixResponse,
@@ -10,7 +11,7 @@ import type {
     GenerateAssessmentByPercentageRequest,
     MatrixValidationReport,
     PercentageBasedGenerationResponse,
-    UpdateMatrixPercentagesRequest,
+    UpdateMatrixRowCellsRequest,
 } from '../types/examMatrix';
 
 const getAuthHeaders = (): Record<string, string> => {
@@ -91,17 +92,28 @@ export const examMatrixService = {
             headers: getAuthHeaders(),
         }).then(handleResponse<ExamMatrixTableResponse>),
 
+    upsertExamMatrixRowCells: (
+        matrixId: string,
+        rowId: string,
+        request: UpdateMatrixRowCellsRequest,
+    ) =>
+        fetch(`${API_BASE_URL}${API_ENDPOINTS.EXAM_MATRIX_ROW_CELLS(matrixId, rowId)}`, {
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(request),
+        }).then(handleResponse<ExamMatrixTableResponse>),
+
+    batchUpsertExamMatrixRowCells: (matrixId: string, request: BatchUpsertMatrixRowCellsRequest) =>
+        fetch(`${API_BASE_URL}${API_ENDPOINTS.EXAM_MATRIX_ROWS_CELLS_BATCH(matrixId)}`, {
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(request),
+        }).then(handleResponse<ExamMatrixTableResponse>),
+
     validateMatrix: (matrixId: string) =>
         fetch(`${API_BASE_URL}${API_ENDPOINTS.EXAM_MATRIX_VALIDATE(matrixId)}`, {
             headers: getAuthHeaders(),
         }).then(handleResponse<MatrixValidationReport>),
-
-    updatePercentages: (matrixId: string, request: UpdateMatrixPercentagesRequest) =>
-        fetch(`${API_BASE_URL}${API_ENDPOINTS.EXAM_MATRIX_PERCENTAGES(matrixId)}`, {
-            method: 'PUT',
-            headers: getAuthHeaders(),
-            body: JSON.stringify(request),
-        }).then(handleResponse<ExamMatrixResponse>),
 
     generateAssessmentByPercentage: (request: GenerateAssessmentByPercentageRequest) =>
         fetch(`${API_BASE_URL}${API_ENDPOINTS.ASSESSMENTS_GENERATE_BY_PERCENTAGE}`, {
