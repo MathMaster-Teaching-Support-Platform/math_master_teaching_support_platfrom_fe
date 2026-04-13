@@ -284,6 +284,7 @@ const AISlideGenerator: React.FC = () => {
   const [success, setSuccess] = useState('');
   const [slideStatusFilter, setSlideStatusFilter] = useState<LessonSlidePublicationStatus>('DRAFT');
   const [managedLessons, setManagedLessons] = useState<LessonResponse[]>([]);
+  const [managedLessonId, setManagedLessonId] = useState('');
   const [selectedManagedLesson, setSelectedManagedLesson] = useState<LessonResponse | null>(null);
   const [loadingManagedLessons, setLoadingManagedLessons] = useState(false);
   const [loadingSelectedManagedLesson, setLoadingSelectedManagedLesson] = useState(false);
@@ -354,6 +355,7 @@ const AISlideGenerator: React.FC = () => {
     };
 
     setGenerated(restoredResult);
+    setLessonId(lesson.id);
     setEditableSlides(parsedSlides);
     setActivePreviewIndex(0);
     setPreparedPptxBlob(null);
@@ -368,9 +370,17 @@ const AISlideGenerator: React.FC = () => {
 
     try {
       const response = await LessonSlideService.getTeacherLessonSlidesByStatus(status);
-      setManagedLessons(response.result || []);
+      const nextLessons = response.result || [];
+      setManagedLessons(nextLessons);
+
+      if (!nextLessons.some((lesson) => lesson.id === managedLessonId)) {
+        setManagedLessonId('');
+        setSelectedManagedLesson(null);
+      }
     } catch (err) {
       setManagedLessons([]);
+      setManagedLessonId('');
+      setSelectedManagedLesson(null);
       setError(
         err instanceof Error ? err.message : 'Không thể tải danh sách slide theo trạng thái'
       );
@@ -381,6 +391,7 @@ const AISlideGenerator: React.FC = () => {
 
   const loadManagedLessonById = async (targetLessonId: string) => {
     setLoadingSelectedManagedLesson(true);
+    setManagedLessonId(targetLessonId);
 
     try {
       const response = await LessonSlideService.getTeacherLessonSlideByLessonId(targetLessonId);
@@ -394,8 +405,9 @@ const AISlideGenerator: React.FC = () => {
   };
 
   const handleTogglePublishSlide = async (targetStatus: LessonSlidePublicationStatus) => {
-    if (!lessonId) {
-      setError('Vui lòng chọn bài học trước khi đổi trạng thái slide.');
+    const targetLessonId = managedLessonId || selectedManagedLesson?.id || lessonId;
+    if (!targetLessonId) {
+      setError('Vui lòng chọn một slide đã gen trong danh sách để đổi trạng thái.');
       return;
     }
 
@@ -405,16 +417,16 @@ const AISlideGenerator: React.FC = () => {
 
     try {
       if (targetStatus === 'PUBLISHED') {
-        await LessonSlideService.publishLessonSlides(lessonId);
+        await LessonSlideService.publishLessonSlides(targetLessonId);
         setSuccess('Đã xuất bản slide thành công. Học sinh có thể xem qua endpoint public.');
       } else {
-        await LessonSlideService.unpublishLessonSlides(lessonId);
+        await LessonSlideService.unpublishLessonSlides(targetLessonId);
         setSuccess('Đã chuyển slide về nháp. Học sinh sẽ không còn thấy bài này.');
       }
 
       setSlideStatusFilter(targetStatus);
       await Promise.all([
-        loadManagedLessonById(lessonId),
+        loadManagedLessonById(targetLessonId),
         loadManagedLessonsByStatus(targetStatus),
       ]);
     } catch (err) {
@@ -481,15 +493,6 @@ const AISlideGenerator: React.FC = () => {
   useEffect(() => {
     void loadManagedLessonsByStatus(slideStatusFilter);
   }, [slideStatusFilter]);
-
-  useEffect(() => {
-    if (!lessonId) {
-      setSelectedManagedLesson(null);
-      return;
-    }
-
-    void loadManagedLessonById(lessonId);
-  }, [lessonId]);
 
   useEffect(() => {
     const previewsToLoad = templates.filter((template) => Boolean(template.previewImage));
@@ -680,6 +683,7 @@ const AISlideGenerator: React.FC = () => {
       setSuccess('Đã tạo nội dung slide bằng AI. Vui lòng kiểm tra và confirm nội dung.');
       setActiveWizardStep(4);
       setSlideStatusFilter('DRAFT');
+      setManagedLessonId(response.result.lessonId);
       await Promise.all([
         loadManagedLessonById(response.result.lessonId),
         loadManagedLessonsByStatus('DRAFT'),
@@ -925,7 +929,8 @@ const AISlideGenerator: React.FC = () => {
                 <div className="ai-slide-management-header">
                   <h3>Quan ly slide da gen</h3>
                   <p>
-                    Chuyen doi trang thai nhap/xuat ban. Hoc sinh chi xem duoc slide da xuat ban.
+                    Danh sach duoi day la cac bai da di qua AI Slide flow, khong phai toan bo lesson
+                    trong DB.
                   </p>
                 </div>
 
@@ -956,7 +961,7 @@ const AISlideGenerator: React.FC = () => {
                   <button
                     type="button"
                     className="btn btn-primary"
-                    disabled={!lessonId || updatingPublishState}
+                    disabled={!managedLessonId || updatingPublishState}
                     onClick={() => void handleTogglePublishSlide('PUBLISHED')}
                   >
                     {updatingPublishState ? 'Dang cap nhat...' : 'Xuat ban slide cua bai da chon'}
@@ -964,7 +969,7 @@ const AISlideGenerator: React.FC = () => {
                   <button
                     type="button"
                     className="btn btn-outline"
-                    disabled={!lessonId || updatingPublishState}
+                    disabled={!managedLessonId || updatingPublishState}
                     onClick={() => void handleTogglePublishSlide('DRAFT')}
                   >
                     Chuyen ve nhap
@@ -997,7 +1002,7 @@ const AISlideGenerator: React.FC = () => {
 
                 {!loadingManagedLessons && managedLessons.length === 0 && (
                   <p className="ai-slide-info">
-                    Khong co bai nao o trang thai {slideStatusFilter}.
+                    Bạn chưa có slide nào, hãy Generate hoặc Confirm nội dung trước.
                   </p>
                 )}
 
@@ -1007,9 +1012,9 @@ const AISlideGenerator: React.FC = () => {
                       <button
                         type="button"
                         key={lesson.id}
-                        className={`ai-slide-managed-item ${lessonId === lesson.id ? 'active' : ''}`}
+                        className={`ai-slide-managed-item ${managedLessonId === lesson.id ? 'active' : ''}`}
                         onClick={() => {
-                          setLessonId(lesson.id);
+                          setManagedLessonId(lesson.id);
                           setSuccess('');
                           setError('');
                           void loadManagedLessonById(lesson.id);
