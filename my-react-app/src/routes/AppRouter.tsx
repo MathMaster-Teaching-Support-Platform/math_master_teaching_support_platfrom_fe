@@ -40,6 +40,7 @@ import StudentWallet from '../pages/wallet/StudentWallet';
 // Teacher Profile Routes
 // Profile Page
 import Profile from '../pages/profile/Profile';
+import TeacherProfilePage from '../pages/teacher-profile/TeacherProfilePage';
 // Admin Teacher Profile Routes
 import AdminAnalytics from '../pages/admin/AdminAnalytics';
 import AdminRoadmapCreatePage from '../pages/admin/AdminRoadmapCreatePage';
@@ -214,7 +215,7 @@ const router = createBrowserRouter([
     path: '/submit-teacher-profile',
     element: (
       <PrivateRoute>
-        <Profile />
+        <TeacherProfilePage />
       </PrivateRoute>
     ),
   },
@@ -222,7 +223,7 @@ const router = createBrowserRouter([
     path: '/my-teacher-profile',
     element: (
       <PrivateRoute>
-        <Profile />
+        <TeacherProfilePage />
       </PrivateRoute>
     ),
   },
