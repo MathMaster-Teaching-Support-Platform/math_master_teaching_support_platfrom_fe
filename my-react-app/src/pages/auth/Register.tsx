@@ -474,14 +474,38 @@ const Register: React.FC = () => {
             </div>
 
             {successMessage ? (
-              <div className="alert alert-success" style={{ marginTop: '1rem' }}>
-                <p>{successMessage}</p>
-                <p style={{ marginTop: '0.75rem', fontSize: '0.9rem' }}>
-                  Đã có tài khoản?{' '}
-                  <Link to="/login" className="link-primary">
-                    Đăng nhập
-                  </Link>
+              <div className="reg-success">
+                <div className="reg-success__icon-wrap">
+                  <svg
+                    className="reg-success__icon"
+                    viewBox="0 0 52 52"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <circle cx="26" cy="26" r="25" stroke="#22c55e" strokeWidth="2" fill="rgba(34,197,94,0.08)" />
+                    <path
+                      d="M15 26.5l8 8 14-16"
+                      stroke="#22c55e"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+                <h3 className="reg-success__title">Đăng ký thành công!</h3>
+                <p className="reg-success__body">
+                  Vui lòng kiểm tra hộp thư và nhấp vào liên kết xác nhận để kích hoạt tài khoản.
                 </p>
+                <div className="reg-success__hint">
+                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+                    <rect x="2" y="5" width="16" height="12" rx="2" />
+                    <polyline points="2,5 10,12 18,5" />
+                  </svg>
+                  Không thấy email? Kiểm tra thư mục <strong>Spam / Junk</strong>.
+                </div>
+                <Link to="/login" className="btn btn-primary btn-block reg-success__btn">
+                  Đến trang đăng nhập →
+                </Link>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="auth-form">
