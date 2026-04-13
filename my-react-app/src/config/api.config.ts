@@ -1,6 +1,17 @@
 const normalizeUrl = (url?: string): string => {
   if (!url) return '';
-  return url.trim().replace(/\/$/, '');
+
+  const normalized = url.trim().replace(/\/$/, '');
+  try {
+    // Keep absolute backend URL only when it is a valid URL.
+    // Invalid env values can produce malformed requests at runtime.
+    if (normalized) {
+      new URL(normalized);
+    }
+    return normalized;
+  } catch {
+    return '';
+  }
 };
 
 // Development: /api đi qua Vite proxy.
@@ -69,8 +80,7 @@ export const API_ENDPOINTS = {
     `/exam-matrices/${matrixId}/rows/${rowId}`,
   EXAM_MATRIX_ROW_CELLS: (matrixId: string, rowId: string) =>
     `/exam-matrices/${matrixId}/rows/${rowId}/cells`,
-  EXAM_MATRIX_ROWS_CELLS_BATCH: (matrixId: string) =>
-    `/exam-matrices/${matrixId}/rows/cells:batch`,
+  EXAM_MATRIX_ROWS_CELLS_BATCH: (matrixId: string) => `/exam-matrices/${matrixId}/rows/cells:batch`,
   EXAM_MATRIX_VALIDATE: (matrixId: string) => `/exam-matrices/${matrixId}/validate`,
   EXAM_MATRIX_APPROVE: (matrixId: string) => `/exam-matrices/${matrixId}/approve`,
   EXAM_MATRIX_LOCK: (matrixId: string) => `/exam-matrices/${matrixId}/lock`,
@@ -107,6 +117,8 @@ export const API_ENDPOINTS = {
   MINDMAPS_PUBLIC_LIST: '/mindmaps/public',
   MINDMAPS_PUBLIC_DETAIL: (id: string) => `/mindmaps/public/${id}`,
   MINDMAPS_PUBLIC_BY_LESSON: (lessonId: string) => `/mindmaps/public/lesson/${lessonId}`,
+  MINDMAPS_PUBLISH: (id: string) => `/mindmaps/${id}/publish`,
+  MINDMAPS_UNPUBLISH: (id: string) => `/mindmaps/${id}/unpublish`,
   MINDMAPS_NODES: '/mindmaps/nodes',
   MINDMAPS_NODE_DETAIL: (nodeId: string) => `/mindmaps/nodes/${nodeId}`,
 
