@@ -12,7 +12,7 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import {
   useCreateLessonPlan,
@@ -56,6 +56,40 @@ const splitLines = (val: string) =>
 
 const fmtDate = (iso: string) =>
   new Date(iso).toLocaleDateString('vi-VN', { day: '2-digit', month: 'short', year: 'numeric' });
+
+// ─── Auto-resize textarea ────────────────────────────────────────────────────
+
+function AutoTextarea({
+  value,
+  onChange,
+  placeholder,
+  className,
+}: {
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  placeholder?: string;
+  className?: string;
+}) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = el.scrollHeight + 'px';
+  }, [value]);
+
+  return (
+    <textarea
+      ref={ref}
+      className={className}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      style={{ overflow: 'hidden', resize: 'none' }}
+    />
+  );
+}
 
 // ─── Create Modal (with cascading selectors) ──────────────────────────────────
 
@@ -183,7 +217,7 @@ function CreateLessonPlanModal({
             </p>
           </div>
           <button className="lp-modal-close" onClick={onClose} aria-label="Đóng">
-            <X size={16} />
+            ×
           </button>
         </div>
 
@@ -403,11 +437,13 @@ function CreateLessonPlanModal({
 
 function EditLessonPlanModal({
   initial,
+  idx,
   onClose,
   onSubmit,
   isLoading,
 }: {
   initial: LessonPlanResponse;
+  idx: number;
   onClose: () => void;
   onSubmit: (data: UpdateLessonPlanRequest) => void;
   isLoading: boolean;
@@ -418,70 +454,95 @@ function EditLessonPlanModal({
   const [assessment, setAssessment] = useState(initial.assessmentMethods ?? '');
   const [notes, setNotes] = useState(initial.notes ?? '');
 
+  const gradient = coverGradients[idx % coverGradients.length];
+  const accent = coverAccents[idx % coverAccents.length];
+
   return (
     <div className="lp-modal-overlay">
       <div className="lp-modal">
-        <div className="lp-modal-header">
-          <div>
-            <h3>✏️ Chỉnh sửa giáo án</h3>
-            <p>{initial.lessonTitle ?? 'Giáo án'}</p>
-          </div>
-          <button className="lp-modal-close" onClick={onClose} aria-label="Đóng">
-            <X size={16} />
+        {/* ── Hero strip ── */}
+        <div className="lp-edit-hero" style={{ background: gradient }}>
+          <div className="lp-detail-hero-overlay" />
+          <button className="lp-modal-close lp-detail-close" onClick={onClose} aria-label="Đóng">
+            ×
           </button>
+          <div className="lp-edit-hero-label">
+            <Pencil size={13} />
+            Chỉnh sửa giáo án
+          </div>
+          <h3 className="lp-detail-hero-title" style={{ color: accent }}>
+            {initial.lessonTitle ?? 'Giáo án'}
+          </h3>
         </div>
 
-        <div className="lp-modal-body">
-          <div className="lp-field">
-            <label>
-              Mục tiêu bài học <span className="lp-field-hint">(mỗi dòng một mục tiêu)</span>
-            </label>
-            <textarea
-              className="lp-textarea"
-              rows={4}
+        <div className="lp-modal-body lp-edit-body">
+          {/* ── Mục tiêu ── */}
+          <div className="lp-edit-group lp-eg--blue">
+            <div className="lp-edit-group-header">
+              <span className="lp-detail-icon-wrap lp-di--blue"><Target size={14} /></span>
+              <span className="lp-edit-group-title">Mục tiêu bài học</span>
+              <span className="lp-edit-group-hint">mỗi dòng một mục tiêu</span>
+            </div>
+            <AutoTextarea
+              className="lp-textarea lp-textarea--blue"
               placeholder={'Học sinh hiểu được...\nHọc sinh vận dụng được...'}
               value={objectives}
               onChange={(e) => setObjectives(e.target.value)}
             />
           </div>
-          <div className="lp-field">
-            <label>
-              Tài liệu & thiết bị <span className="lp-field-hint">(mỗi dòng một mục)</span>
-            </label>
-            <textarea
-              className="lp-textarea"
-              rows={3}
+
+          {/* ── Tài liệu ── */}
+          <div className="lp-edit-group lp-eg--amber">
+            <div className="lp-edit-group-header">
+              <span className="lp-detail-icon-wrap lp-di--amber"><BookOpen size={14} /></span>
+              <span className="lp-edit-group-title">Tài liệu & thiết bị</span>
+              <span className="lp-edit-group-hint">mỗi dòng một mục</span>
+            </div>
+            <AutoTextarea
+              className="lp-textarea lp-textarea--amber"
               placeholder={'Sách giáo khoa trang 45\nBảng phụ'}
               value={materials}
               onChange={(e) => setMaterials(e.target.value)}
             />
           </div>
-          <div className="lp-field">
-            <label>Phương pháp giảng dạy</label>
-            <textarea
-              className="lp-textarea"
-              rows={3}
-              placeholder="Thuyết trình kết hợp thảo luận nhóm..."
+
+          {/* ── Phương pháp giảng dạy ── */}
+          <div className="lp-edit-group lp-eg--emerald">
+            <div className="lp-edit-group-header">
+              <span className="lp-detail-icon-wrap lp-di--emerald"><ClipboardList size={14} /></span>
+              <span className="lp-edit-group-title">Phương pháp giảng dạy</span>
+            </div>
+            <AutoTextarea
+              className="lp-textarea lp-textarea--emerald"
+              placeholder="Thuyết trình kết hợp thảo luận nhóm, đặt câu hỏi gợi mở..."
               value={strategy}
               onChange={(e) => setStrategy(e.target.value)}
             />
           </div>
-          <div className="lp-field">
-            <label>Phương pháp đánh giá</label>
-            <textarea
-              className="lp-textarea"
-              rows={2}
-              placeholder="Kiểm tra miệng, bài tập về nhà..."
+
+          {/* ── Phương pháp đánh giá ── */}
+          <div className="lp-edit-group lp-eg--violet">
+            <div className="lp-edit-group-header">
+              <span className="lp-detail-icon-wrap lp-di--violet"><FileText size={14} /></span>
+              <span className="lp-edit-group-title">Phương pháp đánh giá</span>
+            </div>
+            <AutoTextarea
+              className="lp-textarea lp-textarea--violet"
+              placeholder="Kiểm tra miệng đầu giờ, bài tập về nhà..."
               value={assessment}
               onChange={(e) => setAssessment(e.target.value)}
             />
           </div>
-          <div className="lp-field">
-            <label>Ghi chú thêm</label>
-            <textarea
-              className="lp-textarea"
-              rows={2}
-              placeholder="Lưu ý đặc biệt..."
+
+          {/* ── Ghi chú ── */}
+          <div className="lp-edit-group lp-eg--orange">
+            <div className="lp-edit-group-header">
+              <span className="lp-detail-icon-wrap lp-di--orange"><Pencil size={14} /></span>
+              <span className="lp-edit-group-title">Ghi chú thêm</span>
+            </div>
+            <AutoTextarea
+              className="lp-textarea lp-textarea--orange"
+              placeholder="Lưu ý đặc biệt cho tiết học này..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
             />
@@ -536,7 +597,7 @@ function LessonPlanDetail({
         <div className="lp-detail-hero" style={{ background: gradient }}>
           <div className="lp-detail-hero-overlay" />
           <button className="lp-modal-close lp-detail-close" onClick={onClose} aria-label="Đóng">
-            <X size={16} />
+            ×
           </button>
           <div className="lp-detail-hero-meta">
             <span className="lp-date-badge">
@@ -971,6 +1032,7 @@ export default function TeacherLessonPlans() {
       {editing && (
         <EditLessonPlanModal
           initial={editing}
+          idx={plans.findIndex((p) => p.id === editing.id)}
           onClose={() => setEditing(null)}
           onSubmit={async (payload) => {
             await updateMutation.mutateAsync({ id: editing.id, data: payload });
