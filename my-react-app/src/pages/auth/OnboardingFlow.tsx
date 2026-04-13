@@ -150,6 +150,7 @@ const OnboardingFlow: React.FC = () => {
         },
         [t2.file]
       );
+      localStorage.removeItem('pendingRoleSelection');
       goNext(); // step 4 = success
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra.');
@@ -169,6 +170,7 @@ const OnboardingFlow: React.FC = () => {
       });
       if (response.code === 1000) {
         AuthService.saveToken(response.result.token, response.result.expiryTime);
+        localStorage.removeItem('pendingRoleSelection');
         goNext(); // step 2 = success
       }
     } catch (err) {

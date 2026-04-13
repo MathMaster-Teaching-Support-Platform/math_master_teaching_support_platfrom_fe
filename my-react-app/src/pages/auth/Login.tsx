@@ -277,9 +277,20 @@ const Login: React.FC = () => {
         // Save token to localStorage
         AuthService.saveToken(response.result.token, response.result.expiryTime);
 
-        // Get dashboard URL based on user role from token
-        const dashboardUrl = AuthService.getDashboardUrl();
-        navigate(dashboardUrl);
+        if (response.result.newRegistration) {
+          const alreadyShown = localStorage.getItem('pendingRoleSelection') === 'true';
+          if (alreadyShown) {
+            // Second login without selecting role → default to student dashboard
+            navigate('/student/dashboard');
+          } else {
+            localStorage.setItem('pendingRoleSelection', 'true');
+            navigate('/select-role');
+          }
+        } else {
+          // Get dashboard URL based on user role from token
+          const dashboardUrl = AuthService.getDashboardUrl();
+          navigate(dashboardUrl);
+        }
       }
     } catch (err) {
       if (err instanceof ApiError && err.code === 1140) {
@@ -309,6 +320,7 @@ const Login: React.FC = () => {
         AuthService.saveToken(authResponse.result.token, authResponse.result.expiryTime);
 
         if (authResponse.result.newRegistration) {
+          localStorage.setItem('pendingRoleSelection', 'true');
           navigate('/select-role');
         } else {
           const dashboardUrl = AuthService.getDashboardUrl();

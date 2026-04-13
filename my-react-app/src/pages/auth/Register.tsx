@@ -325,6 +325,7 @@ const Register: React.FC = () => {
       if (authResponse.code === 1000 && authResponse.result.token) {
         AuthService.saveToken(authResponse.result.token, authResponse.result.expiryTime);
         if (authResponse.result.newRegistration) {
+          localStorage.setItem('pendingRoleSelection', 'true');
           navigate('/select-role');
         } else {
           navigate(AuthService.getDashboardUrl());
