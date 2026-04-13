@@ -521,18 +521,22 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
               <label className="tp-label" htmlFor="position">
                 Chức vụ / Chức danh <span className="tp-required">*</span>
               </label>
-              <input
+              <select
                 className="tp-input"
-                type="text"
                 id="position"
                 name="position"
                 value={formData.position}
                 onChange={handleInputChange}
-                placeholder="VD: Giáo viên toán, Giảng viên cao cấp"
-                maxLength={100}
                 required
                 disabled={submitting}
-              />
+              >
+                <option value="" disabled>-- Chọn chức vụ --</option>
+                <option value="Giảng Viên Toán">Giảng Viên Toán</option>
+                <option value="Giáo Viên Toán">Giáo Viên Toán</option>
+              </select>
+              <p className="tp-form-hint">
+                Chọn chức vụ từ danh sách để hệ thống OCR có thể xác minh được hồ sơ
+              </p>
             </div>
 
             <div className="tp-form-group">
