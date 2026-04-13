@@ -517,30 +517,49 @@ function EditLessonPlanModal({
 
 function LessonPlanDetail({
   plan,
+  idx,
   onClose,
   onEdit,
 }: {
   plan: LessonPlanResponse;
+  idx: number;
   onClose: () => void;
   onEdit: () => void;
 }) {
+  const gradient = coverGradients[idx % coverGradients.length];
+  const accent = coverAccents[idx % coverAccents.length];
+
   return (
     <div className="lp-modal-overlay">
-      <div className="lp-modal">
-        <div className="lp-modal-header">
-          <div>
-            <h3>📋 {plan.lessonTitle ?? 'Chi tiết giáo án'}</h3>
-            <p>Cập nhật lần cuối: {fmtDate(plan.updatedAt)}</p>
-          </div>
-          <button className="lp-modal-close" onClick={onClose} aria-label="Đóng">
+      <div className="lp-modal lp-detail-modal">
+        {/* ── Hero banner ── */}
+        <div className="lp-detail-hero" style={{ background: gradient }}>
+          <div className="lp-detail-hero-overlay" />
+          <button className="lp-modal-close lp-detail-close" onClick={onClose} aria-label="Đóng">
             <X size={16} />
           </button>
+          <div className="lp-detail-hero-meta">
+            <span className="lp-date-badge">
+              <CalendarDays size={11} />
+              {fmtDate(plan.updatedAt)}
+            </span>
+          </div>
+          <h3 className="lp-detail-hero-title" style={{ color: accent }}>
+            {plan.lessonTitle ?? 'Chi tiết giáo án'}
+          </h3>
         </div>
 
-        <div className="lp-modal-body">
+        {/* ── Sections ── */}
+        <div className="lp-modal-body lp-detail-body">
           {plan.objectives && plan.objectives.length > 0 && (
-            <div className="lp-detail-section">
-              <p className="lp-detail-section-title">🎯 Mục tiêu bài học</p>
+            <div className="lp-detail-section lp-ds--blue">
+              <div className="lp-detail-section-head">
+                <span className="lp-detail-icon-wrap lp-di--blue">
+                  <Target size={14} />
+                </span>
+                <p className="lp-detail-section-title">Mục tiêu bài học</p>
+                <span className="lp-detail-count lp-dc--blue">{plan.objectives.length}</span>
+              </div>
               <ul className="lp-detail-list">
                 {plan.objectives.map((obj, i) => (
                   <li key={i}>{obj}</li>
@@ -550,8 +569,14 @@ function LessonPlanDetail({
           )}
 
           {plan.materialsNeeded && plan.materialsNeeded.length > 0 && (
-            <div className="lp-detail-section">
-              <p className="lp-detail-section-title">📦 Tài liệu & thiết bị</p>
+            <div className="lp-detail-section lp-ds--amber">
+              <div className="lp-detail-section-head">
+                <span className="lp-detail-icon-wrap lp-di--amber">
+                  <BookOpen size={14} />
+                </span>
+                <p className="lp-detail-section-title">Tài liệu & thiết bị</p>
+                <span className="lp-detail-count lp-dc--amber">{plan.materialsNeeded.length}</span>
+              </div>
               <ul className="lp-detail-list">
                 {plan.materialsNeeded.map((m, i) => (
                   <li key={i}>{m}</li>
@@ -561,22 +586,37 @@ function LessonPlanDetail({
           )}
 
           {plan.teachingStrategy && (
-            <div className="lp-detail-section">
-              <p className="lp-detail-section-title">🧑‍🏫 Phương pháp giảng dạy</p>
+            <div className="lp-detail-section lp-ds--emerald">
+              <div className="lp-detail-section-head">
+                <span className="lp-detail-icon-wrap lp-di--emerald">
+                  <ClipboardList size={14} />
+                </span>
+                <p className="lp-detail-section-title">Phương pháp giảng dạy</p>
+              </div>
               <p className="lp-detail-text">{plan.teachingStrategy}</p>
             </div>
           )}
 
           {plan.assessmentMethods && (
-            <div className="lp-detail-section">
-              <p className="lp-detail-section-title">📝 Phương pháp đánh giá</p>
+            <div className="lp-detail-section lp-ds--violet">
+              <div className="lp-detail-section-head">
+                <span className="lp-detail-icon-wrap lp-di--violet">
+                  <FileText size={14} />
+                </span>
+                <p className="lp-detail-section-title">Phương pháp đánh giá</p>
+              </div>
               <p className="lp-detail-text">{plan.assessmentMethods}</p>
             </div>
           )}
 
           {plan.notes && (
-            <div className="lp-detail-section">
-              <p className="lp-detail-section-title">💡 Ghi chú</p>
+            <div className="lp-detail-section lp-ds--orange">
+              <div className="lp-detail-section-head">
+                <span className="lp-detail-icon-wrap lp-di--orange">
+                  <Pencil size={14} />
+                </span>
+                <p className="lp-detail-section-title">Ghi chú</p>
+              </div>
               <p className="lp-detail-text">{plan.notes}</p>
             </div>
           )}
@@ -586,9 +626,10 @@ function LessonPlanDetail({
             !plan.teachingStrategy &&
             !plan.assessmentMethods &&
             !plan.notes && (
-              <p style={{ color: '#94a3b8', textAlign: 'center', padding: '1rem 0' }}>
-                Giáo án này chưa có nội dung chi tiết.
-              </p>
+              <div className="lp-detail-empty">
+                <ClipboardList size={28} />
+                <p>Giáo án này chưa có nội dung chi tiết.</p>
+              </div>
             )}
         </div>
 
@@ -942,6 +983,7 @@ export default function TeacherLessonPlans() {
       {viewing && (
         <LessonPlanDetail
           plan={viewing}
+          idx={plans.findIndex((p) => p.id === viewing.id)}
           onClose={() => setViewing(null)}
           onEdit={() => {
             setEditing(viewing);
