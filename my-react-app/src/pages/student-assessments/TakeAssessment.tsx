@@ -69,14 +69,18 @@ export default function TakeAssessment() {
     if (draftData?.result) {
       const loadedAnswers = draftData.result.answers || {};
       const loadedFlags = draftData.result.flags || {};
-      
+
       setAnswers(loadedAnswers);
       setFlags(loadedFlags);
-      
+
       // Show notification if resuming with existing answers
       if (Object.keys(loadedAnswers).length > 0 && !isResumed) {
         setIsResumed(true);
-        console.log('Đã khôi phục bài làm trước đó với', Object.keys(loadedAnswers).length, 'câu trả lời');
+        console.log(
+          'Đã khôi phục bài làm trước đó với',
+          Object.keys(loadedAnswers).length,
+          'câu trả lời'
+        );
         // You can add toast notification here if you have a toast library
       }
     }
@@ -84,7 +88,9 @@ export default function TakeAssessment() {
 
   // Debounced auto-save with pending saves tracking
   const removePendingSave = useCallback((promise: Promise<any>) => {
-    pendingSavesRef.current = pendingSavesRef.current.filter((trackedPromise) => trackedPromise !== promise);
+    pendingSavesRef.current = pendingSavesRef.current.filter(
+      (trackedPromise) => trackedPromise !== promise
+    );
   }, []);
 
   const clearDebounceTimer = useCallback(() => {
@@ -141,24 +147,25 @@ export default function TakeAssessment() {
 
       // Schedule save
       saveTimeoutRef.current = setTimeout(() => {
-        const savePromise = updateAnswerMutation.mutateAsync(
-          {
+        const savePromise = updateAnswerMutation
+          .mutateAsync({
             attemptId: attemptData.attemptId,
             questionId,
             answerValue: value,
             clientTimestamp: new Date().toISOString(),
             sequenceNumber: ++sequenceRef.current,
-          }
-        ).then(() => {
-          setLastSaved(new Date());
-          setIsSaving(false);
-          // Remove from pending saves
-          removePendingSave(savePromise);
-        }).catch((error) => {
-          console.error('Failed to save answer:', error);
-          setIsSaving(false);
-          removePendingSave(savePromise);
-        });
+          })
+          .then(() => {
+            setLastSaved(new Date());
+            setIsSaving(false);
+            // Remove from pending saves
+            removePendingSave(savePromise);
+          })
+          .catch((error) => {
+            console.error('Failed to save answer:', error);
+            setIsSaving(false);
+            removePendingSave(savePromise);
+          });
 
         // Track pending save
         pendingSavesRef.current.push(savePromise);
@@ -272,7 +279,10 @@ export default function TakeAssessment() {
             </div>
             <div className="row" style={{ gap: 16 }}>
               {isSaving && (
-                <span className="muted" style={{ fontSize: '0.875rem', color: 'var(--primary-color)' }}>
+                <span
+                  className="muted"
+                  style={{ fontSize: '0.875rem', color: 'var(--primary-color)' }}
+                >
                   <Save size={14} style={{ marginRight: 4 }} />
                   Đang lưu...
                 </span>
@@ -286,22 +296,22 @@ export default function TakeAssessment() {
               {typeof attemptData.timeLimitMinutes === 'number' &&
                 attemptData.timeLimitMinutes > 0 &&
                 countdownExpiresAt && (
-                <Timer expiresAt={countdownExpiresAt} onExpire={handleAutoSubmit} />
-              )}
+                  <Timer expiresAt={countdownExpiresAt} onExpire={handleAutoSubmit} />
+                )}
             </div>
           </header>
 
           {/* Resume notification banner */}
           {isResumed && (
-            <div 
-              style={{ 
-                padding: 12, 
-                backgroundColor: 'var(--primary-color-light)', 
-                borderRadius: 8, 
+            <div
+              style={{
+                padding: 12,
+                backgroundColor: 'var(--primary-color-light)',
+                borderRadius: 8,
                 marginTop: 16,
                 display: 'flex',
                 alignItems: 'center',
-                gap: 8
+                gap: 8,
               }}
             >
               <AlertCircle size={16} style={{ color: 'var(--primary-color)' }} />
