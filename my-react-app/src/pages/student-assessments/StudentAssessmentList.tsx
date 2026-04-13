@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Clock, FileText, RefreshCw, Search } from 'lucide-react';
+import { AlertCircle, BookOpen, CheckCircle2, Clock, FileText, Hourglass, RefreshCw, Search } from 'lucide-react';
 import { useMyAssessments } from '../../hooks/useStudentAssessment';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import type { StudentAssessmentResponse } from '../../types/studentAssessment.types';
@@ -9,7 +9,7 @@ import '../../styles/module-refactor.css';
 const statusFilters = ['ALL', 'UPCOMING', 'IN_PROGRESS', 'COMPLETED'] as const;
 type StatusFilter = typeof statusFilters[number];
 
-const statusLabel: Record<StatusFilter, string> = {
+const statusLabel: Record<string, string> = {
   ALL: 'Tất cả',
   UPCOMING: 'Sắp tới',
   IN_PROGRESS: 'Đang làm',
@@ -17,16 +17,16 @@ const statusLabel: Record<StatusFilter, string> = {
 };
 
 const assessmentTypeLabel: Record<string, string> = {
-  QUIZ: 'Trắc nghiệm nhanh',
-  TEST: 'Bài kiểm tra',
+  QUIZ: 'Trắc nghiệm',
+  TEST: 'Kiểm tra',
   EXAM: 'Bài thi',
-  HOMEWORK: 'Bài tập về nhà',
+  HOMEWORK: 'Bài tập',
 };
 
-const statusClass: Record<string, string> = {
-  UPCOMING: 'badge',
-  IN_PROGRESS: 'badge published',
-  COMPLETED: 'badge closed',
+const statusBadgeClass: Record<string, string> = {
+  UPCOMING: 'badge upcoming',
+  IN_PROGRESS: 'badge in-progress',
+  COMPLETED: 'badge completed',
 };
 
 export default function StudentAssessmentList() {
@@ -64,18 +64,21 @@ export default function StudentAssessmentList() {
         <section className="module-page">
           <header className="page-header">
             <div>
-              <h2>Bài kiểm tra của tôi</h2>
-              <p>Xem và làm các bài kiểm tra được giao.</p>
+              <div className="row" style={{ gap: '0.6rem', marginBottom: 6 }}>
+                <h2>Bài kiểm tra của tôi</h2>
+                {!isLoading && !isError && (
+                  <span className="count-chip">{filtered.length}</span>
+                )}
+              </div>
+              <p>Xem và làm các bài kiểm tra được giao cho bạn.</p>
             </div>
           </header>
 
           <div className="toolbar">
-            <label className="row" style={{ minWidth: 260 }}>
-              <Search size={15} />
+            <label className="search-box">
+              <Search size={15} style={{ color: 'var(--mod-slate-300)', flexShrink: 0 }} />
               <input
-                className="input"
-                style={{ border: 0, padding: 0, width: '100%' }}
-                placeholder="Tìm bài kiểm tra"
+                placeholder="Tìm kiếm bài kiểm tra..."
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
               />
@@ -96,20 +99,31 @@ export default function StudentAssessmentList() {
               ))}
             </div>
 
-            <button className="btn secondary" onClick={() => void refetch()}>
+            <button className="btn secondary" style={{ marginLeft: 'auto' }} onClick={() => void refetch()}>
               <RefreshCw size={14} />
               Làm mới
             </button>
           </div>
 
-          {isLoading && <div className="empty">Đang tải danh sách bài kiểm tra...</div>}
-          {isError && (
+          {isLoading && (
             <div className="empty">
-              {error instanceof Error ? error.message : 'Không thể tải danh sách bài kiểm tra'}
+              <Hourglass size={28} style={{ opacity: 0.4, marginBottom: 8 }} />
+              <p>Đang tải danh sách bài kiểm tra...</p>
             </div>
           )}
+
+          {isError && (
+            <div className="empty">
+              <AlertCircle size={28} style={{ opacity: 0.5, marginBottom: 8, color: 'var(--mod-danger)' }} />
+              <p>{error instanceof Error ? error.message : 'Không thể tải danh sách bài kiểm tra'}</p>
+            </div>
+          )}
+
           {!isLoading && !isError && filtered.length === 0 && (
-            <div className="empty">Chưa có bài kiểm tra nào.</div>
+            <div className="empty">
+              <BookOpen size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
+              <p>Chưa có bài kiểm tra nào{search ? ` khớp với "${search}"` : ''}.</p>
+            </div>
           )}
 
           {!isLoading && !isError && filtered.length > 0 && (
@@ -165,56 +179,76 @@ function AssessmentCard({
   const isOverdue = dueDate && dueDate < new Date();
 
   return (
-    <article className="data-card">
-      <div className="row">
-        <span className={statusClass[assessment.studentStatus]}>
-          {statusLabel[assessment.studentStatus]}
+    <article className={`data-card status-${assessment.studentStatus}`}>
+      {/* Header row: status badge + type pill */}
+      <div className="row" style={{ justifyContent: 'space-between' }}>
+        <span className={statusBadgeClass[assessment.studentStatus] ?? 'badge'}>
+          {statusLabel[assessment.studentStatus] ?? assessment.studentStatus}
         </span>
-        <span className="muted">
-          {assessmentTypeLabel[assessment.assessmentType] || assessment.assessmentType}
+        <span className="type-pill">
+          {assessmentTypeLabel[assessment.assessmentType] ?? assessment.assessmentType}
         </span>
       </div>
 
+      {/* Title + description */}
       <div>
         <h3>{assessment.title}</h3>
-        <p className="muted" style={{ marginTop: 6 }}>
-          {assessment.description || 'Không có mô tả'}
-        </p>
+        {assessment.description && (
+          <p className="muted" style={{ marginTop: 5, fontSize: '0.88rem', lineHeight: 1.45 }}>
+            {assessment.description}
+          </p>
+        )}
       </div>
 
-      <div className="row" style={{ justifyContent: 'start', flexWrap: 'wrap', gap: 12 }}>
-        <div className="row" style={{ gap: 4 }}>
-          <FileText size={14} className="muted" />
-          <span className="muted">{assessment.totalQuestions} câu hỏi</span>
-        </div>
+      <hr className="card-divider" />
+
+      {/* Meta info */}
+      <div className="meta-row">
+        <span className="meta-item">
+          <FileText size={13} />
+          {assessment.totalQuestions} câu
+        </span>
         {assessment.timeLimitMinutes && (
-          <div className="row" style={{ gap: 4 }}>
-            <Clock size={14} className="muted" />
-            <span className="muted">{assessment.timeLimitMinutes} phút</span>
-          </div>
+          <span className="meta-item">
+            <Clock size={13} />
+            {assessment.timeLimitMinutes} phút
+          </span>
         )}
-        {assessment.passingScore && (
-          <span className="muted">Điểm đạt: {assessment.passingScore}</span>
+        {assessment.passingScore != null && (
+          <span className="meta-item">
+            <CheckCircle2 size={13} />
+            Đạt: {assessment.passingScore}đ
+          </span>
+        )}
+        {assessment.allowMultipleAttempts && (
+          <span className="meta-item">
+            <RefreshCw size={13} />
+            {assessment.attemptNumber || 0}
+            {assessment.maxAttempts ? `/${assessment.maxAttempts}` : ''} lần
+          </span>
         )}
       </div>
 
-      {assessment.allowMultipleAttempts && (
-        <div className="row" style={{ justifyContent: 'start' }}>
-          <span className="muted">
-            Lần làm: {assessment.attemptNumber || 0}
-            {assessment.maxAttempts ? ` / ${assessment.maxAttempts}` : ''}
-          </span>
-        </div>
-      )}
-
+      {/* Due date */}
       {dueDate && (
-        <div className="row" style={{ justifyContent: 'start' }}>
-          <span className={isOverdue ? 'muted' : ''} style={{ color: isOverdue ? 'var(--danger-color)' : undefined }}>
-            Hạn nộp: {dueDate.toLocaleString('vi-VN')}
-          </span>
+        <div>
+          {isOverdue ? (
+            <span className="overdue">
+              <AlertCircle size={13} />
+              Quá hạn: {dueDate.toLocaleString('vi-VN')}
+            </span>
+          ) : (
+            <span className="meta-item">
+              <Clock size={13} />
+              Hạn nộp: {dueDate.toLocaleString('vi-VN')}
+            </span>
+          )}
         </div>
       )}
 
+      <hr className="card-divider" />
+
+      {/* Actions */}
       <div className="row" style={{ flexWrap: 'wrap' }}>
         <button className="btn secondary" onClick={onViewDetail}>
           <BookOpen size={14} />
@@ -223,14 +257,16 @@ function AssessmentCard({
 
         {assessment.canStart && (
           <button className="btn" onClick={onStart}>
-            {(assessment.attemptNumber || 0) > 0 ? 'Làm lại' : 'Bắt đầu'}
+            {(assessment.attemptNumber || 0) > 0 ? (
+              <><RefreshCw size={14} /> Làm lại</>
+            ) : (
+              'Bắt đầu'
+            )}
           </button>
         )}
 
         {!assessment.canStart && assessment.cannotStartReason && (
-          <span className="muted" style={{ fontSize: '0.875rem' }}>
-            {assessment.cannotStartReason}
-          </span>
+          <span className="reason-note">{assessment.cannotStartReason}</span>
         )}
       </div>
     </article>
