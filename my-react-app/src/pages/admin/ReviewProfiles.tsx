@@ -4,9 +4,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
-  Download,
   FileText,
   Globe,
+  Image,
+  Loader2,
   MapPin,
   Scan,
   Search,
@@ -14,8 +15,11 @@ import {
   UserX,
   X,
   XCircle,
+  ZoomIn,
+  ZoomOut,
 } from 'lucide-react';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import JSZip from 'jszip';
 import { DashboardLayout } from '../../components/layout';
 import { mockAdmin } from '../../data/mockData';
 import { TeacherProfileService } from '../../services/api/teacher-profile.service';
@@ -106,6 +110,13 @@ const ReviewProfiles: React.FC = () => {
   const [ocrResult, setOcrResult] = useState<OcrComparisonResult | null>(null);
   const [ocrError, setOcrError] = useState<string | null>(null);
 
+  const [verificationImages, setVerificationImages] = useState<Array<{ name: string; url: string }>>([]);
+  const [verificationLoading, setVerificationLoading] = useState(false);
+  const [verificationError, setVerificationError] = useState<string | null>(null);
+  const [previewIndex, setPreviewIndex] = useState<number | null>(null);
+  const [previewZoom, setPreviewZoom] = useState(1);
+  const verificationUrlsRef = useRef<string[]>([]);
+
   const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3500);
@@ -155,6 +166,8 @@ const ReviewProfiles: React.FC = () => {
     setOcrResult(null);
     setOcrError(null);
     setOcrProgress(0);
+    setPreviewIndex(null);
+    setPreviewZoom(1);
   };
 
   const handleReviewSubmit = async () => {
@@ -179,14 +192,152 @@ const ReviewProfiles: React.FC = () => {
     }
   };
 
-  const handleDownload = async (profileId: string) => {
-    try {
-      const res = await TeacherProfileService.getDownloadUrl(profileId);
-      if (res.result) window.open(res.result as string, '_blank');
-    } catch {
-      showToast('Không thể lấy link tải hồ sơ', 'error');
-    }
+  const cleanupVerificationImages = useCallback(() => {
+    verificationUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+    verificationUrlsRef.current = [];
+  }, []);
+
+  const extractImagesFromZip = useCallback(async (zipBlob: Blob) => {
+    const zip = await JSZip.loadAsync(zipBlob);
+    const imageFileNames = Object.keys(zip.files).filter((fileName) => {
+      const entry = zip.files[fileName];
+      if (entry.dir) return false;
+      return /\.(png|jpe?g|webp|gif|bmp)$/i.test(fileName);
+    });
+
+    const extracted = await Promise.all(
+      imageFileNames.map(async (fileName) => {
+        const blob = await zip.files[fileName].async('blob');
+        return {
+          name: fileName.split('/').pop() || fileName,
+          url: URL.createObjectURL(blob),
+        };
+      })
+    );
+
+    return extracted;
+  }, []);
+
+  const loadVerificationImages = useCallback(
+    async (profile: TeacherProfile) => {
+      cleanupVerificationImages();
+      setVerificationImages([]);
+      setVerificationError(null);
+      setVerificationLoading(true);
+
+      try {
+        if (!profile.verificationDocumentKey) {
+          throw new Error('Hồ sơ này chưa có ảnh xác minh');
+        }
+
+        const fileBlob = await TeacherProfileService.getVerificationDocumentBlob(profile.id);
+        const contentType = fileBlob.type || '';
+        const isZip =
+          contentType.includes('zip') || fileBlob.type.includes('zip') || fileBlob.type === '';
+
+        if (isZip) {
+          const extracted = await extractImagesFromZip(fileBlob);
+          if (extracted.length === 0) {
+            throw new Error('ZIP không chứa ảnh hợp lệ');
+          }
+          verificationUrlsRef.current = extracted.map((image) => image.url);
+          setVerificationImages(extracted);
+        } else if (contentType.startsWith('image/') || fileBlob.type.startsWith('image/')) {
+          const directUrl = URL.createObjectURL(fileBlob);
+          verificationUrlsRef.current = [directUrl];
+          setVerificationImages([
+            {
+              name: 'verification-image',
+              url: directUrl,
+            },
+          ]);
+        } else {
+          throw new Error('Định dạng tài liệu xác minh không hỗ trợ xem trực tiếp');
+        }
+      } catch (err: unknown) {
+        setVerificationError(
+          err instanceof Error ? err.message : 'Không thể hiển thị ảnh xác minh'
+        );
+      } finally {
+        setVerificationLoading(false);
+      }
+    },
+    [cleanupVerificationImages, extractImagesFromZip]
+  );
+
+  const handleOpenPreview = (index: number) => {
+    setPreviewIndex(index);
+    setPreviewZoom(1);
   };
+
+  const handleClosePreview = () => {
+    setPreviewIndex(null);
+    setPreviewZoom(1);
+  };
+
+  const handleNextPreview = () => {
+    if (previewIndex === null || verificationImages.length === 0) return;
+    setPreviewIndex((previewIndex + 1) % verificationImages.length);
+    setPreviewZoom(1);
+  };
+
+  const handlePrevPreview = () => {
+    if (previewIndex === null || verificationImages.length === 0) return;
+    setPreviewIndex((previewIndex - 1 + verificationImages.length) % verificationImages.length);
+    setPreviewZoom(1);
+  };
+
+  const handleZoomIn = () => {
+    setPreviewZoom((z) => Math.min(z + 0.25, 3));
+  };
+
+  const handleZoomOut = () => {
+    setPreviewZoom((z) => Math.max(z - 0.25, 0.5));
+  };
+
+  const handleZoomReset = () => {
+    setPreviewZoom(1);
+  };
+
+  useEffect(() => {
+    if (!selectedProfile) {
+      cleanupVerificationImages();
+      setVerificationImages([]);
+      setVerificationError(null);
+      setVerificationLoading(false);
+      return;
+    }
+
+    loadVerificationImages(selectedProfile);
+
+    return () => {
+      cleanupVerificationImages();
+    };
+  }, [cleanupVerificationImages, loadVerificationImages, selectedProfile]);
+
+  useEffect(() => {
+    if (previewIndex === null) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') handleClosePreview();
+      if (event.key === 'ArrowRight') handleNextPreview();
+      if (event.key === 'ArrowLeft') handlePrevPreview();
+      if (event.key === '+') handleZoomIn();
+      if (event.key === '-') handleZoomOut();
+      if (event.key === '0') handleZoomReset();
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [
+    handleClosePreview,
+    handleNextPreview,
+    handlePrevPreview,
+    handleZoomIn,
+    handleZoomOut,
+    handleZoomReset,
+    previewIndex,
+  ]);
 
   const handleOcrVerify = async () => {
     if (!selectedProfile) return;
@@ -450,14 +601,47 @@ const ReviewProfiles: React.FC = () => {
                     </section>
                   )}
 
-                  {/* Documents */}
-                  <button
-                    className="rpd-download-btn"
-                    onClick={() => handleDownload(selectedProfile.id)}
-                  >
-                    <Download size={14} />
-                    Tải hồ sơ xác minh
-                  </button>
+                  {/* Verification images */}
+                  <section className="rpd-section">
+                    <h3 className="rpd-section-title">
+                      <Image size={12} /> Ảnh thẻ xác minh
+                    </h3>
+
+                    {verificationLoading && (
+                      <div className="rpd-verification-loading">
+                        <Loader2 size={16} className="rpd-spin" />
+                        Đang tải ảnh xác minh...
+                      </div>
+                    )}
+
+                    {verificationError && !verificationLoading && (
+                      <div className="rpd-verification-error">
+                        <XCircle size={14} />
+                        {verificationError}
+                      </div>
+                    )}
+
+                    {!verificationLoading && !verificationError && verificationImages.length > 0 && (
+                      <>
+                        <div className="rpd-verification-hint">
+                          Click ảnh để mở preview. Dùng mũi tên để xem nhanh nhiều ảnh.
+                        </div>
+                        <div className="rpd-image-grid">
+                          {verificationImages.map((img, index) => (
+                            <button
+                              key={`${img.name}-${index}`}
+                              type="button"
+                              className="rpd-image-card"
+                              onClick={() => handleOpenPreview(index)}
+                            >
+                              <img src={img.url} alt={`Ảnh xác minh ${index + 1}`} />
+                              <span>Ảnh {index + 1}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </section>
 
                   {/* OCR Verification */}
                   {selectedProfile.status === 'PENDING' && (
@@ -606,6 +790,61 @@ const ReviewProfiles: React.FC = () => {
           <div className={`rp-toast rp-toast--${toast.type}`}>
             {toast.type === 'success' ? <CheckCircle2 size={15} /> : <XCircle size={15} />}
             {toast.message}
+          </div>
+        )}
+
+        {previewIndex !== null && verificationImages[previewIndex] && (
+          <div className="rp-lightbox" onClick={handleClosePreview}>
+            <div className="rp-lightbox-toolbar" onClick={(e) => e.stopPropagation()}>
+              <button type="button" onClick={handleZoomOut} disabled={previewZoom <= 0.5}>
+                <ZoomOut size={14} />
+              </button>
+              <span>{Math.round(previewZoom * 100)}%</span>
+              <button type="button" onClick={handleZoomIn} disabled={previewZoom >= 3}>
+                <ZoomIn size={14} />
+              </button>
+              <button type="button" onClick={handleZoomReset}>
+                100%
+              </button>
+              <button type="button" onClick={handleClosePreview}>
+                <X size={14} />
+              </button>
+            </div>
+
+            <button
+              type="button"
+              className="rp-lightbox-nav rp-lightbox-nav--prev"
+              onClick={(e) => {
+                e.stopPropagation();
+                handlePrevPreview();
+              }}
+            >
+              <ChevronLeft size={18} />
+            </button>
+
+            <div className="rp-lightbox-stage" onClick={(e) => e.stopPropagation()}>
+              <img
+                src={verificationImages[previewIndex].url}
+                alt={verificationImages[previewIndex].name}
+                className="rp-lightbox-image"
+                style={{ transform: `scale(${previewZoom})` }}
+              />
+            </div>
+
+            <button
+              type="button"
+              className="rp-lightbox-nav rp-lightbox-nav--next"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleNextPreview();
+              }}
+            >
+              <ChevronRight size={18} />
+            </button>
+
+            <div className="rp-lightbox-counter" onClick={(e) => e.stopPropagation()}>
+              {previewIndex + 1} / {verificationImages.length}
+            </div>
           </div>
         )}
       </div>

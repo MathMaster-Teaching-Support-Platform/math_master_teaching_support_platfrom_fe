@@ -263,6 +263,31 @@ export class TeacherProfileService {
   }
 
   /**
+   * Download verification document content via backend (Admin)
+   */
+  static async getVerificationDocumentBlob(profileId: string): Promise<Blob> {
+    const token = AuthService.getToken();
+    if (!token) throw new Error('Authentication required');
+
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.TEACHER_PROFILES_DOWNLOAD_FILE(profileId)}`,
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          accept: 'application/zip,*/*',
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Failed to download verification document');
+    }
+
+    return response.blob();
+  }
+
+  /**
    * Verify profile with Gemini OCR (Admin) - Async
    * Returns job ID immediately for polling
    */
