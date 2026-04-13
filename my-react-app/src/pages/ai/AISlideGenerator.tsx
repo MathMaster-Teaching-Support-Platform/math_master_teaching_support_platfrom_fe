@@ -7,6 +7,7 @@ import { mockTeacher } from '../../data/mockData';
 import { AuthService } from '../../services/api/auth.service';
 import { LessonSlideService } from '../../services/api/lesson-slide.service';
 import { notifySubscriptionUpdated } from '../../services/api/subscription-plan.service';
+import type { LessonResponse } from '../../types/lesson.types';
 import type {
   ChapterBySubject,
   GenerateSlideContentResult,
@@ -14,6 +15,7 @@ import type {
   LessonSlideEquationMode,
   LessonSlideItem,
   LessonSlideOutputFormat,
+  LessonSlidePublicationStatus,
   LessonSlideTemplate,
   SchoolGrade,
   SubjectByGrade,
@@ -43,6 +45,39 @@ type MathSegment =
   | { type: 'text'; value: string }
   | { type: 'inline-math'; value: string }
   | { type: 'block-math'; value: string };
+
+const parseSlidesFromLessonContent = (lessonContent?: string | null): LessonSlideItem[] => {
+  if (!lessonContent) return [];
+
+  try {
+    const parsed = JSON.parse(lessonContent) as unknown;
+
+    let rawSlides: unknown[] = [];
+
+    if (Array.isArray(parsed)) {
+      rawSlides = parsed;
+    } else if (parsed && typeof parsed === 'object') {
+      const container = parsed as { slides?: unknown; result?: { slides?: unknown } };
+      if (Array.isArray(container.slides)) {
+        rawSlides = container.slides;
+      } else if (Array.isArray(container.result?.slides)) {
+        rawSlides = container.result.slides;
+      }
+    }
+
+    return rawSlides.map((slide, index) => {
+      const item = (slide ?? {}) as Partial<LessonSlideItem>;
+      return {
+        slideNumber: Number(item.slideNumber) || index + 1,
+        slideType: item.slideType || 'CONTENT',
+        heading: item.heading || '',
+        content: item.content || '',
+      };
+    });
+  } catch {
+    return [];
+  }
+};
 
 const normalizeOutputFormat = (value?: string): LessonSlideOutputFormat => {
   if (value === 'LATEX' || value === 'HYBRID') {
@@ -247,6 +282,12 @@ const AISlideGenerator: React.FC = () => {
 
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [slideStatusFilter, setSlideStatusFilter] = useState<LessonSlidePublicationStatus>('DRAFT');
+  const [managedLessons, setManagedLessons] = useState<LessonResponse[]>([]);
+  const [selectedManagedLesson, setSelectedManagedLesson] = useState<LessonResponse | null>(null);
+  const [loadingManagedLessons, setLoadingManagedLessons] = useState(false);
+  const [loadingSelectedManagedLesson, setLoadingSelectedManagedLesson] = useState(false);
+  const [updatingPublishState, setUpdatingPublishState] = useState(false);
 
   const selectedLesson = useMemo(
     () => lessons.find((lesson) => lesson.id === lessonId),
@@ -292,6 +333,95 @@ const AISlideGenerator: React.FC = () => {
     setPreparedPptxBlob(null);
     setPreparedPptxFilename('lesson-slides.pptx');
     setActiveWizardStep(1);
+  };
+
+  const applyLessonSlideContentToEditor = (lesson: LessonResponse) => {
+    const parsedSlides = parseSlidesFromLessonContent(lesson.lessonContent);
+
+    if (!parsedSlides.length) {
+      setError('Bài này chưa có nội dung slide đã gen để xem lại.');
+      return;
+    }
+
+    const restoredResult: GenerateSlideContentResult = {
+      subjectId,
+      chapterId,
+      lessonId: lesson.id,
+      lessonTitle: lesson.title || selectedLesson?.title || 'Lesson',
+      slideCount: parsedSlides.length,
+      outputFormat,
+      slides: parsedSlides,
+    };
+
+    setGenerated(restoredResult);
+    setEditableSlides(parsedSlides);
+    setActivePreviewIndex(0);
+    setPreparedPptxBlob(null);
+    setPreparedPptxFilename('lesson-slides.pptx');
+    setSuccess('Đã nạp lại nội dung slide đã gen. Bạn có thể chỉnh sửa và xuất PPTX.');
+    setError('');
+    setActiveWizardStep(4);
+  };
+
+  const loadManagedLessonsByStatus = async (status: LessonSlidePublicationStatus) => {
+    setLoadingManagedLessons(true);
+
+    try {
+      const response = await LessonSlideService.getTeacherLessonSlidesByStatus(status);
+      setManagedLessons(response.result || []);
+    } catch (err) {
+      setManagedLessons([]);
+      setError(
+        err instanceof Error ? err.message : 'Không thể tải danh sách slide theo trạng thái'
+      );
+    } finally {
+      setLoadingManagedLessons(false);
+    }
+  };
+
+  const loadManagedLessonById = async (targetLessonId: string) => {
+    setLoadingSelectedManagedLesson(true);
+
+    try {
+      const response = await LessonSlideService.getTeacherLessonSlideByLessonId(targetLessonId);
+      setSelectedManagedLesson(response.result);
+    } catch (err) {
+      setSelectedManagedLesson(null);
+      setError(err instanceof Error ? err.message : 'Không thể tải chi tiết slide của bài học');
+    } finally {
+      setLoadingSelectedManagedLesson(false);
+    }
+  };
+
+  const handleTogglePublishSlide = async (targetStatus: LessonSlidePublicationStatus) => {
+    if (!lessonId) {
+      setError('Vui lòng chọn bài học trước khi đổi trạng thái slide.');
+      return;
+    }
+
+    setUpdatingPublishState(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      if (targetStatus === 'PUBLISHED') {
+        await LessonSlideService.publishLessonSlides(lessonId);
+        setSuccess('Đã xuất bản slide thành công. Học sinh có thể xem qua endpoint public.');
+      } else {
+        await LessonSlideService.unpublishLessonSlides(lessonId);
+        setSuccess('Đã chuyển slide về nháp. Học sinh sẽ không còn thấy bài này.');
+      }
+
+      setSlideStatusFilter(targetStatus);
+      await Promise.all([
+        loadManagedLessonById(lessonId),
+        loadManagedLessonsByStatus(targetStatus),
+      ]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Không thể cập nhật trạng thái slide');
+    } finally {
+      setUpdatingPublishState(false);
+    }
   };
 
   useEffect(() => {
@@ -347,6 +477,19 @@ const AISlideGenerator: React.FC = () => {
       });
     };
   }, []);
+
+  useEffect(() => {
+    void loadManagedLessonsByStatus(slideStatusFilter);
+  }, [slideStatusFilter]);
+
+  useEffect(() => {
+    if (!lessonId) {
+      setSelectedManagedLesson(null);
+      return;
+    }
+
+    void loadManagedLessonById(lessonId);
+  }, [lessonId]);
 
   useEffect(() => {
     const previewsToLoad = templates.filter((template) => Boolean(template.previewImage));
@@ -536,6 +679,11 @@ const AISlideGenerator: React.FC = () => {
       notifySubscriptionUpdated();
       setSuccess('Đã tạo nội dung slide bằng AI. Vui lòng kiểm tra và confirm nội dung.');
       setActiveWizardStep(4);
+      setSlideStatusFilter('DRAFT');
+      await Promise.all([
+        loadManagedLessonById(response.result.lessonId),
+        loadManagedLessonsByStatus('DRAFT'),
+      ]);
     } catch (err) {
       const apiError = err as Error & { code?: number };
       if (apiError.code === 1164) {
@@ -745,10 +893,17 @@ const AISlideGenerator: React.FC = () => {
                   <select
                     value={lessonId}
                     onChange={(e) => {
-                      setLessonId(e.target.value);
+                      const nextLessonId = e.target.value;
+                      setLessonId(nextLessonId);
                       clearGeneratedData();
                       setSuccess('');
                       setError('');
+
+                      if (nextLessonId) {
+                        void loadManagedLessonById(nextLessonId);
+                      } else {
+                        setSelectedManagedLesson(null);
+                      }
                     }}
                     disabled={loadingLessons}
                   >
@@ -765,6 +920,108 @@ const AISlideGenerator: React.FC = () => {
               {showLessonStep && !loadingLessons && lessons.length === 0 && (
                 <p className="ai-slide-info">Chương này chưa có bài học.</p>
               )}
+
+              <div className="ai-slide-management-card">
+                <div className="ai-slide-management-header">
+                  <h3>Quan ly slide da gen</h3>
+                  <p>
+                    Chuyen doi trang thai nhap/xuat ban. Hoc sinh chi xem duoc slide da xuat ban.
+                  </p>
+                </div>
+
+                <div
+                  className="ai-slide-status-tabs"
+                  role="group"
+                  aria-label="Loc trang thai slide"
+                >
+                  <button
+                    type="button"
+                    className={`ai-slide-status-tab ${slideStatusFilter === 'DRAFT' ? 'active' : ''}`}
+                    onClick={() => setSlideStatusFilter('DRAFT')}
+                    disabled={loadingManagedLessons}
+                  >
+                    Nhap
+                  </button>
+                  <button
+                    type="button"
+                    className={`ai-slide-status-tab ${slideStatusFilter === 'PUBLISHED' ? 'active' : ''}`}
+                    onClick={() => setSlideStatusFilter('PUBLISHED')}
+                    disabled={loadingManagedLessons}
+                  >
+                    Xuat ban
+                  </button>
+                </div>
+
+                <div className="ai-slide-management-actions">
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    disabled={!lessonId || updatingPublishState}
+                    onClick={() => void handleTogglePublishSlide('PUBLISHED')}
+                  >
+                    {updatingPublishState ? 'Dang cap nhat...' : 'Xuat ban slide cua bai da chon'}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-outline"
+                    disabled={!lessonId || updatingPublishState}
+                    onClick={() => void handleTogglePublishSlide('DRAFT')}
+                  >
+                    Chuyen ve nhap
+                  </button>
+                </div>
+
+                {loadingSelectedManagedLesson && (
+                  <p className="ai-slide-info">Dang tai chi tiet slide cua bai dang chon...</p>
+                )}
+
+                {!loadingSelectedManagedLesson && selectedManagedLesson && (
+                  <div className="ai-slide-selected-lesson">
+                    <div>
+                      <strong>{selectedManagedLesson.title || 'Bai hoc'}</strong>
+                      <span>Trang thai: {selectedManagedLesson.status || 'DRAFT'}</span>
+                    </div>
+                    <button
+                      type="button"
+                      className="btn btn-outline"
+                      onClick={() => applyLessonSlideContentToEditor(selectedManagedLesson)}
+                    >
+                      Xem lai noi dung da gen
+                    </button>
+                  </div>
+                )}
+
+                {loadingManagedLessons && (
+                  <p className="ai-slide-info">Dang tai danh sach slide...</p>
+                )}
+
+                {!loadingManagedLessons && managedLessons.length === 0 && (
+                  <p className="ai-slide-info">
+                    Khong co bai nao o trang thai {slideStatusFilter}.
+                  </p>
+                )}
+
+                {!loadingManagedLessons && managedLessons.length > 0 && (
+                  <div className="ai-slide-managed-list">
+                    {managedLessons.map((lesson) => (
+                      <button
+                        type="button"
+                        key={lesson.id}
+                        className={`ai-slide-managed-item ${lessonId === lesson.id ? 'active' : ''}`}
+                        onClick={() => {
+                          setLessonId(lesson.id);
+                          setSuccess('');
+                          setError('');
+                          void loadManagedLessonById(lesson.id);
+                        }}
+                      >
+                        <span className="title">{lesson.title || 'Bai hoc khong ten'}</span>
+                        <span className="meta">{lesson.status || slideStatusFilter}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               <div
                 className="ai-slide-actions"

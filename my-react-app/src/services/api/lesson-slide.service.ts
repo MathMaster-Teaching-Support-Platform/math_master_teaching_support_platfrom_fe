@@ -1,11 +1,13 @@
 import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
 import { AuthService } from './auth.service';
+import type { LessonResponse } from '../../types/lesson.types';
 import type {
   ApiEnvelope,
   ChapterBySubject,
   GeneratePptxRequest,
   GenerateSlideContentRequest,
   GenerateSlideContentResult,
+  LessonSlidePublicationStatus,
   LessonByChapter,
   LessonSlideTemplate,
   SchoolGrade,
@@ -211,5 +213,97 @@ export class LessonSlideService {
       blob: await response.blob(),
       filename: this.getFilenameFromDisposition(response.headers.get('content-disposition')),
     };
+  }
+
+  static async getTeacherLessonSlideByLessonId(
+    lessonId: string
+  ): Promise<ApiEnvelope<LessonResponse>> {
+    const headers = await this.getAuthHeaders(false);
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.LESSON_SLIDES_BY_LESSON(lessonId)}`,
+      {
+        method: 'GET',
+        headers,
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(await this.readErrorMessage(response, 'Failed to fetch lesson slide'));
+    }
+
+    return response.json();
+  }
+
+  static async getTeacherLessonSlidesByStatus(
+    status: LessonSlidePublicationStatus = 'DRAFT'
+  ): Promise<ApiEnvelope<LessonResponse[]>> {
+    const headers = await this.getAuthHeaders(false);
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.LESSON_SLIDES_BY_STATUS(status)}`,
+      {
+        method: 'GET',
+        headers,
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(await this.readErrorMessage(response, 'Failed to fetch lesson slides'));
+    }
+
+    return response.json();
+  }
+
+  static async publishLessonSlides(lessonId: string): Promise<ApiEnvelope<LessonResponse>> {
+    const headers = await this.getAuthHeaders(false);
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.LESSON_SLIDES_PUBLISH(lessonId)}`,
+      {
+        method: 'PATCH',
+        headers,
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(await this.readErrorMessage(response, 'Failed to publish lesson slides'));
+    }
+
+    return response.json();
+  }
+
+  static async unpublishLessonSlides(lessonId: string): Promise<ApiEnvelope<LessonResponse>> {
+    const headers = await this.getAuthHeaders(false);
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.LESSON_SLIDES_UNPUBLISH(lessonId)}`,
+      {
+        method: 'PATCH',
+        headers,
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(await this.readErrorMessage(response, 'Failed to unpublish lesson slides'));
+    }
+
+    return response.json();
+  }
+
+  static async getPublicLessonSlidesByLessonId(
+    lessonId: string
+  ): Promise<ApiEnvelope<LessonResponse>> {
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.LESSON_SLIDES_PUBLIC_BY_LESSON(lessonId)}`,
+      {
+        method: 'GET',
+        headers: { accept: '*/*' },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        await this.readErrorMessage(response, 'Failed to fetch public lesson slides')
+      );
+    }
+
+    return response.json();
   }
 }

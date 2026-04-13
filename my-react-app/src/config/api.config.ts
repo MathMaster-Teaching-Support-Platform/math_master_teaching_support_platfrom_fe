@@ -181,6 +181,12 @@ export const API_ENDPOINTS = {
   LESSON_SLIDES_TEMPLATES: '/lesson-slides/templates',
   LESSON_SLIDES_GENERATE_CONTENT: '/lesson-slides/generate-content',
   LESSON_SLIDES_GENERATE_PPTX: '/lesson-slides/generate-pptx-from-json',
+  LESSON_SLIDES_BY_LESSON: (lessonId: string) => `/lesson-slides/lessons/${lessonId}`,
+  LESSON_SLIDES_BY_STATUS: (status: 'DRAFT' | 'PUBLISHED') =>
+    `/lesson-slides/lessons?status=${status}`,
+  LESSON_SLIDES_PUBLISH: (lessonId: string) => `/lesson-slides/lessons/${lessonId}/publish`,
+  LESSON_SLIDES_UNPUBLISH: (lessonId: string) => `/lesson-slides/lessons/${lessonId}/unpublish`,
+  LESSON_SLIDES_PUBLIC_BY_LESSON: (lessonId: string) => `/lesson-slides/public/lessons/${lessonId}`,
 
   // Lesson Plans (Giáo án)
   LESSON_PLANS: '/lesson-plans',

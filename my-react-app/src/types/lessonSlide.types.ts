@@ -67,6 +67,8 @@ export interface LessonSlideTemplate {
   updatedAt?: string;
 }
 
+export type LessonSlidePublicationStatus = 'DRAFT' | 'PUBLISHED';
+
 export type LessonSlideOutputFormat = 'PLAIN_TEXT' | 'LATEX' | 'HYBRID';
 export type LessonSlideEquationMode = 'OMML' | 'IMAGE' | 'PLAIN_TEXT';
 

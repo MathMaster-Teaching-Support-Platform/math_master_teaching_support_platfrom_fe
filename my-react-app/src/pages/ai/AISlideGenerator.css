@@ -531,6 +531,114 @@
   padding: 0.2rem 0.55rem;
 }
 
+.ai-slide-management-card {
+  border: 1px solid #dbe3f1;
+  border-radius: 12px;
+  background: #f8fbff;
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.ai-slide-management-header h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.ai-slide-management-header p {
+  margin: 0.25rem 0 0;
+  color: #475569;
+  font-size: 0.82rem;
+}
+
+.ai-slide-status-tabs {
+  display: inline-flex;
+  gap: 0.45rem;
+}
+
+.ai-slide-status-tab {
+  border-radius: 999px;
+  border: 1px solid #cbd5e1;
+  padding: 0.36rem 0.78rem;
+  background: #ffffff;
+  color: #1e293b;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ai-slide-status-tab.active {
+  background: #2563eb;
+  border-color: #1d4ed8;
+  color: #ffffff;
+}
+
+.ai-slide-management-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.ai-slide-selected-lesson {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.6rem;
+  border-radius: 10px;
+  border: 1px solid #c7d2fe;
+  background: #eef2ff;
+}
+
+.ai-slide-selected-lesson strong {
+  display: block;
+  font-size: 0.9rem;
+  color: #1e293b;
+}
+
+.ai-slide-selected-lesson span {
+  display: block;
+  margin-top: 0.14rem;
+  font-size: 0.78rem;
+  color: #475569;
+}
+
+.ai-slide-managed-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.55rem;
+}
+
+.ai-slide-managed-item {
+  text-align: left;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 0.55rem 0.65rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.ai-slide-managed-item.active {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.16);
+}
+
+.ai-slide-managed-item .title {
+  color: #0f172a;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.ai-slide-managed-item .meta {
+  color: #64748b;
+  font-size: 0.78rem;
+}
+
 @media (max-width: 900px) {
   .ai-slide-stepper {
     flex-wrap: wrap;
@@ -553,6 +661,11 @@
 
   .ai-slide-actions .btn {
     width: 100%;
+  }
+
+  .ai-slide-selected-lesson {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .ai-slide-preview-toolbar {
