@@ -236,11 +236,18 @@ function AssessmentCard({
   readonly onStart: () => void;
 }) {
   const [navigating, setNavigating] = useState(false);
+  const [starting, setStarting] = useState(false);
 
   const handleViewDetail = () => {
     if (navigating) return;
     setNavigating(true);
     setTimeout(() => onViewDetail(), 2400);
+  };
+
+  const handleStart = () => {
+    if (starting) return;
+    setStarting(true);
+    setTimeout(() => onStart(), 2400);
   };
 
   const dueDate = assessment.endDate ? new Date(assessment.endDate) : null;
@@ -336,15 +343,11 @@ function AssessmentCard({
         </button>
 
         {assessment.canStart && (
-          <button className="btn" onClick={onStart}>
-            {(assessment.attemptNumber || 0) > 0 ? (
-              <>
-                <RefreshCw size={14} /> Làm lại
-              </>
-            ) : (
-              'Bắt đầu'
-            )}
-          </button>
+          <StartButton
+            starting={starting}
+            isRetry={(assessment.attemptNumber || 0) > 0}
+            onClick={handleStart}
+          />
         )}
 
         {!assessment.canStart && assessment.cannotStartReason && (
@@ -352,5 +355,41 @@ function AssessmentCard({
         )}
       </div>
     </article>
+  );
+}
+
+function StartButton({
+  starting,
+  isRetry,
+  onClick,
+}: {
+  readonly starting: boolean;
+  readonly isRetry: boolean;
+  readonly onClick: () => void;
+}) {
+  if (starting) {
+    return (
+      <button className="btn btn--navigating" disabled>
+        <span className="circle-loader">
+          <svg width="18" height="18" viewBox="0 0 20 20">
+            <circle className="cl-track" cx="10" cy="10" r="9" />
+            <circle className="cl-fill" cx="10" cy="10" r="9" />
+          </svg>
+          Đang mở...
+        </span>
+      </button>
+    );
+  }
+  if (isRetry) {
+    return (
+      <button className="btn" onClick={onClick}>
+        <RefreshCw size={14} /> Làm lại
+      </button>
+    );
+  }
+  return (
+    <button className="btn" onClick={onClick}>
+      Bắt đầu
+    </button>
   );
 }

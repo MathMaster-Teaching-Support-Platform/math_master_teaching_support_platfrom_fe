@@ -56,9 +56,32 @@ export default function AssessmentDetail() {
   if (isLoading) {
     return (
       <Layout>
-        <div className="page-spinner">
-          <div className="spinner-ring" />
-          <span>Đang tải thông tin bài kiểm tra...</span>
+        <div className="skeleton-detail">
+          {/* Header skeleton */}
+          <div className="skeleton-detail-header">
+            <div className="skeleton-line sk-xs" />
+            <div className="skeleton-line sk-xl" />
+            <div className="skeleton-line sk-lg" />
+          </div>
+
+          {/* Info grid skeleton */}
+          <div className="skeleton-section">
+            <div className="skeleton-line sk-xs" style={{ width: '30%', height: 12 }} />
+            <div className="skeleton-grid">
+              {(['q', 't', 'p', 's', 'd', 'a'] as const).map((k) => (
+                <div key={k} className="skeleton-info-item">
+                  <div className="skeleton-line sk-sm" style={{ height: 11 }} />
+                  <div className="skeleton-line sk-md" style={{ height: 16 }} />
+                </div>
+              ))}
+            </div>
+            <div className="skeleton-block" />
+          </div>
+
+          {/* Action skeleton */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <div className="skeleton-line" style={{ width: 160, height: 38, borderRadius: 10 }} />
+          </div>
         </div>
       </Layout>
     );
@@ -82,24 +105,22 @@ export default function AssessmentDetail() {
   return (
     <Layout>
       {/* Page header */}
-      <header className="page-header">
-        <div className="row" style={{ gap: '0.75rem' }}>
-          <button className="btn secondary" onClick={() => navigate('/student/assessments')}>
+      <header className="detail-hero">
+        <div className="detail-hero__topbar">
+          <button className="detail-hero__back" onClick={() => navigate('/student/assessments')}>
             <ArrowLeft size={14} />
             Quay lại
           </button>
-          <div>
-            <div className="row" style={{ gap: '0.55rem', flexWrap: 'wrap' }}>
-              <h2>{assessment.title}</h2>
-              <span className={statusBadgeClass[assessment.studentStatus] ?? 'badge'}>
-                {statusLabel[assessment.studentStatus] ?? assessment.studentStatus}
-              </span>
-            </div>
-            <span className="type-pill" style={{ marginTop: 6, display: 'inline-flex' }}>
+          <div className="detail-hero__badges">
+            <span className={statusBadgeClass[assessment.studentStatus] ?? 'badge'}>
+              {statusLabel[assessment.studentStatus] ?? assessment.studentStatus}
+            </span>
+            <span className="type-pill">
               {assessmentTypeLabel[assessment.assessmentType] ?? assessment.assessmentType}
             </span>
           </div>
         </div>
+        <h1 className="detail-hero__title">{assessment.title}</h1>
       </header>
 
       {/* Info section */}
@@ -174,7 +195,7 @@ export default function AssessmentDetail() {
         )}
       </div>
 
-      {/* Warning */}
+      {/* Warning — only shown when cannot start so action bar still shows the reason */}
       {!assessment.canStart && assessment.cannotStartReason && (
         <div className="warning-banner">
           <AlertCircle size={18} style={{ color: '#92660a', flexShrink: 0, marginTop: 1 }} />
@@ -185,16 +206,23 @@ export default function AssessmentDetail() {
         </div>
       )}
 
-      {/* Action */}
-      <div className="row" style={{ justifyContent: 'flex-end' }}>
+      {/* Action bar */}
+      <div className="detail-action-bar">
+        <div className="detail-action-bar__text">
+          <p className="detail-action-bar__hint">Bạn đã sẵn sàng?</p>
+          <p className="detail-action-bar__sub">
+            {assessment.canStart
+              ? 'Đảm bảo kết nối ổn định trước khi bắt đầu làm bài.'
+              : (assessment.cannotStartReason ?? 'Bài kiểm tra này chưa thể bắt đầu.')}
+          </p>
+        </div>
         <button
-          className="btn"
+          className="btn btn--cta"
           disabled={!assessment.canStart}
           onClick={() => navigate(`/student/assessments/${assessmentId}/take`)}
-          style={{ minWidth: 180 }}
         >
-          <Play size={14} />
-          {attemptCount > 0 ? 'Làm lại' : 'Bắt đầu làm bài'}
+          <Play size={15} />
+          {attemptCount > 0 ? 'Làm lại bài' : 'Bắt đầu làm bài'}
         </button>
       </div>
     </Layout>
