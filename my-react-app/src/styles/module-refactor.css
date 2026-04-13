@@ -246,6 +246,53 @@
   box-shadow: none;
 }
 
+/* ── Circular progress loader (for detail navigation) ── */
+@keyframes circle-fill {
+  from {
+    stroke-dashoffset: 57;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.module-layout-container .circle-loader {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1;
+}
+
+.module-layout-container .circle-loader svg {
+  flex-shrink: 0;
+  transform: rotate(-90deg);
+  overflow: visible;
+}
+
+.module-layout-container .circle-loader .cl-track {
+  fill: none;
+  stroke: rgba(100, 130, 200, 0.25);
+  stroke-width: 2.6;
+}
+
+.module-layout-container .circle-loader .cl-fill {
+  fill: none;
+  stroke: var(--mod-primary);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-dasharray: 57;
+  stroke-dashoffset: 57;
+  animation: circle-fill 2.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.module-layout-container .btn.secondary.btn--navigating {
+  pointer-events: none;
+  opacity: 0.85;
+  background: #eef3fa;
+  border-color: var(--mod-primary);
+  color: var(--mod-primary);
+}
+
 .module-layout-container .pill-group {
   display: inline-flex;
   gap: 0.45rem;

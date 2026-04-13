@@ -235,6 +235,14 @@ function AssessmentCard({
   readonly onViewDetail: () => void;
   readonly onStart: () => void;
 }) {
+  const [navigating, setNavigating] = useState(false);
+
+  const handleViewDetail = () => {
+    if (navigating) return;
+    setNavigating(true);
+    setTimeout(() => onViewDetail(), 2400);
+  };
+
   const dueDate = assessment.endDate ? new Date(assessment.endDate) : null;
   const isOverdue = dueDate && dueDate < new Date();
 
@@ -306,9 +314,25 @@ function AssessmentCard({
 
       {/* Actions */}
       <div className="card-actions">
-        <button className="btn secondary" onClick={onViewDetail}>
-          <BookOpen size={14} />
-          Chi tiết
+        <button
+          className={`btn secondary${navigating ? ' btn--navigating' : ''}`}
+          onClick={handleViewDetail}
+          disabled={navigating}
+        >
+          {navigating ? (
+            <span className="circle-loader">
+              <svg width="18" height="18" viewBox="0 0 20 20">
+                <circle className="cl-track" cx="10" cy="10" r="9" />
+                <circle className="cl-fill" cx="10" cy="10" r="9" />
+              </svg>
+              Đang mở...
+            </span>
+          ) : (
+            <>
+              <BookOpen size={14} />
+              Chi tiết
+            </>
+          )}
         </button>
 
         {assessment.canStart && (
