@@ -284,20 +284,21 @@ const SubmitTeacherProfile: React.FC<SubmitTeacherProfileProps> = ({ onSuccess }
               <label className="tp-label" htmlFor="position">
                 Chức vụ / Chức danh <span className="tp-required">*</span>
               </label>
-              <input
+              <select
                 className="tp-input"
-                type="text"
                 id="position"
                 name="position"
                 value={formData.position}
                 onChange={handleInputChange}
-                placeholder="VD: Giáo viên Toán, Giảng viên Khoa Toán"
-                maxLength={100}
                 required
                 disabled={submitting}
-              />
+              >
+                <option value="" disabled>-- Chọn chức vụ --</option>
+                <option value="Giảng Viên Toán">Giảng Viên Toán</option>
+                <option value="Giáo Viên Toán">Giáo Viên Toán</option>
+              </select>
               <p className="tp-form-hint">
-                Phải có từ "Giáo viên" hoặc "Giảng viên" + "Toán" để hệ thống OCR xác minh
+                Chọn chức vụ từ danh sách để hệ thống OCR có thể xác minh được hồ sơ
               </p>
             </div>
 
