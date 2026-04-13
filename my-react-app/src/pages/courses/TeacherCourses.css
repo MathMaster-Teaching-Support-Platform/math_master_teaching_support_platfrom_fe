@@ -6,17 +6,20 @@
 /* ── Header extras ───────────────────────────────────────── */
 .module-layout-container .courses-header-row {
   align-items: flex-start;
-  padding-bottom: 1rem;
+  padding-bottom: 1.25rem;
   border-bottom: 1.5px solid var(--mod-slate-100);
 }
 
 .module-layout-container .header-stack {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.3rem;
 }
 
 .module-layout-container .header-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.14em;
@@ -24,11 +27,39 @@
   color: var(--mod-primary);
 }
 
+.module-layout-container .header-kicker::before {
+  content: '';
+  display: inline-block;
+  width: 3px;
+  height: 14px;
+  border-radius: 99px;
+  background: var(--mod-primary);
+  flex-shrink: 0;
+}
+
+.module-layout-container .courses-header-row h2 {
+  font-size: 1.85rem;
+  letter-spacing: -0.03em;
+}
+
 .module-layout-container .header-sub {
   margin: 0;
-  font-size: 0.88rem;
+  font-size: 0.875rem;
   color: var(--mod-slate-500);
-  padding-top: 0.1rem;
+  padding-top: 0.15rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.module-layout-container .header-sub::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #22c55e;
+  flex-shrink: 0;
 }
 
 /* ── Stat card color variants ────────────────────────────── */
@@ -119,36 +150,74 @@
   color: #ffffff;
 }
 
+/* ── Search box override (ensure icon renders styled) ───── */
+.module-layout-container .search-box {
+  background: #f8faff;
+  border-color: #d0defc;
+  border-radius: 12px;
+  padding: 0.38rem 0.6rem;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 2px 8px rgba(22, 42, 71, 0.05);
+}
+
+.module-layout-container .search-box:focus-within {
+  background: #fff;
+  border-color: var(--mod-primary);
+  box-shadow:
+    0 0 0 3px rgba(31, 94, 255, 0.12),
+    0 4px 16px rgba(31, 94, 255, 0.08);
+}
+
+.module-layout-container .search-box .search-box__icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: linear-gradient(145deg, #dde9ff 0%, #c7d8ff 100%);
+  border: 1px solid #b3cbff;
+  color: var(--mod-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
 /* ── View toggle (not in module-refactor) ────────────────── */
 .module-layout-container .view-toggle {
   display: flex;
-  background: #fff;
+  gap: 0.25rem;
+  background: #f1f5fd;
   border: 1.5px solid var(--mod-slate-200);
-  border-radius: 11px;
-  overflow: hidden;
+  border-radius: 12px;
+  padding: 0.22rem;
+  overflow: visible;
 }
 
 .module-layout-container .view-toggle button {
-  width: 38px;
-  height: 38px;
-  border: none;
+  width: 34px;
+  height: 34px;
+  border: 1.5px solid transparent;
   background: transparent;
-  color: var(--mod-slate-500);
+  color: var(--mod-slate-400);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   font-family: inherit;
+  border-radius: 9px;
   transition: all 0.15s;
 }
 
-.module-layout-container .view-toggle button + button {
-  border-left: 1.5px solid var(--mod-slate-200);
+.module-layout-container .view-toggle button:hover:not(.active) {
+  background: #e2eaff;
+  color: var(--mod-primary);
 }
 
 .module-layout-container .view-toggle button.active {
-  background: #eef3ff;
+  background: #fff;
   color: var(--mod-primary);
+  border-color: #c5d6ff;
+  box-shadow: 0 1px 4px rgba(31, 94, 255, 0.14);
 }
 
 /* ── Course card (override data-card defaults) ───────────── */
