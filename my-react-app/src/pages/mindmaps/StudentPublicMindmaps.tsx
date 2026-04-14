@@ -1,6 +1,6 @@
 import { Download, FileText, Search, Workflow } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockStudent } from '../../data/mockData';
 import { LessonSlideService } from '../../services/api/lesson-slide.service';
@@ -51,6 +51,7 @@ const emptyMindmapPage = (): PaginatedResponse<Mindmap> => ({
 
 export default function StudentPublicMindmaps() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [schoolGrades, setSchoolGrades] = useState<SchoolGrade[]>([]);
@@ -62,9 +63,11 @@ export default function StudentPublicMindmaps() {
   const [subjectId, setSubjectId] = useState('');
   const [chapterId, setChapterId] = useState('');
   const [lessonId, setLessonId] = useState('');
-  const [activeTab, setActiveTab] = useState<'SLIDES' | 'MINDMAPS'>(() =>
-    searchParams.get('tab') === 'MINDMAPS' ? 'MINDMAPS' : 'SLIDES'
-  );
+  const [activeTab, setActiveTab] = useState<'SLIDES' | 'MINDMAPS'>(() => {
+    if (location.pathname === '/student/public-mindmaps') return 'MINDMAPS';
+    if (location.pathname === '/student/public-slides') return 'SLIDES';
+    return searchParams.get('tab') === 'MINDMAPS' ? 'MINDMAPS' : 'SLIDES';
+  });
 
   const [slideKeyword, setSlideKeyword] = useState(() => searchParams.get('slideQ') || '');
   const [slideKeywordDebounced, setSlideKeywordDebounced] = useState(() =>
@@ -144,6 +147,16 @@ export default function StudentPublicMindmaps() {
     const timer = window.setTimeout(() => setMindmapKeywordDebounced(mindmapKeyword.trim()), 400);
     return () => window.clearTimeout(timer);
   }, [mindmapKeyword]);
+
+  useEffect(() => {
+    if (location.pathname === '/student/public-mindmaps') {
+      setActiveTab('MINDMAPS');
+      return;
+    }
+    if (location.pathname === '/student/public-slides') {
+      setActiveTab('SLIDES');
+    }
+  }, [location.pathname]);
 
   useEffect(() => {
     const params = new URLSearchParams();

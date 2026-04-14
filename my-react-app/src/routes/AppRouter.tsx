@@ -505,6 +505,22 @@ const router = createBrowserRouter([
     ),
   },
   {
+    path: '/student/public-slides',
+    element: (
+      <PrivateRoute>
+        <StudentPublicMindmaps />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/student/public-mindmaps',
+    element: (
+      <PrivateRoute>
+        <StudentPublicMindmaps />
+      </PrivateRoute>
+    ),
+  },
+  {
     path: '/student/wallet',
     element: (
       <PrivateRoute>
