@@ -323,6 +323,7 @@ export default function TeacherMindmaps() {
     >
       <div className="module-layout-container">
         <section className="module-page">
+
           {/* ── Header ── */}
           <header className="page-header mindmaps-header-row">
             <div className="header-stack">
@@ -775,12 +776,17 @@ export default function TeacherMindmaps() {
             <div className="empty">
               <Network size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
               <p>Bạn chưa có mindmap nào. Hãy tạo mindmap đầu tiên bằng AI.</p>
-              <button className="btn" style={{ marginTop: '1rem' }} onClick={toggleGenerator}>
+              <button
+                className="btn"
+                style={{ marginTop: '1rem' }}
+                onClick={toggleGenerator}
+              >
                 Bắt đầu ngay
                 <ArrowRight size={16} />
               </button>
             </div>
           )}
+
         </section>
       </div>
     </DashboardLayout>

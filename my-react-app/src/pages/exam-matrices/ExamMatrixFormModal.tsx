@@ -1,4 +1,4 @@
-import { X } from 'lucide-react';
+import { FileText, LayoutGrid, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { ExamMatrixRequest, ExamMatrixResponse } from '../../types/examMatrix';
 
@@ -10,7 +10,29 @@ type Props = {
   onSubmit: (data: ExamMatrixRequest) => Promise<void>;
 };
 
-export function ExamMatrixFormModal({ isOpen, mode, initialData, onClose, onSubmit }: Readonly<Props>) {
+const Spinner = () => (
+  <span
+    style={{
+      display: 'inline-block',
+      width: '1rem',
+      height: '1rem',
+      border: '2px solid rgba(255,255,255,0.35)',
+      borderTopColor: '#fff',
+      borderRadius: '50%',
+      animation: 'emf-spin 0.75s linear infinite',
+      flexShrink: 0,
+    }}
+    aria-hidden="true"
+  />
+);
+
+export function ExamMatrixFormModal({
+  isOpen,
+  mode,
+  initialData,
+  onClose,
+  onSubmit,
+}: Readonly<Props>) {
   const [formData, setFormData] = useState<ExamMatrixRequest>({
     name: '',
     description: '',
@@ -34,10 +56,6 @@ export function ExamMatrixFormModal({ isOpen, mode, initialData, onClose, onSubm
 
   if (!isOpen) return null;
 
-  let submitLabel = 'Cập nhật';
-  if (saving) submitLabel = 'Đang lưu...';
-  else if (mode === 'create') submitLabel = 'Tạo draft';
-
   async function submit(event: React.BaseSyntheticEvent) {
     event.preventDefault();
     const normalizedName = formData.name.trim();
@@ -45,7 +63,6 @@ export function ExamMatrixFormModal({ isOpen, mode, initialData, onClose, onSubm
       setError('Tên ma trận là bắt buộc.');
       return;
     }
-
     setSaving(true);
     setError(null);
     try {
@@ -66,103 +83,227 @@ export function ExamMatrixFormModal({ isOpen, mode, initialData, onClose, onSubm
     }
   }
 
+  const isCreate = mode === 'create';
+  const submitLabel = isCreate ? 'Tạo draft' : 'Cập nhật';
+
   return (
-    <div className="modal-layer">
-      <div className="modal-card" style={{ width: 'min(640px, 100%)' }}>
-        <div className="modal-header">
-          <div>
-            <h3>{mode === 'create' ? 'Tạo draft ma trận đề' : 'Chỉnh sửa ma trận đề'}</h3>
-            <p className="muted" style={{ marginTop: 4 }}>
-              {mode === 'create'
-                ? 'Bước 1 chỉ cần tên ma trận. Các cột/dòng và phân bố điểm sẽ thêm ở trang chi tiết.'
-                : 'Cấu hình ma trận dùng để tạo đề kiểm tra.'}
-            </p>
-          </div>
-          <button className="icon-btn" onClick={onClose}>
-            <X size={16} />
-          </button>
-        </div>
+    <>
+      {/* Keyframe injected once via style tag */}
+      <style>{`@keyframes emf-spin { to { transform: rotate(360deg); } }`}</style>
 
-        <form onSubmit={submit}>
-          <div className="modal-body">
-            {error && <p style={{ color: '#be123c', fontSize: 13 }}>{error}</p>}
-
-            <label>
-              <p className="muted" style={{ marginBottom: 6 }}>Tên ma trận</p>
-              <input
-                className="input"
-                required
-                value={formData.name}
-                onChange={(event) => setFormData({ ...formData, name: event.target.value })}
-              />
-            </label>
-
-            {mode === 'edit' && (
-              <>
-                <label>
-                  <p className="muted" style={{ marginBottom: 6 }}>Mô tả</p>
-                  <textarea
-                    className="textarea"
-                    rows={3}
-                    value={formData.description ?? ''}
-                    onChange={(event) => setFormData({ ...formData, description: event.target.value })}
-                  />
-                </label>
-
-                <div className="form-grid">
-                  <label>
-                    <p className="muted" style={{ marginBottom: 6 }}>Tổng số câu mục tiêu</p>
-                    <input
-                      className="input"
-                      type="number"
-                      min={1}
-                      value={formData.totalQuestionsTarget ?? ''}
-                      onChange={(event) =>
-                        setFormData({
-                          ...formData,
-                          totalQuestionsTarget: event.target.value ? Number(event.target.value) : undefined,
-                        })
-                      }
-                    />
-                  </label>
-
-                  <label>
-                    <p className="muted" style={{ marginBottom: 6 }}>Tổng điểm mục tiêu</p>
-                    <input
-                      className="input"
-                      type="number"
-                      min={1}
-                      value={formData.totalPointsTarget ?? ''}
-                      onChange={(event) =>
-                        setFormData({
-                          ...formData,
-                          totalPointsTarget: event.target.value ? Number(event.target.value) : undefined,
-                        })
-                      }
-                    />
-                  </label>
-                </div>
-
-                <label className="row" style={{ justifyContent: 'start' }}>
-                  <input
-                    type="checkbox"
-                    checked={formData.isReusable ?? false}
-                    onChange={(event) => setFormData({ ...formData, isReusable: event.target.checked })}
-                  />{' '}
-                  Cho phép tái sử dụng
-                </label>
-              </>
-            )}
-          </div>
-
-          <div className="modal-footer">
-            <button type="button" className="btn secondary" onClick={onClose}>Hủy</button>
-            <button type="submit" className="btn" disabled={saving}>
-              {submitLabel}
+      <div className="modal-layer">
+        <div className="modal-card" style={{ width: 'min(560px, 100%)' }}>
+          {/* ── Header ── */}
+          <div className="modal-header">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+              <span
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 10,
+                  background: isCreate ? '#eff6ff' : '#f5f3ff',
+                  color: isCreate ? '#1d4ed8' : '#7c3aed',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                {isCreate ? <LayoutGrid size={17} /> : <FileText size={17} />}
+              </span>
+              <div>
+                <h3
+                  style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: 'var(--mod-ink)' }}
+                >
+                  {isCreate ? 'Tạo draft ma trận đề' : 'Chỉnh sửa ma trận đề'}
+                </h3>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: '0.78rem',
+                    color: 'var(--mod-muted, #64748b)',
+                    marginTop: 2,
+                  }}
+                >
+                  {isCreate
+                    ? 'Chỉ cần đặt tên — cột phân bố sẽ thêm trong trang chi tiết.'
+                    : 'Cập nhật thông tin và mục tiêu của ma trận.'}
+                </p>
+              </div>
+            </div>
+            <button className="icon-btn" onClick={onClose} aria-label="Đóng">
+              <X size={15} />
             </button>
           </div>
-        </form>
+
+          {/* ── Body ── */}
+          <form onSubmit={submit}>
+            <div className="modal-body">
+              {error && (
+                <div
+                  style={{
+                    padding: '0.6rem 0.85rem',
+                    background: '#fff1f2',
+                    border: '1px solid #fecdd3',
+                    borderRadius: 8,
+                    color: '#be123c',
+                    fontSize: '0.83rem',
+                    fontWeight: 500,
+                  }}
+                >
+                  {error}
+                </div>
+              )}
+
+              {/* Name */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                <label
+                  htmlFor="emf-name"
+                  style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--mod-ink)' }}
+                >
+                  Tên ma trận <span style={{ color: '#e11d48' }}>*</span>
+                </label>
+                <input
+                  id="emf-name"
+                  className="input"
+                  required
+                  placeholder="VD: Ma trận Toán lớp 10 – Chương 1"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  autoFocus
+                />
+              </div>
+
+              {/* Edit-only fields */}
+              {mode === 'edit' && (
+                <>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                    <label
+                      htmlFor="emf-desc"
+                      style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--mod-ink)' }}
+                    >
+                      Mô tả
+                    </label>
+                    <textarea
+                      id="emf-desc"
+                      className="textarea"
+                      rows={3}
+                      placeholder="Mô tả ngắn về phạm vi, mục tiêu của ma trận..."
+                      value={formData.description ?? ''}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="form-grid">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                      <label
+                        htmlFor="emf-questions"
+                        style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--mod-ink)' }}
+                      >
+                        Tổng số câu mục tiêu
+                      </label>
+                      <input
+                        id="emf-questions"
+                        className="input"
+                        type="number"
+                        min={1}
+                        placeholder="VD: 40"
+                        value={formData.totalQuestionsTarget ?? ''}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            totalQuestionsTarget: e.target.value
+                              ? Number(e.target.value)
+                              : undefined,
+                          })
+                        }
+                      />
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                      <label
+                        htmlFor="emf-points"
+                        style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--mod-ink)' }}
+                      >
+                        Tổng điểm mục tiêu
+                      </label>
+                      <input
+                        id="emf-points"
+                        className="input"
+                        type="number"
+                        min={1}
+                        placeholder="VD: 10"
+                        value={formData.totalPointsTarget ?? ''}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            totalPointsTarget: e.target.value ? Number(e.target.value) : undefined,
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <label
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      cursor: 'pointer',
+                      padding: '0.55rem 0.75rem',
+                      borderRadius: 8,
+                      border: '1px solid var(--mod-slate-100)',
+                      background: formData.isReusable ? '#f0fdf4' : 'transparent',
+                      transition: 'background 0.15s',
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={formData.isReusable ?? false}
+                      onChange={(e) => setFormData({ ...formData, isReusable: e.target.checked })}
+                      style={{ accentColor: '#16a34a', width: 15, height: 15 }}
+                    />
+                    <span style={{ fontSize: '0.84rem', fontWeight: 500, color: 'var(--mod-ink)' }}>
+                      Cho phép tái sử dụng
+                    </span>
+                    <span
+                      style={{
+                        fontSize: '0.76rem',
+                        color: 'var(--mod-muted, #64748b)',
+                        marginLeft: 2,
+                      }}
+                    >
+                      (chia sẻ với giáo viên khác)
+                    </span>
+                  </label>
+                </>
+              )}
+            </div>
+
+            {/* ── Footer ── */}
+            <div className="modal-footer">
+              <button type="button" className="btn secondary" onClick={onClose} disabled={saving}>
+                Hủy
+              </button>
+              <button
+                type="submit"
+                className="btn"
+                disabled={saving}
+                style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', minWidth: 110 }}
+              >
+                {saving ? (
+                  <>
+                    <Spinner />
+                    Đang lưu...
+                  </>
+                ) : (
+                  submitLabel
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

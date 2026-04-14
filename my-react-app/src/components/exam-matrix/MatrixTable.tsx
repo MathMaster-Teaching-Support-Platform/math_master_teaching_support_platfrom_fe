@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
 import { Trash2 } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import type {
   BatchUpsertMatrixRowCellsRequest,
-  ExamMatrixTableRow,
   ExamMatrixTableChapter,
+  ExamMatrixTableRow,
 } from '../../types/examMatrix';
 import { EditableCell } from './EditableCell';
 import './matrix-table.css';
@@ -50,10 +50,10 @@ function normalizeLevel(level: string): MatrixLevel | null {
 function getLevelCount(row: ExamMatrixTableRow, level: MatrixLevel): number {
   const fromCells = row.cells?.find((cell) => normalizeLevel(cell.cognitiveLevel) === level);
   if (fromCells) return fromCells.questionCount ?? 0;
-  
+
   const dist = row.countByCognitive;
   if (!dist) return 0;
-  
+
   if (level === 'NB') return dist.NB ?? dist.NHAN_BIET ?? dist.REMEMBER ?? 0;
   if (level === 'TH') return dist.TH ?? dist.THONG_HIEU ?? dist.UNDERSTAND ?? 0;
   if (level === 'VD') return dist.VD ?? dist.VAN_DUNG ?? dist.APPLY ?? 0;
@@ -111,12 +111,11 @@ function distributeByRowAndColumn(rowTargets: number[], colTargets: number[]): n
         nextValue = remainingRows[rowIndex];
       } else if (remainingTotal > 0) {
         const expected =
-          (remainingRows[rowIndex] * remainingCols[colIndex]) /
-          Math.max(remainingTotal, 1);
+          (remainingRows[rowIndex] * remainingCols[colIndex]) / Math.max(remainingTotal, 1);
         nextValue = Math.min(
           remainingRows[rowIndex],
           remainingCols[colIndex],
-          Math.max(0, Math.round(expected)),
+          Math.max(0, Math.round(expected))
         );
       }
 
@@ -145,7 +144,10 @@ export function MatrixTable({
 }: Readonly<MatrixTableProps>) {
   const [deletingRowId, setDeletingRowId] = useState<string | null>(null);
   const [rowPercentages, setRowPercentages] = useState<Record<string, number>>({});
-  const [manualCellsByRow, setManualCellsByRow] = useState<Record<string, Record<MatrixLevel, number>> | null>(null);
+  const [manualCellsByRow, setManualCellsByRow] = useState<Record<
+    string,
+    Record<MatrixLevel, number>
+  > | null>(null);
   const [previewFromPercent, setPreviewFromPercent] = useState(false);
 
   const flatRows = useMemo(
@@ -154,9 +156,9 @@ export function MatrixTable({
         chapter.rows.map((row) => ({
           chapter,
           row,
-        })),
+        }))
       ),
-    [chapters],
+    [chapters]
   );
 
   useEffect(() => {
@@ -165,34 +167,37 @@ export function MatrixTable({
       return;
     }
 
-    const hasAllExisting = flatRows.every(({ row }) => rowPercentages[row.rowId] !== undefined);
-    if (hasAllExisting && Object.keys(rowPercentages).length === flatRows.length) {
-      return;
-    }
-
-    const totalExistingQuestions = flatRows.reduce(
-      (sum, item) => sum + Math.max(0, item.row.rowTotalQuestions || 0),
-      0,
-    );
-
-    const defaults: Record<string, number> = {};
-    if (totalExistingQuestions > 0) {
-      for (const item of flatRows) {
-        defaults[item.row.rowId] =
-          ((item.row.rowTotalQuestions || 0) / totalExistingQuestions) * 100;
+    setRowPercentages((prev) => {
+      const hasAllExisting = flatRows.every(({ row }) => prev[row.rowId] !== undefined);
+      if (hasAllExisting && Object.keys(prev).length === flatRows.length) {
+        return prev;
       }
-    } else {
-      const equal = 100 / flatRows.length;
-      for (const item of flatRows) {
-        defaults[item.row.rowId] = equal;
-      }
-    }
 
-    setRowPercentages(defaults);
-  }, [flatRows, rowPercentages]);
+      const totalExistingQuestions = flatRows.reduce(
+        (sum, item) => sum + Math.max(0, item.row.rowTotalQuestions || 0),
+        0
+      );
+
+      const defaults: Record<string, number> = {};
+      if (totalExistingQuestions > 0) {
+        for (const item of flatRows) {
+          defaults[item.row.rowId] =
+            ((item.row.rowTotalQuestions || 0) / totalExistingQuestions) * 100;
+        }
+      } else {
+        const equal = 100 / flatRows.length;
+        for (const item of flatRows) {
+          defaults[item.row.rowId] = equal;
+        }
+      }
+
+      return defaults;
+    });
+  }, [flatRows]);
 
   const calculatedCellsByRow = useMemo(() => {
-    if (!percentageDraft || flatRows.length === 0) return {} as Record<string, Record<MatrixLevel, number>>;
+    if (!percentageDraft || flatRows.length === 0)
+      return {} as Record<string, Record<MatrixLevel, number>>;
 
     const colPercentages = [
       percentageDraft.cognitiveLevelPercentages.NHAN_BIET,
@@ -201,7 +206,9 @@ export function MatrixTable({
       percentageDraft.cognitiveLevelPercentages.VAN_DUNG_CAO,
     ];
 
-    const rowPercentagesList = flatRows.map(({ row }) => Number(rowPercentages[row.rowId] ?? 0) || 0);
+    const rowPercentagesList = flatRows.map(
+      ({ row }) => Number(rowPercentages[row.rowId] ?? 0) || 0
+    );
     const rowTargets = allocateByPercent(percentageDraft.totalQuestionsTarget, rowPercentagesList);
     const colTargets = allocateByPercent(percentageDraft.totalQuestionsTarget, colPercentages);
     const matrix = distributeByRowAndColumn(rowTargets, colTargets);
@@ -234,7 +241,13 @@ export function MatrixTable({
     if (manualCellsByRow) return manualCellsByRow;
     if (previewFromPercent && percentageDraft) return calculatedCellsByRow;
     return serverCellsByRow;
-  }, [calculatedCellsByRow, manualCellsByRow, percentageDraft, previewFromPercent, serverCellsByRow]);
+  }, [
+    calculatedCellsByRow,
+    manualCellsByRow,
+    percentageDraft,
+    previewFromPercent,
+    serverCellsByRow,
+  ]);
 
   useEffect(() => {
     if (!savingPercentages) {
@@ -251,14 +264,14 @@ export function MatrixTable({
       for (const row of chapter.rows) {
         for (const level of cognitiveOrder) {
           const count = percentageDraft
-            ? displayedCellsByRow[row.rowId]?.[level] ?? 0
+            ? (displayedCellsByRow[row.rowId]?.[level] ?? 0)
             : getLevelCount(row, level);
           columnTotals[level] += count;
         }
         const rowTotal = percentageDraft
           ? cognitiveOrder.reduce(
               (sum, level) => sum + (displayedCellsByRow[row.rowId]?.[level] ?? 0),
-              0,
+              0
             )
           : row.rowTotalQuestions || 0;
         columnTotals.total += rowTotal;
@@ -303,11 +316,8 @@ export function MatrixTable({
   const isPercentageTotalValid = Math.abs(totalPercentage - 100) <= 0.01;
   const totalRowPercentage = useMemo(
     () =>
-      flatRows.reduce(
-        (sum, item) => sum + (Number(rowPercentages[item.row.rowId] ?? 0) || 0),
-        0,
-      ),
-    [flatRows, rowPercentages],
+      flatRows.reduce((sum, item) => sum + (Number(rowPercentages[item.row.rowId] ?? 0) || 0), 0),
+    [flatRows, rowPercentages]
   );
   const isRowPercentageTotalValid = Math.abs(totalRowPercentage - 100) <= 0.01;
 
@@ -351,9 +361,9 @@ export function MatrixTable({
         sum +
         cognitiveOrder.reduce(
           (rowSum, level) => rowSum + (cellsByRow[item.row.rowId]?.[level] ?? 0),
-          0,
+          0
         ),
-      0,
+      0
     );
 
     if (totalQuestions <= 0) {
@@ -364,7 +374,7 @@ export function MatrixTable({
     for (const item of flatRows) {
       const rowSum = cognitiveOrder.reduce(
         (sum, level) => sum + (cellsByRow[item.row.rowId]?.[level] ?? 0),
-        0,
+        0
       );
       nextRowPercentages[item.row.rowId] = Number(((rowSum / totalQuestions) * 100).toFixed(2));
     }
@@ -514,7 +524,9 @@ export function MatrixTable({
                 Mức độ nhận thức
               </th>
               <th className="matrix-th matrix-th--total-type" rowSpan={2}>
-                Tổng<br />dạng bài
+                Tổng
+                <br />
+                dạng bài
               </th>
               {canEdit && (
                 <th className="matrix-th matrix-th--actions" rowSpan={2}>
@@ -524,7 +536,10 @@ export function MatrixTable({
             </tr>
             <tr>
               {cognitiveOrder.map((level) => (
-                <th key={level} className={`matrix-th matrix-th--level matrix-th--level-${level.toLowerCase()}`}>
+                <th
+                  key={level}
+                  className={`matrix-th matrix-th--level matrix-th--level-${level.toLowerCase()}`}
+                >
                   <div className="matrix-level-header">
                     <span className="matrix-level-code">{level}</span>
                     <span className="matrix-level-label">{levelLabels[level]}</span>
@@ -545,21 +560,19 @@ export function MatrixTable({
                 const rowTotal = percentageDraft
                   ? cognitiveOrder.reduce(
                       (sum, level) => sum + (displayedCellsByRow[row.rowId]?.[level] ?? 0),
-                      0,
+                      0
                     )
                   : row.rowTotalQuestions || 0;
-                
+
                 // Get grade from multiple possible sources
-                const displayGrade = gradeLevel || 
-                  row.schoolGradeName || 
-                  row.gradeLevel || 
-                  row.schoolGrade || 
-                  'N/A';
-                
+                const displayGrade =
+                  gradeLevel || row.schoolGradeName || row.gradeLevel || row.schoolGrade || 'N/A';
+
                 // Get chapter name from multiple possible sources
-                const displayChapter = chapterName === 'Chương không xác định'
-                  ? (row.chapterName || row.chapter || 'Chương không xác định')
-                  : chapterName;
+                const displayChapter =
+                  chapterName === 'Chương không xác định'
+                    ? row.chapterName || row.chapter || 'Chương không xác định'
+                    : chapterName;
 
                 return (
                   <tr
@@ -572,29 +585,20 @@ export function MatrixTable({
                         className="matrix-td matrix-td--grade"
                         rowSpan={chapters.reduce((sum, ch) => sum + ch.rows.length, 0)}
                       >
-                        <div className="matrix-grade-cell">
-                          {displayGrade}
-                        </div>
+                        <div className="matrix-grade-cell">{displayGrade}</div>
                       </td>
                     )}
 
                     {/* Chapter (rowspan for all rows in chapter) */}
                     {isFirstRowInChapter && (
-                      <td
-                        className="matrix-td matrix-td--chapter"
-                        rowSpan={rowCount}
-                      >
-                        <div className="matrix-chapter-cell">
-                          {displayChapter}
-                        </div>
+                      <td className="matrix-td matrix-td--chapter" rowSpan={rowCount}>
+                        <div className="matrix-chapter-cell">{displayChapter}</div>
                       </td>
                     )}
 
                     {/* Question Type */}
                     <td className="matrix-td matrix-td--type">
-                      <div className="matrix-type-cell">
-                        {row.questionTypeName || 'N/A'}
-                      </div>
+                      <div className="matrix-type-cell">{row.questionTypeName || 'N/A'}</div>
                     </td>
 
                     {/* Reference */}
@@ -607,7 +611,7 @@ export function MatrixTable({
                     {/* Cognitive Levels */}
                     {cognitiveOrder.map((level) => {
                       const count = percentageDraft
-                        ? displayedCellsByRow[row.rowId]?.[level] ?? 0
+                        ? (displayedCellsByRow[row.rowId]?.[level] ?? 0)
                         : getLevelCount(row, level);
                       return (
                         <td
@@ -670,28 +674,19 @@ export function MatrixTable({
 
             {/* Grand Total Row */}
             <tr className="matrix-row matrix-row--grand-total">
-              <td
-                className="matrix-td matrix-td--total-label"
-                colSpan={4}
-              >
-                <div className="matrix-grand-total-label">
-                  TỔNG CỘNG
-                </div>
+              <td className="matrix-td matrix-td--total-label" colSpan={4}>
+                <div className="matrix-grand-total-label">TỔNG CỘNG</div>
               </td>
               {cognitiveOrder.map((level) => (
                 <td
                   key={level}
                   className={`matrix-td matrix-td--level matrix-td--level-${level.toLowerCase()} matrix-td--grand-total`}
                 >
-                  <div className="matrix-grand-total-cell">
-                    {columnTotals[level]}
-                  </div>
+                  <div className="matrix-grand-total-cell">{columnTotals[level]}</div>
                 </td>
               ))}
               <td className="matrix-td matrix-td--total-type matrix-td--grand-total">
-                <div className="matrix-grand-total-cell">
-                  {grandTotal}
-                </div>
+                <div className="matrix-grand-total-cell">{grandTotal}</div>
               </td>
               {canEdit && <td className="matrix-td matrix-td--actions"></td>}
             </tr>
@@ -699,9 +694,7 @@ export function MatrixTable({
             {canShowPercentageControls && (
               <tr className="matrix-row matrix-row--percentage-config">
                 <td className="matrix-td matrix-td--percentage-label" colSpan={4}>
-                  <div className="matrix-grand-total-label">
-                    CẤU HÌNH PHẦN TRĂM
-                  </div>
+                  <div className="matrix-grand-total-label">CẤU HÌNH PHẦN TRĂM</div>
                   <p className="matrix-percentage-hint">
                     Nhập % theo mức độ và tổng số câu cần tạo ở dòng này.
                   </p>
@@ -719,7 +712,9 @@ export function MatrixTable({
                     onChange={(event) => updateLevel('NHAN_BIET', Number(event.target.value))}
                   />
                   <span className="matrix-percentage-suffix">%</span>
-                  <p className="matrix-percentage-preview">~ {estimatedDistribution.NHAN_BIET} câu</p>
+                  <p className="matrix-percentage-preview">
+                    ~ {estimatedDistribution.NHAN_BIET} câu
+                  </p>
                 </td>
 
                 <td className="matrix-td matrix-td--percentage-cell">
@@ -734,7 +729,9 @@ export function MatrixTable({
                     onChange={(event) => updateLevel('THONG_HIEU', Number(event.target.value))}
                   />
                   <span className="matrix-percentage-suffix">%</span>
-                  <p className="matrix-percentage-preview">~ {estimatedDistribution.THONG_HIEU} câu</p>
+                  <p className="matrix-percentage-preview">
+                    ~ {estimatedDistribution.THONG_HIEU} câu
+                  </p>
                 </td>
 
                 <td className="matrix-td matrix-td--percentage-cell">
@@ -749,7 +746,9 @@ export function MatrixTable({
                     onChange={(event) => updateLevel('VAN_DUNG', Number(event.target.value))}
                   />
                   <span className="matrix-percentage-suffix">%</span>
-                  <p className="matrix-percentage-preview">~ {estimatedDistribution.VAN_DUNG} câu</p>
+                  <p className="matrix-percentage-preview">
+                    ~ {estimatedDistribution.VAN_DUNG} câu
+                  </p>
                 </td>
 
                 <td className="matrix-td matrix-td--percentage-cell">
@@ -764,7 +763,9 @@ export function MatrixTable({
                     onChange={(event) => updateLevel('VAN_DUNG_CAO', Number(event.target.value))}
                   />
                   <span className="matrix-percentage-suffix">%</span>
-                  <p className="matrix-percentage-preview">~ {estimatedDistribution.VAN_DUNG_CAO} câu</p>
+                  <p className="matrix-percentage-preview">
+                    ~ {estimatedDistribution.VAN_DUNG_CAO} câu
+                  </p>
                 </td>
 
                 <td className="matrix-td matrix-td--percentage-total-cell">
@@ -786,9 +787,13 @@ export function MatrixTable({
                   {!isPercentageTotalValid && (
                     <p className="matrix-percentage-error">Tổng phần trăm phải bằng 100%</p>
                   )}
-                  <p className="matrix-percentage-preview">Tổng % dòng: {totalRowPercentage.toFixed(1)}%</p>
+                  <p className="matrix-percentage-preview">
+                    Tổng % dòng: {totalRowPercentage.toFixed(1)}%
+                  </p>
                   {!isRowPercentageTotalValid && (
-                    <p className="matrix-percentage-error">Tổng phần trăm theo dòng phải bằng 100%</p>
+                    <p className="matrix-percentage-error">
+                      Tổng phần trăm theo dòng phải bằng 100%
+                    </p>
                   )}
                 </td>
 
