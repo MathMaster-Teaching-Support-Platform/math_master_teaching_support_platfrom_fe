@@ -741,6 +741,18 @@
   background: #eff6ff;
 }
 
+.ai-slide-table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.ai-slide-table-actions .btn {
+  min-height: 34px;
+  padding: 0.42rem 0.72rem;
+  font-size: 0.78rem;
+}
+
 .ai-slide-public-badge {
   display: inline-flex;
   align-items: center;
@@ -789,6 +801,77 @@
   margin-top: 0.14rem;
   font-size: 0.78rem;
   color: #475569;
+}
+
+.ai-slide-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.ai-slide-modal {
+  width: min(920px, 100%);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #dbeafe;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 20px 46px rgba(15, 23, 42, 0.28);
+  overflow: hidden;
+}
+
+.ai-slide-modal-header,
+.ai-slide-modal-footer {
+  padding: 0.8rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.ai-slide-modal-header h3 {
+  margin: 0;
+  font-size: 1.02rem;
+  color: #0f172a;
+}
+
+.ai-slide-modal-close {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.ai-slide-modal-close:hover {
+  background: #eff6ff;
+  border-color: #93c5fd;
+}
+
+.ai-slide-modal-body {
+  padding: 0.8rem 1rem 1rem;
+  overflow-y: auto;
+}
+
+.ai-slide-modal-preview-wrap {
+  margin-bottom: 0;
+}
+
+.ai-slide-modal-footer {
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 0;
+  justify-content: flex-end;
 }
 
 .ai-slide-managed-list {
@@ -880,6 +963,20 @@
   .ai-slide-selected-lesson {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .ai-slide-modal-header,
+  .ai-slide-modal-footer {
+    padding: 0.7rem 0.8rem;
+  }
+
+  .ai-slide-modal-footer {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .ai-slide-modal-footer .btn {
+    width: 100%;
   }
 
   .ai-slide-preview-toolbar {

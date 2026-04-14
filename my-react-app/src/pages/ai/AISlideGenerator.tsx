@@ -316,6 +316,8 @@ const AISlideGenerator: React.FC = () => {
   const [loadingSelectedGeneratedLesson, setLoadingSelectedGeneratedLesson] = useState(false);
   const [updatingGeneratedVisibilityId, setUpdatingGeneratedVisibilityId] = useState('');
   const [downloadingGeneratedFileId, setDownloadingGeneratedFileId] = useState('');
+  const [isGeneratedPreviewOpen, setIsGeneratedPreviewOpen] = useState(false);
+  const [generatedPreviewIndex, setGeneratedPreviewIndex] = useState(0);
   const [publicGeneratedFiles, setPublicGeneratedFiles] = useState<LessonSlideGeneratedFile[]>([]);
   const [loadingPublicGeneratedFiles, setLoadingPublicGeneratedFiles] = useState(false);
   const [downloadingPublicGeneratedFileId, setDownloadingPublicGeneratedFileId] = useState('');
@@ -338,6 +340,16 @@ const AISlideGenerator: React.FC = () => {
   const selectedGeneratedFile = useMemo(
     () => generatedFiles.find((file) => file.id === selectedGeneratedFileId) || null,
     [generatedFiles, selectedGeneratedFileId]
+  );
+
+  const generatedPreviewSlides = useMemo(
+    () => parseSlidesFromLessonContent(selectedGeneratedLesson?.lessonContent),
+    [selectedGeneratedLesson?.lessonContent]
+  );
+
+  const currentGeneratedPreviewSlide = useMemo(
+    () => generatedPreviewSlides[generatedPreviewIndex] || null,
+    [generatedPreviewIndex, generatedPreviewSlides]
   );
 
   const managedGeneratedFiles = useMemo(() => {
@@ -549,6 +561,22 @@ const AISlideGenerator: React.FC = () => {
     }
   };
 
+  const handleOpenGeneratedPreview = (generatedFileId?: string) => {
+    if (!generatedFileId && !selectedGeneratedFile) {
+      setError('Vui lòng chọn 1 file trước khi xem trước.');
+      return;
+    }
+
+    if (generatedFileId && generatedFileId !== selectedGeneratedFileId) {
+      setSelectedGeneratedFileId(generatedFileId);
+    }
+
+    setGeneratedPreviewIndex(0);
+    setIsGeneratedPreviewOpen(true);
+    setError('');
+    setSuccess('');
+  };
+
   const handleToggleGeneratedVisibility = async (
     generatedFileId: string,
     shouldPublish: boolean
@@ -675,6 +703,23 @@ const AISlideGenerator: React.FC = () => {
 
     void loadLessonDetailFromGeneratedFile(selectedGeneratedFile);
   }, [selectedGeneratedFile, loadLessonDetailFromGeneratedFile]);
+
+  useEffect(() => {
+    if (!isGeneratedPreviewOpen) {
+      return;
+    }
+
+    const handleEscClose = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsGeneratedPreviewOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleEscClose);
+    return () => {
+      window.removeEventListener('keydown', handleEscClose);
+    };
+  }, [isGeneratedPreviewOpen]);
 
   useEffect(() => {
     const missingLessonIds = Array.from(
@@ -1318,17 +1363,29 @@ const AISlideGenerator: React.FC = () => {
                                 </span>
                               </td>
                               <td>
-                                <button
-                                  type="button"
-                                  className="btn btn-outline"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    void handleDownloadGeneratedFile(file.id);
-                                  }}
-                                  disabled={downloadingGeneratedFileId === file.id}
-                                >
-                                  Tải
-                                </button>
+                                <div className="ai-slide-table-actions">
+                                  <button
+                                    type="button"
+                                    className="btn btn-outline"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleOpenGeneratedPreview(file.id);
+                                    }}
+                                  >
+                                    Xem
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="btn btn-outline"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      void handleDownloadGeneratedFile(file.id);
+                                    }}
+                                    disabled={downloadingGeneratedFileId === file.id}
+                                  >
+                                    Tải
+                                  </button>
+                                </div>
                               </td>
                             </tr>
                           ))}
@@ -1366,6 +1423,14 @@ const AISlideGenerator: React.FC = () => {
                       updatingGeneratedVisibilityId === selectedGeneratedFile.id
                         ? 'Đang cập nhật...'
                         : 'Công khai'}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-outline"
+                      disabled={!selectedGeneratedFile}
+                      onClick={() => handleOpenGeneratedPreview()}
+                    >
+                      Xem trước slide
                     </button>
                     <button
                       type="button"
@@ -1824,6 +1889,124 @@ const AISlideGenerator: React.FC = () => {
             {error && <p className="ai-slide-error">{error}</p>}
             {success && <p className="ai-slide-success">{success}</p>}
           </section>
+        )}
+
+        {isGeneratedPreviewOpen && (
+          <div className="ai-slide-modal-overlay" onClick={() => setIsGeneratedPreviewOpen(false)}>
+            <div
+              className="ai-slide-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Xem trước slide"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="ai-slide-modal-header">
+                <h3>Xem trước slide trước khi tải</h3>
+                <button
+                  type="button"
+                  className="ai-slide-modal-close"
+                  onClick={() => setIsGeneratedPreviewOpen(false)}
+                  aria-label="Đóng xem trước"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="ai-slide-modal-body">
+                <p className="ai-slide-info">
+                  {selectedGeneratedFile
+                    ? `${selectedGeneratedFile.fileName || 'generated-slide.pptx'} (${formatFileSize(
+                        selectedGeneratedFile.fileSizeBytes
+                      )})`
+                    : 'Chưa chọn file'}
+                </p>
+
+                {loadingSelectedGeneratedLesson && (
+                  <p className="ai-slide-info">Đang tải nội dung để xem trước...</p>
+                )}
+
+                {!loadingSelectedGeneratedLesson && !generatedPreviewSlides.length && (
+                  <p className="ai-slide-info">
+                    Không có dữ liệu slide để preview. Bạn vẫn có thể tải trực tiếp file PPTX.
+                  </p>
+                )}
+
+                {!loadingSelectedGeneratedLesson && currentGeneratedPreviewSlide && (
+                  <div className="ai-slide-preview-wrap ai-slide-modal-preview-wrap">
+                    <div className="ai-slide-preview-toolbar">
+                      <button
+                        className="btn btn-outline"
+                        onClick={() => setGeneratedPreviewIndex((prev) => Math.max(0, prev - 1))}
+                        disabled={generatedPreviewIndex === 0}
+                      >
+                        Slide trước
+                      </button>
+                      <span>
+                        Slide {generatedPreviewIndex + 1}/{generatedPreviewSlides.length}
+                      </span>
+                      <button
+                        className="btn btn-outline"
+                        onClick={() =>
+                          setGeneratedPreviewIndex((prev) =>
+                            Math.min(generatedPreviewSlides.length - 1, prev + 1)
+                          )
+                        }
+                        disabled={generatedPreviewIndex === generatedPreviewSlides.length - 1}
+                      >
+                        Slide sau
+                      </button>
+                    </div>
+
+                    <article className="ai-slide-preview-canvas">
+                      <div className="ai-slide-preview-heading" role="heading" aria-level={4}>
+                        {renderSlideText(
+                          currentGeneratedPreviewSlide.heading || 'Chưa có tiêu đề',
+                          resolvedOutputFormat,
+                          `manage-heading-${currentGeneratedPreviewSlide.slideNumber}`
+                        )}
+                      </div>
+                      <div className="ai-slide-preview-content">
+                        {renderSlideText(
+                          currentGeneratedPreviewSlide.content || 'Chưa có nội dung',
+                          resolvedOutputFormat,
+                          `manage-content-${currentGeneratedPreviewSlide.slideNumber}`
+                        )}
+                      </div>
+                      <span className="ai-slide-preview-tag">
+                        {currentGeneratedPreviewSlide.slideType}
+                      </span>
+                    </article>
+                  </div>
+                )}
+              </div>
+
+              <div className="ai-slide-modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={() => setIsGeneratedPreviewOpen(false)}
+                >
+                  Đóng
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  disabled={
+                    !selectedGeneratedFile ||
+                    downloadingGeneratedFileId === selectedGeneratedFile.id
+                  }
+                  onClick={() =>
+                    selectedGeneratedFile &&
+                    void handleDownloadGeneratedFile(selectedGeneratedFile.id)
+                  }
+                >
+                  {selectedGeneratedFile && downloadingGeneratedFileId === selectedGeneratedFile.id
+                    ? 'Đang tải...'
+                    : 'Tải file này'}
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </DashboardLayout>
