@@ -108,16 +108,18 @@ export default function AssessmentBuilderFlow() {
     >
       <div className="module-layout-container">
         <section className="module-page">
-          <div className="abf-header-row">
+          <header className="page-header abf-header-row">
             <div className="header-stack">
-              <span className="header-kicker">Orchestrator</span>
-              <h2 style={{ margin: 0, fontSize: '1.45rem', color: '#142235' }}>Trình tạo đề thi</h2>
+              <div className="header-kicker">Assessment Builder</div>
+              <div className="row" style={{ gap: '0.6rem' }}>
+                <h2>Trình tạo đề thi</h2>
+              </div>
               <p className="header-sub">
                 Không gian điều phối gọn nhẹ để lắp ráp đề từ tài nguyên đã duyệt, rà soát cuối và
                 xuất bản.
               </p>
             </div>
-          </div>
+          </header>
 
           <nav className="abf-quicknav">
             <button

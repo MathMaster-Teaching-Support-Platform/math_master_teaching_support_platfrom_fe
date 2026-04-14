@@ -435,12 +435,13 @@ export default function TeacherQuestionManagementPage() {
     >
       <div className="module-layout-container">
         <section className="module-page">
-          <div className="tqm-header-row">
+          <header className="page-header tqm-header-row">
             <div className="header-stack">
-              <span className="header-kicker">Kho câu hỏi cá nhân</span>
-              <h2 style={{ margin: 0, fontSize: '1.45rem', color: '#142235' }}>
-                Quản lý câu hỏi của tôi <span className="count-chip">{questions.length}</span>
-              </h2>
+              <div className="header-kicker">My Questions</div>
+              <div className="row" style={{ gap: '0.6rem' }}>
+                <h2>Quản lý câu hỏi của tôi</h2>
+                {!isLoading && <span className="count-chip">{questions.length}</span>}
+              </div>
               <p className="header-sub">
                 Tạo, chỉnh sửa, xóa và tìm nhanh câu hỏi theo nội dung và tag để tái sử dụng trong
                 đề thi.
@@ -450,7 +451,7 @@ export default function TeacherQuestionManagementPage() {
               <Plus size={14} />
               Tạo câu hỏi
             </button>
-          </div>
+          </header>
 
           <div
             className="stats-grid"
