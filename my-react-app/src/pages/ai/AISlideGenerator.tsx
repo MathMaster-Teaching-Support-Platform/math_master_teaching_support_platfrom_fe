@@ -303,6 +303,10 @@ const AISlideGenerator: React.FC = () => {
   const [generatedVisibilityFilter, setGeneratedVisibilityFilter] = useState<
     'ALL' | 'PUBLIC' | 'PRIVATE'
   >('ALL');
+  const [generatedSearch, setGeneratedSearch] = useState('');
+  const [generatedSort, setGeneratedSort] = useState<
+    'NEWEST' | 'OLDEST' | 'NAME_ASC' | 'NAME_DESC' | 'SIZE_DESC' | 'SIZE_ASC' | 'PUBLIC_FIRST'
+  >('NEWEST');
   const [selectedGeneratedFileId, setSelectedGeneratedFileId] = useState('');
   const [selectedGeneratedLesson, setSelectedGeneratedLesson] = useState<LessonResponse | null>(
     null
@@ -335,17 +339,50 @@ const AISlideGenerator: React.FC = () => {
     [generatedFiles, selectedGeneratedFileId]
   );
 
-  const visibleGeneratedFiles = useMemo(() => {
+  const managedGeneratedFiles = useMemo(() => {
+    const normalizedSearch = generatedSearch.trim().toLowerCase();
+
+    let files = [...generatedFiles];
+
     if (generatedVisibilityFilter === 'PUBLIC') {
-      return generatedFiles.filter((file) => file.isPublic);
+      files = files.filter((file) => file.isPublic);
+    } else if (generatedVisibilityFilter === 'PRIVATE') {
+      files = files.filter((file) => !file.isPublic);
     }
 
-    if (generatedVisibilityFilter === 'PRIVATE') {
-      return generatedFiles.filter((file) => !file.isPublic);
+    if (normalizedSearch) {
+      files = files.filter((file) => {
+        const fileName = (file.fileName || '').toLowerCase();
+        const lesson = (file.lessonId || '').toLowerCase();
+        return fileName.includes(normalizedSearch) || lesson.includes(normalizedSearch);
+      });
     }
 
-    return generatedFiles;
-  }, [generatedFiles, generatedVisibilityFilter]);
+    const getTime = (value?: string | null) => new Date(value || 0).getTime() || 0;
+
+    files.sort((a, b) => {
+      switch (generatedSort) {
+        case 'OLDEST':
+          return getTime(a.createdAt) - getTime(b.createdAt);
+        case 'NAME_ASC':
+          return (a.fileName || '').localeCompare(b.fileName || '');
+        case 'NAME_DESC':
+          return (b.fileName || '').localeCompare(a.fileName || '');
+        case 'SIZE_ASC':
+          return a.fileSizeBytes - b.fileSizeBytes;
+        case 'SIZE_DESC':
+          return b.fileSizeBytes - a.fileSizeBytes;
+        case 'PUBLIC_FIRST':
+          if (a.isPublic === b.isPublic) return getTime(b.createdAt) - getTime(a.createdAt);
+          return a.isPublic ? -1 : 1;
+        case 'NEWEST':
+        default:
+          return getTime(b.createdAt) - getTime(a.createdAt);
+      }
+    });
+
+    return files;
+  }, [generatedFiles, generatedSearch, generatedSort, generatedVisibilityFilter]);
 
   const resolvedOutputFormat = useMemo(
     () => normalizeOutputFormat(generated?.outputFormat || outputFormat),
@@ -1123,6 +1160,45 @@ const AISlideGenerator: React.FC = () => {
                 </p>
               </div>
 
+              <div className="ai-slide-management-toolbar">
+                <label className="ai-slide-management-search">
+                  <span>Tim theo ten file / lessonId</span>
+                  <input
+                    type="text"
+                    value={generatedSearch}
+                    placeholder="VD: algebra hoặc 8c5d..."
+                    onChange={(e) => setGeneratedSearch(e.target.value)}
+                  />
+                </label>
+
+                <label className="ai-slide-management-sort">
+                  <span>Sap xep</span>
+                  <select
+                    value={generatedSort}
+                    onChange={(e) =>
+                      setGeneratedSort(
+                        e.target.value as
+                          | 'NEWEST'
+                          | 'OLDEST'
+                          | 'NAME_ASC'
+                          | 'NAME_DESC'
+                          | 'SIZE_DESC'
+                          | 'SIZE_ASC'
+                          | 'PUBLIC_FIRST'
+                      )
+                    }
+                  >
+                    <option value="NEWEST">Moi nhat</option>
+                    <option value="OLDEST">Cu nhat</option>
+                    <option value="NAME_ASC">Ten A-Z</option>
+                    <option value="NAME_DESC">Ten Z-A</option>
+                    <option value="SIZE_DESC">Size lon truoc</option>
+                    <option value="SIZE_ASC">Size nho truoc</option>
+                    <option value="PUBLIC_FIRST">Public truoc</option>
+                  </select>
+                </label>
+              </div>
+
               <div className="ai-slide-status-tabs" role="group" aria-label="Loc file generated">
                 <button
                   type="button"
@@ -1149,205 +1225,225 @@ const AISlideGenerator: React.FC = () => {
                   Private
                 </button>
               </div>
+              <div className="ai-slide-management-layout">
+                <div className="ai-slide-management-list-panel">
+                  {loadingGeneratedFiles && (
+                    <p className="ai-slide-info">Dang tai danh sach file generated...</p>
+                  )}
 
-              <div className="ai-slide-management-actions">
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  disabled={
-                    !selectedGeneratedFile ||
-                    selectedGeneratedFile.isPublic ||
-                    updatingGeneratedVisibilityId === selectedGeneratedFile.id
-                  }
-                  onClick={() =>
-                    selectedGeneratedFile &&
-                    void handleToggleGeneratedVisibility(selectedGeneratedFile.id, true)
-                  }
-                >
-                  {selectedGeneratedFile &&
-                  updatingGeneratedVisibilityId === selectedGeneratedFile.id
-                    ? 'Dang cap nhat...'
-                    : 'Publish file da chon'}
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-outline"
-                  disabled={
-                    !selectedGeneratedFile ||
-                    !selectedGeneratedFile.isPublic ||
-                    updatingGeneratedVisibilityId === selectedGeneratedFile.id
-                  }
-                  onClick={() =>
-                    selectedGeneratedFile &&
-                    void handleToggleGeneratedVisibility(selectedGeneratedFile.id, false)
-                  }
-                >
-                  Unpublish file da chon
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-outline"
-                  disabled={
-                    !selectedGeneratedFile ||
-                    downloadingGeneratedFileId === selectedGeneratedFile.id
-                  }
-                  onClick={() =>
-                    selectedGeneratedFile &&
-                    void handleDownloadGeneratedFile(selectedGeneratedFile.id)
-                  }
-                >
-                  {selectedGeneratedFile && downloadingGeneratedFileId === selectedGeneratedFile.id
-                    ? 'Dang tai...'
-                    : 'Tai lai file da chon'}
-                </button>
-              </div>
+                  {!loadingGeneratedFiles && managedGeneratedFiles.length === 0 && (
+                    <p className="ai-slide-info">
+                      Khong co file nao phu hop bo loc. Thu doi tu khoa tim kiem hoac tao file moi.
+                    </p>
+                  )}
 
-              {loadingSelectedGeneratedLesson && (
-                <p className="ai-slide-info">Dang tai chi tiet lesson tu file da chon...</p>
-              )}
-
-              {!loadingSelectedGeneratedLesson && selectedGeneratedLesson && (
-                <div className="ai-slide-selected-lesson">
-                  <div>
-                    <strong>{selectedGeneratedLesson.title || 'Bai hoc'}</strong>
-                    <span>Trang thai lesson: {selectedGeneratedLesson.status || '--'}</span>
-                  </div>
-                  <button
-                    type="button"
-                    className="btn btn-outline"
-                    onClick={() => {
-                      applyLessonSlideContentToEditor(selectedGeneratedLesson);
-                      setActiveMainTab('GENERATE');
-                    }}
-                  >
-                    Xem lai noi dung da gen
-                  </button>
+                  {!loadingGeneratedFiles && managedGeneratedFiles.length > 0 && (
+                    <div className="ai-slide-table-wrap">
+                      <table className="ai-slide-table">
+                        <thead>
+                          <tr>
+                            <th>File</th>
+                            <th>Lesson</th>
+                            <th>Created</th>
+                            <th>Size</th>
+                            <th>Public</th>
+                            <th>Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {managedGeneratedFiles.map((file) => (
+                            <tr
+                              key={file.id}
+                              className={selectedGeneratedFileId === file.id ? 'active' : ''}
+                              onClick={() => {
+                                setSelectedGeneratedFileId(file.id);
+                                setSuccess('');
+                                setError('');
+                              }}
+                            >
+                              <td title={file.fileName}>
+                                {file.fileName || 'generated-slide.pptx'}
+                              </td>
+                              <td>{file.lessonId}</td>
+                              <td>{formatDateTime(file.createdAt)}</td>
+                              <td>{formatFileSize(file.fileSizeBytes)}</td>
+                              <td>
+                                <span
+                                  className={`ai-slide-public-badge ${file.isPublic ? 'yes' : 'no'}`}
+                                >
+                                  {file.isPublic ? 'Yes' : 'No'}
+                                </span>
+                              </td>
+                              <td>
+                                <button
+                                  type="button"
+                                  className="btn btn-outline"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    void handleDownloadGeneratedFile(file.id);
+                                  }}
+                                  disabled={downloadingGeneratedFileId === file.id}
+                                >
+                                  DL
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
-              )}
 
-              {loadingGeneratedFiles && (
-                <p className="ai-slide-info">Dang tai danh sach file generated...</p>
-              )}
+                <div className="ai-slide-management-detail-panel">
+                  <div className="ai-slide-management-header">
+                    <h3>Chi tiet file</h3>
+                    <p>
+                      {selectedGeneratedFile
+                        ? `File ID: ${selectedGeneratedFile.id}`
+                        : 'Chon 1 dong trong bang de thao tac.'}
+                    </p>
+                  </div>
 
-              {!loadingGeneratedFiles && visibleGeneratedFiles.length === 0 && (
-                <p className="ai-slide-info">
-                  Chua co file generated nao theo bo loc hien tai. Hay qua tab Generate de tao file.
-                </p>
-              )}
-
-              {!loadingGeneratedFiles && visibleGeneratedFiles.length > 0 && (
-                <div className="ai-slide-managed-list">
-                  {visibleGeneratedFiles.map((file) => (
-                    <div
-                      key={file.id}
-                      className={`ai-slide-managed-item ${selectedGeneratedFileId === file.id ? 'active' : ''}`}
+                  <div className="ai-slide-management-actions">
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      disabled={
+                        !selectedGeneratedFile ||
+                        selectedGeneratedFile.isPublic ||
+                        updatingGeneratedVisibilityId === selectedGeneratedFile.id
+                      }
+                      onClick={() =>
+                        selectedGeneratedFile &&
+                        void handleToggleGeneratedVisibility(selectedGeneratedFile.id, true)
+                      }
                     >
+                      {selectedGeneratedFile &&
+                      updatingGeneratedVisibilityId === selectedGeneratedFile.id
+                        ? 'Dang cap nhat...'
+                        : 'Publish'}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-outline"
+                      disabled={
+                        !selectedGeneratedFile ||
+                        !selectedGeneratedFile.isPublic ||
+                        updatingGeneratedVisibilityId === selectedGeneratedFile.id
+                      }
+                      onClick={() =>
+                        selectedGeneratedFile &&
+                        void handleToggleGeneratedVisibility(selectedGeneratedFile.id, false)
+                      }
+                    >
+                      Unpublish
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-outline"
+                      disabled={
+                        !selectedGeneratedFile ||
+                        downloadingGeneratedFileId === selectedGeneratedFile.id
+                      }
+                      onClick={() =>
+                        selectedGeneratedFile &&
+                        void handleDownloadGeneratedFile(selectedGeneratedFile.id)
+                      }
+                    >
+                      {selectedGeneratedFile &&
+                      downloadingGeneratedFileId === selectedGeneratedFile.id
+                        ? 'Dang tai...'
+                        : 'Tai lai file'}
+                    </button>
+                  </div>
+
+                  {loadingSelectedGeneratedLesson && (
+                    <p className="ai-slide-info">Dang tai chi tiet lesson tu file da chon...</p>
+                  )}
+
+                  {!loadingSelectedGeneratedLesson && selectedGeneratedLesson && (
+                    <div className="ai-slide-selected-lesson">
+                      <div>
+                        <strong>{selectedGeneratedLesson.title || 'Bai hoc'}</strong>
+                        <span>Trang thai lesson: {selectedGeneratedLesson.status || '--'}</span>
+                      </div>
                       <button
                         type="button"
-                        className="ai-slide-managed-item-select"
+                        className="btn btn-outline"
                         onClick={() => {
-                          setSelectedGeneratedFileId(file.id);
-                          setSuccess('');
-                          setError('');
+                          applyLessonSlideContentToEditor(selectedGeneratedLesson);
+                          setActiveMainTab('GENERATE');
                         }}
                       >
-                        <span className="title">{file.fileName || 'generated-slide.pptx'}</span>
-                        <span className="meta">
-                          Lesson: {file.lessonId} | {formatFileSize(file.fileSizeBytes)}
-                        </span>
-                        <span className="meta">
-                          Tao luc: {formatDateTime(file.createdAt)} | Public:{' '}
-                          {file.isPublic ? 'Yes' : 'No'}
-                        </span>
+                        Xem lai noi dung da gen
                       </button>
-
-                      <div className="ai-slide-managed-item-actions">
-                        <button
-                          type="button"
-                          className="btn btn-outline"
-                          disabled={downloadingGeneratedFileId === file.id}
-                          onClick={() => void handleDownloadGeneratedFile(file.id)}
-                        >
-                          {downloadingGeneratedFileId === file.id ? 'Dang tai...' : 'Download'}
-                        </button>
-                        {file.isPublic ? (
-                          <button
-                            type="button"
-                            className="btn btn-outline"
-                            disabled={updatingGeneratedVisibilityId === file.id}
-                            onClick={() => void handleToggleGeneratedVisibility(file.id, false)}
-                          >
-                            {updatingGeneratedVisibilityId === file.id
-                              ? 'Dang cap nhat...'
-                              : 'Unpublish'}
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            className="btn btn-primary"
-                            disabled={updatingGeneratedVisibilityId === file.id}
-                            onClick={() => void handleToggleGeneratedVisibility(file.id, true)}
-                          >
-                            {updatingGeneratedVisibilityId === file.id
-                              ? 'Dang cap nhat...'
-                              : 'Publish'}
-                          </button>
-                        )}
-                      </div>
                     </div>
-                  ))}
-                </div>
-              )}
+                  )}
 
-              <div className="ai-slide-management-header">
-                <h3>Student view (public files)</h3>
-                <p>
-                  Chi hien thi file isPublic=true va lesson PUBLISHED tu endpoint public cua BE.
-                </p>
+                  <div className="ai-slide-management-header">
+                    <h3>Student view (public files)</h3>
+                    <p>
+                      Chi hien thi file isPublic=true va lesson PUBLISHED tu endpoint public cua BE.
+                    </p>
+                  </div>
+
+                  {loadingPublicGeneratedFiles && (
+                    <p className="ai-slide-info">Dang tai danh sach public generated...</p>
+                  )}
+
+                  {!loadingPublicGeneratedFiles && !publicLessonIdForPreview && (
+                    <p className="ai-slide-info">
+                      Chon 1 generated file de preview danh sach public theo lesson tuong ung.
+                    </p>
+                  )}
+
+                  {!loadingPublicGeneratedFiles &&
+                    publicLessonIdForPreview &&
+                    publicGeneratedFiles.length === 0 && (
+                      <p className="ai-slide-info">
+                        Lesson nay chua co file public de student tai.
+                      </p>
+                    )}
+
+                  {!loadingPublicGeneratedFiles && publicGeneratedFiles.length > 0 && (
+                    <div className="ai-slide-table-wrap compact">
+                      <table className="ai-slide-table">
+                        <thead>
+                          <tr>
+                            <th>File</th>
+                            <th>Published</th>
+                            <th>Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {publicGeneratedFiles.map((file) => (
+                            <tr key={file.id}>
+                              <td>{file.fileName || 'generated-slide.pptx'}</td>
+                              <td>{formatDateTime(file.publishedAt)}</td>
+                              <td>
+                                <button
+                                  type="button"
+                                  className="btn btn-outline"
+                                  disabled={downloadingPublicGeneratedFileId === file.id}
+                                  onClick={() => void handleDownloadPublicGeneratedFile(file.id)}
+                                >
+                                  {downloadingPublicGeneratedFileId === file.id
+                                    ? 'Dang tai...'
+                                    : 'Download'}
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {loadingPublicGeneratedFiles && (
-                <p className="ai-slide-info">Dang tai danh sach public generated...</p>
-              )}
-
-              {!loadingPublicGeneratedFiles && !publicLessonIdForPreview && (
-                <p className="ai-slide-info">
-                  Chon 1 generated file de preview danh sach public theo lesson tuong ung.
-                </p>
-              )}
-
-              {!loadingPublicGeneratedFiles &&
-                publicLessonIdForPreview &&
-                publicGeneratedFiles.length === 0 && (
-                  <p className="ai-slide-info">Lesson nay chua co file public de student tai.</p>
-                )}
-
-              {!loadingPublicGeneratedFiles && publicGeneratedFiles.length > 0 && (
-                <div className="ai-slide-managed-list">
-                  {publicGeneratedFiles.map((file) => (
-                    <div key={file.id} className="ai-slide-managed-item">
-                      <span className="title">{file.fileName || 'generated-slide.pptx'}</span>
-                      <span className="meta">
-                        Public at: {formatDateTime(file.publishedAt)} | Size:{' '}
-                        {formatFileSize(file.fileSizeBytes)}
-                      </span>
-
-                      <div className="ai-slide-managed-item-actions">
-                        <button
-                          type="button"
-                          className="btn btn-outline"
-                          disabled={downloadingPublicGeneratedFileId === file.id}
-                          onClick={() => void handleDownloadPublicGeneratedFile(file.id)}
-                        >
-                          {downloadingPublicGeneratedFileId === file.id
-                            ? 'Dang tai...'
-                            : 'Download public'}
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+              {error && <p className="ai-slide-error">{error}</p>}
+              {success && <p className="ai-slide-success">{success}</p>}
             </div>
           </section>
         )}
