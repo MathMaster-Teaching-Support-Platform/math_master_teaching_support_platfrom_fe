@@ -1,4 +1,3 @@
-import { useMemo, useState } from 'react';
 import {
   AlertCircle,
   ArrowRight,
@@ -19,6 +18,7 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import {
@@ -28,8 +28,8 @@ import {
   useToggleQuestionBankPublicStatus,
   useUpdateQuestionBank,
 } from '../../hooks/useQuestionBank';
-import type { QuestionBankRequest, QuestionBankResponse } from '../../types/questionBank';
 import '../../styles/module-refactor.css';
+import type { QuestionBankRequest, QuestionBankResponse } from '../../types/questionBank';
 import './QuestionBankDashboard.css';
 import { QuestionBankFormModal } from './QuestionBankFormModal';
 
@@ -70,7 +70,7 @@ export function QuestionBankDashboard() {
     size,
     'createdAt',
     'DESC',
-    true,
+    true
   );
 
   const createMutation = useCreateQuestionBank();
@@ -87,7 +87,7 @@ export function QuestionBankDashboard() {
       public: banks.filter((b) => b.isPublic).length,
       private: banks.filter((b) => !b.isPublic).length,
     }),
-    [banks],
+    [banks]
   );
 
   const filtered = useMemo(() => {
@@ -129,11 +129,10 @@ export function QuestionBankDashboard() {
     >
       <div className="module-layout-container">
         <section className="module-page">
-
           {/* ── Header ── */}
           <header className="page-header qb-header-row">
             <div className="header-stack">
-              <div className="header-kicker">Quản lý câu hỏi</div>
+              <div className="header-kicker">Question Banking</div>
               <div className="row" style={{ gap: '0.6rem' }}>
                 <h2>Ngân hàng câu hỏi</h2>
                 {!isLoading && <span className="count-chip">{banks.length}</span>}
@@ -353,7 +352,9 @@ export function QuestionBankDashboard() {
                   >
                     <div className="cover-overlay" />
                     <div className="cover-index">#{String(idx + 1).padStart(2, '0')}</div>
-                    <span className={`course-badge ${bank.isPublic ? 'badge-live' : 'badge-draft'}`}>
+                    <span
+                      className={`course-badge ${bank.isPublic ? 'badge-live' : 'badge-draft'}`}
+                    >
                       {bank.isPublic ? <Eye size={11} /> : <EyeOff size={11} />}
                       {bank.isPublic ? 'Công khai' : 'Riêng tư'}
                     </span>

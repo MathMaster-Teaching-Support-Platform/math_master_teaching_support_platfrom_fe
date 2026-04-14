@@ -1,13 +1,13 @@
+import { Clock, FileText, LineChart, RefreshCw, Search, User, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Clock, FileText, LineChart, RefreshCw, Search, User } from 'lucide-react';
-import { useGradingQueue } from '../../hooks/useGrading';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
-import type { GradingSubmissionResponse } from '../../types/grading.types';
+import { useGradingQueue } from '../../hooks/useGrading';
 import '../../styles/module-refactor.css';
+import type { GradingSubmissionResponse } from '../../types/grading.types';
 
 const statusFilters = ['ALL', 'SUBMITTED', 'GRADED'] as const;
-type StatusFilter = typeof statusFilters[number];
+type StatusFilter = (typeof statusFilters)[number];
 
 const statusLabel: Record<StatusFilter, string> = {
   ALL: 'Tất cả',
@@ -36,6 +36,15 @@ export default function GradingQueue() {
   const submissions = data?.result?.content ?? [];
   const totalPages = data?.result?.totalPages ?? 0;
 
+  const stats = useMemo(
+    () => ({
+      total: submissions.length,
+      pending: submissions.filter((s) => s.status === 'SUBMITTED').length,
+      graded: submissions.filter((s) => s.status === 'GRADED').length,
+    }),
+    [submissions]
+  );
+
   const filtered = useMemo(() => {
     if (!search.trim()) return submissions;
     const q = search.toLowerCase();
@@ -55,21 +64,25 @@ export default function GradingQueue() {
     >
       <div className="module-layout-container">
         <section className="module-page">
-          <header className="page-header">
-            <div>
-              <h2>Hàng đợi chấm bài</h2>
-              <p>Chấm điểm và đánh giá bài làm của học sinh.</p>
+          <header className="page-header gq-header-row">
+            <div className="header-stack">
+              <div className="header-kicker">Grading Queue</div>
+              <div className="row" style={{ gap: '0.6rem' }}>
+                <h2>Hàng đợi Chấm Bài</h2>
+                {!isLoading && <span className="count-chip">{stats.total}</span>}
+              </div>
+              <p className="header-sub">Chấm điểm và đánh giá bài làm của học sinh.</p>
             </div>
             <div className="row" style={{ gap: 8 }}>
-              <button 
-                className="btn secondary" 
+              <button
+                className="btn secondary"
                 onClick={() => navigate('/teacher/grading/analytics')}
               >
                 <LineChart size={14} />
                 Phân tích
               </button>
-              <button 
-                className="btn secondary" 
+              <button
+                className="btn secondary"
                 onClick={() => navigate('/teacher/grading/regrade-requests')}
               >
                 <RefreshCw size={14} />
@@ -78,17 +91,52 @@ export default function GradingQueue() {
             </div>
           </header>
 
+          {/* Stats */}
+          <div className="stats-grid">
+            <div className="stat-card stat-violet">
+              <div className="stat-icon-wrap">
+                <FileText size={18} />
+              </div>
+              <div>
+                <h3>{stats.total}</h3>
+                <p>Tổng bài nộp</p>
+              </div>
+            </div>
+            <div className="stat-card stat-amber">
+              <div className="stat-icon-wrap">
+                <Clock size={18} />
+              </div>
+              <div>
+                <h3>{stats.pending}</h3>
+                <p>Chờ chấm</p>
+              </div>
+            </div>
+            <div className="stat-card stat-emerald">
+              <div className="stat-icon-wrap">
+                <User size={18} />
+              </div>
+              <div>
+                <h3>{stats.graded}</h3>
+                <p>Đã chấm</p>
+              </div>
+            </div>
+          </div>
+
           <div className="toolbar">
-            <label className="row" style={{ minWidth: 260 }}>
-              <Search size={15} />
+            <span className="search-box" style={{ flex: '1 1 240px' }}>
+              <Search size={15} className="search-box__icon" />
               <input
                 className="input"
-                style={{ border: 0, padding: 0, width: '100%' }}
                 placeholder="Tìm theo tên học sinh hoặc bài kiểm tra"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
               />
-            </label>
+              {search && (
+                <button className="search-box__clear" onClick={() => setSearch('')}>
+                  <X size={13} />
+                </button>
+              )}
+            </span>
 
             <div className="pill-group">
               {statusFilters.map((item) => (
@@ -175,9 +223,7 @@ function SubmissionCard({
         <span className={statusClass[submission.status]}>
           {submission.status === 'SUBMITTED' ? 'Chờ chấm' : 'Đã chấm'}
         </span>
-        {submission.attemptNumber && (
-          <span className="muted">Lần {submission.attemptNumber}</span>
-        )}
+        {submission.attemptNumber && <span className="muted">Lần {submission.attemptNumber}</span>}
       </div>
 
       <div>
@@ -203,9 +249,7 @@ function SubmissionCard({
         {submission.autoGradedQuestionsCount > 0 && (
           <div className="row" style={{ gap: 4 }}>
             <FileText size={14} className="muted" />
-            <span className="muted">
-              {submission.autoGradedQuestionsCount} câu tự động
-            </span>
+            <span className="muted">{submission.autoGradedQuestionsCount} câu tự động</span>
           </div>
         )}
       </div>
@@ -213,7 +257,8 @@ function SubmissionCard({
       {submission.score !== undefined && (
         <div>
           <p>
-            Điểm: {submission.finalScore?.toFixed(1) || submission.score.toFixed(1)} / {submission.maxScore}
+            Điểm: {submission.finalScore?.toFixed(1) || submission.score.toFixed(1)} /{' '}
+            {submission.maxScore}
             {submission.percentage && ` (${submission.percentage.toFixed(1)}%)`}
           </p>
         </div>

@@ -122,7 +122,7 @@ export function ExamMatrixDashboard() {
             <div className="header-stack">
               <div className="header-kicker">Exam matrix management</div>
               <div className="row" style={{ gap: '0.6rem' }}>
-                <h2>Ma trận đề của tôi</h2>
+                <h2>Ma trận đề</h2>
                 {!isLoading && <span className="count-chip">{matrices.length}</span>}
               </div>
               <p className="header-sub">

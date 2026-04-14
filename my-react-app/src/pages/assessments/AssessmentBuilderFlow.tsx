@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
 import { ArrowRight, CheckCircle2, FileCheck2, Library, Ruler, Sparkles } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import {
@@ -10,8 +10,8 @@ import {
   usePublishSummary,
 } from '../../hooks/useAssessment';
 import { useGetMyExamMatrices } from '../../hooks/useExamMatrix';
-import { MatrixStatus } from '../../types/examMatrix';
 import '../../styles/module-refactor.css';
+import { MatrixStatus } from '../../types/examMatrix';
 import './assessment-builder-flow.css';
 
 type ToastState = {
@@ -29,15 +29,24 @@ export default function AssessmentBuilderFlow() {
   const generateMutation = useGenerateAssessmentFromMatrix();
   const publishMutation = usePublishAssessment();
 
-  const matrices = matrixQuery.data?.result ?? [];
+  const matrices = useMemo(() => matrixQuery.data?.result ?? [], [matrixQuery.data]);
   const readyMatrices = useMemo(
-    () => matrices.filter((item) => item.status === MatrixStatus.APPROVED || item.status === MatrixStatus.LOCKED),
+    () =>
+      matrices.filter(
+        (item) => item.status === MatrixStatus.APPROVED || item.status === MatrixStatus.LOCKED
+      ),
     [matrices]
   );
 
-  const assessmentQuery = useAssessment(generatedAssessmentId, { enabled: !!generatedAssessmentId });
-  const questionsQuery = useAssessmentQuestions(generatedAssessmentId, { enabled: !!generatedAssessmentId });
-  const summaryQuery = usePublishSummary(generatedAssessmentId, { enabled: !!generatedAssessmentId });
+  const assessmentQuery = useAssessment(generatedAssessmentId, {
+    enabled: !!generatedAssessmentId,
+  });
+  const questionsQuery = useAssessmentQuestions(generatedAssessmentId, {
+    enabled: !!generatedAssessmentId,
+  });
+  const summaryQuery = usePublishSummary(generatedAssessmentId, {
+    enabled: !!generatedAssessmentId,
+  });
 
   const generatedAssessment = assessmentQuery.data?.result;
   const generatedQuestions = questionsQuery.data?.result ?? [];
@@ -92,114 +101,150 @@ export default function AssessmentBuilderFlow() {
   }
 
   return (
-    <DashboardLayout role="teacher" user={{ name: 'Teacher', avatar: '', role: 'teacher' }} notificationCount={0}>
+    <DashboardLayout
+      role="teacher"
+      user={{ name: 'Teacher', avatar: '', role: 'teacher' }}
+      notificationCount={0}
+    >
       <div className="module-layout-container">
         <section className="module-page">
-          <header className="page-header">
-            <div>
-              <h2>Trình tạo đề thi</h2>
-              <p>
-                Không gian điều phối gọn nhẹ để lắp ráp đề từ tài nguyên đã duyệt, rà soát cuối và xuất bản.
+          <header className="page-header abf-header-row">
+            <div className="header-stack">
+              <div className="header-kicker">Assessment Builder</div>
+              <div className="row" style={{ gap: '0.6rem' }}>
+                <h2>Trình tạo đề thi</h2>
+              </div>
+              <p className="header-sub">
+                Không gian điều phối gọn nhẹ để lắp ráp đề từ tài nguyên đã duyệt, rà soát cuối và
+                xuất bản.
               </p>
             </div>
           </header>
 
-          <section className="hero-card assessment-builder-flow__orchestration-card">
-            <p className="hero-kicker">Phân tách trách nhiệm</p>
-            <h2>Xây đề từ các module chuyên biệt, không gom tất cả vào một trang</h2>
-            <div className="assessment-builder-flow__routing-grid">
-              <article className="assessment-builder-flow__route-item">
-                <div className="assessment-builder-flow__route-icon"><Ruler size={16} /></div>
-                <div>
-                  <strong>Ma trận đề</strong>
-                  <p>Định nghĩa blueprint, cấu trúc và ràng buộc phân bố câu hỏi.</p>
-                </div>
-                <button className="btn secondary" onClick={() => navigate('/teacher/exam-matrices')}>
-                  Mở trang <ArrowRight size={14} />
-                </button>
-              </article>
-
-              <article className="assessment-builder-flow__route-item">
-                <div className="assessment-builder-flow__route-icon"><Sparkles size={16} /></div>
-                <div>
-                  <strong>Mẫu câu hỏi</strong>
-                  <p>Soạn mẫu tái sử dụng và chạy sinh câu hỏi có hỗ trợ AI.</p>
-                </div>
-                <button className="btn secondary" onClick={() => navigate('/teacher/question-templates')}>
-                  Mở trang <ArrowRight size={14} />
-                </button>
-              </article>
-
-              <article className="assessment-builder-flow__route-item">
-                <div className="assessment-builder-flow__route-icon"><Library size={16} /></div>
-                <div>
-                  <strong>Ngân hàng câu hỏi</strong>
-                  <p>Chỉnh sửa, duyệt, phê duyệt và quản lý kho câu hỏi dùng lại.</p>
-                </div>
-                <button className="btn secondary" onClick={() => navigate('/teacher/question-banks')}>
-                  Mở trang <ArrowRight size={14} />
-                </button>
-              </article>
-            </div>
-          </section>
+          <nav className="abf-quicknav">
+            <button
+              className="abf-quicknav__item"
+              onClick={() => navigate('/teacher/exam-matrices')}
+            >
+              <span className="abf-quicknav__icon abf-nav-indigo">
+                <Ruler size={14} />
+              </span>
+              <span className="abf-quicknav__text">
+                <span className="abf-quicknav__title">Ma trận đề</span>
+                <span className="abf-quicknav__desc">
+                  Định nghĩa blueprint và ràng buộc phân bố câu hỏi
+                </span>
+              </span>
+              <ArrowRight size={14} className="abf-quicknav__arrow" />
+            </button>
+            <span className="abf-quicknav__divider" />
+            <button
+              className="abf-quicknav__item"
+              onClick={() => navigate('/teacher/question-templates')}
+            >
+              <span className="abf-quicknav__icon abf-nav-violet">
+                <Sparkles size={14} />
+              </span>
+              <span className="abf-quicknav__text">
+                <span className="abf-quicknav__title">Mẫu câu hỏi</span>
+                <span className="abf-quicknav__desc">Soạn mẫu tái sử dụng và sinh câu hỏi AI</span>
+              </span>
+              <ArrowRight size={14} className="abf-quicknav__arrow" />
+            </button>
+            <span className="abf-quicknav__divider" />
+            <button
+              className="abf-quicknav__item"
+              onClick={() => navigate('/teacher/question-banks')}
+            >
+              <span className="abf-quicknav__icon abf-nav-blue">
+                <Library size={14} />
+              </span>
+              <span className="abf-quicknav__text">
+                <span className="abf-quicknav__title">Ngân hàng câu hỏi</span>
+                <span className="abf-quicknav__desc">Duyệt, phê duyệt và quản lý kho câu hỏi</span>
+              </span>
+              <ArrowRight size={14} className="abf-quicknav__arrow" />
+            </button>
+          </nav>
 
           <section className="data-card" style={{ minHeight: 0 }}>
-            <h3>Flow tạo assessment theo thứ tự</h3>
-            <p className="muted">Làm theo 4 bước dưới đây để lên đề hoàn chỉnh, đúng dữ liệu và đúng quy trình.</p>
-
-            <div style={{ display: 'grid', gap: 10, marginTop: 8 }}>
-              <article className="assessment-builder-flow__publish-summary ok" style={{ margin: 0 }}>
-                <div className="row" style={{ gap: 8, alignItems: 'center' }}>
-                  <span className="badge draft">Bước 1</span>
-                  <strong>Question Template</strong>
-                </div>
-                <p>Tạo mẫu câu hỏi, khai báo biến số, công thức đáp án và kiểm tra preview công thức.</p>
-                <button className="btn secondary" onClick={() => navigate('/teacher/question-templates')}>
-                  Mở Question Template
-                </button>
-              </article>
-
-              <article className="assessment-builder-flow__publish-summary ok" style={{ margin: 0 }}>
-                <div className="row" style={{ gap: 8, alignItems: 'center' }}>
-                  <span className="badge draft">Bước 2</span>
-                  <strong>Question Bank</strong>
-                </div>
-                <p>Sinh câu hỏi từ template, rà soát chất lượng nội dung và đưa câu hỏi vào ngân hàng.</p>
-                <button className="btn secondary" onClick={() => navigate('/teacher/question-banks')}>
-                  Mở Question Bank
-                </button>
-              </article>
-
-              <article className="assessment-builder-flow__publish-summary ok" style={{ margin: 0 }}>
-                <div className="row" style={{ gap: 8, alignItems: 'center' }}>
-                  <span className="badge draft">Bước 3</span>
-                  <strong>Exam Matrix</strong>
-                </div>
-                <p>Tạo ma trận đề (số câu, mức độ, phân bố chương/chủ đề), sau đó phê duyệt để sẵn sàng tạo đề.</p>
-                <button className="btn secondary" onClick={() => navigate('/teacher/exam-matrices')}>
-                  Mở Exam Matrix
-                </button>
-              </article>
-
-              <article className="assessment-builder-flow__publish-summary ok" style={{ margin: 0 }}>
-                <div className="row" style={{ gap: 8, alignItems: 'center' }}>
-                  <span className="badge draft">Bước 4</span>
-                  <strong>Assessment</strong>
-                </div>
-                <p>Quay lại Trình tạo đề này, chọn ma trận đã duyệt, Generate đề nháp, rà soát và xuất bản.</p>
-              </article>
+            <div style={{ marginBottom: '0.85rem' }}>
+              <h3 style={{ margin: '0 0 0.2rem' }}>Quy trình tạo đề 4 bước</h3>
+              <p className="muted" style={{ margin: 0 }}>
+                Làm theo thứ tự để lên đề hoàn chỉnh, đúng dữ liệu và đúng quy trình.
+              </p>
             </div>
+            <ol className="abf-step-list">
+              <li className="abf-step">
+                <span className="abf-step__num">1</span>
+                <div className="abf-step__body">
+                  <strong className="abf-step__title">Question Template</strong>
+                  <p className="abf-step__desc">
+                    Tạo mẫu câu hỏi, khai báo biến số, công thức đáp án và kiểm tra preview.
+                  </p>
+                </div>
+                <button
+                  className="btn secondary"
+                  onClick={() => navigate('/teacher/question-templates')}
+                >
+                  Mở <ArrowRight size={13} />
+                </button>
+              </li>
+              <li className="abf-step">
+                <span className="abf-step__num">2</span>
+                <div className="abf-step__body">
+                  <strong className="abf-step__title">Question Bank</strong>
+                  <p className="abf-step__desc">
+                    Sinh câu hỏi từ template, rà soát chất lượng và đưa vào ngân hàng.
+                  </p>
+                </div>
+                <button
+                  className="btn secondary"
+                  onClick={() => navigate('/teacher/question-banks')}
+                >
+                  Mở <ArrowRight size={13} />
+                </button>
+              </li>
+              <li className="abf-step">
+                <span className="abf-step__num">3</span>
+                <div className="abf-step__body">
+                  <strong className="abf-step__title">Exam Matrix</strong>
+                  <p className="abf-step__desc">
+                    Tạo ma trận đề, phân bố chương/chủ đề, phê duyệt để sẵn sàng tạo đề.
+                  </p>
+                </div>
+                <button
+                  className="btn secondary"
+                  onClick={() => navigate('/teacher/exam-matrices')}
+                >
+                  Mở <ArrowRight size={13} />
+                </button>
+              </li>
+              <li className="abf-step">
+                <span className="abf-step__num abf-step__num--active">4</span>
+                <div className="abf-step__body">
+                  <strong className="abf-step__title">Assessment</strong>
+                  <p className="abf-step__desc">
+                    Chọn ma trận đã duyệt, Generate đề nháp, rà soát cuối và xuất bản.
+                  </p>
+                </div>
+                <span className="badge draft">Bạn đang ở đây</span>
+              </li>
+            </ol>
           </section>
 
           <section className="assessment-builder-flow__orchestration-grid">
             <article className="data-card">
               <h3>Bước 1: Lắp ráp đề nháp từ ma trận</h3>
               <p className="muted">
-                Chọn ma trận đã duyệt. Hệ thống chỉ chọn câu hỏi từ Question Bank theo rule của ma trận.
+                Chọn ma trận đã duyệt. Hệ thống chỉ chọn câu hỏi từ Question Bank theo rule của ma
+                trận.
               </p>
 
               <label>
-                <p className="muted" style={{ marginBottom: 6 }}>Ma trận đã duyệt</p>
+                <p className="muted" style={{ marginBottom: 6 }}>
+                  Ma trận đã duyệt
+                </p>
                 <select
                   className="select"
                   value={selectedMatrixId}
@@ -216,20 +261,32 @@ export default function AssessmentBuilderFlow() {
               </label>
 
               <p className="muted" style={{ marginTop: 8 }}>
-                Generation Mode: BANK_FIRST (cố định). Không dùng AI trong bước tạo assessment từ matrix.
+                Generation Mode: BANK_FIRST (cố định). Không dùng AI trong bước tạo assessment từ
+                matrix.
               </p>
 
               <div className="row" style={{ flexWrap: 'wrap' }}>
-                <button className="btn" onClick={() => void handleGenerate()} disabled={!selectedMatrixId || generateMutation.isPending}>
+                <button
+                  className="btn"
+                  onClick={() => void handleGenerate()}
+                  disabled={!selectedMatrixId || generateMutation.isPending}
+                >
                   {generateMutation.isPending ? 'Đang tạo...' : 'Generate from Matrix'}
                 </button>
-                <button className="btn secondary" onClick={() => navigate('/teacher/exam-matrices')}>
+                <button
+                  className="btn secondary"
+                  onClick={() => navigate('/teacher/exam-matrices')}
+                >
                   Quản lý ma trận
                 </button>
               </div>
 
               {matrixQuery.isError && (
-                <p className="empty">{matrixQuery.error instanceof Error ? matrixQuery.error.message : 'Không thể tải danh sách ma trận.'}</p>
+                <p className="empty">
+                  {matrixQuery.error instanceof Error
+                    ? matrixQuery.error.message
+                    : 'Không thể tải danh sách ma trận.'}
+                </p>
               )}
             </article>
 
@@ -242,7 +299,9 @@ export default function AssessmentBuilderFlow() {
               {generatedAssessmentId && (
                 <>
                   <div className="assessment-builder-flow__review-meta">
-                    <span className={`badge ${generatedAssessment?.status === 'PUBLISHED' ? 'published' : 'draft'}`}>
+                    <span
+                      className={`badge ${generatedAssessment?.status === 'PUBLISHED' ? 'published' : 'draft'}`}
+                    >
                       {generatedAssessment?.status || 'DRAFT'}
                     </span>
                     <span className="muted">Mã đề: {generatedAssessmentId}</span>
@@ -263,7 +322,8 @@ export default function AssessmentBuilderFlow() {
                     <div className="data-card" style={{ minHeight: 0 }}>
                       <h3>Kết quả Generate from Matrix</h3>
                       <p className="muted">
-                        totalQuestionsGenerated: {generatedAssessment.generationSummary.totalQuestionsGenerated ?? 0}
+                        totalQuestionsGenerated:{' '}
+                        {generatedAssessment.generationSummary.totalQuestionsGenerated ?? 0}
                       </p>
                       {(generatedAssessment.generationSummary.warnings || []).length > 0 && (
                         <ul style={{ margin: 0, paddingLeft: 18 }}>
@@ -276,23 +336,42 @@ export default function AssessmentBuilderFlow() {
                   )}
 
                   {publishSummary && (
-                    <div className={`assessment-builder-flow__publish-summary ${publishSummary.canPublish ? 'ok' : 'warn'}`}>
+                    <div
+                      className={`assessment-builder-flow__publish-summary ${publishSummary.canPublish ? 'ok' : 'warn'}`}
+                    >
                       <div className="row">
-                        {publishSummary.canPublish ? <CheckCircle2 size={16} /> : <FileCheck2 size={16} />}
-                        <strong>{publishSummary.canPublish ? 'Sẵn sàng xuất bản' : 'Cần xử lý trước khi xuất bản'}</strong>
+                        {publishSummary.canPublish ? (
+                          <CheckCircle2 size={16} />
+                        ) : (
+                          <FileCheck2 size={16} />
+                        )}
+                        <strong>
+                          {publishSummary.canPublish
+                            ? 'Sẵn sàng xuất bản'
+                            : 'Cần xử lý trước khi xuất bản'}
+                        </strong>
                       </div>
-                      {publishSummary.validationMessage && <p>{publishSummary.validationMessage}</p>}
+                      {publishSummary.validationMessage && (
+                        <p>{publishSummary.validationMessage}</p>
+                      )}
                     </div>
                   )}
 
                   <div className="row" style={{ flexWrap: 'wrap' }}>
-                    <button className="btn secondary" onClick={() => navigate(`/teacher/assessments/${generatedAssessmentId}`)}>
+                    <button
+                      className="btn secondary"
+                      onClick={() => navigate(`/teacher/assessments/${generatedAssessmentId}`)}
+                    >
                       Mở chi tiết đề
                     </button>
                     <button
                       className="btn"
                       onClick={() => void handlePublish()}
-                      disabled={!publishSummary?.canPublish || publishMutation.isPending || generatedAssessment?.status === 'PUBLISHED'}
+                      disabled={
+                        !publishSummary?.canPublish ||
+                        publishMutation.isPending ||
+                        generatedAssessment?.status === 'PUBLISHED'
+                      }
                     >
                       {publishButtonLabel}
                     </button>
@@ -303,7 +382,9 @@ export default function AssessmentBuilderFlow() {
           </section>
 
           {toast && (
-            <div className={`assessment-builder-flow__toast assessment-builder-flow__toast--${toast.type}`}>
+            <div
+              className={`assessment-builder-flow__toast assessment-builder-flow__toast--${toast.type}`}
+            >
               {toast.message}
             </div>
           )}

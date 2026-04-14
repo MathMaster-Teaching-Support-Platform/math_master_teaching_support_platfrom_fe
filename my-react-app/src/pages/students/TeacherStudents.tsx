@@ -1,6 +1,8 @@
+import { AlertTriangle, BarChart2, CheckCircle, Search, Users, X } from 'lucide-react';
 import React, { useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockTeacher } from '../../data/mockData';
+import '../../styles/module-refactor.css';
 import './TeacherStudents.css';
 
 interface Student {
@@ -146,301 +148,315 @@ const TeacherStudents: React.FC = () => {
       user={{ name: mockTeacher.name, avatar: mockTeacher.avatar!, role: 'teacher' }}
       notificationCount={3}
     >
-      <div className="teacher-students-page">
-        <div className="page-header">
-          <div>
-            <h1 className="page-title">👥 Quản Lý Học Sinh</h1>
-            <p className="page-subtitle">Theo dõi tiến độ và hỗ trợ học sinh</p>
-          </div>
-          <div className="header-actions">
-            <button className="btn btn-outline">📥 Xuất báo cáo</button>
-            <button className="btn btn-primary">➕ Thêm học sinh</button>
-          </div>
-        </div>
-
-        {/* Stats */}
-        <div className="students-stats">
-          <div className="stat-card">
-            <div
-              className="stat-icon"
-              style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
-            >
-              👥
-            </div>
-            <div className="stat-content">
-              <div className="stat-value">{stats.total}</div>
-              <div className="stat-label">Tổng học sinh</div>
-            </div>
-          </div>
-          <div className="stat-card">
-            <div
-              className="stat-icon"
-              style={{ background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)' }}
-            >
-              ✅
-            </div>
-            <div className="stat-content">
-              <div className="stat-value">{stats.active}</div>
-              <div className="stat-label">Đang hoạt động</div>
-            </div>
-          </div>
-          <div className="stat-card">
-            <div
-              className="stat-icon"
-              style={{ background: 'linear-gradient(135deg, #ffd89b 0%, #19547b 100%)' }}
-            >
-              ⚠️
-            </div>
-            <div className="stat-content">
-              <div className="stat-value">{stats.warning}</div>
-              <div className="stat-label">Cần chú ý</div>
-            </div>
-          </div>
-          <div className="stat-card">
-            <div
-              className="stat-icon"
-              style={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' }}
-            >
-              📊
-            </div>
-            <div className="stat-content">
-              <div className="stat-value">{stats.avgScore}</div>
-              <div className="stat-label">Điểm TB chung</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Filters */}
-        <div className="students-filters">
-          <input
-            type="text"
-            placeholder="🔍 Tìm kiếm học sinh..."
-            className="search-input"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <select
-            className="filter-select"
-            value={courseFilter}
-            onChange={(e) => setCourseFilter(e.target.value)}
-          >
-            <option value="all">Tất cả Giáo Trình</option>
-            <option value="Toán 11">Toán 11</option>
-            <option value="Toán 12">Toán 12</option>
-          </select>
-          <select
-            className="filter-select"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="all">Tất cả trạng thái</option>
-            <option value="active">Hoạt động tốt</option>
-            <option value="warning">Cần chú ý</option>
-          </select>
-        </div>
-
-        {/* Students Grid */}
-        <div className="students-grid">
-          {filteredStudents.map((student) => (
-            <div key={student.id} className={`student-card status-${student.status}`}>
-              {student.status === 'warning' && <div className="warning-badge">⚠️ Cần chú ý</div>}
-
-              <div className="student-avatar-large">{student.avatar || student.name.charAt(0)}</div>
-
-              <h3 className="student-name">{student.name}</h3>
-              <p className="student-email">{student.email}</p>
-
-              <div className="student-courses">
-                {student.courses.map((course, idx) => (
-                  <span key={idx} className="course-tag">
-                    {course}
-                  </span>
-                ))}
+      <div className="module-layout-container">
+        <section className="module-page">
+          {/* ── Header ── */}
+          <header className="page-header ts-header-row">
+            <div className="header-stack">
+              <div className="header-kicker">Students</div>
+              <div className="row" style={{ gap: '0.6rem' }}>
+                <h2>Quản Lý Học Sinh</h2>
+                <span className="count-chip">{stats.total}</span>
               </div>
+              <p className="header-sub">Theo dõi tiến độ và hỗ trợ học sinh</p>
+            </div>
+            <div className="header-actions">
+              <button className="btn secondary">Xuất báo cáo</button>
+            </div>
+          </header>
 
-              <div className="student-metrics">
-                <div className="metric">
-                  <div className="metric-label">Điểm TB</div>
-                  <div
-                    className={`metric-value ${student.avgScore >= 8 ? 'good' : student.avgScore >= 6.5 ? 'normal' : 'warning'}`}
-                  >
-                    {student.avgScore}
-                  </div>
-                </div>
-                <div className="metric">
-                  <div className="metric-label">Điểm danh</div>
-                  <div
-                    className={`metric-value ${student.attendance >= 90 ? 'good' : student.attendance >= 75 ? 'normal' : 'warning'}`}
-                  >
-                    {student.attendance}%
-                  </div>
-                </div>
-                <div className="metric">
-                  <div className="metric-label">Bài tập</div>
-                  <div className="metric-value">
-                    {student.assignments.completed}/{student.assignments.total}
-                  </div>
-                </div>
+          {/* ── Stats ── */}
+          <div className="stats-grid">
+            <div className="stat-card stat-violet">
+              <div className="stat-icon-wrap">
+                <Users size={18} />
               </div>
-
-              <div className="student-progress">
-                <div className="progress-label">Tiến độ hoàn thành</div>
-                <div className="progress-bar">
-                  <div
-                    className="progress-fill"
-                    style={{
-                      width: `${(student.assignments.completed / student.assignments.total) * 100}%`,
-                    }}
-                  ></div>
-                </div>
+              <div>
+                <h3>{stats.total}</h3>
+                <p>Tổng học sinh</p>
               </div>
-
-              <div className="student-footer">
-                <span className="last-active">⏱️ {student.lastActive}</span>
+            </div>
+            <div className="stat-card stat-emerald">
+              <div className="stat-icon-wrap">
+                <CheckCircle size={18} />
               </div>
+              <div>
+                <h3>{stats.active}</h3>
+                <p>Đang hoạt động</p>
+              </div>
+            </div>
+            <div className="stat-card stat-amber">
+              <div className="stat-icon-wrap">
+                <AlertTriangle size={18} />
+              </div>
+              <div>
+                <h3>{stats.warning}</h3>
+                <p>Cần chú ý</p>
+              </div>
+            </div>
+            <div className="stat-card stat-blue">
+              <div className="stat-icon-wrap">
+                <BarChart2 size={18} />
+              </div>
+              <div>
+                <h3>{stats.avgScore}</h3>
+                <p>Điểm TB chung</p>
+              </div>
+            </div>
+          </div>
 
-              <div className="student-actions">
-                <button className="action-btn" onClick={() => setSelectedStudent(student)}>
-                  👁️ Xem chi tiết
+          {/* ── Toolbar ── */}
+          <div className="toolbar">
+            <span className="search-box" style={{ flex: '1 1 240px' }}>
+              <Search size={15} className="search-box__icon" />
+              <input
+                className="input"
+                placeholder="Tìm kiếm học sinh..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              {searchTerm && (
+                <button className="search-box__clear" onClick={() => setSearchTerm('')}>
+                  <X size={13} />
                 </button>
-                <button className="action-btn" onClick={() => setShowMessageModal(true)}>
-                  💬 Nhắn tin
-                </button>
-              </div>
+              )}
+            </span>
+            <div className="pill-group">
+              <button
+                className={`pill-btn${statusFilter === 'all' ? ' active' : ''}`}
+                onClick={() => setStatusFilter('all')}
+              >
+                Tất cả
+              </button>
+              <button
+                className={`pill-btn${statusFilter === 'active' ? ' active' : ''}`}
+                onClick={() => setStatusFilter('active')}
+              >
+                Hoạt động
+              </button>
+              <button
+                className={`pill-btn${statusFilter === 'warning' ? ' active' : ''}`}
+                onClick={() => setStatusFilter('warning')}
+              >
+                Cần chú ý
+              </button>
             </div>
-          ))}
-        </div>
+            <select
+              className="sort-select"
+              value={courseFilter}
+              onChange={(e) => setCourseFilter(e.target.value)}
+            >
+              <option value="all">Tất cả Giáo Trình</option>
+              <option value="Toán 11">Toán 11</option>
+              <option value="Toán 12">Toán 12</option>
+            </select>
+          </div>
 
-        {/* Student Detail Modal */}
-        {selectedStudent && (
-          <div className="modal-overlay" onClick={() => setSelectedStudent(null)}>
-            <div className="modal large" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h2 className="modal-title">Chi tiết học sinh</h2>
-                <button className="modal-close" onClick={() => setSelectedStudent(null)}>
-                  ✕
-                </button>
+          {/* ── Students Grid ── */}
+          <div className="students-grid">
+            {filteredStudents.map((student) => (
+              <div key={student.id} className={`student-card status-${student.status}`}>
+                {student.status === 'warning' && <div className="warning-badge">⚠️ Cần chú ý</div>}
+
+                <div className="student-avatar-large">
+                  {student.avatar || student.name.charAt(0)}
+                </div>
+
+                <h3 className="student-name">{student.name}</h3>
+                <p className="student-email">{student.email}</p>
+
+                <div className="student-courses">
+                  {student.courses.map((course, idx) => (
+                    <span key={idx} className="course-tag">
+                      {course}
+                    </span>
+                  ))}
+                </div>
+
+                <div className="student-metrics">
+                  <div className="metric">
+                    <div className="metric-label">Điểm TB</div>
+                    <div
+                      className={`metric-value ${student.avgScore >= 8 ? 'good' : student.avgScore >= 6.5 ? 'normal' : 'warning'}`}
+                    >
+                      {student.avgScore}
+                    </div>
+                  </div>
+                  <div className="metric">
+                    <div className="metric-label">Điểm danh</div>
+                    <div
+                      className={`metric-value ${student.attendance >= 90 ? 'good' : student.attendance >= 75 ? 'normal' : 'warning'}`}
+                    >
+                      {student.attendance}%
+                    </div>
+                  </div>
+                  <div className="metric">
+                    <div className="metric-label">Bài tập</div>
+                    <div className="metric-value">
+                      {student.assignments.completed}/{student.assignments.total}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="student-progress">
+                  <div className="progress-label">Tiến độ hoàn thành</div>
+                  <div className="progress-bar">
+                    <div
+                      className="progress-fill"
+                      style={{
+                        width: `${(student.assignments.completed / student.assignments.total) * 100}%`,
+                      }}
+                    ></div>
+                  </div>
+                </div>
+
+                <div className="student-footer">
+                  <span className="last-active">⏱️ {student.lastActive}</span>
+                </div>
+
+                <div className="student-actions">
+                  <button className="action-btn" onClick={() => setSelectedStudent(student)}>
+                    👁️ Xem chi tiết
+                  </button>
+                  <button className="action-btn" onClick={() => setShowMessageModal(true)}>
+                    💬 Nhắn tin
+                  </button>
+                </div>
               </div>
+            ))}
+          </div>
 
-              <div className="modal-body">
-                <div className="detail-header">
-                  <div className="detail-avatar">
-                    {selectedStudent.avatar || selectedStudent.name.charAt(0)}
-                  </div>
-                  <div className="detail-info">
-                    <h3>{selectedStudent.name}</h3>
-                    <p>{selectedStudent.email}</p>
-                    <div className="detail-courses">
-                      {selectedStudent.courses.map((course, idx) => (
-                        <span key={idx} className="course-tag">
-                          {course}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
+          {/* Student Detail Modal */}
+          {selectedStudent && (
+            <div className="modal-overlay" onClick={() => setSelectedStudent(null)}>
+              <div className="modal large" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                  <h2 className="modal-title">Chi tiết học sinh</h2>
+                  <button className="modal-close" onClick={() => setSelectedStudent(null)}>
+                    ✕
+                  </button>
                 </div>
 
-                <div className="detail-stats-grid">
-                  <div className="detail-stat">
-                    <div className="stat-label">Điểm trung bình</div>
-                    <div className="stat-value">{selectedStudent.avgScore}/10</div>
-                  </div>
-                  <div className="detail-stat">
-                    <div className="stat-label">Tỷ lệ điểm danh</div>
-                    <div className="stat-value">{selectedStudent.attendance}%</div>
-                  </div>
-                  <div className="detail-stat">
-                    <div className="stat-label">Bài tập hoàn thành</div>
-                    <div className="stat-value">
-                      {selectedStudent.assignments.completed}/{selectedStudent.assignments.total}
+                <div className="modal-body">
+                  <div className="detail-header">
+                    <div className="detail-avatar">
+                      {selectedStudent.avatar || selectedStudent.name.charAt(0)}
                     </div>
-                  </div>
-                  <div className="detail-stat">
-                    <div className="stat-label">Hoạt động gần đây</div>
-                    <div className="stat-value">{selectedStudent.lastActive}</div>
-                  </div>
-                </div>
-
-                <div className="detail-section">
-                  <h4>Hoạt động gần đây</h4>
-                  <div className="activity-list">
-                    <div className="activity-item">
-                      <span className="activity-icon">📝</span>
-                      <div className="activity-content">
-                        <div className="activity-title">Nộp bài tập "Phương trình bậc 2"</div>
-                        <div className="activity-time">2 giờ trước</div>
-                      </div>
-                    </div>
-                    <div className="activity-item">
-                      <span className="activity-icon">📊</span>
-                      <div className="activity-content">
-                        <div className="activity-title">Nhận điểm 9.5 cho bài kiểm tra</div>
-                        <div className="activity-time">1 ngày trước</div>
-                      </div>
-                    </div>
-                    <div className="activity-item">
-                      <span className="activity-icon">📚</span>
-                      <div className="activity-content">
-                        <div className="activity-title">Hoàn thành bài học "Đạo hàm"</div>
-                        <div className="activity-time">2 ngày trước</div>
+                    <div className="detail-info">
+                      <h3>{selectedStudent.name}</h3>
+                      <p>{selectedStudent.email}</p>
+                      <div className="detail-courses">
+                        {selectedStudent.courses.map((course, idx) => (
+                          <span key={idx} className="course-tag">
+                            {course}
+                          </span>
+                        ))}
                       </div>
                     </div>
                   </div>
+
+                  <div className="detail-stats-grid">
+                    <div className="detail-stat">
+                      <div className="stat-label">Điểm trung bình</div>
+                      <div className="stat-value">{selectedStudent.avgScore}/10</div>
+                    </div>
+                    <div className="detail-stat">
+                      <div className="stat-label">Tỷ lệ điểm danh</div>
+                      <div className="stat-value">{selectedStudent.attendance}%</div>
+                    </div>
+                    <div className="detail-stat">
+                      <div className="stat-label">Bài tập hoàn thành</div>
+                      <div className="stat-value">
+                        {selectedStudent.assignments.completed}/{selectedStudent.assignments.total}
+                      </div>
+                    </div>
+                    <div className="detail-stat">
+                      <div className="stat-label">Hoạt động gần đây</div>
+                      <div className="stat-value">{selectedStudent.lastActive}</div>
+                    </div>
+                  </div>
+
+                  <div className="detail-section">
+                    <h4>Hoạt động gần đây</h4>
+                    <div className="activity-list">
+                      <div className="activity-item">
+                        <span className="activity-icon">📝</span>
+                        <div className="activity-content">
+                          <div className="activity-title">Nộp bài tập "Phương trình bậc 2"</div>
+                          <div className="activity-time">2 giờ trước</div>
+                        </div>
+                      </div>
+                      <div className="activity-item">
+                        <span className="activity-icon">📊</span>
+                        <div className="activity-content">
+                          <div className="activity-title">Nhận điểm 9.5 cho bài kiểm tra</div>
+                          <div className="activity-time">1 ngày trước</div>
+                        </div>
+                      </div>
+                      <div className="activity-item">
+                        <span className="activity-icon">📚</span>
+                        <div className="activity-content">
+                          <div className="activity-title">Hoàn thành bài học "Đạo hàm"</div>
+                          <div className="activity-time">2 ngày trước</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="detail-actions">
+                    <button className="btn btn-outline">📧 Gửi email</button>
+                    <button className="btn btn-outline">📊 Xem báo cáo</button>
+                    <button className="btn btn-outline">✏️ Chỉnh sửa</button>
+                  </div>
                 </div>
 
-                <div className="detail-actions">
-                  <button className="btn btn-outline">📧 Gửi email</button>
-                  <button className="btn btn-outline">📊 Xem báo cáo</button>
-                  <button className="btn btn-outline">✏️ Chỉnh sửa</button>
+                <div className="modal-footer">
+                  <button className="btn btn-primary" onClick={() => setSelectedStudent(null)}>
+                    Đóng
+                  </button>
                 </div>
-              </div>
-
-              <div className="modal-footer">
-                <button className="btn btn-primary" onClick={() => setSelectedStudent(null)}>
-                  Đóng
-                </button>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Message Modal */}
-        {showMessageModal && (
-          <div className="modal-overlay" onClick={() => setShowMessageModal(false)}>
-            <div className="modal" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h2 className="modal-title">💬 Gửi tin nhắn</h2>
-                <button className="modal-close" onClick={() => setShowMessageModal(false)}>
-                  ✕
-                </button>
-              </div>
-
-              <div className="modal-body">
-                <div className="form-group">
-                  <label>Người nhận</label>
-                  <input type="text" value="Học sinh đã chọn" disabled />
+          {/* Message Modal */}
+          {showMessageModal && (
+            <div className="modal-overlay" onClick={() => setShowMessageModal(false)}>
+              <div className="modal" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                  <h2 className="modal-title">💬 Gửi tin nhắn</h2>
+                  <button className="modal-close" onClick={() => setShowMessageModal(false)}>
+                    ✕
+                  </button>
                 </div>
 
-                <div className="form-group">
-                  <label>Tiêu đề</label>
-                  <input type="text" placeholder="Nhập tiêu đề tin nhắn" />
+                <div className="modal-body">
+                  <div className="form-group">
+                    <label>Người nhận</label>
+                    <input type="text" value="Học sinh đã chọn" disabled />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Tiêu đề</label>
+                    <input type="text" placeholder="Nhập tiêu đề tin nhắn" />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Nội dung</label>
+                    <textarea rows={6} placeholder="Nhập nội dung tin nhắn..."></textarea>
+                  </div>
                 </div>
 
-                <div className="form-group">
-                  <label>Nội dung</label>
-                  <textarea rows={6} placeholder="Nhập nội dung tin nhắn..."></textarea>
+                <div className="modal-footer">
+                  <button className="btn btn-outline" onClick={() => setShowMessageModal(false)}>
+                    Hủy
+                  </button>
+                  <button className="btn btn-primary">📤 Gửi tin nhắn</button>
                 </div>
-              </div>
-
-              <div className="modal-footer">
-                <button className="btn btn-outline" onClick={() => setShowMessageModal(false)}>
-                  Hủy
-                </button>
-                <button className="btn btn-primary">📤 Gửi tin nhắn</button>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </section>
       </div>
     </DashboardLayout>
   );
