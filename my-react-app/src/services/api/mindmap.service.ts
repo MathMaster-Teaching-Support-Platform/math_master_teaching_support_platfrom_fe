@@ -78,6 +78,32 @@ export class MindmapService {
     return response.json();
   }
 
+  /** PATCH /mindmaps/{id}/publish - Publish mindmap */
+  static async publishMindmap(id: string): Promise<ApiResponse<Mindmap>> {
+    const headers = await this.getHeaders();
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.MINDMAPS_PUBLISH(id)}`, {
+      method: 'PATCH',
+      headers,
+    });
+    if (!response.ok) {
+      return this.throwApiError(response, 'Failed to publish mindmap');
+    }
+    return response.json();
+  }
+
+  /** PATCH /mindmaps/{id}/unpublish - Unpublish mindmap */
+  static async unpublishMindmap(id: string): Promise<ApiResponse<Mindmap>> {
+    const headers = await this.getHeaders();
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.MINDMAPS_UNPUBLISH(id)}`, {
+      method: 'PATCH',
+      headers,
+    });
+    if (!response.ok) {
+      return this.throwApiError(response, 'Failed to unpublish mindmap');
+    }
+    return response.json();
+  }
+
   /** DELETE /mindmaps/{id} */
   static async deleteMindmap(id: string): Promise<ApiResponse<void>> {
     const headers = await this.getHeaders();

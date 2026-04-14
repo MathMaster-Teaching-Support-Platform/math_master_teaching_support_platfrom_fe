@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BlockMath, InlineMath } from 'react-katex';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
@@ -7,11 +7,13 @@ import { mockTeacher } from '../../data/mockData';
 import { AuthService } from '../../services/api/auth.service';
 import { LessonSlideService } from '../../services/api/lesson-slide.service';
 import { notifySubscriptionUpdated } from '../../services/api/subscription-plan.service';
+import type { LessonResponse } from '../../types/lesson.types';
 import type {
   ChapterBySubject,
   GenerateSlideContentResult,
   LessonByChapter,
   LessonSlideEquationMode,
+  LessonSlideGeneratedFile,
   LessonSlideItem,
   LessonSlideOutputFormat,
   LessonSlideTemplate,
@@ -44,6 +46,39 @@ type MathSegment =
   | { type: 'inline-math'; value: string }
   | { type: 'block-math'; value: string };
 
+const parseSlidesFromLessonContent = (lessonContent?: string | null): LessonSlideItem[] => {
+  if (!lessonContent) return [];
+
+  try {
+    const parsed = JSON.parse(lessonContent) as unknown;
+
+    let rawSlides: unknown[] = [];
+
+    if (Array.isArray(parsed)) {
+      rawSlides = parsed;
+    } else if (parsed && typeof parsed === 'object') {
+      const container = parsed as { slides?: unknown; result?: { slides?: unknown } };
+      if (Array.isArray(container.slides)) {
+        rawSlides = container.slides;
+      } else if (Array.isArray(container.result?.slides)) {
+        rawSlides = container.result.slides;
+      }
+    }
+
+    return rawSlides.map((slide, index) => {
+      const item = (slide ?? {}) as Partial<LessonSlideItem>;
+      return {
+        slideNumber: Number(item.slideNumber) || index + 1,
+        slideType: item.slideType || 'CONTENT',
+        heading: item.heading || '',
+        content: item.content || '',
+      };
+    });
+  } catch {
+    return [];
+  }
+};
+
 const normalizeOutputFormat = (value?: string): LessonSlideOutputFormat => {
   if (value === 'LATEX' || value === 'HYBRID') {
     return value;
@@ -71,6 +106,22 @@ const getOutputFormatLabel = (format: LessonSlideOutputFormat): string =>
   OUTPUT_FORMAT_LABELS[format];
 
 const getEquationModeLabel = (mode: LessonSlideEquationMode): string => EQUATION_MODE_LABELS[mode];
+
+const formatFileSize = (sizeInBytes: number): string => {
+  if (!Number.isFinite(sizeInBytes) || sizeInBytes < 0) return '--';
+  if (sizeInBytes < 1024) return `${sizeInBytes} B`;
+  if (sizeInBytes < 1024 * 1024) return `${(sizeInBytes / 1024).toFixed(1)} KB`;
+  return `${(sizeInBytes / (1024 * 1024)).toFixed(2)} MB`;
+};
+
+const formatDateTime = (value?: string | null): string => {
+  if (!value) return '--';
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+
+  return parsed.toLocaleString('vi-VN');
+};
 
 const parseMathSegments = (text: string): MathSegment[] => {
   if (!text) return [{ type: 'text', value: '' }];
@@ -243,10 +294,30 @@ const AISlideGenerator: React.FC = () => {
   const [generatingContent, setGeneratingContent] = useState(false);
   const [generatingPptx, setGeneratingPptx] = useState(false);
 
+  const [activeMainTab, setActiveMainTab] = useState<'GENERATE' | 'MANAGE'>('GENERATE');
   const [activeWizardStep, setActiveWizardStep] = useState(1);
 
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [generatedFiles, setGeneratedFiles] = useState<LessonSlideGeneratedFile[]>([]);
+  const [generatedVisibilityFilter, setGeneratedVisibilityFilter] = useState<
+    'ALL' | 'PUBLIC' | 'PRIVATE'
+  >('ALL');
+  const [generatedSearch, setGeneratedSearch] = useState('');
+  const [generatedSort, setGeneratedSort] = useState<
+    'NEWEST' | 'OLDEST' | 'NAME_ASC' | 'NAME_DESC' | 'SIZE_DESC' | 'SIZE_ASC' | 'PUBLIC_FIRST'
+  >('NEWEST');
+  const [selectedGeneratedFileId, setSelectedGeneratedFileId] = useState('');
+  const [selectedGeneratedLesson, setSelectedGeneratedLesson] = useState<LessonResponse | null>(
+    null
+  );
+  const [loadingGeneratedFiles, setLoadingGeneratedFiles] = useState(false);
+  const [loadingSelectedGeneratedLesson, setLoadingSelectedGeneratedLesson] = useState(false);
+  const [updatingGeneratedVisibilityId, setUpdatingGeneratedVisibilityId] = useState('');
+  const [downloadingGeneratedFileId, setDownloadingGeneratedFileId] = useState('');
+  const [publicGeneratedFiles, setPublicGeneratedFiles] = useState<LessonSlideGeneratedFile[]>([]);
+  const [loadingPublicGeneratedFiles, setLoadingPublicGeneratedFiles] = useState(false);
+  const [downloadingPublicGeneratedFileId, setDownloadingPublicGeneratedFileId] = useState('');
 
   const selectedLesson = useMemo(
     () => lessons.find((lesson) => lesson.id === lessonId),
@@ -263,10 +334,62 @@ const AISlideGenerator: React.FC = () => {
     [editableSlides, activePreviewIndex]
   );
 
+  const selectedGeneratedFile = useMemo(
+    () => generatedFiles.find((file) => file.id === selectedGeneratedFileId) || null,
+    [generatedFiles, selectedGeneratedFileId]
+  );
+
+  const managedGeneratedFiles = useMemo(() => {
+    const normalizedSearch = generatedSearch.trim().toLowerCase();
+
+    let files = [...generatedFiles];
+
+    if (generatedVisibilityFilter === 'PUBLIC') {
+      files = files.filter((file) => file.isPublic);
+    } else if (generatedVisibilityFilter === 'PRIVATE') {
+      files = files.filter((file) => !file.isPublic);
+    }
+
+    if (normalizedSearch) {
+      files = files.filter((file) => {
+        const fileName = (file.fileName || '').toLowerCase();
+        const lesson = (file.lessonId || '').toLowerCase();
+        return fileName.includes(normalizedSearch) || lesson.includes(normalizedSearch);
+      });
+    }
+
+    const getTime = (value?: string | null) => new Date(value || 0).getTime() || 0;
+
+    files.sort((a, b) => {
+      switch (generatedSort) {
+        case 'OLDEST':
+          return getTime(a.createdAt) - getTime(b.createdAt);
+        case 'NAME_ASC':
+          return (a.fileName || '').localeCompare(b.fileName || '');
+        case 'NAME_DESC':
+          return (b.fileName || '').localeCompare(a.fileName || '');
+        case 'SIZE_ASC':
+          return a.fileSizeBytes - b.fileSizeBytes;
+        case 'SIZE_DESC':
+          return b.fileSizeBytes - a.fileSizeBytes;
+        case 'PUBLIC_FIRST':
+          if (a.isPublic === b.isPublic) return getTime(b.createdAt) - getTime(a.createdAt);
+          return a.isPublic ? -1 : 1;
+        case 'NEWEST':
+        default:
+          return getTime(b.createdAt) - getTime(a.createdAt);
+      }
+    });
+
+    return files;
+  }, [generatedFiles, generatedSearch, generatedSort, generatedVisibilityFilter]);
+
   const resolvedOutputFormat = useMemo(
     () => normalizeOutputFormat(generated?.outputFormat || outputFormat),
     [generated?.outputFormat, outputFormat]
   );
+
+  const publicLessonIdForPreview = lessonId || selectedGeneratedFile?.lessonId || '';
 
   const showSubjectStep = Boolean(schoolGradeId);
   const showChapterStep = Boolean(subjectId);
@@ -292,6 +415,193 @@ const AISlideGenerator: React.FC = () => {
     setPreparedPptxBlob(null);
     setPreparedPptxFilename('lesson-slides.pptx');
     setActiveWizardStep(1);
+  };
+
+  const applyLessonSlideContentToEditor = (lesson: LessonResponse) => {
+    const parsedSlides = parseSlidesFromLessonContent(lesson.lessonContent);
+
+    if (!parsedSlides.length) {
+      setError('Bài này chưa có nội dung slide đã gen để xem lại.');
+      return;
+    }
+
+    const restoredResult: GenerateSlideContentResult = {
+      subjectId,
+      chapterId,
+      lessonId: lesson.id,
+      lessonTitle: lesson.title || selectedLesson?.title || 'Lesson',
+      slideCount: parsedSlides.length,
+      outputFormat,
+      slides: parsedSlides,
+    };
+
+    setGenerated(restoredResult);
+    setLessonId(lesson.id);
+    setEditableSlides(parsedSlides);
+    setActivePreviewIndex(0);
+    setPreparedPptxBlob(null);
+    setPreparedPptxFilename('lesson-slides.pptx');
+    setSuccess('Đã nạp lại nội dung slide đã gen. Bạn có thể chỉnh sửa và xuất PPTX.');
+    setError('');
+    setActiveWizardStep(4);
+  };
+
+  const loadGeneratedFiles = useCallback(
+    async (targetLessonId?: string) => {
+      setLoadingGeneratedFiles(true);
+
+      try {
+        const response = await LessonSlideService.getGeneratedFiles(targetLessonId);
+        const files = response.result || [];
+        setGeneratedFiles(files);
+
+        if (files.length === 0) {
+          setSelectedGeneratedFileId('');
+          setSelectedGeneratedLesson(null);
+        } else if (!files.some((file) => file.id === selectedGeneratedFileId)) {
+          setSelectedGeneratedFileId(files[0].id);
+        }
+      } catch (err) {
+        setGeneratedFiles([]);
+        setSelectedGeneratedFileId('');
+        setSelectedGeneratedLesson(null);
+        setError(
+          err instanceof Error ? err.message : 'Không thể tải danh sách file slide đã generate'
+        );
+      } finally {
+        setLoadingGeneratedFiles(false);
+      }
+    },
+    [selectedGeneratedFileId]
+  );
+
+  const loadLessonDetailFromGeneratedFile = useCallback(
+    async (generatedFile: LessonSlideGeneratedFile) => {
+      setLoadingSelectedGeneratedLesson(true);
+
+      try {
+        const response = await LessonSlideService.getTeacherLessonSlideByLessonId(
+          generatedFile.lessonId
+        );
+        setSelectedGeneratedLesson(response.result);
+      } catch (err) {
+        setSelectedGeneratedLesson(null);
+        setError(
+          err instanceof Error ? err.message : 'Không thể tải lesson của file slide đã chọn'
+        );
+      } finally {
+        setLoadingSelectedGeneratedLesson(false);
+      }
+    },
+    []
+  );
+
+  const loadPublicGeneratedFiles = useCallback(async (targetLessonId?: string) => {
+    if (!targetLessonId) {
+      setPublicGeneratedFiles([]);
+      return;
+    }
+
+    setLoadingPublicGeneratedFiles(true);
+    try {
+      const response = await LessonSlideService.getPublicGeneratedFilesByLessonId(targetLessonId);
+      setPublicGeneratedFiles(response.result || []);
+    } catch {
+      // Public endpoint can legitimately fail when lesson is not published yet.
+      setPublicGeneratedFiles([]);
+    } finally {
+      setLoadingPublicGeneratedFiles(false);
+    }
+  }, []);
+
+  const triggerBlobDownload = (blob: Blob, fileName: string) => {
+    const blobUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = fileName || 'generated-slide.pptx';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(blobUrl);
+  };
+
+  const handleDownloadGeneratedFile = async (generatedFileId: string) => {
+    setDownloadingGeneratedFileId(generatedFileId);
+    setError('');
+    setSuccess('');
+
+    try {
+      const response = await LessonSlideService.downloadGeneratedFile(generatedFileId);
+      triggerBlobDownload(response.blob, response.filename || 'generated-slide.pptx');
+      setSuccess('Đã tải lại file slide đã generate thành công.');
+    } catch (err) {
+      const apiError = err as Error & { code?: number };
+      if (apiError.code === 1166) {
+        setError('File slide đã generate không còn tồn tại. Vui lòng refresh danh sách.');
+      } else if (apiError.code === 1167) {
+        setError('Bạn không có quyền tải file này.');
+      } else {
+        setError(err instanceof Error ? err.message : 'Không thể tải file slide đã generate');
+      }
+    } finally {
+      setDownloadingGeneratedFileId('');
+    }
+  };
+
+  const handleToggleGeneratedVisibility = async (
+    generatedFileId: string,
+    shouldPublish: boolean
+  ) => {
+    setUpdatingGeneratedVisibilityId(generatedFileId);
+    setError('');
+    setSuccess('');
+
+    try {
+      if (shouldPublish) {
+        await LessonSlideService.publishGeneratedFile(generatedFileId);
+        setSuccess('Đã publish file slide cho student thành công.');
+      } else {
+        await LessonSlideService.unpublishGeneratedFile(generatedFileId);
+        setSuccess('Đã unpublish file slide. Student sẽ không thấy file này nữa.');
+      }
+
+      await loadGeneratedFiles(lessonId || undefined);
+      await loadPublicGeneratedFiles(lessonId || undefined);
+    } catch (err) {
+      const apiError = err as Error & { code?: number };
+      if (apiError.code === 1166) {
+        setError('Không tìm thấy file slide để cập nhật trạng thái.');
+      } else if (apiError.code === 1167) {
+        setError('Bạn không có quyền cập nhật trạng thái file slide này.');
+      } else {
+        setError(
+          err instanceof Error ? err.message : 'Không thể cập nhật trạng thái public của file slide'
+        );
+      }
+    } finally {
+      setUpdatingGeneratedVisibilityId('');
+    }
+  };
+
+  const handleDownloadPublicGeneratedFile = async (generatedFileId: string) => {
+    setDownloadingPublicGeneratedFileId(generatedFileId);
+    setError('');
+    setSuccess('');
+
+    try {
+      const response = await LessonSlideService.downloadPublicGeneratedFile(generatedFileId);
+      triggerBlobDownload(response.blob, response.filename || 'generated-slide.pptx');
+      setSuccess('Đã tải file từ endpoint public (student) thành công.');
+    } catch (err) {
+      const apiError = err as Error & { code?: number };
+      if (apiError.code === 1168) {
+        setError('File chưa public hoặc lesson chưa ở trạng thái PUBLISHED.');
+      } else {
+        setError(err instanceof Error ? err.message : 'Không thể tải file public cho student');
+      }
+    } finally {
+      setDownloadingPublicGeneratedFileId('');
+    }
   };
 
   useEffect(() => {
@@ -347,6 +657,23 @@ const AISlideGenerator: React.FC = () => {
       });
     };
   }, []);
+
+  useEffect(() => {
+    void loadGeneratedFiles(lessonId || undefined);
+  }, [lessonId, loadGeneratedFiles]);
+
+  useEffect(() => {
+    void loadPublicGeneratedFiles(publicLessonIdForPreview || undefined);
+  }, [publicLessonIdForPreview, loadPublicGeneratedFiles]);
+
+  useEffect(() => {
+    if (!selectedGeneratedFile) {
+      setSelectedGeneratedLesson(null);
+      return;
+    }
+
+    void loadLessonDetailFromGeneratedFile(selectedGeneratedFile);
+  }, [selectedGeneratedFile, loadLessonDetailFromGeneratedFile]);
 
   useEffect(() => {
     const previewsToLoad = templates.filter((template) => Boolean(template.previewImage));
@@ -536,6 +863,7 @@ const AISlideGenerator: React.FC = () => {
       notifySubscriptionUpdated();
       setSuccess('Đã tạo nội dung slide bằng AI. Vui lòng kiểm tra và confirm nội dung.');
       setActiveWizardStep(4);
+      await loadGeneratedFiles(response.result.lessonId);
     } catch (err) {
       const apiError = err as Error & { code?: number };
       if (apiError.code === 1164) {
@@ -637,6 +965,7 @@ const AISlideGenerator: React.FC = () => {
     link.remove();
     window.URL.revokeObjectURL(blobUrl);
     setSuccess('Đã tải file PPTX về máy thành công.');
+    void loadGeneratedFiles(lessonId || undefined);
   };
 
   return (
@@ -648,29 +977,52 @@ const AISlideGenerator: React.FC = () => {
       <div className="ai-slide-page">
         <div className="ai-slide-header">
           <h1 className="ai-slide-title">AI Slide Generator</h1>
-          <ol className="ai-slide-stepper" aria-label="Tiến trình tạo slide">
-            {wizardSteps.map((stepLabel, index) => {
-              const stepNumber = index + 1;
-              const isDone = visualWizardStep > stepNumber;
-              const isActive = visualWizardStep === stepNumber;
+          <div className="ai-slide-main-tabs" role="tablist" aria-label="Che do AI Slide">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeMainTab === 'GENERATE'}
+              className={`ai-slide-main-tab ${activeMainTab === 'GENERATE' ? 'active' : ''}`}
+              onClick={() => setActiveMainTab('GENERATE')}
+            >
+              Generate Slide
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeMainTab === 'MANAGE'}
+              className={`ai-slide-main-tab ${activeMainTab === 'MANAGE' ? 'active' : ''}`}
+              onClick={() => setActiveMainTab('MANAGE')}
+            >
+              Quan ly Slide
+            </button>
+          </div>
 
-              return (
-                <li
-                  key={stepLabel}
-                  className={`ai-slide-step-item ${isDone ? 'done' : ''} ${isActive ? 'active' : ''}`}
-                  aria-current={isActive ? 'step' : undefined}
-                >
-                  <span className="ai-slide-step-dot" aria-hidden="true">
-                    {stepNumber}
-                  </span>
-                  <span className="ai-slide-step-text">{stepLabel}</span>
-                </li>
-              );
-            })}
-          </ol>
+          {activeMainTab === 'GENERATE' && (
+            <ol className="ai-slide-stepper" aria-label="Tiến trình tạo slide">
+              {wizardSteps.map((stepLabel, index) => {
+                const stepNumber = index + 1;
+                const isDone = visualWizardStep > stepNumber;
+                const isActive = visualWizardStep === stepNumber;
+
+                return (
+                  <li
+                    key={stepLabel}
+                    className={`ai-slide-step-item ${isDone ? 'done' : ''} ${isActive ? 'active' : ''}`}
+                    aria-current={isActive ? 'step' : undefined}
+                  >
+                    <span className="ai-slide-step-dot" aria-hidden="true">
+                      {stepNumber}
+                    </span>
+                    <span className="ai-slide-step-text">{stepLabel}</span>
+                  </li>
+                );
+              })}
+            </ol>
+          )}
         </div>
 
-        {activeWizardStep === 1 && (
+        {activeMainTab === 'GENERATE' && activeWizardStep === 1 && (
           <section className="ai-slide-card">
             <h2>Bước 1: Chọn dữ liệu bài dạy</h2>
 
@@ -745,10 +1097,18 @@ const AISlideGenerator: React.FC = () => {
                   <select
                     value={lessonId}
                     onChange={(e) => {
-                      setLessonId(e.target.value);
+                      const nextLessonId = e.target.value;
+                      setLessonId(nextLessonId);
                       clearGeneratedData();
                       setSuccess('');
                       setError('');
+
+                      if (nextLessonId) {
+                        void loadGeneratedFiles(nextLessonId);
+                      } else {
+                        setSelectedGeneratedLesson(null);
+                        void loadGeneratedFiles();
+                      }
                     }}
                     disabled={loadingLessons}
                   >
@@ -782,7 +1142,313 @@ const AISlideGenerator: React.FC = () => {
           </section>
         )}
 
-        {activeWizardStep === 2 && (
+        {activeMainTab === 'MANAGE' && (
+          <section className="ai-slide-card">
+            <h2>Slide Library</h2>
+            <p className="ai-slide-info" style={{ marginTop: 0 }}>
+              Quan ly file PPTX da generate: download lai, publish/unpublish va kiem tra public
+              view.
+            </p>
+
+            <div className="ai-slide-management-card">
+              <div className="ai-slide-management-header">
+                <h3>Thu vien file da generate</h3>
+                <p>
+                  {lessonId
+                    ? `Dang loc theo lesson: ${lessonId}`
+                    : 'Dang hien thi tat ca file generated cua ban.'}
+                </p>
+              </div>
+
+              <div className="ai-slide-management-toolbar">
+                <label className="ai-slide-management-search">
+                  <span>Tim theo ten file / lessonId</span>
+                  <input
+                    type="text"
+                    value={generatedSearch}
+                    placeholder="VD: algebra hoặc 8c5d..."
+                    onChange={(e) => setGeneratedSearch(e.target.value)}
+                  />
+                </label>
+
+                <label className="ai-slide-management-sort">
+                  <span>Sap xep</span>
+                  <select
+                    value={generatedSort}
+                    onChange={(e) =>
+                      setGeneratedSort(
+                        e.target.value as
+                          | 'NEWEST'
+                          | 'OLDEST'
+                          | 'NAME_ASC'
+                          | 'NAME_DESC'
+                          | 'SIZE_DESC'
+                          | 'SIZE_ASC'
+                          | 'PUBLIC_FIRST'
+                      )
+                    }
+                  >
+                    <option value="NEWEST">Moi nhat</option>
+                    <option value="OLDEST">Cu nhat</option>
+                    <option value="NAME_ASC">Ten A-Z</option>
+                    <option value="NAME_DESC">Ten Z-A</option>
+                    <option value="SIZE_DESC">Size lon truoc</option>
+                    <option value="SIZE_ASC">Size nho truoc</option>
+                    <option value="PUBLIC_FIRST">Public truoc</option>
+                  </select>
+                </label>
+              </div>
+
+              <div className="ai-slide-status-tabs" role="group" aria-label="Loc file generated">
+                <button
+                  type="button"
+                  className={`ai-slide-status-tab ${generatedVisibilityFilter === 'ALL' ? 'active' : ''}`}
+                  onClick={() => setGeneratedVisibilityFilter('ALL')}
+                  disabled={loadingGeneratedFiles}
+                >
+                  Tat ca
+                </button>
+                <button
+                  type="button"
+                  className={`ai-slide-status-tab ${generatedVisibilityFilter === 'PUBLIC' ? 'active' : ''}`}
+                  onClick={() => setGeneratedVisibilityFilter('PUBLIC')}
+                  disabled={loadingGeneratedFiles}
+                >
+                  Public
+                </button>
+                <button
+                  type="button"
+                  className={`ai-slide-status-tab ${generatedVisibilityFilter === 'PRIVATE' ? 'active' : ''}`}
+                  onClick={() => setGeneratedVisibilityFilter('PRIVATE')}
+                  disabled={loadingGeneratedFiles}
+                >
+                  Private
+                </button>
+              </div>
+              <div className="ai-slide-management-layout">
+                <div className="ai-slide-management-list-panel">
+                  {loadingGeneratedFiles && (
+                    <p className="ai-slide-info">Dang tai danh sach file generated...</p>
+                  )}
+
+                  {!loadingGeneratedFiles && managedGeneratedFiles.length === 0 && (
+                    <p className="ai-slide-info">
+                      Khong co file nao phu hop bo loc. Thu doi tu khoa tim kiem hoac tao file moi.
+                    </p>
+                  )}
+
+                  {!loadingGeneratedFiles && managedGeneratedFiles.length > 0 && (
+                    <div className="ai-slide-table-wrap">
+                      <table className="ai-slide-table">
+                        <thead>
+                          <tr>
+                            <th>File</th>
+                            <th>Lesson</th>
+                            <th>Created</th>
+                            <th>Size</th>
+                            <th>Public</th>
+                            <th>Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {managedGeneratedFiles.map((file) => (
+                            <tr
+                              key={file.id}
+                              className={selectedGeneratedFileId === file.id ? 'active' : ''}
+                              onClick={() => {
+                                setSelectedGeneratedFileId(file.id);
+                                setSuccess('');
+                                setError('');
+                              }}
+                            >
+                              <td title={file.fileName}>
+                                {file.fileName || 'generated-slide.pptx'}
+                              </td>
+                              <td>{file.lessonId}</td>
+                              <td>{formatDateTime(file.createdAt)}</td>
+                              <td>{formatFileSize(file.fileSizeBytes)}</td>
+                              <td>
+                                <span
+                                  className={`ai-slide-public-badge ${file.isPublic ? 'yes' : 'no'}`}
+                                >
+                                  {file.isPublic ? 'Yes' : 'No'}
+                                </span>
+                              </td>
+                              <td>
+                                <button
+                                  type="button"
+                                  className="btn btn-outline"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    void handleDownloadGeneratedFile(file.id);
+                                  }}
+                                  disabled={downloadingGeneratedFileId === file.id}
+                                >
+                                  DL
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+
+                <div className="ai-slide-management-detail-panel">
+                  <div className="ai-slide-management-header">
+                    <h3>Chi tiet file</h3>
+                    <p>
+                      {selectedGeneratedFile
+                        ? `File ID: ${selectedGeneratedFile.id}`
+                        : 'Chon 1 dong trong bang de thao tac.'}
+                    </p>
+                  </div>
+
+                  <div className="ai-slide-management-actions">
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      disabled={
+                        !selectedGeneratedFile ||
+                        selectedGeneratedFile.isPublic ||
+                        updatingGeneratedVisibilityId === selectedGeneratedFile.id
+                      }
+                      onClick={() =>
+                        selectedGeneratedFile &&
+                        void handleToggleGeneratedVisibility(selectedGeneratedFile.id, true)
+                      }
+                    >
+                      {selectedGeneratedFile &&
+                      updatingGeneratedVisibilityId === selectedGeneratedFile.id
+                        ? 'Dang cap nhat...'
+                        : 'Publish'}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-outline"
+                      disabled={
+                        !selectedGeneratedFile ||
+                        !selectedGeneratedFile.isPublic ||
+                        updatingGeneratedVisibilityId === selectedGeneratedFile.id
+                      }
+                      onClick={() =>
+                        selectedGeneratedFile &&
+                        void handleToggleGeneratedVisibility(selectedGeneratedFile.id, false)
+                      }
+                    >
+                      Unpublish
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-outline"
+                      disabled={
+                        !selectedGeneratedFile ||
+                        downloadingGeneratedFileId === selectedGeneratedFile.id
+                      }
+                      onClick={() =>
+                        selectedGeneratedFile &&
+                        void handleDownloadGeneratedFile(selectedGeneratedFile.id)
+                      }
+                    >
+                      {selectedGeneratedFile &&
+                      downloadingGeneratedFileId === selectedGeneratedFile.id
+                        ? 'Dang tai...'
+                        : 'Tai lai file'}
+                    </button>
+                  </div>
+
+                  {loadingSelectedGeneratedLesson && (
+                    <p className="ai-slide-info">Dang tai chi tiet lesson tu file da chon...</p>
+                  )}
+
+                  {!loadingSelectedGeneratedLesson && selectedGeneratedLesson && (
+                    <div className="ai-slide-selected-lesson">
+                      <div>
+                        <strong>{selectedGeneratedLesson.title || 'Bai hoc'}</strong>
+                        <span>Trang thai lesson: {selectedGeneratedLesson.status || '--'}</span>
+                      </div>
+                      <button
+                        type="button"
+                        className="btn btn-outline"
+                        onClick={() => {
+                          applyLessonSlideContentToEditor(selectedGeneratedLesson);
+                          setActiveMainTab('GENERATE');
+                        }}
+                      >
+                        Xem lai noi dung da gen
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="ai-slide-management-header">
+                    <h3>Student view (public files)</h3>
+                    <p>
+                      Chi hien thi file isPublic=true va lesson PUBLISHED tu endpoint public cua BE.
+                    </p>
+                  </div>
+
+                  {loadingPublicGeneratedFiles && (
+                    <p className="ai-slide-info">Dang tai danh sach public generated...</p>
+                  )}
+
+                  {!loadingPublicGeneratedFiles && !publicLessonIdForPreview && (
+                    <p className="ai-slide-info">
+                      Chon 1 generated file de preview danh sach public theo lesson tuong ung.
+                    </p>
+                  )}
+
+                  {!loadingPublicGeneratedFiles &&
+                    publicLessonIdForPreview &&
+                    publicGeneratedFiles.length === 0 && (
+                      <p className="ai-slide-info">
+                        Lesson nay chua co file public de student tai.
+                      </p>
+                    )}
+
+                  {!loadingPublicGeneratedFiles && publicGeneratedFiles.length > 0 && (
+                    <div className="ai-slide-table-wrap compact">
+                      <table className="ai-slide-table">
+                        <thead>
+                          <tr>
+                            <th>File</th>
+                            <th>Published</th>
+                            <th>Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {publicGeneratedFiles.map((file) => (
+                            <tr key={file.id}>
+                              <td>{file.fileName || 'generated-slide.pptx'}</td>
+                              <td>{formatDateTime(file.publishedAt)}</td>
+                              <td>
+                                <button
+                                  type="button"
+                                  className="btn btn-outline"
+                                  disabled={downloadingPublicGeneratedFileId === file.id}
+                                  onClick={() => void handleDownloadPublicGeneratedFile(file.id)}
+                                >
+                                  {downloadingPublicGeneratedFileId === file.id
+                                    ? 'Dang tai...'
+                                    : 'Download'}
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {error && <p className="ai-slide-error">{error}</p>}
+              {success && <p className="ai-slide-success">{success}</p>}
+            </div>
+          </section>
+        )}
+
+        {activeMainTab === 'GENERATE' && activeWizardStep === 2 && (
           <section className="ai-slide-card">
             <h2>Bước 2: Chọn template slide</h2>
             <div
@@ -891,7 +1557,7 @@ const AISlideGenerator: React.FC = () => {
           </section>
         )}
 
-        {activeWizardStep === 3 && (
+        {activeMainTab === 'GENERATE' && activeWizardStep === 3 && (
           <section className="ai-slide-card">
             <h2>Bước 3: Gen nội dung slide bằng AI</h2>
             <div
@@ -964,7 +1630,7 @@ const AISlideGenerator: React.FC = () => {
           </section>
         )}
 
-        {activeWizardStep === 4 && generated && (
+        {activeMainTab === 'GENERATE' && activeWizardStep === 4 && generated && (
           <section className="ai-slide-card">
             <h2>Bước 4: Confirm và chỉnh sửa nội dung</h2>
             <div
@@ -1090,7 +1756,7 @@ const AISlideGenerator: React.FC = () => {
           </section>
         )}
 
-        {activeWizardStep === 5 && (
+        {activeMainTab === 'GENERATE' && activeWizardStep === 5 && (
           <section className="ai-slide-card">
             <h2>Bước 5: Tải file PPTX</h2>
             <div

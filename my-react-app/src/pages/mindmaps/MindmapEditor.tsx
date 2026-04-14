@@ -515,7 +515,18 @@ export default function MindmapEditor() {
     if (!mindmap) return;
 
     try {
-      await MindmapService.updateMindmap(mindmap.id, { status });
+      if (status === 'PUBLISHED') {
+        await MindmapService.publishMindmap(mindmap.id);
+      } else if (status === 'DRAFT') {
+        await MindmapService.unpublishMindmap(mindmap.id);
+      } else {
+        await MindmapService.updateMindmap(mindmap.id, {
+          title: mindmap.title,
+          description: mindmap.description,
+          status,
+        });
+      }
+
       setMindmap({ ...mindmap, status });
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to update status');
@@ -551,9 +562,10 @@ export default function MindmapEditor() {
         logging: false,
       });
 
-      const safeTitle = (mindmap?.title || 'mindmap')
-        .trim()
-        .replace(/[<>:"/\\|?*\x00-\x1F]/g, '')
+      const reservedCharacters = new Set(['<', '>', ':', '"', '/', '\\', '|', '?', '*']);
+      const safeTitle = Array.from((mindmap?.title || 'mindmap').trim())
+        .filter((char) => char.charCodeAt(0) >= 32 && !reservedCharacters.has(char))
+        .join('')
         .replace(/\s+/g, '-')
         .toLowerCase();
       const fileName = `${safeTitle || 'mindmap'}-${new Date().toISOString().slice(0, 10)}.png`;
