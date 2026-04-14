@@ -1,17 +1,20 @@
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   BookOpen,
   Copy,
-  Sparkles,
+  FileText,
   Lock,
   Pencil,
   Plus,
   RefreshCw,
   Search,
   Send,
+  Sparkles,
   Trash2,
+  X,
 } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import {
   useCloneAssessment,
   useCloseAssessment,
@@ -24,9 +27,8 @@ import {
   useUpdateAssessment,
 } from '../../hooks/useAssessment';
 import { useGetMyExamMatrices } from '../../hooks/useExamMatrix';
-import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
-import type { AssessmentRequest, AssessmentResponse, AssessmentStatus } from '../../types';
 import '../../styles/module-refactor.css';
+import type { AssessmentRequest, AssessmentResponse, AssessmentStatus } from '../../types';
 import AssessmentModal from './AssessmentModal';
 
 const statusFilters: Array<'ALL' | AssessmentStatus> = ['ALL', 'DRAFT', 'PUBLISHED', 'CLOSED'];
@@ -151,7 +153,9 @@ function GenerateFromMatrixModal({
 
         <div className="modal-body">
           <label>
-            <p className="muted" style={{ marginBottom: 6 }}>Ma trận đề</p>
+            <p className="muted" style={{ marginBottom: 6 }}>
+              Ma trận đề
+            </p>
             <select
               className="select"
               value={matrixId}
@@ -168,7 +172,9 @@ function GenerateFromMatrixModal({
         </div>
 
         <div className="modal-footer">
-          <button className="btn secondary" onClick={onClose}>Hủy</button>
+          <button className="btn secondary" onClick={onClose}>
+            Hủy
+          </button>
           <button className="btn" disabled={!matrixId || isLoading} onClick={onConfirm}>
             {isLoading ? 'Đang tạo...' : 'Tạo assessment'}
           </button>
@@ -211,6 +217,16 @@ export default function TeacherAssessments() {
   const assessments = data?.result?.content ?? [];
   const totalPages = data?.result?.totalPages ?? 0;
   const myMatrices = myMatricesData?.result ?? [];
+
+  const stats = useMemo(
+    () => ({
+      total: assessments.length,
+      draft: assessments.filter((a) => a.status === 'DRAFT').length,
+      published: assessments.filter((a) => a.status === 'PUBLISHED').length,
+      closed: assessments.filter((a) => a.status === 'CLOSED').length,
+    }),
+    [assessments]
+  );
 
   const filtered = useMemo(() => {
     if (!search.trim()) return assessments;
@@ -261,16 +277,19 @@ export default function TeacherAssessments() {
     >
       <div className="module-layout-container">
         <section className="module-page">
-          <header className="page-header">
-            <div>
-              <h2>Bài kiểm tra</h2>
-              <p>Tạo, xuất bản và quản lý vòng đời bài kiểm tra cho học sinh.</p>
+          <header className="page-header ta-assessments-header-row">
+            <div className="header-stack">
+              <div className="header-kicker">Assessments</div>
+              <div className="row" style={{ gap: '0.6rem' }}>
+                <h2>Bài Kiểm Tra</h2>
+                {!isLoading && <span className="count-chip">{stats.total}</span>}
+              </div>
+              <p className="header-sub">
+                Tạo, xuất bản và quản lý vòng đời bài kiểm tra cho học sinh.
+              </p>
             </div>
             <div className="row" style={{ flexWrap: 'wrap' }}>
-              <button
-                className="btn secondary"
-                onClick={() => setGenerateModalOpen(true)}
-              >
+              <button className="btn secondary" onClick={() => setGenerateModalOpen(true)}>
                 <Sparkles size={14} />
                 Tạo nhanh từ ma trận
               </button>
@@ -288,17 +307,61 @@ export default function TeacherAssessments() {
             </div>
           </header>
 
+          {/* Stats */}
+          <div className="stats-grid">
+            <div className="stat-card stat-violet">
+              <div className="stat-icon-wrap">
+                <FileText size={18} />
+              </div>
+              <div>
+                <h3>{stats.total}</h3>
+                <p>Tổng bài kiểm tra</p>
+              </div>
+            </div>
+            <div className="stat-card stat-blue">
+              <div className="stat-icon-wrap">
+                <Pencil size={18} />
+              </div>
+              <div>
+                <h3>{stats.draft}</h3>
+                <p>Nháp</p>
+              </div>
+            </div>
+            <div className="stat-card stat-emerald">
+              <div className="stat-icon-wrap">
+                <Send size={18} />
+              </div>
+              <div>
+                <h3>{stats.published}</h3>
+                <p>Đã xuất bản</p>
+              </div>
+            </div>
+            <div className="stat-card stat-amber">
+              <div className="stat-icon-wrap">
+                <Lock size={18} />
+              </div>
+              <div>
+                <h3>{stats.closed}</h3>
+                <p>Đã đóng</p>
+              </div>
+            </div>
+          </div>
+
           <div className="toolbar">
-            <label className="row" style={{ minWidth: 260 }}>
-              <Search size={15} />
+            <span className="search-box" style={{ flex: '1 1 240px' }}>
+              <Search size={15} className="search-box__icon" />
               <input
                 className="input"
-                style={{ border: 0, padding: 0, width: '100%' }}
                 placeholder="Tìm bài kiểm tra"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
               />
-            </label>
+              {search && (
+                <button className="search-box__clear" onClick={() => setSearch('')}>
+                  <X size={13} />
+                </button>
+              )}
+            </span>
 
             <div className="pill-group">
               {statusFilters.map((item) => (
