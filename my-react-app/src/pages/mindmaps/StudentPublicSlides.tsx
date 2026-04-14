@@ -1,17 +1,17 @@
-import { Search, Workflow } from 'lucide-react';
+import { Download, Search } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockStudent } from '../../data/mockData';
 import { LessonSlideService } from '../../services/api/lesson-slide.service';
-import { MindmapService } from '../../services/api/mindmap.service';
 import type {
   ChapterBySubject,
   LessonByChapter,
+  LessonSlideGeneratedFile,
+  PageResult,
   SchoolGrade,
   SubjectByGrade,
 } from '../../types/lessonSlide.types';
-import type { Mindmap, PaginatedResponse } from '../../types';
 import './StudentPublicMindmaps.css';
 
 const DEFAULT_PAGE_SIZE = 9;
@@ -29,16 +29,17 @@ const getQueryDirection = (value: string | null): SortDirection =>
 const getQuerySortBy = (value: string | null): string =>
   value === 'updatedAt' ? 'updatedAt' : 'createdAt';
 
-const emptyMindmapPage = (): PaginatedResponse<Mindmap> => ({
+const emptySlidePage = (): PageResult<LessonSlideGeneratedFile> => ({
   content: [],
-  totalElements: 0,
-  totalPages: 0,
   number: 0,
   size: DEFAULT_PAGE_SIZE,
+  totalElements: 0,
+  totalPages: 0,
+  first: true,
+  last: true,
 });
 
-export default function StudentPublicMindmaps() {
-  const navigate = useNavigate();
+export default function StudentPublicSlides() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [schoolGrades, setSchoolGrades] = useState<SchoolGrade[]>([]);
@@ -51,49 +52,67 @@ export default function StudentPublicMindmaps() {
   const [chapterId, setChapterId] = useState('');
   const [lessonId, setLessonId] = useState('');
 
-  const [mindmapKeyword, setMindmapKeyword] = useState(() => searchParams.get('mindmapQ') || '');
-  const [mindmapKeywordDebounced, setMindmapKeywordDebounced] = useState(() =>
-    (searchParams.get('mindmapQ') || '').trim()
+  const [slideKeyword, setSlideKeyword] = useState(() => searchParams.get('slideQ') || '');
+  const [slideKeywordDebounced, setSlideKeywordDebounced] = useState(() =>
+    (searchParams.get('slideQ') || '').trim()
   );
-
-  const [mindmapPage, setMindmapPage] = useState(() =>
-    getQueryNumber(searchParams.get('mindmapPage'), 0)
+  const [slidePage, setSlidePage] = useState(() =>
+    getQueryNumber(searchParams.get('slidePage'), 0)
   );
-  const [mindmapSize, setMindmapSize] = useState(() =>
-    getQueryNumber(searchParams.get('mindmapSize'), DEFAULT_PAGE_SIZE)
+  const [slideSize, setSlideSize] = useState(() =>
+    getQueryNumber(searchParams.get('slideSize'), DEFAULT_PAGE_SIZE)
   );
-  const [mindmapSortBy, setMindmapSortBy] = useState(() =>
-    getQuerySortBy(searchParams.get('mindmapSortBy'))
+  const [slideSortBy, setSlideSortBy] = useState(() =>
+    getQuerySortBy(searchParams.get('slideSortBy'))
   );
-  const [mindmapDirection, setMindmapDirection] = useState<SortDirection>(() =>
-    getQueryDirection(searchParams.get('mindmapDir'))
+  const [slideDirection, setSlideDirection] = useState<SortDirection>(() =>
+    getQueryDirection(searchParams.get('slideDir'))
   );
-  const [mindmapsResult, setMindmapsResult] =
-    useState<PaginatedResponse<Mindmap>>(emptyMindmapPage());
+  const [slidesResult, setSlidesResult] =
+    useState<PageResult<LessonSlideGeneratedFile>>(emptySlidePage());
 
   const [loadingCatalog, setLoadingCatalog] = useState(false);
-  const [loadingMindmaps, setLoadingMindmaps] = useState(false);
-  const [mindmapsError, setMindmapsError] = useState('');
+  const [loadingSlides, setLoadingSlides] = useState(false);
+  const [downloadingSlideId, setDownloadingSlideId] = useState('');
+  const [slidesError, setSlidesError] = useState('');
 
   const selectedLesson = useMemo(
     () => lessons.find((lesson) => lesson.id === lessonId),
     [lessons, lessonId]
   );
 
+  const formatFileSize = (sizeInBytes: number): string => {
+    if (!Number.isFinite(sizeInBytes) || sizeInBytes < 0) return '--';
+    if (sizeInBytes < 1024) return `${sizeInBytes} B`;
+    if (sizeInBytes < 1024 * 1024) return `${(sizeInBytes / 1024).toFixed(1)} KB`;
+    return `${(sizeInBytes / (1024 * 1024)).toFixed(2)} MB`;
+  };
+
+  const triggerBlobDownload = (blob: Blob, fileName: string) => {
+    const blobUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = fileName || 'generated-slide.pptx';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(blobUrl);
+  };
+
   useEffect(() => {
-    const timer = window.setTimeout(() => setMindmapKeywordDebounced(mindmapKeyword.trim()), 400);
+    const timer = window.setTimeout(() => setSlideKeywordDebounced(slideKeyword.trim()), 400);
     return () => window.clearTimeout(timer);
-  }, [mindmapKeyword]);
+  }, [slideKeyword]);
 
   useEffect(() => {
     const params = new URLSearchParams();
-    if (mindmapKeyword) params.set('mindmapQ', mindmapKeyword);
-    if (mindmapPage > 0) params.set('mindmapPage', String(mindmapPage));
-    if (mindmapSize !== DEFAULT_PAGE_SIZE) params.set('mindmapSize', String(mindmapSize));
-    if (mindmapSortBy !== 'createdAt') params.set('mindmapSortBy', mindmapSortBy);
-    if (mindmapDirection !== 'DESC') params.set('mindmapDir', mindmapDirection);
+    if (slideKeyword) params.set('slideQ', slideKeyword);
+    if (slidePage > 0) params.set('slidePage', String(slidePage));
+    if (slideSize !== DEFAULT_PAGE_SIZE) params.set('slideSize', String(slideSize));
+    if (slideSortBy !== 'createdAt') params.set('slideSortBy', slideSortBy);
+    if (slideDirection !== 'DESC') params.set('slideDir', slideDirection);
     setSearchParams(params, { replace: true });
-  }, [mindmapKeyword, mindmapPage, mindmapSize, mindmapSortBy, mindmapDirection, setSearchParams]);
+  }, [slideKeyword, slidePage, slideSize, slideSortBy, slideDirection, setSearchParams]);
 
   useEffect(() => {
     const loadGrades = async () => {
@@ -102,7 +121,7 @@ export default function StudentPublicMindmaps() {
         const response = await LessonSlideService.getSchoolGrades(true);
         setSchoolGrades(response.result || []);
       } catch (err) {
-        setMindmapsError(err instanceof Error ? err.message : 'Không thể tải danh sách khối lớp');
+        setSlidesError(err instanceof Error ? err.message : 'Không thể tải danh sách khối lớp');
       } finally {
         setLoadingCatalog(false);
       }
@@ -112,9 +131,9 @@ export default function StudentPublicMindmaps() {
   }, []);
 
   const resetResourceState = () => {
-    setMindmapPage(0);
-    setMindmapKeyword('');
-    setMindmapsResult(emptyMindmapPage());
+    setSlidePage(0);
+    setSlideKeyword('');
+    setSlidesResult(emptySlidePage());
   };
 
   const handleGradeChange = async (value: string) => {
@@ -131,12 +150,11 @@ export default function StudentPublicMindmaps() {
 
     try {
       setLoadingCatalog(true);
-      setMindmapsError('');
+      setSlidesError('');
       const response = await LessonSlideService.getSubjectsBySchoolGrade(value);
       setSubjects(response.result || []);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Không thể tải danh sách môn học';
-      setMindmapsError(message);
+      setSlidesError(err instanceof Error ? err.message : 'Không thể tải danh sách môn học');
     } finally {
       setLoadingCatalog(false);
     }
@@ -154,12 +172,11 @@ export default function StudentPublicMindmaps() {
 
     try {
       setLoadingCatalog(true);
-      setMindmapsError('');
+      setSlidesError('');
       const response = await LessonSlideService.getChaptersBySubject(value);
       setChapters(response.result || []);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Không thể tải danh sách chương';
-      setMindmapsError(message);
+      setSlidesError(err instanceof Error ? err.message : 'Không thể tải danh sách chương');
     } finally {
       setLoadingCatalog(false);
     }
@@ -175,12 +192,11 @@ export default function StudentPublicMindmaps() {
 
     try {
       setLoadingCatalog(true);
-      setMindmapsError('');
+      setSlidesError('');
       const response = await LessonSlideService.getLessonsByChapter(value);
       setLessons(response.result || []);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Không thể tải danh sách bài học';
-      setMindmapsError(message);
+      setSlidesError(err instanceof Error ? err.message : 'Không thể tải danh sách bài học');
     } finally {
       setLoadingCatalog(false);
     }
@@ -193,55 +209,62 @@ export default function StudentPublicMindmaps() {
 
   useEffect(() => {
     let cancelled = false;
-    const loadMindmaps = async () => {
-      setLoadingMindmaps(true);
-      setMindmapsError('');
+    const loadSlides = async () => {
+      setLoadingSlides(true);
+      setSlidesError('');
 
       try {
-        const response = await MindmapService.getPublicMindmaps({
+        const response = await LessonSlideService.getAllPublicGeneratedFiles({
           lessonId: lessonId || undefined,
-          name: mindmapKeywordDebounced || undefined,
-          page: mindmapPage,
-          size: mindmapSize,
-          sortBy: mindmapSortBy,
-          direction: mindmapDirection,
+          keyword: slideKeywordDebounced || undefined,
+          page: slidePage,
+          size: slideSize,
+          sortBy: slideSortBy,
+          direction: slideDirection,
         });
 
         if (!cancelled) {
-          setMindmapsResult(response.result);
+          setSlidesResult(response.result);
         }
       } catch (err) {
         if (!cancelled) {
-          setMindmapsError(
-            err instanceof Error ? err.message : 'Không thể tải danh sách mindmap công khai'
+          setSlidesError(
+            err instanceof Error ? err.message : 'Không thể tải danh sách slide công khai'
           );
         }
       } finally {
         if (!cancelled) {
-          setLoadingMindmaps(false);
+          setLoadingSlides(false);
         }
       }
     };
 
-    void loadMindmaps();
+    void loadSlides();
     return () => {
       cancelled = true;
     };
-  }, [
-    lessonId,
-    mindmapKeywordDebounced,
-    mindmapPage,
-    mindmapSize,
-    mindmapSortBy,
-    mindmapDirection,
-  ]);
+  }, [lessonId, slideKeywordDebounced, slidePage, slideSize, slideSortBy, slideDirection]);
+
+  const handleDownloadSlide = async (generatedFileId: string) => {
+    setDownloadingSlideId(generatedFileId);
+    setSlidesError('');
+
+    try {
+      const response = await LessonSlideService.downloadPublicGeneratedFile(generatedFileId);
+      triggerBlobDownload(response.blob, response.filename || 'generated-slide.pptx');
+    } catch (err) {
+      setSlidesError(err instanceof Error ? err.message : 'Không thể tải slide công khai');
+    } finally {
+      setDownloadingSlideId('');
+    }
+  };
 
   return (
     <DashboardLayout user={mockStudent} role="student">
       <div className="student-public-mindmaps-page">
         <header className="student-public-mindmaps-header">
           <p className="header-kicker">Kho học liệu học sinh</p>
-          <h1>Thư viện mindmap công khai</h1>
+          <h1>Thư viện slide công khai</h1>
         </header>
 
         <section className="student-public-mindmaps-filters">
@@ -299,10 +322,10 @@ export default function StudentPublicMindmaps() {
           <p className="state-text">Đang lọc theo bài học: {selectedLesson.title}</p>
         )}
 
-        <section className="student-public-mindmaps-section">
+        <section className="student-public-slides-section">
           <div className="student-public-section-header">
-            <h2>Mindmap công khai</h2>
-            <p>Danh sách mindmap lấy từ API public có filter + pagination.</p>
+            <h2>Slide công khai</h2>
+            <p>Danh sách slide lấy từ API public có filter + pagination.</p>
           </div>
 
           <div className="resource-toolbar">
@@ -310,21 +333,21 @@ export default function StudentPublicMindmaps() {
               <Search size={16} />
               <input
                 type="text"
-                value={mindmapKeyword}
+                value={slideKeyword}
                 onChange={(e) => {
-                  setMindmapKeyword(e.target.value);
-                  setMindmapPage(0);
+                  setSlideKeyword(e.target.value);
+                  setSlidePage(0);
                 }}
-                placeholder="Tìm theo tiêu đề hoặc mô tả mindmap..."
+                placeholder="Tìm theo tên file slide..."
               />
             </label>
 
             <div className="resource-toolbar-right">
               <select
-                value={mindmapSortBy}
+                value={slideSortBy}
                 onChange={(e) => {
-                  setMindmapSortBy(e.target.value);
-                  setMindmapPage(0);
+                  setSlideSortBy(e.target.value);
+                  setSlidePage(0);
                 }}
               >
                 <option value="createdAt">Sắp xếp: Ngày tạo</option>
@@ -332,10 +355,10 @@ export default function StudentPublicMindmaps() {
               </select>
 
               <select
-                value={mindmapDirection}
+                value={slideDirection}
                 onChange={(e) => {
-                  setMindmapDirection(e.target.value as SortDirection);
-                  setMindmapPage(0);
+                  setSlideDirection(e.target.value as SortDirection);
+                  setSlidePage(0);
                 }}
               >
                 <option value="DESC">Mới nhất trước</option>
@@ -343,10 +366,10 @@ export default function StudentPublicMindmaps() {
               </select>
 
               <select
-                value={mindmapSize}
+                value={slideSize}
                 onChange={(e) => {
-                  setMindmapSize(Number(e.target.value));
-                  setMindmapPage(0);
+                  setSlideSize(Number(e.target.value));
+                  setSlidePage(0);
                 }}
               >
                 <option value={6}>6 / trang</option>
@@ -356,64 +379,61 @@ export default function StudentPublicMindmaps() {
             </div>
           </div>
 
-          {loadingMindmaps && <p className="state-text">Đang tải mindmap công khai...</p>}
-          {mindmapsError && <p className="state-text state-text--error">{mindmapsError}</p>}
+          {loadingSlides && <p className="state-text">Đang tải slide công khai...</p>}
+          {slidesError && <p className="state-text state-text--error">{slidesError}</p>}
 
-          {!loadingMindmaps && !mindmapsError && mindmapsResult.content.length === 0 && (
-            <p className="state-text">Không có mindmap công khai phù hợp bộ lọc hiện tại.</p>
+          {!loadingSlides && !slidesError && slidesResult.content.length === 0 && (
+            <p className="state-text">Không có slide công khai phù hợp bộ lọc hiện tại.</p>
           )}
 
-          {!loadingMindmaps && mindmapsResult.content.length > 0 && (
+          {!loadingSlides && slidesResult.content.length > 0 && (
             <>
               <p className="resource-summary">
-                Hiển thị {mindmapsResult.content.length}/{mindmapsResult.totalElements} mindmap công
-                khai.
+                Hiển thị {slidesResult.content.length}/{slidesResult.totalElements} slide công khai.
               </p>
 
-              <section className="student-public-mindmaps-grid">
-                {mindmapsResult.content.map((mindmap) => (
-                  <article key={mindmap.id} className="mindmap-card-public">
-                    <h3>{mindmap.title}</h3>
-                    <p>{mindmap.description || 'Không có mô tả.'}</p>
-                    <div className="mindmap-card-public-meta">
-                      <span>{mindmap.nodeCount} nút</span>
-                      <span>{mindmap.teacherName || 'Giáo viên'}</span>
+              <div className="student-public-slides-grid">
+                {slidesResult.content.map((slide) => (
+                  <article key={slide.id} className="slide-card-public">
+                    <h3>{slide.fileName || 'generated-slide.pptx'}</h3>
+                    <div className="slide-card-public-meta">
+                      <span>Dung lượng: {formatFileSize(slide.fileSizeBytes)}</span>
+                      <span>Ngày tạo: {new Date(slide.createdAt).toLocaleDateString('vi-VN')}</span>
                     </div>
                     <button
                       type="button"
-                      onClick={() => navigate(`/mindmaps/public/${mindmap.id}`)}
                       className="mindmap-card-public-btn"
+                      onClick={() => void handleDownloadSlide(slide.id)}
+                      disabled={downloadingSlideId === slide.id}
                     >
-                      <Workflow size={16} /> Xem mindmap
+                      <Download size={16} />
+                      {downloadingSlideId === slide.id ? 'Đang tải...' : 'Tải slide'}
                     </button>
                   </article>
                 ))}
-              </section>
+              </div>
 
               <div className="resource-pagination">
                 <button
                   type="button"
-                  onClick={() => setMindmapPage((prev) => Math.max(prev - 1, 0))}
-                  disabled={mindmapsResult.number <= 0}
+                  onClick={() => setSlidePage((prev) => Math.max(prev - 1, 0))}
+                  disabled={slidesResult.first}
                 >
                   Trang trước
                 </button>
                 <span>
-                  Trang {mindmapsResult.number + 1}/{Math.max(mindmapsResult.totalPages, 1)}
+                  Trang {slidesResult.number + 1}/{Math.max(slidesResult.totalPages, 1)}
                 </span>
                 <button
                   type="button"
                   onClick={() =>
-                    setMindmapPage((prev) =>
-                      mindmapsResult.totalPages > 0
-                        ? Math.min(prev + 1, mindmapsResult.totalPages - 1)
+                    setSlidePage((prev) =>
+                      slidesResult.totalPages > 0
+                        ? Math.min(prev + 1, slidesResult.totalPages - 1)
                         : prev
                     )
                   }
-                  disabled={
-                    mindmapsResult.totalPages === 0 ||
-                    mindmapsResult.number >= mindmapsResult.totalPages - 1
-                  }
+                  disabled={slidesResult.last || slidesResult.totalPages === 0}
                 >
                   Trang sau
                 </button>

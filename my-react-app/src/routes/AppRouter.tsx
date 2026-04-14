@@ -1,5 +1,5 @@
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { Navigate, createBrowserRouter, RouterProvider } from 'react-router-dom';
 import About from '../pages/About';
 import Contact from '../pages/Contact';
 import Features from '../pages/Features';
@@ -59,6 +59,7 @@ import TeacherLessonPlans from '../pages/lesson-plans/TeacherLessonPlans';
 import { MindmapEditor, TeacherMindmaps } from '../pages/mindmaps';
 import PublicMindmapViewer from '../pages/mindmaps/PublicMindmapViewer';
 import StudentPublicMindmaps from '../pages/mindmaps/StudentPublicMindmaps';
+import StudentPublicSlides from '../pages/mindmaps/StudentPublicSlides';
 import { QuestionBankDashboard } from '../pages/question-banks/QuestionBankDashboard';
 import { QuestionBankDetailPage } from '../pages/question-banks/QuestionBankDetailPage';
 import { TemplateDashboard } from '../pages/question-templates/TemplateDashboard';
@@ -500,7 +501,7 @@ const router = createBrowserRouter([
     path: '/student/public-resources',
     element: (
       <PrivateRoute>
-        <StudentPublicMindmaps />
+        <Navigate to="/student/public-slides" replace />
       </PrivateRoute>
     ),
   },
@@ -508,7 +509,7 @@ const router = createBrowserRouter([
     path: '/student/public-slides',
     element: (
       <PrivateRoute>
-        <StudentPublicMindmaps />
+        <StudentPublicSlides />
       </PrivateRoute>
     ),
   },
