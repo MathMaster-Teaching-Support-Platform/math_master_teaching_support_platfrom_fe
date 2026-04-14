@@ -1,4 +1,16 @@
-import { Clock3, Search } from 'lucide-react';
+import {
+  AlertCircle,
+  BookOpen,
+  BrainCircuit,
+  Clock3,
+  Download,
+  FileSliders,
+  Network,
+  PenTool,
+  Presentation,
+  Search,
+  Sparkles,
+} from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
@@ -6,6 +18,7 @@ import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
 import { AuthService } from '../../services/api/auth.service';
 import { LessonSlideService } from '../../services/api/lesson-slide.service';
 import { MindmapService } from '../../services/api/mindmap.service';
+import '../../styles/module-refactor.css';
 import type { Mindmap } from '../../types';
 import type { LessonSlideGeneratedFile } from '../../types/lessonSlide.types';
 import './MaterialsGenerator.css';
@@ -191,32 +204,58 @@ const MaterialsGenerator: React.FC = () => {
     return allRows.filter((r) => r.title.toLowerCase().includes(q)).slice(0, 12);
   }, [allRows, searchValue]);
 
-  const cards = [
+  type ToolCard = {
+    Icon: React.FC<{ size?: number }>;
+    title: string;
+    desc: string;
+    route: string | null;
+    accentClass: string;
+    tag: string;
+  };
+
+  const cards: ToolCard[] = [
     {
-      icon: '📊',
+      Icon: Presentation,
       title: 'Slide Bài Giảng',
-      desc: 'Tạo slide PowerPoint chuyên nghiệp từ nội dung bài giảng của bạn.',
+      desc: 'Tạo slide PowerPoint chuyên nghiệp từ nội dung bài giảng của bạn chỉ trong vài giây.',
       route: '/teacher/ai-slide-generator',
+      accentClass: 'tool-accent-blue',
+      tag: 'Khả dụng',
     },
     {
-      icon: '🧠',
+      Icon: BrainCircuit,
       title: 'Sơ Đồ Tư Duy',
-      desc: 'Tạo mindmap trực quan tự động dựa trên các từ khóa bài học.',
+      desc: 'Tạo mindmap trực quan tự động dựa trên các từ khoá và nội dung bài học.',
       route: '/teacher/mindmaps',
+      accentClass: 'tool-accent-violet',
+      tag: 'Khả dụng',
     },
     {
-      icon: '📐',
+      Icon: PenTool,
       title: 'Hình Vẽ Toán Học',
-      desc: 'Vẽ đồ thị hàm số và hình học không gian chính xác chỉ với mô tả.',
-      route: null, // pending BE implementation
+      desc: 'Vẽ đồ thị hàm số và hình học không gian chính xác chỉ với mô tả ngôn ngữ tự nhiên.',
+      route: null,
+      accentClass: 'tool-accent-amber',
+      tag: 'Sắp ra mắt',
     },
     {
-      icon: '🧾',
+      Icon: FileSliders,
       title: 'Phiếu Bài Tập',
       desc: 'Tạo đề bài tập in sẵn với các dạng toán đa dạng và lời giải chi tiết.',
-      route: null, // pending BE implementation
+      route: null,
+      accentClass: 'tool-accent-emerald',
+      tag: 'Sắp ra mắt',
     },
   ];
+
+  const stats = useMemo(
+    () => ({
+      slides: slides.length,
+      mindmaps: mindmaps.length,
+      total: slides.length + mindmaps.length,
+    }),
+    [slides, mindmaps]
+  );
 
   const userName = userInfo?.fullName ?? '';
   const userAvatar = userInfo?.avatar?.startsWith('http')
@@ -229,60 +268,144 @@ const MaterialsGenerator: React.FC = () => {
       user={{ name: userName, avatar: userAvatar, role: 'teacher' }}
       notificationCount={notificationCount}
     >
-      <div className="materials-page">
-        <header className="materials-header">
-          <div>
-            <h1>
-              Tạo Tài Liệu với AI <span className="beta-badge">BETA</span>
-            </h1>
-            <p>
-              Sử dụng AI để tạo slide, sơ đồ tư duy, hình vẽ và tài liệu giảng dạy chuyên nghiệp.
-            </p>
+      <div className="module-layout-container">
+        <section className="module-page">
+          {/* ── Header ── */}
+          <header className="page-header materials-header-row">
+            <div className="header-stack">
+              <div className="header-kicker">AI Content Studio</div>
+              <div className="row" style={{ gap: '0.6rem' }}>
+                <h2>Tạo Tài Liệu với AI</h2>
+                <span className="materials-beta-badge">BETA</span>
+              </div>
+              <p className="header-sub">
+                Sử dụng AI để tạo slide, sơ đồ tư duy, hình vẽ và tài liệu giảng dạy chuyên nghiệp.
+              </p>
+            </div>
+            <button className="btn materials-history-btn">
+              <Clock3 size={15} />
+              Lịch sử tạo
+            </button>
+          </header>
+
+          {/* ── Stats ── */}
+          {!loading && (
+            <div className="stats-grid">
+              <div className="stat-card stat-blue">
+                <div className="stat-icon-wrap">
+                  <Sparkles size={20} />
+                </div>
+                <div>
+                  <h3>{stats.total}</h3>
+                  <p>Tổng tài liệu</p>
+                </div>
+              </div>
+              <div className="stat-card stat-indigo">
+                <div className="stat-icon-wrap">
+                  <Presentation size={20} />
+                </div>
+                <div>
+                  <h3>{stats.slides}</h3>
+                  <p>Slide bài giảng</p>
+                </div>
+              </div>
+              <div className="stat-card stat-violet">
+                <div className="stat-icon-wrap">
+                  <Network size={20} />
+                </div>
+                <div>
+                  <h3>{stats.mindmaps}</h3>
+                  <p>Sơ đồ tư duy</p>
+                </div>
+              </div>
+              <div className="stat-card stat-emerald">
+                <div className="stat-icon-wrap">
+                  <BookOpen size={20} />
+                </div>
+                <div>
+                  <h3>4</h3>
+                  <p>Công cụ AI</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── Tool cards ── */}
+          <div className="materials-section-label">
+            <Sparkles size={15} /> Công cụ tạo tài liệu
           </div>
-          <button className="history-btn">
-            <Clock3 size={16} /> Lịch sử tạo
-          </button>
-        </header>
+          <div className="materials-tool-grid">
+            {cards.map((card) => {
+              const { Icon } = card;
+              const available = card.route !== null;
+              return (
+                <article key={card.title} className={`materials-tool-card ${card.accentClass}`}>
+                  <div className="materials-tool-card__head">
+                    <div className="materials-tool-icon">
+                      <Icon size={22} />
+                    </div>
+                    <span
+                      className={`materials-tool-tag ${available ? 'available' : 'coming-soon'}`}
+                    >
+                      {card.tag}
+                    </span>
+                  </div>
+                  <h3>{card.title}</h3>
+                  <p>{card.desc}</p>
+                  <button
+                    className={`btn${available ? '' : ' secondary'} materials-tool-cta`}
+                    onClick={() => available && navigate(card.route!)}
+                    disabled={!available}
+                    title={available ? undefined : 'Tính năng đang phát triển'}
+                  >
+                    {available ? 'Bắt đầu tạo' : 'Đang phát triển'}
+                  </button>
+                </article>
+              );
+            })}
+          </div>
 
-        <section className="tool-grid">
-          {cards.map((card) => (
-            <article key={card.title} className="tool-card">
-              <div className="tool-icon">{card.icon}</div>
-              <h3>{card.title}</h3>
-              <p>{card.desc}</p>
-              <button
-                onClick={() => card.route && navigate(card.route)}
-                disabled={card.route === null}
-                title={card.route === null ? 'Tính năng đang phát triển' : undefined}
-              >
-                Bắt đầu tạo
-              </button>
-            </article>
-          ))}
-        </section>
-
-        <section className="recent-section">
-          <div className="recent-head">
-            <h2>Tài liệu đã tạo gần đây</h2>
-            <div className="search-box">
-              <Search size={16} />
+          {/* ── Recent materials ── */}
+          <div className="toolbar" style={{ marginTop: '0.5rem' }}>
+            <div className="materials-section-label" style={{ margin: 0 }}>
+              <Clock3 size={15} /> Tài liệu đã tạo gần đây
+            </div>
+            <label className="search-box" style={{ marginLeft: 'auto' }}>
+              <span className="search-box__icon">
+                <Search size={15} />
+              </span>
               <input
                 type="text"
                 placeholder="Tìm kiếm tài liệu..."
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
               />
-            </div>
+            </label>
           </div>
 
           <div className="table-wrap">
-            {loading && <div className="table-loading">Đang tải...</div>}
-            {!loading && error && <div className="table-error">{error}</div>}
+            {loading && (
+              <div className="materials-table-placeholder">
+                <div className="skeleton-card" style={{ height: 180 }} />
+              </div>
+            )}
+            {!loading && error && (
+              <div className="empty">
+                <AlertCircle size={28} style={{ opacity: 0.5, color: 'var(--mod-danger)' }} />
+                <p>{error}</p>
+              </div>
+            )}
             {!loading && !error && rows.length === 0 && (
-              <div className="table-empty">Chưa có tài liệu nào được tạo.</div>
+              <div className="empty">
+                <Network size={32} style={{ opacity: 0.3, marginBottom: 4 }} />
+                <p>Chưa có tài liệu nào được tạo.</p>
+                <p style={{ fontSize: '0.85rem', opacity: 0.7 }}>
+                  Hãy chọn một công cụ AI ở trên để bắt đầu!
+                </p>
+              </div>
             )}
             {!loading && !error && rows.length > 0 && (
-              <table>
+              <table className="table">
                 <thead>
                   <tr>
                     <th>Tên tệp</th>
@@ -295,36 +418,51 @@ const MaterialsGenerator: React.FC = () => {
                 <tbody>
                   {rows.map((row) => (
                     <tr key={`${row.kind}-${row.id}`}>
-                      <td className="file-cell">
-                        <span className="file-dot">{row.kind === 'slide' ? '📊' : '🧠'}</span>
-                        {row.title}
+                      <td>
+                        <div className="materials-file-cell">
+                          <span className="materials-file-icon">
+                            {row.kind === 'slide' ? (
+                              <Presentation size={14} />
+                            ) : (
+                              <BrainCircuit size={14} />
+                            )}
+                          </span>
+                          <span className="materials-file-name">{row.title}</span>
+                        </div>
                       </td>
                       <td>
-                        <span className="tool-tag">
-                          {row.kind === 'slide' ? 'SLIDE' : 'MINDMAP'} AI
+                        <span className={`badge materials-kind-badge ${row.kind}`}>
+                          {row.kind === 'slide' ? 'SLIDE AI' : 'MINDMAP AI'}
                         </span>
                       </td>
-                      <td>{new Date(row.createdAt).toLocaleDateString('vi-VN')}</td>
+                      <td style={{ color: 'var(--mod-slate-500)', fontSize: '0.85rem' }}>
+                        {new Date(row.createdAt).toLocaleDateString('vi-VN', {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
+                      </td>
                       <td>
                         {row.kind === 'slide' ? (
-                          <span className="status-tag done">Hoàn thành</span>
+                          <span className="badge completed">Hoàn thành</span>
                         ) : (
-                          <span className={`status-tag ${mindmapStatusClass(row.status)}`}>
+                          <span className={`badge ${mindmapStatusClass(row.status)}`}>
                             {mindmapStatusLabel(row.status)}
                           </span>
                         )}
                       </td>
-                      <td className="action-cell">
+                      <td>
                         {row.kind === 'slide' ? (
                           <a
+                            className="btn secondary materials-action-btn"
                             href={`${API_BASE_URL}${API_ENDPOINTS.LESSON_SLIDES_GENERATED_DOWNLOAD(row.id)}`}
                             download
                           >
-                            Tải về
+                            <Download size={13} /> Tải về
                           </a>
                         ) : (
                           <button
-                            className="action-link"
+                            className="btn secondary materials-action-btn"
                             onClick={() => navigate(`/teacher/mindmaps/${row.id}`)}
                           >
                             Xem thử
@@ -336,10 +474,9 @@ const MaterialsGenerator: React.FC = () => {
                 </tbody>
               </table>
             )}
-
             {!loading && !error && rows.length > 0 && (
-              <div className="table-footer">
-                Hiển thị 1 - {rows.length} của {allRows.length} tài liệu AI
+              <div className="materials-table-footer">
+                Hiển thị {rows.length} / {allRows.length} tài liệu AI
               </div>
             )}
           </div>
