@@ -599,15 +599,15 @@ export function TemplateDashboard() {
             <div className="row" style={{ flexWrap: 'wrap' }}>
               <button className="btn secondary" onClick={() => setBulkImportOpen(true)}>
                 <Upload size={14} />
-                Bulk Import
+                Nhập từ Excel
               </button>
               <button className="btn secondary" onClick={() => setImportOpen(true)}>
                 <Upload size={14} />
-                Nhập file
+                Nhập từ file
               </button>
               <button className="btn secondary" onClick={openCanonicalCreateModal}>
                 <Plus size={14} />
-                Tạo Canonical
+                Thêm bài toán gốc
               </button>
               <button
                 className="btn"
@@ -663,64 +663,148 @@ export function TemplateDashboard() {
             </div>
           </div>
 
-          <section className="hero-card">
-            <p className="hero-kicker">Phân tách trách nhiệm</p>
-            <h2>Soạn mẫu và xét duyệt câu hỏi theo mẫu ngay tại đây</h2>
-            <p className="muted" style={{ marginTop: 6 }}>
-              Canonical Question = bài toán gốc do giáo viên định nghĩa.
-            </p>
-            <div className="row" style={{ flexWrap: 'wrap' }}>
-              <button className="btn secondary" onClick={() => openReviewModal()}>
-                Xét duyệt theo mẫu <ArrowRight size={14} />
+          <section className="hero-card workflow-card">
+            <p className="hero-kicker">Quy trình làm việc</p>
+            <h2>Làm theo 4 bước để có ngân hàng câu hỏi chất lượng</h2>
+
+            <ol className="workflow-steps" aria-label="Các bước thực hiện">
+              <li className="workflow-step">
+                <div className="workflow-step-head">
+                  <span className="workflow-step-dot">1</span>
+                  <div className="workflow-step-icon-wrap wf-blue">
+                    <FileText size={17} />
+                  </div>
+                </div>
+                <div className="workflow-step-body">
+                  <h4>Soạn mẫu câu hỏi</h4>
+                  <p>
+                    Tạo mẫu với biến số (a, b...). Hệ thống tự sinh hàng loạt câu hỏi ngẫu nhiên
+                    cùng dạng toán.
+                  </p>
+                  <button
+                    className="btn secondary"
+                    onClick={() => {
+                      setMode('create');
+                      setSelected(null);
+                      setFormOpen(true);
+                    }}
+                  >
+                    <Plus size={13} /> Tạo mẫu mới
+                  </button>
+                </div>
+              </li>
+
+              <li className="workflow-connector" aria-hidden="true">
+                <ArrowRight size={16} />
+              </li>
+
+              <li className="workflow-step">
+                <div className="workflow-step-head">
+                  <span className="workflow-step-dot">2</span>
+                  <div className="workflow-step-icon-wrap wf-emerald">
+                    <Eye size={17} />
+                  </div>
+                </div>
+                <div className="workflow-step-body">
+                  <h4>Xem trước & duyệt câu hỏi</h4>
+                  <p>Chọn mẫu, xem toàn bộ câu hỏi đã sinh và phê duyệt nhanh theo lô vào kho.</p>
+                  <button className="btn secondary" onClick={() => openReviewModal()}>
+                    <CheckSquare size={13} /> Duyệt theo mẫu
+                  </button>
+                </div>
+              </li>
+
+              <li className="workflow-connector" aria-hidden="true">
+                <ArrowRight size={16} />
+              </li>
+
+              <li className="workflow-step">
+                <div className="workflow-step-head">
+                  <span className="workflow-step-dot">3</span>
+                  <div className="workflow-step-icon-wrap wf-violet">
+                    <Archive size={17} />
+                  </div>
+                </div>
+                <div className="workflow-step-body">
+                  <h4>Quản lý ngân hàng câu hỏi</h4>
+                  <p>
+                    Toàn bộ câu hỏi đã duyệt được lưu vào kho. Tổ chức, tìm kiếm và tái sử dụng tại
+                    đây.
+                  </p>
+                  <button
+                    className="btn secondary"
+                    onClick={() => navigate('/teacher/question-banks')}
+                  >
+                    <ArrowRight size={13} /> Mở ngân hàng
+                  </button>
+                </div>
+              </li>
+
+              <li className="workflow-connector" aria-hidden="true">
+                <ArrowRight size={16} />
+              </li>
+
+              <li className="workflow-step">
+                <div className="workflow-step-head">
+                  <span className="workflow-step-dot">4</span>
+                  <div className="workflow-step-icon-wrap wf-amber">
+                    <Save size={17} />
+                  </div>
+                </div>
+                <div className="workflow-step-body">
+                  <h4>Tạo đề kiểm tra</h4>
+                  <p>
+                    Chọn câu hỏi từ kho, lắp thành đề theo cơ cấu ma trận và xuất bản cho học sinh.
+                  </p>
+                  <button className="btn" onClick={() => navigate('/teacher/assessment-builder')}>
+                    Tạo đề ngay
+                  </button>
+                </div>
+              </li>
+            </ol>
+
+            <div className="workflow-ai-note">
+              <Network size={14} />
+              <span>
+                <strong>Tùy chọn AI:</strong> Thêm <em>bài toán gốc</em> để AI tự sinh câu hỏi thay
+                vì soạn mẫu thủ công.
+              </span>
+              <button className="btn secondary" onClick={openCanonicalCreateModal}>
+                <Plus size={13} /> Thêm bài toán gốc
               </button>
               <button
                 className="btn secondary"
                 onClick={() => {
                   if (canonicalQuestions.length === 0) {
-                    setToast({
-                      type: 'error',
-                      message: 'Bạn chưa có canonical question để xét duyệt.',
-                    });
-                    return;
-                  }
-                  openCanonicalReviewModal(canonicalQuestions[0]?.id);
-                }}
-              >
-                Xét duyệt theo Canonical <ArrowRight size={14} />
-              </button>
-              <button
-                className="btn secondary"
-                onClick={() => {
-                  if (canonicalQuestions.length === 0) {
-                    setToast({
-                      type: 'error',
-                      message: 'Can tao canonical question truoc khi generate theo canonical flow.',
-                    });
+                    setToast({ type: 'error', message: 'Chưa có bài toán gốc. Hãy thêm trước.' });
                     return;
                   }
                   setCanonicalGenerateId(canonicalQuestions[0]?.id ?? '');
                   setCanonicalGenerateOpen(true);
                 }}
               >
-                Generate tu Canonical <ArrowRight size={14} />
+                <Play size={13} /> Cho AI tạo câu hỏi
               </button>
-              <button className="btn secondary" onClick={() => navigate('/teacher/question-banks')}>
-                Sang Ngân hàng câu hỏi để quản lý kho <ArrowRight size={14} />
-              </button>
-              <button className="btn" onClick={() => navigate('/teacher/assessment-builder')}>
-                Tiếp tục lắp đề ở Trình tạo đề
+              <button
+                className="btn secondary"
+                onClick={() => {
+                  if (canonicalQuestions.length === 0) {
+                    setToast({ type: 'error', message: 'Chưa có bài toán gốc nào để duyệt.' });
+                    return;
+                  }
+                  openCanonicalReviewModal(canonicalQuestions[0]?.id);
+                }}
+              >
+                <CheckSquare size={13} /> Duyệt câu hỏi AI sinh
               </button>
             </div>
-            <p className="muted" style={{ marginTop: 6 }}>
-              Chọn mẫu câu hỏi, xem trước toàn bộ câu đã sinh từ mẫu đó và phê duyệt nhanh theo lô.
-            </p>
           </section>
 
           <section className="data-card" style={{ minHeight: 0 }}>
             <div className="row" style={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
               <div>
-                <h3>Canonical Questions gần đây</h3>
-                <p className="muted">Nguồn semantic cho chế độ AI_FROM_CANONICAL.</p>
+                <h3>Bài toán gốc gần đây</h3>
+                <p className="muted">AI dùng các bài toán này để sinh câu hỏi tự động cho bạn.</p>
               </div>
               <button className="btn secondary" onClick={openCanonicalCreateModal}>
                 <Plus size={14} />
@@ -729,7 +813,9 @@ export function TemplateDashboard() {
             </div>
 
             {canonicalQuestions.length === 0 && (
-              <div className="empty">Bạn chưa có canonical question nào.</div>
+              <div className="empty">
+                Bạn chưa có bài toán gốc nào. Hãy thêm bài toán gốc để bắt đầu.
+              </div>
             )}
 
             {canonicalQuestions.length > 0 && (
@@ -738,9 +824,9 @@ export function TemplateDashboard() {
                   <thead>
                     <tr>
                       <th>Tiêu đề</th>
-                      <th style={{ width: 180 }}>Problem Type</th>
-                      <th style={{ width: 180 }}>Muc do nhan thuc</th>
-                      <th style={{ width: 380 }}>Thao tac</th>
+                      <th style={{ width: 180 }}>Dạng bài toán</th>
+                      <th style={{ width: 180 }}>Mức độ nhận thức</th>
+                      <th style={{ width: 380 }}>Thao tác</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -765,7 +851,7 @@ export function TemplateDashboard() {
                               }}
                             >
                               <Play size={14} />
-                              Generate
+                              Tạo câu hỏi
                             </button>
                             <button
                               className="btn secondary"

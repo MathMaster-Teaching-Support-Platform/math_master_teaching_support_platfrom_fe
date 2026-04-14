@@ -1,16 +1,16 @@
-import { useState, useRef } from 'react';
 import {
-  Upload,
-  DownloadCloud,
-  CheckCircle,
-  XCircle,
   AlertCircle,
-  X,
+  CheckCircle,
+  DownloadCloud,
   FileSpreadsheet,
+  Upload,
+  X,
+  XCircle,
 } from 'lucide-react';
+import { useRef, useState } from 'react';
+import MathText from '../../components/common/MathText';
 import { templateImportService } from '../../services/templateImportService';
 import type { ExcelPreviewResponse } from '../../types/bulkImport';
-import MathText from '../../components/common/MathText';
 import './template-bulk-import.css';
 
 interface Props {
@@ -65,20 +65,20 @@ export function TemplateBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
       a.remove();
       globalThis.URL.revokeObjectURL(url);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to download template');
+      setError(err instanceof Error ? err.message : 'Không thể tải file mẫu. Vui lòng thử lại.');
     }
   };
 
   const handleFileSelect = async (selectedFile: File) => {
     // Validate file type
     if (!selectedFile.name.endsWith('.xlsx')) {
-      setError('Only .xlsx files are supported');
+      setError('Chỉ hỗ trợ file định dạng .xlsx');
       return;
     }
 
     // Validate file size (10MB limit)
     if (selectedFile.size > 10 * 1024 * 1024) {
-      setError('File size exceeds 10MB limit');
+      setError('File vượt quá giới hạn 10MB');
       return;
     }
 
@@ -90,7 +90,11 @@ export function TemplateBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
       setPreviewData(preview);
       setStep('preview');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to parse Excel file');
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Không thể đọc file Excel. Vui lòng kiểm tra định dạng file.'
+      );
     } finally {
       setLoading(false);
     }
@@ -132,7 +136,7 @@ export function TemplateBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
       .map((row) => row.data!);
 
     if (validTemplates.length === 0) {
-      setError('No valid templates to import');
+      setError('Không có mẫu hợp lệ nào để nhập.');
       return;
     }
 
@@ -142,9 +146,9 @@ export function TemplateBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
     try {
       const result = await templateImportService.submitBatch(validTemplates);
       onSuccess();
-      setSuccessMessage(`Imported ${result.successCount} templates successfully`);
+      setSuccessMessage(`Đã nhập thành công ${result.successCount} mẫu câu hỏi.`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Import failed');
+      setError(err instanceof Error ? err.message : 'Nhập thất bại. Vui lòng thử lại.');
     } finally {
       setImporting(false);
     }
@@ -174,11 +178,11 @@ export function TemplateBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
       <div className="modal-card bulk-import-modal">
         <div className="modal-header">
           <div>
-            <h3>Bulk Import Question Templates</h3>
+            <h3>Nhập mẫu câu hỏi hàng loạt</h3>
             <p className="muted" style={{ marginTop: 4 }}>
               {step === 'upload'
-                ? 'Download template, fill it with your data, and upload'
-                : `Preview: ${previewData?.validRows ?? 0} valid, ${previewData?.invalidRows ?? 0} invalid`}
+                ? 'Tải file mẫu, điền dữ liệu và tải lên để nhập nhiều mẫu cùng lúc'
+                : `Xem trước: ${previewData?.validRows ?? 0} hợp lệ, ${previewData?.invalidRows ?? 0} lỗi / ${previewData?.totalRows ?? 0} tổng`}
             </p>
           </div>
           <button className="icon-btn" onClick={handleClose}>
@@ -199,21 +203,27 @@ export function TemplateBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
               <div className="alert alert-info">
                 <AlertCircle size={16} />
                 <div>
-                  <strong>Step 1: Download Template</strong>
-                  <p>Download the Excel template and fill in your question templates following the format.</p>
+                  <strong>Bước 1: Tải file mẫu Excel</strong>
+                  <p>
+                    Tải file mẫu về máy, mở bằng Excel và điền thông tin các mẫu câu hỏi theo đúng
+                    cột.
+                  </p>
                 </div>
               </div>
 
               <button className="btn" onClick={handleDownloadTemplate} style={{ marginBottom: 24 }}>
                 <DownloadCloud size={16} />
-                Download Excel Template
+                Tải file mẫu (.xlsx)
               </button>
 
               <div className="alert alert-info">
                 <AlertCircle size={16} />
                 <div>
-                  <strong>Step 2: Upload Filled Template</strong>
-                  <p>Upload your filled Excel file to preview and validate.</p>
+                  <strong>Bước 2: Tải lên file đã điền</strong>
+                  <p>
+                    Tải lên file Excel đã điền để hệ thống kiểm tra và xem trước dữ liệu trước khi
+                    nhập.
+                  </p>
                 </div>
               </div>
 
@@ -237,13 +247,13 @@ export function TemplateBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
                 {loading ? (
                   <>
                     <div className="spinner" />
-                    <p>Parsing Excel file...</p>
+                    <p>Đang đọc file...</p>
                   </>
                 ) : (
                   <>
                     <Upload size={48} />
-                    <p className="drop-zone-text">Click or drag Excel file to upload</p>
-                    <p className="drop-zone-hint">Only .xlsx files are supported (max 10MB)</p>
+                    <p className="drop-zone-text">Nhấn hoặc kéo thả file Excel vào đây</p>
+                    <p className="drop-zone-hint">Chỉ hỗ trợ file .xlsx (tối đa 10MB)</p>
                   </>
                 )}
               </button>
@@ -262,13 +272,13 @@ export function TemplateBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
                 )}
                 <div>
                   <strong>
-                    Preview Results: {previewData.validRows} valid, {previewData.invalidRows} invalid
-                    out of {previewData.totalRows} total
+                    Kết quả kiểm tra: {previewData.validRows} hợp lệ, {previewData.invalidRows} lỗi
+                    / {previewData.totalRows} dòng tổng
                   </strong>
                   {previewData.invalidRows > 0 && (
-                    <p>Please review and fix invalid rows, then re-upload the file.</p>
+                    <p>Vui lòng sửa các dòng lỗi trong file rồi tải lên lại.</p>
                   )}
-                  {previewData.invalidRows === 0 && <p>All rows are valid and ready to import!</p>}
+                  {previewData.invalidRows === 0 && <p>Tất cả dòng đều hợp lệ, sẵn sàng nhập!</p>}
                 </div>
               </div>
 
@@ -276,12 +286,12 @@ export function TemplateBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
                 <table className="table">
                   <thead>
                     <tr>
-                      <th style={{ width: 60 }}>Row</th>
-                      <th style={{ width: 80 }}>Status</th>
-                      <th>Name</th>
-                      <th style={{ width: 150 }}>Type</th>
-                      <th style={{ width: 130 }}>Cognitive Level</th>
-                      <th>Errors</th>
+                      <th style={{ width: 60 }}>Dòng</th>
+                      <th style={{ width: 100 }}>Trạng thái</th>
+                      <th>Tên mẫu</th>
+                      <th style={{ width: 150 }}>Loại câu hỏi</th>
+                      <th style={{ width: 130 }}>Mức độ</th>
+                      <th>Lỗi phát hiện</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -292,12 +302,12 @@ export function TemplateBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
                           {row.isValid ? (
                             <span className="badge badge-success">
                               <CheckCircle size={12} />
-                              Valid
+                              Hợp lệ
                             </span>
                           ) : (
                             <span className="badge badge-error">
                               <XCircle size={12} />
-                              Invalid
+                              Lỗi
                             </span>
                           )}
                         </td>
@@ -315,7 +325,8 @@ export function TemplateBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
                         </td>
                         <td>
                           {row.data?.cognitiveLevel
-                            ? cognitiveLevelLabel[row.data.cognitiveLevel] || row.data.cognitiveLevel
+                            ? cognitiveLevelLabel[row.data.cognitiveLevel] ||
+                              row.data.cognitiveLevel
                             : '-'}
                         </td>
                         <td>
@@ -343,14 +354,14 @@ export function TemplateBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
         <div className="modal-footer">
           {step === 'upload' && (
             <button className="btn secondary" onClick={handleClose}>
-              Cancel
+              Đóng
             </button>
           )}
 
           {step === 'preview' && (
             <>
               <button className="btn secondary" onClick={handleBack}>
-                Back
+                Quay lại
               </button>
               <button
                 className="btn"
@@ -360,13 +371,12 @@ export function TemplateBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
                 {importing ? (
                   <>
                     <div className="spinner-small" />
-                    Importing...
+                    Đang nhập...
                   </>
                 ) : (
                   <>
                     <FileSpreadsheet size={16} />
-                    Import {previewData?.validRows ?? 0} Valid Template
-                    {previewData && previewData.validRows !== 1 ? 's' : ''}
+                    Nhập {previewData?.validRows ?? 0} mẫu hợp lệ
                   </>
                 )}
               </button>
@@ -376,7 +386,7 @@ export function TemplateBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
 
         {successMessage && (
           <dialog
-            aria-label="Import thanh cong"
+            aria-label="Nhập thành công"
             open
             style={{
               position: 'absolute',
@@ -401,15 +411,11 @@ export function TemplateBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
             >
               <div className="row" style={{ alignItems: 'center', gap: 8 }}>
                 <CheckCircle size={18} color="#15803d" />
-                <strong style={{ color: '#0f172a' }}>Import completed</strong>
+                <strong style={{ color: '#0f172a' }}>Nhập thành công</strong>
               </div>
               <p style={{ margin: '0.75rem 0 1rem', color: '#334155' }}>{successMessage}</p>
               <div className="row" style={{ justifyContent: 'end' }}>
-                <button
-                  type="button"
-                  className="btn"
-                  onClick={handleClose}
-                >
+                <button type="button" className="btn" onClick={handleClose}>
                   OK
                 </button>
               </div>

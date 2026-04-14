@@ -45,8 +45,8 @@ export function CanonicalQuestionModal({
   const [cognitiveLevel, setCognitiveLevel] = useState<CanonicalCognitiveLevel>('THONG_HIEU');
   const [error, setError] = useState<string | null>(null);
 
-  let submitLabel = 'Lưu Canonical';
-  if (mode === 'create') submitLabel = 'Tạo Canonical';
+  let submitLabel = 'Lưu bài toán';
+  if (mode === 'create') submitLabel = 'Tạo bài toán gốc';
   if (submitting) submitLabel = 'Đang lưu...';
 
   useEffect(() => {
@@ -91,7 +91,7 @@ export function CanonicalQuestionModal({
     }
 
     if (!solutionSteps.trim()) {
-      setError('solutionSteps là bắt buộc cho canonical question.');
+      setError('Lời giải là bắt buộc.');
       return;
     }
 
@@ -109,7 +109,9 @@ export function CanonicalQuestionModal({
 
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Không thể lưu canonical question.');
+      setError(
+        err instanceof Error ? err.message : 'Không thể lưu bài toán gốc. Vui lòng thử lại.'
+      );
     }
   }
 
@@ -118,9 +120,9 @@ export function CanonicalQuestionModal({
       <div className="modal-card" style={{ width: 'min(900px, 100%)' }}>
         <div className="modal-header">
           <div>
-            <h3>{mode === 'create' ? 'Tạo Canonical Question' : 'Cập nhật Canonical Question'}</h3>
+            <h3>{mode === 'create' ? 'Thêm bài toán gốc' : 'Cập nhật bài toán gốc'}</h3>
             <p className="muted" style={{ marginTop: 4 }}>
-              Canonical Question = bài toán gốc do giáo viên định nghĩa.
+              Bài toán gốc là nền tảng để AI tạo ra nhiều câu hỏi ngẫu nhiên cùng chủ đề.
             </p>
           </div>
           <button className="icon-btn" onClick={onClose}>
@@ -130,33 +132,57 @@ export function CanonicalQuestionModal({
 
         <form onSubmit={submit}>
           <div className="modal-body">
-            {error && <div className="empty" style={{ color: '#b91c1c' }}>{error}</div>}
+            {error && (
+              <div className="empty" style={{ color: '#b91c1c' }}>
+                {error}
+              </div>
+            )}
 
             <div className="form-grid">
               <label>
-                <p className="muted" style={{ marginBottom: 6 }}>Tiêu đề</p>
-                <input className="input" value={title} onChange={(event) => setTitle(event.target.value)} />
+                <p className="muted" style={{ marginBottom: 6 }}>
+                  Tiêu đề
+                </p>
+                <input
+                  className="input"
+                  value={title}
+                  onChange={(event) => setTitle(event.target.value)}
+                />
               </label>
               <label>
-                <p className="muted" style={{ marginBottom: 6 }}>Problem Type</p>
-                <input className="input" value={problemType} onChange={(event) => setProblemType(event.target.value)} />
+                <p className="muted" style={{ marginBottom: 6 }}>
+                  Dạng bài toán
+                </p>
+                <input
+                  className="input"
+                  value={problemType}
+                  onChange={(event) => setProblemType(event.target.value)}
+                />
               </label>
               <label>
-                <p className="muted" style={{ marginBottom: 6 }}>Muc do nhan thuc</p>
+                <p className="muted" style={{ marginBottom: 6 }}>
+                  Mức độ nhận thức
+                </p>
                 <select
                   className="select"
                   value={cognitiveLevel}
-                  onChange={(event) => setCognitiveLevel(event.target.value as CanonicalCognitiveLevel)}
+                  onChange={(event) =>
+                    setCognitiveLevel(event.target.value as CanonicalCognitiveLevel)
+                  }
                 >
                   {cognitiveLevels.map((item) => (
-                    <option key={item} value={item}>{item}</option>
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
                   ))}
                 </select>
               </label>
             </div>
 
             <label>
-              <p className="muted" style={{ marginBottom: 6 }}>Problem Text (LaTeX hỗ trợ)</p>
+              <p className="muted" style={{ marginBottom: 6 }}>
+                Nội dung bài toán (hỗ trợ LaTeX)
+              </p>
               <textarea
                 className="textarea"
                 rows={4}
@@ -171,7 +197,9 @@ export function CanonicalQuestionModal({
             </label>
 
             <label>
-              <p className="muted" style={{ marginBottom: 6 }}>Solution Steps (LaTeX) *</p>
+              <p className="muted" style={{ marginBottom: 6 }}>
+                Lời giải / Các bước giải *
+              </p>
               <textarea
                 className="textarea"
                 rows={4}
@@ -186,7 +214,9 @@ export function CanonicalQuestionModal({
             </label>
 
             <label>
-              <p className="muted" style={{ marginBottom: 6 }}>Diagram Definition (LaTeX text)</p>
+              <p className="muted" style={{ marginBottom: 6 }}>
+                Hình vẽ / Sơ đồ (LaTeX, tùy chọn)
+              </p>
               <textarea
                 className="textarea"
                 rows={4}
@@ -198,7 +228,9 @@ export function CanonicalQuestionModal({
           </div>
 
           <div className="modal-footer">
-            <button type="button" className="btn secondary" onClick={onClose}>Hủy</button>
+            <button type="button" className="btn secondary" onClick={onClose}>
+              Hủy
+            </button>
             <button type="submit" className="btn" disabled={submitting}>
               {submitLabel}
             </button>
