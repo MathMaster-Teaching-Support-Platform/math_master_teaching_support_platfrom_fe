@@ -1,6 +1,16 @@
-import { useEffect, useState } from 'react';
-import { ArrowLeft, CheckCircle2, Plus, RotateCcw, ShieldCheck, Trash2 } from 'lucide-react';
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Plus,
+  RefreshCw,
+  RotateCcw,
+  ShieldCheck,
+  Trash2,
+} from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { MatrixTable } from '../../components/exam-matrix';
+import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import {
   useApproveMatrix,
   useBatchUpsertMatrixRowCells,
@@ -10,8 +20,6 @@ import {
   useRemoveExamMatrixRow,
   useResetMatrix,
 } from '../../hooks/useExamMatrix';
-import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
-import { MatrixTable } from '../../components/exam-matrix';
 import { examMatrixService } from '../../services/examMatrixService';
 import '../../styles/module-refactor.css';
 import {
@@ -30,7 +38,7 @@ const matrixStatusLabel: Record<string, string> = {
 
 function getPercentageValue(
   distribution: MatrixCognitiveDistribution | undefined,
-  level: 'NHAN_BIET' | 'THONG_HIEU' | 'VAN_DUNG' | 'VAN_DUNG_CAO',
+  level: 'NHAN_BIET' | 'THONG_HIEU' | 'VAN_DUNG' | 'VAN_DUNG_CAO'
 ): number {
   if (!distribution) return 0;
   if (level === 'NHAN_BIET') {
@@ -70,11 +78,11 @@ export default function ExamMatrixDetailPageRefactored() {
 
   const { data, isLoading, isError, error, refetch } = useGetExamMatrixById(
     matrixId ?? '',
-    !!matrixId,
+    !!matrixId
   );
   const { data: tableData, refetch: refetchTable } = useGetExamMatrixTable(
     matrixId ?? '',
-    !!matrixId,
+    !!matrixId
   );
 
   const approveMutation = useApproveMatrix();
@@ -85,14 +93,16 @@ export default function ExamMatrixDetailPageRefactored() {
 
   const matrix = data?.result;
   const table = tableData?.result;
-  const chapters = table?.chapters ?? [];
+  const chapters = useMemo(() => table?.chapters ?? [], [table]);
 
   const canEdit = matrix?.status === MatrixStatus.DRAFT;
 
   useEffect(() => {
     if (!matrix) return;
 
-    const totalQuestionsTarget = Number(matrix.totalQuestionsTarget ?? table?.grandTotalQuestions ?? 40);
+    const totalQuestionsTarget = Number(
+      matrix.totalQuestionsTarget ?? table?.grandTotalQuestions ?? 40
+    );
     const fromServer = matrix.cognitiveLevelPercentages;
 
     const pFromMatrix = {
@@ -127,10 +137,7 @@ export default function ExamMatrixDetailPageRefactored() {
       VAN_DUNG_CAO: getPercentageValue(fromTable, 'VAN_DUNG_CAO'),
     };
     const tableTotal =
-      cFromTable.NHAN_BIET +
-      cFromTable.THONG_HIEU +
-      cFromTable.VAN_DUNG +
-      cFromTable.VAN_DUNG_CAO;
+      cFromTable.NHAN_BIET + cFromTable.THONG_HIEU + cFromTable.VAN_DUNG + cFromTable.VAN_DUNG_CAO;
 
     if (tableTotal > 0) {
       setPercentageDraft({
@@ -192,12 +199,17 @@ export default function ExamMatrixDetailPageRefactored() {
     if (!matrixId) return;
     if (!globalThis.confirm('Bạn có chắc muốn xóa ma trận này?')) return;
     await deleteMutation.mutateAsync(matrixId);
-    navigate('/teacher/exam-matrices');
+    navigate('/teacher/exam-matrices', { replace: true });
   }
 
   async function handleApprove() {
     if (!matrix?.id) return;
-    if (!globalThis.confirm('Bạn có chắc muốn phê duyệt ma trận này? Sau khi phê duyệt, bạn không thể chỉnh sửa.')) return;
+    if (
+      !globalThis.confirm(
+        'Bạn có chắc muốn phê duyệt ma trận này? Sau khi phê duyệt, bạn không thể chỉnh sửa.'
+      )
+    )
+      return;
     await approveMutation.mutateAsync(matrix.id);
     await refetch();
   }
@@ -222,13 +234,42 @@ export default function ExamMatrixDetailPageRefactored() {
             Quay lại danh sách ma trận
           </button>
 
-          {isLoading && <div className="empty">Đang tải chi tiết ma trận...</div>}
+          {isLoading && (
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '4rem 2rem',
+                gap: '1rem',
+              }}
+            >
+              <style>{`@keyframes emxd-spin { to { transform: rotate(360deg); } }`}</style>
+              <span
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: '50%',
+                  border: '3px solid #e2e8f0',
+                  borderTopColor: '#2563eb',
+                  animation: 'emxd-spin 0.75s linear infinite',
+                  display: 'inline-block',
+                }}
+              />
+              <p className="muted" style={{ fontSize: '0.9rem' }}>
+                Đang tải chi tiết ma trận...
+              </p>
+            </div>
+          )}
           {isError && (
             <div className="empty">
               {error instanceof Error ? error.message : 'Không thể tải chi tiết ma trận'}
             </div>
           )}
-          {!isLoading && !isError && !matrix && <div className="empty">Không tìm thấy ma trận.</div>}
+          {!isLoading && !isError && !matrix && (
+            <div className="empty">Không tìm thấy ma trận.</div>
+          )}
 
           {!isLoading && !isError && matrix && (
             <>
@@ -241,19 +282,25 @@ export default function ExamMatrixDetailPageRefactored() {
                     <p style={{ marginBottom: 12 }}>{matrix.description || 'Không có mô tả'}</p>
                     <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
                       <div>
-                        <span className="muted" style={{ fontSize: 12 }}>Khối</span>
+                        <span className="muted" style={{ fontSize: 12 }}>
+                          Khối
+                        </span>
                         <p style={{ fontWeight: 600, marginTop: 4 }}>
                           {matrix.gradeLevel || table?.gradeLevel || 'N/A'}
                         </p>
                       </div>
                       <div>
-                        <span className="muted" style={{ fontSize: 12 }}>Môn học</span>
+                        <span className="muted" style={{ fontSize: 12 }}>
+                          Môn học
+                        </span>
                         <p style={{ fontWeight: 600, marginTop: 4 }}>
                           {matrix.subjectName || table?.subjectName || 'N/A'}
                         </p>
                       </div>
                       <div>
-                        <span className="muted" style={{ fontSize: 12 }}>Tổng điểm</span>
+                        <span className="muted" style={{ fontSize: 12 }}>
+                          Tổng điểm
+                        </span>
                         <p style={{ fontWeight: 600, marginTop: 4 }}>
                           {matrix.totalPointsTarget || 10}
                         </p>
@@ -269,15 +316,13 @@ export default function ExamMatrixDetailPageRefactored() {
                 </div>
 
                 {/* Action Buttons */}
-                <div
-                  className="row"
-                  style={{ marginTop: 20, gap: 8, flexWrap: 'wrap' }}
-                >
+                <div className="row" style={{ marginTop: 20, gap: 8, flexWrap: 'wrap' }}>
                   <button
                     className="btn secondary"
                     onClick={() => void refreshMatrix()}
                     disabled={refreshing}
                   >
+                    <RefreshCw size={14} />
                     {refreshing ? 'Đang làm mới...' : 'Làm mới'}
                   </button>
                   <button
@@ -328,9 +373,16 @@ export default function ExamMatrixDetailPageRefactored() {
                     <div style={{ flex: 1 }}>
                       <h3 style={{ marginBottom: 8 }}>Báo cáo kiểm tra</h3>
                       <p className="muted" style={{ fontSize: 13 }}>
-                        Lỗi: <strong style={{ color: validation.errors.length > 0 ? '#dc2626' : '#10b981' }}>
+                        Lỗi:{' '}
+                        <strong
+                          style={{ color: validation.errors.length > 0 ? '#dc2626' : '#10b981' }}
+                        >
                           {validation.errors.length}
-                        </strong> | Cảnh báo: <strong style={{ color: validation.warnings.length > 0 ? '#f59e0b' : '#10b981' }}>
+                        </strong>{' '}
+                        | Cảnh báo:{' '}
+                        <strong
+                          style={{ color: validation.warnings.length > 0 ? '#f59e0b' : '#10b981' }}
+                        >
                           {validation.warnings.length}
                         </strong>
                       </p>
@@ -341,12 +393,17 @@ export default function ExamMatrixDetailPageRefactored() {
                   </div>
                   {validation.errors.length > 0 && (
                     <div style={{ marginTop: 12 }}>
-                      <p style={{ fontWeight: 600, fontSize: 13, color: '#dc2626', marginBottom: 8 }}>
+                      <p
+                        style={{ fontWeight: 600, fontSize: 13, color: '#dc2626', marginBottom: 8 }}
+                      >
                         Lỗi cần sửa:
                       </p>
                       <ul style={{ margin: 0, paddingLeft: 20 }}>
                         {validation.errors.map((item) => (
-                          <li key={`error-${item}`} style={{ color: '#dc2626', fontSize: 13, marginBottom: 4 }}>
+                          <li
+                            key={`error-${item}`}
+                            style={{ color: '#dc2626', fontSize: 13, marginBottom: 4 }}
+                          >
                             {item}
                           </li>
                         ))}
@@ -355,12 +412,17 @@ export default function ExamMatrixDetailPageRefactored() {
                   )}
                   {validation.warnings.length > 0 && (
                     <div style={{ marginTop: 12 }}>
-                      <p style={{ fontWeight: 600, fontSize: 13, color: '#f59e0b', marginBottom: 8 }}>
+                      <p
+                        style={{ fontWeight: 600, fontSize: 13, color: '#f59e0b', marginBottom: 8 }}
+                      >
                         Cảnh báo:
                       </p>
                       <ul style={{ margin: 0, paddingLeft: 20 }}>
                         {validation.warnings.map((item) => (
-                          <li key={`warning-${item}`} style={{ color: '#f59e0b', fontSize: 13, marginBottom: 4 }}>
+                          <li
+                            key={`warning-${item}`}
+                            style={{ color: '#f59e0b', fontSize: 13, marginBottom: 4 }}
+                          >
                             {item}
                           </li>
                         ))}
@@ -371,7 +433,15 @@ export default function ExamMatrixDetailPageRefactored() {
               )}
 
               {/* Matrix Table Header */}
-              <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', marginTop: 24, marginBottom: 16 }}>
+              <div
+                className="row"
+                style={{
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginTop: 24,
+                  marginBottom: 16,
+                }}
+              >
                 <div>
                   <h3 style={{ marginBottom: 4 }}>Bảng ma trận đề</h3>
                   <p className="muted" style={{ fontSize: 13 }}>

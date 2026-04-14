@@ -1,9 +1,363 @@
-.materials-page {
-  max-width: 1240px;
-  margin: 0 auto;
+/* ═══════════════════════════════════════════════════
+   Materials Generator — page-specific overrides
+   Base styles from module-refactor.css
+   ═══════════════════════════════════════════════════ */
+
+/* ── Header extras ───────────────────────────────────── */
+.module-layout-container .materials-header-row {
+  align-items: flex-start;
+  padding-bottom: 1.25rem;
+  border-bottom: 1.5px solid var(--mod-slate-100);
 }
 
-.materials-header {
+.module-layout-container .header-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.module-layout-container .header-kicker {
+  color: #4f6790;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.module-layout-container .header-sub {
+  margin: 0;
+  color: var(--mod-slate-500);
+  font-size: 0.9rem;
+  max-width: 640px;
+}
+
+.module-layout-container .count-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--mod-slate-100);
+  color: var(--mod-slate-700);
+  border-radius: 9999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0.1rem 0.55rem;
+}
+
+/* ── Beta badge ──────────────────────────────────────── */
+.module-layout-container .materials-beta-badge {
+  font-size: 0.66rem;
+  font-weight: 800;
+  border-radius: 8px;
+  padding: 0.18rem 0.48rem;
+  color: #2563eb;
+  background: #dbeafe;
+  letter-spacing: 0.05em;
+  vertical-align: middle;
+}
+
+/* ── History button ──────────────────────────────────── */
+.module-layout-container .materials-history-btn {
+  background: #fff;
+  color: var(--mod-slate-700);
+  border-color: var(--mod-slate-200);
+  box-shadow: none;
+  flex-shrink: 0;
+}
+.module-layout-container .materials-history-btn:hover {
+  background: var(--mod-slate-50);
+  border-color: var(--mod-slate-300);
+}
+
+/* ── Stat cards colour variants ──────────────────────── */
+.module-layout-container .stat-card {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.module-layout-container .stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(21, 44, 74, 0.1);
+}
+
+.module-layout-container .stat-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.module-layout-container .stat-blue .stat-icon-wrap {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+.module-layout-container .stat-indigo .stat-icon-wrap {
+  background: #eef2ff;
+  color: #4338ca;
+}
+.module-layout-container .stat-violet .stat-icon-wrap {
+  background: #f5f3ff;
+  color: #6d28d9;
+}
+.module-layout-container .stat-emerald .stat-icon-wrap {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+/* ── Section label ───────────────────────────────────── */
+.module-layout-container .materials-section-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--mod-slate-500);
+  margin-bottom: -0.2rem;
+}
+
+/* ── Tool card grid ──────────────────────────────────── */
+.module-layout-container .materials-tool-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.95rem;
+}
+
+.module-layout-container .materials-tool-card {
+  position: relative;
+  background: #fff;
+  border: 1px solid var(--mod-slate-100);
+  border-radius: 16px;
+  padding: 1.2rem 1.25rem 1.3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  box-shadow: 0 4px 14px rgba(21, 44, 74, 0.06);
+  transition:
+    transform 0.17s ease,
+    box-shadow 0.17s ease,
+    border-color 0.17s ease;
+  overflow: hidden;
+}
+
+.module-layout-container .materials-tool-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(25, 49, 82, 0.11);
+  border-color: var(--mod-slate-200);
+}
+
+/* Subtle top-border colour accent */
+.module-layout-container .materials-tool-card.tool-accent-blue {
+  border-top: 3px solid #3b82f6;
+}
+.module-layout-container .materials-tool-card.tool-accent-violet {
+  border-top: 3px solid #8b5cf6;
+}
+.module-layout-container .materials-tool-card.tool-accent-amber {
+  border-top: 3px solid #f59e0b;
+}
+.module-layout-container .materials-tool-card.tool-accent-emerald {
+  border-top: 3px solid #10b981;
+}
+
+.module-layout-container .materials-tool-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.module-layout-container .materials-tool-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.module-layout-container .tool-accent-blue .materials-tool-icon {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+.module-layout-container .tool-accent-violet .materials-tool-icon {
+  background: #f5f3ff;
+  color: #6d28d9;
+}
+.module-layout-container .tool-accent-amber .materials-tool-icon {
+  background: #fffbeb;
+  color: #b45309;
+}
+.module-layout-container .tool-accent-emerald .materials-tool-icon {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.module-layout-container .materials-tool-tag {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  border-radius: 999px;
+  padding: 0.18rem 0.5rem;
+  flex-shrink: 0;
+}
+
+.module-layout-container .materials-tool-tag.available {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.module-layout-container .materials-tool-tag.coming-soon {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.module-layout-container .materials-tool-card h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--mod-ink);
+  line-height: 1.25;
+}
+
+.module-layout-container .materials-tool-card p {
+  margin: 0;
+  color: var(--mod-slate-500);
+  font-size: 0.86rem;
+  line-height: 1.6;
+  flex: 1;
+}
+
+.module-layout-container .materials-tool-cta {
+  width: 100%;
+  justify-content: center;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  margin-top: auto;
+}
+
+/* ── Table enhancements ──────────────────────────────── */
+.module-layout-container .materials-file-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.module-layout-container .materials-file-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: #eef4ff;
+  color: #2563eb;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.module-layout-container .materials-file-name {
+  font-weight: 700;
+  color: var(--mod-ink);
+  font-size: 0.87rem;
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.module-layout-container .badge.materials-kind-badge {
+  font-size: 0.67rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  border-radius: 999px;
+}
+
+.module-layout-container .badge.materials-kind-badge.slide {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+
+.module-layout-container .badge.materials-kind-badge.mindmap {
+  background: #f5f3ff;
+  color: #6d28d9;
+  border-color: #ddd6fe;
+}
+
+.module-layout-container .materials-action-btn {
+  padding: 0.38rem 0.7rem;
+  font-size: 0.8rem;
+  border-radius: 9px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+}
+
+.module-layout-container .materials-table-footer {
+  padding: 0.72rem 0.95rem;
+  font-size: 0.8rem;
+  color: var(--mod-slate-500);
+  border-top: 1px solid var(--mod-slate-100);
+  background: #f9fbff;
+}
+
+.module-layout-container .materials-table-placeholder {
+  padding: 1rem;
+}
+
+/* ── Skeleton animation ──────────────────────────────── */
+.module-layout-container .skeleton-card {
+  border-radius: 14px;
+  background: linear-gradient(90deg, #f1f5f9 25%, #e8edf5 50%, #f1f5f9 75%);
+  background-size: 400% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* ── Responsive ──────────────────────────────────────── */
+@media (max-width: 1150px) {
+  .module-layout-container .materials-tool-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .module-layout-container .materials-tool-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .module-layout-container .materials-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .module-layout-container .materials-file-name {
+    max-width: 160px;
+  }
+}
+
+/* ─────────────────────────────────────────────────────
+   LEGACY (kept for safety, can be removed after QA)
+   ───────────────────────────────────────────────────── */
+.materials-header-legacy {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
