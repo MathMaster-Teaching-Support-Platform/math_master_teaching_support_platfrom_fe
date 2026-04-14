@@ -430,35 +430,6 @@ const AISlideGenerator: React.FC = () => {
     setActiveWizardStep(1);
   };
 
-  const applyLessonSlideContentToEditor = (lesson: LessonResponse) => {
-    const parsedSlides = parseSlidesFromLessonContent(lesson.lessonContent);
-
-    if (!parsedSlides.length) {
-      setError('Bài này chưa có nội dung slide đã gen để xem lại.');
-      return;
-    }
-
-    const restoredResult: GenerateSlideContentResult = {
-      subjectId,
-      chapterId,
-      lessonId: lesson.id,
-      lessonTitle: lesson.title || selectedLesson?.title || 'Lesson',
-      slideCount: parsedSlides.length,
-      outputFormat,
-      slides: parsedSlides,
-    };
-
-    setGenerated(restoredResult);
-    setLessonId(lesson.id);
-    setEditableSlides(parsedSlides);
-    setActivePreviewIndex(0);
-    setPreparedPptxBlob(null);
-    setPreparedPptxFilename('lesson-slides.pptx');
-    setSuccess('Đã nạp lại nội dung slide đã gen. Bạn có thể chỉnh sửa và xuất PPTX.');
-    setError('');
-    setActiveWizardStep(4);
-  };
-
   const loadGeneratedFiles = useCallback(
     async (targetLessonId?: string) => {
       setLoadingGeneratedFiles(true);
@@ -562,19 +533,27 @@ const AISlideGenerator: React.FC = () => {
   };
 
   const handleOpenGeneratedPreview = (generatedFileId?: string) => {
-    if (!generatedFileId && !selectedGeneratedFile) {
+    const targetFile = generatedFileId
+      ? generatedFiles.find((file) => file.id === generatedFileId) || null
+      : selectedGeneratedFile;
+
+    if (!targetFile) {
       setError('Vui lòng chọn 1 file trước khi xem trước.');
       return;
     }
 
-    if (generatedFileId && generatedFileId !== selectedGeneratedFileId) {
-      setSelectedGeneratedFileId(generatedFileId);
+    if (targetFile.id !== selectedGeneratedFileId) {
+      setSelectedGeneratedFileId(targetFile.id);
     }
 
     setGeneratedPreviewIndex(0);
     setIsGeneratedPreviewOpen(true);
     setError('');
     setSuccess('');
+
+    if (selectedGeneratedLesson?.id !== targetFile.lessonId) {
+      void loadLessonDetailFromGeneratedFile(targetFile);
+    }
   };
 
   const handleToggleGeneratedVisibility = async (
@@ -1427,14 +1406,6 @@ const AISlideGenerator: React.FC = () => {
                     <button
                       type="button"
                       className="btn btn-outline"
-                      disabled={!selectedGeneratedFile}
-                      onClick={() => handleOpenGeneratedPreview()}
-                    >
-                      Xem trước slide
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-outline"
                       disabled={
                         !selectedGeneratedFile ||
                         !selectedGeneratedFile.isPublic ||
@@ -1480,11 +1451,10 @@ const AISlideGenerator: React.FC = () => {
                         type="button"
                         className="btn btn-outline"
                         onClick={() => {
-                          applyLessonSlideContentToEditor(selectedGeneratedLesson);
-                          setActiveMainTab('GENERATE');
+                          handleOpenGeneratedPreview();
                         }}
                       >
-                        Xem lại nội dung đã gen
+                        Xem slide đã gen
                       </button>
                     </div>
                   )}
@@ -1925,9 +1895,19 @@ const AISlideGenerator: React.FC = () => {
                   <p className="ai-slide-info">Đang tải nội dung để xem trước...</p>
                 )}
 
-                {!loadingSelectedGeneratedLesson && !generatedPreviewSlides.length && (
+                {!loadingSelectedGeneratedLesson &&
+                  selectedGeneratedLesson?.lessonContent &&
+                  !generatedPreviewSlides.length && (
+                    <p className="ai-slide-info">
+                      Không đọc được cấu trúc slide từ lessonContent. Bạn vẫn có thể tải trực tiếp
+                      file PPTX.
+                    </p>
+                  )}
+
+                {!loadingSelectedGeneratedLesson && !selectedGeneratedLesson?.lessonContent && (
                   <p className="ai-slide-info">
-                    Không có dữ liệu slide để preview. Bạn vẫn có thể tải trực tiếp file PPTX.
+                    File này vẫn tải được, nhưng backend hiện không lưu nội dung slide dạng JSON để
+                    preview trong popup.
                   </p>
                 )}
 
