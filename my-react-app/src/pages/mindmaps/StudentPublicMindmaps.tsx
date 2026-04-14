@@ -53,6 +53,9 @@ export default function StudentPublicMindmaps() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
+  const isSlidesOnlyRoute = location.pathname === '/student/public-slides';
+  const isMindmapsOnlyRoute = location.pathname === '/student/public-mindmaps';
+  const isCombinedRoute = !isSlidesOnlyRoute && !isMindmapsOnlyRoute;
 
   const [schoolGrades, setSchoolGrades] = useState<SchoolGrade[]>([]);
   const [subjects, setSubjects] = useState<SubjectByGrade[]>([]);
@@ -396,8 +399,13 @@ export default function StudentPublicMindmaps() {
       <div className="student-public-mindmaps-page">
         <header className="student-public-mindmaps-header">
           <p className="header-kicker">Kho học liệu học sinh</p>
-          <h1>Thư viện tài nguyên công khai</h1>
-          <p>Tách riêng 2 khu vực: Slide công khai và Mindmap công khai cho học sinh.</p>
+          <h1>
+            {isSlidesOnlyRoute
+              ? 'Thư viện slide công khai'
+              : isMindmapsOnlyRoute
+                ? 'Thư viện mindmap công khai'
+                : 'Thư viện tài nguyên công khai'}
+          </h1>
         </header>
 
         <section className="student-public-mindmaps-filters">
@@ -455,32 +463,34 @@ export default function StudentPublicMindmaps() {
           <p className="state-text">Đang lọc theo bài học: {selectedLesson.title}</p>
         )}
 
-        <section
-          className="student-public-tab-switcher"
-          role="tablist"
-          aria-label="Nội dung công khai"
-        >
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeTab === 'SLIDES'}
-            className={`resource-tab ${activeTab === 'SLIDES' ? 'active' : ''}`}
-            onClick={() => setActiveTab('SLIDES')}
+        {isCombinedRoute && (
+          <section
+            className="student-public-tab-switcher"
+            role="tablist"
+            aria-label="Nội dung công khai"
           >
-            <FileText size={16} /> Slide công khai
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeTab === 'MINDMAPS'}
-            className={`resource-tab ${activeTab === 'MINDMAPS' ? 'active' : ''}`}
-            onClick={() => setActiveTab('MINDMAPS')}
-          >
-            <Workflow size={16} /> Mindmap công khai
-          </button>
-        </section>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'SLIDES'}
+              className={`resource-tab ${activeTab === 'SLIDES' ? 'active' : ''}`}
+              onClick={() => setActiveTab('SLIDES')}
+            >
+              <FileText size={16} /> Slide công khai
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'MINDMAPS'}
+              className={`resource-tab ${activeTab === 'MINDMAPS' ? 'active' : ''}`}
+              onClick={() => setActiveTab('MINDMAPS')}
+            >
+              <Workflow size={16} /> Mindmap công khai
+            </button>
+          </section>
+        )}
 
-        {activeTab === 'SLIDES' && (
+        {(isSlidesOnlyRoute || (!isMindmapsOnlyRoute && activeTab === 'SLIDES')) && (
           <section className="student-public-slides-section">
             <div className="student-public-section-header">
               <h2>Slide công khai</h2>
@@ -605,7 +615,7 @@ export default function StudentPublicMindmaps() {
           </section>
         )}
 
-        {activeTab === 'MINDMAPS' && (
+        {(isMindmapsOnlyRoute || (!isSlidesOnlyRoute && activeTab === 'MINDMAPS')) && (
           <section className="student-public-mindmaps-section">
             <div className="student-public-section-header">
               <h2>Mindmap công khai</h2>
