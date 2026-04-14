@@ -62,7 +62,9 @@
   display: flex;
   align-items: center;
   gap: 0.85rem;
-  transition: transform 0.16s ease, box-shadow 0.16s ease;
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease;
 }
 
 .module-layout-container .stat-card:hover {
@@ -442,7 +444,9 @@
 .module-layout-container .qb-quicknav__arrow {
   color: var(--mod-slate-300);
   flex-shrink: 0;
-  transition: transform 0.15s ease, color 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    color 0.15s ease;
 }
 
 .module-layout-container .qb-quicknav__divider {
@@ -486,6 +490,10 @@
 }
 
 @keyframes qb-skeleton-shimmer {
-  0%   { background-position: 100% 0; }
-  100% { background-position: -100% 0; }
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
 }

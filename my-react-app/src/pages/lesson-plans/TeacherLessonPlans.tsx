@@ -780,7 +780,7 @@ export default function TeacherLessonPlans() {
             <div className="header-stack">
               <div className="header-kicker">Lesson plan management</div>
               <div className="row" style={{ gap: '0.6rem' }}>
-                <h2>Giáo án của tôi</h2>
+                <h2>Giáo án</h2>
                 {!isLoading && <span className="count-chip">{plans.length}</span>}
               </div>
               <p className="header-sub">

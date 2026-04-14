@@ -1,13 +1,29 @@
+import {
+  AlertCircle,
+  ArrowRight,
+  BookOpen,
+  Database,
+  Edit3,
+  FileQuestion,
+  Plus,
+  RefreshCw,
+  Search,
+  Sparkles,
+  Tag,
+  Trash2,
+  X,
+} from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { Edit3, Plus, RefreshCw, Search, Tag, Trash2, X } from 'lucide-react';
-import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { useNavigate } from 'react-router-dom';
 import MathText from '../../components/common/MathText';
+import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import {
   useCreateQuestion,
   useDeleteQuestion,
   useGetMyQuestions,
   useUpdateQuestion,
 } from '../../hooks/useQuestion';
+import '../../styles/module-refactor.css';
 import type {
   CreateQuestionRequest,
   QuestionDifficulty,
@@ -15,7 +31,7 @@ import type {
   QuestionType,
   UpdateQuestionRequest,
 } from '../../types/question';
-import '../../styles/module-refactor.css';
+import './TeacherQuestionManagementPage.css';
 
 type FormMode = 'create' | 'edit';
 
@@ -124,7 +140,9 @@ function QuestionFormModal({
 
           <div className="modal-body">
             <label>
-              <p className="muted" style={{ marginBottom: 6 }}>Noi dung cau hoi</p>
+              <p className="muted" style={{ marginBottom: 6 }}>
+                Noi dung cau hoi
+              </p>
               <textarea
                 className="textarea"
                 rows={4}
@@ -136,7 +154,9 @@ function QuestionFormModal({
 
             <div className="form-grid">
               <label>
-                <p className="muted" style={{ marginBottom: 6 }}>Loai cau hoi</p>
+                <p className="muted" style={{ marginBottom: 6 }}>
+                  Loai cau hoi
+                </p>
                 <select
                   className="select"
                   value={form.questionType}
@@ -152,7 +172,9 @@ function QuestionFormModal({
               </label>
 
               <label>
-                <p className="muted" style={{ marginBottom: 6 }}>Do kho</p>
+                <p className="muted" style={{ marginBottom: 6 }}>
+                  Do kho
+                </p>
                 <select
                   className="select"
                   value={form.difficulty}
@@ -167,7 +189,9 @@ function QuestionFormModal({
               </label>
 
               <label>
-                <p className="muted" style={{ marginBottom: 6 }}>Diem</p>
+                <p className="muted" style={{ marginBottom: 6 }}>
+                  Diem
+                </p>
                 <input
                   className="input"
                   type="number"
@@ -181,7 +205,9 @@ function QuestionFormModal({
 
             <div className="form-grid">
               <label>
-                <p className="muted" style={{ marginBottom: 6 }}>Dap an dung</p>
+                <p className="muted" style={{ marginBottom: 6 }}>
+                  Dap an dung
+                </p>
                 <input
                   className="input"
                   value={form.correctAnswer}
@@ -191,7 +217,9 @@ function QuestionFormModal({
               </label>
 
               <label>
-                <p className="muted" style={{ marginBottom: 6 }}>Tag (tach boi dau phay)</p>
+                <p className="muted" style={{ marginBottom: 6 }}>
+                  Tag (tach boi dau phay)
+                </p>
                 <input
                   className="input"
                   value={form.tags}
@@ -202,7 +230,9 @@ function QuestionFormModal({
             </div>
 
             <label>
-              <p className="muted" style={{ marginBottom: 6 }}>Giai thich</p>
+              <p className="muted" style={{ marginBottom: 6 }}>
+                Giai thich
+              </p>
               <textarea
                 className="textarea"
                 rows={3}
@@ -213,7 +243,9 @@ function QuestionFormModal({
             </label>
 
             <label>
-              <p className="muted" style={{ marginBottom: 6 }}>Options JSON (khong bat buoc)</p>
+              <p className="muted" style={{ marginBottom: 6 }}>
+                Options JSON (khong bat buoc)
+              </p>
               <textarea
                 className="textarea"
                 rows={5}
@@ -245,6 +277,7 @@ function QuestionFormModal({
 }
 
 export default function TeacherQuestionManagementPage() {
+  const navigate = useNavigate();
   const [searchName, setSearchName] = useState('');
   const [searchTag, setSearchTag] = useState('');
   const [page, setPage] = useState(0);
@@ -272,8 +305,17 @@ export default function TeacherQuestionManagementPage() {
   const updateMutation = useUpdateQuestion();
   const deleteMutation = useDeleteQuestion();
 
-  const questions = data?.result?.content ?? [];
+  const questions = useMemo(() => data?.result?.content ?? [], [data]);
   const totalPages = data?.result?.totalPages ?? 0;
+
+  const stats = useMemo(
+    () => ({
+      easy: questions.filter((q) => q.difficulty === 'EASY').length,
+      medium: questions.filter((q) => q.difficulty === 'MEDIUM').length,
+      hard: questions.filter((q) => q.difficulty === 'HARD').length,
+    }),
+    [questions]
+  );
 
   const filteredQuestions = useMemo(() => {
     const qName = searchName.trim().toLowerCase();
@@ -393,71 +435,214 @@ export default function TeacherQuestionManagementPage() {
     >
       <div className="module-layout-container">
         <section className="module-page">
-          <header className="page-header">
-            <div>
-              <h2>Quan ly cau hoi cua toi</h2>
-              <p>
-                Tao, chinh sua, xoa va tim nhanh cau hoi theo noi dung va tag de tai su dung trong de thi.
+          <div className="tqm-header-row">
+            <div className="header-stack">
+              <span className="header-kicker">Kho câu hỏi cá nhân</span>
+              <h2 style={{ margin: 0, fontSize: '1.45rem', color: '#142235' }}>
+                Quản lý câu hỏi của tôi <span className="count-chip">{questions.length}</span>
+              </h2>
+              <p className="header-sub">
+                Tạo, chỉnh sửa, xóa và tìm nhanh câu hỏi theo nội dung và tag để tái sử dụng trong
+                đề thi.
               </p>
             </div>
             <button className="btn" onClick={openingCreateModal}>
               <Plus size={14} />
-              Tao cau hoi
+              Tạo câu hỏi
             </button>
-          </header>
+          </div>
 
-          <section className="hero-card">
-            <p className="hero-kicker">Question CRUD</p>
-            <h2>Quan ly kho cau hoi ca nhan cua giao vien</h2>
-            <p className="muted" style={{ marginTop: 8 }}>
-              Tim kiem theo ten cau hoi va tag. Neu backend chua ho tro loc server-side, trang van loc o FE.
-            </p>
-          </section>
+          <div
+            className="stats-grid"
+            style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))' }}
+          >
+            <div className="stat-card stat-blue">
+              <div className="stat-icon-wrap">
+                <Database size={16} />
+              </div>
+              <div>
+                <p className="muted" style={{ margin: 0, fontSize: '0.78rem' }}>
+                  Tổng câu hỏi
+                </p>
+                <h3 style={{ margin: 0, fontSize: '1.5rem' }}>
+                  {isLoading ? '—' : questions.length}
+                </h3>
+              </div>
+            </div>
+            <div className="stat-card stat-emerald">
+              <div className="stat-icon-wrap">
+                <BookOpen size={16} />
+              </div>
+              <div>
+                <p className="muted" style={{ margin: 0, fontSize: '0.78rem' }}>
+                  Mức Dễ
+                </p>
+                <h3 style={{ margin: 0, fontSize: '1.5rem' }}>{isLoading ? '—' : stats.easy}</h3>
+              </div>
+            </div>
+            <div className="stat-card stat-amber">
+              <div className="stat-icon-wrap">
+                <FileQuestion size={16} />
+              </div>
+              <div>
+                <p className="muted" style={{ margin: 0, fontSize: '0.78rem' }}>
+                  Trung bình
+                </p>
+                <h3 style={{ margin: 0, fontSize: '1.5rem' }}>{isLoading ? '—' : stats.medium}</h3>
+              </div>
+            </div>
+            <div className="stat-card stat-violet">
+              <div className="stat-icon-wrap">
+                <Sparkles size={16} />
+              </div>
+              <div>
+                <p className="muted" style={{ margin: 0, fontSize: '0.78rem' }}>
+                  Mức Khó
+                </p>
+                <h3 style={{ margin: 0, fontSize: '1.5rem' }}>{isLoading ? '—' : stats.hard}</h3>
+              </div>
+            </div>
+          </div>
+
+          <nav className="tqm-quicknav">
+            <button
+              className="tqm-quicknav__item"
+              onClick={() => navigate('/teacher/question-banks')}
+            >
+              <span className="tqm-quicknav__icon tqm-nav-blue">
+                <Database size={14} />
+              </span>
+              <span className="tqm-quicknav__text">
+                <span className="tqm-quicknav__title">Ngân hàng câu hỏi</span>
+                <span className="tqm-quicknav__desc">Quản lý kho câu hỏi dùng chung</span>
+              </span>
+              <ArrowRight size={14} className="tqm-quicknav__arrow" />
+            </button>
+            <span className="tqm-quicknav__divider" />
+            <button
+              className="tqm-quicknav__item"
+              onClick={() => navigate('/teacher/question-templates')}
+            >
+              <span className="tqm-quicknav__icon tqm-nav-violet">
+                <Sparkles size={14} />
+              </span>
+              <span className="tqm-quicknav__text">
+                <span className="tqm-quicknav__title">Mẫu câu hỏi</span>
+                <span className="tqm-quicknav__desc">Soạn mẫu và sinh câu hỏi với AI</span>
+              </span>
+              <ArrowRight size={14} className="tqm-quicknav__arrow" />
+            </button>
+            <span className="tqm-quicknav__divider" />
+            <button
+              className="tqm-quicknav__item"
+              onClick={() => navigate('/teacher/assessment-builder')}
+            >
+              <span className="tqm-quicknav__icon tqm-nav-emerald">
+                <BookOpen size={14} />
+              </span>
+              <span className="tqm-quicknav__text">
+                <span className="tqm-quicknav__title">Trình tạo đề thi</span>
+                <span className="tqm-quicknav__desc">Lắp ráp và xuất bản đề thi hoàn chỉnh</span>
+              </span>
+              <ArrowRight size={14} className="tqm-quicknav__arrow" />
+            </button>
+          </nav>
 
           <div className="toolbar">
-            <label className="row" style={{ minWidth: 260 }}>
-              <Search size={15} />
+            <span className="search-box" style={{ flex: '1 1 240px' }}>
+              <Search size={15} className="search-box__icon" />
               <input
                 className="input"
-                style={{ border: 0, padding: 0, width: '100%' }}
-                placeholder="Tim theo noi dung cau hoi"
+                placeholder="Tìm theo nội dung câu hỏi"
                 value={searchName}
                 onChange={(event) => {
                   setSearchName(event.target.value);
                   setPage(0);
                 }}
               />
-            </label>
+              {searchName && (
+                <button
+                  className="search-box__clear"
+                  onClick={() => {
+                    setSearchName('');
+                    setPage(0);
+                  }}
+                >
+                  <X size={13} />
+                </button>
+              )}
+            </span>
 
-            <label className="row" style={{ minWidth: 220 }}>
-              <Tag size={15} />
+            <span className="search-box" style={{ flex: '1 1 200px' }}>
+              <Tag size={15} className="search-box__icon" />
               <input
                 className="input"
-                style={{ border: 0, padding: 0, width: '100%' }}
-                placeholder="Tim theo tag"
+                placeholder="Tìm theo tag"
                 value={searchTag}
                 onChange={(event) => {
                   setSearchTag(event.target.value);
                   setPage(0);
                 }}
               />
-            </label>
+              {searchTag && (
+                <button
+                  className="search-box__clear"
+                  onClick={() => {
+                    setSearchTag('');
+                    setPage(0);
+                  }}
+                >
+                  <X size={13} />
+                </button>
+              )}
+            </span>
 
             <button className="btn secondary" onClick={() => void refetch()}>
               <RefreshCw size={14} />
-              Lam moi
+              Làm mới
             </button>
           </div>
 
-          {isLoading && <div className="empty">Dang tai danh sach cau hoi...</div>}
+          {isLoading && (
+            <div className="skeleton-table-row">
+              {['s1', 's2', 's3', 's4', 's5'].map((k) => (
+                <div key={k} className="skeleton-row" />
+              ))}
+            </div>
+          )}
           {isError && (
             <div className="empty">
-              {error instanceof Error ? error.message : 'Khong the tai danh sach cau hoi.'}
+              <AlertCircle size={32} style={{ color: '#ef4444', marginBottom: 8 }} />
+              <p style={{ margin: 0 }}>
+                {error instanceof Error ? error.message : 'Không thể tải danh sách câu hỏi.'}
+              </p>
+              <button
+                className="btn secondary"
+                style={{ marginTop: 10 }}
+                onClick={() => void refetch()}
+              >
+                <RefreshCw size={14} /> Thử lại
+              </button>
             </div>
           )}
 
           {!isLoading && !isError && filteredQuestions.length === 0 && (
-            <div className="empty">Khong tim thay cau hoi phu hop.</div>
+            <div className="empty">
+              <FileQuestion size={32} style={{ color: '#94a3b8', marginBottom: 8 }} />
+              <p style={{ margin: 0 }}>Không tìm thấy câu hỏi phù hợp.</p>
+              {(searchName || searchTag) && (
+                <button
+                  className="btn secondary"
+                  style={{ marginTop: 10 }}
+                  onClick={() => {
+                    setSearchName('');
+                    setSearchTag('');
+                  }}
+                >
+                  Xóa bộ lọc
+                </button>
+              )}
+            </div>
           )}
 
           {!isLoading && !isError && filteredQuestions.length > 0 && (
@@ -485,8 +670,18 @@ export default function TeacherQuestionManagementPage() {
                           </p>
                         )}
                       </td>
-                      <td>{questionTypeLabel[question.questionType]}</td>
-                      <td>{question.difficulty ? difficultyLabel[question.difficulty] : '-'}</td>
+                      <td>
+                        <span className="badge">{questionTypeLabel[question.questionType]}</span>
+                      </td>
+                      <td>
+                        {question.difficulty ? (
+                          <span className={`badge badge-${question.difficulty.toLowerCase()}`}>
+                            {difficultyLabel[question.difficulty]}
+                          </span>
+                        ) : (
+                          '-'
+                        )}
+                      </td>
                       <td>{question.points ?? '-'}</td>
                       <td>{(question.tags ?? []).join(', ') || '-'}</td>
                       <td>{formatDate(question.updatedAt)}</td>
