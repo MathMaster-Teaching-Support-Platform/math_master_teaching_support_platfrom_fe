@@ -175,6 +175,71 @@ export class MindmapService {
     return response.json();
   }
 
+  /** GET /mindmaps/public - Get all published mindmaps with filters + pagination */
+  static async getPublicMindmaps(params?: {
+    lessonId?: string;
+    name?: string;
+    page?: number;
+    size?: number;
+    sortBy?: string;
+    direction?: 'ASC' | 'DESC';
+  }): Promise<ApiResponse<PaginatedResponse<Mindmap>>> {
+    const headers = this.getPublicHeaders();
+    const queryParams = new URLSearchParams();
+    if (params?.lessonId) queryParams.set('lessonId', params.lessonId);
+    if (params?.name) queryParams.set('name', params.name);
+    if (params?.page !== undefined) queryParams.set('page', params.page.toString());
+    if (params?.size !== undefined) queryParams.set('size', params.size.toString());
+    if (params?.sortBy) queryParams.set('sortBy', params.sortBy);
+    if (params?.direction) queryParams.set('direction', params.direction);
+
+    const url = `${API_BASE_URL}${API_ENDPOINTS.MINDMAPS_PUBLIC_LIST}${
+      queryParams.toString() ? `?${queryParams.toString()}` : ''
+    }`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers,
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to fetch public mindmaps');
+    }
+
+    const payload = (await response.json()) as ApiResponse<
+      PaginatedResponse<Mindmap> & {
+        number?: number;
+        size?: number;
+        pageNumber?: number;
+        pageSize?: number;
+      }
+    >;
+
+    const result = payload.result;
+    const normalized: PaginatedResponse<Mindmap> = {
+      content: result.content || [],
+      totalElements: result.totalElements || 0,
+      totalPages: result.totalPages || 0,
+      number:
+        typeof result.pageNumber === 'number'
+          ? result.pageNumber
+          : typeof result.number === 'number'
+            ? result.number
+            : params?.page || 0,
+      size:
+        typeof result.pageSize === 'number'
+          ? result.pageSize
+          : typeof result.size === 'number'
+            ? result.size
+            : params?.size || 10,
+    };
+
+    return {
+      ...payload,
+      result: normalized,
+    };
+  }
+
   /** GET /mindmaps/public/lesson/{lessonId} - Get published mindmaps by lesson */
   static async getPublicMindmapsByLesson(
     lessonId: string,

@@ -94,7 +94,7 @@ const studentGroups: MenuGroup[] = [
     items: [
       { path: '/student/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
       { path: '/student/courses', icon: GraduationCap, label: 'Giáo Trình' },
-      { path: '/student/public-resources', icon: Library, label: 'Tài nguyên public' },
+      { path: '/student/public-resources', icon: Library, label: 'Tài nguyên công khai' },
       { path: '/student/assignments', icon: NotebookTabs, label: 'Bài tập' },
       { path: '/student/assessments', icon: FileCheck2, label: 'Bài kiểm tra' },
       { path: '/student/grades', icon: LineChart, label: 'Điểm số' },

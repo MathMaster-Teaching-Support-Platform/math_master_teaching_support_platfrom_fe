@@ -84,6 +84,25 @@ export interface GeneratedFileListResult {
   content?: LessonSlideGeneratedFile[];
 }
 
+export interface PageResult<T> {
+  content: T[];
+  number: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  first: boolean;
+  last: boolean;
+}
+
+export interface PublicGeneratedSlidesQuery {
+  lessonId?: string;
+  keyword?: string;
+  page?: number;
+  size?: number;
+  sortBy?: string;
+  direction?: 'ASC' | 'DESC';
+}
+
 export type LessonSlidePublicationStatus = 'DRAFT' | 'PUBLISHED';
 
 export type LessonSlideOutputFormat = 'PLAIN_TEXT' | 'LATEX' | 'HYBRID';

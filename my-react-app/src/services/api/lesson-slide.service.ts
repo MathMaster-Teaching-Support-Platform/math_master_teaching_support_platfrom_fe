@@ -8,10 +8,12 @@ import type {
   GeneratePptxRequest,
   GenerateSlideContentRequest,
   GenerateSlideContentResult,
+  PageResult,
   LessonSlideGeneratedFile,
   LessonSlidePublicationStatus,
   LessonByChapter,
   LessonSlideTemplate,
+  PublicGeneratedSlidesQuery,
   SchoolGrade,
   SubjectByGrade,
 } from '../../types/lessonSlide.types';
@@ -112,6 +114,78 @@ export class LessonSlideService {
     }
 
     return [];
+  }
+
+  private static normalizeGeneratedFilePage(
+    result:
+      | LessonSlideGeneratedFile[]
+      | GeneratedFileListResult
+      | PageResult<LessonSlideGeneratedFile>
+      | null
+      | undefined,
+    fallbackPage = 0,
+    fallbackSize = 10
+  ): PageResult<LessonSlideGeneratedFile> {
+    if (Array.isArray(result)) {
+      return {
+        content: result,
+        number: fallbackPage,
+        size: fallbackSize,
+        totalElements: result.length,
+        totalPages: result.length ? 1 : 0,
+        first: true,
+        last: true,
+      };
+    }
+
+    if (result && Array.isArray(result.content)) {
+      const totalElements =
+        typeof (result as { totalElements?: number }).totalElements === 'number'
+          ? (result as { totalElements: number }).totalElements
+          : result.content.length;
+      const size =
+        typeof (result as { size?: number }).size === 'number'
+          ? (result as { size: number }).size
+          : typeof (result as { pageSize?: number }).pageSize === 'number'
+            ? (result as { pageSize: number }).pageSize
+            : fallbackSize;
+      const number =
+        typeof (result as { number?: number }).number === 'number'
+          ? (result as { number: number }).number
+          : typeof (result as { pageNumber?: number }).pageNumber === 'number'
+            ? (result as { pageNumber: number }).pageNumber
+            : fallbackPage;
+      const totalPages =
+        typeof (result as { totalPages?: number }).totalPages === 'number'
+          ? (result as { totalPages: number }).totalPages
+          : Math.ceil(totalElements / Math.max(size, 1));
+
+      return {
+        content: result.content,
+        number,
+        size,
+        totalElements,
+        totalPages,
+        first:
+          typeof (result as { first?: boolean }).first === 'boolean'
+            ? (result as { first: boolean }).first
+            : number <= 0,
+        last:
+          typeof (result as { last?: boolean }).last === 'boolean'
+            ? (result as { last: boolean }).last
+            : number >= Math.max(totalPages - 1, 0),
+      };
+    }
+
+    return {
+      content: [],
+      number: fallbackPage,
+      size: fallbackSize,
+      totalElements: 0,
+      totalPages: 0,
+      first: true,
+      last: true,
+    };
   }
 
   static async getSchoolGrades(activeOnly = true): Promise<ApiEnvelope<SchoolGrade[]>> {
@@ -447,6 +521,45 @@ export class LessonSlideService {
     return {
       ...payload,
       result: this.normalizeGeneratedFileList(payload.result),
+    };
+  }
+
+  static async getAllPublicGeneratedFiles(
+    params: PublicGeneratedSlidesQuery = {}
+  ): Promise<ApiEnvelope<PageResult<LessonSlideGeneratedFile>>> {
+    const query = new URLSearchParams();
+    if (params.lessonId) query.set('lessonId', params.lessonId);
+    if (params.keyword) query.set('keyword', params.keyword);
+    if (typeof params.page === 'number') query.set('page', String(params.page));
+    if (typeof params.size === 'number') query.set('size', String(params.size));
+    if (params.sortBy) query.set('sortBy', params.sortBy);
+    if (params.direction) query.set('direction', params.direction);
+
+    const queryString = query.toString();
+    const url = `${API_BASE_URL}${API_ENDPOINTS.LESSON_SLIDES_PUBLIC_GENERATED}${
+      queryString ? `?${queryString}` : ''
+    }`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: { accept: '*/*' },
+    });
+
+    if (!response.ok) {
+      const parsedError = await this.parseApiError(
+        response,
+        'Failed to fetch public generated slides'
+      );
+      throw this.buildApiError(parsedError.message, parsedError.code);
+    }
+
+    const payload = (await response.json()) as ApiEnvelope<
+      LessonSlideGeneratedFile[] | GeneratedFileListResult | PageResult<LessonSlideGeneratedFile>
+    >;
+
+    return {
+      ...payload,
+      result: this.normalizeGeneratedFilePage(payload.result, params.page ?? 0, params.size ?? 10),
     };
   }
 

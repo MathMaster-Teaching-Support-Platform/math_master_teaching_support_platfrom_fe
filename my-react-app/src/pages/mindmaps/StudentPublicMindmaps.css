@@ -7,7 +7,7 @@
 }
 
 .student-public-mindmaps-header {
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 
 .student-public-mindmaps-header .header-kicker {
@@ -31,39 +31,11 @@
   color: #475569;
 }
 
-.student-public-metrics {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  margin: 16px 0 14px;
-}
-
-.metric-card {
-  border: 1px solid #dbeafe;
-  border-radius: 14px;
-  padding: 12px 14px;
-  background: linear-gradient(180deg, #ffffff 0%, #eff6ff 100%);
-  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.08);
-}
-
-.metric-card p {
-  margin: 0;
-  color: #475569;
-  font-size: 0.82rem;
-}
-
-.metric-card strong {
-  display: block;
-  margin-top: 4px;
-  color: #0f172a;
-  font-size: 1.55rem;
-}
-
 .student-public-mindmaps-filters {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
   padding: 12px;
   border: 1px solid #dbeafe;
   border-radius: 14px;
@@ -125,6 +97,35 @@
   color: #b91c1c;
 }
 
+.student-public-tab-switcher {
+  margin-top: 14px;
+  margin-bottom: 14px;
+  display: inline-flex;
+  border-radius: 12px;
+  background: #e2e8f0;
+  padding: 3px;
+  gap: 4px;
+}
+
+.resource-tab {
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 10px;
+  padding: 0.55rem 0.9rem;
+  color: #334155;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+}
+
+.resource-tab.active {
+  border-color: #1d4ed8;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+}
+
 .student-public-mindmaps-section,
 .student-public-slides-section {
   margin-top: 18px;
@@ -133,6 +134,60 @@
   background: #ffffff;
   padding: 12px;
   box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
+}
+
+.resource-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.resource-toolbar-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.resource-search-box {
+  flex: 1;
+  min-width: 240px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #dbe3ee;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 8px 10px;
+  color: #64748b;
+}
+
+.resource-search-box input {
+  border: 0;
+  width: 100%;
+  background: transparent;
+  color: #0f172a;
+  font-size: 0.92rem;
+}
+
+.resource-search-box input:focus {
+  outline: none;
+}
+
+.resource-toolbar select {
+  border: 1px solid #dbe3ee;
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #ffffff;
+  min-width: 130px;
+}
+
+.resource-summary {
+  margin: 0 0 10px;
+  color: #334155;
+  font-weight: 700;
+  font-size: 0.9rem;
 }
 
 .student-public-section-header {
@@ -250,13 +305,63 @@
   box-shadow: none;
 }
 
+.resource-pagination {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+}
+
+.resource-pagination button {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #1e293b;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.resource-pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.resource-pagination span {
+  font-size: 0.86rem;
+  color: #334155;
+  font-weight: 700;
+}
+
 @media (max-width: 900px) {
-  .student-public-metrics {
-    grid-template-columns: 1fr;
+  .student-public-mindmaps-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .student-public-mindmaps-filters {
+  .resource-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .resource-toolbar-right {
+    width: 100%;
+    display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .resource-search-box {
+    min-width: 100%;
+  }
+
+  .resource-toolbar select {
+    min-width: 100%;
+  }
+
+  .resource-pagination {
+    justify-content: flex-start;
   }
 }
 
@@ -270,6 +375,16 @@
   }
 
   .student-public-slides-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .resource-toolbar-right {
+    grid-template-columns: 1fr;
+  }
+
+  .student-public-tab-switcher {
+    width: 100%;
+    display: grid;
     grid-template-columns: 1fr;
   }
 }

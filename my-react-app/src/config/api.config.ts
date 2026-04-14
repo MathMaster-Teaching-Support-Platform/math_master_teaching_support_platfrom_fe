@@ -195,6 +195,7 @@ export const API_ENDPOINTS = {
   LESSON_SLIDES_PUBLISH: (lessonId: string) => `/lesson-slides/lessons/${lessonId}/publish`,
   LESSON_SLIDES_UNPUBLISH: (lessonId: string) => `/lesson-slides/lessons/${lessonId}/unpublish`,
   LESSON_SLIDES_PUBLIC_BY_LESSON: (lessonId: string) => `/lesson-slides/public/lessons/${lessonId}`,
+  LESSON_SLIDES_PUBLIC_GENERATED: '/lesson-slides/public/generated',
   LESSON_SLIDES_PUBLIC_GENERATED_BY_LESSON: (lessonId: string) =>
     `/lesson-slides/public/lessons/${lessonId}/generated`,
   LESSON_SLIDES_PUBLIC_GENERATED_DOWNLOAD: (generatedFileId: string) =>
