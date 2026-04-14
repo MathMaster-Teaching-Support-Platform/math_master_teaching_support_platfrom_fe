@@ -1,12 +1,16 @@
-import { useEffect, useMemo, useState } from 'react';
 import {
+  AlertCircle,
   Archive,
   ArrowRight,
   Check,
+  CheckCircle2,
   CheckSquare,
   Eye,
   EyeOff,
   FileText,
+  Grid2x2,
+  List,
+  Network,
   Pencil,
   Play,
   Plus,
@@ -17,15 +21,11 @@ import {
   Upload,
   X,
 } from 'lucide-react';
-import {
-  useArchiveTemplate,
-  useCreateQuestionTemplate,
-  useDeleteQuestionTemplate,
-  useGetMyQuestionTemplates,
-  usePublishTemplate,
-  useTogglePublicStatus,
-  useUpdateQuestionTemplate,
-} from '../../hooks/useQuestionTemplate';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import LatexRenderer from '../../components/common/LatexRenderer';
+import MathText from '../../components/common/MathText';
+import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import {
   useApproveCanonicalQuestion,
   useBulkApproveCanonicalQuestions,
@@ -43,27 +43,32 @@ import {
   useUpdateQuestion,
 } from '../../hooks/useQuestion';
 import {
+  useArchiveTemplate,
+  useCreateQuestionTemplate,
+  useDeleteQuestionTemplate,
+  useGetMyQuestionTemplates,
+  usePublishTemplate,
+  useTogglePublicStatus,
+  useUpdateQuestionTemplate,
+} from '../../hooks/useQuestionTemplate';
+import { questionTemplateService } from '../../services/questionTemplateService';
+import '../../styles/module-refactor.css';
+import type { CanonicalQuestionResponse } from '../../types/canonicalQuestion';
+import type { QuestionResponse } from '../../types/question';
+import {
   TemplateStatus,
   type QuestionTemplateRequest,
   type QuestionTemplateResponse,
   type TemplateDraft,
 } from '../../types/questionTemplate';
-import type { CanonicalQuestionResponse } from '../../types/canonicalQuestion';
-import type { QuestionResponse } from '../../types/question';
-import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
-import '../../styles/module-refactor.css';
-import { TemplateFormModal } from './TemplateFormModal';
-import { TemplateImportModal } from './TemplateImportModal';
-import { TemplateBulkImportModal } from './TemplateBulkImportModal';
-import { TemplateTestModal } from './TemplateTestModal';
-import { TemplateGenerateModal } from './TemplateGenerateModal';
 import { CanonicalGenerateModal } from './CanonicalGenerateModal';
 import { CanonicalQuestionModal } from './CanonicalQuestionModal';
-import MathText from '../../components/common/MathText';
-import LatexRenderer from '../../components/common/LatexRenderer';
-import { useNavigate } from 'react-router-dom';
 import './template-review.css';
-import { questionTemplateService } from '../../services/questionTemplateService';
+import { TemplateBulkImportModal } from './TemplateBulkImportModal';
+import { TemplateFormModal } from './TemplateFormModal';
+import { TemplateGenerateModal } from './TemplateGenerateModal';
+import { TemplateImportModal } from './TemplateImportModal';
+import { TemplateTestModal } from './TemplateTestModal';
 
 const statusFilters: Array<'ALL' | TemplateStatus> = [
   'ALL',
@@ -72,20 +77,8 @@ const statusFilters: Array<'ALL' | TemplateStatus> = [
   TemplateStatus.ARCHIVED,
 ];
 
-const statusClass: Record<TemplateStatus, string> = {
-  DRAFT: 'badge draft',
-  PUBLISHED: 'badge published',
-  ARCHIVED: 'badge archived',
-};
-
 const statusLabel: Record<'ALL' | TemplateStatus, string> = {
   ALL: 'Tất cả',
-  DRAFT: 'Nháp',
-  PUBLISHED: 'Đã xuất bản',
-  ARCHIVED: 'Lưu trữ',
-};
-
-const cardStatusLabel: Record<TemplateStatus, string> = {
   DRAFT: 'Nháp',
   PUBLISHED: 'Đã xuất bản',
   ARCHIVED: 'Lưu trữ',
@@ -118,6 +111,17 @@ const questionStatusLabel: Record<string, string> = {
   APPROVED: 'Đã duyệt',
   ARCHIVED: 'Lưu trữ',
 };
+
+const coverGradients = [
+  'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
+  'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)',
+  'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)',
+  'linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)',
+  'linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%)',
+  'linear-gradient(135deg, #ecfeff 0%, #cffafe 100%)',
+] as const;
+
+const coverAccents = ['#1d4ed8', '#047857', '#6d28d9', '#c2410c', '#be185d', '#0f766e'] as const;
 
 function extractDiagramLatexStrings(diagramData: unknown): string[] {
   const values: string[] = [];
@@ -199,10 +203,14 @@ export function TemplateDashboard() {
   const [reviewOpen, setReviewOpen] = useState(false);
   const [canonicalOpen, setCanonicalOpen] = useState(false);
   const [canonicalMode, setCanonicalMode] = useState<'create' | 'edit'>('create');
-  const [selectedCanonical, setSelectedCanonical] = useState<CanonicalQuestionResponse | null>(null);
+  const [selectedCanonical, setSelectedCanonical] = useState<CanonicalQuestionResponse | null>(
+    null
+  );
   const [canonicalReviewOpen, setCanonicalReviewOpen] = useState(false);
   const [canonicalReviewId, setCanonicalReviewId] = useState('');
-  const [selectedCanonicalQuestionIds, setSelectedCanonicalQuestionIds] = useState<Set<string>>(new Set());
+  const [selectedCanonicalQuestionIds, setSelectedCanonicalQuestionIds] = useState<Set<string>>(
+    new Set()
+  );
   const [canonicalGenerateOpen, setCanonicalGenerateOpen] = useState(false);
   const [canonicalGenerateId, setCanonicalGenerateId] = useState('');
   const [generateOpen, setGenerateOpen] = useState(false);
@@ -250,7 +258,19 @@ export function TemplateDashboard() {
     canonicalReviewOpen && Boolean(canonicalReviewId)
   );
 
-  const templates = data?.result?.content ?? [];
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+  const templates = useMemo(() => data?.result?.content ?? [], [data]);
+
+  const stats = useMemo(
+    () => ({
+      total: templates.length,
+      published: templates.filter((t) => t.status === TemplateStatus.PUBLISHED).length,
+      draft: templates.filter((t) => t.status === TemplateStatus.DRAFT).length,
+      archived: templates.filter((t) => t.status === TemplateStatus.ARCHIVED).length,
+    }),
+    [templates]
+  );
 
   const filtered = useMemo(() => {
     return templates.filter((item) => {
@@ -265,8 +285,14 @@ export function TemplateDashboard() {
     });
   }, [search, status, templates]);
 
-  const reviewQuestions = reviewQuestionsQuery.data?.result ?? [];
-  const canonicalReviewQuestions = canonicalReviewQuestionsQuery.data?.result?.content ?? [];
+  const reviewQuestions = useMemo(
+    () => reviewQuestionsQuery.data?.result ?? [],
+    [reviewQuestionsQuery.data]
+  );
+  const canonicalReviewQuestions = useMemo(
+    () => canonicalReviewQuestionsQuery.data?.result?.content ?? [],
+    [canonicalReviewQuestionsQuery.data]
+  );
   const canonicalQuestions = canonicalData?.result?.content ?? [];
   const activeDiagramLatexCode = extractPrimaryDiagramLatex(activeDiagram);
   const activeDiagramLatexValues = activeDiagram ? extractDiagramLatexStrings(activeDiagram) : [];
@@ -289,9 +315,12 @@ export function TemplateDashboard() {
 
   useEffect(() => {
     if (!toast) return;
-    const timeoutId = globalThis.setTimeout(() => {
-      setToast(null);
-    }, toast.type === 'error' ? 5500 : 3200);
+    const timeoutId = globalThis.setTimeout(
+      () => {
+        setToast(null);
+      },
+      toast.type === 'error' ? 5500 : 3200
+    );
 
     return () => {
       globalThis.clearTimeout(timeoutId);
@@ -318,7 +347,8 @@ export function TemplateDashboard() {
     } catch (error) {
       setToast({
         type: 'error',
-        message: error instanceof Error ? error.message : 'Không thể tải chi tiết template để chỉnh sửa.',
+        message:
+          error instanceof Error ? error.message : 'Không thể tải chi tiết template để chỉnh sửa.',
       });
     } finally {
       setEditingTemplateId(null);
@@ -397,7 +427,8 @@ export function TemplateDashboard() {
     } catch (error) {
       setToast({
         type: 'error',
-        message: error instanceof Error ? error.message : 'Không thể phê duyệt câu hỏi theo canonical.',
+        message:
+          error instanceof Error ? error.message : 'Không thể phê duyệt câu hỏi theo canonical.',
       });
     }
   }
@@ -553,10 +584,17 @@ export function TemplateDashboard() {
     >
       <div className="module-layout-container">
         <section className="module-page">
-          <header className="page-header">
-            <div>
-              <h2>Mẫu câu hỏi</h2>
-              <p>Quản lý logic tạo câu hỏi tái sử dụng và vòng đời của mẫu.</p>
+          {/* ── Header ── */}
+          <header className="page-header mindmaps-header-row">
+            <div className="header-stack">
+              <div className="header-kicker">Template management</div>
+              <div className="row" style={{ gap: '0.6rem' }}>
+                <h2>Mẫu câu hỏi</h2>
+                {!isLoading && <span className="count-chip">{templates.length}</span>}
+              </div>
+              <p className="header-sub">
+                {stats.published} đã xuất bản • {stats.draft} bản nháp
+              </p>
             </div>
             <div className="row" style={{ flexWrap: 'wrap' }}>
               <button className="btn secondary" onClick={() => setBulkImportOpen(true)}>
@@ -585,6 +623,46 @@ export function TemplateDashboard() {
             </div>
           </header>
 
+          {/* ── Stats ── */}
+          <div className="stats-grid">
+            <div className="stat-card stat-blue">
+              <div className="stat-icon-wrap">
+                <FileText size={20} />
+              </div>
+              <div>
+                <h3>{stats.total}</h3>
+                <p>Tổng mẫu</p>
+              </div>
+            </div>
+            <div className="stat-card stat-emerald">
+              <div className="stat-icon-wrap">
+                <CheckCircle2 size={20} />
+              </div>
+              <div>
+                <h3>{stats.published}</h3>
+                <p>Đã xuất bản</p>
+              </div>
+            </div>
+            <div className="stat-card stat-amber">
+              <div className="stat-icon-wrap">
+                <Network size={20} />
+              </div>
+              <div>
+                <h3>{stats.draft}</h3>
+                <p>Bản nháp</p>
+              </div>
+            </div>
+            <div className="stat-card stat-violet">
+              <div className="stat-icon-wrap">
+                <Archive size={20} />
+              </div>
+              <div>
+                <h3>{stats.archived}</h3>
+                <p>Đã lưu trữ</p>
+              </div>
+            </div>
+          </div>
+
           <section className="hero-card">
             <p className="hero-kicker">Phân tách trách nhiệm</p>
             <h2>Soạn mẫu và xét duyệt câu hỏi theo mẫu ngay tại đây</h2>
@@ -599,7 +677,10 @@ export function TemplateDashboard() {
                 className="btn secondary"
                 onClick={() => {
                   if (canonicalQuestions.length === 0) {
-                    setToast({ type: 'error', message: 'Bạn chưa có canonical question để xét duyệt.' });
+                    setToast({
+                      type: 'error',
+                      message: 'Bạn chưa có canonical question để xét duyệt.',
+                    });
                     return;
                   }
                   openCanonicalReviewModal(canonicalQuestions[0]?.id);
@@ -611,7 +692,10 @@ export function TemplateDashboard() {
                 className="btn secondary"
                 onClick={() => {
                   if (canonicalQuestions.length === 0) {
-                    setToast({ type: 'error', message: 'Can tao canonical question truoc khi generate theo canonical flow.' });
+                    setToast({
+                      type: 'error',
+                      message: 'Can tao canonical question truoc khi generate theo canonical flow.',
+                    });
                     return;
                   }
                   setCanonicalGenerateId(canonicalQuestions[0]?.id ?? '');
@@ -665,10 +749,14 @@ export function TemplateDashboard() {
                         <td>{canonical.title}</td>
                         <td>{canonical.problemType}</td>
                         <td>
-                          {cognitiveLevelLabel[canonical.cognitiveLevel] || canonical.cognitiveLevel}
+                          {cognitiveLevelLabel[canonical.cognitiveLevel] ||
+                            canonical.cognitiveLevel}
                         </td>
                         <td>
-                          <div className="row" style={{ justifyContent: 'start', flexWrap: 'wrap' }}>
+                          <div
+                            className="row"
+                            style={{ justifyContent: 'start', flexWrap: 'wrap' }}
+                          >
                             <button
                               className="btn secondary"
                               onClick={() => {
@@ -711,23 +799,34 @@ export function TemplateDashboard() {
             )}
           </section>
 
+          {/* ── Toolbar ── */}
           <div className="toolbar">
-            <label className="row" style={{ minWidth: 260 }}>
-              <Search size={15} />
+            <label className="search-box">
+              <span className="search-box__icon" aria-hidden="true">
+                <Search size={15} />
+              </span>
               <input
-                className="input"
-                style={{ border: 0, padding: 0, width: '100%' }}
-                placeholder="Tìm mẫu câu hỏi"
+                placeholder="Tìm mẫu câu hỏi..."
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
               />
+              {search && (
+                <button
+                  type="button"
+                  className="search-box__clear"
+                  aria-label="Xóa nội dung tìm kiếm"
+                  onClick={() => setSearch('')}
+                >
+                  <X size={14} />
+                </button>
+              )}
             </label>
 
             <div className="pill-group">
               {statusFilters.map((item) => (
                 <button
                   key={item}
-                  className={`pill-btn ${status === item ? 'active' : ''}`}
+                  className={`pill-btn${status === item ? ' active' : ''}`}
                   onClick={() => setStatus(item)}
                 >
                   {statusLabel[item]}
@@ -735,120 +834,224 @@ export function TemplateDashboard() {
               ))}
             </div>
 
-            <button className="btn secondary" onClick={() => void refetch()}>
-              <RefreshCw size={14} />
-              Làm mới
-            </button>
+            <div
+              style={{ marginLeft: 'auto', display: 'flex', gap: '0.5rem', alignItems: 'center' }}
+            >
+              <button className="btn secondary" onClick={() => void refetch()}>
+                <RefreshCw size={14} />
+                Làm mới
+              </button>
+              <div className="view-toggle">
+                <button
+                  className={viewMode === 'grid' ? 'active' : ''}
+                  onClick={() => setViewMode('grid')}
+                  aria-label="Hiển thị lưới"
+                >
+                  <Grid2x2 size={16} />
+                </button>
+                <button
+                  className={viewMode === 'list' ? 'active' : ''}
+                  onClick={() => setViewMode('list')}
+                  aria-label="Hiển thị danh sách"
+                >
+                  <List size={16} />
+                </button>
+              </div>
+            </div>
           </div>
 
-          {isLoading && <div className="empty">Đang tải danh sách mẫu...</div>}
-          {isError && (
-            <div className="empty">
-              {error instanceof Error ? error.message : 'Không thể tải danh sách mẫu'}
+          {/* ── Loading ── */}
+          {isLoading && (
+            <div className="skeleton-grid">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="skeleton-card" />
+              ))}
             </div>
           )}
-          {!isLoading && !isError && filtered.length === 0 && (
-            <div className="empty">Không tìm thấy mẫu phù hợp.</div>
+
+          {/* ── Error ── */}
+          {isError && (
+            <div className="empty">
+              <AlertCircle
+                size={28}
+                style={{ opacity: 0.5, marginBottom: 8, color: 'var(--mod-danger)' }}
+              />
+              <p>{error instanceof Error ? error.message : 'Không thể tải danh sách mẫu'}</p>
+            </div>
           )}
 
+          {/* ── Empty: filtered ── */}
+          {!isLoading && !isError && filtered.length === 0 && templates.length > 0 && (
+            <div className="empty">
+              <Search size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
+              <p>Không tìm thấy mẫu phù hợp với bộ lọc.</p>
+            </div>
+          )}
+
+          {/* ── Empty: no templates ── */}
+          {!isLoading && !isError && templates.length === 0 && (
+            <div className="empty">
+              <FileText size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
+              <p>Bạn chưa có mẫu câu hỏi nào. Hãy tạo mẫu đầu tiên.</p>
+              <button
+                className="btn"
+                style={{ marginTop: '1rem' }}
+                onClick={() => {
+                  setMode('create');
+                  setSelected(null);
+                  setFormOpen(true);
+                }}
+              >
+                Tạo mẫu mới
+                <ArrowRight size={16} />
+              </button>
+            </div>
+          )}
+
+          {/* ── Grid ── */}
           {!isLoading && !isError && filtered.length > 0 && (
-            <div className="grid-cards">
-              {filtered.map((template) => (
-                <article key={template.id} className="data-card">
-                  <div className="row">
-                    <span className={statusClass[template.status]}>
-                      {cardStatusLabel[template.status]}
-                    </span>
-                    <button
-                      className="btn secondary"
-                      onClick={() => togglePublicMutation.mutate(template.id)}
-                    >
-                      {template.isPublic ? <Eye size={14} /> : <EyeOff size={14} />}
-                      {template.isPublic ? 'Công khai' : 'Riêng tư'}
-                    </button>
+            <div className={`grid-cards${viewMode === 'list' ? ' list-view' : ''}`}>
+              {filtered.map((template, idx) => (
+                <article key={template.id} className="data-card mindmap-card">
+                  <div
+                    className="mindmap-cover"
+                    style={{
+                      background: coverGradients[idx % coverGradients.length],
+                      color: coverAccents[idx % coverAccents.length],
+                    }}
+                  >
+                    <div className="cover-overlay" />
+                    <div className="cover-index">#{String(idx + 1).padStart(2, '0')}</div>
+                    {template.status === TemplateStatus.PUBLISHED && (
+                      <span className="course-badge badge-live">
+                        <Eye size={11} /> Đã xuất bản
+                      </span>
+                    )}
+                    {template.status === TemplateStatus.ARCHIVED && (
+                      <span className="course-badge badge-archived">
+                        <Archive size={11} /> Lưu trữ
+                      </span>
+                    )}
+                    {template.status === TemplateStatus.DRAFT && (
+                      <span className="course-badge badge-draft">
+                        <EyeOff size={11} /> Nháp
+                      </span>
+                    )}
+                    <h3 className="cover-title">
+                      <MathText text={template.name} />
+                    </h3>
                   </div>
 
-                  <div>
-                    <h3><MathText text={template.name} /></h3>
-                    <p className="muted" style={{ marginTop: 6 }}>
+                  <div className="mindmap-body">
+                    <p className="mindmap-desc">
                       <MathText text={template.description || 'Không có mô tả'} />
                     </p>
-                  </div>
 
-                  <div className="row" style={{ justifyContent: 'start', flexWrap: 'wrap' }}>
-                    <span className="muted">
-                      {templateTypeLabel[template.templateType] || template.templateType}
-                    </span>
-                    <span className="muted">
-                      {cognitiveLevelLabel[template.cognitiveLevel] || template.cognitiveLevel}
-                    </span>
-                    <span className="muted">Đã dùng: {template.usageCount ?? 0} lần</span>
-                  </div>
+                    <div className="mindmap-metrics">
+                      <div className="metric">
+                        <FileText size={13} />
+                        <span>
+                          {templateTypeLabel[template.templateType] || template.templateType}
+                        </span>
+                      </div>
+                      <div className="metric">
+                        <Network size={13} />
+                        <span>
+                          {cognitiveLevelLabel[template.cognitiveLevel] || template.cognitiveLevel}
+                        </span>
+                      </div>
+                      <div className="metric">
+                        <span>Đã dùng: {template.usageCount ?? 0} lần</span>
+                      </div>
+                      {template.isPublic && (
+                        <div className="metric metric--ai">
+                          <Eye size={13} />
+                          <span>Công khai</span>
+                        </div>
+                      )}
+                    </div>
 
-                  <div className="row" style={{ flexWrap: 'wrap' }}>
-                    <button
-                      className="btn secondary"
-                      onClick={() => {
-                        setGenerateTemplate(template);
-                        setGenerateOpen(true);
-                      }}
-                    >
-                      <Play size={14} />
-                      Sinh câu hỏi
-                    </button>
-
-                    <button
-                      className="btn secondary"
-                      onClick={() => {
-                        setSelected(template);
-                        setTestOpen(true);
-                      }}
-                    >
-                      <Eye size={14} />
-                      Chạy thử
-                    </button>
-
-                    <button
-                      className="btn secondary"
-                      onClick={() => openReviewModal(template.id)}
-                    >
-                      <CheckSquare size={14} />
-                      Xét duyệt
-                    </button>
-
-                    <button
-                      className="btn secondary"
-                      onClick={() => void openEditTemplate(template.id)}
-                      disabled={editingTemplateId === template.id}
-                    >
-                      <Pencil size={14} />
-                      {editingTemplateId === template.id ? 'Đang tải...' : 'Chỉnh sửa'}
-                    </button>
-
-                    {template.status === TemplateStatus.DRAFT && (
-                      <button className="btn" onClick={() => publishMutation.mutate(template.id)}>
-                        <FileText size={14} />
-                        Xuất bản
-                      </button>
-                    )}
-
-                    {template.status === TemplateStatus.PUBLISHED && (
+                    <div className="row" style={{ flexWrap: 'wrap', gap: '0.4rem' }}>
                       <button
-                        className="btn warn"
-                        onClick={() => archiveMutation.mutate(template.id)}
+                        className="btn secondary"
+                        onClick={() => {
+                          setGenerateTemplate(template);
+                          setGenerateOpen(true);
+                        }}
                       >
-                        <Archive size={14} />
-                        Lưu trữ
+                        <Play size={14} />
+                        Sinh câu hỏi
                       </button>
-                    )}
+                      <button
+                        className="btn secondary"
+                        onClick={() => {
+                          setSelected(template);
+                          setTestOpen(true);
+                        }}
+                      >
+                        <Eye size={14} />
+                        Chạy thử
+                      </button>
+                      <button
+                        className="btn secondary"
+                        onClick={() => openReviewModal(template.id)}
+                      >
+                        <CheckSquare size={14} />
+                        Xét duyệt
+                      </button>
+                      <button
+                        className="btn secondary"
+                        onClick={() => void openEditTemplate(template.id)}
+                        disabled={editingTemplateId === template.id}
+                      >
+                        <Pencil size={14} />
+                        {editingTemplateId === template.id ? 'Đang tải...' : 'Chỉnh sửa'}
+                      </button>
+                      <button
+                        className="btn secondary"
+                        onClick={() => togglePublicMutation.mutate(template.id)}
+                      >
+                        {template.isPublic ? <EyeOff size={14} /> : <Eye size={14} />}
+                        {template.isPublic ? 'Đặt riêng tư' : 'Công khai'}
+                      </button>
+                    </div>
 
-                    <button
-                      className="btn danger"
-                      onClick={() => deleteMutation.mutate(template.id)}
-                    >
-                      <Trash2 size={14} />
-                      Xóa
-                    </button>
+                    <div className="mindmap-footer">
+                      <div className="row" style={{ gap: '0.35rem', flexWrap: 'wrap' }}>
+                        {template.tags.slice(0, 3).map((tag) => (
+                          <span key={tag} className="badge draft" style={{ fontSize: '0.68rem' }}>
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                      <div className="mindmap-actions">
+                        {template.status === TemplateStatus.DRAFT && (
+                          <button
+                            className="btn"
+                            onClick={() => publishMutation.mutate(template.id)}
+                          >
+                            <FileText size={14} />
+                            Xuất bản
+                          </button>
+                        )}
+                        {template.status === TemplateStatus.PUBLISHED && (
+                          <button
+                            className="btn warn"
+                            onClick={() => archiveMutation.mutate(template.id)}
+                          >
+                            <Archive size={14} />
+                            Lưu trữ
+                          </button>
+                        )}
+                        <button
+                          className="btn danger-outline"
+                          onClick={() => deleteMutation.mutate(template.id)}
+                        >
+                          <Trash2 size={14} />
+                          Xóa
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </article>
               ))}
@@ -914,7 +1117,10 @@ export function TemplateDashboard() {
             submitting={createCanonicalMutation.isPending || updateCanonicalMutation.isPending}
             onSubmit={async (payload) => {
               if (canonicalMode === 'edit' && selectedCanonical) {
-                await updateCanonicalMutation.mutateAsync({ id: selectedCanonical.id, request: payload });
+                await updateCanonicalMutation.mutateAsync({
+                  id: selectedCanonical.id,
+                  request: payload,
+                });
                 setToast({ type: 'success', message: 'Cập nhật canonical question thành công.' });
                 return;
               }
@@ -976,7 +1182,9 @@ export function TemplateDashboard() {
                     </button>
                   </div>
 
-                  {!reviewTemplateId && <div className="empty">Hãy chọn một mẫu để bắt đầu xét duyệt.</div>}
+                  {!reviewTemplateId && (
+                    <div className="empty">Hãy chọn một mẫu để bắt đầu xét duyệt.</div>
+                  )}
 
                   {reviewTemplateId && reviewQuestionsQuery.isFetching && (
                     <div className="empty">Đang tải câu hỏi theo mẫu...</div>
@@ -1009,7 +1217,9 @@ export function TemplateDashboard() {
                                 <input
                                   type="checkbox"
                                   checked={
-                                    reviewQuestions.some((question) => question.questionStatus !== 'APPROVED') &&
+                                    reviewQuestions.some(
+                                      (question) => question.questionStatus !== 'APPROVED'
+                                    ) &&
                                     reviewQuestions
                                       .filter((question) => question.questionStatus !== 'APPROVED')
                                       .every((question) => selectedQuestionIds.has(question.id))
@@ -1036,7 +1246,8 @@ export function TemplateDashboard() {
                             {reviewQuestions.map((question) => {
                               const isApproved = question.questionStatus === 'APPROVED';
                               const questionDiagramData = question.diagramData as unknown;
-                              const questionDiagramLatexCode = extractPrimaryDiagramLatex(questionDiagramData);
+                              const questionDiagramLatexCode =
+                                extractPrimaryDiagramLatex(questionDiagramData);
                               const questionDiagramLatexValues = questionDiagramData
                                 ? extractDiagramLatexStrings(questionDiagramData)
                                 : [];
@@ -1056,7 +1267,14 @@ export function TemplateDashboard() {
                                     <div className="template-review-question__text">
                                       <MathText text={question.questionText} />
                                     </div>
-                                    <div className="row" style={{ justifyContent: 'start', flexWrap: 'wrap', marginTop: 6 }}>
+                                    <div
+                                      className="row"
+                                      style={{
+                                        justifyContent: 'start',
+                                        flexWrap: 'wrap',
+                                        marginTop: 6,
+                                      }}
+                                    >
                                       {question.questionSourceType === 'AI_GENERATED' && (
                                         <span className="badge draft">AI Generated</span>
                                       )}
@@ -1074,13 +1292,17 @@ export function TemplateDashboard() {
                                     )}
                                     {question.solutionSteps && (
                                       <div className="preview-box" style={{ marginTop: 8 }}>
-                                        <p className="muted" style={{ marginBottom: 6 }}>Solution Steps</p>
+                                        <p className="muted" style={{ marginBottom: 6 }}>
+                                          Solution Steps
+                                        </p>
                                         <MathText text={question.solutionSteps} />
                                       </div>
                                     )}
                                     {Boolean(questionDiagramData) && (
                                       <div className="preview-box" style={{ marginTop: 8 }}>
-                                        <p className="muted" style={{ marginBottom: 6 }}>Diagram Data</p>
+                                        <p className="muted" style={{ marginBottom: 6 }}>
+                                          Diagram Data
+                                        </p>
                                         <button
                                           type="button"
                                           className="btn secondary"
@@ -1105,24 +1327,40 @@ export function TemplateDashboard() {
                                             color: 'inherit',
                                           }}
                                         >
-                                          {questionDiagramLatexCode && <LatexRenderer latex={questionDiagramLatexCode} />}
-                                          {!questionDiagramLatexCode && questionDiagramLatexValues.length > 0 && (
-                                            <div style={{ marginBottom: 8 }}>
-                                              <p className="muted" style={{ marginBottom: 6 }}>
-                                                LaTeX Preview
-                                              </p>
-                                              <div className="row" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 8 }}>
-                                                {questionDiagramLatexValues.map((latexValue) => (
-                                                  <div key={`${question.id}-latex-${latexValue}`} className="preview-box">
-                                                    <LatexRenderer latex={latexValue} />
-                                                  </div>
-                                                ))}
+                                          {questionDiagramLatexCode && (
+                                            <LatexRenderer latex={questionDiagramLatexCode} />
+                                          )}
+                                          {!questionDiagramLatexCode &&
+                                            questionDiagramLatexValues.length > 0 && (
+                                              <div style={{ marginBottom: 8 }}>
+                                                <p className="muted" style={{ marginBottom: 6 }}>
+                                                  LaTeX Preview
+                                                </p>
+                                                <div
+                                                  className="row"
+                                                  style={{
+                                                    flexDirection: 'column',
+                                                    alignItems: 'stretch',
+                                                    gap: 8,
+                                                  }}
+                                                >
+                                                  {questionDiagramLatexValues.map((latexValue) => (
+                                                    <div
+                                                      key={`${question.id}-latex-${latexValue}`}
+                                                      className="preview-box"
+                                                    >
+                                                      <LatexRenderer latex={latexValue} />
+                                                    </div>
+                                                  ))}
+                                                </div>
                                               </div>
-                                            </div>
-                                          )}
-                                          {!questionDiagramLatexCode && questionDiagramLatexValues.length === 0 && (
-                                            <p className="muted">Khong co du lieu preview cho diagram nay.</p>
-                                          )}
+                                            )}
+                                          {!questionDiagramLatexCode &&
+                                            questionDiagramLatexValues.length === 0 && (
+                                              <p className="muted">
+                                                Khong co du lieu preview cho diagram nay.
+                                              </p>
+                                            )}
                                         </button>
                                       </div>
                                     )}
@@ -1131,8 +1369,11 @@ export function TemplateDashboard() {
                                     <span
                                       className={`template-review-question__status ${isApproved ? 'approved' : 'pending'}`}
                                     >
-                                      {questionStatusLabel[question.questionStatus ?? 'UNDER_REVIEW'] ??
-                                        (question.questionStatus ?? 'Chờ duyệt')}
+                                      {questionStatusLabel[
+                                        question.questionStatus ?? 'UNDER_REVIEW'
+                                      ] ??
+                                        question.questionStatus ??
+                                        'Chờ duyệt'}
                                     </span>
                                   </td>
                                   <td>{question.correctAnswer || '-'}</td>
@@ -1262,7 +1503,11 @@ export function TemplateDashboard() {
                     </button>
                   </div>
 
-                  {!canonicalReviewId && <div className="empty">Hãy chọn một canonical question để bắt đầu xét duyệt.</div>}
+                  {!canonicalReviewId && (
+                    <div className="empty">
+                      Hãy chọn một canonical question để bắt đầu xét duyệt.
+                    </div>
+                  )}
 
                   {canonicalReviewId && canonicalReviewQuestionsQuery.isFetching && (
                     <div className="empty">Đang tải câu hỏi theo canonical...</div>
@@ -1295,10 +1540,14 @@ export function TemplateDashboard() {
                                 <input
                                   type="checkbox"
                                   checked={
-                                    canonicalReviewQuestions.some((question) => question.questionStatus !== 'APPROVED') &&
+                                    canonicalReviewQuestions.some(
+                                      (question) => question.questionStatus !== 'APPROVED'
+                                    ) &&
                                     canonicalReviewQuestions
                                       .filter((question) => question.questionStatus !== 'APPROVED')
-                                      .every((question) => selectedCanonicalQuestionIds.has(question.id))
+                                      .every((question) =>
+                                        selectedCanonicalQuestionIds.has(question.id)
+                                      )
                                   }
                                   onChange={(event) => {
                                     const isChecked = event.target.checked;
@@ -1329,7 +1578,10 @@ export function TemplateDashboard() {
                                       checked={selectedCanonicalQuestionIds.has(question.id)}
                                       disabled={isApproved}
                                       onChange={(event) =>
-                                        toggleCanonicalQuestionSelection(question.id, event.target.checked)
+                                        toggleCanonicalQuestionSelection(
+                                          question.id,
+                                          event.target.checked
+                                        )
                                       }
                                     />
                                   </td>
@@ -1347,8 +1599,11 @@ export function TemplateDashboard() {
                                     <span
                                       className={`template-review-question__status ${isApproved ? 'approved' : 'pending'}`}
                                     >
-                                      {questionStatusLabel[question.questionStatus ?? 'UNDER_REVIEW'] ??
-                                        (question.questionStatus ?? 'Chờ duyệt')}
+                                      {questionStatusLabel[
+                                        question.questionStatus ?? 'UNDER_REVIEW'
+                                      ] ??
+                                        question.questionStatus ??
+                                        'Chờ duyệt'}
                                     </span>
                                   </td>
                                   <td>{question.correctAnswer || '-'}</td>
@@ -1363,8 +1618,12 @@ export function TemplateDashboard() {
                                       </button>
                                       <button
                                         className="btn"
-                                        disabled={isApproved || approveCanonicalQuestionMutation.isPending}
-                                        onClick={() => void handleApproveCanonicalQuestion(question.id)}
+                                        disabled={
+                                          isApproved || approveCanonicalQuestionMutation.isPending
+                                        }
+                                        onClick={() =>
+                                          void handleApproveCanonicalQuestion(question.id)
+                                        }
                                       >
                                         <Check size={14} />
                                         Duyệt
@@ -1402,7 +1661,10 @@ export function TemplateDashboard() {
                   <button
                     type="button"
                     className="btn"
-                    disabled={selectedCanonicalQuestionIds.size === 0 || bulkApproveCanonicalMutation.isPending}
+                    disabled={
+                      selectedCanonicalQuestionIds.size === 0 ||
+                      bulkApproveCanonicalMutation.isPending
+                    }
                     onClick={() => void handleApproveSelectedCanonicalQuestions()}
                   >
                     <CheckSquare size={14} />
@@ -1490,11 +1752,16 @@ export function TemplateDashboard() {
                   padding: 0,
                 }}
               />
-              <div className="modal-card" style={{ width: 'min(1100px, 96vw)', position: 'relative', zIndex: 1 }}>
+              <div
+                className="modal-card"
+                style={{ width: 'min(1100px, 96vw)', position: 'relative', zIndex: 1 }}
+              >
                 <div className="modal-header">
                   <div>
                     <h3>Diagram Preview</h3>
-                    <p className="muted" style={{ marginTop: 4 }}>Bam ra ngoai hoac nut X de dong.</p>
+                    <p className="muted" style={{ marginTop: 4 }}>
+                      Bam ra ngoai hoac nut X de dong.
+                    </p>
                   </div>
                   <button className="icon-btn" onClick={() => setActiveDiagram(null)}>
                     <X size={14} />
@@ -1503,7 +1770,10 @@ export function TemplateDashboard() {
                 <div className="modal-body">
                   {activeDiagramLatexCode && <LatexRenderer latex={activeDiagramLatexCode} />}
                   {!activeDiagramLatexCode && activeDiagramLatexValues.length > 0 && (
-                    <div className="row" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 10 }}>
+                    <div
+                      className="row"
+                      style={{ flexDirection: 'column', alignItems: 'stretch', gap: 10 }}
+                    >
                       {activeDiagramLatexValues.map((latexValue) => (
                         <div key={`diagram-modal-latex-${latexValue}`} className="preview-box">
                           <LatexRenderer latex={latexValue} />

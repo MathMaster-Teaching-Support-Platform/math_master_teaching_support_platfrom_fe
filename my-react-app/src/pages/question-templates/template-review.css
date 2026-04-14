@@ -122,3 +122,198 @@
     min-width: 100%;
   }
 }
+
+/* ═══════════════════════════════════════════════════
+   Template Dashboard — page-specific overrides
+   ═══════════════════════════════════════════════════ */
+
+/* ── Header ── */
+.module-layout-container .mindmaps-header-row {
+  align-items: flex-start;
+  padding-bottom: 1.25rem;
+  border-bottom: 1.5px solid var(--mod-slate-100);
+}
+
+/* ── Template card (same visual pattern as mindmap-card) ── */
+.module-layout-container .data-card.mindmap-card {
+  padding: 0;
+  min-height: auto;
+  gap: 0;
+  overflow: hidden;
+}
+
+.module-layout-container .mindmap-cover {
+  position: relative;
+  padding: 1.3rem 1.25rem 1.15rem;
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
+}
+
+.module-layout-container .mindmap-cover .cover-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.7), transparent 36%),
+    linear-gradient(to top, rgba(255, 255, 255, 0.12) 0%, transparent 70%);
+}
+
+.module-layout-container .mindmap-cover .cover-index {
+  position: absolute;
+  top: 0.9rem;
+  right: 1rem;
+  z-index: 1;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: rgba(15, 23, 42, 0.38);
+}
+
+.module-layout-container .mindmap-cover .course-badge {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border-radius: 999px;
+  padding: 0.22rem 0.6rem;
+  font-size: 0.69rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  width: fit-content;
+  margin-bottom: 0.5rem;
+}
+
+.module-layout-container .mindmap-cover .cover-title {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--mod-ink);
+  line-height: 1.25;
+}
+
+.module-layout-container .mindmap-body {
+  padding: 1rem 1.15rem 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  flex: 1;
+}
+
+.module-layout-container .mindmap-desc {
+  margin: 0;
+  color: var(--mod-slate-500);
+  font-size: 0.84rem;
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.module-layout-container .mindmap-metrics {
+  display: flex;
+  gap: 0.42rem;
+  flex-wrap: wrap;
+}
+
+.module-layout-container .mindmap-metrics .metric {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.76rem;
+  color: var(--mod-slate-500);
+  font-weight: 600;
+  padding: 0.36rem 0.58rem;
+  background: var(--mod-slate-50);
+  border: 1px solid var(--mod-slate-100);
+  border-radius: 999px;
+}
+
+.module-layout-container .mindmap-metrics .metric svg {
+  color: var(--mod-slate-300);
+  flex-shrink: 0;
+}
+
+.module-layout-container .mindmap-metrics .metric--ai {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+}
+
+.module-layout-container .mindmap-metrics .metric--ai svg {
+  color: #3b82f6;
+}
+
+.module-layout-container .mindmap-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-top: auto;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--mod-slate-100);
+  flex-wrap: wrap;
+}
+
+.module-layout-container .mindmap-actions {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.module-layout-container .badge-archived {
+  background: rgba(255, 255, 255, 0.72);
+  color: #475569;
+  border: 1px solid rgba(71, 85, 105, 0.16);
+}
+
+/* ── Danger outline button ── */
+.module-layout-container .btn.danger-outline {
+  background: #fff1f2;
+  color: #be123c;
+  border: 1.5px solid #fecdd3;
+}
+
+.module-layout-container .btn.danger-outline:hover:not(:disabled) {
+  background: #ffe4e6;
+  border-color: #fda4af;
+}
+
+/* ── List view ── */
+.module-layout-container .grid-cards.list-view .data-card.mindmap-card {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+}
+
+.module-layout-container .grid-cards.list-view .mindmap-cover {
+  min-height: 160px;
+}
+
+/* ── Skeleton ── */
+.module-layout-container .skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.1rem;
+}
+
+.module-layout-container .skeleton-card {
+  height: 300px;
+  border-radius: 14px;
+  background: linear-gradient(90deg, #f1f5f9 25%, #e8edf5 50%, #f1f5f9 75%);
+  background-size: 400% 100%;
+  animation: skeleton-shimmer 1.4s ease infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
