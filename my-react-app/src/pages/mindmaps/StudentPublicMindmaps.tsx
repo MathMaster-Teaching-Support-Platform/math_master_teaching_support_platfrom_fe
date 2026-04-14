@@ -7,6 +7,7 @@ import { MindmapService } from '../../services/api/mindmap.service';
 import type {
   ChapterBySubject,
   LessonByChapter,
+  LessonSlideGeneratedFile,
   SchoolGrade,
   SubjectByGrade,
 } from '../../types/lessonSlide.types';
@@ -27,16 +28,70 @@ export default function StudentPublicMindmaps() {
   const [subjectId, setSubjectId] = useState('');
   const [chapterId, setChapterId] = useState('');
   const [lessonId, setLessonId] = useState('');
+  const [resourceSearch, setResourceSearch] = useState('');
+  const [slideTimeFilter, setSlideTimeFilter] = useState<'ALL' | '7D' | '30D'>('ALL');
 
   const [mindmaps, setMindmaps] = useState<Mindmap[]>([]);
+  const [publicSlides, setPublicSlides] = useState<LessonSlideGeneratedFile[]>([]);
   const [loadingCatalog, setLoadingCatalog] = useState(false);
   const [loadingMindmaps, setLoadingMindmaps] = useState(false);
+  const [loadingSlides, setLoadingSlides] = useState(false);
+  const [downloadingSlideId, setDownloadingSlideId] = useState('');
   const [error, setError] = useState('');
 
   const selectedLesson = useMemo(
     () => lessons.find((lesson) => lesson.id === lessonId),
     [lessons, lessonId]
   );
+
+  const filteredPublicSlides = useMemo(() => {
+    const keyword = resourceSearch.trim().toLowerCase();
+    const now = Date.now();
+
+    return publicSlides.filter((slide) => {
+      if (slideTimeFilter !== 'ALL') {
+        const cutoffDays = slideTimeFilter === '7D' ? 7 : 30;
+        const publishedAt = slide.publishedAt ? new Date(slide.publishedAt).getTime() : 0;
+        if (!publishedAt || now - publishedAt > cutoffDays * 24 * 60 * 60 * 1000) {
+          return false;
+        }
+      }
+
+      if (!keyword) return true;
+      return (slide.fileName || '').toLowerCase().includes(keyword);
+    });
+  }, [publicSlides, resourceSearch, slideTimeFilter]);
+
+  const filteredMindmaps = useMemo(() => {
+    const keyword = resourceSearch.trim().toLowerCase();
+    if (!keyword) return mindmaps;
+
+    return mindmaps.filter((mindmap) => {
+      const title = (mindmap.title || '').toLowerCase();
+      const description = (mindmap.description || '').toLowerCase();
+      return title.includes(keyword) || description.includes(keyword);
+    });
+  }, [mindmaps, resourceSearch]);
+
+  const totalResources = filteredPublicSlides.length + filteredMindmaps.length;
+
+  const formatFileSize = (sizeInBytes: number): string => {
+    if (!Number.isFinite(sizeInBytes) || sizeInBytes < 0) return '--';
+    if (sizeInBytes < 1024) return `${sizeInBytes} B`;
+    if (sizeInBytes < 1024 * 1024) return `${(sizeInBytes / 1024).toFixed(1)} KB`;
+    return `${(sizeInBytes / (1024 * 1024)).toFixed(2)} MB`;
+  };
+
+  const triggerBlobDownload = (blob: Blob, fileName: string) => {
+    const blobUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = fileName || 'generated-slide.pptx';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(blobUrl);
+  };
 
   useEffect(() => {
     const loadGrades = async () => {
@@ -120,20 +175,55 @@ export default function StudentPublicMindmaps() {
   const handleLessonChange = async (value: string) => {
     setLessonId(value);
     setMindmaps([]);
+    setPublicSlides([]);
     if (!value) return;
 
     try {
       setLoadingMindmaps(true);
+      setLoadingSlides(true);
       setError('');
-      const response = await MindmapService.getPublicMindmapsByLesson(value, {
-        page: 0,
-        size: PAGE_SIZE,
-      });
-      setMindmaps(response.result.content || []);
+      const [mindmapsResult, slidesResult] = await Promise.allSettled([
+        MindmapService.getPublicMindmapsByLesson(value, {
+          page: 0,
+          size: PAGE_SIZE,
+        }),
+        LessonSlideService.getPublicGeneratedFilesByLessonId(value),
+      ]);
+
+      if (mindmapsResult.status === 'fulfilled') {
+        setMindmaps(mindmapsResult.value.result.content || []);
+      }
+
+      if (slidesResult.status === 'fulfilled') {
+        setPublicSlides(slidesResult.value.result || []);
+      }
+
+      if (mindmapsResult.status === 'rejected' && slidesResult.status === 'rejected') {
+        const message =
+          mindmapsResult.reason instanceof Error
+            ? mindmapsResult.reason.message
+            : 'Không thể tải tài nguyên public của bài học';
+        setError(message);
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Không thể tải danh sách mindmap public');
+      setError(err instanceof Error ? err.message : 'Không thể tải tài nguyên public');
     } finally {
       setLoadingMindmaps(false);
+      setLoadingSlides(false);
+    }
+  };
+
+  const handleDownloadSlide = async (generatedFileId: string) => {
+    setDownloadingSlideId(generatedFileId);
+    setError('');
+
+    try {
+      const response = await LessonSlideService.downloadPublicGeneratedFile(generatedFileId);
+      triggerBlobDownload(response.blob, response.filename || 'generated-slide.pptx');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Không thể tải slide public');
+    } finally {
+      setDownloadingSlideId('');
     }
   };
 
@@ -141,9 +231,25 @@ export default function StudentPublicMindmaps() {
     <DashboardLayout user={mockStudent} role="student">
       <div className="student-public-mindmaps-page">
         <header className="student-public-mindmaps-header">
-          <h1>Mindmap Public</h1>
-          <p>Chọn bài học để xem các mindmap đã được publish.</p>
+          <p className="header-kicker">Kho học liệu học sinh</p>
+          <h1>Tài nguyên công khai</h1>
+          <p>Chọn bài học để xem slide và mindmap đã được giáo viên công khai cho lớp.</p>
         </header>
+
+        <section className="student-public-metrics">
+          <article className="metric-card">
+            <p>Tổng đang hiển thị</p>
+            <strong>{totalResources}</strong>
+          </article>
+          <article className="metric-card">
+            <p>Slide công khai</p>
+            <strong>{filteredPublicSlides.length}</strong>
+          </article>
+          <article className="metric-card">
+            <p>Mindmap công khai</p>
+            <strong>{filteredMindmaps.length}</strong>
+          </article>
+        </section>
 
         <section className="student-public-mindmaps-filters">
           <select value={gradeId} onChange={(e) => void handleGradeChange(e.target.value)}>
@@ -193,38 +299,102 @@ export default function StudentPublicMindmaps() {
               </option>
             ))}
           </select>
+
+          <input
+            type="text"
+            value={resourceSearch}
+            onChange={(e) => setResourceSearch(e.target.value)}
+            placeholder="Tìm theo tên slide hoặc mindmap..."
+            disabled={!lessonId}
+          />
+
+          <select
+            value={slideTimeFilter}
+            onChange={(e) => setSlideTimeFilter(e.target.value as 'ALL' | '7D' | '30D')}
+            disabled={!lessonId}
+          >
+            <option value="ALL">Slide: Tất cả thời gian</option>
+            <option value="7D">Slide: 7 ngày gần đây</option>
+            <option value="30D">Slide: 30 ngày gần đây</option>
+          </select>
         </section>
 
         {loadingCatalog && <p className="state-text">Đang tải danh mục...</p>}
-        {loadingMindmaps && <p className="state-text">Đang tải mindmap public...</p>}
+        {loadingMindmaps && <p className="state-text">Đang tải mindmap công khai...</p>}
+        {loadingSlides && <p className="state-text">Đang tải slide công khai...</p>}
         {error && <p className="state-text state-text--error">{error}</p>}
 
         {selectedLesson && !loadingMindmaps && (
           <p className="state-text">Bài học: {selectedLesson.title}</p>
         )}
 
-        {!loadingMindmaps && lessonId && mindmaps.length === 0 && !error && (
-          <p className="state-text">Bài học này chưa có mindmap ở trạng thái PUBLISHED.</p>
-        )}
+        <section className="student-public-slides-section">
+          <div className="student-public-section-header">
+            <h2>Slide công khai 📄</h2>
+            <p>Danh sách file slide học sinh có thể tải.</p>
+          </div>
 
-        <section className="student-public-mindmaps-grid">
-          {mindmaps.map((mindmap) => (
-            <article key={mindmap.id} className="mindmap-card-public">
-              <h3>{mindmap.title}</h3>
-              <p>{mindmap.description || 'Không có mô tả.'}</p>
-              <div className="mindmap-card-public-meta">
-                <span>{mindmap.nodeCount} nodes</span>
-                <span>{new Date(mindmap.updatedAt).toLocaleDateString('vi-VN')}</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => navigate(`/mindmaps/public/${mindmap.id}`)}
-                className="mindmap-card-public-btn"
-              >
-                Xem mindmap
-              </button>
-            </article>
-          ))}
+          {!loadingSlides && lessonId && filteredPublicSlides.length === 0 && !error && (
+            <p className="state-text">Bài học này chưa có slide public.</p>
+          )}
+
+          {!loadingSlides && filteredPublicSlides.length > 0 && (
+            <div className="student-public-slides-grid">
+              {filteredPublicSlides.map((slide) => (
+                <article key={slide.id} className="slide-card-public">
+                  <h3>{slide.fileName || 'generated-slide.pptx'}</h3>
+                  <div className="slide-card-public-meta">
+                    <span>Dung lượng: {formatFileSize(slide.fileSizeBytes)}</span>
+                    <span>
+                      Công khai lúc:{' '}
+                      {slide.publishedAt
+                        ? new Date(slide.publishedAt).toLocaleDateString('vi-VN')
+                        : '--'}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    className="mindmap-card-public-btn"
+                    onClick={() => void handleDownloadSlide(slide.id)}
+                    disabled={downloadingSlideId === slide.id}
+                  >
+                    {downloadingSlideId === slide.id ? 'Đang tải...' : '📥 Tải slide'}
+                  </button>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section className="student-public-mindmaps-section">
+          <div className="student-public-section-header">
+            <h2>Mindmap công khai 🧠</h2>
+            <p>Chọn để mở bản đồ tư duy công khai theo bài học.</p>
+          </div>
+
+          {!loadingMindmaps && lessonId && filteredMindmaps.length === 0 && !error && (
+            <p className="state-text">Bài học này chưa có mindmap ở trạng thái công khai.</p>
+          )}
+
+          <section className="student-public-mindmaps-grid">
+            {filteredMindmaps.map((mindmap) => (
+              <article key={mindmap.id} className="mindmap-card-public">
+                <h3>{mindmap.title}</h3>
+                <p>{mindmap.description || 'Không có mô tả.'}</p>
+                <div className="mindmap-card-public-meta">
+                  <span>{mindmap.nodeCount} nút</span>
+                  <span>{new Date(mindmap.updatedAt).toLocaleDateString('vi-VN')}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigate(`/mindmaps/public/${mindmap.id}`)}
+                  className="mindmap-card-public-btn"
+                >
+                  🔎 Xem mindmap
+                </button>
+              </article>
+            ))}
+          </section>
         </section>
       </div>
     </DashboardLayout>

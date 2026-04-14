@@ -1,21 +1,74 @@
 .student-public-mindmaps-page {
   padding: 24px;
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 6% 8%, rgba(37, 99, 235, 0.14), transparent 30%),
+    radial-gradient(circle at 92% 12%, rgba(2, 132, 199, 0.12), transparent 26%), #f8fbff;
 }
 
 .student-public-mindmaps-header {
-  margin-bottom: 16px;
+  margin-bottom: 14px;
+}
+
+.student-public-mindmaps-header .header-kicker {
+  margin: 0;
+  color: #2563eb;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.student-public-mindmaps-header h1 {
+  margin: 0.35rem 0 0;
+  font-size: 2rem;
+  font-weight: 800;
+  color: #0f172a;
 }
 
 .student-public-mindmaps-header p {
-  margin-top: 6px;
+  margin-top: 8px;
   color: #475569;
+}
+
+.student-public-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 16px 0 14px;
+}
+
+.metric-card {
+  border: 1px solid #dbeafe;
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: linear-gradient(180deg, #ffffff 0%, #eff6ff 100%);
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.08);
+}
+
+.metric-card p {
+  margin: 0;
+  color: #475569;
+  font-size: 0.82rem;
+}
+
+.metric-card strong {
+  display: block;
+  margin-top: 4px;
+  color: #0f172a;
+  font-size: 1.55rem;
 }
 
 .student-public-mindmaps-filters {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 10px;
   margin-bottom: 14px;
+  padding: 12px;
+  border: 1px solid #dbeafe;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
 }
 
 .student-public-mindmaps-filters input,
@@ -25,6 +78,23 @@
   border-radius: 10px;
   padding: 10px 12px;
   background: #ffffff;
+  transition: all 0.16s ease;
+}
+
+.student-public-mindmaps-filters input::placeholder {
+  color: #94a3b8;
+}
+
+.student-public-mindmaps-filters select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18);
+}
+
+.student-public-mindmaps-filters input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18);
 }
 
 .student-public-mindmaps-filters button {
@@ -55,6 +125,66 @@
   color: #b91c1c;
 }
 
+.student-public-mindmaps-section,
+.student-public-slides-section {
+  margin-top: 18px;
+  border: 1px solid #dbeafe;
+  border-radius: 16px;
+  background: #ffffff;
+  padding: 12px;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
+}
+
+.student-public-section-header {
+  margin-bottom: 10px;
+}
+
+.student-public-section-header h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #0f172a;
+}
+
+.student-public-section-header p {
+  margin: 4px 0 0;
+  color: #475569;
+}
+
+.student-public-slides-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.slide-card-public {
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 14px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: transform 0.18s ease;
+}
+
+.slide-card-public:hover {
+  transform: translateY(-2px);
+}
+
+.slide-card-public h3 {
+  margin: 0;
+  font-size: 16px;
+  word-break: break-word;
+}
+
+.slide-card-public-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: #64748b;
+  font-size: 13px;
+}
+
 .student-public-mindmaps-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -66,10 +196,15 @@
   border: 1px solid #e2e8f0;
   border-radius: 14px;
   padding: 14px;
-  background: #ffffff;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
   display: flex;
   flex-direction: column;
   gap: 10px;
+  transition: transform 0.18s ease;
+}
+
+.mindmap-card-public:hover {
+  transform: translateY(-2px);
 }
 
 .mindmap-card-public h3 {
@@ -95,19 +230,33 @@
   border: none;
   border-radius: 10px;
   padding: 10px 12px;
-  background: #2563eb;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
   color: #ffffff;
   font-weight: 600;
   cursor: pointer;
+  box-shadow: 0 8px 14px rgba(37, 99, 235, 0.22);
+  transition: all 0.16s ease;
 }
 
 .mindmap-card-public-btn:hover {
-  background: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(37, 99, 235, 0.26);
+}
+
+.mindmap-card-public-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 @media (max-width: 900px) {
+  .student-public-metrics {
+    grid-template-columns: 1fr;
+  }
+
   .student-public-mindmaps-filters {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -117,6 +266,10 @@
   }
 
   .student-public-mindmaps-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .student-public-slides-grid {
     grid-template-columns: 1fr;
   }
 }
