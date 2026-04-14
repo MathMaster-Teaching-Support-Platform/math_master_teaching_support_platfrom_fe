@@ -649,6 +649,42 @@
   padding: 0.7rem;
 }
 
+.ai-slide-management-detail-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(37, 99, 235, 0.07), transparent 40%),
+    linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.ai-slide-management-detail-panel .ai-slide-management-header {
+  border: 1px solid #dbeafe;
+  border-radius: 10px;
+  background: #f8fbff;
+  padding: 0.62rem 0.7rem;
+}
+
+.ai-slide-management-detail-panel .ai-slide-management-header h3 {
+  font-size: 0.93rem;
+}
+
+.ai-slide-management-detail-panel .ai-slide-management-header p {
+  margin-top: 0.2rem;
+  font-size: 0.79rem;
+  line-height: 1.35;
+}
+
+.ai-slide-management-detail-panel .ai-slide-management-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.ai-slide-management-detail-panel .ai-slide-management-actions .btn {
+  width: 100%;
+}
+
 .ai-slide-table-wrap {
   overflow-x: hidden;
   overflow-y: auto;
@@ -658,6 +694,11 @@
 
 .ai-slide-table-wrap.compact {
   max-height: 240px;
+}
+
+.ai-slide-management-detail-panel .ai-slide-table-wrap.compact {
+  max-height: 280px;
+  background: #ffffff;
 }
 
 .ai-slide-table {
@@ -730,6 +771,11 @@
   border-radius: 10px;
   border: 1px solid #c7d2fe;
   background: #eef2ff;
+}
+
+.ai-slide-management-detail-panel .ai-slide-selected-lesson {
+  border-left: 4px solid #2563eb;
+  background: #ffffff;
 }
 
 .ai-slide-selected-lesson strong {
@@ -820,6 +866,10 @@
 
   .ai-slide-management-toolbar,
   .ai-slide-management-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .ai-slide-management-detail-panel .ai-slide-management-actions {
     grid-template-columns: 1fr;
   }
 

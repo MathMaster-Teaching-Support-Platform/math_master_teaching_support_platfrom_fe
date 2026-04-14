@@ -1340,7 +1340,7 @@ const AISlideGenerator: React.FC = () => {
 
                 <div className="ai-slide-management-detail-panel">
                   <div className="ai-slide-management-header">
-                    <h3>Chi tiết file</h3>
+                    <h3>Chi tiết tệp</h3>
                     <p>
                       {selectedGeneratedFile
                         ? `Đã chọn: ${selectedGeneratedFile.fileName || 'generated-slide.pptx'}`
@@ -1365,7 +1365,7 @@ const AISlideGenerator: React.FC = () => {
                       {selectedGeneratedFile &&
                       updatingGeneratedVisibilityId === selectedGeneratedFile.id
                         ? 'Đang cập nhật...'
-                        : 'Publish'}
+                        : 'Công khai'}
                     </button>
                     <button
                       type="button"
@@ -1380,7 +1380,7 @@ const AISlideGenerator: React.FC = () => {
                         void handleToggleGeneratedVisibility(selectedGeneratedFile.id, false)
                       }
                     >
-                      Unpublish
+                      Ẩn công khai
                     </button>
                     <button
                       type="button"
@@ -1409,7 +1409,7 @@ const AISlideGenerator: React.FC = () => {
                     <div className="ai-slide-selected-lesson">
                       <div>
                         <strong>{selectedGeneratedLesson.title || 'Bài học'}</strong>
-                        <span>Trạng thái lesson: {selectedGeneratedLesson.status || '--'}</span>
+                        <span>Trạng thái bài học: {selectedGeneratedLesson.status || '--'}</span>
                       </div>
                       <button
                         type="button"
@@ -1425,8 +1425,8 @@ const AISlideGenerator: React.FC = () => {
                   )}
 
                   <div className="ai-slide-management-header">
-                    <h3>Student view (public files)</h3>
-                    <p>Các file công khai mà học sinh có thể tải.</p>
+                    <h3>Tệp công khai cho học sinh</h3>
+                    <p>Danh sách này là những tệp học sinh nhìn thấy và có thể tải.</p>
                   </div>
 
                   {loadingPublicGeneratedFiles && (
