@@ -57,6 +57,8 @@ import { ExamMatrixDashboard } from '../pages/exam-matrices/ExamMatrixDashboard'
 import ExamMatrixDetailPage from '../pages/exam-matrices/ExamMatrixDetailPageRefactored';
 import TeacherLessonPlans from '../pages/lesson-plans/TeacherLessonPlans';
 import { MindmapEditor, TeacherMindmaps } from '../pages/mindmaps';
+import PublicMindmapViewer from '../pages/mindmaps/PublicMindmapViewer';
+import StudentPublicMindmaps from '../pages/mindmaps/StudentPublicMindmaps';
 import { QuestionBankDashboard } from '../pages/question-banks/QuestionBankDashboard';
 import { QuestionBankDetailPage } from '../pages/question-banks/QuestionBankDetailPage';
 import { TemplateDashboard } from '../pages/question-templates/TemplateDashboard';
@@ -198,6 +200,14 @@ const router = createBrowserRouter([
     element: (
       <PrivateRoute>
         <LiveChat />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/mindmaps/public/:id',
+    element: (
+      <PrivateRoute>
+        <PublicMindmapViewer />
       </PrivateRoute>
     ),
   },
@@ -483,6 +493,14 @@ const router = createBrowserRouter([
     element: (
       <PrivateRoute>
         <StudentRoadmap />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/student/public-resources',
+    element: (
+      <PrivateRoute>
+        <StudentPublicMindmaps />
       </PrivateRoute>
     ),
   },
