@@ -1,4 +1,4 @@
-import { Plus, Trash2, X } from 'lucide-react';
+import { AlertTriangle, HelpCircle, Plus, Trash2, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import {
   CognitiveLevel,
@@ -174,6 +174,7 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
   const [saving, setSaving] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [activeMathField, setActiveMathField] = useState<ActiveMathField>({ kind: 'templateText' });
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
   const nameRef = useRef<HTMLInputElement | null>(null);
   const descriptionRef = useRef<HTMLTextAreaElement | null>(null);
   const tagsRef = useRef<HTMLInputElement | null>(null);
@@ -186,6 +187,12 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
   const parameterConstraintRefs = useRef<Record<number, HTMLInputElement | null>>({});
   const optionKeyRefs = useRef<Record<number, HTMLInputElement | null>>({});
   const optionFormulaRefs = useRef<Record<number, HTMLInputElement | null>>({});
+
+  useEffect(() => {
+    if (!isOpen) {
+      setIsGuideOpen(false);
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -474,9 +481,15 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
             <h3>{mode === 'create' ? 'Tạo mẫu câu hỏi' : 'Chỉnh sửa mẫu câu hỏi'}</h3>
             <p className="muted" style={{ marginTop: 4 }}>Cấu hình logic tạo câu hỏi tự động.</p>
           </div>
-          <button className="icon-btn" onClick={onClose}>
-            <X size={16} />
-          </button>
+          <div className="row" style={{ gap: 8 }}>
+            <button type="button" className="btn secondary" onClick={() => setIsGuideOpen(true)}>
+              <HelpCircle size={14} />
+              Hướng dẫn
+            </button>
+            <button className="icon-btn" onClick={onClose}>
+              <X size={16} />
+            </button>
+          </div>
         </div>
 
         <form onSubmit={submit}>
@@ -562,6 +575,9 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
                 onFocus={() => setActiveMathField({ kind: 'templateText' })}
                 onChange={(event) => setTemplateText(event.target.value)}
               />
+              <p className="muted" style={{ marginTop: 6, fontSize: '0.78rem' }}>
+                Dùng {'{{a}}'} để tạo biến động. Bôi đen nội dung cần công thức rồi bấm Insert Math.
+              </p>
               {templateText && (
                 <div className="preview-box">
                   <MathText text={templateText} />
@@ -579,6 +595,9 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
                 onFocus={() => setActiveMathField({ kind: 'answerFormula' })}
                 onChange={(event) => setAnswerFormula(event.target.value)}
               />
+              <p className="muted" style={{ marginTop: 6, fontSize: '0.78rem' }}>
+                Tooltip: Công thức cần bám theo biến đã khai báo (ví dụ: 2 * {'{{a}}'} * x).
+              </p>
               {answerFormula && (
                 <div className="preview-box">
                   <MathText text={answerFormula} />
@@ -816,7 +835,7 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
               ))}
             </div>
             <p className="muted" style={{ marginTop: 8, marginBottom: 0, fontSize: '0.8rem' }}>
-              Thanh cong cu sticky: focus vao o can nhap, sau do bam nut de chen cong thuc vao dung vi tri con tro.
+              Thanh công cụ sticky: focus vào ô cần nhập, sau đó bấm nút để chèn công thức đúng vị trí con trỏ.
             </p>
           </div>
 
@@ -828,6 +847,130 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
           </div>
         </form>
       </div>
+
+      {isGuideOpen && (
+        <>
+          <button
+            type="button"
+            aria-label="Đóng hướng dẫn"
+            onClick={() => setIsGuideOpen(false)}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(15, 23, 42, 0.35)',
+              border: 'none',
+              zIndex: 29,
+              cursor: 'pointer',
+            }}
+          />
+          <aside
+            style={{
+              position: 'fixed',
+              top: 0,
+              right: 0,
+              width: 'min(460px, 100vw)',
+              height: '100vh',
+              background: '#ffffff',
+              borderLeft: '1px solid #e2e8f0',
+              boxShadow: '-8px 0 30px rgba(15, 23, 42, 0.16)',
+              zIndex: 30,
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '1rem 1rem 0.75rem',
+                borderBottom: '1px solid #f1f5f9',
+              }}
+            >
+              <div>
+                <h3 style={{ margin: 0, color: '#0f172a' }}>Hướng dẫn</h3>
+                <p className="muted" style={{ margin: '4px 0 0', fontSize: '0.82rem' }}>
+                  Tạo question template đúng chuẩn và nhập công thức an toàn.
+                </p>
+              </div>
+              <button type="button" className="icon-btn" onClick={() => setIsGuideOpen(false)}>
+                <X size={16} />
+              </button>
+            </div>
+
+            <div style={{ padding: '0.9rem 1rem 1rem', overflowY: 'auto', display: 'grid', gap: '0.75rem' }}>
+              <details open style={{ border: '1px solid #e2e8f0', borderRadius: 12, padding: '0.75rem' }}>
+                <summary style={{ cursor: 'pointer', fontWeight: 600, color: '#0f172a' }}>
+                  📌 Phần 1: Quy tắc nhập liệu
+                </summary>
+                <div style={{ marginTop: 10, display: 'grid', gap: 10 }}>
+                  <div style={{ border: '1px solid #f1f5f9', borderRadius: 10, padding: '0.7rem' }}>
+                    <strong>1. Biến số</strong>
+                    <p className="muted" style={{ margin: '0.35rem 0' }}>Dùng dạng: {'{{a}}'}, {'{{b}}'}, {'{{n}}'}</p>
+                    <pre style={{ margin: 0, background: '#f8fafc', padding: '0.5rem', borderRadius: 8, overflowX: 'auto' }}>
+                      Tính giá trị của {'{{a}}'} + {'{{b}}'}
+                    </pre>
+                  </div>
+
+                  <div style={{ border: '1px solid #f1f5f9', borderRadius: 10, padding: '0.7rem' }}>
+                    <strong>2. Công thức toán</strong>
+                    <p className="muted" style={{ margin: '0.35rem 0' }}>Viết bằng LaTeX, không dùng ký tự lạ hoặc text mơ hồ.</p>
+                    <pre style={{ margin: 0, background: '#f8fafc', padding: '0.5rem', borderRadius: 8, overflowX: 'auto' }}>{String.raw`\frac{a}{b}, \sqrt{x^2 + 1}`}</pre>
+                  </div>
+
+                  <div style={{ border: '1px solid #f1f5f9', borderRadius: 10, padding: '0.7rem' }}>
+                    <strong>3. Chèn công thức</strong>
+                    <p className="muted" style={{ margin: '0.35rem 0 0' }}>Bôi đen nội dung cần công thức rồi bấm Insert Math.</p>
+                  </div>
+                </div>
+              </details>
+
+              <details open style={{ border: '1px solid #e2e8f0', borderRadius: 12, padding: '0.75rem' }}>
+                <summary style={{ cursor: 'pointer', fontWeight: 600, color: '#0f172a' }}>
+                  📌 Phần 2: Các bước tạo câu hỏi
+                </summary>
+                <div style={{ marginTop: 10, display: 'grid', gap: 8 }}>
+                  <div className="data-card" style={{ minHeight: 0, border: '1px solid #dbeafe', padding: '0.65rem' }}>
+                    <strong>Bước 1: Nhập đề bài</strong>
+                    <p className="muted" style={{ margin: '0.3rem 0 0' }}>
+                      Viết nội dung + chèn biến. Ví dụ: Tính đạo hàm của hàm số y = {'{{a}}'}x^2
+                    </p>
+                  </div>
+                  <div className="data-card" style={{ minHeight: 0, border: '1px solid #dbeafe', padding: '0.65rem' }}>
+                    <strong>Bước 2: Công thức đáp án đúng</strong>
+                    <p className="muted" style={{ margin: '0.3rem 0 0' }}>
+                      Nhập công thức theo biến. Ví dụ: 2 * {'{{a}}'} * x
+                    </p>
+                  </div>
+                  <div className="data-card" style={{ minHeight: 0, border: '1px solid #dbeafe', padding: '0.65rem' }}>
+                    <strong>Bước 3: Khai báo tham số</strong>
+                    <p className="muted" style={{ margin: '0.3rem 0 0' }}>Ví dụ: a là số nguyên, từ 1 đến 10.</p>
+                  </div>
+                  <div className="data-card" style={{ minHeight: 0, border: '1px solid #dbeafe', padding: '0.65rem' }}>
+                    <strong>Bước 4 (trắc nghiệm): Nhập đáp án A/B/C/D</strong>
+                    <p className="muted" style={{ margin: '0.3rem 0 0' }}>
+                      A: 2 * {'{{a}}'} * x, B: {'{{a}}'} * x, C: x^2, D: 2x
+                    </p>
+                  </div>
+                  <div className="data-card" style={{ minHeight: 0, border: '1px solid #dbeafe', padding: '0.65rem' }}>
+                    <strong>Bước 5: Xem preview</strong>
+                    <p className="muted" style={{ margin: '0.3rem 0 0' }}>Luôn kiểm tra preview realtime trước khi lưu.</p>
+                  </div>
+                </div>
+              </details>
+
+              <div style={{ border: '1px solid #fecaca', background: '#fff7f7', borderRadius: 12, padding: '0.75rem' }}>
+                <div className="row" style={{ alignItems: 'center', gap: 8 }}>
+                  <AlertTriangle size={16} color="#dc2626" />
+                  <strong style={{ color: '#7f1d1d' }}>Lỗi phổ biến cần tránh</strong>
+                </div>
+                <p style={{ margin: '0.55rem 0 0', color: '#7f1d1d' }}>❌ Quên {'{{}}'} nên biến không render</p>
+                <p style={{ margin: '0.35rem 0 0', color: '#7f1d1d' }}>❌ Sai LaTeX gây lỗi hiển thị công thức</p>
+              </div>
+            </div>
+          </aside>
+        </>
+      )}
     </div>
   );
 }

@@ -42,11 +42,12 @@ const cognitiveLevelLabel: Record<string, string> = {
   CREATE: 'Sáng tạo',
 };
 
-export function TemplateBulkImportModal({ isOpen, onClose, onSuccess }: Props) {
+export function TemplateBulkImportModal({ isOpen, onClose, onSuccess }: Readonly<Props>) {
   const [step, setStep] = useState<Step>('upload');
   const [previewData, setPreviewData] = useState<ExcelPreviewResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -55,14 +56,14 @@ export function TemplateBulkImportModal({ isOpen, onClose, onSuccess }: Props) {
     try {
       setError(null);
       const blob = await templateImportService.downloadTemplate();
-      const url = window.URL.createObjectURL(blob);
+      const url = globalThis.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = 'question_template_import.xlsx';
       document.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
+      a.remove();
+      globalThis.URL.revokeObjectURL(url);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to download template');
     }
@@ -141,9 +142,7 @@ export function TemplateBulkImportModal({ isOpen, onClose, onSuccess }: Props) {
     try {
       const result = await templateImportService.submitBatch(validTemplates);
       onSuccess();
-      handleClose();
-      // Show success message (you can add a toast notification here)
-      alert(`Imported ${result.successCount} templates successfully`);
+      setSuccessMessage(`Imported ${result.successCount} templates successfully`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Import failed');
     } finally {
@@ -156,6 +155,7 @@ export function TemplateBulkImportModal({ isOpen, onClose, onSuccess }: Props) {
     setPreviewData(null);
     setLoading(false);
     setImporting(false);
+    setSuccessMessage(null);
     setError(null);
     setDragActive(false);
     onClose();
@@ -217,8 +217,10 @@ export function TemplateBulkImportModal({ isOpen, onClose, onSuccess }: Props) {
                 </div>
               </div>
 
-              <div
+              <button
+                type="button"
                 className={`file-drop-zone ${dragActive ? 'active' : ''} ${loading ? 'loading' : ''}`}
+                aria-label="Chon file Excel de upload"
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
                 onDragOver={handleDrag}
@@ -244,7 +246,7 @@ export function TemplateBulkImportModal({ isOpen, onClose, onSuccess }: Props) {
                     <p className="drop-zone-hint">Only .xlsx files are supported (max 10MB)</p>
                   </>
                 )}
-              </div>
+              </button>
             </div>
           )}
 
@@ -319,8 +321,8 @@ export function TemplateBulkImportModal({ isOpen, onClose, onSuccess }: Props) {
                         <td>
                           {row.validationErrors && row.validationErrors.length > 0 ? (
                             <div className="error-list">
-                              {row.validationErrors.map((err, idx) => (
-                                <div key={idx} className="error-item">
+                              {row.validationErrors.map((err) => (
+                                <div key={`${row.rowNumber}-${err}`} className="error-item">
                                   • {err}
                                 </div>
                               ))}
@@ -371,6 +373,49 @@ export function TemplateBulkImportModal({ isOpen, onClose, onSuccess }: Props) {
             </>
           )}
         </div>
+
+        {successMessage && (
+          <dialog
+            aria-label="Import thanh cong"
+            open
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'rgba(15, 23, 42, 0.45)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 5,
+              borderRadius: 12,
+            }}
+          >
+            <div
+              style={{
+                width: 'min(420px, calc(100% - 2rem))',
+                background: '#ffffff',
+                borderRadius: 12,
+                border: '1px solid #bfdbfe',
+                boxShadow: '0 12px 30px rgba(15, 23, 42, 0.25)',
+                padding: '1rem',
+              }}
+            >
+              <div className="row" style={{ alignItems: 'center', gap: 8 }}>
+                <CheckCircle size={18} color="#15803d" />
+                <strong style={{ color: '#0f172a' }}>Import completed</strong>
+              </div>
+              <p style={{ margin: '0.75rem 0 1rem', color: '#334155' }}>{successMessage}</p>
+              <div className="row" style={{ justifyContent: 'end' }}>
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={handleClose}
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          </dialog>
+        )}
       </div>
     </div>
   );

@@ -143,6 +143,54 @@ export default function AssessmentBuilderFlow() {
             </div>
           </section>
 
+          <section className="data-card" style={{ minHeight: 0 }}>
+            <h3>Flow tạo assessment theo thứ tự</h3>
+            <p className="muted">Làm theo 4 bước dưới đây để lên đề hoàn chỉnh, đúng dữ liệu và đúng quy trình.</p>
+
+            <div style={{ display: 'grid', gap: 10, marginTop: 8 }}>
+              <article className="assessment-builder-flow__publish-summary ok" style={{ margin: 0 }}>
+                <div className="row" style={{ gap: 8, alignItems: 'center' }}>
+                  <span className="badge draft">Bước 1</span>
+                  <strong>Question Template</strong>
+                </div>
+                <p>Tạo mẫu câu hỏi, khai báo biến số, công thức đáp án và kiểm tra preview công thức.</p>
+                <button className="btn secondary" onClick={() => navigate('/teacher/question-templates')}>
+                  Mở Question Template
+                </button>
+              </article>
+
+              <article className="assessment-builder-flow__publish-summary ok" style={{ margin: 0 }}>
+                <div className="row" style={{ gap: 8, alignItems: 'center' }}>
+                  <span className="badge draft">Bước 2</span>
+                  <strong>Question Bank</strong>
+                </div>
+                <p>Sinh câu hỏi từ template, rà soát chất lượng nội dung và đưa câu hỏi vào ngân hàng.</p>
+                <button className="btn secondary" onClick={() => navigate('/teacher/question-banks')}>
+                  Mở Question Bank
+                </button>
+              </article>
+
+              <article className="assessment-builder-flow__publish-summary ok" style={{ margin: 0 }}>
+                <div className="row" style={{ gap: 8, alignItems: 'center' }}>
+                  <span className="badge draft">Bước 3</span>
+                  <strong>Exam Matrix</strong>
+                </div>
+                <p>Tạo ma trận đề (số câu, mức độ, phân bố chương/chủ đề), sau đó phê duyệt để sẵn sàng tạo đề.</p>
+                <button className="btn secondary" onClick={() => navigate('/teacher/exam-matrices')}>
+                  Mở Exam Matrix
+                </button>
+              </article>
+
+              <article className="assessment-builder-flow__publish-summary ok" style={{ margin: 0 }}>
+                <div className="row" style={{ gap: 8, alignItems: 'center' }}>
+                  <span className="badge draft">Bước 4</span>
+                  <strong>Assessment</strong>
+                </div>
+                <p>Quay lại Trình tạo đề này, chọn ma trận đã duyệt, Generate đề nháp, rà soát và xuất bản.</p>
+              </article>
+            </div>
+          </section>
+
           <section className="assessment-builder-flow__orchestration-grid">
             <article className="data-card">
               <h3>Bước 1: Lắp ráp đề nháp từ ma trận</h3>
