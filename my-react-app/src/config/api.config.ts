@@ -180,13 +180,25 @@ export const API_ENDPOINTS = {
   LESSONS_BY_CHAPTER: (chapterId: string) => `/lessons/chapters/${chapterId}/lessons`,
   LESSON_SLIDES_TEMPLATES: '/lesson-slides/templates',
   LESSON_SLIDES_GENERATE_CONTENT: '/lesson-slides/generate-content',
+  LESSON_SLIDES_GENERATE_PPTX_DIRECT: '/lesson-slides/generate-pptx',
   LESSON_SLIDES_GENERATE_PPTX: '/lesson-slides/generate-pptx-from-json',
+  LESSON_SLIDES_GENERATED: '/lesson-slides/generated',
+  LESSON_SLIDES_GENERATED_DOWNLOAD: (generatedFileId: string) =>
+    `/lesson-slides/generated/${generatedFileId}/download`,
+  LESSON_SLIDES_GENERATED_PUBLISH: (generatedFileId: string) =>
+    `/lesson-slides/generated/${generatedFileId}/publish`,
+  LESSON_SLIDES_GENERATED_UNPUBLISH: (generatedFileId: string) =>
+    `/lesson-slides/generated/${generatedFileId}/unpublish`,
   LESSON_SLIDES_BY_LESSON: (lessonId: string) => `/lesson-slides/lessons/${lessonId}`,
   LESSON_SLIDES_BY_STATUS: (status: 'DRAFT' | 'PUBLISHED') =>
     `/lesson-slides/lessons?status=${status}`,
   LESSON_SLIDES_PUBLISH: (lessonId: string) => `/lesson-slides/lessons/${lessonId}/publish`,
   LESSON_SLIDES_UNPUBLISH: (lessonId: string) => `/lesson-slides/lessons/${lessonId}/unpublish`,
   LESSON_SLIDES_PUBLIC_BY_LESSON: (lessonId: string) => `/lesson-slides/public/lessons/${lessonId}`,
+  LESSON_SLIDES_PUBLIC_GENERATED_BY_LESSON: (lessonId: string) =>
+    `/lesson-slides/public/lessons/${lessonId}/generated`,
+  LESSON_SLIDES_PUBLIC_GENERATED_DOWNLOAD: (generatedFileId: string) =>
+    `/lesson-slides/public/generated/${generatedFileId}/download`,
 
   // Lesson Plans (Giáo án)
   LESSON_PLANS: '/lesson-plans',

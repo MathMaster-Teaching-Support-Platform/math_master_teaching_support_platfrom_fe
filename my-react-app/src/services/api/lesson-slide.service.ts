@@ -4,9 +4,11 @@ import type { LessonResponse } from '../../types/lesson.types';
 import type {
   ApiEnvelope,
   ChapterBySubject,
+  GeneratedFileListResult,
   GeneratePptxRequest,
   GenerateSlideContentRequest,
   GenerateSlideContentResult,
+  LessonSlideGeneratedFile,
   LessonSlidePublicationStatus,
   LessonByChapter,
   LessonSlideTemplate,
@@ -96,6 +98,20 @@ export class LessonSlideService {
 
     const asciiMatch = disposition.match(/filename="?([^";]+)"?/i);
     return asciiMatch?.[1] || 'lesson-slides.pptx';
+  }
+
+  private static normalizeGeneratedFileList(
+    result: LessonSlideGeneratedFile[] | GeneratedFileListResult | null | undefined
+  ): LessonSlideGeneratedFile[] {
+    if (Array.isArray(result)) {
+      return result;
+    }
+
+    if (result && Array.isArray(result.content)) {
+      return result.content;
+    }
+
+    return [];
   }
 
   static async getSchoolGrades(activeOnly = true): Promise<ApiEnvelope<SchoolGrade[]>> {
@@ -215,6 +231,104 @@ export class LessonSlideService {
     };
   }
 
+  static async getGeneratedFiles(
+    lessonId?: string
+  ): Promise<ApiEnvelope<LessonSlideGeneratedFile[]>> {
+    const headers = await this.getAuthHeaders(false);
+    const query = new URLSearchParams();
+
+    if (lessonId) {
+      query.set('lessonId', lessonId);
+    }
+
+    const queryString = query.toString();
+    const url = `${API_BASE_URL}${API_ENDPOINTS.LESSON_SLIDES_GENERATED}${
+      queryString ? `?${queryString}` : ''
+    }`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers,
+    });
+
+    if (!response.ok) {
+      const parsedError = await this.parseApiError(response, 'Failed to fetch generated slides');
+      throw this.buildApiError(parsedError.message, parsedError.code);
+    }
+
+    const payload = (await response.json()) as ApiEnvelope<
+      LessonSlideGeneratedFile[] | GeneratedFileListResult
+    >;
+
+    return {
+      ...payload,
+      result: this.normalizeGeneratedFileList(payload.result),
+    };
+  }
+
+  static async downloadGeneratedFile(generatedFileId: string): Promise<DownloadPptxResult> {
+    const headers = await this.getAuthHeaders(false);
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.LESSON_SLIDES_GENERATED_DOWNLOAD(generatedFileId)}`,
+      {
+        method: 'GET',
+        headers,
+      }
+    );
+
+    if (!response.ok) {
+      const parsedError = await this.parseApiError(response, 'Failed to download generated slide');
+      throw this.buildApiError(parsedError.message, parsedError.code);
+    }
+
+    return {
+      blob: await response.blob(),
+      filename:
+        this.getFilenameFromDisposition(response.headers.get('content-disposition')) ||
+        'generated-slide.pptx',
+    };
+  }
+
+  static async publishGeneratedFile(
+    generatedFileId: string
+  ): Promise<ApiEnvelope<LessonSlideGeneratedFile>> {
+    const headers = await this.getAuthHeaders(false);
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.LESSON_SLIDES_GENERATED_PUBLISH(generatedFileId)}`,
+      {
+        method: 'PATCH',
+        headers,
+      }
+    );
+
+    if (!response.ok) {
+      const parsedError = await this.parseApiError(response, 'Failed to publish generated slide');
+      throw this.buildApiError(parsedError.message, parsedError.code);
+    }
+
+    return response.json();
+  }
+
+  static async unpublishGeneratedFile(
+    generatedFileId: string
+  ): Promise<ApiEnvelope<LessonSlideGeneratedFile>> {
+    const headers = await this.getAuthHeaders(false);
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.LESSON_SLIDES_GENERATED_UNPUBLISH(generatedFileId)}`,
+      {
+        method: 'PATCH',
+        headers,
+      }
+    );
+
+    if (!response.ok) {
+      const parsedError = await this.parseApiError(response, 'Failed to unpublish generated slide');
+      throw this.buildApiError(parsedError.message, parsedError.code);
+    }
+
+    return response.json();
+  }
+
   static async getTeacherLessonSlideByLessonId(
     lessonId: string
   ): Promise<ApiEnvelope<LessonResponse>> {
@@ -305,5 +419,59 @@ export class LessonSlideService {
     }
 
     return response.json();
+  }
+
+  static async getPublicGeneratedFilesByLessonId(
+    lessonId: string
+  ): Promise<ApiEnvelope<LessonSlideGeneratedFile[]>> {
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.LESSON_SLIDES_PUBLIC_GENERATED_BY_LESSON(lessonId)}`,
+      {
+        method: 'GET',
+        headers: { accept: '*/*' },
+      }
+    );
+
+    if (!response.ok) {
+      const parsedError = await this.parseApiError(
+        response,
+        'Failed to fetch public generated slides'
+      );
+      throw this.buildApiError(parsedError.message, parsedError.code);
+    }
+
+    const payload = (await response.json()) as ApiEnvelope<
+      LessonSlideGeneratedFile[] | GeneratedFileListResult
+    >;
+
+    return {
+      ...payload,
+      result: this.normalizeGeneratedFileList(payload.result),
+    };
+  }
+
+  static async downloadPublicGeneratedFile(generatedFileId: string): Promise<DownloadPptxResult> {
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.LESSON_SLIDES_PUBLIC_GENERATED_DOWNLOAD(generatedFileId)}`,
+      {
+        method: 'GET',
+        headers: { accept: '*/*' },
+      }
+    );
+
+    if (!response.ok) {
+      const parsedError = await this.parseApiError(
+        response,
+        'Failed to download public generated slide'
+      );
+      throw this.buildApiError(parsedError.message, parsedError.code);
+    }
+
+    return {
+      blob: await response.blob(),
+      filename:
+        this.getFilenameFromDisposition(response.headers.get('content-disposition')) ||
+        'generated-slide.pptx',
+    };
   }
 }

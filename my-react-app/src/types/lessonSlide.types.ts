@@ -67,6 +67,23 @@ export interface LessonSlideTemplate {
   updatedAt?: string;
 }
 
+export interface LessonSlideGeneratedFile {
+  id: string;
+  lessonId: string;
+  templateId: string | null;
+  fileName: string;
+  contentType: string;
+  fileSizeBytes: number;
+  isPublic: boolean;
+  publishedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GeneratedFileListResult {
+  content?: LessonSlideGeneratedFile[];
+}
+
 export type LessonSlidePublicationStatus = 'DRAFT' | 'PUBLISHED';
 
 export type LessonSlideOutputFormat = 'PLAIN_TEXT' | 'LATEX' | 'HYBRID';
