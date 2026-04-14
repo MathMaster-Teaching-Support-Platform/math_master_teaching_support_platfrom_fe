@@ -144,7 +144,10 @@ const TeacherAssignments: React.FC = () => {
               const completionRate = Math.round((assignment.totalSubmissions / 30) * 100);
 
               return (
-                <div key={assignment.id} className="assignment-card">
+                <div
+                  key={assignment.id}
+                  className={`assignment-card${isOverdue ? ' is-overdue' : ''}`}
+                >
                   <div className="assignment-header">
                     <div className="assignment-title-section">
                       <h3 className="assignment-title">{assignment.title}</h3>
@@ -168,27 +171,27 @@ const TeacherAssignments: React.FC = () => {
                   <div className="assignment-info">
                     <div className="info-item">
                       <span className="info-icon">
-                        <BookOpen size={15} />
+                        <BookOpen size={14} />
                       </span>
                       <span className="info-text">{assignment.courseName}</span>
                     </div>
                     <div className="info-item">
                       <span className="info-icon">
-                        <Timer size={15} />
+                        <Timer size={14} />
                       </span>
                       <span className="info-text">{assignment.duration} phút</span>
                     </div>
                     <div className="info-item">
                       <span className="info-icon">
-                        <Calendar size={15} />
+                        <Calendar size={14} />
                       </span>
                       <span className="info-text">Hạn: {deadline.toLocaleDateString('vi-VN')}</span>
                     </div>
                     <div className="info-item">
                       <span className="info-icon">
-                        <Trophy size={15} />
+                        <Trophy size={14} />
                       </span>
-                      <span className="info-text">Điểm tối đa: {assignment.maxScore}</span>
+                      <span className="info-text">Tối đa: {assignment.maxScore} điểm</span>
                     </div>
                   </div>
 
@@ -335,6 +338,16 @@ const TeacherAssignments: React.FC = () => {
                   </div>
 
                   <div className="form-group">
+                    <p
+                      style={{
+                        margin: '0 0 0.42rem',
+                        fontSize: '0.82rem',
+                        fontWeight: 700,
+                        color: 'var(--mod-slate-700)',
+                      }}
+                    >
+                      Tùy chọn
+                    </p>
                     <label className="checkbox-label">
                       <input type="checkbox" defaultChecked />
                       <span>Cho phép nộp muộn</span>
