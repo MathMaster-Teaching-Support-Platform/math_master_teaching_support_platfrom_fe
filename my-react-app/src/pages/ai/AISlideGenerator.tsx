@@ -300,6 +300,7 @@ const AISlideGenerator: React.FC = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [generatedFiles, setGeneratedFiles] = useState<LessonSlideGeneratedFile[]>([]);
+  const [lessonTitleById, setLessonTitleById] = useState<Record<string, string>>({});
   const [generatedVisibilityFilter, setGeneratedVisibilityFilter] = useState<
     'ALL' | 'PUBLIC' | 'PRIVATE'
   >('ALL');
@@ -674,6 +675,52 @@ const AISlideGenerator: React.FC = () => {
 
     void loadLessonDetailFromGeneratedFile(selectedGeneratedFile);
   }, [selectedGeneratedFile, loadLessonDetailFromGeneratedFile]);
+
+  useEffect(() => {
+    const missingLessonIds = Array.from(
+      new Set(
+        managedGeneratedFiles
+          .map((file) => file.lessonId)
+          .filter((id) => id && !lessonTitleById[id])
+      )
+    );
+
+    if (!missingLessonIds.length) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadLessonTitles = async () => {
+      const entries = await Promise.all(
+        missingLessonIds.map(async (targetLessonId) => {
+          try {
+            const response =
+              await LessonSlideService.getTeacherLessonSlideByLessonId(targetLessonId);
+            return [targetLessonId, response.result?.title || targetLessonId] as const;
+          } catch {
+            return [targetLessonId, targetLessonId] as const;
+          }
+        })
+      );
+
+      if (cancelled) return;
+
+      setLessonTitleById((prev) => {
+        const next = { ...prev };
+        entries.forEach(([id, title]) => {
+          next[id] = title;
+        });
+        return next;
+      });
+    };
+
+    void loadLessonTitles();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [managedGeneratedFiles, lessonTitleById]);
 
   useEffect(() => {
     const previewsToLoad = templates.filter((template) => Boolean(template.previewImage));
@@ -1260,7 +1307,7 @@ const AISlideGenerator: React.FC = () => {
                               <td title={file.fileName}>
                                 {file.fileName || 'generated-slide.pptx'}
                               </td>
-                              <td>{file.lessonId}</td>
+                              <td>{lessonTitleById[file.lessonId] || 'Đang tải tên bài...'}</td>
                               <td>{formatDateTime(file.createdAt)}</td>
                               <td>{formatFileSize(file.fileSizeBytes)}</td>
                               <td>
@@ -1280,7 +1327,7 @@ const AISlideGenerator: React.FC = () => {
                                   }}
                                   disabled={downloadingGeneratedFileId === file.id}
                                 >
-                                  DL
+                                  Tải
                                 </button>
                               </td>
                             </tr>
@@ -1293,10 +1340,10 @@ const AISlideGenerator: React.FC = () => {
 
                 <div className="ai-slide-management-detail-panel">
                   <div className="ai-slide-management-header">
-                    <h3>Chi tiết file</h3>
+                    <h3>Chi tiết tệp</h3>
                     <p>
                       {selectedGeneratedFile
-                        ? `File ID: ${selectedGeneratedFile.id}`
+                        ? `Đã chọn: ${selectedGeneratedFile.fileName || 'generated-slide.pptx'}`
                         : 'Chọn 1 dòng trong bảng để thao tác.'}
                     </p>
                   </div>
@@ -1318,7 +1365,7 @@ const AISlideGenerator: React.FC = () => {
                       {selectedGeneratedFile &&
                       updatingGeneratedVisibilityId === selectedGeneratedFile.id
                         ? 'Đang cập nhật...'
-                        : 'Publish'}
+                        : 'Công khai'}
                     </button>
                     <button
                       type="button"
@@ -1333,7 +1380,7 @@ const AISlideGenerator: React.FC = () => {
                         void handleToggleGeneratedVisibility(selectedGeneratedFile.id, false)
                       }
                     >
-                      Unpublish
+                      Ẩn công khai
                     </button>
                     <button
                       type="button"
@@ -1362,7 +1409,7 @@ const AISlideGenerator: React.FC = () => {
                     <div className="ai-slide-selected-lesson">
                       <div>
                         <strong>{selectedGeneratedLesson.title || 'Bài học'}</strong>
-                        <span>Trạng thái lesson: {selectedGeneratedLesson.status || '--'}</span>
+                        <span>Trạng thái bài học: {selectedGeneratedLesson.status || '--'}</span>
                       </div>
                       <button
                         type="button"
@@ -1378,10 +1425,8 @@ const AISlideGenerator: React.FC = () => {
                   )}
 
                   <div className="ai-slide-management-header">
-                    <h3>Student view (public files)</h3>
-                    <p>
-                      Chi hien thi file isPublic=true va lesson PUBLISHED tu endpoint public cua BE.
-                    </p>
+                    <h3>Tệp công khai cho học sinh</h3>
+                    <p>Danh sách này là những tệp học sinh nhìn thấy và có thể tải.</p>
                   </div>
 
                   {loadingPublicGeneratedFiles && (
@@ -1397,9 +1442,7 @@ const AISlideGenerator: React.FC = () => {
                   {!loadingPublicGeneratedFiles &&
                     publicLessonIdForPreview &&
                     publicGeneratedFiles.length === 0 && (
-                      <p className="ai-slide-info">
-                        Lesson nay chua co file public de student tai.
-                      </p>
+                      <p className="ai-slide-info">Bài học này hiện chưa có file công khai.</p>
                     )}
 
                   {!loadingPublicGeneratedFiles && publicGeneratedFiles.length > 0 && (
