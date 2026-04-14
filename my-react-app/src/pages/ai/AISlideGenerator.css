@@ -650,7 +650,8 @@
 }
 
 .ai-slide-table-wrap {
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
   border: 1px solid #e2e8f0;
   border-radius: 10px;
 }
@@ -662,7 +663,7 @@
 .ai-slide-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 700px;
+  table-layout: fixed;
 }
 
 .ai-slide-table th,
@@ -673,6 +674,9 @@
   font-size: 0.82rem;
   color: #1e293b;
   vertical-align: middle;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .ai-slide-table th {

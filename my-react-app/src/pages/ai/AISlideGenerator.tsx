@@ -994,7 +994,7 @@ const AISlideGenerator: React.FC = () => {
               className={`ai-slide-main-tab ${activeMainTab === 'MANAGE' ? 'active' : ''}`}
               onClick={() => setActiveMainTab('MANAGE')}
             >
-              Quan ly Slide
+              Quản lý Slide
             </button>
           </div>
 
@@ -1145,24 +1145,20 @@ const AISlideGenerator: React.FC = () => {
         {activeMainTab === 'MANAGE' && (
           <section className="ai-slide-card">
             <h2>Slide Library</h2>
-            <p className="ai-slide-info" style={{ marginTop: 0 }}>
-              Quan ly file PPTX da generate: download lai, publish/unpublish va kiem tra public
-              view.
-            </p>
 
             <div className="ai-slide-management-card">
               <div className="ai-slide-management-header">
-                <h3>Thu vien file da generate</h3>
+                <h3>Thư viện file đã generate</h3>
                 <p>
                   {lessonId
-                    ? `Dang loc theo lesson: ${lessonId}`
-                    : 'Dang hien thi tat ca file generated cua ban.'}
+                    ? `Đang lọc theo lesson: ${lessonId}`
+                    : 'Đang hiển thị tất cả file generated của bạn.'}
                 </p>
               </div>
 
               <div className="ai-slide-management-toolbar">
                 <label className="ai-slide-management-search">
-                  <span>Tim theo ten file / lessonId</span>
+                  <span>Tìm theo tên file / lessonId</span>
                   <input
                     type="text"
                     value={generatedSearch}
@@ -1172,7 +1168,7 @@ const AISlideGenerator: React.FC = () => {
                 </label>
 
                 <label className="ai-slide-management-sort">
-                  <span>Sap xep</span>
+                  <span>Sắp xếp</span>
                   <select
                     value={generatedSort}
                     onChange={(e) =>
@@ -1188,13 +1184,13 @@ const AISlideGenerator: React.FC = () => {
                       )
                     }
                   >
-                    <option value="NEWEST">Moi nhat</option>
-                    <option value="OLDEST">Cu nhat</option>
-                    <option value="NAME_ASC">Ten A-Z</option>
-                    <option value="NAME_DESC">Ten Z-A</option>
-                    <option value="SIZE_DESC">Size lon truoc</option>
-                    <option value="SIZE_ASC">Size nho truoc</option>
-                    <option value="PUBLIC_FIRST">Public truoc</option>
+                    <option value="NEWEST">Mới nhất</option>
+                    <option value="OLDEST">Cũ nhất</option>
+                    <option value="NAME_ASC">Tên A-Z</option>
+                    <option value="NAME_DESC">Tên Z-A</option>
+                    <option value="SIZE_DESC">Size lớn trước</option>
+                    <option value="SIZE_ASC">Size nhỏ trước</option>
+                    <option value="PUBLIC_FIRST">Public trước</option>
                   </select>
                 </label>
               </div>
@@ -1206,7 +1202,7 @@ const AISlideGenerator: React.FC = () => {
                   onClick={() => setGeneratedVisibilityFilter('ALL')}
                   disabled={loadingGeneratedFiles}
                 >
-                  Tat ca
+                  Tất cả
                 </button>
                 <button
                   type="button"
@@ -1228,7 +1224,7 @@ const AISlideGenerator: React.FC = () => {
               <div className="ai-slide-management-layout">
                 <div className="ai-slide-management-list-panel">
                   {loadingGeneratedFiles && (
-                    <p className="ai-slide-info">Dang tai danh sach file generated...</p>
+                    <p className="ai-slide-info">Đang tải danh sách file generated...</p>
                   )}
 
                   {!loadingGeneratedFiles && managedGeneratedFiles.length === 0 && (
@@ -1297,11 +1293,11 @@ const AISlideGenerator: React.FC = () => {
 
                 <div className="ai-slide-management-detail-panel">
                   <div className="ai-slide-management-header">
-                    <h3>Chi tiet file</h3>
+                    <h3>Chi tiết file</h3>
                     <p>
                       {selectedGeneratedFile
                         ? `File ID: ${selectedGeneratedFile.id}`
-                        : 'Chon 1 dong trong bang de thao tac.'}
+                        : 'Chọn 1 dòng trong bảng để thao tác.'}
                     </p>
                   </div>
 
@@ -1321,7 +1317,7 @@ const AISlideGenerator: React.FC = () => {
                     >
                       {selectedGeneratedFile &&
                       updatingGeneratedVisibilityId === selectedGeneratedFile.id
-                        ? 'Dang cap nhat...'
+                        ? 'Đang cập nhật...'
                         : 'Publish'}
                     </button>
                     <button
@@ -1353,20 +1349,20 @@ const AISlideGenerator: React.FC = () => {
                     >
                       {selectedGeneratedFile &&
                       downloadingGeneratedFileId === selectedGeneratedFile.id
-                        ? 'Dang tai...'
-                        : 'Tai lai file'}
+                        ? 'Đang tải...'
+                        : 'Tải lại file'}
                     </button>
                   </div>
 
                   {loadingSelectedGeneratedLesson && (
-                    <p className="ai-slide-info">Dang tai chi tiet lesson tu file da chon...</p>
+                    <p className="ai-slide-info">Đang tải chi tiết lesson từ file đã chọn...</p>
                   )}
 
                   {!loadingSelectedGeneratedLesson && selectedGeneratedLesson && (
                     <div className="ai-slide-selected-lesson">
                       <div>
-                        <strong>{selectedGeneratedLesson.title || 'Bai hoc'}</strong>
-                        <span>Trang thai lesson: {selectedGeneratedLesson.status || '--'}</span>
+                        <strong>{selectedGeneratedLesson.title || 'Bài học'}</strong>
+                        <span>Trạng thái lesson: {selectedGeneratedLesson.status || '--'}</span>
                       </div>
                       <button
                         type="button"
@@ -1376,7 +1372,7 @@ const AISlideGenerator: React.FC = () => {
                           setActiveMainTab('GENERATE');
                         }}
                       >
-                        Xem lai noi dung da gen
+                        Xem lại nội dung đã gen
                       </button>
                     </div>
                   )}
@@ -1389,12 +1385,12 @@ const AISlideGenerator: React.FC = () => {
                   </div>
 
                   {loadingPublicGeneratedFiles && (
-                    <p className="ai-slide-info">Dang tai danh sach public generated...</p>
+                    <p className="ai-slide-info">Đang tải danh sách public generated...</p>
                   )}
 
                   {!loadingPublicGeneratedFiles && !publicLessonIdForPreview && (
                     <p className="ai-slide-info">
-                      Chon 1 generated file de preview danh sach public theo lesson tuong ung.
+                      Chọn 1 generated file để preview danh sách public theo lesson tương ứng.
                     </p>
                   )}
 
@@ -1429,7 +1425,7 @@ const AISlideGenerator: React.FC = () => {
                                   onClick={() => void handleDownloadPublicGeneratedFile(file.id)}
                                 >
                                   {downloadingPublicGeneratedFileId === file.id
-                                    ? 'Dang tai...'
+                                    ? 'Đang tải...'
                                     : 'Download'}
                                 </button>
                               </td>
