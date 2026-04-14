@@ -302,7 +302,6 @@ export default function StudentPublicMindmaps() {
         <section className="student-public-mindmaps-section">
           <div className="student-public-section-header">
             <h2>Mindmap công khai</h2>
-            <p>Danh sách mindmap lấy từ API public có filter + pagination.</p>
           </div>
 
           <div className="resource-toolbar">

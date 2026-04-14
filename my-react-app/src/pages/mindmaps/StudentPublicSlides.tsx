@@ -325,7 +325,6 @@ export default function StudentPublicSlides() {
         <section className="student-public-slides-section">
           <div className="student-public-section-header">
             <h2>Slide công khai</h2>
-            <p>Danh sách slide lấy từ API public có filter + pagination.</p>
           </div>
 
           <div className="resource-toolbar">
