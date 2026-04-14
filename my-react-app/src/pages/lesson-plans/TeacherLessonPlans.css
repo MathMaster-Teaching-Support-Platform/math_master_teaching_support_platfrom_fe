@@ -361,8 +361,11 @@
   font-size: 20px;
   font-weight: 400;
   line-height: 1;
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .lp-modal-close svg {
@@ -510,18 +513,53 @@
 }
 
 /* Group color variants */
-.lp-eg--blue    { background: #f8fbff; border-color: #bfdbfe; border-left-color: #3b82f6; }
-.lp-eg--amber   { background: #fffdf5; border-color: #fde68a; border-left-color: #f59e0b; }
-.lp-eg--emerald { background: #f6fef9; border-color: #bbf7d0; border-left-color: #22c55e; }
-.lp-eg--violet  { background: #faf8ff; border-color: #ddd6fe; border-left-color: #8b5cf6; }
-.lp-eg--orange  { background: #fffaf5; border-color: #fed7aa; border-left-color: #f97316; }
+.lp-eg--blue {
+  background: #f8fbff;
+  border-color: #bfdbfe;
+  border-left-color: #3b82f6;
+}
+.lp-eg--amber {
+  background: #fffdf5;
+  border-color: #fde68a;
+  border-left-color: #f59e0b;
+}
+.lp-eg--emerald {
+  background: #f6fef9;
+  border-color: #bbf7d0;
+  border-left-color: #22c55e;
+}
+.lp-eg--violet {
+  background: #faf8ff;
+  border-color: #ddd6fe;
+  border-left-color: #8b5cf6;
+}
+.lp-eg--orange {
+  background: #fffaf5;
+  border-color: #fed7aa;
+  border-left-color: #f97316;
+}
 
 /* Textarea accent borders on focus */
-.lp-textarea--blue:focus    { border-color: #93c5fd; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
-.lp-textarea--amber:focus   { border-color: #fcd34d; box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1); }
-.lp-textarea--emerald:focus { border-color: #86efac; box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1); }
-.lp-textarea--violet:focus  { border-color: #c4b5fd; box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1); }
-.lp-textarea--orange:focus  { border-color: #fdba74; box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1); }
+.lp-textarea--blue:focus {
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+.lp-textarea--amber:focus {
+  border-color: #fcd34d;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+}
+.lp-textarea--emerald:focus {
+  border-color: #86efac;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+}
+.lp-textarea--violet:focus {
+  border-color: #c4b5fd;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+.lp-textarea--orange:focus {
+  border-color: #fdba74;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+}
 
 /* ── Button variants (inside modals) ─────────────────────── */
 .lp-btn {
@@ -597,10 +635,10 @@
   top: 1rem;
   right: 1rem;
   z-index: 2;
-  background: rgba(255,255,255,0.92) !important;
-  border-color: rgba(0,0,0,0.12) !important;
+  background: rgba(255, 255, 255, 0.92) !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
   color: #1e293b !important;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.14) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14) !important;
 }
 
 .lp-detail-close svg {

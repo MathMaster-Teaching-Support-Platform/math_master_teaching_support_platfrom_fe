@@ -479,7 +479,9 @@ function EditLessonPlanModal({
           {/* ── Mục tiêu ── */}
           <div className="lp-edit-group lp-eg--blue">
             <div className="lp-edit-group-header">
-              <span className="lp-detail-icon-wrap lp-di--blue"><Target size={14} /></span>
+              <span className="lp-detail-icon-wrap lp-di--blue">
+                <Target size={14} />
+              </span>
               <span className="lp-edit-group-title">Mục tiêu bài học</span>
               <span className="lp-edit-group-hint">mỗi dòng một mục tiêu</span>
             </div>
@@ -494,7 +496,9 @@ function EditLessonPlanModal({
           {/* ── Tài liệu ── */}
           <div className="lp-edit-group lp-eg--amber">
             <div className="lp-edit-group-header">
-              <span className="lp-detail-icon-wrap lp-di--amber"><BookOpen size={14} /></span>
+              <span className="lp-detail-icon-wrap lp-di--amber">
+                <BookOpen size={14} />
+              </span>
               <span className="lp-edit-group-title">Tài liệu & thiết bị</span>
               <span className="lp-edit-group-hint">mỗi dòng một mục</span>
             </div>
@@ -509,7 +513,9 @@ function EditLessonPlanModal({
           {/* ── Phương pháp giảng dạy ── */}
           <div className="lp-edit-group lp-eg--emerald">
             <div className="lp-edit-group-header">
-              <span className="lp-detail-icon-wrap lp-di--emerald"><ClipboardList size={14} /></span>
+              <span className="lp-detail-icon-wrap lp-di--emerald">
+                <ClipboardList size={14} />
+              </span>
               <span className="lp-edit-group-title">Phương pháp giảng dạy</span>
             </div>
             <AutoTextarea
@@ -523,7 +529,9 @@ function EditLessonPlanModal({
           {/* ── Phương pháp đánh giá ── */}
           <div className="lp-edit-group lp-eg--violet">
             <div className="lp-edit-group-header">
-              <span className="lp-detail-icon-wrap lp-di--violet"><FileText size={14} /></span>
+              <span className="lp-detail-icon-wrap lp-di--violet">
+                <FileText size={14} />
+              </span>
               <span className="lp-edit-group-title">Phương pháp đánh giá</span>
             </div>
             <AutoTextarea
@@ -537,7 +545,9 @@ function EditLessonPlanModal({
           {/* ── Ghi chú ── */}
           <div className="lp-edit-group lp-eg--orange">
             <div className="lp-edit-group-header">
-              <span className="lp-detail-icon-wrap lp-di--orange"><Pencil size={14} /></span>
+              <span className="lp-detail-icon-wrap lp-di--orange">
+                <Pencil size={14} />
+              </span>
               <span className="lp-edit-group-title">Ghi chú thêm</span>
             </div>
             <AutoTextarea
