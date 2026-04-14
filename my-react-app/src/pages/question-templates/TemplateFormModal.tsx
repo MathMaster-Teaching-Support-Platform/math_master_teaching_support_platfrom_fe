@@ -1,12 +1,12 @@
 import { AlertTriangle, HelpCircle, Plus, Trash2, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import MathText from '../../components/common/MathText';
 import {
   CognitiveLevel,
   QuestionType,
   type QuestionTemplateRequest,
   type QuestionTemplateResponse,
 } from '../../types/questionTemplate';
-import MathText from '../../components/common/MathText';
 
 type ParameterInput = {
   name: string;
@@ -159,7 +159,13 @@ const questionTypeLabels: Record<QuestionType, string> = {
   CODING: 'Lập trình',
 };
 
-export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit }: Readonly<Props>) {
+export function TemplateFormModal({
+  isOpen,
+  mode,
+  initialData,
+  onClose,
+  onSubmit,
+}: Readonly<Props>) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [templateType, setTemplateType] = useState<QuestionType>(QuestionType.MULTIPLE_CHOICE);
@@ -215,24 +221,39 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
         );
       }
 
-      const mappedParameters: ParameterInput[] = Object.entries(initialData.parameters || {}).map(([key, raw]) => {
-        const item = raw as { type?: string; min?: number; max?: number; constraint?: string };
-        return {
-          name: key,
-          type: item.type || 'int',
-          min: item.min?.toString() || '1',
-          max: item.max?.toString() || '10',
-          constraint: item.constraint || '',
-        };
-      });
+      const mappedParameters: ParameterInput[] = Object.entries(initialData.parameters || {}).map(
+        ([key, raw]) => {
+          const item = raw as { type?: string; min?: number; max?: number; constraint?: string };
+          return {
+            name: key,
+            type: item.type || 'int',
+            min: item.min?.toString() || '1',
+            max: item.max?.toString() || '10',
+            constraint: item.constraint || '',
+          };
+        }
+      );
 
-      const mappedOptions: OptionInput[] = Object.entries(initialData.optionsGenerator || {}).map(([key, raw]) => ({
-        key,
-        formula: typeof raw === 'string' ? raw : '',
-      }));
+      const mappedOptions: OptionInput[] = Object.entries(initialData.optionsGenerator || {}).map(
+        ([key, raw]) => ({
+          key,
+          formula: typeof raw === 'string' ? raw : '',
+        })
+      );
 
-      setParameters(mappedParameters.length ? mappedParameters : [{ name: 'a', type: 'int', min: '1', max: '10', constraint: '' }]);
-      setOptions(mappedOptions.length ? mappedOptions : [{ key: 'A', formula: '' }, { key: 'B', formula: '' }]);
+      setParameters(
+        mappedParameters.length
+          ? mappedParameters
+          : [{ name: 'a', type: 'int', min: '1', max: '10', constraint: '' }]
+      );
+      setOptions(
+        mappedOptions.length
+          ? mappedOptions
+          : [
+              { key: 'A', formula: '' },
+              { key: 'B', formula: '' },
+            ]
+      );
       return;
     }
 
@@ -273,11 +294,15 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
   };
 
   const setOptionFormulaAt = (optionIndex: number, nextValue: string) => {
-    setOptions((prev) => prev.map((entry, idx) => (idx === optionIndex ? { ...entry, formula: nextValue } : entry)));
+    setOptions((prev) =>
+      prev.map((entry, idx) => (idx === optionIndex ? { ...entry, formula: nextValue } : entry))
+    );
   };
 
   const setOptionKeyAt = (optionIndex: number, nextValue: string) => {
-    setOptions((prev) => prev.map((entry, idx) => (idx === optionIndex ? { ...entry, key: nextValue } : entry)));
+    setOptions((prev) =>
+      prev.map((entry, idx) => (idx === optionIndex ? { ...entry, key: nextValue } : entry))
+    );
   };
 
   const setParameterFieldAt = (
@@ -285,7 +310,9 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
     field: 'name' | 'min' | 'max' | 'constraint',
     nextValue: string
   ) => {
-    setParameters((prev) => prev.map((entry, idx) => (idx === parameterIndex ? { ...entry, [field]: nextValue } : entry)));
+    setParameters((prev) =>
+      prev.map((entry, idx) => (idx === parameterIndex ? { ...entry, [field]: nextValue } : entry))
+    );
   };
 
   const getStaticFieldContext = (): ActiveFieldContext | null => {
@@ -299,9 +326,17 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
       case 'templateText':
         return { value: templateText, setValue: setTemplateText, element: templateTextRef.current };
       case 'answerFormula':
-        return { value: answerFormula, setValue: setAnswerFormula, element: answerFormulaRef.current };
+        return {
+          value: answerFormula,
+          setValue: setAnswerFormula,
+          element: answerFormulaRef.current,
+        };
       case 'diagramTemplateRaw':
-        return { value: diagramTemplateRaw, setValue: setDiagramTemplateRaw, element: diagramTemplateRef.current };
+        return {
+          value: diagramTemplateRaw,
+          setValue: setDiagramTemplateRaw,
+          element: diagramTemplateRef.current,
+        };
       default:
         return null;
     }
@@ -443,7 +478,9 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
     const mappedDiagramTemplate = diagramTemplateRaw.trim() || undefined;
 
     if (Object.keys(mappedParameters).length === 0) {
-      setSubmitError('Bạn cần khai báo ít nhất một tham số trong mục parameters.');
+      setSubmitError(
+        'Bạn cần khai báo ít nhất một biến số trong mục “Biến số ngẫu nhiên” để hệ thống tạo câu hỏi.'
+      );
       setSaving(false);
       return;
     }
@@ -467,7 +504,9 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
       await onSubmit(payload);
       onClose();
     } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : 'Không thể lưu mẫu câu hỏi. Vui lòng thử lại.');
+      setSubmitError(
+        error instanceof Error ? error.message : 'Không thể lưu mẫu câu hỏi. Vui lòng thử lại.'
+      );
     } finally {
       setSaving(false);
     }
@@ -479,7 +518,9 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
         <div className="modal-header">
           <div>
             <h3>{mode === 'create' ? 'Tạo mẫu câu hỏi' : 'Chỉnh sửa mẫu câu hỏi'}</h3>
-            <p className="muted" style={{ marginTop: 4 }}>Cấu hình logic tạo câu hỏi tự động.</p>
+            <p className="muted" style={{ marginTop: 4 }}>
+              Thiết lập biến số để tạo câu hỏi ngẫu nhiên tự động.
+            </p>
           </div>
           <div className="row" style={{ gap: 8 }}>
             <button type="button" className="btn secondary" onClick={() => setIsGuideOpen(true)}>
@@ -496,7 +537,9 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
           <div className="modal-body">
             <div className="form-grid">
               <label>
-                <p className="muted" style={{ marginBottom: 6 }}>Tên mẫu</p>
+                <p className="muted" style={{ marginBottom: 6 }}>
+                  Tên mẫu
+                </p>
                 <input
                   ref={nameRef}
                   className="input"
@@ -508,29 +551,43 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
               </label>
 
               <label>
-                <p className="muted" style={{ marginBottom: 6 }}>Loại câu hỏi</p>
-                <select className="select" value={templateType} onChange={(event) => setTemplateType(event.target.value as QuestionType)}>
+                <p className="muted" style={{ marginBottom: 6 }}>
+                  Loại câu hỏi
+                </p>
+                <select
+                  className="select"
+                  value={templateType}
+                  onChange={(event) => setTemplateType(event.target.value as QuestionType)}
+                >
                   {Object.entries(questionTypeLabels).map(([key, label]) => (
-                    <option key={key} value={key}>{label}</option>
+                    <option key={key} value={key}>
+                      {label}
+                    </option>
                   ))}
                 </select>
               </label>
 
               <label>
-                <p className="muted" style={{ marginBottom: 6 }}>Mức độ nhận thức</p>
+                <p className="muted" style={{ marginBottom: 6 }}>
+                  Mức độ nhận thức
+                </p>
                 <select
                   className="select"
                   value={cognitiveLevel}
                   onChange={(event) => setCognitiveLevel(event.target.value as CognitiveLevel)}
                 >
                   {Object.entries(cognitiveLevelLabels).map(([key, label]) => (
-                    <option key={key} value={key}>{label}</option>
+                    <option key={key} value={key}>
+                      {label}
+                    </option>
                   ))}
                 </select>
               </label>
 
               <label>
-                <p className="muted" style={{ marginBottom: 6 }}>Từ khóa</p>
+                <p className="muted" style={{ marginBottom: 6 }}>
+                  Từ khóa
+                </p>
                 <input
                   ref={tagsRef}
                   className="input"
@@ -542,7 +599,9 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
             </div>
 
             <label>
-              <p className="muted" style={{ marginBottom: 6 }}>Mô tả</p>
+              <p className="muted" style={{ marginBottom: 6 }}>
+                Mô tả
+              </p>
               <textarea
                 ref={descriptionRef}
                 className="textarea"
@@ -562,7 +621,8 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
               <p className="muted" style={{ marginBottom: 6 }}>
                 Nội dung câu hỏi{' '}
                 <span style={{ fontSize: '0.8rem', marginLeft: 8, fontWeight: 400 }}>
-                  (Dùng {"{{a}}"}, {"{{b}}"} để chèn biến số. Ví dụ: "Giải: x + {"{{a}}"} = {"{{b}}"}")
+                  (Dùng {'{{a}}'}, {'{{b}}'} để chèn biến số. Ví dụ: "Giải: x + {'{{a}}'} ={' '}
+                  {'{{b}}'}")
                 </span>
               </p>
               <textarea
@@ -586,7 +646,9 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
             </label>
 
             <label>
-              <p className="muted" style={{ marginBottom: 6 }}>Công thức tính đáp án đúng</p>
+              <p className="muted" style={{ marginBottom: 6 }}>
+                Công thức tính đáp án đúng
+              </p>
               <input
                 ref={answerFormulaRef}
                 className="input"
@@ -596,7 +658,7 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
                 onChange={(event) => setAnswerFormula(event.target.value)}
               />
               <p className="muted" style={{ marginTop: 6, fontSize: '0.78rem' }}>
-                Tooltip: Công thức cần bám theo biến đã khai báo (ví dụ: 2 * {'{{a}}'} * x).
+                Công thức phải dùng đúng tên biến đã khai báo (ví dụ: 2 * {'{{a}}'} * x).
               </p>
               {answerFormula && (
                 <div className="preview-box">
@@ -606,7 +668,9 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
             </label>
 
             <label>
-              <p className="muted" style={{ marginBottom: 6 }}>Diagram Template (LaTeX text)</p>
+              <p className="muted" style={{ marginBottom: 6 }}>
+                Sơ đồ / Hình vẽ đính kèm (LaTeX, tùy chọn)
+              </p>
               <textarea
                 ref={diagramTemplateRef}
                 className="textarea"
@@ -621,13 +685,20 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
             <section className="data-card" style={{ minHeight: 0, border: '1px solid #dbeafe' }}>
               <div className="row">
                 <div>
-                  <h3 style={{ color: '#1e40af' }}>1. Khai báo biến số ngẫu nhiên</h3>
-                  <p className="muted" style={{ fontSize: '0.8rem' }}>Định nghĩa các chữ cái sẽ thay đổi thành số ngẫu nhiên trong câu hỏi.</p>
+                  <h3 style={{ color: '#1e40af' }}>Biến số ngẫu nhiên</h3>
+                  <p className="muted" style={{ fontSize: '0.8rem' }}>
+                    Khai báo các chữ cái sẽ được thay bằng số ngẫu nhiên trong từng câu hỏi.
+                  </p>
                 </div>
                 <button
                   type="button"
                   className="btn secondary"
-                  onClick={() => setParameters((prev) => [...prev, { name: '', type: 'int', min: '1', max: '10', constraint: '' }])}
+                  onClick={() =>
+                    setParameters((prev) => [
+                      ...prev,
+                      { name: '', type: 'int', min: '1', max: '10', constraint: '' },
+                    ])
+                  }
                 >
                   <Plus size={14} />
                   Thêm biến
@@ -635,7 +706,14 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
               </div>
 
               {parameters.map((item, index) => (
-                <div key={`${item.name}-${index}`} className="form-grid" style={{ gridTemplateColumns: '1fr 0.8fr 1fr 1fr 1.6fr 40px', alignItems: 'center' }}>
+                <div
+                  key={`${item.name}-${index}`}
+                  className="form-grid"
+                  style={{
+                    gridTemplateColumns: '1fr 0.8fr 1fr 1fr 1.6fr 40px',
+                    alignItems: 'center',
+                  }}
+                >
                   <input
                     ref={(node) => {
                       parameterNameRefs.current[index] = node;
@@ -713,7 +791,13 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
                   <button
                     type="button"
                     className="btn danger"
-                    style={{ padding: '0.4rem', height: '38px', width: '38px', display: 'flex', justifyContent: 'center' }}
+                    style={{
+                      padding: '0.4rem',
+                      height: '38px',
+                      width: '38px',
+                      display: 'flex',
+                      justifyContent: 'center',
+                    }}
                     onClick={() => removeParameterAt(index)}
                   >
                     <Trash2 size={14} />
@@ -725,8 +809,10 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
             <section className="data-card" style={{ minHeight: 0, border: '1px solid #fef3c7' }}>
               <div className="row">
                 <div>
-                  <h3 style={{ color: '#92400e' }}>2. Cách tính các phương án (Trắc nghiệm)</h3>
-                  <p className="muted" style={{ fontSize: '0.8rem' }}>Viết công thức để máy tính tự tính ra kết quả cho các lựa chọn A, B, C, D.</p>
+                  <h3 style={{ color: '#92400e' }}>Phương án trắc nghiệm (tùy chọn)</h3>
+                  <p className="muted" style={{ fontSize: '0.8rem' }}>
+                    Viết công thức để máy tính tự tính ra kết quả cho các lựa chọn A, B, C, D.
+                  </p>
                 </div>
                 <button
                   type="button"
@@ -790,7 +876,11 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
             </section>
 
             <label className="row" style={{ justifyContent: 'start' }}>
-              <input type="checkbox" checked={isPublic} onChange={(event) => setIsPublic(event.target.checked)} />{' '}
+              <input
+                type="checkbox"
+                checked={isPublic}
+                onChange={(event) => setIsPublic(event.target.checked)}
+              />{' '}
               Công khai mẫu cho giáo viên khác
             </label>
 
@@ -819,7 +909,7 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
                 onMouseDown={keepFocusOnToolbarClick}
                 onClick={handleInsertMath}
               >
-                Insert Math
+                Chèn công thức $$
               </button>
               {mathSnippets.map((entry) => (
                 <button
@@ -835,12 +925,14 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
               ))}
             </div>
             <p className="muted" style={{ marginTop: 8, marginBottom: 0, fontSize: '0.8rem' }}>
-              Thanh công cụ sticky: focus vào ô cần nhập, sau đó bấm nút để chèn công thức đúng vị trí con trỏ.
+              Focus vào ô cần nhập, sau đó bấm nút phía trên để chèn công thức đúng vị trí con trỏ.
             </p>
           </div>
 
           <div className="modal-footer">
-            <button type="button" className="btn secondary" onClick={onClose}>Hủy</button>
+            <button type="button" className="btn secondary" onClick={onClose}>
+              Hủy
+            </button>
             <button type="submit" className="btn" disabled={saving}>
               {submitLabel}
             </button>
@@ -890,7 +982,7 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
               <div>
                 <h3 style={{ margin: 0, color: '#0f172a' }}>Hướng dẫn</h3>
                 <p className="muted" style={{ margin: '4px 0 0', fontSize: '0.82rem' }}>
-                  Tạo question template đúng chuẩn và nhập công thức an toàn.
+                  Hướng dẫn tạo mẫu câu hỏi và nhập công thức toán học.
                 </p>
               </div>
               <button type="button" className="icon-btn" onClick={() => setIsGuideOpen(false)}>
@@ -898,74 +990,139 @@ export function TemplateFormModal({ isOpen, mode, initialData, onClose, onSubmit
               </button>
             </div>
 
-            <div style={{ padding: '0.9rem 1rem 1rem', overflowY: 'auto', display: 'grid', gap: '0.75rem' }}>
-              <details open style={{ border: '1px solid #e2e8f0', borderRadius: 12, padding: '0.75rem' }}>
+            <div
+              style={{
+                padding: '0.9rem 1rem 1rem',
+                overflowY: 'auto',
+                display: 'grid',
+                gap: '0.75rem',
+              }}
+            >
+              <details
+                open
+                style={{ border: '1px solid #e2e8f0', borderRadius: 12, padding: '0.75rem' }}
+              >
                 <summary style={{ cursor: 'pointer', fontWeight: 600, color: '#0f172a' }}>
                   📌 Phần 1: Quy tắc nhập liệu
                 </summary>
                 <div style={{ marginTop: 10, display: 'grid', gap: 10 }}>
                   <div style={{ border: '1px solid #f1f5f9', borderRadius: 10, padding: '0.7rem' }}>
                     <strong>1. Biến số</strong>
-                    <p className="muted" style={{ margin: '0.35rem 0' }}>Dùng dạng: {'{{a}}'}, {'{{b}}'}, {'{{n}}'}</p>
-                    <pre style={{ margin: 0, background: '#f8fafc', padding: '0.5rem', borderRadius: 8, overflowX: 'auto' }}>
+                    <p className="muted" style={{ margin: '0.35rem 0' }}>
+                      Dùng dạng: {'{{a}}'}, {'{{b}}'}, {'{{n}}'}
+                    </p>
+                    <pre
+                      style={{
+                        margin: 0,
+                        background: '#f8fafc',
+                        padding: '0.5rem',
+                        borderRadius: 8,
+                        overflowX: 'auto',
+                      }}
+                    >
                       Tính giá trị của {'{{a}}'} + {'{{b}}'}
                     </pre>
                   </div>
 
                   <div style={{ border: '1px solid #f1f5f9', borderRadius: 10, padding: '0.7rem' }}>
                     <strong>2. Công thức toán</strong>
-                    <p className="muted" style={{ margin: '0.35rem 0' }}>Viết bằng LaTeX, không dùng ký tự lạ hoặc text mơ hồ.</p>
-                    <pre style={{ margin: 0, background: '#f8fafc', padding: '0.5rem', borderRadius: 8, overflowX: 'auto' }}>{String.raw`\frac{a}{b}, \sqrt{x^2 + 1}`}</pre>
+                    <p className="muted" style={{ margin: '0.35rem 0' }}>
+                      Viết bằng LaTeX, không dùng ký tự lạ hoặc text mơ hồ.
+                    </p>
+                    <pre
+                      style={{
+                        margin: 0,
+                        background: '#f8fafc',
+                        padding: '0.5rem',
+                        borderRadius: 8,
+                        overflowX: 'auto',
+                      }}
+                    >{String.raw`\frac{a}{b}, \sqrt{x^2 + 1}`}</pre>
                   </div>
 
                   <div style={{ border: '1px solid #f1f5f9', borderRadius: 10, padding: '0.7rem' }}>
                     <strong>3. Chèn công thức</strong>
-                    <p className="muted" style={{ margin: '0.35rem 0 0' }}>Bôi đen nội dung cần công thức rồi bấm Insert Math.</p>
+                    <p className="muted" style={{ margin: '0.35rem 0 0' }}>
+                      Bôi đen nội dung cần công thức rồi bấm Insert Math.
+                    </p>
                   </div>
                 </div>
               </details>
 
-              <details open style={{ border: '1px solid #e2e8f0', borderRadius: 12, padding: '0.75rem' }}>
+              <details
+                open
+                style={{ border: '1px solid #e2e8f0', borderRadius: 12, padding: '0.75rem' }}
+              >
                 <summary style={{ cursor: 'pointer', fontWeight: 600, color: '#0f172a' }}>
                   📌 Phần 2: Các bước tạo câu hỏi
                 </summary>
                 <div style={{ marginTop: 10, display: 'grid', gap: 8 }}>
-                  <div className="data-card" style={{ minHeight: 0, border: '1px solid #dbeafe', padding: '0.65rem' }}>
+                  <div
+                    className="data-card"
+                    style={{ minHeight: 0, border: '1px solid #dbeafe', padding: '0.65rem' }}
+                  >
                     <strong>Bước 1: Nhập đề bài</strong>
                     <p className="muted" style={{ margin: '0.3rem 0 0' }}>
                       Viết nội dung + chèn biến. Ví dụ: Tính đạo hàm của hàm số y = {'{{a}}'}x^2
                     </p>
                   </div>
-                  <div className="data-card" style={{ minHeight: 0, border: '1px solid #dbeafe', padding: '0.65rem' }}>
+                  <div
+                    className="data-card"
+                    style={{ minHeight: 0, border: '1px solid #dbeafe', padding: '0.65rem' }}
+                  >
                     <strong>Bước 2: Công thức đáp án đúng</strong>
                     <p className="muted" style={{ margin: '0.3rem 0 0' }}>
                       Nhập công thức theo biến. Ví dụ: 2 * {'{{a}}'} * x
                     </p>
                   </div>
-                  <div className="data-card" style={{ minHeight: 0, border: '1px solid #dbeafe', padding: '0.65rem' }}>
+                  <div
+                    className="data-card"
+                    style={{ minHeight: 0, border: '1px solid #dbeafe', padding: '0.65rem' }}
+                  >
                     <strong>Bước 3: Khai báo tham số</strong>
-                    <p className="muted" style={{ margin: '0.3rem 0 0' }}>Ví dụ: a là số nguyên, từ 1 đến 10.</p>
+                    <p className="muted" style={{ margin: '0.3rem 0 0' }}>
+                      Ví dụ: a là số nguyên, từ 1 đến 10.
+                    </p>
                   </div>
-                  <div className="data-card" style={{ minHeight: 0, border: '1px solid #dbeafe', padding: '0.65rem' }}>
+                  <div
+                    className="data-card"
+                    style={{ minHeight: 0, border: '1px solid #dbeafe', padding: '0.65rem' }}
+                  >
                     <strong>Bước 4 (trắc nghiệm): Nhập đáp án A/B/C/D</strong>
                     <p className="muted" style={{ margin: '0.3rem 0 0' }}>
                       A: 2 * {'{{a}}'} * x, B: {'{{a}}'} * x, C: x^2, D: 2x
                     </p>
                   </div>
-                  <div className="data-card" style={{ minHeight: 0, border: '1px solid #dbeafe', padding: '0.65rem' }}>
+                  <div
+                    className="data-card"
+                    style={{ minHeight: 0, border: '1px solid #dbeafe', padding: '0.65rem' }}
+                  >
                     <strong>Bước 5: Xem preview</strong>
-                    <p className="muted" style={{ margin: '0.3rem 0 0' }}>Luôn kiểm tra preview realtime trước khi lưu.</p>
+                    <p className="muted" style={{ margin: '0.3rem 0 0' }}>
+                      Luôn kiểm tra preview realtime trước khi lưu.
+                    </p>
                   </div>
                 </div>
               </details>
 
-              <div style={{ border: '1px solid #fecaca', background: '#fff7f7', borderRadius: 12, padding: '0.75rem' }}>
+              <div
+                style={{
+                  border: '1px solid #fecaca',
+                  background: '#fff7f7',
+                  borderRadius: 12,
+                  padding: '0.75rem',
+                }}
+              >
                 <div className="row" style={{ alignItems: 'center', gap: 8 }}>
                   <AlertTriangle size={16} color="#dc2626" />
                   <strong style={{ color: '#7f1d1d' }}>Lỗi phổ biến cần tránh</strong>
                 </div>
-                <p style={{ margin: '0.55rem 0 0', color: '#7f1d1d' }}>❌ Quên {'{{}}'} nên biến không render</p>
-                <p style={{ margin: '0.35rem 0 0', color: '#7f1d1d' }}>❌ Sai LaTeX gây lỗi hiển thị công thức</p>
+                <p style={{ margin: '0.55rem 0 0', color: '#7f1d1d' }}>
+                  ❌ Quên {'{{}}'} nên biến không render
+                </p>
+                <p style={{ margin: '0.35rem 0 0', color: '#7f1d1d' }}>
+                  ❌ Sai LaTeX gây lỗi hiển thị công thức
+                </p>
               </div>
             </div>
           </aside>
