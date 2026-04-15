@@ -314,13 +314,9 @@ const AISlideGenerator: React.FC = () => {
   );
   const [loadingGeneratedFiles, setLoadingGeneratedFiles] = useState(false);
   const [loadingSelectedGeneratedLesson, setLoadingSelectedGeneratedLesson] = useState(false);
-  const [updatingGeneratedVisibilityId, setUpdatingGeneratedVisibilityId] = useState('');
   const [downloadingGeneratedFileId, setDownloadingGeneratedFileId] = useState('');
   const [isGeneratedPreviewOpen, setIsGeneratedPreviewOpen] = useState(false);
   const [generatedPreviewIndex, setGeneratedPreviewIndex] = useState(0);
-  const [publicGeneratedFiles, setPublicGeneratedFiles] = useState<LessonSlideGeneratedFile[]>([]);
-  const [loadingPublicGeneratedFiles, setLoadingPublicGeneratedFiles] = useState(false);
-  const [downloadingPublicGeneratedFileId, setDownloadingPublicGeneratedFileId] = useState('');
 
   const selectedLesson = useMemo(
     () => lessons.find((lesson) => lesson.id === lessonId),
@@ -402,8 +398,6 @@ const AISlideGenerator: React.FC = () => {
     [generated?.outputFormat, outputFormat]
   );
 
-  const publicLessonIdForPreview = lessonId || selectedGeneratedFile?.lessonId || '';
-
   const showSubjectStep = Boolean(schoolGradeId);
   const showChapterStep = Boolean(subjectId);
   const showLessonStep = Boolean(chapterId);
@@ -480,24 +474,6 @@ const AISlideGenerator: React.FC = () => {
     []
   );
 
-  const loadPublicGeneratedFiles = useCallback(async (targetLessonId?: string) => {
-    if (!targetLessonId) {
-      setPublicGeneratedFiles([]);
-      return;
-    }
-
-    setLoadingPublicGeneratedFiles(true);
-    try {
-      const response = await LessonSlideService.getPublicGeneratedFilesByLessonId(targetLessonId);
-      setPublicGeneratedFiles(response.result || []);
-    } catch {
-      // Public endpoint can legitimately fail when lesson is not published yet.
-      setPublicGeneratedFiles([]);
-    } finally {
-      setLoadingPublicGeneratedFiles(false);
-    }
-  }, []);
-
   const triggerBlobDownload = (blob: Blob, fileName: string) => {
     const blobUrl = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -553,62 +529,6 @@ const AISlideGenerator: React.FC = () => {
 
     if (selectedGeneratedLesson?.id !== targetFile.lessonId) {
       void loadLessonDetailFromGeneratedFile(targetFile);
-    }
-  };
-
-  const handleToggleGeneratedVisibility = async (
-    generatedFileId: string,
-    shouldPublish: boolean
-  ) => {
-    setUpdatingGeneratedVisibilityId(generatedFileId);
-    setError('');
-    setSuccess('');
-
-    try {
-      if (shouldPublish) {
-        await LessonSlideService.publishGeneratedFile(generatedFileId);
-        setSuccess('Đã publish file slide cho student thành công.');
-      } else {
-        await LessonSlideService.unpublishGeneratedFile(generatedFileId);
-        setSuccess('Đã unpublish file slide. Student sẽ không thấy file này nữa.');
-      }
-
-      await loadGeneratedFiles(lessonId || undefined);
-      await loadPublicGeneratedFiles(lessonId || undefined);
-    } catch (err) {
-      const apiError = err as Error & { code?: number };
-      if (apiError.code === 1166) {
-        setError('Không tìm thấy file slide để cập nhật trạng thái.');
-      } else if (apiError.code === 1167) {
-        setError('Bạn không có quyền cập nhật trạng thái file slide này.');
-      } else {
-        setError(
-          err instanceof Error ? err.message : 'Không thể cập nhật trạng thái public của file slide'
-        );
-      }
-    } finally {
-      setUpdatingGeneratedVisibilityId('');
-    }
-  };
-
-  const handleDownloadPublicGeneratedFile = async (generatedFileId: string) => {
-    setDownloadingPublicGeneratedFileId(generatedFileId);
-    setError('');
-    setSuccess('');
-
-    try {
-      const response = await LessonSlideService.downloadPublicGeneratedFile(generatedFileId);
-      triggerBlobDownload(response.blob, response.filename || 'generated-slide.pptx');
-      setSuccess('Đã tải file từ endpoint public (student) thành công.');
-    } catch (err) {
-      const apiError = err as Error & { code?: number };
-      if (apiError.code === 1168) {
-        setError('File chưa public hoặc lesson chưa ở trạng thái PUBLISHED.');
-      } else {
-        setError(err instanceof Error ? err.message : 'Không thể tải file public cho student');
-      }
-    } finally {
-      setDownloadingPublicGeneratedFileId('');
     }
   };
 
@@ -669,10 +589,6 @@ const AISlideGenerator: React.FC = () => {
   useEffect(() => {
     void loadGeneratedFiles(lessonId || undefined);
   }, [lessonId, loadGeneratedFiles]);
-
-  useEffect(() => {
-    void loadPublicGeneratedFiles(publicLessonIdForPreview || undefined);
-  }, [publicLessonIdForPreview, loadPublicGeneratedFiles]);
 
   useEffect(() => {
     if (!selectedGeneratedFile) {
@@ -1292,228 +1208,83 @@ const AISlideGenerator: React.FC = () => {
                   Private
                 </button>
               </div>
-              <div className="ai-slide-management-layout">
-                <div className="ai-slide-management-list-panel">
-                  {loadingGeneratedFiles && (
-                    <p className="ai-slide-info">Đang tải danh sách file generated...</p>
-                  )}
+              <div className="ai-slide-management-list-panel">
+                {loadingGeneratedFiles && (
+                  <p className="ai-slide-info">Đang tải danh sách file generated...</p>
+                )}
 
-                  {!loadingGeneratedFiles && managedGeneratedFiles.length === 0 && (
-                    <p className="ai-slide-info">
-                      Khong co file nao phu hop bo loc. Thu doi tu khoa tim kiem hoac tao file moi.
-                    </p>
-                  )}
+                {!loadingGeneratedFiles && managedGeneratedFiles.length === 0 && (
+                  <p className="ai-slide-info">
+                    Khong co file nao phu hop bo loc. Thu doi tu khoa tim kiem hoac tao file moi.
+                  </p>
+                )}
 
-                  {!loadingGeneratedFiles && managedGeneratedFiles.length > 0 && (
-                    <div className="ai-slide-table-wrap">
-                      <table className="ai-slide-table">
-                        <thead>
-                          <tr>
-                            <th>File</th>
-                            <th>Lesson</th>
-                            <th>Created</th>
-                            <th>Size</th>
-                            <th>Public</th>
-                            <th>Action</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {managedGeneratedFiles.map((file) => (
-                            <tr
-                              key={file.id}
-                              className={selectedGeneratedFileId === file.id ? 'active' : ''}
-                              onClick={() => {
-                                setSelectedGeneratedFileId(file.id);
-                                setSuccess('');
-                                setError('');
-                              }}
-                            >
-                              <td title={file.fileName}>
-                                {file.fileName || 'generated-slide.pptx'}
-                              </td>
-                              <td>{lessonTitleById[file.lessonId] || 'Đang tải tên bài...'}</td>
-                              <td>{formatDateTime(file.createdAt)}</td>
-                              <td>{formatFileSize(file.fileSizeBytes)}</td>
-                              <td>
-                                <span
-                                  className={`ai-slide-public-badge ${file.isPublic ? 'yes' : 'no'}`}
-                                >
-                                  {file.isPublic ? 'Yes' : 'No'}
-                                </span>
-                              </td>
-                              <td>
-                                <div className="ai-slide-table-actions">
-                                  <button
-                                    type="button"
-                                    className="btn btn-outline"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleOpenGeneratedPreview(file.id);
-                                    }}
-                                  >
-                                    Xem
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="btn btn-outline"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      void handleDownloadGeneratedFile(file.id);
-                                    }}
-                                    disabled={downloadingGeneratedFileId === file.id}
-                                  >
-                                    Tải
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-
-                <div className="ai-slide-management-detail-panel">
-                  <div className="ai-slide-management-header">
-                    <h3>Chi tiết tệp</h3>
-                    <p>
-                      {selectedGeneratedFile
-                        ? `Đã chọn: ${selectedGeneratedFile.fileName || 'generated-slide.pptx'}`
-                        : 'Chọn 1 dòng trong bảng để thao tác.'}
-                    </p>
-                  </div>
-
-                  <div className="ai-slide-management-actions">
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      disabled={
-                        !selectedGeneratedFile ||
-                        selectedGeneratedFile.isPublic ||
-                        updatingGeneratedVisibilityId === selectedGeneratedFile.id
-                      }
-                      onClick={() =>
-                        selectedGeneratedFile &&
-                        void handleToggleGeneratedVisibility(selectedGeneratedFile.id, true)
-                      }
-                    >
-                      {selectedGeneratedFile &&
-                      updatingGeneratedVisibilityId === selectedGeneratedFile.id
-                        ? 'Đang cập nhật...'
-                        : 'Công khai'}
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-outline"
-                      disabled={
-                        !selectedGeneratedFile ||
-                        !selectedGeneratedFile.isPublic ||
-                        updatingGeneratedVisibilityId === selectedGeneratedFile.id
-                      }
-                      onClick={() =>
-                        selectedGeneratedFile &&
-                        void handleToggleGeneratedVisibility(selectedGeneratedFile.id, false)
-                      }
-                    >
-                      Ẩn công khai
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-outline"
-                      disabled={
-                        !selectedGeneratedFile ||
-                        downloadingGeneratedFileId === selectedGeneratedFile.id
-                      }
-                      onClick={() =>
-                        selectedGeneratedFile &&
-                        void handleDownloadGeneratedFile(selectedGeneratedFile.id)
-                      }
-                    >
-                      {selectedGeneratedFile &&
-                      downloadingGeneratedFileId === selectedGeneratedFile.id
-                        ? 'Đang tải...'
-                        : 'Tải lại file'}
-                    </button>
-                  </div>
-
-                  {loadingSelectedGeneratedLesson && (
-                    <p className="ai-slide-info">Đang tải chi tiết lesson từ file đã chọn...</p>
-                  )}
-
-                  {!loadingSelectedGeneratedLesson && selectedGeneratedLesson && (
-                    <div className="ai-slide-selected-lesson">
-                      <div>
-                        <strong>{selectedGeneratedLesson.title || 'Bài học'}</strong>
-                        <span>Trạng thái bài học: {selectedGeneratedLesson.status || '--'}</span>
-                      </div>
-                      <button
-                        type="button"
-                        className="btn btn-outline"
-                        onClick={() => {
-                          handleOpenGeneratedPreview();
-                        }}
-                      >
-                        Xem slide đã gen
-                      </button>
-                    </div>
-                  )}
-
-                  <div className="ai-slide-management-header">
-                    <h3>Tệp công khai cho học sinh</h3>
-                    <p>Danh sách này là những tệp học sinh nhìn thấy và có thể tải.</p>
-                  </div>
-
-                  {loadingPublicGeneratedFiles && (
-                    <p className="ai-slide-info">Đang tải danh sách public generated...</p>
-                  )}
-
-                  {!loadingPublicGeneratedFiles && !publicLessonIdForPreview && (
-                    <p className="ai-slide-info">
-                      Chọn 1 generated file để preview danh sách public theo lesson tương ứng.
-                    </p>
-                  )}
-
-                  {!loadingPublicGeneratedFiles &&
-                    publicLessonIdForPreview &&
-                    publicGeneratedFiles.length === 0 && (
-                      <p className="ai-slide-info">Bài học này hiện chưa có file công khai.</p>
-                    )}
-
-                  {!loadingPublicGeneratedFiles && publicGeneratedFiles.length > 0 && (
-                    <div className="ai-slide-table-wrap compact">
-                      <table className="ai-slide-table">
-                        <thead>
-                          <tr>
-                            <th>File</th>
-                            <th>Published</th>
-                            <th>Action</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {publicGeneratedFiles.map((file) => (
-                            <tr key={file.id}>
-                              <td>{file.fileName || 'generated-slide.pptx'}</td>
-                              <td>{formatDateTime(file.publishedAt)}</td>
-                              <td>
+                {!loadingGeneratedFiles && managedGeneratedFiles.length > 0 && (
+                  <div className="ai-slide-table-wrap">
+                    <table className="ai-slide-table">
+                      <thead>
+                        <tr>
+                          <th>File</th>
+                          <th>Lesson</th>
+                          <th>Created</th>
+                          <th>Size</th>
+                          <th>Public</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {managedGeneratedFiles.map((file) => (
+                          <tr
+                            key={file.id}
+                            className={selectedGeneratedFileId === file.id ? 'active' : ''}
+                            onClick={() => {
+                              setSelectedGeneratedFileId(file.id);
+                              setSuccess('');
+                              setError('');
+                            }}
+                          >
+                            <td title={file.fileName}>{file.fileName || 'generated-slide.pptx'}</td>
+                            <td>{lessonTitleById[file.lessonId] || 'Đang tải tên bài...'}</td>
+                            <td>{formatDateTime(file.createdAt)}</td>
+                            <td>{formatFileSize(file.fileSizeBytes)}</td>
+                            <td>
+                              <span
+                                className={`ai-slide-public-badge ${file.isPublic ? 'yes' : 'no'}`}
+                              >
+                                {file.isPublic ? 'Yes' : 'No'}
+                              </span>
+                            </td>
+                            <td>
+                              <div className="ai-slide-table-actions">
                                 <button
                                   type="button"
                                   className="btn btn-outline"
-                                  disabled={downloadingPublicGeneratedFileId === file.id}
-                                  onClick={() => void handleDownloadPublicGeneratedFile(file.id)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleOpenGeneratedPreview(file.id);
+                                  }}
                                 >
-                                  {downloadingPublicGeneratedFileId === file.id
-                                    ? 'Đang tải...'
-                                    : 'Download'}
+                                  Xem
                                 </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
+                                <button
+                                  type="button"
+                                  className="btn btn-outline"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    void handleDownloadGeneratedFile(file.id);
+                                  }}
+                                  disabled={downloadingGeneratedFileId === file.id}
+                                >
+                                  Tải
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
 
               {error && <p className="ai-slide-error">{error}</p>}
