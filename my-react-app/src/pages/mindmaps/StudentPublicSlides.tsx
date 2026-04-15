@@ -281,7 +281,7 @@ export default function StudentPublicSlides() {
           {/* ── Header ── */}
           <header className="page-header">
             <div className="header-stack">
-              <div className="header-kicker">Kho học liệu học sinh</div>
+              <div className="header-kicker">Student Public Slides</div>
               <div className="row" style={{ gap: '0.6rem' }}>
                 <h2>Thư viện slide công khai</h2>
                 {!loadingSlides && <span className="count-chip">{slidesResult.totalElements}</span>}

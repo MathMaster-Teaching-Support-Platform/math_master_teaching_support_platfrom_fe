@@ -1,18 +1,32 @@
-import { Search, Workflow } from 'lucide-react';
+import {
+  BookMarked,
+  BookOpen,
+  ChevronLeft,
+  ChevronRight,
+  Filter,
+  GraduationCap,
+  Network,
+  Search,
+  User,
+  Workflow,
+  X,
+} from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockStudent } from '../../data/mockData';
 import { LessonSlideService } from '../../services/api/lesson-slide.service';
 import { MindmapService } from '../../services/api/mindmap.service';
+import '../../styles/module-refactor.css';
+import type { Mindmap, PaginatedResponse } from '../../types';
 import type {
   ChapterBySubject,
   LessonByChapter,
   SchoolGrade,
   SubjectByGrade,
 } from '../../types/lessonSlide.types';
-import type { Mindmap, PaginatedResponse } from '../../types';
 import './StudentPublicMindmaps.css';
+import './StudentPublicMindmapsNew.css';
 
 const DEFAULT_PAGE_SIZE = 9;
 type SortDirection = 'ASC' | 'DESC';
@@ -81,8 +95,11 @@ export default function StudentPublicMindmaps() {
   );
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setMindmapKeywordDebounced(mindmapKeyword.trim()), 400);
-    return () => window.clearTimeout(timer);
+    const timer = globalThis.setTimeout(
+      () => setMindmapKeywordDebounced(mindmapKeyword.trim()),
+      400
+    );
+    return () => globalThis.clearTimeout(timer);
   }, [mindmapKeyword]);
 
   useEffect(() => {
@@ -238,110 +255,167 @@ export default function StudentPublicMindmaps() {
 
   return (
     <DashboardLayout user={mockStudent} role="student">
-      <div className="student-public-mindmaps-page">
-        <header className="student-public-mindmaps-header">
-          <p className="header-kicker">Kho học liệu học sinh</p>
-          <h1>Thư viện mindmap công khai</h1>
-        </header>
+      <div className="module-layout-container">
+        <section className="module-page">
+          {/* ── Header ── */}
+          <header className="page-header">
+            <div className="header-stack">
+              <div className="header-kicker">Student Public Mindmaps</div>
+              <div className="row" style={{ gap: '0.6rem' }}>
+                <h2>Thư viện mindmap công khai</h2>
+                {!loadingMindmaps && (
+                  <span className="count-chip">{mindmapsResult.totalElements}</span>
+                )}
+              </div>
+              <p className="spm-header-sub">
+                Khám phá sơ đồ tư duy từ giáo viên trên toàn hệ thống
+              </p>
+            </div>
+          </header>
 
-        <section className="student-public-mindmaps-filters">
-          <select value={gradeId} onChange={(e) => void handleGradeChange(e.target.value)}>
-            <option value="">Chọn khối lớp</option>
-            {schoolGrades.map((grade) => (
-              <option key={grade.id} value={grade.id}>
-                {grade.name}
-              </option>
-            ))}
-          </select>
+          {/* ── Filter panel ── */}
+          <div className="spm-filter-panel">
+            <div className="spm-filter-panel__head">
+              <Filter size={13} />
+              <span>Bộ lọc tìm kiếm</span>
+            </div>
+            <div className="spm-filter-bar">
+              <div className="spm-filter-field">
+                <span className="spm-filter-label">
+                  <GraduationCap size={12} />
+                  Khối lớp
+                </span>
+                <select
+                  className="spm-select"
+                  value={gradeId}
+                  onChange={(e) => void handleGradeChange(e.target.value)}
+                  disabled={loadingCatalog}
+                >
+                  <option value="">Tất cả khối lớp</option>
+                  {schoolGrades.map((grade) => (
+                    <option key={grade.id} value={grade.id}>
+                      {grade.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-          <select
-            value={subjectId}
-            onChange={(e) => void handleSubjectChange(e.target.value)}
-            disabled={!gradeId}
-          >
-            <option value="">Chọn môn học</option>
-            {subjects.map((subject) => (
-              <option key={subject.id} value={subject.id}>
-                {subject.name}
-              </option>
-            ))}
-          </select>
+              <div className="spm-filter-field">
+                <span className="spm-filter-label">
+                  <BookOpen size={12} />
+                  Môn học
+                </span>
+                <select
+                  className="spm-select"
+                  value={subjectId}
+                  onChange={(e) => void handleSubjectChange(e.target.value)}
+                  disabled={!gradeId || loadingCatalog}
+                >
+                  <option value="">{gradeId ? 'Tất cả môn học' : 'Chọn khối trước'}</option>
+                  {subjects.map((subject) => (
+                    <option key={subject.id} value={subject.id}>
+                      {subject.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-          <select
-            value={chapterId}
-            onChange={(e) => void handleChapterChange(e.target.value)}
-            disabled={!subjectId}
-          >
-            <option value="">Chọn chương</option>
-            {chapters.map((chapter) => (
-              <option key={chapter.id} value={chapter.id}>
-                {chapter.title}
-              </option>
-            ))}
-          </select>
+              <div className="spm-filter-field">
+                <span className="spm-filter-label">
+                  <BookMarked size={12} />
+                  Chương
+                </span>
+                <select
+                  className="spm-select"
+                  value={chapterId}
+                  onChange={(e) => void handleChapterChange(e.target.value)}
+                  disabled={!subjectId || loadingCatalog}
+                >
+                  <option value="">{subjectId ? 'Tất cả chương' : 'Chọn môn trước'}</option>
+                  {chapters.map((chapter) => (
+                    <option key={chapter.id} value={chapter.id}>
+                      {chapter.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-          <select
-            value={lessonId}
-            onChange={(e) => handleLessonChange(e.target.value)}
-            disabled={!chapterId}
-          >
-            <option value="">Tất cả bài học</option>
-            {lessons.map((lesson) => (
-              <option key={lesson.id} value={lesson.id}>
-                {lesson.title}
-              </option>
-            ))}
-          </select>
-        </section>
-
-        {loadingCatalog && <p className="state-text">Đang tải danh mục...</p>}
-        {selectedLesson && (
-          <p className="state-text">Đang lọc theo bài học: {selectedLesson.title}</p>
-        )}
-
-        <section className="student-public-mindmaps-section">
-          <div className="student-public-section-header">
-            <h2>Mindmap công khai</h2>
+              <div className="spm-filter-field">
+                <span className="spm-filter-label">
+                  <Network size={12} />
+                  Bài học
+                </span>
+                <select
+                  className="spm-select"
+                  value={lessonId}
+                  onChange={(e) => handleLessonChange(e.target.value)}
+                  disabled={!chapterId || loadingCatalog}
+                >
+                  <option value="">{chapterId ? 'Tất cả bài học' : 'Chọn chương trước'}</option>
+                  {lessons.map((lesson) => (
+                    <option key={lesson.id} value={lesson.id}>
+                      {lesson.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </div>
 
-          <div className="resource-toolbar">
-            <label className="resource-search-box">
-              <Search size={16} />
+          {/* ── Toolbar ── */}
+          <div className="toolbar">
+            <label className="search-box">
+              <span className="search-box__icon" aria-hidden="true">
+                <Search size={15} />
+              </span>
               <input
-                type="text"
+                placeholder="Tìm theo tiêu đề hoặc mô tả mindmap..."
                 value={mindmapKeyword}
                 onChange={(e) => {
                   setMindmapKeyword(e.target.value);
                   setMindmapPage(0);
                 }}
-                placeholder="Tìm theo tiêu đề hoặc mô tả mindmap..."
               />
+              {mindmapKeyword && (
+                <button
+                  type="button"
+                  className="search-box__clear"
+                  aria-label="Xóa tìm kiếm"
+                  onClick={() => {
+                    setMindmapKeyword('');
+                    setMindmapPage(0);
+                  }}
+                >
+                  <X size={14} />
+                </button>
+              )}
             </label>
 
-            <div className="resource-toolbar-right">
+            <div className="pill-group">
               <select
+                className="spm-select spm-select--sm"
                 value={mindmapSortBy}
                 onChange={(e) => {
                   setMindmapSortBy(e.target.value);
                   setMindmapPage(0);
                 }}
               >
-                <option value="createdAt">Sắp xếp: Ngày tạo</option>
-                <option value="updatedAt">Sắp xếp: Cập nhật</option>
+                <option value="createdAt">Ngày tạo</option>
+                <option value="updatedAt">Cập nhật</option>
               </select>
-
               <select
+                className="spm-select spm-select--sm"
                 value={mindmapDirection}
                 onChange={(e) => {
                   setMindmapDirection(e.target.value as SortDirection);
                   setMindmapPage(0);
                 }}
               >
-                <option value="DESC">Mới nhất trước</option>
-                <option value="ASC">Cũ nhất trước</option>
+                <option value="DESC">Mới nhất</option>
+                <option value="ASC">Cũ nhất</option>
               </select>
-
               <select
+                className="spm-select spm-select--sm"
                 value={mindmapSize}
                 onChange={(e) => {
                   setMindmapSize(Number(e.target.value));
@@ -355,53 +429,103 @@ export default function StudentPublicMindmaps() {
             </div>
           </div>
 
-          {loadingMindmaps && <p className="state-text">Đang tải mindmap công khai...</p>}
-          {mindmapsError && <p className="state-text state-text--error">{mindmapsError}</p>}
-
-          {!loadingMindmaps && !mindmapsError && mindmapsResult.content.length === 0 && (
-            <p className="state-text">Không có mindmap công khai phù hợp bộ lọc hiện tại.</p>
+          {/* ── Active lesson chip ── */}
+          {selectedLesson && (
+            <div className="assessment-summary-bar">
+              <div className="summary-item summary-item--primary">
+                <span className="summary-label">Bài học</span>
+                <strong className="summary-value">{selectedLesson.title}</strong>
+              </div>
+              <div className="summary-item">
+                <span className="summary-label">Kết quả</span>
+                <strong className="summary-value">{mindmapsResult.totalElements} mindmap</strong>
+              </div>
+            </div>
           )}
 
+          {/* ── Loading skeleton ── */}
+          {loadingMindmaps && (
+            <div className="skeleton-grid">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="skeleton-card" />
+              ))}
+            </div>
+          )}
+
+          {/* ── Error ── */}
+          {mindmapsError && !loadingMindmaps && (
+            <div className="empty">
+              <p style={{ color: 'var(--mod-danger)' }}>{mindmapsError}</p>
+            </div>
+          )}
+
+          {/* ── Empty ── */}
+          {!loadingMindmaps && !mindmapsError && mindmapsResult.content.length === 0 && (
+            <div className="empty">
+              <Workflow size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
+              <p>Không có mindmap công khai phù hợp bộ lọc hiện tại.</p>
+            </div>
+          )}
+
+          {/* ── Grid ── */}
           {!loadingMindmaps && mindmapsResult.content.length > 0 && (
             <>
-              <p className="resource-summary">
-                Hiển thị {mindmapsResult.content.length}/{mindmapsResult.totalElements} mindmap công
-                khai.
-              </p>
-
-              <section className="student-public-mindmaps-grid">
+              <div className="grid-cards">
                 {mindmapsResult.content.map((mindmap) => (
-                  <article key={mindmap.id} className="mindmap-card-public">
-                    <h3>{mindmap.title}</h3>
-                    <p>{mindmap.description || 'Không có mô tả.'}</p>
-                    <div className="mindmap-card-public-meta">
-                      <span>{mindmap.nodeCount} nút</span>
-                      <span>{mindmap.teacherName || 'Giáo viên'}</span>
+                  <article key={mindmap.id} className="data-card spm-card">
+                    <div className="spm-cover">
+                      <div className="spm-cover__overlay" />
+                      <span className="spm-cover__badge">Mindmap</span>
+                      <div className="spm-cover__icon">
+                        <Workflow size={42} strokeWidth={1.3} />
+                      </div>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => navigate(`/mindmaps/public/${mindmap.id}`)}
-                      className="mindmap-card-public-btn"
-                    >
-                      <Workflow size={16} /> Xem mindmap
-                    </button>
+                    <div className="spm-card-body">
+                      <h3 className="spm-card__title">{mindmap.title}</h3>
+                      <p className="spm-card__desc">{mindmap.description || 'Không có mô tả.'}</p>
+                      <div className="spm-card-metrics">
+                        <span className="metric">
+                          <Network size={11} />
+                          {mindmap.nodeCount} nút
+                        </span>
+                        <span className="metric">
+                          <User size={11} />
+                          {mindmap.teacherName || 'Giáo viên'}
+                        </span>
+                      </div>
+                      <div className="spm-card-actions">
+                        <button
+                          type="button"
+                          className="spm-btn-view"
+                          onClick={() => navigate(`/mindmaps/public/${mindmap.id}`)}
+                        >
+                          <Workflow size={14} />
+                          Xem mindmap
+                        </button>
+                      </div>
+                    </div>
                   </article>
                 ))}
-              </section>
+              </div>
 
-              <div className="resource-pagination">
+              {/* ── Pagination ── */}
+              <div className="spm-pagination">
                 <button
                   type="button"
+                  className="btn secondary"
                   onClick={() => setMindmapPage((prev) => Math.max(prev - 1, 0))}
                   disabled={mindmapsResult.number <= 0}
                 >
-                  Trang trước
+                  <ChevronLeft size={15} /> Trước
                 </button>
-                <span>
-                  Trang {mindmapsResult.number + 1}/{Math.max(mindmapsResult.totalPages, 1)}
+                <span className="spm-page-info">
+                  Trang <strong>{mindmapsResult.number + 1}</strong> /{' '}
+                  {Math.max(mindmapsResult.totalPages, 1)} ·{' '}
+                  <span style={{ color: '#60748f' }}>{mindmapsResult.totalElements} mindmap</span>
                 </span>
                 <button
                   type="button"
+                  className="btn secondary"
                   onClick={() =>
                     setMindmapPage((prev) =>
                       mindmapsResult.totalPages > 0
@@ -414,7 +538,7 @@ export default function StudentPublicMindmaps() {
                     mindmapsResult.number >= mindmapsResult.totalPages - 1
                   }
                 >
-                  Trang sau
+                  Sau <ChevronRight size={15} />
                 </button>
               </div>
             </>
