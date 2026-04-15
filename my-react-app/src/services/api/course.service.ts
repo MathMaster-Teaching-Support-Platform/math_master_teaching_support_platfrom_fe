@@ -1,13 +1,12 @@
 import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
-import { AuthService } from './auth.service';
 import type {
   AddAssessmentToCourseRequest,
   ApiResponse,
   CourseAssessmentResponse,
   CourseLessonResponse,
   CourseResponse,
-  CreateCourseRequest,
   CreateCourseLessonRequest,
+  CreateCourseRequest,
   EnrollmentResponse,
   GetPublicCoursesParams,
   LessonProgressItem,
@@ -16,9 +15,10 @@ import type {
   StudentInCourseResponse,
   StudentProgressResponse,
   UpdateCourseAssessmentRequest,
-  UpdateCourseRequest,
   UpdateCourseLessonRequest,
+  UpdateCourseRequest,
 } from '../../types';
+import { AuthService } from './auth.service';
 
 export class CourseService {
   private static async getHeaders() {
@@ -210,13 +210,20 @@ export class CourseService {
     return this.handleResponse(res);
   }
 
-  static async dropEnrollment(enrollmentId: string): Promise<ApiResponse<EnrollmentResponse>> {
+  static async dropEnrollment(
+    enrollmentId: string
+  ): Promise<ApiResponse<EnrollmentResponse> | null> {
     const headers = await this.getHeaders();
     const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ENROLLMENT_DROP(enrollmentId)}`, {
       method: 'DELETE',
       headers,
     });
-    return this.handleResponse(res);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error((err as { message?: string }).message || 'Request failed');
+    }
+    if (res.status === 204 || res.headers.get('content-length') === '0') return null;
+    return res.json();
   }
 
   // ─── Progress ─────────────────────────────────────────────────────────────
@@ -235,10 +242,10 @@ export class CourseService {
 
   static async getProgress(enrollmentId: string): Promise<ApiResponse<StudentProgressResponse>> {
     const headers = await this.getHeaders();
-    const res = await fetch(
-      `${API_BASE_URL}${API_ENDPOINTS.ENROLLMENT_PROGRESS(enrollmentId)}`,
-      { method: 'GET', headers }
-    );
+    const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ENROLLMENT_PROGRESS(enrollmentId)}`, {
+      method: 'GET',
+      headers,
+    });
     return this.handleResponse(res);
   }
 
@@ -249,24 +256,20 @@ export class CourseService {
     data: AddAssessmentToCourseRequest
   ): Promise<ApiResponse<CourseAssessmentResponse>> {
     const headers = await this.getHeaders();
-    const res = await fetch(
-      `${API_BASE_URL}${API_ENDPOINTS.COURSE_DETAIL(courseId)}/assessments`,
-      {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(data),
-      }
-    );
+    const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.COURSE_DETAIL(courseId)}/assessments`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(data),
+    });
     return this.handleResponse(res);
   }
 
   static async getCourseAssessments(
     courseId: string
   ): Promise<ApiResponse<CourseAssessmentResponse[]>> {
-    const res = await fetch(
-      `${API_BASE_URL}${API_ENDPOINTS.COURSE_DETAIL(courseId)}/assessments`,
-      { method: 'GET' }
-    );
+    const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.COURSE_DETAIL(courseId)}/assessments`, {
+      method: 'GET',
+    });
     return this.handleResponse(res);
   }
 

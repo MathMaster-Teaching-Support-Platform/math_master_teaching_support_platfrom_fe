@@ -2,13 +2,13 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CourseService } from '../services/api/course.service';
 import type {
   AddAssessmentToCourseRequest,
-  CreateCourseRequest,
   CreateCourseLessonRequest,
+  CreateCourseRequest,
   GetPublicCoursesParams,
   PublishCourseRequest,
   UpdateCourseAssessmentRequest,
-  UpdateCourseRequest,
   UpdateCourseLessonRequest,
+  UpdateCourseRequest,
 } from '../types';
 
 // ─── Query Keys ───────────────────────────────────────────────────────────────
@@ -173,6 +173,10 @@ export function useDropEnrollment() {
   return useMutation({
     mutationFn: (enrollmentId: string) => CourseService.dropEnrollment(enrollmentId),
     onSuccess: () => qc.invalidateQueries({ queryKey: courseKeys.enrollments() }),
+    onError: (err: unknown) => {
+      const msg = err instanceof Error ? err.message : 'Hủy đăng ký thất bại';
+      globalThis.alert(msg);
+    },
   });
 }
 
@@ -199,7 +203,6 @@ export function useMarkLessonComplete() {
   });
 }
 
-
 // ─── Course Assessment Hooks ──────────────────────────────────────────────────
 
 export function useCourseAssessments(courseId: string) {
@@ -213,13 +216,8 @@ export function useCourseAssessments(courseId: string) {
 export function useAddAssessmentToCourse() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      courseId,
-      data,
-    }: {
-      courseId: string;
-      data: AddAssessmentToCourseRequest;
-    }) => CourseService.addAssessmentToCourse(courseId, data),
+    mutationFn: ({ courseId, data }: { courseId: string; data: AddAssessmentToCourseRequest }) =>
+      CourseService.addAssessmentToCourse(courseId, data),
     onSuccess: (_data, { courseId }) => {
       qc.invalidateQueries({ queryKey: [...courseKeys.detail(courseId), 'assessments'] });
       qc.invalidateQueries({ queryKey: courseKeys.detail(courseId) });

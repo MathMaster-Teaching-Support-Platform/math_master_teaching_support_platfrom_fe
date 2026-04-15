@@ -11,80 +11,57 @@ import {
   Star,
   TrendingUp,
   Users,
+  X,
 } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import {
+  useCourseLessons,
+  useCourseProgress,
+  useDropEnrollment,
+  useEnroll,
+  useMarkLessonComplete,
   useMyEnrollments,
   usePublicCourses,
-  useEnroll,
-  useDropEnrollment,
-  useCourseProgress,
-  useMarkLessonComplete,
-  useCourseLessons,
 } from '../../hooks/useCourses';
 import { LessonSlideService } from '../../services/api/lesson-slide.service';
 import { VideoUploadService } from '../../services/api/videoUpload.service';
+import '../../styles/module-refactor.css';
 import type { CourseResponse, EnrollmentResponse } from '../../types';
 import type { SchoolGrade, SubjectByGrade } from '../../types/lessonSlide.types';
 import './StudentCourses.css';
+import './TeacherCourses.css';
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-const COURSE_THEMES = [
-  {
-    gradient: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 60%, #A855F7 100%)',
-    symbol: '∑',
-    symbolSub: 'ALGEBRA',
-    orb1: 'rgba(99,102,241,0.35)',
-    orb2: 'rgba(168,85,247,0.25)',
-  },
-  {
-    gradient: 'linear-gradient(135deg, #0369A1 0%, #0EA5E9 55%, #06B6D4 100%)',
-    symbol: '△',
-    symbolSub: 'GEOMETRY',
-    orb1: 'rgba(14,165,233,0.35)',
-    orb2: 'rgba(6,182,212,0.25)',
-  },
-  {
-    gradient: 'linear-gradient(135deg, #B45309 0%, #F59E0B 50%, #EF4444 100%)',
-    symbol: '∫',
-    symbolSub: 'CALCULUS',
-    orb1: 'rgba(245,158,11,0.40)',
-    orb2: 'rgba(239,68,68,0.25)',
-  },
-];
+// ─── Cover design tokens (shared with TeacherCourses) ────────────────────────
+const coverGradients = [
+  'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
+  'linear-gradient(135deg, #ecfeff 0%, #cffafe 100%)',
+  'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)',
+  'linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)',
+  'linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%)',
+  'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)',
+] as const;
+
+const coverAccents = ['#1d4ed8', '#0f766e', '#047857', '#c2410c', '#be185d', '#6d28d9'] as const;
 
 // ─── Animated progress bar ────────────────────────────────────────────────────
-const AnimatedProgressBar: React.FC<{ value: number; color?: string }> = ({
-  value,
-  color = 'var(--sc-indigo, #4F46E5)',
-}) => {
+const AnimatedProgressBar: React.FC<{ value: number }> = ({ value }) => {
   const [width, setWidth] = useState(0);
   useEffect(() => {
     const t = setTimeout(() => setWidth(value), 120);
     return () => clearTimeout(t);
   }, [value]);
   return (
-    <div className="sc-prog-track">
+    <div style={{ height: 6, background: '#e8eef8', borderRadius: 999, overflow: 'hidden' }}>
       <div
-        className="sc-prog-fill"
-        style={{ width: `${width}%`, background: `linear-gradient(90deg, ${color}, #3B82F6)` }}
+        style={{
+          width: `${width}%`,
+          height: '100%',
+          background: 'linear-gradient(90deg, #1f5eff, #60a5fa)',
+          borderRadius: 999,
+          transition: 'width 0.7s cubic-bezier(0.22, 1, 0.36, 1)',
+        }}
       />
-    </div>
-  );
-};
-
-// ─── Course Thumbnail ─────────────────────────────────────────────────────────
-const CourseThumbnail: React.FC<{ themeIndex: number; name: string }> = ({ themeIndex, name }) => {
-  const theme = COURSE_THEMES[themeIndex % COURSE_THEMES.length];
-  return (
-    <div className="sc-thumb" style={{ background: theme.gradient }} aria-label={name}>
-      <div className="sc-thumb-orb sc-thumb-orb-1" style={{ background: theme.orb1 }} />
-      <div className="sc-thumb-orb sc-thumb-orb-2" style={{ background: theme.orb2 }} />
-      <div className="sc-thumb-symbol">
-        <span className="sc-thumb-glyph">{theme.symbol}</span>
-        <span className="sc-thumb-sub">{theme.symbolSub}</span>
-      </div>
     </div>
   );
 };
@@ -110,26 +87,39 @@ const VideoPlayer: React.FC<{
   return (
     <div
       style={{
-        position: 'fixed', inset: 0, zIndex: 2000,
+        position: 'fixed',
+        inset: 0,
+        zIndex: 2000,
         background: 'rgba(0,0,0,0.88)',
-        display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
         padding: '1rem',
       }}
       onClick={onClose}
     >
-      <div
-        style={{ width: '100%', maxWidth: 900 }}
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div style={{ width: '100%', maxWidth: 900 }} onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 12,
+          }}
+        >
           <h3 style={{ color: '#fff', margin: 0, fontSize: '1rem', fontWeight: 700 }}>{title}</h3>
           <button
             onClick={onClose}
             style={{
-              background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 8,
-              color: '#fff', padding: '0.4rem 0.7rem', cursor: 'pointer', fontSize: '0.88rem',
+              background: 'rgba(255,255,255,0.15)',
+              border: 'none',
+              borderRadius: 8,
+              color: '#fff',
+              padding: '0.4rem 0.7rem',
+              cursor: 'pointer',
+              fontSize: '0.88rem',
             }}
           >
             ✕ Đóng
@@ -137,13 +127,19 @@ const VideoPlayer: React.FC<{
         </div>
 
         {/* Video */}
-        <div style={{ background: '#000', borderRadius: 12, overflow: 'hidden', aspectRatio: '16/9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          {loading && (
-            <p style={{ color: '#94a3b8' }}>Đang tải video...</p>
-          )}
-          {error && (
-            <p style={{ color: '#f87171' }}>{error}</p>
-          )}
+        <div
+          style={{
+            background: '#000',
+            borderRadius: 12,
+            overflow: 'hidden',
+            aspectRatio: '16/9',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          {loading && <p style={{ color: '#94a3b8' }}>Đang tải video...</p>}
+          {error && <p style={{ color: '#f87171' }}>{error}</p>}
           {videoUrl && !loading && (
             <video
               src={videoUrl}
@@ -182,129 +178,243 @@ const ProgressView: React.FC<{
 
   return (
     <motion.div
-      className="sc-detail"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
     >
-      <button className="sc-back-btn" onClick={onBack}>
+      <button className="btn secondary" style={{ marginBottom: '1.25rem' }} onClick={onBack}>
         <ArrowLeft size={16} strokeWidth={2} />
         Quay lại danh sách
       </button>
 
-      <div className="sc-detail-header">
-        <div className="sc-detail-thumb-wrap">
-          <CourseThumbnail themeIndex={courseIndex} name={enrollment.courseTitle ?? ''} />
+      {/* Course detail header card */}
+      <div
+        className="hero-card"
+        style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', marginBottom: '1rem' }}
+      >
+        <div
+          style={{
+            width: 200,
+            minWidth: 160,
+            borderRadius: 12,
+            overflow: 'hidden',
+            background: coverGradients[courseIndex % coverGradients.length],
+            color: coverAccents[courseIndex % coverAccents.length],
+            minHeight: 130,
+            display: 'flex',
+            alignItems: 'flex-end',
+            padding: '1rem',
+            position: 'relative',
+            flexShrink: 0,
+          }}
+        >
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background:
+                'radial-gradient(circle at top right, rgba(255,255,255,0.7), transparent 36%), linear-gradient(to top, rgba(255,255,255,0.12), transparent 70%)',
+            }}
+          />
+          <h3
+            style={{
+              position: 'relative',
+              zIndex: 1,
+              margin: 0,
+              fontSize: '0.95rem',
+              fontWeight: 800,
+              color: 'var(--mod-ink)',
+            }}
+          >
+            {enrollment.courseTitle}
+          </h3>
         </div>
-        <div className="sc-detail-info">
-          <h2 className="sc-detail-title">{enrollment.courseTitle}</h2>
-          <div className="sc-detail-badges">
-            <span className={`sc-badge ${enrollment.status === 'ACTIVE' ? 'sc-badge-rating' : 'sc-badge-lessons'}`}>
-              {enrollment.status === 'ACTIVE' ? 'Đang học' : 'Đã hủy'}
-            </span>
-          </div>
+        <div style={{ flex: 1, minWidth: 240 }}>
+          <h2
+            style={{
+              margin: '0 0 0.5rem',
+              fontSize: '1.4rem',
+              fontWeight: 800,
+              color: 'var(--mod-ink)',
+            }}
+          >
+            {enrollment.courseTitle}
+          </h2>
+          <span
+            className={`course-badge ${enrollment.status === 'ACTIVE' ? 'badge-live' : 'badge-draft'}`}
+            style={{ marginBottom: '0.75rem' }}
+          >
+            {enrollment.status === 'ACTIVE' ? 'Đang học' : 'Đã hủy'}
+          </span>
           {progress && (
-            <div className="sc-detail-prog-wrap">
-              <div className="sc-detail-prog-header">
+            <div style={{ marginTop: '0.75rem' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  fontSize: '0.84rem',
+                  color: '#60748f',
+                  marginBottom: '0.4rem',
+                }}
+              >
                 <span>Tiến độ của bạn</span>
-                <strong>{progress.completionRate.toFixed(1)}%</strong>
+                <strong style={{ color: '#1f5eff' }}>{progress.completionRate.toFixed(1)}%</strong>
               </div>
               <AnimatedProgressBar value={progress.completionRate} />
-              <p style={{ fontSize: '0.8rem', color: '#6b7280', marginTop: '0.25rem' }}>
+              <p style={{ fontSize: '0.8rem', color: '#6b7280', marginTop: '0.35rem' }}>
                 {progress.completedLessons}/{progress.totalLessons} bài học hoàn thành
               </p>
             </div>
           )}
-          {enrollment.status === 'ACTIVE' && (
-            <button
-              className="sc-lesson-btn"
-              style={{ marginTop: '0.75rem', background: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '6px', padding: '0.4rem 0.75rem', cursor: 'pointer' }}
-              onClick={handleDrop}
-              disabled={dropMutation.isPending}
+          <button
+            className="btn danger"
+            style={{ marginTop: '0.75rem' }}
+            onClick={handleDrop}
+            disabled={dropMutation.isPending || enrollment.status !== 'ACTIVE'}
+            title={enrollment.status !== 'ACTIVE' ? 'Khóa học đã hủy' : undefined}
+          >
+            {dropMutation.isPending ? 'Đang hủy...' : 'Hủy đăng ký'}
+          </button>
+        </div>
+      </div>
+
+      {isLoading && (
+        <div className="skeleton-grid">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="skeleton-card" />
+          ))}
+        </div>
+      )}
+
+      {/* Lesson list */}
+      <div className="data-card" style={{ gap: 0, padding: 0, overflow: 'hidden' }}>
+        <div
+          style={{
+            padding: '1rem 1.2rem',
+            borderBottom: '1px solid #e8eef8',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: 'var(--mod-ink)' }}>
+            Danh sách bài học
+          </h4>
+          <span className="badge">
+            {progress?.completedLessons ?? 0}/{lessons.length} bài học
+          </span>
+        </div>
+
+        {lessons.map((lesson) => {
+          const lessonProgress = progress?.lessons.find((l) => l.courseLessonId === lesson.id);
+          const isCompleted = lessonProgress?.isCompleted ?? false;
+
+          return (
+            <div
+              key={lesson.id}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                padding: '0.85rem 1.2rem',
+                borderBottom: '1px solid #f3f7fd',
+                background: isCompleted ? '#f0fdf4' : '#fff',
+              }}
             >
-              Hủy đăng ký
-            </button>
-          )}
-        </div>
-      </div>
-
-      {isLoading && <p style={{ padding: '1rem', color: '#6b7280' }}>Đang tải tiến độ...</p>}
-
-      <div className="sc-lessons">
-        <div className="sc-chapter">
-          <div className="sc-chapter-header">
-            <h4 className="sc-chapter-title">Danh sách bài học</h4>
-            <span className="sc-chapter-badge">{progress?.completedLessons ?? 0}/{lessons.length} bài học</span>
-          </div>
-          {lessons.map((lesson) => {
-            const lessonProgress = progress?.lessons.find((l) => l.courseLessonId === lesson.id);
-            const isCompleted = lessonProgress?.isCompleted ?? false;
-            const status = isCompleted ? 'done' : 'current';
-
-            return (
-              <div key={lesson.id} className={`sc-lesson-row sc-lesson-${status}`}>
-                <div className="sc-lesson-icon">
-                  {isCompleted ? (
-                    <CheckCircle size={18} strokeWidth={2} />
-                  ) : (
-                    <Play size={18} strokeWidth={2} />
-                  )}
-                </div>
-                <div className="sc-lesson-info">
-                  <span className="sc-lesson-title">{lesson.videoTitle ?? lesson.lessonTitle ?? 'Bài học'}</span>
-                  {lesson.durationSeconds && (
-                    <span className="sc-lesson-dur">
-                      ⏱ {Math.round(lesson.durationSeconds / 60)} phút • Video
-                    </span>
-                  )}
-                </div>
-                <div style={{ display: 'flex', gap: '0.4rem' }}>
-                  {/* Nút xem video */}
-                  {lesson.videoUrl && (
-                    <button
-                      className="sc-lesson-btn sc-lesson-btn-primary"
-                      onClick={() =>
-                        setPlayingLesson({
-                          id: lesson.id,
-                          title: lesson.videoTitle ?? lesson.lessonTitle ?? 'Bài học',
-                        })
-                      }
-                    >
-                      ▶ Xem video
-                    </button>
-                  )}
-                  {/* Nút đánh dấu hoàn thành */}
-                  {!isCompleted && enrollment.status === 'ACTIVE' && (
-                    <button
-                      className="sc-lesson-btn"
-                      style={{ background: '#f0fdf4', color: '#059669', border: '1px solid #bbf7d0' }}
-                      onClick={() =>
-                        markComplete.mutate({ enrollmentId: enrollment.id, courseLessonId: lesson.id })
-                      }
-                      disabled={markComplete.isPending}
-                    >
-                      ✓ Hoàn thành
-                    </button>
-                  )}
-                  {isCompleted && (
-                    <span style={{ fontSize: '0.8rem', color: '#059669', fontWeight: 600, alignSelf: 'center' }}>
-                      ✓ Đã xong
-                    </span>
-                  )}
-                </div>
+              <div
+                style={{
+                  width: 34,
+                  height: 34,
+                  borderRadius: 10,
+                  flexShrink: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: isCompleted ? '#dcfce7' : '#e8eef8',
+                  color: isCompleted ? '#15803d' : '#60748f',
+                }}
+              >
+                {isCompleted ? (
+                  <CheckCircle size={17} strokeWidth={2} />
+                ) : (
+                  <Play size={17} strokeWidth={2} />
+                )}
               </div>
-            );
-          })}
-          {lessons.length === 0 && (
-            <p style={{ padding: '1rem', color: '#9ca3af', fontSize: '0.875rem' }}>
-              Chưa có bài học nào trong khóa học này.
-            </p>
-          )}
-        </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div
+                  style={{
+                    fontSize: '0.88rem',
+                    fontWeight: 600,
+                    color: 'var(--mod-ink)',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                >
+                  {lesson.videoTitle ?? lesson.lessonTitle ?? 'Bài học'}
+                </div>
+                {lesson.durationSeconds && (
+                  <div style={{ fontSize: '0.76rem', color: '#60748f', marginTop: '0.15rem' }}>
+                    ⏱ {Math.round(lesson.durationSeconds / 60)} phút • Video
+                  </div>
+                )}
+              </div>
+              <div style={{ display: 'flex', gap: '0.4rem', flexShrink: 0 }}>
+                {lesson.videoUrl && (
+                  <button
+                    className="action-primary"
+                    style={{ padding: '0.42rem 0.75rem', fontSize: '0.78rem' }}
+                    onClick={() =>
+                      setPlayingLesson({
+                        id: lesson.id,
+                        title: lesson.videoTitle ?? lesson.lessonTitle ?? 'Bài học',
+                      })
+                    }
+                  >
+                    <Play size={12} strokeWidth={2.5} /> Xem video
+                  </button>
+                )}
+                {!isCompleted && enrollment.status === 'ACTIVE' && (
+                  <button
+                    className="action-toggle"
+                    style={{ padding: '0.42rem 0.75rem', fontSize: '0.78rem' }}
+                    onClick={() =>
+                      markComplete.mutate({
+                        enrollmentId: enrollment.id,
+                        courseLessonId: lesson.id,
+                      })
+                    }
+                    disabled={markComplete.isPending}
+                  >
+                    <CheckCircle size={12} strokeWidth={2.5} /> Hoàn thành
+                  </button>
+                )}
+                {isCompleted && (
+                  <span
+                    style={{
+                      fontSize: '0.78rem',
+                      color: '#15803d',
+                      fontWeight: 700,
+                      alignSelf: 'center',
+                    }}
+                  >
+                    ✓ Đã xong
+                  </span>
+                )}
+              </div>
+            </div>
+          );
+        })}
+
+        {lessons.length === 0 && !isLoading && (
+          <div className="empty" style={{ padding: '2rem' }}>
+            <BookOpen size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
+            <p>Chưa có bài học nào trong khóa học này.</p>
+          </div>
+        )}
       </div>
 
-      {/* Video Player overlay */}
       {playingLesson && (
         <VideoPlayer
           courseId={enrollment.courseId}
@@ -328,42 +438,69 @@ const EnrollmentCard: React.FC<{
   const completionRate = progress?.completionRate ?? 0;
 
   return (
-    <motion.div
-      className="sc-course-card"
+    <motion.article
+      className="data-card course-card"
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.1 + index * 0.08, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      whileHover={{ y: -5 }}
+      style={{ cursor: 'pointer' }}
       onClick={() => onSelect(enrollment.id)}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => e.key === 'Enter' && onSelect(enrollment.id)}
     >
-      <div className="sc-card-thumb-wrap">
-        <CourseThumbnail themeIndex={index} name={enrollment.courseTitle ?? ''} />
-        <div className="sc-prog-badge">{completionRate.toFixed(0)}%</div>
+      <div
+        className="course-cover"
+        style={{
+          background: coverGradients[index % coverGradients.length],
+          color: coverAccents[index % coverAccents.length],
+        }}
+      >
+        <div className="cover-overlay" />
+        <div className="cover-index">#{String(index + 1).padStart(2, '0')}</div>
+        <span
+          className={`course-badge ${enrollment.status === 'ACTIVE' ? 'badge-live' : 'badge-draft'}`}
+        >
+          {enrollment.status === 'ACTIVE' ? 'Đang học' : 'Đã hủy'}
+        </span>
+        <h3 className="cover-title">{enrollment.courseTitle}</h3>
       </div>
-      <div className="sc-card-body">
-        <h3 className="sc-card-title">{enrollment.courseTitle}</h3>
-        <div className="sc-card-badges">
-          <span className={`sc-badge ${enrollment.status === 'ACTIVE' ? 'sc-badge-rating' : 'sc-badge-lessons'}`}>
-            {enrollment.status === 'ACTIVE' ? 'Đang học' : 'Đã hủy'}
-          </span>
-        </div>
-        <div className="sc-card-prog-section">
-          <div className="sc-card-prog-header">
-            <span className="sc-prog-label">Tiến độ</span>
-            <span className="sc-prog-pct">{completionRate.toFixed(0)}%</span>
+      <div className="course-body">
+        <div>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              fontSize: '0.81rem',
+              color: '#60748f',
+              marginBottom: '0.4rem',
+              fontWeight: 600,
+            }}
+          >
+            <span>Tiến độ học</span>
+            <strong style={{ color: '#1f5eff' }}>{completionRate.toFixed(0)}%</strong>
           </div>
           <AnimatedProgressBar value={completionRate} />
+          {progress && (
+            <p style={{ margin: '0.3rem 0 0', fontSize: '0.75rem', color: '#9aaece' }}>
+              {progress.completedLessons}/{progress.totalLessons} bài hoàn thành
+            </p>
+          )}
         </div>
-        <div className="sc-card-footer">
-          <span className="sc-continue-hint">
-            Xem chi tiết <ChevronRight size={12} strokeWidth={2.5} />
-          </span>
+        <div className="course-actions">
+          <button
+            className="action-primary"
+            style={{ flex: 1 }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelect(enrollment.id);
+            }}
+          >
+            <ChevronRight size={14} /> Xem chi tiết
+          </button>
         </div>
       </div>
-    </motion.div>
+    </motion.article>
   );
 };
 
@@ -373,47 +510,66 @@ const PublicCourseCard: React.FC<{
   index: number;
   onEnroll: (courseId: string) => void;
   isEnrolling: boolean;
-}> = ({ course, index, onEnroll, isEnrolling }) => (
-  <motion.div
-    className="sc-course-card"
-    initial={{ opacity: 0, y: 24 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay: 0.1 + index * 0.08, duration: 0.4 }}
-    whileHover={{ y: -5 }}
-  >
-    <div className="sc-card-thumb-wrap">
-      <CourseThumbnail themeIndex={index} name={course.title} />
-    </div>
-    <div className="sc-card-body">
-      <h3 className="sc-card-title">{course.title}</h3>
-      <p className="sc-card-teacher">
-        <span className="sc-teacher-dot" />
-        {course.teacherName ?? 'Giáo viên'}
-      </p>
-      <div className="sc-card-badges">
-        <span className="sc-badge sc-badge-lessons">
-          <BookOpen size={11} strokeWidth={2.5} />
-          {course.lessonsCount} bài học
-        </span>
-        <span className="sc-badge sc-badge-rating">
-          <Star size={11} strokeWidth={2.5} fill="currentColor" />
-          {Number(course.rating).toFixed(1)}
-        </span>
-        <span className="sc-badge sc-badge-students">
-          <Users size={11} strokeWidth={2.5} />
-          {course.studentsCount}
-        </span>
-      </div>      <button
-        className="sc-lesson-btn sc-lesson-btn-primary"
-        style={{ marginTop: '0.75rem', width: '100%' }}
-        onClick={() => onEnroll(course.id)}
-        disabled={isEnrolling}
+  isEnrolled: boolean;
+}> = ({ course, index, onEnroll, isEnrolling, isEnrolled }) => {
+  let enrollBtnLabel: string;
+  if (isEnrolled) enrollBtnLabel = '✓ Đã đăng ký';
+  else if (isEnrolling) enrollBtnLabel = 'Đang đăng ký...';
+  else enrollBtnLabel = 'Đăng ký học';
+  return (
+    <motion.article
+      className="data-card course-card"
+      initial={{ opacity: 0, y: 24 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.1 + index * 0.08, duration: 0.4 }}
+    >
+      <div
+        className="course-cover"
+        style={{
+          background: coverGradients[index % coverGradients.length],
+          color: coverAccents[index % coverAccents.length],
+        }}
       >
-        {isEnrolling ? 'Đang đăng ký...' : 'Đăng ký học'}
-      </button>
-    </div>
-  </motion.div>
-);
+        <div className="cover-overlay" />
+        <div className="cover-index">#{String(index + 1).padStart(2, '0')}</div>
+        <span className={`course-badge ${isEnrolled ? 'badge-live' : 'badge-draft'}`}>
+          {isEnrolled ? '✓ Đã đăng ký' : 'Chưa đăng ký'}
+        </span>
+        <h3 className="cover-title">{course.title}</h3>
+      </div>
+      <div className="course-body">
+        <p className="course-desc">{course.teacherName ?? 'Giáo viên'}</p>
+        <div className="course-metrics">
+          <div className="metric">
+            <BookOpen size={13} />
+            <span>{course.lessonsCount} bài học</span>
+          </div>
+          <div className="metric">
+            <Star size={13} />
+            <span>{Number(course.rating).toFixed(1)}</span>
+          </div>
+          <div className="metric">
+            <Users size={13} />
+            <span>{course.studentsCount}</span>
+          </div>
+        </div>
+        <div className="course-actions">
+          <button
+            className="action-primary"
+            style={{
+              flex: 1,
+              ...(isEnrolled ? { background: '#ecfdf5', color: '#065f46', cursor: 'default' } : {}),
+            }}
+            onClick={() => !isEnrolled && onEnroll(course.id)}
+            disabled={isEnrolling || isEnrolled}
+          >
+            {enrollBtnLabel}
+          </button>
+        </div>
+      </div>
+    </motion.article>
+  );
+};
 
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 const StudentCourses: React.FC = () => {
@@ -424,6 +580,7 @@ const StudentCourses: React.FC = () => {
   const [filterSubjectId, setFilterSubjectId] = useState('');
   const [grades, setGrades] = useState<SchoolGrade[]>([]);
   const [subjects, setSubjects] = useState<SubjectByGrade[]>([]);
+  const [enrollingCourseId, setEnrollingCourseId] = useState<string | null>(null);
 
   const { data: enrollmentsData, isLoading: loadingEnrollments } = useMyEnrollments();
   const { data: publicCoursesData, isLoading: loadingPublic } = usePublicCourses({
@@ -434,7 +591,6 @@ const StudentCourses: React.FC = () => {
   });
   const enrollMutation = useEnroll();
 
-  // Load school grades for browse filter
   React.useEffect(() => {
     LessonSlideService.getSchoolGrades(true)
       .then((r) => setGrades(r.result || []))
@@ -454,19 +610,39 @@ const StudentCourses: React.FC = () => {
     }
   };
 
-  const enrollments: EnrollmentResponse[] = enrollmentsData?.result ?? [];
-  const publicCourses: CourseResponse[] = publicCoursesData?.result?.content ?? [];
+  const enrollments = useMemo<EnrollmentResponse[]>(
+    () => enrollmentsData?.result ?? [],
+    [enrollmentsData]
+  );
+  const publicCourses = useMemo<CourseResponse[]>(
+    () => publicCoursesData?.result?.content ?? [],
+    [publicCoursesData]
+  );
 
   const filteredEnrollments = useMemo(
     () =>
-      enrollments.filter((e) =>
-        (e.courseTitle ?? '').toLowerCase().includes(searchQuery.toLowerCase())
+      enrollments.filter(
+        (e) =>
+          e.status === 'ACTIVE' &&
+          (e.courseTitle ?? '').toLowerCase().includes(searchQuery.toLowerCase())
       ),
     [enrollments, searchQuery]
   );
 
-  const activeEnrollments = filteredEnrollments.filter((e) => e.status === 'ACTIVE');
-  const avgProgress = 0; // computed per-card via useCourseProgress
+  const stats = useMemo(
+    () => ({
+      active: enrollments.filter((e) => e.status === 'ACTIVE').length,
+      total: enrollments.length,
+      browse: publicCourses.length,
+      dropped: enrollments.filter((e) => e.status !== 'ACTIVE').length,
+    }),
+    [enrollments, publicCourses.length]
+  );
+
+  const enrolledCourseIds = useMemo(
+    () => new Set(enrollments.map((e) => e.courseId)),
+    [enrollments]
+  );
 
   const selectedEnrollment = selectedEnrollmentId
     ? enrollments.find((e) => e.id === selectedEnrollmentId)
@@ -476,187 +652,268 @@ const StudentCourses: React.FC = () => {
     : -1;
 
   const handleEnroll = (courseId: string) => {
+    setEnrollingCourseId(courseId);
     enrollMutation.mutate(courseId, {
       onSuccess: () => setActiveTab('enrolled'),
+      onSettled: () => setEnrollingCourseId(null),
     });
   };
 
   return (
     <DashboardLayout role="student" user={{ name: 'Học sinh', avatar: '', role: 'student' }}>
-      <div className="sc-page">
-        <AnimatePresence mode="wait">
-          {selectedEnrollmentId && selectedEnrollment ? (
-            <motion.div
-              key="detail-view"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.25 }}
-            >
-              <ProgressView
-                enrollment={selectedEnrollment}
-                courseIndex={selectedIndex}
-                onBack={() => setSelectedEnrollmentId(null)}
-              />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="grid-view"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.25 }}
-            >
-              {/* Hero */}
-              <div className="sc-hero">
-                <div className="sc-hero-glass">
-                  <div className="sc-hero-left">
-                    <h1 className="sc-greeting-name">Giáo trình của tôi</h1>
-                    <p className="sc-greeting-sub">Theo dõi tiến độ và khám phá khóa học mới</p>
+      <div className="module-layout-container">
+        <section className="module-page">
+          <AnimatePresence mode="wait">
+            {selectedEnrollmentId && selectedEnrollment ? (
+              <motion.div
+                key="detail-view"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25 }}
+              >
+                <ProgressView
+                  enrollment={selectedEnrollment}
+                  courseIndex={selectedIndex}
+                  onBack={() => setSelectedEnrollmentId(null)}
+                />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="grid-view"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25 }}
+              >
+                {/* ── Header ── */}
+                <header className="page-header courses-header-row">
+                  <div className="header-stack">
+                    <div className="header-kicker">Student dashboard</div>
+                    <div className="row" style={{ gap: '0.6rem' }}>
+                      <h2>Giáo trình của tôi</h2>
+                      {!loadingEnrollments && (
+                        <span className="count-chip">{enrollments.length}</span>
+                      )}
+                    </div>
+                    <p className="header-sub">
+                      {stats.active} đang học • {stats.total} đã đăng ký
+                    </p>
                   </div>
-                  <div className="sc-hero-right">
-                    <div className="sc-searchbar">
-                      <Search className="sc-search-icon" size={16} strokeWidth={2} />
-                      <input
-                        className="sc-search-input"
-                        type="text"
-                        placeholder="Tìm kiếm giáo trình..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        aria-label="Tìm kiếm giáo trình"
-                      />
+                </header>
+
+                {/* ── Stats ── */}
+                <div className="stats-grid">
+                  <div className="stat-card stat-blue">
+                    <div className="stat-icon-wrap">
+                      <BookOpen size={20} />
+                    </div>
+                    <div>
+                      <h3>{stats.active}</h3>
+                      <p>Đang học</p>
+                    </div>
+                  </div>
+                  <div className="stat-card stat-emerald">
+                    <div className="stat-icon-wrap">
+                      <TrendingUp size={20} />
+                    </div>
+                    <div>
+                      <h3>{stats.total}</h3>
+                      <p>Tổng đăng ký</p>
+                    </div>
+                  </div>
+                  <div className="stat-card stat-amber">
+                    <div className="stat-icon-wrap">
+                      <Award size={20} />
+                    </div>
+                    <div>
+                      <h3>{stats.browse}</h3>
+                      <p>Khóa học mới</p>
+                    </div>
+                  </div>
+                  <div className="stat-card stat-violet">
+                    <div className="stat-icon-wrap">
+                      <Clock size={20} />
+                    </div>
+                    <div>
+                      <h3>{stats.dropped}</h3>
+                      <p>Đã hủy</p>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* KPI Row */}
-              <div className="sc-kpi-row">
-                <div className="sc-stat-card">
-                  <div className="sc-stat-icon-wrap" style={{ background: 'rgba(79,70,229,0.12)' }}>
-                    <BookOpen size={20} strokeWidth={2} style={{ color: '#4F46E5' }} />
-                  </div>
-                  <div className="sc-stat-value">{activeEnrollments.length}</div>
-                  <div className="sc-stat-label">Đang học</div>
-                </div>
-                <div className="sc-stat-card">
-                  <div className="sc-stat-icon-wrap" style={{ background: 'rgba(16,185,129,0.12)' }}>
-                    <TrendingUp size={20} strokeWidth={2} style={{ color: '#10B981' }} />
-                  </div>
-                  <div className="sc-stat-value">{enrollments.length}</div>
-                  <div className="sc-stat-label">Tổng đăng ký</div>
-                </div>
-                <div className="sc-stat-card">
-                  <div className="sc-stat-icon-wrap" style={{ background: 'rgba(245,158,11,0.12)' }}>
-                    <Award size={20} strokeWidth={2} style={{ color: '#F59E0B' }} />
-                  </div>
-                  <div className="sc-stat-value">{publicCourses.length}</div>
-                  <div className="sc-stat-label">Khóa học mới</div>
-                </div>
-                <div className="sc-stat-card">
-                  <div className="sc-stat-icon-wrap" style={{ background: 'rgba(59,130,246,0.12)' }}>
-                    <Clock size={20} strokeWidth={2} style={{ color: '#3B82F6' }} />
-                  </div>
-                  <div className="sc-stat-value">{avgProgress}%</div>
-                  <div className="sc-stat-label">Tiến độ TB</div>
-                </div>
-              </div>
-
-              {/* Tabs */}
-              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem' }}>
-                <button
-                  className={`sc-tab-btn ${activeTab === 'enrolled' ? 'sc-tab-active' : ''}`}
-                  onClick={() => setActiveTab('enrolled')}
-                >
-                  <BookOpen size={14} strokeWidth={2} />
-                  Đã đăng ký ({enrollments.length})
-                </button>
-                <button
-                  className={`sc-tab-btn ${activeTab === 'browse' ? 'sc-tab-active' : ''}`}
-                  onClick={() => setActiveTab('browse')}
-                >
-                  <Search size={14} strokeWidth={2} />
-                  Khám phá
-                </button>
-              </div>
-
-              {/* Enrolled courses */}
-              {activeTab === 'enrolled' && (
-                <>
-                  {loadingEnrollments && (
-                    <p style={{ color: '#6b7280', padding: '1rem' }}>Đang tải...</p>
-                  )}
-                  <div className="sc-course-grid">
-                    {filteredEnrollments.map((enrollment, i) => (
-                      <EnrollmentCard
-                        key={enrollment.id}
-                        enrollment={enrollment}
-                        index={i}
-                        onSelect={setSelectedEnrollmentId}
-                      />
-                    ))}
-                    {filteredEnrollments.length === 0 && !loadingEnrollments && (
-                      <div className="sc-empty">
-                        <BookOpen size={40} strokeWidth={1.5} />
-                        <p>Bạn chưa đăng ký khóa học nào</p>
-                      </div>
+                {/* ── Toolbar ── */}
+                <div className="toolbar">
+                  <label className="search-box">
+                    <span className="search-box__icon" aria-hidden="true">
+                      <Search size={15} />
+                    </span>
+                    <input
+                      placeholder="Tìm kiếm giáo trình..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      aria-label="Tìm kiếm giáo trình"
+                    />
+                    {searchQuery && (
+                      <button
+                        type="button"
+                        className="search-box__clear"
+                        aria-label="Xóa tìm kiếm"
+                        onClick={() => setSearchQuery('')}
+                      >
+                        <X size={14} />
+                      </button>
                     )}
+                  </label>
+                  <div className="pill-group">
+                    <button
+                      className={`pill-btn${activeTab === 'enrolled' ? ' active' : ''}`}
+                      onClick={() => setActiveTab('enrolled')}
+                    >
+                      <BookOpen size={13} strokeWidth={2} /> Đã đăng ký ({enrollments.length})
+                    </button>
+                    <button
+                      className={`pill-btn${activeTab === 'browse' ? ' active' : ''}`}
+                      onClick={() => setActiveTab('browse')}
+                    >
+                      <Search size={13} strokeWidth={2} /> Khám phá
+                    </button>
                   </div>
-                </>
-              )}
+                </div>
 
-              {/* Browse public courses */}
-              {activeTab === 'browse' && (
-                <>
-                  {/* Filter bar */}
-                  <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+                {/* ── Browse filter toolbar ── */}
+                {activeTab === 'browse' && (
+                  <div className="toolbar" style={{ gap: '0.5rem' }}>
                     <select
                       value={filterGradeId}
                       onChange={(e) => void handleFilterGradeChange(e.target.value)}
-                      style={{ padding: '0.5rem 0.75rem', borderRadius: '8px', border: '1px solid #dbe4f0', fontSize: '0.88rem' }}
+                      style={{
+                        padding: '0.5rem 0.75rem',
+                        borderRadius: '8px',
+                        border: '1px solid #dbe4f0',
+                        fontSize: '0.88rem',
+                        fontFamily: 'inherit',
+                        background: '#fff',
+                        color: '#142235',
+                      }}
                     >
                       <option value="">Tất cả khối lớp</option>
                       {grades.map((g) => (
-                        <option key={g.id} value={g.id}>Khối {g.gradeLevel} – {g.name}</option>
+                        <option key={g.id} value={g.id}>
+                          Khối {g.gradeLevel} – {g.name}
+                        </option>
                       ))}
                     </select>
                     <select
                       value={filterSubjectId}
                       onChange={(e) => setFilterSubjectId(e.target.value)}
                       disabled={!filterGradeId}
-                      style={{ padding: '0.5rem 0.75rem', borderRadius: '8px', border: '1px solid #dbe4f0', fontSize: '0.88rem' }}
+                      style={{
+                        padding: '0.5rem 0.75rem',
+                        borderRadius: '8px',
+                        border: '1px solid #dbe4f0',
+                        fontSize: '0.88rem',
+                        fontFamily: 'inherit',
+                        background: '#fff',
+                        color: '#142235',
+                      }}
                     >
                       <option value="">Tất cả môn học</option>
                       {subjects.map((s) => (
-                        <option key={s.id} value={s.id}>{s.name}</option>
+                        <option key={s.id} value={s.id}>
+                          {s.name}
+                        </option>
                       ))}
                     </select>
                   </div>
-                  {loadingPublic && (
-                    <p style={{ color: '#6b7280', padding: '1rem' }}>Đang tải...</p>
-                  )}
-                  <div className="sc-course-grid">
-                    {publicCourses.map((course, i) => (
-                      <PublicCourseCard
-                        key={course.id}
-                        course={course}
-                        index={i}
-                        onEnroll={handleEnroll}
-                        isEnrolling={enrollMutation.isPending}
-                      />
+                )}
+
+                {/* ── Summary bar ── */}
+                {activeTab === 'enrolled' && !loadingEnrollments && enrollments.length > 0 && (
+                  <div className="assessment-summary-bar">
+                    <div className="summary-item summary-item--primary">
+                      <span className="summary-label">Hiển thị</span>
+                      <strong className="summary-value">
+                        {filteredEnrollments.length} / {enrollments.length}
+                      </strong>
+                    </div>
+                    <div className="summary-item">
+                      <span className="summary-dot summary-dot--progress" />
+                      <span className="summary-label">Đang học</span>
+                      <strong className="summary-value">{stats.active}</strong>
+                    </div>
+                    <div className="summary-item">
+                      <span className="summary-dot summary-dot--upcoming" />
+                      <span className="summary-label">Đã hủy</span>
+                      <strong className="summary-value">{stats.dropped}</strong>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Loading skeletons ── */}
+                {(activeTab === 'enrolled' ? loadingEnrollments : loadingPublic) && (
+                  <div className="skeleton-grid">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="skeleton-card" />
                     ))}
-                    {publicCourses.length === 0 && !loadingPublic && (
-                      <div className="sc-empty">
-                        <Search size={40} strokeWidth={1.5} />
-                        <p>Không tìm thấy khóa học</p>
+                  </div>
+                )}
+
+                {/* ── Enrolled grid ── */}
+                {activeTab === 'enrolled' && !loadingEnrollments && (
+                  <>
+                    {filteredEnrollments.length > 0 ? (
+                      <div className="grid-cards">
+                        {filteredEnrollments.map((enrollment, i) => (
+                          <EnrollmentCard
+                            key={enrollment.id}
+                            enrollment={enrollment}
+                            index={i}
+                            onSelect={setSelectedEnrollmentId}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="empty">
+                        <BookOpen size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
+                        <p>
+                          {searchQuery
+                            ? `Không tìm thấy kết quả cho "${searchQuery}"`
+                            : 'Bạn chưa đăng ký khóa học nào'}
+                        </p>
                       </div>
                     )}
-                  </div>
-                </>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
+                  </>
+                )}
+
+                {/* ── Browse grid ── */}
+                {activeTab === 'browse' && !loadingPublic && (
+                  <>
+                    {publicCourses.length > 0 ? (
+                      <div className="grid-cards">
+                        {publicCourses.map((course, i) => (
+                          <PublicCourseCard
+                            key={course.id}
+                            course={course}
+                            index={i}
+                            onEnroll={handleEnroll}
+                            isEnrolling={enrollingCourseId === course.id}
+                            isEnrolled={enrolledCourseIds.has(course.id)}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="empty">
+                        <Search size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
+                        <p>Không tìm thấy khóa học nào</p>
+                      </div>
+                    )}
+                  </>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </section>
       </div>
     </DashboardLayout>
   );
