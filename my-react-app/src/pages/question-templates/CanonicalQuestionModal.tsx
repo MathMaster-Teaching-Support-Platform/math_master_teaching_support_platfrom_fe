@@ -37,11 +37,12 @@ export function CanonicalQuestionModal({
   onSubmit,
   submitting,
 }: Readonly<Props>) {
+  const MULTIPLE_CHOICE_TYPE = 'MULTIPLE_CHOICE';
   const [title, setTitle] = useState('');
   const [problemText, setProblemText] = useState('');
   const [solutionSteps, setSolutionSteps] = useState('');
   const [diagramDefinitionRaw, setDiagramDefinitionRaw] = useState('');
-  const [problemType, setProblemType] = useState('SHORT_ANSWER');
+  const [problemType, setProblemType] = useState(MULTIPLE_CHOICE_TYPE);
   const [cognitiveLevel, setCognitiveLevel] = useState<CanonicalCognitiveLevel>('THONG_HIEU');
   const [error, setError] = useState<string | null>(null);
 
@@ -66,7 +67,7 @@ export function CanonicalQuestionModal({
       setProblemText(initialData.problemText || '');
       setSolutionSteps(initialData.solutionSteps || '');
       setDiagramDefinitionRaw(nextDiagramDefinition);
-      setProblemType(initialData.problemType || 'SHORT_ANSWER');
+      setProblemType(initialData.problemType || MULTIPLE_CHOICE_TYPE);
       setCognitiveLevel(initialData.cognitiveLevel || 'THONG_HIEU');
       return;
     }
@@ -75,7 +76,7 @@ export function CanonicalQuestionModal({
     setProblemText('');
     setSolutionSteps('');
     setDiagramDefinitionRaw('');
-    setProblemType('SHORT_ANSWER');
+    setProblemType(MULTIPLE_CHOICE_TYPE);
     setCognitiveLevel('THONG_HIEU');
   }, [isOpen, mode, initialData]);
 
@@ -103,7 +104,7 @@ export function CanonicalQuestionModal({
         problemText: problemText.trim(),
         solutionSteps: solutionSteps.trim(),
         diagramDefinition,
-        problemType: problemType.trim(),
+        problemType: mode === 'create' ? MULTIPLE_CHOICE_TYPE : problemType.trim(),
         cognitiveLevel,
       });
 
@@ -157,6 +158,7 @@ export function CanonicalQuestionModal({
                   className="input"
                   value={problemType}
                   onChange={(event) => setProblemType(event.target.value)}
+                  readOnly={mode === 'create'}
                 />
               </label>
               <label>

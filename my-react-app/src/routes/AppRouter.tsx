@@ -72,12 +72,6 @@ import {
   TakeAssessment,
 } from '../pages/student-assessments';
 // Grading Routes
-import {
-  GradingAnalytics,
-  GradingDetail,
-  GradingQueue,
-  RegradeRequestList,
-} from '../pages/grading';
 // Test Components
 import MathTextTest from '../components/common/MathTextTest';
 import PrivateRoute from './PrivateRoute';
@@ -380,39 +374,6 @@ const router = createBrowserRouter([
     element: (
       <PrivateRoute>
         <TeacherAnalytics />
-      </PrivateRoute>
-    ),
-  },
-  // Grading Routes
-  {
-    path: '/teacher/grading',
-    element: (
-      <PrivateRoute>
-        <GradingQueue />
-      </PrivateRoute>
-    ),
-  },
-  {
-    path: '/teacher/grading/:submissionId',
-    element: (
-      <PrivateRoute>
-        <GradingDetail />
-      </PrivateRoute>
-    ),
-  },
-  {
-    path: '/teacher/grading/analytics',
-    element: (
-      <PrivateRoute>
-        <GradingAnalytics />
-      </PrivateRoute>
-    ),
-  },
-  {
-    path: '/teacher/grading/regrade-requests',
-    element: (
-      <PrivateRoute>
-        <RegradeRequestList />
       </PrivateRoute>
     ),
   },

@@ -3,12 +3,6 @@ export const CognitiveLevel = {
     THONG_HIEU: 'THONG_HIEU',
     VAN_DUNG: 'VAN_DUNG',
     VAN_DUNG_CAO: 'VAN_DUNG_CAO',
-    REMEMBER: 'REMEMBER',
-    UNDERSTAND: 'UNDERSTAND',
-    APPLY: 'APPLY',
-    ANALYZE: 'ANALYZE',
-    EVALUATE: 'EVALUATE',
-    CREATE: 'CREATE',
 } as const;
 export type CognitiveLevel = typeof CognitiveLevel[keyof typeof CognitiveLevel];
 
