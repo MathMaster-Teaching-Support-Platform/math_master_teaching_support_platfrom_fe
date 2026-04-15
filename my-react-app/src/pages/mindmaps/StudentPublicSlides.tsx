@@ -650,12 +650,18 @@ export default function StudentPublicSlides() {
                 </div>
 
                 <div className="sps-modal-body">
-                  {!previewPdfUrl && (
-                    <p className="state-text">
-                      {previewingSlideId
-                        ? 'Đang tạo preview PDF...'
-                        : 'Chưa có dữ liệu preview PDF.'}
-                    </p>
+                  {!previewPdfUrl && previewingSlideId && (
+                    <div className="sps-math-loader" role="status" aria-live="polite">
+                      <div className="sps-math-loader-ring" aria-hidden="true" />
+                      <div className="sps-math-loader-symbols" aria-hidden="true">
+                        <span>x²</span>
+                        <span>∫</span>
+                        <span>π</span>
+                        <span>√</span>
+                        <span>Δ</span>
+                      </div>
+                      <p>Đang dựng preview PDF...</p>
+                    </div>
                   )}
 
                   {previewPdfUrl && (
