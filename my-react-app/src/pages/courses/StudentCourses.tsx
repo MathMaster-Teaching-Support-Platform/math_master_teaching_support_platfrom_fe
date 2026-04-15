@@ -632,7 +632,7 @@ const StudentCourses: React.FC = () => {
   const stats = useMemo(
     () => ({
       active: enrollments.filter((e) => e.status === 'ACTIVE').length,
-      total: enrollments.length,
+      total: enrollments.filter((e) => e.status === 'ACTIVE').length,
       browse: publicCourses.length,
       dropped: enrollments.filter((e) => e.status !== 'ACTIVE').length,
     }),
@@ -640,7 +640,7 @@ const StudentCourses: React.FC = () => {
   );
 
   const enrolledCourseIds = useMemo(
-    () => new Set(enrollments.map((e) => e.courseId)),
+    () => new Set(enrollments.filter((e) => e.status === 'ACTIVE').map((e) => e.courseId)),
     [enrollments]
   );
 
@@ -770,7 +770,7 @@ const StudentCourses: React.FC = () => {
                       className={`pill-btn${activeTab === 'enrolled' ? ' active' : ''}`}
                       onClick={() => setActiveTab('enrolled')}
                     >
-                      <BookOpen size={13} strokeWidth={2} /> Đã đăng ký ({enrollments.length})
+                      <BookOpen size={13} strokeWidth={2} /> Đã đăng ký ({stats.active})
                     </button>
                     <button
                       className={`pill-btn${activeTab === 'browse' ? ' active' : ''}`}
