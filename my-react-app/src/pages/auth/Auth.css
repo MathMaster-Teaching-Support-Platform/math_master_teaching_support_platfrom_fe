@@ -516,6 +516,14 @@
   width: 64px;
   height: 64px;
   animation: reg-success-pop 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reg-success__icon svg {
+  width: 64px;
+  height: 64px;
 }
 
 @keyframes reg-success-pop {

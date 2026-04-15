@@ -19,17 +19,36 @@ const EmailIcon = () => (
   </svg>
 );
 
-const CheckCircleIcon = () => (
-  <svg
-    viewBox="0 0 20 20"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.6"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <circle cx="10" cy="10" r="8" />
-    <polyline points="6,10 9,13 14,7" />
+const MailSentIcon = () => (
+  <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs>
+      <linearGradient id="mailGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#6b69f0" />
+        <stop offset="100%" stopColor="#9896f5" />
+      </linearGradient>
+    </defs>
+    {/* Circle bg */}
+    <circle cx="32" cy="32" r="32" fill="url(#mailGrad)" opacity="0.12" />
+    <circle cx="32" cy="32" r="26" fill="url(#mailGrad)" opacity="0.18" />
+    {/* Envelope */}
+    <rect x="14" y="22" width="36" height="24" rx="3" fill="url(#mailGrad)" />
+    <polyline
+      points="14,22 32,36 50,22"
+      stroke="white"
+      strokeWidth="2"
+      strokeLinejoin="round"
+      fill="none"
+    />
+    {/* Check badge */}
+    <circle cx="46" cy="20" r="9" fill="#22c55e" />
+    <polyline
+      points="41,20 44.5,23.5 51,17"
+      stroke="white"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      fill="none"
+    />
   </svg>
 );
 
@@ -304,21 +323,23 @@ const ForgotPassword: React.FC = () => {
           <div className="auth-card-inner">
             {isSuccess ? (
               /* ── Success state ── */
-              <div className="auth-success-state">
-                <div className="auth-success-icon">
-                  <CheckCircleIcon />
+              <div className="reg-success">
+                <div className="reg-success__icon-wrap">
+                  <div className="reg-success__icon">
+                    <MailSentIcon />
+                  </div>
                 </div>
-                <h2>Kiểm tra hộp thư!</h2>
-                <p className="auth-success-msg">
+                <h2 className="reg-success__title">Kiểm tra hộp thư!</h2>
+                <p className="reg-success__body">
                   Nếu địa chỉ <strong>{email}</strong> tồn tại trong hệ thống, chúng tôi đã gửi link
                   đặt lại mật khẩu. Vui lòng kiểm tra hộp thư đến (và thư mục spam).
                 </p>
-                <p className="auth-success-hint">
-                  Link có hiệu lực trong <strong>15 phút</strong>.
-                </p>
+                <span className="reg-success__hint">
+                  ⏱ Link có hiệu lực trong <strong>15 phút</strong>
+                </span>
                 <button
                   type="button"
-                  className="btn btn-primary btn-block"
+                  className="btn btn-primary btn-block reg-success__btn"
                   onClick={() => {
                     setIsSuccess(false);
                     setEmail('');
@@ -326,7 +347,10 @@ const ForgotPassword: React.FC = () => {
                 >
                   Gửi lại email
                 </button>
-                <div className="auth-footer" style={{ marginTop: '1.25rem' }}>
+                <div
+                  className="auth-footer"
+                  style={{ marginTop: '1.25rem', width: '100%', maxWidth: '320px' }}
+                >
                   <p>
                     <Link to="/login" className="link-primary">
                       Quay lại đăng nhập
