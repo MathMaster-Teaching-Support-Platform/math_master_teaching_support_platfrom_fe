@@ -43,6 +43,31 @@ const getTemplatePreviewUrl = (previewImage?: string | null): string | null => {
 
 const PREVIEW_URL_TTL_MS = 55 * 60 * 1000;
 
+const isLikelyProtectedPreviewUrl = (url: string): boolean => {
+  if (!url) return true;
+
+  try {
+    const resolved = new URL(url, window.location.origin);
+
+    // Presigned URLs normally contain signature params and should be directly openable.
+    if (
+      resolved.searchParams.has('X-Amz-Signature') ||
+      resolved.searchParams.has('X-Amz-Credential')
+    ) {
+      return false;
+    }
+
+    if (API_BASE_URL.startsWith('http')) {
+      const apiBaseOrigin = new URL(API_BASE_URL).origin;
+      return resolved.origin === apiBaseOrigin;
+    }
+
+    return resolved.origin === window.location.origin;
+  } catch {
+    return true;
+  }
+};
+
 type MathSegment =
   | { type: 'text'; value: string }
   | { type: 'inline-math'; value: string }
@@ -590,10 +615,33 @@ const AISlideGenerator: React.FC = () => {
         throw new Error('Không tạo được URL mở preview.');
       }
 
-      const newTab = window.open(rawUrl, '_blank', 'noopener,noreferrer');
+      if (!isLikelyProtectedPreviewUrl(rawUrl)) {
+        const newTab = window.open(rawUrl, '_blank', 'noopener,noreferrer');
+        if (!newTab) {
+          throw new Error('Trình duyệt đã chặn popup. Hãy cho phép mở tab mới rồi thử lại.');
+        }
+        return;
+      }
+
+      // Fallback for URLs that still require Authorization header.
+      const downloadResult = await LessonSlideService.downloadGeneratedFile(
+        selectedGeneratedFile.id
+      );
+      const blobUrl = window.URL.createObjectURL(downloadResult.blob);
+      const newTab = window.open(blobUrl, '_blank', 'noopener,noreferrer');
+
       if (!newTab) {
+        window.URL.revokeObjectURL(blobUrl);
         throw new Error('Trình duyệt đã chặn popup. Hãy cho phép mở tab mới rồi thử lại.');
       }
+
+      window.setTimeout(() => {
+        window.URL.revokeObjectURL(blobUrl);
+      }, 60_000);
+
+      setSuccess(
+        'Đã mở file bằng kênh xác thực. Nếu trình duyệt không render, hãy dùng nút Tải file này.'
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Không thể mở preview trong tab mới');
     } finally {
