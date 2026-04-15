@@ -416,6 +416,30 @@ export class LessonSlideService {
     return url;
   }
 
+  static async getGeneratedFilePreviewPdf(generatedFileId: string): Promise<DownloadPptxResult> {
+    const headers = await this.getAuthHeaders(false);
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.LESSON_SLIDES_GENERATED_PREVIEW_PDF(generatedFileId)}`,
+      {
+        method: 'GET',
+        headers,
+      }
+    );
+
+    if (!response.ok) {
+      const parsedError = await this.parseApiError(
+        response,
+        'Failed to preview generated slide PDF'
+      );
+      throw this.buildApiError(parsedError.message, parsedError.code);
+    }
+
+    return {
+      blob: await response.blob(),
+      filename: this.getFilenameFromDisposition(response.headers.get('content-disposition')),
+    };
+  }
+
   static async publishGeneratedFile(
     generatedFileId: string
   ): Promise<ApiEnvelope<LessonSlideGeneratedFile>> {
@@ -676,5 +700,30 @@ export class LessonSlideService {
     }
 
     return url;
+  }
+
+  static async getPublicGeneratedFilePreviewPdf(
+    generatedFileId: string
+  ): Promise<DownloadPptxResult> {
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.LESSON_SLIDES_PUBLIC_GENERATED_PREVIEW_PDF(generatedFileId)}`,
+      {
+        method: 'GET',
+        headers: { accept: '*/*' },
+      }
+    );
+
+    if (!response.ok) {
+      const parsedError = await this.parseApiError(
+        response,
+        'Failed to get public generated slide preview PDF'
+      );
+      throw this.buildApiError(parsedError.message, parsedError.code);
+    }
+
+    return {
+      blob: await response.blob(),
+      filename: this.getFilenameFromDisposition(response.headers.get('content-disposition')),
+    };
   }
 }

@@ -5,6 +5,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Download,
+  Eye,
   FileText,
   Filter,
   GraduationCap,
@@ -89,6 +90,13 @@ export default function StudentPublicSlides() {
   const [loadingCatalog, setLoadingCatalog] = useState(false);
   const [loadingSlides, setLoadingSlides] = useState(false);
   const [downloadingSlideId, setDownloadingSlideId] = useState('');
+  const [previewingSlideId, setPreviewingSlideId] = useState('');
+  const [openingPreviewTab, setOpeningPreviewTab] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [selectedPreviewSlide, setSelectedPreviewSlide] = useState<LessonSlideGeneratedFile | null>(
+    null
+  );
+  const [previewPdfUrl, setPreviewPdfUrl] = useState('');
   const [slidesError, setSlidesError] = useState('');
 
   const selectedLesson = useMemo(
@@ -112,6 +120,13 @@ export default function StudentPublicSlides() {
     link.click();
     link.remove();
     globalThis.URL.revokeObjectURL(blobUrl);
+  };
+
+  const revokePreviewPdfUrl = () => {
+    if (previewPdfUrl) {
+      globalThis.URL.revokeObjectURL(previewPdfUrl);
+      setPreviewPdfUrl('');
+    }
   };
 
   useEffect(() => {
@@ -273,6 +288,54 @@ export default function StudentPublicSlides() {
       setDownloadingSlideId('');
     }
   };
+
+  const handleOpenPreview = async (slide: LessonSlideGeneratedFile) => {
+    setSelectedPreviewSlide(slide);
+    setPreviewingSlideId(slide.id);
+    setSlidesError('');
+    revokePreviewPdfUrl();
+    setIsPreviewOpen(true);
+
+    try {
+      const response = await LessonSlideService.getPublicGeneratedFilePreviewPdf(slide.id);
+      const pdfObjectUrl = globalThis.URL.createObjectURL(response.blob);
+      setPreviewPdfUrl(pdfObjectUrl);
+    } catch (err) {
+      setSlidesError(err instanceof Error ? err.message : 'Không thể tạo preview PDF');
+    } finally {
+      setPreviewingSlideId('');
+    }
+  };
+
+  const handleClosePreview = () => {
+    setIsPreviewOpen(false);
+    setSelectedPreviewSlide(null);
+    revokePreviewPdfUrl();
+  };
+
+  const handleOpenPreviewInNewTab = () => {
+    if (!previewPdfUrl) return;
+
+    setOpeningPreviewTab(true);
+    try {
+      const newTab = globalThis.window.open(previewPdfUrl, '_blank', 'noopener,noreferrer');
+      if (!newTab) {
+        throw new Error('Trình duyệt chặn popup. Hãy cho phép mở tab mới rồi thử lại.');
+      }
+    } catch (err) {
+      setSlidesError(err instanceof Error ? err.message : 'Không thể mở tab preview PDF');
+    } finally {
+      setOpeningPreviewTab(false);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (previewPdfUrl) {
+        globalThis.URL.revokeObjectURL(previewPdfUrl);
+      }
+    };
+  }, [previewPdfUrl]);
 
   return (
     <DashboardLayout user={mockStudent} role="student">
@@ -515,6 +578,15 @@ export default function StudentPublicSlides() {
                       <div className="sps-card-actions">
                         <button
                           type="button"
+                          className="sps-btn-preview"
+                          onClick={() => void handleOpenPreview(slide)}
+                          disabled={previewingSlideId === slide.id}
+                        >
+                          <Eye size={14} />
+                          {previewingSlideId === slide.id ? 'Đang preview...' : 'Xem PDF'}
+                        </button>
+                        <button
+                          type="button"
                           className="sps-btn-download"
                           onClick={() => void handleDownloadSlide(slide.id)}
                           disabled={downloadingSlideId === slide.id}
@@ -559,6 +631,71 @@ export default function StudentPublicSlides() {
                 </button>
               </div>
             </>
+          )}
+
+          {isPreviewOpen && (
+            <div className="sps-modal-overlay" onClick={handleClosePreview}>
+              <div
+                className="sps-modal"
+                role="dialog"
+                aria-modal="true"
+                aria-label="Xem trước slide PDF"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <div className="sps-modal-header">
+                  <h3>{selectedPreviewSlide?.fileName || 'Xem trước slide'}</h3>
+                  <button type="button" className="sps-modal-close" onClick={handleClosePreview}>
+                    ×
+                  </button>
+                </div>
+
+                <div className="sps-modal-body">
+                  {!previewPdfUrl && (
+                    <p className="state-text">
+                      {previewingSlideId
+                        ? 'Đang tạo preview PDF...'
+                        : 'Chưa có dữ liệu preview PDF.'}
+                    </p>
+                  )}
+
+                  {previewPdfUrl && (
+                    <iframe
+                      className="sps-modal-iframe"
+                      src={previewPdfUrl}
+                      title="Public slide preview PDF"
+                    />
+                  )}
+                </div>
+
+                <div className="sps-modal-footer">
+                  <button type="button" className="btn secondary" onClick={handleClosePreview}>
+                    Đóng
+                  </button>
+                  <button
+                    type="button"
+                    className="btn secondary"
+                    disabled={!previewPdfUrl || openingPreviewTab}
+                    onClick={handleOpenPreviewInNewTab}
+                  >
+                    {openingPreviewTab ? 'Đang mở...' : 'Mở tab mới'}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn"
+                    disabled={
+                      !selectedPreviewSlide || downloadingSlideId === selectedPreviewSlide.id
+                    }
+                    onClick={() =>
+                      selectedPreviewSlide && void handleDownloadSlide(selectedPreviewSlide.id)
+                    }
+                  >
+                    {selectedPreviewSlide && downloadingSlideId === selectedPreviewSlide.id
+                      ? 'Đang tải...'
+                      : 'Tải xuống'}
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
         </section>
       </div>

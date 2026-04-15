@@ -206,6 +206,41 @@
 /* Download button */
 .module-layout-container .sps-card-actions {
   margin-top: auto;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.module-layout-container .sps-btn-preview {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.42rem;
+  padding: 0.58rem 1rem;
+  background: #ffffff;
+  color: var(--mod-ink, #0f172a);
+  border: 1px solid var(--mod-border, #dce3ee);
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition:
+    border-color 0.15s,
+    transform 0.15s,
+    box-shadow 0.15s;
+}
+
+.module-layout-container .sps-btn-preview:hover:not(:disabled) {
+  border-color: #94a3b8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+}
+
+.module-layout-container .sps-btn-preview:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .module-layout-container .sps-btn-download {
@@ -261,4 +296,73 @@
   font-size: 0.84rem;
   color: var(--mod-text-muted, #60748f);
   margin: 0;
+}
+
+.module-layout-container .sps-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.52);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 1200;
+}
+
+.module-layout-container .sps-modal {
+  width: min(1100px, 100%);
+  max-height: 90vh;
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #dce3ee;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.module-layout-container .sps-modal-header,
+.module-layout-container .sps-modal-footer {
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.module-layout-container .sps-modal-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: #0f172a;
+}
+
+.module-layout-container .sps-modal-close {
+  width: 30px;
+  height: 30px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+  color: #334155;
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.module-layout-container .sps-modal-body {
+  padding: 0.75rem 1rem 1rem;
+  overflow: auto;
+}
+
+.module-layout-container .sps-modal-iframe {
+  width: 100%;
+  min-height: 68vh;
+  border: 1px solid #dbeafe;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.module-layout-container .sps-modal-footer {
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 0;
+  justify-content: flex-end;
 }
