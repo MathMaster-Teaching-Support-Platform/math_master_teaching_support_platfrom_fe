@@ -23,6 +23,21 @@ interface DownloadPptxResult {
   filename: string;
 }
 
+interface PreviewUrlEnvelope {
+  result?:
+    | string
+    | {
+        preSignedUrl?: string;
+        presignedUrl?: string;
+        previewUrl?: string;
+        url?: string;
+      };
+  preSignedUrl?: string;
+  presignedUrl?: string;
+  previewUrl?: string;
+  url?: string;
+}
+
 export class LessonSlideService {
   private static buildApiError(
     message: string,
@@ -363,6 +378,44 @@ export class LessonSlideService {
     };
   }
 
+  static async getGeneratedFilePreviewUrl(generatedFileId: string): Promise<string> {
+    const headers = await this.getAuthHeaders(false);
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.LESSON_SLIDES_GENERATED_PREVIEW_URL(generatedFileId)}`,
+      {
+        method: 'GET',
+        headers,
+      }
+    );
+
+    if (!response.ok) {
+      const parsedError = await this.parseApiError(
+        response,
+        'Failed to get generated slide preview URL'
+      );
+      throw this.buildApiError(parsedError.message, parsedError.code);
+    }
+
+    const payload = (await response.json()) as PreviewUrlEnvelope;
+    const result = payload.result;
+
+    const url =
+      (typeof result === 'string' ? result : undefined) ||
+      (typeof result === 'object' && result
+        ? result.preSignedUrl || result.presignedUrl || result.previewUrl || result.url
+        : undefined) ||
+      payload.preSignedUrl ||
+      payload.presignedUrl ||
+      payload.previewUrl ||
+      payload.url;
+
+    if (!url) {
+      throw this.buildApiError('Preview URL is missing in API response');
+    }
+
+    return url;
+  }
+
   static async publishGeneratedFile(
     generatedFileId: string
   ): Promise<ApiEnvelope<LessonSlideGeneratedFile>> {
@@ -586,5 +639,42 @@ export class LessonSlideService {
         this.getFilenameFromDisposition(response.headers.get('content-disposition')) ||
         'generated-slide.pptx',
     };
+  }
+
+  static async getPublicGeneratedFilePreviewUrl(generatedFileId: string): Promise<string> {
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.LESSON_SLIDES_PUBLIC_GENERATED_PREVIEW_URL(generatedFileId)}`,
+      {
+        method: 'GET',
+        headers: { accept: '*/*' },
+      }
+    );
+
+    if (!response.ok) {
+      const parsedError = await this.parseApiError(
+        response,
+        'Failed to get public generated slide preview URL'
+      );
+      throw this.buildApiError(parsedError.message, parsedError.code);
+    }
+
+    const payload = (await response.json()) as PreviewUrlEnvelope;
+    const result = payload.result;
+
+    const url =
+      (typeof result === 'string' ? result : undefined) ||
+      (typeof result === 'object' && result
+        ? result.preSignedUrl || result.presignedUrl || result.previewUrl || result.url
+        : undefined) ||
+      payload.preSignedUrl ||
+      payload.presignedUrl ||
+      payload.previewUrl ||
+      payload.url;
+
+    if (!url) {
+      throw this.buildApiError('Preview URL is missing in API response');
+    }
+
+    return url;
   }
 }

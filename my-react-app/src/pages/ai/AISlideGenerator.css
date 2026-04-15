@@ -868,6 +868,21 @@
   margin-bottom: 0;
 }
 
+.ai-slide-office-viewer-wrap {
+  margin: 0.75rem 0;
+  border: 1px solid #dbeafe;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #f8fafc;
+}
+
+.ai-slide-office-viewer-frame {
+  width: 100%;
+  min-height: 560px;
+  border: 0;
+  background: #ffffff;
+}
+
 .ai-slide-modal-footer {
   border-top: 1px solid #e2e8f0;
   border-bottom: 0;

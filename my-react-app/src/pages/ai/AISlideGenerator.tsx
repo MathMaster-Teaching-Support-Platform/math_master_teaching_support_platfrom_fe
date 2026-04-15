@@ -41,6 +41,16 @@ const getTemplatePreviewUrl = (previewImage?: string | null): string | null => {
   return `${API_BASE_URL}${normalizedPath}`;
 };
 
+const getOfficeViewerEmbedUrl = (rawUrl?: string | null): string | null => {
+  if (!rawUrl) return null;
+  return `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(rawUrl)}`;
+};
+
+const getOfficeViewerOpenUrl = (rawUrl?: string | null): string | null => {
+  if (!rawUrl) return null;
+  return `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(rawUrl)}`;
+};
+
 type MathSegment =
   | { type: 'text'; value: string }
   | { type: 'inline-math'; value: string }
@@ -316,6 +326,9 @@ const AISlideGenerator: React.FC = () => {
   const [loadingSelectedGeneratedLesson, setLoadingSelectedGeneratedLesson] = useState(false);
   const [downloadingGeneratedFileId, setDownloadingGeneratedFileId] = useState('');
   const [isGeneratedPreviewOpen, setIsGeneratedPreviewOpen] = useState(false);
+  const [loadingGeneratedPreviewUrl, setLoadingGeneratedPreviewUrl] = useState(false);
+  const [openingGeneratedPreviewTab, setOpeningGeneratedPreviewTab] = useState(false);
+  const [generatedPreviewUrl, setGeneratedPreviewUrl] = useState('');
   const [generatedPreviewIndex, setGeneratedPreviewIndex] = useState(0);
 
   const selectedLesson = useMemo(
@@ -346,6 +359,16 @@ const AISlideGenerator: React.FC = () => {
   const currentGeneratedPreviewSlide = useMemo(
     () => generatedPreviewSlides[generatedPreviewIndex] || null,
     [generatedPreviewIndex, generatedPreviewSlides]
+  );
+
+  const officeViewerEmbedUrl = useMemo(
+    () => getOfficeViewerEmbedUrl(generatedPreviewUrl),
+    [generatedPreviewUrl]
+  );
+
+  const officeViewerOpenUrl = useMemo(
+    () => getOfficeViewerOpenUrl(generatedPreviewUrl),
+    [generatedPreviewUrl]
   );
 
   const managedGeneratedFiles = useMemo(() => {
@@ -532,6 +555,54 @@ const AISlideGenerator: React.FC = () => {
     }
   };
 
+  const loadGeneratedPreviewUrl = useCallback(async (generatedFileId: string) => {
+    setLoadingGeneratedPreviewUrl(true);
+
+    try {
+      const url = await LessonSlideService.getGeneratedFilePreviewUrl(generatedFileId);
+      setGeneratedPreviewUrl(url);
+    } catch {
+      setGeneratedPreviewUrl('');
+    } finally {
+      setLoadingGeneratedPreviewUrl(false);
+    }
+  }, []);
+
+  const handleOpenGeneratedPreviewInNewTab = useCallback(async () => {
+    if (!selectedGeneratedFile) {
+      setError('Vui lòng chọn 1 file trước khi mở tab mới.');
+      return;
+    }
+
+    setOpeningGeneratedPreviewTab(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const rawUrl =
+        generatedPreviewUrl ||
+        (await LessonSlideService.getGeneratedFilePreviewUrl(selectedGeneratedFile.id));
+
+      if (!generatedPreviewUrl) {
+        setGeneratedPreviewUrl(rawUrl);
+      }
+
+      const openUrl = getOfficeViewerOpenUrl(rawUrl);
+      if (!openUrl) {
+        throw new Error('Không tạo được URL mở preview.');
+      }
+
+      const newTab = window.open(openUrl, '_blank', 'noopener,noreferrer');
+      if (!newTab) {
+        throw new Error('Trình duyệt đã chặn popup. Hãy cho phép mở tab mới rồi thử lại.');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Không thể mở preview trong tab mới');
+    } finally {
+      setOpeningGeneratedPreviewTab(false);
+    }
+  }, [generatedPreviewUrl, selectedGeneratedFile]);
+
   useEffect(() => {
     const loadSchoolGrades = async () => {
       setLoadingGrades(true);
@@ -593,11 +664,21 @@ const AISlideGenerator: React.FC = () => {
   useEffect(() => {
     if (!selectedGeneratedFile) {
       setSelectedGeneratedLesson(null);
+      setGeneratedPreviewUrl('');
       return;
     }
 
     void loadLessonDetailFromGeneratedFile(selectedGeneratedFile);
-  }, [selectedGeneratedFile, loadLessonDetailFromGeneratedFile]);
+
+    if (isGeneratedPreviewOpen) {
+      void loadGeneratedPreviewUrl(selectedGeneratedFile.id);
+    }
+  }, [
+    isGeneratedPreviewOpen,
+    selectedGeneratedFile,
+    loadLessonDetailFromGeneratedFile,
+    loadGeneratedPreviewUrl,
+  ]);
 
   useEffect(() => {
     if (!isGeneratedPreviewOpen) {
@@ -1666,7 +1747,23 @@ const AISlideGenerator: React.FC = () => {
                   <p className="ai-slide-info">Đang tải nội dung để xem trước...</p>
                 )}
 
+                {loadingGeneratedPreviewUrl && (
+                  <p className="ai-slide-info">Đang lấy link preview từ máy chủ...</p>
+                )}
+
+                {!loadingGeneratedPreviewUrl && officeViewerEmbedUrl && (
+                  <div className="ai-slide-office-viewer-wrap">
+                    <iframe
+                      className="ai-slide-office-viewer-frame"
+                      src={officeViewerEmbedUrl}
+                      title="Preview PPTX"
+                      loading="lazy"
+                    />
+                  </div>
+                )}
+
                 {!loadingSelectedGeneratedLesson &&
+                  !officeViewerEmbedUrl &&
                   selectedGeneratedLesson?.lessonContent &&
                   !generatedPreviewSlides.length && (
                     <p className="ai-slide-info">
@@ -1675,60 +1772,65 @@ const AISlideGenerator: React.FC = () => {
                     </p>
                   )}
 
-                {!loadingSelectedGeneratedLesson && !selectedGeneratedLesson?.lessonContent && (
-                  <p className="ai-slide-info">
-                    File này vẫn tải được, nhưng backend hiện không lưu nội dung slide dạng JSON để
-                    preview trong popup.
-                  </p>
-                )}
+                {!loadingSelectedGeneratedLesson &&
+                  !loadingGeneratedPreviewUrl &&
+                  !officeViewerEmbedUrl &&
+                  !selectedGeneratedLesson?.lessonContent && (
+                    <p className="ai-slide-info">
+                      Không có dữ liệu preview trực tiếp. Hãy dùng nút Tải file này để mở bằng
+                      PowerPoint.
+                    </p>
+                  )}
 
-                {!loadingSelectedGeneratedLesson && currentGeneratedPreviewSlide && (
-                  <div className="ai-slide-preview-wrap ai-slide-modal-preview-wrap">
-                    <div className="ai-slide-preview-toolbar">
-                      <button
-                        className="btn btn-outline"
-                        onClick={() => setGeneratedPreviewIndex((prev) => Math.max(0, prev - 1))}
-                        disabled={generatedPreviewIndex === 0}
-                      >
-                        Slide trước
-                      </button>
-                      <span>
-                        Slide {generatedPreviewIndex + 1}/{generatedPreviewSlides.length}
-                      </span>
-                      <button
-                        className="btn btn-outline"
-                        onClick={() =>
-                          setGeneratedPreviewIndex((prev) =>
-                            Math.min(generatedPreviewSlides.length - 1, prev + 1)
-                          )
-                        }
-                        disabled={generatedPreviewIndex === generatedPreviewSlides.length - 1}
-                      >
-                        Slide sau
-                      </button>
+                {!loadingSelectedGeneratedLesson &&
+                  !officeViewerEmbedUrl &&
+                  currentGeneratedPreviewSlide && (
+                    <div className="ai-slide-preview-wrap ai-slide-modal-preview-wrap">
+                      <div className="ai-slide-preview-toolbar">
+                        <button
+                          className="btn btn-outline"
+                          onClick={() => setGeneratedPreviewIndex((prev) => Math.max(0, prev - 1))}
+                          disabled={generatedPreviewIndex === 0}
+                        >
+                          Slide trước
+                        </button>
+                        <span>
+                          Slide {generatedPreviewIndex + 1}/{generatedPreviewSlides.length}
+                        </span>
+                        <button
+                          className="btn btn-outline"
+                          onClick={() =>
+                            setGeneratedPreviewIndex((prev) =>
+                              Math.min(generatedPreviewSlides.length - 1, prev + 1)
+                            )
+                          }
+                          disabled={generatedPreviewIndex === generatedPreviewSlides.length - 1}
+                        >
+                          Slide sau
+                        </button>
+                      </div>
+
+                      <article className="ai-slide-preview-canvas">
+                        <div className="ai-slide-preview-heading" role="heading" aria-level={4}>
+                          {renderSlideText(
+                            currentGeneratedPreviewSlide.heading || 'Chưa có tiêu đề',
+                            resolvedOutputFormat,
+                            `manage-heading-${currentGeneratedPreviewSlide.slideNumber}`
+                          )}
+                        </div>
+                        <div className="ai-slide-preview-content">
+                          {renderSlideText(
+                            currentGeneratedPreviewSlide.content || 'Chưa có nội dung',
+                            resolvedOutputFormat,
+                            `manage-content-${currentGeneratedPreviewSlide.slideNumber}`
+                          )}
+                        </div>
+                        <span className="ai-slide-preview-tag">
+                          {currentGeneratedPreviewSlide.slideType}
+                        </span>
+                      </article>
                     </div>
-
-                    <article className="ai-slide-preview-canvas">
-                      <div className="ai-slide-preview-heading" role="heading" aria-level={4}>
-                        {renderSlideText(
-                          currentGeneratedPreviewSlide.heading || 'Chưa có tiêu đề',
-                          resolvedOutputFormat,
-                          `manage-heading-${currentGeneratedPreviewSlide.slideNumber}`
-                        )}
-                      </div>
-                      <div className="ai-slide-preview-content">
-                        {renderSlideText(
-                          currentGeneratedPreviewSlide.content || 'Chưa có nội dung',
-                          resolvedOutputFormat,
-                          `manage-content-${currentGeneratedPreviewSlide.slideNumber}`
-                        )}
-                      </div>
-                      <span className="ai-slide-preview-tag">
-                        {currentGeneratedPreviewSlide.slideType}
-                      </span>
-                    </article>
-                  </div>
-                )}
+                  )}
               </div>
 
               <div className="ai-slide-modal-footer">
@@ -1738,6 +1840,19 @@ const AISlideGenerator: React.FC = () => {
                   onClick={() => setIsGeneratedPreviewOpen(false)}
                 >
                   Đóng
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  disabled={
+                    !selectedGeneratedFile ||
+                    loadingGeneratedPreviewUrl ||
+                    openingGeneratedPreviewTab
+                  }
+                  onClick={() => void handleOpenGeneratedPreviewInNewTab()}
+                  title={officeViewerOpenUrl ? 'Mở bằng Office Viewer trên tab mới' : undefined}
+                >
+                  {openingGeneratedPreviewTab ? 'Đang mở...' : 'Mở tab mới'}
                 </button>
                 <button
                   type="button"

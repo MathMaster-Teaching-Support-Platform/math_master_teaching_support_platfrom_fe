@@ -185,6 +185,8 @@ export const API_ENDPOINTS = {
   LESSON_SLIDES_GENERATED: '/lesson-slides/generated',
   LESSON_SLIDES_GENERATED_DOWNLOAD: (generatedFileId: string) =>
     `/lesson-slides/generated/${generatedFileId}/download`,
+  LESSON_SLIDES_GENERATED_PREVIEW_URL: (generatedFileId: string) =>
+    `/lesson-slides/generated/${generatedFileId}/preview-url`,
   LESSON_SLIDES_GENERATED_PUBLISH: (generatedFileId: string) =>
     `/lesson-slides/generated/${generatedFileId}/publish`,
   LESSON_SLIDES_GENERATED_UNPUBLISH: (generatedFileId: string) =>
@@ -200,6 +202,8 @@ export const API_ENDPOINTS = {
     `/lesson-slides/public/lessons/${lessonId}/generated`,
   LESSON_SLIDES_PUBLIC_GENERATED_DOWNLOAD: (generatedFileId: string) =>
     `/lesson-slides/public/generated/${generatedFileId}/download`,
+  LESSON_SLIDES_PUBLIC_GENERATED_PREVIEW_URL: (generatedFileId: string) =>
+    `/lesson-slides/public/generated/${generatedFileId}/preview-url`,
 
   // Lesson Plans (Giáo án)
   LESSON_PLANS: '/lesson-plans',
