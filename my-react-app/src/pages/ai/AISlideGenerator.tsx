@@ -1754,20 +1754,18 @@ const AISlideGenerator: React.FC = () => {
               </div>
 
               <div className="ai-slide-modal-body">
-                <p className="ai-slide-info">
-                  {selectedGeneratedFile
-                    ? `${selectedGeneratedFile.fileName || 'generated-slide.pptx'} (${formatFileSize(
-                        selectedGeneratedFile.fileSizeBytes
-                      )})`
-                    : 'Chưa chọn file'}
-                </p>
-
-                {loadingSelectedGeneratedLesson && (
-                  <p className="ai-slide-info">Đang tải nội dung để xem trước...</p>
-                )}
-
-                {loadingGeneratedPreviewPdf && (
-                  <p className="ai-slide-info">Đang tạo file preview PDF từ máy chủ...</p>
+                {(loadingSelectedGeneratedLesson || loadingGeneratedPreviewPdf) && (
+                  <div className="ai-slide-math-loader" role="status" aria-live="polite">
+                    <div className="ai-slide-math-loader-ring" aria-hidden="true" />
+                    <div className="ai-slide-math-loader-symbols" aria-hidden="true">
+                      <span>x²</span>
+                      <span>∫</span>
+                      <span>π</span>
+                      <span>√</span>
+                      <span>Δ</span>
+                    </div>
+                    <p>Đang dựng preview PDF...</p>
+                  </div>
                 )}
 
                 {!loadingGeneratedPreviewPdf && generatedPreviewPdfUrl && (
@@ -1780,24 +1778,6 @@ const AISlideGenerator: React.FC = () => {
                     />
                   </div>
                 )}
-
-                {!loadingSelectedGeneratedLesson &&
-                  selectedGeneratedLesson?.lessonContent &&
-                  !generatedPreviewSlides.length && (
-                    <p className="ai-slide-info">
-                      Không đọc được cấu trúc slide từ lessonContent. Bạn vẫn có thể tải trực tiếp
-                      file PPTX.
-                    </p>
-                  )}
-
-                {!loadingSelectedGeneratedLesson &&
-                  !loadingGeneratedPreviewPdf &&
-                  !selectedGeneratedLesson?.lessonContent && (
-                    <p className="ai-slide-info">
-                      Không có dữ liệu preview trực tiếp. Hãy dùng nút Tải file này để mở bằng
-                      PowerPoint.
-                    </p>
-                  )}
 
                 {!loadingSelectedGeneratedLesson &&
                   !generatedPreviewPdfUrl &&

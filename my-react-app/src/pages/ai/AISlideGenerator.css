@@ -815,8 +815,8 @@
 }
 
 .ai-slide-modal {
-  width: min(920px, 100%);
-  max-height: 90vh;
+  width: min(1220px, 96vw);
+  max-height: 94vh;
   display: flex;
   flex-direction: column;
   border: 1px solid #dbeafe;
@@ -878,9 +878,112 @@
 
 .ai-slide-office-viewer-frame {
   width: 100%;
-  min-height: 560px;
+  min-height: 72vh;
   border: 0;
   background: #ffffff;
+}
+
+.ai-slide-math-loader {
+  position: relative;
+  margin: 0.8rem auto 1rem;
+  min-height: 210px;
+  width: min(520px, 95%);
+  border: 1px solid #dbeafe;
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.13), transparent 38%),
+    radial-gradient(circle at 85% 25%, rgba(14, 165, 233, 0.14), transparent 34%),
+    linear-gradient(180deg, #f8fbff 0%, #f1f5ff 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  overflow: hidden;
+}
+
+.ai-slide-math-loader-ring {
+  width: 68px;
+  height: 68px;
+  border-radius: 999px;
+  border: 3px solid rgba(59, 130, 246, 0.2);
+  border-top-color: #2563eb;
+  animation: ai-slide-math-spin 1s linear infinite;
+}
+
+.ai-slide-math-loader-symbols {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.ai-slide-math-loader-symbols span {
+  position: absolute;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #1d4ed8;
+  opacity: 0;
+  animation: ai-slide-math-float 2.8s ease-in-out infinite;
+}
+
+.ai-slide-math-loader-symbols span:nth-child(1) {
+  top: 18%;
+  left: 22%;
+  animation-delay: 0s;
+}
+
+.ai-slide-math-loader-symbols span:nth-child(2) {
+  top: 24%;
+  right: 19%;
+  animation-delay: 0.35s;
+}
+
+.ai-slide-math-loader-symbols span:nth-child(3) {
+  bottom: 20%;
+  left: 28%;
+  animation-delay: 0.7s;
+}
+
+.ai-slide-math-loader-symbols span:nth-child(4) {
+  bottom: 25%;
+  right: 24%;
+  animation-delay: 1.05s;
+}
+
+.ai-slide-math-loader-symbols span:nth-child(5) {
+  top: 48%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation-delay: 1.4s;
+}
+
+.ai-slide-math-loader p {
+  margin: 0;
+  color: #1e3a8a;
+  font-weight: 700;
+}
+
+@keyframes ai-slide-math-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes ai-slide-math-float {
+  0% {
+    transform: translateY(10px) scale(0.9);
+    opacity: 0;
+  }
+  35% {
+    opacity: 0.95;
+  }
+  65% {
+    opacity: 0.95;
+  }
+  100% {
+    transform: translateY(-10px) scale(1.06);
+    opacity: 0;
+  }
 }
 
 .ai-slide-modal-footer {
