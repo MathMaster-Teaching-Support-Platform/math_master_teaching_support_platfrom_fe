@@ -350,6 +350,23 @@
   text-transform: uppercase;
 }
 
+.form-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.4rem;
+}
+
+.form-label-row .form-label {
+  margin-bottom: 0;
+}
+
+.forgot-pw-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.4rem;
+}
+
 .required {
   color: var(--auth-error);
 }
@@ -399,6 +416,16 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.25rem;
+  width: 100%;
+}
+
+.form-row .checkbox-label {
+  flex: 1;
+}
+
+.form-row .link-text {
+  flex-shrink: 0;
+  text-align: right;
 }
 
 .form-row-2 {
@@ -410,7 +437,7 @@
 /* ---- Checkbox ---- */
 .checkbox-label {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.5rem;
   cursor: pointer;
   font-size: 0.875rem;
@@ -418,7 +445,7 @@
 }
 
 .checkbox-label input[type='checkbox'] {
-  margin-top: 2px;
+  margin-top: 0;
   cursor: pointer;
   width: 16px;
   height: 16px;
