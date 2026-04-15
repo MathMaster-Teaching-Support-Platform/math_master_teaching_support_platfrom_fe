@@ -143,21 +143,9 @@ const cognitiveLevelLabels: Record<CognitiveLevel, string> = {
   THONG_HIEU: '2. Thông hiểu',
   VAN_DUNG: '3. Vận dụng',
   VAN_DUNG_CAO: '4. Vận dụng cao',
-  REMEMBER: '1. Nhận biết',
-  UNDERSTAND: '2. Thông hiểu',
-  APPLY: '3. Vận dụng',
-  ANALYZE: '5. Phân tích',
-  EVALUATE: '6. Đánh giá',
-  CREATE: '7. Sáng tạo',
 };
 
-const questionTypeLabels: Record<QuestionType, string> = {
-  MULTIPLE_CHOICE: 'Trắc nghiệm (Nhiều lựa chọn)',
-  TRUE_FALSE: 'Đúng / Sai',
-  SHORT_ANSWER: 'Trả lời ngắn (Tự điền kết quả)',
-  ESSAY: 'Tự luận',
-  CODING: 'Lập trình',
-};
+const multipleChoiceLabel = 'Trắc nghiệm (Nhiều lựa chọn)';
 
 export function TemplateFormModal({
   isOpen,
@@ -488,7 +476,7 @@ export function TemplateFormModal({
     const payload: QuestionTemplateRequest = {
       name: validation.result.normalizedName,
       description: description.trim() || undefined,
-      templateType,
+      templateType: mode === 'create' ? QuestionType.MULTIPLE_CHOICE : templateType,
       templateText: { vi: validation.result.normalizedTemplateText },
       parameters: mappedParameters,
       answerFormula: validation.result.normalizedAnswerFormula || '',
@@ -554,17 +542,7 @@ export function TemplateFormModal({
                 <p className="muted" style={{ marginBottom: 6 }}>
                   Loại câu hỏi
                 </p>
-                <select
-                  className="select"
-                  value={templateType}
-                  onChange={(event) => setTemplateType(event.target.value as QuestionType)}
-                >
-                  {Object.entries(questionTypeLabels).map(([key, label]) => (
-                    <option key={key} value={key}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
+                <input className="input" value={multipleChoiceLabel} readOnly />
               </label>
 
               <label>
