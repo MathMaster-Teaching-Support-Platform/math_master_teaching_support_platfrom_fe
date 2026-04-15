@@ -46,6 +46,8 @@ const getOfficeViewerEmbedUrl = (rawUrl?: string | null): string | null => {
   return `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(rawUrl)}`;
 };
 
+const PREVIEW_URL_TTL_MS = 55 * 60 * 1000;
+
 type MathSegment =
   | { type: 'text'; value: string }
   | { type: 'inline-math'; value: string }
@@ -324,6 +326,7 @@ const AISlideGenerator: React.FC = () => {
   const [loadingGeneratedPreviewUrl, setLoadingGeneratedPreviewUrl] = useState(false);
   const [openingGeneratedPreviewTab, setOpeningGeneratedPreviewTab] = useState(false);
   const [generatedPreviewUrl, setGeneratedPreviewUrl] = useState('');
+  const [generatedPreviewUrlIssuedAt, setGeneratedPreviewUrlIssuedAt] = useState(0);
   const [generatedPreviewIndex, setGeneratedPreviewIndex] = useState(0);
 
   const selectedLesson = useMemo(
@@ -536,6 +539,8 @@ const AISlideGenerator: React.FC = () => {
     }
 
     setGeneratedPreviewIndex(0);
+    setGeneratedPreviewUrl('');
+    setGeneratedPreviewUrlIssuedAt(0);
     setIsGeneratedPreviewOpen(true);
     setError('');
     setSuccess('');
@@ -551,12 +556,32 @@ const AISlideGenerator: React.FC = () => {
     try {
       const url = await LessonSlideService.getGeneratedFilePreviewUrl(generatedFileId);
       setGeneratedPreviewUrl(url);
+      setGeneratedPreviewUrlIssuedAt(Date.now());
     } catch {
       setGeneratedPreviewUrl('');
+      setGeneratedPreviewUrlIssuedAt(0);
     } finally {
       setLoadingGeneratedPreviewUrl(false);
     }
   }, []);
+
+  const getPreviewUrlForFile = useCallback(
+    async (generatedFileId: string, forceRefresh = false): Promise<string> => {
+      const isFresh =
+        Boolean(generatedPreviewUrl) &&
+        Date.now() - generatedPreviewUrlIssuedAt < PREVIEW_URL_TTL_MS;
+
+      if (!forceRefresh && isFresh) {
+        return generatedPreviewUrl;
+      }
+
+      const url = await LessonSlideService.getGeneratedFilePreviewUrl(generatedFileId);
+      setGeneratedPreviewUrl(url);
+      setGeneratedPreviewUrlIssuedAt(Date.now());
+      return url;
+    },
+    [generatedPreviewUrl, generatedPreviewUrlIssuedAt]
+  );
 
   const handleOpenGeneratedPreviewInNewTab = useCallback(async () => {
     if (!selectedGeneratedFile) {
@@ -569,13 +594,7 @@ const AISlideGenerator: React.FC = () => {
     setSuccess('');
 
     try {
-      const rawUrl =
-        generatedPreviewUrl ||
-        (await LessonSlideService.getGeneratedFilePreviewUrl(selectedGeneratedFile.id));
-
-      if (!generatedPreviewUrl) {
-        setGeneratedPreviewUrl(rawUrl);
-      }
+      const rawUrl = await getPreviewUrlForFile(selectedGeneratedFile.id, true);
 
       if (!rawUrl) {
         throw new Error('Không tạo được URL mở preview.');
@@ -590,7 +609,7 @@ const AISlideGenerator: React.FC = () => {
     } finally {
       setOpeningGeneratedPreviewTab(false);
     }
-  }, [generatedPreviewUrl, selectedGeneratedFile]);
+  }, [getPreviewUrlForFile, selectedGeneratedFile]);
 
   useEffect(() => {
     const loadSchoolGrades = async () => {
@@ -654,6 +673,7 @@ const AISlideGenerator: React.FC = () => {
     if (!selectedGeneratedFile) {
       setSelectedGeneratedLesson(null);
       setGeneratedPreviewUrl('');
+      setGeneratedPreviewUrlIssuedAt(0);
       return;
     }
 
