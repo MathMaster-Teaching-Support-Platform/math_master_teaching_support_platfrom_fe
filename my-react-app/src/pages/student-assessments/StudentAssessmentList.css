@@ -1,0 +1,217 @@
+/* ════════════════════════════════════════════
+   StudentAssessmentList — scoped styles  (sal-*)
+   Status gradient theme:
+     UPCOMING      → indigo / violet
+     IN_PROGRESS   → amber  / orange
+     COMPLETED     → emerald / teal
+   ════════════════════════════════════════════ */
+
+/* ──────────────────────────────────────────
+   Header sub
+   ────────────────────────────────────────── */
+.module-layout-container .sal-header-sub {
+  font-size: 0.84rem;
+  color: var(--mod-text-muted, #60748f);
+  margin: 0;
+}
+
+/* ──────────────────────────────────────────
+   Card shell — zero out data-card padding
+   ────────────────────────────────────────── */
+.module-layout-container .data-card.sal-card {
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+}
+
+/* ──────────────────────────────────────────
+   Cover
+   ────────────────────────────────────────── */
+.module-layout-container .sal-cover {
+  position: relative;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* default slate */
+  background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+/* Status variants */
+.module-layout-container .sal-cover--upcoming {
+  background: linear-gradient(135deg, #4f6ef7 0%, #7c3aed 100%);
+}
+.module-layout-container .sal-cover--in-progress {
+  background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+}
+.module-layout-container .sal-cover--completed {
+  background: linear-gradient(135deg, #10b981 0%, #0d9488 100%);
+}
+
+/* Radial highlight overlay */
+.module-layout-container .sal-cover__overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 30%, rgba(255, 255, 255, 0.18) 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 80%, rgba(0, 0, 0, 0.12) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+/* Type badge chip — top right */
+.module-layout-container .sal-cover__type-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 20px;
+  padding: 0.22em 0.65em;
+  font-size: 0.67rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #fff;
+  line-height: 1.4;
+}
+
+/* Centered icon */
+.module-layout-container .sal-cover__icon {
+  color: rgba(255, 255, 255, 0.92);
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.18));
+  position: relative;
+  z-index: 1;
+}
+
+/* ──────────────────────────────────────────
+   Card Body
+   ────────────────────────────────────────── */
+.module-layout-container .sal-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0.95rem 1.1rem 1.1rem;
+  flex: 1;
+}
+
+/* Status badge row */
+.module-layout-container .sal-card-head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* Title */
+.module-layout-container .sal-card__title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--mod-ink, #1a2332);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0;
+}
+
+/* Description */
+.module-layout-container .sal-card__desc {
+  font-size: 0.78rem;
+  color: var(--mod-text-muted, #60748f);
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0;
+}
+
+/* ──────────────────────────────────────────
+   Metric pills
+   ────────────────────────────────────────── */
+.module-layout-container .sal-card-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.1rem;
+}
+
+.module-layout-container .sal-card-metrics .metric {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  font-size: 0.73rem;
+  font-weight: 500;
+  color: var(--mod-text-muted, #60748f);
+  background: #f7f9fc;
+  border: 1px solid var(--mod-border, #dce3ee);
+  border-radius: 20px;
+  padding: 0.22em 0.6em;
+  line-height: 1.4;
+}
+
+/* ──────────────────────────────────────────
+   Due date row
+   ────────────────────────────────────────── */
+.module-layout-container .sal-due-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  color: var(--mod-text-muted, #60748f);
+}
+
+.module-layout-container .sal-due-date--overdue {
+  color: var(--mod-danger, #ef4444);
+  font-weight: 600;
+}
+
+/* ──────────────────────────────────────────
+   Actions
+   ────────────────────────────────────────── */
+.module-layout-container .sal-card-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: auto;
+  padding-top: 0.4rem;
+}
+
+.module-layout-container .sal-card-actions .btn {
+  flex: 1;
+  min-width: 0;
+  justify-content: center;
+  font-size: 0.8rem;
+}
+
+/* ──────────────────────────────────────────
+   Badge colour patches  (override global badge)
+   ────────────────────────────────────────── */
+.module-layout-container .badge.upcoming {
+  background: rgba(79, 110, 247, 0.1);
+  color: #4f6ef7;
+  border-color: rgba(79, 110, 247, 0.25);
+}
+.module-layout-container .badge.in-progress {
+  background: rgba(245, 158, 11, 0.12);
+  color: #d97706;
+  border-color: rgba(245, 158, 11, 0.3);
+}
+.module-layout-container .badge.completed {
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+  border-color: rgba(16, 185, 129, 0.25);
+}
+
+/* ──────────────────────────────────────────
+   reason-note
+   ────────────────────────────────────────── */
+.module-layout-container .reason-note {
+  font-size: 0.75rem;
+  color: var(--mod-text-muted, #60748f);
+  align-self: center;
+}
