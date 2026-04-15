@@ -46,11 +46,6 @@ const getOfficeViewerEmbedUrl = (rawUrl?: string | null): string | null => {
   return `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(rawUrl)}`;
 };
 
-const getOfficeViewerOpenUrl = (rawUrl?: string | null): string | null => {
-  if (!rawUrl) return null;
-  return `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(rawUrl)}`;
-};
-
 type MathSegment =
   | { type: 'text'; value: string }
   | { type: 'inline-math'; value: string }
@@ -366,11 +361,6 @@ const AISlideGenerator: React.FC = () => {
     [generatedPreviewUrl]
   );
 
-  const officeViewerOpenUrl = useMemo(
-    () => getOfficeViewerOpenUrl(generatedPreviewUrl),
-    [generatedPreviewUrl]
-  );
-
   const managedGeneratedFiles = useMemo(() => {
     const normalizedSearch = generatedSearch.trim().toLowerCase();
 
@@ -587,12 +577,11 @@ const AISlideGenerator: React.FC = () => {
         setGeneratedPreviewUrl(rawUrl);
       }
 
-      const openUrl = getOfficeViewerOpenUrl(rawUrl);
-      if (!openUrl) {
+      if (!rawUrl) {
         throw new Error('Không tạo được URL mở preview.');
       }
 
-      const newTab = window.open(openUrl, '_blank', 'noopener,noreferrer');
+      const newTab = window.open(rawUrl, '_blank', 'noopener,noreferrer');
       if (!newTab) {
         throw new Error('Trình duyệt đã chặn popup. Hãy cho phép mở tab mới rồi thử lại.');
       }
@@ -1850,7 +1839,7 @@ const AISlideGenerator: React.FC = () => {
                     openingGeneratedPreviewTab
                   }
                   onClick={() => void handleOpenGeneratedPreviewInNewTab()}
-                  title={officeViewerOpenUrl ? 'Mở bằng Office Viewer trên tab mới' : undefined}
+                  title="Mở trực tiếp file presigned URL trên tab mới"
                 >
                   {openingGeneratedPreviewTab ? 'Đang mở...' : 'Mở tab mới'}
                 </button>
