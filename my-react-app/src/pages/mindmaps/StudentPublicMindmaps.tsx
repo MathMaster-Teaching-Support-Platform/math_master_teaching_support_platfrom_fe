@@ -260,7 +260,7 @@ export default function StudentPublicMindmaps() {
           {/* ── Header ── */}
           <header className="page-header">
             <div className="header-stack">
-              <div className="header-kicker">Kho học liệu học sinh</div>
+              <div className="header-kicker">Student Public Mindmaps</div>
               <div className="row" style={{ gap: '0.6rem' }}>
                 <h2>Thư viện mindmap công khai</h2>
                 {!loadingMindmaps && (
