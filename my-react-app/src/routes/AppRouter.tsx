@@ -12,7 +12,7 @@ import AISlideGenerator from '../pages/ai/AISlideGenerator';
 import TeacherAnalytics from '../pages/analytics/TeacherAnalytics';
 import StudentAssignments from '../pages/assignments/StudentAssignments';
 import TeacherAssignments from '../pages/assignments/TeacherAssignments';
-import { ConfirmEmail, ForgotPassword, Login, Register } from '../pages/auth';
+import { ConfirmEmail, ForgotPassword, Login, Register, ResetPassword } from '../pages/auth';
 import OnboardingFlow from '../pages/auth/OnboardingFlow';
 import Calendar from '../pages/calendar/Calendar';
 import Certificates from '../pages/certificates/Certificates';
@@ -112,6 +112,10 @@ const router = createBrowserRouter([
   {
     path: '/forgot-password',
     element: <ForgotPassword />,
+  },
+  {
+    path: '/reset-password',
+    element: <ResetPassword />,
   },
   {
     path: '/select-role',

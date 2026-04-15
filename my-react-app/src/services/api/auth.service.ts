@@ -6,6 +6,7 @@ import type {
   LoginResponse,
   RegisterRequest,
   RegisterResult,
+  ResetPasswordRequest,
   RoleSelectionRequest,
 } from '../../types/auth.types';
 import { ApiError } from '../../types/auth.types';
@@ -171,6 +172,37 @@ export class AuthService {
         }
       }
       throw new ApiError(0, 'Gửi yêu cầu thất bại. Vui lòng thử lại.');
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Reset password with token from email link
+   */
+  static async resetPassword(data: ResetPasswordRequest): Promise<ApiResponse<null>> {
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.RESET_PASSWORD}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        accept: '*/*',
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        try {
+          const errorJson = await response.json();
+          if (typeof errorJson?.code === 'number') {
+            throw new ApiError(errorJson.code, errorJson.message || 'Đặt lại mật khẩu thất bại');
+          }
+        } catch (e) {
+          if (e instanceof ApiError) throw e;
+        }
+      }
+      throw new ApiError(0, 'Đặt lại mật khẩu thất bại. Vui lòng thử lại.');
     }
 
     return response.json();

@@ -498,6 +498,38 @@
   border: 1px solid #fecaca;
 }
 
+/* ResetPassword — expired-link error block */
+.rp-alert-error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+.rp-alert-error__msg {
+  line-height: 1.5;
+}
+.rp-alert-error__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #5e5ce6;
+  background: rgba(94, 92, 230, 0.1);
+  border: 1px solid rgba(94, 92, 230, 0.25);
+  border-radius: 99px;
+  padding: 0.25rem 0.75rem;
+  text-decoration: none;
+  transition:
+    background 0.18s,
+    border-color 0.18s;
+}
+.rp-alert-error__link:hover {
+  background: rgba(94, 92, 230, 0.18);
+  border-color: rgba(94, 92, 230, 0.4);
+  text-decoration: none;
+}
+
 /* ---- Register success panel ---- */
 .reg-success {
   display: flex;
@@ -1232,4 +1264,96 @@
   .form-row-2 {
     grid-template-columns: 1fr;
   }
+}
+
+/* ─── ResetPassword page ──────────────────────────────────────────────────── */
+
+/* state screens (error / success) */
+.rp-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0.5rem 0 0.75rem;
+  animation: reg-success-pop 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.rp-state__icon {
+  width: 88px;
+  height: 88px;
+  margin-bottom: 1.25rem;
+  background: rgba(94, 92, 230, 0.06);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.rp-state--error .rp-state__icon {
+  background: #fef2f2;
+}
+.rp-state__icon svg {
+  width: 64px;
+  height: 64px;
+}
+.rp-state__title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #1a1560;
+  margin-bottom: 0.6rem;
+}
+.rp-state__body {
+  font-size: 0.88rem;
+  color: #5f5f7e;
+  line-height: 1.6;
+  margin-bottom: 1.25rem;
+  max-width: 320px;
+}
+.rp-state__hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(94, 92, 230, 0.08);
+  color: #5e5ce6;
+  border-radius: 99px;
+  padding: 0.3rem 0.85rem;
+  font-size: 0.78rem;
+  margin-bottom: 1.25rem;
+}
+.rp-state__btn {
+  width: 100%;
+  max-width: 280px;
+  text-align: center;
+}
+
+/* password strength bar */
+.rp-strength {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+.rp-strength__bar {
+  display: flex;
+  gap: 3px;
+  flex: 1;
+}
+.rp-strength__segment {
+  flex: 1;
+  height: 4px;
+  border-radius: 99px;
+  transition: background 0.25s ease;
+}
+.rp-strength__label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  min-width: 50px;
+  text-align: right;
+  transition: color 0.25s ease;
+}
+
+/* requirements hint */
+.rp-hint {
+  font-size: 0.75rem;
+  color: #888;
+  line-height: 1.5;
+  margin-top: -0.25rem;
 }
