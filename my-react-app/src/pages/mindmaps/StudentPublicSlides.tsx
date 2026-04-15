@@ -1,9 +1,23 @@
-import { Download, Search } from 'lucide-react';
+import {
+  BookMarked,
+  BookOpen,
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  FileText,
+  Filter,
+  GraduationCap,
+  HardDrive,
+  Search,
+  X,
+} from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockStudent } from '../../data/mockData';
 import { LessonSlideService } from '../../services/api/lesson-slide.service';
+import '../../styles/module-refactor.css';
 import type {
   ChapterBySubject,
   LessonByChapter,
@@ -13,6 +27,7 @@ import type {
   SubjectByGrade,
 } from '../../types/lessonSlide.types';
 import './StudentPublicMindmaps.css';
+import './StudentPublicSlides.css';
 
 const DEFAULT_PAGE_SIZE = 9;
 type SortDirection = 'ASC' | 'DESC';
@@ -89,19 +104,19 @@ export default function StudentPublicSlides() {
   };
 
   const triggerBlobDownload = (blob: Blob, fileName: string) => {
-    const blobUrl = window.URL.createObjectURL(blob);
+    const blobUrl = globalThis.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = blobUrl;
     link.download = fileName || 'generated-slide.pptx';
     document.body.appendChild(link);
     link.click();
     link.remove();
-    window.URL.revokeObjectURL(blobUrl);
+    globalThis.URL.revokeObjectURL(blobUrl);
   };
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setSlideKeywordDebounced(slideKeyword.trim()), 400);
-    return () => window.clearTimeout(timer);
+    const timer = globalThis.setTimeout(() => setSlideKeywordDebounced(slideKeyword.trim()), 400);
+    return () => globalThis.clearTimeout(timer);
   }, [slideKeyword]);
 
   useEffect(() => {
@@ -261,110 +276,163 @@ export default function StudentPublicSlides() {
 
   return (
     <DashboardLayout user={mockStudent} role="student">
-      <div className="student-public-mindmaps-page">
-        <header className="student-public-mindmaps-header">
-          <p className="header-kicker">Kho học liệu học sinh</p>
-          <h1>Thư viện slide công khai</h1>
-        </header>
+      <div className="module-layout-container">
+        <section className="module-page">
+          {/* ── Header ── */}
+          <header className="page-header">
+            <div className="header-stack">
+              <div className="header-kicker">Kho học liệu học sinh</div>
+              <div className="row" style={{ gap: '0.6rem' }}>
+                <h2>Thư viện slide công khai</h2>
+                {!loadingSlides && <span className="count-chip">{slidesResult.totalElements}</span>}
+              </div>
+              <p className="header-sub">Tìm kiếm và tải slide bài giảng công khai</p>
+            </div>
+          </header>
 
-        <section className="student-public-mindmaps-filters">
-          <select value={gradeId} onChange={(e) => void handleGradeChange(e.target.value)}>
-            <option value="">Chọn khối lớp</option>
-            {schoolGrades.map((grade) => (
-              <option key={grade.id} value={grade.id}>
-                {grade.name}
-              </option>
-            ))}
-          </select>
+          {/* ── Filter panel ── */}
+          <div className="sps-filter-panel">
+            <div className="sps-filter-panel__head">
+              <Filter size={13} />
+              <span>Bộ lọc tìm kiếm</span>
+            </div>
+            <div className="sps-filter-bar">
+              <div className="sps-filter-field">
+                <span className="sps-filter-label">
+                  <GraduationCap size={12} />
+                  Khối lớp
+                </span>
+                <select
+                  className="sps-select"
+                  value={gradeId}
+                  onChange={(e) => void handleGradeChange(e.target.value)}
+                  disabled={loadingCatalog}
+                >
+                  <option value="">Tất cả khối lớp</option>
+                  {schoolGrades.map((grade) => (
+                    <option key={grade.id} value={grade.id}>
+                      {grade.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-          <select
-            value={subjectId}
-            onChange={(e) => void handleSubjectChange(e.target.value)}
-            disabled={!gradeId}
-          >
-            <option value="">Chọn môn học</option>
-            {subjects.map((subject) => (
-              <option key={subject.id} value={subject.id}>
-                {subject.name}
-              </option>
-            ))}
-          </select>
+              <div className="sps-filter-field">
+                <span className="sps-filter-label">
+                  <BookOpen size={12} />
+                  Môn học
+                </span>
+                <select
+                  className="sps-select"
+                  value={subjectId}
+                  onChange={(e) => void handleSubjectChange(e.target.value)}
+                  disabled={!gradeId || loadingCatalog}
+                >
+                  <option value="">{gradeId ? 'Tất cả môn học' : 'Chọn khối trước'}</option>
+                  {subjects.map((subject) => (
+                    <option key={subject.id} value={subject.id}>
+                      {subject.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-          <select
-            value={chapterId}
-            onChange={(e) => void handleChapterChange(e.target.value)}
-            disabled={!subjectId}
-          >
-            <option value="">Chọn chương</option>
-            {chapters.map((chapter) => (
-              <option key={chapter.id} value={chapter.id}>
-                {chapter.title}
-              </option>
-            ))}
-          </select>
+              <div className="sps-filter-field">
+                <span className="sps-filter-label">
+                  <BookMarked size={12} />
+                  Chương
+                </span>
+                <select
+                  className="sps-select"
+                  value={chapterId}
+                  onChange={(e) => void handleChapterChange(e.target.value)}
+                  disabled={!subjectId || loadingCatalog}
+                >
+                  <option value="">{subjectId ? 'Tất cả chương' : 'Chọn môn trước'}</option>
+                  {chapters.map((chapter) => (
+                    <option key={chapter.id} value={chapter.id}>
+                      {chapter.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-          <select
-            value={lessonId}
-            onChange={(e) => handleLessonChange(e.target.value)}
-            disabled={!chapterId}
-          >
-            <option value="">Tất cả bài học</option>
-            {lessons.map((lesson) => (
-              <option key={lesson.id} value={lesson.id}>
-                {lesson.title}
-              </option>
-            ))}
-          </select>
-        </section>
-
-        {loadingCatalog && <p className="state-text">Đang tải danh mục...</p>}
-        {selectedLesson && (
-          <p className="state-text">Đang lọc theo bài học: {selectedLesson.title}</p>
-        )}
-
-        <section className="student-public-slides-section">
-          <div className="student-public-section-header">
-            <h2>Slide công khai</h2>
+              <div className="sps-filter-field">
+                <span className="sps-filter-label">
+                  <FileText size={12} />
+                  Bài học
+                </span>
+                <select
+                  className="sps-select"
+                  value={lessonId}
+                  onChange={(e) => handleLessonChange(e.target.value)}
+                  disabled={!chapterId || loadingCatalog}
+                >
+                  <option value="">{chapterId ? 'Tất cả bài học' : 'Chọn chương trước'}</option>
+                  {lessons.map((lesson) => (
+                    <option key={lesson.id} value={lesson.id}>
+                      {lesson.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </div>
 
-          <div className="resource-toolbar">
-            <label className="resource-search-box">
-              <Search size={16} />
+          {/* ── Toolbar ── */}
+          <div className="toolbar">
+            <label className="search-box">
+              <span className="search-box__icon" aria-hidden="true">
+                <Search size={15} />
+              </span>
               <input
-                type="text"
+                placeholder="Tìm theo tên file slide..."
                 value={slideKeyword}
                 onChange={(e) => {
                   setSlideKeyword(e.target.value);
                   setSlidePage(0);
                 }}
-                placeholder="Tìm theo tên file slide..."
               />
+              {slideKeyword && (
+                <button
+                  type="button"
+                  className="search-box__clear"
+                  aria-label="Xóa tìm kiếm"
+                  onClick={() => {
+                    setSlideKeyword('');
+                    setSlidePage(0);
+                  }}
+                >
+                  <X size={14} />
+                </button>
+              )}
             </label>
 
-            <div className="resource-toolbar-right">
+            <div className="pill-group">
               <select
+                className="sps-select sps-select--sm"
                 value={slideSortBy}
                 onChange={(e) => {
                   setSlideSortBy(e.target.value);
                   setSlidePage(0);
                 }}
               >
-                <option value="createdAt">Sắp xếp: Ngày tạo</option>
-                <option value="updatedAt">Sắp xếp: Cập nhật</option>
+                <option value="createdAt">Ngày tạo</option>
+                <option value="updatedAt">Cập nhật</option>
               </select>
-
               <select
+                className="sps-select sps-select--sm"
                 value={slideDirection}
                 onChange={(e) => {
                   setSlideDirection(e.target.value as SortDirection);
                   setSlidePage(0);
                 }}
               >
-                <option value="DESC">Mới nhất trước</option>
-                <option value="ASC">Cũ nhất trước</option>
+                <option value="DESC">Mới nhất</option>
+                <option value="ASC">Cũ nhất</option>
               </select>
-
               <select
+                className="sps-select sps-select--sm"
                 value={slideSize}
                 onChange={(e) => {
                   setSlideSize(Number(e.target.value));
@@ -378,53 +446,106 @@ export default function StudentPublicSlides() {
             </div>
           </div>
 
-          {loadingSlides && <p className="state-text">Đang tải slide công khai...</p>}
-          {slidesError && <p className="state-text state-text--error">{slidesError}</p>}
-
-          {!loadingSlides && !slidesError && slidesResult.content.length === 0 && (
-            <p className="state-text">Không có slide công khai phù hợp bộ lọc hiện tại.</p>
+          {/* ── Active filter chip ── */}
+          {selectedLesson && (
+            <div className="assessment-summary-bar">
+              <div className="summary-item summary-item--primary">
+                <span className="summary-label">Bài học</span>
+                <strong className="summary-value">{selectedLesson.title}</strong>
+              </div>
+              <div className="summary-item">
+                <span className="summary-label">Kết quả</span>
+                <strong className="summary-value">{slidesResult.totalElements} slide</strong>
+              </div>
+            </div>
           )}
 
+          {/* ── Loading skeleton ── */}
+          {loadingSlides && (
+            <div className="skeleton-grid">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="skeleton-card" />
+              ))}
+            </div>
+          )}
+
+          {/* ── Error ── */}
+          {slidesError && !loadingSlides && (
+            <div className="empty">
+              <p style={{ color: 'var(--mod-danger)' }}>{slidesError}</p>
+            </div>
+          )}
+
+          {/* ── Empty ── */}
+          {!loadingSlides && !slidesError && slidesResult.content.length === 0 && (
+            <div className="empty">
+              <FileText size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
+              <p>Không có slide công khai phù hợp bộ lọc hiện tại.</p>
+            </div>
+          )}
+
+          {/* ── Grid ── */}
           {!loadingSlides && slidesResult.content.length > 0 && (
             <>
-              <p className="resource-summary">
-                Hiển thị {slidesResult.content.length}/{slidesResult.totalElements} slide công khai.
-              </p>
-
-              <div className="student-public-slides-grid">
+              <div className="grid-cards">
                 {slidesResult.content.map((slide) => (
-                  <article key={slide.id} className="slide-card-public">
-                    <h3>{slide.fileName || 'generated-slide.pptx'}</h3>
-                    <div className="slide-card-public-meta">
-                      <span>Dung lượng: {formatFileSize(slide.fileSizeBytes)}</span>
-                      <span>Ngày tạo: {new Date(slide.createdAt).toLocaleDateString('vi-VN')}</span>
+                  <article key={slide.id} className="data-card sps-card">
+                    <div className="sps-cover">
+                      <div className="sps-cover__overlay" />
+                      <span className="sps-cover__ext">.pptx</span>
+                      <div className="sps-cover__icon">
+                        <FileText size={42} strokeWidth={1.3} />
+                      </div>
                     </div>
-                    <button
-                      type="button"
-                      className="mindmap-card-public-btn"
-                      onClick={() => void handleDownloadSlide(slide.id)}
-                      disabled={downloadingSlideId === slide.id}
-                    >
-                      <Download size={16} />
-                      {downloadingSlideId === slide.id ? 'Đang tải...' : 'Tải slide'}
-                    </button>
+                    <div className="sps-card-body">
+                      <h3 className="sps-card__title">
+                        {(slide.fileName ?? 'generated-slide.pptx').replace(/\.[^/.]+$/, '') ||
+                          'generated-slide'}
+                      </h3>
+                      <div className="sps-card-metrics">
+                        <span className="metric">
+                          <HardDrive size={11} />
+                          {formatFileSize(slide.fileSizeBytes)}
+                        </span>
+                        <span className="metric">
+                          <Calendar size={11} />
+                          {new Date(slide.createdAt).toLocaleDateString('vi-VN')}
+                        </span>
+                      </div>
+                      <div className="sps-card-actions">
+                        <button
+                          type="button"
+                          className="sps-btn-download"
+                          onClick={() => void handleDownloadSlide(slide.id)}
+                          disabled={downloadingSlideId === slide.id}
+                        >
+                          <Download size={14} />
+                          {downloadingSlideId === slide.id ? 'Đang tải...' : 'Tải xuống'}
+                        </button>
+                      </div>
+                    </div>
                   </article>
                 ))}
               </div>
 
-              <div className="resource-pagination">
+              {/* ── Pagination ── */}
+              <div className="sps-pagination">
                 <button
                   type="button"
+                  className="btn secondary"
                   onClick={() => setSlidePage((prev) => Math.max(prev - 1, 0))}
                   disabled={slidesResult.first}
                 >
-                  Trang trước
+                  <ChevronLeft size={15} /> Trước
                 </button>
-                <span>
-                  Trang {slidesResult.number + 1}/{Math.max(slidesResult.totalPages, 1)}
+                <span className="sps-page-info">
+                  Trang <strong>{slidesResult.number + 1}</strong> /{' '}
+                  {Math.max(slidesResult.totalPages, 1)} ·{' '}
+                  <span style={{ color: '#60748f' }}>{slidesResult.totalElements} slide</span>
                 </span>
                 <button
                   type="button"
+                  className="btn secondary"
                   onClick={() =>
                     setSlidePage((prev) =>
                       slidesResult.totalPages > 0
@@ -434,7 +555,7 @@ export default function StudentPublicSlides() {
                   }
                   disabled={slidesResult.last || slidesResult.totalPages === 0}
                 >
-                  Trang sau
+                  Sau <ChevronRight size={15} />
                 </button>
               </div>
             </>
