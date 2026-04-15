@@ -25,6 +25,8 @@ export const API_ENDPOINTS = {
   REGISTER: '/auth/register',
   LOGIN: '/auth/login',
   CONFIRM_EMAIL: '/auth/confirm-email',
+  FORGOT_PASSWORD: '/auth/forgot-password',
+  RESET_PASSWORD: '/auth/reset-password',
 
   // Users (self-service)
   USERS_MY_INFO: '/users/my-info',

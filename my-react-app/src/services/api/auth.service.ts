@@ -1,6 +1,7 @@
 import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
 import type {
   ApiResponse,
+  ForgotPasswordRequest,
   LoginRequest,
   LoginResponse,
   RegisterRequest,
@@ -139,6 +140,37 @@ export class AuthService {
     if (!response.ok) {
       const message = await this.extractErrorMessage(response, 'Google Login failed');
       throw new Error(message);
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Send forgot-password email
+   */
+  static async forgotPassword(data: ForgotPasswordRequest): Promise<ApiResponse<null>> {
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.FORGOT_PASSWORD}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        accept: '*/*',
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        try {
+          const errorJson = await response.json();
+          if (typeof errorJson?.code === 'number') {
+            throw new ApiError(errorJson.code, errorJson.message || 'Gửi yêu cầu thất bại');
+          }
+        } catch (e) {
+          if (e instanceof ApiError) throw e;
+        }
+      }
+      throw new ApiError(0, 'Gửi yêu cầu thất bại. Vui lòng thử lại.');
     }
 
     return response.json();

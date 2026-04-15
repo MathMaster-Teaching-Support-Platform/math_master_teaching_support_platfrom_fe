@@ -67,3 +67,12 @@ export interface ApiResponse<T> {
   code: number;
   result: T;
 }
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
+}

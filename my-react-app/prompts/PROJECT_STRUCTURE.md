@@ -1,6 +1,6 @@
 # Project Structure — Math Master Teaching Support Platform (Frontend)
 
-> **Cập nhật lần cuối:** 2026-04-15
+> **Cập nhật lần cuối:** 2026-04-16
 > **Tech stack:** React + TypeScript + Vite
 > **Root:** `my-react-app/`
 
@@ -247,6 +247,7 @@ auth/
 ├── index.ts
 ├── Login.tsx
 ├── Register.tsx
+├── ForgotPassword.tsx
 ├── ConfirmEmail.tsx
 ├── SelectRole.tsx
 ├── OnboardingFlow.tsx       + onboarding-flow.css

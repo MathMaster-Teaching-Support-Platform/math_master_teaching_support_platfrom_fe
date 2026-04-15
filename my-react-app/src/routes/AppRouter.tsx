@@ -1,5 +1,5 @@
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import { Navigate, createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 import About from '../pages/About';
 import Contact from '../pages/Contact';
 import Features from '../pages/Features';
@@ -12,7 +12,7 @@ import AISlideGenerator from '../pages/ai/AISlideGenerator';
 import TeacherAnalytics from '../pages/analytics/TeacherAnalytics';
 import StudentAssignments from '../pages/assignments/StudentAssignments';
 import TeacherAssignments from '../pages/assignments/TeacherAssignments';
-import { ConfirmEmail, Login, Register } from '../pages/auth';
+import { ConfirmEmail, ForgotPassword, Login, Register } from '../pages/auth';
 import OnboardingFlow from '../pages/auth/OnboardingFlow';
 import Calendar from '../pages/calendar/Calendar';
 import Certificates from '../pages/certificates/Certificates';
@@ -108,6 +108,10 @@ const router = createBrowserRouter([
   {
     path: '/confirm-email',
     element: <ConfirmEmail />,
+  },
+  {
+    path: '/forgot-password',
+    element: <ForgotPassword />,
   },
   {
     path: '/select-role',
