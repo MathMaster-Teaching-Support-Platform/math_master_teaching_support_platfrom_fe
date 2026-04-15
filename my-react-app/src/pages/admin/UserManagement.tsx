@@ -390,7 +390,7 @@ const UserManagement: React.FC = () => {
                             }}
                           />
                         ) : (
-                          user.fullName.charAt(0).toUpperCase()
+                          (user.fullName ?? '?').charAt(0).toUpperCase()
                         )}
                       </div>
                       <div className="user-info">
@@ -702,7 +702,7 @@ const UserManagement: React.FC = () => {
                         }}
                       />
                     ) : (
-                      selectedUser.fullName.charAt(0).toUpperCase()
+                      (selectedUser.fullName ?? '?').charAt(0).toUpperCase()
                     )}
                   </div>
                   <div className="detail-info">
