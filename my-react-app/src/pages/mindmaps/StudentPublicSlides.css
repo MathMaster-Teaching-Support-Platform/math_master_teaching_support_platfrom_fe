@@ -1,0 +1,264 @@
+/* ════════════════════════════════════════════
+   StudentPublicSlides — scoped under .module-layout-container
+   ════════════════════════════════════════════ */
+
+/* ──────────────────────────────────────────
+   Filter Panel
+   ────────────────────────────────────────── */
+.module-layout-container .sps-filter-panel {
+  background: var(--mod-surface, #fff);
+  border: 1px solid var(--mod-border, #dce3ee);
+  border-radius: 14px;
+  padding: 1rem 1.15rem 1.15rem;
+}
+
+.module-layout-container .sps-filter-panel__head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--mod-text-muted, #60748f);
+  margin-bottom: 0.85rem;
+}
+
+.module-layout-container .sps-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.module-layout-container .sps-filter-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--mod-text-muted, #60748f);
+  padding-left: 2px;
+}
+
+/* ── Filter bar grid ── */
+.module-layout-container .sps-filter-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+}
+
+@media (max-width: 900px) {
+  .module-layout-container .sps-filter-bar {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 540px) {
+  .module-layout-container .sps-filter-bar {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Select element ── */
+.module-layout-container .sps-select {
+  display: block;
+  width: 100%;
+  padding: 0.48rem 2rem 0.48rem 0.8rem;
+  font-size: 0.84rem;
+  font-family: inherit;
+  color: var(--mod-text, #1e2a3a);
+  background-color: var(--mod-bg, #f7f9fc);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2360748f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.6rem center;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid var(--mod-border, #dce3ee);
+  border-radius: 8px;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s,
+    background-color 0.15s;
+}
+
+.module-layout-container .sps-select:hover:not(:disabled) {
+  border-color: #a5b4c8;
+  background-color: var(--mod-surface, #fff);
+}
+
+.module-layout-container .sps-select:focus {
+  outline: none;
+  border-color: var(--mod-primary, #4f6ef7);
+  box-shadow: 0 0 0 3px rgba(79, 110, 247, 0.12);
+  background-color: var(--mod-surface, #fff);
+}
+
+.module-layout-container .sps-select:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+  background-color: var(--mod-bg, #f7f9fc);
+}
+
+.module-layout-container .sps-select--sm {
+  width: auto;
+  min-width: 112px;
+  flex-shrink: 0;
+}
+
+/* ── Slide Card ── */
+.module-layout-container .data-card.sps-card {
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+}
+
+/* Colorful gradient cover */
+.module-layout-container .sps-cover {
+  position: relative;
+  height: 130px;
+  background: linear-gradient(135deg, #4f6ef7 0%, #7c3aed 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.module-layout-container .sps-cover__overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 12% 82%, rgba(255, 255, 255, 0.15) 0%, transparent 55%),
+    radial-gradient(circle at 88% 14%, rgba(255, 255, 255, 0.1) 0%, transparent 45%);
+}
+
+.module-layout-container .sps-cover__icon {
+  position: relative;
+  z-index: 1;
+  color: rgba(255, 255, 255, 0.92);
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.18));
+}
+
+.module-layout-container .sps-cover__ext {
+  position: absolute;
+  top: 0.65rem;
+  right: 0.8rem;
+  z-index: 1;
+  font-size: 0.67rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.82);
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 5px;
+  padding: 0.14rem 0.42rem;
+}
+
+/* Card body */
+.module-layout-container .sps-card-body {
+  padding: 0.9rem 1.1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  flex: 1;
+}
+
+.module-layout-container .sps-card__title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--mod-text, #1e2a3a);
+  margin: 0;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.45;
+  word-break: break-all;
+}
+
+/* Metric pills */
+.module-layout-container .sps-card-metrics {
+  display: flex;
+  gap: 0.38rem;
+  flex-wrap: wrap;
+}
+
+.module-layout-container .sps-card-metrics .metric {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  font-size: 0.74rem;
+  color: var(--mod-text-muted, #60748f);
+  font-weight: 600;
+  padding: 0.28rem 0.55rem;
+  background: var(--mod-bg, #f7f9fc);
+  border: 1px solid var(--mod-border, #dce3ee);
+  border-radius: 999px;
+}
+
+.module-layout-container .sps-card-metrics .metric svg {
+  color: #a0aebe;
+  flex-shrink: 0;
+}
+
+/* Download button */
+.module-layout-container .sps-card-actions {
+  margin-top: auto;
+}
+
+.module-layout-container .sps-btn-download {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.42rem;
+  padding: 0.58rem 1rem;
+  background: var(--mod-ink, #0f172a);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition:
+    background 0.15s,
+    transform 0.15s,
+    box-shadow 0.15s;
+}
+
+.module-layout-container .sps-btn-download:hover:not(:disabled) {
+  background: #1e293b;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.22);
+}
+
+.module-layout-container .sps-btn-download:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ── Pagination row ── */
+.module-layout-container .sps-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.module-layout-container .sps-page-info {
+  font-size: 0.84rem;
+  color: var(--mod-text, #1e2a3a);
+  white-space: nowrap;
+}
+
+/* ── Header sub ── */
+.module-layout-container .header-sub {
+  font-size: 0.84rem;
+  color: var(--mod-text-muted, #60748f);
+  margin: 0;
+}
