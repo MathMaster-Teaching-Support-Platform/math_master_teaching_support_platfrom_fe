@@ -1,62 +1,42 @@
 /* ================================================
-   StudentRoadmap.css  �  Learning Path Page
+   StudentRoadmap.css  �  Learning Path Page
    ================================================ */
 
 /* \u2500\u2500 Page wrapper \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
-.srp {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding-bottom: 72px;
+.module-layout-container.srp {
+  padding-bottom: 80px;
 }
 
 /* \u2500\u2500 Header \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
-.srp__header {
+/* ── Header override (page-header from module-refactor) ── */
+.module-layout-container.srp .srp__header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 1rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0;
 }
 
-.srp__title {
+.module-layout-container.srp .srp__title {
   font-family: var(--font-heading);
-  font-size: 1.625rem;
+  font-size: 1.45rem;
   font-weight: 800;
-  color: var(--gray-900);
-  margin: 0 0 0.2rem;
-}
-
-.srp__subtitle {
-  font-size: 0.875rem;
-  color: var(--gray-500);
+  color: var(--gray-900, #1a2332);
   margin: 0;
 }
 
-.srp__stats {
-  display: flex;
-  gap: 1.75rem;
+.module-layout-container.srp .srp__subtitle {
+  font-size: 0.84rem;
+  color: var(--mod-text-muted, #60748f);
+  margin: 0;
 }
 
-.srp__stat {
-  text-align: center;
-}
-
-.srp__stat-num {
-  display: block;
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: var(--primary-color);
-  line-height: 1;
-  margin-bottom: 0.15rem;
-}
-
-.srp__stat-lbl {
-  font-size: 0.72rem;
-  color: var(--gray-500);
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+/* Stats bar inside page-header */
+.module-layout-container.srp .srp__stats-bar {
+  margin: 0;
+  align-self: center;
+  flex-shrink: 0;
 }
 
 /* \u2500\u2500 Body (sidebar + main) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
@@ -123,7 +103,9 @@
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
-  transition: background var(--transition-fast), border-color var(--transition-fast);
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast);
 }
 
 .srp__rm-card:hover {
@@ -142,10 +124,50 @@
   gap: 0.6rem;
 }
 
+/* ── Roadmap cover (sidebar) — replaces plain rm-icon ─── */
+.srp__rm-cover {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+  transition:
+    background var(--transition-fast),
+    transform var(--transition-fast);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.srp__rm-cover--in_progress {
+  background: linear-gradient(135deg, #4f6ef7 0%, #7c3aed 100%);
+  box-shadow: 0 2px 8px rgba(79, 110, 247, 0.28);
+}
+.srp__rm-cover--completed {
+  background: linear-gradient(135deg, #10b981 0%, #0d9488 100%);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.28);
+}
+.srp__rm-cover--generated {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.28);
+}
+.srp__rm-cover--archived {
+  background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+}
+
+.srp__rm-card--active .srp__rm-cover {
+  transform: scale(1.08);
+}
+
+/* Keep old srp__rm-icon as alias (backwards compat) */
 .srp__rm-icon {
-  width: 30px;
-  height: 30px;
-  border-radius: 7px;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
   background: var(--gray-100);
   color: var(--gray-600);
   display: flex;
@@ -154,12 +176,6 @@
   font-size: 0.8rem;
   font-weight: 800;
   flex-shrink: 0;
-  transition: background var(--transition-fast), color var(--transition-fast);
-}
-
-.srp__rm-card--active .srp__rm-icon {
-  background: var(--primary-color);
-  color: #fff;
 }
 
 .srp__rm-name {
@@ -211,10 +227,22 @@
   letter-spacing: 0.04em;
 }
 
-.srp__badge--in_progress  { background: rgba(91,103,241,.12); color: var(--primary-color); }
-.srp__badge--completed    { background: rgba(16,185,129,.12);  color: #065f46; }
-.srp__badge--generated    { background: rgba(251,191,36,.15);  color: #92400e; }
-.srp__badge--archived     { background: var(--gray-100);       color: var(--gray-500); }
+.srp__badge--in_progress {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+.srp__badge--completed {
+  background: #d1fae5;
+  color: #065f46;
+}
+.srp__badge--generated {
+  background: #fef3c7;
+  color: #78350f;
+}
+.srp__badge--archived {
+  background: var(--gray-100);
+  color: var(--gray-600);
+}
 
 /* \u2500\u2500 Skeletons \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
 .srp__skeletons {
@@ -232,11 +260,17 @@
   animation: srp-shimmer 1.4s infinite;
 }
 
-.srp__skeleton--tall { height: 100px; }
+.srp__skeleton--tall {
+  height: 100px;
+}
 
 @keyframes srp-shimmer {
-  0%   { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 /* \u2500\u2500 Main panel \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
@@ -251,47 +285,59 @@
   background: #fff;
   border: 1px solid var(--gray-200);
   border-radius: 16px;
-  padding: 1.25rem 1.5rem;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(79, 110, 247, 0.1);
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1.5rem;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+}
+
+.srp__overview-left {
+  padding: 1.25rem 1.5rem 1rem;
 }
 
 .srp__overview-name {
-  font-size: 1.1rem;
-  font-weight: 700;
+  font-size: 1.15rem;
+  font-weight: 800;
   color: var(--gray-900);
-  margin: 0 0 0.25rem;
+  margin: 0 0 0.3rem;
 }
 
 .srp__overview-desc {
   font-size: 0.85rem;
   color: var(--gray-500);
   margin: 0;
-  max-width: 360px;
+  max-width: 420px;
   line-height: 1.5;
 }
 
 .srp__overview-right {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.5rem;
-  min-width: 190px;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.875rem 1.5rem;
+  border-top: 1px solid var(--gray-100);
+  background: linear-gradient(135deg, rgba(79, 110, 247, 0.03) 0%, rgba(124, 58, 237, 0.03) 100%);
 }
 
 .srp__overview-pct {
-  font-size: 1.75rem;
-  font-weight: 800;
-  color: var(--primary-color);
+  font-size: 2rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, #4f6ef7, #7c3aed);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   line-height: 1;
+  min-width: 56px;
 }
 
 .srp__overview-bar {
-  height: 7px;
-  width: 190px;
+  height: 8px;
+  flex: 1;
+  min-width: 100px;
   background: var(--gray-100);
   border-radius: 99px;
   overflow: hidden;
@@ -299,7 +345,7 @@
 
 .srp__overview-fill {
   height: 100%;
-  background: var(--primary-color);
+  background: linear-gradient(90deg, #4f6ef7, #7c3aed);
   border-radius: 99px;
   transition: width 0.6s ease;
 }
@@ -307,25 +353,29 @@
 .srp__overview-counts {
   font-size: 0.75rem;
   color: var(--gray-500);
+  font-weight: 500;
+  white-space: nowrap;
 }
 
 .srp__detail-link {
   display: inline-flex;
   align-items: center;
   font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--primary-color);
+  font-weight: 700;
+  color: #fff;
   text-decoration: none;
-  padding: 0.4rem 0.875rem;
-  border: 1.5px solid var(--primary-color);
+  padding: 0.45rem 1rem;
+  background: #3730a3;
   border-radius: 8px;
   transition: all var(--transition-fast);
   white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(55, 48, 163, 0.32);
+  margin-left: auto;
 }
 
 .srp__detail-link:hover {
-  background: var(--primary-color);
-  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(79, 110, 247, 0.38);
 }
 
 /* \u2500\u2500 Congratulations \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
@@ -333,10 +383,12 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  background: #fff;
-  border: 1px solid var(--gray-200);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(13, 148, 136, 0.06) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-left: 4px solid #10b981;
   border-radius: 16px;
   padding: 1.25rem 1.5rem;
+  box-shadow: 0 2px 12px rgba(16, 185, 129, 0.08);
 }
 
 .srp__congrats span {
@@ -359,12 +411,14 @@
 
 /* \u2500\u2500 Topic steps list \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
 .srp__steps {
-  background: #fff;
-  border: 1px solid var(--gray-200);
-  border-radius: 16px;
-  padding: 1.25rem 1.5rem;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
+  gap: 0.1rem;
+  box-shadow: none;
 }
 
 .srp__step {
@@ -446,14 +500,51 @@
 }
 
 @keyframes srp-pulse {
-  0%, 100% { transform: scale(1);   opacity: 0.4; }
-  50%       { transform: scale(1.5); opacity: 0; }
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
 }
 
-/* Step body */
+/* Step body — card style */
 .srp__step-body {
   flex: 1;
-  padding-top: 0.5rem;
+  padding: 0.875rem 1rem;
+  background: #fff;
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  margin-top: 0.1rem;
+  transition:
+    box-shadow 0.2s,
+    border-color 0.2s,
+    transform 0.18s;
+}
+
+.srp__step-body:hover {
+  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.07);
+  transform: translateX(2px);
+}
+
+.srp__step--current .srp__step-body {
+  border-color: #a5b4fc;
+  border-left: 3px solid #4f6ef7;
+  background: linear-gradient(135deg, rgba(79, 110, 247, 0.04) 0%, rgba(124, 58, 237, 0.03) 100%);
+  box-shadow: 0 4px 16px rgba(79, 110, 247, 0.1);
+}
+
+.srp__step--completed .srp__step-body {
+  background: rgba(16, 185, 129, 0.03);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.srp__step--locked .srp__step-body {
+  background: var(--gray-50);
+  opacity: 0.65;
 }
 
 .srp__step-header {
@@ -472,9 +563,18 @@
   flex: 1;
 }
 
-.srp__step--current .srp__step-title  { color: var(--gray-900); font-weight: 700; }
-.srp__step--locked  .srp__step-title  { color: var(--gray-400); }
-.srp__step--completed .srp__step-title { color: var(--gray-600); text-decoration: line-through; text-decoration-color: var(--gray-300); }
+.srp__step--current .srp__step-title {
+  color: var(--gray-900);
+  font-weight: 700;
+}
+.srp__step--locked .srp__step-title {
+  color: var(--gray-400);
+}
+.srp__step--completed .srp__step-title {
+  color: var(--gray-500);
+  text-decoration: line-through;
+  text-decoration-color: var(--gray-300);
+}
 
 .srp__step-desc {
   font-size: 0.8rem;
@@ -501,9 +601,18 @@
   letter-spacing: 0.04em;
   white-space: nowrap;
 }
-.srp__diff--easy   { background: rgba(16,185,129,.12); color: #065f46; }
-.srp__diff--medium { background: rgba(251,191,36,.15); color: #92400e; }
-.srp__diff--hard   { background: rgba(239,68,68,.12);  color: #991b1b; }
+.srp__diff--easy {
+  background: #d1fae5;
+  color: #065f46;
+}
+.srp__diff--medium {
+  background: #fef3c7;
+  color: #78350f;
+}
+.srp__diff--hard {
+  background: #fee2e2;
+  color: #7f1d1d;
+}
 
 /* Continue CTA inside step */
 .srp__continue-btn {
@@ -547,7 +656,8 @@
   margin: 0 0 0.4rem;
 }
 
-.srp__empty p, .srp__empty-text {
+.srp__empty p,
+.srp__empty-text {
   color: var(--gray-500);
   font-size: 0.875rem;
   margin: 0;
@@ -560,8 +670,14 @@
   font-size: 0.8rem;
 }
 
-.srp__onboarding span { display: block; font-size: 1.75rem; margin-bottom: 0.4rem; }
-.srp__onboarding p   { margin: 0; }
+.srp__onboarding span {
+  display: block;
+  font-size: 1.75rem;
+  margin-bottom: 0.4rem;
+}
+.srp__onboarding p {
+  margin: 0;
+}
 
 /* \u2500\u2500 Sticky CTA \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
 .srp__sticky {

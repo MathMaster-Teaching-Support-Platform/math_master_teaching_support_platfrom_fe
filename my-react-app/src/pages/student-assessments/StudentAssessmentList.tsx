@@ -1,12 +1,18 @@
+import type { LucideIcon } from 'lucide-react';
 import {
   AlertCircle,
+  BookMarked,
   BookOpen,
-  CheckCircle2,
+  CalendarClock,
+  ClipboardList,
   Clock,
   FileText,
+  GraduationCap,
   Hourglass,
+  ListChecks,
   RefreshCw,
   Search,
+  Trophy,
   X,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -15,6 +21,7 @@ import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLa
 import { useMyAssessments } from '../../hooks/useStudentAssessment';
 import '../../styles/module-refactor.css';
 import type { StudentAssessmentResponse } from '../../types/studentAssessment.types';
+import './StudentAssessmentList.css';
 
 const statusFilters = ['ALL', 'UPCOMING', 'IN_PROGRESS', 'COMPLETED'] as const;
 type StatusFilter = (typeof statusFilters)[number];
@@ -37,6 +44,13 @@ const statusBadgeClass: Record<string, string> = {
   UPCOMING: 'badge upcoming',
   IN_PROGRESS: 'badge in-progress',
   COMPLETED: 'badge completed',
+};
+
+const typeIconMap: Record<string, LucideIcon> = {
+  QUIZ: ListChecks,
+  TEST: ClipboardList,
+  EXAM: GraduationCap,
+  HOMEWORK: BookMarked,
 };
 
 export default function StudentAssessmentList() {
@@ -83,9 +97,13 @@ export default function StudentAssessmentList() {
       <div className="module-layout-container">
         <section className="module-page">
           <header className="page-header">
-            <div className="row" style={{ gap: '0.6rem' }}>
-              <h2>Bài kiểm tra của tôi</h2>
-              {!isLoading && !isError && <span className="count-chip">{filtered.length}</span>}
+            <div className="header-stack">
+              <div className="header-kicker">Student Assessment</div>
+              <div className="row" style={{ gap: '0.6rem' }}>
+                <h2>Bài kiểm tra của tôi</h2>
+                {!isLoading && !isError && <span className="count-chip">{filtered.length}</span>}
+              </div>
+              <p className="sal-header-sub">Theo dõi tiến độ và kết quả các bài kiểm tra của bạn</p>
             </div>
           </header>
 
@@ -241,118 +259,112 @@ function AssessmentCard({
   const handleViewDetail = () => {
     if (navigating) return;
     setNavigating(true);
-    setTimeout(() => onViewDetail(), 2400);
+    globalThis.setTimeout(() => onViewDetail(), 2400);
   };
 
   const handleStart = () => {
     if (starting) return;
     setStarting(true);
-    setTimeout(() => onStart(), 2400);
+    globalThis.setTimeout(() => onStart(), 2400);
   };
 
   const dueDate = assessment.endDate ? new Date(assessment.endDate) : null;
   const isOverdue = dueDate && dueDate < new Date();
+  const TypeIcon = typeIconMap[assessment.assessmentType] ?? FileText;
+  const coverMod = assessment.studentStatus.toLowerCase().replace('_', '-');
 
   return (
-    <article className={`data-card status-${assessment.studentStatus}`}>
-      {/* Header row: status badge + type pill */}
-      <div className="row" style={{ justifyContent: 'space-between' }}>
-        <span className={statusBadgeClass[assessment.studentStatus] ?? 'badge'}>
-          {statusLabel[assessment.studentStatus] ?? assessment.studentStatus}
-        </span>
-        <span className="type-pill">
+    <article className="data-card sal-card">
+      {/* ── Cover ── */}
+      <div className={`sal-cover sal-cover--${coverMod}`}>
+        <div className="sal-cover__overlay" />
+        <span className="sal-cover__type-badge">
           {assessmentTypeLabel[assessment.assessmentType] ?? assessment.assessmentType}
         </span>
+        <div className="sal-cover__icon">
+          <TypeIcon size={42} strokeWidth={1.3} />
+        </div>
       </div>
 
-      {/* Title + description */}
-      <div>
-        <h3>{assessment.title}</h3>
-        {assessment.description && <p className="card-desc">{assessment.description}</p>}
-      </div>
-
-      <hr className="card-divider" />
-
-      {/* Meta info */}
-      <div className="meta-row">
-        <span className="meta-item">
-          <FileText size={13} />
-          {assessment.totalQuestions} câu
-        </span>
-        {assessment.timeLimitMinutes && (
-          <span className="meta-item">
-            <Clock size={13} />
-            {assessment.timeLimitMinutes} phút
+      {/* ── Body ── */}
+      <div className="sal-card-body">
+        <div className="sal-card-head">
+          <span className={statusBadgeClass[assessment.studentStatus] ?? 'badge'}>
+            {statusLabel[assessment.studentStatus] ?? assessment.studentStatus}
           </span>
-        )}
-        {assessment.passingScore != null && (
-          <span className="meta-item">
-            <CheckCircle2 size={13} />
-            Đạt: {assessment.passingScore}đ
-          </span>
-        )}
-        {assessment.allowMultipleAttempts && (
-          <span className="meta-item">
-            <RefreshCw size={13} />
-            {assessment.attemptNumber || 0}
-            {assessment.maxAttempts ? `/${assessment.maxAttempts}` : ''} lần
-          </span>
-        )}
-      </div>
+        </div>
 
-      {/* Due date */}
-      {dueDate && (
-        <div>
-          {isOverdue ? (
-            <span className="overdue">
-              <AlertCircle size={13} />
-              Quá hạn: {dueDate.toLocaleString('vi-VN')}
+        <h3 className="sal-card__title">{assessment.title}</h3>
+        {assessment.description && <p className="sal-card__desc">{assessment.description}</p>}
+
+        <div className="sal-card-metrics">
+          <span className="metric">
+            <FileText size={11} />
+            {assessment.totalQuestions} câu
+          </span>
+          {assessment.timeLimitMinutes && (
+            <span className="metric">
+              <Clock size={11} />
+              {assessment.timeLimitMinutes} phút
             </span>
-          ) : (
-            <span className="meta-item">
-              <Clock size={13} />
-              Hạn nộp: {dueDate.toLocaleString('vi-VN')}
+          )}
+          {assessment.passingScore != null && (
+            <span className="metric">
+              <Trophy size={11} />
+              Đạt: {assessment.passingScore}đ
+            </span>
+          )}
+          {assessment.allowMultipleAttempts && (
+            <span className="metric">
+              <RefreshCw size={11} />
+              {assessment.attemptNumber || 0}
+              {assessment.maxAttempts ? `/${assessment.maxAttempts}` : ''} lần
             </span>
           )}
         </div>
-      )}
 
-      <hr className="card-divider" />
+        {dueDate && (
+          <div className={`sal-due-date${isOverdue ? ' sal-due-date--overdue' : ''}`}>
+            <CalendarClock size={12} />
+            {isOverdue ? 'Quá hạn: ' : 'Hạn nộp: '}
+            {dueDate.toLocaleString('vi-VN')}
+          </div>
+        )}
 
-      {/* Actions */}
-      <div className="card-actions">
-        <button
-          className={`btn secondary${navigating ? ' btn--navigating' : ''}`}
-          onClick={handleViewDetail}
-          disabled={navigating}
-        >
-          {navigating ? (
-            <span className="circle-loader">
-              <svg width="18" height="18" viewBox="0 0 20 20">
-                <circle className="cl-track" cx="10" cy="10" r="9" />
-                <circle className="cl-fill" cx="10" cy="10" r="9" />
-              </svg>
-              Đang mở...
-            </span>
-          ) : (
-            <>
-              <BookOpen size={14} />
-              Chi tiết
-            </>
+        <div className="sal-card-actions">
+          <button
+            className={`btn secondary${navigating ? ' btn--navigating' : ''}`}
+            onClick={handleViewDetail}
+            disabled={navigating}
+          >
+            {navigating ? (
+              <span className="circle-loader">
+                <svg width="18" height="18" viewBox="0 0 20 20">
+                  <circle className="cl-track" cx="10" cy="10" r="9" />
+                  <circle className="cl-fill" cx="10" cy="10" r="9" />
+                </svg>
+                Đang mở...
+              </span>
+            ) : (
+              <>
+                <BookOpen size={14} />
+                Chi tiết
+              </>
+            )}
+          </button>
+
+          {assessment.canStart && (
+            <StartButton
+              starting={starting}
+              isRetry={(assessment.attemptNumber || 0) > 0}
+              onClick={handleStart}
+            />
           )}
-        </button>
 
-        {assessment.canStart && (
-          <StartButton
-            starting={starting}
-            isRetry={(assessment.attemptNumber || 0) > 0}
-            onClick={handleStart}
-          />
-        )}
-
-        {!assessment.canStart && assessment.cannotStartReason && (
-          <span className="reason-note">{assessment.cannotStartReason}</span>
-        )}
+          {!assessment.canStart && assessment.cannotStartReason && (
+            <span className="reason-note">{assessment.cannotStartReason}</span>
+          )}
+        </div>
       </div>
     </article>
   );

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockStudent } from '../../data/mockData';
 import { useRoadmapDetail, useRoadmaps } from '../../hooks/useRoadmaps';
+import '../../styles/module-refactor.css';
 import type { RoadmapCatalogItem, RoadmapTopic } from '../../types';
 import './StudentRoadmap.css';
 
@@ -150,200 +151,208 @@ const StudentRoadmap: React.FC = () => {
       user={{ name: mockStudent.name, avatar: mockStudent.avatar, role: 'student' }}
       notificationCount={5}
     >
-      <div className="srp">
-        {/* ── Page header ── */}
-        <div className="srp__header">
-          <div className="srp__header-text">
-            <h1 className="srp__title">Lộ trình học tập</h1>
-            <p className="srp__subtitle">Khám phá và theo dõi tiến trình học của bạn</p>
-          </div>
-          <div className="srp__stats">
-            <div className="srp__stat">
-              <span className="srp__stat-num">{inProgressCount}</span>
-              <span className="srp__stat-lbl">Đang học</span>
-            </div>
-            <div className="srp__stat">
-              <span className="srp__stat-num">{completedCount}</span>
-              <span className="srp__stat-lbl">Hoàn thành</span>
-            </div>
-            <div className="srp__stat">
-              <span className="srp__stat-num">{avgProgress}%</span>
-              <span className="srp__stat-lbl">Tiến độ TB</span>
-            </div>
-          </div>
-        </div>
-
-        {/* ── Two-column body ── */}
-        <div className="srp__body">
-          {/* Sidebar: roadmap list */}
-          <aside className="srp__sidebar">
-            <div className="srp__sidebar-header">
-              <span className="srp__sidebar-title">Lộ trình</span>
-              <span className="srp__sidebar-count">{roadmaps.length}</span>
-            </div>
-
-            {roadmapsQuery.isLoading && (
-              <div className="srp__skeletons">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="srp__skeleton" />
-                ))}
+      <div className="module-layout-container srp">
+        <section className="module-page">
+          {/* ── Page header ── */}
+          <header className="page-header srp__header">
+            <div className="header-stack srp__header-text">
+              <div className="header-kicker">Học tập &amp; Phát triển</div>
+              <div className="row" style={{ gap: '0.6rem' }}>
+                <h2 className="srp__title">Lộ trình học tập</h2>
+                {roadmaps.length > 0 && <span className="count-chip">{roadmaps.length}</span>}
               </div>
-            )}
-            {roadmapsQuery.error && <p className="srp__empty-text">Không thể tải lộ trình.</p>}
-
-            {!roadmapsQuery.isLoading && !roadmapsQuery.error && roadmaps.length === 0 && (
-              <div className="srp__onboarding">
-                <span>🗺️</span>
-                <p>Chưa có lộ trình nào.</p>
-              </div>
-            )}
-
-            <div className="srp__list">
-              {roadmaps.map((roadmap) => (
-                <button
-                  key={roadmap.id}
-                  type="button"
-                  className={`srp__rm-card ${
-                    selectedRoadmapId === roadmap.id ? 'srp__rm-card--active' : ''
-                  }`}
-                  onClick={() => setSelectedRoadmapId(roadmap.id)}
-                >
-                  <div className="srp__rm-card-row">
-                    <div className="srp__rm-icon">
-                      {roadmap.status === 'COMPLETED'
-                        ? '✓'
-                        : (roadmap.gradeLevel?.charAt(0) ?? '■')}
-                    </div>
-                    <div className="srp__rm-info">
-                      <div className="srp__rm-name">{roadmap.name}</div>
-                      <div className="srp__rm-meta">
-                        {roadmap.subject} · Lớp {roadmap.gradeLevel}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="srp__rm-progress">
-                    <div
-                      className="srp__rm-progress-fill"
-                      style={{ width: `${roadmap.progressPercentage}%` }}
-                    />
-                  </div>
-                  <div className="srp__rm-footer">
-                    <span className={`srp__badge srp__badge--${roadmap.status.toLowerCase()}`}>
-                      {statusLabel(roadmap.status)}
-                    </span>
-                    <span className="srp__rm-pct">{roadmap.progressPercentage}%</span>
-                  </div>
-                </button>
-              ))}
+              <p className="srp__subtitle">Khám phá và theo dõi tiến trình học của bạn</p>
             </div>
-          </aside>
-
-          {/* Main: topic path */}
-          <main className="srp__main">
-            {!selectedRoadmapId && (
-              <div className="srp__empty">
-                <span className="srp__empty-icon">🗺️</span>
-                <h3>Chọn lộ trình để xem chi tiết</h3>
-                <p>Chọn một lộ trình ở bên trái để xem các chủ đề và tiến độ học tập.</p>
+            <div className="assessment-summary-bar srp__stats-bar">
+              <div className="summary-item summary-item--primary">
+                <span className="summary-label">Đang học</span>
+                <strong className="summary-value">{inProgressCount}</strong>
               </div>
-            )}
-
-            {selectedRoadmapId && selectedRoadmapQuery.isLoading && (
-              <div className="srp__skeletons">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="srp__skeleton srp__skeleton--tall" />
-                ))}
+              <div className="summary-item">
+                <span className="summary-label">Hoàn thành</span>
+                <strong className="summary-value">{completedCount}</strong>
               </div>
-            )}
+              <div className="summary-item">
+                <span className="summary-label">Tiến độ TB</span>
+                <strong className="summary-value">{avgProgress}%</strong>
+              </div>
+            </div>
+          </header>
 
-            {selectedRoadmapId &&
-              !selectedRoadmapQuery.isLoading &&
-              !selectedRoadmapQuery.error && (
-                <>
-                  {/* Overview bar */}
-                  {currentRoadmap && (
-                    <div className="srp__overview">
-                      <div className="srp__overview-left">
-                        <h2 className="srp__overview-name">{currentRoadmap.name}</h2>
-                        {currentRoadmap.description && (
-                          <p className="srp__overview-desc">{currentRoadmap.description}</p>
-                        )}
-                      </div>
-                      <div className="srp__overview-right">
-                        <span className="srp__overview-pct">
-                          {currentRoadmap.progressPercentage}%
-                        </span>
-                        <div className="srp__overview-bar">
-                          <div
-                            className="srp__overview-fill"
-                            style={{ width: `${currentRoadmap.progressPercentage}%` }}
-                          />
-                        </div>
-                        <span className="srp__overview-counts">
-                          {currentRoadmap.completedTopicsCount}/{currentRoadmap.totalTopicsCount}{' '}
-                          chủ đề
-                        </span>
-                        <Link to={`/roadmaps/${selectedRoadmapId}`} className="srp__detail-link">
-                          Xem bản đồ học tập →
-                        </Link>
-                      </div>
-                    </div>
-                  )}
+          {/* ── Two-column body ── */}
+          <div className="srp__body">
+            {/* Sidebar: roadmap list */}
+            <aside className="srp__sidebar">
+              <div className="srp__sidebar-header">
+                <span className="srp__sidebar-title">Lộ trình</span>
+                <span className="srp__sidebar-count">{roadmaps.length}</span>
+              </div>
 
-                  {/* Congrats */}
-                  {allCompleted && (
-                    <div className="srp__congrats">
-                      <span>🎉</span>
-                      <div>
-                        <h3>Chúc mừng! Bạn đã hoàn thành lộ trình này!</h3>
-                        <p>Tiếp tục với lộ trình mới để phát triển thêm.</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Topic steps */}
-                  {selectedTopics.length > 0 && (
-                    <div className="srp__steps">
-                      {selectedTopics.map((topic, index) => (
-                        <TopicStep
-                          key={topic.id}
-                          topic={topic}
-                          isFirst={index === 0}
-                          isLast={index === selectedTopics.length - 1}
-                          isCurrent={topic.id === currentTopic?.id}
-                          roadmapId={selectedRoadmapId}
-                          stepRef={topic.id === currentTopic?.id ? currentTopicRef : undefined}
-                        />
-                      ))}
-                    </div>
-                  )}
-
-                  {selectedTopics.length === 0 && (
-                    <div className="srp__empty">
-                      <span className="srp__empty-icon">📚</span>
-                      <h3>Chưa có chủ đề nào</h3>
-                      <p>Lộ trình này chưa có chủ đề nào được thêm.</p>
-                    </div>
-                  )}
-                </>
+              {roadmapsQuery.isLoading && (
+                <div className="srp__skeletons">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="srp__skeleton" />
+                  ))}
+                </div>
               )}
-          </main>
-        </div>
+              {roadmapsQuery.error && <p className="srp__empty-text">Không thể tải lộ trình.</p>}
 
-        {/* ── Sticky CTA ── */}
-        {selectedRoadmapId && currentTopic && !allCompleted && (
-          <div className="srp__sticky">
-            <div className="srp__sticky-inner">
-              <div className="srp__sticky-text">
-                <span className="srp__sticky-label">Tiếp tục lộ trình</span>
-                <span className="srp__sticky-topic">{currentTopic.title}</span>
+              {!roadmapsQuery.isLoading && !roadmapsQuery.error && roadmaps.length === 0 && (
+                <div className="srp__onboarding">
+                  <span>🗺️</span>
+                  <p>Chưa có lộ trình nào.</p>
+                </div>
+              )}
+
+              <div className="srp__list">
+                {roadmaps.map((roadmap) => (
+                  <button
+                    key={roadmap.id}
+                    type="button"
+                    className={`srp__rm-card ${
+                      selectedRoadmapId === roadmap.id ? 'srp__rm-card--active' : ''
+                    }`}
+                    onClick={() => setSelectedRoadmapId(roadmap.id)}
+                  >
+                    <div className="srp__rm-card-row">
+                      <div
+                        className={`srp__rm-cover srp__rm-cover--${roadmap.status.toLowerCase()}`}
+                      >
+                        {roadmap.status === 'COMPLETED'
+                          ? '✓'
+                          : (roadmap.gradeLevel?.charAt(0) ?? '■')}
+                      </div>
+                      <div className="srp__rm-info">
+                        <div className="srp__rm-name">{roadmap.name}</div>
+                        <div className="srp__rm-meta">
+                          {roadmap.subject} · Lớp {roadmap.gradeLevel}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="srp__rm-progress">
+                      <div
+                        className="srp__rm-progress-fill"
+                        style={{ width: `${roadmap.progressPercentage}%` }}
+                      />
+                    </div>
+                    <div className="srp__rm-footer">
+                      <span className={`srp__badge srp__badge--${roadmap.status.toLowerCase()}`}>
+                        {statusLabel(roadmap.status)}
+                      </span>
+                      <span className="srp__rm-pct">{roadmap.progressPercentage}%</span>
+                    </div>
+                  </button>
+                ))}
               </div>
-              <Link to={`/roadmaps/${selectedRoadmapId}`} className="srp__sticky-btn">
-                Tiếp tục học →
-              </Link>
-            </div>
+            </aside>
+
+            {/* Main: topic path */}
+            <main className="srp__main">
+              {!selectedRoadmapId && (
+                <div className="srp__empty">
+                  <span className="srp__empty-icon">🗺️</span>
+                  <h3>Chọn lộ trình để xem chi tiết</h3>
+                  <p>Chọn một lộ trình ở bên trái để xem các chủ đề và tiến độ học tập.</p>
+                </div>
+              )}
+
+              {selectedRoadmapId && selectedRoadmapQuery.isLoading && (
+                <div className="srp__skeletons">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="srp__skeleton srp__skeleton--tall" />
+                  ))}
+                </div>
+              )}
+
+              {selectedRoadmapId &&
+                !selectedRoadmapQuery.isLoading &&
+                !selectedRoadmapQuery.error && (
+                  <>
+                    {/* Overview bar */}
+                    {currentRoadmap && (
+                      <div className="srp__overview">
+                        <div className="srp__overview-left">
+                          <h2 className="srp__overview-name">{currentRoadmap.name}</h2>
+                          {currentRoadmap.description && (
+                            <p className="srp__overview-desc">{currentRoadmap.description}</p>
+                          )}
+                        </div>
+                        <div className="srp__overview-right">
+                          <span className="srp__overview-pct">
+                            {currentRoadmap.progressPercentage}%
+                          </span>
+                          <div className="srp__overview-bar">
+                            <div
+                              className="srp__overview-fill"
+                              style={{ width: `${currentRoadmap.progressPercentage}%` }}
+                            />
+                          </div>
+                          <span className="srp__overview-counts">
+                            {currentRoadmap.completedTopicsCount}/{currentRoadmap.totalTopicsCount}{' '}
+                            chủ đề
+                          </span>
+                          <Link to={`/roadmaps/${selectedRoadmapId}`} className="srp__detail-link">
+                            Xem bản đồ học tập →
+                          </Link>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Congrats */}
+                    {allCompleted && (
+                      <div className="srp__congrats">
+                        <span>🎉</span>
+                        <div>
+                          <h3>Chúc mừng! Bạn đã hoàn thành lộ trình này!</h3>
+                          <p>Tiếp tục với lộ trình mới để phát triển thêm.</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Topic steps */}
+                    {selectedTopics.length > 0 && (
+                      <div className="srp__steps">
+                        {selectedTopics.map((topic, index) => (
+                          <TopicStep
+                            key={topic.id}
+                            topic={topic}
+                            isFirst={index === 0}
+                            isLast={index === selectedTopics.length - 1}
+                            isCurrent={topic.id === currentTopic?.id}
+                            roadmapId={selectedRoadmapId}
+                            stepRef={topic.id === currentTopic?.id ? currentTopicRef : undefined}
+                          />
+                        ))}
+                      </div>
+                    )}
+
+                    {selectedTopics.length === 0 && (
+                      <div className="srp__empty">
+                        <span className="srp__empty-icon">📚</span>
+                        <h3>Chưa có chủ đề nào</h3>
+                        <p>Lộ trình này chưa có chủ đề nào được thêm.</p>
+                      </div>
+                    )}
+                  </>
+                )}
+            </main>
           </div>
-        )}
+
+          {/* ── Sticky CTA ── */}
+          {selectedRoadmapId && currentTopic && !allCompleted && (
+            <div className="srp__sticky">
+              <div className="srp__sticky-inner">
+                <div className="srp__sticky-text">
+                  <span className="srp__sticky-label">Tiếp tục lộ trình</span>
+                  <span className="srp__sticky-topic">{currentTopic.title}</span>
+                </div>
+                <Link to={`/roadmaps/${selectedRoadmapId}`} className="srp__sticky-btn">
+                  Tiếp tục học →
+                </Link>
+              </div>
+            </div>
+          )}
+        </section>
       </div>
     </DashboardLayout>
   );
