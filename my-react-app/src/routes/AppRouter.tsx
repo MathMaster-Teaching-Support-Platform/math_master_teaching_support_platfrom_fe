@@ -74,6 +74,7 @@ import {
 // Grading Routes
 // Test Components
 import MathTextTest from '../components/common/MathTextTest';
+import NotFound from '../pages/NotFound';
 import PrivateRoute from './PrivateRoute';
 
 const router = createBrowserRouter([
@@ -669,15 +670,7 @@ const router = createBrowserRouter([
   // Add more routes as needed
   {
     path: '*',
-    element: (
-      <div style={{ padding: '2rem', textAlign: 'center' }}>
-        <h1>404 - Page Not Found</h1>
-        <p>The page you're looking for doesn't exist.</p>
-        <a href="/" style={{ color: '#667eea', textDecoration: 'none', fontWeight: 'bold' }}>
-          Go back to homepage
-        </a>
-      </div>
-    ),
+    element: <NotFound />,
   },
 ]);
 
