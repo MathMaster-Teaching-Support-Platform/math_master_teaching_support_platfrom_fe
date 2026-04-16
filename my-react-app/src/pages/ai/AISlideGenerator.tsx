@@ -336,6 +336,7 @@ const AISlideGenerator: React.FC = () => {
   );
   const [metadataName, setMetadataName] = useState('');
   const [metadataThumbnailFile, setMetadataThumbnailFile] = useState<File | null>(null);
+  const [metadataIsPublic, setMetadataIsPublic] = useState(false);
   const [updatingMetadata, setUpdatingMetadata] = useState(false);
 
   const selectedLesson = useMemo(
@@ -417,6 +418,7 @@ const AISlideGenerator: React.FC = () => {
     setEditingMetadataFile(file);
     setMetadataName(file.name || '');
     setMetadataThumbnailFile(null);
+    setMetadataIsPublic(file.isPublic ?? false);
     setIsMetadataModalOpen(true);
     setError('');
     setSuccess('');
@@ -428,6 +430,7 @@ const AISlideGenerator: React.FC = () => {
     setEditingMetadataFile(null);
     setMetadataName('');
     setMetadataThumbnailFile(null);
+    setMetadataIsPublic(false);
   };
 
   const handleUpdateMetadata = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -444,7 +447,15 @@ const AISlideGenerator: React.FC = () => {
         thumbnail: metadataThumbnailFile || undefined,
       });
 
-      setSuccess('Đã cập nhật tên và thumbnail của slide thành công.');
+      if (metadataIsPublic !== (editingMetadataFile.isPublic ?? false)) {
+        if (metadataIsPublic) {
+          await LessonSlideService.publishGeneratedFile(editingMetadataFile.id);
+        } else {
+          await LessonSlideService.unpublishGeneratedFile(editingMetadataFile.id);
+        }
+      }
+
+      setSuccess('Đã cập nhật slide thành công.');
       closeMetadataModal();
       await loadGeneratedFiles(lessonId || undefined);
     } catch (err) {
@@ -1345,8 +1356,6 @@ const AISlideGenerator: React.FC = () => {
 
         {activeMainTab === 'MANAGE' && (
           <section className="ai-slide-card">
-            <h2>Slide Library</h2>
-
             <div className="ai-slide-management-card">
               <div className="ai-slide-management-header">
                 <h3>Thư Viện Slide</h3>
@@ -1429,99 +1438,127 @@ const AISlideGenerator: React.FC = () => {
                 )}
 
                 {!loadingGeneratedFiles && managedGeneratedFiles.length > 0 && (
-                  <div className="ai-slide-table-wrap">
-                    <table className="ai-slide-table">
-                      <thead>
-                        <tr>
-                          <th>Thumbnail</th>
-                          <th>Name</th>
-                          <th>File</th>
-                          <th>Lesson</th>
-                          <th>Created</th>
-                          <th>Size</th>
-                          <th>Trạng thái</th>
-                          <th>Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {managedGeneratedFiles.map((file) => (
-                          <tr
-                            key={file.id}
-                            className={selectedGeneratedFileId === file.id ? 'active' : ''}
-                            onClick={() => {
-                              setSelectedGeneratedFileId(file.id);
-                              setSuccess('');
-                              setError('');
+                  <div className="ai-slide-card-grid">
+                    {managedGeneratedFiles.map((file) => (
+                      <div
+                        key={file.id}
+                        className={`ai-slide-file-card ${selectedGeneratedFileId === file.id ? 'active' : ''}`}
+                        onClick={() => {
+                          setSelectedGeneratedFileId(file.id);
+                          setSuccess('');
+                          setError('');
+                        }}
+                      >
+                        <div className="ai-slide-file-card-thumb">
+                          {generatedThumbnailUrls[file.id] ? (
+                            <img
+                              src={generatedThumbnailUrls[file.id]}
+                              alt={getGeneratedDisplayName(file)}
+                            />
+                          ) : (
+                            <div className="ai-slide-file-card-thumb-placeholder">
+                              {getGeneratedDisplayName(file).slice(0, 1).toUpperCase()}
+                            </div>
+                          )}
+                          <span
+                            className={`ai-slide-file-card-badge ${file.isPublic ? 'published' : 'draft'}`}
+                          >
+                            {file.isPublic ? 'PUBLISHED' : 'DRAFT'}
+                          </span>
+                        </div>
+
+                        <div className="ai-slide-file-card-body">
+                          <p
+                            className="ai-slide-file-card-title"
+                            title={getGeneratedDisplayName(file)}
+                          >
+                            {getGeneratedDisplayName(file)}
+                          </p>
+                          <ul className="ai-slide-file-card-meta">
+                            <li>
+                              <span>FILE</span>
+                              <span title={file.fileName}>
+                                {file.fileName || 'generated-slide.pptx'}
+                              </span>
+                            </li>
+                            <li>
+                              <span>BÀI DẠY</span>
+                              <span>{lessonTitleById[file.lessonId] || '...'}</span>
+                            </li>
+                            <li>
+                              <span>NGÀY TẠO</span>
+                              <span>{formatDateTime(file.createdAt)}</span>
+                            </li>
+                            <li>
+                              <span>DUNG LƯỢNG</span>
+                              <span>{formatFileSize(file.fileSizeBytes)}</span>
+                            </li>
+                          </ul>
+                        </div>
+
+                        <div className="ai-slide-file-card-actions">
+                          <button
+                            type="button"
+                            className="ai-slide-file-card-btn primary"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenGeneratedPreview(file.id);
                             }}
                           >
-                            <td>
-                              <div className="ai-slide-table-thumbnail-wrap">
-                                {generatedThumbnailUrls[file.id] ? (
-                                  <img
-                                    src={generatedThumbnailUrls[file.id]}
-                                    alt={getGeneratedDisplayName(file)}
-                                    className="ai-slide-table-thumbnail"
-                                  />
-                                ) : (
-                                  <div className="ai-slide-table-thumbnail-placeholder">
-                                    {getGeneratedDisplayName(file).slice(0, 1).toUpperCase()}
-                                  </div>
-                                )}
-                              </div>
-                            </td>
-                            <td title={getGeneratedDisplayName(file)}>
-                              {getGeneratedDisplayName(file)}
-                            </td>
-                            <td title={file.fileName}>{file.fileName || 'generated-slide.pptx'}</td>
-                            <td>{lessonTitleById[file.lessonId] || 'Đang tải tên bài...'}</td>
-                            <td>{formatDateTime(file.createdAt)}</td>
-                            <td>{formatFileSize(file.fileSizeBytes)}</td>
-                            <td>
-                              <span
-                                className={`ai-slide-public-badge ${file.isPublic ? 'yes' : 'no'}`}
-                              >
-                                {file.isPublic ? 'Công khai' : 'Nháp'}
-                              </span>
-                            </td>
-                            <td>
-                              <div className="ai-slide-table-actions">
-                                <button
-                                  type="button"
-                                  className="btn btn-outline"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleOpenGeneratedPreview(file.id);
-                                  }}
-                                >
-                                  Xem
-                                </button>
-                                <button
-                                  type="button"
-                                  className="btn btn-outline"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    void handleDownloadGeneratedFile(file.id);
-                                  }}
-                                  disabled={downloadingGeneratedFileId === file.id}
-                                >
-                                  Tải
-                                </button>
-                                <button
-                                  type="button"
-                                  className="btn btn-outline"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    openMetadataModal(file);
-                                  }}
-                                >
-                                  Sửa metadata
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                            <svg
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                            >
+                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                              <circle cx="12" cy="12" r="3" />
+                            </svg>
+                            Xem
+                          </button>
+                          <button
+                            type="button"
+                            className="ai-slide-file-card-btn icon"
+                            title="Tải xuống"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              void handleDownloadGeneratedFile(file.id);
+                            }}
+                            disabled={downloadingGeneratedFileId === file.id}
+                          >
+                            <svg
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                            >
+                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                              <polyline points="7 10 12 15 17 10" />
+                              <line x1="12" y1="15" x2="12" y2="3" />
+                            </svg>
+                          </button>
+                          <button
+                            type="button"
+                            className="ai-slide-file-card-btn icon"
+                            title="Chỉnh sửa"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openMetadataModal(file);
+                            }}
+                          >
+                            <svg
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                            >
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
@@ -2061,6 +2098,17 @@ const AISlideGenerator: React.FC = () => {
                 </label>
 
                 <label>
+                  <span>Trạng thái</span>
+                  <select
+                    value={metadataIsPublic ? 'public' : 'draft'}
+                    onChange={(e) => setMetadataIsPublic(e.target.value === 'public')}
+                  >
+                    <option value="draft">Nháp</option>
+                    <option value="public">Công khai</option>
+                  </select>
+                </label>
+
+                <label>
                   <span>Thumbnail (png, jpg, jpeg, webp)</span>
                   <input
                     type="file"
@@ -2078,7 +2126,7 @@ const AISlideGenerator: React.FC = () => {
                     Hủy
                   </button>
                   <button type="submit" className="btn btn-primary" disabled={updatingMetadata}>
-                    {updatingMetadata ? 'Đang cập nhật...' : 'Lưu metadata'}
+                    {updatingMetadata ? 'Đang lưu...' : 'Lưu'}
                   </button>
                 </div>
               </form>
