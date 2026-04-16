@@ -247,8 +247,14 @@ const MaterialsGenerator: React.FC = () => {
     setError(null);
 
     try {
-      const response = await MindmapService.exportMindmap(mindmapId, 'png');
-      triggerBlobDownload(response.blob, response.filename || `${title}.png`);
+      const autoExportUrl = `/teacher/mindmaps/${mindmapId}?autoExport=1&closeAfterExport=1`;
+      const exportTab = window.open(autoExportUrl, '_blank');
+
+      // Fallback when popup is blocked by browser settings.
+      if (!exportTab) {
+        const response = await MindmapService.exportMindmap(mindmapId, 'png');
+        triggerBlobDownload(response.blob, response.filename || `${title}.png`);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Không thể tải xuống mindmap');
     } finally {
@@ -606,7 +612,7 @@ const MaterialsGenerator: React.FC = () => {
                       <span>∞</span>
                       <span>Δ</span>
                     </div>
-                    <p>AI đang dựng preview toán học...</p>
+                    <p>Đang dựng slide toán học ...</p>
                   </div>
                 ) : previewSlidePdfUrl ? (
                   <iframe

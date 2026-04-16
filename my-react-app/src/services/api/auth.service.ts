@@ -343,7 +343,7 @@ export class AuthService {
       case 'admin':
         return '/admin/dashboard';
       case 'teacher':
-        return '/teacher/dashboard';
+        return '/teacher/materials';
       case 'user':
       case 'student':
         return '/student/dashboard';

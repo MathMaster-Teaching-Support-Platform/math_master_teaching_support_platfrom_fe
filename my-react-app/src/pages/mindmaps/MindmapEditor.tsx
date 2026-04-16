@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import MindElixir from 'mind-elixir';
 import html2canvas from 'html2canvas';
 import 'mind-elixir/style.css';
@@ -123,6 +123,7 @@ const getSubtreeDeleteOrder = (nodes: MindmapNode[], rootId: string): string[] =
 export default function MindmapEditor() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [mindmap, setMindmap] = useState<Mindmap | null>(null);
   const [mindmapNodes, setMindmapNodes] = useState<MindmapNode[]>([]);
@@ -164,6 +165,7 @@ export default function MindmapEditor() {
     nodeLabel: '',
     totalNodes: 0,
   });
+  const hasAutoExportedRef = useRef(false);
 
   useEffect(() => {
     if (!id) {
@@ -533,7 +535,7 @@ export default function MindmapEditor() {
     }
   };
 
-  const handleExportImage = async () => {
+  const handleExportImage = useCallback(async () => {
     if (!mindContainerRef.current) return;
 
     try {
@@ -579,7 +581,25 @@ export default function MindmapEditor() {
     } finally {
       setExportingImage(false);
     }
-  };
+  }, [mindmap?.title]);
+
+  useEffect(() => {
+    const autoExport = searchParams.get('autoExport') === '1';
+    const closeAfterExport = searchParams.get('closeAfterExport') === '1';
+    if (!autoExport || loading || !mindmap || exportingImage || hasAutoExportedRef.current) {
+      return;
+    }
+
+    hasAutoExportedRef.current = true;
+    void (async () => {
+      await handleExportImage();
+      if (closeAfterExport) {
+        window.setTimeout(() => {
+          window.close();
+        }, 450);
+      }
+    })();
+  }, [searchParams, loading, mindmap, exportingImage, handleExportImage]);
 
   if (loading) {
     return (
