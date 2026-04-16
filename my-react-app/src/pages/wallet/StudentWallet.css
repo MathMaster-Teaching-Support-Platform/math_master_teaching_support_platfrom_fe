@@ -1022,6 +1022,34 @@
   color: #b91c1c;
 }
 
+/* Countdown clock badge on PENDING transactions */
+.tx-countdown {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.14rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.04em;
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+  gap: 0.2rem;
+}
+.tx-countdown::before {
+  content: '⏱';
+  font-size: 0.65rem;
+}
+.tx-countdown--expired {
+  background: #fef2f2;
+  color: #9f1239;
+  border-color: #fecaca;
+}
+.tx-countdown--expired::before {
+  content: '';
+}
+
 /* ── Footer + Pagination ──────────────────────────────────── */
 .transactions-footer {
   padding: 1rem 1.5rem;
@@ -1222,7 +1250,153 @@
   animation: sectionSlideIn 0.22s ease;
 }
 
-/* Physical card shape */
+/* ── Template picker ── */
+.card-template-picker {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.5rem 0 0.65rem;
+}
+.card-tpl-swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2.5px solid transparent;
+  cursor: pointer;
+  transition:
+    transform 0.15s,
+    border-color 0.15s;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.22);
+  flex-shrink: 0;
+}
+.card-tpl-swatch:hover {
+  transform: scale(1.18);
+}
+.card-tpl-swatch.active {
+  border-color: #fff;
+  transform: scale(1.22);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.45);
+}
+.card-tpl-hint {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  font-weight: 600;
+  margin-left: 2px;
+  letter-spacing: 0.03em;
+}
+
+/* ── Flip container ── */
+.card-flip-container {
+  width: 100%;
+  aspect-ratio: 1.586 / 1;
+  perspective: 1100px;
+  cursor: pointer;
+}
+.card-flipper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.62s cubic-bezier(0.4, 0.2, 0.2, 1);
+}
+.card-flipper.flipped {
+  transform: rotateY(180deg);
+}
+
+/* ── Shared face styles ── */
+.card-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  padding: 1.2rem 1.4rem;
+  overflow: hidden;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.28),
+    0 8px 20px rgba(0, 0, 0, 0.18);
+  user-select: none;
+}
+.card-face--back {
+  transform: rotateY(180deg);
+}
+
+/* ── Back face elements ── */
+.cp-mag-stripe {
+  position: absolute;
+  top: 18%;
+  left: 0;
+  right: 0;
+  height: 13%;
+  background: #1a1a1a;
+  z-index: 1;
+}
+.cp-sig-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+  z-index: 2;
+  margin-top: auto;
+}
+.cp-sig-strip {
+  flex: 1;
+  background: repeating-linear-gradient(0deg, #e2e8f0 0px, #e2e8f0 3px, #f8fafc 3px, #f8fafc 6px);
+  border-radius: 5px;
+  padding: 0.3rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+.cp-sig-text {
+  font-size: 0.52rem;
+  color: #94a3b8;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.cp-cvv-box {
+  width: 52px;
+  background: #fff;
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  gap: 1px;
+}
+.cp-cvv-label {
+  font-size: 0.5rem;
+  color: #64748b;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.cp-cvv-val {
+  font-family: 'SF Mono', 'Courier New', monospace;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #1e293b;
+  letter-spacing: 0.15em;
+}
+.cp-back-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 2;
+}
+.cp-back-hint {
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.45);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+/* Legacy .card-preview kept for fallback */
 .card-preview {
   position: relative;
   width: 100%;
@@ -1239,7 +1413,6 @@
     0 8px 20px rgba(0, 0, 0, 0.18);
   user-select: none;
 }
-
 .card-preview--visa {
   background: linear-gradient(135deg, #0f1f6b 0%, #1a3099 45%, #1565c0 100%);
 }
@@ -1754,4 +1927,36 @@
     padding: 0 1.2rem 1.2rem;
     flex-direction: column-reverse;
   }
+}
+
+/* -- Pending Transaction Warning Modal ----------------------- */
+.sw-pending-warning {
+  max-width: 380px;
+  padding: 0;
+}
+.sw-pw-icon {
+  text-align: center;
+  font-size: 2.6rem;
+  padding: 1.8rem 1.5rem 0.4rem;
+  line-height: 1;
+}
+.sw-pw-title {
+  text-align: center;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0 1.5rem 0.6rem;
+}
+.sw-pw-body {
+  font-size: 0.85rem;
+  color: #64748b;
+  line-height: 1.6;
+  margin: 0 1.5rem 0.5rem;
+  text-align: center;
+}
+.sw-pw-body strong {
+  color: #c2410c;
+}
+.sw-pending-warning .sw-modal-actions {
+  padding: 1rem 1.5rem 1.5rem;
 }

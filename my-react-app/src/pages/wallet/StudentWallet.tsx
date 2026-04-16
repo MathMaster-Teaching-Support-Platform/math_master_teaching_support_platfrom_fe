@@ -11,12 +11,12 @@ import {
   X,
   Zap,
 } from 'lucide-react';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockAdmin, mockStudent, mockTeacher } from '../../data/mockData';
 import { AuthService } from '../../services/api/auth.service';
 import { WalletService } from '../../services/api/wallet.service';
-import type { WalletSummary, WalletTransaction } from '../../types/wallet.types';
+import type { TransactionStatus, WalletSummary, WalletTransaction } from '../../types/wallet.types';
 import './StudentWallet.css';
 
 type TransactionStatusFilter = 'all' | 'completed' | 'pending' | 'failed';
@@ -29,6 +29,60 @@ const PAYMENT_METHODS: { id: PaymentMethod; name: string; sub: string }[] = [
 ];
 
 const QUICK_AMOUNTS = [50_000, 100_000, 200_000, 500_000, 1_000_000];
+
+const VISA_TEMPLATES = [
+  {
+    id: 0,
+    label: 'Classic Blue',
+    gradient: 'linear-gradient(135deg, #0f1f6b 0%, #1a3099 45%, #1565c0 100%)',
+    swatch: '#1a3099',
+  },
+  {
+    id: 1,
+    label: 'Midnight',
+    gradient: 'linear-gradient(135deg, #0f0f0f 0%, #1c1c1c 50%, #2a2a2a 100%)',
+    swatch: '#1c1c1c',
+  },
+  {
+    id: 2,
+    label: 'Rose Gold',
+    gradient: 'linear-gradient(135deg, #6d1f35 0%, #b5495b 50%, #c9748f 100%)',
+    swatch: '#b5495b',
+  },
+  {
+    id: 3,
+    label: 'Emerald',
+    gradient: 'linear-gradient(135deg, #064e3b 0%, #047857 50%, #059669 100%)',
+    swatch: '#047857',
+  },
+  {
+    id: 4,
+    label: 'Purple',
+    gradient: 'linear-gradient(135deg, #3b0764 0%, #6d28d9 55%, #7c3aed 100%)',
+    swatch: '#6d28d9',
+  },
+] as const;
+
+const MC_TEMPLATES = [
+  {
+    id: 0,
+    label: 'Dark',
+    gradient: 'linear-gradient(135deg, #1a1a2e 0%, #2d2d44 45%, #3d3d5c 100%)',
+    swatch: '#2d2d44',
+  },
+  {
+    id: 1,
+    label: 'Carbon',
+    gradient: 'linear-gradient(135deg, #111827 0%, #1f2937 50%, #374151 100%)',
+    swatch: '#1f2937',
+  },
+  {
+    id: 2,
+    label: 'Crimson',
+    gradient: 'linear-gradient(135deg, #7f1d1d 0%, #b91c1c 50%, #dc2626 100%)',
+    swatch: '#b91c1c',
+  },
+] as const;
 
 const VN_BANKS = [
   { id: 'vcb', name: 'Vietcombank', short: 'VCB', color: '#007A3D', bg: '#E8F5EC' },
@@ -121,12 +175,46 @@ const MastercardLogo = () => (
 const PAGE_SIZE = 5;
 
 const STATUS_TO_API: Record<Exclude<TransactionStatusFilter, 'all'>, string> = {
-  completed: 'COMPLETED',
+  completed: 'SUCCESS',
   pending: 'PENDING',
   failed: 'FAILED',
 };
 
-const API_FETCH_SIZE = 10;
+/** Map BE enum → FE display status */
+const TX_STATUS_MAP: Record<TransactionStatus, Exclude<TransactionStatusFilter, 'all'>> = {
+  PENDING: 'pending',
+  PROCESSING: 'pending',
+  SUCCESS: 'completed',
+  FAILED: 'failed',
+  CANCELLED: 'failed',
+};
+
+const API_PAGE_SIZE = 20;
+
+/** Countdown clock for a PENDING transaction — reads expiresAt from BE */
+const TxCountdown = ({ expiresAt }: { expiresAt: string }) => {
+  const calc = () => Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000));
+  const [remaining, setRemaining] = useState(calc);
+
+  useEffect(() => {
+    if (remaining <= 0) return;
+    const id = setInterval(() => setRemaining(calc), 1000);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expiresAt]);
+
+  if (remaining <= 0) return <span className="tx-countdown tx-countdown--expired">Hết hạn</span>;
+
+  const mm = Math.floor(remaining / 60)
+    .toString()
+    .padStart(2, '0');
+  const ss = (remaining % 60).toString().padStart(2, '0');
+  return (
+    <span className="tx-countdown">
+      {mm}:{ss}
+    </span>
+  );
+};
 
 const StudentWallet: React.FC = () => {
   const currentRole = AuthService.getUserRole() || 'student';
@@ -143,11 +231,15 @@ const StudentWallet: React.FC = () => {
   const [depositing, setDepositing] = useState(false);
   const [depositSuccess, setDepositSuccess] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showPendingWarning, setShowPendingWarning] = useState(false);
+  const pollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [selectedBank, setSelectedBank] = useState<string | null>(null);
   const [cardNumber, setCardNumber] = useState('');
   const [cardExpiry, setCardExpiry] = useState('');
   const [cardCvv, setCardCvv] = useState('');
   const [cardName, setCardName] = useState('');
+  const [cardFlipped, setCardFlipped] = useState(false);
+  const [cardTemplate, setCardTemplate] = useState(0);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<TransactionStatusFilter>('all');
@@ -166,18 +258,12 @@ const StudentWallet: React.FC = () => {
     return new Intl.NumberFormat('vi-VN').format(value);
   };
 
-  const normalizeStatus = (status?: string): Exclude<TransactionStatusFilter, 'all'> => {
-    const normalized = (status || '').toLowerCase();
-    if (normalized.includes('pending') || normalized.includes('wait')) return 'pending';
-    if (normalized.includes('fail') || normalized.includes('cancel')) return 'failed';
-    return 'completed';
-  };
+  const normalizeStatus = (status?: string): Exclude<TransactionStatusFilter, 'all'> =>
+    TX_STATUS_MAP[(status as TransactionStatus) ?? ''] ?? 'completed';
 
   const normalizeType = (tx: WalletTransaction): 'deposit' | 'payment' => {
-    const type = (tx.type || '').toLowerCase();
-    if (type.includes('deposit') || type.includes('topup') || type.includes('recharge')) {
-      return 'deposit';
-    }
+    if (tx.type === 'DEPOSIT') return 'deposit';
+    if (tx.type === 'PAYMENT' || tx.type === 'WITHDRAWAL') return 'payment';
     return tx.amount >= 0 ? 'deposit' : 'payment';
   };
 
@@ -203,8 +289,6 @@ const StudentWallet: React.FC = () => {
   const getTransactionCode = (tx: WalletTransaction) => {
     if (tx.orderCode) return String(tx.orderCode);
     if (tx.transactionId) return tx.transactionId.slice(-8).toUpperCase();
-    if (tx.transactionCode) return tx.transactionCode;
-    if (tx.id) return `TXN-${String(tx.id).slice(-6)}`;
     return 'N/A';
   };
 
@@ -221,7 +305,7 @@ const StudentWallet: React.FC = () => {
     }
   };
 
-  const loadTransactions = async (filter: TransactionStatusFilter) => {
+  const loadTransactions = useCallback(async (filter: TransactionStatusFilter) => {
     try {
       setTransactionsLoading(true);
       setError(null);
@@ -229,20 +313,14 @@ const StudentWallet: React.FC = () => {
 
       const response =
         filter === 'all'
-          ? await WalletService.getTransactions({ page: 0, size: API_FETCH_SIZE })
+          ? await WalletService.getTransactions({ page: 0, size: API_PAGE_SIZE })
           : await WalletService.getTransactionsByStatus(STATUS_TO_API[filter], {
               page: 0,
-              size: API_FETCH_SIZE,
+              size: API_PAGE_SIZE,
             });
 
-      const result = response.result;
-      const list = Array.isArray(result)
-        ? result
-        : 'content' in result && Array.isArray(result.content)
-          ? result.content
-          : [];
-
-      setTransactions(list);
+      // BE always returns Spring Page object — `content` is always present
+      setTransactions(response.result.content ?? []);
       setPage(1);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Không thể tải giao dịch');
@@ -250,7 +328,7 @@ const StudentWallet: React.FC = () => {
     } finally {
       setTransactionsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     void loadWallet();
@@ -258,7 +336,15 @@ const StudentWallet: React.FC = () => {
 
   useEffect(() => {
     void loadTransactions(statusFilter);
-  }, [statusFilter]);
+  }, [statusFilter, loadTransactions]);
+
+  // Clean up any in-flight poll timer on unmount
+  useEffect(
+    () => () => {
+      if (pollTimerRef.current) clearTimeout(pollTimerRef.current);
+    },
+    []
+  );
 
   const filteredTransactions = useMemo(() => {
     const keyword = searchTerm.trim().toLowerCase();
@@ -266,7 +352,7 @@ const StudentWallet: React.FC = () => {
 
     return transactions.filter((tx) => {
       const code = getTransactionCode(tx).toLowerCase();
-      const text = `${tx.description || ''} ${tx.paymentMethod || ''}`.toLowerCase();
+      const text = (tx.description ?? '').toLowerCase();
       return code.includes(keyword) || text.includes(keyword);
     });
   }, [searchTerm, transactions]);
@@ -281,9 +367,8 @@ const StudentWallet: React.FC = () => {
   const displayStart = filteredTransactions.length === 0 ? 0 : (safePage - 1) * PAGE_SIZE + 1;
   const displayEnd = Math.min(safePage * PAGE_SIZE, filteredTransactions.length);
 
-  const totalDeposit = transactions
-    .filter((tx) => normalizeType(tx) === 'deposit' && normalizeStatus(tx.status) === 'completed')
-    .reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
+  // Use BE-provided all-time total (wallet.totalDeposited) — no client-side calculation
+  const totalDeposit = wallet?.totalDeposited ?? 0;
 
   const handleDeposit = async () => {
     if (amount < 10000) {
@@ -303,13 +388,44 @@ const StudentWallet: React.FC = () => {
         description: `Nạp tiền MathMaster qua ${methodLabel}`,
       });
 
-      window.open(response.result.checkoutUrl, '_blank', 'noopener,noreferrer');
+      const { checkoutUrl, orderCode } = response.result;
+      window.open(checkoutUrl, '_blank', 'noopener,noreferrer');
+
+      // Immediately refresh transaction list so the new PENDING tx appears at the top
+      await loadTransactions(statusFilter);
 
       setDepositSuccess(true);
       setTimeout(() => setDepositSuccess(false), 3000);
 
-      await loadTransactions(statusFilter);
-      await loadWallet();
+      // Poll order status every 5s (max 3 minutes = 36 attempts)
+      let attempts = 0;
+      const MAX_ATTEMPTS = 36;
+      const poll = async () => {
+        if (attempts >= MAX_ATTEMPTS) return;
+        attempts++;
+        try {
+          const statusRes = await WalletService.getOrderStatus(orderCode);
+          const txStatus = statusRes.result.status;
+          if (txStatus === 'SUCCESS') {
+            await Promise.all([loadWallet(), loadTransactions(statusFilter)]);
+            return;
+          }
+          if (txStatus === 'FAILED' || txStatus === 'CANCELLED') {
+            setError(
+              txStatus === 'CANCELLED'
+                ? 'Giao dịch đã bị hủy hoặc hết hạn.'
+                : 'Thanh toán thất bại. Vui lòng thử lại.'
+            );
+            setErrorDismissed(false);
+            await loadTransactions(statusFilter);
+            return;
+          }
+        } catch {
+          // network error — keep polling
+        }
+        pollTimerRef.current = setTimeout(() => void poll(), 5000);
+      };
+      void poll();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Không thể tạo thanh toán');
       setErrorDismissed(false);
@@ -327,6 +443,14 @@ const StudentWallet: React.FC = () => {
     if (selectedMethod !== 'payos') {
       setError('Phương thức này đang được phát triển. Vui lòng sử dụng PayOS.');
       setErrorDismissed(false);
+      return;
+    }
+    // Warn if a PENDING transaction already exists
+    const hasPending = transactions.some(
+      (tx) => tx.status === 'PENDING' || tx.status === 'PROCESSING'
+    );
+    if (hasPending) {
+      setShowPendingWarning(true);
       return;
     }
     setShowConfirmModal(true);
@@ -415,14 +539,14 @@ const StudentWallet: React.FC = () => {
             <div className="wallet-stat-item">
               <span className="wallet-stat-label">Tổng đã nạp</span>
               <span className="wallet-stat-value wallet-stat-value--green">
-                {transactionsLoading ? '—' : `${formatCurrency(totalDeposit)} ₫`}
+                {walletLoading ? '—' : `${formatCurrency(totalDeposit)} ₫`}
               </span>
             </div>
             <div className="wallet-stat-divider" />
             <div className="wallet-stat-item">
               <span className="wallet-stat-label">Số giao dịch</span>
               <span className="wallet-stat-value">
-                {transactionsLoading ? '—' : transactions.length}
+                {walletLoading ? '—' : (wallet?.transactionCount ?? transactions.length)}
               </span>
             </div>
           </div>
@@ -488,6 +612,8 @@ const StudentWallet: React.FC = () => {
                     onClick={() => {
                       setSelectedMethod(m.id);
                       setSelectedBank(null);
+                      setCardFlipped(false);
+                      setCardTemplate(0);
                     }}
                   >
                     <div className="method-logo">
@@ -572,64 +698,131 @@ const StudentWallet: React.FC = () => {
               {/* ── Visa / Mastercard: Real card preview ── */}
               {(selectedMethod === 'visa' || selectedMethod === 'mastercard') && (
                 <div className="card-preview-section">
-                  {/* Physical card mockup */}
-                  <div className={`card-preview card-preview--${selectedMethod}`}>
-                    {/* Decorative circles */}
-                    <div className="cp-deco-circle cp-deco-circle--1" aria-hidden="true" />
-                    <div className="cp-deco-circle cp-deco-circle--2" aria-hidden="true" />
+                  {/* Template picker */}
+                  <div className="card-template-picker">
+                    {(selectedMethod === 'visa' ? VISA_TEMPLATES : MC_TEMPLATES).map((tpl) => (
+                      <button
+                        key={tpl.id}
+                        type="button"
+                        className={`card-tpl-swatch${cardTemplate === tpl.id ? ' active' : ''}`}
+                        style={{ background: tpl.swatch }}
+                        title={tpl.label}
+                        onClick={() => {
+                          setCardTemplate(tpl.id);
+                          setCardFlipped(false);
+                        }}
+                      />
+                    ))}
+                    <span className="card-tpl-hint">Chọn mẫu</span>
+                  </div>
 
-                    {/* Top row: chip + contactless */}
-                    <div className="cp-top-row">
-                      <div className="cp-chip" aria-hidden="true">
-                        <div className="cp-chip-h" />
-                        <div className="cp-chip-v" />
-                      </div>
-                      {/* Contactless symbol */}
-                      <svg
-                        className="cp-contactless"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
+                  {/* Flip container */}
+                  <div
+                    className="card-flip-container"
+                    onClick={() => setCardFlipped((f) => !f)}
+                    title={cardFlipped ? 'Xem mặt trước' : 'Xem mặt sau'}
+                  >
+                    <div className={`card-flipper${cardFlipped ? ' flipped' : ''}`}>
+                      {/* ── FRONT FACE ── */}
+                      <div
+                        className="card-face card-face--front"
+                        style={{
+                          background: (selectedMethod === 'visa' ? VISA_TEMPLATES : MC_TEMPLATES)[
+                            Math.min(
+                              cardTemplate,
+                              (selectedMethod === 'visa' ? VISA_TEMPLATES : MC_TEMPLATES).length - 1
+                            )
+                          ].gradient,
+                        }}
                       >
-                        <path d="M5 12.55a11 11 0 0 1 14.08 0" />
-                        <path d="M1.42 9a16 16 0 0 1 21.16 0" />
-                        <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
-                        <circle cx="12" cy="20" r="1" fill="currentColor" />
-                      </svg>
-                    </div>
+                        <div className="cp-deco-circle cp-deco-circle--1" aria-hidden="true" />
+                        <div className="cp-deco-circle cp-deco-circle--2" aria-hidden="true" />
 
-                    {/* Card number */}
-                    <div className="cp-number">
-                      {cardNumber
-                        ? cardNumber.padEnd(19, ' ').replace(/X/g, '•')
-                        : '•••• •••• •••• ••••'}
-                    </div>
+                        <div className="cp-top-row">
+                          <div className="cp-chip" aria-hidden="true">
+                            <div className="cp-chip-h" />
+                            <div className="cp-chip-v" />
+                          </div>
+                          <svg
+                            className="cp-contactless"
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                          >
+                            <path d="M5 12.55a11 11 0 0 1 14.08 0" />
+                            <path d="M1.42 9a16 16 0 0 1 21.16 0" />
+                            <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
+                            <circle cx="12" cy="20" r="1" fill="currentColor" />
+                          </svg>
+                        </div>
 
-                    {/* Bottom row */}
-                    <div className="cp-bottom-row">
-                      <div className="cp-field">
-                        <span className="cp-field-label">Card Holder</span>
-                        <span className="cp-field-value">{cardName || 'YOUR NAME'}</span>
-                      </div>
-                      <div className="cp-field">
-                        <span className="cp-field-label">Expires</span>
-                        <span className="cp-field-value cp-field-value--mono">
-                          {cardExpiry || 'MM/YY'}
-                        </span>
-                      </div>
-                      <div className="cp-logo-wrap">
-                        {selectedMethod === 'visa' ? <VisaLogo /> : <MastercardLogo />}
-                      </div>
-                    </div>
+                        <div className="cp-number">
+                          {cardNumber
+                            ? cardNumber.padEnd(19, ' ').replace(/X/g, '•')
+                            : '•••• •••• •••• ••••'}
+                        </div>
 
-                    {/* Coming-soon overlay ON the card */}
-                    <div className="cp-overlay">
-                      <span className="cs-badge">Sắp ra mắt</span>
-                      <p>Thanh toán thẻ quốc tế đang được tích hợp</p>
+                        <div className="cp-bottom-row">
+                          <div className="cp-field">
+                            <span className="cp-field-label">Card Holder</span>
+                            <span className="cp-field-value">{cardName || 'YOUR NAME'}</span>
+                          </div>
+                          <div className="cp-field">
+                            <span className="cp-field-label">Expires</span>
+                            <span className="cp-field-value cp-field-value--mono">
+                              {cardExpiry || 'MM/YY'}
+                            </span>
+                          </div>
+                          <div className="cp-logo-wrap">
+                            {selectedMethod === 'visa' ? <VisaLogo /> : <MastercardLogo />}
+                          </div>
+                        </div>
+
+                        {/* Coming-soon overlay */}
+                        <div className="cp-overlay">
+                          <span className="cs-badge">Sắp ra mắt</span>
+                          <p>Nhấn để xem mặt sau</p>
+                        </div>
+                      </div>
+
+                      {/* ── BACK FACE ── */}
+                      <div
+                        className="card-face card-face--back"
+                        style={{
+                          background: (selectedMethod === 'visa' ? VISA_TEMPLATES : MC_TEMPLATES)[
+                            Math.min(
+                              cardTemplate,
+                              (selectedMethod === 'visa' ? VISA_TEMPLATES : MC_TEMPLATES).length - 1
+                            )
+                          ].gradient,
+                        }}
+                      >
+                        <div className="cp-deco-circle cp-deco-circle--1" aria-hidden="true" />
+                        {/* Magnetic stripe */}
+                        <div className="cp-mag-stripe" aria-hidden="true" />
+                        {/* Signature + CVV strip */}
+                        <div className="cp-sig-row">
+                          <div className="cp-sig-strip">
+                            <span className="cp-sig-lines" aria-hidden="true" />
+                            <span className="cp-sig-text">Authorized Signature</span>
+                          </div>
+                          <div className="cp-cvv-box">
+                            <span className="cp-cvv-label">CVV</span>
+                            <span className="cp-cvv-val">{cardCvv || '•••'}</span>
+                          </div>
+                        </div>
+                        {/* Bottom: network + hint */}
+                        <div className="cp-back-footer">
+                          <span className="cp-back-hint">Nhấn để xem mặt trước</span>
+                          <div className="cp-logo-wrap">
+                            {selectedMethod === 'visa' ? <VisaLogo /> : <MastercardLogo />}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -833,7 +1026,7 @@ const StudentWallet: React.FC = () => {
                   const { day, time } = formatDate(tx.transactionDate ?? tx.createdAt);
 
                   return (
-                    <div key={String(tx.transactionId ?? tx.id ?? tx.orderCode)} className="tx-row">
+                    <div key={String(tx.transactionId ?? tx.orderCode)} className="tx-row">
                       <div className={`tx-icon-wrap ${type}`}>
                         {type === 'deposit' ? (
                           <ArrowUpRight size={18} />
@@ -871,6 +1064,9 @@ const StudentWallet: React.FC = () => {
                               ? 'Đang chờ'
                               : 'Thất bại'}
                         </span>
+                        {status === 'pending' && tx.expiresAt && (
+                          <TxCountdown expiresAt={tx.expiresAt} />
+                        )}
                       </div>
                     </div>
                   );
@@ -911,6 +1107,49 @@ const StudentWallet: React.FC = () => {
           </section>
         </div>
       </DashboardLayout>
+
+      {/* ── Pending Transaction Warning ── */}
+      {showPendingWarning && (
+        <div className="sw-modal-overlay" onClick={() => setShowPendingWarning(false)}>
+          <div className="sw-confirm-modal sw-pending-warning" onClick={(e) => e.stopPropagation()}>
+            <button
+              className="sw-modal-close"
+              onClick={() => setShowPendingWarning(false)}
+              aria-label="Đóng"
+            >
+              <X size={16} />
+            </button>
+
+            <div className="sw-pw-icon" aria-hidden="true">
+              ⚠️
+            </div>
+            <h3 className="sw-pw-title">Có giao dịch đang chờ thanh toán</h3>
+            <p className="sw-pw-body">
+              Bạn đang có <strong>1 giao dịch PayOS chưa hoàn thành</strong>. Giao dịch cũ sẽ tự
+              động bị hủy sau 15 phút nếu chưa thanh toán.
+            </p>
+            <p className="sw-pw-body">Bạn có chắc muốn tạo thêm một giao dịch mới không?</p>
+
+            <div className="sw-modal-actions">
+              <button
+                className="sw-modal-btn sw-modal-btn--cancel"
+                onClick={() => setShowPendingWarning(false)}
+              >
+                Quay lại
+              </button>
+              <button
+                className="sw-modal-btn sw-modal-btn--confirm"
+                onClick={() => {
+                  setShowPendingWarning(false);
+                  setShowConfirmModal(true);
+                }}
+              >
+                Tạo giao dịch mới
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Confirmation Bill Modal ── */}
       {showConfirmModal && (

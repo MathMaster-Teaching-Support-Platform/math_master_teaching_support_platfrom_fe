@@ -246,6 +246,7 @@ export const API_ENDPOINTS = {
 
   // Payment
   PAYMENT_DEPOSIT: '/payment/deposit',
+  PAYMENT_ORDER_STATUS: (orderCode: number) => `/payment/order/${orderCode}/status`,
 
   // Notifications
   NOTIFICATIONS_TOKEN: '/v1/notifications/token',
