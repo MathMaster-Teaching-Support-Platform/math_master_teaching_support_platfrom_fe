@@ -582,9 +582,7 @@ const AIAssistant: React.FC = () => {
 
             {/* character area */}
             <div className="ai-token-modal__char-wrap">
-              <div className="ai-token-modal__speech">
-                <span>!@# ?</span>
-              </div>
+              <div className="ai-token-modal__speech"></div>
               <div className="ai-token-modal__char">
                 {tokenModal.type === 'no-plan' ? '🎓' : '🧮'}
               </div>

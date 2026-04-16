@@ -62,15 +62,7 @@ const teacherGroups: MenuGroup[] = [
       { path: '/teacher/question-banks', icon: Database, label: 'Ngân hàng câu hỏi' },
       { path: '/teacher/questions', icon: ClipboardList, label: 'Câu hỏi của tôi' },
       { path: '/teacher/assessment-builder', icon: Sparkles, label: 'Trình tạo đề' },
-    ],
-  },
-  {
-    label: 'Quản lý',
-    items: [
-      { path: '/teacher/assignments', icon: ClipboardCheck, label: 'Bài tập' },
       { path: '/teacher/assessments', icon: FileCheck2, label: 'Kiểm tra' },
-      { path: '/teacher/students', icon: Users, label: 'Học sinh' },
-      { path: '/pricing', icon: CreditCard, label: 'Gói đăng ký' },
     ],
   },
   {
@@ -79,6 +71,7 @@ const teacherGroups: MenuGroup[] = [
       { path: '/teacher/ai-assistant', icon: Bot, label: 'AI Trợ lý' },
       { path: '/teacher/ai-slide-generator', icon: Presentation, label: 'AI Slide Gen' },
       { path: '/teacher/wallet', icon: Wallet, label: 'Ví của tôi' },
+      { path: '/pricing', icon: CreditCard, label: 'Gói đăng ký' },
     ],
   },
 ];

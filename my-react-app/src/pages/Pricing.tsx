@@ -50,24 +50,90 @@ const faqItems = [
   },
 ];
 
-/* ── Plan icon mapping ── */
-const planIcons: Record<string, string> = {
-  free: '🌱',
-  basic: '⚡',
-  pro: '🚀',
-  enterprise: '🏫',
-  default: '📦',
+type PlanTier = 'free' | 'basic' | 'pro' | 'enterprise';
+
+const getPlanTier = (name: string): PlanTier => {
+  const lower = name.toLowerCase();
+  if (
+    lower.includes('miễn phí') ||
+    lower.includes('free') ||
+    lower.includes('khởi đầu') ||
+    lower.includes('starter')
+  )
+    return 'free';
+  if (
+    lower.includes('pro') ||
+    lower.includes('giáo viên') ||
+    lower.includes('cơ bản') ||
+    lower.includes('basic') ||
+    lower.includes('standard')
+  )
+    return 'pro';
+  if (
+    lower.includes('trường') ||
+    lower.includes('school') ||
+    lower.includes('enterprise') ||
+    lower.includes('cao cấp') ||
+    lower.includes('premium')
+  )
+    return 'enterprise';
+  return 'basic';
 };
 
-const getPlanIcon = (name: string): string => {
-  const lower = name.toLowerCase();
-  // Free / starter tier
-  if (lower.includes('miễn phí') || lower.includes('free') || lower.includes('khởi đầu') || lower.includes('khoi dau') || lower.includes('starter')) return planIcons.free;
-  // Pro / teacher / standard tier
-  if (lower.includes('pro') || lower.includes('giáo viên') || lower.includes('giao vien') || lower.includes('cơ bản') || lower.includes('co ban') || lower.includes('basic') || lower.includes('standard')) return planIcons.pro;
-  // Enterprise / school / premium tier
-  if (lower.includes('trường') || lower.includes('truong') || lower.includes('school') || lower.includes('enterprise') || lower.includes('cao cấp') || lower.includes('cao cap') || lower.includes('premium') || lower.includes('advanced')) return planIcons.enterprise;
-  return planIcons.default;
+const PlanIcon: React.FC<{ tier: PlanTier }> = ({ tier }) => {
+  if (tier === 'free')
+    return (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7z" />
+        <circle cx="12" cy="9" r="2.5" />
+      </svg>
+    );
+  if (tier === 'basic')
+    return (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+      </svg>
+    );
+  if (tier === 'pro')
+    return (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+      </svg>
+    );
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+      <polyline points="9 22 9 12 15 12 15 22" />
+    </svg>
+  );
 };
 
 /* ── FAQ Accordion Item ── */
@@ -381,7 +447,7 @@ const Pricing: React.FC = () => {
             className="pricing-modal-btn pricing-modal-btn--primary"
             onClick={() => {
               setShowWalletModal(false);
-              navigate('/teacher/wallet');
+              navigate(`/${layoutRole}/wallet`);
             }}
           >
             <svg
@@ -432,7 +498,11 @@ const Pricing: React.FC = () => {
                   {/* Trust stats for dashboard view too */}
                   <div className="pricing-trust-bar">
                     {trustStats.map((stat, i) => (
-                      <div className="pricing-trust-pill" key={i} style={{ animationDelay: `${i * 0.12}s` }}>
+                      <div
+                        className="pricing-trust-pill"
+                        key={i}
+                        style={{ animationDelay: `${i * 0.12}s` }}
+                      >
                         <span className="pricing-trust-pill__icon">{stat.icon}</span>
                         <strong className="pricing-trust-pill__value">{stat.value}</strong>
                         <span className="pricing-trust-pill__label">{stat.label}</span>
@@ -451,8 +521,18 @@ const Pricing: React.FC = () => {
                   <div className="pricing-wallet-banner__glow" aria-hidden="true" />
                   <div className="pricing-wallet-banner__col">
                     <span className="pricing-wallet-banner__label">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2" /><line x1="1" y1="10" x2="23" y2="10" />
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                        <line x1="1" y1="10" x2="23" y2="10" />
                       </svg>
                       Số dư ví
                     </span>
@@ -465,14 +545,25 @@ const Pricing: React.FC = () => {
 
                   <div className="pricing-wallet-banner__col">
                     <span className="pricing-wallet-banner__label">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                       </svg>
                       Gói hiện tại
                     </span>
                     <span className="pricing-wallet-banner__value">
                       {activeSubscription ? (
-                        <span className="pricing-active-plan-badge">{activeSubscription.planName}</span>
+                        <span className="pricing-active-plan-badge">
+                          {activeSubscription.planName}
+                        </span>
                       ) : (
                         <span style={{ color: 'var(--c-text-3)' }}>Chưa có gói</span>
                       )}
@@ -484,14 +575,27 @@ const Pricing: React.FC = () => {
                       <div className="pricing-wallet-banner__divider" />
                       <div className="pricing-wallet-banner__col pricing-wallet-banner__col--token">
                         <span className="pricing-wallet-banner__label">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <circle cx="12" cy="12" r="10"/><path d="M12 8v4l2 2"/>
+                          <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M12 8v4l2 2" />
                           </svg>
                           Token còn lại
                         </span>
                         <span className="pricing-wallet-banner__value">
                           {activeSubscription.tokenRemaining}
-                          <span className="pricing-wallet-banner__quota"> / {activeSubscription.tokenQuota}</span>
+                          <span className="pricing-wallet-banner__quota">
+                            {' '}
+                            / {activeSubscription.tokenQuota}
+                          </span>
                         </span>
                         <div className="pricing-token-bar">
                           <div
@@ -508,10 +612,20 @@ const Pricing: React.FC = () => {
                     <button
                       type="button"
                       className="pricing-wallet-topup-btn"
-                      onClick={() => navigate('/teacher/wallet')}
+                      onClick={() => navigate(`/${layoutRole}/wallet`)}
                     >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <line x1="12" y1="5" x2="12" y2="19" />
+                        <line x1="5" y1="12" x2="19" y2="12" />
                       </svg>
                       Nạp tiền
                     </button>
@@ -521,16 +635,36 @@ const Pricing: React.FC = () => {
                 {/* Status messages */}
                 {subscriptionError && (
                   <div className="pricing-alert pricing-alert--error">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="8" x2="12" y2="12" />
+                      <line x1="12" y1="16" x2="12.01" y2="16" />
                     </svg>
                     {subscriptionError}
                   </div>
                 )}
                 {subscriptionSuccess && (
                   <div className="pricing-alert pricing-alert--success">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="20 6 9 17 4 12"/>
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <polyline points="20 6 9 17 4 12" />
                     </svg>
                     {subscriptionSuccess}
                   </div>
@@ -550,17 +684,17 @@ const Pricing: React.FC = () => {
                       const walletBalance = wallet?.balance ?? 0;
                       const isInsufficientBalance = price > 0 && walletBalance < price;
                       const isCurrentPlan = activeSubscription?.planId === plan.id;
-                      const icon = getPlanIcon(plan.name);
+                      const tier = getPlanTier(plan.name);
 
                       return (
                         <div
                           key={plan.id}
-                          className={`pricing-plan-card ${plan.featured ? 'pricing-plan-card--featured' : ''} ${isCurrentPlan ? 'pricing-plan-card--active' : ''}`}
+                          className={`pricing-plan-card pricing-plan-card--tier-${tier} ${plan.featured ? 'pricing-plan-card--featured' : ''} ${isCurrentPlan ? 'pricing-plan-card--active' : ''}`}
                         >
                           {isCurrentPlan && (
                             <div className="pricing-current-plan-badge">
                               <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
-                                <polyline points="20 6 9 17 4 12"/>
+                                <polyline points="20 6 9 17 4 12" />
                               </svg>
                               Đang dùng
                             </div>
@@ -574,7 +708,9 @@ const Pricing: React.FC = () => {
                             </div>
                           )}
 
-                          <div className="pricing-plan-icon">{icon}</div>
+                          <div className="pricing-plan-icon">
+                            <PlanIcon tier={tier} />
+                          </div>
 
                           <div className="pricing-plan-header">
                             <h3 className="pricing-plan-name">{plan.name}</h3>
@@ -591,8 +727,18 @@ const Pricing: React.FC = () => {
                           </div>
 
                           <div className="pricing-token-pill">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <circle cx="12" cy="12" r="10"/><path d="M12 8v4l2 2"/>
+                            <svg
+                              width="12"
+                              height="12"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <circle cx="12" cy="12" r="10" />
+                              <path d="M12 8v4l2 2" />
                             </svg>
                             {plan.tokenQuota.toLocaleString()} token / kỳ
                           </div>
@@ -605,7 +751,10 @@ const Pricing: React.FC = () => {
                             title={isInsufficientBalance ? 'Số dư ví không đủ' : undefined}
                           >
                             {purchasingPlanId === plan.id ? (
-                              <><span className="pricing-btn-spinner" />Đang mua...</>
+                              <>
+                                <span className="pricing-btn-spinner" />
+                                Đang mua...
+                              </>
                             ) : isCurrentPlan ? (
                               'Đang sử dụng'
                             ) : !price ? (
@@ -689,7 +838,11 @@ const Pricing: React.FC = () => {
             {/* Trust stats bar */}
             <div className="pricing-trust-bar">
               {trustStats.map((stat, i) => (
-                <div className="pricing-trust-pill" key={i} style={{ animationDelay: `${i * 0.12}s` }}>
+                <div
+                  className="pricing-trust-pill"
+                  key={i}
+                  style={{ animationDelay: `${i * 0.12}s` }}
+                >
                   <span className="pricing-trust-pill__icon">{stat.icon}</span>
                   <strong className="pricing-trust-pill__value">{stat.value}</strong>
                   <span className="pricing-trust-pill__label">{stat.label}</span>
@@ -704,66 +857,71 @@ const Pricing: React.FC = () => {
       <section className="pricing-cards-section" ref={addSectionRef(0)}>
         <div className="container">
           <div className="pricing-cards-grid">
-            {plans.map((plan, index) => (
-              <div
-                key={index}
-                className={`pricing-plan-card ${plan.highlighted ? 'pricing-plan-card--featured' : ''}`}
-              >
-                {plan.highlighted && (
-                  <div className="pricing-popular-badge">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                    </svg>
-                    Phổ biến nhất
-                  </div>
-                )}
-
-                <div className="pricing-plan-icon">{getPlanIcon(plan.name)}</div>
-
-                <div className="pricing-plan-header">
-                  <h3 className="pricing-plan-name">{plan.name}</h3>
-                  <p className="pricing-plan-desc">{plan.description}</p>
-                </div>
-
-                <div className="pricing-plan-price-block">
-                  <span className="pricing-plan-price">{plan.price}</span>
-                  {plan.period && <span className="pricing-plan-period">{plan.period}</span>}
-                </div>
-
-                <Link
-                  to="/register"
-                  className={`pricing-plan-btn ${plan.highlighted ? 'pricing-plan-btn--primary' : 'pricing-plan-btn--outline'}`}
+            {plans.map((plan, index) => {
+              const tier = getPlanTier(plan.name);
+              return (
+                <div
+                  key={index}
+                  className={`pricing-plan-card pricing-plan-card--tier-${tier} ${plan.highlighted ? 'pricing-plan-card--featured' : ''}`}
                 >
-                  {plan.buttonText}
-                </Link>
+                  {plan.highlighted && (
+                    <div className="pricing-popular-badge">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                      </svg>
+                      Phổ biến nhất
+                    </div>
+                  )}
 
-                <div className="pricing-plan-divider" />
+                  <div className="pricing-plan-icon">
+                    <PlanIcon tier={tier} />
+                  </div>
 
-                <ul className="pricing-plan-features">
-                  {plan.features.map((feature, idx) => (
-                    <li key={idx}>
-                      <span
-                        className={`pricing-check ${plan.highlighted ? 'pricing-check--primary' : ''}`}
-                      >
-                        <svg
-                          width="14"
-                          height="14"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
+                  <div className="pricing-plan-header">
+                    <h3 className="pricing-plan-name">{plan.name}</h3>
+                    <p className="pricing-plan-desc">{plan.description}</p>
+                  </div>
+
+                  <div className="pricing-plan-price-block">
+                    <span className="pricing-plan-price">{plan.price}</span>
+                    {plan.period && <span className="pricing-plan-period">{plan.period}</span>}
+                  </div>
+
+                  <Link
+                    to="/register"
+                    className={`pricing-plan-btn ${plan.highlighted ? 'pricing-plan-btn--primary' : 'pricing-plan-btn--outline'}`}
+                  >
+                    {plan.buttonText}
+                  </Link>
+
+                  <div className="pricing-plan-divider" />
+
+                  <ul className="pricing-plan-features">
+                    {plan.features.map((feature, idx) => (
+                      <li key={idx}>
+                        <span
+                          className={`pricing-check ${plan.highlighted ? 'pricing-check--primary' : ''}`}
                         >
-                          <polyline points="20 6 9 17 4 12" />
-                        </svg>
-                      </span>
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+                          <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                        </span>
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>

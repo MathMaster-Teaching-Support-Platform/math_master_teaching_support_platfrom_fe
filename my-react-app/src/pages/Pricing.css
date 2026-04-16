@@ -181,93 +181,151 @@
   margin: 0 auto;
 }
 
+/* ── Tier colour tokens ── */
+.pricing-plan-card--tier-free {
+  --tier-hue: 142;
+  --tier-color: #16a34a;
+  --tier-bg: #dcfce7;
+  --tier-border: #86efac;
+}
+.pricing-plan-card--tier-basic {
+  --tier-hue: 217;
+  --tier-color: #2563eb;
+  --tier-bg: #dbeafe;
+  --tier-border: #93c5fd;
+}
+.pricing-plan-card--tier-pro {
+  --tier-hue: 260;
+  --tier-color: #7c3aed;
+  --tier-bg: #ede9fe;
+  --tier-border: #c4b5fd;
+}
+.pricing-plan-card--tier-enterprise {
+  --tier-hue: 24;
+  --tier-color: #c2410c;
+  --tier-bg: #ffedd5;
+  --tier-border: #fdba74;
+}
+
 /* ── Individual Card ── */
 .pricing-plan-card {
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: #fff;
   border: 1px solid var(--c-border-soft, #f0edf8);
   border-radius: var(--r-xl, 24px);
-  padding: 2.25rem 2rem;
+  padding: 0;
   position: relative;
   overflow: hidden;
-  box-shadow: var(--shadow-sm, 0 2px 4px rgba(14, 12, 21, 0.03), 0 4px 12px rgba(14, 12, 21, 0.04));
-  transition: all 0.3s ease;
+  box-shadow:
+    0 1px 3px rgba(14, 12, 21, 0.05),
+    0 4px 16px rgba(14, 12, 21, 0.05);
+  transition:
+    box-shadow 0.25s ease,
+    transform 0.25s ease,
+    border-color 0.25s ease;
   display: flex;
   flex-direction: column;
 }
 
-/* Gradient glow orb — visible on hover */
+/* Tier accent stripe at top */
 .pricing-plan-card::before {
   content: '';
+  display: block;
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    var(--tier-color, #5e5ce6),
+    color-mix(in srgb, var(--tier-color, #5e5ce6) 60%, #fff)
+  );
+  border-radius: 24px 24px 0 0;
   position: absolute;
-  width: 180px;
-  height: 180px;
-  border-radius: 50%;
-  top: -60px;
-  right: -60px;
-  background: radial-gradient(circle, rgba(94, 92, 230, 0.1), transparent 70%);
-  filter: blur(30px);
-  opacity: 0;
-  transition: opacity 0.5s ease;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.pricing-plan-card:hover::before {
-  opacity: 1;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1;
 }
 
 .pricing-plan-card:hover {
-  transform: translateY(-10px);
+  transform: translateY(-4px);
   box-shadow:
-    0 6px 20px rgba(94, 92, 230, 0.1),
-    0 16px 48px rgba(94, 92, 230, 0.13);
-  border-color: rgba(94, 92, 230, 0.18);
+    0 4px 20px rgba(14, 12, 21, 0.08),
+    0 12px 40px rgba(14, 12, 21, 0.08);
+  border-color: var(--tier-border, #c4b5fd);
+}
+
+/* ── Inner padding wrapper ── */
+.pricing-plan-card > *:not(.pricing-plan-card__stripe) {
+  position: relative;
+  z-index: 1;
+}
+
+/* Apply padding to card body */
+.pricing-plan-card .pricing-plan-icon,
+.pricing-plan-card .pricing-popular-badge,
+.pricing-plan-card .pricing-current-plan-badge,
+.pricing-plan-card .pricing-plan-header,
+.pricing-plan-card .pricing-plan-price-block,
+.pricing-plan-card .pricing-token-pill,
+.pricing-plan-card .pricing-plan-btn,
+.pricing-plan-card .pricing-plan-divider,
+.pricing-plan-card .pricing-plan-features {
+  padding-left: 1.75rem;
+  padding-right: 1.75rem;
+}
+
+.pricing-plan-card .pricing-popular-badge,
+.pricing-plan-card .pricing-current-plan-badge {
+  margin-top: 1.75rem;
+}
+
+.pricing-plan-card .pricing-plan-icon {
+  padding-top: 1.75rem;
+}
+
+.pricing-plan-card .pricing-popular-badge + .pricing-plan-icon,
+.pricing-plan-card .pricing-current-plan-badge + .pricing-plan-icon {
+  padding-top: 1rem;
+}
+
+.pricing-plan-card:not(:has(.pricing-popular-badge)):not(:has(.pricing-current-plan-badge))
+  .pricing-plan-icon {
+  margin-top: 1.75rem;
+  padding-top: 0;
+}
+
+.pricing-plan-card .pricing-plan-features {
+  padding-bottom: 1.75rem;
+}
+
+.pricing-plan-card .pricing-plan-btn {
+  padding-left: 1.75rem;
+  padding-right: 1.75rem;
+  width: auto;
 }
 
 /* ── Featured / Highlighted Card ── */
 .pricing-plan-card--featured {
-  border-color: rgba(94, 92, 230, 0.28);
-  background: rgba(255, 255, 255, 0.97);
+  border-color: var(--tier-border, #c4b5fd);
   transform: scale(1.04);
   box-shadow:
-    0 4px 16px rgba(94, 92, 230, 0.08),
-    0 16px 48px rgba(94, 92, 230, 0.14);
+    0 4px 16px rgba(124, 58, 237, 0.1),
+    0 16px 48px rgba(124, 58, 237, 0.14);
   z-index: 2;
-  /* Animated shimmer border */
-  animation: shimmerBorder 3s ease-in-out infinite;
 }
 
 .pricing-plan-card--featured::before {
-  opacity: 1;
-  width: 260px;
-  height: 260px;
-  top: -80px;
-  right: -60px;
-  background: radial-gradient(circle, rgba(94, 92, 230, 0.16), transparent 70%);
+  height: 5px;
 }
 
 .pricing-plan-card--featured:hover {
-  transform: scale(1.04) translateY(-10px);
+  transform: scale(1.04) translateY(-4px);
   box-shadow:
-    0 8px 28px rgba(94, 92, 230, 0.15),
-    0 24px 64px rgba(94, 92, 230, 0.2);
-  border-color: rgba(94, 92, 230, 0.35);
-}
-
-/* Featured CTA button brightens on card hover */
-.pricing-plan-card--featured:hover .pricing-plan-btn--primary {
-  background: #4e4cc6;
-  box-shadow:
-    0 6px 20px rgba(94, 92, 230, 0.35),
-    0 10px 40px rgba(94, 92, 230, 0.25);
-  filter: brightness(1.08);
+    0 6px 24px rgba(124, 58, 237, 0.15),
+    0 20px 56px rgba(124, 58, 237, 0.18);
 }
 
 /* ── Active (current) plan card ── */
 .pricing-plan-card--active {
-  border-color: rgba(16, 185, 129, 0.3);
+  border-color: rgba(16, 185, 129, 0.35);
   box-shadow:
     0 4px 16px rgba(16, 185, 129, 0.08),
     0 12px 36px rgba(16, 185, 129, 0.1);
@@ -277,18 +335,17 @@
 .pricing-popular-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  background: var(--c-primary, #5e5ce6);
+  gap: 0.3rem;
+  background: var(--tier-color, #5e5ce6);
   color: #fff;
-  font-size: 0.68rem;
-  font-weight: 600;
-  letter-spacing: 0.5px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.6px;
   text-transform: uppercase;
-  padding: 0.35rem 0.9rem;
+  padding: 0.3rem 0.85rem;
   border-radius: var(--r-pill, 100px);
-  margin-bottom: 1rem;
+  margin-bottom: 0;
   width: fit-content;
-  box-shadow: 0 2px 12px rgba(94, 92, 230, 0.3);
   position: relative;
   z-index: 1;
 }
@@ -298,48 +355,61 @@
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(52, 211, 153, 0.2));
-  color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
   border: 1px solid rgba(16, 185, 129, 0.25);
-  font-size: 0.68rem;
+  font-size: 0.66rem;
   font-weight: 700;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.6px;
   text-transform: uppercase;
-  padding: 0.35rem 0.9rem;
+  padding: 0.3rem 0.85rem;
   border-radius: var(--r-pill, 100px);
-  margin-bottom: 1rem;
+  margin-bottom: 0;
   width: fit-content;
   position: relative;
   z-index: 1;
 }
 
-/* ── Plan Icon emoji ── */
+/* ── Plan Icon SVG container ── */
 .pricing-plan-icon {
-  font-size: 2.2rem;
-  line-height: 1;
-  margin-bottom: 0.85rem;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: var(--tier-bg, #ede9fe);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.1rem;
   position: relative;
   z-index: 1;
+  flex-shrink: 0;
+}
+
+.pricing-plan-icon svg {
+  width: 22px;
+  height: 22px;
+  color: var(--tier-color, #7c3aed);
+  stroke: var(--tier-color, #7c3aed);
 }
 
 /* ── Plan Header ── */
 .pricing-plan-header {
-  margin-bottom: 1.25rem;
+  margin-bottom: 1rem;
   position: relative;
   z-index: 1;
 }
 
 .pricing-plan-name {
-  font-size: 1.35rem;
+  font-size: 1.2rem;
   font-weight: 700;
   color: var(--c-text-1, #0e0c15);
-  margin: 0 0 0.35rem 0;
+  margin: 0 0 0.3rem 0;
   font-family: var(--f-heading, 'Be Vietnam Pro', sans-serif);
-  letter-spacing: -0.3px;
+  letter-spacing: -0.2px;
 }
 
 .pricing-plan-desc {
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   color: var(--c-text-3, #756b85);
   line-height: 1.5;
   margin: 0;
@@ -349,14 +419,14 @@
 .pricing-plan-price-block {
   display: flex;
   align-items: baseline;
-  gap: 0.15rem;
-  margin-bottom: 1rem;
+  gap: 0.2rem;
+  margin-bottom: 0.85rem;
   position: relative;
   z-index: 1;
 }
 
 .pricing-plan-price {
-  font-size: clamp(2.25rem, 3.5vw, 2.75rem);
+  font-size: clamp(1.9rem, 3vw, 2.4rem);
   font-weight: 800;
   color: var(--c-text-1, #0e0c15);
   font-family: var(--f-heading, 'Be Vietnam Pro', sans-serif);
@@ -365,14 +435,11 @@
 }
 
 .pricing-plan-card--featured .pricing-plan-price {
-  background: linear-gradient(135deg, var(--c-primary, #5e5ce6), #858dff);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--tier-color, #7c3aed);
 }
 
 .pricing-plan-period {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 500;
   color: var(--c-text-3, #756b85);
 }
@@ -382,14 +449,14 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  background: linear-gradient(135deg, rgba(94, 92, 230, 0.08), rgba(133, 141, 255, 0.14));
-  color: var(--c-primary, #5e5ce6);
-  border: 1px solid rgba(94, 92, 230, 0.18);
-  font-size: 0.78rem;
+  background: var(--tier-bg, rgba(94, 92, 230, 0.08));
+  color: var(--tier-color, #5e5ce6);
+  border: 1px solid var(--tier-border, rgba(94, 92, 230, 0.18));
+  font-size: 0.76rem;
   font-weight: 600;
-  padding: 0.3rem 0.8rem;
+  padding: 0.28rem 0.75rem;
   border-radius: var(--r-pill, 100px);
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.1rem;
   position: relative;
   z-index: 1;
   width: fit-content;
@@ -401,53 +468,49 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  width: 100%;
-  padding: 0.85rem 1.5rem;
-  border-radius: var(--r-md, 16px);
-  font-size: 0.88rem;
+  width: calc(100% - 3.5rem);
+  margin: 0 1.75rem 1.75rem;
+  padding: 0.8rem 1.25rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
   font-weight: 600;
   text-decoration: none;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   cursor: pointer;
   position: relative;
   z-index: 1;
   font-family: var(--f-heading, 'Be Vietnam Pro', sans-serif);
   letter-spacing: -0.1px;
-  margin-bottom: 0;
 }
 
 .pricing-plan-btn--primary {
-  background: var(--c-primary, #5e5ce6);
+  background: var(--tier-color, #5e5ce6);
   color: #fff;
-  border: 1px solid var(--c-primary, #5e5ce6);
-  box-shadow:
-    0 2px 8px rgba(94, 92, 230, 0.2),
-    0 4px 16px rgba(94, 92, 230, 0.15);
+  border: 1px solid transparent;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--tier-color, #5e5ce6) 35%, transparent);
 }
 
 .pricing-plan-btn--primary:hover:not(:disabled) {
-  background: #4e4cc6;
-  transform: translateY(-2px);
-  box-shadow:
-    0 4px 12px rgba(94, 92, 230, 0.25),
-    0 8px 32px rgba(94, 92, 230, 0.2);
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--tier-color, #5e5ce6) 40%, transparent);
 }
 
 .pricing-plan-btn--outline {
   background: transparent;
-  color: var(--c-text-1, #0e0c15);
+  color: var(--c-text-2, #3f3a52);
   border: 1px solid var(--c-border, #e8e5f0);
 }
 
 .pricing-plan-btn--outline:hover:not(:disabled) {
-  border-color: var(--c-primary, #5e5ce6);
-  color: var(--c-primary, #5e5ce6);
-  background: rgba(94, 92, 230, 0.05);
-  transform: translateY(-2px);
+  border-color: var(--tier-color, #5e5ce6);
+  color: var(--tier-color, #5e5ce6);
+  background: var(--tier-bg, rgba(94, 92, 230, 0.05));
+  transform: translateY(-1px);
 }
 
 .pricing-plan-btn:disabled {
-  opacity: 0.62;
+  opacity: 0.55;
   cursor: not-allowed;
   transform: none !important;
 }
