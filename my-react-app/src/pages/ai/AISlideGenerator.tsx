@@ -1394,7 +1394,7 @@ const AISlideGenerator: React.FC = () => {
                   <input
                     type="text"
                     value={generatedSearch}
-                    placeholder="VD: algebra hoặc 8c5d..."
+                    placeholder="Ví dụ: Xác suất hoặc Hình học ..."
                     onChange={(e) => setGeneratedSearch(e.target.value)}
                   />
                 </label>

@@ -212,7 +212,7 @@
   background: #fff;
   border: 1px solid var(--c-border-soft, #f0edf8);
   border-radius: var(--r-xl, 24px);
-  padding: 0;
+  padding: calc(1.75rem + 4px) 1.75rem 1.75rem;
   position: relative;
   overflow: hidden;
   box-shadow:
@@ -229,7 +229,10 @@
 /* Tier accent stripe at top */
 .pricing-plan-card::before {
   content: '';
-  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
   height: 4px;
   background: linear-gradient(
     90deg,
@@ -237,10 +240,6 @@
     color-mix(in srgb, var(--tier-color, #5e5ce6) 60%, #fff)
   );
   border-radius: 24px 24px 0 0;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
   z-index: 1;
 }
 
@@ -250,56 +249,6 @@
     0 4px 20px rgba(14, 12, 21, 0.08),
     0 12px 40px rgba(14, 12, 21, 0.08);
   border-color: var(--tier-border, #c4b5fd);
-}
-
-/* ── Inner padding wrapper ── */
-.pricing-plan-card > *:not(.pricing-plan-card__stripe) {
-  position: relative;
-  z-index: 1;
-}
-
-/* Apply padding to card body */
-.pricing-plan-card .pricing-plan-icon,
-.pricing-plan-card .pricing-popular-badge,
-.pricing-plan-card .pricing-current-plan-badge,
-.pricing-plan-card .pricing-plan-header,
-.pricing-plan-card .pricing-plan-price-block,
-.pricing-plan-card .pricing-token-pill,
-.pricing-plan-card .pricing-plan-btn,
-.pricing-plan-card .pricing-plan-divider,
-.pricing-plan-card .pricing-plan-features {
-  padding-left: 1.75rem;
-  padding-right: 1.75rem;
-}
-
-.pricing-plan-card .pricing-popular-badge,
-.pricing-plan-card .pricing-current-plan-badge {
-  margin-top: 1.75rem;
-}
-
-.pricing-plan-card .pricing-plan-icon {
-  padding-top: 1.75rem;
-}
-
-.pricing-plan-card .pricing-popular-badge + .pricing-plan-icon,
-.pricing-plan-card .pricing-current-plan-badge + .pricing-plan-icon {
-  padding-top: 1rem;
-}
-
-.pricing-plan-card:not(:has(.pricing-popular-badge)):not(:has(.pricing-current-plan-badge))
-  .pricing-plan-icon {
-  margin-top: 1.75rem;
-  padding-top: 0;
-}
-
-.pricing-plan-card .pricing-plan-features {
-  padding-bottom: 1.75rem;
-}
-
-.pricing-plan-card .pricing-plan-btn {
-  padding-left: 1.75rem;
-  padding-right: 1.75rem;
-  width: auto;
 }
 
 /* ── Featured / Highlighted Card ── */
@@ -344,7 +293,7 @@
   text-transform: uppercase;
   padding: 0.3rem 0.85rem;
   border-radius: var(--r-pill, 100px);
-  margin-bottom: 0;
+  margin-bottom: 1rem;
   width: fit-content;
   position: relative;
   z-index: 1;
@@ -364,7 +313,7 @@
   text-transform: uppercase;
   padding: 0.3rem 0.85rem;
   border-radius: var(--r-pill, 100px);
-  margin-bottom: 0;
+  margin-bottom: 1rem;
   width: fit-content;
   position: relative;
   z-index: 1;
@@ -468,8 +417,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  width: calc(100% - 3.5rem);
-  margin: 0 1.75rem 1.75rem;
+  width: 100%;
   padding: 0.8rem 1.25rem;
   border-radius: 12px;
   font-size: 0.875rem;
