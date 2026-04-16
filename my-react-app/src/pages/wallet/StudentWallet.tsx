@@ -20,7 +20,7 @@ import { WalletService } from '../../services/api/wallet.service';
 import type { TransactionStatus, WalletSummary, WalletTransaction } from '../../types/wallet.types';
 import './StudentWallet.css';
 
-type TransactionStatusFilter = 'all' | 'completed' | 'pending' | 'failed';
+type TransactionStatusFilter = 'all' | 'completed' | 'pending' | 'failed' | 'cancelled';
 type PaymentMethod = 'payos' | 'visa' | 'mastercard';
 
 const PAYMENT_METHODS: { id: PaymentMethod; name: string; sub: string }[] = [
@@ -213,6 +213,7 @@ const STATUS_TO_API: Record<Exclude<TransactionStatusFilter, 'all'>, string> = {
   completed: 'SUCCESS',
   pending: 'PENDING',
   failed: 'FAILED',
+  cancelled: 'CANCELLED',
 };
 
 /** Map BE enum → FE display status */
@@ -221,7 +222,7 @@ const TX_STATUS_MAP: Record<TransactionStatus, Exclude<TransactionStatusFilter, 
   PROCESSING: 'pending',
   SUCCESS: 'completed',
   FAILED: 'failed',
-  CANCELLED: 'failed',
+  CANCELLED: 'cancelled',
 };
 
 const API_PAGE_SIZE = 20;
@@ -297,7 +298,7 @@ const StudentWallet: React.FC = () => {
   };
 
   const normalizeStatus = (status?: string): Exclude<TransactionStatusFilter, 'all'> =>
-    TX_STATUS_MAP[(status as TransactionStatus) ?? ''] ?? 'completed';
+    TX_STATUS_MAP[(status as TransactionStatus) ?? ''] ?? 'failed';
 
   const normalizeType = (tx: WalletTransaction): 'deposit' | 'payment' => {
     if (tx.type === 'DEPOSIT') return 'deposit';
@@ -1104,7 +1105,8 @@ const StudentWallet: React.FC = () => {
                   <option value="all">Tất cả trạng thái</option>
                   <option value="completed">Thành công</option>
                   <option value="pending">Đang chờ</option>
-                  <option value="failed">Thất bại</option>
+                  <option value="failed">Thanh toán lỗi</option>
+                  <option value="cancelled">Đã hủy</option>
                 </select>
               </div>
             </div>
@@ -1173,7 +1175,9 @@ const StudentWallet: React.FC = () => {
                             ? 'Thành công'
                             : status === 'pending'
                               ? 'Đang chờ'
-                              : 'Thất bại'}
+                              : status === 'cancelled'
+                                ? 'Đã hủy'
+                                : 'Thanh toán lỗi'}
                         </span>
                         {status === 'pending' && tx.expiresAt && (
                           <TxCountdown expiresAt={tx.expiresAt} />
