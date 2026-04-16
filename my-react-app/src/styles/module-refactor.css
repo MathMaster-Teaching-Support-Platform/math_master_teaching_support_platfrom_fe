@@ -199,6 +199,7 @@
 .module-layout-container .btn:hover {
   background: var(--mod-primary-700);
   border-color: var(--mod-primary-700);
+  color: #fff;
   transform: translateY(-1px);
 }
 

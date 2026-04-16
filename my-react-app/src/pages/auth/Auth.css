@@ -758,6 +758,7 @@
 
 .auth-container .btn-primary:hover:not(:disabled) {
   background: linear-gradient(135deg, #7c6af5 0%, #6360e8 45%, #5e5ce6 100%);
+  color: #fff;
   box-shadow: 0 6px 24px rgba(94, 92, 230, 0.45);
   transform: translateY(-1px);
 }

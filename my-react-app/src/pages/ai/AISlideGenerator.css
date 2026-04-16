@@ -294,6 +294,7 @@
 .ai-slide-page .btn-primary:hover:not(:disabled) {
   background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
   border-color: #1e40af;
+  color: #fff;
   transform: translateY(-1px);
   box-shadow: 0 10px 20px rgba(30, 64, 175, 0.28);
 }

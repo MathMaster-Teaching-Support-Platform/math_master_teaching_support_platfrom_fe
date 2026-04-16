@@ -73,6 +73,7 @@ button {
 button:hover {
   background-color: var(--primary-color);
   border-color: var(--primary-color);
+  color: var(--white);
 }
 
 button:focus,
