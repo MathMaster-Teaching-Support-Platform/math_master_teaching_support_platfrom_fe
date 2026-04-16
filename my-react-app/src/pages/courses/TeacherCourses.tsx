@@ -497,7 +497,7 @@ const TeacherCourses: React.FC = () => {
                     <div className="course-actions">
                       <button
                         className="action-primary"
-                        onClick={() => navigate(`/teacher/courses/${course.id}/lessons`)}
+                        onClick={() => navigate(`/teacher/courses/${course.id}`)}
                       >
                         <Settings2 size={14} /> Quản lý
                       </button>

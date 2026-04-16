@@ -278,7 +278,8 @@ export class CourseService {
     if (filters?.isRequired !== undefined) qs.append('isRequired', String(filters.isRequired));
     
     const url = `${API_BASE_URL}${API_ENDPOINTS.COURSE_DETAIL(courseId)}/assessments${qs.toString() ? `?${qs}` : ''}`;
-    const res = await fetch(url, { method: 'GET' });
+    const headers = await this.getAuthHeaders();
+    const res = await fetch(url, { method: 'GET', headers });
     return this.handleResponse(res);
   }
 

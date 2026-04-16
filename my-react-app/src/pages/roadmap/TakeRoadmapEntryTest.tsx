@@ -28,6 +28,11 @@ function toAttemptQuestions(data: RoadmapEntryTestAttemptStartResponse | null): 
     questionType: q.questionType,
     options: q.options,
     points: q.points,
+    diagramData: q.diagramData,
+    diagramUrl: q.diagramUrl,
+    diagramLatex: q.diagramLatex,
+    latexContent: q.latexContent,
+    answerFormula: q.answerFormula,
   }));
 }
 

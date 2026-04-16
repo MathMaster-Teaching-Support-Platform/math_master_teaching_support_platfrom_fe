@@ -231,6 +231,11 @@ export interface RoadmapEntryTestQuestion {
   questionText: string;
   options?: Record<string, string>;
   points: number;
+  diagramData?: Record<string, unknown> | string | null;
+  diagramUrl?: string;
+  diagramLatex?: string;
+  latexContent?: string;
+  answerFormula?: string;
 }
 
 export interface RoadmapEntryTestAttemptStartResponse {

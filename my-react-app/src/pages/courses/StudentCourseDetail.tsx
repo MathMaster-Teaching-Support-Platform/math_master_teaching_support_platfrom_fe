@@ -87,7 +87,7 @@ const StudentCourseDetail: React.FC = () => {
 
   const tabs = [
     { id: 'lessons' as const, label: 'Bài học', icon: BookOpen },
-    { id: 'assessments' as const, label: 'Đánh giá', icon: FileText },
+    { id: 'assessments' as const, label: 'Bài đánh giá', icon: FileText },
     { id: 'progress' as const, label: 'Tiến độ', icon: TrendingUp },
   ];
 

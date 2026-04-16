@@ -276,7 +276,7 @@ const StudentAssessmentsTab: React.FC<StudentAssessmentsTabProps> = ({ courseId 
                       style={{ flex: 1 }}
                       disabled={!canTake}
                       onClick={() =>
-                        navigate(`/student/assessments/${assessment.assessmentId}`)
+                        navigate(`/student/assessments/${assessment.assessmentId}/take`)
                       }
                     >
                       {canTake ? (
