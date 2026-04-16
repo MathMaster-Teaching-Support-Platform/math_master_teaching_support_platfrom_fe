@@ -13,7 +13,8 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { BlockMath, InlineMath } from 'react-katex';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
-import { mockTeacher } from '../../data/mockData';
+import { mockStudent, mockTeacher } from '../../data/mockData';
+import { AuthService } from '../../services/api/auth.service';
 import {
   useArchiveChatSession,
   useChatSessionDetail,
@@ -93,6 +94,10 @@ const ChatMessageContent: React.FC<{ content: string }> = ({ content }) => {
 
 const AIAssistant: React.FC = () => {
   const navigate = useNavigate();
+  const currentRole = AuthService.getUserRole() || 'student';
+  const layoutRole: 'teacher' | 'student' | 'admin' =
+    currentRole === 'teacher' ? 'teacher' : currentRole === 'admin' ? 'admin' : 'student';
+  const currentUser = currentRole === 'teacher' ? mockTeacher : mockStudent;
   const [selectedSessionId, setSelectedSessionId] = useState<string>('');
   const [input, setInput] = useState('');
   const [pendingPrompt, setPendingPrompt] = useState('');
@@ -233,7 +238,7 @@ const AIAssistant: React.FC = () => {
       } else if (apiError.code === 1165) {
         setLocalError('Token cua goi da het. Vui long mua them goi hoac nap tien.');
         if (window.confirm('Token da het. Mo trang goi va vi de nap/mua ngay?')) {
-          navigate('/teacher/wallet');
+          navigate(`/${layoutRole}/wallet`);
         }
       } else {
         setLocalError(getErrorMessage(error, 'Không thể gửi prompt.'));
@@ -321,8 +326,8 @@ const AIAssistant: React.FC = () => {
 
   return (
     <DashboardLayout
-      role="teacher"
-      user={{ name: mockTeacher.name, avatar: mockTeacher.avatar!, role: 'teacher' }}
+      role={layoutRole}
+      user={{ name: currentUser.name, avatar: currentUser.avatar!, role: layoutRole }}
       notificationCount={5}
     >
       <div className={`gemini-chat-page ${isSessionPanelOpen ? '' : 'session-collapsed'}`}>
@@ -416,7 +421,7 @@ const AIAssistant: React.FC = () => {
                 className={`chat-row ${message.role === 'USER' ? 'chat-user' : 'chat-assistant'}`}
               >
                 <div className="chat-avatar">
-                  {message.role === 'USER' ? (mockTeacher.name?.[0] ?? 'B') : 'AI'}
+                  {message.role === 'USER' ? (currentUser.name?.[0] ?? 'U') : 'AI'}
                 </div>
                 <div className="chat-body">
                   <ChatMessageContent content={message.content} />

@@ -99,6 +99,13 @@ const studentGroups: MenuGroup[] = [
     ],
   },
   {
+    label: 'Công cụ',
+    items: [
+      { path: '/student/ai-assistant', icon: Bot, label: 'AI Trợ lý' },
+      { path: '/student/wallet', icon: Wallet, label: 'Ví của tôi' },
+    ],
+  },
+  {
     label: 'Giáo viên',
     items: [{ path: '/submit-teacher-profile', icon: ShieldCheck, label: 'Đăng ký Giáo viên' }],
   },

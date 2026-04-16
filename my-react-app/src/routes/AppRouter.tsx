@@ -559,6 +559,22 @@ const router = createBrowserRouter([
     ),
   },
   {
+    path: '/student/ai-assistant',
+    element: (
+      <PrivateRoute>
+        <AIAssistant />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/student/wallet',
+    element: (
+      <PrivateRoute>
+        <StudentWallet />
+      </PrivateRoute>
+    ),
+  },
+  {
     path: '/student/settings',
     element: (
       <PrivateRoute>

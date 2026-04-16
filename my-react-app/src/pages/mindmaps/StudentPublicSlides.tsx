@@ -1,15 +1,12 @@
 import {
   BookMarked,
   BookOpen,
-  Calendar,
   ChevronLeft,
   ChevronRight,
   Download,
-  Eye,
   FileText,
   Filter,
   GraduationCap,
-  HardDrive,
   Search,
   X,
 } from 'lucide-react';
@@ -105,12 +102,6 @@ export default function StudentPublicSlides() {
   const [loadingCatalog, setLoadingCatalog] = useState(false);
   const [loadingSlides, setLoadingSlides] = useState(false);
   const [downloadingSlideId, setDownloadingSlideId] = useState('');
-  const [previewingSlideId, setPreviewingSlideId] = useState('');
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [selectedPreviewSlide, setSelectedPreviewSlide] = useState<LessonSlideGeneratedFile | null>(
-    null
-  );
-  const [previewPdfUrl, setPreviewPdfUrl] = useState('');
   const [slidesError, setSlidesError] = useState('');
 
   const selectedLesson = useMemo(
@@ -134,13 +125,6 @@ export default function StudentPublicSlides() {
     link.click();
     link.remove();
     globalThis.URL.revokeObjectURL(blobUrl);
-  };
-
-  const revokePreviewPdfUrl = () => {
-    if (previewPdfUrl) {
-      globalThis.URL.revokeObjectURL(previewPdfUrl);
-      setPreviewPdfUrl('');
-    }
   };
 
   useEffect(() => {
@@ -309,72 +293,6 @@ export default function StudentPublicSlides() {
       setDownloadingSlideId('');
     }
   };
-
-  const handleOpenPreview = async (slide: LessonSlideGeneratedFile) => {
-    if (!slide.isPublic) {
-      setSlidesError(
-        'Slide này hiện không ở trạng thái public nên không thể preview từ tài khoản student.'
-      );
-      return;
-    }
-
-    setSelectedPreviewSlide(slide);
-    setPreviewingSlideId(slide.id);
-    setSlidesError('');
-    revokePreviewPdfUrl();
-    setIsPreviewOpen(true);
-
-    try {
-      const response = await LessonSlideService.getPublicGeneratedFilePreviewPdf(slide.id);
-      const pdfObjectUrl = globalThis.URL.createObjectURL(response.blob);
-      setPreviewPdfUrl(pdfObjectUrl);
-    } catch (err) {
-      const apiError = err as Error & { code?: number };
-      if (apiError.code === 1168) {
-        setSlidesError(
-          'Slide này không còn public ở phía server. Danh sách đã được làm mới, vui lòng thử lại slide khác.'
-        );
-        setIsPreviewOpen(false);
-        setSelectedPreviewSlide(null);
-        void (async () => {
-          try {
-            const refreshed = await LessonSlideService.getAllPublicGeneratedFiles({
-              lessonId: lessonId || undefined,
-              keyword: slideKeywordDebounced || undefined,
-              page: slidePage,
-              size: slideSize,
-              sortBy: slideSortBy,
-              direction: slideDirection,
-            });
-            setSlidesResult({
-              ...refreshed.result,
-              content: (refreshed.result.content || []).filter((item) => item.isPublic),
-            });
-          } catch {
-            // Keep current list when refresh fails.
-          }
-        })();
-      } else {
-        setSlidesError(err instanceof Error ? err.message : 'Không thể tạo preview PDF');
-      }
-    } finally {
-      setPreviewingSlideId('');
-    }
-  };
-
-  const handleClosePreview = () => {
-    setIsPreviewOpen(false);
-    setSelectedPreviewSlide(null);
-    revokePreviewPdfUrl();
-  };
-
-  useEffect(() => {
-    return () => {
-      if (previewPdfUrl) {
-        globalThis.URL.revokeObjectURL(previewPdfUrl);
-      }
-    };
-  }, [previewPdfUrl]);
 
   return (
     <DashboardLayout user={mockStudent} role="student">
@@ -589,60 +507,52 @@ export default function StudentPublicSlides() {
           {/* ── Grid ── */}
           {!loadingSlides && slidesResult.content.length > 0 && (
             <>
-              <div className="grid-cards">
+              <div className="sps-card-grid">
                 {slidesResult.content.map((slide) => (
-                  <article key={slide.id} className="data-card sps-card">
-                    <div className="sps-cover">
-                      <div className="sps-cover__overlay" />
-                      <span className="sps-cover__ext">.pptx</span>
+                  <div key={slide.id} className="sps-slide-card">
+                    <div className="sps-slide-card__thumb">
                       {resolveThumbnailUrl(slide.thumbnail) ? (
                         <img
                           src={resolveThumbnailUrl(slide.thumbnail) || ''}
                           alt={getGeneratedDisplayName(slide)}
-                          className="sps-cover__thumb"
                           loading="lazy"
                         />
                       ) : (
-                        <div className="sps-cover__icon">
-                          <FileText size={42} strokeWidth={1.3} />
+                        <div className="sps-slide-card__thumb-placeholder">
+                          {getGeneratedDisplayName(slide).slice(0, 1).toUpperCase()}
                         </div>
                       )}
+                      <span className="sps-slide-card__badge">PUBLISHED</span>
                     </div>
-                    <div className="sps-card-body">
-                      <h3 className="sps-card__title">{getGeneratedDisplayName(slide)}</h3>
-                      <div className="sps-card-metrics">
-                        <span className="metric">
-                          <HardDrive size={11} />
-                          {formatFileSize(slide.fileSizeBytes)}
-                        </span>
-                        <span className="metric">
-                          <Calendar size={11} />
-                          {new Date(slide.createdAt).toLocaleDateString('vi-VN')}
-                        </span>
-                        <span className="metric">{slide.isPublic ? 'Public' : 'Private'}</span>
-                      </div>
-                      <div className="sps-card-actions">
-                        <button
-                          type="button"
-                          className="sps-btn-preview"
-                          onClick={() => void handleOpenPreview(slide)}
-                          disabled={previewingSlideId === slide.id || !slide.isPublic}
-                        >
-                          <Eye size={14} />
-                          {previewingSlideId === slide.id ? 'Đang preview...' : 'Xem PDF'}
-                        </button>
-                        <button
-                          type="button"
-                          className="sps-btn-download"
-                          onClick={() => void handleDownloadSlide(slide.id)}
-                          disabled={downloadingSlideId === slide.id || !slide.isPublic}
-                        >
-                          <Download size={14} />
-                          {downloadingSlideId === slide.id ? 'Đang tải...' : 'Tải xuống'}
-                        </button>
-                      </div>
+
+                    <div className="sps-slide-card__body">
+                      <p className="sps-slide-card__title" title={getGeneratedDisplayName(slide)}>
+                        {getGeneratedDisplayName(slide)}
+                      </p>
+                      <ul className="sps-slide-card__meta">
+                        <li>
+                          <span>DUNG LƯỢNG</span>
+                          <span>{formatFileSize(slide.fileSizeBytes)}</span>
+                        </li>
+                        <li>
+                          <span>NGÀY TẠO</span>
+                          <span>{new Date(slide.createdAt).toLocaleDateString('vi-VN')}</span>
+                        </li>
+                      </ul>
                     </div>
-                  </article>
+
+                    <div className="sps-slide-card__actions">
+                      <button
+                        type="button"
+                        className="sps-slide-card__btn primary"
+                        onClick={() => void handleDownloadSlide(slide.id)}
+                        disabled={downloadingSlideId === slide.id || !slide.isPublic}
+                      >
+                        <Download size={14} />
+                        {downloadingSlideId === slide.id ? 'Đang tải...' : 'Tải xuống'}
+                      </button>
+                    </div>
+                  </div>
                 ))}
               </div>
 
@@ -677,73 +587,6 @@ export default function StudentPublicSlides() {
                 </button>
               </div>
             </>
-          )}
-
-          {isPreviewOpen && (
-            <div className="sps-modal-overlay" onClick={handleClosePreview}>
-              <div
-                className="sps-modal"
-                role="dialog"
-                aria-modal="true"
-                aria-label="Xem trước slide PDF"
-                onClick={(event) => event.stopPropagation()}
-              >
-                <div className="sps-modal-header">
-                  <h3>
-                    {selectedPreviewSlide
-                      ? getGeneratedDisplayName(selectedPreviewSlide)
-                      : 'Xem trước slide'}
-                  </h3>
-                  <button type="button" className="sps-modal-close" onClick={handleClosePreview}>
-                    ×
-                  </button>
-                </div>
-
-                <div className="sps-modal-body">
-                  {!previewPdfUrl && previewingSlideId && (
-                    <div className="sps-math-loader" role="status" aria-live="polite">
-                      <div className="sps-math-loader-ring" aria-hidden="true" />
-                      <div className="sps-math-loader-symbols" aria-hidden="true">
-                        <span>x²</span>
-                        <span>∫</span>
-                        <span>π</span>
-                        <span>√</span>
-                        <span>Δ</span>
-                      </div>
-                      <p>Đang dựng preview PDF...</p>
-                    </div>
-                  )}
-
-                  {previewPdfUrl && (
-                    <iframe
-                      className="sps-modal-iframe"
-                      src={previewPdfUrl}
-                      title="Public slide preview PDF"
-                    />
-                  )}
-                </div>
-
-                <div className="sps-modal-footer">
-                  <button type="button" className="btn secondary" onClick={handleClosePreview}>
-                    Đóng
-                  </button>
-                  <button
-                    type="button"
-                    className="btn"
-                    disabled={
-                      !selectedPreviewSlide || downloadingSlideId === selectedPreviewSlide.id
-                    }
-                    onClick={() =>
-                      selectedPreviewSlide && void handleDownloadSlide(selectedPreviewSlide.id)
-                    }
-                  >
-                    {selectedPreviewSlide && downloadingSlideId === selectedPreviewSlide.id
-                      ? 'Đang tải...'
-                      : 'Tải xuống'}
-                  </button>
-                </div>
-              </div>
-            </div>
           )}
         </section>
       </div>
