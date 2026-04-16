@@ -17,23 +17,34 @@
   }
 }
 
+@keyframes shimmerBorder {
+  0%, 100% { opacity: 0.5; }
+  50%       { opacity: 1; }
+}
+
+@keyframes shimmerSkeleton {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+@keyframes spinnerRing {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes trustPillIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 .pricing-animate-in {
   animation: pricingFadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 /* Staggered delays for cards */
-.pricing-animate-in:nth-child(1) {
-  animation-delay: 0s;
-}
-.pricing-animate-in:nth-child(2) {
-  animation-delay: 0.1s;
-}
-.pricing-animate-in:nth-child(3) {
-  animation-delay: 0.2s;
-}
-.pricing-animate-in:nth-child(4) {
-  animation-delay: 0.3s;
-}
+.pricing-animate-in:nth-child(1) { animation-delay: 0s; }
+.pricing-animate-in:nth-child(2) { animation-delay: 0.1s; }
+.pricing-animate-in:nth-child(3) { animation-delay: 0.2s; }
+.pricing-animate-in:nth-child(4) { animation-delay: 0.3s; }
 
 /* ══════════════════════════════════
    PRICING HERO
@@ -44,6 +55,11 @@
   text-align: center;
   position: relative;
   overflow: hidden;
+}
+
+/* Compact variant inside DashboardLayout (already has its own top spacing) */
+.pricing-hero--dashboard {
+  padding: 3.5rem 0 2.5rem;
 }
 
 .pricing-hero-dots {
@@ -80,6 +96,48 @@
   margin: 0 auto;
 }
 
+/* ── Trust Stats Bar ── */
+.pricing-trust-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+}
+
+.pricing-trust-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--c-border-soft, #f0edf8);
+  border-radius: var(--r-pill, 100px);
+  padding: 0.5rem 1.1rem;
+  box-shadow: 0 2px 10px rgba(14, 12, 21, 0.05);
+  font-size: 0.85rem;
+  color: var(--c-text-2, #3f3a52);
+  opacity: 0;
+  animation: trustPillIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.pricing-trust-pill__icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.pricing-trust-pill__value {
+  font-weight: 700;
+  color: var(--c-text-1, #0e0c15);
+  font-family: var(--f-heading, 'Be Vietnam Pro', sans-serif);
+}
+
+.pricing-trust-pill__label {
+  color: var(--c-text-3, #756b85);
+}
+
 /* ══════════════════════════════════
    PRICING CARDS SECTION
    ══════════════════════════════════ */
@@ -105,7 +163,7 @@
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--c-border-soft, #f0edf8);
   border-radius: var(--r-xl, 24px);
-  padding: 2.5rem 2rem;
+  padding: 2.25rem 2rem;
   position: relative;
   overflow: hidden;
   box-shadow: var(--shadow-sm, 0 2px 4px rgba(14, 12, 21, 0.03), 0 4px 12px rgba(14, 12, 21, 0.04));
@@ -131,9 +189,7 @@
   z-index: 0;
 }
 
-.pricing-plan-card:hover::before {
-  opacity: 1;
-}
+.pricing-plan-card:hover::before { opacity: 1; }
 
 .pricing-plan-card:hover {
   transform: translateY(-10px);
@@ -145,13 +201,15 @@
 
 /* ── Featured / Highlighted Card ── */
 .pricing-plan-card--featured {
-  border-color: rgba(94, 92, 230, 0.25);
-  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(94, 92, 230, 0.28);
+  background: rgba(255, 255, 255, 0.97);
   transform: scale(1.04);
   box-shadow:
     0 4px 16px rgba(94, 92, 230, 0.08),
-    0 16px 48px rgba(94, 92, 230, 0.12);
+    0 16px 48px rgba(94, 92, 230, 0.14);
   z-index: 2;
+  /* Animated shimmer border */
+  animation: shimmerBorder 3s ease-in-out infinite;
 }
 
 .pricing-plan-card--featured::before {
@@ -166,9 +224,9 @@
 .pricing-plan-card--featured:hover {
   transform: scale(1.04) translateY(-10px);
   box-shadow:
-    0 8px 28px rgba(94, 92, 230, 0.14),
-    0 24px 64px rgba(94, 92, 230, 0.18);
-  border-color: rgba(94, 92, 230, 0.3);
+    0 8px 28px rgba(94, 92, 230, 0.15),
+    0 24px 64px rgba(94, 92, 230, 0.2);
+  border-color: rgba(94, 92, 230, 0.35);
 }
 
 /* Featured CTA button brightens on card hover */
@@ -178,6 +236,14 @@
     0 6px 20px rgba(94, 92, 230, 0.35),
     0 10px 40px rgba(94, 92, 230, 0.25);
   filter: brightness(1.08);
+}
+
+/* ── Active (current) plan card ── */
+.pricing-plan-card--active {
+  border-color: rgba(16, 185, 129, 0.3);
+  box-shadow:
+    0 4px 16px rgba(16, 185, 129, 0.08),
+    0 12px 36px rgba(16, 185, 129, 0.1);
 }
 
 /* ── Popular Badge ── */
@@ -193,20 +259,45 @@
   text-transform: uppercase;
   padding: 0.35rem 0.9rem;
   border-radius: var(--r-pill, 100px);
-  margin-bottom: 1.25rem;
+  margin-bottom: 1rem;
   width: fit-content;
   box-shadow: 0 2px 12px rgba(94, 92, 230, 0.3);
   position: relative;
   z-index: 1;
 }
 
-.pricing-popular-badge svg {
-  opacity: 0.9;
+/* ── Current Plan Badge ── */
+.pricing-current-plan-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(52, 211, 153, 0.2));
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 0.35rem 0.9rem;
+  border-radius: var(--r-pill, 100px);
+  margin-bottom: 1rem;
+  width: fit-content;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Plan Icon emoji ── */
+.pricing-plan-icon {
+  font-size: 2.2rem;
+  line-height: 1;
+  margin-bottom: 0.85rem;
+  position: relative;
+  z-index: 1;
 }
 
 /* ── Plan Header ── */
 .pricing-plan-header {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
   position: relative;
   z-index: 1;
 }
@@ -232,7 +323,7 @@
   display: flex;
   align-items: baseline;
   gap: 0.15rem;
-  margin-bottom: 1.75rem;
+  margin-bottom: 1rem;
   position: relative;
   z-index: 1;
 }
@@ -259,11 +350,30 @@
   color: var(--c-text-3, #756b85);
 }
 
+/* ── Token Quota Pill ── */
+.pricing-token-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: linear-gradient(135deg, rgba(94, 92, 230, 0.08), rgba(133, 141, 255, 0.14));
+  color: var(--c-primary, #5e5ce6);
+  border: 1px solid rgba(94, 92, 230, 0.18);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.3rem 0.8rem;
+  border-radius: var(--r-pill, 100px);
+  margin-bottom: 1.25rem;
+  position: relative;
+  z-index: 1;
+  width: fit-content;
+}
+
 /* ── CTA Button ── */
 .pricing-plan-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 0.5rem;
   width: 100%;
   padding: 0.85rem 1.5rem;
   border-radius: var(--r-md, 16px);
@@ -276,6 +386,7 @@
   z-index: 1;
   font-family: var(--f-heading, 'Be Vietnam Pro', sans-serif);
   letter-spacing: -0.1px;
+  margin-bottom: 0;
 }
 
 .pricing-plan-btn--primary {
@@ -287,7 +398,7 @@
     0 4px 16px rgba(94, 92, 230, 0.15);
 }
 
-.pricing-plan-btn--primary:hover {
+.pricing-plan-btn--primary:hover:not(:disabled) {
   background: #4e4cc6;
   transform: translateY(-2px);
   box-shadow:
@@ -301,12 +412,29 @@
   border: 1px solid var(--c-border, #e8e5f0);
 }
 
-.pricing-plan-btn--outline:hover {
+.pricing-plan-btn--outline:hover:not(:disabled) {
   border-color: var(--c-primary, #5e5ce6);
   color: var(--c-primary, #5e5ce6);
   background: rgba(94, 92, 230, 0.05);
   transform: translateY(-2px);
-  box-shadow: var(--shadow-sm, 0 2px 4px rgba(14, 12, 21, 0.03), 0 4px 12px rgba(14, 12, 21, 0.04));
+}
+
+.pricing-plan-btn:disabled {
+  opacity: 0.62;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* ── Button loading spinner ── */
+.pricing-btn-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spinnerRing 0.6s linear infinite;
+  flex-shrink: 0;
 }
 
 /* ── Divider ── */
@@ -314,7 +442,7 @@
   width: 100%;
   height: 1px;
   background: linear-gradient(90deg, transparent, var(--c-border, #e8e5f0), transparent);
-  margin: 1.75rem 0;
+  margin: 1.5rem 0;
   position: relative;
   z-index: 1;
 }
@@ -365,6 +493,211 @@
 }
 
 /* ══════════════════════════════════
+   SKELETON LOADING CARDS
+   ══════════════════════════════════ */
+.pricing-skeleton-card {
+  pointer-events: none;
+  gap: 0.9rem;
+}
+
+.pricing-skeleton {
+  border-radius: 10px;
+  background: linear-gradient(
+    90deg,
+    rgba(14, 12, 21, 0.05) 25%,
+    rgba(14, 12, 21, 0.09) 50%,
+    rgba(14, 12, 21, 0.05) 75%
+  );
+  background-size: 800px 100%;
+  animation: shimmerSkeleton 1.4s ease-in-out infinite;
+  position: relative;
+  z-index: 1;
+}
+
+.pricing-skeleton--icon   { width: 44px; height: 44px; border-radius: 12px; }
+.pricing-skeleton--title  { height: 22px; width: 55%; }
+.pricing-skeleton--subtitle { height: 14px; width: 75%; }
+.pricing-skeleton--price  { height: 48px; width: 50%; margin: 0.25rem 0; }
+.pricing-skeleton--btn    { height: 46px; width: 100%; border-radius: 16px; }
+
+/* ══════════════════════════════════
+   WALLET BANNER (authenticated)
+   ══════════════════════════════════ */
+.pricing-wallet-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--c-border-soft, #f0edf8);
+  border-radius: var(--r-xl, 24px);
+  padding: 1.5rem 2rem;
+  margin-bottom: 2rem;
+  box-shadow:
+    0 4px 16px rgba(14, 12, 21, 0.04),
+    0 12px 40px rgba(94, 92, 230, 0.06);
+  position: relative;
+  overflow: hidden;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+}
+
+.pricing-wallet-banner__glow {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  top: -150px;
+  right: -80px;
+  background: radial-gradient(circle, rgba(94, 92, 230, 0.07), transparent 70%);
+  filter: blur(40px);
+  pointer-events: none;
+}
+
+.pricing-wallet-banner__col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  position: relative;
+  z-index: 1;
+  min-width: 140px;
+}
+
+.pricing-wallet-banner__col--token {
+  min-width: 200px;
+}
+
+.pricing-wallet-banner__label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--c-text-3, #756b85);
+}
+
+.pricing-wallet-banner__value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--c-text-1, #0e0c15);
+  font-family: var(--f-heading, 'Be Vietnam Pro', sans-serif);
+  letter-spacing: -0.4px;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.pricing-wallet-banner__quota {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--c-text-3, #756b85);
+}
+
+.pricing-wallet-banner__divider {
+  width: 1px;
+  align-self: stretch;
+  background: var(--c-border-soft, #f0edf8);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.pricing-wallet-banner__action {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Active plan badge in banner ── */
+.pricing-active-plan-badge {
+  display: inline-flex;
+  align-items: center;
+  background: linear-gradient(135deg, var(--c-primary, #5e5ce6), #858dff);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--r-pill, 100px);
+  letter-spacing: 0.2px;
+}
+
+/* ── Token progress bar ── */
+.pricing-token-bar {
+  height: 6px;
+  border-radius: 99px;
+  background: rgba(14, 12, 21, 0.07);
+  overflow: hidden;
+  margin-top: 0.2rem;
+}
+
+.pricing-token-bar__fill {
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--c-primary, #5e5ce6), #858dff);
+  transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pricing-token-percent {
+  font-size: 0.72rem;
+  color: var(--c-text-3, #756b85);
+  font-weight: 500;
+}
+
+/* ── Top-up button inside banner ── */
+.pricing-wallet-topup-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--c-primary, #5e5ce6);
+  color: #fff;
+  border: none;
+  border-radius: var(--r-md, 16px);
+  padding: 0.65rem 1.25rem;
+  font-size: 0.83rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+  font-family: var(--f-heading, 'Be Vietnam Pro', sans-serif);
+  box-shadow: 0 2px 10px rgba(94, 92, 230, 0.22);
+}
+
+.pricing-wallet-topup-btn:hover {
+  background: #4e4cc6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(94, 92, 230, 0.3);
+}
+
+/* ── Alert messages ── */
+.pricing-alert {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.85rem 1.25rem;
+  border-radius: var(--r-md, 16px);
+  font-size: 0.88rem;
+  font-weight: 500;
+  margin-bottom: 1.25rem;
+}
+
+.pricing-alert--error {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #dc2626;
+}
+
+.pricing-alert--success {
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  color: #059669;
+}
+
+/* ══════════════════════════════════
    COMPARISON TABLE SECTION
    ══════════════════════════════════ */
 .pricing-comparison-section {
@@ -374,7 +707,6 @@
   overflow: hidden;
 }
 
-/* Subtle top separator */
 .pricing-comparison-section::before {
   content: '';
   position: absolute;
@@ -407,7 +739,6 @@
   letter-spacing: -0.8px;
 }
 
-/* Table container */
 .pricing-comparison-table-wrap {
   max-width: 900px;
   margin: 0 auto;
@@ -420,17 +751,13 @@
   z-index: 1;
 }
 
-/* The grid-based table */
 .pricing-comparison-table {
   display: grid;
   grid-template-columns: 1.6fr 1fr 1fr 1fr;
   width: 100%;
 }
 
-/* ── Header Row ── */
-.pricing-ct-header {
-  display: contents;
-}
+.pricing-ct-header { display: contents; }
 
 .pricing-ct-header-cell {
   padding: 1.5rem 1.25rem;
@@ -453,16 +780,12 @@
   letter-spacing: 0.5px;
 }
 
-/* Featured column header — subtle accent */
 .pricing-ct-header-cell--featured {
   background: rgba(94, 92, 230, 0.04);
   color: var(--c-primary, #5e5ce6);
 }
 
-/* ── Data Rows ── */
-.pricing-ct-row {
-  display: contents;
-}
+.pricing-ct-row { display: contents; }
 
 .pricing-ct-cell {
   padding: 1rem 1.25rem;
@@ -475,32 +798,18 @@
   transition: background 0.2s ease;
 }
 
-/* Feature name column */
 .pricing-ct-cell:first-child {
   justify-content: flex-start;
   font-weight: 500;
   color: var(--c-text-1, #0e0c15);
 }
 
-/* Featured column cells — subtle background */
-.pricing-ct-cell--featured {
-  background: rgba(94, 92, 230, 0.03);
-}
+.pricing-ct-cell--featured { background: rgba(94, 92, 230, 0.03); }
 
-/* Row hover highlight */
-.pricing-ct-row:hover .pricing-ct-cell {
-  background: rgba(94, 92, 230, 0.03);
-}
-.pricing-ct-row:hover .pricing-ct-cell--featured {
-  background: rgba(94, 92, 230, 0.06);
-}
+.pricing-ct-row:hover .pricing-ct-cell { background: rgba(94, 92, 230, 0.03); }
+.pricing-ct-row:hover .pricing-ct-cell--featured { background: rgba(94, 92, 230, 0.07); }
+.pricing-ct-row:last-child .pricing-ct-cell { border-bottom: none; }
 
-/* Last row — no bottom border */
-.pricing-ct-row:last-child .pricing-ct-cell {
-  border-bottom: none;
-}
-
-/* ── Check / Cross icons in table ── */
 .pricing-ct-check {
   display: inline-flex;
   align-items: center;
@@ -530,19 +839,16 @@
   font-weight: 500;
 }
 
-/* Text values in table cells */
 .pricing-ct-text {
   font-size: 0.82rem;
   font-weight: 600;
   color: var(--c-text-2, #3f3a52);
 }
 
-.pricing-ct-text--featured {
-  color: var(--c-primary, #5e5ce6);
-}
+.pricing-ct-text--featured { color: var(--c-primary, #5e5ce6); }
 
 /* ══════════════════════════════════
-   PRICING FAQ SECTION
+   FAQ ACCORDION
    ══════════════════════════════════ */
 .pricing-faq-section {
   padding: 5rem 0;
@@ -551,7 +857,6 @@
   overflow: hidden;
 }
 
-/* Subtle top separator */
 .pricing-faq-section::before {
   content: '';
   position: absolute;
@@ -584,72 +889,92 @@
   letter-spacing: -0.8px;
 }
 
-.pricing-faq-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1.25rem;
-  max-width: 860px;
+/* Accordion wrapper */
+.pricing-faq-accordion {
+  max-width: 740px;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
   position: relative;
   z-index: 1;
 }
 
-.pricing-faq-card {
-  background: rgba(255, 255, 255, 0.85);
+/* Accordion item */
+.pricing-faq-item {
+  background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--c-border-soft, #f0edf8);
   border-radius: var(--r-xl, 24px);
-  padding: 2rem 1.75rem;
-  box-shadow: var(--shadow-xs, 0 1px 2px rgba(14, 12, 21, 0.04));
-  transition: all 0.3s ease;
-  position: relative;
   overflow: hidden;
-}
-
-/* Gradient glow orb */
-.pricing-faq-card::before {
-  content: '';
-  position: absolute;
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  top: -40px;
-  right: -40px;
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.1), transparent 70%);
-  filter: blur(25px);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
   opacity: 0;
-  transition: opacity 0.5s ease;
-  pointer-events: none;
+  animation: pricingFadeUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-.pricing-faq-card:hover::before {
-  opacity: 1;
+.pricing-faq-item--open {
+  border-color: rgba(94, 92, 230, 0.2);
+  box-shadow: 0 4px 20px rgba(94, 92, 230, 0.07);
 }
 
-.pricing-faq-card:hover {
-  transform: translateY(-6px);
-  box-shadow:
-    0 4px 16px rgba(94, 92, 230, 0.06),
-    0 12px 36px rgba(94, 92, 230, 0.08);
-  border-color: rgba(94, 92, 230, 0.12);
-}
-
-.pricing-faq-q {
-  font-size: 1.05rem;
+/* Question button */
+.pricing-faq-question {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 0.97rem;
   font-weight: 600;
   color: var(--c-text-1, #0e0c15);
-  margin: 0 0 0.65rem 0;
   font-family: var(--f-heading, 'Be Vietnam Pro', sans-serif);
   letter-spacing: -0.2px;
-  line-height: 1.35;
+  text-align: left;
+  transition: color 0.2s ease;
 }
 
-.pricing-faq-a {
-  font-size: 0.88rem;
+.pricing-faq-question:hover {
+  color: var(--c-primary, #5e5ce6);
+}
+
+.pricing-faq-item--open .pricing-faq-question {
+  color: var(--c-primary, #5e5ce6);
+}
+
+/* Chevron rotation */
+.pricing-faq-chevron {
+  flex-shrink: 0;
   color: var(--c-text-3, #756b85);
-  line-height: 1.7;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), color 0.2s ease;
+}
+
+.pricing-faq-item--open .pricing-faq-chevron {
+  transform: rotate(180deg);
+  color: var(--c-primary, #5e5ce6);
+}
+
+/* Answer panel */
+.pricing-faq-answer {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.38s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pricing-faq-item--open .pricing-faq-answer {
+  max-height: 200px;
+}
+
+.pricing-faq-answer p {
+  padding: 0 1.5rem 1.4rem;
   margin: 0;
+  font-size: 0.9rem;
+  color: var(--c-text-3, #756b85);
+  line-height: 1.75;
 }
 
 /* ══════════════════════════════════
@@ -661,7 +986,6 @@
   position: relative;
 }
 
-/* Top separator */
 .pricing-cta-section::before {
   content: '';
   position: absolute;
@@ -695,7 +1019,7 @@
   top: -150px;
   left: 50%;
   transform: translateX(-50%);
-  background: radial-gradient(circle, rgba(94, 92, 230, 0.08), transparent 70%);
+  background: radial-gradient(circle, rgba(94, 92, 230, 0.1), transparent 70%);
   filter: blur(50px);
   pointer-events: none;
 }
@@ -716,10 +1040,46 @@
   font-size: 1rem;
   color: var(--c-text-3, #756b85);
   max-width: 500px;
-  margin: 0 auto 2rem;
+  margin: 0 auto 1.5rem;
   line-height: 1.7;
   position: relative;
   z-index: 1;
+}
+
+/* Social proof avatar row */
+.pricing-cta-avatars {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+.pricing-cta-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f0edf8, #e4e1f5);
+  border: 2px solid #fff;
+  font-size: 1.1rem;
+  margin-left: -8px;
+  box-shadow: 0 2px 8px rgba(14, 12, 21, 0.08);
+  transition: transform 0.2s ease;
+}
+
+.pricing-cta-avatar:first-child { margin-left: 0; }
+
+.pricing-cta-avatar:hover { transform: translateY(-3px) scale(1.12); }
+
+.pricing-cta-avatar-label {
+  margin-left: 0.75rem;
+  font-size: 0.82rem;
+  color: var(--c-text-3, #756b85);
+  font-weight: 600;
 }
 
 .pricing-cta-actions {
@@ -732,130 +1092,16 @@
 }
 
 /* ══════════════════════════════════
-   RESPONSIVE — Pricing
-   ══════════════════════════════════ */
-@media (max-width: 968px) {
-  .pricing-cards-grid {
-    grid-template-columns: 1fr;
-    max-width: 420px;
-    margin: 0 auto;
-    gap: 1.25rem;
-  }
-
-  .pricing-plan-card--featured {
-    transform: scale(1);
-    order: -1;
-  }
-
-  .pricing-plan-card--featured:hover {
-    transform: translateY(-8px);
-  }
-
-  .pricing-faq-grid {
-    grid-template-columns: 1fr;
-    max-width: 520px;
-  }
-
-  /* Comparison table: horizontal scroll on tablet */
-  .pricing-comparison-table-wrap {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .pricing-comparison-table {
-    min-width: 640px;
-  }
-}
-
-@media (max-width: 640px) {
-  .pricing-hero {
-    padding: 5rem 0 2.5rem;
-  }
-
-  .pricing-hero-title {
-    font-size: 2rem;
-    letter-spacing: -0.8px;
-  }
-
-  .pricing-hero-desc {
-    font-size: 0.95rem;
-  }
-
-  .pricing-cards-section {
-    padding: 0.5rem 0 3rem;
-  }
-
-  .pricing-plan-card {
-    padding: 2rem 1.5rem;
-  }
-
-  /* Disable hover transforms on mobile — touch-friendly */
-  .pricing-plan-card:hover {
-    transform: none;
-  }
-  .pricing-plan-card--featured:hover {
-    transform: none;
-  }
-  .pricing-faq-card:hover {
-    transform: none;
-  }
-
-  .pricing-faq-section,
-  .pricing-cta-section,
-  .pricing-comparison-section {
-    padding: 3rem 0;
-  }
-
-  .pricing-cta-card {
-    padding: 3rem 1.5rem;
-  }
-
-  .pricing-cta-title {
-    font-size: 1.5rem;
-  }
-
-  .pricing-faq-title,
-  .pricing-comparison-title {
-    font-size: 1.5rem;
-  }
-
-  /* Comparison table — scroll-hint on mobile */
-  .pricing-comparison-table-wrap {
-    border-radius: var(--r-lg, 20px);
-  }
-
-  .pricing-comparison-table {
-    min-width: 580px;
-  }
-
-  .pricing-ct-header-cell,
-  .pricing-ct-cell {
-    padding: 0.85rem 1rem;
-    font-size: 0.82rem;
-  }
-}
-
-/* ══════════════════════════════════
    WALLET INSUFFICIENT MODAL
    ══════════════════════════════════ */
 @keyframes pricingModalOverlayIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 @keyframes pricingModalSlideUp {
-  from {
-    opacity: 0;
-    transform: translateY(24px) scale(0.97);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  from { opacity: 0; transform: translateY(24px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .pricing-modal-overlay {
@@ -888,13 +1134,11 @@
   text-align: center;
   position: relative;
   animation: pricingModalSlideUp 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
-  /* Reset <dialog> default browser styles */
   margin: 0;
   outline: none;
   color: inherit;
 }
 
-/* Accent glow behind the icon */
 .pricing-modal::before {
   content: '';
   position: absolute;
@@ -980,16 +1224,6 @@
   border-color: var(--c-text-2, #3f3a52);
   background: rgba(14, 12, 21, 0.08);
   color: var(--c-text-1, #0e0c15);
-  -webkit-text-fill-color: var(--c-text-1, #0e0c15);
-}
-
-.pricing-modal-btn--outline:focus-visible {
-  border-color: var(--c-text-2, #3f3a52);
-  background: rgba(14, 12, 21, 0.08);
-  color: var(--c-text-1, #0e0c15);
-  -webkit-text-fill-color: var(--c-text-1, #0e0c15);
-  outline: 2px solid rgba(94, 92, 230, 0.35);
-  outline-offset: 2px;
 }
 
 .pricing-modal-btn--primary {
@@ -1006,6 +1240,132 @@
   box-shadow:
     0 4px 14px rgba(94, 92, 230, 0.32),
     0 8px 28px rgba(94, 92, 230, 0.22);
+}
+
+/* ══════════════════════════════════
+   RESPONSIVE — Pricing
+   ══════════════════════════════════ */
+@media (max-width: 968px) {
+  .pricing-cards-grid {
+    grid-template-columns: 1fr;
+    max-width: 420px;
+    margin: 0 auto;
+    gap: 1.25rem;
+  }
+
+  .pricing-plan-card--featured {
+    transform: scale(1);
+    order: -1;
+  }
+
+  .pricing-plan-card--featured:hover {
+    transform: translateY(-8px);
+  }
+
+  .pricing-comparison-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .pricing-comparison-table {
+    min-width: 640px;
+  }
+
+  .pricing-wallet-banner {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .pricing-wallet-banner__divider {
+    width: 100%;
+    height: 1px;
+    align-self: auto;
+  }
+
+  .pricing-wallet-banner__action {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .pricing-wallet-topup-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 640px) {
+  .pricing-hero {
+    padding: 5rem 0 2.5rem;
+  }
+
+  .pricing-hero-title {
+    font-size: 2rem;
+    letter-spacing: -0.8px;
+  }
+
+  .pricing-hero-desc {
+    font-size: 0.95rem;
+  }
+
+  .pricing-trust-bar {
+    gap: 0.5rem;
+  }
+
+  .pricing-trust-pill {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.85rem;
+  }
+
+  .pricing-cards-section {
+    padding: 0.5rem 0 3rem;
+  }
+
+  .pricing-plan-card {
+    padding: 2rem 1.5rem;
+  }
+
+  /* Disable hover transforms on mobile */
+  .pricing-plan-card:hover { transform: none; }
+  .pricing-plan-card--featured:hover { transform: none; }
+
+  .pricing-faq-section,
+  .pricing-cta-section,
+  .pricing-comparison-section {
+    padding: 3rem 0;
+  }
+
+  .pricing-cta-card {
+    padding: 3rem 1.5rem;
+  }
+
+  .pricing-cta-title { font-size: 1.5rem; }
+
+  .pricing-faq-title,
+  .pricing-comparison-title {
+    font-size: 1.5rem;
+  }
+
+  .pricing-comparison-table-wrap {
+    border-radius: var(--r-lg, 20px);
+  }
+
+  .pricing-comparison-table { min-width: 580px; }
+
+  .pricing-ct-header-cell,
+  .pricing-ct-cell {
+    padding: 0.85rem 1rem;
+    font-size: 0.82rem;
+  }
+
+  .pricing-cta-avatars {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .pricing-cta-avatar {
+    margin-left: 0;
+  }
 }
 
 @media (max-width: 480px) {

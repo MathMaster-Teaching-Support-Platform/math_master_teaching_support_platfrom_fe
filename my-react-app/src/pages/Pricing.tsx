@@ -15,6 +15,108 @@ import type { WalletSummary } from '../types/wallet.types';
 import './Homepage.css';
 import './Pricing.css';
 
+/* ── Trust stats shown in the hero (unauthenticated) ── */
+const trustStats = [
+  { icon: '👩‍🏫', value: '5,000+', label: 'Giáo viên' },
+  { icon: '⭐', value: '4.9', label: 'Đánh giá' },
+  { icon: '🎁', value: '30 ngày', label: 'Miễn phí' },
+];
+
+/* ── FAQ accordion data ── */
+const faqItems = [
+  {
+    q: 'Có thể thay đổi gói sau khi đăng ký không?',
+    a: 'Có, bạn có thể nâng cấp hoặc hạ cấp gói bất kỳ lúc nào. Thay đổi sẽ có hiệu lực ngay lập tức.',
+  },
+  {
+    q: 'Có chính sách hoàn tiền không?',
+    a: 'Chúng tôi có chính sách hoàn tiền trong vòng 14 ngày nếu bạn không hài lòng với dịch vụ.',
+  },
+  {
+    q: 'Thanh toán như thế nào?',
+    a: 'Chúng tôi chấp nhận thanh toán qua thẻ ngân hàng, chuyển khoản trực tiếp, hoặc ví điện tử (MoMo, ZaloPay…).',
+  },
+  {
+    q: 'Có hỗ trợ đào tạo không?',
+    a: 'Gói Trường học bao gồm buổi đào tạo chuyên biệt. Các gói còn lại có tài liệu hướng dẫn chi tiết và video hướng dẫn.',
+  },
+  {
+    q: 'Token AI là gì?',
+    a: 'Token AI là đơn vị tính cho các tính năng AI như sinh đề, chấm điểm tự động. Mỗi gói đăng ký đi kèm một quota token tương ứng.',
+  },
+  {
+    q: 'Dữ liệu bài giảng của tôi có được bảo mật không?',
+    a: 'Toàn bộ dữ liệu được mã hóa AES-256 và lưu trữ trên hạ tầng bảo mật chuẩn SOC 2. Chúng tôi không chia sẻ dữ liệu với bất kỳ bên thứ ba nào.',
+  },
+];
+
+/* ── Plan icon mapping ── */
+const planIcons: Record<string, string> = {
+  free: '🌱',
+  basic: '⚡',
+  pro: '🚀',
+  enterprise: '🏫',
+  default: '📦',
+};
+
+const getPlanIcon = (name: string): string => {
+  const lower = name.toLowerCase();
+  // Free / starter tier
+  if (lower.includes('miễn phí') || lower.includes('free') || lower.includes('khởi đầu') || lower.includes('khoi dau') || lower.includes('starter')) return planIcons.free;
+  // Pro / teacher / standard tier
+  if (lower.includes('pro') || lower.includes('giáo viên') || lower.includes('giao vien') || lower.includes('cơ bản') || lower.includes('co ban') || lower.includes('basic') || lower.includes('standard')) return planIcons.pro;
+  // Enterprise / school / premium tier
+  if (lower.includes('trường') || lower.includes('truong') || lower.includes('school') || lower.includes('enterprise') || lower.includes('cao cấp') || lower.includes('cao cap') || lower.includes('premium') || lower.includes('advanced')) return planIcons.enterprise;
+  return planIcons.default;
+};
+
+/* ── FAQ Accordion Item ── */
+const FaqItem: React.FC<{ q: string; a: string; index: number }> = ({ q, a, index }) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <div
+      className={`pricing-faq-item ${open ? 'pricing-faq-item--open' : ''}`}
+      style={{ animationDelay: `${index * 0.07}s` }}
+    >
+      <button
+        type="button"
+        className="pricing-faq-question"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+      >
+        <span>{q}</span>
+        <svg
+          className="pricing-faq-chevron"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+      <div className="pricing-faq-answer">
+        <p>{a}</p>
+      </div>
+    </div>
+  );
+};
+
+/* ── Skeleton Card ── */
+const PlanCardSkeleton: React.FC = () => (
+  <div className="pricing-plan-card pricing-skeleton-card">
+    <div className="pricing-skeleton pricing-skeleton--icon" />
+    <div className="pricing-skeleton pricing-skeleton--title" />
+    <div className="pricing-skeleton pricing-skeleton--subtitle" />
+    <div className="pricing-skeleton pricing-skeleton--price" />
+    <div className="pricing-skeleton pricing-skeleton--btn" />
+  </div>
+);
+
 const Pricing: React.FC = () => {
   const navigate = useNavigate();
   const isAuthenticated = AuthService.isAuthenticated();
@@ -113,7 +215,7 @@ const Pricing: React.FC = () => {
           }
         });
       },
-      { threshold: 0.12 }
+      { threshold: 0.08 }
     );
 
     sectionsRef.current.forEach((el) => {
@@ -184,7 +286,7 @@ const Pricing: React.FC = () => {
       ]);
       setWallet(walletRes.result || null);
       setActiveSubscription(subscriptionRes.result || null);
-      setSubscriptionSuccess('Mua gói thành công. Token đã được cập nhật.');
+      setSubscriptionSuccess('🎉 Mua gói thành công! Token đã được cập nhật vào tài khoản.');
     } catch (error) {
       const apiError = error as Error & { code?: number };
       if (apiError.code === 1029) {
@@ -233,6 +335,12 @@ const Pricing: React.FC = () => {
     }
     return <span className="pricing-ct-cross">—</span>;
   };
+
+  /* ── Token progress percentage ── */
+  const tokenPercent =
+    activeSubscription && activeSubscription.tokenQuota > 0
+      ? Math.round((activeSubscription.tokenRemaining / activeSubscription.tokenQuota) * 100)
+      : null;
 
   /* ── Wallet Modal ── */
   const walletModal = showWalletModal ? (
@@ -296,6 +404,9 @@ const Pricing: React.FC = () => {
     </div>
   ) : null;
 
+  /* ════════════════════════════════════
+     AUTHENTICATED VIEW
+     ════════════════════════════════════ */
   if (isAuthenticated) {
     return (
       <>
@@ -305,82 +416,187 @@ const Pricing: React.FC = () => {
           notificationCount={5}
         >
           <div className="homepage">
-            <section className="pricing-hero">
+            {/* Hero */}
+            <section className="pricing-hero pricing-hero--dashboard">
               <div className="pricing-hero-dots" aria-hidden="true" />
               <div className="container">
                 <div className="pricing-hero-content">
                   <span className="ft-badge ft-badge--purple" style={{ marginBottom: '1.25rem' }}>
                     Bảng giá
                   </span>
-                  <h1 className="pricing-hero-title">Subscription & Token</h1>
+                  <h1 className="pricing-hero-title">Subscription &amp; Token</h1>
                   <p className="pricing-hero-desc">
                     Mua gói bằng ví và theo dõi token còn lại theo subscription active.
                   </p>
+
+                  {/* Trust stats for dashboard view too */}
+                  <div className="pricing-trust-bar">
+                    {trustStats.map((stat, i) => (
+                      <div className="pricing-trust-pill" key={i} style={{ animationDelay: `${i * 0.12}s` }}>
+                        <span className="pricing-trust-pill__icon">{stat.icon}</span>
+                        <strong className="pricing-trust-pill__value">{stat.value}</strong>
+                        <span className="pricing-trust-pill__label">{stat.label}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </section>
 
+            {/* Wallet Banner + Plan Cards */}
             <section className="pricing-cards-section">
               <div className="container">
-                <div className="pricing-comparison-header" style={{ marginBottom: '1.2rem' }}>
-                  <span className="ft-badge ft-badge--green" style={{ marginBottom: '1rem' }}>
-                    Subscription + Token
-                  </span>
-                  <h2 className="pricing-comparison-title">Mua gói bằng ví</h2>
-                  {wallet && (
-                    <p className="pricing-hero-desc" style={{ marginTop: '0.4rem' }}>
-                      Số dư ví: <strong>{formatPrice(wallet.balance)}</strong>
-                      {activeSubscription && (
-                        <>
-                          {' '}
-                          | Gói active: <strong>{activeSubscription.planName}</strong> | Token còn
-                          lại: <strong>{activeSubscription.tokenRemaining}</strong>
-                        </>
+                {/* Premium wallet / subscription banner */}
+                <div className="pricing-wallet-banner">
+                  <div className="pricing-wallet-banner__glow" aria-hidden="true" />
+                  <div className="pricing-wallet-banner__col">
+                    <span className="pricing-wallet-banner__label">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2" /><line x1="1" y1="10" x2="23" y2="10" />
+                      </svg>
+                      Số dư ví
+                    </span>
+                    <span className="pricing-wallet-banner__value">
+                      {wallet ? formatPrice(wallet.balance) : '—'}
+                    </span>
+                  </div>
+
+                  <div className="pricing-wallet-banner__divider" />
+
+                  <div className="pricing-wallet-banner__col">
+                    <span className="pricing-wallet-banner__label">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                      </svg>
+                      Gói hiện tại
+                    </span>
+                    <span className="pricing-wallet-banner__value">
+                      {activeSubscription ? (
+                        <span className="pricing-active-plan-badge">{activeSubscription.planName}</span>
+                      ) : (
+                        <span style={{ color: 'var(--c-text-3)' }}>Chưa có gói</span>
                       )}
-                    </p>
+                    </span>
+                  </div>
+
+                  {activeSubscription && tokenPercent !== null && (
+                    <>
+                      <div className="pricing-wallet-banner__divider" />
+                      <div className="pricing-wallet-banner__col pricing-wallet-banner__col--token">
+                        <span className="pricing-wallet-banner__label">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="10"/><path d="M12 8v4l2 2"/>
+                          </svg>
+                          Token còn lại
+                        </span>
+                        <span className="pricing-wallet-banner__value">
+                          {activeSubscription.tokenRemaining}
+                          <span className="pricing-wallet-banner__quota"> / {activeSubscription.tokenQuota}</span>
+                        </span>
+                        <div className="pricing-token-bar">
+                          <div
+                            className="pricing-token-bar__fill"
+                            style={{ width: `${tokenPercent}%` }}
+                          />
+                        </div>
+                        <span className="pricing-token-percent">{tokenPercent}% còn lại</span>
+                      </div>
+                    </>
                   )}
+
+                  <div className="pricing-wallet-banner__action">
+                    <button
+                      type="button"
+                      className="pricing-wallet-topup-btn"
+                      onClick={() => navigate('/student/wallet')}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                      </svg>
+                      Nạp tiền
+                    </button>
+                  </div>
                 </div>
 
-                {loadingSubscriptionData && <p>Đang tải dữ liệu gói...</p>}
+                {/* Status messages */}
                 {subscriptionError && (
-                  <p style={{ color: '#dc2626', fontWeight: 600, marginBottom: '1rem' }}>
+                  <div className="pricing-alert pricing-alert--error">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
                     {subscriptionError}
-                  </p>
+                  </div>
                 )}
                 {subscriptionSuccess && (
-                  <p style={{ color: '#16a34a', fontWeight: 600, marginBottom: '1rem' }}>
+                  <div className="pricing-alert pricing-alert--success">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
                     {subscriptionSuccess}
-                  </p>
+                  </div>
                 )}
 
-                {!loadingSubscriptionData && userPlans.length > 0 && (
-                  <div className="pricing-cards-grid">
-                    {userPlans.map((plan) => {
+                {/* Plan cards */}
+                <div className="pricing-cards-grid">
+                  {loadingSubscriptionData ? (
+                    <>
+                      <PlanCardSkeleton />
+                      <PlanCardSkeleton />
+                      <PlanCardSkeleton />
+                    </>
+                  ) : (
+                    userPlans.map((plan) => {
                       const price = plan.price ?? 0;
                       const walletBalance = wallet?.balance ?? 0;
                       const isInsufficientBalance = price > 0 && walletBalance < price;
                       const isCurrentPlan = activeSubscription?.planId === plan.id;
+                      const icon = getPlanIcon(plan.name);
 
                       return (
                         <div
                           key={plan.id}
-                          className={`pricing-plan-card ${plan.featured ? 'pricing-plan-card--featured' : ''}`}
+                          className={`pricing-plan-card ${plan.featured ? 'pricing-plan-card--featured' : ''} ${isCurrentPlan ? 'pricing-plan-card--active' : ''}`}
                         >
+                          {isCurrentPlan && (
+                            <div className="pricing-current-plan-badge">
+                              <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
+                                <polyline points="20 6 9 17 4 12"/>
+                              </svg>
+                              Đang dùng
+                            </div>
+                          )}
+                          {plan.featured && !isCurrentPlan && (
+                            <div className="pricing-popular-badge">
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                              </svg>
+                              Phổ biến nhất
+                            </div>
+                          )}
+
+                          <div className="pricing-plan-icon">{icon}</div>
+
                           <div className="pricing-plan-header">
                             <h3 className="pricing-plan-name">{plan.name}</h3>
                             <p className="pricing-plan-desc">
                               {plan.description || 'Gói đăng ký cho người dùng'}
                             </p>
                           </div>
+
                           <div className="pricing-plan-price-block">
                             <span className="pricing-plan-price">{formatPrice(plan.price)}</span>
                             <span className="pricing-plan-period">
                               /{plan.billingCycle.toLowerCase()}
                             </span>
                           </div>
-                          <p className="pricing-plan-desc" style={{ marginBottom: '0.75rem' }}>
-                            Token quota: <strong>{plan.tokenQuota}</strong>
-                          </p>
+
+                          <div className="pricing-token-pill">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <circle cx="12" cy="12" r="10"/><path d="M12 8v4l2 2"/>
+                            </svg>
+                            {plan.tokenQuota.toLocaleString()} token / kỳ
+                          </div>
+
                           <button
                             type="button"
                             className={`pricing-plan-btn ${plan.featured ? 'pricing-plan-btn--primary' : 'pricing-plan-btn--outline'}`}
@@ -388,19 +604,23 @@ const Pricing: React.FC = () => {
                             disabled={!!purchasingPlanId || isCurrentPlan || !price}
                             title={isInsufficientBalance ? 'Số dư ví không đủ' : undefined}
                           >
-                            {isCurrentPlan
-                              ? 'Đang sử dụng'
-                              : purchasingPlanId === plan.id
-                                ? 'Đang mua...'
-                                : !price
-                                  ? 'Không mua trực tiếp'
-                                  : 'Mua ngay'}
+                            {purchasingPlanId === plan.id ? (
+                              <><span className="pricing-btn-spinner" />Đang mua...</>
+                            ) : isCurrentPlan ? (
+                              'Đang sử dụng'
+                            ) : !price ? (
+                              'Không mua trực tiếp'
+                            ) : isInsufficientBalance ? (
+                              '⚠️ Số dư không đủ'
+                            ) : (
+                              'Mua ngay'
+                            )}
                           </button>
                         </div>
                       );
-                    })}
-                  </div>
-                )}
+                    })
+                  )}
+                </div>
               </div>
             </section>
           </div>
@@ -410,6 +630,9 @@ const Pricing: React.FC = () => {
     );
   }
 
+  /* ════════════════════════════════════
+     UNAUTHENTICATED VIEW
+     ════════════════════════════════════ */
   return (
     <div className="homepage">
       <header className="homepage-header">
@@ -459,103 +682,25 @@ const Pricing: React.FC = () => {
               Chọn gói <span className="gradient-text">phù hợp với bạn</span>
             </h1>
             <p className="pricing-hero-desc">
-              Dùng thử miễn phí 30 ngày. Nâng cấp hoặc hạ cấp bất kỳ lúc nào.
+              Dùng thử miễn phí 30 ngày. Nâng cấp hoặc hạ cấp bất kỳ lúc nào. Không cần thẻ tín
+              dụng.
             </p>
+
+            {/* Trust stats bar */}
+            <div className="pricing-trust-bar">
+              {trustStats.map((stat, i) => (
+                <div className="pricing-trust-pill" key={i} style={{ animationDelay: `${i * 0.12}s` }}>
+                  <span className="pricing-trust-pill__icon">{stat.icon}</span>
+                  <strong className="pricing-trust-pill__value">{stat.value}</strong>
+                  <span className="pricing-trust-pill__label">{stat.label}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       {/* ── Pricing Cards ── */}
-      {isAuthenticated && (
-        <section className="pricing-cards-section">
-          <div className="container">
-            <div className="pricing-comparison-header" style={{ marginBottom: '1.2rem' }}>
-              <span className="ft-badge ft-badge--green" style={{ marginBottom: '1rem' }}>
-                Subscription + Token
-              </span>
-              <h2 className="pricing-comparison-title">Mua gói bằng ví</h2>
-              {wallet && (
-                <p className="pricing-hero-desc" style={{ marginTop: '0.4rem' }}>
-                  So du vi: <strong>{formatPrice(wallet.balance)}</strong>
-                  {activeSubscription && (
-                    <>
-                      {' '}
-                      | Goi active: <strong>{activeSubscription.planName}</strong> | Token con lai:{' '}
-                      <strong>{activeSubscription.tokenRemaining}</strong>
-                    </>
-                  )}
-                </p>
-              )}
-            </div>
-
-            {loadingSubscriptionData && <p>Dang tai du lieu goi...</p>}
-            {subscriptionError && (
-              <p style={{ color: '#dc2626', fontWeight: 600, marginBottom: '1rem' }}>
-                {subscriptionError}
-              </p>
-            )}
-            {subscriptionSuccess && (
-              <p style={{ color: '#16a34a', fontWeight: 600, marginBottom: '1rem' }}>
-                {subscriptionSuccess}
-              </p>
-            )}
-
-            {!loadingSubscriptionData && userPlans.length > 0 && (
-              <div className="pricing-cards-grid">
-                {userPlans.map((plan) => {
-                  const price = plan.price ?? 0;
-                  const walletBalance = wallet?.balance ?? 0;
-                  const isInsufficientBalance = price > 0 && walletBalance < price;
-                  const isCurrentPlan = activeSubscription?.planId === plan.id;
-
-                  return (
-                    <div
-                      key={plan.id}
-                      className={`pricing-plan-card ${plan.featured ? 'pricing-plan-card--featured' : ''}`}
-                    >
-                      <div className="pricing-plan-header">
-                        <h3 className="pricing-plan-name">{plan.name}</h3>
-                        <p className="pricing-plan-desc">
-                          {plan.description || 'Goi dang ky cho nguoi dung'}
-                        </p>
-                      </div>
-                      <div className="pricing-plan-price-block">
-                        <span className="pricing-plan-price">{formatPrice(plan.price)}</span>
-                        <span className="pricing-plan-period">
-                          /{plan.billingCycle.toLowerCase()}
-                        </span>
-                      </div>
-                      <p className="pricing-plan-desc" style={{ marginBottom: '0.75rem' }}>
-                        Token quota: <strong>{plan.tokenQuota}</strong>
-                      </p>
-                      <button
-                        type="button"
-                        className={`pricing-plan-btn ${plan.featured ? 'pricing-plan-btn--primary' : 'pricing-plan-btn--outline'}`}
-                        onClick={() => void handlePurchase(plan)}
-                        disabled={
-                          !!purchasingPlanId || isCurrentPlan || isInsufficientBalance || !price
-                        }
-                        title={isInsufficientBalance ? 'So du vi khong du' : undefined}
-                      >
-                        {isCurrentPlan
-                          ? 'Dang su dung'
-                          : purchasingPlanId === plan.id
-                            ? 'Dang mua...'
-                            : isInsufficientBalance
-                              ? 'So du khong du'
-                              : !price
-                                ? 'Khong mua truc tiep'
-                                : 'Mua bang vi'}
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </section>
-      )}
-
       <section className="pricing-cards-section" ref={addSectionRef(0)}>
         <div className="container">
           <div className="pricing-cards-grid">
@@ -572,21 +717,28 @@ const Pricing: React.FC = () => {
                     Phổ biến nhất
                   </div>
                 )}
+
+                <div className="pricing-plan-icon">{getPlanIcon(plan.name)}</div>
+
                 <div className="pricing-plan-header">
                   <h3 className="pricing-plan-name">{plan.name}</h3>
                   <p className="pricing-plan-desc">{plan.description}</p>
                 </div>
+
                 <div className="pricing-plan-price-block">
                   <span className="pricing-plan-price">{plan.price}</span>
                   {plan.period && <span className="pricing-plan-period">{plan.period}</span>}
                 </div>
+
                 <Link
                   to="/register"
                   className={`pricing-plan-btn ${plan.highlighted ? 'pricing-plan-btn--primary' : 'pricing-plan-btn--outline'}`}
                 >
                   {plan.buttonText}
                 </Link>
+
                 <div className="pricing-plan-divider" />
+
                 <ul className="pricing-plan-features">
                   {plan.features.map((feature, idx) => (
                     <li key={idx}>
@@ -654,7 +806,7 @@ const Pricing: React.FC = () => {
         </div>
       </section>
 
-      {/* ── FAQ ── */}
+      {/* ── FAQ Accordion ── */}
       <section className="pricing-faq-section" ref={addSectionRef(2)}>
         <div className="features-bg-dots" aria-hidden="true" />
         <div className="container">
@@ -665,32 +817,17 @@ const Pricing: React.FC = () => {
             <h2 className="pricing-faq-title">
               Câu hỏi <span className="gradient-text">thường gặp</span>
             </h2>
+            <p className="pricing-hero-desc" style={{ marginTop: '0.75rem' }}>
+              Không tìm được câu trả lời?{' '}
+              <Link to="/contact" style={{ color: 'var(--c-primary)', fontWeight: 600 }}>
+                Liên hệ chúng tôi
+              </Link>
+            </p>
           </div>
-          <div className="pricing-faq-grid">
-            <div className="pricing-faq-card">
-              <h4 className="pricing-faq-q">Có thể thay đổi gói sau khi đăng ký không?</h4>
-              <p className="pricing-faq-a">
-                Có, bạn có thể nâng cấp hoặc hạ cấp gói bất kỳ lúc nào.
-              </p>
-            </div>
-            <div className="pricing-faq-card">
-              <h4 className="pricing-faq-q">Có chính sách hoàn tiền không?</h4>
-              <p className="pricing-faq-a">
-                Chúng tôi có chính sách hoàn tiền trong vòng 14 ngày nếu không hài lòng.
-              </p>
-            </div>
-            <div className="pricing-faq-card">
-              <h4 className="pricing-faq-q">Thanh toán như thế nào?</h4>
-              <p className="pricing-faq-a">
-                Chấp nhận thanh toán qua thẻ, chuyển khoản, hoặc ví điện tử.
-              </p>
-            </div>
-            <div className="pricing-faq-card">
-              <h4 className="pricing-faq-q">Có hỗ trợ đào tạo không?</h4>
-              <p className="pricing-faq-a">
-                Gói Trường học có đào tạo chuyên biệt. Các gói khác có tài liệu hướng dẫn.
-              </p>
-            </div>
+          <div className="pricing-faq-accordion">
+            {faqItems.map((item, i) => (
+              <FaqItem key={i} q={item.q} a={item.a} index={i} />
+            ))}
           </div>
         </div>
       </section>
@@ -707,9 +844,20 @@ const Pricing: React.FC = () => {
               Sẵn sàng tối ưu hóa <span className="gradient-text">bài giảng</span> của bạn?
             </h2>
             <p className="pricing-cta-desc">
-              Tham gia cùng hàng nghìn giáo viên đã lựa chọn MathMaster. Dùng thử miễn phí, không
-              cần thẻ tín dụng.
+              Tham gia cùng <strong>5,000+</strong> giáo viên đã lựa chọn MathMaster. Dùng thử miễn
+              phí, không cần thẻ tín dụng.
             </p>
+
+            {/* Social proof avatars */}
+            <div className="pricing-cta-avatars">
+              {['👩‍🏫', '👨‍🏫', '👩‍💻', '👨‍🎓', '👩‍🔬'].map((emoji, i) => (
+                <span key={i} className="pricing-cta-avatar" style={{ zIndex: 5 - i }}>
+                  {emoji}
+                </span>
+              ))}
+              <span className="pricing-cta-avatar-label">+5,000 giáo viên</span>
+            </div>
+
             <div className="pricing-cta-actions">
               <Link to="/register" className="btn-primary-large">
                 Đăng ký miễn phí <span className="btn-icon">→</span>
