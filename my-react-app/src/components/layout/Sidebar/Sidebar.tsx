@@ -24,6 +24,7 @@ import {
   ShieldCheck,
   Sparkles,
   Users,
+  Wallet,
   Workflow,
 } from 'lucide-react';
 import React, { useEffect, useMemo, useRef } from 'react';
@@ -77,7 +78,7 @@ const teacherGroups: MenuGroup[] = [
     items: [
       { path: '/teacher/ai-assistant', icon: Bot, label: 'AI Trợ lý' },
       { path: '/teacher/ai-slide-generator', icon: Presentation, label: 'AI Slide Gen' },
-      { path: '/teacher/resources', icon: Library, label: 'Tài nguyên' },
+      { path: '/teacher/wallet', icon: Wallet, label: 'Ví của tôi' },
     ],
   },
 ];

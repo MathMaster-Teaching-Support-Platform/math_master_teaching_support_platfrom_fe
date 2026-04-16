@@ -420,6 +420,14 @@ const router = createBrowserRouter([
     ),
   },
   {
+    path: '/teacher/wallet',
+    element: (
+      <PrivateRoute>
+        <StudentWallet />
+      </PrivateRoute>
+    ),
+  },
+  {
     path: '/teacher/*',
     element: (
       <PrivateRoute>
@@ -500,14 +508,7 @@ const router = createBrowserRouter([
       </PrivateRoute>
     ),
   },
-  {
-    path: '/student/wallet',
-    element: (
-      <PrivateRoute>
-        <StudentWallet />
-      </PrivateRoute>
-    ),
-  },
+
   {
     path: '/student/certificates',
     element: (

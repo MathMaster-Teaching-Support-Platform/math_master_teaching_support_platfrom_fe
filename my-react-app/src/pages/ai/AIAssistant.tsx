@@ -233,7 +233,7 @@ const AIAssistant: React.FC = () => {
       } else if (apiError.code === 1165) {
         setLocalError('Token cua goi da het. Vui long mua them goi hoac nap tien.');
         if (window.confirm('Token da het. Mo trang goi va vi de nap/mua ngay?')) {
-          navigate('/student/wallet');
+          navigate('/teacher/wallet');
         }
       } else {
         setLocalError(getErrorMessage(error, 'Không thể gửi prompt.'));

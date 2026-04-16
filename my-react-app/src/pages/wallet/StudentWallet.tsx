@@ -320,6 +320,30 @@ const StudentWallet: React.FC = () => {
           </div>
         )}
 
+        {/* Stat Strip */}
+        <div className="wallet-stat-strip">
+          <div className="wallet-stat-item">
+            <span className="wallet-stat-label">Số dư hiện tại</span>
+            <span className="wallet-stat-value wallet-stat-value--primary">
+              {walletLoading ? '—' : `${formatCurrency(wallet?.balance ?? 0)} ₫`}
+            </span>
+          </div>
+          <div className="wallet-stat-divider" />
+          <div className="wallet-stat-item">
+            <span className="wallet-stat-label">Tổng đã nạp</span>
+            <span className="wallet-stat-value wallet-stat-value--green">
+              {transactionsLoading ? '—' : `${formatCurrency(totalDeposit)} ₫`}
+            </span>
+          </div>
+          <div className="wallet-stat-divider" />
+          <div className="wallet-stat-item">
+            <span className="wallet-stat-label">Số giao dịch</span>
+            <span className="wallet-stat-value">
+              {transactionsLoading ? '—' : transactions.length}
+            </span>
+          </div>
+        </div>
+
         {/* Overview Grid */}
         <section className="wallet-overview">
           {/* Glassmorphism Balance Card */}
@@ -429,11 +453,15 @@ const StudentWallet: React.FC = () => {
               onClick={handleDeposit}
               disabled={depositing}
             >
-              <span className="btn-shimmer" aria-hidden="true" />
+              {!depositing && <span className="btn-shimmer" aria-hidden="true" />}
               {depositing ? (
-                <>
-                  <span className="spinner" /> Đang xử lý...
-                </>
+                <span className="btn-loading-label">
+                  <span className="spinner" />
+                  Đang xử lý
+                  <span className="btn-loading-dots" aria-hidden="true">
+                    <span /><span /><span />
+                  </span>
+                </span>
               ) : depositSuccess ? (
                 <>&#10003;&nbsp;Đã tạo liên kết!</>
               ) : (

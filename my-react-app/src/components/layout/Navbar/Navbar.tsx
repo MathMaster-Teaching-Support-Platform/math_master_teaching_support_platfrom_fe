@@ -26,7 +26,7 @@ const Navbar: React.FC<NavbarProps> = ({ user }) => {
   const roleLabel =
     user.role === 'teacher' ? 'Giao vien' : user.role === 'student' ? 'Hoc sinh' : 'Quan tri vien';
 
-  const walletRoute = '/student/wallet';
+  const walletRoute = user.role === 'teacher' ? '/teacher/wallet' : '/student/wallet';
 
   useEffect(() => {
     if (!AuthService.isAuthenticated()) {

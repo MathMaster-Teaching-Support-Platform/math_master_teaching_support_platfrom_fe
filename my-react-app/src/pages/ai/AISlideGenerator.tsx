@@ -961,7 +961,7 @@ const AISlideGenerator: React.FC = () => {
       } else if (apiError.code === 1165) {
         setError('Token khong du (Slide can 3 token/lan). Vui long mua goi hoac nap them vi.');
         if (window.confirm('Token khong du. Mo trang vi de nap tien?')) {
-          navigate('/student/wallet');
+          navigate('/teacher/wallet');
         }
       } else {
         setError(err instanceof Error ? err.message : 'Không thể tạo nội dung slide');

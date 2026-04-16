@@ -362,7 +362,7 @@ export default function TeacherMindmaps() {
           confirmLabel: 'Nạp tiền vào ví',
           cancelLabel: 'Để sau',
           variant: 'warning',
-          onConfirm: () => navigate('/student/wallet'),
+          onConfirm: () => navigate('/teacher/wallet'),
         });
       } else {
         setGeneratorError(
