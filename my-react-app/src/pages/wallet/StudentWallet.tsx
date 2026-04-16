@@ -15,6 +15,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockAdmin, mockStudent, mockTeacher } from '../../data/mockData';
 import { AuthService } from '../../services/api/auth.service';
+import { UserService } from '../../services/api/user.service';
 import { WalletService } from '../../services/api/wallet.service';
 import type { TransactionStatus, WalletSummary, WalletTransaction } from '../../types/wallet.types';
 import './StudentWallet.css';
@@ -60,6 +61,40 @@ const VISA_TEMPLATES = [
     label: 'Purple',
     gradient: 'linear-gradient(135deg, #3b0764 0%, #6d28d9 55%, #7c3aed 100%)',
     swatch: '#6d28d9',
+  },
+] as const;
+
+const BALANCE_CARD_TEMPLATES = [
+  {
+    id: 0,
+    label: 'Indigo',
+    gradient:
+      'linear-gradient(135deg, #1e1b4b 0%, #3730a3 25%, #4f46e5 55%, #6d28d9 85%, #7c3aed 100%)',
+    swatch: '#4f46e5',
+  },
+  {
+    id: 1,
+    label: 'Ocean',
+    gradient: 'linear-gradient(135deg, #0c4a6e 0%, #0369a1 40%, #0284c7 70%, #0ea5e9 100%)',
+    swatch: '#0369a1',
+  },
+  {
+    id: 2,
+    label: 'Forest',
+    gradient: 'linear-gradient(135deg, #052e16 0%, #166534 35%, #15803d 65%, #16a34a 100%)',
+    swatch: '#166534',
+  },
+  {
+    id: 3,
+    label: 'Sunset',
+    gradient: 'linear-gradient(135deg, #7c2d12 0%, #c2410c 35%, #ea580c 65%, #fb923c 100%)',
+    swatch: '#c2410c',
+  },
+  {
+    id: 4,
+    label: 'Rose',
+    gradient: 'linear-gradient(135deg, #4c0519 0%, #9f1239 35%, #be123c 65%, #e11d48 100%)',
+    swatch: '#9f1239',
   },
 ] as const;
 
@@ -240,6 +275,9 @@ const StudentWallet: React.FC = () => {
   const [cardName, setCardName] = useState('');
   const [cardFlipped, setCardFlipped] = useState(false);
   const [cardTemplate, setCardTemplate] = useState(0);
+  const [realFullName, setRealFullName] = useState<string | null>(null);
+  const [balanceCardFlipped, setBalanceCardFlipped] = useState(false);
+  const [balanceCardTemplate, setBalanceCardTemplate] = useState(0);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<TransactionStatusFilter>('all');
@@ -332,6 +370,11 @@ const StudentWallet: React.FC = () => {
 
   useEffect(() => {
     void loadWallet();
+    UserService.getMyInfo()
+      .then((info) => setRealFullName(info.fullName || info.userName || null))
+      .catch(() => {
+        /* silently fall back to mock name */
+      });
   }, []);
 
   useEffect(() => {
@@ -495,8 +538,6 @@ const StudentWallet: React.FC = () => {
     URL.revokeObjectURL(url);
   };
 
-  const lastUpdated = wallet?.updatedAt ? new Date(wallet.updatedAt).toLocaleString('vi-VN') : null;
-
   return (
     <>
       <DashboardLayout
@@ -553,46 +594,116 @@ const StudentWallet: React.FC = () => {
 
           {/* Overview Grid */}
           <section className="wallet-overview">
-            {/* Glassmorphism Balance Card */}
-            <div
-              ref={cardRef}
-              className="balance-card"
-              style={{
-                transform: `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) translateZ(0)`,
-              }}
-              onMouseMove={handleCardMouseMove}
-              onMouseLeave={handleCardMouseLeave}
-            >
-              <div className="card-noise" aria-hidden="true" />
-              <div className="card-light" aria-hidden="true" />
-              <div className="card-top-row">
-                <div className="card-mc-rings" aria-hidden="true">
-                  <span className="ring-left" />
-                  <span className="ring-right" />
-                </div>
-                <div className="card-chip" aria-hidden="true" />
+            {/* Glassmorphism Balance Card — flippable */}
+            <div className="balance-card-section">
+              {/* Template picker */}
+              <div className="balance-card-tpl-picker">
+                {BALANCE_CARD_TEMPLATES.map((tpl) => (
+                  <button
+                    key={tpl.id}
+                    type="button"
+                    className={`card-tpl-swatch${balanceCardTemplate === tpl.id ? ' active' : ''}`}
+                    style={{ background: tpl.swatch }}
+                    title={tpl.label}
+                    onClick={() => {
+                      setBalanceCardTemplate(tpl.id);
+                      setBalanceCardFlipped(false);
+                    }}
+                  />
+                ))}
+                <span className="card-tpl-hint">Chọn mẫu</span>
               </div>
 
-              <div className="card-balance-section">
-                <div className="card-balance-label">Số dư khả dụng</div>
-                {walletLoading ? (
-                  <div className="card-balance-skeleton" />
-                ) : (
-                  <div className="card-balance-value">
-                    {formatCurrency(wallet?.balance ?? 0)}
-                    <span className="card-balance-currency"> VND</span>
-                  </div>
-                )}
-              </div>
+              {/* Flip outer — tilt effect + click to flip */}
+              <div
+                ref={cardRef}
+                className="balance-card-flip-outer"
+                style={{
+                  transform: `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) translateZ(0)`,
+                }}
+                onMouseMove={handleCardMouseMove}
+                onMouseLeave={handleCardMouseLeave}
+                onClick={() => setBalanceCardFlipped((f) => !f)}
+              >
+                <div className={`balance-card-flipper${balanceCardFlipped ? ' flipped' : ''}`}>
+                  {/* ── FRONT FACE ── */}
+                  <div
+                    className="balance-card balance-card--face"
+                    style={{
+                      background: BALANCE_CARD_TEMPLATES[balanceCardTemplate].gradient,
+                    }}
+                  >
+                    <div className="card-noise" aria-hidden="true" />
+                    <div className="card-light" aria-hidden="true" />
+                    <div className="card-top-row">
+                      <div className="card-mc-rings" aria-hidden="true">
+                        <span className="ring-left" />
+                        <span className="ring-right" />
+                      </div>
+                      <div className="card-chip" aria-hidden="true" />
+                    </div>
 
-              <div className="card-footer-row">
-                <div>
-                  <div className="card-number">**** **** **** 2048</div>
-                  <div className="card-holder">
-                    {(currentUser.name ?? 'MATHMASTER USER').toUpperCase()}
+                    <div className="card-balance-section">
+                      <div className="card-balance-label">Số dư khả dụng</div>
+                      {walletLoading ? (
+                        <div className="card-balance-skeleton" />
+                      ) : (
+                        <div className="card-balance-value">
+                          {formatCurrency(wallet?.balance ?? 0)}
+                          <span className="card-balance-currency"> VND</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="card-footer-row">
+                      <div>
+                        <div className="card-number">**** **** **** 2048</div>
+                        <div className="card-holder">
+                          {(realFullName ?? currentUser.name ?? 'MATHMASTER USER').toUpperCase()}
+                        </div>
+                      </div>
+                      <div className="card-updated bc-front-hint">Nhấn để xem mặt sau</div>
+                    </div>
+                  </div>
+
+                  {/* ── BACK FACE ── */}
+                  <div
+                    className="balance-card balance-card--face balance-card--back"
+                    style={{
+                      background: BALANCE_CARD_TEMPLATES[balanceCardTemplate].gradient,
+                    }}
+                  >
+                    <div className="card-noise" aria-hidden="true" />
+                    {/* Magnetic stripe */}
+                    <div className="bc-mag-stripe" aria-hidden="true" />
+                    {/* Stats */}
+                    <div className="bc-back-stats">
+                      <div className="bc-back-stat">
+                        <span className="bc-back-stat__label">Tổng đã nạp</span>
+                        <span className="bc-back-stat__val">
+                          {walletLoading ? '—' : `${formatCurrency(totalDeposit)} ₫`}
+                        </span>
+                      </div>
+                      <div className="bc-back-stat">
+                        <span className="bc-back-stat__label">Giao dịch</span>
+                        <span className="bc-back-stat__val">
+                          {walletLoading ? '—' : (wallet?.transactionCount ?? transactions.length)}
+                        </span>
+                      </div>
+                      <div className="bc-back-stat">
+                        <span className="bc-back-stat__label">Số dư</span>
+                        <span className="bc-back-stat__val">
+                          {walletLoading ? '—' : `${formatCurrency(wallet?.balance ?? 0)} ₫`}
+                        </span>
+                      </div>
+                    </div>
+                    {/* Footer */}
+                    <div className="bc-back-footer">
+                      <span className="bc-back-hint">Nhấn để xem mặt trước</span>
+                      <span className="bc-back-brand">MathMaster</span>
+                    </div>
                   </div>
                 </div>
-                <div className="card-updated">{lastUpdated ?? 'Thời gian thực'}</div>
               </div>
             </div>
 
