@@ -15,6 +15,8 @@ export const studentAssessmentKeys = {
   all: ['studentAssessments'] as const,
   lists: () => [...studentAssessmentKeys.all, 'list'] as const,
   list: (filters: Record<string, unknown>) => [...studentAssessmentKeys.lists(), filters] as const,
+  courseList: (courseId: string, filters: Record<string, unknown>) =>
+    [...studentAssessmentKeys.lists(), 'course', courseId, filters] as const,
   details: () => [...studentAssessmentKeys.all, 'detail'] as const,
   detail: (id: string) => [...studentAssessmentKeys.details(), id] as const,
   attempts: () => [...studentAssessmentKeys.all, 'attempt'] as const,
@@ -42,6 +44,28 @@ export function useMyAssessments(
   return useQuery({
     queryKey: studentAssessmentKeys.list(params),
     queryFn: () => StudentAssessmentService.getMyAssessments(params),
+    ...options,
+  });
+}
+
+export function useMyAssessmentsByCourse(
+  courseId: string,
+  params: {
+    status?: string;
+    page?: number;
+    size?: number;
+    sortBy?: string;
+    sortDir?: string;
+  },
+  options?: Omit<
+    UseQueryOptions<ApiResponse<PaginatedResponse<StudentAssessmentResponse>>>,
+    'queryKey' | 'queryFn'
+  >
+) {
+  return useQuery({
+    queryKey: studentAssessmentKeys.courseList(courseId, params),
+    queryFn: () => StudentAssessmentService.getMyAssessmentsByCourse(courseId, params),
+    enabled: !!courseId,
     ...options,
   });
 }

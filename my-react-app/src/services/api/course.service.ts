@@ -1,6 +1,7 @@
 import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
 import type {
   AddAssessmentToCourseRequest,
+  AvailableCourseAssessmentResponse,
   ApiResponse,
   CourseAssessmentResponse,
   CourseLessonResponse,
@@ -280,6 +281,20 @@ export class CourseService {
     const url = `${API_BASE_URL}${API_ENDPOINTS.COURSE_DETAIL(courseId)}/assessments${qs.toString() ? `?${qs}` : ''}`;
     const headers = await this.getAuthHeaders();
     const res = await fetch(url, { method: 'GET', headers });
+    return this.handleResponse(res);
+  }
+
+  static async getAvailableAssessmentsForCourse(
+    courseId: string,
+    includeOutOfCourseLessons = false
+  ): Promise<ApiResponse<AvailableCourseAssessmentResponse[]>> {
+    const headers = await this.getHeaders();
+    const qs = new URLSearchParams();
+    qs.set('includeOutOfCourseLessons', String(includeOutOfCourseLessons));
+    const res = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.COURSE_DETAIL(courseId)}/assessments/available?${qs.toString()}`,
+      { method: 'GET', headers }
+    );
     return this.handleResponse(res);
   }
 

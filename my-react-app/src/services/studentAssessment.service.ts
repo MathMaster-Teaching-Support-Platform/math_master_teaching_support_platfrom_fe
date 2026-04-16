@@ -161,6 +161,38 @@ export class StudentAssessmentService {
     return response.json();
   }
 
+  static async getMyAssessmentsByCourse(
+    courseId: string,
+    params: {
+      status?: string;
+      page?: number;
+      size?: number;
+      sortBy?: string;
+      sortDir?: string;
+    }
+  ): Promise<ApiResponse<PaginatedResponse<StudentAssessmentResponse>>> {
+    const headers = await this.getHeaders();
+    const queryParams = new URLSearchParams();
+
+    if (params.status) queryParams.append('status', params.status);
+    if (params.page !== undefined) queryParams.append('page', params.page.toString());
+    if (params.size !== undefined) queryParams.append('size', params.size.toString());
+    if (params.sortBy) queryParams.append('sortBy', params.sortBy);
+    if (params.sortDir) queryParams.append('sortDir', params.sortDir);
+
+    const response = await fetch(
+      `${API_BASE_URL}/student-assessments/course/${courseId}?${queryParams.toString()}`,
+      { method: 'GET', headers }
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to fetch course assessments');
+    }
+
+    return response.json();
+  }
+
   // Get assessment details
   static async getAssessmentDetails(
     assessmentId: string

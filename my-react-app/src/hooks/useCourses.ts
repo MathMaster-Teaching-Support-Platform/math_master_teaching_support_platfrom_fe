@@ -220,6 +220,18 @@ export function useCourseAssessments(
   });
 }
 
+export function useAvailableAssessmentsForCourse(
+  courseId: string,
+  includeOutOfCourseLessons = false
+) {
+  return useQuery({
+    queryKey: [...courseKeys.detail(courseId), 'assessments', 'available', includeOutOfCourseLessons],
+    queryFn: () =>
+      CourseService.getAvailableAssessmentsForCourse(courseId, includeOutOfCourseLessons),
+    enabled: !!courseId,
+  });
+}
+
 export function useAddAssessmentToCourse() {
   const qc = useQueryClient();
   return useMutation({
@@ -227,6 +239,7 @@ export function useAddAssessmentToCourse() {
       CourseService.addAssessmentToCourse(courseId, data),
     onSuccess: (_data, { courseId }) => {
       qc.invalidateQueries({ queryKey: [...courseKeys.detail(courseId), 'assessments'] });
+      qc.invalidateQueries({ queryKey: [...courseKeys.detail(courseId), 'assessments', 'available'] });
       qc.invalidateQueries({ queryKey: courseKeys.detail(courseId) });
     },
   });
@@ -256,6 +269,7 @@ export function useRemoveAssessmentFromCourse() {
       CourseService.removeAssessmentFromCourse(courseId, assessmentId),
     onSuccess: (_data, { courseId }) => {
       qc.invalidateQueries({ queryKey: [...courseKeys.detail(courseId), 'assessments'] });
+      qc.invalidateQueries({ queryKey: [...courseKeys.detail(courseId), 'assessments', 'available'] });
       qc.invalidateQueries({ queryKey: courseKeys.detail(courseId) });
     },
   });

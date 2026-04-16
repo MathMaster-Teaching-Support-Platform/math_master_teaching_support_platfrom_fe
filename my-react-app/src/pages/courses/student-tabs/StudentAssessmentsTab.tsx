@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AlertCircle, CheckCircle, Clock, FileText, Lock, Play, Star } from 'lucide-react';
-import { useCourseAssessments } from '../../../hooks/useCourses';
-import type { CourseAssessmentResponse } from '../../../types';
+import { useMyAssessmentsByCourse } from '../../../hooks/useStudentAssessment';
+import type { StudentAssessmentResponse } from '../../../types/studentAssessment.types';
 import '../../../styles/module-refactor.css';
 
 interface StudentAssessmentsTabProps {
@@ -11,17 +11,20 @@ interface StudentAssessmentsTabProps {
 
 const StudentAssessmentsTab: React.FC<StudentAssessmentsTabProps> = ({ courseId }) => {
   const navigate = useNavigate();
-  const { data: assessmentsData, isLoading } = useCourseAssessments(courseId, {
-    status: 'PUBLISHED', // Only show published assessments to students
+  const { data: assessmentsData, isLoading } = useMyAssessmentsByCourse(courseId, {
+    page: 0,
+    size: 200,
+    sortBy: 'dueDate',
+    sortDir: 'ASC',
   });
 
-  const assessments: CourseAssessmentResponse[] = assessmentsData?.result ?? [];
+  const assessments: StudentAssessmentResponse[] = assessmentsData?.result?.content ?? [];
 
   const stats = useMemo(() => {
     return {
       total: assessments.length,
-      required: assessments.filter((a) => a.isRequired).length,
-      optional: assessments.filter((a) => !a.isRequired).length,
+      required: assessments.filter((a) => a.isRequired === true).length,
+      optional: assessments.filter((a) => a.isRequired !== true).length,
     };
   }, [assessments]);
 
@@ -48,14 +51,14 @@ const StudentAssessmentsTab: React.FC<StudentAssessmentsTabProps> = ({ courseId 
     });
   };
 
-  const isAssessmentAvailable = (assessment: CourseAssessmentResponse) => {
+  const isAssessmentAvailable = (assessment: StudentAssessmentResponse) => {
     if (!assessment.startDate) return true;
     const now = new Date();
     const start = new Date(assessment.startDate);
     return now >= start;
   };
 
-  const isAssessmentExpired = (assessment: CourseAssessmentResponse) => {
+  const isAssessmentExpired = (assessment: StudentAssessmentResponse) => {
     if (!assessment.endDate) return false;
     const now = new Date();
     const end = new Date(assessment.endDate);
@@ -128,7 +131,7 @@ const StudentAssessmentsTab: React.FC<StudentAssessmentsTabProps> = ({ courseId 
       {!isLoading && assessments.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {assessments
-            .sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
+            .sort((a, b) => (a.courseOrderIndex ?? 0) - (b.courseOrderIndex ?? 0))
             .map((assessment) => {
               const available = isAssessmentAvailable(assessment);
               const expired = isAssessmentExpired(assessment);
@@ -161,17 +164,17 @@ const StudentAssessmentsTab: React.FC<StudentAssessmentsTabProps> = ({ courseId 
                       )}
                     </div>
                     <span className="muted" style={{ fontSize: '0.78rem' }}>
-                      #{assessment.orderIndex ?? '—'}
+                      #{assessment.courseOrderIndex ?? '—'}
                     </span>
                   </div>
 
                   <h3 style={{ margin: '0 0 8px', fontSize: '1.1rem', fontWeight: 700 }}>
-                    {assessment.assessmentTitle ?? 'Không có tiêu đề'}
+                    {assessment.title ?? 'Không có tiêu đề'}
                   </h3>
 
-                  {assessment.assessmentDescription && (
+                  {assessment.description && (
                     <p className="muted" style={{ fontSize: '0.9rem', margin: '0 0 12px' }}>
-                      {assessment.assessmentDescription}
+                      {assessment.description}
                     </p>
                   )}
 
@@ -275,9 +278,7 @@ const StudentAssessmentsTab: React.FC<StudentAssessmentsTabProps> = ({ courseId 
                       className="btn"
                       style={{ flex: 1 }}
                       disabled={!canTake}
-                      onClick={() =>
-                        navigate(`/student/assessments/${assessment.assessmentId}/take`)
-                      }
+                      onClick={() => navigate(`/student/assessments/${assessment.id}/take`)}
                     >
                       {canTake ? (
                         <>
@@ -294,7 +295,7 @@ const StudentAssessmentsTab: React.FC<StudentAssessmentsTabProps> = ({ courseId 
                     <button
                       className="btn secondary"
                       onClick={() =>
-                        navigate(`/student/assessments/${assessment.assessmentId}`)
+                        navigate(`/student/assessments/${assessment.id}`)
                       }
                     >
                       Xem chi tiết
