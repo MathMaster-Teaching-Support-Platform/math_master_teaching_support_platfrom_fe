@@ -205,10 +205,17 @@ export function useMarkLessonComplete() {
 
 // ─── Course Assessment Hooks ──────────────────────────────────────────────────
 
-export function useCourseAssessments(courseId: string) {
+export function useCourseAssessments(
+  courseId: string,
+  filters?: {
+    status?: string;
+    type?: string;
+    isRequired?: boolean;
+  }
+) {
   return useQuery({
-    queryKey: [...courseKeys.detail(courseId), 'assessments'],
-    queryFn: () => CourseService.getCourseAssessments(courseId),
+    queryKey: [...courseKeys.detail(courseId), 'assessments', filters],
+    queryFn: () => CourseService.getCourseAssessments(courseId, filters),
     enabled: !!courseId,
   });
 }

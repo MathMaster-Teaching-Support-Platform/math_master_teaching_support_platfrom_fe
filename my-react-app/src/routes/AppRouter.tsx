@@ -18,7 +18,9 @@ import Calendar from '../pages/calendar/Calendar';
 import Certificates from '../pages/certificates/Certificates';
 import LiveChat from '../pages/chat/LiveChat';
 import StudentCourses from '../pages/courses/StudentCourses';
+import StudentCourseDetail from '../pages/courses/StudentCourseDetail';
 import TeacherCourses from '../pages/courses/TeacherCourses';
+import TeacherCourseDetail from '../pages/courses/TeacherCourseDetail';
 import AdminDashboard from '../pages/dashboard/admin/AdminDashboard';
 import StudentDashboard from '../pages/dashboard/student/StudentDashboard';
 import TeacherDashboard from '../pages/dashboard/teacher/TeacherDashboard';
@@ -52,7 +54,6 @@ import ReviewProfiles from '../pages/admin/ReviewProfiles';
 import AssessmentBuilderFlow from '../pages/assessments/AssessmentBuilderFlow';
 import AssessmentDetail from '../pages/assessments/AssessmentDetailRefactored';
 import TeacherAssessments from '../pages/assessments/TeacherAssessments';
-import TeacherCourseLessons from '../pages/courses/TeacherCourseLessons';
 import { ExamMatrixDashboard } from '../pages/exam-matrices/ExamMatrixDashboard';
 import ExamMatrixDetailPage from '../pages/exam-matrices/ExamMatrixDetailPageRefactored';
 import TeacherLessonPlans from '../pages/lesson-plans/TeacherLessonPlans';
@@ -259,18 +260,18 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/teacher/lesson-plans',
+    path: '/teacher/courses/:courseId',
     element: (
       <PrivateRoute>
-        <TeacherLessonPlans />
+        <TeacherCourseDetail />
       </PrivateRoute>
     ),
   },
   {
-    path: '/teacher/courses/:courseId/lessons',
+    path: '/teacher/lesson-plans',
     element: (
       <PrivateRoute>
-        <TeacherCourseLessons />
+        <TeacherLessonPlans />
       </PrivateRoute>
     ),
   },
@@ -440,6 +441,14 @@ const router = createBrowserRouter([
     element: (
       <PrivateRoute>
         <StudentCourses />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/student/courses/:enrollmentId',
+    element: (
+      <PrivateRoute>
+        <StudentCourseDetail />
       </PrivateRoute>
     ),
   },

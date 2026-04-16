@@ -1,31 +1,24 @@
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
-  ArrowLeft,
   Award,
   BookOpen,
-  CheckCircle,
   ChevronRight,
   Clock,
-  Play,
   Search,
   Star,
   TrendingUp,
   Users,
   X,
 } from 'lucide-react';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import {
-  useCourseLessons,
   useCourseProgress,
-  useDropEnrollment,
   useEnroll,
-  useMarkLessonComplete,
   useMyEnrollments,
   usePublicCourses,
 } from '../../hooks/useCourses';
 import { LessonSlideService } from '../../services/api/lesson-slide.service';
-import { VideoUploadService } from '../../services/api/videoUpload.service';
 import '../../styles/module-refactor.css';
 import type { CourseResponse, EnrollmentResponse } from '../../types';
 import type { SchoolGrade, SubjectByGrade } from '../../types/lessonSlide.types';
@@ -46,8 +39,8 @@ const coverAccents = ['#1d4ed8', '#0f766e', '#047857', '#c2410c', '#be185d', '#6
 
 // ─── Animated progress bar ────────────────────────────────────────────────────
 const AnimatedProgressBar: React.FC<{ value: number }> = ({ value }) => {
-  const [width, setWidth] = useState(0);
-  useEffect(() => {
+  const [width, setWidth] = React.useState(0);
+  React.useEffect(() => {
     const t = setTimeout(() => setWidth(value), 120);
     return () => clearTimeout(t);
   }, [value]);
@@ -66,373 +59,11 @@ const AnimatedProgressBar: React.FC<{ value: number }> = ({ value }) => {
   );
 };
 
-// ─── Video Player ─────────────────────────────────────────────────────────────
-const VideoPlayer: React.FC<{
-  courseId: string;
-  courseLessonId: string;
-  title: string;
-  onClose: () => void;
-}> = ({ courseId, courseLessonId, title, onClose }) => {
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    VideoUploadService.getVideoUrl(courseId, courseLessonId)
-      .then((r) => setVideoUrl(r.result))
-      .catch((e) => setError(e instanceof Error ? e.message : 'Không thể tải video'))
-      .finally(() => setLoading(false));
-  }, [courseId, courseLessonId]);
-
-  return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 2000,
-        background: 'rgba(0,0,0,0.88)',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '1rem',
-      }}
-      onClick={onClose}
-    >
-      <div style={{ width: '100%', maxWidth: 900 }} onClick={(e) => e.stopPropagation()}>
-        {/* Header */}
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: 12,
-          }}
-        >
-          <h3 style={{ color: '#fff', margin: 0, fontSize: '1rem', fontWeight: 700 }}>{title}</h3>
-          <button
-            onClick={onClose}
-            style={{
-              background: 'rgba(255,255,255,0.15)',
-              border: 'none',
-              borderRadius: 8,
-              color: '#fff',
-              padding: '0.4rem 0.7rem',
-              cursor: 'pointer',
-              fontSize: '0.88rem',
-            }}
-          >
-            ✕ Đóng
-          </button>
-        </div>
-
-        {/* Video */}
-        <div
-          style={{
-            background: '#000',
-            borderRadius: 12,
-            overflow: 'hidden',
-            aspectRatio: '16/9',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          {loading && <p style={{ color: '#94a3b8' }}>Đang tải video...</p>}
-          {error && <p style={{ color: '#f87171' }}>{error}</p>}
-          {videoUrl && !loading && (
-            <video
-              src={videoUrl}
-              controls
-              autoPlay
-              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-              onError={() => setError('Không thể phát video. Vui lòng thử lại.')}
-            />
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// ─── Progress Detail View ─────────────────────────────────────────────────────
-const ProgressView: React.FC<{
-  enrollment: EnrollmentResponse;
-  courseIndex: number;
-  onBack: () => void;
-}> = ({ enrollment, courseIndex, onBack }) => {
-  const { data: progressData, isLoading } = useCourseProgress(enrollment.id);
-  const { data: lessonsData } = useCourseLessons(enrollment.courseId);
-  const markComplete = useMarkLessonComplete();
-  const dropMutation = useDropEnrollment();
-  const [playingLesson, setPlayingLesson] = useState<{ id: string; title: string } | null>(null);
-
-  const progress = progressData?.result;
-  const lessons = lessonsData?.result ?? [];
-
-  const handleDrop = () => {
-    if (window.confirm('Bạn có chắc muốn hủy đăng ký khóa học này?')) {
-      dropMutation.mutate(enrollment.id, { onSuccess: onBack });
-    }
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-    >
-      <button className="btn secondary" style={{ marginBottom: '1.25rem' }} onClick={onBack}>
-        <ArrowLeft size={16} strokeWidth={2} />
-        Quay lại danh sách
-      </button>
-
-      {/* Course detail header card */}
-      <div
-        className="hero-card"
-        style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', marginBottom: '1rem' }}
-      >
-        <div
-          style={{
-            width: 200,
-            minWidth: 160,
-            borderRadius: 12,
-            overflow: 'hidden',
-            background: coverGradients[courseIndex % coverGradients.length],
-            color: coverAccents[courseIndex % coverAccents.length],
-            minHeight: 130,
-            display: 'flex',
-            alignItems: 'flex-end',
-            padding: '1rem',
-            position: 'relative',
-            flexShrink: 0,
-          }}
-        >
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              background:
-                'radial-gradient(circle at top right, rgba(255,255,255,0.7), transparent 36%), linear-gradient(to top, rgba(255,255,255,0.12), transparent 70%)',
-            }}
-          />
-          <h3
-            style={{
-              position: 'relative',
-              zIndex: 1,
-              margin: 0,
-              fontSize: '0.95rem',
-              fontWeight: 800,
-              color: 'var(--mod-ink)',
-            }}
-          >
-            {enrollment.courseTitle}
-          </h3>
-        </div>
-        <div style={{ flex: 1, minWidth: 240 }}>
-          <h2
-            style={{
-              margin: '0 0 0.5rem',
-              fontSize: '1.4rem',
-              fontWeight: 800,
-              color: 'var(--mod-ink)',
-            }}
-          >
-            {enrollment.courseTitle}
-          </h2>
-          <span
-            className={`course-badge ${enrollment.status === 'ACTIVE' ? 'badge-live' : 'badge-draft'}`}
-            style={{ marginBottom: '0.75rem' }}
-          >
-            {enrollment.status === 'ACTIVE' ? 'Đang học' : 'Đã hủy'}
-          </span>
-          {progress && (
-            <div style={{ marginTop: '0.75rem' }}>
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  fontSize: '0.84rem',
-                  color: '#60748f',
-                  marginBottom: '0.4rem',
-                }}
-              >
-                <span>Tiến độ của bạn</span>
-                <strong style={{ color: '#1f5eff' }}>{progress.completionRate.toFixed(1)}%</strong>
-              </div>
-              <AnimatedProgressBar value={progress.completionRate} />
-              <p style={{ fontSize: '0.8rem', color: '#6b7280', marginTop: '0.35rem' }}>
-                {progress.completedLessons}/{progress.totalLessons} bài học hoàn thành
-              </p>
-            </div>
-          )}
-          <button
-            className="btn danger"
-            style={{ marginTop: '0.75rem' }}
-            onClick={handleDrop}
-            disabled={dropMutation.isPending || enrollment.status !== 'ACTIVE'}
-            title={enrollment.status !== 'ACTIVE' ? 'Khóa học đã hủy' : undefined}
-          >
-            {dropMutation.isPending ? 'Đang hủy...' : 'Hủy đăng ký'}
-          </button>
-        </div>
-      </div>
-
-      {isLoading && (
-        <div className="skeleton-grid">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="skeleton-card" />
-          ))}
-        </div>
-      )}
-
-      {/* Lesson list */}
-      <div className="data-card" style={{ gap: 0, padding: 0, overflow: 'hidden' }}>
-        <div
-          style={{
-            padding: '1rem 1.2rem',
-            borderBottom: '1px solid #e8eef8',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
-          <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: 'var(--mod-ink)' }}>
-            Danh sách bài học
-          </h4>
-          <span className="badge">
-            {progress?.completedLessons ?? 0}/{lessons.length} bài học
-          </span>
-        </div>
-
-        {lessons.map((lesson) => {
-          const lessonProgress = progress?.lessons.find((l) => l.courseLessonId === lesson.id);
-          const isCompleted = lessonProgress?.isCompleted ?? false;
-
-          return (
-            <div
-              key={lesson.id}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                padding: '0.85rem 1.2rem',
-                borderBottom: '1px solid #f3f7fd',
-                background: isCompleted ? '#f0fdf4' : '#fff',
-              }}
-            >
-              <div
-                style={{
-                  width: 34,
-                  height: 34,
-                  borderRadius: 10,
-                  flexShrink: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  background: isCompleted ? '#dcfce7' : '#e8eef8',
-                  color: isCompleted ? '#15803d' : '#60748f',
-                }}
-              >
-                {isCompleted ? (
-                  <CheckCircle size={17} strokeWidth={2} />
-                ) : (
-                  <Play size={17} strokeWidth={2} />
-                )}
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div
-                  style={{
-                    fontSize: '0.88rem',
-                    fontWeight: 600,
-                    color: 'var(--mod-ink)',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                  }}
-                >
-                  {lesson.videoTitle ?? lesson.lessonTitle ?? 'Bài học'}
-                </div>
-                {lesson.durationSeconds && (
-                  <div style={{ fontSize: '0.76rem', color: '#60748f', marginTop: '0.15rem' }}>
-                    ⏱ {Math.round(lesson.durationSeconds / 60)} phút • Video
-                  </div>
-                )}
-              </div>
-              <div style={{ display: 'flex', gap: '0.4rem', flexShrink: 0 }}>
-                {lesson.videoUrl && (
-                  <button
-                    className="action-primary"
-                    style={{ padding: '0.42rem 0.75rem', fontSize: '0.78rem' }}
-                    onClick={() =>
-                      setPlayingLesson({
-                        id: lesson.id,
-                        title: lesson.videoTitle ?? lesson.lessonTitle ?? 'Bài học',
-                      })
-                    }
-                  >
-                    <Play size={12} strokeWidth={2.5} /> Xem video
-                  </button>
-                )}
-                {!isCompleted && enrollment.status === 'ACTIVE' && (
-                  <button
-                    className="action-toggle"
-                    style={{ padding: '0.42rem 0.75rem', fontSize: '0.78rem' }}
-                    onClick={() =>
-                      markComplete.mutate({
-                        enrollmentId: enrollment.id,
-                        courseLessonId: lesson.id,
-                      })
-                    }
-                    disabled={markComplete.isPending}
-                  >
-                    <CheckCircle size={12} strokeWidth={2.5} /> Hoàn thành
-                  </button>
-                )}
-                {isCompleted && (
-                  <span
-                    style={{
-                      fontSize: '0.78rem',
-                      color: '#15803d',
-                      fontWeight: 700,
-                      alignSelf: 'center',
-                    }}
-                  >
-                    ✓ Đã xong
-                  </span>
-                )}
-              </div>
-            </div>
-          );
-        })}
-
-        {lessons.length === 0 && !isLoading && (
-          <div className="empty" style={{ padding: '2rem' }}>
-            <BookOpen size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
-            <p>Chưa có bài học nào trong khóa học này.</p>
-          </div>
-        )}
-      </div>
-
-      {playingLesson && (
-        <VideoPlayer
-          courseId={enrollment.courseId}
-          courseLessonId={playingLesson.id}
-          title={playingLesson.title}
-          onClose={() => setPlayingLesson(null)}
-        />
-      )}
-    </motion.div>
-  );
-};
-
 // ─── Enrollment Card ──────────────────────────────────────────────────────────
 const EnrollmentCard: React.FC<{
   enrollment: EnrollmentResponse;
   index: number;
-  onSelect: (id: string) => void;
-}> = ({ enrollment, index, onSelect }) => {
+}> = ({ enrollment, index }) => {
   const { data: progressData } = useCourseProgress(enrollment.id);
   const progress = progressData?.result;
   const completionRate = progress?.completionRate ?? 0;
@@ -444,10 +75,10 @@ const EnrollmentCard: React.FC<{
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.1 + index * 0.08, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
       style={{ cursor: 'pointer' }}
-      onClick={() => onSelect(enrollment.id)}
+      onClick={() => window.location.href = `/student/courses/${enrollment.id}`}
       role="button"
       tabIndex={0}
-      onKeyDown={(e) => e.key === 'Enter' && onSelect(enrollment.id)}
+      onKeyDown={(e) => e.key === 'Enter' && (window.location.href = `/student/courses/${enrollment.id}`)}
     >
       <div
         className="course-cover"
@@ -493,7 +124,7 @@ const EnrollmentCard: React.FC<{
             style={{ flex: 1 }}
             onClick={(e) => {
               e.stopPropagation();
-              onSelect(enrollment.id);
+              window.location.href = `/student/courses/${enrollment.id}`;
             }}
           >
             <ChevronRight size={14} /> Xem chi tiết
@@ -573,7 +204,6 @@ const PublicCourseCard: React.FC<{
 
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 const StudentCourses: React.FC = () => {
-  const [selectedEnrollmentId, setSelectedEnrollmentId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'enrolled' | 'browse'>('enrolled');
   const [filterGradeId, setFilterGradeId] = useState('');
@@ -644,13 +274,6 @@ const StudentCourses: React.FC = () => {
     [enrollments]
   );
 
-  const selectedEnrollment = selectedEnrollmentId
-    ? enrollments.find((e) => e.id === selectedEnrollmentId)
-    : null;
-  const selectedIndex = selectedEnrollmentId
-    ? enrollments.findIndex((e) => e.id === selectedEnrollmentId)
-    : -1;
-
   const handleEnroll = (courseId: string) => {
     setEnrollingCourseId(courseId);
     enrollMutation.mutate(courseId, {
@@ -663,30 +286,14 @@ const StudentCourses: React.FC = () => {
     <DashboardLayout role="student" user={{ name: 'Học sinh', avatar: '', role: 'student' }}>
       <div className="module-layout-container">
         <section className="module-page">
-          <AnimatePresence mode="wait">
-            {selectedEnrollmentId && selectedEnrollment ? (
-              <motion.div
-                key="detail-view"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.25 }}
-              >
-                <ProgressView
-                  enrollment={selectedEnrollment}
-                  courseIndex={selectedIndex}
-                  onBack={() => setSelectedEnrollmentId(null)}
-                />
-              </motion.div>
-            ) : (
-              <motion.div
-                key="grid-view"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.25 }}
-              >
-                {/* ── Header ── */}
+          <motion.div
+            key="grid-view"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+          >
+            {/* ── Header ── */}
                 <header className="page-header courses-header-row">
                   <div className="header-stack">
                     <div className="header-kicker">Student dashboard</div>
@@ -869,7 +476,6 @@ const StudentCourses: React.FC = () => {
                             key={enrollment.id}
                             enrollment={enrollment}
                             index={i}
-                            onSelect={setSelectedEnrollmentId}
                           />
                         ))}
                       </div>
@@ -911,8 +517,6 @@ const StudentCourses: React.FC = () => {
                   </>
                 )}
               </motion.div>
-            )}
-          </AnimatePresence>
         </section>
       </div>
     </DashboardLayout>

@@ -265,11 +265,20 @@ export class CourseService {
   }
 
   static async getCourseAssessments(
-    courseId: string
+    courseId: string,
+    filters?: {
+      status?: string;
+      type?: string;
+      isRequired?: boolean;
+    }
   ): Promise<ApiResponse<CourseAssessmentResponse[]>> {
-    const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.COURSE_DETAIL(courseId)}/assessments`, {
-      method: 'GET',
-    });
+    const qs = new URLSearchParams();
+    if (filters?.status) qs.append('status', filters.status);
+    if (filters?.type) qs.append('type', filters.type);
+    if (filters?.isRequired !== undefined) qs.append('isRequired', String(filters.isRequired));
+    
+    const url = `${API_BASE_URL}${API_ENDPOINTS.COURSE_DETAIL(courseId)}/assessments${qs.toString() ? `?${qs}` : ''}`;
+    const res = await fetch(url, { method: 'GET' });
     return this.handleResponse(res);
   }
 

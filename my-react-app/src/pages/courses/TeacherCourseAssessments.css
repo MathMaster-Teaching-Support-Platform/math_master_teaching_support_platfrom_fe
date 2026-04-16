@@ -1,0 +1,719 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   TEACHER COURSE ASSESSMENTS - Enhanced UI Styling
+   Aligns with backend API flow and system logic
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Assessment List Container ──────────────────────────────────────────── */
+.module-layout-container .assessment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.95rem;
+}
+
+/* ─── Assessment Card (Draggable) ────────────────────────────────────────── */
+.module-layout-container .assessment-card {
+  background: #ffffff;
+  border: 1.5px solid #e5edf7;
+  border-radius: 14px;
+  padding: 1.15rem 1.3rem;
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: grab;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(14, 29, 52, 0.04);
+}
+
+.module-layout-container .assessment-card:hover {
+  border-color: #b8d0ff;
+  box-shadow: 0 8px 24px rgba(31, 94, 255, 0.12);
+  transform: translateY(-2px);
+}
+
+.module-layout-container .assessment-card:active {
+  cursor: grabbing;
+}
+
+.module-layout-container .assessment-card.dragging {
+  opacity: 0.5;
+  transform: scale(0.98);
+  box-shadow: 0 12px 32px rgba(31, 94, 255, 0.2);
+}
+
+.module-layout-container .assessment-card.drag-over {
+  border-color: var(--mod-primary);
+  background: #f8fbff;
+  border-style: dashed;
+}
+
+/* ─── Drag Handle ────────────────────────────────────────────────────────── */
+.module-layout-container .assessment-drag-handle {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  transition: all 0.15s;
+}
+
+.module-layout-container .assessment-card:hover .assessment-drag-handle {
+  color: var(--mod-primary);
+  background: #edf3ff;
+  border-color: #b8d0ff;
+}
+
+/* ─── Assessment Content ─────────────────────────────────────────────────── */
+.module-layout-container .assessment-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+/* ─── Assessment Header ──────────────────────────────────────────────────── */
+.module-layout-container .assessment-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.module-layout-container .assessment-header-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.module-layout-container .assessment-badges {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+/* ─── Status Badge Variants ──────────────────────────────────────────────── */
+.module-layout-container .status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.28rem 0.7rem;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border: 1px solid;
+}
+
+.module-layout-container .status-badge.status-DRAFT {
+  background: #f8fafc;
+  color: #475569;
+  border-color: #cbd5e1;
+}
+
+.module-layout-container .status-badge.status-PUBLISHED {
+  background: #dcfce7;
+  color: #166534;
+  border-color: #86efac;
+}
+
+.module-layout-container .status-badge.status-CLOSED {
+  background: #fee2e2;
+  color: #991b1b;
+  border-color: #fca5a5;
+}
+
+/* ─── Type Badge ─────────────────────────────────────────────────────────── */
+.module-layout-container .type-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.28rem 0.7rem;
+  border-radius: 8px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: #f1f5fb;
+  color: #4f6790;
+  border: 1px solid #dce8f5;
+}
+
+/* ─── Required Badge ─────────────────────────────────────────────────────── */
+.module-layout-container .required-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.28rem 0.7rem;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+/* ─── Order Index ────────────────────────────────────────────────────────── */
+.module-layout-container .assessment-order {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 28px;
+  padding: 0 0.6rem;
+  background: linear-gradient(135deg, #edf3ff 0%, #e0ebff 100%);
+  border: 1px solid #b8d0ff;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--mod-primary);
+  letter-spacing: 0.02em;
+}
+
+/* ─── Assessment Title ───────────────────────────────────────────────────── */
+.module-layout-container .assessment-title {
+  margin: 0;
+  font-size: 1.08rem;
+  font-weight: 700;
+  color: var(--mod-ink);
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+/* ─── Assessment Description ─────────────────────────────────────────────── */
+.module-layout-container .assessment-description {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--mod-slate-500);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ─── Assessment Metadata ────────────────────────────────────────────────── */
+.module-layout-container .assessment-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+}
+
+.module-layout-container .assessment-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  color: var(--mod-slate-500);
+  font-weight: 500;
+}
+
+.module-layout-container .assessment-meta-item svg {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.module-layout-container .assessment-meta-item strong {
+  font-weight: 700;
+  color: var(--mod-ink);
+}
+
+/* ─── Assessment Actions ─────────────────────────────────────────────────── */
+.module-layout-container .assessment-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding-top: 0.25rem;
+}
+
+.module-layout-container .assessment-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 9px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1.5px solid;
+  font-family: inherit;
+}
+
+.module-layout-container .assessment-action-btn.btn-toggle {
+  background: #f8fafc;
+  color: #475569;
+  border-color: #cbd5e1;
+}
+
+.module-layout-container .assessment-action-btn.btn-toggle:hover:not(:disabled) {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.module-layout-container .assessment-action-btn.btn-view {
+  background: #eff6ff;
+  color: #1e40af;
+  border-color: #bfdbfe;
+}
+
+.module-layout-container .assessment-action-btn.btn-view:hover:not(:disabled) {
+  background: #dbeafe;
+  border-color: #93c5fd;
+}
+
+.module-layout-container .assessment-action-btn.btn-remove {
+  background: #fef2f2;
+  color: #991b1b;
+  border-color: #fecaca;
+}
+
+.module-layout-container .assessment-action-btn.btn-remove:hover:not(:disabled) {
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
+.module-layout-container .assessment-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ─── Submission Warning ─────────────────────────────────────────────────── */
+.module-layout-container .submission-warning {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.75rem;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  color: #92400e;
+  font-weight: 600;
+}
+
+/* ─── Add Assessment Modal ───────────────────────────────────────────────── */
+.module-layout-container .add-assessment-modal {
+  width: min(760px, 100%);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.module-layout-container .add-assessment-modal .modal-body {
+  max-height: calc(90vh - 180px);
+  overflow-y: auto;
+}
+
+/* ─── Assessment Selection Card ──────────────────────────────────────────── */
+.module-layout-container .assessment-select-card {
+  border: 1.5px solid #e5edf7;
+  border-radius: 12px;
+  padding: 1rem 1.15rem;
+  cursor: pointer;
+  background: #ffffff;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.module-layout-container .assessment-select-card:hover {
+  border-color: #b8d0ff;
+  background: #f8fbff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(31, 94, 255, 0.08);
+}
+
+.module-layout-container .assessment-select-card.selected {
+  border-color: var(--mod-primary);
+  border-width: 2px;
+  background: linear-gradient(135deg, #f0f7ff 0%, #e8f3ff 100%);
+  box-shadow: 0 4px 16px rgba(31, 94, 255, 0.15);
+}
+
+.module-layout-container .assessment-select-card.selected::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  right: -1px;
+  bottom: -1px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--mod-primary), #60a5fa);
+  z-index: -1;
+  opacity: 0.1;
+}
+
+.module-layout-container .assessment-select-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.65rem;
+}
+
+.module-layout-container .assessment-select-title {
+  margin: 0 0 0.4rem;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--mod-ink);
+  line-height: 1.3;
+}
+
+.module-layout-container .assessment-select-desc {
+  margin: 0 0 0.75rem;
+  font-size: 0.84rem;
+  color: var(--mod-slate-500);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.module-layout-container .assessment-select-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.85rem;
+  font-size: 0.78rem;
+  color: var(--mod-slate-500);
+}
+
+.module-layout-container .assessment-select-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* ─── Assessment Settings Panel ──────────────────────────────────────────── */
+.module-layout-container .assessment-settings-panel {
+  margin-top: 1.25rem;
+  padding: 1.15rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1.5px solid #cbd5e1;
+  border-radius: 12px;
+}
+
+.module-layout-container .assessment-settings-title {
+  margin: 0 0 0.85rem;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--mod-ink);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.module-layout-container .assessment-settings-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1rem;
+  align-items: end;
+}
+
+.module-layout-container .settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.module-layout-container .settings-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--mod-slate-600, #475569);
+  margin-bottom: 0.15rem;
+}
+
+.module-layout-container .settings-input {
+  width: 100%;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 9px;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.88rem;
+  color: var(--mod-ink);
+  background: #ffffff;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+
+.module-layout-container .settings-input:focus {
+  outline: none;
+  border-color: var(--mod-primary);
+  box-shadow: 0 0 0 3px rgba(31, 94, 255, 0.12);
+}
+
+.module-layout-container .settings-checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.85rem;
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+}
+
+.module-layout-container .settings-checkbox-wrapper:hover {
+  border-color: var(--mod-primary);
+  background: #f8fbff;
+}
+
+.module-layout-container .settings-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--mod-primary);
+}
+
+.module-layout-container .settings-checkbox-label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--mod-ink);
+  cursor: pointer;
+}
+
+/* ─── Filter Toolbar Enhancement ─────────────────────────────────────────── */
+.module-layout-container .assessment-filters {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.module-layout-container .filter-select {
+  min-width: 160px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--mod-ink);
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  padding-right: 2.5rem;
+}
+
+.module-layout-container .filter-select:focus {
+  outline: none;
+  border-color: var(--mod-primary);
+  box-shadow: 0 0 0 3px rgba(31, 94, 255, 0.12);
+}
+
+.module-layout-container .filter-select:hover {
+  border-color: #94a3b8;
+}
+
+/* ─── Empty State Enhancement ────────────────────────────────────────────── */
+.module-layout-container .assessment-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  background: linear-gradient(135deg, #f8fbff 0%, #f0f7ff 100%);
+  border: 2px dashed #b8d0ff;
+  border-radius: 16px;
+  min-height: 320px;
+}
+
+.module-layout-container .empty-state-icon {
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  border-radius: 50%;
+  color: var(--mod-primary);
+  margin-bottom: 1.25rem;
+}
+
+.module-layout-container .empty-state-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--mod-ink);
+  letter-spacing: -0.02em;
+}
+
+.module-layout-container .empty-state-description {
+  margin: 0 0 1.5rem;
+  font-size: 0.95rem;
+  color: var(--mod-slate-500);
+  max-width: 420px;
+  line-height: 1.6;
+}
+
+/* ─── Loading State ──────────────────────────────────────────────────────── */
+.module-layout-container .assessment-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  gap: 1rem;
+}
+
+.module-layout-container .loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #e5edf7;
+  border-top-color: var(--mod-primary);
+  border-radius: 50%;
+  animation: assessment-spin 0.8s linear infinite;
+}
+
+@keyframes assessment-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.module-layout-container .loading-text {
+  font-size: 0.92rem;
+  color: var(--mod-slate-500);
+  font-weight: 600;
+}
+
+/* ─── Validation Messages ────────────────────────────────────────────────── */
+.module-layout-container .validation-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin-top: 0.75rem;
+}
+
+.module-layout-container .validation-message.error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+}
+
+.module-layout-container .validation-message.warning {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+}
+
+.module-layout-container .validation-message.success {
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  color: #166534;
+}
+
+.module-layout-container .validation-message.info {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+}
+
+/* ─── Responsive Design ──────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .module-layout-container .assessment-card {
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+
+  .module-layout-container .assessment-drag-handle {
+    align-self: flex-start;
+  }
+
+  .module-layout-container .assessment-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .module-layout-container .assessment-meta {
+    gap: 0.4rem 0.75rem;
+  }
+
+  .module-layout-container .assessment-actions {
+    width: 100%;
+  }
+
+  .module-layout-container .assessment-action-btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .module-layout-container .assessment-settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .module-layout-container .assessment-filters {
+    width: 100%;
+  }
+
+  .module-layout-container .filter-select {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+/* ─── Print Styles ───────────────────────────────────────────────────────── */
+@media print {
+  .module-layout-container .assessment-drag-handle,
+  .module-layout-container .assessment-actions,
+  .module-layout-container .toolbar,
+  .module-layout-container .page-header .btn {
+    display: none !important;
+  }
+
+  .module-layout-container .assessment-card {
+    break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #cbd5e1;
+  }
+}
+
+/* ─── Accessibility Enhancements ─────────────────────────────────────────── */
+.module-layout-container .assessment-card:focus-within {
+  outline: 2px solid var(--mod-primary);
+  outline-offset: 2px;
+}
+
+.module-layout-container .assessment-action-btn:focus-visible {
+  outline: 2px solid var(--mod-primary);
+  outline-offset: 2px;
+}
+
+.module-layout-container .settings-checkbox:focus-visible {
+  outline: 2px solid var(--mod-primary);
+  outline-offset: 2px;
+}
+
+/* ─── Dark Mode Support (Optional) ───────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .module-layout-container .assessment-card {
+    background: #1e293b;
+    border-color: #334155;
+  }
+
+  .module-layout-container .assessment-title {
+    color: #f1f5f9;
+  }
+
+  .module-layout-container .assessment-description,
+  .module-layout-container .assessment-meta-item {
+    color: #94a3b8;
+  }
+}
