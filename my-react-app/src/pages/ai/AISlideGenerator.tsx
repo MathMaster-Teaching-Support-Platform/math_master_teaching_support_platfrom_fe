@@ -123,6 +123,13 @@ const formatDateTime = (value?: string | null): string => {
   return parsed.toLocaleString('vi-VN');
 };
 
+const getGeneratedDisplayName = (file: LessonSlideGeneratedFile): string => {
+  const preferredName = file.name?.trim();
+  if (preferredName) return preferredName;
+  const fallbackName = (file.fileName || '').trim();
+  return fallbackName.replace(/\.[^/.]+$/, '') || 'generated-slide';
+};
+
 const parseMathSegments = (text: string): MathSegment[] => {
   if (!text) return [{ type: 'text', value: '' }];
 
@@ -321,6 +328,15 @@ const AISlideGenerator: React.FC = () => {
   const [generatedPreviewPdfUrl, setGeneratedPreviewPdfUrl] = useState('');
   const [generatedPreviewIndex, setGeneratedPreviewIndex] = useState(0);
   const generatedPreviewPdfObjectUrlRef = useRef<string | null>(null);
+  const [generatedThumbnailUrls, setGeneratedThumbnailUrls] = useState<Record<string, string>>({});
+  const generatedThumbnailObjectUrlsRef = useRef<string[]>([]);
+  const [isMetadataModalOpen, setIsMetadataModalOpen] = useState(false);
+  const [editingMetadataFile, setEditingMetadataFile] = useState<LessonSlideGeneratedFile | null>(
+    null
+  );
+  const [metadataName, setMetadataName] = useState('');
+  const [metadataThumbnailFile, setMetadataThumbnailFile] = useState<File | null>(null);
+  const [updatingMetadata, setUpdatingMetadata] = useState(false);
 
   const selectedLesson = useMemo(
     () => lessons.find((lesson) => lesson.id === lessonId),
@@ -365,7 +381,7 @@ const AISlideGenerator: React.FC = () => {
 
     if (normalizedSearch) {
       files = files.filter((file) => {
-        const fileName = (file.fileName || '').toLowerCase();
+        const fileName = getGeneratedDisplayName(file).toLowerCase();
         const lesson = (file.lessonId || '').toLowerCase();
         return fileName.includes(normalizedSearch) || lesson.includes(normalizedSearch);
       });
@@ -378,9 +394,9 @@ const AISlideGenerator: React.FC = () => {
         case 'OLDEST':
           return getTime(a.createdAt) - getTime(b.createdAt);
         case 'NAME_ASC':
-          return (a.fileName || '').localeCompare(b.fileName || '');
+          return getGeneratedDisplayName(a).localeCompare(getGeneratedDisplayName(b));
         case 'NAME_DESC':
-          return (b.fileName || '').localeCompare(a.fileName || '');
+          return getGeneratedDisplayName(b).localeCompare(getGeneratedDisplayName(a));
         case 'SIZE_ASC':
           return a.fileSizeBytes - b.fileSizeBytes;
         case 'SIZE_DESC':
@@ -396,6 +412,54 @@ const AISlideGenerator: React.FC = () => {
 
     return files;
   }, [generatedFiles, generatedSearch, generatedSort, generatedVisibilityFilter]);
+
+  const openMetadataModal = (file: LessonSlideGeneratedFile) => {
+    setEditingMetadataFile(file);
+    setMetadataName(file.name || '');
+    setMetadataThumbnailFile(null);
+    setIsMetadataModalOpen(true);
+    setError('');
+    setSuccess('');
+  };
+
+  const closeMetadataModal = () => {
+    if (updatingMetadata) return;
+    setIsMetadataModalOpen(false);
+    setEditingMetadataFile(null);
+    setMetadataName('');
+    setMetadataThumbnailFile(null);
+  };
+
+  const handleUpdateMetadata = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!editingMetadataFile) return;
+
+    setUpdatingMetadata(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      await LessonSlideService.updateGeneratedFileMetadata(editingMetadataFile.id, {
+        name: metadataName.trim(),
+        thumbnail: metadataThumbnailFile || undefined,
+      });
+
+      setSuccess('Đã cập nhật tên và thumbnail của slide thành công.');
+      closeMetadataModal();
+      await loadGeneratedFiles(lessonId || undefined);
+    } catch (err) {
+      const apiError = err as Error & { code?: number };
+      if (apiError.code === 1166) {
+        setError('File slide không còn tồn tại. Vui lòng refresh danh sách.');
+      } else if (apiError.code === 1167) {
+        setError('Bạn không có quyền cập nhật metadata của file này.');
+      } else {
+        setError(err instanceof Error ? err.message : 'Không thể cập nhật metadata slide');
+      }
+    } finally {
+      setUpdatingMetadata(false);
+    }
+  };
 
   const resolvedOutputFormat = useMemo(
     () => normalizeOutputFormat(generated?.outputFormat || outputFormat),
@@ -696,6 +760,56 @@ const AISlideGenerator: React.FC = () => {
         window.URL.revokeObjectURL(generatedPreviewPdfObjectUrlRef.current);
         generatedPreviewPdfObjectUrlRef.current = null;
       }
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadGeneratedThumbnails = async () => {
+      const targets = generatedFiles.filter((file) => Boolean(file.thumbnail));
+      if (!targets.length) {
+        generatedThumbnailObjectUrlsRef.current.forEach((url) => window.URL.revokeObjectURL(url));
+        generatedThumbnailObjectUrlsRef.current = [];
+        setGeneratedThumbnailUrls({});
+        return;
+      }
+
+      const nextUrls: Record<string, string> = {};
+      await Promise.all(
+        targets.map(async (file) => {
+          try {
+            const blob = await LessonSlideService.getGeneratedFileThumbnailImage(file.id);
+            if (cancelled) return;
+            const objectUrl = window.URL.createObjectURL(blob);
+            nextUrls[file.id] = objectUrl;
+          } catch {
+            // Ignore failed thumbnail and keep fallback UI.
+          }
+        })
+      );
+
+      if (cancelled) {
+        Object.values(nextUrls).forEach((url) => window.URL.revokeObjectURL(url));
+        return;
+      }
+
+      generatedThumbnailObjectUrlsRef.current.forEach((url) => window.URL.revokeObjectURL(url));
+      generatedThumbnailObjectUrlsRef.current = Object.values(nextUrls);
+      setGeneratedThumbnailUrls(nextUrls);
+    };
+
+    void loadGeneratedThumbnails();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [generatedFiles]);
+
+  useEffect(() => {
+    return () => {
+      generatedThumbnailObjectUrlsRef.current.forEach((url) => window.URL.revokeObjectURL(url));
+      generatedThumbnailObjectUrlsRef.current = [];
     };
   }, []);
 
@@ -1319,6 +1433,8 @@ const AISlideGenerator: React.FC = () => {
                     <table className="ai-slide-table">
                       <thead>
                         <tr>
+                          <th>Thumbnail</th>
+                          <th>Name</th>
                           <th>File</th>
                           <th>Lesson</th>
                           <th>Created</th>
@@ -1338,6 +1454,24 @@ const AISlideGenerator: React.FC = () => {
                               setError('');
                             }}
                           >
+                            <td>
+                              <div className="ai-slide-table-thumbnail-wrap">
+                                {generatedThumbnailUrls[file.id] ? (
+                                  <img
+                                    src={generatedThumbnailUrls[file.id]}
+                                    alt={getGeneratedDisplayName(file)}
+                                    className="ai-slide-table-thumbnail"
+                                  />
+                                ) : (
+                                  <div className="ai-slide-table-thumbnail-placeholder">
+                                    {getGeneratedDisplayName(file).slice(0, 1).toUpperCase()}
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                            <td title={getGeneratedDisplayName(file)}>
+                              {getGeneratedDisplayName(file)}
+                            </td>
                             <td title={file.fileName}>{file.fileName || 'generated-slide.pptx'}</td>
                             <td>{lessonTitleById[file.lessonId] || 'Đang tải tên bài...'}</td>
                             <td>{formatDateTime(file.createdAt)}</td>
@@ -1371,6 +1505,16 @@ const AISlideGenerator: React.FC = () => {
                                   disabled={downloadingGeneratedFileId === file.id}
                                 >
                                   Tải
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn btn-outline"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    openMetadataModal(file);
+                                  }}
+                                >
+                                  Sửa metadata
                                 </button>
                               </div>
                             </td>
@@ -1863,6 +2007,81 @@ const AISlideGenerator: React.FC = () => {
                     : 'Tải file này'}
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {isMetadataModalOpen && editingMetadataFile && (
+          <div className="ai-slide-modal-overlay" onClick={closeMetadataModal}>
+            <div
+              className="ai-slide-modal ai-slide-metadata-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Cập nhật metadata slide"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="ai-slide-modal-header">
+                <h3>Cập nhật metadata slide</h3>
+                <button
+                  type="button"
+                  className="ai-slide-modal-close"
+                  onClick={closeMetadataModal}
+                  aria-label="Đóng"
+                >
+                  ×
+                </button>
+              </div>
+
+              <form
+                className="ai-slide-metadata-form"
+                onSubmit={(e) => void handleUpdateMetadata(e)}
+              >
+                <div className="ai-slide-metadata-preview">
+                  {generatedThumbnailUrls[editingMetadataFile.id] ? (
+                    <img
+                      src={generatedThumbnailUrls[editingMetadataFile.id]}
+                      alt={getGeneratedDisplayName(editingMetadataFile)}
+                      className="ai-slide-table-thumbnail"
+                    />
+                  ) : (
+                    <div className="ai-slide-table-thumbnail-placeholder large">
+                      {getGeneratedDisplayName(editingMetadataFile).slice(0, 1).toUpperCase()}
+                    </div>
+                  )}
+                </div>
+
+                <label>
+                  <span>Tên hiển thị</span>
+                  <input
+                    type="text"
+                    value={metadataName}
+                    onChange={(e) => setMetadataName(e.target.value)}
+                    placeholder="Nhập tên hiển thị mới"
+                  />
+                </label>
+
+                <label>
+                  <span>Thumbnail (png, jpg, jpeg, webp)</span>
+                  <input
+                    type="file"
+                    accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
+                    onChange={(e) => setMetadataThumbnailFile(e.target.files?.[0] || null)}
+                  />
+                </label>
+
+                {metadataThumbnailFile && (
+                  <p className="ai-slide-info">Đã chọn: {metadataThumbnailFile.name}</p>
+                )}
+
+                <div className="ai-slide-modal-footer">
+                  <button type="button" className="btn btn-outline" onClick={closeMetadataModal}>
+                    Hủy
+                  </button>
+                  <button type="submit" className="btn btn-primary" disabled={updatingMetadata}>
+                    {updatingMetadata ? 'Đang cập nhật...' : 'Lưu metadata'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}

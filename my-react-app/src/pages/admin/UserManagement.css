@@ -94,7 +94,6 @@
 }
 
 .filter-tab.active {
-  background: var(--gradient-primary);
   color: white;
   border-color: transparent;
 }
