@@ -377,42 +377,69 @@
   min-height: 220px;
   width: auto;
   z-index: 2;
-  border: 1px solid #ccfbf1;
-  border-radius: 14px;
+  border: 1px solid #99f6e4;
+  border-radius: 18px;
   background:
-    radial-gradient(circle at 20% 20%, rgba(20, 184, 166, 0.14), transparent 38%),
-    radial-gradient(circle at 85% 25%, rgba(6, 182, 212, 0.13), transparent 34%),
-    linear-gradient(180deg, #f0fdfa 0%, #ecfeff 100%);
+    radial-gradient(circle at 14% 18%, rgba(20, 184, 166, 0.2), transparent 34%),
+    radial-gradient(circle at 88% 20%, rgba(6, 182, 212, 0.18), transparent 32%),
+    radial-gradient(circle at 50% 100%, rgba(56, 189, 248, 0.14), transparent 40%),
+    linear-gradient(180deg, #f0fdfa 0%, #ecfeff 55%, #f0f9ff 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
+  gap: 0.9rem;
   overflow: hidden;
+  box-shadow:
+    0 14px 32px rgba(15, 118, 110, 0.14),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+}
+
+.module-layout-container .spm-math-loader::before {
+  content: '';
+  position: absolute;
+  width: 210px;
+  height: 210px;
+  border-radius: 999px;
+  background: conic-gradient(
+    from 0deg,
+    rgba(45, 212, 191, 0.42),
+    rgba(34, 211, 238, 0.16),
+    rgba(59, 130, 246, 0.36),
+    rgba(45, 212, 191, 0.42)
+  );
+  filter: blur(14px);
+  opacity: 0.68;
+  animation: spm-loader-aura 3.2s linear infinite;
 }
 
 .module-layout-container .spm-math-loader-ring {
-  width: 70px;
-  height: 70px;
+  width: 78px;
+  height: 78px;
   border-radius: 999px;
-  border: 3px solid rgba(20, 184, 166, 0.2);
+  border: 4px solid rgba(20, 184, 166, 0.24);
   border-top-color: #0d9488;
+  border-right-color: #0284c7;
   animation: spm-math-spin 1s linear infinite;
+  box-shadow: 0 0 0 8px rgba(45, 212, 191, 0.1);
+  z-index: 1;
 }
 
 .module-layout-container .spm-math-loader-symbols {
   position: absolute;
   inset: 0;
   pointer-events: none;
+  z-index: 1;
 }
 
 .module-layout-container .spm-math-loader-symbols span {
   position: absolute;
-  font-size: 1.15rem;
+  font-size: 1.28rem;
   font-weight: 800;
   color: #0f766e;
   opacity: 0;
-  animation: spm-math-float 2.8s ease-in-out infinite;
+  text-shadow: 0 3px 10px rgba(15, 118, 110, 0.2);
+  animation: spm-math-float 2.6s ease-in-out infinite;
 }
 
 .module-layout-container .spm-math-loader-symbols span:nth-child(1) {
@@ -448,8 +475,17 @@
 
 .module-layout-container .spm-math-loader p {
   margin: 0;
-  color: #115e59;
-  font-weight: 700;
+  color: #0f766e;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  z-index: 1;
+}
+
+.module-layout-container .spm-math-loader p::after {
+  content: '  ∫  Σ  π';
+  margin-left: 0.35rem;
+  color: #0ea5a4;
+  animation: spm-math-dots 1.2s steps(3, end) infinite;
 }
 
 @keyframes spm-math-spin {
@@ -458,19 +494,43 @@
   }
 }
 
+@keyframes spm-loader-aura {
+  0% {
+    transform: rotate(0deg) scale(0.92);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.05);
+  }
+  100% {
+    transform: rotate(360deg) scale(0.92);
+  }
+}
+
 @keyframes spm-math-float {
   0% {
-    transform: translateY(10px) scale(0.9);
+    transform: translateY(12px) scale(0.88) rotate(-8deg);
     opacity: 0;
   }
   35% {
-    opacity: 0.95;
+    opacity: 0.98;
   }
   65% {
-    opacity: 0.95;
+    opacity: 0.98;
   }
   100% {
-    transform: translateY(-10px) scale(1.06);
+    transform: translateY(-12px) scale(1.08) rotate(8deg);
     opacity: 0;
+  }
+}
+
+@keyframes spm-math-dots {
+  0% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.35;
   }
 }
