@@ -30,6 +30,60 @@ const PAYMENT_METHODS: { id: PaymentMethod; name: string; sub: string }[] = [
 
 const QUICK_AMOUNTS = [50_000, 100_000, 200_000, 500_000, 1_000_000];
 
+const VISA_TEMPLATES = [
+  {
+    id: 0,
+    label: 'Classic Blue',
+    gradient: 'linear-gradient(135deg, #0f1f6b 0%, #1a3099 45%, #1565c0 100%)',
+    swatch: '#1a3099',
+  },
+  {
+    id: 1,
+    label: 'Midnight',
+    gradient: 'linear-gradient(135deg, #0f0f0f 0%, #1c1c1c 50%, #2a2a2a 100%)',
+    swatch: '#1c1c1c',
+  },
+  {
+    id: 2,
+    label: 'Rose Gold',
+    gradient: 'linear-gradient(135deg, #6d1f35 0%, #b5495b 50%, #c9748f 100%)',
+    swatch: '#b5495b',
+  },
+  {
+    id: 3,
+    label: 'Emerald',
+    gradient: 'linear-gradient(135deg, #064e3b 0%, #047857 50%, #059669 100%)',
+    swatch: '#047857',
+  },
+  {
+    id: 4,
+    label: 'Purple',
+    gradient: 'linear-gradient(135deg, #3b0764 0%, #6d28d9 55%, #7c3aed 100%)',
+    swatch: '#6d28d9',
+  },
+] as const;
+
+const MC_TEMPLATES = [
+  {
+    id: 0,
+    label: 'Dark',
+    gradient: 'linear-gradient(135deg, #1a1a2e 0%, #2d2d44 45%, #3d3d5c 100%)',
+    swatch: '#2d2d44',
+  },
+  {
+    id: 1,
+    label: 'Carbon',
+    gradient: 'linear-gradient(135deg, #111827 0%, #1f2937 50%, #374151 100%)',
+    swatch: '#1f2937',
+  },
+  {
+    id: 2,
+    label: 'Crimson',
+    gradient: 'linear-gradient(135deg, #7f1d1d 0%, #b91c1c 50%, #dc2626 100%)',
+    swatch: '#b91c1c',
+  },
+] as const;
+
 const VN_BANKS = [
   { id: 'vcb', name: 'Vietcombank', short: 'VCB', color: '#007A3D', bg: '#E8F5EC' },
   { id: 'bidv', name: 'BIDV', short: 'BIDV', color: '#1B4B9B', bg: '#E8EAF6' },
@@ -184,6 +238,8 @@ const StudentWallet: React.FC = () => {
   const [cardExpiry, setCardExpiry] = useState('');
   const [cardCvv, setCardCvv] = useState('');
   const [cardName, setCardName] = useState('');
+  const [cardFlipped, setCardFlipped] = useState(false);
+  const [cardTemplate, setCardTemplate] = useState(0);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<TransactionStatusFilter>('all');
@@ -556,6 +612,8 @@ const StudentWallet: React.FC = () => {
                     onClick={() => {
                       setSelectedMethod(m.id);
                       setSelectedBank(null);
+                      setCardFlipped(false);
+                      setCardTemplate(0);
                     }}
                   >
                     <div className="method-logo">
@@ -640,64 +698,131 @@ const StudentWallet: React.FC = () => {
               {/* ── Visa / Mastercard: Real card preview ── */}
               {(selectedMethod === 'visa' || selectedMethod === 'mastercard') && (
                 <div className="card-preview-section">
-                  {/* Physical card mockup */}
-                  <div className={`card-preview card-preview--${selectedMethod}`}>
-                    {/* Decorative circles */}
-                    <div className="cp-deco-circle cp-deco-circle--1" aria-hidden="true" />
-                    <div className="cp-deco-circle cp-deco-circle--2" aria-hidden="true" />
+                  {/* Template picker */}
+                  <div className="card-template-picker">
+                    {(selectedMethod === 'visa' ? VISA_TEMPLATES : MC_TEMPLATES).map((tpl) => (
+                      <button
+                        key={tpl.id}
+                        type="button"
+                        className={`card-tpl-swatch${cardTemplate === tpl.id ? ' active' : ''}`}
+                        style={{ background: tpl.swatch }}
+                        title={tpl.label}
+                        onClick={() => {
+                          setCardTemplate(tpl.id);
+                          setCardFlipped(false);
+                        }}
+                      />
+                    ))}
+                    <span className="card-tpl-hint">Chọn mẫu</span>
+                  </div>
 
-                    {/* Top row: chip + contactless */}
-                    <div className="cp-top-row">
-                      <div className="cp-chip" aria-hidden="true">
-                        <div className="cp-chip-h" />
-                        <div className="cp-chip-v" />
-                      </div>
-                      {/* Contactless symbol */}
-                      <svg
-                        className="cp-contactless"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
+                  {/* Flip container */}
+                  <div
+                    className="card-flip-container"
+                    onClick={() => setCardFlipped((f) => !f)}
+                    title={cardFlipped ? 'Xem mặt trước' : 'Xem mặt sau'}
+                  >
+                    <div className={`card-flipper${cardFlipped ? ' flipped' : ''}`}>
+                      {/* ── FRONT FACE ── */}
+                      <div
+                        className="card-face card-face--front"
+                        style={{
+                          background: (selectedMethod === 'visa' ? VISA_TEMPLATES : MC_TEMPLATES)[
+                            Math.min(
+                              cardTemplate,
+                              (selectedMethod === 'visa' ? VISA_TEMPLATES : MC_TEMPLATES).length - 1
+                            )
+                          ].gradient,
+                        }}
                       >
-                        <path d="M5 12.55a11 11 0 0 1 14.08 0" />
-                        <path d="M1.42 9a16 16 0 0 1 21.16 0" />
-                        <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
-                        <circle cx="12" cy="20" r="1" fill="currentColor" />
-                      </svg>
-                    </div>
+                        <div className="cp-deco-circle cp-deco-circle--1" aria-hidden="true" />
+                        <div className="cp-deco-circle cp-deco-circle--2" aria-hidden="true" />
 
-                    {/* Card number */}
-                    <div className="cp-number">
-                      {cardNumber
-                        ? cardNumber.padEnd(19, ' ').replace(/X/g, '•')
-                        : '•••• •••• •••• ••••'}
-                    </div>
+                        <div className="cp-top-row">
+                          <div className="cp-chip" aria-hidden="true">
+                            <div className="cp-chip-h" />
+                            <div className="cp-chip-v" />
+                          </div>
+                          <svg
+                            className="cp-contactless"
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                          >
+                            <path d="M5 12.55a11 11 0 0 1 14.08 0" />
+                            <path d="M1.42 9a16 16 0 0 1 21.16 0" />
+                            <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
+                            <circle cx="12" cy="20" r="1" fill="currentColor" />
+                          </svg>
+                        </div>
 
-                    {/* Bottom row */}
-                    <div className="cp-bottom-row">
-                      <div className="cp-field">
-                        <span className="cp-field-label">Card Holder</span>
-                        <span className="cp-field-value">{cardName || 'YOUR NAME'}</span>
-                      </div>
-                      <div className="cp-field">
-                        <span className="cp-field-label">Expires</span>
-                        <span className="cp-field-value cp-field-value--mono">
-                          {cardExpiry || 'MM/YY'}
-                        </span>
-                      </div>
-                      <div className="cp-logo-wrap">
-                        {selectedMethod === 'visa' ? <VisaLogo /> : <MastercardLogo />}
-                      </div>
-                    </div>
+                        <div className="cp-number">
+                          {cardNumber
+                            ? cardNumber.padEnd(19, ' ').replace(/X/g, '•')
+                            : '•••• •••• •••• ••••'}
+                        </div>
 
-                    {/* Coming-soon overlay ON the card */}
-                    <div className="cp-overlay">
-                      <span className="cs-badge">Sắp ra mắt</span>
-                      <p>Thanh toán thẻ quốc tế đang được tích hợp</p>
+                        <div className="cp-bottom-row">
+                          <div className="cp-field">
+                            <span className="cp-field-label">Card Holder</span>
+                            <span className="cp-field-value">{cardName || 'YOUR NAME'}</span>
+                          </div>
+                          <div className="cp-field">
+                            <span className="cp-field-label">Expires</span>
+                            <span className="cp-field-value cp-field-value--mono">
+                              {cardExpiry || 'MM/YY'}
+                            </span>
+                          </div>
+                          <div className="cp-logo-wrap">
+                            {selectedMethod === 'visa' ? <VisaLogo /> : <MastercardLogo />}
+                          </div>
+                        </div>
+
+                        {/* Coming-soon overlay */}
+                        <div className="cp-overlay">
+                          <span className="cs-badge">Sắp ra mắt</span>
+                          <p>Nhấn để xem mặt sau</p>
+                        </div>
+                      </div>
+
+                      {/* ── BACK FACE ── */}
+                      <div
+                        className="card-face card-face--back"
+                        style={{
+                          background: (selectedMethod === 'visa' ? VISA_TEMPLATES : MC_TEMPLATES)[
+                            Math.min(
+                              cardTemplate,
+                              (selectedMethod === 'visa' ? VISA_TEMPLATES : MC_TEMPLATES).length - 1
+                            )
+                          ].gradient,
+                        }}
+                      >
+                        <div className="cp-deco-circle cp-deco-circle--1" aria-hidden="true" />
+                        {/* Magnetic stripe */}
+                        <div className="cp-mag-stripe" aria-hidden="true" />
+                        {/* Signature + CVV strip */}
+                        <div className="cp-sig-row">
+                          <div className="cp-sig-strip">
+                            <span className="cp-sig-lines" aria-hidden="true" />
+                            <span className="cp-sig-text">Authorized Signature</span>
+                          </div>
+                          <div className="cp-cvv-box">
+                            <span className="cp-cvv-label">CVV</span>
+                            <span className="cp-cvv-val">{cardCvv || '•••'}</span>
+                          </div>
+                        </div>
+                        {/* Bottom: network + hint */}
+                        <div className="cp-back-footer">
+                          <span className="cp-back-hint">Nhấn để xem mặt trước</span>
+                          <div className="cp-logo-wrap">
+                            {selectedMethod === 'visa' ? <VisaLogo /> : <MastercardLogo />}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
