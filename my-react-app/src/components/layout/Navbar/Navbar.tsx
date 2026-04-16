@@ -39,7 +39,7 @@ const Navbar: React.FC<NavbarProps> = ({ user }) => {
       try {
         const res = await SubscriptionPlanService.getMySubscription();
         if (!mounted) return;
-        setTokenRemaining(res.result.tokenRemaining);
+        setTokenRemaining(res.result?.tokenRemaining ?? null);
       } catch {
         if (!mounted) return;
         setTokenRemaining(null);
