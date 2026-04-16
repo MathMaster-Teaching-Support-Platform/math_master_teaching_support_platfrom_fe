@@ -3602,6 +3602,7 @@ const StudentWallet: React.FC = () => {
   const [tplCategory, setTplCategory] = useState<TemplateCategory>('Tất cả');
   const pollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [selectedBank, setSelectedBank] = useState<string | null>(null);
+  const [showBankPanel, setShowBankPanel] = useState(false);
   const [cardNumber, setCardNumber] = useState('');
   const [cardExpiry, setCardExpiry] = useState('');
   const [cardCvv, setCardCvv] = useState('');
@@ -4092,71 +4093,111 @@ const StudentWallet: React.FC = () => {
                 ))}
               </div>
 
-              {/* ── PayOS: Bank selector ── */}
+              {/* ── PayOS: Bank selector (accordion) ── */}
               {selectedMethod === 'payos' && (
-                <div className="payos-section">
-                  <div className="payos-section__header">
-                    <svg
-                      width="15"
-                      height="15"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <rect x="1" y="4" width="22" height="16" rx="2" />
-                      <line x1="1" y1="10" x2="23" y2="10" />
-                    </svg>
-                    <span>
-                      Ngân hàng của bạn <span className="payos-section__optional">(tùy chọn)</span>
-                    </span>
-                  </div>
-                  <div className="bank-grid">
-                    {VN_BANKS.map((bank) => (
-                      <button
-                        key={bank.id}
-                        type="button"
-                        className={`bank-chip${selectedBank === bank.id ? ' selected' : ''}`}
-                        style={
-                          selectedBank === bank.id
-                            ? {
-                                borderColor: bank.color,
-                                boxShadow: `0 0 0 2px ${bank.color}30`,
-                                background: `${bank.color}08`,
-                              }
-                            : {}
-                        }
-                        onClick={() => setSelectedBank(selectedBank === bank.id ? null : bank.id)}
+                <div className={`payos-section${showBankPanel ? ' payos-section--open' : ''}`}>
+                  <button
+                    type="button"
+                    className="payos-section__header"
+                    onClick={() => setShowBankPanel((v) => !v)}
+                    aria-expanded={showBankPanel}
+                  >
+                    <div className="payos-section__header-left">
+                      <svg
+                        width="15"
+                        height="15"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
                       >
-                        <div
-                          className="bank-chip__icon"
-                          style={{ background: '#fff', border: `1.5px solid ${bank.color}25` }}
-                        >
-                          <BankLogoSVG id={bank.id} color={bank.color} />
-                        </div>
-                        <span className="bank-chip__name">{bank.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                  <p className="payos-note">
+                        <rect x="1" y="4" width="22" height="16" rx="2" />
+                        <line x1="1" y1="10" x2="23" y2="10" />
+                      </svg>
+                      <span>
+                        Ngân hàng của bạn{' '}
+                        <span className="payos-section__optional">(tùy chọn)</span>
+                      </span>
+                      {selectedBank &&
+                        (() => {
+                          const b = VN_BANKS.find((x) => x.id === selectedBank);
+                          return b ? (
+                            <span
+                              className="payos-section__selected-tag"
+                              style={{ background: b.bg, color: b.color }}
+                            >
+                              {b.short}
+                            </span>
+                          ) : null;
+                        })()}
+                    </div>
                     <svg
-                      width="13"
-                      height="13"
+                      className={`payos-section__chevron${showBankPanel ? ' open' : ''}`}
+                      width="14"
+                      height="14"
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
-                      strokeWidth="2"
+                      strokeWidth="2.5"
                       strokeLinecap="round"
                       strokeLinejoin="round"
                     >
-                      <circle cx="12" cy="12" r="10" />
-                      <line x1="12" y1="16" x2="12" y2="12" />
-                      <line x1="12" y1="8" x2="12.01" y2="8" />
+                      <polyline points="6 9 12 15 18 9" />
                     </svg>
-                    Hỗ trợ thanh toán QR / chuyển khoản qua hơn 10 ngân hàng
-                  </p>
+                  </button>
+
+                  {showBankPanel && (
+                    <div className="payos-bank-body">
+                      <div className="bank-grid">
+                        {VN_BANKS.map((bank) => (
+                          <button
+                            key={bank.id}
+                            type="button"
+                            className={`bank-chip${selectedBank === bank.id ? ' selected' : ''}`}
+                            style={
+                              selectedBank === bank.id
+                                ? {
+                                    borderColor: bank.color,
+                                    boxShadow: `0 0 0 2px ${bank.color}30`,
+                                    background: `${bank.color}08`,
+                                  }
+                                : {}
+                            }
+                            onClick={() =>
+                              setSelectedBank(selectedBank === bank.id ? null : bank.id)
+                            }
+                          >
+                            <div
+                              className="bank-chip__icon"
+                              style={{ background: '#fff', border: `1.5px solid ${bank.color}25` }}
+                            >
+                              <BankLogoSVG id={bank.id} color={bank.color} />
+                            </div>
+                            <span className="bank-chip__name">{bank.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                      <p className="payos-note">
+                        <svg
+                          width="13"
+                          height="13"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <circle cx="12" cy="12" r="10" />
+                          <line x1="12" y1="16" x2="12" y2="12" />
+                          <line x1="12" y1="8" x2="12.01" y2="8" />
+                        </svg>
+                        Hỗ trợ thanh toán QR / chuyển khoản qua hơn 10 ngân hàng
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
 
