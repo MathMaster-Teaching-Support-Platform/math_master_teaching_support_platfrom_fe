@@ -343,6 +343,7 @@ export const API_ENDPOINTS = {
   ADMIN_SUBSCRIPTION_PLANS_SUBSCRIPTIONS: '/admin/subscription-plans/subscriptions',
 
   // User Subscriptions
+  SUBSCRIPTIONS_PLANS: '/subscriptions/plans',
   SUBSCRIPTIONS_ME: '/subscriptions/me',
   SUBSCRIPTIONS_PURCHASE: (planId: string) => `/subscriptions/purchase/${planId}`,
 

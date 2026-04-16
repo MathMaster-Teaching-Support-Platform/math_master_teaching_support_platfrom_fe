@@ -169,7 +169,7 @@ export const SubscriptionPlanService = {
   },
 
   async getUserPlans(): Promise<ApiResponse<SubscriptionPlan[]>> {
-    const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ADMIN_SUBSCRIPTION_PLANS}`, {
+    const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.SUBSCRIPTIONS_PLANS}`, {
       method: 'GET',
       headers: authHeaders(),
     });

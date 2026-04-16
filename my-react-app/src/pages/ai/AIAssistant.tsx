@@ -105,6 +105,7 @@ const AIAssistant: React.FC = () => {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editingTitle, setEditingTitle] = useState('');
   const [isSessionPanelOpen, setIsSessionPanelOpen] = useState(false);
+  const [tokenModal, setTokenModal] = useState<{ type: 'no-plan' | 'no-token' } | null>(null);
   const hasBootstrappedSession = useRef(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -231,15 +232,11 @@ const AIAssistant: React.FC = () => {
     } catch (error) {
       const apiError = error as Error & { code?: number };
       if (apiError.code === 1164) {
-        setLocalError('Ban chua co goi active. Vui long mua goi de tiep tuc su dung AI.');
-        if (window.confirm('Ban chua co goi active. Mo trang mua goi ngay?')) {
-          navigate('/pricing');
-        }
+        setLocalError('Bạn chưa có gói active. Vui lòng mua gói để tiếp tục sử dụng AI.');
+        setTokenModal({ type: 'no-plan' });
       } else if (apiError.code === 1165) {
-        setLocalError('Token cua goi da het. Vui long mua them goi hoac nap tien.');
-        if (window.confirm('Token da het. Mo trang goi va vi de nap/mua ngay?')) {
-          navigate(`/${layoutRole}/wallet`);
-        }
+        setLocalError('Token của gói đã hết. Vui lòng mua thêm gói hoặc nạp tiền.');
+        setTokenModal({ type: 'no-token' });
       } else {
         setLocalError(getErrorMessage(error, 'Không thể gửi prompt.'));
       }
@@ -559,6 +556,83 @@ const AIAssistant: React.FC = () => {
           </div>
         </aside>
       </div>
+
+      {/* ── Token / Plan alert modal ── */}
+      {tokenModal && (
+        <div
+          className="ai-token-modal-overlay"
+          onClick={() => setTokenModal(null)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="ai-token-modal" onClick={(e) => e.stopPropagation()}>
+            {/* corner math symbols */}
+            <span className="ai-token-sym s1" aria-hidden="true">
+              π
+            </span>
+            <span className="ai-token-sym s2" aria-hidden="true">
+              Σ
+            </span>
+            <span className="ai-token-sym s3" aria-hidden="true">
+              ∞
+            </span>
+            <span className="ai-token-sym s4" aria-hidden="true">
+              Δ
+            </span>
+
+            {/* character area */}
+            <div className="ai-token-modal__char-wrap">
+              <div className="ai-token-modal__speech">
+                <span>!@# ?</span>
+              </div>
+              <div className="ai-token-modal__char">
+                {tokenModal.type === 'no-plan' ? '🎓' : '🧮'}
+              </div>
+              <div className="ai-token-modal__battery">
+                <span className="ai-token-battery__bar" />
+                <span className="ai-token-battery__bar empty" />
+                <span className="ai-token-battery__label">[%]</span>
+              </div>
+            </div>
+
+            <h2 className="ai-token-modal__title">
+              {tokenModal.type === 'no-plan'
+                ? 'Chưa có gói đăng ký!'
+                : "Hết 'điện' rồi bạn ơi! (0 tokens)"}
+            </h2>
+
+            <p className="ai-token-modal__desc">
+              {tokenModal.type === 'no-plan'
+                ? 'Bạn cần kích hoạt gói đăng ký để dùng AI Trợ lý. Mua gói ngay để giải toán không giới hạn!'
+                : 'Phép tính này cần thêm một chút nhiên liệu để hoàn thành. Hãy nạp thêm token để tiếp tục cuộc hành trình toán học nhé!'}
+            </p>
+
+            <div className="ai-token-modal__actions">
+              <button
+                type="button"
+                className="ai-token-modal__btn primary"
+                onClick={() => {
+                  setTokenModal(null);
+                  navigate(tokenModal.type === 'no-plan' ? '/pricing' : `/${layoutRole}/wallet`);
+                }}
+              >
+                <span className="ai-token-btn__hot">HOT</span>
+                <span className="ai-token-btn__icon">+</span>
+                {tokenModal.type === 'no-plan' ? 'Mua gói ngay' : 'Nạp thêm ngay'}
+              </button>
+              <button
+                type="button"
+                className="ai-token-modal__btn ghost"
+                onClick={() => setTokenModal(null)}
+              >
+                Để sau
+              </button>
+            </div>
+
+            <p className="ai-token-modal__footer">HỆ SINH THÁI MATHLAB</p>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 };
