@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import DashboardLayout from '../components/layout/DashboardLayout/DashboardLayout';
 import Footer from '../components/Footer';
+import DashboardLayout from '../components/layout/DashboardLayout/DashboardLayout';
 import { mockAdmin, mockStudent, mockTeacher } from '../data/mockData';
 import { AuthService } from '../services/api/auth.service';
 import {
@@ -30,6 +30,7 @@ const Pricing: React.FC = () => {
   const [subscriptionError, setSubscriptionError] = useState('');
   const [subscriptionSuccess, setSubscriptionSuccess] = useState('');
   const [purchasingPlanId, setPurchasingPlanId] = useState<string | null>(null);
+  const [showWalletModal, setShowWalletModal] = useState(false);
 
   const plans = [
     {
@@ -167,8 +168,7 @@ const Pricing: React.FC = () => {
 
     if ((wallet?.balance ?? 0) < plan.price) {
       setSubscriptionError('Số dư ví không đủ để mua gói này.');
-      alert('Số dư ví không đủ. Bạn sẽ được chuyển tới trang nạp tiền.');
-      navigate('/student/wallet');
+      setShowWalletModal(true);
       return;
     }
 
@@ -189,8 +189,7 @@ const Pricing: React.FC = () => {
       const apiError = error as Error & { code?: number };
       if (apiError.code === 1029) {
         setSubscriptionError('Số dư ví không đủ.');
-        alert('Số dư ví không đủ. Bạn sẽ được chuyển tới trang nạp tiền.');
-        navigate('/student/wallet');
+        setShowWalletModal(true);
       } else if (apiError.code === 1163) {
         setSubscriptionError('Gói không hỗ trợ mua trực tiếp.');
       } else {
@@ -235,114 +234,179 @@ const Pricing: React.FC = () => {
     return <span className="pricing-ct-cross">—</span>;
   };
 
+  /* ── Wallet Modal ── */
+  const walletModal = showWalletModal ? (
+    <div className="pricing-modal-overlay">
+      <dialog open className="pricing-modal" aria-labelledby="wallet-modal-title">
+        <div className="pricing-modal-icon">
+          <svg
+            width="32"
+            height="32"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+            <line x1="1" y1="10" x2="23" y2="10" />
+          </svg>
+        </div>
+        <h3 className="pricing-modal-title" id="wallet-modal-title">
+          Số dư ví không đủ
+        </h3>
+        <p className="pricing-modal-desc">
+          Số dư trong ví của bạn không đủ để mua gói này. Bạn có muốn chuyển đến trang nạp tiền
+          không?
+        </p>
+        <div className="pricing-modal-actions">
+          <button
+            type="button"
+            className="pricing-modal-btn pricing-modal-btn--outline"
+            onClick={() => setShowWalletModal(false)}
+          >
+            Để sau
+          </button>
+          <button
+            type="button"
+            className="pricing-modal-btn pricing-modal-btn--primary"
+            onClick={() => {
+              setShowWalletModal(false);
+              navigate('/student/wallet');
+            }}
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+              <line x1="1" y1="10" x2="23" y2="10" />
+            </svg>
+            Nạp tiền ngay
+          </button>
+        </div>
+      </dialog>
+    </div>
+  ) : null;
+
   if (isAuthenticated) {
     return (
-      <DashboardLayout
-        role={layoutRole}
-        user={{ name: currentUser.name, avatar: currentUser.avatar!, role: layoutRole }}
-        notificationCount={5}
-      >
-        <div className="homepage">
-          <section className="pricing-hero">
-            <div className="pricing-hero-dots" aria-hidden="true" />
-            <div className="container">
-              <div className="pricing-hero-content">
-                <span className="ft-badge ft-badge--purple" style={{ marginBottom: '1.25rem' }}>
-                  Bảng giá
-                </span>
-                <h1 className="pricing-hero-title">Subscription & Token</h1>
-                <p className="pricing-hero-desc">
-                  Mua gói bằng ví và theo dõi token còn lại theo subscription active.
-                </p>
+      <>
+        <DashboardLayout
+          role={layoutRole}
+          user={{ name: currentUser.name, avatar: currentUser.avatar!, role: layoutRole }}
+          notificationCount={5}
+        >
+          <div className="homepage">
+            <section className="pricing-hero">
+              <div className="pricing-hero-dots" aria-hidden="true" />
+              <div className="container">
+                <div className="pricing-hero-content">
+                  <span className="ft-badge ft-badge--purple" style={{ marginBottom: '1.25rem' }}>
+                    Bảng giá
+                  </span>
+                  <h1 className="pricing-hero-title">Subscription & Token</h1>
+                  <p className="pricing-hero-desc">
+                    Mua gói bằng ví và theo dõi token còn lại theo subscription active.
+                  </p>
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
 
-          <section className="pricing-cards-section">
-            <div className="container">
-              <div className="pricing-comparison-header" style={{ marginBottom: '1.2rem' }}>
-                <span className="ft-badge ft-badge--green" style={{ marginBottom: '1rem' }}>
-                  Subscription + Token
-                </span>
-                <h2 className="pricing-comparison-title">Mua gói bằng ví</h2>
-                {wallet && (
-                  <p className="pricing-hero-desc" style={{ marginTop: '0.4rem' }}>
-                    Số dư ví: <strong>{formatPrice(wallet.balance)}</strong>
-                    {activeSubscription && (
-                      <>
-                        {' '}
-                        | Gói active: <strong>{activeSubscription.planName}</strong> | Token còn
-                        lại: <strong>{activeSubscription.tokenRemaining}</strong>
-                      </>
-                    )}
+            <section className="pricing-cards-section">
+              <div className="container">
+                <div className="pricing-comparison-header" style={{ marginBottom: '1.2rem' }}>
+                  <span className="ft-badge ft-badge--green" style={{ marginBottom: '1rem' }}>
+                    Subscription + Token
+                  </span>
+                  <h2 className="pricing-comparison-title">Mua gói bằng ví</h2>
+                  {wallet && (
+                    <p className="pricing-hero-desc" style={{ marginTop: '0.4rem' }}>
+                      Số dư ví: <strong>{formatPrice(wallet.balance)}</strong>
+                      {activeSubscription && (
+                        <>
+                          {' '}
+                          | Gói active: <strong>{activeSubscription.planName}</strong> | Token còn
+                          lại: <strong>{activeSubscription.tokenRemaining}</strong>
+                        </>
+                      )}
+                    </p>
+                  )}
+                </div>
+
+                {loadingSubscriptionData && <p>Đang tải dữ liệu gói...</p>}
+                {subscriptionError && (
+                  <p style={{ color: '#dc2626', fontWeight: 600, marginBottom: '1rem' }}>
+                    {subscriptionError}
                   </p>
                 )}
-              </div>
+                {subscriptionSuccess && (
+                  <p style={{ color: '#16a34a', fontWeight: 600, marginBottom: '1rem' }}>
+                    {subscriptionSuccess}
+                  </p>
+                )}
 
-              {loadingSubscriptionData && <p>Đang tải dữ liệu gói...</p>}
-              {subscriptionError && (
-                <p style={{ color: '#dc2626', fontWeight: 600, marginBottom: '1rem' }}>
-                  {subscriptionError}
-                </p>
-              )}
-              {subscriptionSuccess && (
-                <p style={{ color: '#16a34a', fontWeight: 600, marginBottom: '1rem' }}>
-                  {subscriptionSuccess}
-                </p>
-              )}
+                {!loadingSubscriptionData && userPlans.length > 0 && (
+                  <div className="pricing-cards-grid">
+                    {userPlans.map((plan) => {
+                      const price = plan.price ?? 0;
+                      const walletBalance = wallet?.balance ?? 0;
+                      const isInsufficientBalance = price > 0 && walletBalance < price;
+                      const isCurrentPlan = activeSubscription?.planId === plan.id;
 
-              {!loadingSubscriptionData && userPlans.length > 0 && (
-                <div className="pricing-cards-grid">
-                  {userPlans.map((plan) => {
-                    const price = plan.price ?? 0;
-                    const walletBalance = wallet?.balance ?? 0;
-                    const isInsufficientBalance = price > 0 && walletBalance < price;
-                    const isCurrentPlan = activeSubscription?.planId === plan.id;
-
-                    return (
-                      <div
-                        key={plan.id}
-                        className={`pricing-plan-card ${plan.featured ? 'pricing-plan-card--featured' : ''}`}
-                      >
-                        <div className="pricing-plan-header">
-                          <h3 className="pricing-plan-name">{plan.name}</h3>
-                          <p className="pricing-plan-desc">
-                            {plan.description || 'Gói đăng ký cho người dùng'}
-                          </p>
-                        </div>
-                        <div className="pricing-plan-price-block">
-                          <span className="pricing-plan-price">{formatPrice(plan.price)}</span>
-                          <span className="pricing-plan-period">
-                            /{plan.billingCycle.toLowerCase()}
-                          </span>
-                        </div>
-                        <p className="pricing-plan-desc" style={{ marginBottom: '0.75rem' }}>
-                          Token quota: <strong>{plan.tokenQuota}</strong>
-                        </p>
-                        <button
-                          type="button"
-                          className={`pricing-plan-btn ${plan.featured ? 'pricing-plan-btn--primary' : 'pricing-plan-btn--outline'}`}
-                          onClick={() => void handlePurchase(plan)}
-                          disabled={!!purchasingPlanId || isCurrentPlan || !price}
-                          title={isInsufficientBalance ? 'Số dư ví không đủ' : undefined}
+                      return (
+                        <div
+                          key={plan.id}
+                          className={`pricing-plan-card ${plan.featured ? 'pricing-plan-card--featured' : ''}`}
                         >
-                          {isCurrentPlan
-                            ? 'Đang sử dụng'
-                            : purchasingPlanId === plan.id
-                              ? 'Đang mua...'
-                              : !price
-                                ? 'Không mua trực tiếp'
-                                : 'Mua ngay'}
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </section>
-        </div>
-      </DashboardLayout>
+                          <div className="pricing-plan-header">
+                            <h3 className="pricing-plan-name">{plan.name}</h3>
+                            <p className="pricing-plan-desc">
+                              {plan.description || 'Gói đăng ký cho người dùng'}
+                            </p>
+                          </div>
+                          <div className="pricing-plan-price-block">
+                            <span className="pricing-plan-price">{formatPrice(plan.price)}</span>
+                            <span className="pricing-plan-period">
+                              /{plan.billingCycle.toLowerCase()}
+                            </span>
+                          </div>
+                          <p className="pricing-plan-desc" style={{ marginBottom: '0.75rem' }}>
+                            Token quota: <strong>{plan.tokenQuota}</strong>
+                          </p>
+                          <button
+                            type="button"
+                            className={`pricing-plan-btn ${plan.featured ? 'pricing-plan-btn--primary' : 'pricing-plan-btn--outline'}`}
+                            onClick={() => void handlePurchase(plan)}
+                            disabled={!!purchasingPlanId || isCurrentPlan || !price}
+                            title={isInsufficientBalance ? 'Số dư ví không đủ' : undefined}
+                          >
+                            {isCurrentPlan
+                              ? 'Đang sử dụng'
+                              : purchasingPlanId === plan.id
+                                ? 'Đang mua...'
+                                : !price
+                                  ? 'Không mua trực tiếp'
+                                  : 'Mua ngay'}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </section>
+          </div>
+        </DashboardLayout>
+        {walletModal}
+      </>
     );
   }
 
@@ -659,6 +723,7 @@ const Pricing: React.FC = () => {
       </section>
 
       <Footer />
+      {walletModal}
     </div>
   );
 };
