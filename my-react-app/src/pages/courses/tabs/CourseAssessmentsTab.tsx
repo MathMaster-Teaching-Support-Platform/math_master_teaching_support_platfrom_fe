@@ -17,8 +17,8 @@ import {
   useRemoveAssessmentFromCourse,
   useUpdateCourseAssessment,
   useAddAssessmentToCourse,
+  useAvailableAssessmentsForCourse,
 } from '../../../hooks/useCourses';
-import { useMyAssessments } from '../../../hooks/useAssessment';
 import type { CourseAssessmentResponse, AddAssessmentToCourseRequest } from '../../../types';
 import '../../../styles/module-refactor.css';
 
@@ -49,18 +49,18 @@ function AddAssessmentModal({
   const [selectedId, setSelectedId] = useState('');
   const [orderIndex, setOrderIndex] = useState(1);
   const [isRequired, setIsRequired] = useState(true);
+  const [allowOutOfCourseLessons, setAllowOutOfCourseLessons] = useState(false);
   const [error, setError] = useState('');
 
-  const { data: assessmentsData, isLoading } = useMyAssessments({
-    status: 'PUBLISHED',
-    page: 0,
-    size: 100,
-  });
+  const { data: assessmentsData, isLoading } = useAvailableAssessmentsForCourse(
+    courseId,
+    allowOutOfCourseLessons
+  );
   const addMutation = useAddAssessmentToCourse();
 
-  const assessments = assessmentsData?.result?.content ?? [];
+  const assessments = assessmentsData?.result ?? [];
   const available = useMemo(() => {
-    return assessments.filter((a) => !existingAssessmentIds.includes(a.id));
+    return assessments.filter((a) => !existingAssessmentIds.includes(a.assessmentId));
   }, [assessments, existingAssessmentIds]);
 
   const filtered = useMemo(() => {
@@ -83,6 +83,7 @@ function AddAssessmentModal({
       assessmentId: selectedId,
       orderIndex,
       isRequired,
+      allowOutOfCourseLessons,
     };
 
     try {
@@ -141,6 +142,20 @@ function AddAssessmentModal({
             )}
           </div>
 
+          <label className="row" style={{ alignItems: 'center', gap: 8, marginTop: 10 }}>
+            <input
+              type="checkbox"
+              checked={allowOutOfCourseLessons}
+              onChange={(e) => setAllowOutOfCourseLessons(e.target.checked)}
+            />
+            <span style={{ fontSize: '0.86rem', fontWeight: 600 }}>
+              Cho phép Final Exam ngoài lesson của course (override)
+            </span>
+          </label>
+          <p className="muted" style={{ fontSize: '0.8rem', marginTop: 6 }}>
+            Tắt: chỉ hiện assessment khớp lesson của course. Bật: cho phép chọn cả assessment không khớp lesson.
+          </p>
+
           {error && (
             <div style={{ padding: '0.75rem', background: '#fee2e2', borderRadius: 8, marginTop: '0.75rem' }}>
               <div className="row" style={{ gap: 8, color: '#dc2626' }}>
@@ -167,15 +182,15 @@ function AddAssessmentModal({
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', marginTop: '0.75rem' }}>
               {filtered.map((assessment) => (
                 <div
-                  key={assessment.id}
-                  className={`assessment-select-card ${selectedId === assessment.id ? 'selected' : ''}`}
-                  onClick={() => setSelectedId(assessment.id)}
+                  key={assessment.assessmentId}
+                  className={`assessment-select-card ${selectedId === assessment.assessmentId ? 'selected' : ''}`}
+                  onClick={() => setSelectedId(assessment.assessmentId)}
                   style={{
-                    border: selectedId === assessment.id ? '2px solid #2d7be7' : '1px solid #dbe4f0',
+                    border: selectedId === assessment.assessmentId ? '2px solid #2d7be7' : '1px solid #dbe4f0',
                     borderRadius: 10,
                     padding: '0.85rem',
                     cursor: 'pointer',
-                    background: selectedId === assessment.id ? '#f0f7ff' : '#fff',
+                    background: selectedId === assessment.assessmentId ? '#f0f7ff' : '#fff',
                     transition: 'all 0.15s',
                   }}
                 >
@@ -185,8 +200,16 @@ function AddAssessmentModal({
                       <span className="muted" style={{ fontSize: '0.82rem' }}>
                         {typeLabel[assessment.assessmentType]}
                       </span>
+                      {allowOutOfCourseLessons && selectedId === assessment.assessmentId && (
+                        <span
+                          className="badge"
+                          style={{ background: '#fee2e2', color: '#b91c1c', fontWeight: 700 }}
+                        >
+                          Final Exam Override
+                        </span>
+                      )}
                     </div>
-                    {selectedId === assessment.id && (
+                    {selectedId === assessment.assessmentId && (
                       <CheckCircle2 size={18} style={{ color: '#2d7be7' }} />
                     )}
                   </div>
@@ -203,6 +226,14 @@ function AddAssessmentModal({
                     <span>⭐ {assessment.totalPoints} điểm</span>
                     {assessment.timeLimitMinutes && <span>⏱️ {assessment.timeLimitMinutes} phút</span>}
                   </div>
+                  <p className="muted" style={{ fontSize: '0.78rem', marginTop: 8 }}>
+                    Khớp {assessment.matchedLessonCount} bài học: {assessment.matchedLessonTitles.join(', ')}
+                  </p>
+                  {assessment.matchedLessonCount === 0 && (
+                    <p style={{ fontSize: '0.78rem', marginTop: 4, color: '#b91c1c', fontWeight: 600 }}>
+                      Assessment này không khớp lesson nào của course.
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
@@ -458,6 +489,11 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId })
                             ⭐ Bắt buộc
                           </span>
                         )}
+                        {!assessment.lessonMatched && (
+                          <span className="badge" style={{ background: '#fee2e2', color: '#b91c1c' }}>
+                            ⚠ Không khớp lesson
+                          </span>
+                        )}
                       </div>
                       <span className="muted" style={{ fontSize: '0.78rem' }}>
                         #{assessment.orderIndex ?? '—'}
@@ -489,6 +525,18 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId })
                           <Users size={12} style={{ marginRight: 3 }} />
                           {assessment.submissionCount} bài nộp
                         </span>
+                      )}
+                    </div>
+
+                    <div style={{ marginTop: 8 }}>
+                      {assessment.lessonMatched ? (
+                        <p className="muted" style={{ fontSize: '0.82rem', margin: 0 }}>
+                          Khớp lesson: {assessment.matchedLessonTitles.join(', ')}
+                        </p>
+                      ) : (
+                        <p style={{ fontSize: '0.82rem', margin: 0, color: '#b91c1c', fontWeight: 600 }}>
+                          Assessment này chưa liên kết với bất kỳ lesson nào của course.
+                        </p>
                       )}
                     </div>
 

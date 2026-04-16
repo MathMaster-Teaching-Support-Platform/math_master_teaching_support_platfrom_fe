@@ -143,12 +143,30 @@ export interface CourseAssessmentResponse {
   totalQuestions: number | null;
   totalPoints: number | null;
   submissionCount: number | null;
+  matchedLessonCount: number;
+  matchedLessonTitles: string[];
+  lessonMatched: boolean;
+}
+
+export interface AvailableCourseAssessmentResponse {
+  assessmentId: string;
+  title: string;
+  description: string | null;
+  assessmentType: 'QUIZ' | 'TEST' | 'EXAM' | 'HOMEWORK';
+  status: 'DRAFT' | 'PUBLISHED' | 'CLOSED';
+  timeLimitMinutes: number | null;
+  totalQuestions: number;
+  totalPoints: number;
+  matchedLessonCount: number;
+  matchedLessonIds: string[];
+  matchedLessonTitles: string[];
 }
 
 export interface AddAssessmentToCourseRequest {
   assessmentId: string;
   orderIndex?: number;
   isRequired?: boolean;
+  allowOutOfCourseLessons?: boolean;
 }
 
 export interface UpdateCourseAssessmentRequest {

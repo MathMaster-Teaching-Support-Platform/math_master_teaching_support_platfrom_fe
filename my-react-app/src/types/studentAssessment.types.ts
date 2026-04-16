@@ -20,6 +20,8 @@ export interface StudentAssessmentResponse {
   allowMultipleAttempts: boolean;
   canStart: boolean;
   cannotStartReason?: string;
+  isRequired?: boolean;
+  courseOrderIndex?: number;
 }
 
 export interface AttemptStartResponse {
