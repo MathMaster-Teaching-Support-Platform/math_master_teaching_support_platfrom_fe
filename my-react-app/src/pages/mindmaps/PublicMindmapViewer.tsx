@@ -156,7 +156,7 @@ export default function PublicMindmapViewer() {
 
     const instance = new MindElixir({
       el: containerRef.current,
-      direction: MindElixir.LEFT,
+      direction: MindElixir.SIDE,
       draggable: false,
       editable: false,
       toolBar: false,
