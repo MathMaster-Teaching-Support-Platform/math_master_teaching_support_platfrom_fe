@@ -14,6 +14,7 @@ import {
   WandSparkles,
   X,
 } from 'lucide-react';
+import type React from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
@@ -49,6 +50,56 @@ const LoadingSpinner = ({ label }: { label: string }) => (
   </span>
 );
 
+type ModalConfig = {
+  title: string;
+  message: string;
+  confirmLabel: string;
+  cancelLabel?: string;
+  onConfirm: () => void;
+  variant?: 'info' | 'warning' | 'danger';
+};
+
+function MindmapConfirmModal({
+  modal,
+  onClose,
+}: Readonly<{ modal: ModalConfig; onClose: () => void }>) {
+  const icons: Record<NonNullable<ModalConfig['variant']>, React.ReactNode> = {
+    danger: <AlertCircle size={28} />,
+    warning: <Sparkles size={28} />,
+    info: <CheckCircle2 size={28} />,
+  };
+  const variant = modal.variant ?? 'info';
+  return (
+    <dialog open className="mm-modal-overlay" aria-labelledby="mm-modal-title">
+      <div className={`mm-modal mm-modal--${variant}`}>
+        <div className="mm-modal-icon" aria-hidden="true">
+          {icons[variant]}
+        </div>
+        <h3 id="mm-modal-title" className="mm-modal-title">
+          {modal.title}
+        </h3>
+        <p className="mm-modal-message">{modal.message}</p>
+        <div className="mm-modal-actions">
+          {modal.cancelLabel && (
+            <button className="mm-modal-btn mm-modal-btn--cancel" onClick={onClose}>
+              {modal.cancelLabel}
+            </button>
+          )}
+          <button
+            className={`mm-modal-btn mm-modal-btn--confirm mm-modal-btn--${variant}`}
+            onClick={() => {
+              modal.onConfirm();
+              onClose();
+            }}
+          >
+            {modal.confirmLabel}
+          </button>
+        </div>
+      </div>
+    </dialog>
+  );
+}
+
 export default function TeacherMindmaps() {
   const navigate = useNavigate();
   const [mindmaps, setMindmaps] = useState<Mindmap[]>([]);
@@ -82,6 +133,19 @@ export default function TeacherMindmaps() {
   const [loadingLessons, setLoadingLessons] = useState(false);
   const [generatorError, setGeneratorError] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
+
+  // ── Custom modal state ──────────────────────────────────
+  const [modal, setModal] = useState<{
+    title: string;
+    message: string;
+    confirmLabel: string;
+    cancelLabel?: string;
+    onConfirm: () => void;
+    variant?: 'info' | 'warning' | 'danger';
+  } | null>(null);
+
+  const showConfirm = (opts: NonNullable<typeof modal>) => setModal(opts);
+  const closeModal = () => setModal(null);
 
   const canProceedStep2 = Boolean(lessonId);
   const selectedLesson = lessons.find((lesson) => lesson.id === lessonId) || null;
@@ -259,7 +323,7 @@ export default function TeacherMindmaps() {
     }
 
     if (!generatorForm.title.trim() || !generatorForm.prompt.trim()) {
-      alert('Vui lòng nhập đầy đủ thông tin');
+      setGeneratorError('Vui lòng nhập đầy đủ thông tin (tiêu đề và mô tả).');
       return;
     }
 
@@ -279,32 +343,53 @@ export default function TeacherMindmaps() {
     } catch (err) {
       const apiError = err as Error & { code?: number };
       if (apiError.code === 1164) {
-        setGeneratorError('Ban chua co goi active. Vui long mua goi truoc khi dung AI Mindmap.');
-        if (globalThis.confirm('Ban chua co goi active. Mo trang mua goi ngay?')) {
-          navigate('/pricing');
-        }
+        setGeneratorError('Bạn chưa có gói active. Vui lòng mua gói trước khi dùng AI Mindmap.');
+        showConfirm({
+          title: 'Chưa có gói active',
+          message:
+            'Bạn chưa đăng ký gói dịch vụ nào. Mua gói ngay để sử dụng tính năng tạo Mindmap bằng AI.',
+          confirmLabel: 'Mua gói ngay',
+          cancelLabel: 'Để sau',
+          variant: 'warning',
+          onConfirm: () => navigate('/pricing'),
+        });
       } else if (apiError.code === 1165) {
-        setGeneratorError('Token khong du de tao mindmap. Vui long mua goi hoac nap them vi.');
-        if (globalThis.confirm('Token khong du. Mo trang vi de nap tien?')) {
-          navigate('/student/wallet');
-        }
+        setGeneratorError('Token không đủ để tạo mindmap. Vui lòng mua gói hoặc nạp thêm ví.');
+        showConfirm({
+          title: 'Token không đủ',
+          message:
+            'Số dư token trong ví của bạn không đủ để tạo Mindmap. Vui lòng nạp thêm tiền vào ví.',
+          confirmLabel: 'Nạp tiền vào ví',
+          cancelLabel: 'Để sau',
+          variant: 'warning',
+          onConfirm: () => navigate('/student/wallet'),
+        });
       } else {
-        alert(err instanceof Error ? err.message : 'Failed to generate mindmap');
+        setGeneratorError(
+          err instanceof Error ? err.message : 'Không thể tạo mindmap. Vui lòng thử lại.'
+        );
       }
     } finally {
       setGenerating(false);
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Bạn có chắc chắn muốn xóa mindmap này?')) return;
-
-    try {
-      await MindmapService.deleteMindmap(id);
-      loadMindmaps();
-    } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to delete mindmap');
-    }
+  const handleDelete = (id: string) => {
+    showConfirm({
+      title: 'Xóa mindmap',
+      message: 'Bạn có chắc chắn muốn xóa mindmap này? Hành động này không thể hoàn tác.',
+      confirmLabel: 'Xóa',
+      cancelLabel: 'Hủy',
+      variant: 'danger',
+      onConfirm: async () => {
+        try {
+          await MindmapService.deleteMindmap(id);
+          loadMindmaps();
+        } catch (err) {
+          setGeneratorError(err instanceof Error ? err.message : 'Không thể xóa mindmap.');
+        }
+      },
+    });
   };
 
   const formatDate = (dateString: string) => {
@@ -783,6 +868,8 @@ export default function TeacherMindmaps() {
           )}
         </section>
       </div>
+      {/* ── Custom confirm/info modal ── */}
+      {modal && <MindmapConfirmModal modal={modal} onClose={closeModal} />}
     </DashboardLayout>
   );
 }
