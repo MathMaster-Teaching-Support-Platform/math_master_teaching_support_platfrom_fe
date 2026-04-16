@@ -20,7 +20,7 @@ import { AuthService } from '../../services/api/auth.service';
 import { LessonSlideService } from '../../services/api/lesson-slide.service';
 import { MindmapService } from '../../services/api/mindmap.service';
 import '../../styles/module-refactor.css';
-import type { Mindmap, MindmapNode } from '../../types';
+import type { Mindmap } from '../../types';
 import type { LessonSlideGeneratedFile } from '../../types/lessonSlide.types';
 import './MaterialsGenerator.css';
 
@@ -57,261 +57,15 @@ function getInitials(name: string): string {
 }
 
 function mindmapStatusLabel(status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'): string {
-  if (status === 'PUBLISHED') return 'Hoàn thành';
-  if (status === 'DRAFT') return 'Đang xử lý';
+  if (status === 'PUBLISHED') return 'Công khai';
+  if (status === 'DRAFT') return 'Nháp';
   return 'Lưu trữ';
 }
 
 function mindmapStatusClass(status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'): string {
-  if (status === 'PUBLISHED') return 'done';
-  if (status === 'DRAFT') return 'processing';
+  if (status === 'PUBLISHED') return 'published';
+  if (status === 'DRAFT') return 'draft';
   return 'archived';
-}
-
-type MindmapRenderNode = {
-  id: string;
-  parentId: string | null;
-  content: string;
-  color: string;
-  icon: string;
-  displayOrder: number;
-  children: MindmapRenderNode[];
-};
-
-function normalizeMindmapColor(value?: string): string {
-  const fallback = '#4f46e5';
-  if (!value) return fallback;
-  const color = value.trim();
-  const validHex = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
-  return validHex.test(color) ? color : fallback;
-}
-
-function hexToRgba(hex: string, alpha: number): string {
-  const cleaned = hex.replace('#', '');
-  const expanded =
-    cleaned.length === 3
-      ? cleaned
-          .split('')
-          .map((part) => part + part)
-          .join('')
-      : cleaned;
-
-  const r = Number.parseInt(expanded.slice(0, 2), 16);
-  const g = Number.parseInt(expanded.slice(2, 4), 16);
-  const b = Number.parseInt(expanded.slice(4, 6), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
-
-function sortMindmapNodes(nodes: MindmapRenderNode[]): MindmapRenderNode[] {
-  return [...nodes]
-    .sort((a, b) => a.displayOrder - b.displayOrder)
-    .map((node) => ({
-      ...node,
-      children: sortMindmapNodes(node.children || []),
-    }));
-}
-
-function toMindmapTree(nodes: MindmapNode[]): MindmapRenderNode[] {
-  const map = new Map<string, MindmapRenderNode>();
-
-  nodes.forEach((node) => {
-    map.set(node.id, {
-      id: node.id,
-      parentId: node.parentId,
-      content: node.content || '',
-      color: normalizeMindmapColor(node.color),
-      icon: node.icon || '',
-      displayOrder: node.displayOrder || 0,
-      children: [],
-    });
-  });
-
-  nodes.forEach((rawNode) => {
-    const node = map.get(rawNode.id);
-    if (!node) return;
-
-    const parentId = rawNode.parentId ?? null;
-    node.parentId = parentId;
-
-    if (parentId && map.has(parentId)) {
-      map.get(parentId)!.children.push(node);
-    }
-  });
-
-  const roots = Array.from(map.values()).filter(
-    (node) => !node.parentId || !map.has(node.parentId)
-  );
-  return sortMindmapNodes(roots);
-}
-
-function roundRectPath(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  r: number
-) {
-  const radius = Math.min(r, w / 2, h / 2);
-  ctx.beginPath();
-  ctx.moveTo(x + radius, y);
-  ctx.lineTo(x + w - radius, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + radius);
-  ctx.lineTo(x + w, y + h - radius);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
-  ctx.lineTo(x + radius, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - radius);
-  ctx.lineTo(x, y + radius);
-  ctx.quadraticCurveTo(x, y, x + radius, y);
-  ctx.closePath();
-}
-
-function wrapCanvasText(
-  ctx: CanvasRenderingContext2D,
-  text: string,
-  maxWidth: number,
-  maxLines: number
-): string[] {
-  const words = text.trim().split(/\s+/).filter(Boolean);
-  if (!words.length) return ['Nút không có nội dung'];
-
-  const lines: string[] = [];
-  let current = words[0];
-
-  for (let i = 1; i < words.length; i += 1) {
-    const candidate = `${current} ${words[i]}`;
-    if (ctx.measureText(candidate).width <= maxWidth) {
-      current = candidate;
-    } else {
-      lines.push(current);
-      current = words[i];
-      if (lines.length === maxLines - 1) break;
-    }
-  }
-
-  if (lines.length < maxLines) {
-    lines.push(current);
-  }
-
-  if (lines.length > maxLines) {
-    return lines.slice(0, maxLines);
-  }
-
-  if (lines.length === maxLines && words.join(' ').length > lines.join(' ').length) {
-    lines[maxLines - 1] = `${lines[maxLines - 1].replace(/[.,;:!?\-\s]+$/, '')}...`;
-  }
-
-  return lines;
-}
-
-type MindmapPosition = {
-  x: number;
-  y: number;
-  depth: number;
-  node: MindmapRenderNode;
-};
-
-function layoutMindmap(root: MindmapRenderNode): MindmapPosition[] {
-  const positions: MindmapPosition[] = [];
-  let leafIndex = 0;
-  const verticalGap = 120;
-  const horizontalGap = 290;
-  const margin = 90;
-
-  const walk = (node: MindmapRenderNode, depth: number): number => {
-    if (!node.children.length) {
-      const y = margin + leafIndex * verticalGap;
-      leafIndex += 1;
-      positions.push({ x: margin + depth * horizontalGap, y, depth, node });
-      return y;
-    }
-
-    const childYs = node.children.map((child) => walk(child, depth + 1));
-    const y = childYs.reduce((sum, value) => sum + value, 0) / childYs.length;
-    positions.push({ x: margin + depth * horizontalGap, y, depth, node });
-    return y;
-  };
-
-  walk(root, 0);
-  return positions;
-}
-
-function renderMindmapToCanvas(title: string, rawNodes: MindmapNode[]): HTMLCanvasElement | null {
-  const roots = toMindmapTree(rawNodes);
-  if (!roots.length) return null;
-
-  const root = roots[0];
-  const positions = layoutMindmap(root);
-  if (!positions.length) return null;
-
-  const nodeWidth = 220;
-  const nodeHeight = 72;
-  const padding = 40;
-
-  const maxDepth = Math.max(...positions.map((item) => item.depth));
-  const maxY = Math.max(...positions.map((item) => item.y));
-
-  const canvas = document.createElement('canvas');
-  canvas.width = Math.max(980, (maxDepth + 1) * 290 + nodeWidth + padding * 2);
-  canvas.height = Math.max(540, maxY + nodeHeight + padding * 2);
-
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return null;
-
-  const bgGradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-  bgGradient.addColorStop(0, '#f8fafc');
-  bgGradient.addColorStop(1, '#eef2ff');
-  ctx.fillStyle = bgGradient;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  ctx.fillStyle = '#0f172a';
-  ctx.font = '700 28px "Be Vietnam Pro", "Segoe UI", sans-serif';
-  ctx.fillText(title || 'Mindmap', 40, 48);
-
-  const byId = new Map(positions.map((item) => [item.node.id, item]));
-
-  ctx.lineWidth = 2;
-  positions.forEach((item) => {
-    item.node.children.forEach((child) => {
-      const childPos = byId.get(child.id);
-      if (!childPos) return;
-
-      const startX = item.x + nodeWidth;
-      const startY = item.y + nodeHeight / 2;
-      const endX = childPos.x;
-      const endY = childPos.y + nodeHeight / 2;
-      const midX = (startX + endX) / 2;
-
-      ctx.strokeStyle = '#94a3b8';
-      ctx.beginPath();
-      ctx.moveTo(startX, startY);
-      ctx.bezierCurveTo(midX, startY, midX, endY, endX, endY);
-      ctx.stroke();
-    });
-  });
-
-  positions.forEach((item) => {
-    const nodeColor = normalizeMindmapColor(item.node.color);
-    const x = item.x;
-    const y = item.y;
-
-    roundRectPath(ctx, x, y, nodeWidth, nodeHeight, 14);
-    ctx.fillStyle = hexToRgba(nodeColor, 0.16);
-    ctx.fill();
-    ctx.strokeStyle = hexToRgba(nodeColor, 0.48);
-    ctx.lineWidth = 1.8;
-    ctx.stroke();
-
-    ctx.fillStyle = '#0f172a';
-    ctx.font = '600 15px "Be Vietnam Pro", "Segoe UI", sans-serif';
-    const iconPrefix = item.node.icon ? `${item.node.icon} ` : '';
-    const lines = wrapCanvasText(ctx, `${iconPrefix}${item.node.content}`, nodeWidth - 24, 3);
-    lines.forEach((line, index) => {
-      ctx.fillText(line, x + 12, y + 26 + index * 18);
-    });
-  });
-
-  return canvas;
 }
 
 // ─── User info type from GET /users/my-info ───────────────────────────────────
@@ -331,6 +85,7 @@ const MaterialsGenerator: React.FC = () => {
   const [previewSlideId, setPreviewSlideId] = useState('');
   const [previewSlidePdfUrl, setPreviewSlidePdfUrl] = useState('');
   const [loadingPreviewSlideId, setLoadingPreviewSlideId] = useState('');
+  const [downloadingSlideId, setDownloadingSlideId] = useState('');
   const [downloadingMindmapId, setDownloadingMindmapId] = useState('');
 
   // User / layout state
@@ -352,16 +107,6 @@ const MaterialsGenerator: React.FC = () => {
     link.click();
     document.body.removeChild(link);
     window.URL.revokeObjectURL(objectUrl);
-  };
-
-  const makeSafeFileName = (value: string, fallback: string) => {
-    const normalized = value
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-zA-Z0-9._-]+/g, '_')
-      .replace(/_+/g, '_')
-      .replace(/^_|_$/g, '');
-    return normalized || fallback;
   };
 
   useEffect(() => {
@@ -455,6 +200,8 @@ const MaterialsGenerator: React.FC = () => {
   const handlePreviewSlide = async (slideId: string) => {
     setLoadingPreviewSlideId(slideId);
     setError(null);
+    setPreviewSlideId(slideId);
+    setPreviewSlidePdfUrl('');
 
     try {
       const response = await LessonSlideService.getGeneratedFilePreviewPdf(slideId);
@@ -465,8 +212,8 @@ const MaterialsGenerator: React.FC = () => {
       }
 
       setPreviewSlidePdfUrl(blobUrl);
-      setPreviewSlideId(slideId);
     } catch (err) {
+      setPreviewSlideId('');
       setError(err instanceof Error ? err.message : 'Không thể xem thử slide');
     } finally {
       setLoadingPreviewSlideId('');
@@ -481,31 +228,27 @@ const MaterialsGenerator: React.FC = () => {
     }
   };
 
+  const handleDownloadSlide = async (slideId: string) => {
+    setDownloadingSlideId(slideId);
+    setError(null);
+
+    try {
+      const response = await LessonSlideService.downloadGeneratedFile(slideId);
+      triggerBlobDownload(response.blob, response.filename || 'generated-slide.pptx');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Không thể tải xuống slide');
+    } finally {
+      setDownloadingSlideId('');
+    }
+  };
+
   const handleDownloadMindmap = async (mindmapId: string, title: string) => {
     setDownloadingMindmapId(mindmapId);
     setError(null);
 
     try {
-      const response = await MindmapService.getMindmapById(mindmapId);
-      const fileName = `${makeSafeFileName(title, 'mindmap')}.json`;
-      const nodes = (response.result?.nodes || []) as MindmapNode[];
-      const canvas = renderMindmapToCanvas(title, nodes);
-      if (!canvas) {
-        throw new Error('Mindmap chưa sẵn sàng để tải PNG. Vui lòng thử lại sau.');
-      }
-
-      const blob = await new Promise<Blob>((resolve, reject) => {
-        canvas.toBlob((result) => {
-          if (!result) {
-            reject(new Error('Không thể xuất ảnh mindmap.'));
-            return;
-          }
-          resolve(result);
-        }, 'image/png');
-      });
-
-      const pngFileName = fileName.replace(/\.json$/, '.png');
-      triggerBlobDownload(blob, pngFileName);
+      const response = await MindmapService.exportMindmap(mindmapId, 'png');
+      triggerBlobDownload(response.blob, response.filename || `${title}.png`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Không thể tải xuống mindmap');
     } finally {
@@ -617,7 +360,6 @@ const MaterialsGenerator: React.FC = () => {
               <div className="header-kicker">AI Content Studio</div>
               <div className="row" style={{ gap: '0.6rem' }}>
                 <h2>Tạo Tài Liệu với AI</h2>
-                <span className="materials-beta-badge">BETA</span>
               </div>
               <p className="header-sub">
                 Sử dụng AI để tạo slide, sơ đồ tư duy, hình vẽ và tài liệu giảng dạy chuyên nghiệp.
@@ -785,7 +527,9 @@ const MaterialsGenerator: React.FC = () => {
                       </td>
                       <td>
                         {row.kind === 'slide' ? (
-                          <span className="badge completed">Hoàn thành</span>
+                          <span className={`badge ${row.isPublic ? 'published' : 'draft'}`}>
+                            {row.isPublic ? 'Công khai' : 'Nháp'}
+                          </span>
                         ) : (
                           <span className={`badge ${mindmapStatusClass(row.status)}`}>
                             {mindmapStatusLabel(row.status)}
@@ -803,13 +547,14 @@ const MaterialsGenerator: React.FC = () => {
                               <Eye size={13} />
                               {loadingPreviewSlideId === row.id ? 'Đang tải...' : 'Xem thử'}
                             </button>
-                            <a
+                            <button
                               className="btn secondary materials-action-btn"
-                              href={`${API_BASE_URL}${API_ENDPOINTS.LESSON_SLIDES_GENERATED_DOWNLOAD(row.id)}`}
-                              download
+                              onClick={() => void handleDownloadSlide(row.id)}
+                              disabled={downloadingSlideId === row.id}
                             >
-                              <Download size={13} /> Tải về
-                            </a>
+                              <Download size={13} />
+                              {downloadingSlideId === row.id ? 'Đang tải...' : 'Tải về'}
+                            </button>
                           </div>
                         ) : (
                           <div className="materials-action-group">
@@ -851,7 +596,19 @@ const MaterialsGenerator: React.FC = () => {
                     Đóng
                   </button>
                 </div>
-                {previewSlidePdfUrl ? (
+                {loadingPreviewSlideId === previewSlideId ? (
+                  <div className="materials-math-loader">
+                    <div className="materials-math-loader-ring" />
+                    <div className="materials-math-loader-symbols" aria-hidden="true">
+                      <span>∑</span>
+                      <span>π</span>
+                      <span>√</span>
+                      <span>∞</span>
+                      <span>Δ</span>
+                    </div>
+                    <p>AI đang dựng preview toán học...</p>
+                  </div>
+                ) : previewSlidePdfUrl ? (
                   <iframe
                     src={previewSlidePdfUrl}
                     title="Slide preview"

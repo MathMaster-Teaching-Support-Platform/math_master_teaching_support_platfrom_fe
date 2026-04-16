@@ -118,6 +118,10 @@ export const API_ENDPOINTS = {
   MINDMAPS_DETAIL: (id: string) => `/mindmaps/${id}`,
   MINDMAPS_PUBLIC_LIST: '/mindmaps/public',
   MINDMAPS_PUBLIC_DETAIL: (id: string) => `/mindmaps/public/${id}`,
+  MINDMAPS_EXPORT: (id: string, format: 'png' | 'pdf' = 'png') =>
+    `/mindmaps/${id}/export?format=${format}`,
+  MINDMAPS_PUBLIC_EXPORT: (id: string, format: 'png' | 'pdf' = 'png') =>
+    `/mindmaps/public/${id}/export?format=${format}`,
   MINDMAPS_PUBLIC_BY_LESSON: (lessonId: string) => `/mindmaps/public/lesson/${lessonId}`,
   MINDMAPS_PUBLISH: (id: string) => `/mindmaps/${id}/publish`,
   MINDMAPS_UNPUBLISH: (id: string) => `/mindmaps/${id}/unpublish`,

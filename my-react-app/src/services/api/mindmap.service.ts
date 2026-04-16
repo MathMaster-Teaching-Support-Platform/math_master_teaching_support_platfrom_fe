@@ -12,6 +12,11 @@ import type {
   PaginatedResponse,
 } from '../../types';
 
+interface DownloadMindmapResult {
+  blob: Blob;
+  filename: string;
+}
+
 export class MindmapService {
   private static async throwApiError(response: Response, fallback: string): Promise<never> {
     const payload = await response.json().catch(() => ({}));
@@ -38,6 +43,22 @@ export class MindmapService {
       'Content-Type': 'application/json',
       accept: '*/*',
     };
+  }
+
+  private static getFilenameFromDisposition(disposition: string | null): string | null {
+    if (!disposition) return null;
+
+    const utf8Match = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+    if (utf8Match?.[1]) {
+      try {
+        return decodeURIComponent(utf8Match[1]);
+      } catch {
+        return utf8Match[1];
+      }
+    }
+
+    const plainMatch = disposition.match(/filename="?([^";]+)"?/i);
+    return plainMatch?.[1] ?? null;
   }
 
   // ─── GENERATE ─────────────────────────────────────────────────────────────
@@ -173,6 +194,57 @@ export class MindmapService {
       throw new Error(error.message || 'Failed to fetch public mindmap');
     }
     return response.json();
+  }
+
+  static async exportMindmap(
+    id: string,
+    format: 'png' | 'pdf' = 'png'
+  ): Promise<DownloadMindmapResult> {
+    const token = AuthService.getToken();
+    if (!token) throw new Error('Authentication required');
+
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.MINDMAPS_EXPORT(id, format)}`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        accept: '*/*',
+      },
+    });
+
+    if (!response.ok) {
+      return this.throwApiError(response, 'Failed to export mindmap');
+    }
+
+    return {
+      blob: await response.blob(),
+      filename:
+        this.getFilenameFromDisposition(response.headers.get('content-disposition')) ||
+        `mindmap.${format}`,
+    };
+  }
+
+  static async exportPublicMindmap(
+    id: string,
+    format: 'png' | 'pdf' = 'png'
+  ): Promise<DownloadMindmapResult> {
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.MINDMAPS_PUBLIC_EXPORT(id, format)}`,
+      {
+        method: 'GET',
+        headers: this.getPublicHeaders(),
+      }
+    );
+
+    if (!response.ok) {
+      return this.throwApiError(response, 'Failed to export public mindmap');
+    }
+
+    return {
+      blob: await response.blob(),
+      filename:
+        this.getFilenameFromDisposition(response.headers.get('content-disposition')) ||
+        `mindmap.${format}`,
+    };
   }
 
   /** GET /mindmaps/public - Get all published mindmaps with filters + pagination */
