@@ -26,7 +26,7 @@ import {
   Users,
   Workflow,
 } from 'lucide-react';
-import React from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthService } from '../../../services/api/auth.service';
 import './Sidebar.css';
@@ -50,10 +50,6 @@ interface MenuGroup {
 
 const teacherGroups: MenuGroup[] = [
   {
-    label: null,
-    items: [{ path: '/teacher/dashboard', icon: LayoutDashboard, label: 'Dashboard' }],
-  },
-  {
     label: 'Nội dung',
     items: [
       { path: '/teacher/courses', icon: BookOpen, label: 'Giáo Trình' },
@@ -74,7 +70,6 @@ const teacherGroups: MenuGroup[] = [
       { path: '/teacher/assessments', icon: FileCheck2, label: 'Kiểm tra' },
       { path: '/teacher/students', icon: Users, label: 'Học sinh' },
       { path: '/pricing', icon: CreditCard, label: 'Gói đăng ký' },
-      { path: '/teacher/analytics', icon: LineChart, label: 'Phân tích' },
     ],
   },
   {
@@ -143,6 +138,30 @@ const adminGroups: MenuGroup[] = [
 const Sidebar: React.FC<SidebarProps> = ({ role, collapsed, onToggle }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const navRef = useRef<HTMLElement | null>(null);
+  const navScrollStorageKey = useMemo(() => `mm.sidebar.scrollTop.${role}`, [role]);
+
+  useEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+
+    const savedScroll = Number(window.sessionStorage.getItem(navScrollStorageKey) ?? '0');
+    nav.scrollTop = Number.isFinite(savedScroll) ? savedScroll : 0;
+  }, [navScrollStorageKey]);
+
+  useEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+
+    const handleScroll = () => {
+      window.sessionStorage.setItem(navScrollStorageKey, String(nav.scrollTop));
+    };
+
+    nav.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      nav.removeEventListener('scroll', handleScroll);
+    };
+  }, [navScrollStorageKey]);
 
   const handleLogout = () => {
     AuthService.removeToken();
@@ -178,7 +197,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role, collapsed, onToggle }) => {
       </button>
 
       {/* Role Switcher */}
-      {role !== 'admin' && AuthService.hasRole('teacher') && (
+      {role === 'student' && AuthService.hasRole('teacher') && (
         <div
           className="sb-group sb-role-switcher"
           style={{
@@ -211,7 +230,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role, collapsed, onToggle }) => {
       )}
 
       {/* Nav */}
-      <nav className="sidebar-nav">
+      <nav ref={navRef} className="sidebar-nav">
         {groups.map((group) => (
           <div key={group.label ?? '__root'} className="sb-group">
             {group.label && !collapsed && <p className="sb-group-label">{group.label}</p>}

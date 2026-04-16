@@ -1,4 +1,4 @@
-import { Bell, CircleHelp, MessageSquare, Wallet } from 'lucide-react';
+import { Bell, CircleHelp, Wallet } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useNotificationsContext } from '../../../context/NotificationContext';
@@ -90,10 +90,6 @@ const Navbar: React.FC<NavbarProps> = ({ user }) => {
               <strong>{tokenRemaining}</strong>
             </Link>
           )}
-
-          <Link to="/messages" className="navbar-action-btn message-btn" aria-label="Tin nhắn">
-            <MessageSquare size={18} className="action-icon" />
-          </Link>
 
           <Link to="/help" className="navbar-action-btn help-btn" aria-label="Trợ giúp">
             <CircleHelp size={18} className="action-icon" />

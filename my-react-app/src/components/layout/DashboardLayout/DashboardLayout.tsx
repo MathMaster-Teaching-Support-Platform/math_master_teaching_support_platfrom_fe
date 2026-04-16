@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Navbar from '../Navbar/Navbar';
 import Sidebar from '../Sidebar/Sidebar';
 import './DashboardLayout.css';
@@ -20,7 +20,20 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   user,
   notificationCount,
 }) => {
-  const [collapsed, setCollapsed] = useState(false);
+  const collapsedStorageKey = useMemo(() => `mm.sidebar.collapsed.${role}`, [role]);
+  const [collapsed, setCollapsed] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return window.localStorage.getItem(collapsedStorageKey) === '1';
+  });
+
+  useEffect(() => {
+    window.localStorage.setItem(collapsedStorageKey, collapsed ? '1' : '0');
+  }, [collapsed, collapsedStorageKey]);
+
+  useEffect(() => {
+    setCollapsed(window.localStorage.getItem(collapsedStorageKey) === '1');
+  }, [collapsedStorageKey]);
+
   const sidebarW = collapsed ? '64px' : '248px';
 
   return (

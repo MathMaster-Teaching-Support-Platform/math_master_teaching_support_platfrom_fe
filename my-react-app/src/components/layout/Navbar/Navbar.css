@@ -311,10 +311,6 @@
 }
 
 @media (max-width: 860px) {
-  .message-btn {
-    display: none;
-  }
-
   .navbar-user-meta {
     display: none;
   }

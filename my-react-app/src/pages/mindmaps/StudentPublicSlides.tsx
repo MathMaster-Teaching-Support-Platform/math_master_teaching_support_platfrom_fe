@@ -254,7 +254,14 @@ export default function StudentPublicSlides() {
         });
 
         if (!cancelled) {
-          setSlidesResult(response.result);
+          const normalizedContent = (response.result.content || []).filter(
+            (slide) => slide.isPublic
+          );
+          setSlidesResult({
+            ...response.result,
+            content: normalizedContent,
+            totalElements: Math.max(response.result.totalElements ?? 0, normalizedContent.length),
+          });
         }
       } catch (err) {
         if (!cancelled) {
@@ -290,6 +297,13 @@ export default function StudentPublicSlides() {
   };
 
   const handleOpenPreview = async (slide: LessonSlideGeneratedFile) => {
+    if (!slide.isPublic) {
+      setSlidesError(
+        'Slide này hiện không ở trạng thái public nên không thể preview từ tài khoản student.'
+      );
+      return;
+    }
+
     setSelectedPreviewSlide(slide);
     setPreviewingSlideId(slide.id);
     setSlidesError('');
@@ -301,7 +315,34 @@ export default function StudentPublicSlides() {
       const pdfObjectUrl = globalThis.URL.createObjectURL(response.blob);
       setPreviewPdfUrl(pdfObjectUrl);
     } catch (err) {
-      setSlidesError(err instanceof Error ? err.message : 'Không thể tạo preview PDF');
+      const apiError = err as Error & { code?: number };
+      if (apiError.code === 1168) {
+        setSlidesError(
+          'Slide này không còn public ở phía server. Danh sách đã được làm mới, vui lòng thử lại slide khác.'
+        );
+        setIsPreviewOpen(false);
+        setSelectedPreviewSlide(null);
+        void (async () => {
+          try {
+            const refreshed = await LessonSlideService.getAllPublicGeneratedFiles({
+              lessonId: lessonId || undefined,
+              keyword: slideKeywordDebounced || undefined,
+              page: slidePage,
+              size: slideSize,
+              sortBy: slideSortBy,
+              direction: slideDirection,
+            });
+            setSlidesResult({
+              ...refreshed.result,
+              content: (refreshed.result.content || []).filter((item) => item.isPublic),
+            });
+          } catch {
+            // Keep current list when refresh fails.
+          }
+        })();
+      } else {
+        setSlidesError(err instanceof Error ? err.message : 'Không thể tạo preview PDF');
+      }
     } finally {
       setPreviewingSlideId('');
     }
@@ -574,13 +615,14 @@ export default function StudentPublicSlides() {
                           <Calendar size={11} />
                           {new Date(slide.createdAt).toLocaleDateString('vi-VN')}
                         </span>
+                        <span className="metric">{slide.isPublic ? 'Public' : 'Private'}</span>
                       </div>
                       <div className="sps-card-actions">
                         <button
                           type="button"
                           className="sps-btn-preview"
                           onClick={() => void handleOpenPreview(slide)}
-                          disabled={previewingSlideId === slide.id}
+                          disabled={previewingSlideId === slide.id || !slide.isPublic}
                         >
                           <Eye size={14} />
                           {previewingSlideId === slide.id ? 'Đang preview...' : 'Xem PDF'}
@@ -589,7 +631,7 @@ export default function StudentPublicSlides() {
                           type="button"
                           className="sps-btn-download"
                           onClick={() => void handleDownloadSlide(slide.id)}
-                          disabled={downloadingSlideId === slide.id}
+                          disabled={downloadingSlideId === slide.id || !slide.isPublic}
                         >
                           <Download size={14} />
                           {downloadingSlideId === slide.id ? 'Đang tải...' : 'Tải xuống'}
