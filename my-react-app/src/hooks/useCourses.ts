@@ -43,7 +43,8 @@ export function useCourseDetail(courseId: string) {
 export function useCreateCourse() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: CreateCourseRequest) => CourseService.createCourse(data),
+    mutationFn: ({ data, thumbnailFile }: { data: CreateCourseRequest; thumbnailFile?: File }) =>
+      CourseService.createCourse({ ...data, thumbnailFile }),
     onSuccess: () => qc.invalidateQueries({ queryKey: courseKeys.my() }),
   });
 }

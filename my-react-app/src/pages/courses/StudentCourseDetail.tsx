@@ -138,6 +138,14 @@ const StudentCourseDetail: React.FC = () => {
                       flexShrink: 0,
                     }}
                   >
+                    {course?.thumbnailUrl && (
+                      <img
+                        src={course.thumbnailUrl}
+                        alt={enrollment.courseTitle ?? 'Course thumbnail'}
+                        className="cover-thumb"
+                        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                    )}
                     <div
                       style={{
                         position: 'absolute',

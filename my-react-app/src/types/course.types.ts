@@ -86,13 +86,13 @@ export interface CreateCourseRequest {
   schoolGradeId: string;
   title: string;
   description?: string;
-  thumbnailUrl?: string;
+  thumbnailFile?: File;
 }
 
 export interface UpdateCourseRequest {
   title?: string;
   description?: string;
-  thumbnailUrl?: string;
+  thumbnailFile?: File;
 }
 
 export interface CreateCourseLessonRequest {

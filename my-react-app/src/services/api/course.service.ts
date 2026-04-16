@@ -52,11 +52,18 @@ export class CourseService {
   // ─── Courses ──────────────────────────────────────────────────────────────
 
   static async createCourse(data: CreateCourseRequest): Promise<ApiResponse<CourseResponse>> {
-    const headers = await this.getHeaders();
+    const headers = await this.getAuthHeaders();
+    const formData = new FormData();
+    const { thumbnailFile, ...request } = data;
+    formData.append('request', new Blob([JSON.stringify(request)], { type: 'application/json' }));
+    if (thumbnailFile) {
+      formData.append('thumbnail', thumbnailFile);
+    }
+
     const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.COURSES}`, {
       method: 'POST',
       headers,
-      body: JSON.stringify(data),
+      body: formData,
     });
     return this.handleResponse(res);
   }
@@ -81,11 +88,18 @@ export class CourseService {
     courseId: string,
     data: UpdateCourseRequest
   ): Promise<ApiResponse<CourseResponse>> {
-    const headers = await this.getHeaders();
+    const headers = await this.getAuthHeaders();
+    const formData = new FormData();
+    const { thumbnailFile, ...request } = data;
+    formData.append('request', new Blob([JSON.stringify(request)], { type: 'application/json' }));
+    if (thumbnailFile) {
+      formData.append('thumbnail', thumbnailFile);
+    }
+
     const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.COURSE_DETAIL(courseId)}`, {
       method: 'PUT',
       headers,
-      body: JSON.stringify(data),
+      body: formData,
     });
     return this.handleResponse(res);
   }

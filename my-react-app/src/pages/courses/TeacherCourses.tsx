@@ -46,7 +46,7 @@ const coverAccents = ['#1d4ed8', '#0f766e', '#047857', '#c2410c', '#be185d', '#6
 // ─── Create Course Modal ───────────────────────────────────────────────────────
 interface CreateModalProps {
   onClose: () => void;
-  onSubmit: (data: CreateCourseRequest) => void;
+  onSubmit: (data: CreateCourseRequest, thumbnailFile?: File) => void;
   isLoading: boolean;
 }
 
@@ -56,8 +56,9 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
     schoolGradeId: '',
     title: '',
     description: '',
-    thumbnailUrl: '',
   });
+  const [thumbnailFile, setThumbnailFile] = useState<File | undefined>(undefined);
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
 
   const [grades, setGrades] = useState<SchoolGrade[]>([]);
   const [subjects, setSubjects] = useState<SubjectByGrade[]>([]);
@@ -88,7 +89,21 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
   const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!form.subjectId || !form.schoolGradeId || !form.title) return;
-    onSubmit(form);
+    onSubmit(form, thumbnailFile);
+  };
+
+  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) {
+      setThumbnailFile(undefined);
+      setThumbnailPreview(null);
+      return;
+    }
+
+    setThumbnailFile(file);
+    const reader = new FileReader();
+    reader.onload = () => setThumbnailPreview(typeof reader.result === 'string' ? reader.result : null);
+    reader.readAsDataURL(file);
   };
 
   return (
@@ -191,16 +206,18 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
 
           <div className="form-group">
             <label htmlFor="course-thumb" className="form-label">
-              Thumbnail URL
+              Ảnh thumbnail
             </label>
-            <input
-              id="course-thumb"
-              className="form-input"
-              type="url"
-              value={form.thumbnailUrl}
-              onChange={(e) => setForm({ ...form, thumbnailUrl: e.target.value })}
-              placeholder="https://..."
-            />
+            <input id="course-thumb" className="form-input" type="file" accept="image/*" onChange={handleThumbnailChange} />
+            {thumbnailPreview && (
+              <div style={{ marginTop: '0.75rem' }}>
+                <img
+                  src={thumbnailPreview}
+                  alt="Thumbnail preview"
+                  style={{ width: '100%', maxHeight: 180, objectFit: 'cover', borderRadius: 10 }}
+                />
+              </div>
+            )}
           </div>
 
           <div className="modal-actions">
@@ -262,8 +279,8 @@ const TeacherCourses: React.FC = () => {
     [courses]
   );
 
-  const handleCreate = (data: CreateCourseRequest) => {
-    createMutation.mutate(data, {
+  const handleCreate = (data: CreateCourseRequest, thumbnailFile?: File) => {
+    createMutation.mutate({ data, thumbnailFile }, {
       onSuccess: () => setShowCreateModal(false),
     });
   };

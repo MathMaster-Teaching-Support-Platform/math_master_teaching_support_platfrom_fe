@@ -13,6 +13,7 @@ import {
 import React, { useMemo, useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import {
+  useCourseDetail,
   useCourseProgress,
   useEnroll,
   useMyEnrollments,
@@ -65,7 +66,9 @@ const EnrollmentCard: React.FC<{
   index: number;
 }> = ({ enrollment, index }) => {
   const { data: progressData } = useCourseProgress(enrollment.id);
+  const { data: enrolledCourseData } = useCourseDetail(enrollment.courseId);
   const progress = progressData?.result;
+  const enrolledCourseThumbnailUrl = enrolledCourseData?.result?.thumbnailUrl;
   const completionRate = progress?.completionRate ?? 0;
 
   return (
@@ -87,6 +90,9 @@ const EnrollmentCard: React.FC<{
           color: coverAccents[index % coverAccents.length],
         }}
       >
+        {enrolledCourseThumbnailUrl && (
+          <img src={enrolledCourseThumbnailUrl} alt={enrollment.courseTitle ?? 'Course thumbnail'} className="cover-thumb" />
+        )}
         <div className="cover-overlay" />
         <div className="cover-index">#{String(index + 1).padStart(2, '0')}</div>
         <span
@@ -161,6 +167,9 @@ const PublicCourseCard: React.FC<{
           color: coverAccents[index % coverAccents.length],
         }}
       >
+        {course.thumbnailUrl && (
+          <img src={course.thumbnailUrl} alt={course.title} className="cover-thumb" />
+        )}
         <div className="cover-overlay" />
         <div className="cover-index">#{String(index + 1).padStart(2, '0')}</div>
         <span className={`course-badge ${isEnrolled ? 'badge-live' : 'badge-draft'}`}>
