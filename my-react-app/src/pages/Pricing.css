@@ -18,22 +18,39 @@
 }
 
 @keyframes shimmerBorder {
-  0%, 100% { opacity: 0.5; }
-  50%       { opacity: 1; }
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 @keyframes shimmerSkeleton {
-  0%   { background-position: -400px 0; }
-  100% { background-position: 400px 0; }
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
 }
 
 @keyframes spinnerRing {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes trustPillIn {
-  from { opacity: 0; transform: translateY(12px) scale(0.95); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .pricing-animate-in {
@@ -41,10 +58,18 @@
 }
 
 /* Staggered delays for cards */
-.pricing-animate-in:nth-child(1) { animation-delay: 0s; }
-.pricing-animate-in:nth-child(2) { animation-delay: 0.1s; }
-.pricing-animate-in:nth-child(3) { animation-delay: 0.2s; }
-.pricing-animate-in:nth-child(4) { animation-delay: 0.3s; }
+.pricing-animate-in:nth-child(1) {
+  animation-delay: 0s;
+}
+.pricing-animate-in:nth-child(2) {
+  animation-delay: 0.1s;
+}
+.pricing-animate-in:nth-child(3) {
+  animation-delay: 0.2s;
+}
+.pricing-animate-in:nth-child(4) {
+  animation-delay: 0.3s;
+}
 
 /* ══════════════════════════════════
    PRICING HERO
@@ -189,7 +214,9 @@
   z-index: 0;
 }
 
-.pricing-plan-card:hover::before { opacity: 1; }
+.pricing-plan-card:hover::before {
+  opacity: 1;
+}
 
 .pricing-plan-card:hover {
   transform: translateY(-10px);
@@ -430,7 +457,7 @@
   display: inline-block;
   width: 14px;
   height: 14px;
-  border: 2px solid rgba(255,255,255,0.35);
+  border: 2px solid rgba(255, 255, 255, 0.35);
   border-top-color: #fff;
   border-radius: 50%;
   animation: spinnerRing 0.6s linear infinite;
@@ -514,11 +541,29 @@
   z-index: 1;
 }
 
-.pricing-skeleton--icon   { width: 44px; height: 44px; border-radius: 12px; }
-.pricing-skeleton--title  { height: 22px; width: 55%; }
-.pricing-skeleton--subtitle { height: 14px; width: 75%; }
-.pricing-skeleton--price  { height: 48px; width: 50%; margin: 0.25rem 0; }
-.pricing-skeleton--btn    { height: 46px; width: 100%; border-radius: 16px; }
+.pricing-skeleton--icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+}
+.pricing-skeleton--title {
+  height: 22px;
+  width: 55%;
+}
+.pricing-skeleton--subtitle {
+  height: 14px;
+  width: 75%;
+}
+.pricing-skeleton--price {
+  height: 48px;
+  width: 50%;
+  margin: 0.25rem 0;
+}
+.pricing-skeleton--btn {
+  height: 46px;
+  width: 100%;
+  border-radius: 16px;
+}
 
 /* ══════════════════════════════════
    WALLET BANNER (authenticated)
@@ -757,7 +802,9 @@
   width: 100%;
 }
 
-.pricing-ct-header { display: contents; }
+.pricing-ct-header {
+  display: contents;
+}
 
 .pricing-ct-header-cell {
   padding: 1.5rem 1.25rem;
@@ -785,7 +832,9 @@
   color: var(--c-primary, #5e5ce6);
 }
 
-.pricing-ct-row { display: contents; }
+.pricing-ct-row {
+  display: contents;
+}
 
 .pricing-ct-cell {
   padding: 1rem 1.25rem;
@@ -804,11 +853,19 @@
   color: var(--c-text-1, #0e0c15);
 }
 
-.pricing-ct-cell--featured { background: rgba(94, 92, 230, 0.03); }
+.pricing-ct-cell--featured {
+  background: rgba(94, 92, 230, 0.03);
+}
 
-.pricing-ct-row:hover .pricing-ct-cell { background: rgba(94, 92, 230, 0.03); }
-.pricing-ct-row:hover .pricing-ct-cell--featured { background: rgba(94, 92, 230, 0.07); }
-.pricing-ct-row:last-child .pricing-ct-cell { border-bottom: none; }
+.pricing-ct-row:hover .pricing-ct-cell {
+  background: rgba(94, 92, 230, 0.03);
+}
+.pricing-ct-row:hover .pricing-ct-cell--featured {
+  background: rgba(94, 92, 230, 0.07);
+}
+.pricing-ct-row:last-child .pricing-ct-cell {
+  border-bottom: none;
+}
 
 .pricing-ct-check {
   display: inline-flex;
@@ -845,7 +902,9 @@
   color: var(--c-text-2, #3f3a52);
 }
 
-.pricing-ct-text--featured { color: var(--c-primary, #5e5ce6); }
+.pricing-ct-text--featured {
+  color: var(--c-primary, #5e5ce6);
+}
 
 /* ══════════════════════════════════
    FAQ ACCORDION
@@ -908,7 +967,9 @@
   border: 1px solid var(--c-border-soft, #f0edf8);
   border-radius: var(--r-xl, 24px);
   overflow: hidden;
-  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
   opacity: 0;
   animation: pricingFadeUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
@@ -950,7 +1011,9 @@
 .pricing-faq-chevron {
   flex-shrink: 0;
   color: var(--c-text-3, #756b85);
-  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), color 0.2s ease;
+  transition:
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    color 0.2s ease;
 }
 
 .pricing-faq-item--open .pricing-faq-chevron {
@@ -1071,9 +1134,13 @@
   transition: transform 0.2s ease;
 }
 
-.pricing-cta-avatar:first-child { margin-left: 0; }
+.pricing-cta-avatar:first-child {
+  margin-left: 0;
+}
 
-.pricing-cta-avatar:hover { transform: translateY(-3px) scale(1.12); }
+.pricing-cta-avatar:hover {
+  transform: translateY(-3px) scale(1.12);
+}
 
 .pricing-cta-avatar-label {
   margin-left: 0.75rem;
@@ -1095,13 +1162,23 @@
    WALLET INSUFFICIENT MODAL
    ══════════════════════════════════ */
 @keyframes pricingModalOverlayIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes pricingModalSlideUp {
-  from { opacity: 0; transform: translateY(24px) scale(0.97); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .pricing-modal-overlay {
@@ -1284,12 +1361,11 @@
 
   .pricing-wallet-banner__action {
     margin-left: 0;
-    width: 100%;
+    align-self: flex-start;
   }
 
   .pricing-wallet-topup-btn {
-    width: 100%;
-    justify-content: center;
+    align-self: flex-start;
   }
 }
 
@@ -1325,8 +1401,12 @@
   }
 
   /* Disable hover transforms on mobile */
-  .pricing-plan-card:hover { transform: none; }
-  .pricing-plan-card--featured:hover { transform: none; }
+  .pricing-plan-card:hover {
+    transform: none;
+  }
+  .pricing-plan-card--featured:hover {
+    transform: none;
+  }
 
   .pricing-faq-section,
   .pricing-cta-section,
@@ -1338,7 +1418,9 @@
     padding: 3rem 1.5rem;
   }
 
-  .pricing-cta-title { font-size: 1.5rem; }
+  .pricing-cta-title {
+    font-size: 1.5rem;
+  }
 
   .pricing-faq-title,
   .pricing-comparison-title {
@@ -1349,7 +1431,9 @@
     border-radius: var(--r-lg, 20px);
   }
 
-  .pricing-comparison-table { min-width: 580px; }
+  .pricing-comparison-table {
+    min-width: 580px;
+  }
 
   .pricing-ct-header-cell,
   .pricing-ct-cell {
