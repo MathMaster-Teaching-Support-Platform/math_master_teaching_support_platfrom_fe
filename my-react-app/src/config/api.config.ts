@@ -195,6 +195,10 @@ export const API_ENDPOINTS = {
     `/lesson-slides/generated/${generatedFileId}/preview-url`,
   LESSON_SLIDES_GENERATED_PREVIEW_PDF: (generatedFileId: string) =>
     `/lesson-slides/generated/${generatedFileId}/preview-pdf`,
+  LESSON_SLIDES_GENERATED_METADATA: (generatedFileId: string) =>
+    `/lesson-slides/generated/${generatedFileId}/metadata`,
+  LESSON_SLIDES_GENERATED_THUMBNAIL_IMAGE: (generatedFileId: string) =>
+    `/lesson-slides/generated/${generatedFileId}/thumbnail-image`,
   LESSON_SLIDES_GENERATED_PUBLISH: (generatedFileId: string) =>
     `/lesson-slides/generated/${generatedFileId}/publish`,
   LESSON_SLIDES_GENERATED_UNPUBLISH: (generatedFileId: string) =>
@@ -214,6 +218,8 @@ export const API_ENDPOINTS = {
     `/lesson-slides/public/generated/${generatedFileId}/preview-url`,
   LESSON_SLIDES_PUBLIC_GENERATED_PREVIEW_PDF: (generatedFileId: string) =>
     `/lesson-slides/public/generated/${generatedFileId}/preview-pdf`,
+  LESSON_SLIDES_PUBLIC_GENERATED_THUMBNAIL_IMAGE: (generatedFileId: string) =>
+    `/lesson-slides/public/generated/${generatedFileId}/thumbnail-image`,
 
   // Lesson Plans (Giáo án)
   LESSON_PLANS: '/lesson-plans',

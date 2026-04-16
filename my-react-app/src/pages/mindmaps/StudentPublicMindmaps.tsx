@@ -260,6 +260,40 @@ export default function StudentPublicMindmaps() {
   };
 
   useEffect(() => {
+    if (!isPreviewOpen || !selectedPreviewMindmap) return;
+
+    const handleViewerMessage = (event: MessageEvent) => {
+      if (event.origin !== globalThis.window.location.origin) return;
+
+      const payload = event.data as
+        | {
+            type?: string;
+            mindmapId?: string;
+            status?: 'loading' | 'ready' | 'error';
+            message?: string | null;
+          }
+        | undefined;
+
+      if (!payload || payload.type !== 'public-mindmap-viewer-status') return;
+      if (payload.mindmapId !== selectedPreviewMindmap.id) return;
+
+      if (payload.status === 'ready') {
+        setPreviewFrameLoading(false);
+      }
+
+      if (payload.status === 'error') {
+        setPreviewFrameLoading(false);
+        setMindmapsError(payload.message || 'Không thể hiển thị mindmap');
+      }
+    };
+
+    globalThis.window.addEventListener('message', handleViewerMessage);
+    return () => {
+      globalThis.window.removeEventListener('message', handleViewerMessage);
+    };
+  }, [isPreviewOpen, selectedPreviewMindmap]);
+
+  useEffect(() => {
     let cancelled = false;
     const loadMindmaps = async () => {
       setLoadingMindmaps(true);
@@ -636,7 +670,6 @@ export default function StudentPublicMindmaps() {
                       className="spm-modal-iframe"
                       src={`/mindmaps/public/${selectedPreviewMindmap.id}?embedPreview=1`}
                       title={selectedPreviewMindmap.title || 'Mindmap preview'}
-                      onLoad={() => setPreviewFrameLoading(false)}
                     />
                   )}
                 </div>

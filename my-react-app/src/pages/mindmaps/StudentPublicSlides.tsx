@@ -16,6 +16,7 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { API_BASE_URL } from '../../config/api.config';
 import { mockStudent } from '../../data/mockData';
 import { LessonSlideService } from '../../services/api/lesson-slide.service';
 import '../../styles/module-refactor.css';
@@ -44,6 +45,20 @@ const getQueryDirection = (value: string | null): SortDirection =>
 
 const getQuerySortBy = (value: string | null): string =>
   value === 'updatedAt' ? 'updatedAt' : 'createdAt';
+
+const getGeneratedDisplayName = (slide: LessonSlideGeneratedFile): string => {
+  const preferredName = slide.name?.trim();
+  if (preferredName) return preferredName;
+  const fallbackName = (slide.fileName || '').trim();
+  return fallbackName.replace(/\.[^/.]+$/, '') || 'generated-slide';
+};
+
+const resolveThumbnailUrl = (thumbnail?: string | null): string | null => {
+  if (!thumbnail) return null;
+  if (/^https?:\/\//i.test(thumbnail)) return thumbnail;
+  if (thumbnail.startsWith('/api/')) return thumbnail;
+  return `${API_BASE_URL}${thumbnail.startsWith('/') ? thumbnail : `/${thumbnail}`}`;
+};
 
 const emptySlidePage = (): PageResult<LessonSlideGeneratedFile> => ({
   content: [],
@@ -580,15 +595,21 @@ export default function StudentPublicSlides() {
                     <div className="sps-cover">
                       <div className="sps-cover__overlay" />
                       <span className="sps-cover__ext">.pptx</span>
-                      <div className="sps-cover__icon">
-                        <FileText size={42} strokeWidth={1.3} />
-                      </div>
+                      {resolveThumbnailUrl(slide.thumbnail) ? (
+                        <img
+                          src={resolveThumbnailUrl(slide.thumbnail) || ''}
+                          alt={getGeneratedDisplayName(slide)}
+                          className="sps-cover__thumb"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="sps-cover__icon">
+                          <FileText size={42} strokeWidth={1.3} />
+                        </div>
+                      )}
                     </div>
                     <div className="sps-card-body">
-                      <h3 className="sps-card__title">
-                        {(slide.fileName ?? 'generated-slide.pptx').replace(/\.[^/.]+$/, '') ||
-                          'generated-slide'}
-                      </h3>
+                      <h3 className="sps-card__title">{getGeneratedDisplayName(slide)}</h3>
                       <div className="sps-card-metrics">
                         <span className="metric">
                           <HardDrive size={11} />
@@ -668,7 +689,11 @@ export default function StudentPublicSlides() {
                 onClick={(event) => event.stopPropagation()}
               >
                 <div className="sps-modal-header">
-                  <h3>{selectedPreviewSlide?.fileName || 'Xem trước slide'}</h3>
+                  <h3>
+                    {selectedPreviewSlide
+                      ? getGeneratedDisplayName(selectedPreviewSlide)
+                      : 'Xem trước slide'}
+                  </h3>
                   <button type="button" className="sps-modal-close" onClick={handleClosePreview}>
                     ×
                   </button>

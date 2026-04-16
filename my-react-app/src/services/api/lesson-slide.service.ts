@@ -23,6 +23,11 @@ interface DownloadPptxResult {
   filename: string;
 }
 
+interface UpdateGeneratedSlideMetadataPayload {
+  name?: string;
+  thumbnail?: File;
+}
+
 interface PreviewUrlEnvelope {
   result?:
     | string
@@ -480,6 +485,62 @@ export class LessonSlideService {
     return response.json();
   }
 
+  static async updateGeneratedFileMetadata(
+    generatedFileId: string,
+    payload: UpdateGeneratedSlideMetadataPayload
+  ): Promise<ApiEnvelope<LessonSlideGeneratedFile>> {
+    const headers = await this.getAuthHeaders(false);
+    const formData = new FormData();
+
+    if (typeof payload.name === 'string') {
+      formData.append('name', payload.name);
+    }
+
+    if (payload.thumbnail) {
+      formData.append('thumbnail', payload.thumbnail);
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.LESSON_SLIDES_GENERATED_METADATA(generatedFileId)}`,
+      {
+        method: 'PATCH',
+        headers,
+        body: formData,
+      }
+    );
+
+    if (!response.ok) {
+      const parsedError = await this.parseApiError(
+        response,
+        'Failed to update generated slide metadata'
+      );
+      throw this.buildApiError(parsedError.message, parsedError.code);
+    }
+
+    return response.json();
+  }
+
+  static async getGeneratedFileThumbnailImage(generatedFileId: string): Promise<Blob> {
+    const headers = await this.getAuthHeaders(false);
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.LESSON_SLIDES_GENERATED_THUMBNAIL_IMAGE(generatedFileId)}`,
+      {
+        method: 'GET',
+        headers,
+      }
+    );
+
+    if (!response.ok) {
+      const parsedError = await this.parseApiError(
+        response,
+        'Failed to get generated slide thumbnail image'
+      );
+      throw this.buildApiError(parsedError.message, parsedError.code);
+    }
+
+    return response.blob();
+  }
+
   static async getTeacherLessonSlideByLessonId(
     lessonId: string
   ): Promise<ApiEnvelope<LessonResponse>> {
@@ -725,5 +786,25 @@ export class LessonSlideService {
       blob: await response.blob(),
       filename: this.getFilenameFromDisposition(response.headers.get('content-disposition')),
     };
+  }
+
+  static async getPublicGeneratedFileThumbnailImage(generatedFileId: string): Promise<Blob> {
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.LESSON_SLIDES_PUBLIC_GENERATED_THUMBNAIL_IMAGE(generatedFileId)}`,
+      {
+        method: 'GET',
+        headers: { accept: '*/*' },
+      }
+    );
+
+    if (!response.ok) {
+      const parsedError = await this.parseApiError(
+        response,
+        'Failed to get public generated slide thumbnail image'
+      );
+      throw this.buildApiError(parsedError.message, parsedError.code);
+    }
+
+    return response.blob();
   }
 }

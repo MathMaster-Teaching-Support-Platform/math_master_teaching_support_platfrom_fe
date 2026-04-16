@@ -107,6 +107,22 @@ export default function PublicMindmapViewer() {
     void loadPublicMindmap();
   }, [id]);
 
+  useEffect(() => {
+    if (!isEmbedPreview || !id) return;
+
+    const status = loading ? 'loading' : error || !mindmap ? 'error' : 'ready';
+
+    globalThis.window.parent?.postMessage(
+      {
+        type: 'public-mindmap-viewer-status',
+        mindmapId: id,
+        status,
+        message: error || null,
+      },
+      globalThis.window.location.origin
+    );
+  }, [isEmbedPreview, id, loading, error, mindmap]);
+
   const mindData = useMemo<MindElixirData | null>(() => {
     if (!mindmapNodes.length) return null;
 

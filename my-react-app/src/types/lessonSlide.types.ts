@@ -71,6 +71,8 @@ export interface LessonSlideGeneratedFile {
   id: string;
   lessonId: string;
   templateId: string | null;
+  name: string | null;
+  thumbnail: string | null;
   fileName: string;
   contentType: string;
   fileSizeBytes: number;
