@@ -87,6 +87,7 @@ const MaterialsGenerator: React.FC = () => {
   const [loadingPreviewSlideId, setLoadingPreviewSlideId] = useState('');
   const [downloadingSlideId, setDownloadingSlideId] = useState('');
   const [downloadingMindmapId, setDownloadingMindmapId] = useState('');
+  const isDownloadingAny = Boolean(downloadingSlideId || downloadingMindmapId);
 
   // User / layout state
   const [userInfo, setUserInfo] = useState<MyInfo | null>(null);
@@ -247,14 +248,8 @@ const MaterialsGenerator: React.FC = () => {
     setError(null);
 
     try {
-      const autoExportUrl = `/teacher/mindmaps/${mindmapId}?autoExport=1&closeAfterExport=1`;
-      const exportTab = window.open(autoExportUrl, '_blank');
-
-      // Fallback when popup is blocked by browser settings.
-      if (!exportTab) {
-        const response = await MindmapService.exportMindmap(mindmapId, 'png');
-        triggerBlobDownload(response.blob, response.filename || `${title}.png`);
-      }
+      const response = await MindmapService.exportMindmap(mindmapId, 'png');
+      triggerBlobDownload(response.blob, response.filename || `${title}.png`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Không thể tải xuống mindmap');
     } finally {
@@ -623,6 +618,28 @@ const MaterialsGenerator: React.FC = () => {
                 ) : (
                   <div className="empty">Không có dữ liệu xem thử.</div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {isDownloadingAny && (
+            <div className="materials-download-overlay" role="status" aria-live="polite">
+              <div className="materials-download-modal">
+                <div className="materials-math-loader">
+                  <div className="materials-math-loader-ring" />
+                  <div className="materials-math-loader-symbols" aria-hidden="true">
+                    <span>∑</span>
+                    <span>π</span>
+                    <span>√</span>
+                    <span>∞</span>
+                    <span>Δ</span>
+                  </div>
+                  <p>
+                    {downloadingSlideId
+                      ? 'Đang tải slide xuống, chờ chút nhé...'
+                      : 'Đang tải mindmap xuống, chờ chút nhé...'}
+                  </p>
+                </div>
               </div>
             </div>
           )}

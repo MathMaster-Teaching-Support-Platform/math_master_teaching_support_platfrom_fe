@@ -1235,17 +1235,12 @@ const AISlideGenerator: React.FC = () => {
 
             <div className="ai-slide-management-card">
               <div className="ai-slide-management-header">
-                <h3>Thư viện file đã generate</h3>
-                <p>
-                  {lessonId
-                    ? `Đang lọc theo lesson: ${lessonId}`
-                    : 'Đang hiển thị tất cả file generated của bạn.'}
-                </p>
+                <h3>Thư Viện Slide</h3>
               </div>
 
               <div className="ai-slide-management-toolbar">
                 <label className="ai-slide-management-search">
-                  <span>Tìm theo tên file / lessonId</span>
+                  <span>Tìm Kiếm</span>
                   <input
                     type="text"
                     value={generatedSearch}
@@ -1328,7 +1323,7 @@ const AISlideGenerator: React.FC = () => {
                           <th>Lesson</th>
                           <th>Created</th>
                           <th>Size</th>
-                          <th>Public</th>
+                          <th>Trạng thái</th>
                           <th>Action</th>
                         </tr>
                       </thead>
@@ -1351,7 +1346,7 @@ const AISlideGenerator: React.FC = () => {
                               <span
                                 className={`ai-slide-public-badge ${file.isPublic ? 'yes' : 'no'}`}
                               >
-                                {file.isPublic ? 'Yes' : 'No'}
+                                {file.isPublic ? 'Công khai' : 'Nháp'}
                               </span>
                             </td>
                             <td>

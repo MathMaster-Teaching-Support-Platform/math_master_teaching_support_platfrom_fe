@@ -846,11 +846,16 @@
 .ai-slide-modal-close {
   width: 34px;
   height: 34px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 10px;
   border: 1px solid #cbd5e1;
   background: #ffffff;
   color: #334155;
-  font-size: 1.25rem;
+  font-size: 1.4rem;
+  font-weight: 600;
   line-height: 1;
   cursor: pointer;
 }
@@ -858,6 +863,12 @@
 .ai-slide-modal-close:hover {
   background: #eff6ff;
   border-color: #93c5fd;
+  color: #1e293b;
+}
+
+.ai-slide-modal-close:focus-visible {
+  outline: 2px solid #60a5fa;
+  outline-offset: 2px;
 }
 
 .ai-slide-modal-body {

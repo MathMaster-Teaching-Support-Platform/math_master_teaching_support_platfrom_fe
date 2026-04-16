@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import MindElixir from 'mind-elixir';
-import html2canvas from 'html2canvas';
 import 'mind-elixir/style.css';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockTeacher } from '../../data/mockData';
@@ -123,7 +122,6 @@ const getSubtreeDeleteOrder = (nodes: MindmapNode[], rootId: string): string[] =
 export default function MindmapEditor() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
 
   const [mindmap, setMindmap] = useState<Mindmap | null>(null);
   const [mindmapNodes, setMindmapNodes] = useState<MindmapNode[]>([]);
@@ -165,8 +163,6 @@ export default function MindmapEditor() {
     nodeLabel: '',
     totalNodes: 0,
   });
-  const hasAutoExportedRef = useRef(false);
-
   useEffect(() => {
     if (!id) {
       setError('Không tìm thấy ID mindmap');
@@ -536,70 +532,32 @@ export default function MindmapEditor() {
   };
 
   const handleExportImage = useCallback(async () => {
-    if (!mindContainerRef.current) return;
+    if (!mindmap) return;
 
     try {
       setExportingImage(true);
 
-      // Wait one frame to ensure the latest layout/interaction updates are reflected.
-      await new Promise<void>((resolve) => {
-        requestAnimationFrame(() => resolve());
-      });
-
-      const mindElement =
-        (mindContainerRef.current.querySelector('.map-container') as HTMLElement | null) ||
-        (mindContainerRef.current.querySelector('.mind-elixir') as HTMLElement | null) ||
-        (mindContainerRef.current.firstElementChild as HTMLElement | null) ||
-        mindContainerRef.current;
-
-      if (!mindElement || mindElement.clientWidth === 0 || mindElement.clientHeight === 0) {
-        alert('Sơ đồ chưa sẵn sàng để xuất ảnh. Vui lòng thử lại sau vài giây.');
-        return;
-      }
-
-      const canvas = await html2canvas(mindElement, {
-        backgroundColor: '#f3f5ff',
-        scale: Math.min(window.devicePixelRatio || 1, 2),
-        useCORS: true,
-        logging: false,
-      });
-
+      // Use backend export to always get the full mindmap instead of viewport capture.
+      const response = await MindmapService.exportMindmap(mindmap.id, 'png');
       const reservedCharacters = new Set(['<', '>', ':', '"', '/', '\\', '|', '?', '*']);
-      const safeTitle = Array.from((mindmap?.title || 'mindmap').trim())
+      const safeTitle = Array.from((mindmap.title || 'mindmap').trim())
         .filter((char) => char.charCodeAt(0) >= 32 && !reservedCharacters.has(char))
         .join('')
         .replace(/\s+/g, '-')
         .toLowerCase();
-      const fileName = `${safeTitle || 'mindmap'}-${new Date().toISOString().slice(0, 10)}.png`;
+      const fallbackName = `${safeTitle || 'mindmap'}-${new Date().toISOString().slice(0, 10)}.png`;
 
       const downloadLink = document.createElement('a');
-      downloadLink.href = canvas.toDataURL('image/png');
-      downloadLink.download = fileName;
+      downloadLink.href = window.URL.createObjectURL(response.blob);
+      downloadLink.download = response.filename || fallbackName;
       downloadLink.click();
+      window.URL.revokeObjectURL(downloadLink.href);
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Không thể xuất ảnh mindmap');
     } finally {
       setExportingImage(false);
     }
-  }, [mindmap?.title]);
-
-  useEffect(() => {
-    const autoExport = searchParams.get('autoExport') === '1';
-    const closeAfterExport = searchParams.get('closeAfterExport') === '1';
-    if (!autoExport || loading || !mindmap || exportingImage || hasAutoExportedRef.current) {
-      return;
-    }
-
-    hasAutoExportedRef.current = true;
-    void (async () => {
-      await handleExportImage();
-      if (closeAfterExport) {
-        window.setTimeout(() => {
-          window.close();
-        }, 450);
-      }
-    })();
-  }, [searchParams, loading, mindmap, exportingImage, handleExportImage]);
+  }, [mindmap]);
 
   if (loading) {
     return (

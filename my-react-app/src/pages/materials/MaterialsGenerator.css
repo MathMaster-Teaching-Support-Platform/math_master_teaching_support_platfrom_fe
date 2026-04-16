@@ -375,6 +375,21 @@
   min-height: 0;
 }
 
+.module-layout-container .materials-download-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.44);
+  z-index: 1450;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.module-layout-container .materials-download-modal {
+  width: min(640px, 94vw);
+}
+
 .module-layout-container .materials-math-loader {
   position: relative;
   margin: auto;
