@@ -87,12 +87,12 @@ const PlanIcon: React.FC<{ tier: PlanTier }> = ({ tier }) => {
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
-        strokeWidth="1.8"
+        strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
       >
-        <path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7z" />
-        <circle cx="12" cy="9" r="2.5" />
+        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
       </svg>
     );
   if (tier === 'basic')
@@ -101,11 +101,12 @@ const PlanIcon: React.FC<{ tier: PlanTier }> = ({ tier }) => {
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
-        strokeWidth="1.8"
+        strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
       >
-        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+        <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+        <path d="M6 12v5c3 3 9 3 12 0v-5" />
       </svg>
     );
   if (tier === 'pro')
@@ -114,11 +115,12 @@ const PlanIcon: React.FC<{ tier: PlanTier }> = ({ tier }) => {
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
-        strokeWidth="1.8"
+        strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
       >
-        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+        <path d="M2 20h20" />
+        <polygon points="2 20 5 9 12 14 19 4 22 20" />
       </svg>
     );
   return (
@@ -126,12 +128,15 @@ const PlanIcon: React.FC<{ tier: PlanTier }> = ({ tier }) => {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.8"
+      strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-      <polyline points="9 22 9 12 15 12 15 22" />
+      <polygon points="12 2 22 9 18 20 6 20 2 9" />
+      <line x1="2" y1="9" x2="22" y2="9" />
+      <line x1="6" y1="20" x2="9" y2="9" />
+      <line x1="18" y1="20" x2="15" y2="9" />
+      <line x1="12" y1="2" x2="12" y2="9" />
     </svg>
   );
 };
@@ -691,80 +696,73 @@ const Pricing: React.FC = () => {
                           key={plan.id}
                           className={`pricing-plan-card pricing-plan-card--tier-${tier} ${plan.featured ? 'pricing-plan-card--featured' : ''} ${isCurrentPlan ? 'pricing-plan-card--active' : ''}`}
                         >
-                          {isCurrentPlan && (
-                            <div className="pricing-current-plan-badge">
-                              <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
-                                <polyline points="20 6 9 17 4 12" />
-                              </svg>
-                              Đang dùng
+                          {/* Dark header */}
+                          <div className="pricing-plan-card__head">
+                            {plan.featured && !isCurrentPlan && (
+                              <span className="pricing-popular-ribbon">Phổ biến</span>
+                            )}
+                            {isCurrentPlan && (
+                              <span className="pricing-current-ribbon">Đang dùng</span>
+                            )}
+                            <div className="pricing-plan-icon">
+                              <PlanIcon tier={tier} />
                             </div>
-                          )}
-                          {plan.featured && !isCurrentPlan && (
-                            <div className="pricing-popular-badge">
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                              </svg>
-                              Phổ biến nhất
-                            </div>
-                          )}
-
-                          <div className="pricing-plan-icon">
-                            <PlanIcon tier={tier} />
+                            <h3 className="pricing-plan-name">{plan.name}</h3>
                           </div>
 
-                          <div className="pricing-plan-header">
-                            <h3 className="pricing-plan-name">{plan.name}</h3>
+                          {/* White body */}
+                          <div className="pricing-plan-card__body">
                             <p className="pricing-plan-desc">
                               {plan.description || 'Gói đăng ký cho người dùng'}
                             </p>
-                          </div>
 
-                          <div className="pricing-plan-price-block">
-                            <span className="pricing-plan-price">{formatPrice(plan.price)}</span>
-                            <span className="pricing-plan-period">
-                              /{plan.billingCycle.toLowerCase()}
-                            </span>
-                          </div>
+                            <div className="pricing-plan-price-block">
+                              <span className="pricing-plan-price">{formatPrice(plan.price)}</span>
+                              <span className="pricing-plan-period">
+                                /{plan.billingCycle.toLowerCase()}
+                              </span>
+                            </div>
 
-                          <div className="pricing-token-pill">
-                            <svg
-                              width="12"
-                              height="12"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
+                            <div className="pricing-token-pill">
+                              <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <circle cx="12" cy="12" r="10" />
+                                <path d="M12 8v4l2 2" />
+                              </svg>
+                              {plan.tokenQuota.toLocaleString()} token / kỳ
+                            </div>
+
+                            <button
+                              type="button"
+                              className={`pricing-plan-btn ${plan.featured ? 'pricing-plan-btn--primary' : 'pricing-plan-btn--outline'}`}
+                              onClick={() => void handlePurchase(plan)}
+                              disabled={!!purchasingPlanId || isCurrentPlan || !price}
+                              title={isInsufficientBalance ? 'Số dư ví không đủ' : undefined}
                             >
-                              <circle cx="12" cy="12" r="10" />
-                              <path d="M12 8v4l2 2" />
-                            </svg>
-                            {plan.tokenQuota.toLocaleString()} token / kỳ
+                              {purchasingPlanId === plan.id ? (
+                                <>
+                                  <span className="pricing-btn-spinner" />
+                                  Đang mua...
+                                </>
+                              ) : isCurrentPlan ? (
+                                'Đang sử dụng'
+                              ) : !price ? (
+                                'Không mua trực tiếp'
+                              ) : isInsufficientBalance ? (
+                                '⚠️ Số dư không đủ'
+                              ) : (
+                                'Mua ngay'
+                              )}
+                            </button>
                           </div>
-
-                          <button
-                            type="button"
-                            className={`pricing-plan-btn ${plan.featured ? 'pricing-plan-btn--primary' : 'pricing-plan-btn--outline'}`}
-                            onClick={() => void handlePurchase(plan)}
-                            disabled={!!purchasingPlanId || isCurrentPlan || !price}
-                            title={isInsufficientBalance ? 'Số dư ví không đủ' : undefined}
-                          >
-                            {purchasingPlanId === plan.id ? (
-                              <>
-                                <span className="pricing-btn-spinner" />
-                                Đang mua...
-                              </>
-                            ) : isCurrentPlan ? (
-                              'Đang sử dụng'
-                            ) : !price ? (
-                              'Không mua trực tiếp'
-                            ) : isInsufficientBalance ? (
-                              '⚠️ Số dư không đủ'
-                            ) : (
-                              'Mua ngay'
-                            )}
-                          </button>
                         </div>
                       );
                     })
@@ -864,61 +862,57 @@ const Pricing: React.FC = () => {
                   key={index}
                   className={`pricing-plan-card pricing-plan-card--tier-${tier} ${plan.highlighted ? 'pricing-plan-card--featured' : ''}`}
                 >
-                  {plan.highlighted && (
-                    <div className="pricing-popular-badge">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                      </svg>
-                      Phổ biến nhất
+                  {/* Dark header */}
+                  <div className="pricing-plan-card__head">
+                    {plan.highlighted && <span className="pricing-popular-ribbon">Phổ biến</span>}
+                    <div className="pricing-plan-icon">
+                      <PlanIcon tier={tier} />
                     </div>
-                  )}
-
-                  <div className="pricing-plan-icon">
-                    <PlanIcon tier={tier} />
-                  </div>
-
-                  <div className="pricing-plan-header">
                     <h3 className="pricing-plan-name">{plan.name}</h3>
+                  </div>
+
+                  {/* White body */}
+                  <div className="pricing-plan-card__body">
                     <p className="pricing-plan-desc">{plan.description}</p>
-                  </div>
 
-                  <div className="pricing-plan-price-block">
-                    <span className="pricing-plan-price">{plan.price}</span>
-                    {plan.period && <span className="pricing-plan-period">{plan.period}</span>}
-                  </div>
+                    <div className="pricing-plan-price-block">
+                      <span className="pricing-plan-price">{plan.price}</span>
+                      {plan.period && <span className="pricing-plan-period">{plan.period}</span>}
+                    </div>
 
-                  <Link
-                    to="/register"
-                    className={`pricing-plan-btn ${plan.highlighted ? 'pricing-plan-btn--primary' : 'pricing-plan-btn--outline'}`}
-                  >
-                    {plan.buttonText}
-                  </Link>
+                    <Link
+                      to="/register"
+                      className={`pricing-plan-btn ${plan.highlighted ? 'pricing-plan-btn--primary' : 'pricing-plan-btn--outline'}`}
+                    >
+                      {plan.buttonText}
+                    </Link>
 
-                  <div className="pricing-plan-divider" />
+                    <div className="pricing-plan-divider" />
 
-                  <ul className="pricing-plan-features">
-                    {plan.features.map((feature, idx) => (
-                      <li key={idx}>
-                        <span
-                          className={`pricing-check ${plan.highlighted ? 'pricing-check--primary' : ''}`}
-                        >
-                          <svg
-                            width="14"
-                            height="14"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
+                    <ul className="pricing-plan-features">
+                      {plan.features.map((feature, idx) => (
+                        <li key={idx}>
+                          <span
+                            className={`pricing-check ${plan.highlighted ? 'pricing-check--primary' : ''}`}
                           >
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg>
-                        </span>
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
+                            <svg
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                          </span>
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
               );
             })}
