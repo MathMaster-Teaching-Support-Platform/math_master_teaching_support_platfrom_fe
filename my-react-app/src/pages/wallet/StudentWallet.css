@@ -1022,6 +1022,34 @@
   color: #b91c1c;
 }
 
+/* Countdown clock badge on PENDING transactions */
+.tx-countdown {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.14rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.04em;
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+  gap: 0.2rem;
+}
+.tx-countdown::before {
+  content: '⏱';
+  font-size: 0.65rem;
+}
+.tx-countdown--expired {
+  background: #fef2f2;
+  color: #9f1239;
+  border-color: #fecaca;
+}
+.tx-countdown--expired::before {
+  content: '';
+}
+
 /* ── Footer + Pagination ──────────────────────────────────── */
 .transactions-footer {
   padding: 1rem 1.5rem;
@@ -1754,4 +1782,36 @@
     padding: 0 1.2rem 1.2rem;
     flex-direction: column-reverse;
   }
+}
+
+/* -- Pending Transaction Warning Modal ----------------------- */
+.sw-pending-warning {
+  max-width: 380px;
+  padding: 0;
+}
+.sw-pw-icon {
+  text-align: center;
+  font-size: 2.6rem;
+  padding: 1.8rem 1.5rem 0.4rem;
+  line-height: 1;
+}
+.sw-pw-title {
+  text-align: center;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0 1.5rem 0.6rem;
+}
+.sw-pw-body {
+  font-size: 0.85rem;
+  color: #64748b;
+  line-height: 1.6;
+  margin: 0 1.5rem 0.5rem;
+  text-align: center;
+}
+.sw-pw-body strong {
+  color: #c2410c;
+}
+.sw-pending-warning .sw-modal-actions {
+  padding: 1rem 1.5rem 1.5rem;
 }

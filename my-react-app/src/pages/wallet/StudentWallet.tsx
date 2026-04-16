@@ -11,12 +11,12 @@ import {
   X,
   Zap,
 } from 'lucide-react';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockAdmin, mockStudent, mockTeacher } from '../../data/mockData';
 import { AuthService } from '../../services/api/auth.service';
 import { WalletService } from '../../services/api/wallet.service';
-import type { WalletSummary, WalletTransaction } from '../../types/wallet.types';
+import type { TransactionStatus, WalletSummary, WalletTransaction } from '../../types/wallet.types';
 import './StudentWallet.css';
 
 type TransactionStatusFilter = 'all' | 'completed' | 'pending' | 'failed';
@@ -121,12 +121,46 @@ const MastercardLogo = () => (
 const PAGE_SIZE = 5;
 
 const STATUS_TO_API: Record<Exclude<TransactionStatusFilter, 'all'>, string> = {
-  completed: 'COMPLETED',
+  completed: 'SUCCESS',
   pending: 'PENDING',
   failed: 'FAILED',
 };
 
-const API_FETCH_SIZE = 10;
+/** Map BE enum → FE display status */
+const TX_STATUS_MAP: Record<TransactionStatus, Exclude<TransactionStatusFilter, 'all'>> = {
+  PENDING: 'pending',
+  PROCESSING: 'pending',
+  SUCCESS: 'completed',
+  FAILED: 'failed',
+  CANCELLED: 'failed',
+};
+
+const API_PAGE_SIZE = 20;
+
+/** Countdown clock for a PENDING transaction — reads expiresAt from BE */
+const TxCountdown = ({ expiresAt }: { expiresAt: string }) => {
+  const calc = () => Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000));
+  const [remaining, setRemaining] = useState(calc);
+
+  useEffect(() => {
+    if (remaining <= 0) return;
+    const id = setInterval(() => setRemaining(calc), 1000);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expiresAt]);
+
+  if (remaining <= 0) return <span className="tx-countdown tx-countdown--expired">Hết hạn</span>;
+
+  const mm = Math.floor(remaining / 60)
+    .toString()
+    .padStart(2, '0');
+  const ss = (remaining % 60).toString().padStart(2, '0');
+  return (
+    <span className="tx-countdown">
+      {mm}:{ss}
+    </span>
+  );
+};
 
 const StudentWallet: React.FC = () => {
   const currentRole = AuthService.getUserRole() || 'student';
@@ -143,6 +177,8 @@ const StudentWallet: React.FC = () => {
   const [depositing, setDepositing] = useState(false);
   const [depositSuccess, setDepositSuccess] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showPendingWarning, setShowPendingWarning] = useState(false);
+  const pollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [selectedBank, setSelectedBank] = useState<string | null>(null);
   const [cardNumber, setCardNumber] = useState('');
   const [cardExpiry, setCardExpiry] = useState('');
@@ -166,18 +202,12 @@ const StudentWallet: React.FC = () => {
     return new Intl.NumberFormat('vi-VN').format(value);
   };
 
-  const normalizeStatus = (status?: string): Exclude<TransactionStatusFilter, 'all'> => {
-    const normalized = (status || '').toLowerCase();
-    if (normalized.includes('pending') || normalized.includes('wait')) return 'pending';
-    if (normalized.includes('fail') || normalized.includes('cancel')) return 'failed';
-    return 'completed';
-  };
+  const normalizeStatus = (status?: string): Exclude<TransactionStatusFilter, 'all'> =>
+    TX_STATUS_MAP[(status as TransactionStatus) ?? ''] ?? 'completed';
 
   const normalizeType = (tx: WalletTransaction): 'deposit' | 'payment' => {
-    const type = (tx.type || '').toLowerCase();
-    if (type.includes('deposit') || type.includes('topup') || type.includes('recharge')) {
-      return 'deposit';
-    }
+    if (tx.type === 'DEPOSIT') return 'deposit';
+    if (tx.type === 'PAYMENT' || tx.type === 'WITHDRAWAL') return 'payment';
     return tx.amount >= 0 ? 'deposit' : 'payment';
   };
 
@@ -203,8 +233,6 @@ const StudentWallet: React.FC = () => {
   const getTransactionCode = (tx: WalletTransaction) => {
     if (tx.orderCode) return String(tx.orderCode);
     if (tx.transactionId) return tx.transactionId.slice(-8).toUpperCase();
-    if (tx.transactionCode) return tx.transactionCode;
-    if (tx.id) return `TXN-${String(tx.id).slice(-6)}`;
     return 'N/A';
   };
 
@@ -221,7 +249,7 @@ const StudentWallet: React.FC = () => {
     }
   };
 
-  const loadTransactions = async (filter: TransactionStatusFilter) => {
+  const loadTransactions = useCallback(async (filter: TransactionStatusFilter) => {
     try {
       setTransactionsLoading(true);
       setError(null);
@@ -229,20 +257,14 @@ const StudentWallet: React.FC = () => {
 
       const response =
         filter === 'all'
-          ? await WalletService.getTransactions({ page: 0, size: API_FETCH_SIZE })
+          ? await WalletService.getTransactions({ page: 0, size: API_PAGE_SIZE })
           : await WalletService.getTransactionsByStatus(STATUS_TO_API[filter], {
               page: 0,
-              size: API_FETCH_SIZE,
+              size: API_PAGE_SIZE,
             });
 
-      const result = response.result;
-      const list = Array.isArray(result)
-        ? result
-        : 'content' in result && Array.isArray(result.content)
-          ? result.content
-          : [];
-
-      setTransactions(list);
+      // BE always returns Spring Page object — `content` is always present
+      setTransactions(response.result.content ?? []);
       setPage(1);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Không thể tải giao dịch');
@@ -250,7 +272,7 @@ const StudentWallet: React.FC = () => {
     } finally {
       setTransactionsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     void loadWallet();
@@ -258,7 +280,15 @@ const StudentWallet: React.FC = () => {
 
   useEffect(() => {
     void loadTransactions(statusFilter);
-  }, [statusFilter]);
+  }, [statusFilter, loadTransactions]);
+
+  // Clean up any in-flight poll timer on unmount
+  useEffect(
+    () => () => {
+      if (pollTimerRef.current) clearTimeout(pollTimerRef.current);
+    },
+    []
+  );
 
   const filteredTransactions = useMemo(() => {
     const keyword = searchTerm.trim().toLowerCase();
@@ -266,7 +296,7 @@ const StudentWallet: React.FC = () => {
 
     return transactions.filter((tx) => {
       const code = getTransactionCode(tx).toLowerCase();
-      const text = `${tx.description || ''} ${tx.paymentMethod || ''}`.toLowerCase();
+      const text = (tx.description ?? '').toLowerCase();
       return code.includes(keyword) || text.includes(keyword);
     });
   }, [searchTerm, transactions]);
@@ -281,9 +311,8 @@ const StudentWallet: React.FC = () => {
   const displayStart = filteredTransactions.length === 0 ? 0 : (safePage - 1) * PAGE_SIZE + 1;
   const displayEnd = Math.min(safePage * PAGE_SIZE, filteredTransactions.length);
 
-  const totalDeposit = transactions
-    .filter((tx) => normalizeType(tx) === 'deposit' && normalizeStatus(tx.status) === 'completed')
-    .reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
+  // Use BE-provided all-time total (wallet.totalDeposited) — no client-side calculation
+  const totalDeposit = wallet?.totalDeposited ?? 0;
 
   const handleDeposit = async () => {
     if (amount < 10000) {
@@ -303,13 +332,44 @@ const StudentWallet: React.FC = () => {
         description: `Nạp tiền MathMaster qua ${methodLabel}`,
       });
 
-      window.open(response.result.checkoutUrl, '_blank', 'noopener,noreferrer');
+      const { checkoutUrl, orderCode } = response.result;
+      window.open(checkoutUrl, '_blank', 'noopener,noreferrer');
+
+      // Immediately refresh transaction list so the new PENDING tx appears at the top
+      await loadTransactions(statusFilter);
 
       setDepositSuccess(true);
       setTimeout(() => setDepositSuccess(false), 3000);
 
-      await loadTransactions(statusFilter);
-      await loadWallet();
+      // Poll order status every 5s (max 3 minutes = 36 attempts)
+      let attempts = 0;
+      const MAX_ATTEMPTS = 36;
+      const poll = async () => {
+        if (attempts >= MAX_ATTEMPTS) return;
+        attempts++;
+        try {
+          const statusRes = await WalletService.getOrderStatus(orderCode);
+          const txStatus = statusRes.result.status;
+          if (txStatus === 'SUCCESS') {
+            await Promise.all([loadWallet(), loadTransactions(statusFilter)]);
+            return;
+          }
+          if (txStatus === 'FAILED' || txStatus === 'CANCELLED') {
+            setError(
+              txStatus === 'CANCELLED'
+                ? 'Giao dịch đã bị hủy hoặc hết hạn.'
+                : 'Thanh toán thất bại. Vui lòng thử lại.'
+            );
+            setErrorDismissed(false);
+            await loadTransactions(statusFilter);
+            return;
+          }
+        } catch {
+          // network error — keep polling
+        }
+        pollTimerRef.current = setTimeout(() => void poll(), 5000);
+      };
+      void poll();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Không thể tạo thanh toán');
       setErrorDismissed(false);
@@ -327,6 +387,14 @@ const StudentWallet: React.FC = () => {
     if (selectedMethod !== 'payos') {
       setError('Phương thức này đang được phát triển. Vui lòng sử dụng PayOS.');
       setErrorDismissed(false);
+      return;
+    }
+    // Warn if a PENDING transaction already exists
+    const hasPending = transactions.some(
+      (tx) => tx.status === 'PENDING' || tx.status === 'PROCESSING'
+    );
+    if (hasPending) {
+      setShowPendingWarning(true);
       return;
     }
     setShowConfirmModal(true);
@@ -415,14 +483,14 @@ const StudentWallet: React.FC = () => {
             <div className="wallet-stat-item">
               <span className="wallet-stat-label">Tổng đã nạp</span>
               <span className="wallet-stat-value wallet-stat-value--green">
-                {transactionsLoading ? '—' : `${formatCurrency(totalDeposit)} ₫`}
+                {walletLoading ? '—' : `${formatCurrency(totalDeposit)} ₫`}
               </span>
             </div>
             <div className="wallet-stat-divider" />
             <div className="wallet-stat-item">
               <span className="wallet-stat-label">Số giao dịch</span>
               <span className="wallet-stat-value">
-                {transactionsLoading ? '—' : transactions.length}
+                {walletLoading ? '—' : (wallet?.transactionCount ?? transactions.length)}
               </span>
             </div>
           </div>
@@ -833,7 +901,7 @@ const StudentWallet: React.FC = () => {
                   const { day, time } = formatDate(tx.transactionDate ?? tx.createdAt);
 
                   return (
-                    <div key={String(tx.transactionId ?? tx.id ?? tx.orderCode)} className="tx-row">
+                    <div key={String(tx.transactionId ?? tx.orderCode)} className="tx-row">
                       <div className={`tx-icon-wrap ${type}`}>
                         {type === 'deposit' ? (
                           <ArrowUpRight size={18} />
@@ -871,6 +939,9 @@ const StudentWallet: React.FC = () => {
                               ? 'Đang chờ'
                               : 'Thất bại'}
                         </span>
+                        {status === 'pending' && tx.expiresAt && (
+                          <TxCountdown expiresAt={tx.expiresAt} />
+                        )}
                       </div>
                     </div>
                   );
@@ -911,6 +982,49 @@ const StudentWallet: React.FC = () => {
           </section>
         </div>
       </DashboardLayout>
+
+      {/* ── Pending Transaction Warning ── */}
+      {showPendingWarning && (
+        <div className="sw-modal-overlay" onClick={() => setShowPendingWarning(false)}>
+          <div className="sw-confirm-modal sw-pending-warning" onClick={(e) => e.stopPropagation()}>
+            <button
+              className="sw-modal-close"
+              onClick={() => setShowPendingWarning(false)}
+              aria-label="Đóng"
+            >
+              <X size={16} />
+            </button>
+
+            <div className="sw-pw-icon" aria-hidden="true">
+              ⚠️
+            </div>
+            <h3 className="sw-pw-title">Có giao dịch đang chờ thanh toán</h3>
+            <p className="sw-pw-body">
+              Bạn đang có <strong>1 giao dịch PayOS chưa hoàn thành</strong>. Giao dịch cũ sẽ tự
+              động bị hủy sau 15 phút nếu chưa thanh toán.
+            </p>
+            <p className="sw-pw-body">Bạn có chắc muốn tạo thêm một giao dịch mới không?</p>
+
+            <div className="sw-modal-actions">
+              <button
+                className="sw-modal-btn sw-modal-btn--cancel"
+                onClick={() => setShowPendingWarning(false)}
+              >
+                Quay lại
+              </button>
+              <button
+                className="sw-modal-btn sw-modal-btn--confirm"
+                onClick={() => {
+                  setShowPendingWarning(false);
+                  setShowConfirmModal(true);
+                }}
+              >
+                Tạo giao dịch mới
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Confirmation Bill Modal ── */}
       {showConfirmModal && (

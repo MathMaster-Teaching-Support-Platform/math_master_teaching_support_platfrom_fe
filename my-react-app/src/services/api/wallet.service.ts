@@ -1,12 +1,13 @@
 import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
-import { AuthService } from './auth.service';
 import type {
   ApiResponse,
   DepositRequest,
   DepositResponse,
   WalletSummary,
+  WalletTransaction,
   WalletTransactionPage,
 } from '../../types/wallet.types';
+import { AuthService } from './auth.service';
 
 export class WalletService {
   private static readonly WALLET_BASE_URL = API_BASE_URL;
@@ -118,6 +119,23 @@ export class WalletService {
 
     if (!response.ok) {
       return this.parseError(response, 'Failed to create deposit request');
+    }
+
+    return response.json();
+  }
+
+  static async getOrderStatus(orderCode: number): Promise<ApiResponse<WalletTransaction>> {
+    const headers = await this.getHeaders(false);
+    const response = await fetch(
+      `${this.WALLET_BASE_URL}${API_ENDPOINTS.PAYMENT_ORDER_STATUS(orderCode)}`,
+      {
+        method: 'GET',
+        headers,
+      }
+    );
+
+    if (!response.ok) {
+      return this.parseError(response, 'Failed to fetch order status');
     }
 
     return response.json();
