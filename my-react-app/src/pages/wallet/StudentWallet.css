@@ -281,8 +281,46 @@
 .balance-card-tpl-picker {
   display: flex;
   align-items: center;
-  gap: 0.55rem;
-  padding: 0 0.1rem 0.6rem;
+  gap: 0.4rem;
+  padding: 0.4rem 0.6rem;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  margin-bottom: 0.55rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  min-width: 0;
+  overflow: hidden;
+}
+.bc-tpl-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #64748b;
+  white-space: nowrap;
+  margin-right: 0.15rem;
+}
+.bc-tpl-choose-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-left: auto;
+  padding: 0.25rem 0.6rem;
+  border-radius: 8px;
+  border: 1.5px solid #6366f1;
+  background: #6366f1;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    transform 0.12s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.bc-tpl-choose-btn:hover {
+  background: #4f46e5;
+  transform: translateY(-1px);
 }
 
 /* Perspective + tilt wrapper */
@@ -2225,4 +2263,239 @@
   align-items: center;
   justify-content: center;
   box-shadow: 0 2px 6px rgba(99, 102, 241, 0.5);
+}
+
+/* ── Template Category Tabs ──────────────────────────────── */
+.bc-tpl-cat-tabs {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0 1.25rem 0.75rem;
+  flex-wrap: wrap;
+}
+.bc-tpl-cat-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 20px;
+  border: 1.5px solid #e2e8f0;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+  white-space: nowrap;
+}
+.bc-tpl-cat-tab:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #1e293b;
+}
+.bc-tpl-cat-tab.active {
+  background: #6366f1;
+  border-color: #6366f1;
+  color: #fff;
+}
+.bc-tpl-cat-count {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 10px;
+  padding: 0.05rem 0.35rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+.bc-tpl-cat-tab:not(.active) .bc-tpl-cat-count {
+  background: #e2e8f0;
+  color: #64748b;
+}
+
+/* ── Template category badge on card ────────────────────── */
+.bc-tpl-card-cat-badge {
+  position: absolute;
+  top: 0.35rem;
+  left: 0.35rem;
+  background: rgba(0, 0, 0, 0.45);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.55rem;
+  font-weight: 700;
+  padding: 0.1rem 0.35rem;
+  border-radius: 6px;
+  letter-spacing: 0.03em;
+  z-index: 1;
+  backdrop-filter: blur(4px);
+}
+
+/* ── Preview Pane ────────────────────────────────────────── */
+.bc-tpl-preview-pane {
+  padding: 0 1.25rem 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+  margin-bottom: 0.25rem;
+}
+.bc-tpl-preview-label {
+  font-size: 0.78rem;
+  color: #64748b;
+  margin-bottom: 0.6rem;
+}
+.bc-tpl-preview-label strong {
+  color: #1e293b;
+}
+.bc-tpl-preview-faces {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+.bc-tpl-preview-face-wrap {
+  flex: 1;
+  min-width: 0;
+  max-width: 260px;
+}
+.bc-tpl-face-hint {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #94a3b8;
+  text-align: center;
+  margin-bottom: 0.3rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* Mini card preview */
+.bc-tpl-preview-card {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1.586 / 1;
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 0.55rem 0.7rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.28);
+}
+.bc-tpl-pcard-chip {
+  width: 22px;
+  height: 16px;
+  border-radius: 3px;
+  background: linear-gradient(135deg, #f0d080 0%, #c8a840 50%, #f0d080 100%);
+  border: 0.5px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+.bc-tpl-pcard-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+.bc-tpl-pcard-label {
+  font-size: 0.5rem;
+  color: rgba(255, 255, 255, 0.6);
+  letter-spacing: 0.04em;
+  margin-bottom: 0.1rem;
+}
+.bc-tpl-pcard-balance {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: 0.02em;
+}
+.bc-tpl-pcard-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+.bc-tpl-pcard-num {
+  font-size: 0.55rem;
+  color: rgba(255, 255, 255, 0.65);
+  font-family: monospace;
+  letter-spacing: 0.08em;
+}
+.bc-tpl-pcard-brand {
+  font-size: 0.52rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 0.06em;
+}
+
+/* Back face extras */
+.bc-tpl-preview-card--back {
+  justify-content: flex-start;
+}
+.bc-tpl-pcard-stripe {
+  width: calc(100% + 1.4rem);
+  height: 22px;
+  background: rgba(0, 0, 0, 0.55);
+  margin: -0.55rem -0.7rem 0.5rem;
+}
+.bc-tpl-pcard-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1;
+}
+.bc-tpl-pcard-stat {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.52rem;
+  color: rgba(255, 255, 255, 0.65);
+}
+.bc-tpl-pcard-stat span:last-child {
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 600;
+}
+.bc-tpl-pcard-back-footer {
+  font-size: 0.5rem;
+  color: rgba(255, 255, 255, 0.55);
+  text-align: right;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}
+
+/* Preview action buttons */
+.bc-tpl-preview-actions {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+}
+.bc-tpl-preview-cancel {
+  flex: 1;
+  padding: 0.5rem;
+  border-radius: 10px;
+  border: 1.5px solid #e2e8f0;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.bc-tpl-preview-cancel:hover {
+  background: #f1f5f9;
+}
+.bc-tpl-preview-apply {
+  flex: 2;
+  padding: 0.5rem;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(99, 102, 241, 0.35);
+  transition:
+    opacity 0.15s,
+    transform 0.15s;
+}
+.bc-tpl-preview-apply:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+
+/* Modal grid padding fix */
+.bc-tpl-modal-grid {
+  padding: 0.5rem 1.25rem 1.25rem;
 }

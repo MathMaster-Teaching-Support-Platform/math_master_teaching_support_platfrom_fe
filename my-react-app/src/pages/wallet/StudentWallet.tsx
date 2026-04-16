@@ -1821,7 +1821,1222 @@ const BALANCE_CARD_TEMPLATES: CardTemplate[] = [
       </svg>
     ),
   },
+  /* 20 ── Tre Xanh (Bamboo) */
+  {
+    id: 20,
+    label: 'Tre Xanh',
+    gradient: 'linear-gradient(145deg,#011c0a 0%,#04380e 35%,#075c1a 65%,#0a7c22 100%)',
+    swatch: '#075c1a',
+    patternEl: (
+      <svg
+        className="cp-pattern"
+        viewBox="0 0 380 220"
+        preserveAspectRatio="xMidYMid slice"
+        aria-hidden="true"
+      >
+        {[40, 90, 140, 190, 240, 290, 340].map((x, i) => (
+          <g key={i}>
+            <line
+              x1={x}
+              y1="0"
+              x2={x}
+              y2="220"
+              stroke="rgba(134,239,172,0.10)"
+              strokeWidth={i % 2 === 0 ? 1.8 : 1.2}
+            />
+            {[30, 65, 100, 135, 170].map((y, j) => (
+              <line
+                key={j}
+                x1={x - 8}
+                y1={y}
+                x2={x + 8}
+                y2={y}
+                stroke="rgba(134,239,172,0.14)"
+                strokeWidth="1.2"
+              />
+            ))}
+          </g>
+        ))}
+        <path
+          d="M0,160 C60,130 120,180 180,150 C240,120 300,170 380,140"
+          stroke="rgba(134,239,172,0.06)"
+          strokeWidth="1"
+          fill="none"
+        />
+      </svg>
+    ),
+  },
+  /* 21 ── Hoa Anh Đào (Cherry Blossom) */
+  {
+    id: 21,
+    label: 'Hoa Anh Đào',
+    gradient: 'linear-gradient(145deg,#1a0020 0%,#3d0040 30%,#6b006b 60%,#c0208a 100%)',
+    swatch: '#6b006b',
+    patternEl: (
+      <svg
+        className="cp-pattern"
+        viewBox="0 0 380 220"
+        preserveAspectRatio="xMidYMid slice"
+        aria-hidden="true"
+      >
+        <path
+          d="M60,220 C80,160 70,100 90,40"
+          stroke="rgba(255,180,220,0.12)"
+          strokeWidth="1.5"
+          fill="none"
+        />
+        <path
+          d="M90,40 C110,10 150,20 140,60"
+          stroke="rgba(255,180,220,0.12)"
+          strokeWidth="1.5"
+          fill="none"
+        />
+        <path
+          d="M90,40 C70,20 50,35 60,70"
+          stroke="rgba(255,180,220,0.10)"
+          strokeWidth="1.2"
+          fill="none"
+        />
+        <path
+          d="M90,40 C100,55 130,50 120,80"
+          stroke="rgba(255,180,220,0.08)"
+          strokeWidth="1"
+          fill="none"
+        />
+        {[
+          [110, 28],
+          [68, 58],
+          [145, 55],
+          [88, 82],
+          [125, 100],
+          [55, 110],
+          [165, 75],
+          [100, 130],
+          [145, 150],
+          [70, 165],
+          [195, 110],
+          [170, 170],
+        ].map(([cx, cy], i) => (
+          <g key={i}>
+            <circle cx={cx} cy={cy} r="4.5" fill="rgba(255,150,200,0.18)" />
+            <circle cx={cx} cy={cy} r="2" fill="rgba(255,180,220,0.40)" />
+            <line
+              x1={cx - 5}
+              y1={cy}
+              x2={cx + 5}
+              y2={cy}
+              stroke="rgba(255,200,230,0.25)"
+              strokeWidth="0.6"
+            />
+            <line
+              x1={cx}
+              y1={cy - 5}
+              x2={cx}
+              y2={cy + 5}
+              stroke="rgba(255,200,230,0.25)"
+              strokeWidth="0.6"
+            />
+          </g>
+        ))}
+        <circle
+          cx="320"
+          cy="40"
+          r="30"
+          stroke="rgba(255,200,230,0.12)"
+          strokeWidth="1"
+          fill="rgba(255,200,230,0.04)"
+        />
+      </svg>
+    ),
+  },
+  /* 22 ── Núi Non (Mountain) */
+  {
+    id: 22,
+    label: 'Núi Non',
+    gradient: 'linear-gradient(180deg,#050a1a 0%,#0d1f40 40%,#1a3060 70%,#1e4070 100%)',
+    swatch: '#1a3060',
+    patternEl: (
+      <svg
+        className="cp-pattern"
+        viewBox="0 0 380 220"
+        preserveAspectRatio="xMidYMid slice"
+        aria-hidden="true"
+      >
+        <polygon points="0,220 80,80 160,220" fill="rgba(100,150,220,0.06)" />
+        <polygon points="80,220 200,40 320,220" fill="rgba(120,170,240,0.08)" />
+        <polygon points="200,220 300,90 380,150 380,220" fill="rgba(80,130,200,0.06)" />
+        <polygon
+          points="0,220 80,80 160,220"
+          stroke="rgba(150,200,255,0.10)"
+          strokeWidth="1"
+          fill="none"
+        />
+        <polygon
+          points="80,220 200,40 320,220"
+          stroke="rgba(150,200,255,0.12)"
+          strokeWidth="1"
+          fill="none"
+        />
+        <polygon
+          points="200,220 300,90 380,150 380,220"
+          stroke="rgba(150,200,255,0.08)"
+          strokeWidth="1"
+          fill="none"
+        />
+        <path
+          d="M180,50 L200,40 L220,50"
+          stroke="rgba(255,255,255,0.20)"
+          strokeWidth="1.5"
+          fill="rgba(255,255,255,0.06)"
+        />
+        {[
+          [30, 25],
+          [290, 18],
+          [350, 35],
+          [15, 60],
+          [360, 70],
+        ].map(([cx, cy], i) => (
+          <circle
+            key={i}
+            cx={cx}
+            cy={cy}
+            r={i % 2 === 0 ? 1.5 : 1}
+            fill={`rgba(200,230,255,${i % 2 === 0 ? 0.55 : 0.35})`}
+          />
+        ))}
+      </svg>
+    ),
+  },
+  /* 23 ── Lá Phong (Maple) */
+  {
+    id: 23,
+    label: 'Lá Phong',
+    gradient: 'linear-gradient(145deg,#1a0500 0%,#5c1200 30%,#a02800 60%,#d84010 100%)',
+    swatch: '#a02800',
+    patternEl: (
+      <svg
+        className="cp-pattern"
+        viewBox="0 0 380 220"
+        preserveAspectRatio="xMidYMid slice"
+        aria-hidden="true"
+      >
+        <path
+          d="M190,30 L200,55 L225,50 L210,70 L230,75 L205,85 L215,110 L190,95 L165,110 L175,85 L150,75 L170,70 L155,50 L180,55 Z"
+          stroke="rgba(255,160,60,0.22)"
+          strokeWidth="1.2"
+          fill="rgba(255,160,60,0.06)"
+        />
+        <line
+          x1="190"
+          y1="110"
+          x2="190"
+          y2="135"
+          stroke="rgba(255,160,60,0.18)"
+          strokeWidth="1.5"
+        />
+        {[
+          [80, 60, 18],
+          [310, 80, 14],
+          [50, 150, 12],
+          [340, 170, 16],
+          [130, 180, 10],
+          [270, 130, 13],
+        ].map(([cx, cy, s], i) => (
+          <g
+            key={i}
+            transform={`translate(${cx},${cy}) scale(${(s as number) / 22}) rotate(${i * 30 - 30})`}
+          >
+            <path
+              d="M0,-8 L2,0 L6,-1 L3,4 L6,5 L1,7 L2,14 L0,10 L-2,14 L-1,7 L-6,5 L-3,4 L-6,-1 L-2,0 Z"
+              stroke="rgba(255,140,40,0.18)"
+              strokeWidth="0.8"
+              fill="rgba(255,140,40,0.08)"
+            />
+          </g>
+        ))}
+        <path
+          d="M-20,180 C80,160 200,200 380,170"
+          stroke="rgba(255,160,60,0.07)"
+          strokeWidth="1"
+          fill="none"
+        />
+      </svg>
+    ),
+  },
+  /* 24 ── Biển Cả (Deep Sea) */
+  {
+    id: 24,
+    label: 'Biển Cả',
+    gradient: 'linear-gradient(180deg,#020e1a 0%,#031e38 40%,#05305a 70%,#074878 100%)',
+    swatch: '#05305a',
+    patternEl: (
+      <svg
+        className="cp-pattern"
+        viewBox="0 0 380 220"
+        preserveAspectRatio="xMidYMid slice"
+        aria-hidden="true"
+      >
+        {[60, 90, 115, 140, 165, 190].map((y, i) => (
+          <path
+            key={i}
+            d={`M-20,${y} Q${95},${y - 18 + i * 2} ${190},${y} Q${285},${y + 18 - i * 2} ${400},${y}`}
+            stroke={`rgba(0,200,255,${0.1 - i * 0.012})`}
+            strokeWidth={i === 0 ? 1.8 : 1.2}
+            fill="none"
+          />
+        ))}
+        <ellipse
+          cx="60"
+          cy="45"
+          rx="50"
+          ry="15"
+          fill="rgba(0,180,255,0.06)"
+          transform="rotate(-10,60,45)"
+        />
+        <ellipse
+          cx="310"
+          cy="35"
+          rx="40"
+          ry="12"
+          fill="rgba(0,180,255,0.05)"
+          transform="rotate(8,310,35)"
+        />
+        {[
+          [18, 185],
+          [55, 198],
+          [150, 190],
+          [240, 195],
+          [330, 185],
+          [365, 192],
+        ].map(([x, y], i) => (
+          <circle key={i} cx={x} cy={y} r={i % 2 === 0 ? 1.5 : 0.8} fill="rgba(100,220,255,0.35)" />
+        ))}
+      </svg>
+    ),
+  },
+  /* 25 ── Rồng (Dragon) */
+  {
+    id: 25,
+    label: 'Rồng',
+    gradient: 'linear-gradient(145deg,#0e0020 0%,#220040 30%,#4a1070 60%,#8a20c0 100%)',
+    swatch: '#4a1070',
+    patternEl: (
+      <svg
+        className="cp-pattern"
+        viewBox="0 0 380 220"
+        preserveAspectRatio="xMidYMid slice"
+        aria-hidden="true"
+      >
+        <path
+          d="M20,180 C60,140 100,160 140,110 C180,60 200,80 240,50 C280,20 310,40 340,20 C360,8 375,15 380,10"
+          stroke="rgba(200,120,255,0.18)"
+          strokeWidth="2.5"
+          fill="none"
+          strokeLinecap="round"
+        />
+        <path
+          d="M20,190 C65,148 105,168 145,118 C185,68 205,88 245,58 C285,28 315,48 345,28"
+          stroke="rgba(200,120,255,0.10)"
+          strokeWidth="1.5"
+          fill="none"
+        />
+        {[
+          [140, 110],
+          [200, 78],
+          [260, 48],
+          [320, 24],
+        ].map(([cx, cy], i) => (
+          <polygon
+            key={i}
+            points={`${cx},${cy - 8} ${cx + 7},${cy + 4} ${cx - 7},${cy + 4}`}
+            fill={`rgba(255,200,80,${0.3 - i * 0.04})`}
+          />
+        ))}
+        {[
+          [60, 30],
+          [20, 60],
+          [340, 180],
+          [370, 140],
+          [350, 160],
+        ].map(([cx, cy], i) => (
+          <circle
+            key={i}
+            cx={cx}
+            cy={cy}
+            r={i % 2 === 0 ? 1.8 : 1.2}
+            fill={`rgba(255,200,80,${i % 2 === 0 ? 0.6 : 0.4})`}
+          />
+        ))}
+        <path
+          d="M310,160 C330,140 350,150 360,130 C370,115 360,105 355,100"
+          stroke="rgba(255,200,80,0.14)"
+          strokeWidth="1.2"
+          fill="none"
+        />
+        <ellipse
+          cx="50"
+          cy="170"
+          rx="80"
+          ry="25"
+          fill="rgba(140,60,220,0.08)"
+          transform="rotate(-8,50,170)"
+        />
+      </svg>
+    ),
+  },
+  /* 26 ── Hổ (Tiger) */
+  {
+    id: 26,
+    label: 'Hổ',
+    gradient: 'linear-gradient(145deg,#1a0a00 0%,#4a2000 30%,#8a4000 60%,#d06000 100%)',
+    swatch: '#8a4000',
+    patternEl: (
+      <svg
+        className="cp-pattern"
+        viewBox="0 0 380 220"
+        preserveAspectRatio="xMidYMid slice"
+        aria-hidden="true"
+      >
+        {[
+          [-20, 0, 60, 220],
+          [20, 0, 100, 220],
+          [60, 0, 140, 220],
+          [100, 0, 180, 220],
+          [140, 0, 220, 220],
+          [200, 0, 280, 220],
+          [260, 0, 340, 220],
+          [310, 0, 390, 220],
+        ].map(([x1, y1, x2, y2], i) => (
+          <line
+            key={i}
+            x1={x1}
+            y1={y1}
+            x2={x2}
+            y2={y2}
+            stroke="rgba(20,10,0,0.18)"
+            strokeWidth={i % 3 === 0 ? 5 : 3}
+          />
+        ))}
+        <path
+          d="M0,80 C80,60 160,100 240,70 C310,45 360,80 380,60"
+          stroke="rgba(255,180,60,0.10)"
+          strokeWidth="1.5"
+          fill="none"
+        />
+        <path
+          d="M0,130 C80,110 160,150 240,120 C310,95 360,130 380,110"
+          stroke="rgba(255,180,60,0.08)"
+          strokeWidth="1.2"
+          fill="none"
+        />
+        <circle
+          cx="340"
+          cy="40"
+          r="45"
+          stroke="rgba(255,180,60,0.10)"
+          strokeWidth="1"
+          fill="none"
+        />
+        <path
+          d="M310,18 L322,8 L318,20 L332,16 L320,25"
+          stroke="rgba(255,200,80,0.20)"
+          strokeWidth="1.2"
+          fill="none"
+        />
+      </svg>
+    ),
+  },
+  /* 27 ── Rắn (Snake) */
+  {
+    id: 27,
+    label: 'Rắn',
+    gradient: 'linear-gradient(145deg,#001a06 0%,#003a10 35%,#005a1a 65%,#007a24 100%)',
+    swatch: '#005a1a',
+    patternEl: (
+      <svg
+        className="cp-pattern"
+        viewBox="0 0 380 220"
+        preserveAspectRatio="xMidYMid slice"
+        aria-hidden="true"
+      >
+        <path
+          d="M30,20 C80,20 120,60 120,100 C120,140 80,160 80,190 C80,215 100,220 120,220"
+          stroke="rgba(100,255,150,0.18)"
+          strokeWidth="3"
+          fill="none"
+          strokeLinecap="round"
+        />
+        <path
+          d="M40,20 C90,20 130,60 130,100 C130,140 90,160 90,190"
+          stroke="rgba(100,255,150,0.10)"
+          strokeWidth="1.5"
+          fill="none"
+          strokeLinecap="round"
+        />
+        {[
+          [50, 70],
+          [85, 110],
+          [78, 150],
+          [92, 175],
+        ].map(([cx, cy], i) => (
+          <ellipse
+            key={i}
+            cx={cx}
+            cy={cy}
+            rx="12"
+            ry="7"
+            stroke="rgba(100,255,150,0.15)"
+            strokeWidth="0.8"
+            fill="none"
+            transform={`rotate(${70 + i * 10},${cx},${cy})`}
+          />
+        ))}
+        {[240, 270, 300, 330, 360].map((x, i) =>
+          [30, 60, 90, 120, 150, 180].map((y, j) => (
+            <path
+              key={`${i}-${j}`}
+              d={`M${x},${y} L${x + 15},${y + 10} L${x},${y + 20} L${x - 15},${y + 10} Z`}
+              stroke="rgba(100,255,150,0.08)"
+              strokeWidth="0.7"
+              fill="none"
+            />
+          ))
+        )}
+        <circle cx="30" cy="20" r="6" fill="rgba(100,255,150,0.30)" />
+        <circle cx="28" cy="17" r="2" fill="rgba(0,0,0,0.60)" />
+        <path
+          d="M30,25 C25,30 20,28 18,32 M30,25 C35,30 40,28 42,32"
+          stroke="rgba(100,255,150,0.35)"
+          strokeWidth="1"
+        />
+      </svg>
+    ),
+  },
+  /* 28 ── Trâu (Buffalo) */
+  {
+    id: 28,
+    label: 'Trâu',
+    gradient: 'linear-gradient(145deg,#0e0800 0%,#2e1a00 35%,#503000 65%,#704800 100%)',
+    swatch: '#503000',
+    patternEl: (
+      <svg
+        className="cp-pattern"
+        viewBox="0 0 380 220"
+        preserveAspectRatio="xMidYMid slice"
+        aria-hidden="true"
+      >
+        <path
+          d="M120,80 C80,40 20,50 10,90 C0,130 40,140 80,120"
+          stroke="rgba(200,160,80,0.20)"
+          strokeWidth="2"
+          fill="none"
+          strokeLinecap="round"
+        />
+        <path
+          d="M260,80 C300,40 360,50 370,90 C380,130 340,140 300,120"
+          stroke="rgba(200,160,80,0.20)"
+          strokeWidth="2"
+          fill="none"
+          strokeLinecap="round"
+        />
+        <ellipse
+          cx="190"
+          cy="110"
+          rx="70"
+          ry="50"
+          stroke="rgba(200,160,80,0.12)"
+          strokeWidth="1.2"
+          fill="rgba(200,160,80,0.04)"
+        />
+        {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+          <line
+            key={i}
+            x1="0"
+            y1={160 + i * 8}
+            x2="380"
+            y2={160 + i * 8}
+            stroke="rgba(180,140,60,0.06)"
+            strokeWidth="0.8"
+          />
+        ))}
+        {[
+          [30, 175],
+          [80, 180],
+          [130, 172],
+          [180, 178],
+          [230, 174],
+          [280, 180],
+          [330, 175],
+          [370, 172],
+        ].map(([cx, cy], i) => (
+          <path
+            key={i}
+            d={`M${cx},${cy} C${cx - 4},${cy - 6} ${cx},${cy - 8} ${cx + 4},${cy - 6}`}
+            stroke="rgba(100,180,60,0.15)"
+            strokeWidth="1"
+            fill="none"
+          />
+        ))}
+        <circle
+          cx="190"
+          cy="110"
+          r="15"
+          stroke="rgba(200,160,80,0.18)"
+          strokeWidth="1"
+          fill="none"
+        />
+      </svg>
+    ),
+  },
+  /* 29 ── Mèo (Cat) */
+  {
+    id: 29,
+    label: 'Mèo',
+    gradient: 'linear-gradient(145deg,#020614 0%,#0b1030 35%,#181a50 65%,#28286a 100%)',
+    swatch: '#181a50',
+    patternEl: (
+      <svg
+        className="cp-pattern"
+        viewBox="0 0 380 220"
+        preserveAspectRatio="xMidYMid slice"
+        aria-hidden="true"
+      >
+        <path
+          d="M280,60 A40,40 0 1,1 280,60.01"
+          stroke="rgba(220,220,100,0.18)"
+          strokeWidth="1.5"
+          fill="rgba(220,220,80,0.05)"
+        />
+        <path
+          d="M260,60 A20,20 0 1,1 260,60.01"
+          stroke="rgba(220,220,100,0.25)"
+          strokeWidth="1"
+          fill="rgba(220,220,80,0.08)"
+        />
+        <path d="M240,35 L255,58 L225,58 Z" fill="rgba(220,220,80,0.18)" />
+        <path d="M280,35 L295,58 L265,58 Z" fill="rgba(220,220,80,0.15)" />
+        <ellipse
+          cx="260"
+          cy="100"
+          rx="25"
+          ry="20"
+          stroke="rgba(200,200,255,0.10)"
+          strokeWidth="1"
+          fill="none"
+        />
+        <line
+          x1="235"
+          y1="100"
+          x2="200"
+          y2="95"
+          stroke="rgba(200,200,255,0.15)"
+          strokeWidth="0.8"
+        />
+        <line
+          x1="235"
+          y1="103"
+          x2="198"
+          y2="105"
+          stroke="rgba(200,200,255,0.12)"
+          strokeWidth="0.8"
+        />
+        <line
+          x1="235"
+          y1="106"
+          x2="200"
+          y2="112"
+          stroke="rgba(200,200,255,0.10)"
+          strokeWidth="0.8"
+        />
+        <line
+          x1="285"
+          y1="100"
+          x2="320"
+          y2="95"
+          stroke="rgba(200,200,255,0.15)"
+          strokeWidth="0.8"
+        />
+        <line
+          x1="285"
+          y1="103"
+          x2="322"
+          y2="105"
+          stroke="rgba(200,200,255,0.12)"
+          strokeWidth="0.8"
+        />
+        <line
+          x1="285"
+          y1="106"
+          x2="320"
+          y2="112"
+          stroke="rgba(200,200,255,0.10)"
+          strokeWidth="0.8"
+        />
+        {[
+          [30, 40],
+          [80, 20],
+          [150, 35],
+          [50, 120],
+          [120, 140],
+          [180, 100],
+          [30, 175],
+          [100, 180],
+          [160, 165],
+        ].map(([cx, cy], i) => (
+          <circle
+            key={i}
+            cx={cx}
+            cy={cy}
+            r={i % 3 === 0 ? 1.5 : 0.9}
+            fill={`rgba(200,200,255,${i % 3 === 0 ? 0.5 : 0.3})`}
+          />
+        ))}
+      </svg>
+    ),
+  },
+  /* 30 ── Ngựa (Horse) */
+  {
+    id: 30,
+    label: 'Ngựa',
+    gradient: 'linear-gradient(145deg,#150800 0%,#3a1800 35%,#6a3000 65%,#a05010 100%)',
+    swatch: '#6a3000',
+    patternEl: (
+      <svg
+        className="cp-pattern"
+        viewBox="0 0 380 220"
+        preserveAspectRatio="xMidYMid slice"
+        aria-hidden="true"
+      >
+        <path
+          d="M180,10 C160,30 130,40 120,70 C115,90 130,100 140,90 C145,85 148,75 160,70 C175,65 185,80 180,95 C170,120 150,130 155,160"
+          stroke="rgba(255,200,120,0.18)"
+          strokeWidth="2"
+          fill="none"
+          strokeLinecap="round"
+        />
+        <path
+          d="M130,15 C155,10 180,10 190,8"
+          stroke="rgba(255,200,120,0.22)"
+          strokeWidth="3"
+          fill="none"
+          strokeLinecap="round"
+        />
+        <path
+          d="M135,20 C158,12 185,12 195,10"
+          stroke="rgba(255,180,80,0.18)"
+          strokeWidth="2"
+          fill="none"
+          strokeLinecap="round"
+        />
+        <path
+          d="M140,25 C162,15 188,14 198,12"
+          stroke="rgba(255,160,60,0.14)"
+          strokeWidth="1.5"
+          fill="none"
+          strokeLinecap="round"
+        />
+        {[0, 1, 2, 3].map((i) => (
+          <ellipse
+            key={i}
+            cx={160 + i * 4}
+            cy={160 + i * 12}
+            rx="8"
+            ry="14"
+            stroke="rgba(255,200,120,0.12)"
+            strokeWidth="1"
+            fill="none"
+          />
+        ))}
+        <path
+          d="M-20,200 C80,185 180,200 380,190"
+          stroke="rgba(150,100,30,0.12)"
+          strokeWidth="1.5"
+          fill="none"
+        />
+        {[
+          [320, 30],
+          [350, 60],
+          [370, 25],
+          [300, 55],
+        ].map(([cx, cy], i) => (
+          <circle key={i} cx={cx} cy={cy} r={1.5} fill="rgba(255,200,120,0.35)" />
+        ))}
+      </svg>
+    ),
+  },
+  /* 31 ── Anh Đào Đêm (Night Sakura) */
+  {
+    id: 31,
+    label: 'Anh Đào Đêm',
+    gradient: 'linear-gradient(145deg,#020010 0%,#0a0028 35%,#180040 65%,#2a0060 100%)',
+    swatch: '#180040',
+    patternEl: (
+      <svg
+        className="cp-pattern"
+        viewBox="0 0 380 220"
+        preserveAspectRatio="xMidYMid slice"
+        aria-hidden="true"
+      >
+        <circle
+          cx="310"
+          cy="55"
+          r="32"
+          fill="rgba(255,240,180,0.08)"
+          stroke="rgba(255,240,180,0.16)"
+          strokeWidth="1"
+        />
+        <circle cx="310" cy="55" r="25" fill="rgba(255,240,180,0.05)" />
+        <path
+          d="M50,220 C70,160 65,90 80,30"
+          stroke="rgba(200,100,150,0.15)"
+          strokeWidth="1.5"
+          fill="none"
+        />
+        <path
+          d="M80,30 C100,-5 140,8 135,50"
+          stroke="rgba(200,100,150,0.12)"
+          strokeWidth="1.5"
+          fill="none"
+        />
+        <path
+          d="M80,30 C58,10 38,28 45,65"
+          stroke="rgba(200,100,150,0.10)"
+          strokeWidth="1.2"
+          fill="none"
+        />
+        <path
+          d="M80,30 C95,48 128,42 118,75"
+          stroke="rgba(200,100,150,0.08)"
+          strokeWidth="1"
+          fill="none"
+        />
+        {[
+          [105, 22],
+          [62, 52],
+          [138, 48],
+          [82, 76],
+          [120, 92],
+          [50, 100],
+          [158, 68],
+          [95, 122],
+          [138, 143],
+          [65, 158],
+          [188, 102],
+          [165, 163],
+          [228, 140],
+        ].map(([cx, cy], i) => (
+          <g key={i}>
+            {[0, 72, 144, 216, 288].map((deg, j) => (
+              <ellipse
+                key={j}
+                cx={cx + 6 * Math.cos((deg * Math.PI) / 180)}
+                cy={cy + 6 * Math.sin((deg * Math.PI) / 180)}
+                rx="3.5"
+                ry="2"
+                fill={`rgba(255,160,200,${0.18 - j * 0.01})`}
+                transform={`rotate(${deg},${cx + 6 * Math.cos((deg * Math.PI) / 180)},${cy + 6 * Math.sin((deg * Math.PI) / 180)})`}
+              />
+            ))}
+            <circle cx={cx} cy={cy} r="1.5" fill="rgba(255,220,240,0.50)" />
+          </g>
+        ))}
+        {[
+          [190, 30],
+          [240, 50],
+          [270, 25],
+          [350, 80],
+          [30, 30],
+          [15, 80],
+        ].map(([cx, cy], i) => (
+          <circle
+            key={i}
+            cx={cx}
+            cy={cy}
+            r={i % 2 === 0 ? 1.2 : 0.8}
+            fill={`rgba(255,240,255,${i % 2 === 0 ? 0.55 : 0.35})`}
+          />
+        ))}
+      </svg>
+    ),
+  },
+  /* 32 ── Neon City (Cyberpunk) */
+  {
+    id: 32,
+    label: 'Neon City',
+    gradient: 'linear-gradient(145deg,#000510 0%,#000d20 40%,#011028 70%,#011535 100%)',
+    swatch: '#011028',
+    patternEl: (
+      <svg
+        className="cp-pattern"
+        viewBox="0 0 380 220"
+        preserveAspectRatio="xMidYMid slice"
+        aria-hidden="true"
+      >
+        {[30, 55, 80, 105, 150, 175, 200, 240, 270, 300, 330, 360].map((x, i) => (
+          <rect
+            key={i}
+            x={x}
+            y={140 - (i % 3) * 20}
+            width={i % 3 === 0 ? 18 : i % 3 === 1 ? 14 : 10}
+            height={80 + (i % 3) * 20}
+            stroke="rgba(0,220,255,0.08)"
+            strokeWidth="0.8"
+            fill="rgba(0,180,220,0.03)"
+          />
+        ))}
+        {[
+          [0, 130],
+          [60, 125],
+          [140, 128],
+          [220, 130],
+          [300, 125],
+          [380, 128],
+        ].map(([x, y], i) => (
+          <rect
+            key={i}
+            x={x}
+            y={y}
+            width={60}
+            height={2}
+            fill={`rgba(0,220,255,${0.2 - i * 0.02})`}
+          />
+        ))}
+        <line x1="0" y1="128" x2="380" y2="128" stroke="rgba(0,255,200,0.12)" strokeWidth="1" />
+        <line x1="0" y1="135" x2="380" y2="135" stroke="rgba(0,200,255,0.08)" strokeWidth="0.6" />
+        <path
+          d="M-20,50 C60,30 140,70 220,40 C300,10 360,50 420,30"
+          stroke="rgba(255,0,200,0.12)"
+          strokeWidth="1.5"
+          fill="none"
+        />
+        {[
+          [20, 25],
+          [100, 18],
+          [200, 30],
+          [320, 15],
+          [370, 28],
+        ].map(([cx, cy], i) => (
+          <circle
+            key={i}
+            cx={cx}
+            cy={cy}
+            r={i % 2 === 0 ? 1.5 : 0.8}
+            fill={`rgba(0,255,220,${i % 2 === 0 ? 0.55 : 0.35})`}
+          />
+        ))}
+      </svg>
+    ),
+  },
+  /* 33 ── Ninja (Shinobi) */
+  {
+    id: 33,
+    label: 'Ninja',
+    gradient: 'linear-gradient(145deg,#050508 0%,#0f0f14 40%,#1a1a22 70%,#24243a 100%)',
+    swatch: '#1a1a22',
+    patternEl: (
+      <svg
+        className="cp-pattern"
+        viewBox="0 0 380 220"
+        preserveAspectRatio="xMidYMid slice"
+        aria-hidden="true"
+      >
+        {[
+          [60, 60],
+          [200, 40],
+          [320, 80],
+          [100, 160],
+          [260, 150],
+        ].map(([cx, cy], i) => {
+          const s = i === 0 ? 14 : i === 2 ? 18 : 12;
+          return (
+            <g key={i} transform={`translate(${cx},${cy})`}>
+              {[0, 60, 120, 180, 240, 300].map((deg, j) => (
+                <polygon
+                  key={j}
+                  transform={`rotate(${deg})`}
+                  points={`0,-${s} ${s * 0.25},-${s * 0.35} ${s},0 ${s * 0.25},${s * 0.35}`}
+                  fill={`rgba(200,200,255,${0.1 - j * 0.005})`}
+                />
+              ))}
+              <circle cx="0" cy="0" r={s * 0.18} fill="rgba(200,200,255,0.25)" />
+            </g>
+          );
+        })}
+        <path
+          d="M290,150 C310,120 330,130 320,100 C316,90 308,92 310,100"
+          stroke="rgba(200,200,255,0.14)"
+          strokeWidth="1.2"
+          fill="none"
+        />
+        <path
+          d="M30,40 A28,28 0 0 1 86,40"
+          stroke="rgba(220,220,255,0.22)"
+          strokeWidth="1.5"
+          fill="none"
+        />
+        <line x1="30" y1="40" x2="10" y2="55" stroke="rgba(220,220,255,0.14)" strokeWidth="1" />
+        <circle
+          cx="58"
+          cy="35"
+          r="12"
+          stroke="rgba(220,220,255,0.16)"
+          strokeWidth="0.8"
+          fill="none"
+        />
+        <circle
+          cx="58"
+          cy="35"
+          r="6"
+          stroke="rgba(220,220,255,0.12)"
+          strokeWidth="0.6"
+          fill="none"
+        />
+        {[
+          [160, 20],
+          [350, 30],
+          [340, 170],
+          [15, 155],
+        ].map(([cx, cy], i) => (
+          <circle key={i} cx={cx} cy={cy} r={1.2} fill="rgba(200,200,255,0.40)" />
+        ))}
+      </svg>
+    ),
+  },
+  /* 34 ── Thiên Hà (Galaxy Anime) */
+  {
+    id: 34,
+    label: 'Thiên Hà',
+    gradient: 'linear-gradient(145deg,#010110 0%,#050528 35%,#0e0a50 65%,#1a0a7a 100%)',
+    swatch: '#0e0a50',
+    patternEl: (
+      <svg
+        className="cp-pattern"
+        viewBox="0 0 380 220"
+        preserveAspectRatio="xMidYMid slice"
+        aria-hidden="true"
+      >
+        <circle
+          cx="60"
+          cy="55"
+          r="42"
+          stroke="rgba(200,220,255,0.18)"
+          strokeWidth="1.5"
+          fill="none"
+        />
+        <circle
+          cx="60"
+          cy="55"
+          r="34"
+          stroke="rgba(200,220,255,0.12)"
+          strokeWidth="1"
+          fill="rgba(200,220,255,0.03)"
+        />
+        <circle cx="70" cy="45" r="3" fill="rgba(255,255,220,0.30)" />
+        <ellipse
+          cx="190"
+          cy="130"
+          rx="120"
+          ry="55"
+          stroke="rgba(150,120,255,0.10)"
+          strokeWidth="1"
+          fill="none"
+          transform="rotate(-15,190,130)"
+        />
+        <ellipse
+          cx="190"
+          cy="130"
+          rx="70"
+          ry="32"
+          stroke="rgba(150,120,255,0.08)"
+          strokeWidth="0.8"
+          fill="rgba(150,120,255,0.03)"
+          transform="rotate(-15,190,130)"
+        />
+        <line
+          x1="280"
+          y1="10"
+          x2="340"
+          y2="80"
+          stroke="rgba(200,220,255,0.20)"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+        />
+        <circle cx="280" cy="10" r="2.5" fill="rgba(255,255,220,0.60)" />
+        {[
+          [20, 170],
+          [50, 190],
+          [100, 200],
+          [160, 185],
+          [200, 195],
+          [250, 175],
+          [300, 190],
+          [340, 170],
+          [360, 195],
+          [15, 140],
+          [370, 155],
+        ].map(([cx, cy], i) => (
+          <circle
+            key={i}
+            cx={cx}
+            cy={cy}
+            r={i % 4 === 0 ? 1.8 : i % 4 === 1 ? 1.2 : 0.8}
+            fill={`rgba(200,200,255,${i % 4 === 0 ? 0.55 : 0.35})`}
+          />
+        ))}
+        {[
+          [120, 40],
+          [200, 20],
+          [270, 50],
+          [340, 25],
+          [350, 100],
+          [30, 100],
+        ].map(([cx, cy], i) => (
+          <circle
+            key={i}
+            cx={cx}
+            cy={cy}
+            r={i % 2 === 0 ? 1.5 : 1}
+            fill={`rgba(220,200,255,${i % 2 === 0 ? 0.45 : 0.25})`}
+          />
+        ))}
+      </svg>
+    ),
+  },
+  /* 35 ── Phép Thuật (Magic) */
+  {
+    id: 35,
+    label: 'Phép Thuật',
+    gradient: 'linear-gradient(145deg,#08001a 0%,#180030 35%,#300058 65%,#500090 100%)',
+    swatch: '#300058',
+    patternEl: (
+      <svg
+        className="cp-pattern"
+        viewBox="0 0 380 220"
+        preserveAspectRatio="xMidYMid slice"
+        aria-hidden="true"
+      >
+        <circle
+          cx="190"
+          cy="100"
+          r="80"
+          stroke="rgba(200,150,255,0.12)"
+          strokeWidth="1"
+          fill="none"
+        />
+        <circle
+          cx="190"
+          cy="100"
+          r="60"
+          stroke="rgba(200,150,255,0.10)"
+          strokeWidth="0.8"
+          fill="none"
+        />
+        <circle
+          cx="190"
+          cy="100"
+          r="40"
+          stroke="rgba(200,150,255,0.08)"
+          strokeWidth="0.8"
+          fill="none"
+        />
+        {[0, 45, 90, 135, 180, 225, 270, 315].map((deg, i) => (
+          <line
+            key={i}
+            x1={190 + 80 * Math.cos((deg * Math.PI) / 180)}
+            y1={100 + 80 * Math.sin((deg * Math.PI) / 180)}
+            x2={190 + 95 * Math.cos((deg * Math.PI) / 180)}
+            y2={100 + 95 * Math.sin((deg * Math.PI) / 180)}
+            stroke="rgba(200,150,255,0.18)"
+            strokeWidth="1.2"
+          />
+        ))}
+        <line
+          x1="280"
+          y1="30"
+          x2="310"
+          y2="5"
+          stroke="rgba(255,220,100,0.25)"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+        <circle cx="308" cy="7" r="4" fill="rgba(255,220,100,0.40)" />
+        {[
+          [60, 40],
+          [320, 55],
+          [40, 170],
+          [340, 165],
+          [190, 20],
+          [190, 185],
+        ].map(([cx, cy], i) => {
+          const sz = i % 3 === 0 ? 6 : i % 3 === 1 ? 4 : 3;
+          return (
+            <g key={i}>
+              <circle cx={cx} cy={cy} r={sz} fill={`rgba(255,200,100,${0.2 - i * 0.02})`} />
+              <line
+                x1={cx - sz * 1.5}
+                y1={cy}
+                x2={cx + sz * 1.5}
+                y2={cy}
+                stroke="rgba(255,220,120,0.30)"
+                strokeWidth="0.8"
+              />
+              <line
+                x1={cx}
+                y1={cy - sz * 1.5}
+                x2={cx}
+                y2={cy + sz * 1.5}
+                stroke="rgba(255,220,120,0.30)"
+                strokeWidth="0.8"
+              />
+            </g>
+          );
+        })}
+      </svg>
+    ),
+  },
 ];
+
+const TEMPLATE_CATEGORIES = ['Tất cả', 'Cổ điển', 'Thiên nhiên', '12 Con Giáp', 'Anime'] as const;
+type TemplateCategory = (typeof TEMPLATE_CATEGORIES)[number];
+
+const TEMPLATE_CATEGORY_MAP: Record<number, Exclude<TemplateCategory, 'Tất cả'>> = {
+  0: 'Cổ điển',
+  1: 'Cổ điển',
+  2: 'Cổ điển',
+  3: 'Cổ điển',
+  4: 'Cổ điển',
+  5: 'Cổ điển',
+  6: 'Cổ điển',
+  7: 'Cổ điển',
+  8: 'Cổ điển',
+  9: 'Cổ điển',
+  10: 'Cổ điển',
+  11: 'Cổ điển',
+  12: 'Cổ điển',
+  13: 'Cổ điển',
+  14: 'Cổ điển',
+  15: 'Cổ điển',
+  16: 'Cổ điển',
+  17: 'Cổ điển',
+  18: 'Cổ điển',
+  19: 'Cổ điển',
+  20: 'Thiên nhiên',
+  21: 'Thiên nhiên',
+  22: 'Thiên nhiên',
+  23: 'Thiên nhiên',
+  24: 'Thiên nhiên',
+  25: '12 Con Giáp',
+  26: '12 Con Giáp',
+  27: '12 Con Giáp',
+  28: '12 Con Giáp',
+  29: '12 Con Giáp',
+  30: '12 Con Giáp',
+  31: 'Anime',
+  32: 'Anime',
+  33: 'Anime',
+  34: 'Anime',
+  35: 'Anime',
+};
 
 const MC_TEMPLATES: CardTemplate[] = [
   /* 0 ── Obsidian */
@@ -2383,6 +3598,8 @@ const StudentWallet: React.FC = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showPendingWarning, setShowPendingWarning] = useState(false);
   const [showTplModal, setShowTplModal] = useState(false);
+  const [tplPreviewId, setTplPreviewId] = useState<number | null>(null);
+  const [tplCategory, setTplCategory] = useState<TemplateCategory>('Tất cả');
   const pollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [selectedBank, setSelectedBank] = useState<string | null>(null);
   const [cardNumber, setCardNumber] = useState('');
@@ -2716,9 +3933,9 @@ const StudentWallet: React.FC = () => {
           <section className="wallet-overview">
             {/* Glassmorphism Balance Card — flippable */}
             <div className="balance-card-section">
-              {/* Template picker */}
+              {/* Template picker bar */}
               <div className="balance-card-tpl-picker">
-                {BALANCE_CARD_TEMPLATES.slice(0, 6).map((tpl) => (
+                {BALANCE_CARD_TEMPLATES.slice(0, 4).map((tpl) => (
                   <button
                     key={tpl.id}
                     type="button"
@@ -2731,22 +3948,22 @@ const StudentWallet: React.FC = () => {
                     }}
                   />
                 ))}
+                {balanceCardTemplate >= 4 && (
+                  <button
+                    type="button"
+                    className="card-tpl-swatch active"
+                    style={{ background: BALANCE_CARD_TEMPLATES[balanceCardTemplate].swatch }}
+                    title={BALANCE_CARD_TEMPLATES[balanceCardTemplate].label}
+                    onClick={() => setShowTplModal(true)}
+                  />
+                )}
                 <button
                   type="button"
-                  className="bc-tpl-more-btn"
-                  title="Xem thêm mẫu"
+                  className="bc-tpl-choose-btn"
                   onClick={() => setShowTplModal(true)}
                 >
-                  {balanceCardTemplate >= 6 ? (
-                    <span
-                      className="bc-tpl-more-dot"
-                      style={{ background: BALANCE_CARD_TEMPLATES[balanceCardTemplate].swatch }}
-                    />
-                  ) : (
-                    '···'
-                  )}
+                  Đổi mẫu
                 </button>
-                <span className="card-tpl-hint">Chọn mẫu</span>
               </div>
 
               {/* Flip outer — tilt effect + click to flip */}
@@ -3351,40 +4568,162 @@ const StudentWallet: React.FC = () => {
       {showTplModal && (
         <div
           className="sw-modal-overlay bc-tpl-modal-overlay"
-          onClick={() => setShowTplModal(false)}
+          onClick={() => {
+            setShowTplModal(false);
+            setTplPreviewId(null);
+          }}
         >
           <div className="bc-tpl-modal" onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
             <div className="bc-tpl-modal-header">
               <span className="bc-tpl-modal-title">Chọn mẫu thẻ</span>
               <button
                 type="button"
                 className="sw-modal-close"
-                onClick={() => setShowTplModal(false)}
+                onClick={() => {
+                  setShowTplModal(false);
+                  setTplPreviewId(null);
+                }}
                 aria-label="Đóng"
               >
                 ×
               </button>
             </div>
-            <div className="bc-tpl-modal-grid">
-              {BALANCE_CARD_TEMPLATES.map((tpl) => (
+
+            {/* Category tabs */}
+            <div className="bc-tpl-cat-tabs">
+              {TEMPLATE_CATEGORIES.map((cat) => (
                 <button
-                  key={tpl.id}
+                  key={cat}
                   type="button"
-                  className={`bc-tpl-card-btn${balanceCardTemplate === tpl.id ? ' active' : ''}`}
+                  className={`bc-tpl-cat-tab${tplCategory === cat ? ' active' : ''}`}
                   onClick={() => {
-                    setBalanceCardTemplate(tpl.id);
-                    setBalanceCardFlipped(false);
-                    setShowTplModal(false);
+                    setTplCategory(cat);
+                    setTplPreviewId(null);
                   }}
                 >
-                  <div className="bc-tpl-card-preview" style={{ background: tpl.gradient }}>
-                    {tpl.patternEl}
-                    <span className="bc-tpl-card-name">{tpl.label}</span>
-                  </div>
-                  {balanceCardTemplate === tpl.id && <span className="bc-tpl-card-check">✓</span>}
+                  {cat}
+                  {cat !== 'Tất cả' && (
+                    <span className="bc-tpl-cat-count">
+                      {cat === 'Cổ điển'
+                        ? 20
+                        : cat === 'Thiên nhiên'
+                          ? 5
+                          : cat === '12 Con Giáp'
+                            ? 6
+                            : 5}
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
+
+            {/* Preview pane — shown when a template is hovered/clicked */}
+            {tplPreviewId !== null &&
+              (() => {
+                const prev = BALANCE_CARD_TEMPLATES.find((t) => t.id === tplPreviewId)!;
+                return (
+                  <div className="bc-tpl-preview-pane">
+                    <div className="bc-tpl-preview-label">
+                      Xem trước: <strong>{prev.label}</strong>
+                    </div>
+                    <div className="bc-tpl-preview-faces">
+                      {/* Front face */}
+                      <div className="bc-tpl-preview-face-wrap">
+                        <span className="bc-tpl-face-hint">Mặt trước</span>
+                        <div className="bc-tpl-preview-card" style={{ background: prev.gradient }}>
+                          {prev.patternEl}
+                          <div className="bc-tpl-pcard-chip" aria-hidden="true" />
+                          <div className="bc-tpl-pcard-body">
+                            <div className="bc-tpl-pcard-label">Số dư khả dụng</div>
+                            <div className="bc-tpl-pcard-balance">*** *** VND</div>
+                          </div>
+                          <div className="bc-tpl-pcard-footer">
+                            <span className="bc-tpl-pcard-num">**** 2048</span>
+                            <span className="bc-tpl-pcard-brand">MathMaster</span>
+                          </div>
+                        </div>
+                      </div>
+                      {/* Back face */}
+                      <div className="bc-tpl-preview-face-wrap">
+                        <span className="bc-tpl-face-hint">Mặt sau</span>
+                        <div
+                          className="bc-tpl-preview-card bc-tpl-preview-card--back"
+                          style={{ background: prev.gradient }}
+                        >
+                          {prev.patternEl}
+                          <div className="bc-tpl-pcard-stripe" aria-hidden="true" />
+                          <div className="bc-tpl-pcard-stats">
+                            <div className="bc-tpl-pcard-stat">
+                              <span>Tổng nạp</span>
+                              <span>--- ₫</span>
+                            </div>
+                            <div className="bc-tpl-pcard-stat">
+                              <span>Giao dịch</span>
+                              <span>—</span>
+                            </div>
+                            <div className="bc-tpl-pcard-stat">
+                              <span>Số dư</span>
+                              <span>--- ₫</span>
+                            </div>
+                          </div>
+                          <div className="bc-tpl-pcard-back-footer">
+                            <span>MathMaster Wallet</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="bc-tpl-preview-actions">
+                      <button
+                        type="button"
+                        className="bc-tpl-preview-cancel"
+                        onClick={() => setTplPreviewId(null)}
+                      >
+                        Quay lại
+                      </button>
+                      <button
+                        type="button"
+                        className="bc-tpl-preview-apply"
+                        onClick={() => {
+                          setBalanceCardTemplate(tplPreviewId);
+                          setBalanceCardFlipped(false);
+                          setShowTplModal(false);
+                          setTplPreviewId(null);
+                        }}
+                      >
+                        ✓ Áp dụng mẫu này
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
+
+            {/* Template grid */}
+            {tplPreviewId === null && (
+              <div className="bc-tpl-modal-grid">
+                {BALANCE_CARD_TEMPLATES.filter(
+                  (tpl) => tplCategory === 'Tất cả' || TEMPLATE_CATEGORY_MAP[tpl.id] === tplCategory
+                ).map((tpl) => (
+                  <button
+                    key={tpl.id}
+                    type="button"
+                    className={`bc-tpl-card-btn${balanceCardTemplate === tpl.id ? ' active' : ''}`}
+                    onClick={() => setTplPreviewId(tpl.id)}
+                  >
+                    <div className="bc-tpl-card-preview" style={{ background: tpl.gradient }}>
+                      {tpl.patternEl}
+                      <span className="bc-tpl-card-name">{tpl.label}</span>
+                      {TEMPLATE_CATEGORY_MAP[tpl.id] && tplCategory === 'Tất cả' && (
+                        <span className="bc-tpl-card-cat-badge">
+                          {TEMPLATE_CATEGORY_MAP[tpl.id]}
+                        </span>
+                      )}
+                    </div>
+                    {balanceCardTemplate === tpl.id && <span className="bc-tpl-card-check">✓</span>}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
