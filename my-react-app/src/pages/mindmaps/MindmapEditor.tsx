@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import MindElixir from 'mind-elixir';
 import 'mind-elixir/style.css';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
@@ -122,6 +122,8 @@ const getSubtreeDeleteOrder = (nodes: MindmapNode[], rootId: string): string[] =
 export default function MindmapEditor() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isEmbedPreview = searchParams.get('embedPreview') === '1';
 
   const [mindmap, setMindmap] = useState<Mindmap | null>(null);
   const [mindmapNodes, setMindmapNodes] = useState<MindmapNode[]>([]);
@@ -255,6 +257,7 @@ export default function MindmapEditor() {
   }, [interactionMode]);
 
   useEffect(() => {
+    if (isEmbedPreview) return;
     if (interactionMode !== 'EDIT' || !selectedNodeId || deleteConfirm.open) return;
 
     const handleOutsideClick = (event: MouseEvent) => {
@@ -274,7 +277,7 @@ export default function MindmapEditor() {
     return () => {
       document.removeEventListener('mousedown', handleOutsideClick);
     };
-  }, [interactionMode, selectedNodeId, deleteConfirm.open]);
+  }, [interactionMode, selectedNodeId, deleteConfirm.open, isEmbedPreview]);
 
   useEffect(() => {
     if (!mindContainerRef.current || !mindmap) return;
@@ -286,27 +289,29 @@ export default function MindmapEditor() {
         el: mindContainerRef.current,
         direction: MindElixir.SIDE,
         draggable: true,
-        contextMenu: true,
-        toolBar: true,
-        keypress: true,
+        contextMenu: !isEmbedPreview,
+        toolBar: !isEmbedPreview,
+        keypress: !isEmbedPreview,
         locale: 'en',
       });
 
       mind.init(data);
 
-      mind.bus.addListener('selectNodes', (nodes: Array<{ id: string }>) => {
-        if (interactionModeRef.current !== 'EDIT') {
-          setSelectedNodeId(null);
-          return;
-        }
+      if (!isEmbedPreview) {
+        mind.bus.addListener('selectNodes', (nodes: Array<{ id: string }>) => {
+          if (interactionModeRef.current !== 'EDIT') {
+            setSelectedNodeId(null);
+            return;
+          }
 
-        const targetNode = nodes?.[0];
-        if (!targetNode?.id) {
-          setSelectedNodeId(null);
-          return;
-        }
-        setSelectedNodeId(targetNode.id);
-      });
+          const targetNode = nodes?.[0];
+          if (!targetNode?.id) {
+            setSelectedNodeId(null);
+            return;
+          }
+          setSelectedNodeId(targetNode.id);
+        });
+      }
 
       mindInstanceRef.current = mind as MindElixirInstance;
     } else {
@@ -317,7 +322,7 @@ export default function MindmapEditor() {
       if (!prev) return null;
       return nodeLookupRef.current.has(prev) ? prev : null;
     });
-  }, [mindmap, mindmapNodes, toMindElixirData]);
+  }, [mindmap, mindmapNodes, toMindElixirData, isEmbedPreview]);
 
   useEffect(() => {
     return () => {
@@ -560,6 +565,15 @@ export default function MindmapEditor() {
   }, [mindmap]);
 
   if (loading) {
+    if (isEmbedPreview) {
+      return (
+        <div className="mindmap-editor-loading mindmap-editor-loading-embedded">
+          <div className="loader"></div>
+          <p>Đang tải mindmap...</p>
+        </div>
+      );
+    }
+
     return (
       <DashboardLayout
         role="teacher"
@@ -578,6 +592,15 @@ export default function MindmapEditor() {
   }
 
   if (error || !mindmap) {
+    if (isEmbedPreview) {
+      return (
+        <div className="mindmap-editor-error mindmap-editor-error-embedded">
+          <h2>Lỗi</h2>
+          <p>{error || 'Không tìm thấy mindmap'}</p>
+        </div>
+      );
+    }
+
     return (
       <DashboardLayout
         role="teacher"
@@ -597,6 +620,18 @@ export default function MindmapEditor() {
           </div>
         </div>
       </DashboardLayout>
+    );
+  }
+
+  if (isEmbedPreview) {
+    return (
+      <div className="mindmap-editor-page mindmap-editor-embedded">
+        <div className="editor-content">
+          <div className="flow-container">
+            <div ref={mindContainerRef} className="mind-elixir-host" />
+          </div>
+        </div>
+      </div>
     );
   }
 

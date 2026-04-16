@@ -5,6 +5,24 @@
   background: #f7fafc;
 }
 
+.mindmap-editor-page.mindmap-editor-embedded {
+  height: 100vh;
+  background: #f3f5ff;
+}
+
+.mindmap-editor-page.mindmap-editor-embedded .editor-content {
+  overflow: auto;
+}
+
+.mindmap-editor-page.mindmap-editor-embedded .flow-container {
+  height: 100%;
+}
+
+.mindmap-editor-loading-embedded,
+.mindmap-editor-error-embedded {
+  min-height: 100vh;
+}
+
 /* Header */
 .editor-header {
   background: white;

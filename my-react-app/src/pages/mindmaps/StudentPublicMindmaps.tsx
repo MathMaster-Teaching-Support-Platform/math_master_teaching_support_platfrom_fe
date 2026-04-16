@@ -12,7 +12,7 @@ import {
   X,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockStudent } from '../../data/mockData';
 import { LessonSlideService } from '../../services/api/lesson-slide.service';
@@ -52,7 +52,6 @@ const emptyMindmapPage = (): PaginatedResponse<Mindmap> => ({
 });
 
 export default function StudentPublicMindmaps() {
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [schoolGrades, setSchoolGrades] = useState<SchoolGrade[]>([]);
@@ -87,6 +86,11 @@ export default function StudentPublicMindmaps() {
 
   const [loadingCatalog, setLoadingCatalog] = useState(false);
   const [loadingMindmaps, setLoadingMindmaps] = useState(false);
+  const [previewingMindmapId, setPreviewingMindmapId] = useState('');
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [selectedPreviewMindmap, setSelectedPreviewMindmap] = useState<Mindmap | null>(null);
+  const [previewFrameLoading, setPreviewFrameLoading] = useState(false);
+  const [downloadingPreviewMindmapId, setDownloadingPreviewMindmapId] = useState('');
   const [mindmapsError, setMindmapsError] = useState('');
 
   const selectedLesson = useMemo(
@@ -206,6 +210,53 @@ export default function StudentPublicMindmaps() {
   const handleLessonChange = (value: string) => {
     setLessonId(value);
     resetResourceState();
+  };
+
+  const handleOpenMindmapPreview = async (mindmap: Mindmap) => {
+    setSelectedPreviewMindmap(mindmap);
+    setPreviewingMindmapId(mindmap.id);
+    setPreviewFrameLoading(true);
+    setMindmapsError('');
+    setIsPreviewOpen(true);
+
+    // Small delay only to ensure opening transition is smooth; actual render readiness is handled by iframe onLoad.
+    globalThis.setTimeout(() => setPreviewingMindmapId(''), 180);
+  };
+
+  const triggerBlobDownload = (blob: Blob, fileName: string) => {
+    const blobUrl = globalThis.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = fileName || 'mindmap.png';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    globalThis.URL.revokeObjectURL(blobUrl);
+  };
+
+  const handleDownloadPreviewMindmap = async () => {
+    if (!selectedPreviewMindmap) return;
+
+    setDownloadingPreviewMindmapId(selectedPreviewMindmap.id);
+    setMindmapsError('');
+
+    try {
+      const response = await MindmapService.exportPublicMindmap(selectedPreviewMindmap.id, 'png');
+      triggerBlobDownload(
+        response.blob,
+        response.filename || `${selectedPreviewMindmap.title}.png`
+      );
+    } catch (err) {
+      setMindmapsError(err instanceof Error ? err.message : 'Không thể tải ảnh mindmap');
+    } finally {
+      setDownloadingPreviewMindmapId('');
+    }
+  };
+
+  const handleCloseMindmapPreview = () => {
+    setIsPreviewOpen(false);
+    setSelectedPreviewMindmap(null);
+    setPreviewFrameLoading(false);
   };
 
   useEffect(() => {
@@ -497,10 +548,11 @@ export default function StudentPublicMindmaps() {
                         <button
                           type="button"
                           className="spm-btn-view"
-                          onClick={() => navigate(`/mindmaps/public/${mindmap.id}`)}
+                          onClick={() => void handleOpenMindmapPreview(mindmap)}
+                          disabled={previewingMindmapId === mindmap.id}
                         >
                           <Workflow size={14} />
-                          Xem mindmap
+                          {previewingMindmapId === mindmap.id ? 'Đang tải...' : 'Xem mindmap'}
                         </button>
                       </div>
                     </div>
@@ -542,6 +594,78 @@ export default function StudentPublicMindmaps() {
                 </button>
               </div>
             </>
+          )}
+
+          {isPreviewOpen && (
+            <div className="spm-modal-overlay" onClick={handleCloseMindmapPreview}>
+              <div
+                className="spm-modal"
+                role="dialog"
+                aria-modal="true"
+                aria-label="Xem trước mindmap PNG"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <div className="spm-modal-header">
+                  <h3>{selectedPreviewMindmap?.title || 'Xem trước mindmap'}</h3>
+                  <button
+                    type="button"
+                    className="spm-modal-close"
+                    onClick={handleCloseMindmapPreview}
+                  >
+                    ×
+                  </button>
+                </div>
+
+                <div className="spm-modal-body">
+                  {previewFrameLoading && (
+                    <div className="spm-math-loader" role="status" aria-live="polite">
+                      <div className="spm-math-loader-ring" aria-hidden="true" />
+                      <div className="spm-math-loader-symbols" aria-hidden="true">
+                        <span>∑</span>
+                        <span>π</span>
+                        <span>√</span>
+                        <span>∞</span>
+                        <span>Δ</span>
+                      </div>
+                      <p>Đang dựng mindmap...</p>
+                    </div>
+                  )}
+
+                  {selectedPreviewMindmap && (
+                    <iframe
+                      className="spm-modal-iframe"
+                      src={`/mindmaps/public/${selectedPreviewMindmap.id}?embedPreview=1`}
+                      title={selectedPreviewMindmap.title || 'Mindmap preview'}
+                      onLoad={() => setPreviewFrameLoading(false)}
+                    />
+                  )}
+                </div>
+
+                <div className="spm-modal-footer">
+                  <button
+                    type="button"
+                    className="btn"
+                    disabled={
+                      !selectedPreviewMindmap ||
+                      downloadingPreviewMindmapId === selectedPreviewMindmap.id
+                    }
+                    onClick={() => void handleDownloadPreviewMindmap()}
+                  >
+                    {selectedPreviewMindmap &&
+                    downloadingPreviewMindmapId === selectedPreviewMindmap.id
+                      ? 'Đang tải...'
+                      : 'Tải ảnh PNG'}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn secondary"
+                    onClick={handleCloseMindmapPreview}
+                  >
+                    Đóng
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
         </section>
       </div>

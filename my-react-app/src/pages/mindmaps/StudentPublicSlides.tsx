@@ -91,7 +91,6 @@ export default function StudentPublicSlides() {
   const [loadingSlides, setLoadingSlides] = useState(false);
   const [downloadingSlideId, setDownloadingSlideId] = useState('');
   const [previewingSlideId, setPreviewingSlideId] = useState('');
-  const [openingPreviewTab, setOpeningPreviewTab] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [selectedPreviewSlide, setSelectedPreviewSlide] = useState<LessonSlideGeneratedFile | null>(
     null
@@ -352,22 +351,6 @@ export default function StudentPublicSlides() {
     setIsPreviewOpen(false);
     setSelectedPreviewSlide(null);
     revokePreviewPdfUrl();
-  };
-
-  const handleOpenPreviewInNewTab = () => {
-    if (!previewPdfUrl) return;
-
-    setOpeningPreviewTab(true);
-    try {
-      const newTab = globalThis.window.open(previewPdfUrl, '_blank', 'noopener,noreferrer');
-      if (!newTab) {
-        throw new Error('Trình duyệt chặn popup. Hãy cho phép mở tab mới rồi thử lại.');
-      }
-    } catch (err) {
-      setSlidesError(err instanceof Error ? err.message : 'Không thể mở tab preview PDF');
-    } finally {
-      setOpeningPreviewTab(false);
-    }
   };
 
   useEffect(() => {
@@ -718,14 +701,6 @@ export default function StudentPublicSlides() {
                 <div className="sps-modal-footer">
                   <button type="button" className="btn secondary" onClick={handleClosePreview}>
                     Đóng
-                  </button>
-                  <button
-                    type="button"
-                    className="btn secondary"
-                    disabled={!previewPdfUrl || openingPreviewTab}
-                    onClick={handleOpenPreviewInNewTab}
-                  >
-                    {openingPreviewTab ? 'Đang mở...' : 'Mở tab mới'}
                   </button>
                   <button
                     type="button"

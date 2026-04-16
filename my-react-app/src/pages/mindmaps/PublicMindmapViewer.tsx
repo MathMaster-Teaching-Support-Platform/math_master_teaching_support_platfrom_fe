@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import MindElixir from 'mind-elixir';
 import 'mind-elixir/style.css';
 import { MindmapService } from '../../services/api/mindmap.service';
@@ -72,6 +72,8 @@ const uniqueFlatNodes = (nodes: MindmapNode[]): MindmapNode[] => {
 
 export default function PublicMindmapViewer() {
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
+  const isEmbedPreview = searchParams.get('embedPreview') === '1';
   const [mindmap, setMindmap] = useState<Mindmap | null>(null);
   const [mindmapNodes, setMindmapNodes] = useState<MindmapNode[]>([]);
   const [loading, setLoading] = useState(true);
@@ -175,7 +177,7 @@ export default function PublicMindmapViewer() {
 
   if (loading) {
     return (
-      <main className="public-mindmap-page">
+      <main className={`public-mindmap-page${isEmbedPreview ? ' embed-preview' : ''}`}>
         <div className="public-mindmap-state">Đang tải mindmap...</div>
       </main>
     );
@@ -183,7 +185,7 @@ export default function PublicMindmapViewer() {
 
   if (error || !mindmap) {
     return (
-      <main className="public-mindmap-page">
+      <main className={`public-mindmap-page${isEmbedPreview ? ' embed-preview' : ''}`}>
         <div className="public-mindmap-state public-mindmap-state--error">
           {error || 'Không tìm thấy mindmap công khai'}
         </div>
@@ -192,12 +194,14 @@ export default function PublicMindmapViewer() {
   }
 
   return (
-    <main className="public-mindmap-page">
-      <header className="public-mindmap-header">
-        <p className="public-mindmap-badge">Public Mindmap</p>
-        <h1>{mindmap.title}</h1>
-        {mindmap.description && <p>{mindmap.description}</p>}
-      </header>
+    <main className={`public-mindmap-page${isEmbedPreview ? ' embed-preview' : ''}`}>
+      {!isEmbedPreview && (
+        <header className="public-mindmap-header">
+          <p className="public-mindmap-badge">Public Mindmap</p>
+          <h1>{mindmap.title}</h1>
+          {mindmap.description && <p>{mindmap.description}</p>}
+        </header>
+      )}
 
       <section className="public-mindmap-canvas-wrap">
         <div ref={containerRef} className="public-mindmap-canvas" />

@@ -84,6 +84,8 @@ const MaterialsGenerator: React.FC = () => {
   const [searchValue, setSearchValue] = useState('');
   const [previewSlideId, setPreviewSlideId] = useState('');
   const [previewSlidePdfUrl, setPreviewSlidePdfUrl] = useState('');
+  const [previewMindmapId, setPreviewMindmapId] = useState('');
+  const [previewMindmapFrameLoading, setPreviewMindmapFrameLoading] = useState(false);
   const [loadingPreviewSlideId, setLoadingPreviewSlideId] = useState('');
   const [downloadingSlideId, setDownloadingSlideId] = useState('');
   const [downloadingMindmapId, setDownloadingMindmapId] = useState('');
@@ -227,6 +229,17 @@ const MaterialsGenerator: React.FC = () => {
       window.URL.revokeObjectURL(previewSlidePdfUrl);
       setPreviewSlidePdfUrl('');
     }
+  };
+
+  const handlePreviewMindmap = (mindmapId: string) => {
+    setPreviewMindmapId(mindmapId);
+    setPreviewMindmapFrameLoading(true);
+    setError(null);
+  };
+
+  const closePreviewMindmap = () => {
+    setPreviewMindmapId('');
+    setPreviewMindmapFrameLoading(false);
   };
 
   const handleDownloadSlide = async (slideId: string) => {
@@ -561,7 +574,7 @@ const MaterialsGenerator: React.FC = () => {
                           <div className="materials-action-group">
                             <button
                               className="btn secondary materials-action-btn"
-                              onClick={() => navigate(`/teacher/mindmaps/${row.id}`)}
+                              onClick={() => handlePreviewMindmap(row.id)}
                             >
                               <Eye size={13} /> Xem thử
                             </button>
@@ -618,6 +631,41 @@ const MaterialsGenerator: React.FC = () => {
                 ) : (
                   <div className="empty">Không có dữ liệu xem thử.</div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {previewMindmapId && (
+            <div className="materials-preview-overlay" role="dialog" aria-modal="true">
+              <div className="materials-preview-modal">
+                <div className="materials-preview-header">
+                  <h3>Xem thử mindmap</h3>
+                  <button className="btn secondary" onClick={closePreviewMindmap}>
+                    Đóng
+                  </button>
+                </div>
+
+                {previewMindmapFrameLoading && (
+                  <div className="materials-math-loader">
+                    <div className="materials-math-loader-ring" />
+                    <div className="materials-math-loader-symbols" aria-hidden="true">
+                      <span>∑</span>
+                      <span>π</span>
+                      <span>√</span>
+                      <span>∞</span>
+                      <span>Δ</span>
+                    </div>
+                    <p>Đang dựng mindmap ...</p>
+                  </div>
+                )}
+
+                <iframe
+                  src={`/teacher/mindmaps/${previewMindmapId}?embedPreview=1`}
+                  title="Mindmap preview"
+                  className="materials-preview-frame"
+                  style={{ display: previewMindmapFrameLoading ? 'none' : 'block' }}
+                  onLoad={() => setPreviewMindmapFrameLoading(false)}
+                />
               </div>
             </div>
           )}

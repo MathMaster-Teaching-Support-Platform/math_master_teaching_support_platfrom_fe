@@ -279,3 +279,198 @@
   color: var(--mod-text, #1e2a3a);
   white-space: nowrap;
 }
+
+/* ──────────────────────────────────────────
+   PNG Preview Modal
+   ────────────────────────────────────────── */
+.module-layout-container .spm-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.52);
+  z-index: 1500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.module-layout-container .spm-modal {
+  width: min(1200px, 96vw);
+  height: min(88vh, 920px);
+  background: #ffffff;
+  border: 1px solid var(--mod-border, #dce3ee);
+  border-radius: 14px;
+  box-shadow: 0 24px 56px rgba(2, 6, 23, 0.24);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.module-layout-container .spm-modal-header,
+.module-layout-container .spm-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  padding: 0.8rem 0.95rem;
+  border-bottom: 1px solid var(--mod-border, #dce3ee);
+}
+
+.module-layout-container .spm-modal-footer {
+  border-bottom: 0;
+  border-top: 1px solid var(--mod-border, #dce3ee);
+  justify-content: flex-end;
+}
+
+.module-layout-container .spm-modal-header h3 {
+  margin: 0;
+  font-size: 0.98rem;
+  color: var(--mod-text, #1e2a3a);
+}
+
+.module-layout-container .spm-modal-close {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  font-size: 1.4rem;
+  font-weight: 600;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.module-layout-container .spm-modal-close:hover {
+  background: #f0fdfa;
+  border-color: #5eead4;
+  color: #115e59;
+}
+
+.module-layout-container .spm-modal-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 0.9rem;
+  background: #f8fbff;
+}
+
+.module-layout-container .spm-modal-iframe {
+  width: 100%;
+  height: 100%;
+  min-height: 64vh;
+  display: block;
+  border-radius: 12px;
+  border: 1px solid #dbeafe;
+  background: #ffffff;
+}
+
+.module-layout-container .spm-math-loader {
+  position: absolute;
+  inset: 0.9rem;
+  margin: auto;
+  min-height: 220px;
+  width: auto;
+  z-index: 2;
+  border: 1px solid #ccfbf1;
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(20, 184, 166, 0.14), transparent 38%),
+    radial-gradient(circle at 85% 25%, rgba(6, 182, 212, 0.13), transparent 34%),
+    linear-gradient(180deg, #f0fdfa 0%, #ecfeff 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  overflow: hidden;
+}
+
+.module-layout-container .spm-math-loader-ring {
+  width: 70px;
+  height: 70px;
+  border-radius: 999px;
+  border: 3px solid rgba(20, 184, 166, 0.2);
+  border-top-color: #0d9488;
+  animation: spm-math-spin 1s linear infinite;
+}
+
+.module-layout-container .spm-math-loader-symbols {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.module-layout-container .spm-math-loader-symbols span {
+  position: absolute;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f766e;
+  opacity: 0;
+  animation: spm-math-float 2.8s ease-in-out infinite;
+}
+
+.module-layout-container .spm-math-loader-symbols span:nth-child(1) {
+  top: 18%;
+  left: 22%;
+  animation-delay: 0s;
+}
+
+.module-layout-container .spm-math-loader-symbols span:nth-child(2) {
+  top: 24%;
+  right: 19%;
+  animation-delay: 0.35s;
+}
+
+.module-layout-container .spm-math-loader-symbols span:nth-child(3) {
+  bottom: 20%;
+  left: 28%;
+  animation-delay: 0.7s;
+}
+
+.module-layout-container .spm-math-loader-symbols span:nth-child(4) {
+  bottom: 25%;
+  right: 24%;
+  animation-delay: 1.05s;
+}
+
+.module-layout-container .spm-math-loader-symbols span:nth-child(5) {
+  top: 48%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation-delay: 1.4s;
+}
+
+.module-layout-container .spm-math-loader p {
+  margin: 0;
+  color: #115e59;
+  font-weight: 700;
+}
+
+@keyframes spm-math-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes spm-math-float {
+  0% {
+    transform: translateY(10px) scale(0.9);
+    opacity: 0;
+  }
+  35% {
+    opacity: 0.95;
+  }
+  65% {
+    opacity: 0.95;
+  }
+  100% {
+    transform: translateY(-10px) scale(1.06);
+    opacity: 0;
+  }
+}

@@ -30,7 +30,9 @@ export class MindmapService {
   }
 
   private static getPublicHeaders() {
+    const token = AuthService.getToken();
     return {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       accept: '*/*',
     };
   }
