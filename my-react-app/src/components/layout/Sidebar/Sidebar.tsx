@@ -4,7 +4,6 @@ import {
   BookOpen,
   Bot,
   ChevronLeft,
-  ClipboardCheck,
   ClipboardList,
   CreditCard,
   Database,
