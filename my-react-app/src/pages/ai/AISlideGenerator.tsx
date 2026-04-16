@@ -292,6 +292,9 @@ const AISlideGenerator: React.FC = () => {
   const [activePreviewIndex, setActivePreviewIndex] = useState(0);
   const [preparedPptxBlob, setPreparedPptxBlob] = useState<Blob | null>(null);
   const [preparedPptxFilename, setPreparedPptxFilename] = useState('lesson-slides.pptx');
+  const [newSlideName, setNewSlideName] = useState('');
+  const [newSlideThumbnailFile, setNewSlideThumbnailFile] = useState<File | null>(null);
+  const [newSlideThumbnailPreview, setNewSlideThumbnailPreview] = useState<string | null>(null);
 
   const [loadingGrades, setLoadingGrades] = useState(false);
   const [loadingSubjects, setLoadingSubjects] = useState(false);
@@ -500,6 +503,10 @@ const AISlideGenerator: React.FC = () => {
     setActivePreviewIndex(0);
     setPreparedPptxBlob(null);
     setPreparedPptxFilename('lesson-slides.pptx');
+    setNewSlideName('');
+    if (newSlideThumbnailPreview) window.URL.revokeObjectURL(newSlideThumbnailPreview);
+    setNewSlideThumbnailFile(null);
+    setNewSlideThumbnailPreview(null);
     setActiveWizardStep(1);
   };
 
@@ -1153,7 +1160,27 @@ const AISlideGenerator: React.FC = () => {
 
       setPreparedPptxBlob(response.blob);
       setPreparedPptxFilename(response.filename || 'lesson-slides.pptx');
-      setSuccess(`PPTX da san sang voi che do cong thuc: ${getEquationModeLabel(equationMode)}.`);
+
+      // Apply name / thumbnail on the newly created file
+      if (newSlideName.trim() || newSlideThumbnailFile) {
+        try {
+          const prevIds = new Set(generatedFiles.map((f) => f.id));
+          const freshRes = await LessonSlideService.getGeneratedFiles(lessonId);
+          const freshFiles = freshRes.result || [];
+          const newFile = freshFiles.find((f) => !prevIds.has(f.id));
+          if (newFile) {
+            await LessonSlideService.updateGeneratedFileMetadata(newFile.id, {
+              name: newSlideName.trim() || undefined,
+              thumbnail: newSlideThumbnailFile || undefined,
+            });
+          }
+          setGeneratedFiles(freshFiles);
+        } catch {
+          // non-blocking
+        }
+      }
+
+      setSuccess(`PPTX đã sẵn sàng! Chế độ công thức: ${getEquationModeLabel(equationMode)}.`);
       setActiveWizardStep(5);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Không thể tạo PPTX');
@@ -1705,6 +1732,65 @@ const AISlideGenerator: React.FC = () => {
               </div>
 
               <label className="ai-slide-full-width">
+                <span>Tên slide (hiển thị trong thư viện)</span>
+                <input
+                  type="text"
+                  placeholder="VD: Cấp Số Cộng - Lớp 11"
+                  value={newSlideName}
+                  onChange={(e) => setNewSlideName(e.target.value)}
+                />
+              </label>
+
+              <div className="ai-slide-full-width">
+                <span className="ai-slide-field-label">Ảnh thumbnail</span>
+                <label className="ai-slide-thumb-upload">
+                  {newSlideThumbnailPreview ? (
+                    <img
+                      src={newSlideThumbnailPreview}
+                      alt="preview"
+                      className="ai-slide-thumb-upload-preview"
+                    />
+                  ) : (
+                    <div className="ai-slide-thumb-upload-placeholder">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="17 8 12 3 7 8" />
+                        <line x1="12" y1="3" x2="12" y2="15" />
+                      </svg>
+                      <span>Chọn ảnh thumbnail</span>
+                      <small>PNG, JPG, WEBP</small>
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
+                    style={{ display: 'none' }}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] || null;
+                      setNewSlideThumbnailFile(file);
+                      if (newSlideThumbnailPreview)
+                        window.URL.revokeObjectURL(newSlideThumbnailPreview);
+                      setNewSlideThumbnailPreview(file ? window.URL.createObjectURL(file) : null);
+                    }}
+                  />
+                </label>
+                {newSlideThumbnailFile && (
+                  <button
+                    type="button"
+                    className="ai-slide-thumb-remove"
+                    onClick={() => {
+                      setNewSlideThumbnailFile(null);
+                      if (newSlideThumbnailPreview)
+                        window.URL.revokeObjectURL(newSlideThumbnailPreview);
+                      setNewSlideThumbnailPreview(null);
+                    }}
+                  >
+                    ✕ Xóa ảnh
+                  </button>
+                )}
+              </div>
+
+              <label className="ai-slide-full-width">
                 <span>Additional Prompt</span>
                 <textarea
                   rows={3}
@@ -2054,11 +2140,11 @@ const AISlideGenerator: React.FC = () => {
               className="ai-slide-modal ai-slide-metadata-modal"
               role="dialog"
               aria-modal="true"
-              aria-label="Cập nhật metadata slide"
+              aria-label="Chỉnh sửa slide"
               onClick={(event) => event.stopPropagation()}
             >
               <div className="ai-slide-modal-header">
-                <h3>Cập nhật metadata slide</h3>
+                <h3>Chỉnh sửa slide</h3>
                 <button
                   type="button"
                   className="ai-slide-modal-close"
@@ -2070,6 +2156,7 @@ const AISlideGenerator: React.FC = () => {
               </div>
 
               <form
+                id="slide-edit-form"
                 className="ai-slide-metadata-form"
                 onSubmit={(e) => void handleUpdateMetadata(e)}
               >
@@ -2078,10 +2165,10 @@ const AISlideGenerator: React.FC = () => {
                     <img
                       src={generatedThumbnailUrls[editingMetadataFile.id]}
                       alt={getGeneratedDisplayName(editingMetadataFile)}
-                      className="ai-slide-table-thumbnail"
+                      className="ai-slide-meta-thumb-img"
                     />
                   ) : (
-                    <div className="ai-slide-table-thumbnail-placeholder large">
+                    <div className="ai-slide-meta-thumb-placeholder">
                       {getGeneratedDisplayName(editingMetadataFile).slice(0, 1).toUpperCase()}
                     </div>
                   )}
@@ -2108,28 +2195,63 @@ const AISlideGenerator: React.FC = () => {
                   </select>
                 </label>
 
-                <label>
-                  <span>Thumbnail (png, jpg, jpeg, webp)</span>
-                  <input
-                    type="file"
-                    accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
-                    onChange={(e) => setMetadataThumbnailFile(e.target.files?.[0] || null)}
-                  />
-                </label>
-
-                {metadataThumbnailFile && (
-                  <p className="ai-slide-info">Đã chọn: {metadataThumbnailFile.name}</p>
-                )}
-
-                <div className="ai-slide-modal-footer">
-                  <button type="button" className="btn btn-outline" onClick={closeMetadataModal}>
-                    Hủy
-                  </button>
-                  <button type="submit" className="btn btn-primary" disabled={updatingMetadata}>
-                    {updatingMetadata ? 'Đang lưu...' : 'Lưu'}
-                  </button>
+                <div>
+                  <span className="ai-slide-field-label">Ảnh thumbnail mới</span>
+                  <label className="ai-slide-thumb-upload">
+                    {metadataThumbnailFile ? (
+                      <img
+                        src={window.URL.createObjectURL(metadataThumbnailFile)}
+                        alt="preview"
+                        className="ai-slide-thumb-upload-preview"
+                      />
+                    ) : (
+                      <div className="ai-slide-thumb-upload-placeholder">
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                        >
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                          <polyline points="17 8 12 3 7 8" />
+                          <line x1="12" y1="3" x2="12" y2="15" />
+                        </svg>
+                        <span>Chọn ảnh mới</span>
+                        <small>PNG, JPG, WEBP</small>
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
+                      style={{ display: 'none' }}
+                      onChange={(e) => setMetadataThumbnailFile(e.target.files?.[0] || null)}
+                    />
+                  </label>
+                  {metadataThumbnailFile && (
+                    <button
+                      type="button"
+                      className="ai-slide-thumb-remove"
+                      onClick={() => setMetadataThumbnailFile(null)}
+                    >
+                      ✕ Xóa ảnh mới
+                    </button>
+                  )}
                 </div>
               </form>
+
+              <div className="ai-slide-modal-footer">
+                <button type="button" className="btn btn-outline" onClick={closeMetadataModal}>
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  form="slide-edit-form"
+                  className="btn btn-primary"
+                  disabled={updatingMetadata}
+                >
+                  {updatingMetadata ? 'Đang lưu...' : 'Lưu'}
+                </button>
+              </div>
             </div>
           </div>
         )}
