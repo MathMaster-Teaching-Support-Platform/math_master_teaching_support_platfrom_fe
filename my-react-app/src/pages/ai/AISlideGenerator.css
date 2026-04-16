@@ -566,73 +566,144 @@
 }
 
 .ai-slide-management-card {
-  border: 1px solid #dbe3f1;
-  border-radius: 12px;
-  background: #f8fbff;
-  padding: 0.85rem;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 .ai-slide-management-header h3 {
-  margin: 0;
-  font-size: 0.95rem;
+  margin: 0 0 0.15rem;
+  font-size: 1.05rem;
+  font-weight: 800;
   color: #0f172a;
 }
 
 .ai-slide-management-header p {
-  margin: 0.25rem 0 0;
-  color: #475569;
+  margin: 0;
+  color: #64748b;
   font-size: 0.82rem;
 }
 
+/* ── Toolbar row ── */
+.ai-slide-management-toolbar {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.ai-slide-management-search {
+  flex: 1;
+  min-width: 180px;
+  position: relative;
+}
+
+.ai-slide-management-search input {
+  width: 100%;
+  padding: 0.55rem 0.9rem 0.55rem 2.4rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+  font-size: 0.88rem;
+  color: #1e293b;
+  outline: none;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+  box-sizing: border-box;
+}
+
+.ai-slide-management-search input:focus {
+  border-color: #93c5fd;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.ai-slide-management-search::before {
+  content: '';
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath stroke-linecap='round' d='M21 21l-4.35-4.35'/%3E%3C/svg%3E")
+    center/contain no-repeat;
+}
+
+.ai-slide-management-sort {
+  flex-shrink: 0;
+}
+
+.ai-slide-management-sort select {
+  padding: 0.55rem 2rem 0.55rem 0.9rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #1e293b;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.6rem center;
+  background-size: 16px;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+.ai-slide-management-sort select:focus {
+  border-color: #93c5fd;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.ai-slide-management-search span,
+.ai-slide-management-sort span {
+  display: none;
+}
+
+/* ── Filter chips ── */
 .ai-slide-status-tabs {
   display: inline-flex;
-  gap: 0.45rem;
+  gap: 0.4rem;
+  background: #f1f5f9;
+  border-radius: 12px;
+  padding: 0.3rem;
 }
 
 .ai-slide-status-tab {
-  border-radius: 999px;
-  border: 1px solid #cbd5e1;
-  padding: 0.36rem 0.78rem;
-  background: #ffffff;
-  color: #1e293b;
-  font-size: 0.82rem;
-  font-weight: 700;
+  border-radius: 8px;
+  border: none;
+  padding: 0.38rem 1rem;
+  background: transparent;
+  color: #64748b;
+  font-size: 0.83rem;
+  font-weight: 600;
   cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.ai-slide-status-tab:hover:not(.active) {
+  background: #e2e8f0;
+  color: #1e293b;
 }
 
 .ai-slide-status-tab.active {
   background: #2563eb;
-  border-color: #1d4ed8;
   color: #ffffff;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
 }
 
 .ai-slide-management-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.55rem;
-}
-
-.ai-slide-management-toolbar {
-  display: grid;
-  grid-template-columns: minmax(240px, 1fr) 220px;
-  gap: 0.7rem;
-}
-
-.ai-slide-management-search,
-.ai-slide-management-sort {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.ai-slide-management-search span,
-.ai-slide-management-sort span {
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: #334155;
 }
 
 .ai-slide-management-layout {
@@ -644,10 +715,9 @@
 
 .ai-slide-management-list-panel,
 .ai-slide-management-detail-panel {
-  border: 1px solid #dbe3f1;
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 0.7rem;
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
 }
 
 .ai-slide-management-detail-panel {
@@ -787,6 +857,7 @@
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
 }
 

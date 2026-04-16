@@ -1732,7 +1732,7 @@ const AISlideGenerator: React.FC = () => {
               </div>
 
               <label className="ai-slide-full-width">
-                <span>Tên slide (hiển thị trong thư viện)</span>
+                <span>Tên slide</span>
                 <input
                   type="text"
                   placeholder="VD: Cấp Số Cộng - Lớp 11"
