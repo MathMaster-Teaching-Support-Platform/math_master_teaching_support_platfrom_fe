@@ -329,6 +329,7 @@ const AISlideGenerator: React.FC = () => {
   const [loadingGeneratedPreviewPdf, setLoadingGeneratedPreviewPdf] = useState(false);
   const [openingGeneratedPreviewPdfTab, setOpeningGeneratedPreviewPdfTab] = useState(false);
   const [generatedPreviewPdfUrl, setGeneratedPreviewPdfUrl] = useState('');
+  const [previewIframeLoaded, setPreviewIframeLoaded] = useState(false);
   const [generatedPreviewIndex, setGeneratedPreviewIndex] = useState(0);
   const generatedPreviewPdfObjectUrlRef = useRef<string | null>(null);
   const [generatedThumbnailUrls, setGeneratedThumbnailUrls] = useState<Record<string, string>>({});
@@ -635,6 +636,7 @@ const AISlideGenerator: React.FC = () => {
       }
 
       generatedPreviewPdfObjectUrlRef.current = blobUrl;
+      setPreviewIframeLoaded(false);
       setGeneratedPreviewPdfUrl(blobUrl);
     } catch {
       if (generatedPreviewPdfObjectUrlRef.current) {
@@ -2032,11 +2034,28 @@ const AISlideGenerator: React.FC = () => {
 
                 {!loadingGeneratedPreviewPdf && generatedPreviewPdfUrl && (
                   <div className="ai-slide-office-viewer-wrap">
+                    {!previewIframeLoaded && (
+                      <div className="ai-slide-iframe-skeleton" aria-hidden="true">
+                        <div className="ai-slide-iframe-skeleton__bar ai-slide-iframe-skeleton__bar--title" />
+                        <div className="ai-slide-iframe-skeleton__slides">
+                          {[0, 1, 2, 3, 4, 5].map((i) => (
+                            <div key={i} className="ai-slide-iframe-skeleton__slide">
+                              <div className="ai-slide-iframe-skeleton__slide-inner" />
+                            </div>
+                          ))}
+                        </div>
+                        <div className="ai-slide-iframe-skeleton__hint">
+                          <span className="ai-slide-iframe-skeleton__ring" />
+                          Đang tải slide...
+                        </div>
+                      </div>
+                    )}
                     <iframe
-                      className="ai-slide-office-viewer-frame"
+                      className={`ai-slide-office-viewer-frame${previewIframeLoaded ? ' ai-slide-office-viewer-frame--loaded' : ''}`}
                       src={generatedPreviewPdfUrl}
                       title="Preview PDF"
-                      loading="lazy"
+                      loading="eager"
+                      onLoad={() => setPreviewIframeLoaded(true)}
                     />
                   </div>
                 )}
