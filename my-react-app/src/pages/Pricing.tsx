@@ -684,88 +684,90 @@ const Pricing: React.FC = () => {
                       <PlanCardSkeleton />
                     </>
                   ) : (
-                    userPlans.map((plan) => {
-                      const price = plan.price ?? 0;
-                      const walletBalance = wallet?.balance ?? 0;
-                      const isInsufficientBalance = price > 0 && walletBalance < price;
-                      const isCurrentPlan = activeSubscription?.planId === plan.id;
-                      const tier = getPlanTier(plan.name);
+                    [...userPlans]
+                      .sort((a, b) => (a.price ?? 0) - (b.price ?? 0))
+                      .map((plan) => {
+                        const price = plan.price ?? 0;
+                        const walletBalance = wallet?.balance ?? 0;
+                        const isInsufficientBalance = price > 0 && walletBalance < price;
+                        const isCurrentPlan = activeSubscription?.planId === plan.id;
+                        const tier = getPlanTier(plan.name);
 
-                      return (
-                        <div
-                          key={plan.id}
-                          className={`pricing-plan-card pricing-plan-card--tier-${tier} ${plan.featured ? 'pricing-plan-card--featured' : ''} ${isCurrentPlan ? 'pricing-plan-card--active' : ''}`}
-                        >
-                          {/* Dark header */}
-                          <div className="pricing-plan-card__head">
-                            {plan.featured && !isCurrentPlan && (
-                              <span className="pricing-popular-ribbon">Phổ biến</span>
-                            )}
-                            {isCurrentPlan && (
-                              <span className="pricing-current-ribbon">Đang dùng</span>
-                            )}
-                            <div className="pricing-plan-icon">
-                              <PlanIcon tier={tier} />
-                            </div>
-                            <h3 className="pricing-plan-name">{plan.name}</h3>
-                          </div>
-
-                          {/* White body */}
-                          <div className="pricing-plan-card__body">
-                            <p className="pricing-plan-desc">
-                              {plan.description || 'Gói đăng ký cho người dùng'}
-                            </p>
-
-                            <div className="pricing-plan-price-block">
-                              <span className="pricing-plan-price">{formatPrice(plan.price)}</span>
-                              <span className="pricing-plan-period">
-                                /{plan.billingCycle.toLowerCase()}
-                              </span>
-                            </div>
-
-                            <div className="pricing-token-pill">
-                              <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <circle cx="12" cy="12" r="10" />
-                                <path d="M12 8v4l2 2" />
-                              </svg>
-                              {plan.tokenQuota.toLocaleString()} token / kỳ
-                            </div>
-
-                            <button
-                              type="button"
-                              className={`pricing-plan-btn ${plan.featured ? 'pricing-plan-btn--primary' : 'pricing-plan-btn--outline'}`}
-                              onClick={() => void handlePurchase(plan)}
-                              disabled={!!purchasingPlanId || isCurrentPlan || !price}
-                              title={isInsufficientBalance ? 'Số dư ví không đủ' : undefined}
-                            >
-                              {purchasingPlanId === plan.id ? (
-                                <>
-                                  <span className="pricing-btn-spinner" />
-                                  Đang mua...
-                                </>
-                              ) : isCurrentPlan ? (
-                                'Đang sử dụng'
-                              ) : !price ? (
-                                'Không mua trực tiếp'
-                              ) : isInsufficientBalance ? (
-                                '⚠️ Số dư không đủ'
-                              ) : (
-                                'Mua ngay'
+                        return (
+                          <div
+                            key={plan.id}
+                            className={`pricing-plan-card pricing-plan-card--tier-${tier} ${plan.featured ? 'pricing-plan-card--featured' : ''} ${isCurrentPlan ? 'pricing-plan-card--active' : ''}`}
+                          >
+                            {/* Dark header */}
+                            <div className="pricing-plan-card__head">
+                              {plan.featured && !isCurrentPlan && (
+                                <span className="pricing-popular-ribbon">Phổ biến</span>
                               )}
-                            </button>
+                              {isCurrentPlan && (
+                                <span className="pricing-current-ribbon">Đang dùng</span>
+                              )}
+                              <div className="pricing-plan-icon">
+                                <PlanIcon tier={tier} />
+                              </div>
+                              <h3 className="pricing-plan-name">{plan.name}</h3>
+                            </div>
+
+                            {/* White body */}
+                            <div className="pricing-plan-card__body">
+                              <p className="pricing-plan-desc">
+                                {plan.description || 'Gói đăng ký cho người dùng'}
+                              </p>
+
+                              <div className="pricing-plan-price-block">
+                                <span className="pricing-plan-price">
+                                  {formatPrice(plan.price)}
+                                </span>
+                                <span className="pricing-plan-period">
+                                  /{plan.billingCycle.toLowerCase()}
+                                </span>
+                              </div>
+
+                              <div className="pricing-token-pill">
+                                <svg
+                                  width="12"
+                                  height="12"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <circle cx="12" cy="12" r="10" />
+                                  <path d="M12 8v4l2 2" />
+                                </svg>
+                                {plan.tokenQuota.toLocaleString()} token / kỳ
+                              </div>
+
+                              <button
+                                type="button"
+                                className={`pricing-plan-btn ${plan.featured ? 'pricing-plan-btn--primary' : 'pricing-plan-btn--outline'}`}
+                                onClick={() => void handlePurchase(plan)}
+                                disabled={!!purchasingPlanId || isCurrentPlan || !price}
+                                title={isInsufficientBalance ? 'Số dư ví không đủ' : undefined}
+                              >
+                                {purchasingPlanId === plan.id ? (
+                                  <>
+                                    <span className="pricing-btn-spinner" />
+                                    Đang mua...
+                                  </>
+                                ) : isCurrentPlan ? (
+                                  'Đang sử dụng'
+                                ) : !price ? (
+                                  'Không mua trực tiếp'
+                                ) : (
+                                  'Mua ngay'
+                                )}
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })
+                        );
+                      })
                   )}
                 </div>
               </div>

@@ -373,6 +373,7 @@
 .pricing-plan-btn--primary:hover:not(:disabled) {
   background: #1e2a42;
   border-color: #1e2a42;
+  color: #fff;
   transform: translateY(-1px);
 }
 
@@ -385,6 +386,7 @@
 .pricing-plan-btn--outline:hover:not(:disabled) {
   border-color: #151c2c;
   background: #f9fafb;
+  color: #151c2c;
   transform: translateY(-1px);
 }
 
