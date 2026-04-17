@@ -511,34 +511,34 @@ const AISlideGenerator: React.FC = () => {
     setActiveWizardStep(1);
   };
 
-  const loadGeneratedFiles = useCallback(
-    async (targetLessonId?: string) => {
-      setLoadingGeneratedFiles(true);
+  const selectedGeneratedFileIdRef = useRef(selectedGeneratedFileId);
+  selectedGeneratedFileIdRef.current = selectedGeneratedFileId;
 
-      try {
-        const response = await LessonSlideService.getGeneratedFiles(targetLessonId);
-        const files = response.result || [];
-        setGeneratedFiles(files);
+  const loadGeneratedFiles = useCallback(async (targetLessonId?: string) => {
+    setLoadingGeneratedFiles(true);
 
-        if (files.length === 0) {
-          setSelectedGeneratedFileId('');
-          setSelectedGeneratedLesson(null);
-        } else if (!files.some((file) => file.id === selectedGeneratedFileId)) {
-          setSelectedGeneratedFileId(files[0].id);
-        }
-      } catch (err) {
-        setGeneratedFiles([]);
+    try {
+      const response = await LessonSlideService.getGeneratedFiles(targetLessonId);
+      const files = response.result || [];
+      setGeneratedFiles(files);
+
+      if (files.length === 0) {
         setSelectedGeneratedFileId('');
         setSelectedGeneratedLesson(null);
-        setError(
-          err instanceof Error ? err.message : 'Không thể tải danh sách file slide đã generate'
-        );
-      } finally {
-        setLoadingGeneratedFiles(false);
+      } else if (!files.some((file) => file.id === selectedGeneratedFileIdRef.current)) {
+        setSelectedGeneratedFileId(files[0].id);
       }
-    },
-    [selectedGeneratedFileId]
-  );
+    } catch (err) {
+      setGeneratedFiles([]);
+      setSelectedGeneratedFileId('');
+      setSelectedGeneratedLesson(null);
+      setError(
+        err instanceof Error ? err.message : 'Không thể tải danh sách file slide đã generate'
+      );
+    } finally {
+      setLoadingGeneratedFiles(false);
+    }
+  }, []);
 
   const loadLessonDetailFromGeneratedFile = useCallback(
     async (generatedFile: LessonSlideGeneratedFile) => {

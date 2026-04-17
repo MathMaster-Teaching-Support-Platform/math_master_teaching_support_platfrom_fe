@@ -227,6 +227,9 @@
 .module-layout-container .sps-slide-card__actions {
   padding: 0.6rem 0.9rem 0.75rem;
   border-top: 1px solid #f1f5f9;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
 }
 
 .module-layout-container .sps-slide-card__btn {
@@ -254,6 +257,17 @@
 
 .module-layout-container .sps-slide-card__btn.primary:hover:not(:disabled) {
   background: #1e293b;
+  transform: translateY(-1px);
+}
+
+.module-layout-container .sps-slide-card__btn.secondary {
+  background: #f1f5f9;
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
+}
+
+.module-layout-container .sps-slide-card__btn.secondary:hover:not(:disabled) {
+  background: #e2e8f0;
   transform: translateY(-1px);
 }
 

@@ -4,13 +4,14 @@ import {
   ChevronLeft,
   ChevronRight,
   Download,
+  Eye,
   FileText,
   Filter,
   GraduationCap,
   Search,
   X,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { API_BASE_URL } from '../../config/api.config';
@@ -102,6 +103,11 @@ export default function StudentPublicSlides() {
   const [loadingCatalog, setLoadingCatalog] = useState(false);
   const [loadingSlides, setLoadingSlides] = useState(false);
   const [downloadingSlideId, setDownloadingSlideId] = useState('');
+  const [previewSlideId, setPreviewSlideId] = useState('');
+  const [previewSlidePdfUrl, setPreviewSlidePdfUrl] = useState('');
+  const [loadingPreviewSlideId, setLoadingPreviewSlideId] = useState('');
+  const [previewIframeLoaded, setPreviewIframeLoaded] = useState(false);
+  const previewPdfObjectUrlRef = useRef<string | null>(null);
   const [slidesError, setSlidesError] = useState('');
 
   const selectedLesson = useMemo(
@@ -291,6 +297,40 @@ export default function StudentPublicSlides() {
       setSlidesError(err instanceof Error ? err.message : 'Không thể tải slide công khai');
     } finally {
       setDownloadingSlideId('');
+    }
+  };
+
+  const handlePreviewSlide = async (generatedFileId: string) => {
+    setPreviewSlideId(generatedFileId);
+    setPreviewSlidePdfUrl('');
+    setPreviewIframeLoaded(false);
+    setLoadingPreviewSlideId(generatedFileId);
+    setSlidesError('');
+
+    try {
+      const response = await LessonSlideService.getPublicGeneratedFilePreviewPdf(generatedFileId);
+      const blobUrl = globalThis.URL.createObjectURL(response.blob);
+
+      if (previewPdfObjectUrlRef.current) {
+        globalThis.URL.revokeObjectURL(previewPdfObjectUrlRef.current);
+      }
+      previewPdfObjectUrlRef.current = blobUrl;
+      setPreviewSlidePdfUrl(blobUrl);
+    } catch (err) {
+      setSlidesError(err instanceof Error ? err.message : 'Không thể xem thử slide');
+      setPreviewSlideId('');
+    } finally {
+      setLoadingPreviewSlideId('');
+    }
+  };
+
+  const closePreview = () => {
+    setPreviewSlideId('');
+    setPreviewSlidePdfUrl('');
+    setPreviewIframeLoaded(false);
+    if (previewPdfObjectUrlRef.current) {
+      globalThis.URL.revokeObjectURL(previewPdfObjectUrlRef.current);
+      previewPdfObjectUrlRef.current = null;
     }
   };
 
@@ -544,6 +584,15 @@ export default function StudentPublicSlides() {
                     <div className="sps-slide-card__actions">
                       <button
                         type="button"
+                        className="sps-slide-card__btn secondary"
+                        onClick={() => void handlePreviewSlide(slide.id)}
+                        disabled={loadingPreviewSlideId === slide.id}
+                      >
+                        <Eye size={14} />
+                        {loadingPreviewSlideId === slide.id ? 'Đang tải...' : 'Xem'}
+                      </button>
+                      <button
+                        type="button"
                         className="sps-slide-card__btn primary"
                         onClick={() => void handleDownloadSlide(slide.id)}
                         disabled={downloadingSlideId === slide.id || !slide.isPublic}
@@ -590,6 +639,56 @@ export default function StudentPublicSlides() {
           )}
         </section>
       </div>
+
+      {previewSlideId && (
+        <div
+          className="materials-preview-overlay"
+          role="dialog"
+          aria-modal="true"
+          onClick={closePreview}
+        >
+          <div className="materials-preview-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="materials-preview-header">
+              <h3>Xem thử slide</h3>
+              <button className="btn secondary" onClick={closePreview}>
+                Đóng
+              </button>
+            </div>
+            {loadingPreviewSlideId === previewSlideId ? (
+              <div className="materials-math-loader">
+                <div className="materials-math-loader-ring" />
+                <div className="materials-math-loader-symbols" aria-hidden="true">
+                  <span>∑</span>
+                  <span>π</span>
+                  <span>√</span>
+                  <span>∞</span>
+                  <span>Δ</span>
+                </div>
+                <p>Đang dựng slide toán học ...</p>
+              </div>
+            ) : previewSlidePdfUrl ? (
+              <div style={{ position: 'relative', width: '100%', flex: 1 }}>
+                {!previewIframeLoaded && (
+                  <div className="materials-math-loader" style={{ position: 'absolute', inset: 0 }}>
+                    <div className="materials-math-loader-ring" />
+                    <p>Đang tải slide...</p>
+                  </div>
+                )}
+                <iframe
+                  src={previewSlidePdfUrl}
+                  title="Slide preview"
+                  className="materials-preview-frame"
+                  loading="eager"
+                  style={{ opacity: previewIframeLoaded ? 1 : 0, transition: 'opacity 0.3s' }}
+                  onLoad={() => setPreviewIframeLoaded(true)}
+                />
+              </div>
+            ) : (
+              <div className="empty">Không có dữ liệu xem thử.</div>
+            )}
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }
