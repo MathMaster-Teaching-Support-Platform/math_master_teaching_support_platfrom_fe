@@ -641,51 +641,67 @@ export default function StudentPublicSlides() {
       </div>
 
       {previewSlideId && (
-        <div
-          className="materials-preview-overlay"
-          role="dialog"
-          aria-modal="true"
-          onClick={closePreview}
-        >
-          <div className="materials-preview-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="materials-preview-header">
+        <div className="ai-slide-modal-overlay" onClick={closePreview}>
+          <div
+            className="ai-slide-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Xem thử slide"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="ai-slide-modal-header">
               <h3>Xem thử slide</h3>
-              <button className="btn secondary" onClick={closePreview}>
-                Đóng
+              <button
+                type="button"
+                className="ai-slide-modal-close"
+                onClick={closePreview}
+                aria-label="Đóng xem trước"
+              >
+                ×
               </button>
             </div>
-            {loadingPreviewSlideId === previewSlideId ? (
-              <div className="materials-math-loader">
-                <div className="materials-math-loader-ring" />
-                <div className="materials-math-loader-symbols" aria-hidden="true">
-                  <span>∑</span>
-                  <span>π</span>
-                  <span>√</span>
-                  <span>∞</span>
-                  <span>Δ</span>
-                </div>
-                <p>Đang dựng slide toán học ...</p>
-              </div>
-            ) : previewSlidePdfUrl ? (
-              <div style={{ position: 'relative', width: '100%', flex: 1 }}>
-                {!previewIframeLoaded && (
-                  <div className="materials-math-loader" style={{ position: 'absolute', inset: 0 }}>
-                    <div className="materials-math-loader-ring" />
-                    <p>Đang tải slide...</p>
+            <div className="ai-slide-modal-body">
+              {loadingPreviewSlideId === previewSlideId && (
+                <div className="ai-slide-math-loader" role="status" aria-live="polite">
+                  <div className="ai-slide-math-loader-ring" aria-hidden="true" />
+                  <div className="ai-slide-math-loader-symbols" aria-hidden="true">
+                    <span>x²</span>
+                    <span>∫</span>
+                    <span>π</span>
+                    <span>√</span>
+                    <span>Δ</span>
                   </div>
-                )}
-                <iframe
-                  src={previewSlidePdfUrl}
-                  title="Slide preview"
-                  className="materials-preview-frame"
-                  loading="eager"
-                  style={{ opacity: previewIframeLoaded ? 1 : 0, transition: 'opacity 0.3s' }}
-                  onLoad={() => setPreviewIframeLoaded(true)}
-                />
-              </div>
-            ) : (
-              <div className="empty">Không có dữ liệu xem thử.</div>
-            )}
+                  <p>Đang dựng slide toán học...</p>
+                </div>
+              )}
+              {!loadingPreviewSlideId && previewSlidePdfUrl && (
+                <div className="ai-slide-office-viewer-wrap">
+                  {!previewIframeLoaded && (
+                    <div className="ai-slide-iframe-skeleton" aria-hidden="true">
+                      <div className="ai-slide-iframe-skeleton__bar ai-slide-iframe-skeleton__bar--title" />
+                      <div className="ai-slide-iframe-skeleton__slides">
+                        {[0, 1, 2, 3, 4, 5].map((i) => (
+                          <div key={i} className="ai-slide-iframe-skeleton__slide">
+                            <div className="ai-slide-iframe-skeleton__slide-inner" />
+                          </div>
+                        ))}
+                      </div>
+                      <div className="ai-slide-iframe-skeleton__hint">
+                        <span className="ai-slide-iframe-skeleton__ring" />
+                        Đang tải slide...
+                      </div>
+                    </div>
+                  )}
+                  <iframe
+                    className={`ai-slide-office-viewer-frame${previewIframeLoaded ? ' ai-slide-office-viewer-frame--loaded' : ''}`}
+                    src={previewSlidePdfUrl}
+                    title="Slide preview"
+                    loading="eager"
+                    onLoad={() => setPreviewIframeLoaded(true)}
+                  />
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
