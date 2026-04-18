@@ -9,6 +9,8 @@ import type {
   UpdateCourseAssessmentRequest,
   UpdateCourseLessonRequest,
   UpdateCourseRequest,
+  UpdateCustomCourseSectionRequest,
+  CreateCustomCourseSectionRequest,
 } from '../types';
 
 // ─── Query Keys ───────────────────────────────────────────────────────────────
@@ -273,5 +275,54 @@ export function useRemoveAssessmentFromCourse() {
       qc.invalidateQueries({ queryKey: [...courseKeys.detail(courseId), 'assessments', 'available'] });
       qc.invalidateQueries({ queryKey: courseKeys.detail(courseId) });
     },
+  });
+}
+
+// ─── Custom Course Section Hooks ─────────────────────────────────────────────
+
+export const sectionKeys = {
+  all: ['course-sections'] as const,
+  course: (courseId: string) => [...sectionKeys.all, courseId] as const,
+};
+
+export function useCustomCourseSections(courseId: string) {
+  return useQuery({
+    queryKey: sectionKeys.course(courseId),
+    queryFn: () => CourseService.listSections(courseId),
+    enabled: !!courseId,
+  });
+}
+
+export function useCreateSection() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ courseId, data }: { courseId: string; data: CreateCustomCourseSectionRequest }) =>
+      CourseService.createSection(courseId, data),
+    onSuccess: (_data, { courseId }) => qc.invalidateQueries({ queryKey: sectionKeys.course(courseId) }),
+  });
+}
+
+export function useUpdateSection() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      courseId,
+      sectionId,
+      data,
+    }: {
+      courseId: string;
+      sectionId: string;
+      data: UpdateCustomCourseSectionRequest;
+    }) => CourseService.updateSection(courseId, sectionId, data),
+    onSuccess: (_data, { courseId }) => qc.invalidateQueries({ queryKey: sectionKeys.course(courseId) }),
+  });
+}
+
+export function useDeleteSection() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ courseId, sectionId }: { courseId: string; sectionId: string }) =>
+      CourseService.deleteSection(courseId, sectionId),
+    onSuccess: (_data, { courseId }) => qc.invalidateQueries({ queryKey: sectionKeys.course(courseId) }),
   });
 }

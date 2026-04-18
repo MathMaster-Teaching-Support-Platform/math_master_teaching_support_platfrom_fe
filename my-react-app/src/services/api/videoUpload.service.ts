@@ -22,7 +22,10 @@ export interface CompleteUploadPayload {
   uploadId: string;
   objectKey: string;
   parts: PartInfo[];
-  lessonId: string;
+  lessonId?: string;
+  sectionId?: string;
+  customTitle?: string;
+  customDescription?: string;
   videoTitle?: string;
   orderIndex?: number;
   isFreePreview?: boolean;

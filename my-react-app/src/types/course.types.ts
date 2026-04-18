@@ -1,5 +1,7 @@
 // Course Management Types
 
+export type CourseProvider = 'MINISTRY' | 'CUSTOM';
+
 export interface MaterialItem {
   type: 'slide' | 'mindmap' | 'document';
   title: string;
@@ -10,9 +12,10 @@ export interface CourseResponse {
   id: string;
   teacherId: string;
   teacherName: string | null;
-  subjectId: string;
+  provider: CourseProvider;
+  subjectId: string | null;
   subjectName: string | null;
-  schoolGradeId: string;
+  schoolGradeId: string | null;
   gradeLevel: number | null;
   title: string;
   description: string | null;
@@ -29,8 +32,17 @@ export interface CourseResponse {
 export interface CourseLessonResponse {
   id: string;
   courseId: string;
-  lessonId: string;
+  /** FK to Ministry Lesson. Null for CUSTOM-course lessons. */
+  lessonId: string | null;
+  /** FK to CustomCourseSection. Null for MINISTRY-course lessons. */
+  sectionId: string | null;
+  /**
+   * Display title: populated from Ministry lesson title (MINISTRY)
+   * or from customTitle (CUSTOM) transparently.
+   */
   lessonTitle: string | null;
+  /** Teacher-defined description (CUSTOM courses only). */
+  customDescription: string | null;
   videoUrl: string | null;
   videoTitle: string | null;
   durationSeconds: number | null;
@@ -82,8 +94,11 @@ export interface StudentInCourseResponse {
 
 // Request types
 export interface CreateCourseRequest {
-  subjectId: string;
-  schoolGradeId: string;
+  provider: CourseProvider;
+  /** Required when provider = MINISTRY */
+  subjectId?: string;
+  /** Required when provider = MINISTRY */
+  schoolGradeId?: string;
   title: string;
   description?: string;
   thumbnailFile?: File;
@@ -96,7 +111,14 @@ export interface UpdateCourseRequest {
 }
 
 export interface CreateCourseLessonRequest {
-  lessonId: string;
+  /** Required for MINISTRY courses */
+  lessonId?: string;
+  /** Required for CUSTOM courses */
+  sectionId?: string;
+  /** Required for CUSTOM courses */
+  customTitle?: string;
+  /** Optional description for CUSTOM courses */
+  customDescription?: string;
   videoTitle?: string;
   orderIndex?: number;
   isFreePreview?: boolean;
@@ -172,4 +194,29 @@ export interface AddAssessmentToCourseRequest {
 export interface UpdateCourseAssessmentRequest {
   orderIndex?: number;
   isRequired?: boolean;
+}
+
+// ─── Custom Course Section Types ─────────────────────────────────────────────
+
+export interface CustomCourseSectionResponse {
+  id: string;
+  courseId: string;
+  title: string;
+  description: string | null;
+  orderIndex: number;
+  lessonCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateCustomCourseSectionRequest {
+  title: string;
+  description?: string;
+  orderIndex: number;
+}
+
+export interface UpdateCustomCourseSectionRequest {
+  title?: string;
+  description?: string;
+  orderIndex?: number;
 }

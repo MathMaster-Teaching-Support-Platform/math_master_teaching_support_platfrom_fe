@@ -52,6 +52,7 @@ interface CreateModalProps {
 
 const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLoading }) => {
   const [form, setForm] = useState<CreateCourseRequest>({
+    provider: 'MINISTRY',
     subjectId: '',
     schoolGradeId: '',
     title: '',
@@ -88,7 +89,8 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
 
   const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!form.subjectId || !form.schoolGradeId || !form.title) return;
+    if (form.provider === 'MINISTRY' && (!form.subjectId || !form.schoolGradeId)) return;
+    if (!form.title) return;
     onSubmit(form, thumbnailFile);
   };
 
@@ -109,7 +111,7 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
   return (
     <div className="modal-overlay">
       <button type="button" className="modal-backdrop" onClick={onClose} aria-label="Đóng" />
-      <div className="modal-box">
+      <div className="modal-box" style={{ maxWidth: '640px' }}>
         <div className="modal-header">
           <div className="modal-header-left">
             <div className="modal-icon">
@@ -125,54 +127,89 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
           </button>
         </div>
         <form onSubmit={handleSubmit} className="modal-form">
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="grade-select" className="form-label">
-                Khối lớp <span className="required">*</span>
-              </label>
-              <select
-                id="grade-select"
-                className="form-select"
-                value={form.schoolGradeId}
-                onChange={(e) => void handleGradeChange(e.target.value)}
-                required
-                disabled={loadingGrades}
-              >
-                <option value="">{loadingGrades ? 'Đang tải...' : '-- Chọn khối lớp --'}</option>
-                {grades.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    Khối {g.gradeLevel} – {g.name}
-                  </option>
-                ))}
-              </select>
+          <div className="provider-selector" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+            <div
+              className={`provider-card ${form.provider === 'MINISTRY' ? 'active' : ''}`}
+              onClick={() => setForm({ ...form, provider: 'MINISTRY' })}
+              style={{
+                border: `2px solid ${form.provider === 'MINISTRY' ? '#2563eb' : '#e2e8f0'}`,
+                borderRadius: '8px',
+                padding: '1rem',
+                cursor: 'pointer',
+                background: form.provider === 'MINISTRY' ? '#eff6ff' : '#fff',
+              }}
+            >
+              <GraduationCap size={24} style={{ color: form.provider === 'MINISTRY' ? '#2563eb' : '#64748b', marginBottom: '0.5rem' }} />
+              <h4 style={{ margin: '0 0 0.5rem 0', color: '#0f172a' }}>Chương trình Bộ GD</h4>
+              <p style={{ fontSize: '0.85rem', color: '#64748b', margin: 0, lineHeight: 1.4 }}>Dạy theo chương trình chuẩn. Yêu cầu chọn khối lớp và môn học.</p>
             </div>
-            <div className="form-group">
-              <label htmlFor="subject-select" className="form-label">
-                Môn học <span className="required">*</span>
-              </label>
-              <select
-                id="subject-select"
-                className="form-select"
-                value={form.subjectId}
-                onChange={(e) => setForm({ ...form, subjectId: e.target.value })}
-                required
-                disabled={!form.schoolGradeId || loadingSubjects}
-              >
-                <option value="">
-                  {(() => {
-                    if (!form.schoolGradeId) return 'Chọn khối lớp trước';
-                    if (loadingSubjects) return 'Đang tải...';
-                    return '-- Chọn môn học --';
-                  })()}
-                </option>
-                {subjects.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
+            <div
+              className={`provider-card ${form.provider === 'CUSTOM' ? 'active' : ''}`}
+              onClick={() => setForm({ ...form, provider: 'CUSTOM', subjectId: '', schoolGradeId: '' })}
+              style={{
+                border: `2px solid ${form.provider === 'CUSTOM' ? '#059669' : '#e2e8f0'}`,
+                borderRadius: '8px',
+                padding: '1rem',
+                cursor: 'pointer',
+                background: form.provider === 'CUSTOM' ? '#f0fdf4' : '#fff',
+              }}
+            >
+              <Sparkles size={24} style={{ color: form.provider === 'CUSTOM' ? '#059669' : '#64748b', marginBottom: '0.5rem' }} />
+              <h4 style={{ margin: '0 0 0.5rem 0', color: '#0f172a' }}>Khóa học Tùy chỉnh</h4>
+              <p style={{ fontSize: '0.85rem', color: '#64748b', margin: 0, lineHeight: 1.4 }}>Tự do xây dựng nội dung theo phong cách riêng. Không bắt buộc theo Bộ GD.</p>
             </div>
           </div>
+
+          {form.provider === 'MINISTRY' && (
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="grade-select" className="form-label">
+                  Khối lớp <span className="required">*</span>
+                </label>
+                <select
+                  id="grade-select"
+                  className="form-select"
+                  value={form.schoolGradeId || ''}
+                  onChange={(e) => void handleGradeChange(e.target.value)}
+                  required
+                  disabled={loadingGrades}
+                >
+                  <option value="">{loadingGrades ? 'Đang tải...' : '-- Chọn khối lớp --'}</option>
+                  {grades.map((g) => (
+                    <option key={g.id} value={g.id}>
+                      Khối {g.gradeLevel} – {g.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label htmlFor="subject-select" className="form-label">
+                  Môn học <span className="required">*</span>
+                </label>
+                <select
+                  id="subject-select"
+                  className="form-select"
+                  value={form.subjectId || ''}
+                  onChange={(e) => setForm({ ...form, subjectId: e.target.value })}
+                  required
+                  disabled={!form.schoolGradeId || loadingSubjects}
+                >
+                  <option value="">
+                    {(() => {
+                      if (!form.schoolGradeId) return 'Chọn khối lớp trước';
+                      if (loadingSubjects) return 'Đang tải...';
+                      return '-- Chọn môn học --';
+                    })()}
+                  </option>
+                  {subjects.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
 
           <div className="form-group">
             <label htmlFor="course-title" className="form-label">
@@ -197,7 +234,7 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
             <textarea
               id="course-desc"
               className="form-input form-textarea"
-              value={form.description}
+              value={form.description || ''}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
               placeholder="Mô tả ngắn về nội dung giáo trình..."
               rows={3}
@@ -224,7 +261,7 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
             <button type="button" onClick={onClose} className="btn secondary">
               Hủy bỏ
             </button>
-            <button type="submit" className="btn" disabled={isLoading || !form.subjectId}>
+            <button type="submit" className="btn" disabled={isLoading || (form.provider === 'MINISTRY' && !form.subjectId)}>
               {isLoading ? (
                 <>
                   <span className="btn-spinner" />

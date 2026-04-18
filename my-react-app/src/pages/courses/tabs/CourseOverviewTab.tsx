@@ -1,4 +1,4 @@
-import { BookOpen, Calendar, CheckCircle2, Eye, GraduationCap, Star, Users } from 'lucide-react';
+import { BookOpen, Calendar, CheckCircle2, Eye, GraduationCap, Star, Users, Sparkles } from 'lucide-react';
 import type { CourseResponse } from '../../../types';
 import '../../../styles/module-refactor.css';
 
@@ -66,19 +66,37 @@ const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({ course }) => {
         <div style={{ display: 'grid', gap: '1rem' }}>
           <div className="info-row">
             <span className="info-label">
-              <GraduationCap size={16} />
-              Môn học
+              <Sparkles size={16} />
+              Loại giáo trình
             </span>
-            <span className="info-value">{course.subjectName || '—'}</span>
+            <span className="info-value">
+              {course.provider === 'CUSTOM' ? (
+                <span style={{ color: '#059669', background: '#ecfdf5', padding: '2px 8px', borderRadius: '4px', fontSize: '0.85rem' }}>Khóa học Tùy chỉnh</span>
+              ) : (
+                <span style={{ color: '#2563eb', background: '#eff6ff', padding: '2px 8px', borderRadius: '4px', fontSize: '0.85rem' }}>Chương trình Bộ GD</span>
+              )}
+            </span>
           </div>
 
-          <div className="info-row">
-            <span className="info-label">
-              <BookOpen size={16} />
-              Khối lớp
-            </span>
-            <span className="info-value">Khối {course.gradeLevel}</span>
-          </div>
+          {course.provider === 'MINISTRY' && (
+            <>
+              <div className="info-row">
+                <span className="info-label">
+                  <GraduationCap size={16} />
+                  Môn học
+                </span>
+                <span className="info-value">{course.subjectName || '—'}</span>
+              </div>
+
+              <div className="info-row">
+                <span className="info-label">
+                  <BookOpen size={16} />
+                  Khối lớp
+                </span>
+                <span className="info-value">Khối {course.gradeLevel}</span>
+              </div>
+            </>
+          )}
 
           <div className="info-row">
             <span className="info-label">

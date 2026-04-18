@@ -8,6 +8,8 @@ import type {
   CourseResponse,
   CreateCourseLessonRequest,
   CreateCourseRequest,
+  CreateCustomCourseSectionRequest,
+  CustomCourseSectionResponse,
   EnrollmentResponse,
   GetPublicCoursesParams,
   LessonProgressItem,
@@ -18,6 +20,7 @@ import type {
   UpdateCourseAssessmentRequest,
   UpdateCourseLessonRequest,
   UpdateCourseRequest,
+  UpdateCustomCourseSectionRequest,
 } from '../../types';
 import { AuthService } from './auth.service';
 
@@ -336,6 +339,55 @@ export class CourseService {
     const headers = await this.getHeaders();
     const res = await fetch(
       `${API_BASE_URL}${API_ENDPOINTS.COURSE_DETAIL(courseId)}/assessments/${assessmentId}`,
+      { method: 'DELETE', headers }
+    );
+    return this.handleResponse(res);
+  }
+
+  // ─── Custom Course Sections ─────────────────────────────────────────────
+
+  static async listSections(
+    courseId: string
+  ): Promise<ApiResponse<CustomCourseSectionResponse[]>> {
+    const res = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.COURSE_SECTIONS(courseId)}`,
+      { method: 'GET' }
+    );
+    return this.handleResponse(res);
+  }
+
+  static async createSection(
+    courseId: string,
+    data: CreateCustomCourseSectionRequest
+  ): Promise<ApiResponse<CustomCourseSectionResponse>> {
+    const headers = await this.getHeaders();
+    const res = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.COURSE_SECTIONS(courseId)}`,
+      { method: 'POST', headers, body: JSON.stringify(data) }
+    );
+    return this.handleResponse(res);
+  }
+
+  static async updateSection(
+    courseId: string,
+    sectionId: string,
+    data: UpdateCustomCourseSectionRequest
+  ): Promise<ApiResponse<CustomCourseSectionResponse>> {
+    const headers = await this.getHeaders();
+    const res = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.COURSE_SECTION_DETAIL(courseId, sectionId)}`,
+      { method: 'PUT', headers, body: JSON.stringify(data) }
+    );
+    return this.handleResponse(res);
+  }
+
+  static async deleteSection(
+    courseId: string,
+    sectionId: string
+  ): Promise<ApiResponse<void>> {
+    const headers = await this.getHeaders();
+    const res = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.COURSE_SECTION_DETAIL(courseId, sectionId)}`,
       { method: 'DELETE', headers }
     );
     return this.handleResponse(res);

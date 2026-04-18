@@ -301,6 +301,9 @@ export const API_ENDPOINTS = {
   COURSE_LESSONS: (courseId: string) => `/courses/${courseId}/lessons`,
   COURSE_LESSON_DETAIL: (courseId: string, lessonId: string) =>
     `/courses/${courseId}/lessons/${lessonId}`,
+  COURSE_SECTIONS: (courseId: string) => `/courses/${courseId}/sections`,
+  COURSE_SECTION_DETAIL: (courseId: string, sectionId: string) =>
+    `/courses/${courseId}/sections/${sectionId}`,
 
   // Enrollments
   COURSE_ENROLL: (courseId: string) => `/courses/${courseId}/enroll`,
