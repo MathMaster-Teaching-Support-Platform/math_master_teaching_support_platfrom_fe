@@ -409,8 +409,31 @@ const CoursePreview: React.FC = () => {
               </div>
 
               <div className="sidebar-price-container">
-                <span className="price-primary">Miễn phí</span>
-                {/* Future implementation for paid courses can go here */}
+                {course.discountedPrice !== null && course.discountedPrice >= 0 && (!course.discountExpiryDate || new Date(course.discountExpiryDate) > new Date()) ? (
+                  <div className="price-group">
+                    <span className="price-primary">{course.discountedPrice === 0 ? 'Miễn phí' : course.discountedPrice.toLocaleString('vi-VN') + '₫'}</span>
+                    {course.originalPrice && course.originalPrice > course.discountedPrice && (
+                      <span className="price-original">{course.originalPrice.toLocaleString('vi-VN')}₫</span>
+                    )}
+                    {course.originalPrice && course.originalPrice > course.discountedPrice && (
+                      <span className="price-discount">
+                        {Math.round(((course.originalPrice - course.discountedPrice) / course.originalPrice) * 100)}% off
+                      </span>
+                    )}
+                  </div>
+                ) : course.originalPrice && course.originalPrice > 0 ? (
+                  <span className="price-primary">{course.originalPrice.toLocaleString('vi-VN')}₫</span>
+                ) : (
+                  <span className="price-primary">Miễn phí</span>
+                )}
+                {course.discountExpiryDate && new Date(course.discountExpiryDate) > new Date() && (
+                  <div className="price-expiry">
+                    <Clock size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'text-bottom' }} />
+                    <span style={{ color: '#b32d0f', fontSize: '0.85rem', fontWeight: 600 }}>
+                      Ưu đãi kết thúc vào {new Date(course.discountExpiryDate).toLocaleDateString('vi-VN')}
+                    </span>
+                  </div>
+                )}
               </div>
 
               <button 
@@ -418,8 +441,31 @@ const CoursePreview: React.FC = () => {
                 onClick={handleEnroll}
                 disabled={enrollMutation.isPending}
               >
-                {enrollMutation.isPending ? 'Đang xử lý...' : 'Đăng ký học ngay'}
+                {enrollMutation.isPending ? 'Đang xử lý...' : 
+                 ((course.discountedPrice !== null && course.discountedPrice >= 0 && (!course.discountExpiryDate || new Date(course.discountExpiryDate) > new Date())) ? course.discountedPrice : course.originalPrice || 0) > 0 
+                   ? 'Mua ngay' 
+                   : 'Đăng ký miễn phí'}
               </button>
+
+              {enrollMutation.isError && (
+                <div className="enroll-error-alert" style={{ margin: '0 1.5rem 1.5rem', padding: '1rem', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '4px', color: '#991b1b', fontSize: '0.9rem' }}>
+                  <AlertCircle size={16} style={{ display: 'inline', verticalAlign: 'text-bottom', marginRight: '6px' }} />
+                  {(enrollMutation.error as any)?.response?.data?.code === 1029 ? (
+                    <>
+                      <strong style={{ display: 'inline-block', marginBottom: '0.25rem' }}>Số dư ví không đủ!</strong>
+                      <div style={{ marginTop: '0.25rem' }}>Vui lòng nạp thêm tiền để tiếp tục thanh toán khóa học.</div>
+                      <button 
+                        onClick={() => navigate('/student/wallet')} 
+                        style={{ background: 'none', border: 'none', color: '#b91c1c', textDecoration: 'underline', padding: 0, marginTop: '0.75rem', cursor: 'pointer', fontWeight: 700 }}
+                      >
+                        Đến ví của tôi &rarr;
+                      </button>
+                    </>
+                  ) : (
+                    <span>{(enrollMutation.error as any)?.response?.data?.message || 'Có lỗi xảy ra khi đăng ký khóa học.'}</span>
+                  )}
+                </div>
+              )}
 
               <div className="sidebar-inclusions">
                 <h4>Khóa học này bao gồm:</h4>
@@ -830,10 +876,33 @@ const CoursePreview: React.FC = () => {
           padding: 1.5rem 1.5rem 0.5rem;
         }
 
+        .price-group {
+          display: flex;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 0.5rem;
+          margin-bottom: 0.5rem;
+        }
+
         .price-primary {
           font-size: 2rem;
           font-weight: 700;
           color: #1c1d1f;
+        }
+
+        .price-original {
+          font-size: 1rem;
+          color: #6a6f73;
+          text-decoration: line-through;
+        }
+
+        .price-discount {
+          font-size: 1rem;
+          color: #1c1d1f;
+        }
+
+        .price-expiry {
+          margin-top: 0.5rem;
         }
 
         .btn-enroll-primary {

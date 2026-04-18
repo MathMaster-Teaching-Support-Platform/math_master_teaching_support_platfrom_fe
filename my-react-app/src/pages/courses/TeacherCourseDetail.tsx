@@ -57,14 +57,14 @@ const TeacherCourseDetail: React.FC = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editStep, setEditStep] = useState(1);
   const [editForm, setEditForm] = useState<UpdateCourseRequest>({
-    title: '',
-    description: '',
-    subtitle: '',
-    language: '',
     whatYouWillLearn: '',
     requirements: '',
     targetAudience: '',
+    originalPrice: 0,
+    discountedPrice: 0,
+    discountExpiryDate: '',
   });
+  const [discountPercent, setDiscountPercent] = useState(0);
 
   const course = courseData?.result;
   const students = studentsData?.result?.content ?? [];
@@ -79,7 +79,13 @@ const TeacherCourseDetail: React.FC = () => {
         whatYouWillLearn: course.whatYouWillLearn || '',
         requirements: course.requirements || '',
         targetAudience: course.targetAudience || '',
+        originalPrice: course.originalPrice || 0,
+        discountedPrice: course.discountedPrice || 0,
+        discountExpiryDate: course.discountExpiryDate || '',
       });
+      if (course.originalPrice && course.discountedPrice) {
+        setDiscountPercent(Math.round(((course.originalPrice - course.discountedPrice) / course.originalPrice) * 100));
+      }
     }
   }, [course]);
 
@@ -92,6 +98,12 @@ const TeacherCourseDetail: React.FC = () => {
         onSuccess: () => setShowEditModal(false),
       }
     );
+  };
+
+  const handlePriceChange = (original: number, percent: number) => {
+    const discounted = Math.round(original * (1 - percent / 100));
+    setEditForm({ ...editForm, originalPrice: original, discountedPrice: discounted });
+    setDiscountPercent(percent);
   };
 
   const handleTabChange = (tab: TabType) => {
@@ -288,7 +300,7 @@ const TeacherCourseDetail: React.FC = () => {
                 </div>
                 <div>
                   <h2>Chỉnh sửa giáo trình</h2>
-                  <p>Bước {editStep} trên 3</p>
+                  <p>Bước {editStep} trên 4</p>
                 </div>
               </div>
               <button className="modal-close" onClick={() => setShowEditModal(false)}>
@@ -298,13 +310,13 @@ const TeacherCourseDetail: React.FC = () => {
 
             {/* Step Indicator */}
             <div className="wizard-steps-indicator">
-              {[1, 2, 3].map((i) => (
+              {[1, 2, 3, 4].map((i) => (
                 <div key={i} className={`wizard-step-item ${editStep === i ? 'active' : ''} ${editStep > i ? 'completed' : ''}`}>
                   <div className="wizard-step-circle">
                     {editStep > i ? <Check size={18} /> : i}
                   </div>
                   <span className="wizard-step-label">
-                    {i === 1 ? 'Phân loại' : i === 2 ? 'Chi tiết' : 'Tiếp thị'}
+                    {i === 1 ? 'Phân loại' : i === 2 ? 'Chi tiết' : i === 3 ? 'Tiếp thị' : 'Định giá'}
                   </span>
                 </div>
               ))}
@@ -423,6 +435,74 @@ const TeacherCourseDetail: React.FC = () => {
                         </div>
                       </div>
                     )}
+
+                    {editStep === 4 && (
+                      <div className="edit-step-4">
+                        <div className="form-section-header">
+                          <h3>Định giá & Khuyến mãi</h3>
+                          <p>Cập nhật học phí và các chương trình ưu đãi.</p>
+                        </div>
+
+                        <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                          <div className="form-group">
+                            <label className="form-label">Giá gốc (VND) <span className="required">*</span></label>
+                            <input
+                              type="number"
+                              className="form-input"
+                              value={editForm.originalPrice || ''}
+                              onChange={(e) => handlePriceChange(Number(e.target.value), discountPercent)}
+                              placeholder="0"
+                            />
+                            <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px' }}>
+                              Nhập 0 cho giáo trình miễn phí.
+                            </p>
+                          </div>
+                          <div className="form-group">
+                            <label className="form-label">Giảm giá (%)</label>
+                            <input
+                              type="number"
+                              className="form-input"
+                              min="0"
+                              max="99"
+                              value={discountPercent || ''}
+                              onChange={(e) => handlePriceChange(Number(editForm.originalPrice), Number(e.target.value))}
+                              placeholder="0"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="pricing-summary-card" style={{ 
+                          background: '#f8fafc',
+                          padding: '1.25rem',
+                          borderRadius: '8px',
+                          border: '1px solid #e2e8f0',
+                          marginBottom: '1.5rem'
+                        }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                            <span style={{ color: '#64748b' }}>Giá bán thực tế:</span>
+                            <strong style={{ fontSize: '1.1rem', color: '#1e293b' }}>
+                              {editForm.discountedPrice?.toLocaleString('vi-VN')}₫
+                            </strong>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <span style={{ color: '#64748b' }}>Tiết kiệm:</span>
+                            <span style={{ color: '#059669', fontWeight: 600 }}>
+                              {(Number(editForm.originalPrice) - Number(editForm.discountedPrice)).toLocaleString('vi-VN')}₫ ({discountPercent}%)
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="form-group full-width">
+                          <label className="form-label">Ngày hết hạn giảm giá</label>
+                          <input
+                            type="date"
+                            className="form-input"
+                            value={editForm.discountExpiryDate ? editForm.discountExpiryDate.split('T')[0] : ''}
+                            onChange={(e) => setEditForm({ ...editForm, discountExpiryDate: e.target.value ? new Date(e.target.value).toISOString() : '' })}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </motion.div>
                 </AnimatePresence>
               </div>
@@ -445,9 +525,9 @@ const TeacherCourseDetail: React.FC = () => {
                   type="button"
                   className="btn primary"
                   disabled={updateMutation.isPending || !editForm.title}
-                  onClick={editStep === 3 ? handleEditSubmit : () => setEditStep((s) => s + 1)}
+                  onClick={editStep === 4 ? handleEditSubmit : () => setEditStep((s) => s + 1)}
                 >
-                  {updateMutation.isPending ? 'Đang lưu...' : editStep === 3 ? (
+                  {updateMutation.isPending ? 'Đang lưu...' : editStep === 4 ? (
                     <>
                       <Save size={16} /> Lưu thay đổi
                     </>

@@ -62,12 +62,15 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
     title: '',
     subtitle: '',
     description: '',
-    language: 'Tiếng Việt',
     whatYouWillLearn: '',
     requirements: '',
     targetAudience: '',
+    originalPrice: 0,
+    discountedPrice: 0,
+    discountExpiryDate: '',
   });
   const [thumbnailFile, setThumbnailFile] = useState<File | undefined>(undefined);
+  const [discountPercent, setDiscountPercent] = useState(0);
 
   const [grades, setGrades] = useState<SchoolGrade[]>([]);
   const [subjects, setSubjects] = useState<SubjectByGrade[]>([]);
@@ -87,17 +90,22 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
     } catch {}
   };
 
+  const [step, setStep] = useState(1);
+  const totalSteps = 4;
+
+  const nextStep = () => setStep((s) => Math.min(s + 1, totalSteps));
+  const prevStep = () => setStep((s) => Math.max(s - 1, 1));
+
+  const handlePriceChange = (original: number, percent: number) => {
+    const discounted = Math.round(original * (1 - percent / 100));
+    setForm({ ...form, originalPrice: original, discountedPrice: discounted });
+    setDiscountPercent(percent);
+  };
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) setThumbnailFile(file);
   };
-
-  const [step, setStep] = useState(1);
-  const totalSteps = 3;
-
-  const nextStep = () => setStep((s) => Math.min(s + 1, totalSteps));
-  const prevStep = () => setStep((s) => Math.max(s - 1, 1));
 
   return (
     <div className="modal-overlay">
@@ -120,13 +128,13 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
 
         {/* Step Indicator */}
         <div className="wizard-steps-indicator">
-          {[1, 2, 3].map((i) => (
+          {[1, 2, 3, 4].map((i) => (
             <div key={i} className={`wizard-step-item ${step === i ? 'active' : ''} ${step > i ? 'completed' : ''}`}>
               <div className="wizard-step-circle">
                 {step > i ? <Check size={18} /> : i}
               </div>
               <span className="wizard-step-label">
-                {i === 1 ? 'Phân loại' : i === 2 ? 'Chi tiết' : 'Tiếp thị'}
+                {i === 1 ? 'Phân loại' : i === 2 ? 'Chi tiết' : i === 3 ? 'Tiếp thị' : 'Định giá'}
               </span>
             </div>
           ))}
@@ -316,6 +324,77 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
                         placeholder="Dành cho học sinh khối 12..."
                         rows={2}
                       />
+                    </div>
+                  </div>
+                )}
+
+                {step === 4 && (
+                  <div className="step-4-pricing">
+                    <div className="form-section-header">
+                      <h3>Định giá & Khuyến mãi</h3>
+                      <p>Thiết lập học phí và các chương trình giảm giá cho giáo trình của bạn.</p>
+                    </div>
+
+                    <div className="form-row" style={{ marginBottom: '1.5rem' }}>
+                      <div className="form-group">
+                        <label className="form-label">Giá gốc (VND) <span className="required">*</span></label>
+                        <input
+                          className="form-input"
+                          type="number"
+                          value={form.originalPrice || ''}
+                          onChange={(e) => handlePriceChange(Number(e.target.value), discountPercent)}
+                          placeholder="0"
+                        />
+                        <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px' }}>
+                          Nhập 0 nếu bạn muốn cung cấp giáo trình miễn phí.
+                        </p>
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Phần trăm giảm giá (%)</label>
+                        <input
+                          className="form-input"
+                          type="number"
+                          min="0"
+                          max="99"
+                          value={discountPercent || ''}
+                          onChange={(e) => handlePriceChange(Number(form.originalPrice), Number(e.target.value))}
+                          placeholder="0"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="pricing-summary-card" style={{ 
+                      background: '#f8fafc',
+                      padding: '1.25rem',
+                      borderRadius: '8px',
+                      border: '1px solid #e2e8f0',
+                      marginBottom: '1.5rem'
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                        <span style={{ color: '#64748b' }}>Giá bán thực tế:</span>
+                        <strong style={{ fontSize: '1.1rem', color: '#1e293b' }}>
+                          {form.discountedPrice?.toLocaleString('vi-VN')}₫
+                        </strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#64748b' }}>Tiết kiệm cho học viên:</span>
+                        <span style={{ color: '#059669', fontWeight: 600 }}>
+                          {(Number(form.originalPrice) - Number(form.discountedPrice)).toLocaleString('vi-VN')}₫ ({discountPercent}%)
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Ngày hết hạn giảm giá</label>
+                      <input
+                        className="form-input"
+                        type="date"
+                        value={form.discountExpiryDate ? form.discountExpiryDate.split('T')[0] : ''}
+                        onChange={(e) => setForm({ ...form, discountExpiryDate: e.target.value ? new Date(e.target.value).toISOString() : '' })}
+                      />
+                      <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px' }}>
+                        Sau ngày này, giáo trình sẽ quay trở về giá gốc. Để trống nếu không giới hạn thời gian.
+                      </p>
                     </div>
                   </div>
                 )}

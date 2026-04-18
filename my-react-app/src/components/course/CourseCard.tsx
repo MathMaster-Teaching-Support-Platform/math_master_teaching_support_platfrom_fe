@@ -94,6 +94,29 @@ export const CourseCard: React.FC<CourseCardProps> = ({
             <span>{course.studentsCount}</span>
           </div>
         </div>
+        <div className="course-pricing">
+          {course.discountedPrice !== null && course.discountedPrice >= 0 && (!course.discountExpiryDate || new Date(course.discountExpiryDate) > new Date()) ? (
+            <div className="price-container">
+              <span className="current-price">
+                {course.discountedPrice.toLocaleString('vi-VN')}₫
+              </span>
+              {course.originalPrice && course.originalPrice > course.discountedPrice && (
+                <span className="original-price">
+                  {course.originalPrice.toLocaleString('vi-VN')}₫
+                </span>
+              )}
+            </div>
+          ) : course.originalPrice && course.originalPrice > 0 ? (
+            <span className="current-price">{course.originalPrice.toLocaleString('vi-VN')}₫</span>
+          ) : (
+            <span className="current-price price-free">Miễn phí</span>
+          )}
+          {course.originalPrice && course.discountedPrice !== null && course.originalPrice > course.discountedPrice && (!course.discountExpiryDate || new Date(course.discountExpiryDate) > new Date()) && (
+            <span className="discount-badge">
+              -{Math.round(((course.originalPrice - course.discountedPrice) / course.originalPrice) * 100)}%
+            </span>
+          )}
+        </div>
         {showEnrollButton && (
           <div className="course-actions">
             <button
@@ -139,6 +162,40 @@ export const CourseCard: React.FC<CourseCardProps> = ({
           font-size: 0.85rem;
           color: #64748b;
           margin: 0;
+        }
+        .course-pricing {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin: 0.75rem 0;
+          padding-top: 0.75rem;
+          border-top: 1px solid #f1f5f9;
+        }
+        .price-container {
+          display: flex;
+          align-items: baseline;
+          gap: 8px;
+        }
+        .current-price {
+          font-size: 1.25rem;
+          font-weight: 700;
+          color: #1e293b;
+        }
+        .original-price {
+          font-size: 0.875rem;
+          color: #94a3b8;
+          text-decoration: line-through;
+        }
+        .price-free {
+          color: #059669;
+        }
+        .discount-badge {
+          background: #fef08a;
+          color: #854d0e;
+          padding: 2px 8px;
+          border-radius: 4px;
+          font-size: 0.75rem;
+          font-weight: 700;
         }
       `}</style>
     </motion.article>

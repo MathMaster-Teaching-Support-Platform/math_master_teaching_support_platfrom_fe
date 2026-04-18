@@ -47,6 +47,9 @@ export interface CourseResponse {
   articlesCount?: number;
   resourcesCount?: number;
   sectionsCount: number;
+  originalPrice: number | null;
+  discountedPrice: number | null;
+  discountExpiryDate: string | null;
 }
 
 export interface CourseLessonResponse {
@@ -130,6 +133,9 @@ export interface CreateCourseRequest {
   targetAudience?: string;
   subtitle?: string;
   language?: string;
+  originalPrice?: number;
+  discountedPrice?: number;
+  discountExpiryDate?: string;
 }
 
 export interface UpdateCourseRequest {
@@ -141,6 +147,9 @@ export interface UpdateCourseRequest {
   targetAudience?: string;
   subtitle?: string;
   language?: string;
+  originalPrice?: number;
+  discountedPrice?: number;
+  discountExpiryDate?: string;
 }
 
 export interface CreateCourseLessonRequest {
