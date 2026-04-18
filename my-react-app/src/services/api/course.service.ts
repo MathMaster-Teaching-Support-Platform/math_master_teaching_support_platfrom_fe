@@ -143,6 +143,22 @@ export class CourseService {
     return this.handleResponse(res);
   }
 
+  /** Admin: search ALL courses (published + unpublished) by keyword */
+  static async adminSearchCourses(params: {
+    keyword?: string;
+    page?: number;
+    size?: number;
+  } = {}): Promise<ApiResponse<PaginatedResponse<CourseResponse>>> {
+    const headers = await this.getHeaders();
+    const qs = new URLSearchParams();
+    if (params.keyword) qs.append('keyword', params.keyword);
+    if (params.page !== undefined) qs.append('page', String(params.page));
+    if (params.size !== undefined) qs.append('size', String(params.size));
+    const url = `${API_BASE_URL}/courses/admin/search${qs.toString() ? `?${qs}` : ''}`;
+    const res = await fetch(url, { method: 'GET', headers });
+    return this.handleResponse(res);
+  }
+
   static async getStudentsInCourse(
     courseId: string,
     page = 0,

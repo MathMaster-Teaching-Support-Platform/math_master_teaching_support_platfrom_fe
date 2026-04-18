@@ -10,6 +10,32 @@ export interface User {
   grade?: string | number;
 }
 
+// Legacy types for backward compatibility (deprecated)
+export interface RoadmapModule {
+  id: string;
+  title: string;
+  order?: number;
+  description?: string;
+  completionPercent?: number;
+  lessons: RoadmapLesson[];
+}
+
+export interface RoadmapLesson {
+  id: string;
+  title: string;
+  order?: number;
+  status?: string;
+  durationMinutes?: number;
+  completed: boolean;
+}
+
+export interface RoadmapResourceOption {
+  id: string;
+  title: string;
+  name: string;
+  type: string;
+}
+
 // Re-export from other type files
 export * from './auth.types';
 export * from './teacher.types';

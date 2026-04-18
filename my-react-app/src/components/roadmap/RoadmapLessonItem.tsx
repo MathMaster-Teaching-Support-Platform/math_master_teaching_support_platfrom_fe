@@ -11,7 +11,7 @@ export default function RoadmapLessonItem(props: Readonly<RoadmapLessonItemProps
   const canComplete = lesson.status !== 'COMPLETED' && lesson.status !== 'LOCKED';
 
   return (
-    <li className={`roadmap-lesson-item roadmap-lesson-item--${lesson.status.toLowerCase()}`}>
+    <li className={`roadmap-lesson-item roadmap-lesson-item--${lesson.status?.toLowerCase() ?? 'default'}`}>
       <div>
         <h5 className="roadmap-lesson-item__title">{lesson.order}. {lesson.title}</h5>
         <p className="roadmap-lesson-item__meta">{lesson.durationMinutes} mins</p>

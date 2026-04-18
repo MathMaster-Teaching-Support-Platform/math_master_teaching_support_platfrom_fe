@@ -1,0 +1,83 @@
+/* ============================================
+   GRADE-SUBJECT CASCADING SELECT
+   ============================================ */
+
+.grade-subject-select {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.grade-subject-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.grade-subject-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.grade-subject-icon {
+  color: #6b7280;
+}
+
+.grade-subject-required {
+  color: #dc2626;
+  margin-left: 2px;
+}
+
+.grade-subject-input {
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  background: white;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.grade-subject-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.grade-subject-input:disabled {
+  background: #f3f4f6;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+.grade-subject-loading {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-style: italic;
+}
+
+.grade-subject-hint {
+  font-size: 0.75rem;
+  color: #10b981;
+}
+
+/* Horizontal layout variant */
+.grade-subject-select--horizontal {
+  flex-direction: row;
+  gap: 16px;
+}
+
+.grade-subject-select--horizontal .grade-subject-field {
+  flex: 1;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .grade-subject-select--horizontal {
+    flex-direction: column;
+  }
+}

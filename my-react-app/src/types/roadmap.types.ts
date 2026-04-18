@@ -1,9 +1,8 @@
 import type { ApiResponse } from './auth.types';
 
 export type RoadmapStatus = 'GENERATED' | 'IN_PROGRESS' | 'COMPLETED' | 'ARCHIVED';
-export type RoadmapLessonStatus = 'LOCKED' | 'IN_PROGRESS' | 'COMPLETED';
 export type QuestionDifficulty = 'EASY' | 'MEDIUM' | 'HARD';
-export type TopicStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'LOCKED';
+export type TopicStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED';
 
 export interface RoadmapCatalogItem {
   id: string;
@@ -22,24 +21,18 @@ export interface RoadmapCatalogItem {
   description: string;
 }
 
-export interface RoadmapLesson {
+/** Enriched course info embedded in each topic */
+export interface RoadmapTopicCourse {
   id: string;
   title: string;
-  order: number;
-  durationMinutes: number;
-  status: RoadmapLessonStatus;
-  isRequired: boolean;
-}
-
-export interface RoadmapModule {
-  id: string;
-  title: string;
-  order: number;
+  thumbnail?: string | null;
+  thumbnailUrl?: string | null;
   description?: string;
-  completionPercent: number;
-  lessons: RoadmapLesson[];
+  totalLessons?: number;
+  isEnrolled?: boolean;
 }
 
+/** A single topic in the roadmap — always clickable, no locking */
 export interface RoadmapTopic {
   id: string;
   title: string;
@@ -47,23 +40,9 @@ export interface RoadmapTopic {
   status: TopicStatus;
   difficulty: QuestionDifficulty;
   sequenceOrder: number;
-  mark?: number;
-  requiredPoint?: number;
-  unlocked?: boolean;
-  courseIds?: string[];
-  courses?: Array<{
-    id: string;
-    title: string;
-  }>;
-  lessonIds?: string[];
-  slideLessonIds?: string[];
-  assessmentIds?: string[];
-  lessonPlanIds?: string[];
-  mindmapIds?: string[];
-  topicAssessmentId?: string | null;
+  /** Multiple linked courses */
+  courses?: RoadmapTopicCourse[];
   startedAt?: string | null;
-  questionTemplates: unknown[];
-  mindmaps: unknown[];
 }
 
 export interface RoadmapStats {
@@ -72,7 +51,6 @@ export interface RoadmapStats {
   mediumTopicsCount: number;
   hardTopicsCount: number;
   averageProgress: number;
-  lockedTopicsCount: number;
   daysRemaining: number;
 }
 
@@ -101,105 +79,23 @@ export interface StudentRoadmapSnapshot {
   progress: StudentRoadmapProgress;
 }
 
-export type TopicMaterialResourceType =
-  | 'LESSON'
-  | 'ASSESSMENT'
-  | 'MINDMAP'
-  | 'SLIDE'
-  | 'LESSON_PLAN';
-
-export interface TopicMaterial {
-  id: string;
-  resourceTitle: string;
-  resourceType: TopicMaterialResourceType;
-  sequenceOrder: number;
-  isRequired: boolean;
-  lessonId: string | null;
-  questionId: string | null;
-  assessmentId: string | null;
-  mindmapId: string | null;
-  chapterId: string | null;
-}
-
-export interface LinkTopicMaterialsByQuestionRequest {
-  questionId: string;
-  includeSlides: boolean;
-  includeQuestions: boolean;
-  includeMindmaps: boolean;
-  includeDocuments: boolean;
-  startSequenceOrder: number;
-}
-
+/** Admin: create a new topic (single courseId required) */
 export interface CreateRoadmapTopicRequest {
   title: string;
   description?: string;
   sequenceOrder: number;
-  mark?: number;
-  courseIds?: string[];
-  lessonIds: string[];
-  slideLessonIds?: string[];
-  assessmentIds?: string[];
-  lessonPlanIds?: string[];
-  mindmapIds?: string[];
-  topicAssessmentId?: string;
   difficulty: QuestionDifficulty;
+  courseId: string;
 }
 
-export interface RoadmapTopicResponse {
-  id: string;
-  title: string;
-  description?: string;
-  status: TopicStatus;
-  difficulty: QuestionDifficulty;
-  sequenceOrder: number;
-  mark?: number;
-  requiredPoint?: number;
-  unlocked?: boolean;
-  courseIds?: string[];
-  courses?: Array<{
-    id: string;
-    title: string;
-  }>;
-  lessonIds?: string[];
-  slideLessonIds?: string[];
-  assessmentIds?: string[];
-  lessonPlanIds?: string[];
-  mindmapIds?: string[];
-  topicAssessmentId?: string | null;
-  startedAt?: string | null;
-  questionTemplates: unknown[];
-  mindmaps: unknown[];
-}
-
+/** Admin: update an existing topic */
 export interface UpdateRoadmapTopicRequest {
   title?: string;
   description?: string;
   sequenceOrder?: number;
-  mark?: number;
-  courseIds?: string[];
-  lessonIds?: string[];
-  slideLessonIds?: string[];
-  assessmentIds?: string[];
-  lessonPlanIds?: string[];
-  mindmapIds?: string[];
-  topicAssessmentId?: string;
   difficulty?: QuestionDifficulty;
+  courseId?: string;
   status?: TopicStatus;
-}
-
-export type RoadmapResourceOptionType =
-  | 'LESSON'
-  | 'TEMPLATE_SLIDE'
-  | 'MINDMAP'
-  | 'LESSON_PLAN'
-  | 'ASSESSMENT';
-
-export interface RoadmapResourceOption {
-  id: string;
-  name: string;
-  type: RoadmapResourceOptionType;
-  lessonId: string | null;
-  chapterId: string | null;
 }
 
 export interface CreateRoadmapEntryTestRequest {
@@ -313,6 +209,7 @@ export interface RoadmapUnlockedTopicItem {
 export interface SubmitRoadmapEntryTestResult {
   roadmapId: string;
   submissionId: string;
+  suggestedTopicId?: string;
   score: number;
   studentBestScore: number;
   unlockedTopics: RoadmapUnlockedTopicItem[];
@@ -345,6 +242,17 @@ export interface RoadmapFeedbackPage {
   number: number;
 }
 
+export interface RoadmapTopicResponse {
+  id: string;
+  title: string;
+  description?: string;
+  status: TopicStatus;
+  difficulty: QuestionDifficulty;
+  sequenceOrder: number;
+  courses?: RoadmapTopicCourse[];
+  startedAt?: string | null;
+}
+
 export interface CreateAdminRoadmapRequest {
   name: string;
   subjectId: string;
@@ -360,8 +268,9 @@ export interface UpdateAdminRoadmapRequest {
 }
 
 export interface UpdateRoadmapProgressRequest {
-  lessonId: string;
-  status: Extract<RoadmapLessonStatus, 'IN_PROGRESS' | 'COMPLETED'>;
+  topicId: string;
+  status: TopicStatus;
+  progressPercentage?: number;
 }
 
 export type RoadmapApiResponse<T> = ApiResponse<T>;

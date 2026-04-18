@@ -47,7 +47,7 @@ export function QuestionBankDetailPage() {
   const [batchMessage, setBatchMessage] = useState<string | null>(null);
   const [batchError, setBatchError] = useState<string | null>(null);
   const [questionPage, setQuestionPage] = useState(0);
-  const [pageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(20);
   const [formOpen, setFormOpen] = useState(false);
 
   const { data, isLoading, isError, error, refetch } = useGetQuestionBankById(
@@ -86,6 +86,7 @@ export function QuestionBankDetailPage() {
   const bank = data?.result;
   const questions = questionsData?.result?.content ?? [];
   const totalQuestionPages = questionsData?.result?.totalPages ?? 0;
+  const totalQuestionElements = questionsData?.result?.totalElements ?? 0;
   const searchedQuestions = searchQuestionsData?.result?.content ?? [];
   const totalSearchQuestionPages = searchQuestionsData?.result?.totalPages ?? 0;
 
@@ -504,25 +505,100 @@ export function QuestionBankDetailPage() {
                 </div>
               )}
 
-              {totalQuestionPages > 1 && (
-                <div className="row" style={{ justifyContent: 'center' }}>
-                  <button
-                    className="btn secondary"
-                    disabled={questionPage === 0}
-                    onClick={() => setQuestionPage((prev) => prev - 1)}
-                  >
-                    Trước
-                  </button>
-                  <span className="muted">
-                    Trang {questionPage + 1} / {totalQuestionPages}
-                  </span>
-                  <button
-                    className="btn secondary"
-                    disabled={questionPage >= totalQuestionPages - 1}
-                    onClick={() => setQuestionPage((prev) => prev + 1)}
-                  >
-                    Sau
-                  </button>
+              {!questionsLoading && !questionsError && questions.length > 0 && (
+                <div className="pagination-container" style={{ marginTop: 24, padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+                  <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+                    <label className="row" style={{ gap: 8, alignItems: 'center' }}>
+                      <span className="muted" style={{ fontSize: '13px', fontWeight: 500 }}>Hiển thị</span>
+                      <select
+                        className="select"
+                        value={pageSize}
+                        onChange={(event) => {
+                          setPageSize(Number(event.target.value));
+                          setQuestionPage(0);
+                        }}
+                        style={{ width: 88, padding: '6px 8px', fontSize: '13px' }}
+                      >
+                        <option value={10}>10</option>
+                        <option value={20}>20</option>
+                        <option value={30}>30</option>
+                        <option value={50}>50</option>
+                      </select>
+                      <span className="muted" style={{ fontSize: '13px', fontWeight: 500 }}>câu hỏi</span>
+                    </label>
+
+                    {totalQuestionPages > 1 && (
+                      <div className="row" style={{ gap: 8, alignItems: 'center' }}>
+                        <button
+                          className="btn secondary"
+                          disabled={questionPage === 0}
+                          onClick={() => setQuestionPage((prev) => prev - 1)}
+                          style={{ padding: '6px 12px', fontSize: '13px' }}
+                        >
+                          ← Trước
+                        </button>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 240 }}>
+                          <span className="muted" style={{ fontSize: '13px', fontWeight: 500 }}>
+                            Trang
+                          </span>
+                          <input
+                            type="number"
+                            min={1}
+                            max={totalQuestionPages}
+                            value={questionPage + 1}
+                            onChange={(event) => {
+                              const page = Number(event.target.value) - 1;
+                              if (page >= 0 && page < totalQuestionPages) {
+                                setQuestionPage(page);
+                              }
+                            }}
+                            style={{
+                              width: 50,
+                              padding: '6px 8px',
+                              border: '1px solid #d1d5db',
+                              borderRadius: '4px',
+                              textAlign: 'center',
+                              fontSize: '13px',
+                              fontWeight: 600,
+                            }}
+                          />
+                          <span className="muted" style={{ fontSize: '13px' }}>
+                            / {totalQuestionPages}
+                          </span>
+                          <button
+                            className="btn"
+                            onClick={() => {
+                              const inputValue = (document.querySelector('input[type="number"]') as HTMLInputElement)?.value;
+                              const page = Number(inputValue) - 1;
+                              if (page >= 0 && page < totalQuestionPages) {
+                                setQuestionPage(page);
+                              }
+                            }}
+                            style={{ padding: '6px 12px', fontSize: '13px' }}
+                          >
+                            Đi
+                          </button>
+                        </div>
+
+                        <button
+                          className="btn secondary"
+                          disabled={questionPage >= totalQuestionPages - 1}
+                          onClick={() => setQuestionPage((prev) => prev + 1)}
+                          style={{ padding: '6px 12px', fontSize: '13px' }}
+                        >
+                          Sau →
+                        </button>
+                      </div>
+                    )}
+
+                    <span className="muted" style={{ fontSize: '12px', color: '#6b7280' }}>
+                      {totalQuestionPages > 1 
+                        ? `Trang ${questionPage + 1} / ${totalQuestionPages} - Tổng: ${totalQuestionElements} câu hỏi`
+                        : `Tổng: ${totalQuestionElements} câu hỏi`
+                      }
+                    </span>
+                  </div>
                 </div>
               )}
 

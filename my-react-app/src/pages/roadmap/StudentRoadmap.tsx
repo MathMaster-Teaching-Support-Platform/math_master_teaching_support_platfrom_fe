@@ -34,11 +34,9 @@ function difficultyLabel(d: string): string {
   return map[d] ?? d;
 }
 
-function isTopicUnlocked(topic: RoadmapTopic): boolean {
-  if (typeof topic.unlocked === 'boolean') {
-    return topic.unlocked;
-  }
-  return topic.status !== 'LOCKED';
+function isTopicUnlocked(_: RoadmapTopic): boolean {
+  // All topics are always unlocked in the new model
+  return true;
 }
 
 function findCurrentTopic(topics: RoadmapTopic[]): RoadmapTopic | null {
@@ -99,7 +97,7 @@ const TopicStep: React.FC<{
         </div>
         {topic.description && <p className="srp__step-desc">{topic.description}</p>}
         <div className="srp__step-meta">
-          {typeof topic.mark === 'number' && <span>🎯 {topic.mark.toFixed(1)}</span>}
+          {/* Mark field removed in new model */}
         </div>
         {isCurrent && (
           <Link to={`/roadmaps/${roadmapId}`} className="srp__continue-btn">

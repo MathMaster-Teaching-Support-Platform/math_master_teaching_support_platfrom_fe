@@ -8,7 +8,6 @@ import type {
   CreateRoadmapTopicRequest,
   SubmitRoadmapFeedbackRequest,
   SubmitRoadmapEntryTestRequest,
-  TopicMaterialResourceType,
   UpdateAdminRoadmapRequest,
   UpdateRoadmapTopicRequest,
   UpdateRoadmapProgressRequest,
@@ -22,8 +21,6 @@ export const roadmapKeys = {
   student: (roadmapId?: string) => [...roadmapKeys.all, 'student', roadmapId ?? 'current'] as const,
   adminList: (name = '', page = 0, size = 20) =>
     [...roadmapKeys.all, 'admin', 'list', name, page, size] as const,
-  topicMaterials: (topicId: string, resourceType?: TopicMaterialResourceType) =>
-    [...roadmapKeys.all, 'topic-materials', topicId, resourceType ?? 'ALL'] as const,
   myFeedback: (roadmapId: string) => [...roadmapKeys.all, 'feedback', 'me', roadmapId] as const,
   adminFeedback: (roadmapId: string, page = 0, size = 20) =>
     [...roadmapKeys.all, 'feedback', 'admin', roadmapId, page, size] as const,
@@ -112,13 +109,6 @@ export function useUpdateRoadmap() {
   });
 }
 
-export function useStudentTopicMaterials(topicId: string, resourceType?: TopicMaterialResourceType) {
-  return useQuery({
-    queryKey: roadmapKeys.topicMaterials(topicId, resourceType),
-    queryFn: () => RoadmapService.getStudentTopicMaterials(topicId, resourceType),
-    enabled: !!topicId,
-  });
-}
 
 export function useAddRoadmapTopic() {
   const queryClient = useQueryClient();

@@ -59,7 +59,6 @@ import {
   TemplateStatus,
   type QuestionTemplateRequest,
   type QuestionTemplateResponse,
-  type TemplateDraft,
 } from '../../types/questionTemplate';
 import { CanonicalGenerateModal } from './CanonicalGenerateModal';
 import { CanonicalQuestionModal } from './CanonicalQuestionModal';
@@ -67,7 +66,6 @@ import './template-review.css';
 import { TemplateBulkImportModal } from './TemplateBulkImportModal';
 import { TemplateFormModal } from './TemplateFormModal';
 import { TemplateGenerateModal } from './TemplateGenerateModal';
-import { TemplateImportModal } from './TemplateImportModal';
 import { TemplateTestModal } from './TemplateTestModal';
 
 const statusFilters: Array<'ALL' | TemplateStatus> = [
@@ -196,7 +194,6 @@ export function TemplateDashboard() {
   const [status, setStatus] = useState<'ALL' | TemplateStatus>('ALL');
   const [mode, setMode] = useState<'create' | 'edit'>('create');
   const [formOpen, setFormOpen] = useState(false);
-  const [importOpen, setImportOpen] = useState(false);
   const [bulkImportOpen, setBulkImportOpen] = useState(false);
   const [testOpen, setTestOpen] = useState(false);
   const [selected, setSelected] = useState<QuestionTemplateResponse | null>(null);
@@ -355,11 +352,11 @@ export function TemplateDashboard() {
     }
   }
 
-  function openCreateFromDraft(draft?: TemplateDraft) {
-    setMode('create');
-    setSelected(draft as QuestionTemplateResponse | null);
-    setFormOpen(true);
-  }
+  // function _openCreateFromDraft(draft?: TemplateDraft) {
+  //   setMode('create');
+  //   setSelected(draft as QuestionTemplateResponse | null);
+  //   setFormOpen(true);
+  // }
 
   function openReviewModal(templateId?: string) {
     setReviewTemplateId(templateId ?? templates[0]?.id ?? '');
@@ -600,10 +597,6 @@ export function TemplateDashboard() {
               <button className="btn secondary" onClick={() => setBulkImportOpen(true)}>
                 <Upload size={14} />
                 Nhập từ Excel
-              </button>
-              <button className="btn secondary" onClick={() => setImportOpen(true)}>
-                <Upload size={14} />
-                Nhập từ file
               </button>
               <button className="btn secondary" onClick={openCanonicalCreateModal}>
                 <Plus size={14} />
@@ -1150,15 +1143,6 @@ export function TemplateDashboard() {
             mode={mode}
             initialData={selected}
             onSubmit={saveTemplate}
-          />
-
-          <TemplateImportModal
-            isOpen={importOpen}
-            onClose={() => setImportOpen(false)}
-            onUseTemplate={(draft) => {
-              setImportOpen(false);
-              openCreateFromDraft(draft);
-            }}
           />
 
           <TemplateBulkImportModal

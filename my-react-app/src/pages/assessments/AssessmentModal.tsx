@@ -2,8 +2,9 @@ import { X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useGetExamMatrixById, useGetMyExamMatrices } from '../../hooks/useExamMatrix';
 import { useLessonsByChapter } from '../../hooks/useLessons';
-import { useSubjects } from '../../hooks/useSubjects';
+import { useSubjectsByGrade } from '../../hooks/useSubjects';
 import { useChaptersBySubject } from '../../hooks/useChapters';
+import { useGrades } from '../../hooks/useGrades';
 import { AssessmentService } from '../../services/api/assessment.service';
 import { LessonService } from '../../services/api/lesson.service';
 import type {
@@ -41,6 +42,7 @@ const defaultForm: AssessmentRequest = {
 };
 
 export default function AssessmentModal({ isOpen, mode, initialData, onClose, onSubmit }: Readonly<Props>) {
+  const [gradeLevel, setGradeLevel] = useState('');
   const [selectedSubjectId, setSelectedSubjectId] = useState('');
   const [selectedChapterId, setSelectedChapterId] = useState('');
   const [lessonSearch, setLessonSearch] = useState('');
@@ -52,7 +54,11 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
 
   const { data: matrixData } = useGetMyExamMatrices();
   useGetExamMatrixById(formData.examMatrixId, !!formData.examMatrixId && isOpen);
-  const { data: subjectsData } = useSubjects();
+  const { data: gradesData, isLoading: isLoadingGrades } = useGrades(isOpen);
+  const { data: subjectsData, isLoading: isLoadingSubjects } = useSubjectsByGrade(
+    gradeLevel,
+    !!gradeLevel && isOpen
+  );
   const { data: chaptersData } = useChaptersBySubject(selectedSubjectId, !!selectedSubjectId && isOpen);
   const { data: lessonsData, isLoading: loadingLessons } = useLessonsByChapter(
     selectedChapterId,
@@ -86,6 +92,7 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
       setFormData(defaultForm);
     }
 
+    setGradeLevel('');
     setLessonSearch('');
     setSelectedSubjectId('');
     setSelectedChapterId('');
@@ -95,8 +102,10 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
   }, [isOpen, mode, initialData]);
 
   const matrices = matrixData?.result ?? [];
+  const grades = gradesData?.result ?? [];
   const subjects = subjectsData?.result ?? [];
   const chapters = chaptersData?.result ?? [];
+  const sortedGrades = [...grades].sort((a, b) => a.level - b.level);
   const lessons = lessonsData?.result ?? [];
   const lessonMap = useMemo(() => {
     const map = new Map<string, LessonResponse>();
@@ -289,6 +298,30 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
 
             <section className="data-card" style={{ minHeight: 0 }}>
               <div className="form-grid">
+                {/* Grade Select */}
+                <label>
+                  <p className="muted" style={{ marginBottom: 6 }}>Khối lớp</p>
+                  <select
+                    className="select"
+                    value={gradeLevel}
+                    onChange={(event) => {
+                      const newGrade = event.target.value;
+                      setGradeLevel(newGrade);
+                      setSelectedSubjectId('');
+                      setSelectedChapterId('');
+                    }}
+                    disabled={isLoadingGrades}
+                  >
+                    <option value="">Chọn khối lớp</option>
+                    {sortedGrades.map((grade) => (
+                      <option key={grade.id} value={String(grade.level)}>
+                        {grade.name || `Lớp ${grade.level}`}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                {/* Subject Select */}
                 <label>
                   <p className="muted" style={{ marginBottom: 6 }}>Môn học</p>
                   <select
@@ -298,11 +331,22 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
                       setSelectedSubjectId(event.target.value);
                       setSelectedChapterId('');
                     }}
+                    disabled={isLoadingSubjects || !gradeLevel}
                   >
-                    <option value="">Chọn môn học</option>
-                    {subjects.map((subject) => (
-                      <option key={subject.id} value={subject.id}>{subject.name}</option>
-                    ))}
+                    {!gradeLevel ? (
+                      <option value="">Chọn khối lớp trước</option>
+                    ) : isLoadingSubjects ? (
+                      <option value="">Đang tải môn học...</option>
+                    ) : subjects.length === 0 ? (
+                      <option value="">Không có môn học cho khối này</option>
+                    ) : (
+                      <>
+                        <option value="">Chọn môn học</option>
+                        {subjects.map((subject) => (
+                          <option key={subject.id} value={subject.id}>{subject.name}</option>
+                        ))}
+                      </>
+                    )}
                   </select>
                 </label>
 
@@ -312,13 +356,22 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
                     className="select"
                     value={selectedChapterId}
                     onChange={(event) => setSelectedChapterId(event.target.value)}
+                    disabled={!selectedSubjectId}
                   >
-                    <option value="">Chọn chapter</option>
-                    {chapters.map((chapter) => (
-                      <option key={chapter.id} value={chapter.id}>
-                        {chapter.title || chapter.name || chapter.id}
-                      </option>
-                    ))}
+                    {!selectedSubjectId ? (
+                      <option value="">Chọn môn học trước</option>
+                    ) : chapters.length === 0 ? (
+                      <option value="">Không có chapter</option>
+                    ) : (
+                      <>
+                        <option value="">Chọn chapter</option>
+                        {chapters.map((chapter) => (
+                          <option key={chapter.id} value={chapter.id}>
+                            {chapter.title || chapter.name || chapter.id}
+                          </option>
+                        ))}
+                      </>
+                    )}
                   </select>
                 </label>
               </div>

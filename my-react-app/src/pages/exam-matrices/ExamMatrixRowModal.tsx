@@ -3,7 +3,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { useChaptersBySubject } from '../../hooks/useChapters';
 import { useAddExamMatrixRow } from '../../hooks/useExamMatrix';
 import { useSearchQuestionBanks } from '../../hooks/useQuestionBank';
-import { useSubjects, useSubjectsByGrade } from '../../hooks/useSubjects';
+import { useSubjectsByGrade } from '../../hooks/useSubjects';
+import { useGrades } from '../../hooks/useGrades';
 import type { ExamMatrixRowRequest, MatrixCognitiveLevel } from '../../types/examMatrix';
 
 type UiCognitiveLevel = 'NB' | 'TH' | 'VD' | 'VDC';
@@ -58,7 +59,7 @@ export function ExamMatrixRowModal({
   const [error, setError] = useState<string | null>(null);
 
   const addRowMutation = useAddExamMatrixRow();
-  const subjectsQuery = useSubjects();
+  const { data: gradesData, isLoading: isLoadingGrades } = useGrades(isOpen);
   const subjectsByGradeQuery = useSubjectsByGrade(gradeLevel, isOpen && !!gradeLevel);
   const chapterQuery = useChaptersBySubject(selectedSubjectId, isOpen && !!selectedSubjectId);
   const questionBanksQuery = useSearchQuestionBanks(
@@ -78,37 +79,12 @@ export function ExamMatrixRowModal({
 
   const chapters = chapterQuery.data?.result ?? [];
   const subjectsByGrade = subjectsByGradeQuery.data?.result ?? [];
-  const allSubjects = subjectsQuery.data?.result ?? [];
+  const grades = gradesData?.result ?? [];
   const questionBanks = questionBanksQuery.data?.result?.content ?? [];
 
-  const subjectOptions = gradeLevel ? subjectsByGrade : allSubjects;
+  // Sort grades by level
+  const sortedGrades = [...grades].sort((a, b) => a.level - b.level);
 
-  const gradeSuggestions = useMemo(() => {
-    const gradeFromApi = new Set<string>();
-
-    for (const subject of allSubjects) {
-      if (typeof subject.primaryGradeLevel === 'number') {
-        gradeFromApi.add(String(subject.primaryGradeLevel));
-      }
-      if (Array.isArray(subject.gradeLevels)) {
-        subject.gradeLevels.forEach((level) => gradeFromApi.add(String(level)));
-      }
-      if (typeof subject.gradeMin === 'number' && typeof subject.gradeMax === 'number') {
-        for (let level = subject.gradeMin; level <= subject.gradeMax; level += 1) {
-          gradeFromApi.add(String(level));
-        }
-      }
-    }
-
-    const defaults = ['10', '11', '12'];
-    if (matrixGradeLevel) {
-      gradeFromApi.add(matrixGradeLevel);
-    }
-
-    return Array.from(new Set([...defaults, ...Array.from(gradeFromApi)])).sort((a, b) =>
-      a.localeCompare(b),
-    );
-  }, [allSubjects, matrixGradeLevel]);
 
   const chapterLabel = useMemo(() => {
     const selected = chapters.find((item) => item.id === chapterId);
@@ -148,10 +124,10 @@ export function ExamMatrixRowModal({
 
   useEffect(() => {
     if (!isOpen) return;
-    if (subjectOptions.length > 0 && !selectedSubjectId) {
-      setSelectedSubjectId(subjectOptions[0].id);
+    if (subjectsByGrade.length > 0 && !selectedSubjectId) {
+      setSelectedSubjectId(subjectsByGrade[0].id);
     }
-  }, [isOpen, subjectOptions, selectedSubjectId]);
+  }, [isOpen, subjectsByGrade, selectedSubjectId]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -254,9 +230,8 @@ export function ExamMatrixRowModal({
                 <tbody>
                   <tr>
                     <td>
-                      <input
-                        className="input"
-                        list="matrix-grade-suggestions"
+                      <select
+                        className="select"
                         value={gradeLevel}
                         onChange={(event) => {
                           setGradeLevel(event.target.value);
@@ -264,13 +239,15 @@ export function ExamMatrixRowModal({
                           setChapterId('');
                           setQuestionBankId('');
                         }}
-                        placeholder="12"
-                      />
-                      <datalist id="matrix-grade-suggestions">
-                        {gradeSuggestions.map((grade) => (
-                          <option key={grade} value={grade} />
+                        disabled={isLoadingGrades}
+                      >
+                        <option value="">Chọn khối lớp</option>
+                        {sortedGrades.map((grade) => (
+                          <option key={grade.id} value={String(grade.level)}>
+                            {grade.name || `Lớp ${grade.level}`}
+                          </option>
                         ))}
-                      </datalist>
+                      </select>
                     </td>
                     <td>
                       <select
@@ -281,12 +258,20 @@ export function ExamMatrixRowModal({
                           setChapterId('');
                           setQuestionBankId('');
                         }}
-                        disabled={(gradeLevel ? subjectsByGradeQuery.isLoading : subjectsQuery.isLoading) || subjectOptions.length === 0}
+                        disabled={subjectsByGradeQuery.isLoading || !gradeLevel || subjectsByGrade.length === 0}
                       >
-                        {subjectOptions.length === 0 && <option value="">Chọn lớp trước</option>}
-                        {subjectOptions.map((subject) => (
-                          <option key={subject.id} value={subject.id}>{subject.name}</option>
-                        ))}
+                        {!gradeLevel ? (
+                          <option value="">Chọn khối lớp trước</option>
+                        ) : subjectsByGrade.length === 0 ? (
+                          <option value="">Không có môn học</option>
+                        ) : (
+                          <>
+                            <option value="">Chọn môn học</option>
+                            {subjectsByGrade.map((subject) => (
+                              <option key={subject.id} value={subject.id}>{subject.name}</option>
+                            ))}
+                          </>
+                        )}
                       </select>
                     </td>
                     <td>
@@ -297,13 +282,20 @@ export function ExamMatrixRowModal({
                         required
                         disabled={chapterQuery.isLoading || !selectedSubjectId}
                       >
-                        {!selectedSubjectId && <option value="">Chọn môn trước</option>}
-                        {selectedSubjectId && chapters.length === 0 && <option value="">Không có chương</option>}
-                        {chapters.map((chapter) => (
-                          <option key={chapter.id} value={chapter.id}>
-                            {chapter.title || chapter.name || chapter.id}
-                          </option>
-                        ))}
+                        {!selectedSubjectId ? (
+                          <option value="">Chọn môn học trước</option>
+                        ) : chapters.length === 0 ? (
+                          <option value="">Không có chương</option>
+                        ) : (
+                          <>
+                            <option value="">Chọn chương</option>
+                            {chapters.map((chapter) => (
+                              <option key={chapter.id} value={chapter.id}>
+                                {chapter.title || chapter.name || chapter.id}
+                              </option>
+                            ))}
+                          </>
+                        )}
                       </select>
                     </td>
                     <td>
@@ -321,13 +313,20 @@ export function ExamMatrixRowModal({
                         required
                         disabled={questionBanksQuery.isLoading || !chapterId}
                       >
-                        {!chapterId && <option value="">Chọn chương trước</option>}
-                        {chapterId && questionBanks.length === 0 && <option value="">Không có bank phù hợp</option>}
-                        {questionBanks.map((bank) => (
-                          <option key={bank.id} value={bank.id}>
-                            {bank.name}
-                          </option>
-                        ))}
+                        {!chapterId ? (
+                          <option value="">Chọn chương trước</option>
+                        ) : questionBanks.length === 0 ? (
+                          <option value="">Không có bank phù hợp</option>
+                        ) : (
+                          <>
+                            <option value="">Chọn ngân hàng câu hỏi</option>
+                            {questionBanks.map((bank) => (
+                              <option key={bank.id} value={bank.id}>
+                                {bank.name}
+                              </option>
+                            ))}
+                          </>
+                        )}
                       </select>
                     </td>
                     {LEVELS.map((level) => (

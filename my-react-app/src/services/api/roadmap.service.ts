@@ -8,23 +8,19 @@ import type {
   RoadmapEntryTestFlagRequest,
   RoadmapEntryTestSnapshotResponse,
   CreateRoadmapTopicRequest,
+  RoadmapTopicResponse,
   UpdateAdminRoadmapRequest,
   RoadmapApiResponse,
   RoadmapCatalogItem,
   RoadmapDetail,
   RoadmapFeedbackPage,
   RoadmapFeedbackResponse,
-  RoadmapResourceOption,
-  RoadmapResourceOptionType,
   RoadmapEntryTestAttemptStartResponse,
   RoadmapEntryTestResultResponse,
-  RoadmapTopicResponse,
   StudentRoadmapEntryTestInfo,
   SubmitRoadmapFeedbackRequest,
   SubmitRoadmapEntryTestRequest,
   StudentRoadmapSnapshot,
-  TopicMaterial,
-  TopicMaterialResourceType,
   UpdateRoadmapTopicRequest,
   UpdateRoadmapProgressRequest,
 } from '../../types';
@@ -501,59 +497,6 @@ export class RoadmapService {
     }
 
     return data;
-  }
-
-  static async getRoadmapResourceOptions(params: {
-    type: RoadmapResourceOptionType;
-    chapterId?: string;
-    lessonId?: string;
-    name?: string;
-  }): Promise<RoadmapApiResponse<RoadmapResourceOption[]>> {
-    const headers = await this.getHeaders();
-    const query = new URLSearchParams();
-    query.set('type', params.type);
-    if (params.chapterId) query.set('chapterId', params.chapterId);
-    if (params.lessonId) query.set('lessonId', params.lessonId);
-    if (params.name?.trim()) query.set('name', params.name.trim());
-
-    const response = await fetch(
-      `${API_BASE_URL}${API_ENDPOINTS.ADMIN_ROADMAP_RESOURCE_OPTIONS}?${query.toString()}`,
-      {
-        method: 'GET',
-        headers,
-      }
-    );
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      throw new Error(
-        (error as { message?: string }).message || 'Failed to fetch roadmap resource options'
-      );
-    }
-
-    return response.json();
-  }
-
-  static async getStudentTopicMaterials(
-    topicId: string,
-    resourceType?: TopicMaterialResourceType
-  ): Promise<RoadmapApiResponse<TopicMaterial[]>> {
-    const headers = await this.getHeaders();
-    const endpoint = resourceType
-      ? API_ENDPOINTS.STUDENT_TOPIC_MATERIALS_BY_TYPE(topicId, resourceType)
-      : API_ENDPOINTS.STUDENT_TOPIC_MATERIALS(topicId);
-
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      method: 'GET',
-      headers,
-    });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      throw new Error((error as { message?: string }).message || 'Failed to fetch topic materials');
-    }
-
-    return response.json();
   }
 
   static async submitRoadmapEntryTest(

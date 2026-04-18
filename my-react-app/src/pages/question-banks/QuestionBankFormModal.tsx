@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import type { QuestionBankRequest, QuestionBankResponse } from '../../types/questionBank';
-import { useSubjects } from '../../hooks/useSubjects';
+import { useSubjectsByGrade } from '../../hooks/useSubjects';
 import { useChaptersBySubject } from '../../hooks/useChapters';
+import { useGrades } from '../../hooks/useGrades';
+import '../../components/common/grade-subject-select.css';
 
 type Props = {
   isOpen: boolean;
@@ -16,15 +18,23 @@ export function QuestionBankFormModal({ isOpen, mode, initialData, onClose, onSu
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [isPublic, setIsPublic] = useState(false);
+  const [gradeLevel, setGradeLevel] = useState('');
   const [selectedSubjectId, setSelectedSubjectId] = useState('');
   const [selectedChapterId, setSelectedChapterId] = useState('');
   const [chapterSearch, setChapterSearch] = useState('');
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const { data: subjectsData } = useSubjects();
+  // Fetch grades
+  const { data: gradesData, isLoading: isLoadingGrades } = useGrades(isOpen);
+  // Fetch subjects by grade (only when grade is selected)
+  const { data: subjectsData, isLoading: isLoadingSubjects } = useSubjectsByGrade(
+    gradeLevel,
+    !!gradeLevel && isOpen
+  );
   const { data: chaptersData } = useChaptersBySubject(selectedSubjectId, !!selectedSubjectId && isOpen);
 
+  const grades = gradesData?.result ?? [];
   const subjects = subjectsData?.result ?? [];
   const chapters = chaptersData?.result ?? [];
   const filteredChapters = chapters.filter((chapter) => {
@@ -33,6 +43,9 @@ export function QuestionBankFormModal({ isOpen, mode, initialData, onClose, onSu
     const title = (chapter.title || chapter.name || '').toLowerCase();
     return title.includes(query);
   });
+
+  // Sort grades by level
+  const sortedGrades = [...grades].sort((a, b) => a.level - b.level);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -117,6 +130,31 @@ export function QuestionBankFormModal({ isOpen, mode, initialData, onClose, onSu
               />
             </label>
 
+            {/* Grade Select */}
+            <label>
+              <p className="muted" style={{ marginBottom: 6 }}>Khối lớp</p>
+              <select
+                className="select"
+                value={gradeLevel}
+                onChange={(event) => {
+                  const newGrade = event.target.value;
+                  setGradeLevel(newGrade);
+                  setSelectedSubjectId('');
+                  setSelectedChapterId('');
+                  setChapterSearch('');
+                }}
+                disabled={isLoadingGrades}
+              >
+                <option value="">Chọn khối lớp</option>
+                {sortedGrades.map((grade) => (
+                  <option key={grade.id} value={String(grade.level)}>
+                    {grade.name || `Lớp ${grade.level}`}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            {/* Subject Select */}
             <label>
               <p className="muted" style={{ marginBottom: 6 }}>Môn học</p>
               <select
@@ -127,11 +165,22 @@ export function QuestionBankFormModal({ isOpen, mode, initialData, onClose, onSu
                   setSelectedChapterId('');
                   setChapterSearch('');
                 }}
+                disabled={isLoadingSubjects || !gradeLevel}
               >
-                <option value="">Chọn môn học để tải chapter</option>
-                {subjects.map((subject) => (
-                  <option key={subject.id} value={subject.id}>{subject.name}</option>
-                ))}
+                {!gradeLevel ? (
+                  <option value="">Chọn khối lớp trước</option>
+                ) : isLoadingSubjects ? (
+                  <option value="">Đang tải môn học...</option>
+                ) : subjects.length === 0 ? (
+                  <option value="">Không có môn học cho khối này</option>
+                ) : (
+                  <>
+                    <option value="">Chọn môn học để tải chapter</option>
+                    {subjects.map((subject) => (
+                      <option key={subject.id} value={subject.id}>{subject.name}</option>
+                    ))}
+                  </>
+                )}
               </select>
             </label>
 

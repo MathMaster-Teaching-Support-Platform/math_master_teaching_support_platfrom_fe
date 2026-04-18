@@ -21,7 +21,7 @@ export default function RoadmapModule(props: Readonly<RoadmapModuleProps>) {
 
       {module.description && <p className="roadmap-module__description">{module.description}</p>}
 
-      <RoadmapProgressBar value={module.completionPercent} label="Module progress" />
+      <RoadmapProgressBar value={module.completionPercent ?? 0} label="Module progress" />
 
       <ul className="roadmap-module__lessons">
         {module.lessons.map((lesson) => (
