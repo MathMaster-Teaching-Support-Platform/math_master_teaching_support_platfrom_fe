@@ -1,7 +1,9 @@
 import {
   AlertCircle,
   ArrowLeft,
+  ArrowRight,
   BookOpen,
+  Check,
   CheckCircle2,
   Eye,
   EyeOff,
@@ -10,8 +12,12 @@ import {
   Pencil,
   Trash2,
   Users,
+  Star,
+  X,
+  Save,
 } from 'lucide-react';
-import { useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { CourseBreadcrumb } from '../../components/course/CourseBreadcrumb';
@@ -20,18 +26,21 @@ import {
   useDeleteCourse,
   usePublishCourse,
   useCourseStudents,
+  useUpdateCourse,
 } from '../../hooks/useCourses';
 import '../../styles/module-refactor.css';
 import './TeacherCourses.css';
 import './TeacherCourseDetail.css';
+import type { UpdateCourseRequest } from '../../types';
 
 // Import tab components
 import CourseOverviewTab from './tabs/CourseOverviewTab.tsx';
 import CourseLessonsTab from './tabs/CourseLessonsTab.tsx';
 import CourseAssessmentsTab from './tabs/CourseAssessmentsTab.tsx';
+import CourseReviewsTab from './tabs/CourseReviewsTab.tsx';
 import CourseStudentsTab from './tabs/CourseStudentsTab.tsx';
 
-type TabType = 'overview' | 'lessons' | 'assessments' | 'students';
+type TabType = 'overview' | 'lessons' | 'assessments' | 'students' | 'reviews';
 
 const TeacherCourseDetail: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>();
@@ -43,11 +52,47 @@ const TeacherCourseDetail: React.FC = () => {
   const { data: studentsData } = useCourseStudents(courseId!);
   const deleteMutation = useDeleteCourse();
   const publishMutation = usePublishCourse();
+  const updateMutation = useUpdateCourse();
 
   const [showEditModal, setShowEditModal] = useState(false);
+  const [editStep, setEditStep] = useState(1);
+  const [editForm, setEditForm] = useState<UpdateCourseRequest>({
+    title: '',
+    description: '',
+    subtitle: '',
+    language: '',
+    whatYouWillLearn: '',
+    requirements: '',
+    targetAudience: '',
+  });
 
   const course = courseData?.result;
   const students = studentsData?.result?.content ?? [];
+
+  useEffect(() => {
+    if (course) {
+      setEditForm({
+        title: course.title || '',
+        description: course.description || '',
+        subtitle: course.subtitle || '',
+        language: course.language || '',
+        whatYouWillLearn: course.whatYouWillLearn || '',
+        requirements: course.requirements || '',
+        targetAudience: course.targetAudience || '',
+      });
+    }
+  }, [course]);
+
+  const handleEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!course) return;
+    updateMutation.mutate(
+      { courseId: course.id, data: editForm },
+      {
+        onSuccess: () => setShowEditModal(false),
+      }
+    );
+  };
 
   const handleTabChange = (tab: TabType) => {
     setSearchParams({ tab });
@@ -110,6 +155,7 @@ const TeacherCourseDetail: React.FC = () => {
     { id: 'lessons' as const, label: 'Bài học', icon: FileText, count: course.lessonsCount },
     { id: 'assessments' as const, label: 'Bài đánh giá', icon: CheckCircle2 },
     { id: 'students' as const, label: 'Học viên', icon: Users, count: students.length },
+    { id: 'reviews' as const, label: 'Đánh giá', icon: Star },
   ];
 
   return (
@@ -225,25 +271,194 @@ const TeacherCourseDetail: React.FC = () => {
             {activeTab === 'lessons' && <CourseLessonsTab courseId={course.id} course={course} />}
             {activeTab === 'assessments' && <CourseAssessmentsTab courseId={course.id} course={course} />}
             {activeTab === 'students' && <CourseStudentsTab courseId={course.id} />}
+            {activeTab === 'reviews' && <CourseReviewsTab courseId={course.id} />}
           </div>
         </section>
       </div>
 
-      {/* Edit Modal - TODO: Implement */}
+      {/* Edit Modal */}
       {showEditModal && (
-        <div className="modal-layer" onClick={() => setShowEditModal(false)}>
-          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-overlay">
+          <button type="button" className="modal-backdrop" onClick={() => setShowEditModal(false)} />
+          <div className="modal-box wizard-modal-box">
             <div className="modal-header">
-              <h3>Chỉnh sửa giáo trình</h3>
-            </div>
-            <div className="modal-body">
-              <p>Chức năng chỉnh sửa đang được phát triển...</p>
-            </div>
-            <div className="modal-footer">
-              <button className="btn secondary" onClick={() => setShowEditModal(false)}>
-                Đóng
+              <div className="modal-header-left">
+                <div className="modal-icon">
+                  <Pencil size={18} />
+                </div>
+                <div>
+                  <h2>Chỉnh sửa giáo trình</h2>
+                  <p>Bước {editStep} trên 3</p>
+                </div>
+              </div>
+              <button className="modal-close" onClick={() => setShowEditModal(false)}>
+                <X size={18} />
               </button>
             </div>
+
+            {/* Step Indicator */}
+            <div className="wizard-steps-indicator">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className={`wizard-step-item ${editStep === i ? 'active' : ''} ${editStep > i ? 'completed' : ''}`}>
+                  <div className="wizard-step-circle">
+                    {editStep > i ? <Check size={18} /> : i}
+                  </div>
+                  <span className="wizard-step-label">
+                    {i === 1 ? 'Phân loại' : i === 2 ? 'Chi tiết' : 'Tiếp thị'}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <form onSubmit={(e) => e.preventDefault()} className="modal-form">
+              <div className="wizard-content-wrapper">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={editStep}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.2 }}
+                    className="wizard-step-content"
+                  >
+                    {editStep === 1 && (
+                      <div className="edit-step-1">
+                        <div className="form-section-header">
+                          <h3>Thông tin cơ bản</h3>
+                          <p>Cập nhật lại tiêu đề và mục tiêu chính của giáo trình.</p>
+                        </div>
+
+                        <div className="form-group full-width" style={{ marginBottom: '1.25rem' }}>
+                          <label className="form-label">Tiêu đề giáo trình</label>
+                          <input
+                            type="text"
+                            className="form-input"
+                            value={editForm.title}
+                            onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                          />
+                        </div>
+
+                        <div className="form-group full-width">
+                          <label className="form-label">Phụ đề (Catchy subtitle)</label>
+                          <input
+                            type="text"
+                            className="form-input"
+                            value={editForm.subtitle}
+                            onChange={(e) => setEditForm({ ...editForm, subtitle: e.target.value })}
+                            placeholder="Câu ngắn gọn thu hút học viên"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {editStep === 2 && (
+                      <div className="edit-step-2">
+                        <div className="form-section-header">
+                          <h3>Chi tiết nội dung</h3>
+                          <p>Cập nhật ngôn ngữ và mô tả tổng quan của khóa học.</p>
+                        </div>
+
+                        <div className="form-group full-width" style={{ marginBottom: '1.25rem' }}>
+                          <label className="form-label">Ngôn ngữ</label>
+                          <input
+                            type="text"
+                            className="form-input"
+                            value={editForm.language}
+                            onChange={(e) => setEditForm({ ...editForm, language: e.target.value })}
+                            placeholder="Ví dụ: Tiếng Việt"
+                          />
+                        </div>
+
+                        <div className="form-group full-width">
+                          <label className="form-label">Mô tả tổng quát</label>
+                          <textarea
+                            rows={5}
+                            className="form-input form-textarea"
+                            value={editForm.description}
+                            onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                            placeholder="Mô tả chi tiết về khóa học..."
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {editStep === 3 && (
+                      <div className="edit-step-3">
+                        <div className="form-section-header">
+                          <h3>Tiếp thị & Đối tượng</h3>
+                          <p>Tối ưu hóa nội dung tiếp thị để thu hút học viên.</p>
+                        </div>
+
+                        <div className="form-group full-width" style={{ marginBottom: '1rem' }}>
+                          <label className="form-label">Bạn sẽ học được gì? (Mỗi dòng một ý)</label>
+                          <textarea
+                            rows={3}
+                            className="form-input form-textarea"
+                            value={editForm.whatYouWillLearn}
+                            onChange={(e) => setEditForm({ ...editForm, whatYouWillLearn: e.target.value })}
+                            placeholder="✔️ Kỹ năng thực tế 1..."
+                          />
+                        </div>
+
+                        <div className="form-group full-width" style={{ marginBottom: '1rem' }}>
+                          <label className="form-label">Yêu cầu (Mỗi dòng một ý)</label>
+                          <textarea
+                            rows={2}
+                            className="form-input form-textarea"
+                            value={editForm.requirements}
+                            onChange={(e) => setEditForm({ ...editForm, requirements: e.target.value })}
+                            placeholder="• Kiến thức cơ bản về..."
+                          />
+                        </div>
+
+                        <div className="form-group full-width">
+                          <label className="form-label">Đối tượng mục tiêu (Mỗi dòng một ý)</label>
+                          <textarea
+                            rows={2}
+                            className="form-input form-textarea"
+                            value={editForm.targetAudience}
+                            onChange={(e) => setEditForm({ ...editForm, targetAudience: e.target.value })}
+                            placeholder="Dành cho học sinh lớp 11 ôn thi THPT..."
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+
+              <div className="wizard-footer">
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={editStep === 1 ? () => setShowEditModal(false) : () => setEditStep((s) => s - 1)}
+                  disabled={updateMutation.isPending}
+                >
+                  {editStep === 1 ? 'Hủy' : (
+                    <>
+                      <ArrowLeft size={16} /> Quay lại
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  className="btn primary"
+                  disabled={updateMutation.isPending || !editForm.title}
+                  onClick={editStep === 3 ? handleEditSubmit : () => setEditStep((s) => s + 1)}
+                >
+                  {updateMutation.isPending ? 'Đang lưu...' : editStep === 3 ? (
+                    <>
+                      <Save size={16} /> Lưu thay đổi
+                    </>
+                  ) : (
+                    <>
+                      Tiếp theo <ArrowRight size={16} />
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

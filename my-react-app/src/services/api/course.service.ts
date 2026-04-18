@@ -21,6 +21,11 @@ import type {
   UpdateCourseLessonRequest,
   UpdateCourseRequest,
   UpdateCustomCourseSectionRequest,
+  CourseReviewRequest,
+  CourseReviewResponse,
+  CourseReviewSummaryResponse,
+  InstructorReplyRequest,
+  TeacherProfileResponse,
 } from '../../types';
 import { AuthService } from './auth.service';
 
@@ -436,6 +441,119 @@ export class CourseService {
       `${API_BASE_URL}${API_ENDPOINTS.COURSE_LESSON_MATERIAL_DETAIL(courseId, lessonId, materialId)}`,
       { method: 'DELETE', headers }
     );
+    return this.handleResponse(res);
+  }
+
+  // ─── Course Reviews ────────────────────────────────────────────────────────
+  
+  static async submitReview(
+    courseId: string,
+    data: CourseReviewRequest
+  ): Promise<ApiResponse<CourseReviewResponse>> {
+    const headers = await this.getHeaders();
+    const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.COURSES}/${courseId}/reviews`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(data),
+    });
+    return this.handleResponse(res);
+  }
+
+  static async updateReview(
+    reviewId: string,
+    data: CourseReviewRequest
+  ): Promise<ApiResponse<CourseReviewResponse>> {
+    const headers = await this.getHeaders();
+    const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.COURSES}/reviews/${reviewId}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify(data),
+    });
+    return this.handleResponse(res);
+  }
+
+  static async getCourseReviews(
+    courseId: string, 
+    page = 0, 
+    size = 10,
+    rating?: number
+  ): Promise<ApiResponse<PaginatedResponse<CourseReviewResponse>>> {
+    const url = new URL(`${API_BASE_URL}/courses/${courseId}/reviews`);
+    url.searchParams.append('page', page.toString());
+    url.searchParams.append('size', size.toString());
+    if (rating) url.searchParams.append('rating', rating.toString());
+
+    const headers = await this.getHeaders();
+    const response = await fetch(url.toString(), {
+      headers,
+    });
+    return response.json();
+  }
+
+  static async getReviewSummary(courseId: string): Promise<ApiResponse<CourseReviewSummaryResponse>> {
+    const headers = await this.getHeaders();
+    const response = await fetch(`${API_BASE_URL}/courses/${courseId}/reviews/summary`, {
+      headers,
+    });
+    return response.json();
+  }
+
+  static async replyToReview(
+    reviewId: string, 
+    data: InstructorReplyRequest
+  ): Promise<ApiResponse<CourseReviewResponse>> {
+    const headers = await this.getHeaders();
+    const response = await fetch(`${API_BASE_URL}/courses/reviews/${reviewId}/reply`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(data),
+    });
+    return response.json();
+  }
+
+  static async getRelatedCourses(
+    courseId: string,
+    page = 0,
+    size = 10
+  ): Promise<ApiResponse<PaginatedResponse<CourseResponse>>> {
+    const headers = await this.getHeaders();
+    const response = await fetch(`${API_BASE_URL}/courses/${courseId}/related?page=${page}&size=${size}`, {
+      headers,
+    });
+    return response.json();
+  }
+
+  static async getTeacherCourses(teacherId: string): Promise<ApiResponse<CourseResponse[]>> {
+    const headers = await this.getHeaders();
+    const response = await fetch(`${API_BASE_URL}/courses/teachers/${teacherId}/courses`, {
+      headers,
+    });
+    return response.json();
+  }
+
+  static async getTeacherProfile(teacherId: string): Promise<ApiResponse<TeacherProfileResponse>> {
+    const headers = await this.getHeaders();
+    const response = await fetch(`${API_BASE_URL}/courses/teachers/${teacherId}/profile`, {
+      headers,
+    });
+    return response.json();
+  }
+
+  static async deleteReview(reviewId: string): Promise<ApiResponse<string>> {
+    const headers = await this.getHeaders();
+    const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.COURSES}/reviews/${reviewId}`, {
+      method: 'DELETE',
+      headers,
+    });
+    return this.handleResponse(res);
+  }
+
+  static async getMyReview(courseId: string): Promise<ApiResponse<CourseReviewResponse>> {
+    const headers = await this.getHeaders();
+    const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.COURSES}/${courseId}/my-review`, {
+      method: 'GET',
+      headers,
+    });
     return this.handleResponse(res);
   }
 }

@@ -5,12 +5,11 @@ import {
   ChevronRight,
   Clock,
   Search,
-  Star,
   TrendingUp,
-  Users,
   X,
 } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
+import { CourseCard } from '../../components/course/CourseCard';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import {
   useCourseDetail,
@@ -141,75 +140,7 @@ const EnrollmentCard: React.FC<{
   );
 };
 
-// ─── Public Course Card ───────────────────────────────────────────────────────
-const PublicCourseCard: React.FC<{
-  course: CourseResponse;
-  index: number;
-  onEnroll: (courseId: string) => void;
-  isEnrolling: boolean;
-  isEnrolled: boolean;
-}> = ({ course, index, onEnroll, isEnrolling, isEnrolled }) => {
-  let enrollBtnLabel: string;
-  if (isEnrolled) enrollBtnLabel = '✓ Đã đăng ký';
-  else if (isEnrolling) enrollBtnLabel = 'Đang đăng ký...';
-  else enrollBtnLabel = 'Đăng ký học';
-  return (
-    <motion.article
-      className="data-card course-card"
-      initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.1 + index * 0.08, duration: 0.4 }}
-    >
-      <div
-        className="course-cover"
-        style={{
-          background: coverGradients[index % coverGradients.length],
-          color: coverAccents[index % coverAccents.length],
-        }}
-      >
-        {course.thumbnailUrl && (
-          <img src={course.thumbnailUrl} alt={course.title} className="cover-thumb" />
-        )}
-        <div className="cover-overlay" />
-        <div className="cover-index">#{String(index + 1).padStart(2, '0')}</div>
-        <span className={`course-badge ${isEnrolled ? 'badge-live' : 'badge-draft'}`}>
-          {isEnrolled ? '✓ Đã đăng ký' : 'Chưa đăng ký'}
-        </span>
-        <h3 className="cover-title">{course.title}</h3>
-      </div>
-      <div className="course-body">
-        <p className="course-desc">{course.teacherName ?? 'Giáo viên'}</p>
-        <div className="course-metrics">
-          <div className="metric">
-            <BookOpen size={13} />
-            <span>{course.lessonsCount} bài học</span>
-          </div>
-          <div className="metric">
-            <Star size={13} />
-            <span>{Number(course.rating).toFixed(1)}</span>
-          </div>
-          <div className="metric">
-            <Users size={13} />
-            <span>{course.studentsCount}</span>
-          </div>
-        </div>
-        <div className="course-actions">
-          <button
-            className="action-primary"
-            style={{
-              flex: 1,
-              ...(isEnrolled ? { background: '#ecfdf5', color: '#065f46', cursor: 'default' } : {}),
-            }}
-            onClick={() => !isEnrolled && onEnroll(course.id)}
-            disabled={isEnrolling || isEnrolled}
-          >
-            {enrollBtnLabel}
-          </button>
-        </div>
-      </div>
-    </motion.article>
-  );
-};
+// PublicCourseCard was replaced by shared CourseCard
 
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 const StudentCourses: React.FC = () => {
@@ -507,7 +438,7 @@ const StudentCourses: React.FC = () => {
                     {publicCourses.length > 0 ? (
                       <div className="grid-cards">
                         {publicCourses.map((course, i) => (
-                          <PublicCourseCard
+                          <CourseCard
                             key={course.id}
                             course={course}
                             index={i}

@@ -8,6 +8,14 @@ export interface MaterialItem {
   url: string;
 }
 
+export interface CourseTeacherProfile {
+  id: string;
+  name: string;
+  avatarUrl: string | null;
+  bio: string | null;
+  position: string | null;
+}
+
 export interface CourseResponse {
   id: string;
   teacherId: string;
@@ -23,10 +31,22 @@ export interface CourseResponse {
   published: boolean; // Backend returns 'published', not 'isPublished'
   isPublished: boolean; // Alias for compatibility
   rating: number;
+  ratingCount: number; // Add review count
   studentsCount: number;
   lessonsCount: number;
+  teacherAvatar: string | null;
+  teacherPosition: string | null;
   createdAt: string;
   updatedAt: string;
+  whatYouWillLearn?: string;
+  requirements?: string;
+  targetAudience?: string;
+  subtitle?: string;
+  language?: string;
+  totalVideoHours?: number;
+  articlesCount?: number;
+  resourcesCount?: number;
+  sectionsCount: number;
 }
 
 export interface CourseLessonResponse {
@@ -105,12 +125,22 @@ export interface CreateCourseRequest {
   title: string;
   description?: string;
   thumbnailFile?: File;
+  whatYouWillLearn?: string;
+  requirements?: string;
+  targetAudience?: string;
+  subtitle?: string;
+  language?: string;
 }
 
 export interface UpdateCourseRequest {
   title?: string;
   description?: string;
   thumbnailFile?: File;
+  whatYouWillLearn?: string;
+  requirements?: string;
+  targetAudience?: string;
+  subtitle?: string;
+  language?: string;
 }
 
 export interface CreateCourseLessonRequest {
@@ -222,4 +252,64 @@ export interface UpdateCustomCourseSectionRequest {
   title?: string;
   description?: string;
   orderIndex?: number;
+}
+
+// ─── Course Review Types ─────────────────────────────────────────────────────
+
+export interface CourseReviewResponse {
+  id: string;
+  courseId: string;
+  studentId: string;
+  studentName: string;
+  studentAvatar: string | null;
+  rating: number;
+  comment: string;
+  instructorReply?: string;
+  repliedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TeacherProfileResponse {
+  id: string;
+  userId: string;
+  userName: string;
+  fullName: string;
+  schoolName: string;
+  schoolAddress: string;
+  schoolWebsite: string;
+  position: string | null;
+  verificationDocumentKey: string;
+  description: string | null;
+  status: string;
+  adminComment: string | null;
+  reviewedBy: string | null;
+  reviewedByName: string | null;
+  reviewedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  avatar: string | null;
+  totalCourses: number;
+  totalStudents: number;
+  totalRatings: number;
+  averageRating: number;
+  websiteUrl?: string;
+  linkedinUrl?: string;
+  youtubeUrl?: string;
+  facebookUrl?: string;
+}
+
+export interface CourseReviewSummaryResponse {
+  totalReviews: number;
+  averageRating: number;
+  ratingDistribution: Record<number, number>;
+}
+
+export interface CourseReviewRequest {
+  rating: number;
+  comment: string;
+}
+
+export interface InstructorReplyRequest {
+  reply: string;
 }

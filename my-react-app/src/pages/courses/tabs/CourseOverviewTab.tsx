@@ -1,4 +1,4 @@
-import { BookOpen, Calendar, CheckCircle2, Eye, GraduationCap, Star, Users, Sparkles } from 'lucide-react';
+import { BookOpen, Calendar, CheckCircle2, Eye, GraduationCap, Star, Users, Sparkles, Languages, Clock, FileText, Download } from 'lucide-react';
 import type { CourseResponse } from '../../../types';
 import '../../../styles/module-refactor.css';
 
@@ -104,6 +104,38 @@ const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({ course }) => {
               Giáo viên
             </span>
             <span className="info-value">{course.teacherName || 'Bạn'}</span>
+          </div>
+
+          <div className="info-row">
+            <span className="info-label">
+              <Languages size={16} />
+              Ngôn ngữ
+            </span>
+            <span className="info-value">{course.language || 'Tiếng Việt'}</span>
+          </div>
+
+          <div className="info-row">
+            <span className="info-label">
+              <Clock size={16} />
+              Tổng giờ video
+            </span>
+            <span className="info-value">{course.totalVideoHours || 0} giờ</span>
+          </div>
+
+          <div className="info-row">
+            <span className="info-label">
+              <Download size={16} />
+              Tài nguyên tải về
+            </span>
+            <span className="info-value">{course.resourcesCount || 0} tài nguyên</span>
+          </div>
+
+          <div className="info-row">
+            <span className="info-label">
+              <FileText size={16} />
+              Bài đọc (Articles)
+            </span>
+            <span className="info-value">{course.articlesCount || 0} bài</span>
           </div>
 
           <div className="info-row">

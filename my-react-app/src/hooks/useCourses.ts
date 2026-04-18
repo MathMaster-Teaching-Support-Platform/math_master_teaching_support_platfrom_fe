@@ -11,6 +11,8 @@ import type {
   UpdateCourseRequest,
   UpdateCustomCourseSectionRequest,
   CreateCustomCourseSectionRequest,
+  CourseReviewRequest,
+  InstructorReplyRequest,
 } from '../types';
 
 // ─── Query Keys ───────────────────────────────────────────────────────────────
@@ -353,5 +355,107 @@ export function useRemoveMaterial() {
     }) => CourseService.removeMaterial(courseId, lessonId, materialId),
     onSuccess: (_data, { courseId }) =>
       qc.invalidateQueries({ queryKey: courseKeys.lessons(courseId) }),
+  });
+}
+
+// ─── Course Review Hooks ──────────────────────────────────────────────────────
+
+export function useCourseReviews(courseId: string, page = 0, size = 10, rating?: number) {
+  return useQuery({
+    queryKey: [...courseKeys.detail(courseId), 'reviews', page, size, rating],
+    queryFn: () => CourseService.getCourseReviews(courseId, page, size, rating),
+    enabled: !!courseId,
+  });
+}
+
+export function useReviewSummary(courseId: string) {
+  return useQuery({
+    queryKey: [...courseKeys.detail(courseId), 'reviews', 'summary'],
+    queryFn: () => CourseService.getReviewSummary(courseId),
+    enabled: !!courseId,
+  });
+}
+
+export function useMyReview(courseId: string) {
+  return useQuery({
+    queryKey: [...courseKeys.detail(courseId), 'my-review'],
+    queryFn: () => CourseService.getMyReview(courseId),
+    enabled: !!courseId,
+  });
+}
+
+export function useSubmitReview() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ courseId, data }: { courseId: string; data: CourseReviewRequest }) =>
+      CourseService.submitReview(courseId, data),
+    onSuccess: (_data, { courseId }) => {
+      qc.invalidateQueries({ queryKey: [...courseKeys.detail(courseId), 'reviews'] });
+      qc.invalidateQueries({ queryKey: [...courseKeys.detail(courseId), 'my-review'] });
+      qc.invalidateQueries({ queryKey: courseKeys.detail(courseId) });
+    },
+  });
+}
+
+export function useUpdateReview() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ reviewId, data }: { reviewId: string; courseId: string; data: CourseReviewRequest }) =>
+      CourseService.updateReview(reviewId, data),
+    onSuccess: (_data, { courseId }) => {
+      qc.invalidateQueries({ queryKey: [...courseKeys.detail(courseId), 'reviews'] });
+      qc.invalidateQueries({ queryKey: [...courseKeys.detail(courseId), 'my-review'] });
+      qc.invalidateQueries({ queryKey: courseKeys.detail(courseId) });
+    },
+  });
+}
+
+export function useDeleteReview() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ reviewId }: { reviewId: string; courseId: string }) =>
+      CourseService.deleteReview(reviewId),
+    onSuccess: (_data, { courseId }) => {
+      qc.invalidateQueries({ queryKey: [...courseKeys.detail(courseId), 'reviews'] });
+      qc.invalidateQueries({ queryKey: [...courseKeys.detail(courseId), 'my-review'] });
+      qc.invalidateQueries({ queryKey: courseKeys.detail(courseId) });
+    },
+  });
+}
+
+// ─── Discovery & Instructor Hooks ──────────────────────────────────────────
+
+export function useRelatedCourses(courseId: string, page = 0, size = 6) {
+  return useQuery({
+    queryKey: [...courseKeys.detail(courseId), 'related', page, size],
+    queryFn: () => CourseService.getRelatedCourses(courseId, page, size),
+    enabled: !!courseId,
+  });
+}
+
+export function useInstructorCourses(teacherId: string) {
+  return useQuery({
+    queryKey: ['courses', 'instructor', teacherId],
+    queryFn: () => CourseService.getTeacherCourses(teacherId),
+    enabled: !!teacherId,
+  });
+}
+
+export function useTeacherProfile(teacherId: string) {
+  return useQuery({
+    queryKey: ['teacher', 'profile', teacherId],
+    queryFn: () => CourseService.getTeacherProfile(teacherId),
+    enabled: !!teacherId,
+  });
+}
+
+export function useReplyToReview() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ reviewId, data }: { reviewId: string; courseId: string; data: InstructorReplyRequest }) =>
+      CourseService.replyToReview(reviewId, data),
+    onSuccess: (_data, { courseId }) => {
+      qc.invalidateQueries({ queryKey: [...courseKeys.detail(courseId), 'reviews'] });
+    },
   });
 }

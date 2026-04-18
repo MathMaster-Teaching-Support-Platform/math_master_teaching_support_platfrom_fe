@@ -61,6 +61,7 @@ import { MindmapEditor, TeacherMindmaps } from '../pages/mindmaps';
 import PublicMindmapViewer from '../pages/mindmaps/PublicMindmapViewer';
 import StudentPublicMindmaps from '../pages/mindmaps/StudentPublicMindmaps';
 import StudentPublicSlides from '../pages/mindmaps/StudentPublicSlides';
+import InstructorPublicProfile from '../pages/instructor/InstructorPublicProfile';
 import { QuestionBankDashboard } from '../pages/question-banks/QuestionBankDashboard';
 import { QuestionBankDetailPage } from '../pages/question-banks/QuestionBankDetailPage';
 import { TemplateDashboard } from '../pages/question-templates/TemplateDashboard';
@@ -449,6 +450,14 @@ const router = createBrowserRouter([
     element: (
       <PrivateRoute>
         <StudentCourses />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/student/instructors/:id',
+    element: (
+      <PrivateRoute>
+        <InstructorPublicProfile />
       </PrivateRoute>
     ),
   },

@@ -20,7 +20,6 @@ import {
   useDeleteSection,
   useRemoveMaterial,
 } from '../../../hooks/useCourses';
-import { useAssessmentsByLesson } from '../../../hooks/useAssessment';
 import { VideoUploadService } from '../../../services/api/videoUpload.service';
 import { LessonSlideService } from '../../../services/api/lesson-slide.service';
 import type { CourseLessonResponse, CourseResponse } from '../../../types';
@@ -424,8 +423,7 @@ function LessonRow({
       return [];
     }
   }, [lesson.materials]);
-  const { data: assessmentsData } = useAssessmentsByLesson(lesson.lessonId || '');
-  const assessmentCount = assessmentsData?.result?.length ?? 0;
+
 
   const fmtDuration = (secs?: number | null) => {
     if (!secs) return null;
@@ -662,7 +660,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                 <th>Tiêu đề video</th>
                 <th>Thời lượng</th>
                 <th>Xem thử</th>
-                <th>Đánh giá</th>
+                <th>Tài liệu</th>
                 <th>Thao tác</th>
               </tr>
             </thead>
@@ -730,7 +728,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                           <th>Tiêu đề video</th>
                           <th>Thời lượng</th>
                           <th>Xem thử</th>
-                          <th>Đánh giá</th>
+                          <th>Tài liệu</th>
                           <th>Thao tác</th>
                         </tr>
                       </thead>

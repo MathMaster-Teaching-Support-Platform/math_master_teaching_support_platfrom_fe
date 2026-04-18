@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { BookOpen, CheckCircle, Clock, Play, Paperclip, FileText, ChevronRight, Layout, ChevronDown } from 'lucide-react';
+import { BookOpen, CheckCircle, Clock, Play, Paperclip, FileText, Layout, ChevronDown } from 'lucide-react';
 import {
   useCourseLessons,
   useCourseProgress,
