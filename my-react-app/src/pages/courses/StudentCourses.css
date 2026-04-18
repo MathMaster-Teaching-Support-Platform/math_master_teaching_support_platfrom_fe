@@ -1,4 +1,4 @@
-﻿/*
+/*
  * MathFlow DS — StudentCourses Premium Redesign
  * Design Language: Modern · Minimalist · High-contrast · Breathable
  * Spacing: Strict 8px grid (8, 16, 24, 32, 48, 64)
@@ -842,4 +842,94 @@
 
 @media (max-width: 480px) {
   .sc-kpi-row { grid-template-columns: 1fr; }
+}
+
+/* ─── Integrated Player Layout ─────────────────────────────────────────────── */
+.player-container {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 1.5rem;
+  margin-top: 0.5rem;
+  align-items: start;
+}
+
+.player-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.player-sidebar {
+  padding: 0;
+  overflow: hidden;
+  height: fit-content;
+  position: sticky;
+  top: 1rem;
+}
+
+@media (max-width: 1024px) {
+  .player-container {
+    grid-template-columns: 1fr;
+  }
+  .player-sidebar {
+    position: static;
+  }
+}
+
+/* ─── Curriculum Hierarchy ───────────────────────────────────────────────── */
+.section-header {
+  padding: 1rem 1.25rem;
+  background: #f8fbff;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.section-header:hover {
+  background: #f1f7ff;
+}
+
+.section-title-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.section-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: #e2e8f0;
+  padding: 2px 8px;
+  borderRadius: 4px;
+}
+
+.section-title {
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: var(--mod-ink);
+}
+
+.section-meta {
+  font-size: 0.75rem;
+  color: #64748b;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.lessons-group {
+  overflow: hidden;
+  max-height: 2000px; /* Large enough for many lessons */
+  transition: max-height 0.4s cubic-bezier(0, 1, 0, 1);
+}
+
+.lessons-group.collapsed {
+  max-height: 0;
 }

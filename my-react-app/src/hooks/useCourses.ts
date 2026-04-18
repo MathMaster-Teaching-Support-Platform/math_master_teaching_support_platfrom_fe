@@ -326,3 +326,32 @@ export function useDeleteSection() {
     onSuccess: (_data, { courseId }) => qc.invalidateQueries({ queryKey: sectionKeys.course(courseId) }),
   });
 }
+
+// ─── Lesson Material Hooks ───────────────────────────────────────────────────
+
+export function useAddMaterial() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ courseId, lessonId, file }: { courseId: string; lessonId: string; file: File }) =>
+      CourseService.addMaterial(courseId, lessonId, file),
+    onSuccess: (_data, { courseId }) =>
+      qc.invalidateQueries({ queryKey: courseKeys.lessons(courseId) }),
+  });
+}
+
+export function useRemoveMaterial() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      courseId,
+      lessonId,
+      materialId,
+    }: {
+      courseId: string;
+      lessonId: string;
+      materialId: string;
+    }) => CourseService.removeMaterial(courseId, lessonId, materialId),
+    onSuccess: (_data, { courseId }) =>
+      qc.invalidateQueries({ queryKey: courseKeys.lessons(courseId) }),
+  });
+}

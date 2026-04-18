@@ -19,11 +19,12 @@ import {
   useAddAssessmentToCourse,
   useAvailableAssessmentsForCourse,
 } from '../../../hooks/useCourses';
-import type { CourseAssessmentResponse, AddAssessmentToCourseRequest } from '../../../types';
+import type { CourseAssessmentResponse, AddAssessmentToCourseRequest, CourseResponse } from '../../../types';
 import '../../../styles/module-refactor.css';
 
 interface CourseAssessmentsTabProps {
   courseId: string;
+  course: CourseResponse;
 }
 
 type AssessmentStatus = 'DRAFT' | 'PUBLISHED' | 'CLOSED';
@@ -38,10 +39,12 @@ interface FilterState {
 // Add Assessment Modal
 function AddAssessmentModal({
   courseId,
+  provider,
   existingAssessmentIds,
   onClose,
 }: {
   courseId: string;
+  provider: 'MINISTRY' | 'CUSTOM';
   existingAssessmentIds: string[];
   onClose: () => void;
 }) {
@@ -49,7 +52,7 @@ function AddAssessmentModal({
   const [selectedId, setSelectedId] = useState('');
   const [orderIndex, setOrderIndex] = useState(1);
   const [isRequired, setIsRequired] = useState(true);
-  const [allowOutOfCourseLessons, setAllowOutOfCourseLessons] = useState(false);
+  const [allowOutOfCourseLessons, setAllowOutOfCourseLessons] = useState(provider === 'CUSTOM');
   const [error, setError] = useState('');
 
   const { data: assessmentsData, isLoading } = useAvailableAssessmentsForCourse(
@@ -147,13 +150,18 @@ function AddAssessmentModal({
               type="checkbox"
               checked={allowOutOfCourseLessons}
               onChange={(e) => setAllowOutOfCourseLessons(e.target.checked)}
+              disabled={provider === 'CUSTOM'}
             />
             <span style={{ fontSize: '0.86rem', fontWeight: 600 }}>
-              Cho phép Final Exam ngoài lesson của course (override)
+              {provider === 'CUSTOM' 
+                ? 'Cho phép chọn tất cả bài kiểm tra (Bắt buộc cho khóa Custom)'
+                : 'Cho phép Final Exam ngoài lesson của course (override)'}
             </span>
           </label>
           <p className="muted" style={{ fontSize: '0.8rem', marginTop: 6 }}>
-            Tắt: chỉ hiện assessment khớp lesson của course. Bật: cho phép chọn cả assessment không khớp lesson.
+            {provider === 'CUSTOM'
+              ? 'Vì đây là khóa học tự do, bạn có thể chọn bất kỳ bài kiểm tra PUBLISHED nào của mình.'
+              : 'Tắt: chỉ hiện assessment khớp lesson của course. Bật: cho phép chọn cả assessment không khớp lesson.'}
           </p>
 
           {error && (
@@ -226,12 +234,20 @@ function AddAssessmentModal({
                     <span>⭐ {assessment.totalPoints} điểm</span>
                     {assessment.timeLimitMinutes && <span>⏱️ {assessment.timeLimitMinutes} phút</span>}
                   </div>
-                  <p className="muted" style={{ fontSize: '0.78rem', marginTop: 8 }}>
-                    Khớp {assessment.matchedLessonCount} bài học: {assessment.matchedLessonTitles.join(', ')}
-                  </p>
-                  {assessment.matchedLessonCount === 0 && (
-                    <p style={{ fontSize: '0.78rem', marginTop: 4, color: '#b91c1c', fontWeight: 600 }}>
-                      Assessment này không khớp lesson nào của course.
+                  {provider === 'MINISTRY' ? (
+                    <>
+                      <p className="muted" style={{ fontSize: '0.78rem', marginTop: 8 }}>
+                        Khớp {assessment.matchedLessonCount} bài học: {assessment.matchedLessonTitles.join(', ')}
+                      </p>
+                      {assessment.matchedLessonCount === 0 && (
+                        <p style={{ fontSize: '0.78rem', marginTop: 4, color: '#b91c1c', fontWeight: 600 }}>
+                          Assessment này không khớp lesson nào của course.
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <p style={{ fontSize: '0.78rem', marginTop: 8, color: '#059669', fontWeight: 600 }}>
+                      ✓ Khóa học tự do (Cho phép chọn bất kỳ bài đánh giá nào)
                     </p>
                   )}
                 </div>
@@ -286,7 +302,7 @@ function AddAssessmentModal({
 }
 
 // Main Component
-const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId }) => {
+const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, course }) => {
   const navigate = useNavigate();
   const [showAddModal, setShowAddModal] = useState(false);
   // const [draggedId, setDraggedId] = useState<string | null>(null);
@@ -489,7 +505,7 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId })
                             ⭐ Bắt buộc
                           </span>
                         )}
-                        {!assessment.lessonMatched && (
+                        {!assessment.lessonMatched && course.provider === 'MINISTRY' && (
                           <span className="badge" style={{ background: '#fee2e2', color: '#b91c1c' }}>
                             ⚠ Không khớp lesson
                           </span>
@@ -529,7 +545,11 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId })
                     </div>
 
                     <div style={{ marginTop: 8 }}>
-                      {assessment.lessonMatched ? (
+                      {course.provider === 'CUSTOM' ? (
+                        <p style={{ fontSize: '0.82rem', margin: 0, color: '#059669', fontWeight: 600 }}>
+                          ✓ Bài đánh giá tự do (Khóa học Custom)
+                        </p>
+                      ) : assessment.lessonMatched ? (
                         <p className="muted" style={{ fontSize: '0.82rem', margin: 0 }}>
                           Khớp lesson: {assessment.matchedLessonTitles.join(', ')}
                         </p>
@@ -595,6 +615,7 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId })
       {showAddModal && (
         <AddAssessmentModal
           courseId={courseId}
+          provider={course.provider}
           existingAssessmentIds={existingIds}
           onClose={() => setShowAddModal(false)}
         />

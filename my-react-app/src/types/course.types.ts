@@ -49,6 +49,9 @@ export interface CourseLessonResponse {
   orderIndex: number | null;
   isFreePreview: boolean;
   materials: string | null;
+  /** MINISTRY courses only */
+  chapterId: string | null;
+  chapterTitle: string | null;
   createdAt: string;
   updatedAt: string;
 }

@@ -223,7 +223,7 @@ const TeacherCourseDetail: React.FC = () => {
           <div className="course-tab-content">
             {activeTab === 'overview' && <CourseOverviewTab course={course} />}
             {activeTab === 'lessons' && <CourseLessonsTab courseId={course.id} course={course} />}
-            {activeTab === 'assessments' && <CourseAssessmentsTab courseId={course.id} />}
+            {activeTab === 'assessments' && <CourseAssessmentsTab courseId={course.id} course={course} />}
             {activeTab === 'students' && <CourseStudentsTab courseId={course.id} />}
           </div>
         </section>

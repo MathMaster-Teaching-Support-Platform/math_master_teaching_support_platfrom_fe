@@ -305,6 +305,11 @@ export const API_ENDPOINTS = {
   COURSE_SECTION_DETAIL: (courseId: string, sectionId: string) =>
     `/courses/${courseId}/sections/${sectionId}`,
 
+  COURSE_LESSON_MATERIALS: (courseId: string, lessonId: string) =>
+    `/courses/${courseId}/lessons/${lessonId}/materials`,
+  COURSE_LESSON_MATERIAL_DETAIL: (courseId: string, lessonId: string, materialId: string) =>
+    `/courses/${courseId}/lessons/${lessonId}/materials/${materialId}`,
+
   // Enrollments
   COURSE_ENROLL: (courseId: string) => `/courses/${courseId}/enroll`,
   ENROLLMENTS_MY: '/enrollments/my',

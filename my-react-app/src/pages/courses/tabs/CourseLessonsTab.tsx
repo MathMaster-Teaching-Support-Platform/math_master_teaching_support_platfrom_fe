@@ -1,20 +1,24 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   CheckCircle2,
   Clock,
   Eye,
   EyeOff,
+  FileText,
+  Paperclip,
   Pencil,
   Plus,
   Trash2,
   Video,
 } from 'lucide-react';
 import {
+  useAddMaterial,
   useCourseLessons,
   useDeleteCourseLesson,
   useCustomCourseSections,
   useCreateSection,
   useDeleteSection,
+  useRemoveMaterial,
 } from '../../../hooks/useCourses';
 import { useAssessmentsByLesson } from '../../../hooks/useAssessment';
 import { VideoUploadService } from '../../../services/api/videoUpload.service';
@@ -34,11 +38,13 @@ function UploadVideoModal({
   course,
   onClose,
   onSuccess,
+  existingLessons,
 }: {
   courseId: string;
   course: CourseResponse;
   onClose: () => void;
   onSuccess: () => void;
+  existingLessons: CourseLessonResponse[];
 }) {
   const provider = course.provider;
   const [chapters, setChapters] = useState<ChapterBySubject[]>([]);
@@ -60,6 +66,7 @@ function UploadVideoModal({
   const [sectionId, setSectionId] = useState(''); // for CUSTOM
   const [customTitle, setCustomTitle] = useState(''); // for CUSTOM
   const [customDescription, setCustomDescription] = useState(''); // for CUSTOM
+  const [durationSeconds, setDurationSeconds] = useState<number | undefined>(undefined);
 
   useState(() => {
     if (provider === 'MINISTRY' && course.subjectId) {
@@ -78,6 +85,18 @@ function UploadVideoModal({
     }
   });
 
+  // Auto-calculate orderIndex
+  useEffect(() => {
+    if (provider === 'CUSTOM') {
+      if (sectionId) {
+        const count = existingLessons.filter((l) => l.sectionId === sectionId).length;
+        setOrderIndex(count + 1);
+      }
+    } else {
+      setOrderIndex(existingLessons.length + 1);
+    }
+  }, [sectionId, existingLessons, provider]);
+
   const handleChapterChange = async (val: string) => {
     setChapterId(val);
     setLessonId('');
@@ -92,11 +111,30 @@ function UploadVideoModal({
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const getVideoDuration = (file: File): Promise<number> => {
+    return new Promise((resolve) => {
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      video.onloadedmetadata = () => {
+        window.URL.revokeObjectURL(video.src);
+        resolve(Math.round(video.duration));
+      };
+      video.onerror = () => {
+        resolve(0);
+      };
+      video.src = URL.createObjectURL(file);
+    });
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
     setFile(f);
     if (!videoTitle) setVideoTitle(f.name.replace(/\.[^.]+$/, ''));
+    
+    // Auto-extract duration
+    const dur = await getVideoDuration(f);
+    if (dur > 0) setDurationSeconds(dur);
   };
 
   const handleUpload = async () => {
@@ -108,8 +146,8 @@ function UploadVideoModal({
     setProgress(0);
     try {
       const extraData = provider === 'MINISTRY' 
-        ? { lessonId, videoTitle, orderIndex, isFreePreview }
-        : { sectionId, customTitle, customDescription, videoTitle, orderIndex, isFreePreview };
+        ? { lessonId, videoTitle, orderIndex, isFreePreview, durationSeconds }
+        : { sectionId, customTitle, customDescription, videoTitle, orderIndex, isFreePreview, durationSeconds };
         
       await VideoUploadService.uploadVideo(
         courseId,
@@ -248,41 +286,41 @@ function UploadVideoModal({
             </p>
             <div
               style={{
+                position: 'relative',
                 border: '2px dashed #dbe4f0',
-                borderRadius: 10,
-                padding: '1.25rem',
+                borderRadius: 12,
+                padding: '1.5rem',
                 textAlign: 'center',
-                background: file ? '#f0fdf4' : '#f8fbff',
+                background: '#f8fafc',
                 cursor: 'pointer',
               }}
-              onClick={() => document.getElementById('video-file-input')?.click()}
+              onClick={() => document.getElementById('video-input')?.click()}
             >
+              <input
+                id="video-input"
+                type="file"
+                accept="video/*"
+                style={{ display: 'none' }}
+                onChange={(e) => void handleFileChange(e)}
+                disabled={uploading}
+              />
               {file ? (
                 <div>
-                  <Video size={24} style={{ color: '#059669', marginBottom: 6 }} />
-                  <p style={{ fontWeight: 700, color: '#0f172a', margin: 0 }}>{file.name}</p>
-                  <p className="muted" style={{ fontSize: '0.82rem', marginTop: 4 }}>
-                    {fileSizeMB} MB • {file.type}
-                  </p>
+                  <div style={{ color: '#2d7be7', fontWeight: 600, marginBottom: 4 }}>
+                    ✅ {file.name}
+                  </div>
+                  <div className="muted" style={{ fontSize: '0.82rem' }}>
+                    {fileSizeMB} MB {durationSeconds ? `• ${Math.floor(durationSeconds / 60)} phút ${durationSeconds % 60} giây` : ''}
+                  </div>
                 </div>
               ) : (
-                <div>
-                  <Plus size={24} style={{ color: '#94a3b8', marginBottom: 6 }} />
-                  <p style={{ color: '#64748b', margin: 0 }}>Click để chọn file video</p>
-                  <p className="muted" style={{ fontSize: '0.8rem', marginTop: 4 }}>
-                    MP4, MOV, AVI, MKV — không giới hạn dung lượng
-                  </p>
+                <div className="muted">
+                  <Video size={32} style={{ marginBottom: 8, opacity: 0.5 }} />
+                  <p>Kéo thả hoặc click để chọn file video</p>
+                  <p style={{ fontSize: '0.75rem', marginTop: 4 }}>MP4, WebM hoặc OGG</p>
                 </div>
               )}
             </div>
-            <input
-              id="video-file-input"
-              type="file"
-              accept="video/*"
-              style={{ display: 'none' }}
-              onChange={handleFileChange}
-              disabled={uploading}
-            />
           </label>
 
           <label>
@@ -297,18 +335,7 @@ function UploadVideoModal({
           </label>
 
           <div className="row" style={{ gap: '1rem' }}>
-            <label style={{ flex: 1 }}>
-              <p className="muted" style={{ marginBottom: 6 }}>Thứ tự</p>
-              <input
-                className="input"
-                type="number"
-                min={1}
-                value={orderIndex}
-                onChange={(e) => setOrderIndex(Number(e.target.value))}
-                disabled={uploading}
-              />
-            </label>
-            <label className="row" style={{ alignItems: 'center', gap: 8, paddingTop: 24 }}>
+            <label className="row" style={{ alignItems: 'center', gap: 8, paddingTop: 10 }}>
               <input
                 type="checkbox"
                 checked={isFreePreview}
@@ -378,11 +405,25 @@ function LessonRow({
   lesson,
   onDelete,
   deletePending,
+  courseId,
 }: {
+  courseId: string;
   lesson: CourseLessonResponse;
   onDelete: () => void;
   deletePending: boolean;
 }) {
+  const [showMaterials, setShowMaterials] = useState(false);
+  const addMaterialMutation = useAddMaterial();
+  const removeMaterialMutation = useRemoveMaterial();
+
+  const materialsList = useMemo(() => {
+    if (!lesson.materials) return [];
+    try {
+      return JSON.parse(lesson.materials);
+    } catch {
+      return [];
+    }
+  }, [lesson.materials]);
   const { data: assessmentsData } = useAssessmentsByLesson(lesson.lessonId || '');
   const assessmentCount = assessmentsData?.result?.length ?? 0;
 
@@ -394,63 +435,149 @@ function LessonRow({
   };
 
   return (
-    <tr>
-      <td className="muted">{lesson.orderIndex ?? '—'}</td>
-      <td>
-        <div style={{ fontWeight: 600 }}>{lesson.lessonTitle ?? '—'}</div>
-      </td>
-      <td>
-        {lesson.videoUrl ? (
-          <div className="row" style={{ gap: 6 }}>
-            <CheckCircle2 size={14} style={{ color: '#059669' }} />
-            <span>{lesson.videoTitle ?? 'Đã upload'}</span>
-          </div>
-        ) : (
-          <span className="muted">Chưa có video</span>
-        )}
-      </td>
-      <td>
-        {lesson.durationSeconds ? (
-          <div className="row" style={{ gap: 4 }}>
-            <Clock size={13} />
-            <span>{fmtDuration(lesson.durationSeconds)}</span>
-          </div>
-        ) : (
-          <span className="muted">—</span>
-        )}
-      </td>
-      <td>
-        {lesson.isFreePreview ? (
-          <span className="badge published">
-            <Eye size={11} style={{ marginRight: 3 }} />
-            Miễn phí
-          </span>
-        ) : (
-          <span className="badge draft">
-            <EyeOff size={11} style={{ marginRight: 3 }} />
-            Yêu cầu đăng ký
-          </span>
-        )}
-      </td>
-      <td>
-        <span className="badge">{assessmentCount > 0 ? `${assessmentCount} đánh giá` : '—'}</span>
-      </td>
-      <td>
-        <div className="row" style={{ gap: 6 }}>
-          <button className="btn secondary" style={{ padding: '0.35rem 0.6rem' }} title="Chỉnh sửa">
-            <Pencil size={13} />
-          </button>
-          <button
-            className="btn danger"
-            style={{ padding: '0.35rem 0.6rem' }}
-            disabled={deletePending}
-            onClick={onDelete}
+    <>
+      <tr>
+        <td className="muted">{lesson.orderIndex ?? '—'}</td>
+        <td>
+          <div style={{ fontWeight: 600 }}>{lesson.lessonTitle ?? '—'}</div>
+        </td>
+        <td>
+          {lesson.videoUrl ? (
+            <div className="row" style={{ gap: 6 }}>
+              <CheckCircle2 size={14} style={{ color: '#059669' }} />
+              <span>{lesson.videoTitle ?? 'Đã upload'}</span>
+            </div>
+          ) : (
+            <span className="muted">Chưa có video</span>
+          )}
+        </td>
+        <td>
+          {lesson.durationSeconds ? (
+            <div className="row" style={{ gap: 4 }}>
+              <Clock size={13} />
+              <span>{fmtDuration(lesson.durationSeconds)}</span>
+            </div>
+          ) : (
+            <span className="muted">—</span>
+          )}
+        </td>
+        <td>
+          {lesson.isFreePreview ? (
+            <span className="badge published">
+              <Eye size={11} style={{ marginRight: 3 }} />
+              Miễn phí
+            </span>
+          ) : (
+            <span className="badge draft">
+              <EyeOff size={11} style={{ marginRight: 3 }} />
+              Khóa
+            </span>
+          )}
+        </td>
+        <td>
+          <div 
+            className={`row ${showMaterials ? 'active' : ''}`} 
+            style={{ 
+              gap: 6, 
+              cursor: 'pointer', 
+              color: materialsList.length > 0 ? '#2563eb' : '#64748b' 
+            }}
+            onClick={() => setShowMaterials(!showMaterials)}
           >
-            <Trash2 size={13} />
-          </button>
-        </div>
-      </td>
-    </tr>
+            <Paperclip size={14} />
+            <span style={{ fontWeight: materialsList.length > 0 ? 600 : 400 }}>
+              {materialsList.length} tài liệu
+            </span>
+          </div>
+        </td>
+        <td>
+          <div className="row" style={{ gap: 6 }}>
+            <button className="btn secondary" style={{ padding: '0.35rem 0.6rem' }} title="Chỉnh sửa">
+              <Pencil size={13} />
+            </button>
+            <button
+              className="btn danger"
+              style={{ padding: '0.35rem 0.6rem' }}
+              disabled={deletePending}
+              onClick={onDelete}
+            >
+              <Trash2 size={13} />
+            </button>
+          </div>
+        </td>
+      </tr>
+      {showMaterials && (
+        <tr style={{ background: '#f8fafc' }}>
+          <td colSpan={7} style={{ padding: '1rem 2rem' }}>
+            <div style={{ borderLeft: '4px solid #e2e8f0', paddingLeft: '1.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h4 style={{ margin: 0, fontSize: '0.9rem', color: '#475569' }}>Tài liệu đính kèm</h4>
+                <label className="btn secondary" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', cursor: 'pointer' }}>
+                  <Plus size={12} style={{ marginRight: 4 }} />
+                  Tải lên tài liệu
+                  <input
+                    type="file"
+                    style={{ display: 'none' }}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        addMaterialMutation.mutate({ courseId, lessonId: lesson.id, file });
+                      }
+                    }}
+                  />
+                </label>
+              </div>
+
+              {materialsList.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {materialsList.map((m: any) => (
+                    <div key={m.id} style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center', 
+                      background: 'white', 
+                      padding: '0.5rem 0.75rem', 
+                      borderRadius: '6px',
+                      border: '1px solid #e2e8f0'
+                    }}>
+                      <div className="row" style={{ gap: 8 }}>
+                        <FileText size={14} style={{ color: '#64748b' }} />
+                        <a 
+                          href={m.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          style={{ fontSize: '0.85rem', color: '#1e293b', textDecoration: 'none' }}
+                          onMouseOver={(e) => (e.currentTarget.style.textDecoration = 'underline')}
+                          onMouseOut={(e) => (e.currentTarget.style.textDecoration = 'none')}
+                        >
+                          {m.name}
+                        </a>
+                        <span className="muted" style={{ fontSize: '0.75rem' }}>
+                          ({(m.size / 1024).toFixed(1)} KB)
+                        </span>
+                      </div>
+                      <button 
+                        className="btn-icon" 
+                        style={{ color: '#ef4444' }}
+                        onClick={() => {
+                          if (confirm(`Xóa tài liệu ${m.name}?`)) {
+                            removeMaterialMutation.mutate({ courseId, lessonId: lesson.id, materialId: m.id });
+                          }
+                        }}
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="muted" style={{ fontSize: '0.85rem', fontStyle: 'italic' }}>Chưa có tài liệu nào.</p>
+              )}
+            </div>
+          </td>
+        </tr>
+      )}
+    </>
   );
 }
 
@@ -545,6 +672,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                 .map((lesson) => (
                   <LessonRow
                     key={lesson.id}
+                    courseId={courseId}
                     lesson={lesson}
                     onDelete={() => {
                       if (confirm('Xóa bài học này?')) {
@@ -610,6 +738,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                         {sectionLessons.map(lesson => (
                           <LessonRow
                             key={lesson.id}
+                            courseId={courseId}
                             lesson={lesson}
                             onDelete={() => {
                               if (confirm('Xóa bài học này?')) {
@@ -646,6 +775,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
         <UploadVideoModal
           courseId={courseId}
           course={course}
+          existingLessons={lessons}
           onClose={() => setShowUpload(false)}
           onSuccess={() => void refetch()}
         />

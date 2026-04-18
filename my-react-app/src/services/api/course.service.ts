@@ -392,4 +392,34 @@ export class CourseService {
     );
     return this.handleResponse(res);
   }
+
+  // ─── Lesson Materials ─────────────────────────────────────────────────────
+
+  static async addMaterial(
+    courseId: string,
+    lessonId: string,
+    file: File
+  ): Promise<ApiResponse<CourseLessonResponse>> {
+    const headers = await this.getAuthHeaders();
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.COURSE_LESSON_MATERIALS(courseId, lessonId)}`,
+      { method: 'POST', headers, body: formData }
+    );
+    return this.handleResponse(res);
+  }
+
+  static async removeMaterial(
+    courseId: string,
+    lessonId: string,
+    materialId: string
+  ): Promise<ApiResponse<CourseLessonResponse>> {
+    const headers = await this.getHeaders();
+    const res = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.COURSE_LESSON_MATERIAL_DETAIL(courseId, lessonId, materialId)}`,
+      { method: 'DELETE', headers }
+    );
+    return this.handleResponse(res);
+  }
 }
