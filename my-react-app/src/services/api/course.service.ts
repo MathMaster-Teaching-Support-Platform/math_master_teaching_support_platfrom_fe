@@ -52,7 +52,8 @@ export class CourseService {
   private static async handleResponse<T>(res: Response): Promise<T> {
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error((err as { message?: string }).message || 'Request failed');
+      const message = (err as { message?: string }).message || 'Request failed';
+      throw Object.assign(new Error(message), { response: { data: err } });
     }
     return res.json();
   }

@@ -1,0 +1,31 @@
+.countdown-timer-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #fef2f2;
+  color: #b91c1c;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-top: 8px;
+  border: 1px solid #fee2e2;
+  animation: pulse-soft 2s infinite ease-in-out;
+}
+
+.countdown-icon {
+  color: #ef4444;
+  flex-shrink: 0;
+}
+
+@keyframes pulse-soft {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}

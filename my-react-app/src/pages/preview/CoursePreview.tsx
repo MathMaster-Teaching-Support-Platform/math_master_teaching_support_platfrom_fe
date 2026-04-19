@@ -26,6 +26,8 @@ import {
   useEnroll
 } from '../../hooks/useCourses';
 import { AuthService } from '../../services/api/auth.service';
+import { getEffectivePrice, isDiscountActive } from '../../utils/pricing';
+import { CountdownTimer } from '../../components/common/CountdownTimer';
 import './CoursePreview.css';
 
 const CoursePreview: React.FC = () => {
@@ -409,15 +411,15 @@ const CoursePreview: React.FC = () => {
               </div>
 
               <div className="sidebar-price-container">
-                {course.discountedPrice !== null && course.discountedPrice >= 0 && (!course.discountExpiryDate || new Date(course.discountExpiryDate) > new Date()) ? (
+                {isDiscountActive(course) ? (
                   <div className="price-group">
-                    <span className="price-primary">{course.discountedPrice === 0 ? 'Miễn phí' : course.discountedPrice.toLocaleString('vi-VN') + '₫'}</span>
-                    {course.originalPrice && course.originalPrice > course.discountedPrice && (
+                    <span className="price-primary">{getEffectivePrice(course) === 0 ? 'Miễn phí' : getEffectivePrice(course).toLocaleString('vi-VN') + '₫'}</span>
+                    {course.originalPrice && course.originalPrice > getEffectivePrice(course) && (
                       <span className="price-original">{course.originalPrice.toLocaleString('vi-VN')}₫</span>
                     )}
-                    {course.originalPrice && course.originalPrice > course.discountedPrice && (
+                    {course.originalPrice && course.originalPrice > getEffectivePrice(course) && (
                       <span className="price-discount">
-                        {Math.round(((course.originalPrice - course.discountedPrice) / course.originalPrice) * 100)}% off
+                        {Math.round(((course.originalPrice - getEffectivePrice(course)) / course.originalPrice) * 100)}% off
                       </span>
                     )}
                   </div>
@@ -426,13 +428,9 @@ const CoursePreview: React.FC = () => {
                 ) : (
                   <span className="price-primary">Miễn phí</span>
                 )}
-                {course.discountExpiryDate && new Date(course.discountExpiryDate) > new Date() && (
-                  <div className="price-expiry">
-                    <Clock size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'text-bottom' }} />
-                    <span style={{ color: '#b32d0f', fontSize: '0.85rem', fontWeight: 600 }}>
-                      Ưu đãi kết thúc vào {new Date(course.discountExpiryDate).toLocaleDateString('vi-VN')}
-                    </span>
-                  </div>
+                
+                {isDiscountActive(course) && course.discountExpiryDate && (
+                  <CountdownTimer expiryDate={course.discountExpiryDate} />
                 )}
               </div>
 
@@ -442,7 +440,7 @@ const CoursePreview: React.FC = () => {
                 disabled={enrollMutation.isPending}
               >
                 {enrollMutation.isPending ? 'Đang xử lý...' : 
-                 ((course.discountedPrice !== null && course.discountedPrice >= 0 && (!course.discountExpiryDate || new Date(course.discountExpiryDate) > new Date())) ? course.discountedPrice : course.originalPrice || 0) > 0 
+                 getEffectivePrice(course) > 0 
                    ? 'Mua ngay' 
                    : 'Đăng ký miễn phí'}
               </button>

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { BookOpen, Star, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { CourseResponse } from '../../types';
+import { getEffectivePrice, isDiscountActive } from '../../utils/pricing';
 
 interface CourseCardProps {
   course: CourseResponse;
@@ -95,12 +96,12 @@ export const CourseCard: React.FC<CourseCardProps> = ({
           </div>
         </div>
         <div className="course-pricing">
-          {course.discountedPrice !== null && course.discountedPrice >= 0 && (!course.discountExpiryDate || new Date(course.discountExpiryDate) > new Date()) ? (
+          {isDiscountActive(course) ? (
             <div className="price-container">
               <span className="current-price">
-                {course.discountedPrice.toLocaleString('vi-VN')}₫
+                {getEffectivePrice(course).toLocaleString('vi-VN')}₫
               </span>
-              {course.originalPrice && course.originalPrice > course.discountedPrice && (
+              {course.originalPrice && course.originalPrice > getEffectivePrice(course) && (
                 <span className="original-price">
                   {course.originalPrice.toLocaleString('vi-VN')}₫
                 </span>
@@ -111,9 +112,9 @@ export const CourseCard: React.FC<CourseCardProps> = ({
           ) : (
             <span className="current-price price-free">Miễn phí</span>
           )}
-          {course.originalPrice && course.discountedPrice !== null && course.originalPrice > course.discountedPrice && (!course.discountExpiryDate || new Date(course.discountExpiryDate) > new Date()) && (
+          {isDiscountActive(course) && course.originalPrice && course.originalPrice > getEffectivePrice(course) && (
             <span className="discount-badge">
-              -{Math.round(((course.originalPrice - course.discountedPrice) / course.originalPrice) * 100)}%
+              -{Math.round(((course.originalPrice - getEffectivePrice(course)) / course.originalPrice) * 100)}%
             </span>
           )}
         </div>

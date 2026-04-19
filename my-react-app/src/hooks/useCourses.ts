@@ -1,4 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '../context/ToastContext';
 import { CourseService } from '../services/api/course.service';
 import type {
   AddAssessmentToCourseRequest,
@@ -167,9 +169,39 @@ export function useMyEnrollments() {
 
 export function useEnroll() {
   const qc = useQueryClient();
+  const { showToast } = useToast();
+  const navigate = useNavigate();
+
   return useMutation({
     mutationFn: (courseId: string) => CourseService.enroll(courseId),
-    onSuccess: () => qc.invalidateQueries({ queryKey: courseKeys.enrollments() }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: courseKeys.enrollments() });
+      showToast({
+        type: 'success',
+        message: 'Đăng ký khóa học thành công!',
+      });
+    },
+    onError: (err: unknown) => {
+      const code = (err as any)?.response?.data?.code;
+      
+      if (code === 1029) {
+        showToast({
+          type: 'error',
+          message: 'Số dư ví không đủ! Vui lòng nạp thêm tiền để tiếp tục thanh toán khóa học.',
+          duration: 10000,
+          action: {
+            label: 'Nạp tiền ngay',
+            onClick: () => navigate('/student/wallet'),
+          },
+        });
+      } else {
+        const msg = (err as any)?.response?.data?.message || 'Có lỗi xảy ra khi đăng ký khóa học.';
+        showToast({
+          type: 'error',
+          message: msg,
+        });
+      }
+    },
   });
 }
 

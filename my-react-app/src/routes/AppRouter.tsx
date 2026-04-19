@@ -1,4 +1,5 @@
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import { ToastProvider } from '../context/ToastProvider';
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 import About from '../pages/About';
 import Contact from '../pages/Contact';
@@ -712,7 +713,9 @@ const router = createBrowserRouter([
 export default function AppRouter() {
   return (
     <GoogleOAuthProvider clientId="299660266172-38kfomfcv0pcvrhrg0pas04rhfskqn8u.apps.googleusercontent.com">
-      <RouterProvider router={router} />
+      <ToastProvider>
+        <RouterProvider router={router} />
+      </ToastProvider>
     </GoogleOAuthProvider>
   );
 }
