@@ -535,7 +535,7 @@ const StudentDashboard: React.FC = () => {
           <div className="sd-header-text">
             <div className="sd-greeting-badge">{greeting} ☀️</div>
             <h1 className="sd-title">
-              Chào {mockStudent.name}! <span className="sd-wave">👋</span>
+              {mockStudent.name}! <span className="sd-wave">👋</span>
             </h1>
             <p className="sd-subtitle">
               Hôm nay bạn có <strong>3 bài tập</strong> cần hoàn thành. Hãy cùng chinh phục nào!
