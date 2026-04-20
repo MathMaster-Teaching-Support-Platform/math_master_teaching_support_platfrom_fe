@@ -11,12 +11,7 @@ import {
   Globe,
   Linkedin,
   Youtube,
-  Facebook,
-  ChevronRight,
-  Infinity as InfinityIcon,
-  Smartphone,
-  Clock,
-  Download
+  Facebook
 } from 'lucide-react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
@@ -31,6 +26,8 @@ import {
   useInstructorCourses,
 } from '../../hooks/useCourses';
 import CourseRecommendationRow from '../../components/course/CourseRecommendationRow';
+import { CourseLearningPanels } from '../../components/course/CourseLearningPanels';
+import { CourseIncludesList } from '../../components/course/CourseIncludesList';
 import '../../styles/module-refactor.css';
 import './StudentCourses.css';
 // Import tab components
@@ -357,30 +354,11 @@ const StudentCourseDetail: React.FC = () => {
 
               {/* ── Enhanced Metadata (Udemy Style) ── */}
               <div className="course-udemy-metadata">
-                {course?.whatYouWillLearn && (
-                  <section className="metadata-section objectives-section">
-                    <h3 className="section-title-premium-small">Bạn sẽ học được gì</h3>
-                    <div className="objectives-list">
-                      {course.whatYouWillLearn.split('\n').filter(line => line.trim()).map((item, i) => (
-                        <div key={i} className="objective-item">
-                          <ChevronRight size={16} className="item-icon" />
-                          <span>{item}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </section>
-                )}
-
-                {course?.requirements && (
-                  <section className="metadata-section">
-                    <h3 className="section-title-premium-small">Yêu cầu</h3>
-                    <ul className="simple-list-premium">
-                      {course.requirements.split('\n').filter(line => line.trim()).map((item, i) => (
-                        <li key={i}>{item}</li>
-                      ))}
-                    </ul>
-                  </section>
-                )}
+                <CourseLearningPanels
+                  whatYouWillLearn={course?.whatYouWillLearn}
+                  requirements={course?.requirements}
+                  targetAudience={course?.targetAudience}
+                />
               </div>
 
               {/* ── Instructor Section ── */}
@@ -440,33 +418,12 @@ const StudentCourseDetail: React.FC = () => {
                   </div>
                 </section>
               )}
-              {/* Course Includes Specs */}
-              <div className="metadata-section course-specs-card" style={{ marginTop: '2rem' }}>
-                <h3 className="section-title-sm" style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '1rem' }}>Khóa học này bao gồm</h3>
-                <div className="specs-grid-mini" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
-                  <div className="spec-item-mini" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.9rem', color: '#334155' }}>
-                    <Clock size={16} />
-                    <span>{course?.totalVideoHours || '--'} giờ video theo yêu cầu</span>
-                  </div>
-                  <div className="spec-item-mini" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.9rem', color: '#334155' }}>
-                    <FileText size={16} />
-                    <span>{course?.articlesCount || 0} bài báo/tài liệu</span>
-                  </div>
-                  {course?.resourcesCount && course?.resourcesCount > 0 && (
-                    <div className="spec-item-mini" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.9rem', color: '#334155' }}>
-                      <Download size={16} />
-                      <span>{course.resourcesCount} tài nguyên tải xuống</span>
-                    </div>
-                  )}
-                  <div className="spec-item-mini" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.9rem', color: '#334155' }}>
-                    <InfinityIcon size={16} />
-                    <span>Quyền truy cập trọn đời</span>
-                  </div>
-                  <div className="spec-item-mini" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.9rem', color: '#334155' }}>
-                    <Smartphone size={16} />
-                    <span>Truy cập trên thiết bị di động</span>
-                  </div>
-                </div>
+              <div style={{ marginTop: '2rem' }}>
+                <CourseIncludesList
+                  totalVideoHours={course?.totalVideoHours}
+                  articlesCount={course?.articlesCount}
+                  resourcesCount={course?.resourcesCount}
+                />
               </div>
               <div className="course-recommendations-area">
                 <CourseRecommendationRow 

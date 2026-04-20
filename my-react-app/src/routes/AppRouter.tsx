@@ -1,6 +1,6 @@
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import { ToastProvider } from '../context/ToastProvider';
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
+import { ToastProvider } from '../context/ToastProvider';
 import About from '../pages/About';
 import Contact from '../pages/Contact';
 import Features from '../pages/Features';
@@ -18,12 +18,11 @@ import OnboardingFlow from '../pages/auth/OnboardingFlow';
 import Calendar from '../pages/calendar/Calendar';
 import Certificates from '../pages/certificates/Certificates';
 import LiveChat from '../pages/chat/LiveChat';
-import StudentCourses from '../pages/courses/StudentCourses';
 import StudentCourseDetail from '../pages/courses/StudentCourseDetail';
-import TeacherCourses from '../pages/courses/TeacherCourses';
+import StudentCourses from '../pages/courses/StudentCourses';
 import TeacherCourseDetail from '../pages/courses/TeacherCourseDetail';
+import TeacherCourses from '../pages/courses/TeacherCourses';
 import AdminDashboard from '../pages/dashboard/admin/AdminDashboard';
-import StudentDashboard from '../pages/dashboard/student/StudentDashboard';
 import TeacherDashboard from '../pages/dashboard/teacher/TeacherDashboard';
 import Forum from '../pages/forum/Forum';
 import StudentGrades from '../pages/grades/StudentGrades';
@@ -57,12 +56,12 @@ import AssessmentDetail from '../pages/assessments/AssessmentDetailRefactored';
 import TeacherAssessments from '../pages/assessments/TeacherAssessments';
 import { ExamMatrixDashboard } from '../pages/exam-matrices/ExamMatrixDashboard';
 import ExamMatrixDetailPage from '../pages/exam-matrices/ExamMatrixDetailPageRefactored';
+import InstructorPublicProfile from '../pages/instructor/InstructorPublicProfile';
 import TeacherLessonPlans from '../pages/lesson-plans/TeacherLessonPlans';
 import { MindmapEditor, TeacherMindmaps } from '../pages/mindmaps';
 import PublicMindmapViewer from '../pages/mindmaps/PublicMindmapViewer';
 import StudentPublicMindmaps from '../pages/mindmaps/StudentPublicMindmaps';
 import StudentPublicSlides from '../pages/mindmaps/StudentPublicSlides';
-import InstructorPublicProfile from '../pages/instructor/InstructorPublicProfile';
 import { QuestionBankDashboard } from '../pages/question-banks/QuestionBankDashboard';
 import { QuestionBankDetailPage } from '../pages/question-banks/QuestionBankDetailPage';
 import { TemplateDashboard } from '../pages/question-templates/TemplateDashboard';
@@ -439,14 +438,6 @@ const router = createBrowserRouter([
   },
   // Student Routes
   {
-    path: '/student/dashboard',
-    element: (
-      <PrivateRoute>
-        <StudentDashboard />
-      </PrivateRoute>
-    ),
-  },
-  {
     path: '/student/courses',
     element: (
       <PrivateRoute>
@@ -589,14 +580,6 @@ const router = createBrowserRouter([
     element: (
       <PrivateRoute>
         <ProfileSettings />
-      </PrivateRoute>
-    ),
-  },
-  {
-    path: '/student/*',
-    element: (
-      <PrivateRoute>
-        <StudentDashboard />
       </PrivateRoute>
     ),
   },

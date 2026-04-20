@@ -9,6 +9,7 @@ import {
   X,
 } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { CourseCard } from '../../components/course/CourseCard';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import {
@@ -64,6 +65,7 @@ const EnrollmentCard: React.FC<{
   enrollment: EnrollmentResponse;
   index: number;
 }> = ({ enrollment, index }) => {
+  const navigate = useNavigate();
   const { data: progressData } = useCourseProgress(enrollment.id);
   const { data: enrolledCourseData } = useCourseDetail(enrollment.courseId);
   const progress = progressData?.result;
@@ -77,10 +79,15 @@ const EnrollmentCard: React.FC<{
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.1 + index * 0.08, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
       style={{ cursor: 'pointer' }}
-      onClick={() => window.location.href = `/student/courses/${enrollment.id}`}
+      onClick={() => navigate(`/student/courses/${enrollment.id}`)}
       role="button"
       tabIndex={0}
-      onKeyDown={(e) => e.key === 'Enter' && (window.location.href = `/student/courses/${enrollment.id}`)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          navigate(`/student/courses/${enrollment.id}`);
+        }
+      }}
     >
       <div
         className="course-cover"
@@ -129,7 +136,7 @@ const EnrollmentCard: React.FC<{
             style={{ flex: 1 }}
             onClick={(e) => {
               e.stopPropagation();
-              window.location.href = `/student/courses/${enrollment.id}`;
+              navigate(`/student/courses/${enrollment.id}`);
             }}
           >
             <ChevronRight size={14} /> Xem chi tiết

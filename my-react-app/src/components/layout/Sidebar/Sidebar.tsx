@@ -79,7 +79,6 @@ const studentGroups: MenuGroup[] = [
   {
     label: null,
     items: [
-      { path: '/student/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
       { path: '/student/courses', icon: GraduationCap, label: 'Giáo Trình' },
       { path: '/student/public-slides', icon: Library, label: 'Slide' },
       { path: '/student/public-mindmaps', icon: Workflow, label: 'Mindmap' },

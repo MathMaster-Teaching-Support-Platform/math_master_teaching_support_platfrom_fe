@@ -47,6 +47,14 @@ export class VideoUploadService {
     return { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', accept: '*/*' };
   }
 
+  private static getOptionalAuthHeaders() {
+    const token = AuthService.getToken();
+    if (!token) {
+      return { accept: '*/*' };
+    }
+    return { Authorization: `Bearer ${token}`, accept: '*/*' };
+  }
+
   private static async handleResponse<T>(res: Response): Promise<T> {
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
@@ -103,7 +111,7 @@ export class VideoUploadService {
     courseId: string,
     courseLessonId: string
   ): Promise<ApiResponse<string>> {
-    const headers = await this.getHeaders();
+    const headers = this.getOptionalAuthHeaders();
     const res = await fetch(
       `${API_BASE_URL}${API_ENDPOINTS.COURSE_VIDEO_URL(courseId, courseLessonId)}`,
       { method: 'GET', headers }

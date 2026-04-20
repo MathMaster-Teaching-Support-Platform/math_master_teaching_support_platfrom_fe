@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { BookOpen, Star, Users } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import type { CourseResponse } from '../../types';
 import { getEffectivePrice, isDiscountActive } from '../../utils/pricing';
 
@@ -35,6 +35,8 @@ export const CourseCard: React.FC<CourseCardProps> = ({
   showEnrollButton = true,
   onClick
 }) => {
+  const navigate = useNavigate();
+
   const handleEnrollClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (onEnroll && !isEnrolled) {
@@ -52,8 +54,20 @@ export const CourseCard: React.FC<CourseCardProps> = ({
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.05 + (index % 10) * 0.05, duration: 0.4 }}
-      onClick={onClick || (() => window.location.href = `/student/courses/preview/${course.id}`)}
+      onClick={onClick || (() => navigate(`/course/${course.id}`))}
       style={{ cursor: 'pointer' }}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          if (onClick) {
+            onClick();
+          } else {
+            navigate(`/course/${course.id}`);
+          }
+        }
+      }}
     >
       <div
         className="course-cover"

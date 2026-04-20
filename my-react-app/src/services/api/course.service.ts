@@ -30,6 +30,14 @@ import type {
 import { AuthService } from './auth.service';
 
 export class CourseService {
+  private static normalizeLessonFlags<T extends Record<string, any>>(lesson: T): T {
+    if (!lesson) return lesson;
+    if (typeof lesson.isFreePreview === 'undefined' && typeof lesson.freePreview !== 'undefined') {
+      return { ...lesson, isFreePreview: !!lesson.freePreview };
+    }
+    return lesson;
+  }
+
   private static async getHeaders() {
     const token = AuthService.getToken();
     if (!token) throw new Error('Authentication required');
@@ -99,7 +107,11 @@ export class CourseService {
       method: 'GET',
       headers: Object.keys(headers).length > 0 ? headers : undefined,
     });
-    return this.handleResponse(res);
+    const data = await this.handleResponse<ApiResponse<any>>(res);
+    if (data?.result?.lessons && Array.isArray(data.result.lessons)) {
+      data.result.lessons = data.result.lessons.map((l: any) => this.normalizeLessonFlags(l));
+    }
+    return data;
   }
 
   static async updateCourse(
@@ -210,7 +222,11 @@ export class CourseService {
     const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.COURSE_LESSONS(courseId)}`, {
       method: 'GET',
     });
-    return this.handleResponse(res);
+    const data = await this.handleResponse<ApiResponse<CourseLessonResponse[]>>(res);
+    if (data?.result && Array.isArray(data.result)) {
+      data.result = data.result.map((l: any) => this.normalizeLessonFlags(l));
+    }
+    return data;
   }
 
   static async updateLesson(
