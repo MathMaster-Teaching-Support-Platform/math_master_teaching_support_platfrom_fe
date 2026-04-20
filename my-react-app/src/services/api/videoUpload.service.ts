@@ -47,12 +47,15 @@ export class VideoUploadService {
     return { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', accept: '*/*' };
   }
 
-  private static getOptionalAuthHeaders() {
+  private static getOptionalAuthHeaders(): Record<string, string> {
     const token = AuthService.getToken();
-    if (!token) {
-      return { accept: '*/*' };
+    const headers: Record<string, string> = { accept: '*/*' };
+
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
     }
-    return { Authorization: `Bearer ${token}`, accept: '*/*' };
+
+    return headers;
   }
 
   private static async handleResponse<T>(res: Response): Promise<T> {
@@ -107,10 +110,7 @@ export class VideoUploadService {
   }
 
   /** Get presigned URL to stream a video */
-  static async getVideoUrl(
-    courseId: string,
-    courseLessonId: string
-  ): Promise<ApiResponse<string>> {
+  static async getVideoUrl(courseId: string, courseLessonId: string): Promise<ApiResponse<string>> {
     const headers = this.getOptionalAuthHeaders();
     const res = await fetch(
       `${API_BASE_URL}${API_ENDPOINTS.COURSE_VIDEO_URL(courseId, courseLessonId)}`,
@@ -147,10 +147,10 @@ export class VideoUploadService {
       const headers = await this.getHeaders();
       // Remove Content-Type to let browser set it, but keep other headers
       const uploadHeaders: Record<string, string> = {
-        'Authorization': headers['Authorization'],
-        'accept': headers['accept']
+        Authorization: headers['Authorization'],
+        accept: headers['accept'],
       };
-      
+
       const uploadRes = await fetch(
         `${API_BASE_URL}${API_ENDPOINTS.COURSE_VIDEO_UPLOAD_PART(courseId)}?uploadId=${encodeURIComponent(uploadId)}&objectKey=${encodeURIComponent(objectKey)}&partNumber=${partNumber}`,
         {
@@ -161,15 +161,17 @@ export class VideoUploadService {
       );
 
       if (!uploadRes.ok) {
-        throw new Error(`Failed to upload chunk ${partNumber}: ${uploadRes.status} ${uploadRes.statusText}`);
+        throw new Error(
+          `Failed to upload chunk ${partNumber}: ${uploadRes.status} ${uploadRes.statusText}`
+        );
       }
 
       const uploadData = await uploadRes.json();
       console.log(`Part ${partNumber} response:`, uploadData);
-      
+
       // Backend returns 'etag' (lowercase) not 'eTag'
       let eTag = uploadData.result?.etag || uploadData.result?.eTag;
-      
+
       if (!eTag) {
         console.error('Upload response:', uploadData);
         throw new Error(`No ETag returned for chunk ${partNumber}`);
