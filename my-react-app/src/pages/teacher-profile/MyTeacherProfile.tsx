@@ -9,6 +9,39 @@ interface MyTeacherProfileProps {
   onDelete?: () => void;
 }
 
+// ── OCR failure helpers ───────────────────────────────────────────────────
+interface OcrField {
+  label: string;
+  valid: boolean;
+}
+
+function parseOcrFields(comment: string): OcrField[] | null {
+  // Matches patterns like "Họ tên: v", "Chức danh+Toán: X", "Tên trường: v"
+  const fieldPattern = /([^,\n]+?):\s*([vVxX✓✗])\b/g;
+  const results: OcrField[] = [];
+  let match: RegExpExecArray | null;
+  while ((match = fieldPattern.exec(comment)) !== null) {
+    const rawLabel = match[1].trim();
+    // Skip lines that look like header sentences (contain spaces and are long)
+    if (rawLabel.length > 40) continue;
+    results.push({ label: rawLabel, valid: ['v', 'V', '✓'].includes(match[2]) });
+  }
+  return results.length > 0 ? results : null;
+}
+
+function isOcrFailureComment(comment: string): boolean {
+  return /TỰ ĐỘNG TỪ CHỐI|XÁC MINH THẤT BẠI|Xác minh OCR thất bại/i.test(comment);
+}
+
+function extractOcrSubtitle(comment: string): string {
+  const match = comment.match(/XÁC MINH THẤT BẠI[:\s]*([^.]+\.?)/i);
+  if (match) return match[1].trim();
+  const match2 = comment.match(/Xác minh OCR thất bại[.:\s]*([^.]*\.?)/i);
+  if (match2 && match2[1].trim()) return match2[1].trim();
+  return 'Một số thông tin trong hồ sơ chưa khớp với giấy tờ đã nộp.';
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<TeacherProfile | null>(null);
@@ -17,6 +50,7 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [ocrDismissed, setOcrDismissed] = useState(false);
 
   const [formData, setFormData] = useState<UpdateTeacherProfileRequest>({
     fullName: '',
@@ -29,7 +63,7 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
 
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [fileNames, setFileNames] = useState<string[]>([]);
-  
+
   // Goong API States
   const [schoolSuggestions, setSchoolSuggestions] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -39,9 +73,9 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-        if (autocompleteRef.current && !autocompleteRef.current.contains(event.target as Node)) {
-            setShowSuggestions(false);
-        }
+      if (autocompleteRef.current && !autocompleteRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -79,12 +113,12 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
   };
 
   const handleSchoolSearch = (value: string) => {
-    setFormData(prev => ({ ...prev, schoolName: value }));
+    setFormData((prev) => ({ ...prev, schoolName: value }));
 
     if (!value.trim()) {
-        setSchoolSuggestions([]);
-        setShowSuggestions(false);
-        return;
+      setSchoolSuggestions([]);
+      setShowSuggestions(false);
+      return;
     }
 
     setIsSearchingSchool(true);
@@ -92,28 +126,30 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
 
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     debounceTimerRef.current = setTimeout(async () => {
-        try {
-            const res = await fetch(`https://rsapi.goong.io/Place/AutoComplete?api_key=Pqo1poLXDFAq43GqCePcCWJjPvTl4cB6y4jG0Ofr&input=${encodeURIComponent(value)}`);
-            const data = await res.json();
-            if (data.status === 'OK') {
-                setSchoolSuggestions(data.predictions || []);
-            } else {
-                setSchoolSuggestions([]);
-            }
-        } catch (error) {
-            console.error('Error fetching schools:', error);
-            setSchoolSuggestions([]);
-        } finally {
-            setIsSearchingSchool(false);
+      try {
+        const res = await fetch(
+          `https://rsapi.goong.io/Place/AutoComplete?api_key=Pqo1poLXDFAq43GqCePcCWJjPvTl4cB6y4jG0Ofr&input=${encodeURIComponent(value)}`
+        );
+        const data = await res.json();
+        if (data.status === 'OK') {
+          setSchoolSuggestions(data.predictions || []);
+        } else {
+          setSchoolSuggestions([]);
         }
+      } catch (error) {
+        console.error('Error fetching schools:', error);
+        setSchoolSuggestions([]);
+      } finally {
+        setIsSearchingSchool(false);
+      }
     }, 500);
   };
 
   const handleSelectSchool = (suggestion: any) => {
-    setFormData(prev => ({ 
-        ...prev, 
-        schoolName: suggestion.structured_formatting?.main_text || suggestion.description,
-        schoolAddress: suggestion.description 
+    setFormData((prev) => ({
+      ...prev,
+      schoolName: suggestion.structured_formatting?.main_text || suggestion.description,
+      schoolAddress: suggestion.description,
     }));
     setShowSuggestions(false);
   };
@@ -345,12 +381,70 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
               )}
             </div>
 
-            {profile.adminComment && (
-              <div className="tp-admin-comment">
-                <p className="tp-admin-comment__title">💬 Nhận xét từ quản trị viên</p>
-                <p className="tp-admin-comment__text">{profile.adminComment}</p>
-              </div>
-            )}
+            {profile.adminComment &&
+              (() => {
+                if (!ocrDismissed && isOcrFailureComment(profile.adminComment!)) {
+                  const fields = parseOcrFields(profile.adminComment!);
+                  const subtitle = extractOcrSubtitle(profile.adminComment!);
+                  return (
+                    <div className="tp-ocr-card">
+                      <div className="tp-ocr-card__header">
+                        <div className="tp-ocr-card__icon" aria-hidden="true">
+                          !
+                        </div>
+                        <div>
+                          <p className="tp-ocr-card__title">Hồ sơ chưa được xác minh</p>
+                          <p className="tp-ocr-card__subtitle">{subtitle}</p>
+                        </div>
+                      </div>
+
+                      {fields && fields.length > 0 && (
+                        <ul className="tp-ocr-fields">
+                          {fields.map((f, i) => (
+                            <li key={i} className="tp-ocr-field">
+                              <span className="tp-ocr-field__label">{f.label}</span>
+                              {f.valid ? (
+                                <span className="tp-ocr-field__badge tp-ocr-field__badge--valid">
+                                  Hợp lệ ✓
+                                </span>
+                              ) : (
+                                <span className="tp-ocr-field__badge tp-ocr-field__badge--failed">
+                                  Không khớp ✗
+                                </span>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+
+                      <div className="tp-ocr-card__actions">
+                        {canEdit && (
+                          <button
+                            type="button"
+                            className="tp-ocr-card__btn"
+                            onClick={() => setEditing(true)}
+                          >
+                            Cập nhật hồ sơ
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          className="tp-ocr-card__dismiss"
+                          onClick={() => setOcrDismissed(true)}
+                        >
+                          Đóng
+                        </button>
+                      </div>
+                    </div>
+                  );
+                }
+                return (
+                  <div className="tp-admin-comment">
+                    <p className="tp-admin-comment__title">💬 Nhận xét từ quản trị viên</p>
+                    <p className="tp-admin-comment__text">{profile.adminComment}</p>
+                  </div>
+                );
+              })()}
 
             <div className="tp-actions">
               <button type="button" className="tp-btn tp-btn--ghost" onClick={() => navigate(-1)}>
@@ -449,7 +543,8 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
                 value={formData.schoolName}
                 onChange={(e) => handleSchoolSearch(e.target.value)}
                 onFocus={() => {
-                    if (formData.schoolName.trim() && schoolSuggestions.length > 0) setShowSuggestions(true);
+                  if (formData.schoolName.trim() && schoolSuggestions.length > 0)
+                    setShowSuggestions(true);
                 }}
                 autoComplete="off"
                 placeholder="VD: Đại học FPT"
@@ -457,30 +552,30 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
                 disabled={submitting}
               />
               {showSuggestions && formData.schoolName.trim() && (
-                  <div className="autocomplete-dropdown">
-                      {isSearchingSchool ? (
-                          <div className="autocomplete-loading">Đang tìm kiếm...</div>
-                      ) : schoolSuggestions.length > 0 ? (
-                          schoolSuggestions.map((suggestion) => (
-                              <div 
-                                  key={suggestion.place_id} 
-                                  className="autocomplete-item"
-                                  onClick={() => handleSelectSchool(suggestion)}
-                              >
-                                  <span className="autocomplete-item-main">
-                                      {suggestion.structured_formatting?.main_text || suggestion.description}
-                                  </span>
-                                  {suggestion.structured_formatting?.secondary_text && (
-                                      <span className="autocomplete-item-sub">
-                                          {suggestion.structured_formatting.secondary_text}
-                                      </span>
-                                  )}
-                              </div>
-                          ))
-                      ) : (
-                          <div className="autocomplete-loading">Không tìm thấy kết quả</div>
-                      )}
-                  </div>
+                <div className="autocomplete-dropdown">
+                  {isSearchingSchool ? (
+                    <div className="autocomplete-loading">Đang tìm kiếm...</div>
+                  ) : schoolSuggestions.length > 0 ? (
+                    schoolSuggestions.map((suggestion) => (
+                      <div
+                        key={suggestion.place_id}
+                        className="autocomplete-item"
+                        onClick={() => handleSelectSchool(suggestion)}
+                      >
+                        <span className="autocomplete-item-main">
+                          {suggestion.structured_formatting?.main_text || suggestion.description}
+                        </span>
+                        {suggestion.structured_formatting?.secondary_text && (
+                          <span className="autocomplete-item-sub">
+                            {suggestion.structured_formatting.secondary_text}
+                          </span>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="autocomplete-loading">Không tìm thấy kết quả</div>
+                  )}
+                </div>
               )}
             </div>
 
@@ -530,7 +625,9 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
                 required
                 disabled={submitting}
               >
-                <option value="" disabled>-- Chọn chức vụ --</option>
+                <option value="" disabled>
+                  -- Chọn chức vụ --
+                </option>
                 <option value="Giảng Viên Toán">Giảng Viên Toán</option>
                 <option value="Giáo Viên Toán">Giáo Viên Toán</option>
               </select>
@@ -544,7 +641,8 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
                 Tài liệu xác minh mới (Tuỳ chọn)
               </label>
               <p className="tp-form-hint">
-                Tải lên Thẻ Cán bộ, Công chức, Viên chức (Giáo Viên) NẾU BẠN CẦN THAY ĐỔI. Nếu không chọn, hệ thống sẽ sử dụng ảnh cũ.
+                Tải lên Thẻ Cán bộ, Công chức, Viên chức (Giáo Viên) NẾU BẠN CẦN THAY ĐỔI. Nếu không
+                chọn, hệ thống sẽ sử dụng ảnh cũ.
               </p>
               <button
                 type="button"
