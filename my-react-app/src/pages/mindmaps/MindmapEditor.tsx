@@ -549,31 +549,82 @@ export default function MindmapEditor() {
         (container.querySelector('.map-canvas') as HTMLElement | null) ||
         container;
 
-      const width = Math.max(renderedMap.scrollWidth, renderedMap.clientWidth, 1);
-      const height = Math.max(renderedMap.scrollHeight, renderedMap.clientHeight, 1);
-      renderedMap.setAttribute('data-mindmap-export-root', '1');
+      const rootRect = renderedMap.getBoundingClientRect();
+      const descendants = Array.from(renderedMap.querySelectorAll<HTMLElement | SVGElement>('*'));
 
-      const canvas = await html2canvas(renderedMap, {
-        backgroundColor: '#ffffff',
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        width,
-        height,
-        windowWidth: width,
-        windowHeight: height,
-        scrollX: 0,
-        scrollY: 0,
-        onclone: (doc) => {
-          const cloneRoot = doc.querySelector(
-            '[data-mindmap-export-root="1"]'
-          ) as HTMLElement | null;
-          if (cloneRoot) {
-            cloneRoot.style.overflow = 'visible';
-          }
-        },
+      let minX = 0;
+      let minY = 0;
+      let maxX = Math.max(renderedMap.clientWidth, 1);
+      let maxY = Math.max(renderedMap.clientHeight, 1);
+
+      descendants.forEach((el) => {
+        const rect = el.getBoundingClientRect();
+        if (rect.width <= 0 || rect.height <= 0) return;
+
+        const left = rect.left - rootRect.left;
+        const top = rect.top - rootRect.top;
+        const right = rect.right - rootRect.left;
+        const bottom = rect.bottom - rootRect.top;
+
+        minX = Math.min(minX, left);
+        minY = Math.min(minY, top);
+        maxX = Math.max(maxX, right);
+        maxY = Math.max(maxY, bottom);
       });
-      renderedMap.removeAttribute('data-mindmap-export-root');
+
+      const padding = 48;
+      const captureWidth = Math.ceil(maxX - minX + padding * 2);
+      const captureHeight = Math.ceil(maxY - minY + padding * 2);
+      const offsetX = Math.ceil(padding - minX);
+      const offsetY = Math.ceil(padding - minY);
+
+      const wrapper = document.createElement('div');
+      wrapper.style.position = 'relative';
+      wrapper.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+      wrapper.style.transformOrigin = 'top left';
+
+      const originalChildren = Array.from(renderedMap.childNodes);
+      const previousPosition = renderedMap.style.position;
+      const previousWidth = renderedMap.style.width;
+      const previousHeight = renderedMap.style.height;
+      const previousOverflow = renderedMap.style.overflow;
+      const previousMinHeight = renderedMap.style.minHeight;
+
+      let canvas: HTMLCanvasElement;
+      try {
+        originalChildren.forEach((node) => wrapper.appendChild(node));
+        renderedMap.appendChild(wrapper);
+
+        renderedMap.style.position = 'relative';
+        renderedMap.style.width = `${captureWidth}px`;
+        renderedMap.style.height = `${captureHeight}px`;
+        renderedMap.style.overflow = 'hidden';
+        renderedMap.style.minHeight = '0';
+
+        canvas = await html2canvas(renderedMap, {
+          backgroundColor: '#ffffff',
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          width: captureWidth,
+          height: captureHeight,
+          windowWidth: captureWidth,
+          windowHeight: captureHeight,
+          scrollX: 0,
+          scrollY: 0,
+        });
+      } finally {
+        while (wrapper.firstChild) {
+          renderedMap.appendChild(wrapper.firstChild);
+        }
+        wrapper.remove();
+
+        renderedMap.style.position = previousPosition;
+        renderedMap.style.width = previousWidth;
+        renderedMap.style.height = previousHeight;
+        renderedMap.style.overflow = previousOverflow;
+        renderedMap.style.minHeight = previousMinHeight;
+      }
 
       const reservedCharacters = new Set(['<', '>', ':', '"', '/', '\\', '|', '?', '*']);
       const safeTitle = Array.from((mindmap.title || 'mindmap').trim())
