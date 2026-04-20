@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import html2canvas from 'html2canvas';
 import MindElixir from 'mind-elixir';
 import 'mind-elixir/style.css';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
@@ -538,12 +539,42 @@ export default function MindmapEditor() {
 
   const handleExportImage = useCallback(async () => {
     if (!mindmap) return;
+    if (!mindContainerRef.current) return;
 
     try {
       setExportingImage(true);
+      const container = mindContainerRef.current;
+      const renderedMap =
+        (container.querySelector('.map-container') as HTMLElement | null) ||
+        (container.querySelector('.map-canvas') as HTMLElement | null) ||
+        container;
 
-      // Use backend export to always get the full mindmap instead of viewport capture.
-      const response = await MindmapService.exportMindmap(mindmap.id, 'png');
+      const width = Math.max(renderedMap.scrollWidth, renderedMap.clientWidth, 1);
+      const height = Math.max(renderedMap.scrollHeight, renderedMap.clientHeight, 1);
+      renderedMap.setAttribute('data-mindmap-export-root', '1');
+
+      const canvas = await html2canvas(renderedMap, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        width,
+        height,
+        windowWidth: width,
+        windowHeight: height,
+        scrollX: 0,
+        scrollY: 0,
+        onclone: (doc) => {
+          const cloneRoot = doc.querySelector(
+            '[data-mindmap-export-root="1"]'
+          ) as HTMLElement | null;
+          if (cloneRoot) {
+            cloneRoot.style.overflow = 'visible';
+          }
+        },
+      });
+      renderedMap.removeAttribute('data-mindmap-export-root');
+
       const reservedCharacters = new Set(['<', '>', ':', '"', '/', '\\', '|', '?', '*']);
       const safeTitle = Array.from((mindmap.title || 'mindmap').trim())
         .filter((char) => char.charCodeAt(0) >= 32 && !reservedCharacters.has(char))
@@ -553,10 +584,9 @@ export default function MindmapEditor() {
       const fallbackName = `${safeTitle || 'mindmap'}-${new Date().toISOString().slice(0, 10)}.png`;
 
       const downloadLink = document.createElement('a');
-      downloadLink.href = window.URL.createObjectURL(response.blob);
-      downloadLink.download = response.filename || fallbackName;
+      downloadLink.href = canvas.toDataURL('image/png');
+      downloadLink.download = fallbackName;
       downloadLink.click();
-      window.URL.revokeObjectURL(downloadLink.href);
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Không thể xuất ảnh mindmap');
     } finally {

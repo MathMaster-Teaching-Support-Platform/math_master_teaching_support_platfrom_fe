@@ -90,42 +90,41 @@ export default function PublicMindmapViewer() {
   const mindInstanceRef = useRef<MindElixirInstance | null>(null);
 
   const exportCurrentViewAsPngDataUrl = async (): Promise<string> => {
-    const target = containerRef.current;
-    if (!target) {
+    const container = containerRef.current;
+    if (!container) {
       throw new Error('Không tìm thấy canvas mindmap để xuất ảnh.');
     }
 
-    const width = Math.max(target.scrollWidth, target.clientWidth, 1);
-    const height = Math.max(target.scrollHeight, target.clientHeight, 1);
-    const previousWidth = target.style.width;
-    const previousHeight = target.style.height;
-    const previousOverflow = target.style.overflow;
+    const renderedMap =
+      (container.querySelector('.map-container') as HTMLElement | null) ||
+      (container.querySelector('.map-canvas') as HTMLElement | null) ||
+      container;
 
-    try {
-      // Ensure html2canvas captures the full scrollable content, not only viewport.
-      target.style.width = `${width}px`;
-      target.style.height = `${height}px`;
-      target.style.overflow = 'visible';
+    const width = Math.max(renderedMap.scrollWidth, renderedMap.clientWidth, 1);
+    const height = Math.max(renderedMap.scrollHeight, renderedMap.clientHeight, 1);
+    renderedMap.setAttribute('data-mindmap-export-root', '1');
 
-      const canvas = await html2canvas(target, {
-        backgroundColor: '#ffffff',
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        width,
-        height,
-        windowWidth: width,
-        windowHeight: height,
-        scrollX: 0,
-        scrollY: 0,
-      });
+    const canvas = await html2canvas(renderedMap, {
+      backgroundColor: '#ffffff',
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      width,
+      height,
+      windowWidth: width,
+      windowHeight: height,
+      scrollX: 0,
+      scrollY: 0,
+      onclone: (doc) => {
+        const cloneRoot = doc.querySelector('[data-mindmap-export-root="1"]') as HTMLElement | null;
+        if (cloneRoot) {
+          cloneRoot.style.overflow = 'visible';
+        }
+      },
+    });
 
-      return canvas.toDataURL('image/png');
-    } finally {
-      target.style.width = previousWidth;
-      target.style.height = previousHeight;
-      target.style.overflow = previousOverflow;
-    }
+    renderedMap.removeAttribute('data-mindmap-export-root');
+    return canvas.toDataURL('image/png');
   };
 
   useEffect(() => {

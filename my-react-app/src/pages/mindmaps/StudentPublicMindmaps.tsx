@@ -296,6 +296,10 @@ export default function StudentPublicMindmaps() {
 
   const handleDownloadPreviewMindmap = async () => {
     if (!selectedPreviewMindmap) return;
+    if (previewFrameLoading) {
+      setMindmapsError('Mindmap đang được dựng. Vui lòng chờ vài giây rồi tải lại.');
+      return;
+    }
 
     setDownloadingPreviewMindmapId(selectedPreviewMindmap.id);
     setMindmapsError('');
@@ -308,18 +312,7 @@ export default function StudentPublicMindmaps() {
 
       triggerBlobDownload(blob, `${safeName || 'mindmap'}.png`);
     } catch (err) {
-      // Fallback to backend export if iframe export is blocked.
-      try {
-        const response = await MindmapService.exportPublicMindmap(selectedPreviewMindmap.id, 'png');
-        triggerBlobDownload(
-          response.blob,
-          response.filename || `${selectedPreviewMindmap.title}.png`
-        );
-      } catch (fallbackErr) {
-        setMindmapsError(
-          fallbackErr instanceof Error ? fallbackErr.message : 'Không thể tải ảnh mindmap'
-        );
-      }
+      setMindmapsError(err instanceof Error ? err.message : 'Không thể tải ảnh mindmap');
     } finally {
       setDownloadingPreviewMindmapId('');
     }
@@ -753,6 +746,7 @@ export default function StudentPublicMindmaps() {
                     className="btn"
                     disabled={
                       !selectedPreviewMindmap ||
+                      previewFrameLoading ||
                       downloadingPreviewMindmapId === selectedPreviewMindmap.id
                     }
                     onClick={() => void handleDownloadPreviewMindmap()}
