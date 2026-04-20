@@ -51,6 +51,10 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [ocrDismissed, setOcrDismissed] = useState(false);
+  const [pollingForResult, setPollingForResult] = useState(false);
+  const [showOcrResultModal, setShowOcrResultModal] = useState(false);
+  const [ocrResultComment, setOcrResultComment] = useState<string | null>(null);
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [formData, setFormData] = useState<UpdateTeacherProfileRequest>({
     fullName: '',
@@ -84,6 +88,46 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
   useEffect(() => {
     loadProfile();
   }, []);
+
+  useEffect(() => {
+    return () => {
+      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+    };
+  }, []);
+
+  const startPollingForResult = (previousComment: string | undefined) => {
+    if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+    setPollingForResult(true);
+    let attempts = 0;
+    const MAX_ATTEMPTS = 15; // 30 seconds at 2s interval
+    pollIntervalRef.current = setInterval(async () => {
+      attempts++;
+      try {
+        const response = await TeacherProfileService.getMyProfile();
+        const newProfile = response.result;
+        if (newProfile.adminComment !== previousComment) {
+          clearInterval(pollIntervalRef.current!);
+          pollIntervalRef.current = null;
+          setPollingForResult(false);
+          setProfile(newProfile);
+          setOcrDismissed(false);
+          if (newProfile.adminComment) {
+            setOcrResultComment(newProfile.adminComment);
+            setShowOcrResultModal(true);
+          }
+          return;
+        }
+      } catch {
+        // ignore network errors during polling
+      }
+      if (attempts >= MAX_ATTEMPTS) {
+        clearInterval(pollIntervalRef.current!);
+        pollIntervalRef.current = null;
+        setPollingForResult(false);
+        loadProfile();
+      }
+    }, 2000);
+  };
 
   const loadProfile = async () => {
     try {
@@ -174,10 +218,11 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
       if (!formData.schoolName.trim()) throw new Error('Vui lòng nhập tên trường');
       if (!formData.position.trim()) throw new Error('Vui lòng nhập chức vụ');
 
+      const previousComment = profile?.adminComment;
       const response = await TeacherProfileService.updateMyProfile(formData, selectedFiles);
       setProfile(response.result);
       setEditing(false);
-      setSuccess('Cập nhật hồ sơ thành công!');
+      startPollingForResult(previousComment);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Không thể cập nhật hồ sơ';
       setError(errorMessage);
@@ -473,6 +518,94 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
             </div>
           </div>
         </div>
+
+        {/* Polling loading overlay */}
+        {pollingForResult && (
+          <div className="tp-polling-overlay">
+            <div className="tp-polling-overlay__box">
+              <div className="tp-polling-overlay__spinner" />
+              <p className="tp-polling-overlay__title">Đang gửi hồ sơ...</p>
+              <p className="tp-polling-overlay__sub">
+                Hệ thống đang xử lý hồ sơ của bạn, vui lòng chờ trong giây lát.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* OCR result modal */}
+        {showOcrResultModal &&
+          ocrResultComment &&
+          (() => {
+            const fields = parseOcrFields(ocrResultComment);
+            const subtitle = extractOcrSubtitle(ocrResultComment);
+            const isFailure = isOcrFailureComment(ocrResultComment);
+            return (
+              <div className="tp-result-modal-overlay" onClick={() => setShowOcrResultModal(false)}>
+                <div className="tp-result-modal" onClick={(e) => e.stopPropagation()}>
+                  {isFailure ? (
+                    <>
+                      <div className="tp-ocr-card__header">
+                        <div className="tp-ocr-card__icon" aria-hidden="true">
+                          !
+                        </div>
+                        <div>
+                          <p className="tp-ocr-card__title">Hồ sơ chưa được xác minh</p>
+                          <p className="tp-ocr-card__subtitle">{subtitle}</p>
+                        </div>
+                      </div>
+                      {fields && fields.length > 0 && (
+                        <ul className="tp-ocr-fields">
+                          {fields.map((f, i) => (
+                            <li key={i} className="tp-ocr-field">
+                              <span className="tp-ocr-field__label">{f.label}</span>
+                              {f.valid ? (
+                                <span className="tp-ocr-field__badge tp-ocr-field__badge--valid">
+                                  Hợp lệ ✓
+                                </span>
+                              ) : (
+                                <span className="tp-ocr-field__badge tp-ocr-field__badge--failed">
+                                  Không khớp ✗
+                                </span>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </>
+                  ) : (
+                    <div className="tp-result-modal__success">
+                      <div className="tp-result-modal__success-icon">✓</div>
+                      <p className="tp-result-modal__success-title">Hồ sơ đã được gửi thành công</p>
+                      <p className="tp-result-modal__success-sub">
+                        Hồ sơ của bạn đang chờ xét duyệt từ quản trị viên.
+                      </p>
+                    </div>
+                  )}
+                  <div className="tp-result-modal__actions">
+                    {isFailure && canEdit && (
+                      <button
+                        type="button"
+                        className="tp-ocr-card__btn"
+                        onClick={() => {
+                          setShowOcrResultModal(false);
+                          setEditing(true);
+                        }}
+                      >
+                        Cập nhật hồ sơ
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="tp-ocr-card__dismiss"
+                      onClick={() => setShowOcrResultModal(false)}
+                    >
+                      Đóng
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
       </div>
     );
   }
