@@ -19,6 +19,7 @@ import {
   useDeleteCourseLesson,
   useDeleteSection,
   useRemoveMaterial,
+  useUpdateCourseLesson,
 } from '../../../hooks/useCourses';
 import { CourseService } from '../../../services/api/course.service';
 import { LessonSlideService } from '../../../services/api/lesson-slide.service';
@@ -413,21 +414,160 @@ function UploadVideoModal({
   );
 }
 
+// Edit Modal Component
+function EditLessonModal({
+  courseId,
+  lesson,
+  onClose,
+  onSuccess,
+}: {
+  courseId: string;
+  lesson: CourseLessonResponse;
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const [videoTitle, setVideoTitle] = useState(lesson.videoTitle || '');
+  const [orderIndex, setOrderIndex] = useState(lesson.orderIndex || 1);
+  const [isFreePreview, setIsFreePreview] = useState(lesson.isFreePreview);
+  const [updating, setUpdating] = useState(false);
+  const [error, setError] = useState('');
+
+  const updateMutation = useUpdateCourseLesson();
+
+  const handleUpdate = async () => {
+    setUpdating(true);
+    setError('');
+    updateMutation.mutate(
+      {
+        courseId,
+        lessonId: lesson.id,
+        request: {
+          videoTitle,
+          orderIndex,
+          isFreePreview,
+        },
+      },
+      {
+        onSuccess: () => {
+          onSuccess();
+          onClose();
+        },
+        onError: (err: any) => {
+          setError(err?.response?.data?.message || 'Cập nhật thất bại');
+          setUpdating(false);
+        },
+      }
+    );
+  };
+
+  return (
+    <div className="modal-layer" onClick={onClose}>
+      <div
+        className="modal-card"
+        style={{ width: 'min(500px, 100%)' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="modal-header">
+          <div>
+            <h3>📝 Chỉnh sửa bài học</h3>
+            <p className="muted" style={{ marginTop: 4 }}>
+              Cập nhật thông tin bài học: {lesson.lessonTitle}
+            </p>
+          </div>
+          <button className="icon-btn" onClick={onClose} disabled={updating}>
+            ✕
+          </button>
+        </div>
+
+        <div className="modal-body">
+          <label>
+            <p className="muted" style={{ marginBottom: 6 }}>
+              Tiêu đề hiển thị
+            </p>
+            <input
+              className="input"
+              value={videoTitle}
+              onChange={(e) => setVideoTitle(e.target.value)}
+              placeholder="Tên hiển thị cho video bài học"
+              disabled={updating}
+            />
+          </label>
+
+          <label>
+            <p className="muted" style={{ marginBottom: 6 }}>
+              Thứ tự hiển thị
+            </p>
+            <input
+              type="number"
+              className="input"
+              value={orderIndex}
+              onChange={(e) => setOrderIndex(parseInt(e.target.value) || 1)}
+              disabled={updating}
+            />
+          </label>
+
+          <div className="row" style={{ gap: '1rem', marginTop: '0.5rem' }}>
+            <label className="row" style={{ alignItems: 'center', gap: 8 }}>
+              <input
+                type="checkbox"
+                checked={isFreePreview}
+                onChange={(e) => setIsFreePreview(e.target.checked)}
+                disabled={updating}
+              />
+              <span style={{ fontSize: '0.9rem' }}>Xem thử miễn phí (Students can watch without enrollment)</span>
+            </label>
+          </div>
+
+          {error && (
+            <p style={{ color: '#dc2626', fontSize: '0.88rem', fontWeight: 600, marginTop: 12 }}>{error}</p>
+          )}
+        </div>
+
+        <div className="modal-footer">
+          <button className="btn secondary" onClick={onClose} disabled={updating}>
+            Hủy
+          </button>
+          <button
+            className="btn"
+            disabled={updating}
+            onClick={() => void handleUpdate()}
+          >
+            {updating ? 'Đang lưu...' : 'Lưu thay đổi'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Lesson Row Component
 function LessonRow({
   lesson,
   onDelete,
+  onEdit,
   deletePending,
   courseId,
 }: {
   courseId: string;
   lesson: CourseLessonResponse;
   onDelete: () => void;
+  onEdit: () => void;
   deletePending: boolean;
 }) {
   const [showMaterials, setShowMaterials] = useState(false);
   const addMaterialMutation = useAddMaterial();
   const removeMaterialMutation = useRemoveMaterial();
+  const updateMutation = useUpdateCourseLesson();
+
+  const handleToggleFreePreview = () => {
+    updateMutation.mutate({
+      courseId,
+      lessonId: lesson.id,
+      request: {
+        isFreePreview: !lesson.isFreePreview,
+      },
+    });
+  };
 
   const materialsList = useMemo(() => {
     if (!lesson.materials) return [];
@@ -472,16 +612,20 @@ function LessonRow({
             <span className="muted">—</span>
           )}
         </td>
-        <td>
+        <td 
+          onClick={handleToggleFreePreview}
+          style={{ cursor: updateMutation.isPending ? 'wait' : 'pointer' }}
+          title={lesson.isFreePreview ? "Click to lock this lesson" : "Click to make this lesson free for preview"}
+        >
           {lesson.isFreePreview ? (
-            <span className="badge published">
-              <Eye size={11} style={{ marginRight: 3 }} />
-              Miễn phí
+            <span className="badge published" style={{ display: 'inline-flex', alignItems: 'center', transition: 'all 0.2s' }}>
+              <Eye size={11} style={{ marginRight: 4 }} />
+              Xem trước
             </span>
           ) : (
-            <span className="badge draft">
-              <EyeOff size={11} style={{ marginRight: 3 }} />
-              Khóa
+            <span className="badge draft" style={{ display: 'inline-flex', alignItems: 'center', opacity: 0.7, transition: 'all 0.2s' }}>
+              <EyeOff size={11} style={{ marginRight: 4 }} />
+              Đăng ký để xem
             </span>
           )}
         </td>
@@ -507,6 +651,7 @@ function LessonRow({
               className="btn secondary"
               style={{ padding: '0.35rem 0.6rem' }}
               title="Chỉnh sửa"
+              onClick={onEdit}
             >
               <Pencil size={13} />
             </button>
@@ -620,6 +765,7 @@ function LessonRow({
 // Main Component
 const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course }) => {
   const [showUpload, setShowUpload] = useState(false);
+  const [editingLesson, setEditingLesson] = useState<CourseLessonResponse | null>(null);
   const { data: lessonsData, isLoading, refetch } = useCourseLessons(courseId);
   const { data: sectionsData } = useCustomCourseSections(courseId);
   const deleteMutation = useDeleteCourseLesson();
@@ -710,6 +856,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                     key={lesson.id}
                     courseId={courseId}
                     lesson={lesson}
+                    onEdit={() => setEditingLesson(lesson)}
                     onDelete={() => {
                       if (confirm('Xóa bài học này?')) {
                         deleteMutation.mutate(
@@ -724,6 +871,27 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
             </tbody>
           </table>
         </div>
+      )}
+
+      {/* Upload Modal */}
+      {showUpload && (
+        <UploadVideoModal
+          courseId={courseId}
+          course={course}
+          existingLessons={lessons}
+          onClose={() => setShowUpload(false)}
+          onSuccess={() => void refetch()}
+        />
+      )}
+
+      {/* Edit Modal */}
+      {editingLesson && (
+        <EditLessonModal
+          courseId={courseId}
+          lesson={editingLesson}
+          onClose={() => setEditingLesson(null)}
+          onSuccess={() => void refetch()}
+        />
       )}
 
       {/* Custom Sections and Lessons */}
@@ -808,6 +976,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                               key={lesson.id}
                               courseId={courseId}
                               lesson={lesson}
+                              onEdit={() => setEditingLesson(lesson)}
                               onDelete={() => {
                                 if (confirm('Xóa bài học này?')) {
                                   deleteMutation.mutate(

@@ -4,17 +4,14 @@ import {
   Users, 
   Star, 
   PlayCircle, 
+  Lock,
   Globe, 
-  Clock, 
   FileText, 
-  CheckCircle2, 
-  Infinity as InfinityIcon, 
-  Smartphone, 
   ChevronDown,
   ChevronUp,
   AlertCircle,
   ArrowLeft,
-  Download
+  X
 } from 'lucide-react';
 import { 
   useCourseDetail, 
@@ -26,30 +23,45 @@ import {
   useEnroll
 } from '../../hooks/useCourses';
 import { AuthService } from '../../services/api/auth.service';
+import { VideoUploadService } from '../../services/api/videoUpload.service';
 import { getEffectivePrice, isDiscountActive } from '../../utils/pricing';
 import { CountdownTimer } from '../../components/common/CountdownTimer';
+import { CourseLearningPanels } from '../../components/course/CourseLearningPanels';
+import { CourseIncludesList } from '../../components/course/CourseIncludesList';
+import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import './CoursePreview.css';
 
 const CoursePreview: React.FC = () => {
-  const { courseId } = useParams<{ courseId: string }>();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const isAuthenticated = AuthService.isAuthenticated();
   
   const [activeTab, setActiveTab] = useState<'overview' | 'curriculum' | 'instructor' | 'reviews'>('overview');
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
+  
+  // Preview states
+  const [previewLesson, setPreviewLesson] = useState<any | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
+  const [loadingPreview, setLoadingPreview] = useState(false);
 
   // Data fetching
-  const { data: courseResp, isLoading: isLoadingCourse } = useCourseDetail(courseId!);
-  const { data: lessonsResp } = useCourseLessons(courseId!);
-  const { data: sectionsResp } = useCustomCourseSections(courseId!);
-  const { data: reviewsResp } = useCourseReviews(courseId!);
-  const { data: summaryResp } = useReviewSummary(courseId!);
+  const { data: courseResp, isLoading: isLoadingCourse } = useCourseDetail(id!);
+  const { data: lessonsResp } = useCourseLessons(id!);
+  const { data: sectionsResp } = useCustomCourseSections(id!);
+  const { data: reviewsResp } = useCourseReviews(id!);
+  const { data: summaryResp } = useReviewSummary(id!);
   
   const course = courseResp?.result;
   const lessons = lessonsResp?.result || [];
   const sections = sectionsResp?.result || [];
   const reviews = reviewsResp?.result?.content || [];
   const summary = summaryResp?.result;
+  const previewLessons = useMemo(() => lessons.filter(l => l.isFreePreview), [lessons]);
+  const lockedLessonsCount = useMemo(() => Math.max(lessons.length - previewLessons.length, 0), [lessons.length, previewLessons.length]);
+
+  const totalDurationMinutes = useMemo(() => {
+    return lessons.reduce((acc, l) => acc + Math.floor((l.durationSeconds || 0) / 60), 0);
+  }, [lessons]);
 
   const { data: teacherResp } = useTeacherProfile(course?.teacherId || '');
   const teacher = teacherResp?.result;
@@ -86,15 +98,60 @@ const CoursePreview: React.FC = () => {
   const toggleSection = (id: string) => {
     setExpandedSections(prev => ({ ...prev, [id]: !prev[id] }));
   };
+  
+  const handlePlayPreview = async (lesson: any) => {
+    if (!lesson.id) return;
+    setLoadingPreview(true);
+    try {
+      const resp = await VideoUploadService.getVideoUrl(id!, lesson.id);
+      setPreviewUrl(resp.result);
+      setPreviewLesson(lesson);
+    } catch (err) {
+      console.error('Failed to load preview:', err);
+      alert('Không thể tải video xem trước. Vui lòng thử lại sau.');
+    } finally {
+      setLoadingPreview(false);
+    }
+  };
+
+  const getPreviewMaterials = (lesson: any) => {
+    if (!lesson?.materials) return [];
+    try {
+      const parsed = JSON.parse(lesson.materials);
+      if (!Array.isArray(parsed)) return [];
+      return parsed.filter((m: any) => !!m?.url);
+    } catch {
+      return [];
+    }
+  };
+
+  const isFreeCourse = useMemo(() => course ? getEffectivePrice(course) === 0 : false, [course]);
+  
+  const hasFreeLessons = useMemo(() => {
+    return lessons.some(l => l.isFreePreview);
+  }, [lessons]);
 
   const handleEnroll = () => {
     if (!isAuthenticated) {
-      navigate('/login', { state: { from: `/courses/preview/${courseId}` } });
+      navigate('/login', { state: { from: `/course/${id}` } });
       return;
     }
-    enrollMutation.mutate(courseId!, {
-      onSuccess: () => navigate(`/student/courses/${courseId}`)
+    enrollMutation.mutate(id!, {
+      onSuccess: (resp) => {
+        const enrollmentId = resp?.result?.id;
+        if (enrollmentId) {
+          navigate(`/student/courses/${enrollmentId}`);
+        }
+      }
     });
+  };
+
+  const handlePrimaryAction = () => {
+    if (course.isEnrolled) {
+      navigate('/student/courses');
+      return;
+    }
+    handleEnroll();
   };
 
   if (isLoadingCourse) {
@@ -127,18 +184,18 @@ const CoursePreview: React.FC = () => {
     ));
   };
 
-  const learningOutcomes = course.whatYouWillLearn?.split('\n').filter(Boolean) || [];
-  const courseRequirements = course.requirements?.split('\n').filter(Boolean) || [];
-  const targetAudiences = course.targetAudience?.split('\n').filter(Boolean) || [];
-
-  return (
+  const previewContent = (
     <div className="course-preview-v2">
       {/* ── Dark Header Section ── */}
       <header className="preview-header-dark">
         <div className="preview-container">
           <Link to="/student/courses" className="breadcrumb-link">
-            <ArrowLeft size={16} /> Quay lại danh sách
+            <ArrowLeft size={16} /> Trang giới thiệu khóa học
           </Link>
+
+          <div className="preview-purpose-note" style={{ marginBottom: '1rem' }}>
+            <span style={{ fontWeight: 700 }}>Chế độ xem trước:</span> Bạn đang xem phiên bản giới thiệu công khai của khóa học. Chỉ các bài được đánh dấu xem trước miễn phí mới có thể phát ngay.
+          </div>
           
           <div className="header-grid">
             <div className="header-main-info">
@@ -161,7 +218,7 @@ const CoursePreview: React.FC = () => {
 
               <div className="creator-info">
                 <span>Giảng viên: </span>
-                <Link to={`/instructor/${course.teacherId}`} className="teacher-link">
+                <Link to={`/student/instructors/${course.teacherId}`} className="teacher-link">
                   {course.teacherName}
                 </Link>
               </div>
@@ -190,21 +247,6 @@ const CoursePreview: React.FC = () => {
         <div className="preview-container grid-layout">
           
           <div className="preview-main-column">
-            {/* What you'll learn */}
-            {learningOutcomes.length > 0 && (
-              <section className="preview-card outcomes-card">
-                <h2 className="section-title">Nội dung bạn sẽ học</h2>
-                <div className="outcomes-grid">
-                  {learningOutcomes.map((outcome, idx) => (
-                    <div key={idx} className="outcome-item">
-                      <CheckCircle2 size={18} className="check-icon" />
-                      <span>{outcome}</span>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
-
             {/* Tabs Navigation */}
             <nav className="preview-page-tabs">
               <button 
@@ -243,27 +285,13 @@ const CoursePreview: React.FC = () => {
                     </div>
                   </section>
 
-                  {courseRequirements.length > 0 && (
-                    <section className="requirements-section">
-                      <h2 className="pane-title">Yêu cầu</h2>
-                      <ul className="requirements-ul">
-                        {courseRequirements.map((req, idx) => (
-                          <li key={idx} style={{ marginBottom: '0.25rem' }}>{req}</li>
-                        ))}
-                      </ul>
-                    </section>
-                  )}
-
-                  {targetAudiences.length > 0 && (
-                    <section className="target-audience-section" style={{ marginTop: '1.5rem' }}>
-                      <h2 className="pane-title">Khóa học này dành cho ai?</h2>
-                      <ul className="requirements-ul">
-                        {targetAudiences.map((audience, idx) => (
-                          <li key={idx} style={{ marginBottom: '0.25rem' }}>{audience}</li>
-                        ))}
-                      </ul>
-                    </section>
-                  )}
+                  <div style={{ marginTop: '1.5rem' }}>
+                    <CourseLearningPanels
+                      whatYouWillLearn={course.whatYouWillLearn}
+                      requirements={course.requirements}
+                      targetAudience={course.targetAudience}
+                    />
+                  </div>
                 </div>
               )}
 
@@ -274,7 +302,9 @@ const CoursePreview: React.FC = () => {
                     <span className="dot">•</span>
                     <span>{lessons.length} bài học</span>
                     <span className="dot">•</span>
-                    <span>{course.totalVideoHours ? course.totalVideoHours + ' giờ tổng cộng' : 'N/A'}</span>
+                    <span>{course.totalVideoHours ? course.totalVideoHours + ' giờ tổng cộng' : `${totalDurationMinutes} phút`}</span>
+                    <span className="dot">•</span>
+                    <span>{previewLessons.length} bài xem trước</span>
                   </div>
 
                   <div className="accordion-curriculum">
@@ -291,13 +321,22 @@ const CoursePreview: React.FC = () => {
                         {expandedSections[section.id] && (
                           <div className="accordion-body">
                             {section.lessons.map((lesson: any) => (
-                              <div key={lesson.id} className="lesson-row">
+                              <div 
+                                key={lesson.id} 
+                                className={`lesson-row ${lesson.isFreePreview ? 'clickable-preview' : 'locked-lesson-row'}`}
+                                onClick={() => lesson.isFreePreview && handlePlayPreview(lesson)}
+                              >
                                 <div className="lesson-left">
                                   <PlayCircle size={16} className="play-icon" />
                                   <span className="lesson-title-text">{lesson.lessonTitle}</span>
                                 </div>
                                 <div className="lesson-right">
-                                  {lesson.isFreePreview && <span className="preview-tag">Xem trước</span>}
+                                  {lesson.isFreePreview && (
+                                    <span className="preview-tag-v2">Xem trước</span>
+                                  )}
+                                  {!lesson.isFreePreview && (
+                                    <span className="locked-tag-v2"><Lock size={13} /> Bị khóa</span>
+                                  )}
                                   <span className="lesson-time">
                                     {lesson.durationSeconds ? `${Math.floor(lesson.durationSeconds / 60)}:${(lesson.durationSeconds % 60).toString().padStart(2, '0')}` : '--:--'}
                                   </span>
@@ -322,7 +361,7 @@ const CoursePreview: React.FC = () => {
                     />
                     <div className="instructor-header-info">
                       <h3 className="instructor-name-link">
-                        <Link to={`/instructor/${course.teacherId}`}>{teacher?.fullName}</Link>
+                        <Link to={`/student/instructors/${course.teacherId}`}>{teacher?.fullName}</Link>
                       </h3>
                       <p className="instructor-tagline">{teacher?.position || 'Giảng viên chuyên nghiệp'}</p>
                       
@@ -396,7 +435,14 @@ const CoursePreview: React.FC = () => {
 
           <aside className="preview-sidebar-column">
             <div className="sidebar-sticky-card">
-              <div className="video-preview-thumbnail">
+              <div
+                className="video-preview-thumbnail"
+                onClick={() => {
+                  const firstPreview = lessons.find(l => l.isFreePreview);
+                  if (firstPreview) handlePlayPreview(firstPreview);
+                }}
+                style={{ cursor: previewLessons.length > 0 ? 'pointer' : 'not-allowed' }}
+              >
                 {course.thumbnailUrl ? (
                   <img src={course.thumbnailUrl} alt={course.title} />
                 ) : (
@@ -406,8 +452,12 @@ const CoursePreview: React.FC = () => {
                 )}
                 <div className="play-overlay">
                   <PlayCircle size={64} />
-                  <span>Xem trước khóa học</span>
+                  <span>{previewLessons.length > 0 ? 'Xem trước khóa học' : 'Không có bài xem trước'}</span>
                 </div>
+              </div>
+
+              <div style={{ padding: '0.75rem 1.5rem 0', color: '#4b5563', fontSize: '0.88rem' }}>
+                <strong>{previewLessons.length}</strong> bài học miễn phí xem trước • <strong>{lockedLessonsCount}</strong> bài học mở sau khi đăng ký
               </div>
 
               <div className="sidebar-price-container">
@@ -429,6 +479,13 @@ const CoursePreview: React.FC = () => {
                   <span className="price-primary">Miễn phí</span>
                 )}
                 
+                {!isFreeCourse && hasFreeLessons && (
+                  <div style={{ marginTop: '0.5rem', color: '#1c1d1f', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600 }}>
+                    <PlayCircle size={14} color="#a435f0" />
+                    <span>Bài học thử miễn phí đã sẵn sàng</span>
+                  </div>
+                )}
+
                 {isDiscountActive(course) && course.discountExpiryDate && (
                   <CountdownTimer expiryDate={course.discountExpiryDate} />
                 )}
@@ -436,13 +493,18 @@ const CoursePreview: React.FC = () => {
 
               <button 
                 className={`btn-enroll-primary ${enrollMutation.isPending ? 'loading' : ''}`}
-                onClick={handleEnroll}
+                onClick={handlePrimaryAction}
                 disabled={enrollMutation.isPending}
               >
-                {enrollMutation.isPending ? 'Đang xử lý...' : 
-                 getEffectivePrice(course) > 0 
-                   ? 'Mua ngay' 
-                   : 'Đăng ký miễn phí'}
+                {enrollMutation.isPending
+                  ? 'Đang xử lý...'
+                  : course.isEnrolled
+                    ? 'Tiếp tục học'
+                    : !isAuthenticated
+                      ? 'Đăng nhập để đăng ký'
+                      : getEffectivePrice(course) > 0
+                        ? 'Mua ngay'
+                        : 'Đăng ký miễn phí'}
               </button>
 
               {enrollMutation.isError && (
@@ -466,36 +528,18 @@ const CoursePreview: React.FC = () => {
               )}
 
               <div className="sidebar-inclusions">
-                <h4>Khóa học này bao gồm:</h4>
-                <ul className="inclusion-list">
-                  <li>
-                    <Clock size={16} />
-                    <span>{course.totalVideoHours || '--'} giờ video theo yêu cầu</span>
-                  </li>
-                  <li>
-                    <FileText size={16} />
-                    <span>{course.articlesCount || 0} bài báo/tài liệu đọc</span>
-                  </li>
-                  {(course.resourcesCount ?? 0) > 0 && (
-                    <li>
-                      <Download size={16} />
-                      <span>{course.resourcesCount} tài nguyên tải xuống</span>
-                    </li>
-                  )}
-                  <li>
-                    <Smartphone size={16} />
-                    <span>Truy cập trên thiết bị di động và TV</span>
-                  </li>
-                  <li>
-                    <InfinityIcon size={16} />
-                    <span>Quyền truy cập trọn đời</span>
-                  </li>
-                </ul>
+                <CourseIncludesList
+                  totalVideoHours={course.totalVideoHours}
+                  articlesCount={course.articlesCount}
+                  resourcesCount={course.resourcesCount}
+                  mobileText="Truy cập trên thiết bị di động và TV"
+                />
               </div>
 
-              <div className="sidebar-actions">
-                <button className="btn-share">Chia sẻ</button>
-                <button className="btn-coupon">Áp dụng mã giảm giá</button>
+              <div className="sidebar-actions" style={{ display: 'block', textAlign: 'left' }}>
+                <p style={{ margin: 0, color: '#4b5563', fontSize: '0.86rem', lineHeight: 1.5 }}>
+                  Đây là trang giới thiệu khóa học. Bài học bị khóa sẽ mở đầy đủ sau khi đăng ký thành công.
+                </p>
               </div>
             </div>
           </aside>
@@ -503,7 +547,139 @@ const CoursePreview: React.FC = () => {
         </div>
       </div>
       
+      {/* ── Video Preview Modal ── */}
+      {previewLesson && (
+        <div className="video-modal-overlay" onClick={() => setPreviewLesson(null)}>
+          <div className="video-modal-container" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="modal-title-box">
+                <span className="preview-label">Xem trước khóa học</span>
+                <h3 className="modal-lesson-title">{previewLesson.lessonTitle}</h3>
+              </div>
+              <button className="modal-close-btn" onClick={() => setPreviewLesson(null)}>
+                <X size={24} />
+              </button>
+            </div>
+            
+            <div className="modal-video-box">
+              <video 
+                src={previewUrl} 
+                controls 
+                autoPlay 
+                className="preview-video-player"
+                style={{ width: '100%', borderRadius: '4px' }}
+              />
+            </div>
+
+            <div className="modal-footer-info" style={{ padding: '1.5rem', borderTop: '1px solid #d1d7dc' }}>
+              <h4 style={{ margin: '0 0 1rem', fontSize: '1rem' }}>Tài liệu bài học</h4>
+              <div className="preview-materials" style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
+                {getPreviewMaterials(previewLesson).map((m: any) => (
+                  <a key={m.id} href={m.url} target="_blank" rel="noreferrer" className="preview-material-link" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#a435f0', textDecoration: 'none', fontWeight: 600 }}>
+                    <FileText size={16} />
+                    <span>{m.name}</span>
+                  </a>
+                ))}
+                {getPreviewMaterials(previewLesson).length === 0 && (
+                  <p className="muted-italic" style={{ color: '#6a6f73', fontStyle: 'italic' }}>Không có tài liệu miễn phí cho bài học xem trước này.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {loadingPreview && (
+        <div className="loading-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+          <div className="spinner" style={{ border: '4px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%', width: '40px', height: '40px', animation: 'spin 1s linear infinite', marginBottom: '1rem' }} />
+          <p>Đang chuẩn bị video...</p>
+        </div>
+      )}
+
       <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .video-modal-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.8);
+          z-index: 2000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 2rem;
+        }
+
+        .video-modal-container {
+          background: white;
+          width: 100%;
+          max-width: 900px;
+          border-radius: 8px;
+          overflow: hidden;
+          box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+        }
+
+        .modal-header {
+          padding: 1.25rem 1.5rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          border-bottom: 1px solid #d1d7dc;
+        }
+
+        .preview-label {
+          color: #6a6f73;
+          font-size: 0.85rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          display: block;
+          margin-bottom: 0.25rem;
+        }
+
+        .modal-lesson-title {
+          font-size: 1.25rem;
+          font-weight: 700;
+          margin: 0;
+        }
+
+        .modal-close-btn {
+          background: none;
+          border: none;
+          cursor: pointer;
+          color: #1c1d1f;
+        }
+
+        .modal-video-box {
+          background: #000;
+          aspect-ratio: 16/9;
+        }
+        
+        .clickable-preview {
+          cursor: pointer;
+        }
+        
+        .clickable-preview:hover {
+          background: #f7f9fa;
+        }
+
+        .locked-lesson-row {
+          cursor: default;
+          opacity: 0.9;
+        }
+
+        .locked-tag-v2 {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          background: #f3f4f6;
+          color: #374151;
+          border: 1px solid #d1d5db;
+          border-radius: 999px;
+          padding: 0.18rem 0.6rem;
+          font-size: 0.72rem;
+          font-weight: 700;
+        }
+
         .course-preview-v2 {
           background: #fff;
           min-height: 100vh;
@@ -772,12 +948,20 @@ const CoursePreview: React.FC = () => {
 
         .play-icon { color: #6a6f73; }
 
-        .preview-tag {
+        .preview-tag-v2 {
+          background: #f7f9fa;
+          border: 1px solid #1c1d1f;
+          padding: 2px 8px;
+          border-radius: 4px;
           color: #a435f0;
           text-decoration: underline;
-          font-size: 0.85rem;
+          font-size: 0.8rem;
           margin-right: 1rem;
-          font-weight: 600;
+          font-weight: 700;
+        }
+
+        .preview-tag-v2:hover {
+          background: #e3e7ea;
         }
 
         .lesson-time {
@@ -975,6 +1159,19 @@ const CoursePreview: React.FC = () => {
       `}</style>
     </div>
   );
+
+  if (isAuthenticated) {
+    return (
+      <DashboardLayout
+        role="student"
+        user={{ name: 'Học sinh', avatar: '', role: 'student' }}
+      >
+        {previewContent}
+      </DashboardLayout>
+    );
+  }
+
+  return previewContent;
 };
 
 export default CoursePreview;
