@@ -22,6 +22,7 @@ import {
 } from '../../../hooks/useCourses';
 import { VideoUploadService } from '../../../services/api/videoUpload.service';
 import { LessonSlideService } from '../../../services/api/lesson-slide.service';
+import { CourseService } from '../../../services/api/course.service';
 import type { CourseLessonResponse, CourseResponse } from '../../../types';
 import type { ChapterBySubject, LessonByChapter } from '../../../types/lessonSlide.types';
 import '../../../styles/module-refactor.css';
@@ -76,11 +77,9 @@ function UploadVideoModal({
         .finally(() => setLoadingChapters(false));
     } else if (provider === 'CUSTOM') {
       // Mock fetch sections or from real API
-      import('../../../services/api/course.service').then(({ CourseService }) => {
-        CourseService.listSections(courseId)
-          .then((res) => setSections(res.result || []))
-          .catch(() => setError('Không thể tải danh sách phần'));
-      });
+      CourseService.listSections(courseId)
+        .then((res) => setSections(res.result || []))
+        .catch(() => setError('Không thể tải danh sách phần'));
     }
   });
 
