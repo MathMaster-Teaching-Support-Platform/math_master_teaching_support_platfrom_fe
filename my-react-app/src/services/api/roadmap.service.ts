@@ -298,7 +298,7 @@ export class RoadmapService {
   ): Promise<RoadmapApiResponse<null>> {
     const headers = await this.getHeaders();
     const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ADMIN_ROADMAP_ENTRY_TEST(roadmapId)}`, {
-      method: 'POST',
+      method: 'PUT',
       headers,
       body: JSON.stringify(payload),
     });
@@ -306,6 +306,21 @@ export class RoadmapService {
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
       throw new Error((error as { message?: string }).message || 'Failed to create roadmap entry test');
+    }
+
+    return response.json();
+  }
+
+  static async removeRoadmapEntryTest(roadmapId: string): Promise<RoadmapApiResponse<null>> {
+    const headers = await this.getHeaders();
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ADMIN_ROADMAP_ENTRY_TEST(roadmapId)}`, {
+      method: 'DELETE',
+      headers,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error((error as { message?: string }).message || 'Failed to remove roadmap entry test');
     }
 
     return response.json();

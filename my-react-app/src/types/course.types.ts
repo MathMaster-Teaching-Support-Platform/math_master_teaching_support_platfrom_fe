@@ -50,6 +50,9 @@ export interface CourseResponse {
   originalPrice: number | null;
   discountedPrice: number | null;
   discountExpiryDate: string | null;
+  isEnrolled?: boolean | null;
+  completedLessons?: number | null;
+  progress?: number | null;
 }
 
 export interface CourseLessonResponse {
@@ -77,6 +80,25 @@ export interface CourseLessonResponse {
   chapterTitle: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface CourseLessonPreviewResponse {
+  id: string;
+  courseId: string;
+  sectionId: string | null;
+  lessonTitle: string | null;
+  customDescription: string | null;
+  videoTitle: string | null;
+  durationSeconds: number | null;
+  orderIndex: number | null;
+  isFreePreview: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CoursePreviewResponse {
+  course: CourseResponse;
+  lessons: CourseLessonPreviewResponse[];
 }
 
 export interface EnrollmentResponse {

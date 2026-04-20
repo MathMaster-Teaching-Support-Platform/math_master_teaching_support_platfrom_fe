@@ -48,66 +48,7 @@ function findCurrentTopic(topics: RoadmapTopic[]): RoadmapTopic | null {
   );
 }
 
-const TopicStep: React.FC<{
-  topic: RoadmapTopic;
-  isFirst: boolean;
-  isLast: boolean;
-  isCurrent: boolean;
-  roadmapId: string;
-  stepRef?: React.Ref<HTMLDivElement>;
-}> = ({ topic, isFirst, isLast, isCurrent, roadmapId, stepRef }) => {
-  const isCompleted = topic.status === 'COMPLETED';
-  const isLocked = !isTopicUnlocked(topic);
-
-  let dotContent: React.ReactNode;
-  if (isCompleted) dotContent = '✓';
-  else if (isLocked) dotContent = '🔒';
-  else dotContent = topic.sequenceOrder;
-
-  return (
-    <div
-      ref={stepRef}
-      className={[
-        'srp__step',
-        isFirst && 'srp__step--first',
-        isLast && 'srp__step--last',
-        isCompleted && 'srp__step--completed',
-        isCurrent && 'srp__step--current',
-        isLocked && 'srp__step--locked',
-      ]
-        .filter(Boolean)
-        .join(' ')}
-    >
-      {/* Vertical connector */}
-      {!isLast && <div className={`srp__step-line ${isCompleted ? 'srp__step-line--done' : ''}`} />}
-
-      {/* Dot indicator */}
-      <div className="srp__step-indicator">
-        <div className="srp__step-dot">{dotContent}</div>
-        {isCurrent && <div className="srp__step-pulse" />}
-      </div>
-
-      {/* Content */}
-      <div className="srp__step-body">
-        <div className="srp__step-header">
-          <h3 className="srp__step-title">{topic.title}</h3>
-          <span className={`srp__diff srp__diff--${topic.difficulty.toLowerCase()}`}>
-            {difficultyLabel(topic.difficulty)}
-          </span>
-        </div>
-        {topic.description && <p className="srp__step-desc">{topic.description}</p>}
-        <div className="srp__step-meta">
-          {/* Mark field removed in new model */}
-        </div>
-        {isCurrent && (
-          <Link to={`/roadmaps/${roadmapId}`} className="srp__continue-btn">
-            Tiếp tục học →
-          </Link>
-        )}
-      </div>
-    </div>
-  );
-};
+// Removed TopicStep to enforce node-based roadmap UI only
 
 const StudentRoadmap: React.FC = () => {
   const [selectedRoadmapId, setSelectedRoadmapId] = useState('');
@@ -137,11 +78,7 @@ const StudentRoadmap: React.FC = () => {
       ? Math.round(roadmaps.reduce((s, r) => s + r.progressPercentage, 0) / roadmaps.length)
       : 0;
 
-  useEffect(() => {
-    if (currentTopicRef.current) {
-      currentTopicRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  }, [selectedTopics.length]);
+  // No automatic scrolling since we removed the vertical list
 
   return (
     <DashboardLayout
@@ -296,60 +233,21 @@ const StudentRoadmap: React.FC = () => {
                       </div>
                     )}
 
-                    {/* Congrats */}
-                    {allCompleted && (
-                      <div className="srp__congrats">
-                        <span>🎉</span>
-                        <div>
-                          <h3>Chúc mừng! Bạn đã hoàn thành lộ trình này!</h3>
-                          <p>Tiếp tục với lộ trình mới để phát triển thêm.</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Topic steps */}
-                    {selectedTopics.length > 0 && (
-                      <div className="srp__steps">
-                        {selectedTopics.map((topic, index) => (
-                          <TopicStep
-                            key={topic.id}
-                            topic={topic}
-                            isFirst={index === 0}
-                            isLast={index === selectedTopics.length - 1}
-                            isCurrent={topic.id === currentTopic?.id}
-                            roadmapId={selectedRoadmapId}
-                            stepRef={topic.id === currentTopic?.id ? currentTopicRef : undefined}
-                          />
-                        ))}
-                      </div>
-                    )}
-
-                    {selectedTopics.length === 0 && (
-                      <div className="srp__empty">
-                        <span className="srp__empty-icon">📚</span>
-                        <h3>Chưa có chủ đề nào</h3>
-                        <p>Lộ trình này chưa có chủ đề nào được thêm.</p>
-                      </div>
-                    )}
+                    {/* Removed old list-based UI */}
+                    <div className="srp__cta-container" style={{ textAlign: 'center', marginTop: '3rem' }}>
+                       <img src="/assets/illustrations/map.svg" alt="" style={{ width: '120px', opacity: 0.5, marginBottom: '1rem' }} />
+                       <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Sẵn sàng học tiếp?</h3>
+                       <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
+                         Bản đồ học tập mới với giao diện trực quan đã sẵn sàng.
+                       </p>
+                       <Link to={`/roadmaps/${selectedRoadmapId}`} className="srp__sticky-btn" style={{ display: 'inline-block' }}>
+                          Mở bản đồ học tập →
+                       </Link>
+                    </div>
                   </>
                 )}
             </main>
           </div>
-
-          {/* ── Sticky CTA ── */}
-          {selectedRoadmapId && currentTopic && !allCompleted && (
-            <div className="srp__sticky">
-              <div className="srp__sticky-inner">
-                <div className="srp__sticky-text">
-                  <span className="srp__sticky-label">Tiếp tục lộ trình</span>
-                  <span className="srp__sticky-topic">{currentTopic.title}</span>
-                </div>
-                <Link to={`/roadmaps/${selectedRoadmapId}`} className="srp__sticky-btn">
-                  Tiếp tục học →
-                </Link>
-              </div>
-            </div>
-          )}
         </section>
       </div>
     </DashboardLayout>

@@ -17,6 +17,7 @@ import {
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import Pagination from '../../components/common/Pagination';
 import {
   useApproveMatrix,
   useCreateExamMatrix,
@@ -63,6 +64,8 @@ export function ExamMatrixDashboard() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | MatrixStatus>('ALL');
+  const [page, setPage] = useState(0);
+  const [size, setSize] = useState(20);
   const [formOpen, setFormOpen] = useState(false);
   const [mode, setMode] = useState<'create' | 'edit'>('create');
   const [selected, setSelected] = useState<ExamMatrixResponse | null>(null);
@@ -95,6 +98,10 @@ export function ExamMatrixDashboard() {
       (matrix.description?.toLowerCase().includes(q) ?? false)
     );
   });
+
+  const totalElements = filtered.length;
+  const totalPages = Math.ceil(totalElements / size);
+  const paginated = filtered.slice(page * size, (page + 1) * size);
 
   async function handleSave(payload: ExamMatrixRequest) {
     if (mode === 'create') {
@@ -360,7 +367,7 @@ export function ExamMatrixDashboard() {
                 style={{ border: '0', padding: 0, width: '100%' }}
                 placeholder="Tìm ma trận"
                 value={search}
-                onChange={(event) => setSearch(event.target.value)}
+                onChange={(event) => { setSearch(event.target.value); setPage(0); }}
               />
             </label>
 
@@ -374,7 +381,7 @@ export function ExamMatrixDashboard() {
                   <button
                     key={filter}
                     className={`pill-btn ${statusFilter === filter ? 'active' : ''}`}
-                    onClick={() => setStatusFilter(filter)}
+                    onClick={() => { setStatusFilter(filter); setPage(0); }}
                   >
                     {filterLabel[filter]} ({count})
                   </button>
@@ -405,7 +412,7 @@ export function ExamMatrixDashboard() {
 
           {!isLoading && !isError && filtered.length > 0 && (
             <div className="grid-cards">
-              {filtered.map((matrix) => (
+              {paginated.map((matrix) => (
                 <article
                   key={matrix.id}
                   className="data-card"
@@ -547,6 +554,15 @@ export function ExamMatrixDashboard() {
               ))}
             </div>
           )}
+
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            totalElements={totalElements}
+            pageSize={size}
+            onChange={(p) => setPage(p)}
+            onPageSizeChange={(s) => { setSize(s); setPage(0); }}
+          />
 
           <ExamMatrixFormModal
             isOpen={formOpen}

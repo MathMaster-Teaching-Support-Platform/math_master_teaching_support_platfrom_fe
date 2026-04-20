@@ -16,6 +16,7 @@ import {
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MathText from '../../components/common/MathText';
+import Pagination from '../../components/common/Pagination';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import {
   useCreateQuestion,
@@ -281,7 +282,7 @@ export default function TeacherQuestionManagementPage() {
   const [searchName, setSearchName] = useState('');
   const [searchTag, setSearchTag] = useState('');
   const [page, setPage] = useState(0);
-  const [size] = useState(20);
+  const [size, setSize] = useState(20);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formMode, setFormMode] = useState<FormMode>('create');
   const [selectedQuestion, setSelectedQuestion] = useState<QuestionResponse | null>(null);
@@ -307,6 +308,7 @@ export default function TeacherQuestionManagementPage() {
 
   const questions = useMemo(() => data?.result?.content ?? [], [data]);
   const totalPages = data?.result?.totalPages ?? 0;
+  const totalElements = data?.result?.totalElements ?? 0;
 
   const stats = useMemo(
     () => ({
@@ -712,27 +714,14 @@ export default function TeacherQuestionManagementPage() {
             </div>
           )}
 
-          {totalPages > 1 && (
-            <div className="row" style={{ justifyContent: 'center' }}>
-              <button
-                className="btn secondary"
-                disabled={page === 0}
-                onClick={() => setPage((prev) => prev - 1)}
-              >
-                Truoc
-              </button>
-              <span className="muted">
-                Trang {page + 1} / {totalPages}
-              </span>
-              <button
-                className="btn secondary"
-                disabled={page >= totalPages - 1}
-                onClick={() => setPage((prev) => prev + 1)}
-              >
-                Sau
-              </button>
-            </div>
-          )}
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            totalElements={totalElements}
+            pageSize={size}
+            onChange={(p) => setPage(p)}
+            onPageSizeChange={(s) => { setSize(s); setPage(0); }}
+          />
 
           <QuestionFormModal
             isOpen={isModalOpen}

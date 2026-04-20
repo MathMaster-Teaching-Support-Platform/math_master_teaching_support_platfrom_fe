@@ -296,6 +296,7 @@ export const API_ENDPOINTS = {
   COURSES: '/courses',
   COURSES_MY: '/courses/my',
   COURSE_DETAIL: (courseId: string) => `/courses/${courseId}`,
+  COURSE_PREVIEW: (courseId: string) => `/courses/${courseId}/preview`,
   COURSE_PUBLISH: (courseId: string) => `/courses/${courseId}/publish`,
   COURSE_STUDENTS: (courseId: string) => `/courses/${courseId}/students`,
   COURSE_LESSONS: (courseId: string) => `/courses/${courseId}/lessons`,

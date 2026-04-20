@@ -342,6 +342,57 @@
 
 .art-entry__hint { font-size: 0.83rem; color: #6b7280; margin: 12px 0 0; line-height: 1.6; }
 
+.art-entry__current {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #f0fdf4;
+  border: 1.5px solid #bbf7d0;
+  border-radius: 10px;
+}
+
+.art-entry__current-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #16a34a;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.art-entry__current-name {
+  flex: 1;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #166534;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.art-entry__remove-btn {
+  padding: 0.3rem 0.65rem;
+  background: transparent;
+  border: 1px solid #ef4444;
+  color: #dc2626;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.art-entry__remove-btn:hover:not(:disabled) {
+  background: #fee2e2;
+}
+
+.art-entry__remove-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .art-list { display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; }
 
 .art-list-item {

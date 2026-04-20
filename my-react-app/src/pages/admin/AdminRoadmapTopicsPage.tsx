@@ -13,6 +13,7 @@ import {
   useAdminRoadmapDetail,
   useArchiveRoadmapTopic,
   useCreateRoadmapEntryTest,
+  useRemoveRoadmapEntryTest,
   useUpdateRoadmapTopic,
 } from '../../hooks/useRoadmaps';
 import { useBatchSaveTopics } from '../../hooks/useBatchTopics';
@@ -167,6 +168,7 @@ export default function AdminRoadmapTopicsPage() {
   const updateMutation = useUpdateRoadmapTopic();
   const archiveMutation = useArchiveRoadmapTopic();
   const entryTestMutation = useCreateRoadmapEntryTest();
+  const removeEntryTestMutation = useRemoveRoadmapEntryTest();
   const batchSaveMutation = useBatchSaveTopics();
 
   const roadmap = roadmapData?.result;
@@ -176,6 +178,7 @@ export default function AdminRoadmapTopicsPage() {
   const [toast, setToast] = useState<Toast | null>(null);
   const [courseKw, setCourseKw] = useState('');
   const [entryTestId, setEntryTestId] = useState('');
+  const [currentEntryTestName, setCurrentEntryTestName] = useState<string | null>(null);
   const [entryKw, setEntryKw] = useState('');
   const [isSavingAll, setIsSavingAll] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -241,6 +244,20 @@ export default function AdminRoadmapTopicsPage() {
     },
   });
   const assessmentOptions = useMemo(() => assessmentsQuery.data?.result ?? [], [assessmentsQuery.data]);
+
+  // Sync entry test from loaded roadmap
+  useEffect(() => {
+    if (!roadmap) return;
+    const et = (roadmap as any).entryTest;
+    if (et?.assessmentId) {
+      setEntryTestId(String(et.assessmentId));
+      setCurrentEntryTestName(et.name ?? null);
+    } else {
+      setEntryTestId('');
+      setCurrentEntryTestName(null);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roadmap?.id]);
 
   // Load from API
   useEffect(() => {
@@ -348,9 +365,23 @@ export default function AdminRoadmapTopicsPage() {
     if (!entryTestId) { showToast('error', 'Vui lòng chọn bài kiểm tra.'); return; }
     try {
       await entryTestMutation.mutateAsync({ roadmapId, payload: { assessmentId: entryTestId } });
+      const selected = assessmentOptions.find((a: AssessmentResponse) => String(a.id) === entryTestId);
+      setCurrentEntryTestName(selected?.title ?? entryTestId);
       showToast('success', 'Đã cấu hình bài kiểm tra đầu vào.');
     } catch (err) {
       showToast('error', err instanceof Error ? err.message : 'Lỗi cấu hình');
+    }
+  }
+
+  async function removeEntryTest() {
+    if (!globalThis.confirm('Xóa bài kiểm tra đầu vào của lộ trình này?')) return;
+    try {
+      await removeEntryTestMutation.mutateAsync({ roadmapId });
+      setEntryTestId('');
+      setCurrentEntryTestName(null);
+      showToast('success', 'Đã xóa bài kiểm tra đầu vào.');
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : 'Lỗi xóa bài kiểm tra');
     }
   }
 
@@ -445,6 +476,20 @@ export default function AdminRoadmapTopicsPage() {
           {entryOpen && (
             <div className="art-entry__body">
               <p className="art-entry__hint">Kết quả bài test gợi ý điểm xuất phát phù hợp cho học sinh (không khoá chủ đề nào).</p>
+              {currentEntryTestName && (
+                <div className="art-entry__current">
+                  <span className="art-entry__current-label">Bài test hiện tại:</span>
+                  <span className="art-entry__current-name">{currentEntryTestName}</span>
+                  <button
+                    className="art-entry__remove-btn"
+                    onClick={removeEntryTest}
+                    disabled={removeEntryTestMutation.isPending}
+                    title="Xóa bài kiểm tra đầu vào"
+                  >
+                    {removeEntryTestMutation.isPending ? 'Đang xóa...' : '✕ Xóa'}
+                  </button>
+                </div>
+              )}
               <div className="art-field">
                 <label className="art-label">Tìm bài kiểm tra</label>
                 <input className="art-input" placeholder="Tên bài kiểm tra..." value={entryKw} onChange={(e) => setEntryKw(e.target.value)} />

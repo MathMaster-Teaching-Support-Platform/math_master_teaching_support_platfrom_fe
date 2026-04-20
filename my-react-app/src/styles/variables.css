@@ -79,4 +79,20 @@
   --z-modal: 1050;
   --z-popover: 1060;
   --z-tooltip: 1070;
+
+  /* Semantic tokens — used across roadmap & dashboard pages */
+  --bg-body: #f8f9ff;
+  --bg-card: #ffffff;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --border-color: #e8eaed;
+  --danger-color: #ef4444;
+
+  /* RGB channels for rgba() compositing */
+  --primary-rgb: 91, 103, 241;
+  --secondary-rgb: 139, 92, 246;
+  --success-rgb: 16, 185, 129;
+  --warning-rgb: 251, 191, 36;
+  --danger-rgb: 239, 68, 68;
+  --text-secondary-rgb: 107, 114, 128;
 }

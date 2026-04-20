@@ -15,6 +15,7 @@ import {
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import Pagination from '../../components/common/Pagination';
 import {
   useCloneAssessment,
   useCloseAssessment,
@@ -189,6 +190,7 @@ export default function TeacherAssessments() {
   const [statusFilter, setStatusFilter] = useState<'ALL' | AssessmentStatus>('ALL');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
+  const [size, setSize] = useState(20);
   const [openForm, setOpenForm] = useState(false);
   const [mode, setMode] = useState<'create' | 'edit'>('create');
   const [selected, setSelected] = useState<AssessmentResponse | null>(null);
@@ -199,7 +201,7 @@ export default function TeacherAssessments() {
   const { data, isLoading, isError, error, refetch } = useMyAssessments({
     status: statusFilter === 'ALL' ? undefined : statusFilter,
     page,
-    size: 30,
+    size,
     sortBy: 'createdAt',
     sortDirection: 'DESC',
   });
@@ -216,6 +218,7 @@ export default function TeacherAssessments() {
 
   const assessments = data?.result?.content ?? [];
   const totalPages = data?.result?.totalPages ?? 0;
+  const totalElements = data?.result?.totalElements ?? 0;
   const myMatrices = myMatricesData?.result ?? [];
 
   const stats = useMemo(
@@ -489,27 +492,14 @@ export default function TeacherAssessments() {
             </div>
           )}
 
-          {totalPages > 1 && (
-            <div className="row" style={{ justifyContent: 'center' }}>
-              <button
-                className="btn secondary"
-                disabled={page === 0}
-                onClick={() => setPage((prev) => prev - 1)}
-              >
-                Trước
-              </button>
-              <span className="muted">
-                Trang {page + 1} / {totalPages}
-              </span>
-              <button
-                className="btn secondary"
-                disabled={page >= totalPages - 1}
-                onClick={() => setPage((prev) => prev + 1)}
-              >
-                Sau
-              </button>
-            </div>
-          )}
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            totalElements={totalElements}
+            pageSize={size}
+            onChange={(p) => setPage(p)}
+            onPageSizeChange={(s) => { setSize(s); setPage(0); }}
+          />
 
           <AssessmentModal
             isOpen={openForm}

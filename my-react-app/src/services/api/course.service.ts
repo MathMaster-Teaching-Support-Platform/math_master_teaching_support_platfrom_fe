@@ -93,6 +93,15 @@ export class CourseService {
     return this.handleResponse(res);
   }
 
+  static async getCoursePreview(courseId: string): Promise<ApiResponse<any>> {
+    const headers = await this.getAuthHeaders().catch(() => ({})); // try with auth, fallback to no auth if not logged in
+    const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.COURSE_PREVIEW(courseId)}`, {
+      method: 'GET',
+      headers: Object.keys(headers).length > 0 ? headers : undefined,
+    });
+    return this.handleResponse(res);
+  }
+
   static async updateCourse(
     courseId: string,
     data: UpdateCourseRequest

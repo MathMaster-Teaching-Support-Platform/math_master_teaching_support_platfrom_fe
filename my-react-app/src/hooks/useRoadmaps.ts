@@ -184,6 +184,17 @@ export function useCreateRoadmapEntryTest() {
   });
 }
 
+export function useRemoveRoadmapEntryTest() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ roadmapId }: { roadmapId: string }) =>
+      RoadmapService.removeRoadmapEntryTest(roadmapId),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: roadmapKeys.adminDetail(variables.roadmapId) });
+    },
+  });
+}
+
 export function useRoadmapEntryTest(roadmapId: string) {
   return useQuery({
     queryKey: roadmapKeys.entryTest(roadmapId),

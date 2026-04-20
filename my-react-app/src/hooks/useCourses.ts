@@ -46,6 +46,14 @@ export function useCourseDetail(courseId: string) {
   });
 }
 
+export function useCoursePreview(courseId: string) {
+  return useQuery({
+    queryKey: [...courseKeys.detail(courseId), 'preview'],
+    queryFn: () => CourseService.getCoursePreview(courseId),
+    enabled: !!courseId,
+  });
+}
+
 export function useCreateCourse() {
   const qc = useQueryClient();
   return useMutation({

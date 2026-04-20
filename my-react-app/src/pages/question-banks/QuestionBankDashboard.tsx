@@ -21,6 +21,7 @@ import {
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import Pagination from '../../components/common/Pagination';
 import {
   useCreateQuestionBank,
   useDeleteQuestionBank,
@@ -59,7 +60,7 @@ export function QuestionBankDashboard() {
   const [search, setSearch] = useState('');
   const [visibilityFilter, setVisibilityFilter] = useState<VisibilityFilter>('ALL');
   const [page, setPage] = useState(0);
-  const [size] = useState(20);
+  const [size, setSize] = useState(20);
   const [formOpen, setFormOpen] = useState(false);
   const [mode, setMode] = useState<'create' | 'edit'>('create');
   const [selected, setSelected] = useState<QuestionBankResponse | null>(null);
@@ -80,14 +81,15 @@ export function QuestionBankDashboard() {
 
   const banks = useMemo(() => data?.result?.content ?? [], [data]);
   const totalPages = data?.result?.totalPages ?? 0;
+  const totalElements = data?.result?.totalElements ?? 0;
 
   const stats = useMemo(
     () => ({
-      total: banks.length,
+      total: totalElements,
       public: banks.filter((b) => b.isPublic).length,
       private: banks.filter((b) => !b.isPublic).length,
     }),
-    [banks]
+    [banks, totalElements]
   );
 
   const filtered = useMemo(() => {
@@ -425,27 +427,14 @@ export function QuestionBankDashboard() {
             </div>
           )}
 
-          {totalPages > 1 && (
-            <div className="row" style={{ justifyContent: 'center' }}>
-              <button
-                className="btn secondary"
-                disabled={page === 0}
-                onClick={() => setPage((prev) => prev - 1)}
-              >
-                Trước
-              </button>
-              <span className="muted">
-                Trang {page + 1} / {totalPages}
-              </span>
-              <button
-                className="btn secondary"
-                disabled={page >= totalPages - 1}
-                onClick={() => setPage((prev) => prev + 1)}
-              >
-                Sau
-              </button>
-            </div>
-          )}
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            totalElements={totalElements}
+            pageSize={size}
+            onChange={(p) => setPage(p)}
+            onPageSizeChange={(s) => { setSize(s); setPage(0); }}
+          />
 
           <QuestionBankFormModal
             isOpen={formOpen}

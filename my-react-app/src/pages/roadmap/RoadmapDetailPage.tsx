@@ -1,17 +1,15 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Fragment, useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockStudent } from '../../data/mockData';
-import { useEnroll, useMyEnrollments } from '../../hooks/useCourses';
+import { useCoursePreview, useEnroll, useMyEnrollments } from '../../hooks/useCourses';
 import {
   useMyRoadmapFeedback,
   useRoadmapDetail,
-  useRoadmapEntryTest,
-  useRoadmapEntryTestActiveAttempt,
   useSubmitRoadmapFeedback,
 } from '../../hooks/useRoadmaps';
-import type { RoadmapEntryTestResultResponse, RoadmapTopic } from '../../types';
+import type { RoadmapTopicCourse } from '../../types';
 import './roadmap-detail-page.css';
 
 /* ─────────────────────────────────────────────────────
@@ -23,28 +21,14 @@ function diffLabel(d: string) {
 }
 
 function diffColorClass(d: string) {
-  if (d === 'EASY') return 'rdp-node__diff--easy';
-  if (d === 'HARD') return 'rdp-node__diff--hard';
-  return 'rdp-node__diff--medium';
-}
-
-function getEntryActionLabel(status?: string) {
-  if (status === 'IN_PROGRESS') return 'Tiếp tục bài test';
-  if (status === 'COMPLETED') return 'Xem lại kết quả';
-  return 'Bắt đầu bài test';
-}
-
-function getEntryAssessmentStatusLabel(status?: string) {
-  switch (status) {
-    case 'IN_PROGRESS': return 'Đang làm';
-    case 'COMPLETED': return 'Đã hoàn thành';
-    default: return 'Chưa làm';
-  }
+  if (d === 'EASY') return 'rdp-topic-node__diff--easy';
+  if (d === 'HARD') return 'rdp-topic-node__diff--hard';
+  return 'rdp-topic-node__diff--medium';
 }
 
 function getCourseButtonLabel(isPending: boolean, isEnrolled: boolean) {
   if (isPending) return 'Đang xử lý...';
-  return isEnrolled ? 'Tiếp tục học →' : 'Đăng ký & Học ngay →';
+  return isEnrolled ? 'Tiếp tục học →' : 'Đăng ký ngay →';
 }
 
 function getFeedbackErrorText(message: string) {
@@ -53,103 +37,112 @@ function getFeedbackErrorText(message: string) {
   return message.replace(/^\d{3}\s+[^:]+:\s*/, '');
 }
 
-function getFeedbackSubmitLabel(isPending: boolean, hasFeedback: boolean) {
-  if (isPending) return 'Đang lưu...';
-  return hasFeedback ? 'Cập nhật đánh giá' : 'Gửi đánh giá';
-}
-
 function shouldNavigateToCourseOnEnrollError(message: string) {
   const n = message.toLowerCase();
   return n.includes('already') || n.includes('đã đăng ký');
 }
 
-function resolveEntryTestState(params: {
-  entryStatus?: 'UPCOMING' | 'IN_PROGRESS' | 'COMPLETED';
-  entryActiveAttemptId?: string | null;
-  activeAttemptId?: string | null;
-}) {
-  const hasActiveAttempt = Boolean(params.activeAttemptId || params.entryActiveAttemptId);
-  const resolvedEntryStatus =
-    params.entryStatus === 'IN_PROGRESS' && !hasActiveAttempt ? 'UPCOMING' : params.entryStatus;
-  const hasInProgressAttempt = resolvedEntryStatus === 'IN_PROGRESS' && hasActiveAttempt;
-  return { resolvedEntryStatus, hasInProgressAttempt };
+function getCourseStatusInfo(progress: number): { statusClass: string; statusText: string } {
+  if (progress >= 100) return { statusClass: 'completed', statusText: 'Đã hoàn thành' };
+  if (progress > 0)   return { statusClass: 'progress',  statusText: 'Đang học' };
+  return                      { statusClass: 'locked',    statusText: 'Chưa bắt đầu' };
+}
+
+function getTopicStatus(
+  topic: { courses?: Array<{ id: string; progress?: number }> },
+  enrolledIds: Set<string>
+): 'done' | 'progress' | 'none' {
+  const courses = topic.courses ?? [];
+  if (courses.length === 0) return 'none';
+  if (courses.every((c) => (c.progress ?? 0) >= 100)) return 'done';
+  if (courses.some((c) => enrolledIds.has(c.id) || (c.progress ?? 0) > 0)) return 'progress';
+  return 'none';
 }
 
 /* ─────────────────────────────────────────────────────
    Sub-components
 ───────────────────────────────────────────────────── */
 
-interface TopicDetailPanelProps {
-  topic: RoadmapTopic;
+interface CoursePreviewPanelProps {
+  course: RoadmapTopicCourse;
   isPending: boolean;
-  activeCourseIdSet: Set<string>;
+  isEnrolled: boolean;
   onClose: () => void;
-  onOpenCourse: (courseId?: string | null) => void;
+  onEnroll: (courseId: string) => void;
 }
 
-function TopicDetailPanel({ topic, isPending, activeCourseIdSet, onClose, onOpenCourse }: TopicDetailPanelProps) {
+function CoursePreviewPanel({ course, isPending, isEnrolled, onClose, onEnroll }: CoursePreviewPanelProps) {
+  const { data, isLoading } = useCoursePreview(course.id);
+  const preview = data?.result;
+
   return (
     <motion.aside
       className="rdp-panel"
-      initial={{ x: 380, opacity: 0 }}
+      initial={{ x: 420, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
-      exit={{ x: 380, opacity: 0 }}
+      exit={{ x: 420, opacity: 0 }}
       transition={{ type: 'spring', stiffness: 300, damping: 35 }}
     >
       <div className="rdp-panel__header">
         <div>
-          <span className={`rdp-node__diff ${diffColorClass(topic.difficulty)}`}>
-            {diffLabel(topic.difficulty)}
-          </span>
-          <h2 className="rdp-panel__title">{topic.title}</h2>
+          <span className="rdp-panel__badge">Khóa học</span>
+          <h2 className="rdp-panel__title">{course.title}</h2>
         </div>
         <button className="rdp-panel__close" onClick={onClose} aria-label="Đóng">✕</button>
       </div>
 
-      {topic.description && (
-        <p className="rdp-panel__desc">{topic.description}</p>
-      )}
+      <div className="rdp-panel__body">
+        {(course.thumbnail ?? course.thumbnailUrl) && (
+          <img
+            className="rdp-panel__thumb"
+            src={course.thumbnail ?? course.thumbnailUrl ?? undefined}
+            alt={course.title}
+          />
+        )}
 
-      <div className="rdp-panel__divider" />
+        {course.description && (
+          <p className="rdp-panel__desc">{course.description}</p>
+        )}
 
-      {topic.courses && topic.courses.length > 0 ? (
-        <div className="rdp-panel__courses">
-          <p className="rdp-panel__course-label">Khóa học liên kết ({topic.courses.length})</p>
-          {topic.courses.map((course) => (
-            <div key={course.id} className="rdp-panel__course">
-              {course.thumbnailUrl && (
-                <img
-                  className="rdp-panel__course-thumb"
-                  src={course.thumbnailUrl}
-                  alt={course.title}
-                />
-              )}
-              <div className="rdp-panel__course-info">
-                <h3 className="rdp-panel__course-title">{course.title}</h3>
-                {course.description && (
-                  <p className="rdp-panel__course-desc">{course.description}</p>
-                )}
-                {course.totalLessons != null && (
-                  <span className="rdp-panel__course-meta">📚 {course.totalLessons} bài học</span>
+        <div className="rdp-panel__meta-row">
+          <div className="rdp-panel__meta-item">
+            <span>Bài học</span>
+            <strong>{course.totalLessons ?? preview?.totalLessons ?? 0} bài</strong>
+          </div>
+          {preview?.instructorName && (
+            <div className="rdp-panel__meta-item">
+              <span>Giáo viên</span>
+              <strong>{preview.instructorName}</strong>
+            </div>
+          )}
+        </div>
+
+        {isLoading && <p>Đang tải thông tin chi tiết...</p>}
+
+        {preview?.lessons && preview.lessons.length > 0 && (
+          <div className="rdp-panel__lessons">
+            <h3>Danh sách bài học</h3>
+            {preview.lessons.map((lesson: any, i: number) => (
+              <div key={lesson.id} className="rdp-panel__lesson-item">
+                <span className="rdp-panel__lesson-title">{i + 1}. {lesson.title}</span>
+                {lesson.durationMinutes && (
+                  <span className="rdp-panel__lesson-duration">{lesson.durationMinutes}p</span>
                 )}
               </div>
+            ))}
+          </div>
+        )}
+      </div>
 
-              <button
-                className={`rdp-panel__cta ${activeCourseIdSet.has(course.id) ? 'rdp-panel__cta--enrolled' : ''}`}
-                onClick={() => onOpenCourse(course.id)}
-                disabled={isPending}
-              >
-                {getCourseButtonLabel(isPending, activeCourseIdSet.has(course.id))}
-              </button>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="rdp-panel__no-course">
-          <span className="rdp-panel__no-course-icon">📭</span>
-          <p>Chủ đề này chưa có khóa học liên kết.</p>
-        </div>
-      )}
+      <div className="rdp-panel__footer">
+        <button
+          className={`rdp-panel__cta ${isEnrolled ? 'rdp-panel__cta--enrolled' : ''}`}
+          onClick={() => onEnroll(course.id)}
+          disabled={isPending}
+        >
+          {getCourseButtonLabel(isPending, isEnrolled)}
+        </button>
+      </div>
     </motion.aside>
   );
 }
@@ -159,34 +152,25 @@ function TopicDetailPanel({ topic, isPending, activeCourseIdSet, onClose, onOpen
 ───────────────────────────────────────────────────── */
 export default function RoadmapDetailPage() {
   const { roadmapId = '' } = useParams();
-  const location = useLocation();
   const navigate = useNavigate();
+
   const { data, isLoading, error } = useRoadmapDetail(roadmapId);
-  const entryTestQuery = useRoadmapEntryTest(roadmapId);
-  const myFeedbackQuery = useMyRoadmapFeedback(roadmapId);
-  const submitFeedback = useSubmitRoadmapFeedback();
   const myEnrollmentsQuery = useMyEnrollments();
   const enrollMutation = useEnroll();
-  const activeAttemptQuery = useRoadmapEntryTestActiveAttempt(roadmapId);
 
+  // Feedback hooks
+  const myFeedbackQuery = useMyRoadmapFeedback(roadmapId);
+  const submitFeedback = useSubmitRoadmapFeedback();
+
+  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null);
   const [feedbackRating, setFeedbackRating] = useState(0);
   const [feedbackContent, setFeedbackContent] = useState('');
-  const [feedbackMessage, setFeedbackMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [feedbackChip, setFeedbackChip] = useState<string>('');
   const [courseActionMessage, setCourseActionMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [entryTestOpen, setEntryTestOpen] = useState(false);
 
   const roadmap = data?.result;
-  const entryResult =
-    (location.state as { entryTestResult?: RoadmapEntryTestResultResponse } | null)?.entryTestResult ?? null;
-  const entryTest = entryTestQuery.data?.result;
-  const entryStatus = entryTest?.studentStatus;
-  const activeAttempt = activeAttemptQuery.data?.result;
   const myFeedback = myFeedbackQuery.data?.result ?? null;
-  const bestScore =
-    typeof roadmap?.studentBestScore === 'number'
-      ? roadmap.studentBestScore
-      : entryResult?.studentBestScore;
 
   const sortedTopics = (roadmap?.topics ?? [])
     .slice()
@@ -198,8 +182,6 @@ export default function RoadmapDetailPage() {
       .map((e) => e.courseId)
   );
 
-  const selectedTopic = selectedTopicId ? sortedTopics.find((t) => t.id === selectedTopicId) ?? null : null;
-
   // Sync feedback from API
   useEffect(() => {
     if (!myFeedback) return;
@@ -207,66 +189,44 @@ export default function RoadmapDetailPage() {
     setFeedbackContent(myFeedback.content ?? '');
   }, [myFeedback]);
 
-  const { resolvedEntryStatus, hasInProgressAttempt } = resolveEntryTestState({
-    entryStatus,
-    entryActiveAttemptId: entryTest?.activeAttemptId,
-    activeAttemptId: activeAttempt?.attemptId,
-  });
+  // Find currently selected course object
+  const selectedCourse = selectedCourseId
+    ? sortedTopics.flatMap((t) => t.courses ?? []).find((c) => c.id === selectedCourseId)
+    : null;
 
-  const canOpenEntryAssessment = Boolean(entryTest?.assessmentId);
-  const canStartEntryAssessment = entryTest?.canStart ?? false;
-
-  function openTopicCourse(courseId?: string | null) {
-    if (!courseId) {
-      setCourseActionMessage({ type: 'error', text: 'Chủ đề này chưa có khóa học liên kết.' });
-      return;
-    }
+  function handleEnrollOrContinue(courseId: string) {
     setCourseActionMessage(null);
-
     const isEnrolled = activeCourseIdSet.has(courseId);
+
     if (isEnrolled) {
-      // Find the enrollment ID for this course
       const enrollment = (myEnrollmentsQuery.data?.result ?? []).find(
         (e) => e.courseId === courseId && e.status === 'ACTIVE'
       );
-      
-      if (enrollment) {
-        navigate(`/student/courses/${enrollment.id}`);
-      } else {
-        setCourseActionMessage({ type: 'error', text: 'Không tìm thấy thông tin đăng ký.' });
-      }
+      if (enrollment) navigate(`/student/courses/${enrollment.id}`);
       return;
     }
 
     enrollMutation.mutate(courseId, {
       onSuccess: (response) => {
         setCourseActionMessage({ type: 'success', text: 'Đăng ký thành công! Đang mở khóa học...' });
-        // Use the enrollment ID from the response
         const enrollmentId = response.result?.id;
-        if (enrollmentId) {
-          navigate(`/student/courses/${enrollmentId}`);
-        } else {
-          // Fallback: refetch enrollments and find the new one
+        if (enrollmentId) navigate(`/student/courses/${enrollmentId}`);
+        else {
           myEnrollmentsQuery.refetch().then(() => {
             const enrollment = (myEnrollmentsQuery.data?.result ?? []).find(
               (e) => e.courseId === courseId && e.status === 'ACTIVE'
             );
-            if (enrollment) {
-              navigate(`/student/courses/${enrollment.id}`);
-            }
+            if (enrollment) navigate(`/student/courses/${enrollment.id}`);
           });
         }
       },
-      onError: (error) => {
-        const message = error instanceof Error ? error.message : 'Không thể đăng ký';
+      onError: (err) => {
+        const message = err instanceof Error ? err.message : 'Không thể đăng ký';
         if (shouldNavigateToCourseOnEnrollError(message)) {
-          // Find existing enrollment
           const enrollment = (myEnrollmentsQuery.data?.result ?? []).find(
             (e) => e.courseId === courseId && e.status === 'ACTIVE'
           );
-          if (enrollment) {
-            navigate(`/student/courses/${enrollment.id}`);
-          }
+          if (enrollment) navigate(`/student/courses/${enrollment.id}`);
           return;
         }
         setCourseActionMessage({ type: 'error', text: message });
@@ -284,17 +244,11 @@ export default function RoadmapDetailPage() {
         onSuccess: (res) => {
           setFeedbackRating(res.result.rating);
           setFeedbackContent(res.result.content ?? '');
-          setFeedbackMessage({ type: 'success', text: myFeedback ? 'Đã cập nhật đánh giá.' : 'Đánh giá đã được ghi nhận.' });
-        },
-        onError: (err) => {
-          const message = err instanceof Error ? err.message : 'Lỗi không xác định';
-          setFeedbackMessage({ type: 'error', text: getFeedbackErrorText(message) });
         },
       }
     );
   }
 
-  /* ──────────── Skeleton ──────────── */
   if (isLoading) {
     return (
       <DashboardLayout role="student" user={{ name: mockStudent.name, avatar: mockStudent.avatar, role: 'student' }} notificationCount={3}>
@@ -313,250 +267,202 @@ export default function RoadmapDetailPage() {
     );
   }
 
-  /* ──────────── Main render ──────────── */
   return (
     <DashboardLayout
       role="student"
       user={{ name: mockStudent.name, avatar: mockStudent.avatar, role: 'student' }}
       notificationCount={3}
     >
-      <div className={`rdp-layout ${selectedTopic ? 'rdp-layout--panel-open' : ''}`}>
+      <div className="rdp-page">
 
-        {/* ── Main content ── */}
-        <div className="rdp-main">
-
-          {/* ── Hero header ── */}
-          <div className="rdp-hero">
-            <div className="rdp-hero__content">
-              <span className="rdp-hero__badge">Lộ trình học tập</span>
-              <h1 className="rdp-hero__title">{roadmap.name}</h1>
-              {roadmap.description && <p className="rdp-hero__desc">{roadmap.description}</p>}
-              <div className="rdp-hero__meta">
-                <span className="rdp-hero__meta-item">📚 {roadmap.totalTopicsCount} chủ đề</span>
-                {typeof bestScore === 'number' && (
-                  <span className="rdp-hero__meta-item">🏆 Điểm test: <strong>{bestScore}</strong></span>
-                )}
-              </div>
-            </div>
-            <div className="rdp-hero__progress">
-              <div className="rdp-hero__progress-ring">
-                <svg viewBox="0 0 80 80" className="rdp-ring-svg">
-                  <circle cx="40" cy="40" r="32" className="rdp-ring__bg" />
-                  <circle
-                    cx="40" cy="40" r="32"
-                    className="rdp-ring__fill"
-                    strokeDasharray={`${(roadmap.progressPercentage / 100) * 201} 201`}
-                  />
-                </svg>
-                <span className="rdp-ring__label">{roadmap.progressPercentage}%</span>
-              </div>
-              <p className="rdp-hero__progress-text">
-                {roadmap.completedTopicsCount}/{roadmap.totalTopicsCount} chủ đề
-              </p>
-            </div>
-          </div>
-
-          {/* ── Global action message ── */}
-          {courseActionMessage && (
-            <div className={`rdp-action-msg rdp-action-msg--${courseActionMessage.type}`}>
-              {courseActionMessage.type === 'success' ? '✓ ' : '⚠ '}
-              {courseActionMessage.text}
-            </div>
-          )}
-
-          {/* ── Entry test (collapsible) ── */}
-          {entryTest && (
-            <div className="rdp-collapsible">
-              <button
-                className="rdp-collapsible__trigger"
-                onClick={() => setEntryTestOpen((o) => !o)}
-              >
-                <span>🎯 Bài kiểm tra đầu vào</span>
-                <div className="rdp-collapsible__trigger-right">
-                  {resolvedEntryStatus && (
-                    <span className={`rdp-entry-status rdp-entry-status--${resolvedEntryStatus?.toLowerCase()}`}>
-                      {getEntryAssessmentStatusLabel(resolvedEntryStatus)}
-                    </span>
-                  )}
-                  <span className="rdp-collapsible__chevron">{entryTestOpen ? '▲' : '▼'}</span>
-                </div>
-              </button>
-              {entryTestOpen && (
-                <div className="rdp-collapsible__body">
-                  <p className="rdp-entry__hint">
-                    {entryTest.title} · {entryTest.totalQuestions} câu
-                    {entryTest.timeLimitMinutes ? ` · ${entryTest.timeLimitMinutes} phút` : ''}
-                  </p>
-                  <p className="rdp-entry__hint">
-                    Kết quả bài test giúp gợi ý chủ đề phù hợp, không khoá bất kỳ chủ đề nào.
-                  </p>
-                  <button
-                    className="rdp-entry__btn"
-                    disabled={!canOpenEntryAssessment || (!hasInProgressAttempt && !canStartEntryAssessment)}
-                    onClick={() => navigate(`/roadmaps/${roadmapId}/entry-test/take`)}
-                  >
-                    {getEntryActionLabel(resolvedEntryStatus)}
-                  </button>
-                  {entryResult?.newlyUnlockedTopics && entryResult.newlyUnlockedTopics.length > 0 && (
-                    <div className="rdp-entry__unlocked">
-                      🎉 Vừa gợi ý {entryResult.newlyUnlockedTopics.length} chủ đề mới dựa trên điểm của bạn!
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ── Roadmap graph ── */}
-          <div className="rdp-graph-wrap">
-            <div className="rdp-graph-header">
-              <h2 className="rdp-graph-header__title">Bản đồ học tập</h2>
-              <p className="rdp-graph-header__sub">Nhấn vào chủ đề để xem chi tiết và đăng ký khóa học</p>
-            </div>
-
-            <div className="rdp-graph">
-              {sortedTopics.map((topic, index) => {
-                const isSelected = selectedTopicId === topic.id;
-                const hasAnyCourse = topic.courses && topic.courses.length > 0;
-                const isEnrolled = hasAnyCourse && topic.courses!.some(course => activeCourseIdSet.has(course.id));
-
-                let stateClass = 'rdp-node--default';
-                if (isSelected) stateClass = 'rdp-node--selected';
-                else if (isEnrolled) stateClass = 'rdp-node--enrolled';
-
-                return (
-                  <div key={topic.id} className="rdp-node-wrapper">
-                    {/* Connector line between nodes */}
-                    {index < sortedTopics.length - 1 && (
-                      <div className="rdp-connector">
-                        <div className={`rdp-connector__line ${isEnrolled ? 'rdp-connector__line--enrolled' : ''}`} />
-                      </div>
-                    )}
-
-                    <motion.button
-                      className={`rdp-node ${stateClass}`}
-                      onClick={() => setSelectedTopicId(isSelected ? null : topic.id)}
-                      whileHover={{ scale: 1.03 }}
-                      whileTap={{ scale: 0.97 }}
-                      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                    >
-                      {/* Order badge */}
-                      <div className={`rdp-node__badge ${isEnrolled ? 'rdp-node__badge--enrolled' : ''}`}>
-                        {isEnrolled ? '✓' : topic.sequenceOrder}
-                      </div>
-
-                      <div className="rdp-node__body">
-                        <strong className="rdp-node__title">{topic.title}</strong>
-                        <span className={`rdp-node__diff ${diffColorClass(topic.difficulty)}`}>
-                          {diffLabel(topic.difficulty)}
-                        </span>
-
-                        {hasAnyCourse ? (
-                          <span className="rdp-node__course">
-                            📘 {topic.courses!.length === 1 
-                              ? topic.courses![0].title 
-                              : `${topic.courses!.length} khóa học`}
-                            {topic.courses!.length === 1 && topic.courses![0].totalLessons != null && (
-                              <em> · {topic.courses![0].totalLessons} bài</em>
-                            )}
-                          </span>
-                        ) : (
-                          <span className="rdp-node__no-course">Chưa có khóa học</span>
-                        )}
-
-                        {isEnrolled && (
-                          <span className="rdp-node__enrolled-tag">Đã đăng ký</span>
-                        )}
-                      </div>
-
-                      {hasAnyCourse && (
-                        <div className="rdp-node__footer">
-                          <span className="rdp-node__action-hint">
-                            {isEnrolled ? 'Tiếp tục →' : 'Xem & Đăng ký →'}
-                          </span>
-                        </div>
-                      )}
-                    </motion.button>
-                  </div>
-                );
-              })}
-
-              {sortedTopics.length === 0 && (
-                <div className="rdp-graph__empty">
-                  <span>🗺</span>
-                  <p>Lộ trình này chưa có chủ đề nào.</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* ── Feedback ── */}
-          <div className="rdp-feedback">
-            <div className="rdp-feedback__header">
-              <h3 className="rdp-feedback__title">Đánh giá lộ trình</h3>
-              <p className="rdp-feedback__sub">Chia sẻ cảm nhận của bạn về lộ trình học này.</p>
-            </div>
-
-            {myFeedbackQuery.isLoading && <p className="rdp-feedback__state">Đang tải đánh giá...</p>}
-
-            {!myFeedbackQuery.isLoading && (
-              <>
-                <div className="rdp-stars" role="radiogroup">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      type="button"
-                      className={`rdp-star ${feedbackRating >= star ? 'rdp-star--active' : ''}`}
-                      onClick={() => setFeedbackRating(star)}
-                      aria-label={`${star} sao`}
-                      disabled={submitFeedback.isPending}
-                    >★</button>
-                  ))}
-                </div>
-
-                <label className="rdp-feedback__field">
-                  <textarea
-                    rows={4}
-                    value={feedbackContent}
-                    onChange={(e) => { setFeedbackContent(e.target.value); setFeedbackMessage(null); }}
-                    maxLength={2000}
-                    placeholder="Chia sẻ cảm nhận, điểm mạnh, hoặc điểm cần cải thiện..."
-                    disabled={submitFeedback.isPending}
-                  />
-                  <small className="rdp-feedback__counter">{feedbackContent.length}/2000</small>
-                </label>
-
-                {feedbackMessage && (
-                  <p className={`rdp-feedback__message rdp-feedback__message--${feedbackMessage.type}`}>
-                    {feedbackMessage.text}
-                  </p>
-                )}
-
-                <button
-                  className="rdp-feedback__submit"
-                  onClick={submitRoadmapFeedback}
-                  disabled={submitFeedback.isPending || !feedbackIsValid}
-                >
-                  {getFeedbackSubmitLabel(submitFeedback.isPending, Boolean(myFeedback))}
-                </button>
-              </>
+        {/* ── Minimal sticky header ── */}
+        <div className="rdp-header">
+          <button type="button" className="rdp-header__back" onClick={() => navigate(-1)}>
+            ← Quay lại
+          </button>
+          <div className="rdp-header__info">
+            <h1 className="rdp-header__title">{roadmap.name}</h1>
+            {roadmap.description && (
+              <p className="rdp-header__sub">{roadmap.description}</p>
             )}
+          </div>
+          <div className="rdp-header__progress">
+            <span className="rdp-header__pct">{Math.round(roadmap.progressPercentage)}%</span>
+            <div className="rdp-header__bar-track">
+              <div className="rdp-header__bar-fill" style={{ width: `${roadmap.progressPercentage}%` }} />
+            </div>
+            <span className="rdp-header__count">
+              {roadmap.completedTopicsCount}/{roadmap.totalTopicsCount}
+            </span>
           </div>
         </div>
 
-        {/* ── Side panel ── */}
-        <AnimatePresence>
-          {selectedTopic && (
-            <TopicDetailPanel
-              topic={selectedTopic}
-              isPending={enrollMutation.isPending}
-              activeCourseIdSet={activeCourseIdSet}
-              onClose={() => setSelectedTopicId(null)}
-              onOpenCourse={openTopicCourse}
-            />
+        {courseActionMessage && (
+          <div className={`rdp-action-msg rdp-action-msg--${courseActionMessage.type}`}>
+            {courseActionMessage.type === 'success' ? '✓ ' : '⚠ '}
+            {courseActionMessage.text}
+          </div>
+        )}
+
+        {/* ── Map + Panel ── */}
+        <div className={`rdp-layout ${selectedCourse ? 'rdp-layout--panel' : ''}`}>
+          <div className="rdp-map">
+
+            <div className="rdp-map-title">
+              <h2>Lộ trình học tập</h2>
+              <p>Nhấn vào từng chủ đề để xem khóa học</p>
+            </div>
+
+            {sortedTopics.map((topic, topicIdx) => (
+              <Fragment key={topic.id}>
+                {topicIdx > 0 && <div className="rdp-vline" aria-hidden="true" />}
+
+                <div className="rdp-topic-group">
+
+                  {/* Topic node */}
+                  <button
+                    type="button"
+                    className={`rdp-topic-node ${selectedTopicId === topic.id ? 'rdp-topic-node--active' : ''}`}
+                    onClick={() => setSelectedTopicId(selectedTopicId === topic.id ? null : topic.id)}
+                  >
+                    <span className={`rdp-status-dot rdp-status-dot--${getTopicStatus(topic, activeCourseIdSet)}`} />
+                    <span className="rdp-topic-node__num">{topicIdx + 1}.</span>
+                    <span className="rdp-topic-node__title">{topic.title}</span>
+                    <span className={`rdp-diff-badge rdp-diff-badge--${topic.difficulty.toLowerCase()}`}>
+                      {diffLabel(topic.difficulty)}
+                    </span>
+                    <span className="rdp-topic-node__meta">{(topic.courses ?? []).length} khóa học</span>
+                    <span className="rdp-topic-node__chevron" aria-hidden="true">▾</span>
+                  </button>
+
+                  {/* Courses — expand when topic is active */}
+                  {selectedTopicId === topic.id && (
+                    <div className="rdp-courses-wrap">
+                      <div className="rdp-courses-vline" aria-hidden="true" />
+                      <div className="rdp-courses-row">
+                        {(topic.courses ?? []).length > 0 ? (
+                          (topic.courses ?? []).map((course) => {
+                            const isEnrolled = activeCourseIdSet.has(course.id);
+                            const isSelected = selectedCourseId === course.id;
+                            const p = course.progress ?? 0;
+                            let dotClass: 'done' | 'progress' | 'none';
+                            if (p >= 100) { dotClass = 'done'; }
+                            else if (p > 0) { dotClass = 'progress'; }
+                            else { dotClass = 'none'; }
+                            let tag: { cls: string; label: string };
+                            if (p >= 100) { tag = { cls: 'done', label: '✓ Hoàn thành' }; }
+                            else if (isEnrolled) { tag = { cls: 'enrolled', label: '● Đang học' }; }
+                            else { tag = { cls: 'new', label: '○ Chưa bắt đầu' }; }
+
+                            return (
+                              <button
+                                key={course.id}
+                                type="button"
+                                className={`rdp-course-node ${isSelected ? 'rdp-course-node--selected' : ''}`}
+                                onClick={() => setSelectedCourseId(course.id)}
+                              >
+                                <span className={`rdp-status-dot rdp-status-dot--${dotClass}`} />
+                                <div className="rdp-course-node__body">
+                                  <span className="rdp-course-node__title">{course.title}</span>
+                                  <span className="rdp-course-node__meta">{course.totalLessons ?? 0} bài học</span>
+                                  <span className={`rdp-course-node__tag rdp-course-node__tag--${tag.cls}`}>
+                                    {tag.label}
+                                  </span>
+                                </div>
+                              </button>
+                            );
+                          })
+                        ) : (
+                          <div className="rdp-course-node" style={{ cursor: 'default' }}>
+                            <span className="rdp-status-dot rdp-status-dot--none" />
+                            <div className="rdp-course-node__body">
+                              <span className="rdp-course-node__title" style={{ color: '#9ca3af' }}>Chưa có khóa học</span>
+                              <span className="rdp-course-node__meta">Đang cập nhật...</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                </div>
+              </Fragment>
+            ))}
+
+          </div>{/* /rdp-map */}
+
+          {/* ── Side Panel ── */}
+          <AnimatePresence>
+            {selectedCourse && (
+              <CoursePreviewPanel
+                course={selectedCourse}
+                isPending={enrollMutation.isPending}
+                isEnrolled={activeCourseIdSet.has(selectedCourse.id)}
+                onClose={() => setSelectedCourseId(null)}
+                onEnroll={handleEnrollOrContinue}
+              />
+            )}
+          </AnimatePresence>
+
+        </div>{/* /rdp-layout */}
+
+        {/* ── Feedback ── */}
+        <div className="rdp-feedback">
+          <div className="rdp-feedback__header">
+            <div className="rdp-feedback__icon">⭐</div>
+            <div>
+              <h3 className="rdp-feedback__title">Đánh giá lộ trình</h3>
+              <p className="rdp-feedback__sub">Chia sẻ cảm nhận của bạn về lộ trình học này.</p>
+            </div>
+          </div>
+          {!myFeedbackQuery.isLoading && (
+            <>
+              <div className="rdp-stars">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    className={`rdp-star ${feedbackRating >= star ? 'rdp-star--active' : ''}`}
+                    onClick={() => setFeedbackRating(star)}
+                    aria-label={`${star} sao`}
+                  >★</button>
+                ))}
+              </div>
+              <div className="rdp-feedback__chips">
+                {['😐 Bình thường', '😊 Hay', '🎯 Đúng trọng tâm', '💪 Thách thức', '🏆 Xuất sắc'].map((chip) => (
+                  <button
+                    key={chip}
+                    type="button"
+                    className={`rdp-feedback__chip ${feedbackChip === chip ? 'rdp-feedback__chip--active' : ''}`}
+                    onClick={() => setFeedbackChip(feedbackChip === chip ? '' : chip)}
+                  >
+                    {chip}
+                  </button>
+                ))}
+              </div>
+              <div className="rdp-feedback__field">
+                <textarea
+                  rows={4}
+                  value={feedbackContent}
+                  onChange={(e) => setFeedbackContent(e.target.value)}
+                  placeholder="Chia sẻ cảm nhận, điểm mạnh của lộ trình..."
+                />
+                <span className="rdp-feedback__char-count">{feedbackContent.length} / 2000</span>
+              </div>
+              <button
+                type="button"
+                className="rdp-feedback__submit"
+                onClick={submitRoadmapFeedback}
+                disabled={submitFeedback.isPending || !feedbackIsValid}
+              >
+                {submitFeedback.isPending ? 'Đang lưu...' : '✓ Gửi đánh giá'}
+              </button>
+            </>
           )}
-        </AnimatePresence>
-      </div>
+        </div>
+
+      </div>{/* /rdp-page */}
     </DashboardLayout>
   );
 }
+

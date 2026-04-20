@@ -30,6 +30,8 @@ export interface RoadmapTopicCourse {
   description?: string;
   totalLessons?: number;
   isEnrolled?: boolean;
+  completedLessons?: number;
+  progress?: number;
 }
 
 /** A single topic in the roadmap — always clickable, no locking */
@@ -43,6 +45,9 @@ export interface RoadmapTopic {
   /** Multiple linked courses */
   courses?: RoadmapTopicCourse[];
   startedAt?: string | null;
+  totalLessons?: number;
+  completedLessons?: number;
+  progress?: number;
 }
 
 export interface RoadmapStats {
@@ -63,6 +68,7 @@ export interface RoadmapDetail extends RoadmapCatalogItem {
   completedAt?: string | null;
   topics: RoadmapTopic[];
   stats?: RoadmapStats;
+  entryTest?: RoadmapEntryTestInfo | null;
 }
 
 export interface StudentRoadmapProgress {
@@ -100,6 +106,13 @@ export interface UpdateRoadmapTopicRequest {
 
 export interface CreateRoadmapEntryTestRequest {
   assessmentId: string;
+}
+
+export interface RoadmapEntryTestInfo {
+  assessmentId: string;
+  name: string;
+  description?: string;
+  totalQuestions: number;
 }
 
 export interface StudentRoadmapEntryTestInfo {

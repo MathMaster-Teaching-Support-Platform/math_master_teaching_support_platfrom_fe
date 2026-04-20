@@ -25,6 +25,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LatexRenderer from '../../components/common/LatexRenderer';
 import MathText from '../../components/common/MathText';
+import Pagination from '../../components/common/Pagination';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import {
   useApproveCanonicalQuestion,
@@ -192,6 +193,8 @@ export function TemplateDashboard() {
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<'ALL' | TemplateStatus>('ALL');
+  const [page, setPage] = useState(0);
+  const [size, setSize] = useState(20);
   const [mode, setMode] = useState<'create' | 'edit'>('create');
   const [formOpen, setFormOpen] = useState(false);
   const [bulkImportOpen, setBulkImportOpen] = useState(false);
@@ -222,8 +225,8 @@ export function TemplateDashboard() {
   const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
 
   const { data, isLoading, isError, error, refetch } = useGetMyQuestionTemplates(
-    0,
-    200,
+    page,
+    size,
     'createdAt',
     'DESC'
   );
@@ -258,15 +261,17 @@ export function TemplateDashboard() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   const templates = useMemo(() => data?.result?.content ?? [], [data]);
+  const totalPages = data?.result?.totalPages ?? 0;
+  const totalElements = data?.result?.totalElements ?? 0;
 
   const stats = useMemo(
     () => ({
-      total: templates.length,
+      total: totalElements,
       published: templates.filter((t) => t.status === TemplateStatus.PUBLISHED).length,
       draft: templates.filter((t) => t.status === TemplateStatus.DRAFT).length,
       archived: templates.filter((t) => t.status === TemplateStatus.ARCHIVED).length,
     }),
-    [templates]
+    [templates, totalElements]
   );
 
   const filtered = useMemo(() => {
@@ -887,14 +892,14 @@ export function TemplateDashboard() {
               <input
                 placeholder="Tìm mẫu câu hỏi..."
                 value={search}
-                onChange={(event) => setSearch(event.target.value)}
+                onChange={(event) => { setSearch(event.target.value); setPage(0); }}
               />
               {search && (
                 <button
                   type="button"
                   className="search-box__clear"
                   aria-label="Xóa nội dung tìm kiếm"
-                  onClick={() => setSearch('')}
+                  onClick={() => { setSearch(''); setPage(0); }}
                 >
                   <X size={14} />
                 </button>
@@ -906,7 +911,7 @@ export function TemplateDashboard() {
                 <button
                   key={item}
                   className={`pill-btn${status === item ? ' active' : ''}`}
-                  onClick={() => setStatus(item)}
+                  onClick={() => { setStatus(item); setPage(0); }}
                 >
                   {statusLabel[item]}
                 </button>
@@ -1136,6 +1141,15 @@ export function TemplateDashboard() {
               ))}
             </div>
           )}
+
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            totalElements={totalElements}
+            pageSize={size}
+            onChange={(p) => setPage(p)}
+            onPageSizeChange={(s) => { setSize(s); setPage(0); }}
+          />
 
           <TemplateFormModal
             isOpen={formOpen}

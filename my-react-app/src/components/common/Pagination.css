@@ -1,0 +1,108 @@
+/* ── Pagination component ─────────────────────────────────── */
+.pg-root {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0.85rem 0.25rem 0.25rem;
+}
+
+/* "Hiển thị X–Y trên Z kết quả" */
+.pg-info {
+  font-size: 0.82rem;
+  color: var(--mod-slate-500, #60748f);
+  white-space: nowrap;
+  flex: 1 1 auto;
+}
+
+.pg-info strong {
+  color: var(--mod-ink, #142235);
+  font-weight: 600;
+}
+
+/* Right cluster: buttons + size selector */
+.pg-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+/* Prev / Next / number buttons */
+.pg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 0.45rem;
+  border-radius: 8px;
+  border: 1px solid var(--mod-slate-200, #d6e0ee);
+  background: #fff;
+  color: var(--mod-ink, #142235);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+  line-height: 1;
+  user-select: none;
+}
+
+.pg-btn:hover:not(:disabled) {
+  background: var(--mod-slate-50, #f3f7fd);
+  border-color: var(--mod-primary, #1f5eff);
+  color: var(--mod-primary, #1f5eff);
+}
+
+.pg-btn.active {
+  background: var(--mod-primary, #1f5eff);
+  border-color: var(--mod-primary, #1f5eff);
+  color: #fff;
+  font-weight: 700;
+}
+
+.pg-btn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+/* Ellipsis span */
+.pg-ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  height: 2rem;
+  font-size: 0.82rem;
+  color: var(--mod-slate-500, #60748f);
+  user-select: none;
+}
+
+/* Page-size selector */
+.pg-size-label {
+  font-size: 0.8rem;
+  color: var(--mod-slate-500, #60748f);
+  white-space: nowrap;
+  margin-left: 0.35rem;
+}
+
+.pg-size-select {
+  height: 2rem;
+  padding: 0 0.5rem;
+  border: 1px solid var(--mod-slate-200, #d6e0ee);
+  border-radius: 8px;
+  background: #fff;
+  font-size: 0.82rem;
+  color: var(--mod-ink, #142235);
+  cursor: pointer;
+  appearance: auto;
+  transition: border-color 0.15s;
+}
+
+.pg-size-select:focus {
+  outline: none;
+  border-color: var(--mod-primary, #1f5eff);
+}
