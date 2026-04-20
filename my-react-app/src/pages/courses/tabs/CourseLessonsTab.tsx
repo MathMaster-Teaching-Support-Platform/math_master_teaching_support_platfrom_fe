@@ -1,4 +1,3 @@
-import { useState, useEffect, useMemo } from 'react';
 import {
   CheckCircle2,
   Clock,
@@ -11,21 +10,22 @@ import {
   Trash2,
   Video,
 } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   useAddMaterial,
   useCourseLessons,
-  useDeleteCourseLesson,
-  useCustomCourseSections,
   useCreateSection,
+  useCustomCourseSections,
+  useDeleteCourseLesson,
   useDeleteSection,
   useRemoveMaterial,
 } from '../../../hooks/useCourses';
-import { VideoUploadService } from '../../../services/api/videoUpload.service';
-import { LessonSlideService } from '../../../services/api/lesson-slide.service';
 import { CourseService } from '../../../services/api/course.service';
+import { LessonSlideService } from '../../../services/api/lesson-slide.service';
+import { VideoUploadService } from '../../../services/api/videoUpload.service';
+import '../../../styles/module-refactor.css';
 import type { CourseLessonResponse, CourseResponse } from '../../../types';
 import type { ChapterBySubject, LessonByChapter } from '../../../types/lessonSlide.types';
-import '../../../styles/module-refactor.css';
 
 interface CourseLessonsTabProps {
   courseId: string;
@@ -129,7 +129,7 @@ function UploadVideoModal({
     if (!f) return;
     setFile(f);
     if (!videoTitle) setVideoTitle(f.name.replace(/\.[^.]+$/, ''));
-    
+
     // Auto-extract duration
     const dur = await getVideoDuration(f);
     if (dur > 0) setDurationSeconds(dur);
@@ -138,24 +138,28 @@ function UploadVideoModal({
   const handleUpload = async () => {
     if (provider === 'MINISTRY' && (!file || !lessonId)) return;
     if (provider === 'CUSTOM' && (!file || !sectionId || !customTitle)) return;
-    
+
     setUploading(true);
     setError('');
     setProgress(0);
     try {
-      const extraData = provider === 'MINISTRY' 
-        ? { lessonId, videoTitle, orderIndex, isFreePreview, durationSeconds }
-        : { sectionId, customTitle, customDescription, videoTitle, orderIndex, isFreePreview, durationSeconds };
-        
-      await VideoUploadService.uploadVideo(
-        courseId,
-        file!,
-        extraData,
-        {
-          onProgress: (pct) => setProgress(pct),
-          onChunkComplete: (done, total) => setChunkInfo(`Đã upload ${done}/${total} phần`),
-        }
-      );
+      const extraData =
+        provider === 'MINISTRY'
+          ? { lessonId, videoTitle, orderIndex, isFreePreview, durationSeconds }
+          : {
+              sectionId,
+              customTitle,
+              customDescription,
+              videoTitle,
+              orderIndex,
+              isFreePreview,
+              durationSeconds,
+            };
+
+      await VideoUploadService.uploadVideo(courseId, file!, extraData, {
+        onProgress: (pct) => setProgress(pct),
+        onChunkComplete: (done, total) => setChunkInfo(`Đã upload ${done}/${total} phần`),
+      });
       onSuccess();
       onClose();
     } catch (err) {
@@ -169,7 +173,11 @@ function UploadVideoModal({
 
   return (
     <div className="modal-layer" onClick={onClose}>
-      <div className="modal-card" style={{ width: 'min(640px, 100%)' }} onClick={(e) => e.stopPropagation()}>
+      <div
+        className="modal-card"
+        style={{ width: 'min(640px, 100%)' }}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="modal-header">
           <div>
             <h3>📹 Thêm bài học video</h3>
@@ -265,7 +273,9 @@ function UploadVideoModal({
               </label>
 
               <label>
-                <p className="muted" style={{ marginBottom: 6 }}>Mô tả ngắn (tùy chọn)</p>
+                <p className="muted" style={{ marginBottom: 6 }}>
+                  Mô tả ngắn (tùy chọn)
+                </p>
                 <textarea
                   className="input"
                   rows={2}
@@ -308,7 +318,10 @@ function UploadVideoModal({
                     ✅ {file.name}
                   </div>
                   <div className="muted" style={{ fontSize: '0.82rem' }}>
-                    {fileSizeMB} MB {durationSeconds ? `• ${Math.floor(durationSeconds / 60)} phút ${durationSeconds % 60} giây` : ''}
+                    {fileSizeMB} MB{' '}
+                    {durationSeconds
+                      ? `• ${Math.floor(durationSeconds / 60)} phút ${durationSeconds % 60} giây`
+                      : ''}
                   </div>
                 </div>
               ) : (
@@ -322,7 +335,9 @@ function UploadVideoModal({
           </label>
 
           <label>
-            <p className="muted" style={{ marginBottom: 6 }}>Tiêu đề video</p>
+            <p className="muted" style={{ marginBottom: 6 }}>
+              Tiêu đề video
+            </p>
             <input
               className="input"
               value={videoTitle}
@@ -423,7 +438,6 @@ function LessonRow({
     }
   }, [lesson.materials]);
 
-
   const fmtDuration = (secs?: number | null) => {
     if (!secs) return null;
     const m = Math.floor(secs / 60);
@@ -472,12 +486,12 @@ function LessonRow({
           )}
         </td>
         <td>
-          <div 
-            className={`row ${showMaterials ? 'active' : ''}`} 
-            style={{ 
-              gap: 6, 
-              cursor: 'pointer', 
-              color: materialsList.length > 0 ? '#2563eb' : '#64748b' 
+          <div
+            className={`row ${showMaterials ? 'active' : ''}`}
+            style={{
+              gap: 6,
+              cursor: 'pointer',
+              color: materialsList.length > 0 ? '#2563eb' : '#64748b',
             }}
             onClick={() => setShowMaterials(!showMaterials)}
           >
@@ -489,7 +503,11 @@ function LessonRow({
         </td>
         <td>
           <div className="row" style={{ gap: 6 }}>
-            <button className="btn secondary" style={{ padding: '0.35rem 0.6rem' }} title="Chỉnh sửa">
+            <button
+              className="btn secondary"
+              style={{ padding: '0.35rem 0.6rem' }}
+              title="Chỉnh sửa"
+            >
               <Pencil size={13} />
             </button>
             <button
@@ -507,9 +525,21 @@ function LessonRow({
         <tr style={{ background: '#f8fafc' }}>
           <td colSpan={7} style={{ padding: '1rem 2rem' }}>
             <div style={{ borderLeft: '4px solid #e2e8f0', paddingLeft: '1.5rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <h4 style={{ margin: 0, fontSize: '0.9rem', color: '#475569' }}>Tài liệu đính kèm</h4>
-                <label className="btn secondary" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', cursor: 'pointer' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '1rem',
+                }}
+              >
+                <h4 style={{ margin: 0, fontSize: '0.9rem', color: '#475569' }}>
+                  Tài liệu đính kèm
+                </h4>
+                <label
+                  className="btn secondary"
+                  style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', cursor: 'pointer' }}
+                >
                   <Plus size={12} style={{ marginRight: 4 }} />
                   Tải lên tài liệu
                   <input
@@ -528,20 +558,23 @@ function LessonRow({
               {materialsList.length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   {materialsList.map((m: any) => (
-                    <div key={m.id} style={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'center', 
-                      background: 'white', 
-                      padding: '0.5rem 0.75rem', 
-                      borderRadius: '6px',
-                      border: '1px solid #e2e8f0'
-                    }}>
+                    <div
+                      key={m.id}
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        background: 'white',
+                        padding: '0.5rem 0.75rem',
+                        borderRadius: '6px',
+                        border: '1px solid #e2e8f0',
+                      }}
+                    >
                       <div className="row" style={{ gap: 8 }}>
                         <FileText size={14} style={{ color: '#64748b' }} />
-                        <a 
-                          href={m.url} 
-                          target="_blank" 
+                        <a
+                          href={m.url}
+                          target="_blank"
                           rel="noopener noreferrer"
                           style={{ fontSize: '0.85rem', color: '#1e293b', textDecoration: 'none' }}
                           onMouseOver={(e) => (e.currentTarget.style.textDecoration = 'underline')}
@@ -553,12 +586,16 @@ function LessonRow({
                           ({(m.size / 1024).toFixed(1)} KB)
                         </span>
                       </div>
-                      <button 
-                        className="btn-icon" 
+                      <button
+                        className="btn-icon"
                         style={{ color: '#ef4444' }}
                         onClick={() => {
                           if (confirm(`Xóa tài liệu ${m.name}?`)) {
-                            removeMaterialMutation.mutate({ courseId, lessonId: lesson.id, materialId: m.id });
+                            removeMaterialMutation.mutate({
+                              courseId,
+                              lessonId: lesson.id,
+                              materialId: m.id,
+                            });
                           }
                         }}
                       >
@@ -568,7 +605,9 @@ function LessonRow({
                   ))}
                 </div>
               ) : (
-                <p className="muted" style={{ fontSize: '0.85rem', fontStyle: 'italic' }}>Chưa có tài liệu nào.</p>
+                <p className="muted" style={{ fontSize: '0.85rem', fontStyle: 'italic' }}>
+                  Chưa có tài liệu nào.
+                </p>
               )}
             </div>
           </td>
@@ -584,7 +623,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
   const { data: lessonsData, isLoading, refetch } = useCourseLessons(courseId);
   const { data: sectionsData } = useCustomCourseSections(courseId);
   const deleteMutation = useDeleteCourseLesson();
-  
+
   const createSectionMutation = useCreateSection();
   const deleteSectionMutation = useDeleteSection();
 
@@ -689,79 +728,115 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
 
       {/* Custom Sections and Lessons */}
       {!isLoading && course.provider === 'CUSTOM' && (
-        <div className="sections-container" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          {sections.sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0)).map(section => {
-            const sectionLessons = lessons.filter(l => l.sectionId === section.id).sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
-            return (
-              <div key={section.id} className="data-card section-card" style={{ padding: '1.25rem', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                  <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#0f172a' }}>
-                    Phần {section.orderIndex}: {section.title}
-                  </h3>
-                  <div className="row" style={{ gap: '0.5rem' }}>
-                    <button className="btn secondary" style={{ padding: '0.35rem 0.6rem' }} title="Chỉnh sửa phần" onClick={() => {
-                      const newTitle = window.prompt('Đổi tên phần:', section.title);
-                      if (newTitle) {
-                        alert('Chức năng sửa tên đang được cập nhật...');
-                      }
-                    }}>
-                      <Pencil size={13} />
-                    </button>
-                    <button className="btn danger" style={{ padding: '0.35rem 0.6rem' }} title="Xóa phần" onClick={() => {
-                      if (confirm('Bạn có chắc muốn xóa phần này? (Các bài học bên trong sẽ không bị xóa)')) {
-                        deleteSectionMutation.mutate({ courseId, sectionId: section.id });
-                      }
-                    }}>
-                      <Trash2 size={13} />
-                    </button>
+        <div
+          className="sections-container"
+          style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}
+        >
+          {sections
+            .sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
+            .map((section) => {
+              const sectionLessons = lessons
+                .filter((l) => l.sectionId === section.id)
+                .sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
+              return (
+                <div
+                  key={section.id}
+                  className="data-card section-card"
+                  style={{ padding: '1.25rem', border: '1px solid #e2e8f0', borderRadius: '12px' }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '1rem',
+                    }}
+                  >
+                    <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#0f172a' }}>
+                      Phần {section.orderIndex}: {section.title}
+                    </h3>
+                    <div className="row" style={{ gap: '0.5rem' }}>
+                      <button
+                        className="btn secondary"
+                        style={{ padding: '0.35rem 0.6rem' }}
+                        title="Chỉnh sửa phần"
+                        onClick={() => {
+                          const newTitle = window.prompt('Đổi tên phần:', section.title);
+                          if (newTitle) {
+                            alert('Chức năng sửa tên đang được cập nhật...');
+                          }
+                        }}
+                      >
+                        <Pencil size={13} />
+                      </button>
+                      <button
+                        className="btn danger"
+                        style={{ padding: '0.35rem 0.6rem' }}
+                        title="Xóa phần"
+                        onClick={() => {
+                          if (
+                            confirm(
+                              'Bạn có chắc muốn xóa phần này? (Các bài học bên trong sẽ không bị xóa)'
+                            )
+                          ) {
+                            deleteSectionMutation.mutate({ courseId, sectionId: section.id });
+                          }
+                        }}
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
                   </div>
-                </div>
 
-                {sectionLessons.length > 0 ? (
-                  <div className="table-wrap">
-                    <table className="table">
-                      <thead>
-                        <tr>
-                          <th>#</th>
-                          <th>Bài học</th>
-                          <th>Tiêu đề video</th>
-                          <th>Thời lượng</th>
-                          <th>Xem thử</th>
-                          <th>Tài liệu</th>
-                          <th>Thao tác</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {sectionLessons.map(lesson => (
-                          <LessonRow
-                            key={lesson.id}
-                            courseId={courseId}
-                            lesson={lesson}
-                            onDelete={() => {
-                              if (confirm('Xóa bài học này?')) {
-                                deleteMutation.mutate(
-                                  { courseId, lessonId: lesson.id },
-                                  { onSuccess: () => void refetch() }
-                                );
-                              }
-                            }}
-                            deletePending={deleteMutation.isPending}
-                          />
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="empty" style={{ padding: '1.5rem', background: '#f8fafc' }}>
-                    <p style={{ margin: 0, color: '#64748b' }}>Chưa có bài học nào trong phần này.</p>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                  {sectionLessons.length > 0 ? (
+                    <div className="table-wrap">
+                      <table className="table">
+                        <thead>
+                          <tr>
+                            <th>#</th>
+                            <th>Bài học</th>
+                            <th>Tiêu đề video</th>
+                            <th>Thời lượng</th>
+                            <th>Xem thử</th>
+                            <th>Tài liệu</th>
+                            <th>Thao tác</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {sectionLessons.map((lesson) => (
+                            <LessonRow
+                              key={lesson.id}
+                              courseId={courseId}
+                              lesson={lesson}
+                              onDelete={() => {
+                                if (confirm('Xóa bài học này?')) {
+                                  deleteMutation.mutate(
+                                    { courseId, lessonId: lesson.id },
+                                    { onSuccess: () => void refetch() }
+                                  );
+                                }
+                              }}
+                              deletePending={deleteMutation.isPending}
+                            />
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="empty" style={{ padding: '1.5rem', background: '#f8fafc' }}>
+                      <p style={{ margin: 0, color: '#64748b' }}>
+                        Chưa có bài học nào trong phần này.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           {sections.length === 0 && (
             <div className="empty" style={{ padding: '2rem' }}>
-              <p style={{ margin: 0, color: '#64748b' }}>Khóa học này chưa có phần nào. Hãy thêm phần trước khi upload video.</p>
+              <p style={{ margin: 0, color: '#64748b' }}>
+                Khóa học này chưa có phần nào. Hãy thêm phần trước khi upload video.
+              </p>
             </div>
           )}
         </div>
