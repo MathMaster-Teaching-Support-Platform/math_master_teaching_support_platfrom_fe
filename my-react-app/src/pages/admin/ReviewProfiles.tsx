@@ -58,6 +58,12 @@ function getSubmitLabel(submitting: boolean, action: 'APPROVED' | 'REJECTED' | n
   return 'Xác nhận từ chối';
 }
 
+function toFriendlyVerificationText(text: string) {
+  return text
+    .replace(/\bOCR\b/gi, 'hệ thống')
+    .replace(/xác minh hệ thống/gi, 'xác minh tự động');
+}
+
 // ── StatusBadge ───────────────────────────────────────────────────────────────
 const StatusBadge: React.FC<{ status: ProfileStatus }> = ({ status }) => {
   const map: Record<ProfileStatus, { label: string; cls: string }> = {
@@ -363,11 +369,12 @@ const ReviewProfiles: React.FC = () => {
 
       setOcrResult(result);
       setOcrProgress(100);
-      showToast('Xác minh OCR hoàn tất!', 'success');
+      showToast('Xác minh hồ sơ tự động hoàn tất!', 'success');
     } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : 'Xác minh OCR thất bại';
-      setOcrError(errorMsg);
-      showToast(errorMsg, 'error');
+      const errorMsg = err instanceof Error ? err.message : 'Xác minh hồ sơ tự động thất bại';
+      const friendlyError = toFriendlyVerificationText(errorMsg);
+      setOcrError(friendlyError);
+      showToast(friendlyError, 'error');
     } finally {
       setOcrVerifying(false);
     }
@@ -647,7 +654,7 @@ const ReviewProfiles: React.FC = () => {
                   {selectedProfile.status === 'PENDING' && (
                     <section className="rpd-section">
                       <h3 className="rpd-section-title">
-                        <Scan size={12} /> Xác minh OCR
+                        <Scan size={12} /> Xác minh hồ sơ tự động
                       </h3>
                       
                       <button
@@ -656,7 +663,7 @@ const ReviewProfiles: React.FC = () => {
                         disabled={ocrVerifying}
                       >
                         <Scan size={14} />
-                        {ocrVerifying ? `Đang xác minh... ${ocrProgress}%` : 'Xác minh với OCR'}
+                        {ocrVerifying ? `Đang xác minh... ${ocrProgress}%` : 'Chạy xác minh tự động'}
                       </button>
 
                       {ocrVerifying && (
@@ -687,7 +694,7 @@ const ReviewProfiles: React.FC = () => {
                             </span>
                           </div>
                           
-                          <p className="rpd-ocr-summary">{ocrResult.summary}</p>
+                          <p className="rpd-ocr-summary">{toFriendlyVerificationText(ocrResult.summary)}</p>
                           
                           <div className="rpd-ocr-fields">
                             <h4>🔴 3 Trường bắt buộc phải có:</h4>
@@ -709,7 +716,7 @@ const ReviewProfiles: React.FC = () => {
                                     <span>{field.profileValue || 'N/A'}</span>
                                   </div>
                                   <div>
-                                    <span className="rpd-ocr-field-label">OCR đọc được:</span>
+                                    <span className="rpd-ocr-field-label">Hệ thống đọc được:</span>
                                     <span className={field.ocrValue ? '' : 'rpd-ocr-missing'}>
                                       {field.ocrValue || '⚠️ Không đọc được'}
                                     </span>
