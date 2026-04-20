@@ -16,11 +16,11 @@ const StudentOnboarding: React.FC = () => {
     // Pre-fill from token if available
     const token = AuthService.getToken();
     if (token) {
-        const decoded = AuthService.decodeToken(token);
-        if (decoded) {
-            // We might need an endpoint to get full user details here if token doesn't have name
-            // For now, let's assume we might have it or just let user fill.
-        }
+      const decoded = AuthService.decodeToken(token);
+      if (decoded) {
+        // We might need an endpoint to get full user details here if token doesn't have name
+        // For now, let's assume we might have it or just let user fill.
+      }
     }
   }, []);
 
@@ -46,7 +46,7 @@ const StudentOnboarding: React.FC = () => {
       if (response.code === 1000) {
         // Save new token with STUDENT role
         AuthService.saveToken(response.result.token, response.result.expiryTime);
-        navigate('/student/dashboard');
+        navigate('/student/courses');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra. Vui lòng thử lại.');

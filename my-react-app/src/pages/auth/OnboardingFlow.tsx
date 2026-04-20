@@ -634,10 +634,7 @@ const OnboardingFlow: React.FC = () => {
         Tài khoản học sinh của bạn đã sẵn sàng. Hãy bắt đầu hành trình chinh phục toán học cùng{' '}
         <strong>MathMaster</strong>!
       </p>
-      <button
-        className="ob-btn ob-btn-teal ob-btn-lg"
-        onClick={() => navigate('/student/dashboard')}
-      >
+      <button className="ob-btn ob-btn-teal ob-btn-lg" onClick={() => navigate('/student/courses')}>
         Bắt đầu học ngay <ArrowRight size={18} />
       </button>
     </div>

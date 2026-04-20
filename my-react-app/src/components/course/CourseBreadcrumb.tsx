@@ -78,7 +78,7 @@ function generateBreadcrumbs(pathname: string, courseTitle?: string): Breadcrumb
 
   // Student routes
   if (segments[0] === 'student') {
-    breadcrumbs.push({ label: 'Học sinh', path: '/student/dashboard' });
+    breadcrumbs.push({ label: 'Học sinh', path: '/student/courses' });
 
     if (segments[1] === 'courses') {
       breadcrumbs.push({ label: 'Giáo trình của tôi', path: '/student/courses' });

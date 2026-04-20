@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
+import html2canvas from 'html2canvas';
 import MindElixir from 'mind-elixir';
 import 'mind-elixir/style.css';
 import { MindmapService } from '../../services/api/mindmap.service';
@@ -24,6 +25,12 @@ interface MindElixirData {
 interface MindElixirInstance {
   init: (data: MindElixirData) => void;
   destroy?: () => void;
+}
+
+interface ExportRequestMessage {
+  type?: string;
+  requestId?: string;
+  mindmapId?: string;
 }
 
 const ICON_SYMBOLS: Record<string, string> = {
@@ -82,6 +89,45 @@ export default function PublicMindmapViewer() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mindInstanceRef = useRef<MindElixirInstance | null>(null);
 
+  const exportCurrentViewAsPngDataUrl = async (): Promise<string> => {
+    const target = containerRef.current;
+    if (!target) {
+      throw new Error('Không tìm thấy canvas mindmap để xuất ảnh.');
+    }
+
+    const width = Math.max(target.scrollWidth, target.clientWidth, 1);
+    const height = Math.max(target.scrollHeight, target.clientHeight, 1);
+    const previousWidth = target.style.width;
+    const previousHeight = target.style.height;
+    const previousOverflow = target.style.overflow;
+
+    try {
+      // Ensure html2canvas captures the full scrollable content, not only viewport.
+      target.style.width = `${width}px`;
+      target.style.height = `${height}px`;
+      target.style.overflow = 'visible';
+
+      const canvas = await html2canvas(target, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        width,
+        height,
+        windowWidth: width,
+        windowHeight: height,
+        scrollX: 0,
+        scrollY: 0,
+      });
+
+      return canvas.toDataURL('image/png');
+    } finally {
+      target.style.width = previousWidth;
+      target.style.height = previousHeight;
+      target.style.overflow = previousOverflow;
+    }
+  };
+
   useEffect(() => {
     const loadPublicMindmap = async () => {
       if (!id) {
@@ -121,6 +167,66 @@ export default function PublicMindmapViewer() {
       },
       globalThis.window.location.origin
     );
+  }, [isEmbedPreview, id, loading, error, mindmap]);
+
+  useEffect(() => {
+    if (!isEmbedPreview || !id) return;
+
+    const handleExportRequest = async (event: MessageEvent) => {
+      if (event.origin !== globalThis.window.location.origin) return;
+
+      const payload = event.data as ExportRequestMessage | undefined;
+      if (!payload || payload.type !== 'public-mindmap-export-request') return;
+      if (payload.mindmapId !== id) return;
+
+      const requestId = payload.requestId;
+      if (!requestId) return;
+
+      if (loading || error || !mindmap) {
+        globalThis.window.parent?.postMessage(
+          {
+            type: 'public-mindmap-export-response',
+            requestId,
+            mindmapId: id,
+            status: 'error',
+            message: error || 'Mindmap chưa sẵn sàng để xuất ảnh.',
+          },
+          globalThis.window.location.origin
+        );
+        return;
+      }
+
+      try {
+        const dataUrl = await exportCurrentViewAsPngDataUrl();
+        globalThis.window.parent?.postMessage(
+          {
+            type: 'public-mindmap-export-response',
+            requestId,
+            mindmapId: id,
+            status: 'success',
+            dataUrl,
+          },
+          globalThis.window.location.origin
+        );
+      } catch (exportError) {
+        globalThis.window.parent?.postMessage(
+          {
+            type: 'public-mindmap-export-response',
+            requestId,
+            mindmapId: id,
+            status: 'error',
+            message:
+              exportError instanceof Error ? exportError.message : 'Không thể xuất ảnh mindmap.',
+          },
+          globalThis.window.location.origin
+        );
+      }
+    };
+
+    globalThis.window.addEventListener('message', handleExportRequest);
+    return () => {
+      globalThis.window.removeEventListener('message', handleExportRequest);
+    };
   }, [isEmbedPreview, id, loading, error, mindmap]);
 
   const mindData = useMemo<MindElixirData | null>(() => {

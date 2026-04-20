@@ -346,7 +346,7 @@ export class AuthService {
         return '/teacher/materials';
       case 'user':
       case 'student':
-        return '/student/dashboard';
+        return '/student/courses';
       default:
         return '/'; // fallback to homepage
     }

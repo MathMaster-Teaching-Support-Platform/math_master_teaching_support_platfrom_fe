@@ -207,7 +207,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role, collapsed, onToggle }) => {
           }}
         >
           <Link
-            to={role === 'student' ? '/teacher/dashboard' : '/student/dashboard'}
+            to={role === 'student' ? '/teacher/dashboard' : '/student/courses'}
             className="sb-item sb-item--switch"
             style={{ color: 'var(--primary-color)', fontWeight: '600' }}
           >

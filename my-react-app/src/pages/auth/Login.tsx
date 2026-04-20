@@ -280,8 +280,8 @@ const Login: React.FC = () => {
         if (response.result.newRegistration) {
           const alreadyShown = localStorage.getItem('pendingRoleSelection') === 'true';
           if (alreadyShown) {
-            // Second login without selecting role → default to student dashboard
-            navigate('/student/dashboard');
+            // Second login without selecting role → default to student courses
+            navigate('/student/courses');
           } else {
             localStorage.setItem('pendingRoleSelection', 'true');
             navigate('/select-role');

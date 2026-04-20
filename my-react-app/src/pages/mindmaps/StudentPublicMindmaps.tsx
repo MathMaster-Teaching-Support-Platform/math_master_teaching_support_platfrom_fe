@@ -11,7 +11,7 @@ import {
   Workflow,
   X,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockStudent } from '../../data/mockData';
@@ -92,6 +92,7 @@ export default function StudentPublicMindmaps() {
   const [previewFrameLoading, setPreviewFrameLoading] = useState(false);
   const [downloadingPreviewMindmapId, setDownloadingPreviewMindmapId] = useState('');
   const [mindmapsError, setMindmapsError] = useState('');
+  const previewIframeRef = useRef<HTMLIFrameElement | null>(null);
 
   const selectedLesson = useMemo(
     () => lessons.find((lesson) => lesson.id === lessonId),
@@ -234,6 +235,65 @@ export default function StudentPublicMindmaps() {
     globalThis.URL.revokeObjectURL(blobUrl);
   };
 
+  const requestIframeMindmapExport = async (mindmap: Mindmap): Promise<Blob> => {
+    const iframeWindow = previewIframeRef.current?.contentWindow;
+    if (!iframeWindow) {
+      throw new Error('Khung xem trước chưa sẵn sàng để xuất ảnh.');
+    }
+
+    const requestId = `${mindmap.id}-${Date.now()}`;
+
+    return new Promise<Blob>((resolve, reject) => {
+      const timeoutId = globalThis.setTimeout(() => {
+        globalThis.window.removeEventListener('message', handleExportResponse);
+        reject(new Error('Xuất ảnh mindmap quá thời gian chờ.'));
+      }, 15000);
+
+      const handleExportResponse = async (event: MessageEvent) => {
+        if (event.origin !== globalThis.window.location.origin) return;
+
+        const payload = event.data as
+          | {
+              type?: string;
+              requestId?: string;
+              status?: 'success' | 'error';
+              dataUrl?: string;
+              message?: string;
+            }
+          | undefined;
+
+        if (!payload || payload.type !== 'public-mindmap-export-response') return;
+        if (payload.requestId !== requestId) return;
+
+        globalThis.clearTimeout(timeoutId);
+        globalThis.window.removeEventListener('message', handleExportResponse);
+
+        if (payload.status !== 'success' || !payload.dataUrl) {
+          reject(new Error(payload.message || 'Không thể xuất ảnh từ bản xem trước.'));
+          return;
+        }
+
+        try {
+          const blob = await (await fetch(payload.dataUrl)).blob();
+          resolve(blob);
+        } catch {
+          reject(new Error('Không thể chuyển ảnh mindmap sang file tải xuống.'));
+        }
+      };
+
+      globalThis.window.addEventListener('message', handleExportResponse);
+
+      iframeWindow.postMessage(
+        {
+          type: 'public-mindmap-export-request',
+          requestId,
+          mindmapId: mindmap.id,
+        },
+        globalThis.window.location.origin
+      );
+    });
+  };
+
   const handleDownloadPreviewMindmap = async () => {
     if (!selectedPreviewMindmap) return;
 
@@ -241,13 +301,25 @@ export default function StudentPublicMindmaps() {
     setMindmapsError('');
 
     try {
-      const response = await MindmapService.exportPublicMindmap(selectedPreviewMindmap.id, 'png');
-      triggerBlobDownload(
-        response.blob,
-        response.filename || `${selectedPreviewMindmap.title}.png`
-      );
+      const blob = await requestIframeMindmapExport(selectedPreviewMindmap);
+      const safeName = (selectedPreviewMindmap.title || 'mindmap')
+        .replace(/[\\/:*?"<>|]/g, '-')
+        .trim();
+
+      triggerBlobDownload(blob, `${safeName || 'mindmap'}.png`);
     } catch (err) {
-      setMindmapsError(err instanceof Error ? err.message : 'Không thể tải ảnh mindmap');
+      // Fallback to backend export if iframe export is blocked.
+      try {
+        const response = await MindmapService.exportPublicMindmap(selectedPreviewMindmap.id, 'png');
+        triggerBlobDownload(
+          response.blob,
+          response.filename || `${selectedPreviewMindmap.title}.png`
+        );
+      } catch (fallbackErr) {
+        setMindmapsError(
+          fallbackErr instanceof Error ? fallbackErr.message : 'Không thể tải ảnh mindmap'
+        );
+      }
     } finally {
       setDownloadingPreviewMindmapId('');
     }
@@ -667,6 +739,7 @@ export default function StudentPublicMindmaps() {
 
                   {selectedPreviewMindmap && (
                     <iframe
+                      ref={previewIframeRef}
                       className="spm-modal-iframe"
                       src={`/mindmaps/public/${selectedPreviewMindmap.id}?embedPreview=1`}
                       title={selectedPreviewMindmap.title || 'Mindmap preview'}
