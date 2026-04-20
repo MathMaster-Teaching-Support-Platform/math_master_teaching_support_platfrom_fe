@@ -20,32 +20,14 @@ function diffLabel(d: string) {
   return m[d] ?? d;
 }
 
-function diffColorClass(d: string) {
-  if (d === 'EASY') return 'rdp-topic-node__diff--easy';
-  if (d === 'HARD') return 'rdp-topic-node__diff--hard';
-  return 'rdp-topic-node__diff--medium';
-}
-
 function getCourseButtonLabel(isPending: boolean, isEnrolled: boolean) {
   if (isPending) return 'Đang xử lý...';
   return isEnrolled ? 'Tiếp tục học →' : 'Đăng ký ngay →';
 }
 
-function getFeedbackErrorText(message: string) {
-  if (message.startsWith('400')) return 'Vui lòng chọn sao từ 1-5 và nội dung dưới 2000 ký tự.';
-  if (message.startsWith('401')) return 'Vui lòng đăng nhập để gửi đánh giá.';
-  return message.replace(/^\d{3}\s+[^:]+:\s*/, '');
-}
-
 function shouldNavigateToCourseOnEnrollError(message: string) {
   const n = message.toLowerCase();
   return n.includes('already') || n.includes('đã đăng ký');
-}
-
-function getCourseStatusInfo(progress: number): { statusClass: string; statusText: string } {
-  if (progress >= 100) return { statusClass: 'completed', statusText: 'Đã hoàn thành' };
-  if (progress > 0)   return { statusClass: 'progress',  statusText: 'Đang học' };
-  return                      { statusClass: 'locked',    statusText: 'Chưa bắt đầu' };
 }
 
 function getTopicStatus(
@@ -71,7 +53,13 @@ interface CoursePreviewPanelProps {
   onEnroll: (courseId: string) => void;
 }
 
-function CoursePreviewPanel({ course, isPending, isEnrolled, onClose, onEnroll }: CoursePreviewPanelProps) {
+function CoursePreviewPanel({
+  course,
+  isPending,
+  isEnrolled,
+  onClose,
+  onEnroll,
+}: CoursePreviewPanelProps) {
   const { data, isLoading } = useCoursePreview(course.id);
   const preview = data?.result;
 
@@ -88,7 +76,9 @@ function CoursePreviewPanel({ course, isPending, isEnrolled, onClose, onEnroll }
           <span className="rdp-panel__badge">Khóa học</span>
           <h2 className="rdp-panel__title">{course.title}</h2>
         </div>
-        <button className="rdp-panel__close" onClick={onClose} aria-label="Đóng">✕</button>
+        <button className="rdp-panel__close" onClick={onClose} aria-label="Đóng">
+          ✕
+        </button>
       </div>
 
       <div className="rdp-panel__body">
@@ -100,9 +90,7 @@ function CoursePreviewPanel({ course, isPending, isEnrolled, onClose, onEnroll }
           />
         )}
 
-        {course.description && (
-          <p className="rdp-panel__desc">{course.description}</p>
-        )}
+        {course.description && <p className="rdp-panel__desc">{course.description}</p>}
 
         <div className="rdp-panel__meta-row">
           <div className="rdp-panel__meta-item">
@@ -124,7 +112,9 @@ function CoursePreviewPanel({ course, isPending, isEnrolled, onClose, onEnroll }
             <h3>Danh sách bài học</h3>
             {preview.lessons.map((lesson: any, i: number) => (
               <div key={lesson.id} className="rdp-panel__lesson-item">
-                <span className="rdp-panel__lesson-title">{i + 1}. {lesson.title}</span>
+                <span className="rdp-panel__lesson-title">
+                  {i + 1}. {lesson.title}
+                </span>
                 {lesson.durationMinutes && (
                   <span className="rdp-panel__lesson-duration">{lesson.durationMinutes}p</span>
                 )}
@@ -167,7 +157,10 @@ export default function RoadmapDetailPage() {
   const [feedbackRating, setFeedbackRating] = useState(0);
   const [feedbackContent, setFeedbackContent] = useState('');
   const [feedbackChip, setFeedbackChip] = useState<string>('');
-  const [courseActionMessage, setCourseActionMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [courseActionMessage, setCourseActionMessage] = useState<{
+    type: 'success' | 'error';
+    text: string;
+  } | null>(null);
 
   const roadmap = data?.result;
   const myFeedback = myFeedbackQuery.data?.result ?? null;
@@ -208,7 +201,10 @@ export default function RoadmapDetailPage() {
 
     enrollMutation.mutate(courseId, {
       onSuccess: (response) => {
-        setCourseActionMessage({ type: 'success', text: 'Đăng ký thành công! Đang mở khóa học...' });
+        setCourseActionMessage({
+          type: 'success',
+          text: 'Đăng ký thành công! Đang mở khóa học...',
+        });
         const enrollmentId = response.result?.id;
         if (enrollmentId) navigate(`/student/courses/${enrollmentId}`);
         else {
@@ -234,7 +230,8 @@ export default function RoadmapDetailPage() {
     });
   }
 
-  const feedbackIsValid = feedbackRating >= 1 && feedbackRating <= 5 && feedbackContent.length <= 2000;
+  const feedbackIsValid =
+    feedbackRating >= 1 && feedbackRating <= 5 && feedbackContent.length <= 2000;
 
   function submitRoadmapFeedback() {
     if (!roadmapId || !feedbackIsValid) return;
@@ -251,9 +248,15 @@ export default function RoadmapDetailPage() {
 
   if (isLoading) {
     return (
-      <DashboardLayout role="student" user={{ name: mockStudent.name, avatar: mockStudent.avatar, role: 'student' }} notificationCount={3}>
+      <DashboardLayout
+        role="student"
+        user={{ name: mockStudent.name, avatar: mockStudent.avatar, role: 'student' }}
+        notificationCount={3}
+      >
         <div className="rdp-skeleton-wrap">
-          {[1, 2, 3].map((i) => <div key={i} className="rdp-skeleton" />)}
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="rdp-skeleton" />
+          ))}
         </div>
       </DashboardLayout>
     );
@@ -261,7 +264,11 @@ export default function RoadmapDetailPage() {
 
   if (error || !roadmap) {
     return (
-      <DashboardLayout role="student" user={{ name: mockStudent.name, avatar: mockStudent.avatar, role: 'student' }} notificationCount={3}>
+      <DashboardLayout
+        role="student"
+        user={{ name: mockStudent.name, avatar: mockStudent.avatar, role: 'student' }}
+        notificationCount={3}
+      >
         <div className="rdp-error">⚠ Không thể tải lộ trình. Vui lòng thử lại.</div>
       </DashboardLayout>
     );
@@ -274,7 +281,6 @@ export default function RoadmapDetailPage() {
       notificationCount={3}
     >
       <div className="rdp-page">
-
         {/* ── Minimal sticky header ── */}
         <div className="rdp-header">
           <button type="button" className="rdp-header__back" onClick={() => navigate(-1)}>
@@ -282,14 +288,15 @@ export default function RoadmapDetailPage() {
           </button>
           <div className="rdp-header__info">
             <h1 className="rdp-header__title">{roadmap.name}</h1>
-            {roadmap.description && (
-              <p className="rdp-header__sub">{roadmap.description}</p>
-            )}
+            {roadmap.description && <p className="rdp-header__sub">{roadmap.description}</p>}
           </div>
           <div className="rdp-header__progress">
             <span className="rdp-header__pct">{Math.round(roadmap.progressPercentage)}%</span>
             <div className="rdp-header__bar-track">
-              <div className="rdp-header__bar-fill" style={{ width: `${roadmap.progressPercentage}%` }} />
+              <div
+                className="rdp-header__bar-fill"
+                style={{ width: `${roadmap.progressPercentage}%` }}
+              />
             </div>
             <span className="rdp-header__count">
               {roadmap.completedTopicsCount}/{roadmap.totalTopicsCount}
@@ -307,7 +314,6 @@ export default function RoadmapDetailPage() {
         {/* ── Map + Panel ── */}
         <div className={`rdp-layout ${selectedCourse ? 'rdp-layout--panel' : ''}`}>
           <div className="rdp-map">
-
             <div className="rdp-map-title">
               <h2>Lộ trình học tập</h2>
               <p>Nhấn vào từng chủ đề để xem khóa học</p>
@@ -318,21 +324,30 @@ export default function RoadmapDetailPage() {
                 {topicIdx > 0 && <div className="rdp-vline" aria-hidden="true" />}
 
                 <div className="rdp-topic-group">
-
                   {/* Topic node */}
                   <button
                     type="button"
                     className={`rdp-topic-node ${selectedTopicId === topic.id ? 'rdp-topic-node--active' : ''}`}
-                    onClick={() => setSelectedTopicId(selectedTopicId === topic.id ? null : topic.id)}
+                    onClick={() =>
+                      setSelectedTopicId(selectedTopicId === topic.id ? null : topic.id)
+                    }
                   >
-                    <span className={`rdp-status-dot rdp-status-dot--${getTopicStatus(topic, activeCourseIdSet)}`} />
+                    <span
+                      className={`rdp-status-dot rdp-status-dot--${getTopicStatus(topic, activeCourseIdSet)}`}
+                    />
                     <span className="rdp-topic-node__num">{topicIdx + 1}.</span>
                     <span className="rdp-topic-node__title">{topic.title}</span>
-                    <span className={`rdp-diff-badge rdp-diff-badge--${topic.difficulty.toLowerCase()}`}>
+                    <span
+                      className={`rdp-diff-badge rdp-diff-badge--${topic.difficulty.toLowerCase()}`}
+                    >
                       {diffLabel(topic.difficulty)}
                     </span>
-                    <span className="rdp-topic-node__meta">{(topic.courses ?? []).length} khóa học</span>
-                    <span className="rdp-topic-node__chevron" aria-hidden="true">▾</span>
+                    <span className="rdp-topic-node__meta">
+                      {(topic.courses ?? []).length} khóa học
+                    </span>
+                    <span className="rdp-topic-node__chevron" aria-hidden="true">
+                      ▾
+                    </span>
                   </button>
 
                   {/* Courses — expand when topic is active */}
@@ -346,13 +361,21 @@ export default function RoadmapDetailPage() {
                             const isSelected = selectedCourseId === course.id;
                             const p = course.progress ?? 0;
                             let dotClass: 'done' | 'progress' | 'none';
-                            if (p >= 100) { dotClass = 'done'; }
-                            else if (p > 0) { dotClass = 'progress'; }
-                            else { dotClass = 'none'; }
+                            if (p >= 100) {
+                              dotClass = 'done';
+                            } else if (p > 0) {
+                              dotClass = 'progress';
+                            } else {
+                              dotClass = 'none';
+                            }
                             let tag: { cls: string; label: string };
-                            if (p >= 100) { tag = { cls: 'done', label: '✓ Hoàn thành' }; }
-                            else if (isEnrolled) { tag = { cls: 'enrolled', label: '● Đang học' }; }
-                            else { tag = { cls: 'new', label: '○ Chưa bắt đầu' }; }
+                            if (p >= 100) {
+                              tag = { cls: 'done', label: '✓ Hoàn thành' };
+                            } else if (isEnrolled) {
+                              tag = { cls: 'enrolled', label: '● Đang học' };
+                            } else {
+                              tag = { cls: 'new', label: '○ Chưa bắt đầu' };
+                            }
 
                             return (
                               <button
@@ -364,8 +387,12 @@ export default function RoadmapDetailPage() {
                                 <span className={`rdp-status-dot rdp-status-dot--${dotClass}`} />
                                 <div className="rdp-course-node__body">
                                   <span className="rdp-course-node__title">{course.title}</span>
-                                  <span className="rdp-course-node__meta">{course.totalLessons ?? 0} bài học</span>
-                                  <span className={`rdp-course-node__tag rdp-course-node__tag--${tag.cls}`}>
+                                  <span className="rdp-course-node__meta">
+                                    {course.totalLessons ?? 0} bài học
+                                  </span>
+                                  <span
+                                    className={`rdp-course-node__tag rdp-course-node__tag--${tag.cls}`}
+                                  >
                                     {tag.label}
                                   </span>
                                 </div>
@@ -376,7 +403,9 @@ export default function RoadmapDetailPage() {
                           <div className="rdp-course-node" style={{ cursor: 'default' }}>
                             <span className="rdp-status-dot rdp-status-dot--none" />
                             <div className="rdp-course-node__body">
-                              <span className="rdp-course-node__title" style={{ color: '#9ca3af' }}>Chưa có khóa học</span>
+                              <span className="rdp-course-node__title" style={{ color: '#9ca3af' }}>
+                                Chưa có khóa học
+                              </span>
                               <span className="rdp-course-node__meta">Đang cập nhật...</span>
                             </div>
                           </div>
@@ -384,12 +413,11 @@ export default function RoadmapDetailPage() {
                       </div>
                     </div>
                   )}
-
                 </div>
               </Fragment>
             ))}
-
-          </div>{/* /rdp-map */}
+          </div>
+          {/* /rdp-map */}
 
           {/* ── Side Panel ── */}
           <AnimatePresence>
@@ -403,8 +431,8 @@ export default function RoadmapDetailPage() {
               />
             )}
           </AnimatePresence>
-
-        </div>{/* /rdp-layout */}
+        </div>
+        {/* /rdp-layout */}
 
         {/* ── Feedback ── */}
         <div className="rdp-feedback">
@@ -425,11 +453,19 @@ export default function RoadmapDetailPage() {
                     className={`rdp-star ${feedbackRating >= star ? 'rdp-star--active' : ''}`}
                     onClick={() => setFeedbackRating(star)}
                     aria-label={`${star} sao`}
-                  >★</button>
+                  >
+                    ★
+                  </button>
                 ))}
               </div>
               <div className="rdp-feedback__chips">
-                {['😐 Bình thường', '😊 Hay', '🎯 Đúng trọng tâm', '💪 Thách thức', '🏆 Xuất sắc'].map((chip) => (
+                {[
+                  '😐 Bình thường',
+                  '😊 Hay',
+                  '🎯 Đúng trọng tâm',
+                  '💪 Thách thức',
+                  '🏆 Xuất sắc',
+                ].map((chip) => (
                   <button
                     key={chip}
                     type="button"
@@ -460,9 +496,8 @@ export default function RoadmapDetailPage() {
             </>
           )}
         </div>
-
-      </div>{/* /rdp-page */}
+      </div>
+      {/* /rdp-page */}
     </DashboardLayout>
   );
 }
-

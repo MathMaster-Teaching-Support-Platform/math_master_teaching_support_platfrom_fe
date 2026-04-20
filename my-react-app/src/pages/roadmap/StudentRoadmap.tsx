@@ -1,10 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockStudent } from '../../data/mockData';
 import { useRoadmapDetail, useRoadmaps } from '../../hooks/useRoadmaps';
 import '../../styles/module-refactor.css';
-import type { RoadmapCatalogItem, RoadmapTopic } from '../../types';
+import type { RoadmapCatalogItem } from '../../types';
 import './StudentRoadmap.css';
 
 function normalizeRoadmaps(
@@ -29,30 +29,10 @@ function statusLabel(status: string): string {
   return map[status] ?? status;
 }
 
-function difficultyLabel(d: string): string {
-  const map: Record<string, string> = { EASY: 'Dễ', MEDIUM: 'Trung bình', HARD: 'Khó' };
-  return map[d] ?? d;
-}
-
-function isTopicUnlocked(_: RoadmapTopic): boolean {
-  // All topics are always unlocked in the new model
-  return true;
-}
-
-function findCurrentTopic(topics: RoadmapTopic[]): RoadmapTopic | null {
-  return (
-    topics.find((t) => t.status === 'IN_PROGRESS' && isTopicUnlocked(t)) ??
-    topics.find((t) => t.status === 'NOT_STARTED' && isTopicUnlocked(t)) ??
-    topics.find((t) => isTopicUnlocked(t) && t.status !== 'COMPLETED') ??
-    null
-  );
-}
-
 // Removed TopicStep to enforce node-based roadmap UI only
 
 const StudentRoadmap: React.FC = () => {
   const [selectedRoadmapId, setSelectedRoadmapId] = useState('');
-  const currentTopicRef = useRef<HTMLDivElement>(null);
 
   const roadmapsQuery = useRoadmaps();
   const roadmapResult = roadmapsQuery.data?.result as
@@ -62,14 +42,8 @@ const StudentRoadmap: React.FC = () => {
   const roadmaps = normalizeRoadmaps(roadmapResult);
 
   const selectedRoadmapQuery = useRoadmapDetail(selectedRoadmapId);
-  const selectedTopics = (selectedRoadmapQuery.data?.result.topics ?? [])
-    .slice()
-    .sort((a, b) => a.sequenceOrder - b.sequenceOrder);
 
   const currentRoadmap = roadmaps.find((r) => r.id === selectedRoadmapId);
-  const currentTopic = findCurrentTopic(selectedTopics);
-  const allCompleted =
-    selectedTopics.length > 0 && selectedTopics.every((t) => t.status === 'COMPLETED');
 
   const inProgressCount = roadmaps.filter((r) => r.status === 'IN_PROGRESS').length;
   const completedCount = roadmaps.filter((r) => r.status === 'COMPLETED').length;
@@ -234,15 +208,28 @@ const StudentRoadmap: React.FC = () => {
                     )}
 
                     {/* Removed old list-based UI */}
-                    <div className="srp__cta-container" style={{ textAlign: 'center', marginTop: '3rem' }}>
-                       <img src="/assets/illustrations/map.svg" alt="" style={{ width: '120px', opacity: 0.5, marginBottom: '1rem' }} />
-                       <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Sẵn sàng học tiếp?</h3>
-                       <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
-                         Bản đồ học tập mới với giao diện trực quan đã sẵn sàng.
-                       </p>
-                       <Link to={`/roadmaps/${selectedRoadmapId}`} className="srp__sticky-btn" style={{ display: 'inline-block' }}>
-                          Mở bản đồ học tập →
-                       </Link>
+                    <div
+                      className="srp__cta-container"
+                      style={{ textAlign: 'center', marginTop: '3rem' }}
+                    >
+                      <img
+                        src="/assets/illustrations/map.svg"
+                        alt=""
+                        style={{ width: '120px', opacity: 0.5, marginBottom: '1rem' }}
+                      />
+                      <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>
+                        Sẵn sàng học tiếp?
+                      </h3>
+                      <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
+                        Bản đồ học tập mới với giao diện trực quan đã sẵn sàng.
+                      </p>
+                      <Link
+                        to={`/roadmaps/${selectedRoadmapId}`}
+                        className="srp__sticky-btn"
+                        style={{ display: 'inline-block' }}
+                      >
+                        Mở bản đồ học tập →
+                      </Link>
                     </div>
                   </>
                 )}
