@@ -15,18 +15,41 @@ interface OcrField {
   valid: boolean;
 }
 
+function normalizeOcrFieldLabel(rawLabel: string): string | null {
+  const normalized = rawLabel.toLowerCase().trim();
+
+  if (normalized === 'họ và tên' || normalized === 'ho va ten' || normalized === 'họ tên' || normalized === 'ho ten') {
+    return 'Họ và tên';
+  }
+
+  if (normalized === 'chức danh+toán' || normalized === 'chuc danh+toan' || normalized === 'chức danh + chuyên môn' || normalized === 'chuc danh + chuyen mon') {
+    return 'Chức danh + Chuyên môn';
+  }
+
+  if (normalized === 'tên trường' || normalized === 'ten truong') {
+    return 'Tên trường';
+  }
+
+  return null;
+}
+
 function parseOcrFields(comment: string): OcrField[] | null {
-  // Matches patterns like "Họ tên: v", "Chức danh+Toán: X", "Tên trường: v"
-  const fieldPattern = /([^,\n]+?):\s*([vVxX✓✗])\b/g;
+  // Parse only known OCR status fields to avoid picking up subtitle fragments
+  const fieldPattern = /(Họ và tên|Họ tên|ho va ten|ho ten|Chức danh\+Toán|chuc danh\+toan|Chức danh \+ Chuyên môn|chuc danh \+ chuyen mon|Tên trường|ten truong)\s*:\s*([vVxX✓✗])(?=\s|,|$)/gi;
   const results: OcrField[] = [];
   let match: RegExpExecArray | null;
   while ((match = fieldPattern.exec(comment)) !== null) {
-    const rawLabel = match[1].trim();
-    // Skip lines that look like header sentences (contain spaces and are long)
-    if (rawLabel.length > 40) continue;
-    results.push({ label: rawLabel, valid: ['v', 'V', '✓'].includes(match[2]) });
+    const label = normalizeOcrFieldLabel(match[1]);
+    if (!label) continue;
+    results.push({ label, valid: ['v', 'V', '✓'].includes(match[2]) });
   }
-  return results.length > 0 ? results : null;
+
+  const deduped = new Map<string, OcrField>();
+  for (const field of results) {
+    deduped.set(field.label, field);
+  }
+
+  return deduped.size > 0 ? Array.from(deduped.values()) : null;
 }
 
 function isOcrFailureComment(comment: string): boolean {
