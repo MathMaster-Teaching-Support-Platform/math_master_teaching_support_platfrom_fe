@@ -124,6 +124,7 @@ const adminGroups: MenuGroup[] = [
   {
     label: 'Nội dung',
     items: [
+      { path: '/admin/courses/review', icon: BookOpen, label: 'Duyệt khóa học' },
       { path: '/admin/roadmaps', icon: Workflow, label: 'Lộ trình' },
       { path: '/admin/templates', icon: FileStack, label: 'Mẫu' },
     ],

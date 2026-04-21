@@ -24,15 +24,17 @@ import { AnimatePresence, motion } from 'framer-motion';
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { useToast } from '../../context/ToastContext';
 import {
   useCreateCourse,
   useDeleteCourse,
   usePublishCourse,
+  useSubmitCourseForReview,
   useTeacherCourses,
 } from '../../hooks/useCourses';
 import { LessonSlideService } from '../../services/api/lesson-slide.service';
 import '../../styles/module-refactor.css';
-import type { CourseResponse, CreateCourseRequest } from '../../types';
+import type { CourseResponse, CreateCourseRequest, CourseLevel } from '../../types';
 import type { SchoolGrade, SubjectByGrade } from '../../types/lessonSlide.types';
 import './TeacherCourses.css';
 
@@ -59,6 +61,7 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
     provider: 'MINISTRY',
     subjectId: '',
     schoolGradeId: '',
+    level: 'ALL_LEVELS',
     title: '',
     subtitle: '',
     description: '',
@@ -325,6 +328,20 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
                         rows={2}
                       />
                     </div>
+                    
+                    <div className="form-group">
+                      <label className="form-label">Cấp độ (Level)</label>
+                      <select
+                        className="form-select"
+                        value={form.level || 'ALL_LEVELS'}
+                        onChange={(e) => setForm({ ...form, level: e.target.value as CourseLevel })}
+                      >
+                        <option value="ALL_LEVELS">Mọi cấp độ</option>
+                        <option value="BEGINNER">Người mới bắt đầu</option>
+                        <option value="INTERMEDIATE">Trình độ trung cấp</option>
+                        <option value="ADVANCED">Trình độ nâng cao</option>
+                      </select>
+                    </div>
                   </div>
                 )}
 
@@ -419,7 +436,7 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
             <button
               type="button"
               className="btn primary"
-              disabled={isLoading || (step === 1 && (!form.title || (form.provider === 'MINISTRY' && !form.subjectId)))}
+              disabled={isLoading || (step === 1 && (!form.title || (form.provider === 'MINISTRY' && (!form.subjectId || !form.schoolGradeId))))}
               onClick={step === totalSteps ? () => onSubmit(form, thumbnailFile) : nextStep}
             >
               {isLoading ? (
@@ -446,6 +463,7 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
 // Main Page
 const TeacherCourses: React.FC = () => {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'draft'>('all');
   const [search, setSearch] = useState('');
@@ -455,6 +473,7 @@ const TeacherCourses: React.FC = () => {
   const createMutation = useCreateCourse();
   const deleteMutation = useDeleteCourse();
   const publishMutation = usePublishCourse();
+  const submitReviewMutation = useSubmitCourseForReview();
 
   const courses: CourseResponse[] = useMemo(() => coursesData?.result ?? [], [coursesData]);
 
@@ -486,6 +505,18 @@ const TeacherCourses: React.FC = () => {
 
   const handleTogglePublish = (course: CourseResponse) => {
     publishMutation.mutate({ courseId: course.id, data: { published: !course.published } });
+  };
+
+  const handleSubmitForReview = (course: CourseResponse) => {
+    submitReviewMutation.mutate(course.id, {
+      onSuccess: () => {
+        showToast({ type: 'success', message: 'Đã gửi khóa học lên hàng chờ duyệt.' });
+      },
+      onError: (err: unknown) => {
+        const msg = err instanceof Error ? err.message : 'Không thể gửi duyệt khóa học.';
+        showToast({ type: 'error', message: msg });
+      },
+    });
   };
 
   const handleDelete = (courseId: string) => {
@@ -677,7 +708,15 @@ const TeacherCourses: React.FC = () => {
                     <span
                       className={`course-badge ${course.published ? 'badge-live' : 'badge-draft'}`}
                     >
-                      {course.published ? (
+                      {course.status === 'PENDING_REVIEW' ? (
+                        <>
+                          <CheckCircle2 size={11} /> Chờ duyệt
+                        </>
+                      ) : course.status === 'REJECTED' ? (
+                        <>
+                          <AlertCircle size={11} /> Bị từ chối
+                        </>
+                      ) : course.published ? (
                         <>
                           <Eye size={11} /> Công khai
                         </>
@@ -717,10 +756,25 @@ const TeacherCourses: React.FC = () => {
                       >
                         <Settings2 size={14} /> Quản lý
                       </button>
+                      {!course.published && course.status !== 'PENDING_REVIEW' && (
+                        <button
+                          className="action-toggle"
+                          onClick={() => handleSubmitForReview(course)}
+                          disabled={submitReviewMutation.isPending}
+                          title="Gửi khóa học để admin phê duyệt"
+                        >
+                          <CheckCircle2 size={14} /> Gửi duyệt
+                        </button>
+                      )}
                       <button
                         className={`action-toggle${course.published ? ' is-live' : ''}`}
                         onClick={() => handleTogglePublish(course)}
-                        disabled={publishMutation.isPending}
+                        disabled={publishMutation.isPending || !course.published && course.status !== 'PUBLISHED'}
+                        title={
+                          !course.published && course.status !== 'PUBLISHED'
+                            ? 'Khóa học cần được duyệt trước khi công khai'
+                            : undefined
+                        }
                       >
                         {course.published ? (
                           <>

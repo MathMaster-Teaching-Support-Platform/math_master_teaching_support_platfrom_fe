@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { BookOpen, Star, Users } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import type { CourseResponse } from '../../types';
+import type { CourseResponse, CourseLevel } from '../../types';
 import { getEffectivePrice, isDiscountActive } from '../../utils/pricing';
 
 interface CourseCardProps {
@@ -25,6 +25,13 @@ const coverGradients = [
 ] as const;
 
 const coverAccents = ['#1d4ed8', '#0f766e', '#047857', '#c2410c', '#be185d', '#6d28d9'] as const;
+
+const levelMap: Record<CourseLevel | 'ALL_LEVELS', { label: string; color: string }> = {
+  BEGINNER: { label: 'Cơ bản', color: '#10b981' },
+  INTERMEDIATE: { label: 'Trung bình', color: '#f59e0b' },
+  ADVANCED: { label: 'Nâng cao', color: '#ef4444' },
+  ALL_LEVELS: { label: 'Mọi cấp độ', color: '#6366f1' },
+};
 
 export const CourseCard: React.FC<CourseCardProps> = ({ 
   course, 
@@ -81,7 +88,19 @@ export const CourseCard: React.FC<CourseCardProps> = ({
         )}
         <div className="cover-overlay" />
         <div className="cover-index">#{String(index + 1).padStart(2, '0')}</div>
-        {isEnrolled && <span className="course-badge badge-live">✓ Đã đăng ký</span>}
+        {course.level && (
+          <span 
+            className="course-badge" 
+            style={{ 
+              top: '10px', 
+              right: '10px', 
+              background: levelMap[course.level]?.color ?? '#6366f1' 
+            }}
+          >
+            {levelMap[course.level]?.label ?? 'Mọi cấp độ'}
+          </span>
+        )}
+        {isEnrolled && <span className="course-badge badge-live" style={{ top: '35px', right: '10px' }}>✓ Đã đăng ký</span>}
         <h3 className="cover-title">{course.title}</h3>
       </div>
       <div className="course-body">
@@ -133,7 +152,24 @@ export const CourseCard: React.FC<CourseCardProps> = ({
           )}
         </div>
         {showEnrollButton && (
-          <div className="course-actions">
+          <div className="course-actions" style={{ display: 'flex', gap: '8px' }}>
+            <button
+              className="action-secondary"
+              style={{
+                background: '#f1f5f9',
+                color: '#475569',
+                flex: 1,
+                border: 'none',
+                padding: '0.6rem',
+                borderRadius: '6px',
+                fontWeight: 600,
+                fontSize: '0.85rem',
+                cursor: 'pointer'
+              }}
+              onClick={(e) => { e.stopPropagation(); navigate(`/course/${course.id}`); }}
+            >
+              Xem chi tiết
+            </button>
             <button
               className="action-primary"
               style={{

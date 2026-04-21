@@ -1,9 +1,25 @@
 import {
+  closestCenter,
+  DndContext,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import type { DragEndEvent } from '@dnd-kit/core';
+import {
+  SortableContext,
+  arrayMove,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import {
   CheckCircle2,
   Clock,
   Eye,
   EyeOff,
   FileText,
+  GripVertical,
   Paperclip,
   Pencil,
   Plus,
@@ -18,9 +34,11 @@ import {
   useCustomCourseSections,
   useDeleteCourseLesson,
   useDeleteSection,
+  useReorderCourseLessons,
   useRemoveMaterial,
   useUpdateCourseLesson,
 } from '../../../hooks/useCourses';
+import { useToast } from '../../../context/ToastContext';
 import { CourseService } from '../../../services/api/course.service';
 import { LessonSlideService } from '../../../services/api/lesson-slide.service';
 import { VideoUploadService } from '../../../services/api/videoUpload.service';
@@ -762,19 +780,163 @@ function LessonRow({
   );
 }
 
+function SortableLessonChip({
+  lesson,
+}: {
+  lesson: CourseLessonResponse;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: lesson.id,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="data-card"
+      {...attributes}
+      {...listeners}
+    >
+      <div className="row" style={{ gap: 10, alignItems: 'center' }}>
+        <GripVertical size={16} style={{ color: '#94a3b8', cursor: 'grab' }} />
+        <span style={{ minWidth: 28, fontWeight: 700, color: '#2563eb' }}>#{lesson.orderIndex ?? '-'}</span>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontWeight: 600 }}>{lesson.lessonTitle ?? 'Untitled lesson'}</div>
+          <div className="muted" style={{ fontSize: '0.8rem' }}>
+            {lesson.videoTitle || 'No video title'}
+          </div>
+        </div>
+        {lesson.isFreePreview && <span className="badge published">Xem trước</span>}
+      </div>
+    </div>
+  );
+}
+
+function LessonReorderStrip({
+  lessons,
+  title,
+  disabled,
+  onReordered,
+}: {
+  lessons: CourseLessonResponse[];
+  title: string;
+  disabled?: boolean;
+  onReordered: (ordered: CourseLessonResponse[]) => void;
+}) {
+  const [items, setItems] = useState<CourseLessonResponse[]>(lessons);
+
+  useEffect(() => {
+    setItems(lessons);
+  }, [lessons]);
+
+  const sensors = useSensors(useSensor(PointerSensor));
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    if (disabled) return;
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = items.findIndex((l) => l.id === String(active.id));
+    const newIndex = items.findIndex((l) => l.id === String(over.id));
+    if (oldIndex < 0 || newIndex < 0) return;
+
+    const moved = arrayMove(items, oldIndex, newIndex).map((lesson, idx) => ({
+      ...lesson,
+      orderIndex: idx + 1,
+    }));
+    setItems(moved);
+    onReordered(moved);
+  };
+
+  return (
+    <div
+      className="data-card"
+      style={{
+        marginBottom: '1rem',
+        opacity: disabled ? 0.7 : 1,
+        transition: 'opacity 0.2s ease',
+      }}
+    >
+      <div className="row" style={{ justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+        <h4 style={{ margin: 0 }}>{title}</h4>
+        <span className="muted" style={{ fontSize: '0.82rem' }}>
+          {disabled ? 'Đang lưu thứ tự...' : 'Kéo thả để đổi thứ tự'}
+        </span>
+      </div>
+      <div style={{ pointerEvents: disabled ? 'none' : 'auto' }}>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext
+            items={items.map((item) => item.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <div style={{ display: 'grid', gap: '0.5rem' }}>
+              {items.map((lesson) => (
+                <SortableLessonChip key={lesson.id} lesson={lesson} />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
+      </div>
+      {disabled && (
+        <div className="muted" style={{ marginTop: '0.6rem', fontSize: '0.78rem' }}>
+          Vui lòng chờ lưu xong trước khi tiếp tục kéo thả.
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Main Component
 const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course }) => {
+  const { showToast } = useToast();
   const [showUpload, setShowUpload] = useState(false);
   const [editingLesson, setEditingLesson] = useState<CourseLessonResponse | null>(null);
   const { data: lessonsData, isLoading, refetch } = useCourseLessons(courseId);
   const { data: sectionsData } = useCustomCourseSections(courseId);
   const deleteMutation = useDeleteCourseLesson();
+  const reorderMutation = useReorderCourseLessons();
 
   const createSectionMutation = useCreateSection();
   const deleteSectionMutation = useDeleteSection();
 
   const lessons: CourseLessonResponse[] = lessonsData?.result ?? [];
   const sections = sectionsData?.result ?? [];
+
+  const persistReorder = (orderedLessons: CourseLessonResponse[]) => {
+    reorderMutation.mutate(
+      {
+        courseId,
+        data: {
+          orders: orderedLessons.map((lesson, idx) => ({
+            lessonId: lesson.id,
+            orderIndex: idx + 1,
+          })),
+        },
+      },
+      {
+        onSuccess: () => {
+          showToast({
+            type: 'success',
+            message: 'Đã lưu thứ tự bài học.',
+            duration: 1500,
+          });
+        },
+        onError: () => {
+          showToast({
+            type: 'error',
+            message: 'Không thể lưu thứ tự. Đã khôi phục dữ liệu từ máy chủ.',
+          });
+          void refetch();
+        },
+      }
+    );
+  };
 
   const handleCreateSection = () => {
     const title = window.prompt('Nhập tên phần mới:');
@@ -835,53 +997,50 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
 
       {/* Lesson Table */}
       {!isLoading && lessons.length > 0 && course.provider === 'MINISTRY' && (
-        <div className="table-wrap">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Bài học</th>
-                <th>Tiêu đề video</th>
-                <th>Thời lượng</th>
-                <th>Xem thử</th>
-                <th>Tài liệu</th>
-                <th>Thao tác</th>
-              </tr>
-            </thead>
-            <tbody>
-              {lessons
-                .sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
-                .map((lesson) => (
-                  <LessonRow
-                    key={lesson.id}
-                    courseId={courseId}
-                    lesson={lesson}
-                    onEdit={() => setEditingLesson(lesson)}
-                    onDelete={() => {
-                      if (confirm('Xóa bài học này?')) {
-                        deleteMutation.mutate(
-                          { courseId, lessonId: lesson.id },
-                          { onSuccess: () => void refetch() }
-                        );
-                      }
-                    }}
-                    deletePending={deleteMutation.isPending}
-                  />
-                ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Upload Modal */}
-      {showUpload && (
-        <UploadVideoModal
-          courseId={courseId}
-          course={course}
-          existingLessons={lessons}
-          onClose={() => setShowUpload(false)}
-          onSuccess={() => void refetch()}
-        />
+        <>
+          <LessonReorderStrip
+            title="Sắp xếp bài học"
+            lessons={[...lessons].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))}
+            disabled={reorderMutation.isPending}
+            onReordered={persistReorder}
+          />
+          <div className="table-wrap">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Bài học</th>
+                  <th>Tiêu đề video</th>
+                  <th>Thời lượng</th>
+                  <th>Xem thử</th>
+                  <th>Tài liệu</th>
+                  <th>Thao tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...lessons]
+                  .sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
+                  .map((lesson) => (
+                    <LessonRow
+                      key={lesson.id}
+                      courseId={courseId}
+                      lesson={lesson}
+                      onEdit={() => setEditingLesson(lesson)}
+                      onDelete={() => {
+                        if (confirm('Xóa bài học này?')) {
+                          deleteMutation.mutate(
+                            { courseId, lessonId: lesson.id },
+                            { onSuccess: () => void refetch() }
+                          );
+                        }
+                      }}
+                      deletePending={deleteMutation.isPending}
+                    />
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       {/* Edit Modal */}
@@ -955,6 +1114,15 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                       </button>
                     </div>
                   </div>
+
+                  {sectionLessons.length > 1 && (
+                    <LessonReorderStrip
+                      title="Sắp xếp bài học trong phần"
+                      lessons={sectionLessons}
+                      disabled={reorderMutation.isPending}
+                      onReordered={persistReorder}
+                    />
+                  )}
 
                   {sectionLessons.length > 0 ? (
                     <div className="table-wrap">

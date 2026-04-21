@@ -1,9 +1,10 @@
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { BookOpen, CheckCircle, Clock, Play, Paperclip, FileText, Layout, ChevronDown } from 'lucide-react';
 import {
   useCourseLessons,
   useCourseProgress,
   useMarkLessonComplete,
+  useUpdateProgress,
   useCustomCourseSections,
 } from '../../../hooks/useCourses';
 import { VideoUploadService } from '../../../services/api/videoUpload.service';
@@ -22,8 +23,10 @@ const InlinePlayer: React.FC<{
   courseId: string;
   courseLessonId: string;
   title: string;
+  initialTime?: number;
+  onTimeUpdate?: (time: number) => void;
   onLessonComplete: () => void;
-}> = ({ courseId, courseLessonId, title, onLessonComplete }) => {
+}> = ({ courseId, courseLessonId, title, initialTime = 0, onTimeUpdate, onLessonComplete }) => {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -52,10 +55,21 @@ const InlinePlayer: React.FC<{
         {error && <p style={{ color: '#f87171' }}>{error}</p>}
         {videoUrl && !loading && (
           <video
+            key={videoUrl}
             src={videoUrl}
             controls
             autoPlay
             style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+            onLoadedMetadata={(e) => {
+              if (initialTime > 0) {
+                (e.target as HTMLVideoElement).currentTime = initialTime;
+              }
+            }}
+            onTimeUpdate={(e) => {
+              if (onTimeUpdate) {
+                onTimeUpdate((e.target as HTMLVideoElement).currentTime);
+              }
+            }}
             onEnded={onLessonComplete}
             onError={() => setError('Không thể phát video. Vui lòng thử lại.')}
           />
@@ -77,9 +91,13 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
   const { data: sectionsData } = useCustomCourseSections(courseId);
   const { data: progressData } = useCourseProgress(enrollmentId);
   const markComplete = useMarkLessonComplete();
+  const updateProgress = useUpdateProgress();
   const [playingLessonId, setPlayingLessonId] = useState<string | null>(null);
   const [showResources, setShowResources] = useState<string | null>(null);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+  
+  // Throttle updates to avoid spamming the backend
+  const lastUpdateTimeRef = useRef(0);
 
   const lessons: CourseLessonResponse[] = useMemo(() => {
     return (lessonsData?.result ?? []).sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
@@ -301,10 +319,33 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
               courseId={courseId}
               courseLessonId={playingLessonId}
               title={currentLesson.videoTitle ?? currentLesson.lessonTitle ?? 'Bài học'}
+              initialTime={progress?.lessons.find(l => l.courseLessonId === playingLessonId)?.watchedSeconds ?? 0}
+              onTimeUpdate={(time) => {
+                const now = Date.now();
+                // Update roughly every 5 seconds
+                if (now - lastUpdateTimeRef.current > 5000) {
+                  lastUpdateTimeRef.current = now;
+                  updateProgress.mutate({
+                    enrollmentId,
+                    courseLessonId: playingLessonId,
+                    watchedSeconds: time,
+                  });
+                }
+              }}
               onLessonComplete={() => {
-                // 1. Mark current as complete
-                if (!progress?.lessons.find(l => l.courseLessonId === playingLessonId)?.isCompleted) {
+                const lp = progress?.lessons.find(l => l.courseLessonId === playingLessonId);
+                // 1. Mark current as complete if not already
+                if (!lp?.isCompleted) {
                   markComplete.mutate({ enrollmentId, courseLessonId: playingLessonId });
+                }
+
+                // Make sure we save the final duration as progress too
+                if (currentLesson.durationSeconds) {
+                  updateProgress.mutate({
+                    enrollmentId,
+                    courseLessonId: playingLessonId,
+                    watchedSeconds: currentLesson.durationSeconds,
+                  });
                 }
 
                 // 2. Auto-play next lesson

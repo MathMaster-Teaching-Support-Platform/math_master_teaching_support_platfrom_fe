@@ -13,8 +13,6 @@ import { useNavigate } from 'react-router-dom';
 import { CourseCard } from '../../components/course/CourseCard';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import {
-  useCourseDetail,
-  useCourseProgress,
   useEnroll,
   useMyEnrollments,
   usePublicCourses,
@@ -66,11 +64,8 @@ const EnrollmentCard: React.FC<{
   index: number;
 }> = ({ enrollment, index }) => {
   const navigate = useNavigate();
-  const { data: progressData } = useCourseProgress(enrollment.id);
-  const { data: enrolledCourseData } = useCourseDetail(enrollment.courseId);
-  const progress = progressData?.result;
-  const enrolledCourseThumbnailUrl = enrolledCourseData?.result?.thumbnailUrl;
-  const completionRate = progress?.completionRate ?? 0;
+  const completionRate = enrollment.completionRate ?? 0;
+  const enrolledCourseThumbnailUrl = enrollment.courseThumbnailUrl;
 
   return (
     <motion.article
@@ -124,11 +119,9 @@ const EnrollmentCard: React.FC<{
             <strong style={{ color: '#1f5eff' }}>{completionRate.toFixed(0)}%</strong>
           </div>
           <AnimatedProgressBar value={completionRate} />
-          {progress && (
-            <p style={{ margin: '0.3rem 0 0', fontSize: '0.75rem', color: '#9aaece' }}>
-              {progress.completedLessons}/{progress.totalLessons} bài hoàn thành
-            </p>
-          )}
+          <p style={{ margin: '0.3rem 0 0', fontSize: '0.75rem', color: '#9aaece' }}>
+            {enrollment.completedLessons ?? 0}/{enrollment.totalLessons ?? 0} bài hoàn thành
+          </p>
         </div>
         <div className="course-actions">
           <button

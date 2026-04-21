@@ -298,8 +298,13 @@ export const API_ENDPOINTS = {
   COURSE_DETAIL: (courseId: string) => `/courses/${courseId}`,
   COURSE_PREVIEW: (courseId: string) => `/courses/${courseId}/preview`,
   COURSE_PUBLISH: (courseId: string) => `/courses/${courseId}/publish`,
+  COURSE_SUBMIT_REVIEW: (courseId: string) => `/courses/${courseId}/submit-review`,
+  ADMIN_COURSES_PENDING: '/courses/admin/pending',
+  ADMIN_COURSE_APPROVE: (courseId: string) => `/courses/admin/${courseId}/approve`,
+  ADMIN_COURSE_REJECT: (courseId: string) => `/courses/admin/${courseId}/reject`,
   COURSE_STUDENTS: (courseId: string) => `/courses/${courseId}/students`,
   COURSE_LESSONS: (courseId: string) => `/courses/${courseId}/lessons`,
+  COURSE_LESSONS_REORDER: (courseId: string) => `/courses/${courseId}/lessons/reorder`,
   COURSE_LESSON_DETAIL: (courseId: string, lessonId: string) =>
     `/courses/${courseId}/lessons/${lessonId}`,
   COURSE_SECTIONS: (courseId: string) => `/courses/${courseId}/sections`,

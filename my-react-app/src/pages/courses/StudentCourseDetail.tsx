@@ -49,6 +49,13 @@ const coverGradients = [
 
 const coverAccents = ['#1d4ed8', '#0f766e', '#047857', '#c2410c', '#be185d', '#6d28d9'] as const;
 
+const levelMap: Record<string, { label: string; color: string }> = {
+  BEGINNER: { label: 'Cơ bản', color: '#10b981' },
+  INTERMEDIATE: { label: 'Trung bình', color: '#f59e0b' },
+  ADVANCED: { label: 'Nâng cao', color: '#ef4444' },
+  ALL_LEVELS: { label: 'Mọi cấp độ', color: '#6366f1' },
+};
+
 const StudentCourseDetail: React.FC = () => {
   const { enrollmentId } = useParams<{ enrollmentId: string }>();
   const navigate = useNavigate();
@@ -80,7 +87,28 @@ const StudentCourseDetail: React.FC = () => {
   };
 
   const handleDrop = () => {
-    if (window.confirm('Bạn có chắc muốn hủy đăng ký khóa học này?')) {
+    if (!enrollment) return;
+    let isEligible = true;
+    let reason = '';
+
+    if (enrollment.enrolledAt) {
+      const hoursSinceEnrollment = (new Date().getTime() - new Date(enrollment.enrolledAt).getTime()) / (1000 * 60 * 60);
+      if (hoursSinceEnrollment >= 24) {
+        isEligible = false;
+        reason = 'vượt quá 24h kể từ khi đăng ký';
+      }
+    }
+
+    if (progress && progress.completionRate >= 10) {
+      isEligible = false;
+      reason = 'hoàn thành từ 10% bài học trở lên';
+    }
+
+    const confirmMsg = isEligible
+      ? 'Bạn có chắc muốn hủy đăng ký khóa học này? Số tiền đã thanh toán sẽ được hoàn lại vào ví.'
+      : `CẢNH BÁO: Khóa học đã ${reason}. Hủy đăng ký lúc này sẽ KHÔNG được hoàn tiền. Bạn vẫn muốn hủy khóa học chứ?`;
+
+    if (window.confirm(confirmMsg)) {
       dropMutation.mutate(enrollmentId!, {
         onSuccess: () => navigate('/student/courses'),
       });
@@ -209,7 +237,7 @@ const StudentCourseDetail: React.FC = () => {
                     {teacherProfile && (
                       <div className="hero-instructor-link" style={{ marginBottom: '1rem', fontSize: '0.9rem', color: '#64748b' }}>
                         <span>Giảng viên: </span>
-                        <Link 
+                        <Link
                           to={`/student/instructors/${teacherProfile.userId}`}
                           style={{
                             color: '#4f46e5',
@@ -224,10 +252,21 @@ const StudentCourseDetail: React.FC = () => {
                     )}
                     <span
                       className={`course-badge ${enrollment.status === 'ACTIVE' ? 'badge-live' : 'badge-draft'}`}
-                      style={{ marginBottom: '0.75rem' }}
+                      style={{ marginBottom: '0.75rem', marginRight: '0.5rem' }}
                     >
                       {enrollment.status === 'ACTIVE' ? 'Đang học' : 'Đã hủy'}
                     </span>
+                    {course?.level && (
+                      <span
+                        className="course-badge"
+                        style={{
+                          marginBottom: '0.75rem',
+                          background: levelMap[course.level]?.color ?? '#6366f1',
+                        }}
+                      >
+                        {levelMap[course.level]?.label ?? 'Mọi cấp độ'}
+                      </span>
+                    )}
 
                     {course && (
                       <div className="course-header-meta" style={{ marginTop: '0.5rem' }}>
@@ -379,7 +418,7 @@ const StudentCourseDetail: React.FC = () => {
                           <div className="instructor-info-box">
                             <h4 className="instructor-name">{teacherProfile.fullName}</h4>
                             <p className="instructor-position">{teacherProfile.position || 'Giảng viên chuyên nghiệp'}</p>
-                            
+
                             <div className="instructor-social-links-mini">
                               {teacherProfile.websiteUrl && <Globe size={14} />}
                               {teacherProfile.linkedinUrl && <Linkedin size={14} />}
@@ -426,16 +465,16 @@ const StudentCourseDetail: React.FC = () => {
                 />
               </div>
               <div className="course-recommendations-area">
-                <CourseRecommendationRow 
-                  title="Các khóa học liên quan" 
-                  courses={relatedCourses} 
-                  loading={loadingRelated} 
+                <CourseRecommendationRow
+                  title="Các khóa học liên quan"
+                  courses={relatedCourses}
+                  loading={loadingRelated}
                 />
-                
-                <CourseRecommendationRow 
-                  title={`Khóa học khác của ${teacherProfile?.fullName || 'giảng viên'}`} 
-                  courses={teacherCourses} 
-                  loading={loadingTeacherCourses} 
+
+                <CourseRecommendationRow
+                  title={`Khóa học khác của ${teacherProfile?.fullName || 'giảng viên'}`}
+                  courses={teacherCourses}
+                  loading={loadingTeacherCourses}
                 />
               </div>
 

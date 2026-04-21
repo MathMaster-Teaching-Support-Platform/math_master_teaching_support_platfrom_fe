@@ -1,0 +1,179 @@
+.acr-page {
+  display: grid;
+  gap: 1rem;
+}
+
+.acr-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.acr-header h1 {
+  margin: 0;
+  font-size: 1.6rem;
+  color: #10243e;
+}
+
+.acr-header p {
+  margin: 0.25rem 0 0;
+  color: #4d627d;
+}
+
+.acr-refresh {
+  border: 1px solid #c8d6ea;
+  background: #f9fbff;
+  color: #1f3f72;
+  border-radius: 10px;
+  padding: 0.55rem 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.acr-refresh:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.acr-card {
+  background: #fff;
+  border: 1px solid #e4ecf7;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.acr-empty {
+  padding: 2rem;
+  text-align: center;
+  color: #6c809c;
+}
+
+.acr-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.acr-table th,
+.acr-table td {
+  padding: 0.9rem;
+  border-bottom: 1px solid #edf2fa;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.acr-table th {
+  background: #f7faff;
+  color: #2b4770;
+  font-size: 0.86rem;
+}
+
+.acr-title-cell {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.acr-title-cell a {
+  color: #1f5eff;
+  text-decoration: none;
+  font-size: 0.85rem;
+}
+
+.acr-title-cell a:hover {
+  text-decoration: underline;
+}
+
+.acr-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.acr-btn {
+  border: 1px solid #d7e3f4;
+  background: #fff;
+  border-radius: 9px;
+  padding: 0.45rem 0.7rem;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.acr-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.acr-btn-approve {
+  border-color: #a8e0c2;
+  background: #edfdf3;
+  color: #1b6a41;
+}
+
+.acr-btn-reject {
+  border-color: #f4c6c6;
+  background: #fff3f3;
+  color: #9f2d2d;
+}
+
+.acr-pagination {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.7rem;
+  align-items: center;
+  padding: 0.8rem;
+}
+
+.acr-pagination button {
+  border: 1px solid #d4e1f3;
+  background: #fff;
+  border-radius: 8px;
+  padding: 0.4rem 0.65rem;
+}
+
+.acr-pagination button:disabled {
+  opacity: 0.55;
+}
+
+.acr-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(12, 24, 48, 0.45);
+  display: grid;
+  place-items: center;
+  z-index: 60;
+}
+
+.acr-modal {
+  width: min(560px, 92vw);
+  background: #fff;
+  border-radius: 14px;
+  padding: 1rem;
+  border: 1px solid #e7ecf5;
+  box-shadow: 0 18px 50px rgba(17, 35, 63, 0.22);
+}
+
+.acr-modal h2 {
+  margin: 0;
+  color: #152947;
+}
+
+.acr-modal p {
+  margin: 0.45rem 0 0.8rem;
+  color: #4f6481;
+}
+
+.acr-modal textarea {
+  width: 100%;
+  resize: vertical;
+  border-radius: 10px;
+  border: 1px solid #cedbec;
+  padding: 0.65rem;
+  font-family: inherit;
+}
+
+.acr-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  margin-top: 0.8rem;
+}

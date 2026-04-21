@@ -20,11 +20,13 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { useToast } from '../../context/ToastContext';
 import { CourseBreadcrumb } from '../../components/course/CourseBreadcrumb';
 import {
   useCourseDetail,
   useDeleteCourse,
   usePublishCourse,
+  useSubmitCourseForReview,
   useCourseStudents,
   useUpdateCourse,
 } from '../../hooks/useCourses';
@@ -45,6 +47,7 @@ type TabType = 'overview' | 'lessons' | 'assessments' | 'students' | 'reviews';
 const TeacherCourseDetail: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = (searchParams.get('tab') as TabType) || 'overview';
 
@@ -52,6 +55,7 @@ const TeacherCourseDetail: React.FC = () => {
   const { data: studentsData } = useCourseStudents(courseId!);
   const deleteMutation = useDeleteCourse();
   const publishMutation = usePublishCourse();
+  const submitReviewMutation = useSubmitCourseForReview();
   const updateMutation = useUpdateCourse();
 
   const [showEditModal, setShowEditModal] = useState(false);
@@ -115,6 +119,19 @@ const TeacherCourseDetail: React.FC = () => {
     publishMutation.mutate({
       courseId: course.id,
       data: { published: !course.published },
+    });
+  };
+
+  const handleSubmitForReview = () => {
+    if (!course) return;
+    submitReviewMutation.mutate(course.id, {
+      onSuccess: () => {
+        showToast({ type: 'success', message: 'Đã gửi khóa học lên hàng chờ duyệt.' });
+      },
+      onError: (err: unknown) => {
+        const msg = err instanceof Error ? err.message : 'Không thể gửi duyệt khóa học.';
+        showToast({ type: 'error', message: msg });
+      },
     });
   };
 
@@ -194,7 +211,15 @@ const TeacherCourseDetail: React.FC = () => {
                   <span
                     className={`course-badge ${course.published ? 'badge-live' : 'badge-draft'}`}
                   >
-                    {course.published ? (
+                    {course.status === 'PENDING_REVIEW' ? (
+                      <>
+                        <CheckCircle2 size={11} /> Chờ duyệt
+                      </>
+                    ) : course.status === 'REJECTED' ? (
+                      <>
+                        <AlertCircle size={11} /> Bị từ chối
+                      </>
+                    ) : course.published ? (
                       <>
                         <Eye size={11} /> Công khai
                       </>
@@ -226,10 +251,26 @@ const TeacherCourseDetail: React.FC = () => {
                 {course.description && (
                   <p className="course-header-description">{course.description}</p>
                 )}
+
+                {course.status === 'REJECTED' && course.rejectionReason && (
+                  <p className="course-header-description" style={{ color: '#b42318' }}>
+                    Lý do từ chối: {course.rejectionReason}
+                  </p>
+                )}
               </div>
             </div>
 
             <div className="course-header-actions">
+              {!course.published && course.status !== 'PENDING_REVIEW' && (
+                <button
+                  className="btn secondary"
+                  onClick={handleSubmitForReview}
+                  disabled={submitReviewMutation.isPending}
+                >
+                  <CheckCircle2 size={14} />
+                  {submitReviewMutation.isPending ? 'Đang gửi...' : 'Gửi duyệt'}
+                </button>
+              )}
               <button
                 className="btn secondary"
                 onClick={() => setShowEditModal(true)}
@@ -241,7 +282,12 @@ const TeacherCourseDetail: React.FC = () => {
               <button
                 className={`btn ${course.published ? 'secondary' : ''}`}
                 onClick={handleTogglePublish}
-                disabled={publishMutation.isPending}
+                disabled={publishMutation.isPending || !course.published && course.status !== 'PUBLISHED'}
+                title={
+                  !course.published && course.status !== 'PUBLISHED'
+                    ? 'Khóa học cần được admin duyệt trước khi công khai'
+                    : undefined
+                }
               >
                 {course.published ? (
                   <>

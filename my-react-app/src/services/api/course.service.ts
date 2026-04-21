@@ -17,9 +17,11 @@ import type {
   PublishCourseRequest,
   StudentInCourseResponse,
   StudentProgressResponse,
+  ReorderLessonsRequest,
   UpdateCourseAssessmentRequest,
   UpdateCourseLessonRequest,
   UpdateCourseRequest,
+  RejectCourseRequest,
   UpdateCustomCourseSectionRequest,
   CourseReviewRequest,
   CourseReviewResponse,
@@ -156,6 +158,50 @@ export class CourseService {
     return this.handleResponse(res);
   }
 
+  static async submitForReview(courseId: string): Promise<ApiResponse<CourseResponse>> {
+    const headers = await this.getHeaders();
+    const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.COURSE_SUBMIT_REVIEW(courseId)}`, {
+      method: 'PATCH',
+      headers,
+    });
+    return this.handleResponse(res);
+  }
+
+  static async getPendingReviewCourses(params: {
+    page?: number;
+    size?: number;
+  } = {}): Promise<ApiResponse<PaginatedResponse<CourseResponse>>> {
+    const headers = await this.getHeaders();
+    const qs = new URLSearchParams();
+    if (params.page !== undefined) qs.append('page', String(params.page));
+    if (params.size !== undefined) qs.append('size', String(params.size));
+    const url = `${API_BASE_URL}${API_ENDPOINTS.ADMIN_COURSES_PENDING}${qs.toString() ? `?${qs}` : ''}`;
+    const res = await fetch(url, { method: 'GET', headers });
+    return this.handleResponse(res);
+  }
+
+  static async approveCourse(courseId: string): Promise<ApiResponse<CourseResponse>> {
+    const headers = await this.getHeaders();
+    const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ADMIN_COURSE_APPROVE(courseId)}`, {
+      method: 'PATCH',
+      headers,
+    });
+    return this.handleResponse(res);
+  }
+
+  static async rejectCourse(
+    courseId: string,
+    data: RejectCourseRequest
+  ): Promise<ApiResponse<CourseResponse>> {
+    const headers = await this.getHeaders();
+    const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ADMIN_COURSE_REJECT(courseId)}`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify(data),
+    });
+    return this.handleResponse(res);
+  }
+
   static async getPublicCourses(
     params: GetPublicCoursesParams = {}
   ): Promise<ApiResponse<PaginatedResponse<CourseResponse>>> {
@@ -255,6 +301,19 @@ export class CourseService {
     return this.handleResponse(res);
   }
 
+  static async reorderLessons(
+    courseId: string,
+    data: ReorderLessonsRequest
+  ): Promise<ApiResponse<void>> {
+    const headers = await this.getHeaders();
+    const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.COURSE_LESSONS_REORDER(courseId)}`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify(data),
+    });
+    return this.handleResponse(res);
+  }
+
   // ─── Enrollments ──────────────────────────────────────────────────────────
 
   static async enroll(courseId: string): Promise<ApiResponse<EnrollmentResponse>> {
@@ -300,6 +359,19 @@ export class CourseService {
     const headers = await this.getHeaders();
     const res = await fetch(
       `${API_BASE_URL}${API_ENDPOINTS.ENROLLMENT_LESSON_COMPLETE(enrollmentId, courseLessonId)}`,
+      { method: 'POST', headers }
+    );
+    return this.handleResponse(res);
+  }
+
+  static async updateProgress(
+    enrollmentId: string,
+    courseLessonId: string,
+    watchedSeconds: number
+  ): Promise<ApiResponse<LessonProgressItem>> {
+    const headers = await this.getHeaders();
+    const res = await fetch(
+      `${API_BASE_URL}/enrollments/${enrollmentId}/lessons/${courseLessonId}/progress?watchedSeconds=${watchedSeconds}`,
       { method: 'POST', headers }
     );
     return this.handleResponse(res);

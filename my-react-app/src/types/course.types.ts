@@ -1,6 +1,8 @@
 // Course Management Types
 
 export type CourseProvider = 'MINISTRY' | 'CUSTOM';
+export type CourseLevel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'ALL_LEVELS';
+export type CourseStatus = 'DRAFT' | 'PENDING_REVIEW' | 'PUBLISHED' | 'REJECTED';
 
 export interface MaterialItem {
   type: 'slide' | 'mindmap' | 'document';
@@ -30,6 +32,8 @@ export interface CourseResponse {
   thumbnailUrl: string | null;
   published: boolean; // Backend returns 'published', not 'isPublished'
   isPublished: boolean; // Alias for compatibility
+  status?: CourseStatus;
+  rejectionReason?: string | null;
   rating: number;
   ratingCount: number; // Add review count
   studentsCount: number;
@@ -43,6 +47,7 @@ export interface CourseResponse {
   targetAudience?: string;
   subtitle?: string;
   language?: string;
+  level?: CourseLevel;
   totalVideoHours?: number;
   articlesCount?: number;
   resourcesCount?: number;
@@ -111,6 +116,10 @@ export interface EnrollmentResponse {
   enrolledAt: string;
   createdAt: string;
   updatedAt: string;
+  courseThumbnailUrl: string | null;
+  completedLessons?: number;
+  totalLessons?: number;
+  completionRate?: number;
 }
 
 export interface LessonProgressItem {
@@ -119,6 +128,7 @@ export interface LessonProgressItem {
   orderIndex: number | null;
   isCompleted: boolean;
   completedAt: string | null;
+  watchedSeconds?: number;
 }
 
 export interface StudentProgressResponse {
@@ -155,6 +165,7 @@ export interface CreateCourseRequest {
   targetAudience?: string;
   subtitle?: string;
   language?: string;
+  level?: CourseLevel;
   originalPrice?: number;
   discountedPrice?: number;
   discountExpiryDate?: string;
@@ -169,6 +180,7 @@ export interface UpdateCourseRequest {
   targetAudience?: string;
   subtitle?: string;
   language?: string;
+  level?: CourseLevel;
   originalPrice?: number;
   discountedPrice?: number;
   discountExpiryDate?: string;
@@ -196,8 +208,19 @@ export interface UpdateCourseLessonRequest {
   materials?: string;
 }
 
+export interface ReorderLessonsRequest {
+  orders: Array<{
+    lessonId: string;
+    orderIndex: number;
+  }>;
+}
+
 export interface PublishCourseRequest {
   published: boolean;
+}
+
+export interface RejectCourseRequest {
+  reason: string;
 }
 
 export interface GetPublicCoursesParams {

@@ -8,8 +8,10 @@ import type {
   CreateCourseRequest,
   GetPublicCoursesParams,
   PublishCourseRequest,
+  RejectCourseRequest,
   UpdateCourseAssessmentRequest,
   UpdateCourseLessonRequest,
+  ReorderLessonsRequest,
   UpdateCourseRequest,
   UpdateCustomCourseSectionRequest,
   CreateCustomCourseSectionRequest,
@@ -27,6 +29,8 @@ export const courseKeys = {
   students: (courseId: string) => [...courseKeys.all, 'students', courseId] as const,
   enrollments: () => ['enrollments', 'my'] as const,
   progress: (enrollmentId: string) => ['enrollments', 'progress', enrollmentId] as const,
+  pendingReview: (page: number, size: number) =>
+    [...courseKeys.all, 'admin', 'pending-review', page, size] as const,
 };
 
 // ─── Teacher Hooks ────────────────────────────────────────────────────────────
@@ -95,6 +99,45 @@ export function usePublishCourse() {
   });
 }
 
+export function useSubmitCourseForReview() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (courseId: string) => CourseService.submitForReview(courseId),
+    onSuccess: (_data, courseId) => {
+      qc.invalidateQueries({ queryKey: courseKeys.my() });
+      qc.invalidateQueries({ queryKey: courseKeys.detail(courseId) });
+    },
+  });
+}
+
+export function usePendingReviewCourses(page = 0, size = 20) {
+  return useQuery({
+    queryKey: courseKeys.pendingReview(page, size),
+    queryFn: () => CourseService.getPendingReviewCourses({ page, size }),
+  });
+}
+
+export function useApproveCourseReview() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (courseId: string) => CourseService.approveCourse(courseId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: courseKeys.all });
+    },
+  });
+}
+
+export function useRejectCourseReview() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ courseId, data }: { courseId: string; data: RejectCourseRequest }) =>
+      CourseService.rejectCourse(courseId, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: courseKeys.all });
+    },
+  });
+}
+
 export function useCourseStudents(courseId: string) {
   return useQuery({
     queryKey: courseKeys.students(courseId),
@@ -154,6 +197,16 @@ export function useDeleteCourseLesson() {
   return useMutation({
     mutationFn: ({ courseId, lessonId }: { courseId: string; lessonId: string }) =>
       CourseService.deleteLesson(courseId, lessonId),
+    onSuccess: (_data, { courseId }) =>
+      qc.invalidateQueries({ queryKey: courseKeys.lessons(courseId) }),
+  });
+}
+
+export function useReorderCourseLessons() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ courseId, data }: { courseId: string; data: ReorderLessonsRequest }) =>
+      CourseService.reorderLessons(courseId, data),
     onSuccess: (_data, { courseId }) =>
       qc.invalidateQueries({ queryKey: courseKeys.lessons(courseId) }),
   });
@@ -243,6 +296,23 @@ export function useMarkLessonComplete() {
       enrollmentId: string;
       courseLessonId: string;
     }) => CourseService.markLessonComplete(enrollmentId, courseLessonId),
+    onSuccess: (_data, { enrollmentId }) =>
+      qc.invalidateQueries({ queryKey: courseKeys.progress(enrollmentId) }),
+  });
+}
+
+export function useUpdateProgress() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      enrollmentId,
+      courseLessonId,
+      watchedSeconds,
+    }: {
+      enrollmentId: string;
+      courseLessonId: string;
+      watchedSeconds: number;
+    }) => CourseService.updateProgress(enrollmentId, courseLessonId, Math.floor(watchedSeconds)),
     onSuccess: (_data, { enrollmentId }) =>
       qc.invalidateQueries({ queryKey: courseKeys.progress(enrollmentId) }),
   });
