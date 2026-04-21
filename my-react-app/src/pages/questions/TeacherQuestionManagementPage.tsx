@@ -13,11 +13,12 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MathText from '../../components/common/MathText';
 import Pagination from '../../components/common/Pagination';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { useDebounce } from '../../hooks/useDebounce';
 import {
   useCreateQuestion,
   useDeleteQuestion,
@@ -32,6 +33,7 @@ import type {
   QuestionType,
   UpdateQuestionRequest,
 } from '../../types/question';
+import { useToast } from '../../context/ToastContext';
 import './TeacherQuestionManagementPage.css';
 
 type FormMode = 'create' | 'edit';
@@ -282,12 +284,19 @@ export default function TeacherQuestionManagementPage() {
   const [searchName, setSearchName] = useState('');
   const [searchTag, setSearchTag] = useState('');
   const [page, setPage] = useState(0);
-  const [size, setSize] = useState(20);
+  const size = 10;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formMode, setFormMode] = useState<FormMode>('create');
   const [selectedQuestion, setSelectedQuestion] = useState<QuestionResponse | null>(null);
   const [form, setForm] = useState<QuestionFormState>(initialFormState);
   const [formError, setFormError] = useState<string | null>(null);
+
+  const debouncedSearchName = useDebounce(searchName, 300);
+  const debouncedSearchTag = useDebounce(searchTag, 300);
+
+  useEffect(() => {
+    setPage(0);
+  }, [debouncedSearchName, debouncedSearchTag]);
 
   const queryParams = useMemo(
     () => ({
@@ -295,11 +304,13 @@ export default function TeacherQuestionManagementPage() {
       size,
       sortBy: 'createdAt',
       sortDirection: 'DESC' as const,
-      searchName: searchName.trim() || undefined,
-      searchTag: searchTag.trim() || undefined,
+      searchName: debouncedSearchName.trim() || undefined,
+      searchTag: debouncedSearchTag.trim() || undefined,
     }),
-    [page, searchName, searchTag, size]
+    [page, debouncedSearchName, debouncedSearchTag, size]
   );
+
+  const { showToast } = useToast();
 
   const { data, isLoading, isError, error, refetch } = useGetMyQuestions(queryParams);
   const createMutation = useCreateQuestion();
@@ -318,18 +329,6 @@ export default function TeacherQuestionManagementPage() {
     }),
     [questions]
   );
-
-  const filteredQuestions = useMemo(() => {
-    const qName = searchName.trim().toLowerCase();
-    const qTag = searchTag.trim().toLowerCase();
-
-    return questions.filter((question) => {
-      const matchName = !qName || question.questionText.toLowerCase().includes(qName);
-      const matchTag =
-        !qTag || (question.tags ?? []).some((tag) => tag.toLowerCase().includes(qTag));
-      return matchName && matchTag;
-    });
-  }, [questions, searchName, searchTag]);
 
   const openingCreateModal = () => {
     setFormMode('create');
@@ -408,6 +407,7 @@ export default function TeacherQuestionManagementPage() {
         await updateMutation.mutateAsync({ questionId: selectedQuestion.id, request: payload });
       }
 
+      showToast({ type: 'success', message: formMode === 'create' ? 'Tạo câu hỏi thành công.' : 'Cập nhật câu hỏi thành công.' });
       closeModal();
       await refetch();
     } catch (error_) {
@@ -421,9 +421,10 @@ export default function TeacherQuestionManagementPage() {
 
     try {
       await deleteMutation.mutateAsync(question.id);
+      showToast({ type: 'success', message: 'Đã xóa câu hỏi thành công.' });
       await refetch();
     } catch (error_) {
-      globalThis.alert(error_ instanceof Error ? error_.message : 'Khong the xoa cau hoi.');
+      showToast({ type: 'error', message: error_ instanceof Error ? error_.message : 'Không thể xóa câu hỏi.' });
     }
   }
 
@@ -468,7 +469,7 @@ export default function TeacherQuestionManagementPage() {
                   Tổng câu hỏi
                 </p>
                 <h3 style={{ margin: 0, fontSize: '1.5rem' }}>
-                  {isLoading ? '—' : questions.length}
+                  {isLoading ? '—' : totalElements}
                 </h3>
               </div>
             </div>
@@ -560,7 +561,6 @@ export default function TeacherQuestionManagementPage() {
                 value={searchName}
                 onChange={(event) => {
                   setSearchName(event.target.value);
-                  setPage(0);
                 }}
               />
               {searchName && (
@@ -568,7 +568,6 @@ export default function TeacherQuestionManagementPage() {
                   className="search-box__clear"
                   onClick={() => {
                     setSearchName('');
-                    setPage(0);
                   }}
                 >
                   <X size={13} />
@@ -584,7 +583,6 @@ export default function TeacherQuestionManagementPage() {
                 value={searchTag}
                 onChange={(event) => {
                   setSearchTag(event.target.value);
-                  setPage(0);
                 }}
               />
               {searchTag && (
@@ -592,7 +590,6 @@ export default function TeacherQuestionManagementPage() {
                   className="search-box__clear"
                   onClick={() => {
                     setSearchTag('');
-                    setPage(0);
                   }}
                 >
                   <X size={13} />
@@ -629,7 +626,7 @@ export default function TeacherQuestionManagementPage() {
             </div>
           )}
 
-          {!isLoading && !isError && filteredQuestions.length === 0 && (
+          {!isLoading && !isError && questions.length === 0 && (
             <div className="empty">
               <FileQuestion size={32} style={{ color: '#94a3b8', marginBottom: 8 }} />
               <p style={{ margin: 0 }}>Không tìm thấy câu hỏi phù hợp.</p>
@@ -648,7 +645,7 @@ export default function TeacherQuestionManagementPage() {
             </div>
           )}
 
-          {!isLoading && !isError && filteredQuestions.length > 0 && (
+          {!isLoading && !isError && questions.length > 0 && (
             <div className="table-wrap">
               <table className="table">
                 <thead>
@@ -663,7 +660,7 @@ export default function TeacherQuestionManagementPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredQuestions.map((question) => (
+                  {questions.map((question) => (
                     <tr key={question.id}>
                       <td>
                         <MathText text={question.questionText} />
@@ -720,7 +717,6 @@ export default function TeacherQuestionManagementPage() {
             totalElements={totalElements}
             pageSize={size}
             onChange={(p) => setPage(p)}
-            onPageSizeChange={(s) => { setSize(s); setPage(0); }}
           />
 
           <QuestionFormModal

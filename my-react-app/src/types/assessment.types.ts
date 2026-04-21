@@ -138,6 +138,7 @@ export interface AssessmentSummary {
 // ─── Query Params ─────────────────────────────────────────────────────────────
 export interface GetMyAssessmentsParams {
     status?: AssessmentStatus;
+    search?: string;
     page?: number;
     size?: number;
     sortBy?: string;

@@ -102,7 +102,9 @@ export const questionTemplateService = {
         page: number = 0,
         size: number = 20,
         sortBy: string = 'createdAt',
-        sortDirection: string = 'DESC'
+        sortDirection: string = 'DESC',
+        search?: string,
+        status?: string
     ): Promise<ApiResponse<PageResponse<QuestionTemplateResponse>>> => {
         const params = new URLSearchParams({
             page: page.toString(),
@@ -110,6 +112,8 @@ export const questionTemplateService = {
             sortBy,
             sortDirection,
         });
+        if (search) params.append('search', search);
+        if (status) params.append('status', status);
         const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTION_TEMPLATES_MY}?${params.toString()}`, {
             method: 'GET',
             headers: getAuthHeaders(),

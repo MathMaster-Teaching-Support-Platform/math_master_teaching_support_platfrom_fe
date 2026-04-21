@@ -441,6 +441,34 @@
   text-overflow: ellipsis;
 }
 
+/* ── Cognitive stats row ─────────────────────────────── */
+.bank-cognitive-stats {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.45rem;
+  font-size: 0.75rem;
+}
+
+.bank-cognitive-label {
+  color: var(--mod-slate-500);
+  font-weight: 600;
+  margin-right: 0.15rem;
+}
+
+.bank-cognitive-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  background: var(--mod-slate-100);
+  color: var(--mod-slate-700);
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 .module-layout-container .qb-quicknav__arrow {
   color: var(--mod-slate-300);
   flex-shrink: 0;

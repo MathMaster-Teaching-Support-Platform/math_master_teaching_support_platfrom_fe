@@ -27,6 +27,7 @@ import LatexRenderer from '../../components/common/LatexRenderer';
 import MathText from '../../components/common/MathText';
 import Pagination from '../../components/common/Pagination';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { useDebounce } from '../../hooks/useDebounce';
 import {
   useApproveCanonicalQuestion,
   useBulkApproveCanonicalQuestions,
@@ -63,6 +64,7 @@ import {
 } from '../../types/questionTemplate';
 import { CanonicalGenerateModal } from './CanonicalGenerateModal';
 import { CanonicalQuestionModal } from './CanonicalQuestionModal';
+import { useToast } from '../../context/ToastContext';
 import './template-review.css';
 import { TemplateBulkImportModal } from './TemplateBulkImportModal';
 import { TemplateFormModal } from './TemplateFormModal';
@@ -190,11 +192,11 @@ function extractPrimaryDiagramLatex(diagramData: unknown): string | null {
 
 export function TemplateDashboard() {
   const navigate = useNavigate();
-  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const { showToast } = useToast();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<'ALL' | TemplateStatus>('ALL');
   const [page, setPage] = useState(0);
-  const [size, setSize] = useState(20);
+  const size = 10;
   const [mode, setMode] = useState<'create' | 'edit'>('create');
   const [formOpen, setFormOpen] = useState(false);
   const [bulkImportOpen, setBulkImportOpen] = useState(false);
@@ -224,11 +226,20 @@ export function TemplateDashboard() {
   const [editExplanation, setEditExplanation] = useState('');
   const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
 
+  const debouncedSearch = useDebounce(search, 300);
+  const debouncedStatus = status;
+
+  useEffect(() => {
+    setPage(0);
+  }, [debouncedSearch, status]);
+
   const { data, isLoading, isError, error, refetch } = useGetMyQuestionTemplates(
     page,
     size,
     'createdAt',
-    'DESC'
+    'DESC',
+    debouncedSearch.trim() || undefined,
+    debouncedStatus === 'ALL' ? undefined : debouncedStatus
   );
   const { data: canonicalData } = useGetMyCanonicalQuestions(0, 20, 'createdAt', 'DESC');
 
@@ -274,19 +285,6 @@ export function TemplateDashboard() {
     [templates, totalElements]
   );
 
-  const filtered = useMemo(() => {
-    return templates.filter((item) => {
-      if (status !== 'ALL' && item.status !== status) return false;
-      if (!search.trim()) return true;
-      const q = search.toLowerCase();
-      return (
-        item.name.toLowerCase().includes(q) ||
-        (item.description?.toLowerCase().includes(q) ?? false) ||
-        item.tags.some((tag) => tag.toLowerCase().includes(q))
-      );
-    });
-  }, [search, status, templates]);
-
   const reviewQuestions = useMemo(
     () => reviewQuestionsQuery.data?.result ?? [],
     [reviewQuestionsQuery.data]
@@ -315,20 +313,6 @@ export function TemplateDashboard() {
     setSelectedCanonicalQuestionIds(new Set(defaultSelected));
   }, [canonicalReviewOpen, canonicalReviewQuestions]);
 
-  useEffect(() => {
-    if (!toast) return;
-    const timeoutId = globalThis.setTimeout(
-      () => {
-        setToast(null);
-      },
-      toast.type === 'error' ? 5500 : 3200
-    );
-
-    return () => {
-      globalThis.clearTimeout(timeoutId);
-    };
-  }, [toast]);
-
   async function saveTemplate(payload: QuestionTemplateRequest) {
     if (mode === 'create') {
       await createMutation.mutateAsync(payload);
@@ -347,7 +331,7 @@ export function TemplateDashboard() {
       setSelected(detail.result);
       setFormOpen(true);
     } catch (error) {
-      setToast({
+      showToast({
         type: 'error',
         message:
           error instanceof Error ? error.message : 'Không thể tải chi tiết template để chỉnh sửa.',
@@ -389,14 +373,14 @@ export function TemplateDashboard() {
     if (!globalThis.confirm(`Bạn có chắc muốn xóa canonical "${canonical.title}"?`)) return;
     try {
       await deleteCanonicalMutation.mutateAsync(canonical.id);
-      setToast({ type: 'success', message: 'Đã xóa canonical question.' });
+      showToast({ type: 'success', message: 'Đã xóa canonical question.' });
       if (canonicalReviewId === canonical.id) {
         setCanonicalReviewOpen(false);
         setCanonicalReviewId('');
         setSelectedCanonicalQuestionIds(new Set());
       }
     } catch (error) {
-      setToast({
+      showToast({
         type: 'error',
         message: error instanceof Error ? error.message : 'Không thể xóa canonical question.',
       });
@@ -406,10 +390,10 @@ export function TemplateDashboard() {
   async function handleApproveCanonicalQuestion(questionId: string) {
     try {
       await approveCanonicalQuestionMutation.mutateAsync(questionId);
-      setToast({ type: 'success', message: 'Đã duyệt câu hỏi thành công.' });
+      showToast({ type: 'success', message: 'Đã duyệt câu hỏi thành công.' });
       void canonicalReviewQuestionsQuery.refetch();
     } catch (error) {
-      setToast({
+      showToast({
         type: 'error',
         message: error instanceof Error ? error.message : 'Không thể duyệt câu hỏi theo canonical.',
       });
@@ -420,14 +404,14 @@ export function TemplateDashboard() {
     if (selectedCanonicalQuestionIds.size === 0) return;
     try {
       await bulkApproveCanonicalMutation.mutateAsync(Array.from(selectedCanonicalQuestionIds));
-      setToast({
+      showToast({
         type: 'success',
         message: `Đã phê duyệt ${selectedCanonicalQuestionIds.size} câu hỏi thành công.`,
       });
       setSelectedCanonicalQuestionIds(new Set());
       void canonicalReviewQuestionsQuery.refetch();
     } catch (error) {
-      setToast({
+      showToast({
         type: 'error',
         message:
           error instanceof Error ? error.message : 'Không thể phê duyệt câu hỏi theo canonical.',
@@ -439,14 +423,14 @@ export function TemplateDashboard() {
     if (selectedQuestionIds.size === 0) return;
     try {
       await bulkApproveMutation.mutateAsync(Array.from(selectedQuestionIds));
-      setToast({
+      showToast({
         type: 'success',
         message: `Đã phê duyệt ${selectedQuestionIds.size} câu hỏi thành công.`,
       });
       setSelectedQuestionIds(new Set());
       void reviewQuestionsQuery.refetch();
     } catch (error) {
-      setToast({
+      showToast({
         type: 'error',
         message: error instanceof Error ? error.message : 'Không thể phê duyệt câu hỏi đã chọn.',
       });
@@ -471,7 +455,7 @@ export function TemplateDashboard() {
     }
 
     if (failedCount === 0) {
-      setToast({
+      showToast({
         type: 'success',
         message: `Đã xóa ${successCount} câu hỏi thành công.`,
       });
@@ -479,14 +463,14 @@ export function TemplateDashboard() {
     }
 
     if (successCount === 0) {
-      setToast({
+      showToast({
         type: 'error',
         message: 'Không thể xóa các câu hỏi đã chọn. Vui lòng thử lại.',
       });
       return;
     }
 
-    setToast({
+    showToast({
       type: 'error',
       message: `Đã xóa ${successCount} câu hỏi, thất bại ${failedCount} câu.`,
     });
@@ -527,10 +511,10 @@ export function TemplateDashboard() {
   async function handleApproveQuestion(questionId: string) {
     try {
       await approveQuestionMutation.mutateAsync(questionId);
-      setToast({ type: 'success', message: 'Đã duyệt câu hỏi thành công.' });
+      showToast({ type: 'success', message: 'Đã duyệt câu hỏi thành công.' });
       void reviewQuestionsQuery.refetch();
     } catch (error) {
-      setToast({
+      showToast({
         type: 'error',
         message: error instanceof Error ? error.message : 'Không thể duyệt câu hỏi.',
       });
@@ -541,7 +525,7 @@ export function TemplateDashboard() {
     if (!globalThis.confirm('Bạn có chắc muốn xóa câu hỏi này?')) return;
     try {
       await deleteQuestionMutation.mutateAsync(questionId);
-      setToast({ type: 'success', message: 'Đã xóa câu hỏi.' });
+      showToast({ type: 'success', message: 'Đã xóa câu hỏi.' });
       setSelectedQuestionIds((prev) => {
         const next = new Set(prev);
         next.delete(questionId);
@@ -549,7 +533,7 @@ export function TemplateDashboard() {
       });
       void reviewQuestionsQuery.refetch();
     } catch (error) {
-      setToast({
+      showToast({
         type: 'error',
         message: error instanceof Error ? error.message : 'Không thể xóa câu hỏi.',
       });
@@ -567,11 +551,11 @@ export function TemplateDashboard() {
           explanation: editExplanation,
         },
       });
-      setToast({ type: 'success', message: 'Đã cập nhật câu hỏi.' });
+      showToast({ type: 'success', message: 'Đã cập nhật câu hỏi.' });
       closeEditQuestion();
       void reviewQuestionsQuery.refetch();
     } catch (error) {
-      setToast({
+      showToast({
         type: 'error',
         message: error instanceof Error ? error.message : 'Không thể cập nhật câu hỏi.',
       });
@@ -774,7 +758,7 @@ export function TemplateDashboard() {
                 className="btn secondary"
                 onClick={() => {
                   if (canonicalQuestions.length === 0) {
-                    setToast({ type: 'error', message: 'Chưa có bài toán gốc. Hãy thêm trước.' });
+                    showToast({ type: 'error', message: 'Chưa có bài toán gốc. Hãy thêm trước.' });
                     return;
                   }
                   setCanonicalGenerateId(canonicalQuestions[0]?.id ?? '');
@@ -787,7 +771,7 @@ export function TemplateDashboard() {
                 className="btn secondary"
                 onClick={() => {
                   if (canonicalQuestions.length === 0) {
-                    setToast({ type: 'error', message: 'Chưa có bài toán gốc nào để duyệt.' });
+                    showToast({ type: 'error', message: 'Chưa có bài toán gốc nào để duyệt.' });
                     return;
                   }
                   openCanonicalReviewModal(canonicalQuestions[0]?.id);
@@ -892,14 +876,14 @@ export function TemplateDashboard() {
               <input
                 placeholder="Tìm mẫu câu hỏi..."
                 value={search}
-                onChange={(event) => { setSearch(event.target.value); setPage(0); }}
+                onChange={(event) => { setSearch(event.target.value); }}
               />
               {search && (
                 <button
                   type="button"
                   className="search-box__clear"
                   aria-label="Xóa nội dung tìm kiếm"
-                  onClick={() => { setSearch(''); setPage(0); }}
+                  onClick={() => { setSearch(''); }}
                 >
                   <X size={14} />
                 </button>
@@ -911,7 +895,7 @@ export function TemplateDashboard() {
                 <button
                   key={item}
                   className={`pill-btn${status === item ? ' active' : ''}`}
-                  onClick={() => { setStatus(item); setPage(0); }}
+                  onClick={() => { setStatus(item); }}
                 >
                   {statusLabel[item]}
                 </button>
@@ -964,8 +948,8 @@ export function TemplateDashboard() {
             </div>
           )}
 
-          {/* ── Empty: filtered ── */}
-          {!isLoading && !isError && filtered.length === 0 && templates.length > 0 && (
+          {/* ── Empty: no results ── */}
+          {!isLoading && !isError && templates.length === 0 && (debouncedSearch || status !== 'ALL') && (
             <div className="empty">
               <Search size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
               <p>Không tìm thấy mẫu phù hợp với bộ lọc.</p>
@@ -993,9 +977,9 @@ export function TemplateDashboard() {
           )}
 
           {/* ── Grid ── */}
-          {!isLoading && !isError && filtered.length > 0 && (
+          {!isLoading && !isError && templates.length > 0 && (
             <div className={`grid-cards${viewMode === 'list' ? ' list-view' : ''}`}>
-              {filtered.map((template, idx) => (
+              {templates.map((template, idx) => (
                 <article key={template.id} className="data-card mindmap-card">
                   <div
                     className="mindmap-cover"
@@ -1044,9 +1028,7 @@ export function TemplateDashboard() {
                           {cognitiveLevelLabel[template.cognitiveLevel] || template.cognitiveLevel}
                         </span>
                       </div>
-                      <div className="metric">
-                        <span>Đã dùng: {template.usageCount ?? 0} lần</span>
-                      </div>
+
                       {template.isPublic && (
                         <div className="metric metric--ai">
                           <Eye size={13} />
@@ -1148,7 +1130,6 @@ export function TemplateDashboard() {
             totalElements={totalElements}
             pageSize={size}
             onChange={(p) => setPage(p)}
-            onPageSizeChange={(s) => { setSize(s); setPage(0); }}
           />
 
           <TemplateFormModal
@@ -1181,7 +1162,7 @@ export function TemplateDashboard() {
               isOpen={generateOpen}
               onClose={() => setGenerateOpen(false)}
               template={generateTemplate}
-              onGenerated={(message) => setToast({ type: 'success', message })}
+              onGenerated={(message) => showToast({ type: 'success', message })}
             />
           )}
 
@@ -1190,7 +1171,7 @@ export function TemplateDashboard() {
             onClose={() => setCanonicalGenerateOpen(false)}
             canonicalId={canonicalGenerateId}
             templates={templates}
-            onGenerated={(message) => setToast({ type: 'success', message })}
+            onGenerated={(message) => showToast({ type: 'success', message })}
           />
 
           <CanonicalQuestionModal
@@ -1205,12 +1186,12 @@ export function TemplateDashboard() {
                   id: selectedCanonical.id,
                   request: payload,
                 });
-                setToast({ type: 'success', message: 'Cập nhật canonical question thành công.' });
+                showToast({ type: 'success', message: 'Cập nhật canonical question thành công.' });
                 return;
               }
 
               await createCanonicalMutation.mutateAsync(payload);
-              setToast({ type: 'success', message: 'Tạo canonical question thành công.' });
+              showToast({ type: 'success', message: 'Tạo canonical question thành công.' });
             }}
           />
 
@@ -1873,16 +1854,7 @@ export function TemplateDashboard() {
             </div>
           )}
 
-          {toast && (
-            <button
-              type="button"
-              className={`template-review-toast template-review-toast--${toast.type}`}
-              onClick={() => setToast(null)}
-              style={{ border: 'none' }}
-            >
-              {toast.message}
-            </button>
-          )}
+
         </section>
       </div>
     </DashboardLayout>

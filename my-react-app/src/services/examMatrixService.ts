@@ -73,6 +73,28 @@ export const examMatrixService = {
             headers: getAuthHeaders(),
         }).then(handleResponse<ExamMatrixResponse[]>),
 
+    getMyExamMatricesPaged: async (params: {
+        search?: string;
+        status?: string;
+        page?: number;
+        size?: number;
+        sortBy?: string;
+        sortDirection?: string;
+    }): Promise<ExamMatrixApiResponse<{ content: ExamMatrixResponse[]; totalPages: number; totalElements: number; size: number; number: number }>> => {
+        const queryParams = new URLSearchParams();
+        queryParams.append('page', (params.page ?? 0).toString());
+        queryParams.append('size', (params.size ?? 20).toString());
+        queryParams.append('sortBy', params.sortBy ?? 'createdAt');
+        queryParams.append('sortDirection', params.sortDirection ?? 'DESC');
+        if (params.search) queryParams.append('search', params.search);
+        if (params.status) queryParams.append('status', params.status);
+        const response = await fetch(
+            `${API_BASE_URL}${API_ENDPOINTS.EXAM_MATRICES_MY_PAGED}?${queryParams.toString()}`,
+            { headers: getAuthHeaders() }
+        );
+        return handleResponse<{ content: ExamMatrixResponse[]; totalPages: number; totalElements: number; size: number; number: number }>(response);
+    },
+
     deleteExamMatrix: (matrixId: string) =>
         fetch(`${API_BASE_URL}${API_ENDPOINTS.EXAM_MATRIX_DETAIL(matrixId)}`, {
             method: 'DELETE',

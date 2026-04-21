@@ -18,19 +18,21 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import Pagination from '../../components/common/Pagination';
+import { useDebounce } from '../../hooks/useDebounce';
 import {
   useCreateQuestionBank,
   useDeleteQuestionBank,
-  useGetMyQuestionBanks,
+  useSearchQuestionBanks,
   useToggleQuestionBankPublicStatus,
   useUpdateQuestionBank,
 } from '../../hooks/useQuestionBank';
 import '../../styles/module-refactor.css';
 import type { QuestionBankRequest, QuestionBankResponse } from '../../types/questionBank';
+import { useToast } from '../../context/ToastContext';
 import './QuestionBankDashboard.css';
 import { QuestionBankFormModal } from './QuestionBankFormModal';
 
@@ -55,29 +57,59 @@ const coverGradients = [
 
 const coverAccents = ['#93c5fd', '#86efac', '#c4b5fd', '#fdba74', '#67e8f9', '#f9a8d4'];
 
+const cognitiveShortLabel: Record<string, string> = {
+  NHAN_BIET: 'NB',
+  THONG_HIEU: 'TH',
+  VAN_DUNG: 'VD',
+  VAN_DUNG_CAO: 'VDC',
+  REMEMBER: 'NB',
+  UNDERSTAND: 'TH',
+  APPLY: 'VD',
+  ANALYZE: 'PT',
+  EVALUATE: 'DG',
+  CREATE: 'ST',
+};
+
 export function QuestionBankDashboard() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [visibilityFilter, setVisibilityFilter] = useState<VisibilityFilter>('ALL');
   const [page, setPage] = useState(0);
-  const [size, setSize] = useState(20);
+  const size = 10;
   const [formOpen, setFormOpen] = useState(false);
   const [mode, setMode] = useState<'create' | 'edit'>('create');
   const [selected, setSelected] = useState<QuestionBankResponse | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  const { data, isLoading, isError, error, refetch } = useGetMyQuestionBanks(
-    page,
-    size,
-    'createdAt',
-    'DESC',
-    true
-  );
+  const debouncedSearch = useDebounce(search, 300);
+
+  useEffect(() => {
+    setPage(0);
+  }, [debouncedSearch, visibilityFilter]);
+
+  const searchParams = useMemo(() => {
+    let isPublic: boolean | undefined;
+    if (visibilityFilter === 'PUBLIC') isPublic = true;
+    else if (visibilityFilter === 'PRIVATE') isPublic = false;
+    return {
+      searchTerm: debouncedSearch.trim() || undefined,
+      isPublic,
+      mineOnly: true,
+      page,
+      size,
+      sortBy: 'createdAt',
+      sortDirection: 'DESC' as const,
+    };
+  }, [debouncedSearch, visibilityFilter, page, size]);
+
+  const { data, isLoading, isError, error, refetch } = useSearchQuestionBanks(searchParams);
 
   const createMutation = useCreateQuestionBank();
   const updateMutation = useUpdateQuestionBank();
   const deleteMutation = useDeleteQuestionBank();
   const togglePublicMutation = useToggleQuestionBankPublicStatus();
+
+  const { showToast } = useToast();
 
   const banks = useMemo(() => data?.result?.content ?? [], [data]);
   const totalPages = data?.result?.totalPages ?? 0;
@@ -92,27 +124,19 @@ export function QuestionBankDashboard() {
     [banks, totalElements]
   );
 
-  const filtered = useMemo(() => {
-    return banks.filter((bank) => {
-      if (visibilityFilter === 'PUBLIC' && !bank.isPublic) return false;
-      if (visibilityFilter === 'PRIVATE' && bank.isPublic) return false;
-      if (!search.trim()) return true;
-      const q = search.toLowerCase();
-      return (
-        bank.name.toLowerCase().includes(q) ||
-        (bank.description?.toLowerCase().includes(q) ?? false) ||
-        (bank.teacherName?.toLowerCase().includes(q) ?? false)
-      );
-    });
-  }, [banks, search, visibilityFilter]);
-
   async function saveQuestionBank(payload: QuestionBankRequest) {
-    if (mode === 'create') {
-      await createMutation.mutateAsync(payload);
-      return;
+    try {
+      if (mode === 'create') {
+        await createMutation.mutateAsync(payload);
+        showToast({ type: 'success', message: 'Tạo ngân hàng câu hỏi thành công.' });
+        return;
+      }
+      if (!selected) return;
+      await updateMutation.mutateAsync({ id: selected.id, request: payload });
+      showToast({ type: 'success', message: 'Cập nhật ngân hàng câu hỏi thành công.' });
+    } catch (error) {
+      showToast({ type: 'error', message: error instanceof Error ? error.message : 'Không thể lưu ngân hàng câu hỏi.' });
     }
-    if (!selected) return;
-    await updateMutation.mutateAsync({ id: selected.id, request: payload });
   }
 
   async function handleDelete(bank: QuestionBankResponse) {
@@ -120,7 +144,12 @@ export function QuestionBankDashboard() {
       `Xóa ngân hàng "${bank.name}"? Hành động này sẽ gỡ liên kết câu hỏi khỏi ngân hàng.`
     );
     if (!confirmed) return;
-    await deleteMutation.mutateAsync(bank.id);
+    try {
+      await deleteMutation.mutateAsync(bank.id);
+      showToast({ type: 'success', message: `Đã xóa ngân hàng “${bank.name}”.` });
+    } catch (error) {
+      showToast({ type: 'error', message: error instanceof Error ? error.message : 'Không thể xóa ngân hàng câu hỏi.' });
+    }
   }
 
   return (
@@ -312,8 +341,8 @@ export function QuestionBankDashboard() {
             </div>
           )}
 
-          {/* ── Empty: filtered ── */}
-          {!isLoading && !isError && filtered.length === 0 && banks.length > 0 && (
+          {/* ── Empty: no results ── */}
+          {!isLoading && !isError && banks.length === 0 && (debouncedSearch || visibilityFilter !== 'ALL') && (
             <div className="empty">
               <Search size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
               <p>Không tìm thấy ngân hàng phù hợp với bộ lọc.</p>
@@ -341,9 +370,9 @@ export function QuestionBankDashboard() {
           )}
 
           {/* ── Cards ── */}
-          {!isLoading && !isError && filtered.length > 0 && (
+          {!isLoading && !isError && banks.length > 0 && (
             <div className={`grid-cards${viewMode === 'list' ? ' list-view' : ''}`}>
-              {filtered.map((bank, idx) => (
+              {banks.map((bank, idx) => (
                 <article key={bank.id} className="data-card bank-card">
                   <div
                     className="bank-cover"
@@ -380,6 +409,17 @@ export function QuestionBankDashboard() {
                         </div>
                       )}
                     </div>
+
+                    {bank.cognitiveStats && Object.keys(bank.cognitiveStats).length > 0 && (
+                      <div className="bank-cognitive-stats">
+                        <span className="bank-cognitive-label">📊 Mức độ:</span>
+                        {Object.entries(bank.cognitiveStats).map(([level, count]) => (
+                          <span key={level} className="bank-cognitive-badge">
+                            {cognitiveShortLabel[level] ?? level}: {count}
+                          </span>
+                        ))}
+                      </div>
+                    )}
 
                     <div className="row" style={{ flexWrap: 'wrap', gap: '0.4rem' }}>
                       <button
@@ -433,7 +473,6 @@ export function QuestionBankDashboard() {
             totalElements={totalElements}
             pageSize={size}
             onChange={(p) => setPage(p)}
-            onPageSizeChange={(s) => { setSize(s); setPage(0); }}
           />
 
           <QuestionBankFormModal

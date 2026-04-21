@@ -12,10 +12,11 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import Pagination from '../../components/common/Pagination';
+import { useDebounce } from '../../hooks/useDebounce';
 import {
   useCloneAssessment,
   useCloseAssessment,
@@ -28,6 +29,7 @@ import {
   useUpdateAssessment,
 } from '../../hooks/useAssessment';
 import { useGetMyExamMatrices } from '../../hooks/useExamMatrix';
+import { useToast } from '../../context/ToastContext';
 import '../../styles/module-refactor.css';
 import type { AssessmentRequest, AssessmentResponse, AssessmentStatus } from '../../types';
 import AssessmentModal from './AssessmentModal';
@@ -190,7 +192,7 @@ export default function TeacherAssessments() {
   const [statusFilter, setStatusFilter] = useState<'ALL' | AssessmentStatus>('ALL');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
-  const [size, setSize] = useState(20);
+  const size = 10;
   const [openForm, setOpenForm] = useState(false);
   const [mode, setMode] = useState<'create' | 'edit'>('create');
   const [selected, setSelected] = useState<AssessmentResponse | null>(null);
@@ -198,8 +200,15 @@ export default function TeacherAssessments() {
   const [generateModalOpen, setGenerateModalOpen] = useState(false);
   const [selectedMatrixId, setSelectedMatrixId] = useState('');
 
+  const debouncedSearch = useDebounce(search, 300);
+
+  useEffect(() => {
+    setPage(0);
+  }, [debouncedSearch, statusFilter]);
+
   const { data, isLoading, isError, error, refetch } = useMyAssessments({
     status: statusFilter === 'ALL' ? undefined : statusFilter,
+    search: debouncedSearch.trim() || undefined,
     page,
     size,
     sortBy: 'createdAt',
@@ -216,6 +225,8 @@ export default function TeacherAssessments() {
   const generateFromMatrixMutation = useGenerateAssessmentFromMatrix();
   const { data: myMatricesData } = useGetMyExamMatrices();
 
+  const { showToast } = useToast();
+
   const assessments = data?.result?.content ?? [];
   const totalPages = data?.result?.totalPages ?? 0;
   const totalElements = data?.result?.totalElements ?? 0;
@@ -223,52 +234,58 @@ export default function TeacherAssessments() {
 
   const stats = useMemo(
     () => ({
-      total: assessments.length,
+      total: totalElements,
       draft: assessments.filter((a) => a.status === 'DRAFT').length,
       published: assessments.filter((a) => a.status === 'PUBLISHED').length,
       closed: assessments.filter((a) => a.status === 'CLOSED').length,
     }),
-    [assessments]
+    [assessments, totalElements]
   );
 
-  const filtered = useMemo(() => {
-    if (!search.trim()) return assessments;
-    const q = search.toLowerCase();
-    return assessments.filter(
-      (item) =>
-        item.title.toLowerCase().includes(q) ||
-        (item.description?.toLowerCase().includes(q) ?? false)
-    );
-  }, [assessments, search]);
-
   async function saveAssessment(payload: AssessmentRequest) {
-    if (mode === 'create') {
-      await createMutation.mutateAsync(payload);
-      return;
+    try {
+      if (mode === 'create') {
+        await createMutation.mutateAsync(payload);
+        showToast({ type: 'success', message: 'Tạo bài kiểm tra thành công.' });
+        return;
+      }
+      if (!selected) return;
+      await updateMutation.mutateAsync({ id: selected.id, data: payload });
+      showToast({ type: 'success', message: 'Cập nhật bài kiểm tra thành công.' });
+    } catch (error) {
+      showToast({ type: 'error', message: error instanceof Error ? error.message : 'Không thể lưu bài kiểm tra.' });
     }
-    if (!selected) return;
-    await updateMutation.mutateAsync({ id: selected.id, data: payload });
   }
 
   async function cloneAssessment(newTitle: string, cloneQuestions: boolean) {
     if (!cloneTarget) return;
-    await cloneMutation.mutateAsync({
-      id: cloneTarget.id,
-      data: { newTitle, cloneQuestions },
-    });
-    setCloneTarget(null);
+    try {
+      await cloneMutation.mutateAsync({
+        id: cloneTarget.id,
+        data: { newTitle, cloneQuestions },
+      });
+      showToast({ type: 'success', message: `Đã nhân bản bài kiểm tra thành “${newTitle}”.` });
+      setCloneTarget(null);
+    } catch (error) {
+      showToast({ type: 'error', message: error instanceof Error ? error.message : 'Không thể nhân bản bài kiểm tra.' });
+    }
   }
 
   async function generateFromMatrix() {
     if (!selectedMatrixId) return;
-    const response = await generateFromMatrixMutation.mutateAsync({
-      examMatrixId: selectedMatrixId,
-    });
-    const generatedAssessmentId = response.result?.id;
-    setGenerateModalOpen(false);
-    setSelectedMatrixId('');
-    if (generatedAssessmentId) {
-      navigate(`/teacher/assessments/${generatedAssessmentId}`);
+    try {
+      const response = await generateFromMatrixMutation.mutateAsync({
+        examMatrixId: selectedMatrixId,
+      });
+      showToast({ type: 'success', message: 'Tạo bài kiểm tra từ ma trận thành công.' });
+      const generatedAssessmentId = response.result?.id;
+      setGenerateModalOpen(false);
+      setSelectedMatrixId('');
+      if (generatedAssessmentId) {
+        navigate(`/teacher/assessments/${generatedAssessmentId}`);
+      }
+    } catch (error) {
+      showToast({ type: 'error', message: error instanceof Error ? error.message : 'Không thể tạo bài kiểm tra từ ma trận.' });
     }
   }
 
@@ -393,13 +410,13 @@ export default function TeacherAssessments() {
               {error instanceof Error ? error.message : 'Không thể tải danh sách bài kiểm tra'}
             </div>
           )}
-          {!isLoading && !isError && filtered.length === 0 && (
+          {!isLoading && !isError && assessments.length === 0 && (
             <div className="empty">Chưa có bài kiểm tra nào.</div>
           )}
 
-          {!isLoading && !isError && filtered.length > 0 && (
+          {!isLoading && !isError && assessments.length > 0 && (
             <div className="grid-cards">
-              {filtered.map((assessment) => (
+              {assessments.map((assessment) => (
                 <article key={assessment.id} className="data-card">
                   <div className="row">
                     <span className={statusClass[assessment.status]}>
@@ -447,7 +464,10 @@ export default function TeacherAssessments() {
                     )}
 
                     {assessment.status === 'DRAFT' && (
-                      <button className="btn" onClick={() => publishMutation.mutate(assessment.id)}>
+                      <button className="btn" onClick={() => publishMutation.mutate(assessment.id, {
+                        onSuccess: () => showToast({ type: 'success', message: `Đã xuất bản bài kiểm tra “${assessment.title}”.` }),
+                        onError: (err) => showToast({ type: 'error', message: err instanceof Error ? err.message : 'Không thể xuất bản bài kiểm tra.' }),
+                      })}>
                         <Send size={14} />
                         Xuất bản
                       </button>
@@ -456,7 +476,10 @@ export default function TeacherAssessments() {
                     {assessment.status === 'PUBLISHED' && (
                       <button
                         className="btn warn"
-                        onClick={() => unpublishMutation.mutate(assessment.id)}
+                        onClick={() => unpublishMutation.mutate(assessment.id, {
+                          onSuccess: () => showToast({ type: 'success', message: `Đã hủy xuất bản bài kiểm tra “${assessment.title}”.` }),
+                          onError: (err) => showToast({ type: 'error', message: err instanceof Error ? err.message : 'Không thể hủy xuất bản.' }),
+                        })}
                       >
                         Hủy xuất bản
                       </button>
@@ -465,7 +488,10 @@ export default function TeacherAssessments() {
                     {assessment.status === 'PUBLISHED' && (
                       <button
                         className="btn warn"
-                        onClick={() => closeMutation.mutate(assessment.id)}
+                        onClick={() => closeMutation.mutate(assessment.id, {
+                          onSuccess: () => showToast({ type: 'success', message: `Đã đóng bài kiểm tra “${assessment.title}”.` }),
+                          onError: (err) => showToast({ type: 'error', message: err instanceof Error ? err.message : 'Không thể đóng bài kiểm tra.' }),
+                        })}
                       >
                         <Lock size={14} />
                         Đóng
@@ -475,7 +501,10 @@ export default function TeacherAssessments() {
                     {assessment.status === 'DRAFT' && (
                       <button
                         className="btn danger"
-                        onClick={() => deleteMutation.mutate(assessment.id)}
+                        onClick={() => deleteMutation.mutate(assessment.id, {
+                          onSuccess: () => showToast({ type: 'success', message: `Đã xóa bài kiểm tra “${assessment.title}”.` }),
+                          onError: (err) => showToast({ type: 'error', message: err instanceof Error ? err.message : 'Không thể xóa bài kiểm tra.' }),
+                        })}
                       >
                         <Trash2 size={14} />
                         Xóa
@@ -498,7 +527,6 @@ export default function TeacherAssessments() {
             totalElements={totalElements}
             pageSize={size}
             onChange={(p) => setPage(p)}
-            onPageSizeChange={(s) => { setSize(s); setPage(0); }}
           />
 
           <AssessmentModal

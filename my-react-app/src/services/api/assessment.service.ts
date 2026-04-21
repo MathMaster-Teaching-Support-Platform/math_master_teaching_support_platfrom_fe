@@ -130,6 +130,7 @@ export class AssessmentService {
         const headers = await this.getHeaders();
         const queryParams = new URLSearchParams();
         if (params.status) queryParams.append('status', params.status);
+        if (params.search) queryParams.append('search', params.search);
         if (params.page !== undefined) queryParams.append('page', params.page.toString());
         if (params.size !== undefined) queryParams.append('size', params.size.toString());
         if (params.sortBy) queryParams.append('sortBy', params.sortBy);

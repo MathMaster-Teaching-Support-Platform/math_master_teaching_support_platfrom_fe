@@ -11,6 +11,7 @@ import type {
 export const examMatrixKeys = {
     all: ['examMatrices'] as const,
     mine: () => [...examMatrixKeys.all, 'my'] as const,
+    minePaged: (params: object) => [...examMatrixKeys.all, 'myPaged', params] as const,
     detail: (id: string) => [...examMatrixKeys.all, 'detail', id] as const,
     table: (matrixId: string) => [...examMatrixKeys.detail(matrixId), 'table'] as const,
     validation: (matrixId: string) => [...examMatrixKeys.detail(matrixId), 'validation'] as const,
@@ -20,6 +21,19 @@ export const useGetMyExamMatrices = () =>
     useQuery({
         queryKey: examMatrixKeys.mine(),
         queryFn: () => examMatrixService.getMyExamMatrices(),
+    });
+
+export const useGetMyExamMatricesPaged = (params: {
+    search?: string;
+    status?: string;
+    page?: number;
+    size?: number;
+    sortBy?: string;
+    sortDirection?: string;
+}) =>
+    useQuery({
+        queryKey: examMatrixKeys.minePaged(params),
+        queryFn: () => examMatrixService.getMyExamMatricesPaged(params),
     });
 
 export const useGetExamMatrixById = (matrixId: string, enabled = true) =>

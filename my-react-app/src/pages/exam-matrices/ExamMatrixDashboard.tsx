@@ -14,18 +14,20 @@ import {
   Search,
   Trash2,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import Pagination from '../../components/common/Pagination';
+import { useDebounce } from '../../hooks/useDebounce';
 import {
   useApproveMatrix,
   useCreateExamMatrix,
   useDeleteExamMatrix,
-  useGetMyExamMatrices,
+  useGetMyExamMatricesPaged,
   useResetMatrix,
   useUpdateExamMatrix,
 } from '../../hooks/useExamMatrix';
+import { useToast } from '../../context/ToastContext';
 import '../../styles/module-refactor.css';
 import {
   MatrixStatus,
@@ -65,55 +67,64 @@ export function ExamMatrixDashboard() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | MatrixStatus>('ALL');
   const [page, setPage] = useState(0);
-  const [size, setSize] = useState(20);
+  const size = 10;
   const [formOpen, setFormOpen] = useState(false);
   const [mode, setMode] = useState<'create' | 'edit'>('create');
   const [selected, setSelected] = useState<ExamMatrixResponse | null>(null);
 
-  const { data, isLoading, isError, error, refetch } = useGetMyExamMatrices();
+  const debouncedSearch = useDebounce(search, 300);
+
+  useEffect(() => {
+    setPage(0);
+  }, [debouncedSearch, statusFilter]);
+
+  const { data, isLoading, isError, error, refetch } = useGetMyExamMatricesPaged({
+    search: debouncedSearch.trim() || undefined,
+    status: statusFilter === 'ALL' ? undefined : statusFilter,
+    page,
+    size,
+    sortBy: 'createdAt',
+    sortDirection: 'DESC',
+  });
   const createMutation = useCreateExamMatrix();
   const updateMutation = useUpdateExamMatrix();
   const deleteMutation = useDeleteExamMatrix();
   const approveMutation = useApproveMatrix();
   const resetMutation = useResetMatrix();
 
-  const matrices = useMemo(() => data?.result ?? [], [data]);
+  const { showToast } = useToast();
+
+  const matrices = useMemo(() => data?.result?.content ?? [], [data]);
+  const totalPages = data?.result?.totalPages ?? 0;
+  const totalElements = data?.result?.totalElements ?? 0;
 
   const stats = useMemo(
     () => ({
-      total: matrices.length,
+      total: totalElements,
       draft: matrices.filter((m) => m.status === MatrixStatus.DRAFT).length,
       approved: matrices.filter((m) => m.status === MatrixStatus.APPROVED).length,
       locked: matrices.filter((m) => m.status === MatrixStatus.LOCKED).length,
     }),
-    [matrices]
+    [matrices, totalElements]
   );
 
-  const filtered = matrices.filter((matrix) => {
-    if (statusFilter !== 'ALL' && matrix.status !== statusFilter) return false;
-    if (!search.trim()) return true;
-    const q = search.toLowerCase();
-    return (
-      (matrix.name ?? '').toLowerCase().includes(q) ||
-      (matrix.description?.toLowerCase().includes(q) ?? false)
-    );
-  });
-
-  const totalElements = filtered.length;
-  const totalPages = Math.ceil(totalElements / size);
-  const paginated = filtered.slice(page * size, (page + 1) * size);
-
   async function handleSave(payload: ExamMatrixRequest) {
-    if (mode === 'create') {
-      const response = await createMutation.mutateAsync(payload);
-      const newMatrixId = response.result?.id;
-      if (newMatrixId) {
-        navigate(`/teacher/exam-matrices/${newMatrixId}`);
+    try {
+      if (mode === 'create') {
+        const response = await createMutation.mutateAsync(payload);
+        showToast({ type: 'success', message: 'Tạo ma trận đề thành công.' });
+        const newMatrixId = response.result?.id;
+        if (newMatrixId) {
+          navigate(`/teacher/exam-matrices/${newMatrixId}`);
+        }
+        return;
       }
-      return;
+      if (!selected) return;
+      await updateMutation.mutateAsync({ matrixId: selected.id, request: payload });
+      showToast({ type: 'success', message: 'Cập nhật ma trận đề thành công.' });
+    } catch (error) {
+      showToast({ type: 'error', message: error instanceof Error ? error.message : 'Không thể lưu ma trận đề.' });
     }
-    if (!selected) return;
-    await updateMutation.mutateAsync({ matrixId: selected.id, request: payload });
   }
 
   return (
@@ -367,7 +378,7 @@ export function ExamMatrixDashboard() {
                 style={{ border: '0', padding: 0, width: '100%' }}
                 placeholder="Tìm ma trận"
                 value={search}
-                onChange={(event) => { setSearch(event.target.value); setPage(0); }}
+                onChange={(event) => { setSearch(event.target.value); }}
               />
             </label>
 
@@ -381,7 +392,7 @@ export function ExamMatrixDashboard() {
                   <button
                     key={filter}
                     className={`pill-btn ${statusFilter === filter ? 'active' : ''}`}
-                    onClick={() => { setStatusFilter(filter); setPage(0); }}
+                    onClick={() => { setStatusFilter(filter); }}
                   >
                     {filterLabel[filter]} ({count})
                   </button>
@@ -406,13 +417,13 @@ export function ExamMatrixDashboard() {
             </div>
           )}
 
-          {!isLoading && !isError && filtered.length === 0 && (
+          {!isLoading && !isError && matrices.length === 0 && (
             <div className="empty">Không có ma trận phù hợp với bộ lọc hiện tại.</div>
           )}
 
-          {!isLoading && !isError && filtered.length > 0 && (
+          {!isLoading && !isError && matrices.length > 0 && (
             <div className="grid-cards">
-              {paginated.map((matrix) => (
+              {matrices.map((matrix) => (
                 <article
                   key={matrix.id}
                   className="data-card"
@@ -506,7 +517,10 @@ export function ExamMatrixDashboard() {
                         disabled={approveMutation.isPending}
                         onClick={() => {
                           if (!globalThis.confirm(`Phê duyệt ma trận "${matrix.name}"?`)) return;
-                          approveMutation.mutate(matrix.id);
+                          approveMutation.mutate(matrix.id, {
+                            onSuccess: () => showToast({ type: 'success', message: `Đã phê duyệt ma trận “${matrix.name}”.` }),
+                            onError: (err) => showToast({ type: 'error', message: err instanceof Error ? err.message : 'Không thể phê duyệt ma trận.' }),
+                          });
                         }}
                       >
                         <CheckCircle2 size={13} />
@@ -522,7 +536,10 @@ export function ExamMatrixDashboard() {
                         onClick={() => {
                           if (!globalThis.confirm(`Đặt lại ma trận "${matrix.name}" về nháp?`))
                             return;
-                          resetMutation.mutate(matrix.id);
+                          resetMutation.mutate(matrix.id, {
+                            onSuccess: () => showToast({ type: 'success', message: `Đã đặt lại ma trận “${matrix.name}” về nháp.` }),
+                            onError: (err) => showToast({ type: 'error', message: err instanceof Error ? err.message : 'Không thể đặt lại ma trận.' }),
+                          });
                         }}
                       >
                         <RotateCcw size={13} />
@@ -542,7 +559,10 @@ export function ExamMatrixDashboard() {
                             )
                           )
                             return;
-                          deleteMutation.mutate(matrix.id);
+                          deleteMutation.mutate(matrix.id, {
+                            onSuccess: () => showToast({ type: 'success', message: `Đã xóa ma trận “${matrix.name}”.` }),
+                            onError: (err) => showToast({ type: 'error', message: err instanceof Error ? err.message : 'Không thể xóa ma trận.' }),
+                          });
                         }}
                       >
                         <Trash2 size={13} />
@@ -561,7 +581,6 @@ export function ExamMatrixDashboard() {
             totalElements={totalElements}
             pageSize={size}
             onChange={(p) => setPage(p)}
-            onPageSizeChange={(s) => { setSize(s); setPage(0); }}
           />
 
           <ExamMatrixFormModal

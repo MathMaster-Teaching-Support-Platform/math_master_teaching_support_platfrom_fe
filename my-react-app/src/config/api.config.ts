@@ -73,6 +73,7 @@ export const API_ENDPOINTS = {
   // Exam matrices
   EXAM_MATRICES: '/exam-matrices',
   EXAM_MATRICES_MY: '/exam-matrices/my',
+  EXAM_MATRICES_MY_PAGED: '/exam-matrices/my/paged',
   EXAM_MATRIX_DETAIL: (matrixId: string) => `/exam-matrices/${matrixId}`,
   EXAM_MATRIX_BY_ASSESSMENT: (assessmentId: string) => `/exam-matrices/assessment/${assessmentId}`,
   EXAM_MATRIX_BUILD: '/exam-matrices/build',

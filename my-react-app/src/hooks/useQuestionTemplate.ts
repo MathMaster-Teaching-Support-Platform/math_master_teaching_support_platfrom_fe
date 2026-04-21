@@ -27,10 +27,10 @@ export const useGetQuestionTemplate = (id: string, enabled = true) => {
     });
 };
 
-export const useGetMyQuestionTemplates = (page = 0, size = 20, sortBy = 'createdAt', sortDirection = 'DESC') => {
+export const useGetMyQuestionTemplates = (page = 0, size = 20, sortBy = 'createdAt', sortDirection = 'DESC', search?: string, status?: string) => {
     return useQuery({
-        queryKey: questionTemplateKeys.myList(`${page}-${size}-${sortBy}-${sortDirection}`),
-        queryFn: () => questionTemplateService.getMyQuestionTemplates(page, size, sortBy, sortDirection),
+        queryKey: questionTemplateKeys.myList(`${page}-${size}-${sortBy}-${sortDirection}-${search ?? ''}-${status ?? ''}`),
+        queryFn: () => questionTemplateService.getMyQuestionTemplates(page, size, sortBy, sortDirection, search, status),
     });
 };
 

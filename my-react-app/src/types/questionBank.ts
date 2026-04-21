@@ -17,6 +17,7 @@ export interface QuestionBankResponse {
   chapterId?: string | null;
   chapterTitle?: string | null;
   questionCount: number;
+  cognitiveStats?: Record<string, number>;
   createdAt: string;
   updatedAt: string;
 }
