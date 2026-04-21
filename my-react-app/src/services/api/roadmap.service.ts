@@ -21,6 +21,7 @@ import type {
   SubmitRoadmapFeedbackRequest,
   SubmitRoadmapEntryTestRequest,
   StudentRoadmapSnapshot,
+  TopicMaterial,
   UpdateRoadmapTopicRequest,
   UpdateRoadmapProgressRequest,
 } from '../../types';
@@ -550,6 +551,23 @@ export class RoadmapService {
       throw new Error(`${response.status} ${response.statusText}: ${message}`);
     }
 
+    return response.json();
+  }
+
+  static async getTopicMaterials(
+    topicId: string
+  ): Promise<RoadmapApiResponse<TopicMaterial[]>> {
+    const headers = await this.getHeaders();
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.STUDENT_TOPIC_MATERIALS(topicId)}`,
+      { method: 'GET', headers }
+    );
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(
+        (error as { message?: string }).message || 'Failed to fetch topic materials'
+      );
+    }
     return response.json();
   }
 

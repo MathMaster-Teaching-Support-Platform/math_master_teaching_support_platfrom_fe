@@ -29,6 +29,7 @@ export const roadmapKeys = {
     [...roadmapKeys.all, 'entry-test', roadmapId, 'active-attempt'] as const,
   entryTestSnapshot: (roadmapId: string, attemptId: string) =>
     [...roadmapKeys.all, 'entry-test', roadmapId, 'snapshot', attemptId] as const,
+  topicMaterials: (topicId: string) => [...roadmapKeys.all, 'topic-materials', topicId] as const,
 };
 
 export function useRoadmaps(name = '', page = 0, size = 20) {
@@ -328,5 +329,13 @@ export function useAdminRoadmapFeedback(roadmapId: string, page = 0, size = 20) 
     queryKey: roadmapKeys.adminFeedback(roadmapId, page, size),
     queryFn: () => RoadmapService.getAdminRoadmapFeedback(roadmapId, page, size),
     enabled: !!roadmapId,
+  });
+}
+
+export function useTopicMaterials(topicId: string) {
+  return useQuery({
+    queryKey: roadmapKeys.topicMaterials(topicId),
+    queryFn: () => RoadmapService.getTopicMaterials(topicId),
+    enabled: !!topicId,
   });
 }

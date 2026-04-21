@@ -21,6 +21,17 @@ export interface RoadmapCatalogItem {
   description: string;
 }
 
+export type MaterialResourceType = 'ARTICLE' | 'VIDEO' | 'COURSE' | 'BOOK' | 'PODCAST' | 'OTHER';
+
+export interface TopicMaterial {
+  id: string;
+  title: string;
+  url: string;
+  resourceType: MaterialResourceType;
+  isFree: boolean;
+  description?: string;
+}
+
 /** Enriched course info embedded in each topic */
 export interface RoadmapTopicCourse {
   id: string;
