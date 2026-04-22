@@ -297,6 +297,8 @@ export const API_ENDPOINTS = {
 
   // Latex render via backend proxy (QuickLaTeX)
   LATEX_RENDER: '/latex/render',
+  // Cache-friendly GET endpoint for diagram renders
+  DIAGRAM_RENDER: '/diagrams/render',
 
   // Courses
   COURSES: '/courses',

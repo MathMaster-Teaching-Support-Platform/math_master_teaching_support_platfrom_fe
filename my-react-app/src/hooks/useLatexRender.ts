@@ -7,14 +7,14 @@ type UseLatexRenderResult = {
   error: string;
 };
 
-export function useLatexRender(latex: string): UseLatexRenderResult {
+export function useLatexRender(latex: string, enabled = true): UseLatexRenderResult {
   const [imageUrl, setImageUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     const normalizedLatex = latex.trim();
-    if (!normalizedLatex) {
+    if (!normalizedLatex || !enabled) {
       setImageUrl('');
       setError('');
       setIsLoading(false);
@@ -47,7 +47,7 @@ export function useLatexRender(latex: string): UseLatexRenderResult {
       globalThis.clearTimeout(timer);
       controller.abort();
     };
-  }, [latex]);
+  }, [latex, enabled]);
 
   return { imageUrl, isLoading, error };
 }

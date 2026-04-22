@@ -361,6 +361,63 @@ export function ExamMatrixRowModal({
             <p className="muted" style={{ marginTop: 4 }}>
               Chương đang chọn: <strong>{chapterLabel || 'Chưa chọn'}</strong>. Hệ thống sẽ chọn câu ngẫu nhiên từ ngân hàng câu hỏi.
             </p>
+
+            {selectedQuestionBank && (
+              <div style={{ marginTop: 12, padding: '10px 14px', background: 'var(--surface-2, #f8f9fa)', borderRadius: 8, border: '1px solid var(--border, #e5e7eb)' }}>
+                <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: 'var(--text-muted, #6b7280)' }}>
+                  Số câu khả dụng trong bank: <strong style={{ color: 'var(--text, #111)' }}>{selectedQuestionBank.name}</strong>
+                </p>
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                  {(
+                    [
+                      { key: 'NB' as UiCognitiveLevel, label: 'Nhận biết',    color: '#6b7280', bg: '#f3f4f6' },
+                      { key: 'TH' as UiCognitiveLevel, label: 'Thông hiểu',   color: '#2563eb', bg: '#eff6ff' },
+                      { key: 'VD' as UiCognitiveLevel, label: 'Vận dụng',     color: '#ea580c', bg: '#fff7ed' },
+                      { key: 'VDC' as UiCognitiveLevel, label: 'Vận dụng cao', color: '#dc2626', bg: '#fef2f2' },
+                    ] as const
+                  ).map(({ key, label, color, bg }) => {
+                    const backendKey = BACKEND_COGNITIVE_LEVEL[key];
+                    const available = selectedQuestionBank.cognitiveStats?.[backendKey] ?? 0;
+                    const requested = cells[key].questionCount;
+                    const isOver = requested > available;
+                    return (
+                      <div
+                        key={key}
+                        style={{
+                          flex: '1 1 calc(25% - 8px)',
+                          minWidth: 100,
+                          padding: '8px 10px',
+                          borderRadius: 6,
+                          background: bg,
+                          border: `1px solid ${isOver ? '#fca5a5' : color + '33'}`,
+                          position: 'relative',
+                        }}
+                      >
+                        <div style={{ fontSize: 11, color, fontWeight: 600, marginBottom: 2 }}>{label}</div>
+                        <div style={{ fontSize: 18, fontWeight: 700, color: isOver ? '#dc2626' : color }}>
+                          {available}
+                        </div>
+                        <div style={{ fontSize: 11, color: '#9ca3af' }}>câu khả dụng</div>
+                        {isOver && (
+                          <div style={{ fontSize: 11, color: '#dc2626', marginTop: 4, fontWeight: 500 }}>
+                            ⚠ Yêu cầu {requested} &gt; {available} khả dụng
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                <p style={{ fontSize: 11, color: '#9ca3af', marginTop: 8 }}>
+                  Tổng câu trong bank:{' '}
+                  <strong style={{ color: '#374151' }}>
+                    {Object.values(selectedQuestionBank.cognitiveStats ?? {}).reduce(
+                      (sum, v) => sum + Number(v),
+                      0,
+                    )}
+                  </strong>
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="modal-footer">
