@@ -142,8 +142,6 @@ const getGeneratedDisplayName = (file: LessonSlideGeneratedFile): string => {
   return fallbackName.replace(/\.[^/.]+$/, '') || 'generated-slide';
 };
 
-const MANAGED_GENERATED_PAGE_SIZE = 9;
-
 const parseMathSegments = (text: string): MathSegment[] => {
   if (!text) return [{ type: 'text', value: '' }];
 
@@ -296,6 +294,7 @@ const AISlideGenerator: React.FC = () => {
   const [downloadingGeneratedFileId, setDownloadingGeneratedFileId] = useState('');
   const [deletingGeneratedFileId, setDeletingGeneratedFileId] = useState('');
   const [generatedPage, setGeneratedPage] = useState(1);
+  const [generatedPageSize, setGeneratedPageSize] = useState(12);
   const [isGeneratedPreviewOpen, setIsGeneratedPreviewOpen] = useState(false);
   const [loadingGeneratedPreviewPdf, setLoadingGeneratedPreviewPdf] = useState(false);
   const [openingGeneratedPreviewPdfTab, setOpeningGeneratedPreviewPdfTab] = useState(false);
@@ -390,15 +389,15 @@ const AISlideGenerator: React.FC = () => {
   }, [generatedFiles, generatedSearch, generatedSort, generatedVisibilityFilter]);
 
   const totalManagedGeneratedPages = useMemo(
-    () => Math.max(1, Math.ceil(managedGeneratedFiles.length / MANAGED_GENERATED_PAGE_SIZE)),
-    [managedGeneratedFiles.length]
+    () => Math.max(1, Math.ceil(managedGeneratedFiles.length / generatedPageSize)),
+    [managedGeneratedFiles.length, generatedPageSize]
   );
 
   const pagedManagedGeneratedFiles = useMemo(() => {
-    const start = (generatedPage - 1) * MANAGED_GENERATED_PAGE_SIZE;
-    const end = start + MANAGED_GENERATED_PAGE_SIZE;
+    const start = (generatedPage - 1) * generatedPageSize;
+    const end = start + generatedPageSize;
     return managedGeneratedFiles.slice(start, end);
-  }, [generatedPage, managedGeneratedFiles]);
+  }, [generatedPage, managedGeneratedFiles, generatedPageSize]);
 
   const openMetadataModal = (file: LessonSlideGeneratedFile) => {
     setEditingMetadataFile(file);
@@ -924,7 +923,7 @@ const AISlideGenerator: React.FC = () => {
 
   useEffect(() => {
     setGeneratedPage(1);
-  }, [lessonId, generatedSearch, generatedSort, generatedVisibilityFilter]);
+  }, [lessonId, generatedSearch, generatedSort, generatedVisibilityFilter, generatedPageSize]);
 
   useEffect(() => {
     setGeneratedPage((prev) => Math.min(prev, totalManagedGeneratedPages));
@@ -1463,6 +1462,18 @@ const AISlideGenerator: React.FC = () => {
                     <option value="PUBLIC_FIRST">Public trước</option>
                   </select>
                 </label>
+
+                <label className="ai-slide-management-sort">
+                  <span>Số lượng mỗi trang</span>
+                  <select
+                    value={generatedPageSize}
+                    onChange={(e) => setGeneratedPageSize(Number(e.target.value))}
+                  >
+                    <option value={12}>12 / trang</option>
+                    <option value={24}>24 / trang</option>
+                    <option value={48}>48 / trang</option>
+                  </select>
+                </label>
               </div>
 
               <div className="ai-slide-status-tabs" role="group" aria-label="Loc file generated">
@@ -1666,7 +1677,7 @@ const AISlideGenerator: React.FC = () => {
                     </button>
                     <span className="ai-slide-pagination-meta">
                       Trang {generatedPage}/{totalManagedGeneratedPages} •{' '}
-                      {managedGeneratedFiles.length} file
+                      {managedGeneratedFiles.length} file • {generatedPageSize} / trang
                     </span>
                     <button
                       type="button"
