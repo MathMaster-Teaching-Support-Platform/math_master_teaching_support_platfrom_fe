@@ -233,6 +233,8 @@ const SlideContentPreview: React.FC<SlideContentPreviewProps> = ({
   keyPrefix,
 }) => {
   const previewImageUrl = getSlidePreviewImageUrl(slide.previewImageUrl);
+  const canTryAuthFetch =
+    Boolean(previewImageUrl) && !/^https?:\/\//i.test(slide.previewImageUrl || '');
   const [imageSrc, setImageSrc] = useState<string | null>(previewImageUrl);
   const [usedAuthFetch, setUsedAuthFetch] = useState(false);
   const [loadingAuthImage, setLoadingAuthImage] = useState(false);
@@ -260,7 +262,7 @@ const SlideContentPreview: React.FC<SlideContentPreviewProps> = ({
   }, []);
 
   const fetchPreviewWithAuth = useCallback(async () => {
-    if (!previewImageUrl || usedAuthFetch) {
+    if (!previewImageUrl || usedAuthFetch || !canTryAuthFetch) {
       return;
     }
 
@@ -298,7 +300,7 @@ const SlideContentPreview: React.FC<SlideContentPreviewProps> = ({
     } finally {
       setLoadingAuthImage(false);
     }
-  }, [previewImageUrl, usedAuthFetch]);
+  }, [previewImageUrl, usedAuthFetch, canTryAuthFetch]);
 
   if (previewImageUrl && loadingAuthImage) {
     return <span className="ai-slide-preview-loading">Đang tải ảnh preview...</span>;
@@ -312,13 +314,24 @@ const SlideContentPreview: React.FC<SlideContentPreviewProps> = ({
         className="ai-slide-preview-rendered-image"
         loading="lazy"
         onError={() => {
-          if (!usedAuthFetch) {
+          if (!usedAuthFetch && canTryAuthFetch) {
             void fetchPreviewWithAuth();
             return;
           }
           setImageLoadFailed(true);
         }}
       />
+    );
+  }
+
+  if (previewImageUrl && imageLoadFailed && !canTryAuthFetch) {
+    return (
+      <span className="ai-slide-preview-loading">
+        Không tải được ảnh preview từ dịch vụ bên ngoài.{' '}
+        <a href={previewImageUrl} target="_blank" rel="noreferrer">
+          Mở ảnh trực tiếp
+        </a>
+      </span>
     );
   }
 
@@ -2209,6 +2222,36 @@ const AISlideGenerator: React.FC = () => {
             {error && <p className="ai-slide-error">{error}</p>}
             {success && <p className="ai-slide-success">{success}</p>}
           </section>
+        )}
+
+        {generatingContent && (
+          <div
+            className="ai-slide-generating-overlay"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Đang tạo nội dung AI"
+          >
+            <div className="ai-slide-generating-popup">
+              <div className="ai-slide-math-loader" role="status" aria-live="polite">
+                <div className="ai-slide-math-loader-ring" aria-hidden="true" />
+                <div className="ai-slide-math-loader-symbols" aria-hidden="true">
+                  <span>x²</span>
+                  <span>∫</span>
+                  <span>π</span>
+                  <span>√</span>
+                  <span>Δ</span>
+                </div>
+                <p>AI đang tạo nội dung slide...</p>
+              </div>
+
+              <div className="ai-slide-generating-steps" aria-hidden="true">
+                <span>Đang phân tích bài học</span>
+                <span>Đang dựng dàn ý theo slideType</span>
+                <span>Đang tối ưu biểu thức toán học</span>
+                <span>Đang hoàn tất nội dung</span>
+              </div>
+            </div>
+          </div>
         )}
 
         {isGeneratedPreviewOpen && (
