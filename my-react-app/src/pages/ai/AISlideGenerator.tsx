@@ -69,7 +69,7 @@ const parseSlidesFromLessonContent = (lessonContent?: string | null): LessonSlid
       const item = (slide ?? {}) as Partial<LessonSlideItem>;
       return {
         slideNumber: Number(item.slideNumber) || index + 1,
-        slideType: item.slideType || 'CONTENT',
+        slideType: item.slideType || 'MAIN_CONTENT',
         heading: item.heading || '',
         content: item.content || '',
       };
@@ -157,80 +157,6 @@ const parseMathSegments = (text: string): MathSegment[] => {
   }
 
   return segments.length ? segments : [{ type: 'text', value: text }];
-};
-
-const replaceInlineLatexCommands = (input: string): string => {
-  if (!input) return input;
-
-  return input
-    .replace(/\\textbf\{([^{}]+)\}/g, '$1')
-    .replace(/\\textit\{([^{}]+)\}/g, '$1')
-    .replace(/\\emph\{([^{}]+)\}/g, '$1')
-    .replace(/\\quad/g, ' ')
-    .replace(/\\cdot/g, ' * ')
-    .replace(/\\times/g, ' x ')
-    .replace(/\\ne/g, ' != ')
-    .replace(/\\leq/g, ' <= ')
-    .replace(/\\geq/g, ' >= ')
-    .replace(/\\in/g, ' in ')
-    .replace(/\\mathbb\{Z\}/g, 'Z')
-    .replace(/\\mathbb\{N\}/g, 'N')
-    .replace(/\\mathbb\{Q\}/g, 'Q')
-    .replace(/\\mathbb\{R\}/g, 'R')
-    .replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/g, '($1)/($2)');
-};
-
-const normalizeLatexForPptx = (input: string): string => {
-  if (!input) return input;
-
-  const normalized = input
-    .replace(/\\\\/g, '\\')
-    .replace(/\$\$([\s\S]+?)\$\$/g, (_, expr: string) => replaceInlineLatexCommands(expr.trim()))
-    .replace(/\$([^$\n]+?)\$/g, (_, expr: string) => replaceInlineLatexCommands(expr.trim()))
-    .replace(/\\\(([^)]+?)\\\)/g, (_, expr: string) => replaceInlineLatexCommands(expr.trim()))
-    .replace(/\\\[([\s\S]+?)\\\]/g, (_, expr: string) => replaceInlineLatexCommands(expr.trim()))
-    .replace(/\\\{/g, '{')
-    .replace(/\\\}/g, '}')
-    .replace(/\\_/g, '_')
-    .replace(/\\%/g, '%')
-    .replace(/\\&/g, '&')
-    .replace(/\\#/g, '#')
-    .replace(/\\\$/g, '$')
-    .replace(/\\,/g, ' ')
-    .replace(/\\;/g, ' ')
-    .replace(/\\!/g, '')
-    .replace(/\\:/g, ':')
-    .replace(/\\\n/g, '\n')
-    .replace(/\\\\/g, '\n')
-    .replace(/\\[a-zA-Z]+/g, '')
-    .replace(/\s{2,}/g, ' ')
-    .replace(/\n[ \t]+/g, '\n')
-    .trim();
-
-  return replaceInlineLatexCommands(normalized)
-    .replace(/\s{2,}/g, ' ')
-    .replace(/\n[ \t]+/g, '\n')
-    .trim();
-};
-
-const wrapBareLatexForOfficeMath = (input: string): string => {
-  if (!input) return input;
-
-  const normalized = input.replace(/\\n/g, '\n');
-  const latexChunkRegex =
-    /(\\(?:frac|cdot|times|sqrt|sum|int|alpha|beta|gamma|delta|theta|lambda|pi|sigma|omega|mathbb|in|neq|ne|leq|geq|pm|mp|div|Box)(?:\{[^{}]*\})*(?:\s*[_^]\{?[^\s{}]+\}?)?(?:\s*[_^]\{?[^\s{}]+\}?)?)/g;
-
-  return normalized.replace(latexChunkRegex, (chunk, _cmd, offset, fullText) => {
-    const before = fullText.slice(0, offset);
-    const after = fullText.slice(offset + chunk.length);
-    const inDollarMath = before.lastIndexOf('$') > before.lastIndexOf('\n') && after.includes('$');
-
-    if (inDollarMath) {
-      return chunk;
-    }
-
-    return `$${chunk}$`;
-  });
 };
 
 const renderSlideText = (
@@ -1059,6 +985,17 @@ const AISlideGenerator: React.FC = () => {
       return;
     }
 
+    if (slideCount < 5 || slideCount > 15) {
+      setError('Số lượng slide phải nằm trong khoảng từ 5 đến 15.');
+      return;
+    }
+
+    const trimmedPrompt = additionalPrompt.trim();
+    if (!trimmedPrompt) {
+      setError('Additional Prompt là bắt buộc. Vui lòng nhập mô tả để AI tạo nội dung.');
+      return;
+    }
+
     setGeneratingContent(true);
     try {
       const response = await LessonSlideService.generateContent({
@@ -1067,7 +1004,7 @@ const AISlideGenerator: React.FC = () => {
         chapterId,
         lessonId,
         slideCount,
-        additionalPrompt: additionalPrompt.trim() || undefined,
+        additionalPrompt: trimmedPrompt,
         outputFormat,
       });
 
@@ -1132,31 +1069,18 @@ const AISlideGenerator: React.FC = () => {
 
     setGeneratingPptx(true);
     try {
-      const outputFormatForPptx: LessonSlideOutputFormat =
-        equationMode === 'PLAIN_TEXT'
-          ? 'PLAIN_TEXT'
-          : resolvedOutputFormat === 'PLAIN_TEXT'
-            ? 'LATEX'
-            : resolvedOutputFormat;
-
-      const slidesForPptx =
-        equationMode === 'PLAIN_TEXT'
-          ? editableSlides.map((slide) => ({
-              ...slide,
-              heading: normalizeLatexForPptx(slide.heading || ''),
-              content: normalizeLatexForPptx(slide.content || ''),
-            }))
-          : editableSlides.map((slide) => ({
-              ...slide,
-              heading: wrapBareLatexForOfficeMath(slide.heading || ''),
-              content: wrapBareLatexForOfficeMath(slide.content || ''),
-            }));
+      const outputFormatForPptx: LessonSlideOutputFormat = resolvedOutputFormat;
+      const slidesForPptx = editableSlides.map((slide) => ({
+        ...slide,
+        heading: slide.heading || '',
+        content: slide.content || '',
+      }));
 
       const response = await LessonSlideService.generatePptx({
         lessonId,
         templateId,
         outputFormat: outputFormatForPptx,
-        equationMode,
+        equationMode: outputFormatForPptx === 'LATEX' ? undefined : equationMode,
         slides: slidesForPptx,
       });
 
@@ -1182,7 +1106,11 @@ const AISlideGenerator: React.FC = () => {
         }
       }
 
-      setSuccess(`PPTX đã sẵn sàng! Chế độ công thức: ${getEquationModeLabel(equationMode)}.`);
+      setSuccess(
+        outputFormatForPptx === 'LATEX'
+          ? 'PPTX đã sẵn sàng! Đã xuất theo chế độ LATEX.'
+          : `PPTX đã sẵn sàng! Chế độ công thức: ${getEquationModeLabel(equationMode)}.`
+      );
       setActiveWizardStep(5);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Không thể tạo PPTX');
@@ -1725,11 +1653,16 @@ const AISlideGenerator: React.FC = () => {
                   <span>Số lượng slide</span>
                   <input
                     type="number"
-                    min={1}
-                    max={30}
+                    min={5}
+                    max={15}
                     value={slideCount}
-                    onChange={(e) => setSlideCount(Number(e.target.value || 1))}
+                    onChange={(e) => {
+                      const nextValue = Number(e.target.value || 5);
+                      const clamped = Math.max(5, Math.min(15, nextValue));
+                      setSlideCount(clamped);
+                    }}
                   />
+                  <small className="ai-slide-format-hint">Cho phép từ 5 đến 15 slide.</small>
                 </label>
               </div>
 
@@ -1799,7 +1732,9 @@ const AISlideGenerator: React.FC = () => {
                   placeholder="Ví dụ: Giải Phương Trình Bậc 2"
                   value={additionalPrompt}
                   onChange={(e) => setAdditionalPrompt(e.target.value)}
+                  required
                 />
+                <small className="ai-slide-format-hint">Trường bắt buộc.</small>
               </label>
 
               <label className="ai-slide-full-width">
@@ -1857,21 +1792,30 @@ const AISlideGenerator: React.FC = () => {
               <strong>{getOutputFormatLabel(resolvedOutputFormat)}</strong>
             </p>
 
-            <label className="ai-slide-full-width">
-              <span>Cach xuat cong thuc cho PowerPoint</span>
-              <select
-                value={equationMode}
-                onChange={(e) => setEquationMode(e.target.value as LessonSlideEquationMode)}
-              >
-                <option value="OMML">OMML (Office Equation, khuyen nghi)</option>
-                <option value="IMAGE">IMAGE (ve cong thuc thanh anh)</option>
-                <option value="PLAIN_TEXT">PLAIN_TEXT (khong khuyen nghi)</option>
-              </select>
+            {resolvedOutputFormat !== 'LATEX' && (
+              <label className="ai-slide-full-width">
+                <span>Cach xuat cong thuc cho PowerPoint</span>
+                <select
+                  value={equationMode}
+                  onChange={(e) => setEquationMode(e.target.value as LessonSlideEquationMode)}
+                >
+                  <option value="OMML">OMML (Office Equation, khuyen nghi)</option>
+                  <option value="IMAGE">IMAGE (ve cong thuc thanh anh)</option>
+                  <option value="PLAIN_TEXT">PLAIN_TEXT (khong khuyen nghi)</option>
+                </select>
+                <p className="ai-slide-format-hint">
+                  OMML giu cong thuc dang Equation native cua Office. IMAGE dung khi cong thuc phuc
+                  tap.
+                </p>
+              </label>
+            )}
+
+            {resolvedOutputFormat === 'LATEX' && (
               <p className="ai-slide-format-hint">
-                OMML giu cong thuc dang Equation native cua Office. IMAGE dung khi cong thuc phuc
-                tap.
+                Chế độ LATEX: nội dung mỗi slide sẽ được backend render thành một ảnh PNG duy nhất
+                trong vùng content của template.
               </p>
-            </label>
+            )}
 
             {currentPreviewSlide && (
               <div className="ai-slide-preview-wrap">
