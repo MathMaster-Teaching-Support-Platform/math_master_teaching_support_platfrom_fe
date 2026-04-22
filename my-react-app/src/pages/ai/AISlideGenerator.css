@@ -515,6 +515,16 @@
   white-space: pre-wrap;
 }
 
+.ai-slide-preview-rendered-image {
+  max-width: 100%;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  border-radius: 10px;
+  border: 1px solid #dbeafe;
+  background: #ffffff;
+}
+
 .ai-slide-preview-heading .katex,
 .ai-slide-preview-content .katex {
   font-size: 1em;

@@ -53,6 +53,7 @@ export interface LessonSlideItem {
   slideType: string;
   heading: string;
   content: string;
+  previewImageUrl?: string | null;
 }
 
 export interface LessonSlideTemplate {

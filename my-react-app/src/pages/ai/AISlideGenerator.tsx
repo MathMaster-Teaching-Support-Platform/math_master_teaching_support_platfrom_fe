@@ -41,6 +41,17 @@ const getTemplatePreviewUrl = (previewImage?: string | null): string | null => {
   return `${API_BASE_URL}${normalizedPath}`;
 };
 
+const getSlidePreviewImageUrl = (previewImageUrl?: string | null): string | null => {
+  if (!previewImageUrl) return null;
+
+  if (/^https?:\/\//i.test(previewImageUrl)) {
+    return previewImageUrl;
+  }
+
+  const normalizedPath = previewImageUrl.startsWith('/') ? previewImageUrl : `/${previewImageUrl}`;
+  return `${API_BASE_URL}${normalizedPath}`;
+};
+
 type MathSegment =
   | { type: 'text'; value: string }
   | { type: 'inline-math'; value: string }
@@ -72,6 +83,7 @@ const parseSlidesFromLessonContent = (lessonContent?: string | null): LessonSlid
         slideType: item.slideType || 'MAIN_CONTENT',
         heading: item.heading || '',
         content: item.content || '',
+        previewImageUrl: item.previewImageUrl || null,
       };
     });
   } catch {
@@ -189,6 +201,35 @@ const renderSlideText = (
 
     return <InlineMath key={key} math={segment.value} />;
   });
+};
+
+type SlideContentPreviewProps = {
+  slide: LessonSlideItem;
+  outputFormat: LessonSlideOutputFormat;
+  keyPrefix: string;
+};
+
+const SlideContentPreview: React.FC<SlideContentPreviewProps> = ({
+  slide,
+  outputFormat,
+  keyPrefix,
+}) => {
+  const [imageLoadFailed, setImageLoadFailed] = useState(false);
+  const previewImageUrl = getSlidePreviewImageUrl(slide.previewImageUrl);
+
+  if (previewImageUrl && !imageLoadFailed) {
+    return (
+      <img
+        src={previewImageUrl}
+        alt={`Rendered preview slide ${slide.slideNumber}`}
+        className="ai-slide-preview-rendered-image"
+        loading="lazy"
+        onError={() => setImageLoadFailed(true)}
+      />
+    );
+  }
+
+  return <>{renderSlideText(slide.content || 'Chưa có nội dung', outputFormat, keyPrefix)}</>;
 };
 
 const AISlideGenerator: React.FC = () => {
@@ -1971,11 +2012,11 @@ const AISlideGenerator: React.FC = () => {
                     )}
                   </div>
                   <div className="ai-slide-preview-content">
-                    {renderSlideText(
-                      currentPreviewSlide.content || 'Chưa có nội dung',
-                      resolvedOutputFormat,
-                      `content-${currentPreviewSlide.slideNumber}`
-                    )}
+                    <SlideContentPreview
+                      slide={currentPreviewSlide}
+                      outputFormat={resolvedOutputFormat}
+                      keyPrefix={`content-${currentPreviewSlide.slideNumber}`}
+                    />
                   </div>
                   <span className="ai-slide-preview-tag">{currentPreviewSlide.slideType}</span>
                 </article>
@@ -2162,11 +2203,11 @@ const AISlideGenerator: React.FC = () => {
                           )}
                         </div>
                         <div className="ai-slide-preview-content">
-                          {renderSlideText(
-                            currentGeneratedPreviewSlide.content || 'Chưa có nội dung',
-                            resolvedOutputFormat,
-                            `manage-content-${currentGeneratedPreviewSlide.slideNumber}`
-                          )}
+                          <SlideContentPreview
+                            slide={currentGeneratedPreviewSlide}
+                            outputFormat={resolvedOutputFormat}
+                            keyPrefix={`manage-content-${currentGeneratedPreviewSlide.slideNumber}`}
+                          />
                         </div>
                         <span className="ai-slide-preview-tag">
                           {currentGeneratedPreviewSlide.slideType}
