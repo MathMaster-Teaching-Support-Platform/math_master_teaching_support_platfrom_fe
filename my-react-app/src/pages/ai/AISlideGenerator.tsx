@@ -52,6 +52,18 @@ const getSlidePreviewImageUrl = (previewImageUrl?: string | null): string | null
   return `${API_BASE_URL}${normalizedPath}`;
 };
 
+const normalizeVietnameseHeading = (heading?: string | null): string => {
+  const value = (heading || '').trim();
+  if (!value) return '';
+
+  const mainContentMatch = value.match(/^noi\s+dung\s+chinh(\s+\d+)?$/i);
+  if (mainContentMatch) {
+    return `Nội dung chính${mainContentMatch[1] || ''}`;
+  }
+
+  return heading || '';
+};
+
 const normalizeSlideItem = (slide: unknown, index: number): LessonSlideItem => {
   const item = (slide ?? {}) as Partial<LessonSlideItem> & {
     preview_image_url?: string | null;
@@ -62,7 +74,7 @@ const normalizeSlideItem = (slide: unknown, index: number): LessonSlideItem => {
   return {
     slideNumber: Number(item.slideNumber) || index + 1,
     slideType: item.slideType || 'MAIN_CONTENT',
-    heading: item.heading || '',
+    heading: normalizeVietnameseHeading(item.heading),
     content: (item.content || '').replace(/\\n/g, '\n'),
     previewImageUrl:
       item.previewImageUrl || item.preview_image_url || item.previewUrl || item.imageUrl || null,
@@ -221,77 +233,76 @@ const SlideContentPreview: React.FC<SlideContentPreviewProps> = ({
   keyPrefix,
 }) => {
   const previewImageUrl = getSlidePreviewImageUrl(slide.previewImageUrl);
-  const requiresAuthFetch =
-    Boolean(previewImageUrl) &&
-    Boolean(AuthService.getToken()) &&
-    previewImageUrl!.startsWith(API_BASE_URL);
-
-  const [authImageSrc, setAuthImageSrc] = useState<string | null>(null);
+  const [imageSrc, setImageSrc] = useState<string | null>(previewImageUrl);
+  const [usedAuthFetch, setUsedAuthFetch] = useState(false);
   const [loadingAuthImage, setLoadingAuthImage] = useState(false);
   const [imageLoadFailed, setImageLoadFailed] = useState(false);
+  const authImageObjectUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
-    setAuthImageSrc(null);
+    if (authImageObjectUrlRef.current) {
+      window.URL.revokeObjectURL(authImageObjectUrlRef.current);
+      authImageObjectUrlRef.current = null;
+    }
+    setImageSrc(previewImageUrl);
+    setUsedAuthFetch(false);
     setLoadingAuthImage(false);
     setImageLoadFailed(false);
   }, [previewImageUrl, slide.slideNumber]);
 
   useEffect(() => {
-    if (!previewImageUrl || !requiresAuthFetch) {
+    return () => {
+      if (authImageObjectUrlRef.current) {
+        window.URL.revokeObjectURL(authImageObjectUrlRef.current);
+        authImageObjectUrlRef.current = null;
+      }
+    };
+  }, []);
+
+  const fetchPreviewWithAuth = useCallback(async () => {
+    if (!previewImageUrl || usedAuthFetch) {
       return;
     }
 
     const token = AuthService.getToken();
     if (!token) {
+      setImageLoadFailed(true);
       return;
     }
 
-    const controller = new AbortController();
-    let objectUrl: string | null = null;
+    setUsedAuthFetch(true);
     setLoadingAuthImage(true);
+    try {
+      const response = await fetch(previewImageUrl, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          accept: '*/*',
+        },
+      });
 
-    const fetchPreviewImage = async () => {
-      try {
-        const response = await fetch(previewImageUrl, {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            accept: '*/*',
-          },
-          signal: controller.signal,
-        });
-
-        if (!response.ok) {
-          return;
-        }
-
-        const blob = await response.blob();
-        objectUrl = window.URL.createObjectURL(blob);
-        setAuthImageSrc(objectUrl);
-      } catch {
-        // Fall back to text preview when image cannot be fetched.
-      } finally {
-        if (!controller.signal.aborted) {
-          setLoadingAuthImage(false);
-        }
+      if (!response.ok) {
+        setImageLoadFailed(true);
+        return;
       }
-    };
 
-    void fetchPreviewImage();
-
-    return () => {
-      controller.abort();
-      if (objectUrl) {
-        window.URL.revokeObjectURL(objectUrl);
+      const blob = await response.blob();
+      if (authImageObjectUrlRef.current) {
+        window.URL.revokeObjectURL(authImageObjectUrlRef.current);
       }
-    };
-  }, [previewImageUrl, requiresAuthFetch]);
+      authImageObjectUrlRef.current = window.URL.createObjectURL(blob);
+      setImageSrc(authImageObjectUrlRef.current);
+      setImageLoadFailed(false);
+    } catch {
+      setImageLoadFailed(true);
+    } finally {
+      setLoadingAuthImage(false);
+    }
+  }, [previewImageUrl, usedAuthFetch]);
 
-  if (requiresAuthFetch && loadingAuthImage) {
+  if (previewImageUrl && loadingAuthImage) {
     return <span className="ai-slide-preview-loading">Đang tải ảnh preview...</span>;
   }
-
-  const imageSrc = requiresAuthFetch ? authImageSrc : previewImageUrl;
 
   if (imageSrc && !imageLoadFailed) {
     return (
@@ -300,7 +311,13 @@ const SlideContentPreview: React.FC<SlideContentPreviewProps> = ({
         alt={`Rendered preview slide ${slide.slideNumber}`}
         className="ai-slide-preview-rendered-image"
         loading="lazy"
-        onError={() => setImageLoadFailed(true)}
+        onError={() => {
+          if (!usedAuthFetch) {
+            void fetchPreviewWithAuth();
+            return;
+          }
+          setImageLoadFailed(true);
+        }}
       />
     );
   }
