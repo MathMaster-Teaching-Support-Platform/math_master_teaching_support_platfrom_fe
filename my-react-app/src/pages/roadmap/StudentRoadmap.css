@@ -202,7 +202,9 @@
   height: 100%;
   background: var(--primary-color);
   border-radius: 99px;
-  transition: width 0.5s ease;
+  width: 100%;
+  transform-origin: left;
+  transition: transform 0.5s ease;
 }
 
 .srp__rm-footer {
@@ -326,10 +328,7 @@
 .srp__overview-pct {
   font-size: 2rem;
   font-weight: 900;
-  background: linear-gradient(135deg, #4f6ef7, #7c3aed);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #4f6ef7;
   line-height: 1;
   min-width: 56px;
 }
@@ -347,7 +346,9 @@
   height: 100%;
   background: linear-gradient(90deg, #4f6ef7, #7c3aed);
   border-radius: 99px;
-  transition: width 0.6s ease;
+  width: 100%;
+  transform-origin: left;
+  transition: transform 0.6s ease;
 }
 
 .srp__overview-counts {
@@ -385,10 +386,11 @@
   gap: 1rem;
   background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(13, 148, 136, 0.06) 100%);
   border: 1px solid rgba(16, 185, 129, 0.25);
-  border-left: 4px solid #10b981;
+  box-shadow:
+    inset 3px 0 0 #10b981,
+    0 2px 12px rgba(16, 185, 129, 0.08);
   border-radius: 16px;
   padding: 1.25rem 1.5rem;
-  box-shadow: 0 2px 12px rgba(16, 185, 129, 0.08);
 }
 
 .srp__congrats span {
@@ -532,9 +534,10 @@
 
 .srp__step--current .srp__step-body {
   border-color: #a5b4fc;
-  border-left: 3px solid #4f6ef7;
+  box-shadow:
+    inset 2px 0 0 #4f6ef7,
+    0 4px 16px rgba(79, 110, 247, 0.1);
   background: linear-gradient(135deg, rgba(79, 110, 247, 0.04) 0%, rgba(124, 58, 237, 0.03) 100%);
-  box-shadow: 0 4px 16px rgba(79, 110, 247, 0.1);
 }
 
 .srp__step--completed .srp__step-body {

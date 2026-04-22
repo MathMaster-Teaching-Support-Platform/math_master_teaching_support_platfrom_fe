@@ -1,8 +1,8 @@
+import { Award, Search, TrendingUp, Users, X } from 'lucide-react';
 import { useState } from 'react';
-import { Search, Users, X, TrendingUp, Award } from 'lucide-react';
 import { useCourseStudents } from '../../../hooks/useCourses';
-import type { StudentInCourseResponse } from '../../../types';
 import '../../../styles/module-refactor.css';
+import type { StudentInCourseResponse } from '../../../types';
 
 interface CourseStudentsTabProps {
   courseId: string;
@@ -22,8 +22,7 @@ const CourseStudentsTab: React.FC<CourseStudentsTabProps> = ({ courseId }) => {
     if (!search.trim()) return true;
     const q = search.toLowerCase();
     return (
-      student.studentName?.toLowerCase().includes(q) ||
-      student.email?.toLowerCase().includes(q)
+      student.studentName?.toLowerCase().includes(q) || student.email?.toLowerCase().includes(q)
     );
   });
 
@@ -128,7 +127,8 @@ const CourseStudentsTab: React.FC<CourseStudentsTabProps> = ({ courseId }) => {
                     student.totalLessons > 0
                       ? (student.completedLessons / student.totalLessons) * 100
                       : 0;
-                  const isCompleted = student.completedLessons === student.totalLessons && student.totalLessons > 0;
+                  const isCompleted =
+                    student.completedLessons === student.totalLessons && student.totalLessons > 0;
 
                   return (
                     <tr key={student.studentId}>
@@ -157,13 +157,15 @@ const CourseStudentsTab: React.FC<CourseStudentsTabProps> = ({ courseId }) => {
                           >
                             <div
                               style={{
-                                width: `${progress}%`,
+                                transform: `scaleX(${progress / 100})`,
+                                transformOrigin: 'left',
+                                width: '100%',
                                 height: '100%',
                                 background: isCompleted
                                   ? '#10b981'
                                   : 'linear-gradient(90deg, #1f5eff, #60a5fa)',
                                 borderRadius: 999,
-                                transition: 'width 0.3s ease',
+                                transition: 'transform 0.3s ease',
                               }}
                             />
                           </div>

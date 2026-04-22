@@ -203,7 +203,7 @@
 
 .event-item {
   padding: 1rem;
-  border-left: 4px solid var(--primary-color);
+  box-shadow: inset 3px 0 0 var(--primary-color);
   background: var(--gray-50);
   border-radius: 8px;
   margin-bottom: 1rem;

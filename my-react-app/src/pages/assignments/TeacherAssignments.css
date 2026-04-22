@@ -407,7 +407,9 @@
 .module-layout-container .progress-fill {
   height: 100%;
   border-radius: 99px;
-  transition: width 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
+  transform-origin: left;
+  transition: transform 0.65s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .module-layout-container .progress-fill.completion {
@@ -485,7 +487,7 @@
     0 32px 64px rgba(8, 18, 50, 0.22),
     0 4px 16px rgba(8, 18, 50, 0.1);
   border: 1px solid var(--mod-slate-100);
-  animation: ta-modal-in 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: ta-modal-in 0.22s cubic-bezier(0.22, 1, 0.36, 1);
   scrollbar-width: thin;
   scrollbar-color: #d1dded transparent;
 }
@@ -729,7 +731,7 @@
     left: 0;
     right: 0;
     width: 100% !important;
-    animation: ta-modal-slide-up 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation: ta-modal-slide-up 0.25s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .module-layout-container .modal-overlay {

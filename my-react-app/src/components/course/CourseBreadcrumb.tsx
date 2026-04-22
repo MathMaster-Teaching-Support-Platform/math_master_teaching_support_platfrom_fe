@@ -1,5 +1,6 @@
 import { ChevronRight, Home } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
+import { AuthService } from '../../services/api/auth.service';
 import './CourseBreadcrumb.css';
 
 interface BreadcrumbItem {
@@ -18,15 +19,21 @@ export const CourseBreadcrumb: React.FC<CourseBreadcrumbProps> = ({ items, cours
   // Auto-generate breadcrumbs if not provided
   const breadcrumbs = items || generateBreadcrumbs(location.pathname, courseTitle);
 
+  const dashboardUrl = AuthService.getDashboardUrl();
+  // Hide "Trang chủ" if it points to the same URL as the first breadcrumb item
+  const showHome = breadcrumbs.length === 0 || breadcrumbs[0].path !== dashboardUrl;
+
   return (
     <nav className="course-breadcrumb" aria-label="Breadcrumb">
       <ol className="breadcrumb-list">
-        <li className="breadcrumb-item">
-          <Link to="/" className="breadcrumb-link">
-            <Home size={14} />
-            <span>Trang chủ</span>
-          </Link>
-        </li>
+        {showHome && (
+          <li className="breadcrumb-item">
+            <Link to={dashboardUrl} className="breadcrumb-link">
+              <Home size={14} />
+              <span>Trang chủ</span>
+            </Link>
+          </li>
+        )}
         {breadcrumbs.map((item, index) => (
           <li key={index} className="breadcrumb-item">
             <ChevronRight size={14} className="breadcrumb-separator" />
@@ -78,8 +85,6 @@ function generateBreadcrumbs(pathname: string, courseTitle?: string): Breadcrumb
 
   // Student routes
   if (segments[0] === 'student') {
-    breadcrumbs.push({ label: 'Học sinh', path: '/student/courses' });
-
     if (segments[1] === 'courses') {
       breadcrumbs.push({ label: 'Giáo trình của tôi', path: '/student/courses' });
 

@@ -36,9 +36,14 @@
   font-family: inherit;
   flex-shrink: 0;
 }
-.rdp-header__back:hover { color: #111827; }
+.rdp-header__back:hover {
+  color: #111827;
+}
 
-.rdp-header__info { flex: 1; min-width: 0; }
+.rdp-header__info {
+  flex: 1;
+  min-width: 0;
+}
 
 .rdp-header__title {
   font-size: 1.05rem;
@@ -83,7 +88,9 @@
   height: 100%;
   background: #4f46e5;
   border-radius: 3px;
-  transition: width 0.5s ease;
+  width: 100%;
+  transform-origin: left;
+  transition: transform 0.5s ease;
 }
 
 .rdp-header__count {
@@ -105,21 +112,36 @@
   gap: 0.5rem;
   animation: rdp-slide-in 0.25s ease;
 }
-.rdp-action-msg--success { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
-.rdp-action-msg--error   { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+.rdp-action-msg--success {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+.rdp-action-msg--error {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
 
 @keyframes rdp-slide-in {
-  from { opacity: 0; transform: translateY(-6px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ── Main layout ── */
 .rdp-layout {
   display: flex;
   position: relative;
-  transition: padding-right 0.3s ease;
 }
-.rdp-layout--panel { padding-right: 420px; }
+.rdp-layout--panel {
+  padding-right: 420px;
+}
 
 /* ── Map canvas ── */
 .rdp-map {
@@ -202,7 +224,10 @@
   font-family: inherit;
   font-size: 0.95rem;
   text-align: left;
-  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s,
+    box-shadow 0.15s;
   position: relative;
   outline: none;
 }
@@ -210,11 +235,11 @@
 .rdp-topic-node:hover {
   border-color: #b45309;
   background: #fef9c3;
-  box-shadow: 0 2px 12px rgba(180,83,9,0.12);
+  box-shadow: 0 2px 12px rgba(180, 83, 9, 0.12);
 }
 
 .rdp-topic-node:focus-visible {
-  box-shadow: 0 0 0 3px rgba(217,172,74,0.35);
+  box-shadow: 0 0 0 3px rgba(217, 172, 74, 0.35);
 }
 
 /* Completed topic */
@@ -225,7 +250,7 @@
 .rdp-topic-node--done:hover {
   border-color: #16a34a;
   background: #dcfce7;
-  box-shadow: 0 2px 12px rgba(22,163,74,0.1);
+  box-shadow: 0 2px 12px rgba(22, 163, 74, 0.1);
 }
 
 /* In-progress topic */
@@ -236,24 +261,24 @@
 .rdp-topic-node--progress:hover {
   border-color: #2563eb;
   background: #dbeafe;
-  box-shadow: 0 2px 12px rgba(37,99,235,0.1);
+  box-shadow: 0 2px 12px rgba(37, 99, 235, 0.1);
 }
 
 /* Active / selected */
 .rdp-topic-node--active {
   border-color: #b45309 !important;
   background: #fef9c3 !important;
-  box-shadow: 0 0 0 3px rgba(217,172,74,0.25);
+  box-shadow: 0 0 0 3px rgba(217, 172, 74, 0.25);
 }
 .rdp-topic-node--done.rdp-topic-node--active {
   border-color: #16a34a !important;
   background: #dcfce7 !important;
-  box-shadow: 0 0 0 3px rgba(22,163,74,0.2);
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.2);
 }
 .rdp-topic-node--progress.rdp-topic-node--active {
   border-color: #2563eb !important;
   background: #dbeafe !important;
-  box-shadow: 0 0 0 3px rgba(37,99,235,0.2);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
 }
 
 /* Status dot */
@@ -263,9 +288,16 @@
   border-radius: 50%;
   flex-shrink: 0;
 }
-.rdp-status-dot--done     { background: #16a34a; }
-.rdp-status-dot--progress { background: #2563eb; }
-.rdp-status-dot--none     { background: transparent; border: 2px solid #9ca3af; }
+.rdp-status-dot--done {
+  background: #16a34a;
+}
+.rdp-status-dot--progress {
+  background: #2563eb;
+}
+.rdp-status-dot--none {
+  background: transparent;
+  border: 2px solid #9ca3af;
+}
 
 /* Topic node body */
 .rdp-topic-node__body {
@@ -311,9 +343,18 @@
   letter-spacing: 0.04em;
   flex-shrink: 0;
 }
-.rdp-diff-badge--easy   { background: #dcfce7; color: #166534; }
-.rdp-diff-badge--medium { background: #fef9c3; color: #854d0e; }
-.rdp-diff-badge--hard   { background: #fee2e2; color: #991b1b; }
+.rdp-diff-badge--easy {
+  background: #dcfce7;
+  color: #166534;
+}
+.rdp-diff-badge--medium {
+  background: #fef9c3;
+  color: #854d0e;
+}
+.rdp-diff-badge--hard {
+  background: #fee2e2;
+  color: #991b1b;
+}
 
 .rdp-topic-node__course-count {
   font-size: 0.72rem;
@@ -327,7 +368,9 @@
   color: #9ca3af;
   flex-shrink: 0;
   transform: rotate(0deg);
-  transition: transform 0.2s, color 0.15s;
+  transition:
+    transform 0.2s,
+    color 0.15s;
   line-height: 1;
 }
 .rdp-topic-node__chevron--open {
@@ -346,8 +389,14 @@
 }
 
 @keyframes rdp-branch-in {
-  from { opacity: 0; transform: translateX(-8px); }
-  to   { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .rdp-branch-hconn {
@@ -398,23 +447,26 @@
   font-family: inherit;
   font-size: inherit;
   text-align: left;
-  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s,
+    background 0.15s;
   outline: none;
 }
 
 .rdp-course-card:hover {
   border-color: #6366f1;
-  box-shadow: 0 2px 10px rgba(99,102,241,0.1);
+  box-shadow: 0 2px 10px rgba(99, 102, 241, 0.1);
 }
 
 .rdp-course-card:focus-visible {
-  box-shadow: 0 0 0 3px rgba(99,102,241,0.25);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
 }
 
 .rdp-course-card--selected {
   border-color: #6366f1;
   background: #f5f3ff;
-  box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
 }
 
 .rdp-course-card--empty {
@@ -471,7 +523,9 @@
   height: 100%;
   background: #4f46e5;
   border-radius: 2px;
-  transition: width 0.4s ease;
+  width: 100%;
+  transform-origin: left;
+  transition: transform 0.4s ease;
 }
 
 .rdp-course-tag {
@@ -480,15 +534,23 @@
   padding: 0.12rem 0.4rem;
   border-radius: 4px;
 }
-.rdp-course-tag--enrolled { background: #dbeafe; color: #1d4ed8; }
-.rdp-course-tag--done     { background: #dcfce7; color: #166534; }
+.rdp-course-tag--enrolled {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+.rdp-course-tag--done {
+  background: #dcfce7;
+  color: #166534;
+}
 
 .rdp-course-card__arrow {
   font-size: 1rem;
   color: #d1d5db;
   flex-shrink: 0;
   align-self: center;
-  transition: color 0.15s, transform 0.15s;
+  transition:
+    color 0.15s,
+    transform 0.15s;
 }
 .rdp-course-card:hover .rdp-course-card__arrow,
 .rdp-course-card--selected .rdp-course-card__arrow {
@@ -562,9 +624,18 @@
   border-radius: 20px;
   white-space: nowrap;
 }
-.rdp-panel__status-badge--none     { background: #f3f4f6; color: #6b7280; }
-.rdp-panel__status-badge--progress { background: #dbeafe; color: #1d4ed8; }
-.rdp-panel__status-badge--done     { background: #dcfce7; color: #166534; }
+.rdp-panel__status-badge--none {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+.rdp-panel__status-badge--progress {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+.rdp-panel__status-badge--done {
+  background: #dcfce7;
+  color: #166534;
+}
 
 .rdp-panel__close {
   background: none;
@@ -578,11 +649,16 @@
   align-items: center;
   justify-content: center;
   border-radius: 5px;
-  transition: color 0.15s, background 0.15s;
+  transition:
+    color 0.15s,
+    background 0.15s;
   font-family: inherit;
   flex-shrink: 0;
 }
-.rdp-panel__close:hover { color: #111827; background: #f3f4f6; }
+.rdp-panel__close:hover {
+  color: #111827;
+  background: #f3f4f6;
+}
 
 .rdp-panel__body {
   flex: 1;
@@ -685,7 +761,9 @@
   height: 100%;
   background: #4f46e5;
   border-radius: 3px;
-  transition: width 0.5s ease;
+  width: 100%;
+  transform-origin: left;
+  transition: transform 0.5s ease;
 }
 
 .rdp-panel__progress-pct {
@@ -734,8 +812,12 @@
   letter-spacing: 0.05em;
 }
 
-.rdp-panel__section-header--green .rdp-panel__section-title { color: #16a34a; }
-.rdp-panel__section-header--purple .rdp-panel__section-title { color: #7c3aed; }
+.rdp-panel__section-header--green .rdp-panel__section-title {
+  color: #16a34a;
+}
+.rdp-panel__section-header--purple .rdp-panel__section-title {
+  color: #7c3aed;
+}
 
 .rdp-panel__lessons {
   border: 1px solid #e5e7eb;
@@ -751,8 +833,12 @@
   border-bottom: 1px solid #f3f4f6;
   transition: background 0.1s;
 }
-.rdp-panel__lesson-item:last-child { border-bottom: none; }
-.rdp-panel__lesson-item:hover { background: #f9fafb; }
+.rdp-panel__lesson-item:last-child {
+  border-bottom: none;
+}
+.rdp-panel__lesson-item:hover {
+  background: #f9fafb;
+}
 
 .rdp-panel__lesson-num {
   width: 20px;
@@ -797,13 +883,17 @@
   border-radius: 7px;
   text-decoration: none;
   background: #fff;
-  transition: border-color 0.15s, background 0.15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
 }
 .rdp-panel__resource-item:hover {
   border-color: #4f46e5;
   background: #f5f3ff;
 }
-.rdp-panel__resource-item--premium { background: #fafafa; }
+.rdp-panel__resource-item--premium {
+  background: #fafafa;
+}
 .rdp-panel__resource-item--premium:hover {
   border-color: #7c3aed;
   background: #f5f3ff;
@@ -819,12 +909,30 @@
   flex-shrink: 0;
   white-space: nowrap;
 }
-.rdp-panel__resource-badge--article { background: #dbeafe; color: #1d4ed8; }
-.rdp-panel__resource-badge--video   { background: #fce7f3; color: #be185d; }
-.rdp-panel__resource-badge--course  { background: #dcfce7; color: #166534; }
-.rdp-panel__resource-badge--book    { background: #fef9c3; color: #854d0e; }
-.rdp-panel__resource-badge--podcast { background: #ede9fe; color: #6d28d9; }
-.rdp-panel__resource-badge--other   { background: #f3f4f6; color: #6b7280; }
+.rdp-panel__resource-badge--article {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+.rdp-panel__resource-badge--video {
+  background: #fce7f3;
+  color: #be185d;
+}
+.rdp-panel__resource-badge--course {
+  background: #dcfce7;
+  color: #166534;
+}
+.rdp-panel__resource-badge--book {
+  background: #fef9c3;
+  color: #854d0e;
+}
+.rdp-panel__resource-badge--podcast {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+.rdp-panel__resource-badge--other {
+  background: #f3f4f6;
+  color: #6b7280;
+}
 
 .rdp-panel__resource-title {
   flex: 1;
@@ -839,7 +947,9 @@
   color: #9ca3af;
   flex-shrink: 0;
 }
-.rdp-panel__resource-item:hover .rdp-panel__resource-arrow { color: #4f46e5; }
+.rdp-panel__resource-item:hover .rdp-panel__resource-arrow {
+  color: #4f46e5;
+}
 
 .rdp-panel__footer {
   padding: 1rem 1.25rem;
@@ -863,10 +973,19 @@
   transition: background 0.15s;
   font-family: inherit;
 }
-.rdp-panel__cta:hover { background: #4338ca; }
-.rdp-panel__cta--enrolled { background: #059669; }
-.rdp-panel__cta--enrolled:hover { background: #047857; }
-.rdp-panel__cta:disabled { opacity: 0.55; cursor: not-allowed; }
+.rdp-panel__cta:hover {
+  background: #4338ca;
+}
+.rdp-panel__cta--enrolled {
+  background: #059669;
+}
+.rdp-panel__cta--enrolled:hover {
+  background: #047857;
+}
+.rdp-panel__cta:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
 
 /* ══════════════════════════════════════════════════════
    FEEDBACK
@@ -927,13 +1046,20 @@
   font-size: 1.55rem;
   cursor: pointer;
   color: #d1d5db;
-  transition: color 0.15s, transform 0.1s;
+  transition:
+    color 0.15s,
+    transform 0.1s;
   padding: 0;
   line-height: 1;
   font-family: inherit;
 }
-.rdp-star:hover { transform: scale(1.15); color: #f59e0b; }
-.rdp-star--active { color: #f59e0b; }
+.rdp-star:hover {
+  transform: scale(1.15);
+  color: #f59e0b;
+}
+.rdp-star--active {
+  color: #f59e0b;
+}
 
 .rdp-feedback__chips {
   display: flex;
@@ -954,7 +1080,10 @@
   transition: all 0.15s;
   font-family: inherit;
 }
-.rdp-feedback__chip:hover { border-color: #4f46e5; color: #4f46e5; }
+.rdp-feedback__chip:hover {
+  border-color: #4f46e5;
+  color: #4f46e5;
+}
 .rdp-feedback__chip--active {
   border-color: #4f46e5;
   background: #eef2ff;
@@ -982,7 +1111,10 @@
   background: #f9fafb;
   box-sizing: border-box;
 }
-.rdp-feedback__field textarea:focus { border-color: #4f46e5; background: #ffffff; }
+.rdp-feedback__field textarea:focus {
+  border-color: #4f46e5;
+  background: #ffffff;
+}
 
 .rdp-feedback__char-count {
   display: block;
@@ -1004,8 +1136,13 @@
   transition: background 0.15s;
   font-family: inherit;
 }
-.rdp-feedback__submit:hover { background: #4338ca; }
-.rdp-feedback__submit:disabled { opacity: 0.5; cursor: not-allowed; }
+.rdp-feedback__submit:hover {
+  background: #4338ca;
+}
+.rdp-feedback__submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
 /* ── Skeleton loading ── */
 .rdp-skeleton-wrap {
@@ -1027,8 +1164,12 @@
 }
 
 @keyframes rdp-shimmer {
-  0%   { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 .rdp-error {
@@ -1042,7 +1183,9 @@
    RESPONSIVE
 ══════════════════════════════════════════════════════ */
 @media (max-width: 900px) {
-  .rdp-layout--panel { padding-right: 0; }
+  .rdp-layout--panel {
+    padding-right: 0;
+  }
   .rdp-panel {
     position: fixed;
     bottom: 0;
@@ -1059,17 +1202,34 @@
 }
 
 @media (max-width: 640px) {
-  .rdp-header { padding: 0.75rem 1rem; flex-wrap: wrap; }
-  .rdp-header__progress { display: none; }
-  .rdp-map { padding: 1.5rem 0.75rem 4rem; }
-  .rdp-topic-area { width: 100%; }
-  .rdp-vline-wrap { width: 100%; }
-  .rdp-tree-row { flex-direction: column; }
+  .rdp-header {
+    padding: 0.75rem 1rem;
+    flex-wrap: wrap;
+  }
+  .rdp-header__progress {
+    display: none;
+  }
+  .rdp-map {
+    padding: 1.5rem 0.75rem 4rem;
+  }
+  .rdp-topic-area {
+    width: 100%;
+  }
+  .rdp-vline-wrap {
+    width: 100%;
+  }
+  .rdp-tree-row {
+    flex-direction: column;
+  }
   .rdp-courses-branch {
     padding-top: 0;
     padding-left: 1.5rem;
     flex-direction: column;
   }
-  .rdp-branch-hconn { display: none; }
-  .rdp-topic-node { max-width: 100%; }
+  .rdp-branch-hconn {
+    display: none;
+  }
+  .rdp-topic-node {
+    max-width: 100%;
+  }
 }

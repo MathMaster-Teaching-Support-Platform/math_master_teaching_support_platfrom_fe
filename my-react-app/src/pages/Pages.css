@@ -57,7 +57,7 @@
 /* ── Hero ── */
 .features-page-hero {
   padding: 8rem 0 4rem;
-  background: var(--c-bg, #FAFAFF);
+  background: var(--c-bg, #fafaff);
   text-align: center;
   position: relative;
   overflow: hidden;
@@ -86,13 +86,13 @@
   letter-spacing: -1.5px;
   margin: 0 0 1.25rem 0;
   font-family: 'Be Vietnam Pro', 'Inter', sans-serif;
-  color: var(--c-text-1, #0E0C15);
+  color: var(--c-text-1, #0e0c15);
 }
 
 .features-hero-desc {
   font-size: 1.05rem;
   line-height: 1.7;
-  color: var(--c-text-3, #6E6A80);
+  color: var(--c-text-3, #6e6a80);
   max-width: 560px;
   margin: 0 auto;
 }
@@ -131,7 +131,7 @@
   gap: 0.75rem;
   padding: 0.6rem 0;
   font-size: 0.85rem;
-  color: var(--c-text-2, #3F3A52);
+  color: var(--c-text-2, #3f3a52);
   border-bottom: 1px solid var(--c-border-soft, rgba(0, 0, 0, 0.04));
   line-height: 1.5;
 }
@@ -150,7 +150,7 @@
   min-width: 22px;
   border-radius: 6px;
   background: linear-gradient(135deg, rgba(94, 92, 230, 0.12), rgba(133, 141, 255, 0.2));
-  color: #5E5CE6;
+  color: #5e5ce6;
 }
 
 .fp-check svg {
@@ -160,23 +160,23 @@
 
 .fp-check--green {
   background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(52, 211, 153, 0.2));
-  color: #10B981;
+  color: #10b981;
 }
 .fp-check--blue {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(96, 165, 250, 0.2));
-  color: #3B82F6;
+  color: #3b82f6;
 }
 .fp-check--orange {
   background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(251, 191, 36, 0.2));
-  color: #D97706;
+  color: #d97706;
 }
 .fp-check--pink {
   background: linear-gradient(135deg, rgba(236, 72, 153, 0.12), rgba(244, 114, 182, 0.2));
-  color: #EC4899;
+  color: #ec4899;
 }
 .fp-check--teal {
   background: linear-gradient(135deg, rgba(20, 184, 166, 0.12), rgba(45, 212, 191, 0.2));
-  color: #14B8A6;
+  color: #14b8a6;
 }
 
 /* ==================== ABOUT PAGE — Premium ==================== */
@@ -184,7 +184,7 @@
 /* ── Hero ── */
 .about-hero {
   padding: 8rem 0 5rem;
-  background: var(--c-bg, #FAFAFF);
+  background: var(--c-bg, #fafaff);
   text-align: center;
   position: relative;
   overflow: hidden;
@@ -213,13 +213,13 @@
   letter-spacing: -1.5px;
   margin: 0 0 1.25rem 0;
   font-family: 'Be Vietnam Pro', 'Inter', sans-serif;
-  color: var(--c-text-1, #0E0C15);
+  color: var(--c-text-1, #0e0c15);
 }
 
 .about-hero-desc {
   font-size: 1.1rem;
   line-height: 1.7;
-  color: var(--c-text-3, #6E6A80);
+  color: var(--c-text-3, #6e6a80);
   max-width: 580px;
   margin: 0 auto;
 }
@@ -239,7 +239,12 @@
   transform: translateX(-50%);
   width: min(90%, 800px);
   height: 1px;
-  background: linear-gradient(90deg, transparent, var(--c-border, rgba(0,0,0,0.06)), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--c-border, rgba(0, 0, 0, 0.06)),
+    transparent
+  );
 }
 
 .about-story-grid {
@@ -261,7 +266,7 @@
   font-weight: 600;
   letter-spacing: 0.3px;
   text-transform: uppercase;
-  color: var(--c-primary, #5E5CE6);
+  color: var(--c-primary, #5e5ce6);
   margin-bottom: 1.25rem;
 }
 
@@ -270,13 +275,13 @@
 }
 
 .about-label--blue {
-  color: #3B82F6;
+  color: #3b82f6;
 }
 
 .about-heading {
   font-size: clamp(1.75rem, 3.5vw, 2.5rem);
   font-weight: 700;
-  color: var(--c-text-1, #0E0C15);
+  color: var(--c-text-1, #0e0c15);
   margin: 0 0 1.25rem 0;
   font-family: 'Be Vietnam Pro', 'Inter', sans-serif;
   line-height: 1.2;
@@ -285,7 +290,7 @@
 
 .about-body {
   font-size: 0.95rem;
-  color: var(--c-text-3, #6E6A80);
+  color: var(--c-text-3, #6e6a80);
   line-height: 1.8;
   margin: 0 0 1rem 0;
 }
@@ -305,7 +310,7 @@
   padding: 2.5rem 2rem;
   position: relative;
   overflow: hidden;
-  box-shadow: var(--shadow-sm, 0 2px 8px rgba(0,0,0,0.04));
+  box-shadow: var(--shadow-sm, 0 2px 8px rgba(0, 0, 0, 0.04));
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   max-width: 380px;
   width: 100%;
@@ -340,7 +345,7 @@
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, rgba(94, 92, 230, 0.12), rgba(133, 141, 255, 0.18));
-  color: var(--c-primary, #5E5CE6);
+  color: var(--c-primary, #5e5ce6);
   margin-bottom: 1.25rem;
 }
 
@@ -352,7 +357,7 @@
 .about-visual-title {
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--c-text-1, #0E0C15);
+  color: var(--c-text-1, #0e0c15);
   margin: 0 0 0.5rem 0;
   font-family: 'Be Vietnam Pro', 'Inter', sans-serif;
   letter-spacing: -0.3px;
@@ -360,7 +365,7 @@
 
 .about-visual-desc {
   font-size: 0.85rem;
-  color: var(--c-text-3, #6E6A80);
+  color: var(--c-text-3, #6e6a80);
   line-height: 1.6;
   margin: 0 0 1.5rem 0;
 }
@@ -392,7 +397,7 @@
   display: block;
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--c-primary, #5E5CE6);
+  color: var(--c-primary, #5e5ce6);
   font-family: 'Be Vietnam Pro', 'Inter', sans-serif;
   letter-spacing: -0.5px;
   line-height: 1;
@@ -401,7 +406,7 @@
 
 .about-stat-label {
   font-size: 0.7rem;
-  color: var(--c-text-3, #6E6A80);
+  color: var(--c-text-3, #6e6a80);
   text-transform: uppercase;
   letter-spacing: 0.3px;
   font-weight: 500;
@@ -410,7 +415,7 @@
 /* ── Vision — Accent Section ── */
 .about-vision-section {
   padding: 5rem 0;
-  background: var(--c-bg, #FAFAFF);
+  background: var(--c-bg, #fafaff);
   position: relative;
   overflow: hidden;
 }
@@ -427,7 +432,7 @@
   padding: 3rem;
   position: relative;
   z-index: 1;
-  box-shadow: var(--shadow-sm, 0 2px 8px rgba(0,0,0,0.04));
+  box-shadow: var(--shadow-sm, 0 2px 8px rgba(0, 0, 0, 0.04));
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
 }
@@ -462,7 +467,7 @@
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(96, 165, 250, 0.16));
-  color: #3B82F6;
+  color: #3b82f6;
 }
 
 .about-vision-icon svg {
@@ -490,7 +495,12 @@
   transform: translateX(-50%);
   width: min(90%, 800px);
   height: 1px;
-  background: linear-gradient(90deg, transparent, var(--c-border, rgba(0,0,0,0.06)), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--c-border, rgba(0, 0, 0, 0.06)),
+    transparent
+  );
 }
 
 .about-section-header {
@@ -516,14 +526,14 @@
 /* ── Benefits — Why MathMaster ── */
 .about-benefits-section {
   padding: 5rem 0;
-  background: var(--c-bg, #FAFAFF);
+  background: var(--c-bg, #fafaff);
   position: relative;
   overflow: hidden;
 }
 
 .about-benefits-desc {
   font-size: 1rem;
-  color: var(--c-text-3, #6E6A80);
+  color: var(--c-text-3, #6e6a80);
   max-width: 480px;
   margin: 0 auto;
   line-height: 1.6;
@@ -557,7 +567,7 @@
 .about-benefit-stat {
   font-size: 1.1rem;
   font-weight: 700;
-  color: var(--c-primary, #5E5CE6);
+  color: var(--c-primary, #5e5ce6);
   font-family: 'Be Vietnam Pro', 'Inter', sans-serif;
   letter-spacing: -0.3px;
   white-space: nowrap;
@@ -565,7 +575,7 @@
 
 .about-benefit-stat-text {
   font-size: 0.78rem;
-  color: var(--c-text-2, #3F3A52);
+  color: var(--c-text-2, #3f3a52);
   line-height: 1.4;
 }
 
@@ -584,14 +594,19 @@
   transform: translateX(-50%);
   width: min(90%, 800px);
   height: 1px;
-  background: linear-gradient(90deg, transparent, var(--c-border, rgba(0,0,0,0.06)), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--c-border, rgba(0, 0, 0, 0.06)),
+    transparent
+  );
 }
 
 .about-cta-card {
   text-align: center;
   padding: 4rem 2rem;
   border-radius: var(--r-xl, 20px);
-  background: var(--c-bg, #FAFAFF);
+  background: var(--c-bg, #fafaff);
   border: 1px solid var(--c-border-soft, rgba(0, 0, 0, 0.04));
   position: relative;
   overflow: hidden;
@@ -616,7 +631,7 @@
 .about-cta-title {
   font-size: clamp(1.75rem, 3.5vw, 2.5rem);
   font-weight: 700;
-  color: var(--c-text-1, #0E0C15);
+  color: var(--c-text-1, #0e0c15);
   margin: 0 0 1rem 0;
   font-family: 'Be Vietnam Pro', 'Inter', sans-serif;
   line-height: 1.2;
@@ -625,7 +640,7 @@
 
 .about-cta-desc {
   font-size: 1rem;
-  color: var(--c-text-3, #6E6A80);
+  color: var(--c-text-3, #6e6a80);
   max-width: 500px;
   margin: 0 auto 2rem;
   line-height: 1.7;
@@ -900,7 +915,7 @@
   background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
   padding: 2rem;
   border-radius: 15px;
-  border-left: 4px solid #667eea;
+  box-shadow: inset 3px 0 0 #667eea;
   transition: all 0.3s ease;
 }
 

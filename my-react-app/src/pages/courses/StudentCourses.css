@@ -557,7 +557,7 @@
 .sc-prog-fill {
   height: 100%;
   border-radius: 4px;
-  transition: width 1.5s cubic-bezier(0.34, 1.2, 0.64, 1);
+  transition: transform 1.5s cubic-bezier(0.22, 1, 0.36, 1);
   position: relative;
 }
 
@@ -1072,11 +1072,16 @@
 }
 
 .lessons-group {
+  display: grid;
+  grid-template-rows: 1fr;
   overflow: hidden;
-  max-height: 2000px; /* Large enough for many lessons */
-  transition: max-height 0.4s cubic-bezier(0, 1, 0, 1);
+  transition: grid-template-rows 0.4s cubic-bezier(0, 1, 0, 1);
+}
+
+.lessons-group > * {
+  min-height: 0;
 }
 
 .lessons-group.collapsed {
-  max-height: 0;
+  grid-template-rows: 0fr;
 }

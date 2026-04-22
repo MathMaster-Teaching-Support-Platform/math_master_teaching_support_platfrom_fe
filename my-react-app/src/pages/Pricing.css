@@ -615,7 +615,9 @@
   height: 100%;
   border-radius: 99px;
   background: linear-gradient(90deg, var(--c-primary, #5e5ce6), #858dff);
-  transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  width: 100%;
+  transform-origin: left;
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .pricing-token-percent {
@@ -954,13 +956,18 @@
 
 /* Answer panel */
 .pricing-faq-answer {
-  max-height: 0;
+  display: grid;
+  grid-template-rows: 0fr;
   overflow: hidden;
-  transition: max-height 0.38s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: grid-template-rows 0.38s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pricing-faq-answer > * {
+  min-height: 0;
 }
 
 .pricing-faq-item--open .pricing-faq-answer {
-  max-height: 200px;
+  grid-template-rows: 1fr;
 }
 
 .pricing-faq-answer p {

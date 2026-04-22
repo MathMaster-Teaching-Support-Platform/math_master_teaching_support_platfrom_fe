@@ -10,7 +10,7 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 0 56px;
-  font-family: 'Inter', var(--font-heading, 'Segoe UI'), sans-serif;
+  font-family: var(--font-heading, system-ui, sans-serif);
   font-feature-settings: 'cv11', 'ss01', 'tnum';
 }
 
@@ -630,10 +630,11 @@
   flex-shrink: 0;
   align-self: stretch;
   border-radius: 0;
-  transition: width 0.2s;
+  transform-origin: left;
+  transition: transform 0.2s;
 }
 .sa-task:hover .sa-task-bar {
-  width: 5px;
+  transform: scaleX(1.25);
 }
 
 /* Task body */

@@ -22,7 +22,9 @@
   height: 100%;
   border-radius: 999px;
   background: linear-gradient(90deg, #0284c7, #0ea5e9);
-  transition: width 0.25s ease;
+  width: 100%;
+  transform-origin: left;
+  transition: transform 0.25s ease;
 }
 
 .roadmap-progress-bar__native {

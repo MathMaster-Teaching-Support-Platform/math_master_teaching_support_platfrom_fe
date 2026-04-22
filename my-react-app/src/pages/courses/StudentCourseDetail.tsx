@@ -1,38 +1,38 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-  BookOpen,
-  FileText,
-  TrendingUp,
-  Star,
   ArrowLeft,
-  Users,
-  MessageSquare,
-  PlayCircle,
+  BookOpen,
+  Facebook,
+  FileText,
   Globe,
   Linkedin,
+  MessageSquare,
+  PlayCircle,
+  Star,
+  TrendingUp,
+  Users,
   Youtube,
-  Facebook
 } from 'lucide-react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { CourseBreadcrumb } from '../../components/course/CourseBreadcrumb';
+import { CourseIncludesList } from '../../components/course/CourseIncludesList';
+import { CourseLearningPanels } from '../../components/course/CourseLearningPanels';
+import CourseRecommendationRow from '../../components/course/CourseRecommendationRow';
+import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import {
+  useCourseDetail,
   useCourseProgress,
   useDropEnrollment,
-  useMyEnrollments,
-  useCourseDetail,
-  useTeacherProfile,
-  useRelatedCourses,
   useInstructorCourses,
+  useMyEnrollments,
+  useRelatedCourses,
+  useTeacherProfile,
 } from '../../hooks/useCourses';
-import CourseRecommendationRow from '../../components/course/CourseRecommendationRow';
-import { CourseLearningPanels } from '../../components/course/CourseLearningPanels';
-import { CourseIncludesList } from '../../components/course/CourseIncludesList';
 import '../../styles/module-refactor.css';
 import './StudentCourses.css';
 // Import tab components
-import StudentLessonsTab from './student-tabs/StudentLessonsTab';
 import StudentAssessmentsTab from './student-tabs/StudentAssessmentsTab';
+import StudentLessonsTab from './student-tabs/StudentLessonsTab';
 import StudentProgressTab from './student-tabs/StudentProgressTab';
 import StudentReviewsTab from './student-tabs/StudentReviewsTab';
 
@@ -75,12 +75,16 @@ const StudentCourseDetail: React.FC = () => {
   const progress = progressData?.result;
 
   const { data: teacherProfileData } = useTeacherProfile(course?.teacherId ?? '');
-  const { data: relatedCoursesData, isLoading: loadingRelated } = useRelatedCourses(course?.id ?? '');
-  const { data: teacherCoursesData, isLoading: loadingTeacherCourses } = useInstructorCourses(course?.teacherId ?? '');
+  const { data: relatedCoursesData, isLoading: loadingRelated } = useRelatedCourses(
+    course?.id ?? ''
+  );
+  const { data: teacherCoursesData, isLoading: loadingTeacherCourses } = useInstructorCourses(
+    course?.teacherId ?? ''
+  );
 
   const teacherProfile = teacherProfileData?.result;
   const relatedCourses = relatedCoursesData?.result?.content ?? [];
-  const teacherCourses = (teacherCoursesData?.result ?? []).filter(c => c.id !== course?.id);
+  const teacherCourses = (teacherCoursesData?.result ?? []).filter((c) => c.id !== course?.id);
 
   const handleTabChange = (tab: TabType) => {
     setSearchParams({ tab });
@@ -92,7 +96,8 @@ const StudentCourseDetail: React.FC = () => {
     let reason = '';
 
     if (enrollment.enrolledAt) {
-      const hoursSinceEnrollment = (new Date().getTime() - new Date(enrollment.enrolledAt).getTime()) / (1000 * 60 * 60);
+      const hoursSinceEnrollment =
+        (new Date().getTime() - new Date(enrollment.enrolledAt).getTime()) / (1000 * 60 * 60);
       if (hoursSinceEnrollment >= 24) {
         isEligible = false;
         reason = 'vượt quá 24h kể từ khi đăng ký';
@@ -193,7 +198,13 @@ const StudentCourseDetail: React.FC = () => {
                         src={course.thumbnailUrl}
                         alt={enrollment.courseTitle ?? 'Course thumbnail'}
                         className="cover-thumb"
-                        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+                        style={{
+                          position: 'absolute',
+                          inset: 0,
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                        }}
                       />
                     )}
                     <div
@@ -230,12 +241,18 @@ const StudentCourseDetail: React.FC = () => {
                       {enrollment.courseTitle}
                     </h2>
                     {course?.subtitle && (
-                      <p className="course-hero-subtitle" style={{ fontSize: '1rem', color: '#475569', marginBottom: '1rem' }}>
+                      <p
+                        className="course-hero-subtitle"
+                        style={{ fontSize: '1rem', color: '#475569', marginBottom: '1rem' }}
+                      >
                         {course.subtitle}
                       </p>
                     )}
                     {teacherProfile && (
-                      <div className="hero-instructor-link" style={{ marginBottom: '1rem', fontSize: '0.9rem', color: '#64748b' }}>
+                      <div
+                        className="hero-instructor-link"
+                        style={{ marginBottom: '1rem', fontSize: '0.9rem', color: '#64748b' }}
+                      >
                         <span>Giảng viên: </span>
                         <Link
                           to={`/student/instructors/${teacherProfile.userId}`}
@@ -243,7 +260,7 @@ const StudentCourseDetail: React.FC = () => {
                             color: '#4f46e5',
                             textDecoration: 'none',
                             fontWeight: 600,
-                            transition: 'all 0.2s'
+                            transition: 'all 0.2s',
                           }}
                         >
                           {teacherProfile.fullName}
@@ -330,11 +347,13 @@ const StudentCourseDetail: React.FC = () => {
                         >
                           <div
                             style={{
-                              width: `${progress.completionRate}%`,
+                              transform: `scaleX(${progress.completionRate / 100})`,
+                              transformOrigin: 'left',
+                              width: '100%',
                               height: '100%',
                               background: 'linear-gradient(90deg, #1f5eff, #60a5fa)',
                               borderRadius: 999,
-                              transition: 'width 0.7s cubic-bezier(0.22, 1, 0.36, 1)',
+                              transition: 'transform 0.7s cubic-bezier(0.22, 1, 0.36, 1)',
                             }}
                           />
                         </div>
@@ -386,9 +405,7 @@ const StudentCourseDetail: React.FC = () => {
                 {activeTab === 'progress' && (
                   <StudentProgressTab enrollmentId={enrollmentId!} enrollment={enrollment} />
                 )}
-                {activeTab === 'reviews' && (
-                  <StudentReviewsTab courseId={enrollment.courseId} />
-                )}
+                {activeTab === 'reviews' && <StudentReviewsTab courseId={enrollment.courseId} />}
               </div>
 
               {/* ── Enhanced Metadata (Udemy Style) ── */}
@@ -408,16 +425,27 @@ const StudentCourseDetail: React.FC = () => {
                   </div>
                   <div className="instructor-card-detailed">
                     <div className="instructor-main">
-                      <Link to={`/student/instructors/${teacherProfile.userId}`} className="instructor-identity-link">
+                      <Link
+                        to={`/student/instructors/${teacherProfile.userId}`}
+                        className="instructor-identity-link"
+                      >
                         <div className="instructor-identity">
                           {teacherProfile.avatar ? (
-                            <img src={teacherProfile.avatar} alt={teacherProfile.fullName} className="instructor-avatar-large" />
+                            <img
+                              src={teacherProfile.avatar}
+                              alt={teacherProfile.fullName}
+                              className="instructor-avatar-large"
+                            />
                           ) : (
-                            <div className="avatar-placeholder-large">{teacherProfile.fullName.charAt(0)}</div>
+                            <div className="avatar-placeholder-large">
+                              {teacherProfile.fullName.charAt(0)}
+                            </div>
                           )}
                           <div className="instructor-info-box">
                             <h4 className="instructor-name">{teacherProfile.fullName}</h4>
-                            <p className="instructor-position">{teacherProfile.position || 'Giảng viên chuyên nghiệp'}</p>
+                            <p className="instructor-position">
+                              {teacherProfile.position || 'Giảng viên chuyên nghiệp'}
+                            </p>
 
                             <div className="instructor-social-links-mini">
                               {teacherProfile.websiteUrl && <Globe size={14} />}

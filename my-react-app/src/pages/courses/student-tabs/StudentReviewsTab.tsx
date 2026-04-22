@@ -1,12 +1,22 @@
+import {
+  AlertCircle,
+  Edit2,
+  Filter,
+  MessageSquare,
+  Send,
+  Star,
+  Trash2,
+  User,
+  X,
+} from 'lucide-react';
 import React, { useState } from 'react';
-import { Star, MessageSquare, Send, Trash2, Edit2, User, AlertCircle, Filter, X } from 'lucide-react';
-import { 
-  useCourseReviews, 
-  useMyReview, 
-  useSubmitReview, 
-  useUpdateReview, 
+import {
+  useCourseReviews,
   useDeleteReview,
-  useReviewSummary
+  useMyReview,
+  useReviewSummary,
+  useSubmitReview,
+  useUpdateReview,
 } from '../../../hooks/useCourses';
 
 interface StudentReviewsTabProps {
@@ -21,9 +31,14 @@ const StudentReviewsTab: React.FC<StudentReviewsTabProps> = ({ courseId }) => {
   const [filterRating, setFilterRating] = useState<number | undefined>(undefined);
 
   const { data: summaryData } = useReviewSummary(courseId);
-  const { data: reviewsData, isLoading: reviewsLoading } = useCourseReviews(courseId, 0, 20, filterRating);
+  const { data: reviewsData, isLoading: reviewsLoading } = useCourseReviews(
+    courseId,
+    0,
+    20,
+    filterRating
+  );
   const { data: myReviewData, isLoading: myReviewLoading } = useMyReview(courseId);
-  
+
   const submitReviewMutation = useSubmitReview();
   const updateReviewMutation = useUpdateReview();
   const deleteReviewMutation = useDeleteReview();
@@ -39,18 +54,24 @@ const StudentReviewsTab: React.FC<StudentReviewsTabProps> = ({ courseId }) => {
     const data = { rating, comment };
 
     if (isEditing && myReview) {
-      updateReviewMutation.mutate({ reviewId: myReview.id, courseId, data }, {
-        onSuccess: () => setIsEditing(false),
-        onError: (err) => setError(err instanceof Error ? err.message : 'Cập nhật thất bại')
-      });
+      updateReviewMutation.mutate(
+        { reviewId: myReview.id, courseId, data },
+        {
+          onSuccess: () => setIsEditing(false),
+          onError: (err) => setError(err instanceof Error ? err.message : 'Cập nhật thất bại'),
+        }
+      );
     } else {
-      submitReviewMutation.mutate({ courseId, data }, {
-        onSuccess: () => {
-          setComment('');
-          setRating(5);
-        },
-        onError: (err) => setError(err instanceof Error ? err.message : 'Gửi đánh giá thất bại')
-      });
+      submitReviewMutation.mutate(
+        { courseId, data },
+        {
+          onSuccess: () => {
+            setComment('');
+            setRating(5);
+          },
+          onError: (err) => setError(err instanceof Error ? err.message : 'Gửi đánh giá thất bại'),
+        }
+      );
     }
   };
 
@@ -74,7 +95,7 @@ const StudentReviewsTab: React.FC<StudentReviewsTabProps> = ({ courseId }) => {
       return new Date(dateStr).toLocaleDateString('vi-VN', {
         year: 'numeric',
         month: 'long',
-        day: 'numeric'
+        day: 'numeric',
       });
     } catch {
       return dateStr;
@@ -98,38 +119,48 @@ const StudentReviewsTab: React.FC<StudentReviewsTabProps> = ({ courseId }) => {
           <div className="avg-box">
             <span className="avg-num">{summary?.averageRating?.toFixed(1) || '0.0'}</span>
             <div className="stars-row">
-              {[1, 2, 3, 4, 5].map(s => (
-                <Star 
-                  key={s} 
-                  size={18} 
-                  fill={s <= (summary?.averageRating || 0) ? '#FBBF24' : 'none'} 
-                  color="#FBBF24" 
+              {[1, 2, 3, 4, 5].map((s) => (
+                <Star
+                  key={s}
+                  size={18}
+                  fill={s <= (summary?.averageRating || 0) ? '#FBBF24' : 'none'}
+                  color="#FBBF24"
                 />
               ))}
             </div>
-            <span className="total-label">Xếp hạng khóa học ({summary?.totalReviews || 0} đánh giá)</span>
+            <span className="total-label">
+              Xếp hạng khóa học ({summary?.totalReviews || 0} đánh giá)
+            </span>
           </div>
         </div>
-        
+
         <div className="summary-right stats-histogram">
-          {[5, 4, 3, 2, 1].map(star => {
+          {[5, 4, 3, 2, 1].map((star) => {
             const count = summary?.ratingDistribution?.[star] || 0;
             const percent = summary?.totalReviews ? (count / summary.totalReviews) * 100 : 0;
             const isActive = filterRating === star;
-            
+
             return (
-              <div 
-                key={star} 
+              <div
+                key={star}
                 className={`stat-row ${isActive ? 'active' : ''}`}
                 onClick={() => setFilterRating(isActive ? undefined : star)}
               >
                 <div className="progress-bar-wrap">
-                  <div className="progress-fill" style={{ width: `${percent}%` }} />
+                  <div
+                    className="progress-fill"
+                    style={{ transform: `scaleX(${percent / 100})` }}
+                  />
                 </div>
                 <div className="stat-meta">
                   <div className="stars-mini">
-                    {[1, 2, 3, 4, 5].map(s => (
-                      <Star key={s} size={12} fill={s <= star ? '#FBBF24' : 'none'} color="#FBBF24" />
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <Star
+                        key={s}
+                        size={12}
+                        fill={s <= star ? '#FBBF24' : 'none'}
+                        color="#FBBF24"
+                      />
                     ))}
                   </div>
                   <span className="percent-label">{percent.toFixed(0)}%</span>
@@ -142,15 +173,18 @@ const StudentReviewsTab: React.FC<StudentReviewsTabProps> = ({ courseId }) => {
 
       {/* 2. Review Input Section */}
       <div className="review-input-section">
-        {(!myReview || isEditing) ? (
+        {!myReview || isEditing ? (
           <div className="review-card write-card">
             <div className="card-header">
               <MessageSquare size={20} className="icon-accent" />
               <h3>{isEditing ? 'Chỉnh sửa đánh giá' : 'Để lại đánh giá của bạn'}</h3>
             </div>
-            
+
             {error && (
-              <div className="alert-box error" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div
+                className="alert-box error"
+                style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}
+              >
                 <AlertCircle size={16} />
                 <span>{error}</span>
               </div>
@@ -168,15 +202,23 @@ const StudentReviewsTab: React.FC<StudentReviewsTabProps> = ({ courseId }) => {
                       onClick={() => setRating(s)}
                       className={`star-btn ${s <= rating ? 'active' : ''}`}
                     >
-                      <Star 
-                        size={32} 
-                        fill={s <= rating ? 'currentColor' : 'none'} 
+                      <Star
+                        size={32}
+                        fill={s <= rating ? 'currentColor' : 'none'}
                         strokeWidth={s <= rating ? 0 : 1}
                       />
                     </button>
                   ))}
                   <span className="rating-label">
-                    {rating === 5 ? 'Xuất sắc' : rating === 4 ? 'Tốt' : rating === 3 ? 'Bình thường' : rating === 2 ? 'Kém' : 'Rất tệ'}
+                    {rating === 5
+                      ? 'Xuất sắc'
+                      : rating === 4
+                        ? 'Tốt'
+                        : rating === 3
+                          ? 'Bình thường'
+                          : rating === 2
+                            ? 'Kém'
+                            : 'Rất tệ'}
                   </span>
                 </div>
               </div>
@@ -192,9 +234,15 @@ const StudentReviewsTab: React.FC<StudentReviewsTabProps> = ({ courseId }) => {
 
               <div className="form-actions">
                 {isEditing && (
-                  <button type="button" className="btn-text" onClick={() => setIsEditing(false)}>Hủy</button>
+                  <button type="button" className="btn-text" onClick={() => setIsEditing(false)}>
+                    Hủy
+                  </button>
                 )}
-                <button type="submit" className="btn-premium" disabled={submitReviewMutation.isPending || updateReviewMutation.isPending}>
+                <button
+                  type="submit"
+                  className="btn-premium"
+                  disabled={submitReviewMutation.isPending || updateReviewMutation.isPending}
+                >
                   <Send size={18} />
                   <span>{isEditing ? 'Cập nhật' : 'Gửi đánh giá'}</span>
                 </button>
@@ -205,21 +253,32 @@ const StudentReviewsTab: React.FC<StudentReviewsTabProps> = ({ courseId }) => {
           <div className="review-card my-review-card">
             <div className="card-header">
               <div className="user-meta">
-                <div className="avatar-mini gold"><User size={16} /></div>
+                <div className="avatar-mini gold">
+                  <User size={16} />
+                </div>
                 <div>
                   <h3 style={{ margin: 0, fontSize: '1rem' }}>Đánh giá của bạn</h3>
                   <span className="date-sub">{formatDate(myReview.updatedAt)}</span>
                 </div>
               </div>
               <div className="actions">
-                <button onClick={startEdit} className="action-btn"><Edit2 size={16} /></button>
-                <button onClick={handleDelete} className="action-btn danger"><Trash2 size={16} /></button>
+                <button onClick={startEdit} className="action-btn">
+                  <Edit2 size={16} />
+                </button>
+                <button onClick={handleDelete} className="action-btn danger">
+                  <Trash2 size={16} />
+                </button>
               </div>
             </div>
             <div className="review-body">
               <div className="stars-static">
-                {[1, 2, 3, 4, 5].map(s => (
-                  <Star key={s} size={16} fill={s <= myReview.rating ? '#FBBF24' : '#E2E8F0'} color={s <= myReview.rating ? '#FBBF24' : '#E2E8F0'} />
+                {[1, 2, 3, 4, 5].map((s) => (
+                  <Star
+                    key={s}
+                    size={16}
+                    fill={s <= myReview.rating ? '#FBBF24' : '#E2E8F0'}
+                    color={s <= myReview.rating ? '#FBBF24' : '#E2E8F0'}
+                  />
                 ))}
               </div>
               <p className="comment-text">{myReview.comment}</p>
@@ -238,28 +297,39 @@ const StudentReviewsTab: React.FC<StudentReviewsTabProps> = ({ courseId }) => {
               {filterRating && (
                 <div className="active-filter-badge">
                   <span>Chỉ hiện {filterRating} sao</span>
-                  <button onClick={() => setFilterRating(undefined)}><X size={12} /></button>
+                  <button onClick={() => setFilterRating(undefined)}>
+                    <X size={12} />
+                  </button>
                 </div>
               )}
             </div>
           </div>
           <div className="filter-controls">
-             <Filter size={16} />
-             <select value={filterRating || ''} onChange={(e) => setFilterRating(e.target.value ? Number(e.target.value) : undefined)}>
-               <option value="">Tất cả xếp hạng</option>
-               <option value="5">5 sao</option>
-               <option value="4">4 sao</option>
-               <option value="3">3 sao</option>
-               <option value="2">2 sao</option>
-               <option value="1">1 sao</option>
-             </select>
+            <Filter size={16} />
+            <select
+              value={filterRating || ''}
+              onChange={(e) => setFilterRating(e.target.value ? Number(e.target.value) : undefined)}
+            >
+              <option value="">Tất cả xếp hạng</option>
+              <option value="5">5 sao</option>
+              <option value="4">4 sao</option>
+              <option value="3">3 sao</option>
+              <option value="2">2 sao</option>
+              <option value="1">1 sao</option>
+            </select>
           </div>
         </div>
 
         {reviews.length === 0 ? (
           <div className="empty-reviews">
-            <div className="empty-icon-wrap"><MessageSquare size={48} /></div>
-            <p>{filterRating ? `Không có đánh giá ${filterRating} sao nào.` : 'Chưa có nhận xét nào.'}</p>
+            <div className="empty-icon-wrap">
+              <MessageSquare size={48} />
+            </div>
+            <p>
+              {filterRating
+                ? `Không có đánh giá ${filterRating} sao nào.`
+                : 'Chưa có nhận xét nào.'}
+            </p>
           </div>
         ) : (
           <div className="review-list">
@@ -268,7 +338,11 @@ const StudentReviewsTab: React.FC<StudentReviewsTabProps> = ({ courseId }) => {
                 <div className="review-user-info">
                   <div className="user-avatar-wrap">
                     {review.studentAvatar ? (
-                      <img src={review.studentAvatar} alt={review.studentName} className="user-avatar" />
+                      <img
+                        src={review.studentAvatar}
+                        alt={review.studentName}
+                        className="user-avatar"
+                      />
                     ) : (
                       <div className="user-avatar placeholder">{review.studentName.charAt(0)}</div>
                     )}
@@ -276,17 +350,22 @@ const StudentReviewsTab: React.FC<StudentReviewsTabProps> = ({ courseId }) => {
                   <div className="user-text-meta">
                     <h4>{review.studentName}</h4>
                     <div className="stars-static">
-                      {[1, 2, 3, 4, 5].map(s => (
-                        <Star key={s} size={14} fill={s <= review.rating ? '#FBBF24' : '#E2E8F0'} color={s <= review.rating ? '#FBBF24' : '#E2E8F0'} />
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <Star
+                          key={s}
+                          size={14}
+                          fill={s <= review.rating ? '#FBBF24' : '#E2E8F0'}
+                          color={s <= review.rating ? '#FBBF24' : '#E2E8F0'}
+                        />
                       ))}
                       <span className="review-date-mini">{formatDate(review.createdAt)}</span>
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="review-content">
                   <p className="review-body-text">{review.comment}</p>
-                  
+
                   {/* Instructor Reply Box */}
                   {review.instructorReply && (
                     <div className="instructor-reply-box">
@@ -393,7 +472,9 @@ const StudentReviewsTab: React.FC<StudentReviewsTabProps> = ({ courseId }) => {
           height: 100%;
           background: #FBBF24;
           border-radius: 999px;
-          transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+          width: 100%;
+          transform-origin: left;
+          transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
         }
 
         .stat-meta {
@@ -591,7 +672,7 @@ const StudentReviewsTab: React.FC<StudentReviewsTabProps> = ({ courseId }) => {
           padding: 1.5rem;
           background: #f8fafc;
           border-radius: 16px;
-          border-left: 4px solid var(--sc-indigo);
+          box-shadow: inset 3px 0 0 var(--sc-indigo);
         }
 
         .reply-header {

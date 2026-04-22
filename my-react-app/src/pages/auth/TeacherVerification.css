@@ -5,7 +5,10 @@
   justify-content: center;
   background: linear-gradient(135deg, #f6f8fb 0%, #e9effd 100%);
   padding: 2rem;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
 }
 
 .verification-container {
@@ -217,7 +220,8 @@
   margin-top: 1rem;
 }
 
-.btn-primary, .btn-secondary {
+.btn-primary,
+.btn-secondary {
   flex: 1;
   padding: 1rem;
   border-radius: 12px;
@@ -266,8 +270,14 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .status-icon {

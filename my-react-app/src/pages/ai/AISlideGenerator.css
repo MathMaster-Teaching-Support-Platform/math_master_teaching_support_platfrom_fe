@@ -1014,7 +1014,7 @@
 }
 
 .ai-slide-management-detail-panel .ai-slide-selected-lesson {
-  border-left: 4px solid #2563eb;
+  box-shadow: inset 3px 0 0 #2563eb;
   background: #ffffff;
 }
 
