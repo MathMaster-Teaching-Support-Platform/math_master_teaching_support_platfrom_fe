@@ -51,6 +51,7 @@ import {
   useGetMyQuestionTemplates,
   usePublishTemplate,
   useTogglePublicStatus,
+  useUnpublishTemplate,
   useUpdateQuestionTemplate,
 } from '../../hooks/useQuestionTemplate';
 import { questionTemplateService } from '../../services/questionTemplateService';
@@ -248,6 +249,7 @@ export function TemplateDashboard() {
   const deleteMutation = useDeleteQuestionTemplate();
   const publishMutation = usePublishTemplate();
   const archiveMutation = useArchiveTemplate();
+  const unpublishMutation = useUnpublishTemplate();
   const togglePublicMutation = useTogglePublicStatus();
   const bulkApproveMutation = useBulkApproveQuestions();
   const approveQuestionMutation = useApproveQuestion();
@@ -1107,6 +1109,16 @@ export function TemplateDashboard() {
                           >
                             <Archive size={14} />
                             Lưu trữ
+                          </button>
+                        )}
+                        {(template.status === TemplateStatus.PUBLISHED ||
+                          template.status === TemplateStatus.ARCHIVED) && (
+                          <button
+                            className="btn secondary"
+                            onClick={() => unpublishMutation.mutate(template.id)}
+                          >
+                            <EyeOff size={14} />
+                            Bỏ xuất bản
                           </button>
                         )}
                         <button

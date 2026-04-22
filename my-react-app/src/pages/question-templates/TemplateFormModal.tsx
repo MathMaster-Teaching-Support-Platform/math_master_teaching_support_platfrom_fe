@@ -42,7 +42,7 @@ type ActiveMathField =
   | { kind: 'tags' }
   | { kind: 'templateText' }
   | { kind: 'answerFormula' }
-  | { kind: 'diagramTemplateRaw' }
+  | { kind: 'solution' }
   | { kind: 'parameterName'; index: number }
   | { kind: 'parameterMin'; index: number }
   | { kind: 'parameterMax'; index: number }
@@ -164,7 +164,7 @@ export function TemplateFormModal({
   const [tags, setTags] = useState('');
   const [parameters, setParameters] = useState<ParameterInput[]>([]);
   const [options, setOptions] = useState<OptionInput[]>([]);
-  const [diagramTemplateRaw, setDiagramTemplateRaw] = useState('');
+  const [solution, setSolution] = useState('');
   const [saving, setSaving] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [activeMathField, setActiveMathField] = useState<ActiveMathField>({ kind: 'templateText' });
@@ -174,7 +174,7 @@ export function TemplateFormModal({
   const tagsRef = useRef<HTMLInputElement | null>(null);
   const templateTextRef = useRef<HTMLTextAreaElement | null>(null);
   const answerFormulaRef = useRef<HTMLInputElement | null>(null);
-  const diagramTemplateRef = useRef<HTMLTextAreaElement | null>(null);
+  const solutionRef = useRef<HTMLTextAreaElement | null>(null);
   const parameterNameRefs = useRef<Record<number, HTMLInputElement | null>>({});
   const parameterMinRefs = useRef<Record<number, HTMLInputElement | null>>({});
   const parameterMaxRefs = useRef<Record<number, HTMLInputElement | null>>({});
@@ -198,16 +198,10 @@ export function TemplateFormModal({
       setTemplateType(initialData.templateType || QuestionType.MULTIPLE_CHOICE);
       setCognitiveLevel(initialData.cognitiveLevel || CognitiveLevel.THONG_HIEU);
       setIsPublic(initialData.isPublic ?? false);
-      setTemplateText(parseTemplateText(initialData.templateText));
+      setTemplateText(initialData.content || parseTemplateText(initialData.templateText));
       setAnswerFormula(initialData.answerFormula || '');
+      setSolution(initialData.solution || '');
       setTags((initialData.tags || []).join(', '));
-      if (typeof initialData.diagramTemplate === 'string') {
-        setDiagramTemplateRaw(initialData.diagramTemplate);
-      } else {
-        setDiagramTemplateRaw(
-          initialData.diagramTemplate ? JSON.stringify(initialData.diagramTemplate, null, 2) : ''
-        );
-      }
 
       const mappedParameters: ParameterInput[] = Object.entries(initialData.parameters || {}).map(
         ([key, raw]) => {
@@ -254,7 +248,7 @@ export function TemplateFormModal({
     setTemplateText('Giải phương trình: {{a}}x + {{b}} = 0');
     setAnswerFormula('(-b)/a');
     setTags('đại số, lớp 9');
-    setDiagramTemplateRaw('');
+    setSolution('');
     setParameters([
       { name: 'a', type: 'int', min: '1', max: '10', constraint: '' },
       { name: 'b', type: 'int', min: '-10', max: '10', constraint: '' },
@@ -319,11 +313,11 @@ export function TemplateFormModal({
           setValue: setAnswerFormula,
           element: answerFormulaRef.current,
         };
-      case 'diagramTemplateRaw':
+      case 'solution':
         return {
-          value: diagramTemplateRaw,
-          setValue: setDiagramTemplateRaw,
-          element: diagramTemplateRef.current,
+          value: solution,
+          setValue: setSolution,
+          element: solutionRef.current,
         };
       default:
         return null;
@@ -463,7 +457,7 @@ export function TemplateFormModal({
 
     const mappedParameters = buildParameters(parameters);
     const mappedOptions = buildOptions(options);
-    const mappedDiagramTemplate = diagramTemplateRaw.trim() || undefined;
+
 
     if (Object.keys(mappedParameters).length === 0) {
       setSubmitError(
@@ -477,15 +471,16 @@ export function TemplateFormModal({
       name: validation.result.normalizedName,
       description: description.trim() || undefined,
       templateType: mode === 'create' ? QuestionType.MULTIPLE_CHOICE : templateType,
+      content: validation.result.normalizedTemplateText,
       templateText: { vi: validation.result.normalizedTemplateText },
       parameters: mappedParameters,
       answerFormula: validation.result.normalizedAnswerFormula || '',
+      solution: solution.trim() || undefined,
       optionsGenerator: Object.keys(mappedOptions).length ? mappedOptions : undefined,
       cognitiveLevel,
       tags: validation.result.normalizedTags,
       isPublic,
       questionBankId: initialData?.questionBankId ?? null,
-      diagramTemplate: mappedDiagramTemplate,
     };
 
     try {
@@ -647,16 +642,16 @@ export function TemplateFormModal({
 
             <label>
               <p className="muted" style={{ marginBottom: 6 }}>
-                Sơ đồ / Hình vẽ đính kèm (LaTeX, tùy chọn)
+                Lời giải / Hướng dẫn giải (tùy chọn)
               </p>
               <textarea
-                ref={diagramTemplateRef}
+                ref={solutionRef}
                 className="textarea"
                 rows={4}
-                value={diagramTemplateRaw}
-                onFocus={() => setActiveMathField({ kind: 'diagramTemplateRaw' })}
-                onChange={(event) => setDiagramTemplateRaw(event.target.value)}
-                placeholder="Vi du: \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}"
+                value={solution}
+                onFocus={() => setActiveMathField({ kind: 'solution' })}
+                onChange={(event) => setSolution(event.target.value)}
+                placeholder="Ví dụ: Chuyển vế: {{a}}x = {{c}} - {{b}}, chia hai vế: x = ({{c}} - {{b}}) / {{a}}"
               />
             </label>
 

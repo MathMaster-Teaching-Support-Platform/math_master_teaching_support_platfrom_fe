@@ -133,6 +133,29 @@ export const useArchiveTemplate = () => {
     });
 };
 
+export const useUnpublishTemplate = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (id: string) => questionTemplateService.unpublishTemplate(id),
+        onSuccess: (_, id) => {
+            queryClient.invalidateQueries({ queryKey: questionTemplateKeys.detail(id) });
+            queryClient.invalidateQueries({ queryKey: questionTemplateKeys.lists() });
+            queryClient.invalidateQueries({ queryKey: questionTemplateKeys.myKeys() });
+        },
+    });
+};
+
+export const useImportTemplatesFromExcel = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (file: File) => questionTemplateService.importFromExcel(file),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: questionTemplateKeys.lists() });
+            queryClient.invalidateQueries({ queryKey: questionTemplateKeys.myKeys() });
+        },
+    });
+};
+
 export const useGenerateAIEnhancedQuestion = () => {
     return useMutation({
         mutationFn: (id: string) => questionTemplateService.generateAIEnhancedQuestion(id),
