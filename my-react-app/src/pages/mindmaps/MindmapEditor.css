@@ -230,7 +230,7 @@
   max-height: calc(100vh - 200px);
   overflow-y: auto;
   backdrop-filter: blur(10px);
-  animation: panelSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: panelSlideIn 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @keyframes panelSlideIn {
@@ -576,11 +576,10 @@
 .loader {
   width: 60px;
   height: 60px;
-  border: 5px solid transparent;
-  border-top: 5px solid #667eea;
-  border-right: 5px solid #764ba2;
+  border: 3px solid rgba(102, 126, 234, 0.15);
+  border-top-color: #667eea;
   border-radius: 50%;
-  animation: spin 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+  animation: spin 1s linear infinite;
   margin-bottom: 1.5rem;
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
 }

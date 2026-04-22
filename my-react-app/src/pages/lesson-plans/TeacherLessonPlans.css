@@ -488,7 +488,8 @@
 .lp-edit-group {
   border-radius: 10px;
   border: 1px solid;
-  border-left-width: 3px;
+  border-left-width: 1px;
+  box-shadow: inset 3px 0 0 currentColor;
   padding: 0.75rem 0.9rem 0.85rem;
 }
 
@@ -680,7 +681,8 @@
   border-radius: 10px;
   padding: 0.85rem 0.95rem;
   border: 1px solid;
-  border-left-width: 3px;
+  border-left-width: 1px;
+  box-shadow: inset 3px 0 0 currentColor;
 }
 
 .lp-detail-section-head {

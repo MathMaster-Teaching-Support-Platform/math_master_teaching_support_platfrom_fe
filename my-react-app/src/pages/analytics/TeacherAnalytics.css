@@ -214,7 +214,9 @@
 .attendance-fill {
   height: 100%;
   background: var(--gradient-primary);
-  transition: width 0.3s;
+  width: 100%;
+  transform-origin: left;
+  transition: transform 0.3s;
 }
 
 .attendance-text {
@@ -254,7 +256,8 @@
   align-items: flex-start;
   justify-content: center;
   padding-top: 0.5rem;
-  transition: height 0.3s;
+  transform-origin: bottom;
+  transition: transform 0.3s;
 }
 
 .bar-value {
@@ -341,7 +344,9 @@
   height: 100%;
   background: var(--gradient-primary);
   border-radius: 4px;
-  transition: width 0.3s;
+  width: 100%;
+  transform-origin: left;
+  transition: transform 0.3s;
 }
 
 /* Assignment Stats */
@@ -398,22 +403,22 @@
   gap: 1rem;
   padding: 1.5rem;
   border-radius: 12px;
-  border-left: 4px solid;
+  border-left: none;
 }
 
 .insight-card.positive {
   background: rgba(67, 233, 123, 0.1);
-  border-color: var(--success-color);
+  box-shadow: inset 3px 0 0 var(--success-color);
 }
 
 .insight-card.warning {
   background: rgba(255, 199, 0, 0.1);
-  border-color: var(--warning-color);
+  box-shadow: inset 3px 0 0 var(--warning-color);
 }
 
 .insight-card.info {
   background: rgba(102, 126, 234, 0.1);
-  border-color: var(--primary-color);
+  box-shadow: inset 3px 0 0 var(--primary-color);
 }
 
 .insight-icon {

@@ -5,24 +5,23 @@
 
 /* Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 /* ── Design Tokens ── */
 :root {
-  --c-primary: #5E5CE6;
+  --c-primary: #5e5ce6;
   --c-primary-soft: rgba(94, 92, 230, 0.08);
   --c-primary-glow: rgba(94, 92, 230, 0.18);
-  --c-dark: #0E0C15;
-  --c-dark-alt: #1A1725;
-  --c-bg: #FAFAFF;
+  --c-dark: #0e0c15;
+  --c-dark-alt: #1a1725;
+  --c-bg: #fafaff;
   --c-surface: #ffffff;
-  --c-text-1: #0E0C15;
-  --c-text-2: #3F3A52;
-  --c-text-3: #756B85;
-  --c-border: #E8E5F0;
-  --c-border-soft: #F0EDF8;
-  --c-accent-pink: #FF98E2;
-  --c-accent-gold: #FFC876;
+  --c-text-1: #0e0c15;
+  --c-text-2: #3f3a52;
+  --c-text-3: #756b85;
+  --c-border: #e8e5f0;
+  --c-border-soft: #f0edf8;
+  --c-accent-pink: #ff98e2;
+  --c-accent-gold: #ffc876;
   --f-heading: 'Be Vietnam Pro', -apple-system, sans-serif;
   --f-body: 'Inter', -apple-system, sans-serif;
   --r-sm: 12px;
@@ -160,11 +159,11 @@
 }
 
 .btn-primary-gradient:hover {
-  background: #4E4CC6;
+  background: #4e4cc6;
   color: #fff;
   box-shadow: var(--shadow-glow);
   transform: translateY(-1px);
-}/* ══════════════════════════════════
+} /* ══════════════════════════════════
    UNIQUE APPROACH SECTION
    ══════════════════════════════════ */
 .unique-approach-section {
@@ -179,7 +178,7 @@
   font-size: 3rem;
   font-weight: 600;
   line-height: 60px;
-  color: #0E0C15;
+  color: #0e0c15;
   margin-bottom: 2.5rem;
   text-align: left;
   width: 100%;
@@ -202,7 +201,7 @@
 }
 
 .unique-approach__title .text-accent {
-  color: #5E5CE6;
+  color: #5e5ce6;
   position: relative;
 }
 
@@ -252,7 +251,7 @@
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 1.5px;
-  color: #0E0C15;
+  color: #0e0c15;
   margin-bottom: 0.5rem;
 }
 
@@ -264,23 +263,23 @@
 }
 
 .step-badge--1 {
-  background-color: #5E5CE6;
+  background-color: #5e5ce6;
   color: #ffffff;
 }
 
 .step-badge--2 {
-  background-color: #FF9FD3;
+  background-color: #ff9fd3;
 }
 
 .step-badge--3 {
-  background-color: #FFC87D;
+  background-color: #ffc87d;
 }
 
 .step-title {
   font-family: 'Be Vietnam Pro', 'Sora', sans-serif;
   font-size: 32px;
   line-height: 40px;
-  color: #0E0C15;
+  color: #0e0c15;
   margin: 0;
 }
 
@@ -296,7 +295,7 @@
   font-family: 'Source Code Pro', monospace;
   font-size: 15px;
   line-height: 20px;
-  color: #4D4D4D;
+  color: #4d4d4d;
   margin: 0;
 }
 
@@ -361,8 +360,6 @@
     padding: 120px 0;
   }
 }
-
-
 
 .intro-content {
   display: flex;
@@ -438,7 +435,7 @@
 }
 
 .intro-title-accent {
-  color: #5E5CE6;
+  color: #5e5ce6;
 }
 
 .intro-description {
@@ -493,14 +490,16 @@
   align-items: center;
   overflow: hidden;
   /* Graph-paper grid background — matching math-master.org */
-  background-color: #F8F8FF;
+  background-color: #f8f8ff;
   background-image:
     linear-gradient(rgba(94, 92, 230, 0.06) 1px, transparent 1px),
     linear-gradient(90deg, rgba(94, 92, 230, 0.06) 1px, transparent 1px);
   background-size: 80px 80px;
 }
 
-.hero-bg { display: none; }
+.hero-bg {
+  display: none;
+}
 
 /* ── Decorative System ──
    Multi-colored 3D wireframe shapes (sphere, cylinder, pyramid, cube)
@@ -519,24 +518,96 @@
   position: absolute;
   font-family: 'Be Vietnam Pro', serif;
   font-weight: 700;
-  color: #5E5CE6;
+  color: #5e5ce6;
   pointer-events: none;
   will-change: transform;
   z-index: 1;
 }
 
-.symbol-1 { top: 8%; left: 10%; font-size: 2.5rem; opacity: 0.30; animation: mathFloat 8s ease-in-out infinite; }
-.symbol-2 { top: 15%; right: 12%; font-size: 3rem; opacity: 0.25; animation: mathFloat 10s ease-in-out infinite 1s; }
-.symbol-3 { top: 40%; left: 4%; font-size: 4rem; opacity: 0.20; animation: mathFloat 9s ease-in-out infinite 2s; }
-.symbol-4 { bottom: 30%; right: 8%; font-size: 2rem; opacity: 0.35; animation: mathFloat 7s ease-in-out infinite 0.5s; }
-.symbol-5 { bottom: 15%; left: 15%; font-size: 2.2rem; opacity: 0.28; animation: mathFloat 11s ease-in-out infinite 3s; }
-.symbol-6 { top: 25%; right: 25%; font-size: 1.8rem; opacity: 0.22; animation: mathFloat 14s ease-in-out infinite 4s; }
-.symbol-7 { bottom: 40%; left: 25%; font-size: 1.6rem; opacity: 0.30; animation: mathFloat 6s ease-in-out infinite 1.5s; }
-.symbol-8 { top: 55%; right: 5%; font-size: 2.8rem; opacity: 0.18; animation: mathFloat 12s ease-in-out infinite 2.5s; }
-.symbol-9 { top: 5%; left: 35%; font-size: 1.5rem; opacity: 0.22; animation: mathFloat 9s ease-in-out infinite 3.5s; }
-.symbol-10 { bottom: 8%; right: 20%; font-size: 2rem; opacity: 0.20; animation: mathFloat 11s ease-in-out infinite 1s; }
-.symbol-11 { top: 65%; left: 8%; font-size: 2.4rem; opacity: 0.18; animation: mathFloat 13s ease-in-out infinite 2s; }
-.symbol-12 { bottom: 25%; right: 35%; font-size: 1.8rem; opacity: 0.25; animation: mathFloat 8s ease-in-out infinite 4.5s; }
+.symbol-1 {
+  top: 8%;
+  left: 10%;
+  font-size: 2.5rem;
+  opacity: 0.3;
+  animation: mathFloat 8s ease-in-out infinite;
+}
+.symbol-2 {
+  top: 15%;
+  right: 12%;
+  font-size: 3rem;
+  opacity: 0.25;
+  animation: mathFloat 10s ease-in-out infinite 1s;
+}
+.symbol-3 {
+  top: 40%;
+  left: 4%;
+  font-size: 4rem;
+  opacity: 0.2;
+  animation: mathFloat 9s ease-in-out infinite 2s;
+}
+.symbol-4 {
+  bottom: 30%;
+  right: 8%;
+  font-size: 2rem;
+  opacity: 0.35;
+  animation: mathFloat 7s ease-in-out infinite 0.5s;
+}
+.symbol-5 {
+  bottom: 15%;
+  left: 15%;
+  font-size: 2.2rem;
+  opacity: 0.28;
+  animation: mathFloat 11s ease-in-out infinite 3s;
+}
+.symbol-6 {
+  top: 25%;
+  right: 25%;
+  font-size: 1.8rem;
+  opacity: 0.22;
+  animation: mathFloat 14s ease-in-out infinite 4s;
+}
+.symbol-7 {
+  bottom: 40%;
+  left: 25%;
+  font-size: 1.6rem;
+  opacity: 0.3;
+  animation: mathFloat 6s ease-in-out infinite 1.5s;
+}
+.symbol-8 {
+  top: 55%;
+  right: 5%;
+  font-size: 2.8rem;
+  opacity: 0.18;
+  animation: mathFloat 12s ease-in-out infinite 2.5s;
+}
+.symbol-9 {
+  top: 5%;
+  left: 35%;
+  font-size: 1.5rem;
+  opacity: 0.22;
+  animation: mathFloat 9s ease-in-out infinite 3.5s;
+}
+.symbol-10 {
+  bottom: 8%;
+  right: 20%;
+  font-size: 2rem;
+  opacity: 0.2;
+  animation: mathFloat 11s ease-in-out infinite 1s;
+}
+.symbol-11 {
+  top: 65%;
+  left: 8%;
+  font-size: 2.4rem;
+  opacity: 0.18;
+  animation: mathFloat 13s ease-in-out infinite 2s;
+}
+.symbol-12 {
+  bottom: 25%;
+  right: 35%;
+  font-size: 1.8rem;
+  opacity: 0.25;
+  animation: mathFloat 8s ease-in-out infinite 4.5s;
+}
 
 /* Geometric wireframe shapes — multi-colored, matching math-master.org */
 .geo-shape {
@@ -552,7 +623,7 @@
   left: 28%;
   width: 100px;
   height: 100px;
-  color: #5E5CE6;
+  color: #5e5ce6;
   opacity: 0.55;
   animation: mathFloat 14s ease-in-out infinite;
 }
@@ -563,8 +634,8 @@
   left: 5%;
   width: 160px;
   height: 160px;
-  color: #FFB347;
-  opacity: 0.60;
+  color: #ffb347;
+  opacity: 0.6;
   animation: mathFloat 12s ease-in-out infinite 1s;
 }
 
@@ -574,7 +645,7 @@
   right: 2%;
   width: 160px;
   height: 160px;
-  color: #FF6B9C;
+  color: #ff6b9c;
   opacity: 0.55;
   animation: mathFloat 14s ease-in-out infinite 2s;
 }
@@ -585,14 +656,19 @@
   right: 8%;
   width: 130px;
   height: 130px;
-  color: #5E5CE6;
-  opacity: 0.50;
+  color: #5e5ce6;
+  opacity: 0.5;
   animation: mathFloat 10s ease-in-out infinite 4s;
 }
 
 @keyframes mathFloat {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-10px) rotate(3deg); }
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(3deg);
+  }
 }
 
 /* ── Hero Content ── */
@@ -624,7 +700,9 @@
   box-shadow: var(--shadow-xs);
 }
 
-.badge-icon { font-size: 0.85rem; }
+.badge-icon {
+  font-size: 0.85rem;
+}
 
 .hero-title {
   font-size: clamp(2.5rem, 5.5vw, 4.25rem);
@@ -638,10 +716,6 @@
 
 .gradient-text {
   color: var(--c-primary);
-  background: linear-gradient(135deg, var(--c-primary), #858DFF);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
   position: relative;
   display: inline;
 }
@@ -654,7 +728,8 @@
   left: 0;
   width: 100%;
   height: 8px;
-  background: url('https://gcdn.fx2.io/math-master.org/_nuxt/line1.2e3dcbd2.svg') no-repeat center / contain;
+  background: url('https://gcdn.fx2.io/math-master.org/_nuxt/line1.2e3dcbd2.svg') no-repeat center /
+    contain;
   opacity: 0.5;
   pointer-events: none;
 }
@@ -689,13 +764,17 @@
   gap: 0.5rem;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   border: none;
-  box-shadow: 0 1px 2px rgba(94, 92, 230, 0.2), 0 4px 16px rgba(94, 92, 230, 0.2);
+  box-shadow:
+    0 1px 2px rgba(94, 92, 230, 0.2),
+    0 4px 16px rgba(94, 92, 230, 0.2);
 }
 
 .btn-primary-large:hover {
-  background: #4E4CC6;
+  background: #4e4cc6;
   color: #fff;
-  box-shadow: 0 4px 12px rgba(94, 92, 230, 0.25), 0 8px 32px rgba(94, 92, 230, 0.2);
+  box-shadow:
+    0 4px 12px rgba(94, 92, 230, 0.25),
+    0 8px 32px rgba(94, 92, 230, 0.2);
   transform: translateY(-2px);
 }
 
@@ -732,7 +811,9 @@
   box-shadow: var(--shadow-sm);
 }
 
-.play-icon { font-size: 0.7rem; }
+.play-icon {
+  font-size: 0.7rem;
+}
 
 /* ── Stats Row ── */
 .hero-stats {
@@ -752,9 +833,15 @@
   gap: 1rem;
 }
 
-.stat-item:first-child { border-radius: var(--r-lg) 0 0 var(--r-lg); }
-.stat-item:last-child { border-radius: 0 var(--r-lg) var(--r-lg) 0; }
-.stat-item:not(:last-child) { border-right: none; }
+.stat-item:first-child {
+  border-radius: var(--r-lg) 0 0 var(--r-lg);
+}
+.stat-item:last-child {
+  border-radius: 0 var(--r-lg) var(--r-lg) 0;
+}
+.stat-item:not(:last-child) {
+  border-right: none;
+}
 
 .stat-number {
   font-size: 1.75rem;
@@ -773,9 +860,20 @@
 }
 
 /* Legacy elements */
-.hero-image, .dashboard-preview, .preview-card, .floating-math-symbols,
-.math-float, .card-chart, .card-icon, .card-title, .card-content,
-.card-graph, .math-equation, .hero-shape { display: none; }
+.hero-image,
+.dashboard-preview,
+.preview-card,
+.floating-math-symbols,
+.math-float,
+.card-chart,
+.card-icon,
+.card-title,
+.card-content,
+.card-graph,
+.math-equation,
+.hero-shape {
+  display: none;
+}
 
 /* ══════════════════════════════════
    HELP SECTION — "Instant help with all things math"
@@ -967,8 +1065,12 @@
     rgba(133, 141, 255, 0.4) 55%,
     transparent 65%
   );
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   opacity: 0;
@@ -988,7 +1090,9 @@
 }
 
 @keyframes rotateBorder {
-  to { --angle: 360deg; }
+  to {
+    --angle: 360deg;
+  }
 }
 
 .ft-card:hover {
@@ -1043,27 +1147,27 @@
 
 .ft-badge--purple {
   background: rgba(94, 92, 230, 0.1);
-  color: #5E5CE6;
+  color: #5e5ce6;
 }
 .ft-badge--blue {
   background: rgba(59, 130, 246, 0.1);
-  color: #3B82F6;
+  color: #3b82f6;
 }
 .ft-badge--green {
   background: rgba(16, 185, 129, 0.1);
-  color: #10B981;
+  color: #10b981;
 }
 .ft-badge--orange {
   background: rgba(245, 158, 11, 0.1);
-  color: #D97706;
+  color: #d97706;
 }
 .ft-badge--pink {
   background: rgba(236, 72, 153, 0.1);
-  color: #EC4899;
+  color: #ec4899;
 }
 .ft-badge--teal {
   background: rgba(20, 184, 166, 0.1);
-  color: #14B8A6;
+  color: #14b8a6;
 }
 
 /* ── Icon ── */
@@ -1091,27 +1195,27 @@
 
 .ft-icon--purple {
   background: linear-gradient(135deg, rgba(94, 92, 230, 0.12), rgba(133, 141, 255, 0.18));
-  color: #5E5CE6;
+  color: #5e5ce6;
 }
 .ft-icon--blue {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(96, 165, 250, 0.18));
-  color: #3B82F6;
+  color: #3b82f6;
 }
 .ft-icon--green {
   background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(52, 211, 153, 0.18));
-  color: #10B981;
+  color: #10b981;
 }
 .ft-icon--orange {
   background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(251, 191, 36, 0.18));
-  color: #D97706;
+  color: #d97706;
 }
 .ft-icon--pink {
   background: linear-gradient(135deg, rgba(236, 72, 153, 0.12), rgba(244, 114, 182, 0.18));
-  color: #EC4899;
+  color: #ec4899;
 }
 .ft-icon--teal {
   background: linear-gradient(135deg, rgba(20, 184, 166, 0.12), rgba(45, 212, 191, 0.18));
-  color: #14B8A6;
+  color: #14b8a6;
 }
 
 /* ── Title ── */
@@ -1153,7 +1257,7 @@
 }
 
 .ft-link:hover {
-  color: #4E4CC6;
+  color: #4e4cc6;
 }
 
 .ft-arrow {
@@ -1164,7 +1268,6 @@
 .ft-card:hover .ft-arrow {
   transform: translateX(5px);
 }
-
 
 /* ══════════════════════════════════
    HOW IT WORKS
@@ -1212,11 +1315,21 @@
   font-family: var(--f-heading);
 }
 
-.how-step-item:nth-child(1) .how-step-number { background: var(--c-primary); }
-.how-step-item:nth-child(2) .how-step-number { background: var(--c-accent-pink); color: var(--c-dark); }
-.how-step-item:nth-child(3) .how-step-number { background: var(--c-accent-gold); color: var(--c-dark); }
+.how-step-item:nth-child(1) .how-step-number {
+  background: var(--c-primary);
+}
+.how-step-item:nth-child(2) .how-step-number {
+  background: var(--c-accent-pink);
+  color: var(--c-dark);
+}
+.how-step-item:nth-child(3) .how-step-number {
+  background: var(--c-accent-gold);
+  color: var(--c-dark);
+}
 
-.step-connector { display: none; }
+.step-connector {
+  display: none;
+}
 
 .how-step-title {
   font-size: 1.25rem;
@@ -1336,8 +1449,12 @@
 }
 
 /* Hide old elements */
-.testimonial-rating { display: none; }
-.author-avatar { display: none; }
+.testimonial-rating {
+  display: none;
+}
+.author-avatar {
+  display: none;
+}
 
 /* ══════════════════════════════════
    UNIQUE FEATURES SECTION
@@ -1543,7 +1660,7 @@
    ══════════════════════════════════ */
 .cta-section {
   padding: 7.5rem 0;
-  background: linear-gradient(180deg, #ffffff 0%, #F5F3FF 40%, #EEEDF8 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #f5f3ff 40%, #eeedf8 100%);
   text-align: center;
   position: relative;
   z-index: 1;
@@ -1617,7 +1734,7 @@
 }
 
 .btn-cta-primary:hover {
-  background: #4E4CC6;
+  background: #4e4cc6;
   color: #fff;
   transform: translateY(-3px);
   box-shadow: 0 8px 32px rgba(94, 92, 230, 0.3);
@@ -1639,13 +1756,15 @@
 }
 
 /* Remove old btn-white-large */
-.btn-white-large { display: none; }
+.btn-white-large {
+  display: none;
+}
 
 /* ══════════════════════════════════
    FOOTER — math-master.org style (light)
    ══════════════════════════════════ */
 .homepage-footer {
-  background: #F7F7FE;
+  background: #f7f7fe;
   color: var(--c-text-2);
   padding: 4rem 0 2rem;
   border-top: 1px solid var(--c-border);
@@ -1817,14 +1936,24 @@
     gap: 1rem;
   }
 
-  .navbar-menu { display: none; }
+  .navbar-menu {
+    display: none;
+  }
 
   .footer-content {
     grid-template-columns: 1fr 1fr;
   }
 
-  .deco-math-1 { width: 100px; height: 100px; top: 5%; left: 3%; }
-  .deco-math-2 { width: 90px; height: 90px; }
+  .deco-math-1 {
+    width: 100px;
+    height: 100px;
+    top: 5%;
+    left: 3%;
+  }
+  .deco-math-2 {
+    width: 90px;
+    height: 90px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -1850,7 +1979,7 @@
 
   .stat-item {
     border-radius: 0 !important;
-    border-right: 1px solid var(--c-border) !important;
+    box-shadow: inset -1px 0 0 var(--c-border) !important;
   }
 
   .stat-item:first-child {
@@ -1889,10 +2018,16 @@
     padding: 3rem 1.5rem;
   }
 
-  .deco-math-1 { width: 80px; height: 80px; opacity: 0.5; }
-  .deco-math-2 { width: 70px; height: 70px; opacity: 0.5; }
-
-
+  .deco-math-1 {
+    width: 80px;
+    height: 80px;
+    opacity: 0.5;
+  }
+  .deco-math-2 {
+    width: 70px;
+    height: 70px;
+    opacity: 0.5;
+  }
 }
 
 @media (max-width: 480px) {
@@ -1908,5 +2043,7 @@
     padding: 1.5rem;
   }
 
-  .deco-math { display: none; }
+  .deco-math {
+    display: none;
+  }
 }

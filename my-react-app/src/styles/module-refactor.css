@@ -13,7 +13,7 @@
   --mod-danger: #c63f4d;
   --mod-warn: #a36a12;
   --mod-success: #0d845d;
-  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  font-family: 'Segoe UI', system-ui, sans-serif;
 }
 
 .module-layout-container .module-page {
@@ -680,15 +680,15 @@
 
 /* ── Card left-border accent by status ───────────────────── */
 .module-layout-container .data-card.status-UPCOMING {
-  border-left: 4px solid #cfdced;
+  box-shadow: inset 3px 0 0 #cfdced;
 }
 
 .module-layout-container .data-card.status-IN_PROGRESS {
-  border-left: 4px solid var(--mod-primary);
+  box-shadow: inset 3px 0 0 var(--mod-primary);
 }
 
 .module-layout-container .data-card.status-COMPLETED {
-  border-left: 4px solid var(--mod-success);
+  box-shadow: inset 3px 0 0 var(--mod-success);
 }
 
 /* ── Card divider ─────────────────────────────────────────── */

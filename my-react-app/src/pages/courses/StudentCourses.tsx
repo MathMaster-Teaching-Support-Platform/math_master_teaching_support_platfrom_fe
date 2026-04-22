@@ -1,22 +1,10 @@
 import { motion } from 'framer-motion';
-import {
-  Award,
-  BookOpen,
-  ChevronRight,
-  Clock,
-  Search,
-  TrendingUp,
-  X,
-} from 'lucide-react';
+import { Award, BookOpen, ChevronRight, Clock, Search, TrendingUp, X } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CourseCard } from '../../components/course/CourseCard';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
-import {
-  useEnroll,
-  useMyEnrollments,
-  usePublicCourses,
-} from '../../hooks/useCourses';
+import { useEnroll, useMyEnrollments, usePublicCourses } from '../../hooks/useCourses';
 import { LessonSlideService } from '../../services/api/lesson-slide.service';
 import '../../styles/module-refactor.css';
 import type { CourseResponse, EnrollmentResponse } from '../../types';
@@ -47,11 +35,13 @@ const AnimatedProgressBar: React.FC<{ value: number }> = ({ value }) => {
     <div style={{ height: 6, background: '#e8eef8', borderRadius: 999, overflow: 'hidden' }}>
       <div
         style={{
-          width: `${width}%`,
+          transform: `scaleX(${width / 100})`,
+          transformOrigin: 'left',
+          width: '100%',
           height: '100%',
           background: 'linear-gradient(90deg, #1f5eff, #60a5fa)',
           borderRadius: 999,
-          transition: 'width 0.7s cubic-bezier(0.22, 1, 0.36, 1)',
+          transition: 'transform 0.7s cubic-bezier(0.22, 1, 0.36, 1)',
         }}
       />
     </div>
@@ -92,7 +82,11 @@ const EnrollmentCard: React.FC<{
         }}
       >
         {enrolledCourseThumbnailUrl && (
-          <img src={enrolledCourseThumbnailUrl} alt={enrollment.courseTitle ?? 'Course thumbnail'} className="cover-thumb" />
+          <img
+            src={enrolledCourseThumbnailUrl}
+            alt={enrollment.courseTitle ?? 'Course thumbnail'}
+            className="cover-thumb"
+          />
         )}
         <div className="cover-overlay" />
         <div className="cover-index">#{String(index + 1).padStart(2, '0')}</div>
@@ -234,229 +228,223 @@ const StudentCourses: React.FC = () => {
             transition={{ duration: 0.25 }}
           >
             {/* ── Header ── */}
-                <header className="page-header courses-header-row">
-                  <div className="header-stack">
-                    <div className="header-kicker">Student dashboard</div>
-                    <div className="row" style={{ gap: '0.6rem' }}>
-                      <h2>Giáo trình của tôi</h2>
-                      {!loadingEnrollments && (
-                        <span className="count-chip">{enrollments.length}</span>
-                      )}
-                    </div>
-                    <p className="header-sub">
-                      {stats.active} đang học • {stats.total} đã đăng ký
-                    </p>
-                  </div>
-                </header>
-
-                {/* ── Stats ── */}
-                <div className="stats-grid">
-                  <div className="stat-card stat-blue">
-                    <div className="stat-icon-wrap">
-                      <BookOpen size={20} />
-                    </div>
-                    <div>
-                      <h3>{stats.active}</h3>
-                      <p>Đang học</p>
-                    </div>
-                  </div>
-                  <div className="stat-card stat-emerald">
-                    <div className="stat-icon-wrap">
-                      <TrendingUp size={20} />
-                    </div>
-                    <div>
-                      <h3>{stats.total}</h3>
-                      <p>Tổng đăng ký</p>
-                    </div>
-                  </div>
-                  <div className="stat-card stat-amber">
-                    <div className="stat-icon-wrap">
-                      <Award size={20} />
-                    </div>
-                    <div>
-                      <h3>{stats.browse}</h3>
-                      <p>Khóa học mới</p>
-                    </div>
-                  </div>
-                  <div className="stat-card stat-violet">
-                    <div className="stat-icon-wrap">
-                      <Clock size={20} />
-                    </div>
-                    <div>
-                      <h3>{stats.dropped}</h3>
-                      <p>Đã hủy</p>
-                    </div>
-                  </div>
+            <header className="page-header courses-header-row">
+              <div className="header-stack">
+                <div className="header-kicker">Student dashboard</div>
+                <div className="row" style={{ gap: '0.6rem' }}>
+                  <h2>Giáo trình của tôi</h2>
+                  {!loadingEnrollments && <span className="count-chip">{enrollments.length}</span>}
                 </div>
+                <p className="header-sub">
+                  {stats.active} đang học • {stats.total} đã đăng ký
+                </p>
+              </div>
+            </header>
 
-                {/* ── Toolbar ── */}
-                <div className="toolbar">
-                  <label className="search-box">
-                    <span className="search-box__icon" aria-hidden="true">
-                      <Search size={15} />
-                    </span>
-                    <input
-                      placeholder="Tìm kiếm giáo trình..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      aria-label="Tìm kiếm giáo trình"
-                    />
-                    {searchQuery && (
-                      <button
-                        type="button"
-                        className="search-box__clear"
-                        aria-label="Xóa tìm kiếm"
-                        onClick={() => setSearchQuery('')}
-                      >
-                        <X size={14} />
-                      </button>
-                    )}
-                  </label>
-                  <div className="pill-group">
-                    <button
-                      className={`pill-btn${activeTab === 'enrolled' ? ' active' : ''}`}
-                      onClick={() => setActiveTab('enrolled')}
-                    >
-                      <BookOpen size={13} strokeWidth={2} /> Đã đăng ký ({stats.active})
-                    </button>
-                    <button
-                      className={`pill-btn${activeTab === 'browse' ? ' active' : ''}`}
-                      onClick={() => setActiveTab('browse')}
-                    >
-                      <Search size={13} strokeWidth={2} /> Khám phá
-                    </button>
-                  </div>
+            {/* ── Stats ── */}
+            <div className="stats-grid">
+              <div className="stat-card stat-blue">
+                <div className="stat-icon-wrap">
+                  <BookOpen size={20} />
                 </div>
+                <div>
+                  <h3>{stats.active}</h3>
+                  <p>Đang học</p>
+                </div>
+              </div>
+              <div className="stat-card stat-emerald">
+                <div className="stat-icon-wrap">
+                  <TrendingUp size={20} />
+                </div>
+                <div>
+                  <h3>{stats.total}</h3>
+                  <p>Tổng đăng ký</p>
+                </div>
+              </div>
+              <div className="stat-card stat-amber">
+                <div className="stat-icon-wrap">
+                  <Award size={20} />
+                </div>
+                <div>
+                  <h3>{stats.browse}</h3>
+                  <p>Khóa học mới</p>
+                </div>
+              </div>
+              <div className="stat-card stat-violet">
+                <div className="stat-icon-wrap">
+                  <Clock size={20} />
+                </div>
+                <div>
+                  <h3>{stats.dropped}</h3>
+                  <p>Đã hủy</p>
+                </div>
+              </div>
+            </div>
 
-                {/* ── Browse filter toolbar ── */}
-                {activeTab === 'browse' && (
-                  <div className="toolbar" style={{ gap: '0.5rem' }}>
-                    <select
-                      value={filterGradeId}
-                      onChange={(e) => void handleFilterGradeChange(e.target.value)}
-                      style={{
-                        padding: '0.5rem 0.75rem',
-                        borderRadius: '8px',
-                        border: '1px solid #dbe4f0',
-                        fontSize: '0.88rem',
-                        fontFamily: 'inherit',
-                        background: '#fff',
-                        color: '#142235',
-                      }}
-                    >
-                      <option value="">Tất cả khối lớp</option>
-                      {grades.map((g) => (
-                        <option key={g.id} value={g.id}>
-                          Khối {g.gradeLevel} – {g.name}
-                        </option>
-                      ))}
-                    </select>
-                    <select
-                      value={filterSubjectId}
-                      onChange={(e) => setFilterSubjectId(e.target.value)}
-                      disabled={!filterGradeId}
-                      style={{
-                        padding: '0.5rem 0.75rem',
-                        borderRadius: '8px',
-                        border: '1px solid #dbe4f0',
-                        fontSize: '0.88rem',
-                        fontFamily: 'inherit',
-                        background: '#fff',
-                        color: '#142235',
-                      }}
-                    >
-                      <option value="">Tất cả môn học</option>
-                      {subjects.map((s) => (
-                        <option key={s.id} value={s.id}>
-                          {s.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+            {/* ── Toolbar ── */}
+            <div className="toolbar">
+              <label className="search-box">
+                <span className="search-box__icon" aria-hidden="true">
+                  <Search size={15} />
+                </span>
+                <input
+                  placeholder="Tìm kiếm giáo trình..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  aria-label="Tìm kiếm giáo trình"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    className="search-box__clear"
+                    aria-label="Xóa tìm kiếm"
+                    onClick={() => setSearchQuery('')}
+                  >
+                    <X size={14} />
+                  </button>
                 )}
+              </label>
+              <div className="pill-group">
+                <button
+                  className={`pill-btn${activeTab === 'enrolled' ? ' active' : ''}`}
+                  onClick={() => setActiveTab('enrolled')}
+                >
+                  <BookOpen size={13} strokeWidth={2} /> Đã đăng ký ({stats.active})
+                </button>
+                <button
+                  className={`pill-btn${activeTab === 'browse' ? ' active' : ''}`}
+                  onClick={() => setActiveTab('browse')}
+                >
+                  <Search size={13} strokeWidth={2} /> Khám phá
+                </button>
+              </div>
+            </div>
 
-                {/* ── Summary bar ── */}
-                {activeTab === 'enrolled' && !loadingEnrollments && enrollments.length > 0 && (
-                  <div className="assessment-summary-bar">
-                    <div className="summary-item summary-item--primary">
-                      <span className="summary-label">Hiển thị</span>
-                      <strong className="summary-value">
-                        {filteredEnrollments.length} / {enrollments.length}
-                      </strong>
-                    </div>
-                    <div className="summary-item">
-                      <span className="summary-dot summary-dot--progress" />
-                      <span className="summary-label">Đang học</span>
-                      <strong className="summary-value">{stats.active}</strong>
-                    </div>
-                    <div className="summary-item">
-                      <span className="summary-dot summary-dot--upcoming" />
-                      <span className="summary-label">Đã hủy</span>
-                      <strong className="summary-value">{stats.dropped}</strong>
-                    </div>
-                  </div>
-                )}
+            {/* ── Browse filter toolbar ── */}
+            {activeTab === 'browse' && (
+              <div className="toolbar" style={{ gap: '0.5rem' }}>
+                <select
+                  value={filterGradeId}
+                  onChange={(e) => void handleFilterGradeChange(e.target.value)}
+                  style={{
+                    padding: '0.5rem 0.75rem',
+                    borderRadius: '8px',
+                    border: '1px solid #dbe4f0',
+                    fontSize: '0.88rem',
+                    fontFamily: 'inherit',
+                    background: '#fff',
+                    color: '#142235',
+                  }}
+                >
+                  <option value="">Tất cả khối lớp</option>
+                  {grades.map((g) => (
+                    <option key={g.id} value={g.id}>
+                      Khối {g.gradeLevel} – {g.name}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={filterSubjectId}
+                  onChange={(e) => setFilterSubjectId(e.target.value)}
+                  disabled={!filterGradeId}
+                  style={{
+                    padding: '0.5rem 0.75rem',
+                    borderRadius: '8px',
+                    border: '1px solid #dbe4f0',
+                    fontSize: '0.88rem',
+                    fontFamily: 'inherit',
+                    background: '#fff',
+                    color: '#142235',
+                  }}
+                >
+                  <option value="">Tất cả môn học</option>
+                  {subjects.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
-                {/* ── Loading skeletons ── */}
-                {(activeTab === 'enrolled' ? loadingEnrollments : loadingPublic) && (
-                  <div className="skeleton-grid">
-                    {[1, 2, 3].map((i) => (
-                      <div key={i} className="skeleton-card" />
+            {/* ── Summary bar ── */}
+            {activeTab === 'enrolled' && !loadingEnrollments && enrollments.length > 0 && (
+              <div className="assessment-summary-bar">
+                <div className="summary-item summary-item--primary">
+                  <span className="summary-label">Hiển thị</span>
+                  <strong className="summary-value">
+                    {filteredEnrollments.length} / {enrollments.length}
+                  </strong>
+                </div>
+                <div className="summary-item">
+                  <span className="summary-dot summary-dot--progress" />
+                  <span className="summary-label">Đang học</span>
+                  <strong className="summary-value">{stats.active}</strong>
+                </div>
+                <div className="summary-item">
+                  <span className="summary-dot summary-dot--upcoming" />
+                  <span className="summary-label">Đã hủy</span>
+                  <strong className="summary-value">{stats.dropped}</strong>
+                </div>
+              </div>
+            )}
+
+            {/* ── Loading skeletons ── */}
+            {(activeTab === 'enrolled' ? loadingEnrollments : loadingPublic) && (
+              <div className="skeleton-grid">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="skeleton-card" />
+                ))}
+              </div>
+            )}
+
+            {/* ── Enrolled grid ── */}
+            {activeTab === 'enrolled' && !loadingEnrollments && (
+              <>
+                {filteredEnrollments.length > 0 ? (
+                  <div className="grid-cards">
+                    {filteredEnrollments.map((enrollment, i) => (
+                      <EnrollmentCard key={enrollment.id} enrollment={enrollment} index={i} />
                     ))}
                   </div>
+                ) : (
+                  <div className="empty">
+                    <BookOpen size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
+                    <p>
+                      {searchQuery
+                        ? `Không tìm thấy kết quả cho "${searchQuery}"`
+                        : 'Bạn chưa đăng ký khóa học nào'}
+                    </p>
+                  </div>
                 )}
+              </>
+            )}
 
-                {/* ── Enrolled grid ── */}
-                {activeTab === 'enrolled' && !loadingEnrollments && (
-                  <>
-                    {filteredEnrollments.length > 0 ? (
-                      <div className="grid-cards">
-                        {filteredEnrollments.map((enrollment, i) => (
-                          <EnrollmentCard
-                            key={enrollment.id}
-                            enrollment={enrollment}
-                            index={i}
-                          />
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="empty">
-                        <BookOpen size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
-                        <p>
-                          {searchQuery
-                            ? `Không tìm thấy kết quả cho "${searchQuery}"`
-                            : 'Bạn chưa đăng ký khóa học nào'}
-                        </p>
-                      </div>
-                    )}
-                  </>
+            {/* ── Browse grid ── */}
+            {activeTab === 'browse' && !loadingPublic && (
+              <>
+                {publicCourses.length > 0 ? (
+                  <div className="grid-cards">
+                    {publicCourses.map((course, i) => (
+                      <CourseCard
+                        key={course.id}
+                        course={course}
+                        index={i}
+                        onEnroll={handleEnroll}
+                        isEnrolling={enrollingCourseId === course.id}
+                        isEnrolled={enrolledCourseIds.has(course.id)}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="empty">
+                    <Search size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
+                    <p>Không tìm thấy khóa học nào</p>
+                  </div>
                 )}
-
-                {/* ── Browse grid ── */}
-                {activeTab === 'browse' && !loadingPublic && (
-                  <>
-                    {publicCourses.length > 0 ? (
-                      <div className="grid-cards">
-                        {publicCourses.map((course, i) => (
-                          <CourseCard
-                            key={course.id}
-                            course={course}
-                            index={i}
-                            onEnroll={handleEnroll}
-                            isEnrolling={enrollingCourseId === course.id}
-                            isEnrolled={enrolledCourseIds.has(course.id)}
-                          />
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="empty">
-                        <Search size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
-                        <p>Không tìm thấy khóa học nào</p>
-                      </div>
-                    )}
-                  </>
-                )}
-              </motion.div>
+              </>
+            )}
+          </motion.div>
         </section>
       </div>
     </DashboardLayout>

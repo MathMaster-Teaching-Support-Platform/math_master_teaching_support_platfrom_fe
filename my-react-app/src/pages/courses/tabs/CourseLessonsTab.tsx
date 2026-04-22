@@ -1,14 +1,8 @@
-import {
-  closestCenter,
-  DndContext,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core';
 import type { DragEndEvent } from '@dnd-kit/core';
+import { closestCenter, DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import {
-  SortableContext,
   arrayMove,
+  SortableContext,
   useSortable,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
@@ -27,6 +21,7 @@ import {
   Video,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { useToast } from '../../../context/ToastContext';
 import {
   useAddMaterial,
   useCourseLessons,
@@ -34,11 +29,10 @@ import {
   useCustomCourseSections,
   useDeleteCourseLesson,
   useDeleteSection,
-  useReorderCourseLessons,
   useRemoveMaterial,
+  useReorderCourseLessons,
   useUpdateCourseLesson,
 } from '../../../hooks/useCourses';
-import { useToast } from '../../../context/ToastContext';
 import { CourseService } from '../../../services/api/course.service';
 import { LessonSlideService } from '../../../services/api/lesson-slide.service';
 import { VideoUploadService } from '../../../services/api/videoUpload.service';
@@ -390,10 +384,12 @@ function UploadVideoModal({
                 <div
                   style={{
                     height: '100%',
-                    width: `${progress}%`,
+                    transform: `scaleX(${progress / 100})`,
+                    transformOrigin: 'left',
+                    width: '100%',
                     background: 'linear-gradient(90deg, #2563eb, #60a5fa)',
                     borderRadius: 999,
-                    transition: 'width 0.3s ease',
+                    transition: 'transform 0.3s ease',
                   }}
                 />
               </div>
@@ -532,12 +528,16 @@ function EditLessonModal({
                 onChange={(e) => setIsFreePreview(e.target.checked)}
                 disabled={updating}
               />
-              <span style={{ fontSize: '0.9rem' }}>Xem thử miễn phí (Students can watch without enrollment)</span>
+              <span style={{ fontSize: '0.9rem' }}>
+                Xem thử miễn phí (Students can watch without enrollment)
+              </span>
             </label>
           </div>
 
           {error && (
-            <p style={{ color: '#dc2626', fontSize: '0.88rem', fontWeight: 600, marginTop: 12 }}>{error}</p>
+            <p style={{ color: '#dc2626', fontSize: '0.88rem', fontWeight: 600, marginTop: 12 }}>
+              {error}
+            </p>
           )}
         </div>
 
@@ -545,11 +545,7 @@ function EditLessonModal({
           <button className="btn secondary" onClick={onClose} disabled={updating}>
             Hủy
           </button>
-          <button
-            className="btn"
-            disabled={updating}
-            onClick={() => void handleUpdate()}
-          >
+          <button className="btn" disabled={updating} onClick={() => void handleUpdate()}>
             {updating ? 'Đang lưu...' : 'Lưu thay đổi'}
           </button>
         </div>
@@ -630,18 +626,33 @@ function LessonRow({
             <span className="muted">—</span>
           )}
         </td>
-        <td 
+        <td
           onClick={handleToggleFreePreview}
           style={{ cursor: updateMutation.isPending ? 'wait' : 'pointer' }}
-          title={lesson.isFreePreview ? "Click to lock this lesson" : "Click to make this lesson free for preview"}
+          title={
+            lesson.isFreePreview
+              ? 'Click to lock this lesson'
+              : 'Click to make this lesson free for preview'
+          }
         >
           {lesson.isFreePreview ? (
-            <span className="badge published" style={{ display: 'inline-flex', alignItems: 'center', transition: 'all 0.2s' }}>
+            <span
+              className="badge published"
+              style={{ display: 'inline-flex', alignItems: 'center', transition: 'all 0.2s' }}
+            >
               <Eye size={11} style={{ marginRight: 4 }} />
               Xem trước
             </span>
           ) : (
-            <span className="badge draft" style={{ display: 'inline-flex', alignItems: 'center', opacity: 0.7, transition: 'all 0.2s' }}>
+            <span
+              className="badge draft"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                opacity: 0.7,
+                transition: 'all 0.2s',
+              }}
+            >
               <EyeOff size={11} style={{ marginRight: 4 }} />
               Đăng ký để xem
             </span>
@@ -687,7 +698,7 @@ function LessonRow({
       {showMaterials && (
         <tr style={{ background: '#f8fafc' }}>
           <td colSpan={7} style={{ padding: '1rem 2rem' }}>
-            <div style={{ borderLeft: '4px solid #e2e8f0', paddingLeft: '1.5rem' }}>
+            <div style={{ boxShadow: 'inset 2px 0 0 #e2e8f0', paddingLeft: '1.5rem' }}>
               <div
                 style={{
                   display: 'flex',
@@ -780,11 +791,7 @@ function LessonRow({
   );
 }
 
-function SortableLessonChip({
-  lesson,
-}: {
-  lesson: CourseLessonResponse;
-}) {
+function SortableLessonChip({ lesson }: { lesson: CourseLessonResponse }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: lesson.id,
   });
@@ -796,16 +803,12 @@ function SortableLessonChip({
   };
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className="data-card"
-      {...attributes}
-      {...listeners}
-    >
+    <div ref={setNodeRef} style={style} className="data-card" {...attributes} {...listeners}>
       <div className="row" style={{ gap: 10, alignItems: 'center' }}>
         <GripVertical size={16} style={{ color: '#94a3b8', cursor: 'grab' }} />
-        <span style={{ minWidth: 28, fontWeight: 700, color: '#2563eb' }}>#{lesson.orderIndex ?? '-'}</span>
+        <span style={{ minWidth: 28, fontWeight: 700, color: '#2563eb' }}>
+          #{lesson.orderIndex ?? '-'}
+        </span>
         <div style={{ flex: 1 }}>
           <div style={{ fontWeight: 600 }}>{lesson.lessonTitle ?? 'Untitled lesson'}</div>
           <div className="muted" style={{ fontSize: '0.8rem' }}>

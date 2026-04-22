@@ -1,34 +1,34 @@
-import React, { useState, useMemo } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
-  Users,
-  Star,
-  PlayCircle,
-  Lock,
-  Globe,
-  FileText,
-  ChevronDown,
-  ChevronUp,
   AlertCircle,
   ArrowLeft,
+  ChevronDown,
+  ChevronUp,
+  FileText,
+  Globe,
+  Lock,
+  PlayCircle,
+  Star,
+  Users,
   X,
 } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { CountdownTimer } from '../../components/common/CountdownTimer';
+import { CourseIncludesList } from '../../components/course/CourseIncludesList';
+import { CourseLearningPanels } from '../../components/course/CourseLearningPanels';
+import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import {
   useCourseDetail,
   useCourseLessons,
-  useCustomCourseSections,
   useCourseReviews,
+  useCustomCourseSections,
+  useEnroll,
   useReviewSummary,
   useTeacherProfile,
-  useEnroll,
 } from '../../hooks/useCourses';
 import { AuthService } from '../../services/api/auth.service';
 import { VideoUploadService } from '../../services/api/videoUpload.service';
 import { getEffectivePrice, isDiscountActive } from '../../utils/pricing';
-import { CountdownTimer } from '../../components/common/CountdownTimer';
-import { CourseLearningPanels } from '../../components/course/CourseLearningPanels';
-import { CourseIncludesList } from '../../components/course/CourseIncludesList';
-import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import './CoursePreview.css';
 
 const CoursePreview: React.FC = () => {
@@ -795,7 +795,7 @@ const CoursePreview: React.FC = () => {
         }
 
         .modal-video-box {
-          background: #000;
+          background: #0f172a;
           aspect-ratio: 16/9;
         }
         
@@ -828,7 +828,7 @@ const CoursePreview: React.FC = () => {
         .course-preview-v2 {
           background: #fff;
           min-height: 100vh;
-          font-family: 'Inter', -apple-system, sans-serif;
+          font-family: -apple-system, sans-serif;
         }
 
         .preview-header-dark {
@@ -1172,7 +1172,7 @@ const CoursePreview: React.FC = () => {
         .video-preview-thumbnail {
           position: relative;
           aspect-ratio: 16/9;
-          background: #000;
+          background: #0f172a;
           cursor: pointer;
         }
 

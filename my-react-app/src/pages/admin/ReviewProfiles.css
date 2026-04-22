@@ -560,7 +560,7 @@
   line-height: 1.65;
   background: #fef9ec;
   border: 1px solid #fde68a;
-  border-left: 3px solid #f59e0b;
+  box-shadow: inset 2px 0 0 #f59e0b;
   border-radius: 8px;
   padding: 0.75rem;
   margin: 0;
@@ -626,7 +626,9 @@
   padding: 0.4rem;
   background: #fff;
   cursor: pointer;
-  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+  transition:
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
 }
 
 .rpd-image-card:hover {
@@ -998,7 +1000,9 @@
 .rpd-ocr-progress-fill {
   height: 100%;
   background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-  transition: width 0.3s ease;
+  width: 100%;
+  transform-origin: left;
+  transition: transform 0.3s ease;
 }
 
 .rpd-ocr-progress-text {

@@ -148,7 +148,7 @@
 }
 
 .notification-item.priority-high {
-  border-left: 4px solid var(--error-color);
+  box-shadow: inset 3px 0 0 var(--error-color);
 }
 
 .unread-indicator {

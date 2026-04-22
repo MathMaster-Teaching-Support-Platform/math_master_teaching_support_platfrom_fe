@@ -233,7 +233,8 @@
   width: 100%;
   background: var(--gradient-primary);
   border-radius: 4px 4px 0 0;
-  transition: height 0.3s;
+  transform-origin: bottom;
+  transition: transform 0.3s;
 }
 
 .bar-label {
@@ -277,7 +278,9 @@
 .quick-stat-fill {
   height: 100%;
   border-radius: 4px;
-  transition: width 0.3s;
+  width: 100%;
+  transform-origin: left;
+  transition: transform 0.3s;
 }
 
 /* System Status */

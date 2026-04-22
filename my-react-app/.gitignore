@@ -8,7 +8,9 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
+skills-lock.json
 dist
+.agents
 dist-ssr
 *.local
 
@@ -22,3 +24,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+prompts/impeccable-rules.md
+.github
+.github/java-pgrade
+
