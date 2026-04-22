@@ -1097,9 +1097,7 @@
   font-size: 0.84rem;
   color: #1e3a8a;
   font-weight: 600;
-  text-align: justify;
-  text-align-last: justify;
-  text-justify: inter-word;
+  text-align: center;
   opacity: 0.25;
   animation: ai-slide-generating-pulse 2.2s ease-in-out infinite;
 }

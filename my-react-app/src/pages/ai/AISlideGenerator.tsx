@@ -41,17 +41,6 @@ const getTemplatePreviewUrl = (previewImage?: string | null): string | null => {
   return `${API_BASE_URL}${normalizedPath}`;
 };
 
-const getSlidePreviewImageUrl = (previewImageUrl?: string | null): string | null => {
-  if (!previewImageUrl) return null;
-
-  if (/^https?:\/\//i.test(previewImageUrl)) {
-    return previewImageUrl;
-  }
-
-  const normalizedPath = previewImageUrl.startsWith('/') ? previewImageUrl : `/${previewImageUrl}`;
-  return `${API_BASE_URL}${normalizedPath}`;
-};
-
 const normalizeVietnameseHeading = (heading?: string | null): string => {
   const value = (heading || '').trim();
   if (!value) return '';
@@ -219,123 +208,6 @@ const renderSlideText = (
 
     return <InlineMath key={key} math={segment.value} />;
   });
-};
-
-type SlideContentPreviewProps = {
-  slide: LessonSlideItem;
-  outputFormat: LessonSlideOutputFormat;
-  keyPrefix: string;
-};
-
-const SlideContentPreview: React.FC<SlideContentPreviewProps> = ({
-  slide,
-  outputFormat,
-  keyPrefix,
-}) => {
-  const previewImageUrl = getSlidePreviewImageUrl(slide.previewImageUrl);
-  const canTryAuthFetch =
-    Boolean(previewImageUrl) && !/^https?:\/\//i.test(slide.previewImageUrl || '');
-  const [imageSrc, setImageSrc] = useState<string | null>(previewImageUrl);
-  const [usedAuthFetch, setUsedAuthFetch] = useState(false);
-  const [loadingAuthImage, setLoadingAuthImage] = useState(false);
-  const [imageLoadFailed, setImageLoadFailed] = useState(false);
-  const authImageObjectUrlRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    if (authImageObjectUrlRef.current) {
-      window.URL.revokeObjectURL(authImageObjectUrlRef.current);
-      authImageObjectUrlRef.current = null;
-    }
-    setImageSrc(previewImageUrl);
-    setUsedAuthFetch(false);
-    setLoadingAuthImage(false);
-    setImageLoadFailed(false);
-  }, [previewImageUrl, slide.slideNumber]);
-
-  useEffect(() => {
-    return () => {
-      if (authImageObjectUrlRef.current) {
-        window.URL.revokeObjectURL(authImageObjectUrlRef.current);
-        authImageObjectUrlRef.current = null;
-      }
-    };
-  }, []);
-
-  const fetchPreviewWithAuth = useCallback(async () => {
-    if (!previewImageUrl || usedAuthFetch || !canTryAuthFetch) {
-      return;
-    }
-
-    const token = AuthService.getToken();
-    if (!token) {
-      setImageLoadFailed(true);
-      return;
-    }
-
-    setUsedAuthFetch(true);
-    setLoadingAuthImage(true);
-    try {
-      const response = await fetch(previewImageUrl, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          accept: '*/*',
-        },
-      });
-
-      if (!response.ok) {
-        setImageLoadFailed(true);
-        return;
-      }
-
-      const blob = await response.blob();
-      if (authImageObjectUrlRef.current) {
-        window.URL.revokeObjectURL(authImageObjectUrlRef.current);
-      }
-      authImageObjectUrlRef.current = window.URL.createObjectURL(blob);
-      setImageSrc(authImageObjectUrlRef.current);
-      setImageLoadFailed(false);
-    } catch {
-      setImageLoadFailed(true);
-    } finally {
-      setLoadingAuthImage(false);
-    }
-  }, [previewImageUrl, usedAuthFetch, canTryAuthFetch]);
-
-  if (previewImageUrl && loadingAuthImage) {
-    return <span className="ai-slide-preview-loading">Đang tải ảnh preview...</span>;
-  }
-
-  if (imageSrc && !imageLoadFailed) {
-    return (
-      <img
-        src={imageSrc}
-        alt={`Rendered preview slide ${slide.slideNumber}`}
-        className="ai-slide-preview-rendered-image"
-        loading="lazy"
-        onError={() => {
-          if (!usedAuthFetch && canTryAuthFetch) {
-            void fetchPreviewWithAuth();
-            return;
-          }
-          setImageLoadFailed(true);
-        }}
-      />
-    );
-  }
-
-  if (previewImageUrl && imageLoadFailed && !canTryAuthFetch) {
-    return (
-      <span className="ai-slide-preview-loading">
-        Không tải được ảnh preview từ dịch vụ bên ngoài.{' '}
-        <a href={previewImageUrl} target="_blank" rel="noreferrer">
-          Mở ảnh trực tiếp
-        </a>
-      </span>
-    );
-  }
-
-  return <>{renderSlideText(slide.content || 'Chưa có nội dung', outputFormat, keyPrefix)}</>;
 };
 
 const AISlideGenerator: React.FC = () => {
@@ -2134,11 +2006,11 @@ const AISlideGenerator: React.FC = () => {
                     )}
                   </div>
                   <div className="ai-slide-preview-content">
-                    <SlideContentPreview
-                      slide={currentPreviewSlide}
-                      outputFormat={resolvedOutputFormat}
-                      keyPrefix={`content-${currentPreviewSlide.slideNumber}`}
-                    />
+                    {renderSlideText(
+                      currentPreviewSlide.content || 'Chưa có nội dung',
+                      resolvedOutputFormat,
+                      `content-${currentPreviewSlide.slideNumber}`
+                    )}
                   </div>
                   <span className="ai-slide-preview-tag">{currentPreviewSlide.slideType}</span>
                 </article>
@@ -2246,7 +2118,7 @@ const AISlideGenerator: React.FC = () => {
 
               <div className="ai-slide-generating-steps" aria-hidden="true">
                 <span>Đang phân tích bài học</span>
-                <span>Đang dựng dàn ý theo slideType</span>
+                <span>Đang dựng dàn ý theo</span>
                 <span>Đang tối ưu biểu thức toán học</span>
                 <span>Đang hoàn tất nội dung</span>
               </div>
@@ -2355,11 +2227,11 @@ const AISlideGenerator: React.FC = () => {
                           )}
                         </div>
                         <div className="ai-slide-preview-content">
-                          <SlideContentPreview
-                            slide={currentGeneratedPreviewSlide}
-                            outputFormat={resolvedOutputFormat}
-                            keyPrefix={`manage-content-${currentGeneratedPreviewSlide.slideNumber}`}
-                          />
+                          {renderSlideText(
+                            currentGeneratedPreviewSlide.content || 'Chưa có nội dung',
+                            resolvedOutputFormat,
+                            `manage-content-${currentGeneratedPreviewSlide.slideNumber}`
+                          )}
                         </div>
                         <span className="ai-slide-preview-tag">
                           {currentGeneratedPreviewSlide.slideType}
