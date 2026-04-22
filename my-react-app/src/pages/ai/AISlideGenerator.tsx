@@ -52,6 +52,23 @@ const getSlidePreviewImageUrl = (previewImageUrl?: string | null): string | null
   return `${API_BASE_URL}${normalizedPath}`;
 };
 
+const normalizeSlideItem = (slide: unknown, index: number): LessonSlideItem => {
+  const item = (slide ?? {}) as Partial<LessonSlideItem> & {
+    preview_image_url?: string | null;
+    previewUrl?: string | null;
+    imageUrl?: string | null;
+  };
+
+  return {
+    slideNumber: Number(item.slideNumber) || index + 1,
+    slideType: item.slideType || 'MAIN_CONTENT',
+    heading: item.heading || '',
+    content: (item.content || '').replace(/\\n/g, '\n'),
+    previewImageUrl:
+      item.previewImageUrl || item.preview_image_url || item.previewUrl || item.imageUrl || null,
+  };
+};
+
 type MathSegment =
   | { type: 'text'; value: string }
   | { type: 'inline-math'; value: string }
@@ -76,16 +93,7 @@ const parseSlidesFromLessonContent = (lessonContent?: string | null): LessonSlid
       }
     }
 
-    return rawSlides.map((slide, index) => {
-      const item = (slide ?? {}) as Partial<LessonSlideItem>;
-      return {
-        slideNumber: Number(item.slideNumber) || index + 1,
-        slideType: item.slideType || 'MAIN_CONTENT',
-        heading: item.heading || '',
-        content: item.content || '',
-        previewImageUrl: item.previewImageUrl || null,
-      };
-    });
+    return rawSlides.map((slide, index) => normalizeSlideItem(slide, index));
   } catch {
     return [];
   }
@@ -212,13 +220,83 @@ const SlideContentPreview: React.FC<SlideContentPreviewProps> = ({
   outputFormat,
   keyPrefix,
 }) => {
-  const [imageLoadFailed, setImageLoadFailed] = useState(false);
   const previewImageUrl = getSlidePreviewImageUrl(slide.previewImageUrl);
+  const requiresAuthFetch =
+    Boolean(previewImageUrl) &&
+    Boolean(AuthService.getToken()) &&
+    previewImageUrl!.startsWith(API_BASE_URL);
 
-  if (previewImageUrl && !imageLoadFailed) {
+  const [authImageSrc, setAuthImageSrc] = useState<string | null>(null);
+  const [loadingAuthImage, setLoadingAuthImage] = useState(false);
+  const [imageLoadFailed, setImageLoadFailed] = useState(false);
+
+  useEffect(() => {
+    setAuthImageSrc(null);
+    setLoadingAuthImage(false);
+    setImageLoadFailed(false);
+  }, [previewImageUrl, slide.slideNumber]);
+
+  useEffect(() => {
+    if (!previewImageUrl || !requiresAuthFetch) {
+      return;
+    }
+
+    const token = AuthService.getToken();
+    if (!token) {
+      return;
+    }
+
+    const controller = new AbortController();
+    let objectUrl: string | null = null;
+    setLoadingAuthImage(true);
+
+    const fetchPreviewImage = async () => {
+      try {
+        const response = await fetch(previewImageUrl, {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            accept: '*/*',
+          },
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          return;
+        }
+
+        const blob = await response.blob();
+        objectUrl = window.URL.createObjectURL(blob);
+        setAuthImageSrc(objectUrl);
+      } catch {
+        // Fall back to text preview when image cannot be fetched.
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoadingAuthImage(false);
+        }
+      }
+    };
+
+    void fetchPreviewImage();
+
+    return () => {
+      controller.abort();
+      if (objectUrl) {
+        window.URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [previewImageUrl, requiresAuthFetch]);
+
+  if (requiresAuthFetch && loadingAuthImage) {
+    return <span className="ai-slide-preview-loading">Đang tải ảnh preview...</span>;
+  }
+
+  const imageSrc = requiresAuthFetch ? authImageSrc : previewImageUrl;
+
+  if (imageSrc && !imageLoadFailed) {
     return (
       <img
-        src={previewImageUrl}
+        src={imageSrc}
         alt={`Rendered preview slide ${slide.slideNumber}`}
         className="ai-slide-preview-rendered-image"
         loading="lazy"
@@ -1118,6 +1196,9 @@ const AISlideGenerator: React.FC = () => {
       const normalizedResult: GenerateSlideContentResult = {
         ...response.result,
         outputFormat: normalizeOutputFormat(response.result.outputFormat),
+        slides: (response.result.slides || []).map((slide, index) =>
+          normalizeSlideItem(slide, index)
+        ),
       };
 
       setGenerated(normalizedResult);

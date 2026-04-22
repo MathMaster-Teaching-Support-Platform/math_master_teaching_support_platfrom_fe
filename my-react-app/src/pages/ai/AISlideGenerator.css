@@ -525,6 +525,12 @@
   background: #ffffff;
 }
 
+.ai-slide-preview-loading {
+  display: inline-block;
+  font-size: 0.9rem;
+  color: #475569;
+}
+
 .ai-slide-preview-heading .katex,
 .ai-slide-preview-content .katex {
   font-size: 1em;
