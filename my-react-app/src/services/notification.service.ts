@@ -41,7 +41,7 @@ export const notificationService = {
   getUnreadCount: () =>
     fetch(`${API_BASE_URL}${API_ENDPOINTS.NOTIFICATIONS_UNREAD_COUNT}`, {
       headers: getAuthHeaders(),
-    }).then(handleResponse<{ count: number }>),
+    }).then(handleResponse<{ unreadCount?: number; count?: number }>),
 
   markAsRead: (id: string) =>
     fetch(`${API_BASE_URL}${API_ENDPOINTS.NOTIFICATIONS_MARK_READ(id)}`, {
@@ -53,5 +53,19 @@ export const notificationService = {
     fetch(`${API_BASE_URL}${API_ENDPOINTS.NOTIFICATIONS_READ_ALL}`, {
       method: 'PATCH',
       headers: getAuthHeaders(),
+    }).then(handleResponse<void>),
+
+  registerPushToken: (token: string, deviceInfo?: string) =>
+    fetch(`${API_BASE_URL}${API_ENDPOINTS.NOTIFICATIONS_PUSH_TOKEN_REGISTER}`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ token, deviceInfo }),
+    }).then(handleResponse<void>),
+
+  unregisterPushToken: (token: string) =>
+    fetch(`${API_BASE_URL}${API_ENDPOINTS.NOTIFICATIONS_PUSH_TOKEN_UNREGISTER}`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ token }),
     }).then(handleResponse<void>),
 };

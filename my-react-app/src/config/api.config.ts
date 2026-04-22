@@ -255,6 +255,8 @@ export const API_ENDPOINTS = {
   NOTIFICATIONS_UNREAD_COUNT: '/v1/notifications/unread-count',
   NOTIFICATIONS_READ_ALL: '/v1/notifications/read-all',
   NOTIFICATIONS_MARK_READ: (id: string) => `/v1/notifications/${id}/read`,
+  NOTIFICATIONS_PUSH_TOKEN_REGISTER: '/v1/notifications/push-token/register',
+  NOTIFICATIONS_PUSH_TOKEN_UNREGISTER: '/v1/notifications/push-token/unregister',
 
   // Chat sessions
   CHAT_SESSIONS: '/chat-sessions',
