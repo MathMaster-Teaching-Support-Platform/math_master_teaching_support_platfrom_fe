@@ -116,7 +116,7 @@ export interface GenerateSlideContentRequest {
   chapterId: string;
   lessonId: string;
   slideCount: number;
-  additionalPrompt?: string;
+  additionalPrompt: string;
   outputFormat?: LessonSlideOutputFormat;
 }
 
@@ -127,6 +127,7 @@ export interface GenerateSlideContentResult {
   lessonTitle: string;
   slideCount: number;
   outputFormat?: LessonSlideOutputFormat;
+  additionalPrompt?: string;
   slides: LessonSlideItem[];
 }
 
