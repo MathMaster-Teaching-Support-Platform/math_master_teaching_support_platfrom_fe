@@ -75,7 +75,8 @@ export interface AssessmentQuestionItem {
     id?: string;
     questionId: string;
     orderIndex: number;
-    pointsOverride?: number | null;
+    /** Effective final points (pointsOverride ?? question.points). */
+    points?: number;
     questionType?: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER' | 'ESSAY' | 'CODING';
     questionText: string;
     options?: Record<string, string>;
@@ -86,9 +87,29 @@ export interface AssessmentQuestionItem {
     canonicalQuestionId?: string;
     createdAt?: string;
     difficulty?: 'EASY' | 'MEDIUM' | 'HARD';
-    points?: number;
+    tags?: string[];
+    cognitiveLevel?: string;
     questionSourceType?: 'MANUAL' | 'TEMPLATE_GENERATED' | 'AI_GENERATED' | 'BANK_IMPORTED' | 'BANK' | 'AI';
     source?: 'BANK' | 'AI';
+}
+
+// ─── Batch request types ──────────────────────────────────────────────────────
+export interface BatchAddQuestionsRequest {
+    questionIds: string[];
+}
+
+export interface QuestionPointItem {
+    id: string;
+    point: number;
+}
+
+export interface BatchUpdatePointsRequest {
+    questions: QuestionPointItem[];
+}
+
+export interface AutoDistributePointsRequest {
+    totalPoints: number;
+    distribution?: Record<string, number>;
 }
 
 // ─── Response DTOs ────────────────────────────────────────────────────────────

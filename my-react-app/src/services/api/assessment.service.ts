@@ -515,4 +515,83 @@ export class AssessmentService {
         }
         return response.json();
     }
+
+    // ─── New batch endpoints ──────────────────────────────────────────────────
+
+    /** GET /questions/search?keyword=...&tags=...&page=...&size=... */
+    static async searchQuestions(params: {
+        keyword?: string;
+        tags?: string[];
+        page?: number;
+        size?: number;
+    }): Promise<ApiResponse<{ content: AssessmentQuestionItem[]; totalElements: number }>> {
+        const headers = await this.getHeaders();
+        const query = new URLSearchParams();
+        if (params.keyword) query.set('keyword', params.keyword);
+        if (params.tags && params.tags.length > 0) {
+            params.tags.forEach((t) => query.append('tags', t));
+        }
+        query.set('page', String(params.page ?? 0));
+        query.set('size', String(params.size ?? 20));
+        const response = await fetch(
+            `${API_BASE_URL}${API_ENDPOINTS.QUESTIONS_SEARCH}?${query.toString()}`,
+            { method: 'GET', headers }
+        );
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to search questions');
+        }
+        return response.json();
+    }
+
+    /** POST /assessments/{id}/questions/batch */
+    static async batchAddQuestions(
+        assessmentId: string,
+        data: { questionIds: string[] }
+    ): Promise<ApiResponse<AssessmentQuestionItem[]>> {
+        const headers = await this.getHeaders();
+        const response = await fetch(
+            `${API_BASE_URL}${API_ENDPOINTS.ASSESSMENTS_QUESTIONS_BATCH(assessmentId)}`,
+            { method: 'POST', headers, body: JSON.stringify(data) }
+        );
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to batch add questions');
+        }
+        return response.json();
+    }
+
+    /** PUT /assessments/{id}/questions/points */
+    static async batchUpdatePoints(
+        assessmentId: string,
+        data: { questions: { id: string; point: number }[] }
+    ): Promise<ApiResponse<AssessmentQuestionItem[]>> {
+        const headers = await this.getHeaders();
+        const response = await fetch(
+            `${API_BASE_URL}${API_ENDPOINTS.ASSESSMENTS_QUESTIONS_POINTS(assessmentId)}`,
+            { method: 'PUT', headers, body: JSON.stringify(data) }
+        );
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to batch update points');
+        }
+        return response.json();
+    }
+
+    /** POST /assessments/{id}/auto-distribute */
+    static async autoDistributePoints(
+        assessmentId: string,
+        data: { totalPoints: number; distribution?: Record<string, number> }
+    ): Promise<ApiResponse<AssessmentQuestionItem[]>> {
+        const headers = await this.getHeaders();
+        const response = await fetch(
+            `${API_BASE_URL}${API_ENDPOINTS.ASSESSMENTS_AUTO_DISTRIBUTE(assessmentId)}`,
+            { method: 'POST', headers, body: JSON.stringify(data) }
+        );
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to auto distribute points');
+        }
+        return response.json();
+    }
 }

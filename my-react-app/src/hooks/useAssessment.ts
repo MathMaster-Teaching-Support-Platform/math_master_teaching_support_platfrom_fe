@@ -334,3 +334,73 @@ export function useUnlinkAssessmentFromLesson() {
     },
   });
 }
+
+// ─── New batch hooks ──────────────────────────────────────────────────────────
+
+/** Search questions by keyword and tags (for the question picker). */
+export function useSearchQuestions(params: {
+  keyword?: string;
+  tags?: string[];
+  page?: number;
+  size?: number;
+  enabled?: boolean;
+}) {
+  const { enabled = true, ...queryParams } = params;
+  return useQuery({
+    queryKey: ['questions', 'search', queryParams],
+    queryFn: () => AssessmentService.searchQuestions(queryParams),
+    enabled: enabled && (!!queryParams.keyword || (!!queryParams.tags && queryParams.tags.length > 0)),
+    staleTime: 30_000,
+  });
+}
+
+/** Batch add questions to an assessment. */
+export function useBatchAddQuestions() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ assessmentId, questionIds }: { assessmentId: string; questionIds: string[] }) =>
+      AssessmentService.batchAddQuestions(assessmentId, { questionIds }),
+    onSuccess: (_data, { assessmentId }) => {
+      queryClient.invalidateQueries({ queryKey: assessmentKeys.questions(assessmentId) });
+      queryClient.invalidateQueries({ queryKey: assessmentKeys.publishSummary(assessmentId) });
+    },
+  });
+}
+
+/** Batch update points for questions in an assessment. */
+export function useBatchUpdatePoints() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      assessmentId,
+      questions,
+    }: {
+      assessmentId: string;
+      questions: { id: string; point: number }[];
+    }) => AssessmentService.batchUpdatePoints(assessmentId, { questions }),
+    onSuccess: (_data, { assessmentId }) => {
+      queryClient.invalidateQueries({ queryKey: assessmentKeys.questions(assessmentId) });
+      queryClient.invalidateQueries({ queryKey: assessmentKeys.publishSummary(assessmentId) });
+    },
+  });
+}
+
+/** Auto-distribute total points by cognitive level percentages. */
+export function useAutoDistributePoints() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      assessmentId,
+      totalPoints,
+      distribution,
+    }: {
+      assessmentId: string;
+      totalPoints: number;
+      distribution?: Record<string, number>;
+    }) => AssessmentService.autoDistributePoints(assessmentId, { totalPoints, distribution }),
+    onSuccess: (_data, { assessmentId }) => {
+      queryClient.invalidateQueries({ queryKey: assessmentKeys.questions(assessmentId) });
+      queryClient.invalidateQueries({ queryKey: assessmentKeys.publishSummary(assessmentId) });
+    },
+  });
+}

@@ -92,7 +92,7 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
       setFormData(defaultForm);
     }
 
-    setGradeLevel('');
+    setGradeLevel(mode === 'edit' && initialData ? String(initialData.examMatrixGradeLevel ?? '') : '');
     setLessonSearch('');
     setSelectedSubjectId('');
     setSelectedChapterId('');

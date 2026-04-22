@@ -1,17 +1,18 @@
-import { ArrowLeft, Pencil } from 'lucide-react';
-import { useState } from 'react';
+import { ArrowLeft, Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import MathText from '../../components/common/MathText';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import {
-  useAddQuestion,
   useAssessment,
   useAssessmentQuestions,
+  useAutoDistributePoints,
+  useBatchAddQuestions,
+  useBatchUpdatePoints,
   useGenerateQuestionsForAssessment,
   useRemoveQuestion,
-  useSetPointsOverride,
+  useSearchQuestions,
   useUpdateAssessment,
-  useUpdateAssessmentQuestionWorkaround,
 } from '../../hooks/useAssessment';
 import '../../styles/module-refactor.css';
 import type { AssessmentRequest } from '../../types';
@@ -41,8 +42,24 @@ const scoringPolicyLabel: Record<string, string> = {
   AVERAGE: 'Điểm trung bình',
 };
 
+const COGNITIVE_LEVELS = [
+  { key: 'NHAN_BIET', label: 'Nhận biết' },
+  { key: 'THONG_HIEU', label: 'Thông hiểu' },
+  { key: 'VAN_DUNG', label: 'Vận dụng' },
+  { key: 'VAN_DUNG_CAO', label: 'Vận dụng cao' },
+];
+
 function getQuestionId(question: { questionId: string; id?: string }) {
   return question.questionId || question.id || '';
+}
+
+function useDebounce<T>(value: T, delay: number): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  return debounced;
 }
 
 export default function AssessmentDetail() {
@@ -50,13 +67,20 @@ export default function AssessmentDetail() {
   const navigate = useNavigate();
 
   const [openEdit, setOpenEdit] = useState(false);
-  const [pointsDraft, setPointsDraft] = useState<Record<string, string>>({});
-  const [orderDraft, setOrderDraft] = useState<Record<string, string>>({});
-  const [newQuestionId, setNewQuestionId] = useState('');
-  const [newOrderIndex, setNewOrderIndex] = useState('');
-  const [newPointsOverride, setNewPointsOverride] = useState('');
   const [generateError, setGenerateError] = useState<string | null>(null);
-  const [questionCrudError, setQuestionCrudError] = useState<string | null>(null);
+  const [crudError, setCrudError] = useState<string | null>(null);
+
+  // Question search picker state
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const debouncedKeyword = useDebounce(searchKeyword, 300);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  // Per-row points draft (questionId → value string)
+  const [pointsDraft, setPointsDraft] = useState<Record<string, string>>({});
+
+  // Auto-distribute state
+  const [totalPointsInput, setTotalPointsInput] = useState('');
+  const [distribution, setDistribution] = useState<Record<string, string>>({});
 
   const { data, isLoading, isError, error, refetch } = useAssessment(id ?? '');
   const {
@@ -65,18 +89,42 @@ export default function AssessmentDetail() {
     isError: questionsError,
     error: questionsErrorValue,
     refetch: refetchQuestions,
-  } = useAssessmentQuestions(id ?? '', {
-    enabled: !!id,
+  } = useAssessmentQuestions(id ?? '', { enabled: !!id });
+
+  const { data: searchData, isFetching: searchFetching } = useSearchQuestions({
+    keyword: debouncedKeyword,
+    size: 20,
+    enabled: debouncedKeyword.length >= 2,
   });
+
   const updateMutation = useUpdateAssessment();
-  const addQuestionMutation = useAddQuestion();
   const removeQuestionMutation = useRemoveQuestion();
-  const updateAssessmentQuestionMutation = useUpdateAssessmentQuestionWorkaround();
-  const pointsOverrideMutation = useSetPointsOverride();
+  const batchAddMutation = useBatchAddQuestions();
+  const batchUpdatePointsMutation = useBatchUpdatePoints();
+  const autoDistributeMutation = useAutoDistributePoints();
   const generateMutation = useGenerateQuestionsForAssessment();
 
   const assessment = data?.result;
   const questions = questionsData?.result ?? [];
+  const searchResults: Array<{ questionId: string; questionText: string; tags?: string[]; cognitiveLevel?: string }> =
+    (searchData?.result as unknown as { content?: Array<{ id?: string; questionId?: string; questionText: string; tags?: string[]; cognitiveLevel?: string }> })?.content?.map(
+      (q) => ({ questionId: q.id ?? q.questionId ?? '', questionText: q.questionText, tags: q.tags, cognitiveLevel: q.cognitiveLevel })
+    ) ?? [];
+
+  // Initialise pointsDraft from loaded questions
+  useEffect(() => {
+    if (!questions.length) return;
+    setPointsDraft((prev) => {
+      const next = { ...prev };
+      questions.forEach((q) => {
+        const qid = getQuestionId(q);
+        if (!(qid in next) && q.points != null) {
+          next[qid] = String(q.points);
+        }
+      });
+      return next;
+    });
+  }, [questions]);
 
   async function save(payload: AssessmentRequest) {
     if (!id) return;
@@ -85,156 +133,92 @@ export default function AssessmentDetail() {
     await refetch();
   }
 
-  function getDraftValue(question: {
-    questionId: string;
-    id?: string;
-    pointsOverride?: number | null;
-  }) {
-    const questionId = getQuestionId(question);
-    if (questionId in pointsDraft) return pointsDraft[questionId];
-    if (typeof question.pointsOverride === 'number') return String(question.pointsOverride);
-    return '';
-  }
-
-  function updatePointsDraft(questionId: string, value: string) {
-    setPointsDraft((prev) => ({
-      ...prev,
-      [questionId]: value,
-    }));
-  }
-
-  function getOrderDraftValue(question: { questionId: string; id?: string; orderIndex: number }) {
-    const questionId = getQuestionId(question);
-    if (questionId in orderDraft) return orderDraft[questionId];
-    return String(question.orderIndex);
-  }
-
-  function updateOrderDraft(questionId: string, value: string) {
-    setOrderDraft((prev) => ({
-      ...prev,
-      [questionId]: value,
-    }));
-  }
-
-  async function addQuestionToAssessment() {
-    if (!id) return;
-    const normalizedQuestionId = newQuestionId.trim();
-    if (!normalizedQuestionId) {
-      setQuestionCrudError('Vui lòng nhập Question ID.');
-      return;
-    }
-
-    const parsedOrderIndex = newOrderIndex.trim() ? Number(newOrderIndex) : undefined;
-    if (newOrderIndex.trim() && (Number.isNaN(parsedOrderIndex) || parsedOrderIndex! < 1)) {
-      setQuestionCrudError('orderIndex phải là số nguyên dương.');
-      return;
-    }
-
-    const parsedPoints = newPointsOverride.trim() ? Number(newPointsOverride) : undefined;
-    if (newPointsOverride.trim() && (Number.isNaN(parsedPoints) || parsedPoints! < 0)) {
-      setQuestionCrudError('pointsOverride phải >= 0.');
-      return;
-    }
-
-    setQuestionCrudError(null);
-    await addQuestionMutation.mutateAsync({
-      assessmentId: id,
-      data: {
-        questionId: normalizedQuestionId,
-        orderIndex: parsedOrderIndex,
-        pointsOverride: parsedPoints,
-      },
+  const toggleSelectQuestion = useCallback((qid: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      next.has(qid) ? next.delete(qid) : next.add(qid);
+      return next;
     });
-    setNewQuestionId('');
-    setNewOrderIndex('');
-    setNewPointsOverride('');
-    await Promise.all([refetchQuestions(), refetch()]);
+  }, []);
+
+  async function handleBatchAdd() {
+    if (!id || selectedIds.size === 0) return;
+    setCrudError(null);
+    try {
+      await batchAddMutation.mutateAsync({ assessmentId: id, questionIds: [...selectedIds] });
+      setSelectedIds(new Set());
+      setSearchKeyword('');
+      await Promise.all([refetchQuestions(), refetch()]);
+    } catch (e) {
+      setCrudError(e instanceof Error ? e.message : 'Không thể thêm câu hỏi.');
+    }
   }
 
-  async function removeQuestionFromAssessment(questionId: string) {
+  async function handleRemoveQuestion(questionId: string) {
     if (!id) return;
-    setQuestionCrudError(null);
-    await removeQuestionMutation.mutateAsync({ assessmentId: id, questionId });
-    await Promise.all([refetchQuestions(), refetch()]);
+    setCrudError(null);
+    try {
+      await removeQuestionMutation.mutateAsync({ assessmentId: id, questionId });
+      await Promise.all([refetchQuestions(), refetch()]);
+    } catch (e) {
+      setCrudError(e instanceof Error ? e.message : 'Không thể xóa câu hỏi.');
+    }
   }
 
-  async function updateAssessmentQuestion(questionId: string) {
+  async function handleBatchUpdatePoints() {
     if (!id) return;
-    const orderRaw = orderDraft[questionId]?.trim();
-    const pointsRaw = pointsDraft[questionId]?.trim();
+    setCrudError(null);
+    const payload = questions
+      .map((q) => {
+        const qid = getQuestionId(q);
+        const raw = pointsDraft[qid]?.trim();
+        if (!raw) return null;
+        const val = Number(raw);
+        if (Number.isNaN(val) || val < 0) return null;
+        return { id: qid, point: val };
+      })
+      .filter((x): x is { id: string; point: number } => x !== null);
 
-    if (!orderRaw && !pointsRaw) {
-      setQuestionCrudError('Vui lòng nhập orderIndex hoặc pointsOverride để cập nhật.');
+    if (payload.length === 0) {
+      setCrudError('Chưa có điểm nào hợp lệ để cập nhật.');
       return;
     }
-
-    const nextOrder = orderRaw ? Number(orderRaw) : undefined;
-    if (orderRaw && (Number.isNaN(nextOrder) || (nextOrder !== undefined && nextOrder < 1))) {
-      setQuestionCrudError('orderIndex phải là số nguyên dương.');
-      return;
+    try {
+      await batchUpdatePointsMutation.mutateAsync({ assessmentId: id, questions: payload });
+      await Promise.all([refetchQuestions(), refetch()]);
+    } catch (e) {
+      setCrudError(e instanceof Error ? e.message : 'Không thể cập nhật điểm.');
     }
-
-    const nextPoints = pointsRaw ? Number(pointsRaw) : null;
-    if (pointsRaw && (Number.isNaN(nextPoints) || (nextPoints !== null && nextPoints < 0))) {
-      setQuestionCrudError('pointsOverride phải >= 0.');
-      return;
-    }
-
-    setQuestionCrudError(null);
-    await updateAssessmentQuestionMutation.mutateAsync({
-      assessmentId: id,
-      questionId,
-      data: {
-        orderIndex: nextOrder,
-        pointsOverride: nextPoints,
-      },
-    });
-    await Promise.all([refetchQuestions(), refetch()]);
   }
 
-  async function savePointsOverride(questionId: string) {
-    const rawValue = pointsDraft[questionId];
-    const trimmedValue = rawValue?.trim() ?? '';
-
-    if (trimmedValue === '') {
-      await pointsOverrideMutation.mutateAsync({
-        assessmentId: id ?? '',
-        data: {
-          questionId,
-          pointsOverride: null,
-        },
+  async function handleAutoDistribute() {
+    if (!id) return;
+    setCrudError(null);
+    const total = Number(totalPointsInput);
+    if (Number.isNaN(total) || total <= 0) {
+      setCrudError('Tổng điểm phải là số dương.');
+      return;
+    }
+    const dist: Record<string, number> = {};
+    for (const [key, val] of Object.entries(distribution)) {
+      const n = Number(val);
+      if (!Number.isNaN(n) && n > 0) dist[key] = n;
+    }
+    try {
+      await autoDistributeMutation.mutateAsync({
+        assessmentId: id,
+        totalPoints: total,
+        distribution: Object.keys(dist).length > 0 ? dist : undefined,
       });
-    } else {
-      const pointsValue = Number(trimmedValue);
-      if (Number.isNaN(pointsValue) || pointsValue < 0) return;
-      await pointsOverrideMutation.mutateAsync({
-        assessmentId: id ?? '',
-        data: {
-          questionId,
-          pointsOverride: pointsValue,
-        },
-      });
+      await Promise.all([refetchQuestions(), refetch()]);
+    } catch (e) {
+      setCrudError(e instanceof Error ? e.message : 'Không thể tự động phân điểm.');
     }
-
-    await Promise.all([refetchQuestions(), refetch()]);
-  }
-
-  async function clearPointsOverride(questionId: string) {
-    await pointsOverrideMutation.mutateAsync({
-      assessmentId: id ?? '',
-      data: {
-        questionId,
-        pointsOverride: null,
-      },
-    });
-    setPointsDraft((prev) => ({ ...prev, [questionId]: '' }));
-    await Promise.all([refetchQuestions(), refetch()]);
   }
 
   async function generateFromMatrix() {
     if (!assessment?.id || !assessment.examMatrixId) return;
     setGenerateError(null);
-
     try {
       await generateMutation.mutateAsync({
         assessmentId: assessment.id,
@@ -246,16 +230,10 @@ export default function AssessmentDetail() {
       });
       await Promise.all([refetchQuestions(), refetch()]);
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Không thể generate câu hỏi từ matrix.';
+      const message = error instanceof Error ? error.message : 'Không thể generate câu hỏi từ matrix.';
       const normalized = message.toUpperCase();
-      if (
-        normalized.includes('INSUFFICIENT_QUESTIONS_AVAILABLE') ||
-        normalized.includes('INSUFFICIENT QUESTIONS')
-      ) {
-        setGenerateError(
-          'Không đủ câu hỏi trong ngân hàng theo cấu trúc đề. Vui lòng bổ sung thêm câu hỏi.'
-        );
+      if (normalized.includes('INSUFFICIENT_QUESTIONS_AVAILABLE') || normalized.includes('INSUFFICIENT QUESTIONS')) {
+        setGenerateError('Không đủ câu hỏi trong ngân hàng theo cấu trúc đề. Vui lòng bổ sung thêm câu hỏi.');
         return;
       }
       setGenerateError(message);
@@ -289,6 +267,9 @@ export default function AssessmentDetail() {
       );
     }
 
+    const isDraft = assessment.status === 'DRAFT';
+    const isDirect = assessment.assessmentMode !== 'MATRIX_BASED' || !assessment.examMatrixId;
+
     return (
       <section className="module-page">
         <button className="btn secondary" onClick={() => navigate('/teacher/assessments')}>
@@ -303,7 +284,7 @@ export default function AssessmentDetail() {
               <h2>{assessment.title}</h2>
               <p>{assessment.description || 'Không có mô tả'}</p>
             </div>
-            {assessment.status === 'DRAFT' && (
+            {isDraft && (
               <button className="btn secondary" onClick={() => setOpenEdit(true)}>
                 <Pencil size={14} />
                 Chỉnh sửa thông tin
@@ -316,9 +297,7 @@ export default function AssessmentDetail() {
           <article className="stat-card">
             <p>Trạng thái</p>
             <h3>{assessmentStatusLabel[assessment.status] || assessment.status}</h3>
-            <span>
-              {assessmentTypeLabel[assessment.assessmentType] || assessment.assessmentType}
-            </span>
+            <span>{assessmentTypeLabel[assessment.assessmentType] || assessment.assessmentType}</span>
           </article>
           <article className="stat-card">
             <p>Câu hỏi</p>
@@ -329,10 +308,8 @@ export default function AssessmentDetail() {
             <p>Lượt nộp</p>
             <h3>{assessment.submissionCount}</h3>
             <span>
-              Chính sách chấm điểm:{' '}
-              {scoringPolicyLabel[assessment.attemptScoringPolicy || 'BEST'] ||
-                assessment.attemptScoringPolicy ||
-                'BEST'}
+              Chính sách:{' '}
+              {scoringPolicyLabel[assessment.attemptScoringPolicy || 'BEST'] || assessment.attemptScoringPolicy || 'BEST'}
             </span>
           </article>
         </div>
@@ -340,129 +317,118 @@ export default function AssessmentDetail() {
         <div className="table-wrap">
           <table className="table">
             <tbody>
-              <tr>
-                <th>Bài học</th>
-                <td>{assessment.lessonTitles?.join(', ') || 'Không có'}</td>
-              </tr>
-              <tr>
-                <th>Thời gian làm bài</th>
-                <td>{assessment.timeLimitMinutes || 0} phút</td>
-              </tr>
-              <tr>
-                <th>Điểm đạt</th>
-                <td>{assessment.passingScore || 0}%</td>
-              </tr>
+              <tr><th>Bài học</th><td>{assessment.lessonTitles?.join(', ') || 'Không có'}</td></tr>
+              <tr><th>Thời gian làm bài</th><td>{assessment.timeLimitMinutes || 0} phút</td></tr>
+              <tr><th>Điểm đạt</th><td>{assessment.passingScore || 0}%</td></tr>
               <tr>
                 <th>Chế độ tạo đề</th>
-                <td>
-                  {assessmentModeLabel[assessment.assessmentMode || 'DIRECT'] ||
-                    assessment.assessmentMode ||
-                    'DIRECT'}
-                </td>
+                <td>{assessmentModeLabel[assessment.assessmentMode || 'DIRECT'] || assessment.assessmentMode || 'DIRECT'}</td>
               </tr>
-              <tr>
-                <th>Ma trận đề</th>
-                <td>{assessment.examMatrixId || 'Không có'}</td>
-              </tr>
+              <tr><th>Ma trận đề</th><td>{assessment.examMatrixId || 'Không có'}</td></tr>
               <tr>
                 <th>Lịch làm bài</th>
                 <td>
-                  {assessment.startDate
-                    ? new Date(assessment.startDate).toLocaleString()
-                    : 'Chưa đặt lịch'}{' '}
-                  -{' '}
-                  {assessment.endDate
-                    ? new Date(assessment.endDate).toLocaleString()
-                    : 'Không giới hạn'}
+                  {assessment.startDate ? new Date(assessment.startDate).toLocaleString() : 'Chưa đặt lịch'}
+                  {' - '}
+                  {assessment.endDate ? new Date(assessment.endDate).toLocaleString() : 'Không giới hạn'}
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
 
+        {/* ── Question management ── */}
         <article className="data-card" style={{ marginTop: 16 }}>
           <div className="row" style={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
             <h3>Câu hỏi trong bài kiểm tra</h3>
             <div className="row" style={{ justifyContent: 'start', flexWrap: 'wrap' }}>
-              <span className="muted">Có thể chỉnh điểm từng câu bằng pointsOverride</span>
-              {assessment.status === 'DRAFT' &&
-                assessment.assessmentMode === 'MATRIX_BASED' &&
-                assessment.examMatrixId && (
-                  <button
-                    className="btn"
-                    onClick={() => void generateFromMatrix()}
-                    disabled={generateMutation.isPending}
-                  >
-                    {generateMutation.isPending ? 'Đang generate...' : 'Generate from Matrix'}
-                  </button>
-                )}
+              {isDraft && assessment.assessmentMode === 'MATRIX_BASED' && assessment.examMatrixId && (
+                <button
+                  className="btn"
+                  onClick={() => void generateFromMatrix()}
+                  disabled={generateMutation.isPending}
+                >
+                  {generateMutation.isPending ? 'Đang generate...' : 'Generate from Matrix'}
+                </button>
+              )}
             </div>
           </div>
 
-          {generateError && (
-            <div className="empty" style={{ color: '#b91c1c' }}>
-              {generateError}
-            </div>
-          )}
-          {questionCrudError && (
-            <div className="empty" style={{ color: '#b91c1c' }}>
-              {questionCrudError}
-            </div>
-          )}
+          {generateError && <div className="empty" style={{ color: '#b91c1c' }}>{generateError}</div>}
+          {crudError && <div className="empty" style={{ color: '#b91c1c' }}>{crudError}</div>}
 
-          {assessment.status === 'DRAFT' && (
-            <div className="preview-box" style={{ marginBottom: 12 }}>
-              <p className="muted" style={{ marginBottom: 8 }}>
-                Thêm câu hỏi vào assessment (manual)
+          {/* ── Search & add questions (only for DIRECT assessments in DRAFT) ── */}
+          {isDraft && isDirect && (
+            <div className="preview-box" style={{ marginBottom: 16 }}>
+              <p className="muted" style={{ marginBottom: 8, fontWeight: 600 }}>
+                <Search size={14} style={{ marginRight: 4 }} />
+                Tìm kiếm và thêm câu hỏi
               </p>
-              <div className="row" style={{ flexWrap: 'wrap', justifyContent: 'start' }}>
+              <div className="row" style={{ flexWrap: 'wrap', justifyContent: 'start', marginBottom: 8 }}>
                 <input
                   className="input"
-                  style={{ minWidth: 220 }}
-                  placeholder="Question ID"
-                  value={newQuestionId}
-                  onChange={(event) => setNewQuestionId(event.target.value)}
+                  style={{ minWidth: 280 }}
+                  placeholder="Nhập từ khóa (ít nhất 2 ký tự)..."
+                  value={searchKeyword}
+                  onChange={(e) => setSearchKeyword(e.target.value)}
                 />
-                <input
-                  className="input"
-                  style={{ width: 140 }}
-                  type="number"
-                  min={1}
-                  placeholder="Order"
-                  value={newOrderIndex}
-                  onChange={(event) => setNewOrderIndex(event.target.value)}
-                />
-                <input
-                  className="input"
-                  style={{ width: 160 }}
-                  type="number"
-                  min={0}
-                  step={0.25}
-                  placeholder="Points override"
-                  value={newPointsOverride}
-                  onChange={(event) => setNewPointsOverride(event.target.value)}
-                />
-                <button
-                  className="btn"
-                  onClick={() => void addQuestionToAssessment()}
-                  disabled={addQuestionMutation.isPending}
-                >
-                  {addQuestionMutation.isPending ? 'Đang thêm...' : 'Thêm câu hỏi'}
-                </button>
+                {searchFetching && <span className="muted">Đang tìm...</span>}
               </div>
-            </div>
-          )}
-          {assessment.generationSummary && (
-            <div className="preview-box" style={{ marginBottom: 12 }}>
-              <p className="muted" style={{ marginBottom: 6 }}>
-                totalQuestionsGenerated: {assessment.generationSummary.totalQuestionsGenerated ?? 0}
-              </p>
-              {(assessment.generationSummary.warnings || []).length > 0 && (
-                <ul style={{ margin: 0, paddingLeft: 18 }}>
-                  {(assessment.generationSummary.warnings || []).map((warning) => (
-                    <li key={warning}>{warning}</li>
-                  ))}
-                </ul>
+
+              {searchResults.length > 0 && (
+                <div style={{ maxHeight: 260, overflowY: 'auto', border: '1px solid #e5e7eb', borderRadius: 6 }}>
+                  {searchResults.map((q) => {
+                    const alreadyAdded = questions.some((aq) => getQuestionId(aq) === q.questionId);
+                    const checked = selectedIds.has(q.questionId);
+                    return (
+                      <label
+                        key={q.questionId}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: 10,
+                          padding: '8px 12px',
+                          cursor: alreadyAdded ? 'not-allowed' : 'pointer',
+                          background: alreadyAdded ? '#f9fafb' : 'white',
+                          borderBottom: '1px solid #f3f4f6',
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          disabled={alreadyAdded}
+                          checked={checked}
+                          onChange={() => toggleSelectQuestion(q.questionId)}
+                          style={{ marginTop: 3 }}
+                        />
+                        <div>
+                          <MathText text={q.questionText} />
+                          <div style={{ marginTop: 4, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                            {q.cognitiveLevel && (
+                              <span className="badge draft" style={{ fontSize: 11 }}>{q.cognitiveLevel}</span>
+                            )}
+                            {q.tags?.map((t) => (
+                              <span key={t} className="badge published" style={{ fontSize: 11 }}>{t}</span>
+                            ))}
+                            {alreadyAdded && <span className="muted" style={{ fontSize: 11 }}>Đã có trong đề</span>}
+                          </div>
+                        </div>
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+
+              {selectedIds.size > 0 && (
+                <div style={{ marginTop: 10 }}>
+                  <button
+                    className="btn"
+                    onClick={() => void handleBatchAdd()}
+                    disabled={batchAddMutation.isPending}
+                  >
+                    <Plus size={14} />
+                    {batchAddMutation.isPending ? 'Đang thêm...' : `Thêm ${selectedIds.size} câu hỏi đã chọn`}
+                  </button>
+                </div>
               )}
             </div>
           )}
@@ -470,9 +436,7 @@ export default function AssessmentDetail() {
           {questionsLoading && <div className="empty">Đang tải danh sách câu hỏi...</div>}
           {questionsError && (
             <div className="empty">
-              {questionsErrorValue instanceof Error
-                ? questionsErrorValue.message
-                : 'Không thể tải câu hỏi trong bài kiểm tra.'}
+              {questionsErrorValue instanceof Error ? questionsErrorValue.message : 'Không thể tải câu hỏi.'}
             </div>
           )}
           {!questionsLoading && !questionsError && questions.length === 0 && (
@@ -480,130 +444,138 @@ export default function AssessmentDetail() {
           )}
 
           {!questionsLoading && !questionsError && questions.length > 0 && (
-            <div className="table-wrap">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th style={{ width: 80 }}>STT</th>
-                    <th>Nội dung câu hỏi</th>
-                    <th style={{ width: 160 }}>Order mới</th>
-                    <th style={{ width: 150 }}>Điểm hiện tại</th>
-                    <th style={{ width: 180 }}>Điểm override</th>
-                    <th style={{ width: 360 }}>Thao tác</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {questions.map((question) => {
-                    const questionId = getQuestionId(question);
-                    return (
-                      <tr key={questionId}>
-                        <td>{question.orderIndex}</td>
-                        <td>
-                          <MathText text={question.questionText} />
-                          <div
-                            className="row"
-                            style={{ justifyContent: 'start', flexWrap: 'wrap', marginTop: 6 }}
-                          >
-                            {question.questionSourceType === 'AI_GENERATED' && (
-                              <span className="badge draft">AI Generated</span>
-                            )}
-                            {question.questionSourceType === 'TEMPLATE_GENERATED' && (
-                              <span className="badge approved">Parametric</span>
-                            )}
-                            {question.canonicalQuestionId && (
-                              <span className="badge published">Generated from Canonical</span>
-                            )}
-                          </div>
-                          {question.solutionSteps && (
-                            <div className="preview-box" style={{ marginTop: 8 }}>
-                              <p className="muted" style={{ marginBottom: 6 }}>
-                                Solution Steps
-                              </p>
-                              <MathText text={question.solutionSteps} />
+            <>
+              <div className="table-wrap">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: 50 }}>STT</th>
+                      <th>Nội dung câu hỏi</th>
+                      <th style={{ width: 100 }}>Mức độ</th>
+                      <th style={{ width: 160 }}>Điểm</th>
+                      {isDraft && <th style={{ width: 80 }}>Xóa</th>}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {questions.map((question) => {
+                      const questionId = getQuestionId(question);
+                      return (
+                        <tr key={questionId}>
+                          <td>{question.orderIndex}</td>
+                          <td>
+                            <MathText text={question.questionText} />
+                            <div className="row" style={{ justifyContent: 'start', flexWrap: 'wrap', marginTop: 4 }}>
+                              {question.tags?.map((t) => (
+                                <span key={t} className="badge published" style={{ fontSize: 11 }}>{t}</span>
+                              ))}
                             </div>
+                          </td>
+                          <td>
+                            {question.cognitiveLevel ? (
+                              <span className="badge draft">{question.cognitiveLevel}</span>
+                            ) : (
+                              <span className="muted">—</span>
+                            )}
+                          </td>
+                          <td>
+                            {isDraft ? (
+                              <input
+                                className="input"
+                                type="number"
+                                min={0}
+                                step={0.25}
+                                value={pointsDraft[questionId] ?? String(question.points ?? '')}
+                                onChange={(e) =>
+                                  setPointsDraft((prev) => ({ ...prev, [questionId]: e.target.value }))
+                                }
+                                placeholder="Điểm"
+                              />
+                            ) : (
+                              <span>{question.points ?? 0}</span>
+                            )}
+                          </td>
+                          {isDraft && (
+                            <td>
+                              <button
+                                className="btn danger"
+                                title="Xóa câu hỏi"
+                                onClick={() => void handleRemoveQuestion(questionId)}
+                                disabled={removeQuestionMutation.isPending}
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </td>
                           )}
-                          {question.diagramData && (
-                            <div className="preview-box" style={{ marginTop: 8 }}>
-                              <p className="muted" style={{ marginBottom: 6 }}>
-                                Diagram
-                              </p>
-                              <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
-                                {JSON.stringify(question.diagramData, null, 2)}
-                              </pre>
-                            </div>
-                          )}
-                        </td>
-                        <td>
-                          <input
-                            className="input"
-                            type="number"
-                            min={1}
-                            value={getOrderDraftValue(question)}
-                            onChange={(event) => updateOrderDraft(questionId, event.target.value)}
-                            placeholder="Order index"
-                          />
-                        </td>
-                        <td>{question.points ?? 0}</td>
-                        <td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* ── Batch actions ── */}
+              {isDraft && (
+                <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {/* Batch save points */}
+                  <div>
+                    <button
+                      className="btn"
+                      onClick={() => void handleBatchUpdatePoints()}
+                      disabled={batchUpdatePointsMutation.isPending}
+                    >
+                      {batchUpdatePointsMutation.isPending ? 'Đang lưu...' : 'Lưu điểm tất cả câu hỏi'}
+                    </button>
+                  </div>
+
+                  {/* Auto distribute */}
+                  <div className="preview-box">
+                    <p className="muted" style={{ fontWeight: 600, marginBottom: 8 }}>
+                      Tự động phân điểm theo mức độ nhận thức
+                    </p>
+                    <div className="row" style={{ flexWrap: 'wrap', justifyContent: 'start', gap: 8 }}>
+                      <div>
+                        <label style={{ fontSize: 12, color: '#6b7280' }}>Tổng điểm</label>
+                        <input
+                          className="input"
+                          type="number"
+                          min={0.01}
+                          step={0.5}
+                          style={{ width: 120 }}
+                          placeholder="VD: 10"
+                          value={totalPointsInput}
+                          onChange={(e) => setTotalPointsInput(e.target.value)}
+                        />
+                      </div>
+                      {COGNITIVE_LEVELS.map(({ key, label }) => (
+                        <div key={key}>
+                          <label style={{ fontSize: 12, color: '#6b7280' }}>{label} (%)</label>
                           <input
                             className="input"
                             type="number"
                             min={0}
-                            step={0.25}
-                            value={getDraftValue(question)}
-                            onChange={(event) => updatePointsDraft(questionId, event.target.value)}
-                            placeholder="Để trống = dùng điểm gốc"
+                            max={100}
+                            style={{ width: 80 }}
+                            placeholder="0"
+                            value={distribution[key] ?? ''}
+                            onChange={(e) =>
+                              setDistribution((prev) => ({ ...prev, [key]: e.target.value }))
+                            }
                           />
-                        </td>
-                        <td>
-                          <div className="row" style={{ justifyContent: 'start' }}>
-                            <button
-                              className="btn secondary"
-                              onClick={() => void updateAssessmentQuestion(questionId)}
-                              disabled={
-                                assessment.status !== 'DRAFT' ||
-                                updateAssessmentQuestionMutation.isPending
-                              }
-                            >
-                              {updateAssessmentQuestionMutation.isPending
-                                ? 'Đang cập nhật...'
-                                : 'Cập nhật'}
-                            </button>
-                            <button
-                              className="btn"
-                              onClick={() => void savePointsOverride(questionId)}
-                              disabled={
-                                assessment.status !== 'DRAFT' || pointsOverrideMutation.isPending
-                              }
-                            >
-                              Lưu điểm
-                            </button>
-                            <button
-                              className="btn secondary"
-                              onClick={() => void clearPointsOverride(questionId)}
-                              disabled={
-                                assessment.status !== 'DRAFT' || pointsOverrideMutation.isPending
-                              }
-                            >
-                              Xóa override
-                            </button>
-                            <button
-                              className="btn danger"
-                              onClick={() => void removeQuestionFromAssessment(questionId)}
-                              disabled={
-                                assessment.status !== 'DRAFT' || removeQuestionMutation.isPending
-                              }
-                            >
-                              {removeQuestionMutation.isPending ? 'Đang xóa...' : 'Xóa câu hỏi'}
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      className="btn secondary"
+                      style={{ marginTop: 10 }}
+                      onClick={() => void handleAutoDistribute()}
+                      disabled={autoDistributeMutation.isPending}
+                    >
+                      {autoDistributeMutation.isPending ? 'Đang phân điểm...' : 'Áp dụng phân điểm tự động'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </article>
 
