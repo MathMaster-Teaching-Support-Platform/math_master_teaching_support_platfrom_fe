@@ -130,6 +130,8 @@ const getGeneratedDisplayName = (file: LessonSlideGeneratedFile): string => {
   return fallbackName.replace(/\.[^/.]+$/, '') || 'generated-slide';
 };
 
+const MANAGED_GENERATED_PAGE_SIZE = 9;
+
 const parseMathSegments = (text: string): MathSegment[] => {
   if (!text) return [{ type: 'text', value: '' }];
 
@@ -251,6 +253,8 @@ const AISlideGenerator: React.FC = () => {
   const [loadingGeneratedFiles, setLoadingGeneratedFiles] = useState(false);
   const [loadingSelectedGeneratedLesson, setLoadingSelectedGeneratedLesson] = useState(false);
   const [downloadingGeneratedFileId, setDownloadingGeneratedFileId] = useState('');
+  const [deletingGeneratedFileId, setDeletingGeneratedFileId] = useState('');
+  const [generatedPage, setGeneratedPage] = useState(1);
   const [isGeneratedPreviewOpen, setIsGeneratedPreviewOpen] = useState(false);
   const [loadingGeneratedPreviewPdf, setLoadingGeneratedPreviewPdf] = useState(false);
   const [openingGeneratedPreviewPdfTab, setOpeningGeneratedPreviewPdfTab] = useState(false);
@@ -343,6 +347,17 @@ const AISlideGenerator: React.FC = () => {
 
     return files;
   }, [generatedFiles, generatedSearch, generatedSort, generatedVisibilityFilter]);
+
+  const totalManagedGeneratedPages = useMemo(
+    () => Math.max(1, Math.ceil(managedGeneratedFiles.length / MANAGED_GENERATED_PAGE_SIZE)),
+    [managedGeneratedFiles.length]
+  );
+
+  const pagedManagedGeneratedFiles = useMemo(() => {
+    const start = (generatedPage - 1) * MANAGED_GENERATED_PAGE_SIZE;
+    const end = start + MANAGED_GENERATED_PAGE_SIZE;
+    return managedGeneratedFiles.slice(start, end);
+  }, [generatedPage, managedGeneratedFiles]);
 
   const openMetadataModal = (file: LessonSlideGeneratedFile) => {
     setEditingMetadataFile(file);
@@ -518,6 +533,50 @@ const AISlideGenerator: React.FC = () => {
       }
     } finally {
       setDownloadingGeneratedFileId('');
+    }
+  };
+
+  const handleDeleteGeneratedFile = async (generatedFileId: string) => {
+    const targetFile = generatedFiles.find((file) => file.id === generatedFileId);
+    const displayName = targetFile ? getGeneratedDisplayName(targetFile) : 'slide này';
+    const shouldDelete = window.confirm(
+      `Bạn có chắc muốn xóa ${displayName}? Hành động này sẽ ẩn file khỏi danh sách.`
+    );
+
+    if (!shouldDelete) {
+      return;
+    }
+
+    setDeletingGeneratedFileId(generatedFileId);
+    setError('');
+    setSuccess('');
+
+    try {
+      await LessonSlideService.deleteGeneratedFile(generatedFileId);
+
+      if (selectedGeneratedFileId === generatedFileId) {
+        setSelectedGeneratedFileId('');
+        setSelectedGeneratedLesson(null);
+        setGeneratedPreviewIndex(0);
+      }
+
+      if (isGeneratedPreviewOpen && selectedGeneratedFileId === generatedFileId) {
+        setIsGeneratedPreviewOpen(false);
+      }
+
+      setSuccess('Đã xóa slide thành công.');
+      await loadGeneratedFiles(lessonId || undefined);
+    } catch (err) {
+      const apiError = err as Error & { code?: number };
+      if (apiError.code === 1166) {
+        setError('File slide không còn tồn tại hoặc đã bị xóa. Vui lòng refresh danh sách.');
+      } else if (apiError.code === 1167) {
+        setError('Bạn không có quyền xóa file này. Chỉ owner hoặc ADMIN mới được xóa.');
+      } else {
+        setError(err instanceof Error ? err.message : 'Không thể xóa file slide đã generate');
+      }
+    } finally {
+      setDeletingGeneratedFileId('');
     }
   };
 
@@ -821,6 +880,14 @@ const AISlideGenerator: React.FC = () => {
       cancelled = true;
     };
   }, [managedGeneratedFiles, lessonTitleById]);
+
+  useEffect(() => {
+    setGeneratedPage(1);
+  }, [lessonId, generatedSearch, generatedSort, generatedVisibilityFilter]);
+
+  useEffect(() => {
+    setGeneratedPage((prev) => Math.min(prev, totalManagedGeneratedPages));
+  }, [totalManagedGeneratedPages]);
 
   useEffect(() => {
     const previewsToLoad = templates.filter((template) => Boolean(template.previewImage));
@@ -1396,7 +1463,7 @@ const AISlideGenerator: React.FC = () => {
 
                 {!loadingGeneratedFiles && managedGeneratedFiles.length > 0 && (
                   <div className="ai-slide-card-grid">
-                    {managedGeneratedFiles.map((file) => (
+                    {pagedManagedGeneratedFiles.map((file) => (
                       <div
                         key={file.id}
                         className={`ai-slide-file-card ${selectedGeneratedFileId === file.id ? 'active' : ''}`}
@@ -1513,9 +1580,63 @@ const AISlideGenerator: React.FC = () => {
                               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                             </svg>
                           </button>
+                          <button
+                            type="button"
+                            className="ai-slide-file-card-btn icon danger"
+                            title="Xóa"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              void handleDeleteGeneratedFile(file.id);
+                            }}
+                            disabled={deletingGeneratedFileId === file.id}
+                          >
+                            <svg
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                            >
+                              <polyline points="3 6 5 6 21 6" />
+                              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                              <path d="M10 11v6" />
+                              <path d="M14 11v6" />
+                              <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                            </svg>
+                          </button>
                         </div>
                       </div>
                     ))}
+                  </div>
+                )}
+
+                {!loadingGeneratedFiles && managedGeneratedFiles.length > 0 && (
+                  <div
+                    className="ai-slide-pagination"
+                    role="navigation"
+                    aria-label="Phan trang file"
+                  >
+                    <button
+                      type="button"
+                      className="ai-slide-pagination-btn"
+                      onClick={() => setGeneratedPage((prev) => Math.max(1, prev - 1))}
+                      disabled={generatedPage <= 1}
+                    >
+                      ← Trước
+                    </button>
+                    <span className="ai-slide-pagination-meta">
+                      Trang {generatedPage}/{totalManagedGeneratedPages} •{' '}
+                      {managedGeneratedFiles.length} file
+                    </span>
+                    <button
+                      type="button"
+                      className="ai-slide-pagination-btn"
+                      onClick={() =>
+                        setGeneratedPage((prev) => Math.min(totalManagedGeneratedPages, prev + 1))
+                      }
+                      disabled={generatedPage >= totalManagedGeneratedPages}
+                    >
+                      Sau →
+                    </button>
                   </div>
                 )}
               </div>

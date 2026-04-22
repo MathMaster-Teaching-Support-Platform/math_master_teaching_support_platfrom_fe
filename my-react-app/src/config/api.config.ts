@@ -67,9 +67,12 @@ export const API_ENDPOINTS = {
   ASSESSMENTS_GENERATE_BY_PERCENTAGE: '/assessments/generate-by-percentage',
   ASSESSMENTS_GENERATE: (assessmentId: string) => `/assessments/${assessmentId}/generate`,
   ASSESSMENTS_QUESTIONS: (assessmentId: string) => `/assessments/${assessmentId}/questions`,
-  ASSESSMENTS_QUESTIONS_BATCH: (assessmentId: string) => `/assessments/${assessmentId}/questions/batch`,
-  ASSESSMENTS_QUESTIONS_POINTS: (assessmentId: string) => `/assessments/${assessmentId}/questions/points`,
-  ASSESSMENTS_AUTO_DISTRIBUTE: (assessmentId: string) => `/assessments/${assessmentId}/auto-distribute`,
+  ASSESSMENTS_QUESTIONS_BATCH: (assessmentId: string) =>
+    `/assessments/${assessmentId}/questions/batch`,
+  ASSESSMENTS_QUESTIONS_POINTS: (assessmentId: string) =>
+    `/assessments/${assessmentId}/questions/points`,
+  ASSESSMENTS_AUTO_DISTRIBUTE: (assessmentId: string) =>
+    `/assessments/${assessmentId}/auto-distribute`,
   ASSESSMENTS_QUESTION_REMOVE: (assessmentId: string, questionId: string) =>
     `/assessments/${assessmentId}/questions/${questionId}`,
 
@@ -193,6 +196,8 @@ export const API_ENDPOINTS = {
   LESSON_SLIDES_GENERATE_PPTX_DIRECT: '/lesson-slides/generate-pptx',
   LESSON_SLIDES_GENERATE_PPTX: '/lesson-slides/generate-pptx-from-json',
   LESSON_SLIDES_GENERATED: '/lesson-slides/generated',
+  LESSON_SLIDES_GENERATED_ITEM: (generatedFileId: string) =>
+    `/lesson-slides/generated/${generatedFileId}`,
   LESSON_SLIDES_GENERATED_DOWNLOAD: (generatedFileId: string) =>
     `/lesson-slides/generated/${generatedFileId}/download`,
   LESSON_SLIDES_GENERATED_PREVIEW_URL: (generatedFileId: string) =>

@@ -383,6 +383,22 @@ export class LessonSlideService {
     };
   }
 
+  static async deleteGeneratedFile(generatedFileId: string): Promise<void> {
+    const headers = await this.getAuthHeaders(false);
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.LESSON_SLIDES_GENERATED_ITEM(generatedFileId)}`,
+      {
+        method: 'DELETE',
+        headers,
+      }
+    );
+
+    if (!response.ok) {
+      const parsedError = await this.parseApiError(response, 'Failed to delete generated slide');
+      throw this.buildApiError(parsedError.message, parsedError.code);
+    }
+  }
+
   static async getGeneratedFilePreviewUrl(generatedFileId: string): Promise<string> {
     const headers = await this.getAuthHeaders(false);
     const response = await fetch(

@@ -945,10 +945,61 @@
   color: #1e293b;
 }
 
+.ai-slide-file-card-btn.icon.danger {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.ai-slide-file-card-btn.icon.danger:hover {
+  background: #fecaca;
+  color: #991b1b;
+}
+
 .ai-slide-file-card-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   transform: none;
+}
+
+.ai-slide-pagination {
+  margin-top: 0.35rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.ai-slide-pagination-btn {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #1e293b;
+  padding: 0.34rem 0.74rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.ai-slide-pagination-btn:hover:not(:disabled) {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+}
+
+.ai-slide-pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ai-slide-pagination-meta {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #475569;
 }
 
 .ai-slide-selected-lesson {
