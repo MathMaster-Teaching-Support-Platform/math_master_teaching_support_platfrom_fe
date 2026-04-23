@@ -48,6 +48,8 @@ const coverGradients = [
 ] as const;
 
 const coverAccents = ['#1d4ed8', '#0f766e', '#047857', '#c2410c', '#be185d', '#6d28d9'] as const;
+const PAGE_SIZE = 9;
+type CourseFilterStatus = 'all' | 'published' | 'draft' | 'rejected';
 
 // ─── Create Course Modal ───────────────────────────────────────────────────────
 interface CreateModalProps {
@@ -124,8 +126,8 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
               <p>Bước {step} trên {totalSteps}</p>
             </div>
           </div>
-          <button className="modal-close" onClick={onClose}>
-            <X size={18} />
+          <button type="button" className="modal-close" onClick={onClose} aria-label="Đóng">
+            <X size={18} strokeWidth={2.5} />
           </button>
         </div>
 
@@ -465,8 +467,10 @@ const TeacherCourses: React.FC = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'draft'>('all');
+  const [filterStatus, setFilterStatus] = useState<CourseFilterStatus>('all');
+  const [filterGrade, setFilterGrade] = useState<string>('all');
   const [search, setSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   const { data: coursesData, isLoading, error } = useTeacherCourses();
@@ -477,21 +481,65 @@ const TeacherCourses: React.FC = () => {
 
   const courses: CourseResponse[] = useMemo(() => coursesData?.result ?? [], [coursesData]);
 
+  const getNormalizedStatus = (course: CourseResponse): 'published' | 'draft' | 'rejected' => {
+    if (course.status === 'REJECTED') return 'rejected';
+    if (course.published || course.status === 'PUBLISHED') return 'published';
+    return 'draft';
+  };
+
+  const getGradeMeta = (course: CourseResponse) => {
+    if (course.schoolGradeId) {
+      return {
+        value: course.schoolGradeId,
+        label: course.gradeLevel ? `Lớp ${course.gradeLevel}` : 'Có phân lớp',
+      };
+    }
+    if (course.gradeLevel) {
+      return {
+        value: `grade-${course.gradeLevel}`,
+        label: `Lớp ${course.gradeLevel}`,
+      };
+    }
+    return { value: 'unassigned', label: 'Chưa phân lớp' };
+  };
+
+  const gradeOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    courses.forEach((course) => {
+      const meta = getGradeMeta(course);
+      map.set(meta.value, meta.label);
+    });
+    return Array.from(map.entries())
+      .map(([value, label]) => ({ value, label }))
+      .sort((a, b) => a.label.localeCompare(b.label, 'vi'));
+  }, [courses]);
+
   const filteredCourses = useMemo(() => {
     return courses.filter((course) => {
+      const normalizedStatus = getNormalizedStatus(course);
       let statusMatch = true;
-      if (filterStatus === 'active') statusMatch = course.published;
-      else if (filterStatus === 'draft') statusMatch = !course.published;
+      if (filterStatus === 'published') statusMatch = normalizedStatus === 'published';
+      else if (filterStatus === 'draft') statusMatch = normalizedStatus === 'draft';
+      else if (filterStatus === 'rejected') statusMatch = normalizedStatus === 'rejected';
       const searchMatch = course.title.toLowerCase().includes(search.toLowerCase());
-      return statusMatch && searchMatch;
+      const gradeMatch = filterGrade === 'all' || getGradeMeta(course).value === filterGrade;
+      return statusMatch && searchMatch && gradeMatch;
     });
-  }, [courses, filterStatus, search]);
+  }, [courses, filterStatus, filterGrade, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredCourses.length / PAGE_SIZE));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const paginatedCourses = useMemo(() => {
+    const start = (safeCurrentPage - 1) * PAGE_SIZE;
+    return filteredCourses.slice(start, start + PAGE_SIZE);
+  }, [filteredCourses, safeCurrentPage]);
 
   const stats = useMemo(
     () => ({
       total: courses.length,
-      active: courses.filter((c) => c.published).length,
-      draft: courses.filter((c) => !c.published).length,
+      active: courses.filter((c) => getNormalizedStatus(c) === 'published').length,
+      draft: courses.filter((c) => getNormalizedStatus(c) === 'draft').length,
+      rejected: courses.filter((c) => getNormalizedStatus(c) === 'rejected').length,
       students: courses.reduce((sum, c) => sum + c.studentsCount, 0),
     }),
     [courses]
@@ -527,18 +575,29 @@ const TeacherCourses: React.FC = () => {
 
   const filterTabs = [
     { id: 'all' as const, label: `Tất cả (${stats.total})` },
-    { id: 'active' as const, label: `Công khai (${stats.active})` },
+    { id: 'published' as const, label: `Công khai (${stats.active})` },
     { id: 'draft' as const, label: `Nháp (${stats.draft})` },
+    { id: 'rejected' as const, label: `Bị từ chối (${stats.rejected})` },
   ];
 
+  const getBadgeClass = (course: CourseResponse) => {
+    if (course.status === 'PENDING_REVIEW') return 'badge-review';
+    if (course.status === 'REJECTED') return 'badge-rejected';
+    return course.published ? 'badge-live' : 'badge-draft';
+  };
+
   return (
-    <DashboardLayout role="teacher" user={{ name: 'Giáo viên', avatar: '', role: 'teacher' }}>
+    <DashboardLayout
+      role="teacher"
+      user={{ name: 'Giáo viên', avatar: '', role: 'teacher' }}
+      contentClassName="dashboard-content--flush-bleed"
+    >
       <div className="module-layout-container">
-        <section className="module-page">
+        <section className="module-page teacher-courses-page">
           {/* ── Header ── */}
           <header className="page-header courses-header-row">
             <div className="header-stack">
-              <div className="header-kicker">Course management</div>
+              <div className="header-kicker">Teacher Studio</div>
               <div className="row" style={{ gap: '0.6rem' }}>
                 <h2>Giáo trình</h2>
                 {!isLoading && <span className="count-chip">{courses.length}</span>}
@@ -602,7 +661,10 @@ const TeacherCourses: React.FC = () => {
               <input
                 placeholder="Tìm kiếm giáo trình..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setCurrentPage(1);
+                }}
               />
               {search && (
                 <button
@@ -616,12 +678,32 @@ const TeacherCourses: React.FC = () => {
               )}
             </label>
 
+            <select
+              className="grade-filter-select"
+              value={filterGrade}
+              onChange={(e) => {
+                setFilterGrade(e.target.value);
+                setCurrentPage(1);
+              }}
+              aria-label="Lọc theo lớp"
+            >
+              <option value="all">Tất cả lớp</option>
+              {gradeOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+
             <div className="pill-group">
               {filterTabs.map((tab) => (
                 <button
                   key={tab.id}
                   className={`pill-btn${filterStatus === tab.id ? ' active' : ''}`}
-                  onClick={() => setFilterStatus(tab.id)}
+                  onClick={() => {
+                    setFilterStatus(tab.id);
+                    setCurrentPage(1);
+                  }}
                 >
                   {tab.label}
                 </button>
@@ -631,14 +713,20 @@ const TeacherCourses: React.FC = () => {
             <div className="view-toggle" style={{ marginLeft: 'auto' }}>
               <button
                 className={viewMode === 'grid' ? 'active' : ''}
-                onClick={() => setViewMode('grid')}
+                onClick={() => {
+                  setViewMode('grid');
+                  setCurrentPage(1);
+                }}
                 aria-label="Hiển thị lưới"
               >
                 <Grid2x2 size={16} />
               </button>
               <button
                 className={viewMode === 'list' ? 'active' : ''}
-                onClick={() => setViewMode('list')}
+                onClick={() => {
+                  setViewMode('list');
+                  setCurrentPage(1);
+                }}
                 aria-label="Hiển thị danh sách"
               >
                 <List size={16} />
@@ -652,7 +740,7 @@ const TeacherCourses: React.FC = () => {
               <div className="summary-item summary-item--primary">
                 <span className="summary-label">Hiển thị</span>
                 <strong className="summary-value">
-                  {filteredCourses.length} / {courses.length}
+                  {paginatedCourses.length} / {filteredCourses.length}
                 </strong>
               </div>
               <div className="summary-item">
@@ -691,7 +779,7 @@ const TeacherCourses: React.FC = () => {
           {/* ── Grid ── */}
           {!isLoading && !error && filteredCourses.length > 0 && (
             <div className={`grid-cards${viewMode === 'list' ? ' list-view' : ''}`}>
-              {filteredCourses.map((course, idx) => (
+              {paginatedCourses.map((course, idx) => (
                 <article key={course.id} className="data-card course-card">
                   <div
                     className="course-cover"
@@ -704,10 +792,8 @@ const TeacherCourses: React.FC = () => {
                       <img src={course.thumbnailUrl} alt={course.title} className="cover-thumb" />
                     )}
                     <div className="cover-overlay" />
-                    <div className="cover-index">#{String(idx + 1).padStart(2, '0')}</div>
-                    <span
-                      className={`course-badge ${course.published ? 'badge-live' : 'badge-draft'}`}
-                    >
+                    <div className="cover-index">#{String((safeCurrentPage - 1) * PAGE_SIZE + idx + 1).padStart(2, '0')}</div>
+                    <span className={`course-badge ${getBadgeClass(course)}`}>
                       {course.status === 'PENDING_REVIEW' ? (
                         <>
                           <CheckCircle2 size={11} /> Chờ duyệt
@@ -798,6 +884,30 @@ const TeacherCourses: React.FC = () => {
                   </div>
                 </article>
               ))}
+            </div>
+          )}
+
+          {!isLoading && !error && filteredCourses.length > PAGE_SIZE && (
+            <div className="courses-pagination">
+              <button
+                type="button"
+                className="pagination-btn"
+                onClick={() => setCurrentPage((p) => Math.max(1, Math.min(totalPages, p) - 1))}
+                disabled={safeCurrentPage === 1}
+              >
+                <ArrowLeft size={14} /> Trước
+              </button>
+              <span className="pagination-info">
+                Trang <strong>{safeCurrentPage}</strong> / {totalPages}
+              </span>
+              <button
+                type="button"
+                className="pagination-btn"
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, Math.min(totalPages, p) + 1))}
+                disabled={safeCurrentPage === totalPages}
+              >
+                Sau <ArrowRight size={14} />
+              </button>
             </div>
           )}
 

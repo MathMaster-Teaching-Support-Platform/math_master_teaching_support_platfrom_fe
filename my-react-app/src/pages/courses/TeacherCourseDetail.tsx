@@ -150,9 +150,13 @@ const TeacherCourseDetail: React.FC = () => {
 
   if (loadingCourse) {
     return (
-      <DashboardLayout role="teacher" user={{ name: 'Giáo viên', avatar: '', role: 'teacher' }}>
+      <DashboardLayout
+        role="teacher"
+        user={{ name: 'Giáo viên', avatar: '', role: 'teacher' }}
+        contentClassName="dashboard-content--flush-bleed"
+      >
         <div className="module-layout-container">
-          <section className="module-page">
+          <section className="module-page module-page--bleed">
             <div className="empty">Đang tải thông tin giáo trình...</div>
           </section>
         </div>
@@ -162,9 +166,13 @@ const TeacherCourseDetail: React.FC = () => {
 
   if (!course) {
     return (
-      <DashboardLayout role="teacher" user={{ name: 'Giáo viên', avatar: '', role: 'teacher' }}>
+      <DashboardLayout
+        role="teacher"
+        user={{ name: 'Giáo viên', avatar: '', role: 'teacher' }}
+        contentClassName="dashboard-content--flush-bleed"
+      >
         <div className="module-layout-container">
-          <section className="module-page">
+          <section className="module-page module-page--bleed">
             <div className="empty">
               <AlertCircle size={32} style={{ marginBottom: 8, color: '#ef4444' }} />
               <p>Không tìm thấy giáo trình</p>
@@ -188,9 +196,13 @@ const TeacherCourseDetail: React.FC = () => {
   ];
 
   return (
-    <DashboardLayout role="teacher" user={{ name: 'Giáo viên', avatar: '', role: 'teacher' }}>
+    <DashboardLayout
+      role="teacher"
+      user={{ name: 'Giáo viên', avatar: '', role: 'teacher' }}
+      contentClassName="dashboard-content--flush-bleed"
+    >
       <div className="module-layout-container">
-        <section className="module-page">
+        <section className="module-page module-page--bleed">
           {/* Breadcrumb */}
           <CourseBreadcrumb courseTitle={course.title} />
 
@@ -349,8 +361,13 @@ const TeacherCourseDetail: React.FC = () => {
                   <p>Bước {editStep} trên 4</p>
                 </div>
               </div>
-              <button className="modal-close" onClick={() => setShowEditModal(false)}>
-                <X size={18} />
+              <button
+                type="button"
+                className="modal-close"
+                onClick={() => setShowEditModal(false)}
+                aria-label="Đóng"
+              >
+                <X size={18} strokeWidth={2.5} />
               </button>
             </div>
 
