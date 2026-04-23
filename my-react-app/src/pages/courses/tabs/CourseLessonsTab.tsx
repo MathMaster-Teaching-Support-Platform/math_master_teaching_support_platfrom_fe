@@ -50,6 +50,28 @@ type LessonMaterial = {
   name?: string;
   url?: string;
   size?: number;
+  key?: string;
+};
+
+const toSafeMaterial = (raw: any): LessonMaterial | null => {
+  if (!raw || typeof raw !== 'object') return null;
+
+  const id = typeof raw.id === 'string' && raw.id.trim() ? raw.id.trim() : undefined;
+  const name =
+    (typeof raw.name === 'string' && raw.name.trim() ? raw.name.trim() : undefined) ||
+    (typeof raw.fileName === 'string' && raw.fileName.trim() ? raw.fileName.trim() : undefined);
+  const key = typeof raw.key === 'string' && raw.key.trim() ? raw.key.trim() : undefined;
+
+  const rawUrl = typeof raw.url === 'string' ? raw.url.trim() : '';
+  const hasAbsoluteUrl = /^https?:\/\//i.test(rawUrl);
+  const url = hasAbsoluteUrl ? rawUrl : undefined;
+  const size = typeof raw.size === 'number' && Number.isFinite(raw.size) ? raw.size : undefined;
+
+  if (!id && !url) {
+    return null;
+  }
+
+  return { id, name, key, url, size };
 };
 
 const parseLessonMaterials = (materials?: string | null): LessonMaterial[] => {
@@ -57,10 +79,26 @@ const parseLessonMaterials = (materials?: string | null): LessonMaterial[] => {
 
   try {
     const parsed = JSON.parse(materials);
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map(toSafeMaterial).filter((item): item is LessonMaterial => Boolean(item));
   } catch {
     return [];
   }
+};
+
+const triggerBlobDownload = (blob: Blob, filename?: string) => {
+  const objectUrl = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = objectUrl;
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  if (filename) {
+    link.download = filename;
+  }
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
 };
 
 interface CourseLessonsTabProps {
@@ -749,6 +787,7 @@ function LessonRow({
   lesson,
   onRequestDeleteLesson,
   onRequestDeleteMaterial,
+  onDownloadMaterial,
   onEdit,
   deletePending,
   courseId,
@@ -757,6 +796,7 @@ function LessonRow({
   lesson: CourseLessonResponse;
   onRequestDeleteLesson: () => void;
   onRequestDeleteMaterial: (materialId: string, materialName: string) => void;
+  onDownloadMaterial: (lesson: CourseLessonResponse, material: LessonMaterial) => void;
   onEdit: () => void;
   deletePending: boolean;
 }) {
@@ -1004,9 +1044,9 @@ function LessonRow({
 
               {materialsList.length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  {materialsList.map((m: any) => (
+                  {materialsList.map((m: LessonMaterial) => (
                     <div
-                      key={m.id}
+                      key={m.id || m.name || 'material-item'}
                       style={{
                         display: 'flex',
                         justifyContent: 'space-between',
@@ -1019,24 +1059,38 @@ function LessonRow({
                     >
                       <div className="row" style={{ gap: 8 }}>
                         <FileText size={14} style={{ color: '#64748b' }} />
-                        <a
-                          href={m.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{ fontSize: '0.85rem', color: '#1e293b', textDecoration: 'none' }}
-                          onMouseOver={(e) => (e.currentTarget.style.textDecoration = 'underline')}
-                          onMouseOut={(e) => (e.currentTarget.style.textDecoration = 'none')}
-                        >
-                          {m.name}
-                        </a>
+                        {m.id ? (
+                          <button
+                            type="button"
+                            onClick={() => onDownloadMaterial(lesson, m)}
+                            style={{
+                              fontSize: '0.85rem',
+                              color: '#1e293b',
+                              background: 'transparent',
+                              border: 'none',
+                              padding: 0,
+                              cursor: 'pointer',
+                              textDecoration: 'none',
+                            }}
+                            onMouseOver={(e) =>
+                              (e.currentTarget.style.textDecoration = 'underline')
+                            }
+                            onMouseOut={(e) => (e.currentTarget.style.textDecoration = 'none')}
+                          >
+                            {m.name}
+                          </button>
+                        ) : (
+                          <span style={{ fontSize: '0.85rem', color: '#64748b' }}>{m.name}</span>
+                        )}
                         <span className="muted" style={{ fontSize: '0.75rem' }}>
-                          ({(m.size / 1024).toFixed(1)} KB)
+                          ({((m.size || 0) / 1024).toFixed(1)} KB)
                         </span>
                       </div>
                       <button
                         className="btn-icon"
                         style={{ color: '#ef4444' }}
-                        onClick={() => onRequestDeleteMaterial(m.id, m.name)}
+                        onClick={() => m.id && onRequestDeleteMaterial(m.id, m.name || 'Tài liệu')}
+                        disabled={!m.id}
                       >
                         <Trash2 size={13} />
                       </button>
@@ -1216,6 +1270,30 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
   const deleteBusy =
     deleteMutation.isPending || removeMaterialMutation.isPending || deleteSectionMutation.isPending;
 
+  const handleDownloadMaterial = async (lesson: CourseLessonResponse, material: LessonMaterial) => {
+    if (!material.id) {
+      showToast({
+        type: 'error',
+        message: 'Tài liệu chưa có mã định danh hợp lệ để tải.',
+      });
+      return;
+    }
+
+    try {
+      const { blob, filename } = await CourseService.downloadMaterial(
+        courseId,
+        lesson.id,
+        material.id
+      );
+      triggerBlobDownload(blob, filename || material.name || 'tai-lieu');
+    } catch (e) {
+      showToast({
+        type: 'error',
+        message: e instanceof Error ? e.message : 'Không thể tải tài liệu.',
+      });
+    }
+  };
+
   const submitAddSection = () => {
     const t = newSectionTitle.trim();
     if (!t) {
@@ -1365,6 +1443,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                       key={lesson.id}
                       courseId={courseId}
                       lesson={lesson}
+                      onDownloadMaterial={handleDownloadMaterial}
                       onEdit={() => setEditingLesson(lesson)}
                       onRequestDeleteLesson={() =>
                         setDeleteTarget({ k: 'lesson', lessonId: lesson.id })
@@ -1473,6 +1552,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                               key={lesson.id}
                               courseId={courseId}
                               lesson={lesson}
+                              onDownloadMaterial={handleDownloadMaterial}
                               onEdit={() => setEditingLesson(lesson)}
                               onRequestDeleteLesson={() =>
                                 setDeleteTarget({ k: 'lesson', lessonId: lesson.id })

@@ -16,7 +16,6 @@ import {
   useUpdateProgress,
   useCustomCourseSections,
 } from '../../../hooks/useCourses';
-import { AuthService } from '../../../services/api/auth.service';
 import { CourseService } from '../../../services/api/course.service';
 import { VideoUploadService } from '../../../services/api/videoUpload.service';
 import type { CourseLessonResponse } from '../../../types';
@@ -75,38 +74,13 @@ const triggerFileDownload = (url: string, filename?: string) => {
   const link = document.createElement('a');
   link.href = url;
   link.rel = 'noopener noreferrer';
-  link.target = '_self';
+  link.target = '_blank';
   if (filename) {
     link.download = filename;
   }
   document.body.appendChild(link);
   link.click();
   link.remove();
-};
-
-const downloadWithAuth = async (url: string, filename?: string): Promise<boolean> => {
-  const token = AuthService.getToken();
-  const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
-
-  try {
-    const response = await fetch(url, {
-      method: 'GET',
-      headers,
-      credentials: 'include',
-    });
-
-    if (!response.ok) {
-      return false;
-    }
-
-    const blob = await response.blob();
-    const objectUrl = URL.createObjectURL(blob);
-    triggerFileDownload(objectUrl, filename);
-    setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
-    return true;
-  } catch {
-    return false;
-  }
 };
 
 // Inline Video Player Component
@@ -244,10 +218,7 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
 
     if (!material.id) {
       if (material.url) {
-        const downloaded = await downloadWithAuth(material.url, fallbackName);
-        if (!downloaded) {
-          triggerFileDownload(material.url, fallbackName);
-        }
+        triggerFileDownload(material.url, fallbackName);
         return;
       }
       window.alert('Tài liệu hiện chưa sẵn sàng để tải. Vui lòng tải lại trang và thử lại.');
@@ -255,13 +226,14 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
     }
 
     try {
-      const response = await CourseService.getMaterialDownloadUrl(courseId, lesson.id, material.id);
-      if (response.result) {
-        const downloaded = await downloadWithAuth(response.result, fallbackName);
-        if (!downloaded) {
-          triggerFileDownload(response.result, fallbackName);
-        }
-      }
+      const { blob, filename } = await CourseService.downloadMaterial(
+        courseId,
+        lesson.id,
+        material.id
+      );
+      const objectUrl = URL.createObjectURL(blob);
+      triggerFileDownload(objectUrl, filename || fallbackName);
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Không thể tải tài liệu.';
       window.alert(message);

@@ -575,7 +575,7 @@ export class CourseService {
     const payload = await this.handleResponse<any>(res);
     const result = payload?.result;
 
-    const url =
+    const rawUrl =
       (typeof result === 'string' ? result : undefined) ||
       (result && typeof result === 'object'
         ? result.downloadUrl || result.url || result.preSignedUrl || result.presignedUrl
@@ -585,14 +585,51 @@ export class CourseService {
       payload?.preSignedUrl ||
       payload?.presignedUrl;
 
-    if (!url) {
+    if (!rawUrl) {
       throw new Error('Không nhận được URL tải tài liệu từ hệ thống.');
+    }
+
+    const url = String(rawUrl).trim();
+    const isAbsoluteHttpUrl = /^https?:\/\//i.test(url);
+    const isStorageKeyPath = /(^|\/)course-materials\//i.test(url);
+
+    if (!isAbsoluteHttpUrl || isStorageKeyPath) {
+      throw new Error('URL tải tài liệu không hợp lệ. Vui lòng tải lại dữ liệu bài học.');
     }
 
     return {
       ...(payload || {}),
       result: url,
     } as ApiResponse<string>;
+  }
+
+  static async downloadMaterial(
+    courseId: string,
+    lessonId: string,
+    materialId: string
+  ): Promise<{ blob: Blob; filename?: string }> {
+    const headers = await this.getAuthHeaders();
+    const res = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.COURSE_LESSON_MATERIAL_DOWNLOAD(courseId, lessonId, materialId)}`,
+      { method: 'GET', headers }
+    );
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      const message = (err as { message?: string }).message || 'Không thể tải tài liệu.';
+      throw Object.assign(new Error(message), { response: { data: err } });
+    }
+
+    const disposition = res.headers.get('content-disposition') || '';
+    const utf8Match = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+    const asciiMatch = disposition.match(/filename="?([^";]+)"?/i);
+    const rawName = utf8Match?.[1] || asciiMatch?.[1] || '';
+    const filename = rawName ? decodeURIComponent(rawName) : undefined;
+
+    return {
+      blob: await res.blob(),
+      filename,
+    };
   }
 
   // ─── Course Reviews ────────────────────────────────────────────────────────
