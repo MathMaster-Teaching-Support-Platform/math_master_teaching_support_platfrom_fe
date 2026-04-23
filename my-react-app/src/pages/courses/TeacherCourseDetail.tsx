@@ -1,3 +1,4 @@
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   AlertCircle,
   ArrowLeft,
@@ -10,37 +11,36 @@ import {
   FileText,
   GraduationCap,
   Pencil,
+  Save,
+  Star,
   Trash2,
   Users,
-  Star,
   X,
-  Save,
 } from 'lucide-react';
-import { AnimatePresence, motion } from 'framer-motion';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { CourseBreadcrumb } from '../../components/course/CourseBreadcrumb';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { useToast } from '../../context/ToastContext';
-import { CourseBreadcrumb } from '../../components/course/CourseBreadcrumb';
 import {
   useCourseDetail,
+  useCourseStudents,
   useDeleteCourse,
   usePublishCourse,
   useSubmitCourseForReview,
-  useCourseStudents,
   useUpdateCourse,
 } from '../../hooks/useCourses';
 import '../../styles/module-refactor.css';
-import './TeacherCourses.css';
+import type { CourseLevel, UpdateCourseRequest } from '../../types';
 import './TeacherCourseDetail.css';
+import './TeacherCourses.css';
 import './tabs/CourseOverviewTab.css';
 import './tabs/course-detail-tabs.css';
-import type { CourseLevel, UpdateCourseRequest } from '../../types';
 
 // Import tab components
-import CourseOverviewTab from './tabs/CourseOverviewTab.tsx';
-import CourseLessonsTab from './tabs/CourseLessonsTab.tsx';
 import CourseAssessmentsTab from './tabs/CourseAssessmentsTab.tsx';
+import CourseLessonsTab from './tabs/CourseLessonsTab.tsx';
+import CourseOverviewTab from './tabs/CourseOverviewTab.tsx';
 import CourseReviewsTab from './tabs/CourseReviewsTab.tsx';
 import CourseStudentsTab from './tabs/CourseStudentsTab.tsx';
 

@@ -1,6 +1,6 @@
+import { Edit2, Filter, MessageSquare, Send, Star } from 'lucide-react';
 import React, { useState } from 'react';
-import { Star, MessageSquare, Send, Edit2, Filter } from 'lucide-react';
-import { useCourseReviews, useReviewSummary, useReplyToReview } from '../../../hooks/useCourses';
+import { useCourseReviews, useReplyToReview, useReviewSummary } from '../../../hooks/useCourses';
 import './course-detail-tabs.css';
 
 interface CourseReviewsTabProps {
