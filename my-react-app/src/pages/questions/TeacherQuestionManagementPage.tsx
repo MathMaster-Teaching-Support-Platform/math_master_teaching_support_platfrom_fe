@@ -18,6 +18,7 @@ import { useNavigate } from 'react-router-dom';
 import MathText from '../../components/common/MathText';
 import Pagination from '../../components/common/Pagination';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { useToast } from '../../context/ToastContext';
 import { useDebounce } from '../../hooks/useDebounce';
 import {
   useCreateQuestion,
@@ -33,9 +34,9 @@ import type {
   QuestionType,
   UpdateQuestionRequest,
 } from '../../types/question';
-import { useToast } from '../../context/ToastContext';
-import './TeacherQuestionManagementPage.css';
+import '../courses/TeacherCourses.css';
 import { QuestionBulkImportModal } from './QuestionBulkImportModal';
+import './TeacherQuestionManagementPage.css';
 
 type FormMode = 'create' | 'edit';
 
@@ -122,7 +123,7 @@ function QuestionFormModal({
 }>) {
   if (!isOpen) return null;
 
-  const submitLabel = mode === 'create' ? 'Tao cau hoi' : 'Luu thay doi';
+  const submitLabel = mode === 'create' ? 'Tao câu hỏi' : 'Luu thay doi';
 
   return (
     <div className="module-layout-container">
@@ -131,10 +132,10 @@ function QuestionFormModal({
           <header className="modal-header">
             <div>
               <h3 style={{ margin: 0 }}>
-                {mode === 'create' ? 'Tao cau hoi moi' : 'Cap nhat cau hoi'}
+                {mode === 'create' ? 'Tao câu hỏi moi' : 'Cap nhat câu hỏi'}
               </h3>
               <p className="muted" style={{ margin: '6px 0 0' }}>
-                Ho tro soan cau hoi, gan tag va cap nhat noi dung nhanh.
+                Ho tro soan câu hỏi, gan tag va cap nhat noi dung nhanh.
               </p>
             </div>
             <button className="icon-btn" onClick={onClose}>
@@ -145,21 +146,21 @@ function QuestionFormModal({
           <div className="modal-body">
             <label>
               <p className="muted" style={{ marginBottom: 6 }}>
-                Noi dung cau hoi
+                Noi dung câu hỏi
               </p>
               <textarea
                 className="textarea"
                 rows={4}
                 value={form.questionText}
                 onChange={(event) => onChange('questionText', event.target.value)}
-                placeholder="Nhap noi dung cau hoi"
+                placeholder="Nhap noi dung câu hỏi"
               />
             </label>
 
             <div className="form-grid">
               <label>
                 <p className="muted" style={{ marginBottom: 6 }}>
-                  Loai cau hoi
+                  Loai câu hỏi
                 </p>
                 <select
                   className="select"
@@ -372,7 +373,7 @@ export default function TeacherQuestionManagementPage() {
   async function handleSubmitForm() {
     const questionText = form.questionText.trim();
     if (!questionText) {
-      setFormError('Noi dung cau hoi khong duoc de trong.');
+      setFormError('Noi dung câu hỏi khong duoc de trong.');
       return;
     }
 
@@ -412,16 +413,19 @@ export default function TeacherQuestionManagementPage() {
         await updateMutation.mutateAsync({ questionId: selectedQuestion.id, request: payload });
       }
 
-      showToast({ type: 'success', message: formMode === 'create' ? 'Tạo câu hỏi thành công.' : 'Cập nhật câu hỏi thành công.' });
+      showToast({
+        type: 'success',
+        message: formMode === 'create' ? 'Tạo câu hỏi thành công.' : 'Cập nhật câu hỏi thành công.',
+      });
       closeModal();
       await refetch();
     } catch (error_) {
-      setFormError(error_ instanceof Error ? error_.message : 'Khong the luu cau hoi.');
+      setFormError(error_ instanceof Error ? error_.message : 'Khong the luu câu hỏi.');
     }
   }
 
   async function handleDeleteQuestion(question: QuestionResponse) {
-    const isConfirmed = globalThis.confirm('Ban co chac chan muon xoa cau hoi nay?');
+    const isConfirmed = globalThis.confirm('Ban co chac chan muon xoa câu hỏi nay?');
     if (!isConfirmed) return;
 
     try {
@@ -429,7 +433,10 @@ export default function TeacherQuestionManagementPage() {
       showToast({ type: 'success', message: 'Đã xóa câu hỏi thành công.' });
       await refetch();
     } catch (error_) {
-      showToast({ type: 'error', message: error_ instanceof Error ? error_.message : 'Không thể xóa câu hỏi.' });
+      showToast({
+        type: 'error',
+        message: error_ instanceof Error ? error_.message : 'Không thể xóa câu hỏi.',
+      });
     }
   }
 
@@ -440,12 +447,13 @@ export default function TeacherQuestionManagementPage() {
       role="teacher"
       user={{ name: 'Teacher', avatar: '', role: 'teacher' }}
       notificationCount={0}
+      contentClassName="dashboard-content--flush-bleed"
     >
       <div className="module-layout-container">
-        <section className="module-page">
-          <header className="page-header tqm-header-row">
+        <section className="module-page teacher-courses-page teacher-question-management-page">
+          <header className="page-header courses-header-row">
             <div className="header-stack">
-              <div className="header-kicker">My Questions</div>
+              <div className="header-kicker">Teacher Studio</div>
               <div className="row" style={{ gap: '0.6rem' }}>
                 <h2>Quản lý câu hỏi của tôi</h2>
                 {!isLoading && <span className="count-chip">{questions.length}</span>}
@@ -479,9 +487,7 @@ export default function TeacherQuestionManagementPage() {
                 <p className="muted" style={{ margin: 0, fontSize: '0.78rem' }}>
                   Tổng câu hỏi
                 </p>
-                <h3 style={{ margin: 0, fontSize: '1.5rem' }}>
-                  {isLoading ? '—' : totalElements}
-                </h3>
+                <h3 style={{ margin: 0, fontSize: '1.5rem' }}>{isLoading ? '—' : totalElements}</h3>
               </div>
             </div>
             <div className="stat-card stat-emerald">
@@ -564,10 +570,11 @@ export default function TeacherQuestionManagementPage() {
           </nav>
 
           <div className="toolbar">
-            <span className="search-box" style={{ flex: '1 1 240px' }}>
-              <Search size={15} className="search-box__icon" />
+            <label className="search-box" style={{ flex: '1 1 240px' }}>
+              <span className="search-box__icon" aria-hidden="true">
+                <Search size={15} />
+              </span>
               <input
-                className="input"
                 placeholder="Tìm theo nội dung câu hỏi"
                 value={searchName}
                 onChange={(event) => {
@@ -576,7 +583,9 @@ export default function TeacherQuestionManagementPage() {
               />
               {searchName && (
                 <button
+                  type="button"
                   className="search-box__clear"
+                  aria-label="Xóa nội dung tìm kiếm"
                   onClick={() => {
                     setSearchName('');
                   }}
@@ -584,7 +593,7 @@ export default function TeacherQuestionManagementPage() {
                   <X size={13} />
                 </button>
               )}
-            </span>
+            </label>
 
             <button className="btn secondary" onClick={() => void refetch()}>
               <RefreshCw size={14} />
@@ -638,7 +647,7 @@ export default function TeacherQuestionManagementPage() {
               <table className="table">
                 <thead>
                   <tr>
-                    <th>Cau hoi</th>
+                    <th>Câu hỏi</th>
                     <th>Loai</th>
                     <th>Do kho</th>
                     <th>Diem</th>

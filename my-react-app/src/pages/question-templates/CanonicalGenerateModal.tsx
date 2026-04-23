@@ -1,8 +1,11 @@
 import { X } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useGenerateQuestionsFromCanonical, useGetCanonicalQuestionById } from '../../hooks/useCanonicalQuestion';
-import type { QuestionTemplateResponse } from '../../types/questionTemplate';
 import MathText from '../../components/common/MathText';
+import {
+  useGenerateQuestionsFromCanonical,
+  useGetCanonicalQuestionById,
+} from '../../hooks/useCanonicalQuestion';
+import type { QuestionTemplateResponse } from '../../types/questionTemplate';
 
 type Props = {
   isOpen: boolean;
@@ -24,7 +27,10 @@ export function CanonicalGenerateModal({
   const [error, setError] = useState<string | null>(null);
 
   const generateMutation = useGenerateQuestionsFromCanonical();
-  const canonicalDetailQuery = useGetCanonicalQuestionById(canonicalId, isOpen && Boolean(canonicalId));
+  const canonicalDetailQuery = useGetCanonicalQuestionById(
+    canonicalId,
+    isOpen && Boolean(canonicalId)
+  );
 
   useEffect(() => {
     if (!isOpen) return;
@@ -58,10 +64,12 @@ export function CanonicalGenerateModal({
       });
 
       const totalGenerated = response.result?.totalGenerated ?? 0;
-      onGenerated(`Da sinh ${totalGenerated} cau hoi theo canonical flow.`);
+      onGenerated(`Da sinh ${totalGenerated} câu hỏi theo canonical flow.`);
       onClose();
     } catch (error_) {
-      setError(error_ instanceof Error ? error_.message : 'Khong the sinh cau hoi tu canonical flow.');
+      setError(
+        error_ instanceof Error ? error_.message : 'Khong the sinh câu hỏi tu canonical flow.'
+      );
     }
   }
 
@@ -72,7 +80,7 @@ export function CanonicalGenerateModal({
           <div>
             <h3>Generate From Canonical</h3>
             <p className="muted" style={{ marginTop: 4 }}>
-              Chon template de bind parameter va sinh cau hoi theo canonical.
+              Chon template de bind parameter va sinh câu hỏi theo canonical.
             </p>
           </div>
           <button className="icon-btn" onClick={onClose}>
@@ -82,10 +90,16 @@ export function CanonicalGenerateModal({
 
         <form onSubmit={submit}>
           <div className="modal-body">
-            {error && <div className="empty" style={{ color: '#b91c1c' }}>{error}</div>}
+            {error && (
+              <div className="empty" style={{ color: '#b91c1c' }}>
+                {error}
+              </div>
+            )}
 
             <label>
-              <p className="muted" style={{ marginBottom: 6 }}>Template</p>
+              <p className="muted" style={{ marginBottom: 6 }}>
+                Template
+              </p>
               <select
                 className="select"
                 value={templateId}
@@ -101,7 +115,9 @@ export function CanonicalGenerateModal({
             </label>
 
             <label>
-              <p className="muted" style={{ marginBottom: 6 }}>Count</p>
+              <p className="muted" style={{ marginBottom: 6 }}>
+                Count
+              </p>
               <input
                 className="input"
                 type="number"
@@ -114,8 +130,12 @@ export function CanonicalGenerateModal({
             {canonicalDetailQuery.data?.result && (
               <div className="data-card" style={{ minHeight: 0 }}>
                 <h3>Preview canonical question</h3>
-                <p><MathText text={canonicalDetailQuery.data.result.problemText} /></p>
-                <p className="muted" style={{ marginTop: 8 }}>Solution:</p>
+                <p>
+                  <MathText text={canonicalDetailQuery.data.result.problemText} />
+                </p>
+                <p className="muted" style={{ marginTop: 8 }}>
+                  Solution:
+                </p>
                 <div className="preview-box">
                   <MathText text={canonicalDetailQuery.data.result.solutionSteps} />
                 </div>
@@ -124,9 +144,11 @@ export function CanonicalGenerateModal({
           </div>
 
           <div className="modal-footer">
-            <button type="button" className="btn secondary" onClick={onClose}>Dong</button>
+            <button type="button" className="btn secondary" onClick={onClose}>
+              Dong
+            </button>
             <button type="submit" className="btn" disabled={generateMutation.isPending}>
-              {generateMutation.isPending ? 'Dang sinh...' : 'Sinh cau hoi'}
+              {generateMutation.isPending ? 'Dang sinh...' : 'Sinh câu hỏi'}
             </button>
           </div>
         </form>

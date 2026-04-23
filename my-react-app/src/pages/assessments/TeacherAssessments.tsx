@@ -31,6 +31,7 @@ import {
 import { useGetMyExamMatrices } from '../../hooks/useExamMatrix';
 import { useToast } from '../../context/ToastContext';
 import '../../styles/module-refactor.css';
+import '../courses/TeacherCourses.css';
 import type { AssessmentRequest, AssessmentResponse, AssessmentStatus } from '../../types';
 import AssessmentModal from './AssessmentModal';
 
@@ -294,12 +295,13 @@ export default function TeacherAssessments() {
       role="teacher"
       user={{ name: 'Teacher', avatar: '', role: 'teacher' }}
       notificationCount={0}
+      contentClassName="dashboard-content--flush-bleed"
     >
       <div className="module-layout-container">
-        <section className="module-page">
-          <header className="page-header ta-assessments-header-row">
+        <section className="module-page teacher-courses-page teacher-assessments-page">
+          <header className="page-header courses-header-row">
             <div className="header-stack">
-              <div className="header-kicker">Assessments</div>
+              <div className="header-kicker">Teacher Studio</div>
               <div className="row" style={{ gap: '0.6rem' }}>
                 <h2>Bài Kiểm Tra</h2>
                 {!isLoading && <span className="count-chip">{stats.total}</span>}
@@ -368,20 +370,26 @@ export default function TeacherAssessments() {
           </div>
 
           <div className="toolbar">
-            <span className="search-box" style={{ flex: '1 1 240px' }}>
-              <Search size={15} className="search-box__icon" />
+            <label className="search-box" style={{ flex: '1 1 240px' }}>
+              <span className="search-box__icon" aria-hidden="true">
+                <Search size={15} />
+              </span>
               <input
-                className="input"
-                placeholder="Tìm bài kiểm tra"
+                placeholder="Tìm bài kiểm tra..."
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
               />
               {search && (
-                <button className="search-box__clear" onClick={() => setSearch('')}>
+                <button
+                  type="button"
+                  className="search-box__clear"
+                  aria-label="Xóa nội dung tìm kiếm"
+                  onClick={() => setSearch('')}
+                >
                   <X size={13} />
                 </button>
               )}
-            </span>
+            </label>
 
             <div className="pill-group">
               {statusFilters.map((item) => (
@@ -404,7 +412,13 @@ export default function TeacherAssessments() {
             </button>
           </div>
 
-          {isLoading && <div className="empty">Đang tải danh sách bài kiểm tra...</div>}
+          {isLoading && (
+            <div className="skeleton-grid" aria-hidden>
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="skeleton-card" />
+              ))}
+            </div>
+          )}
           {isError && (
             <div className="empty">
               {error instanceof Error ? error.message : 'Không thể tải danh sách bài kiểm tra'}
@@ -417,7 +431,7 @@ export default function TeacherAssessments() {
           {!isLoading && !isError && assessments.length > 0 && (
             <div className="grid-cards">
               {assessments.map((assessment) => (
-                <article key={assessment.id} className="data-card">
+                <article key={assessment.id} className="data-card course-card">
                   <div className="row">
                     <span className={statusClass[assessment.status]}>
                       {cardStatusLabel[assessment.status]}

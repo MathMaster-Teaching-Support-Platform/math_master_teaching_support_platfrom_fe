@@ -1744,3 +1744,44 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ══ Teacher Studio — pages reusing this shell (materials, mindmaps, matrices, Q bank, v.v.) ══ */
+.module-layout-container .teacher-courses-page section.hero-card,
+.module-layout-container .teacher-courses-page .hero-card {
+  background: linear-gradient(165deg, #fffefb 0%, #f6f0e6 45%, #faf7f0 100%);
+  border: 1px solid #e8e6dc;
+  border-radius: 16px;
+  box-shadow: 0 8px 28px rgba(45, 35, 25, 0.07);
+  color: #141413;
+}
+
+.module-layout-container .teacher-courses-page .hero-card h2,
+.module-layout-container .teacher-courses-page section.hero-card h2 {
+  color: #141413;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.module-layout-container .teacher-courses-page .hero-kicker {
+  color: #7a5a4d;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+}
+
+.module-layout-container .teacher-courses-page .qb-quicknav,
+.module-layout-container .teacher-courses-page .abf-quicknav,
+.module-layout-container .teacher-courses-page .tqm-quicknav {
+  border-radius: 14px;
+  border: 1px solid #e8e6dc;
+  background: #faf9f5;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+
+/* Ma trận đề — thẻ bước luồng (ghi đè nền xám lạnh) */
+.module-layout-container .teacher-courses-page .exam-matrix-workflow-hero > div:first-of-type > div {
+  background: #faf7f3 !important;
+  border: 1px solid #e8e6dc !important;
+  border-radius: 12px !important;
+}

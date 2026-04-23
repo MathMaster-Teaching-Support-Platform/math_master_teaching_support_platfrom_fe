@@ -67,6 +67,7 @@ import {
 import { CanonicalGenerateModal } from './CanonicalGenerateModal';
 import { CanonicalQuestionModal } from './CanonicalQuestionModal';
 import { useToast } from '../../context/ToastContext';
+import '../courses/TeacherCourses.css';
 import './template-review.css';
 import { TemplateBulkImportModal } from './TemplateBulkImportModal';
 import { TemplateFormModal } from './TemplateFormModal';
@@ -577,13 +578,14 @@ export function TemplateDashboard() {
       role="teacher"
       user={{ name: 'Teacher', avatar: '', role: 'teacher' }}
       notificationCount={0}
+      contentClassName="dashboard-content--flush-bleed"
     >
       <div className="module-layout-container">
-        <section className="module-page">
+        <section className="module-page teacher-courses-page template-dashboard-page">
           {/* ── Header ── */}
-          <header className="page-header mindmaps-header-row">
+          <header className="page-header courses-header-row">
             <div className="header-stack">
-              <div className="header-kicker">Template management</div>
+              <div className="header-kicker">Teacher Studio</div>
               <div className="row" style={{ gap: '0.6rem' }}>
                 <h2>Mẫu câu hỏi</h2>
                 {!isLoading && <span className="count-chip">{templates.length}</span>}
@@ -792,7 +794,7 @@ export function TemplateDashboard() {
             </div>
           </section>
 
-          <section className="data-card" style={{ minHeight: 0 }}>
+          <section className="data-card course-card" style={{ minHeight: 0 }}>
             <div className="row" style={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
               <div>
                 <h3>Bài toán gốc gần đây</h3>
@@ -988,7 +990,7 @@ export function TemplateDashboard() {
           {!isLoading && !isError && templates.length > 0 && (
             <div className={`grid-cards${viewMode === 'list' ? ' list-view' : ''}`}>
               {templates.map((template, idx) => (
-                <article key={template.id} className="data-card mindmap-card">
+                <article key={template.id} className="data-card mindmap-card course-card">
                   <div
                     className="mindmap-cover"
                     style={{

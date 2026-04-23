@@ -20,6 +20,7 @@ import { AuthService } from '../../services/api/auth.service';
 import { LessonSlideService } from '../../services/api/lesson-slide.service';
 import { MindmapService } from '../../services/api/mindmap.service';
 import '../../styles/module-refactor.css';
+import '../courses/TeacherCourses.css';
 import type { Mindmap } from '../../types';
 import type { LessonSlideGeneratedFile } from '../../types/lessonSlide.types';
 import './MaterialsGenerator.css';
@@ -365,15 +366,17 @@ const MaterialsGenerator: React.FC = () => {
       role="teacher"
       user={{ name: userName, avatar: userAvatar, role: 'teacher' }}
       notificationCount={notificationCount}
+      contentClassName="dashboard-content--flush-bleed"
     >
       <div className="module-layout-container">
-        <section className="module-page">
+        <section className="module-page teacher-courses-page materials-generator-page" lang="vi">
           {/* ── Header ── */}
-          <header className="page-header materials-header-row">
+          <header className="page-header courses-header-row">
             <div className="header-stack">
-              <div className="header-kicker">AI Content Studio</div>
+              <div className="header-kicker">Teacher Studio</div>
               <div className="row" style={{ gap: '0.6rem' }}>
-                <h2>Tạo Tài Liệu với AI</h2>
+                <h2>Tạo tài liệu với AI</h2>
+                {!loading && <span className="count-chip">{stats.total}</span>}
               </div>
               <p className="header-sub">
                 Sử dụng AI để tạo slide, sơ đồ tư duy, hình vẽ và tài liệu giảng dạy chuyên nghiệp.
@@ -397,7 +400,7 @@ const MaterialsGenerator: React.FC = () => {
                   <p>Tổng tài liệu</p>
                 </div>
               </div>
-              <div className="stat-card stat-indigo">
+              <div className="stat-card stat-amber">
                 <div className="stat-icon-wrap">
                   <Presentation size={20} />
                 </div>

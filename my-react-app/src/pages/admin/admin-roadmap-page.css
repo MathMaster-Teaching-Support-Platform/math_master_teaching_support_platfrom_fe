@@ -18,7 +18,7 @@
 
 .admin-roadmap-page__header h1 {
   margin: 0;
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--f-heading, 'Be Vietnam Pro', system-ui, sans-serif);
   font-size: clamp(1.75rem, 2.2vw, 2.25rem);
   font-weight: 500;
   line-height: 1.2;
@@ -455,7 +455,7 @@
   align-items: center;
   gap: 0.45rem;
   margin: 0;
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--f-heading, 'Be Vietnam Pro', system-ui, sans-serif);
   font-size: 1.26rem;
   font-weight: 500;
   color: #141413;

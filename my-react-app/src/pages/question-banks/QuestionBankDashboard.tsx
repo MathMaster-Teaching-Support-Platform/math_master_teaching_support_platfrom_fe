@@ -33,6 +33,7 @@ import {
 import '../../styles/module-refactor.css';
 import type { QuestionBankRequest, QuestionBankResponse } from '../../types/questionBank';
 import { useToast } from '../../context/ToastContext';
+import '../courses/TeacherCourses.css';
 import './QuestionBankDashboard.css';
 import { QuestionBankFormModal } from './QuestionBankFormModal';
 
@@ -157,13 +158,14 @@ export function QuestionBankDashboard() {
       role="teacher"
       user={{ name: 'Teacher', avatar: '', role: 'teacher' }}
       notificationCount={0}
+      contentClassName="dashboard-content--flush-bleed"
     >
       <div className="module-layout-container">
-        <section className="module-page">
+        <section className="module-page teacher-courses-page question-bank-dashboard-page">
           {/* ── Header ── */}
-          <header className="page-header qb-header-row">
+          <header className="page-header courses-header-row">
             <div className="header-stack">
-              <div className="header-kicker">Question Banking</div>
+              <div className="header-kicker">Teacher Studio</div>
               <div className="row" style={{ gap: '0.6rem' }}>
                 <h2>Ngân hàng câu hỏi</h2>
                 {!isLoading && <span className="count-chip">{banks.length}</span>}
@@ -373,7 +375,7 @@ export function QuestionBankDashboard() {
           {!isLoading && !isError && banks.length > 0 && (
             <div className={`grid-cards${viewMode === 'list' ? ' list-view' : ''}`}>
               {banks.map((bank, idx) => (
-                <article key={bank.id} className="data-card bank-card">
+                <article key={bank.id} className="data-card bank-card course-card">
                   <div
                     className="bank-cover"
                     style={{

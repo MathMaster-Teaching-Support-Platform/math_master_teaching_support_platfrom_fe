@@ -397,7 +397,7 @@
   font-weight: 500;
   line-height: 1.3;
   color: #141413;
-  font-family: var(--f-heading, Georgia, 'Times New Roman', serif);
+  font-family: var(--f-heading);
 }
 
 .course-overview-tab__panel-mute {
@@ -419,7 +419,7 @@
   line-height: 1.65;
   color: #5e5d59;
   max-width: 65ch;
-  font-family: var(--f-heading, Georgia, 'Times New Roman', serif);
+  font-family: var(--f-heading);
 }
 
 .course-overview-tab__thumb-hint {

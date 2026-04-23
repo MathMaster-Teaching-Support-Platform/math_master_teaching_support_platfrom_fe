@@ -11,6 +11,7 @@ import {
 } from '../../hooks/useAssessment';
 import { useGetMyExamMatrices } from '../../hooks/useExamMatrix';
 import '../../styles/module-refactor.css';
+import '../courses/TeacherCourses.css';
 import { MatrixStatus } from '../../types/examMatrix';
 import './assessment-builder-flow.css';
 
@@ -105,12 +106,13 @@ export default function AssessmentBuilderFlow() {
       role="teacher"
       user={{ name: 'Teacher', avatar: '', role: 'teacher' }}
       notificationCount={0}
+      contentClassName="dashboard-content--flush-bleed"
     >
       <div className="module-layout-container">
-        <section className="module-page">
-          <header className="page-header abf-header-row">
+        <section className="module-page teacher-courses-page assessment-builder-flow-page">
+          <header className="page-header courses-header-row">
             <div className="header-stack">
-              <div className="header-kicker">Assessment Builder</div>
+              <div className="header-kicker">Teacher Studio</div>
               <div className="row" style={{ gap: '0.6rem' }}>
                 <h2>Trình tạo đề thi</h2>
               </div>
@@ -167,7 +169,7 @@ export default function AssessmentBuilderFlow() {
             </button>
           </nav>
 
-          <section className="data-card" style={{ minHeight: 0 }}>
+          <section className="data-card course-card" style={{ minHeight: 0 }}>
             <div style={{ marginBottom: '0.85rem' }}>
               <h3 style={{ margin: '0 0 0.2rem' }}>Quy trình tạo đề 4 bước</h3>
               <p className="muted" style={{ margin: 0 }}>

@@ -93,7 +93,7 @@
 }
 .ob-sym {
   position: absolute;
-  font-family: 'Be Vietnam Pro', Georgia, serif;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
   font-weight: 300;
   color: rgba(255, 255, 255, 0.065);
   user-select: none;

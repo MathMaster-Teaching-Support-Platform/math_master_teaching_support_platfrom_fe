@@ -683,11 +683,26 @@ export default function RoadmapDetailPage() {
             <div className="rdp-feedback__icon">⭐</div>
             <div>
               <h3 className="rdp-feedback__title">Đánh giá lộ trình</h3>
-              <p className="rdp-feedback__sub">Chia sẻ cảm nhận của bạn về lộ trình học này.</p>
+              <p className="rdp-feedback__sub">
+                {myFeedback 
+                  ? 'Cập nhật đánh giá của bạn về lộ trình học này.'
+                  : 'Chia sẻ cảm nhận của bạn về lộ trình học này.'}
+              </p>
             </div>
           </div>
+          {myFeedbackQuery.isLoading && (
+            <p className="rdp-feedback__loading">Đang tải đánh giá...</p>
+          )}
           {!myFeedbackQuery.isLoading && (
             <>
+              {myFeedback && (
+                <div className="rdp-feedback__existing">
+                  <span className="rdp-feedback__existing-badge">✓ Đã đánh giá</span>
+                  <span className="rdp-feedback__existing-date">
+                    Cập nhật lần cuối: {new Date(myFeedback.updatedAt).toLocaleDateString('vi-VN')}
+                  </span>
+                </div>
+              )}
               <div className="rdp-stars">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <button
@@ -734,7 +749,7 @@ export default function RoadmapDetailPage() {
                 onClick={submitRoadmapFeedback}
                 disabled={submitFeedback.isPending || !feedbackIsValid}
               >
-                {submitFeedback.isPending ? 'Đang lưu...' : '✓ Gửi đánh giá'}
+                {submitFeedback.isPending ? 'Đang lưu...' : myFeedback ? '✓ Cập nhật đánh giá' : '✓ Gửi đánh giá'}
               </button>
             </>
           )}

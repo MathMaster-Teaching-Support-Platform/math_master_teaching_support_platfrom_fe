@@ -23,6 +23,7 @@ import { LessonSlideService } from '../../services/api/lesson-slide.service';
 import { MindmapService } from '../../services/api/mindmap.service';
 import { notifySubscriptionUpdated } from '../../services/api/subscription-plan.service';
 import '../../styles/module-refactor.css';
+import '../courses/TeacherCourses.css';
 import type { Mindmap } from '../../types';
 import type {
   ChapterBySubject,
@@ -405,13 +406,14 @@ export default function TeacherMindmaps() {
       role="teacher"
       user={{ name: mockTeacher.name, avatar: mockTeacher.avatar ?? '', role: 'teacher' }}
       notificationCount={5}
+      contentClassName="dashboard-content--flush-bleed"
     >
       <div className="module-layout-container">
-        <section className="module-page">
+        <section className="module-page teacher-courses-page teacher-mindmaps-page">
           {/* ── Header ── */}
-          <header className="page-header mindmaps-header-row">
+          <header className="page-header courses-header-row">
             <div className="header-stack">
-              <div className="header-kicker">Mindmap management</div>
+              <div className="header-kicker">Teacher Studio</div>
               <div className="row" style={{ gap: '0.6rem' }}>
                 <h2>Mindmap</h2>
                 {!loading && <span className="count-chip">{mindmaps.length}</span>}
@@ -772,7 +774,7 @@ export default function TeacherMindmaps() {
           {!loading && !error && filteredMindmaps.length > 0 && (
             <div className={`grid-cards${viewMode === 'list' ? ' list-view' : ''}`}>
               {filteredMindmaps.map((mindmap, idx) => (
-                <article key={mindmap.id} className="data-card mindmap-card">
+                <article key={mindmap.id} className="data-card mindmap-card course-card">
                   <div
                     className="mindmap-cover"
                     style={{
