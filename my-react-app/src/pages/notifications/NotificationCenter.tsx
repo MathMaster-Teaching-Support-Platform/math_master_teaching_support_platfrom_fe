@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockStudent } from '../../data/mockData';
 import './NotificationCenter.css';
@@ -6,16 +7,19 @@ import './NotificationCenter.css';
 import { useNotificationsContext } from '../../context/NotificationContext';
 
 const NotificationCenter: React.FC = () => {
-  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotificationsContext();
+  const { notifications, unreadCount, markAsRead, markAllAsRead, hasNextPage, isFetchingNextPage, loadMore } = useNotificationsContext();
   
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
+
+  const normalizeType = (type: string) => type.toLowerCase();
 
   const filteredNotifications = notifications.filter((notif) => {
     const matchReadStatus =
       filter === 'all' ? true : filter === 'unread' ? !notif.read : notif.read;
 
-    const matchType = typeFilter === 'all' ? true : notif.type === typeFilter;
+    const matchType =
+      typeFilter === 'all' ? true : normalizeType(notif.type) === normalizeType(typeFilter);
 
     return matchReadStatus && matchType;
   });
@@ -27,7 +31,7 @@ const NotificationCenter: React.FC = () => {
   };
 
   const getNotificationIcon = (type: string) => {
-    switch (type) {
+    switch (normalizeType(type)) {
       case 'assignment':
         return '📝';
       case 'grade':
@@ -59,9 +63,14 @@ const NotificationCenter: React.FC = () => {
             <h1 className="page-title">🔔 Trung Tâm Thông Báo</h1>
             <p className="page-subtitle">Quản lý tất cả thông báo của bạn</p>
           </div>
-          <button className="btn btn-outline" onClick={markAllAsRead}>
-            ✅ Đánh dấu đã đọc tất cả
-          </button>
+          <div className="header-actions">
+            <Link to="/notifications/preferences" className="btn btn-outline">
+              ⚙️ Cài đặt
+            </Link>
+            <button className="btn btn-outline" onClick={markAllAsRead}>
+              ✅ Đánh dấu đã đọc tất cả
+            </button>
+          </div>
         </div>
 
         {/* Stats */}
@@ -172,17 +181,17 @@ const NotificationCenter: React.FC = () => {
                     <div className="notification-footer">
                       <span className="notification-time">⏱️ {new Date(notif.createdAt).toLocaleString()}</span>
                       <span className={`notification-type type-${notif.type}`}>
-                        {notif.type === 'assignment'
+                        {normalizeType(notif.type) === 'assignment'
                           ? '📝 Bài tập'
-                          : notif.type === 'grade'
+                          : normalizeType(notif.type) === 'grade'
                             ? '📊 Điểm số'
-                            : notif.type === 'course'
+                            : normalizeType(notif.type) === 'course'
                               ? '📚 Giáo Trình'
-                              : notif.type === 'system'
+                              : normalizeType(notif.type) === 'system'
                                 ? '⚙️ Hệ thống'
-                                : notif.type === 'payment'
+                                : normalizeType(notif.type) === 'payment'
                                   ? '💰 Thanh toán'
-                                  : notif.type === 'PROFILE_VERIFICATION'
+                                  : normalizeType(notif.type) === 'profile_verification'
                                     ? '🛡️ Kiểm duyệt'
                                     : '💬 Tin nhắn'}
                       </span>
@@ -197,12 +206,17 @@ const NotificationCenter: React.FC = () => {
         </div>
 
         {/* Load More */}
-        {filteredNotifications.length > 0 &&
-          filteredNotifications.length < notifications.length && (
-            <div className="load-more-container">
-              <button className="btn btn-outline">Xem thêm thông báo</button>
-            </div>
-          )}
+        {filteredNotifications.length > 0 && hasNextPage && (
+          <div className="load-more-container">
+            <button 
+              className="btn btn-outline" 
+              onClick={loadMore}
+              disabled={isFetchingNextPage}
+            >
+              {isFetchingNextPage ? 'Đang tải...' : 'Xem thêm thông báo'}
+            </button>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );

@@ -1,23 +1,25 @@
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
-import { Centrifuge } from 'centrifuge';
-import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation, useInfiniteQuery } from '@tanstack/react-query';
 import { notificationService } from '../services/notification.service';
 import { AuthService } from '../services/api/auth.service';
-import type { Notification } from '../types/notification';
+import type { Notification, PaginatedNotifications } from '../types/notification';
+import { pushNotificationService } from '../services/push-notification.service';
 
 interface NotificationContextValue {
   notifications: Notification[];
   unreadCount: number;
   isLoading: boolean;
+  hasNextPage: boolean;
+  isFetchingNextPage: boolean;
   markAsRead: (id: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
+  loadMore: () => void;
 }
 
 const NotificationContext = createContext<NotificationContextValue | undefined>(undefined);
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const queryClient = useQueryClient();
-  const [, setCentrifuge] = useState<Centrifuge | null>(null);
 
   const [isAuthenticated, setIsAuthenticated] = useState(AuthService.isAuthenticated());
 
@@ -36,102 +38,103 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     enabled: isAuthenticated,
   });
 
-  // Fetch notifications list
-  const { data: notifsData, isLoading } = useQuery({
+  // Fetch notifications list with infinite query
+  const {
+    data: notifsData,
+    isLoading,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useInfiniteQuery<PaginatedNotifications, Error, { pages: PaginatedNotifications[] }, string[], number>({
     queryKey: ['notifications', 'list'],
-    queryFn: () => notificationService.getNotifications(0, 50),
+    queryFn: ({ pageParam = 0 }) => notificationService.getNotifications(pageParam, 20),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      if (lastPage.number < lastPage.totalPages - 1) {
+        return lastPage.number + 1;
+      }
+      return undefined;
+    },
     enabled: isAuthenticated,
   });
 
-  const notifications = useMemo(() => notifsData?.content || [], [notifsData]);
-  const unreadCount = unreadData?.count || 0;
+  const notifications = useMemo(() => {
+    return notifsData?.pages.flatMap((page) => page.content) ?? [];
+  }, [notifsData]);
+  const unreadCount = unreadData?.unreadCount ?? unreadData?.count ?? 0;
+
+  const applyIncomingNotification = (rawPayload: Record<string, unknown>) => {
+    const newNotif: Notification = {
+      id: (rawPayload.id as string) || String(Date.now()),
+      type: (rawPayload.type as string) || 'system',
+      title: (rawPayload.title as string) || 'Notification',
+      content: (rawPayload.content as string) || '',
+      read: false,
+      createdAt:
+        (rawPayload.createdAt as string) ||
+        (rawPayload.timestamp as string) ||
+        new Date().toISOString(),
+      metadata: rawPayload.metadata as Record<string, unknown> | undefined,
+    };
+
+    queryClient.setQueryData<{ unreadCount?: number; count?: number }>(
+      ['notifications', 'unreadCount'],
+      (old) => {
+        const current = old?.unreadCount ?? old?.count ?? 0;
+        return { unreadCount: current + 1 };
+      }
+    );
+
+    queryClient.setQueryData<any>(
+      ['notifications', 'list'],
+      (oldData: any) => {
+        if (!oldData) return { pages: [{ content: [newNotif] }], pageParams: [0] };
+        
+        const firstPage = oldData.pages[0];
+        if (!firstPage) return { pages: [{ content: [newNotif] }], pageParams: [0] };
+        
+        const exists = firstPage.content.find((n: Notification) => n.id === newNotif.id);
+        if (exists) return oldData;
+        
+        return {
+          ...oldData,
+          pages: [
+            { ...firstPage, content: [newNotif, ...firstPage.content] },
+            ...oldData.pages.slice(1),
+          ],
+        };
+      }
+    );
+  };
 
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated) {
+      void pushNotificationService.unregisterToken();
+      return;
+    }
 
-    const token = AuthService.getToken();
-    if (!token) return;
-    
-    const decoded = AuthService.decodeToken(token);
-    const userId = decoded?.sub;
+    let unsubscribeForeground: (() => void) | null = null;
+    let unsubscribeSw: (() => void) | null = null;
 
-    if (!userId) return;
+    void (async () => {
+      try {
+        await pushNotificationService.initAndRegisterToken();
+      } catch (error) {
+        console.error('[FCM] Failed to initialize push notification token:', error);
+      }
 
-    // Initialize Centrifugo
-    const wsUrl = import.meta.env.VITE_CENTRIFUGO_WS_URL || 'ws://localhost:8000/connection/websocket';
-    const centrifugeInstance = new Centrifuge(wsUrl, {
-      getToken: async () => {
-        try {
-          const res = await notificationService.getConnectionToken();
-          console.log('[Centrifugo] Token fetched successfully, sub length:', res.token?.length);
-          return res.token;
-        } catch (error) {
-          console.error('[Centrifugo] Failed to get centrifugo token:', error);
-          throw error; // Throw instead of returning '' so Centrifuge retries properly
-        }
-      },
-    });
-
-    centrifugeInstance.on('connected', (ctx) => {
-      console.log('[Centrifugo] Connected! client:', ctx.client);
-    });
-
-    centrifugeInstance.on('disconnected', (ctx) => {
-      console.warn('[Centrifugo] Disconnected:', ctx.reason, 'code:', ctx.code);
-    });
-
-    centrifugeInstance.on('error', (ctx) => {
-      console.error('[Centrifugo] Error:', ctx.error);
-    });
-
-    // Subscriptions
-    const channels = [`notifications:public`, `notifications:all`, `notifications:user:${userId}`];
-    
-    channels.forEach((channel) => {
-      const sub = centrifugeInstance.newSubscription(channel);
-      
-      sub.on('publication', (ctx) => {
-        console.log('[Centrifugo] Publication received on channel:', channel, ctx.data);
-
-        // Map NotificationRequest fields to Notification interface fields
-        // Backend sends: { id, type, title, content, timestamp, recipientId, senderId, metadata }
-        // Frontend needs: { id, type, title, content, read, createdAt, metadata }
-        const raw = ctx.data as Record<string, unknown>;
-        const newNotif: Notification = {
-          id: (raw.id as string) || String(Date.now()),
-          type: raw.type as string,
-          title: raw.title as string,
-          content: raw.content as string,
-          read: false,
-          createdAt: (raw.createdAt as string) || (raw.timestamp as string) || new Date().toISOString(),
-          metadata: raw.metadata as Record<string, unknown> | undefined,
-        };
-
-        // Update unread count
-        queryClient.setQueryData<{ count: number }>(['notifications', 'unreadCount'], (old) => {
-          return { count: (old?.count || 0) + 1 };
-        });
-
-        // Update list
-        queryClient.setQueryData<{ content: Notification[] } | undefined>(['notifications', 'list'], (oldData) => {
-          if (!oldData) return { content: [newNotif] };
-          const exists = oldData.content.find((n) => n.id === newNotif.id);
-          if (exists) return oldData;
-          return {
-            ...oldData,
-            content: [newNotif, ...oldData.content],
-          };
-        });
+      unsubscribeForeground = await pushNotificationService.subscribeForeground((payload) => {
+        applyIncomingNotification(payload);
       });
 
-      sub.subscribe();
-    });
-
-    centrifugeInstance.connect();
-    setCentrifuge(centrifugeInstance);
+      unsubscribeSw = pushNotificationService.subscribeServiceWorker((payload) => {
+        applyIncomingNotification(payload);
+      });
+    })();
 
     return () => {
-      centrifugeInstance.disconnect();
+      if (unsubscribeForeground) unsubscribeForeground();
+      if (unsubscribeSw) unsubscribeSw();
     };
   }, [isAuthenticated, queryClient]);
 
@@ -140,23 +143,33 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: ['notifications'] });
       
-      const prevList = queryClient.getQueryData<{ content: Notification[] }>(['notifications', 'list']);
-      const prevCount = queryClient.getQueryData<{ count: number }>(['notifications', 'unreadCount']);
+      const prevList = queryClient.getQueryData<any>(['notifications', 'list']);
+      const prevCount = queryClient.getQueryData<{ unreadCount?: number; count?: number }>([
+        'notifications',
+        'unreadCount',
+      ]);
       
       // Optimistic update
-      queryClient.setQueryData<{ content: Notification[] }>(['notifications', 'list'], (old) => {
+      queryClient.setQueryData<any>(['notifications', 'list'], (old: any) => {
         if (!old) return old;
         return {
           ...old,
-          content: old.content.map(n => n.id === id ? { ...n, read: true } : n),
+          pages: old.pages.map((page: any) => ({
+            ...page,
+            content: page.content.map((n: Notification) => n.id === id ? { ...n, read: true } : n),
+          })),
         };
       });
       
-      queryClient.setQueryData<{ count: number }>(['notifications', 'unreadCount'], (old) => {
-        if (!old || old.count === 0) return old;
-        const item = prevList?.content.find(n => n.id === id);
-        return { count: Math.max(0, old.count - (item && !item.read ? 1 : 0)) };
-      });
+      queryClient.setQueryData<{ unreadCount?: number; count?: number }>(
+        ['notifications', 'unreadCount'],
+        (old) => {
+          const current = old?.unreadCount ?? old?.count ?? 0;
+          if (current === 0) return old;
+          const item = prevList?.pages?.[0]?.content?.find((n: Notification) => n.id === id);
+          return { unreadCount: Math.max(0, current - (item && !item.read ? 1 : 0)) };
+        }
+      );
 
       return { prevList, prevCount, id };
     },
@@ -174,13 +187,24 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     mutationFn: () => notificationService.markAllAsRead(),
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: ['notifications'] });
-      const prevList = queryClient.getQueryData<{ content: Notification[] }>(['notifications', 'list']);
-      const prevCount = queryClient.getQueryData<{ count: number }>(['notifications', 'unreadCount']);
+      const prevList = queryClient.getQueryData<any>(['notifications', 'list']);
+      const prevCount = queryClient.getQueryData<{ unreadCount?: number; count?: number }>([
+        'notifications',
+        'unreadCount',
+      ]);
 
-      queryClient.setQueryData<{ count: number }>(['notifications', 'unreadCount'], { count: 0 });
-      queryClient.setQueryData<{ content: Notification[] }>(['notifications', 'list'], (old) => {
+      queryClient.setQueryData<{ unreadCount?: number; count?: number }>(['notifications', 'unreadCount'], {
+        unreadCount: 0,
+      });
+      queryClient.setQueryData<any>(['notifications', 'list'], (old: any) => {
         if (!old) return old;
-        return { ...old, content: old.content.map(n => ({ ...n, read: true })) };
+        return {
+          ...old,
+          pages: old.pages.map((page: any) => ({
+            ...page,
+            content: page.content.map((n: Notification) => ({ ...n, read: true })),
+          })),
+        };
       });
 
       return { prevList, prevCount };
@@ -199,8 +223,11 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     notifications,
     unreadCount,
     isLoading,
+    hasNextPage: hasNextPage ?? false,
+    isFetchingNextPage,
     markAsRead: async (id: string) => { await markAsReadMutation.mutateAsync(id); },
     markAllAsRead: async () => { await markAllAsReadMutation.mutateAsync(); },
+    loadMore: () => { if (hasNextPage) fetchNextPage(); },
   };
 
   return (
