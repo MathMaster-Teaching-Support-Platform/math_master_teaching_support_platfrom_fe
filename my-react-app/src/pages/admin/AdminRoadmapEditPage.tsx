@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { ChevronLeft, ChevronRight, MessageSquareQuote, Star, Workflow } from 'lucide-react';
 import { AdminRoadmapEditor } from '../../components/roadmap';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { useAdminRoadmapDetail, useAdminRoadmapFeedback, useUpdateRoadmap } from '../../hooks/useRoadmaps';
@@ -23,12 +24,24 @@ export default function AdminRoadmapEditPage() {
   const feedbackTotalElements = feedbackPageResult?.totalElements ?? 0;
 
   const pageLabel = useMemo(() => {
-    if (!feedbackPageResult) return 'Page 0 / 0';
-    return `Page ${feedbackPageResult.number + 1} / ${Math.max(1, feedbackPageResult.totalPages)}`;
+    if (!feedbackPageResult) return 'Trang 0 / 0';
+    return `Trang ${feedbackPageResult.number + 1} / ${Math.max(1, feedbackPageResult.totalPages)}`;
   }, [feedbackPageResult]);
 
-  const renderStars = (rating: number) =>
-    `${'★'.repeat(Math.max(0, Math.min(5, rating)))}${'☆'.repeat(Math.max(0, 5 - rating))}`;
+  const renderStars = (rating: number) => {
+    const clampedRating = Math.max(0, Math.min(5, rating));
+    return (
+      <span className="admin-roadmap-page__rating-stars" aria-label={`Đánh giá ${clampedRating} trên 5`}>
+        {Array.from({ length: 5 }, (_, index) => (
+          <Star
+            key={`${rating}-${index}`}
+            className={`admin-roadmap-page__rating-star ${index < clampedRating ? 'admin-roadmap-page__rating-star--active' : ''}`}
+            aria-hidden="true"
+          />
+        ))}
+      </span>
+    );
+  };
 
   useEffect(() => {
     if (updateRoadmap.isSuccess) {
@@ -45,13 +58,13 @@ export default function AdminRoadmapEditPage() {
       <section className="admin-roadmap-page">
         <header className="admin-roadmap-page__header">
           <div>
-            <h1>Edit roadmap</h1>
-            <p>Update roadmap content and metadata safely.</p>
+            <h1>Chỉnh sửa lộ trình</h1>
+            <p>Cập nhật nội dung và thông tin lộ trình một cách an toàn.</p>
           </div>
         </header>
 
-        {roadmapDetail.isLoading && <p className="admin-roadmap-page__state">Loading roadmap...</p>}
-        {roadmapDetail.error && <p className="admin-roadmap-page__state">Unable to load roadmap.</p>}
+        {roadmapDetail.isLoading && <p className="admin-roadmap-page__state">Đang tải lộ trình...</p>}
+        {roadmapDetail.error && <p className="admin-roadmap-page__state">Không thể tải lộ trình.</p>}
 
         {roadmapDetail.data?.result && (
           <>
@@ -68,8 +81,11 @@ export default function AdminRoadmapEditPage() {
             <section className="admin-roadmap-page__road-section">
               <div className="admin-roadmap-page__road-header">
                 <div>
-                  <h3>Topic builder</h3>
-                  <p>Manage roadmap topic nodes in a separate full-page builder.</p>
+                  <h3 className="admin-roadmap-page__section-title">
+                    <Workflow className="admin-roadmap-page__section-icon" aria-hidden="true" />
+                    Trình xây dựng chủ đề
+                  </h3>
+                  <p>Quản lý các nút chủ đề của lộ trình trong trình chỉnh sửa toàn trang riêng biệt.</p>
                 </div>
                 <div className="admin-roadmap-page__actions">
                   <button
@@ -77,7 +93,8 @@ export default function AdminRoadmapEditPage() {
                     className="admin-roadmap-page__button"
                     onClick={() => navigate(`/admin/roadmaps/${roadmapId}/topics`)}
                   >
-                    Open full topic builder
+                    <Workflow className="admin-roadmap-page__button-icon" aria-hidden="true" />
+                    Mở trình xây dựng chủ đề
                   </button>
                 </div>
               </div>
@@ -86,16 +103,19 @@ export default function AdminRoadmapEditPage() {
             <section className="admin-roadmap-page__road-section">
               <div className="admin-roadmap-page__road-header">
                 <div>
-                  <h3>Student feedback</h3>
-                  <p>Review roadmap ratings and comments submitted by students.</p>
+                  <h3 className="admin-roadmap-page__section-title">
+                    <MessageSquareQuote className="admin-roadmap-page__section-icon" aria-hidden="true" />
+                    Phản hồi học viên
+                  </h3>
+                  <p>Xem đánh giá và nhận xét lộ trình do học viên gửi.</p>
                 </div>
               </div>
 
               {feedbackQuery.isLoading && (
-                <p className="admin-roadmap-page__state">Loading feedback...</p>
+                <p className="admin-roadmap-page__state">Đang tải phản hồi...</p>
               )}
               {feedbackQuery.error && (
-                <p className="admin-roadmap-page__state">Unable to load feedback list.</p>
+                <p className="admin-roadmap-page__state">Không thể tải danh sách phản hồi.</p>
               )}
 
               {!feedbackQuery.isLoading && !feedbackQuery.error && (
@@ -110,16 +130,16 @@ export default function AdminRoadmapEditPage() {
                           </span>
                         </div>
                         <p className="admin-roadmap-page__feedback-content">
-                          {feedback.content?.trim() || 'No comment'}
+                          {feedback.content?.trim() || 'Chưa có nhận xét'}
                         </p>
                         <small className="admin-roadmap-page__feedback-updated">
-                          Updated: {new Date(feedback.updatedAt).toLocaleString()}
+                          Cập nhật: {new Date(feedback.updatedAt).toLocaleString('vi-VN')}
                         </small>
                       </article>
                     ))}
 
                     {feedbackRows.length === 0 && (
-                      <p className="admin-roadmap-page__state">No feedback available for this roadmap.</p>
+                      <p className="admin-roadmap-page__state">Chưa có phản hồi nào cho lộ trình này.</p>
                     )}
                   </div>
 
@@ -130,10 +150,11 @@ export default function AdminRoadmapEditPage() {
                       onClick={() => setFeedbackPage((prev) => Math.max(0, prev - 1))}
                       disabled={feedbackPage <= 0}
                     >
-                      Previous
+                      <ChevronLeft className="admin-roadmap-page__button-icon" aria-hidden="true" />
+                      Trước
                     </button>
                     <span className="admin-roadmap-page__state">
-                      {pageLabel} • {feedbackTotalElements} feedback
+                      {pageLabel} • {feedbackTotalElements} phản hồi
                     </span>
                     <button
                       type="button"
@@ -145,7 +166,8 @@ export default function AdminRoadmapEditPage() {
                       }
                       disabled={feedbackPage >= Math.max(0, totalFeedbackPages - 1)}
                     >
-                      Next
+                      Sau
+                      <ChevronRight className="admin-roadmap-page__button-icon" aria-hidden="true" />
                     </button>
                   </div>
                 </>

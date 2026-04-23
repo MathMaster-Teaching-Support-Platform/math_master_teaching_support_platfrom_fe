@@ -2,12 +2,12 @@
    Auth Pages — MathMaster Design System
    ================================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  --auth-primary: #5e5ce6;
-  --auth-primary-soft: rgba(94, 92, 230, 0.08);
-  --auth-primary-glow: rgba(94, 92, 230, 0.18);
+  --auth-primary: #c96442;
+  --auth-primary-soft: rgba(201, 100, 66, 0.12);
+  --auth-primary-glow: rgba(201, 100, 66, 0.2);
   --auth-dark: #0e0c15;
   --auth-dark-alt: #1a1725;
   --auth-bg: #fafaff;
@@ -196,7 +196,7 @@
 .auth-feature-icon {
   width: 30px;
   height: 30px;
-  background: rgba(94, 92, 230, 0.18);
+  background: rgba(201, 100, 66, 0.2);
   border: 1px solid rgba(94, 92, 230, 0.4);
   border-radius: 8px;
   display: flex;
@@ -514,7 +514,7 @@
   gap: 0.25rem;
   font-size: 0.82rem;
   font-weight: 600;
-  color: #5e5ce6;
+  color: #c96442;
   background: rgba(94, 92, 230, 0.1);
   border: 1px solid rgba(94, 92, 230, 0.25);
   border-radius: 99px;
@@ -525,7 +525,7 @@
     border-color 0.18s;
 }
 .rp-alert-error__link:hover {
-  background: rgba(94, 92, 230, 0.18);
+  background: rgba(201, 100, 66, 0.2);
   border-color: rgba(94, 92, 230, 0.4);
   text-decoration: none;
 }
@@ -645,7 +645,7 @@
   width: 56px;
   height: 56px;
   border: 3px solid rgba(94, 92, 230, 0.15);
-  border-top-color: #5e5ce6;
+  border-top-color: #c96442;
   border-radius: 50%;
   animation: ce-spin 0.9s linear infinite;
   margin-bottom: 1.5rem;
@@ -720,7 +720,7 @@
 }
 
 .auth-container .btn-primary {
-  background: linear-gradient(135deg, #6b69f0 0%, #5e5ce6 45%, #7c6af5 100%);
+  background: linear-gradient(135deg, #6b69f0 0%, #c96442 45%, #7c6af5 100%);
   color: #ffffff !important;
   box-shadow: 0 2px 14px rgba(94, 92, 230, 0.35);
   border: none;
@@ -757,7 +757,7 @@
 }
 
 .auth-container .btn-primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, #7c6af5 0%, #6360e8 45%, #5e5ce6 100%);
+  background: linear-gradient(135deg, #7c6af5 0%, #6360e8 45%, #c96442 100%);
   color: #fff;
   box-shadow: 0 6px 24px rgba(94, 92, 230, 0.45);
   transform: translateY(-1px);
@@ -770,8 +770,8 @@
 
 .auth-container .btn-outline {
   background: transparent;
-  color: #5e5ce6 !important;
-  border: 1.5px solid #5e5ce6;
+  color: #c96442 !important;
+  border: 1.5px solid #c96442;
   box-shadow: none;
 }
 
@@ -944,7 +944,7 @@
 
 .pwd-toggle:hover {
   color: var(--auth-primary);
-  background: rgba(94, 92, 230, 0.08);
+  background: rgba(201, 100, 66, 0.12);
   opacity: 1;
 }
 
@@ -1312,8 +1312,8 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  background: rgba(94, 92, 230, 0.08);
-  color: #5e5ce6;
+  background: rgba(201, 100, 66, 0.12);
+  color: #c96442;
   border-radius: 99px;
   padding: 0.3rem 0.85rem;
   font-size: 0.78rem;

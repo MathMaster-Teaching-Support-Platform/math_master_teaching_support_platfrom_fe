@@ -135,7 +135,7 @@
 }
 
 .metric-card.subscriptions::before {
-  background: linear-gradient(90deg, #8b5cf6 0%, #7c3aed 100%);
+  background: linear-gradient(90deg, #d97757 0%, #7c3aed 100%);
 }
 
 .metric-card.instructors::before {

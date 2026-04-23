@@ -252,7 +252,7 @@ const UserManagement: React.FC = () => {
       <div className="user-management-page">
         <div className="page-header">
           <div>
-            <h1 className="page-title">Quản lý người dùng</h1>
+            <h1 className="page-title">User Management</h1>
             <p className="page-subtitle">Quản lý tài khoản và phân quyền người dùng</p>
           </div>
           <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}>

@@ -260,7 +260,7 @@
 
 .pricing-current-ribbon {
   background: #059669;
-  color: #fff;
+  color: #141413;
 }
 
 /* ── Plan Icon in dark header ── */
@@ -437,13 +437,13 @@
   min-width: 22px;
   border-radius: 6px;
   background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(52, 211, 153, 0.2));
-  color: #10b981;
+  color: #141413;
   transition: transform 0.2s ease;
 }
 
 .pricing-check--primary {
   background: linear-gradient(135deg, rgba(94, 92, 230, 0.12), rgba(133, 141, 255, 0.2));
-  color: #5e5ce6;
+  color: #141413;
 }
 
 .pricing-plan-features li:hover .pricing-check {
@@ -502,7 +502,6 @@
 .pricing-wallet-banner {
   display: flex;
   align-items: flex-start;
-  gap: 0;
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -593,8 +592,8 @@
 .pricing-active-plan-badge {
   display: inline-flex;
   align-items: center;
-  background: linear-gradient(135deg, var(--c-primary, #5e5ce6), #858dff);
-  color: #fff;
+  background: linear-gradient(135deg, var(--c-primary, #c96442), #858dff);
+  color: #141413;
   font-size: 0.78rem;
   font-weight: 700;
   padding: 0.25rem 0.75rem;
@@ -614,7 +613,7 @@
 .pricing-token-bar__fill {
   height: 100%;
   border-radius: 99px;
-  background: linear-gradient(90deg, var(--c-primary, #5e5ce6), #858dff);
+  background: linear-gradient(90deg, var(--c-primary, #c96442), #858dff);
   width: 100%;
   transform-origin: left;
   transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
@@ -631,8 +630,8 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  background: var(--c-primary, #5e5ce6);
-  color: #fff;
+  background: var(--c-primary, #c96442);
+  color: #141413;
   border: none;
   border-radius: var(--r-md, 16px);
   padding: 0.65rem 1.25rem;
@@ -642,7 +641,7 @@
   transition: all 0.25s ease;
   white-space: nowrap;
   font-family: var(--f-heading, 'Be Vietnam Pro', sans-serif);
-  box-shadow: 0 2px 10px rgba(94, 92, 230, 0.22);
+  box-shadow: 0 2px 10px rgba(201, 100, 66, 0.24);
 }
 
 .pricing-wallet-topup-btn:hover {
@@ -666,13 +665,13 @@
 .pricing-alert--error {
   background: rgba(239, 68, 68, 0.08);
   border: 1px solid rgba(239, 68, 68, 0.2);
-  color: #dc2626;
+  color: #141413;
 }
 
 .pricing-alert--success {
   background: rgba(16, 185, 129, 0.08);
   border: 1px solid rgba(16, 185, 129, 0.2);
-  color: #059669;
+  color: #141413;
 }
 
 /* ══════════════════════════════════
@@ -762,7 +761,7 @@
 
 .pricing-ct-header-cell--featured {
   background: rgba(94, 92, 230, 0.04);
-  color: var(--c-primary, #5e5ce6);
+  color: var(--c-primary, #c96442);
 }
 
 .pricing-ct-row {
@@ -808,12 +807,12 @@
   height: 24px;
   border-radius: 50%;
   background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(52, 211, 153, 0.2));
-  color: #10b981;
+  color: #141413;
 }
 
 .pricing-ct-check--primary {
   background: linear-gradient(135deg, rgba(94, 92, 230, 0.12), rgba(133, 141, 255, 0.2));
-  color: #5e5ce6;
+  color: #141413;
 }
 
 .pricing-ct-cross {
@@ -836,7 +835,7 @@
 }
 
 .pricing-ct-text--featured {
-  color: var(--c-primary, #5e5ce6);
+  color: var(--c-primary, #c96442);
 }
 
 /* ══════════════════════════════════
@@ -933,11 +932,11 @@
 }
 
 .pricing-faq-question:hover {
-  color: var(--c-primary, #5e5ce6);
+  color: var(--c-primary, #c96442);
 }
 
 .pricing-faq-item--open .pricing-faq-question {
-  color: var(--c-primary, #5e5ce6);
+  color: var(--c-primary, #c96442);
 }
 
 /* Chevron rotation */
@@ -951,7 +950,7 @@
 
 .pricing-faq-item--open .pricing-faq-chevron {
   transform: rotate(180deg);
-  color: var(--c-primary, #5e5ce6);
+  color: var(--c-primary, #c96442);
 }
 
 /* Answer panel */
@@ -1176,7 +1175,7 @@
   height: 64px;
   border-radius: 50%;
   background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(252, 165, 165, 0.18));
-  color: #ef4444;
+  color: #141413;
   margin-bottom: 1.25rem;
   position: relative;
   z-index: 1;
@@ -1242,11 +1241,11 @@
 }
 
 .pricing-modal-btn--primary {
-  background: linear-gradient(135deg, #5e5ce6, #7b79f7);
-  color: #fff;
+  background: linear-gradient(135deg, #c96442, #7b79f7);
+  color: #141413;
   box-shadow:
     0 2px 8px rgba(94, 92, 230, 0.25),
-    0 4px 16px rgba(94, 92, 230, 0.18);
+    0 4px 16px rgba(201, 100, 66, 0.2);
 }
 
 .pricing-modal-btn--primary:hover {
@@ -1254,7 +1253,7 @@
   transform: translateY(-2px);
   box-shadow:
     0 4px 14px rgba(94, 92, 230, 0.32),
-    0 8px 28px rgba(94, 92, 230, 0.22);
+    0 8px 28px rgba(201, 100, 66, 0.24);
 }
 
 /* ══════════════════════════════════

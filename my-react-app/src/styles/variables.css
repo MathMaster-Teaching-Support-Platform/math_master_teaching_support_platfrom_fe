@@ -1,40 +1,40 @@
 /* Global CSS Variables — MathMaster Design System */
 :root {
   /* Primary Colors */
-  --primary-color: #5b67f1;
-  --primary-dark: #4850d4;
-  --secondary-color: #8b5cf6;
-  --success-color: #10b981;
-  --warning-color: #fbbf24;
-  --error-color: #ef4444;
-  --info-color: #3b82f6;
+  --primary-color: #c96442;
+  --primary-dark: #b45435;
+  --secondary-color: #d97757;
+  --success-color: #16a34a;
+  --warning-color: #d97706;
+  --error-color: #b53333;
+  --info-color: #3898ec;
 
   /* Accent Colors */
-  --accent-pink: #f472b6;
-  --accent-orange: #fbbf24;
-  --accent-teal: #14b8a6;
+  --accent-pink: #d97757;
+  --accent-orange: #c96442;
+  --accent-teal: #6f8a66;
 
   /* Neutral Colors */
   --white: #ffffff;
-  --black: #000000;
-  --gray-50: #f9fafb;
-  --gray-100: #f3f4f6;
-  --gray-200: #e5e7eb;
-  --gray-300: #d1d5db;
-  --gray-400: #9ca3af;
-  --gray-500: #6b7280;
-  --gray-600: #4b5563;
-  --gray-700: #374151;
-  --gray-800: #1f2937;
-  --gray-900: #111827;
+  --black: #141413;
+  --gray-50: #faf9f5;
+  --gray-100: #f5f4ed;
+  --gray-200: #f0eee6;
+  --gray-300: #e8e6dc;
+  --gray-400: #b0aea5;
+  --gray-500: #87867f;
+  --gray-600: #5e5d59;
+  --gray-700: #4d4c48;
+  --gray-800: #30302e;
+  --gray-900: #141413;
 
   /* Background */
-  --bg-primary: #f5f7fa;
-  --bg-dark: #1a1a1b;
+  --bg-primary: #f5f4ed;
+  --bg-dark: #141413;
 
   /* Typography */
-  --font-family: 'Segoe UI', system-ui, sans-serif;
-  --font-heading: 'Segoe UI', system-ui, sans-serif;
+  --font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  --font-heading: Georgia, 'Times New Roman', serif;
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
   --font-size-base: 1rem;
@@ -61,10 +61,10 @@
   --radius-full: 9999px;
 
   /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4px 12px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 12px 32px -3px rgba(0, 0, 0, 0.08);
-  --shadow-xl: 0 20px 40px -5px rgba(0, 0, 0, 0.1);
+  --shadow-sm: 0 0 0 1px #f0eee6;
+  --shadow-md: 0 0 0 1px #e8e6dc;
+  --shadow-lg: rgba(0, 0, 0, 0.05) 0 4px 24px;
+  --shadow-xl: rgba(0, 0, 0, 0.08) 0 10px 36px;
 
   /* Transitions */
   --transition-fast: 150ms ease-in-out;
@@ -81,18 +81,32 @@
   --z-tooltip: 1070;
 
   /* Semantic tokens — used across roadmap & dashboard pages */
-  --bg-body: #f8f9ff;
-  --bg-card: #ffffff;
-  --text-primary: #111827;
-  --text-secondary: #6b7280;
-  --border-color: #e8eaed;
-  --danger-color: #ef4444;
+  --bg-body: #f5f4ed;
+  --bg-card: #faf9f5;
+  --text-primary: #141413;
+  --text-secondary: #5e5d59;
+  --border-color: #f0eee6;
+  --danger-color: #b53333;
 
   /* RGB channels for rgba() compositing */
-  --primary-rgb: 91, 103, 241;
-  --secondary-rgb: 139, 92, 246;
+  --primary-rgb: 201, 100, 66;
+  --secondary-rgb: 217, 119, 87;
   --success-rgb: 16, 185, 129;
-  --warning-rgb: 251, 191, 36;
-  --danger-rgb: 239, 68, 68;
-  --text-secondary-rgb: 107, 114, 128;
+  --warning-rgb: 217, 119, 6;
+  --danger-rgb: 181, 51, 51;
+  --text-secondary-rgb: 94, 93, 89;
+
+  /* Legacy bridge tokens for older page-level CSS variables */
+  --c-primary: #c96442;
+  --c-primary-soft: rgba(201, 100, 66, 0.12);
+  --c-primary-glow: rgba(201, 100, 66, 0.2);
+  --c-bg: #f5f4ed;
+  --c-surface: #faf9f5;
+  --c-text-1: #141413;
+  --c-text-2: #4d4c48;
+  --c-text-3: #87867f;
+  --c-border: #f0eee6;
+  --c-border-soft: #e8e6dc;
+  --f-body: 'Be Vietnam Pro', system-ui, sans-serif;
+  --f-heading: Georgia, 'Times New Roman', serif;
 }

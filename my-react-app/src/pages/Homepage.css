@@ -8,9 +8,9 @@
 
 /* ── Design Tokens ── */
 :root {
-  --c-primary: #5e5ce6;
-  --c-primary-soft: rgba(94, 92, 230, 0.08);
-  --c-primary-glow: rgba(94, 92, 230, 0.18);
+  --c-primary: #c96442;
+  --c-primary-soft: rgba(201, 100, 66, 0.12);
+  --c-primary-glow: rgba(201, 100, 66, 0.2);
   --c-dark: #0e0c15;
   --c-dark-alt: #1a1725;
   --c-bg: #fafaff;
@@ -23,7 +23,7 @@
   --c-accent-pink: #ff98e2;
   --c-accent-gold: #ffc876;
   --f-heading: 'Be Vietnam Pro', -apple-system, sans-serif;
-  --f-body: 'Inter', -apple-system, sans-serif;
+  --f-body: 'Be Vietnam Pro', -apple-system, sans-serif;
   --r-sm: 12px;
   --r-md: 16px;
   --r-lg: 20px;
@@ -201,7 +201,7 @@
 }
 
 .unique-approach__title .text-accent {
-  color: #5e5ce6;
+  color: #c96442;
   position: relative;
 }
 
@@ -263,8 +263,8 @@
 }
 
 .step-badge--1 {
-  background-color: #5e5ce6;
-  color: #ffffff;
+  background-color: #c96442;
+  color: #141413;
 }
 
 .step-badge--2 {
@@ -435,7 +435,7 @@
 }
 
 .intro-title-accent {
-  color: #5e5ce6;
+  color: #c96442;
 }
 
 .intro-description {
@@ -518,7 +518,7 @@
   position: absolute;
   font-family: 'Be Vietnam Pro', serif;
   font-weight: 700;
-  color: #5e5ce6;
+  color: #c96442;
   pointer-events: none;
   will-change: transform;
   z-index: 1;
@@ -623,7 +623,7 @@
   left: 28%;
   width: 100px;
   height: 100px;
-  color: #5e5ce6;
+  color: #c96442;
   opacity: 0.55;
   animation: mathFloat 14s ease-in-out infinite;
 }
@@ -656,7 +656,7 @@
   right: 8%;
   width: 130px;
   height: 130px;
-  color: #5e5ce6;
+  color: #c96442;
   opacity: 0.5;
   animation: mathFloat 10s ease-in-out infinite 4s;
 }
@@ -1098,7 +1098,7 @@
 .ft-card:hover {
   transform: translateY(-8px);
   box-shadow:
-    0 4px 16px rgba(94, 92, 230, 0.08),
+    0 4px 16px rgba(201, 100, 66, 0.12),
     0 12px 40px rgba(94, 92, 230, 0.1);
   border-color: rgba(94, 92, 230, 0.12);
 }
@@ -1146,28 +1146,28 @@
 }
 
 .ft-badge--purple {
-  background: rgba(94, 92, 230, 0.1);
-  color: #5e5ce6;
+  background: #141413;
+  color: #faf9f5;
 }
 .ft-badge--blue {
   background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
+  color: #141413;
 }
 .ft-badge--green {
   background: rgba(16, 185, 129, 0.1);
-  color: #10b981;
+  color: #141413;
 }
 .ft-badge--orange {
   background: rgba(245, 158, 11, 0.1);
-  color: #d97706;
+  color: #141413;
 }
 .ft-badge--pink {
   background: rgba(236, 72, 153, 0.1);
-  color: #ec4899;
+  color: #141413;
 }
 .ft-badge--teal {
   background: rgba(20, 184, 166, 0.1);
-  color: #14b8a6;
+  color: #141413;
 }
 
 /* ── Icon ── */
@@ -1195,27 +1195,27 @@
 
 .ft-icon--purple {
   background: linear-gradient(135deg, rgba(94, 92, 230, 0.12), rgba(133, 141, 255, 0.18));
-  color: #5e5ce6;
+  color: #141413;
 }
 .ft-icon--blue {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(96, 165, 250, 0.18));
-  color: #3b82f6;
+  color: #141413;
 }
 .ft-icon--green {
   background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(52, 211, 153, 0.18));
-  color: #10b981;
+  color: #141413;
 }
 .ft-icon--orange {
   background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(251, 191, 36, 0.18));
-  color: #d97706;
+  color: #141413;
 }
 .ft-icon--pink {
   background: linear-gradient(135deg, rgba(236, 72, 153, 0.12), rgba(244, 114, 182, 0.18));
-  color: #ec4899;
+  color: #141413;
 }
 .ft-icon--teal {
   background: linear-gradient(135deg, rgba(20, 184, 166, 0.12), rgba(45, 212, 191, 0.18));
-  color: #14b8a6;
+  color: #141413;
 }
 
 /* ── Title ── */
