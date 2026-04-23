@@ -188,17 +188,24 @@ const parseMathSegments = (text: string): MathSegment[] => {
 const normalizePreviewText = (input: string): string => {
   if (!input) return input;
 
-  return input
-    .replace(/^khoi\s+dong\b/gim, 'Khởi động')
-    .replace(/\\begin\{itemize\}/gi, '')
-    .replace(/\\end\{itemize\}/gi, '')
-    .replace(/\\item\s*/g, '\n• ')
-    .replace(/\\textbf\{([^{}]+)\}/g, '$1')
-    .replace(/\\textit\{([^{}]+)\}/g, '$1')
-    .replace(/\\emph\{([^{}]+)\}/g, '$1')
-    .replace(/\n{3,}/g, '\n\n')
-    .replace(/\n[ \t]+/g, '\n')
-    .trim();
+  return (
+    input
+      // Backend may return escaped latex commands (e.g. \\vec), normalize to \vec.
+      .replace(/\\\\(?=[a-zA-Z])/g, '\\')
+      // Preserve latex line-break markers as real line breaks in text preview.
+      .replace(/\\\\(?=\s|$)/g, '\n')
+      .replace(/\\\\\\\\/g, '\\')
+      .replace(/^khoi\s+dong\b/gim, 'Khởi động')
+      .replace(/\\begin\{itemize\}/gi, '')
+      .replace(/\\end\{itemize\}/gi, '')
+      .replace(/\\item\s*/g, '\n• ')
+      .replace(/\\textbf\{([^{}]+)\}/g, '$1')
+      .replace(/\\textit\{([^{}]+)\}/g, '$1')
+      .replace(/\\emph\{([^{}]+)\}/g, '$1')
+      .replace(/\n{3,}/g, '\n\n')
+      .replace(/\n[ \t]+/g, '\n')
+      .trim()
+  );
 };
 
 const renderSlideText = (
