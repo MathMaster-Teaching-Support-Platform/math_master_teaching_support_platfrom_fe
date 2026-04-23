@@ -5,10 +5,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800;900&display=swap');
 
 /* ── Design Tokens (mirrored from Homepage) ── */
-.nf-root {
-  --c-primary: #5e5ce6;
-  --c-primary-soft: rgba(94, 92, 230, 0.08);
-  --c-primary-glow: rgba(94, 92, 230, 0.22);
+:root {
+  --c-primary: #c96442;
+  --c-primary-soft: rgba(201, 100, 66, 0.12);
+  --c-primary-glow: rgba(201, 100, 66, 0.24);
   --c-dark: #0e0c15;
   --c-dark-alt: #1a1725;
   --c-bg: #fafaff;
@@ -22,8 +22,8 @@
   --c-accent-gold: #ffc876;
   --c-accent-cyan: #67e8f9;
   --f-heading: 'Be Vietnam Pro', -apple-system, sans-serif;
-  --f-body: 'Inter', -apple-system, sans-serif;
-  --shadow-glow: 0 4px 48px rgba(94, 92, 230, 0.18);
+  --f-body: 'Be Vietnam Pro', -apple-system, sans-serif;
+  --shadow-glow: 0 4px 48px rgba(201, 100, 66, 0.2);
 }
 
 /* ── Root shell ── */
@@ -294,7 +294,7 @@
   padding: 0.4rem 1rem;
   border-radius: 100px;
   background: var(--c-primary-soft);
-  border: 1px solid rgba(94, 92, 230, 0.18);
+  border: 1px solid rgba(201, 100, 66, 0.2);
   margin-bottom: 2rem;
   animation: nf-fade-up 0.6s ease both;
 }
@@ -329,7 +329,7 @@
   font-size: clamp(8rem, 26vw, 18rem);
   font-weight: 900;
   color: transparent;
-  -webkit-text-stroke: 1px rgba(94, 92, 230, 0.08);
+  -webkit-text-stroke: 1px rgba(201, 100, 66, 0.12);
   user-select: none;
   pointer-events: none;
   letter-spacing: -0.04em;
@@ -345,21 +345,21 @@
   background: linear-gradient(
     135deg,
     var(--c-primary) 0%,
-    #8b5cf6 40%,
+    #d97757 40%,
     var(--c-accent-pink) 80%,
     var(--c-accent-gold) 100%
   );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  filter: drop-shadow(0 8px 32px rgba(94, 92, 230, 0.28));
+  filter: drop-shadow(0 8px 32px rgba(201, 100, 66, 0.28));
   animation: nf-pulse-glow 3s ease-in-out infinite;
 }
 
 @keyframes nf-pulse-glow {
   0%,
   100% {
-    filter: drop-shadow(0 8px 32px rgba(94, 92, 230, 0.28));
+    filter: drop-shadow(0 8px 32px rgba(201, 100, 66, 0.28));
   }
   50% {
     filter: drop-shadow(0 8px 48px rgba(94, 92, 230, 0.48));

@@ -1,6 +1,17 @@
-﻿import React, { useCallback, useEffect, useState } from 'react';
+﻿import {
+  BookOpen,
+  CheckCircle2,
+  Eye,
+  GraduationCap,
+  Plus,
+  Search,
+  Settings,
+  Trash2,
+  Users,
+  X,
+} from 'lucide-react';
+import React, { useCallback, useEffect, useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
-import { mockAdmin } from '../../data/mockData';
 import {
   userManagementService,
   type AdminUserItem,
@@ -75,7 +86,7 @@ const UserManagement: React.FC = () => {
         setStats(result.stats);
         setPagination(result.pagination);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Loi tai danh sach nguoi dung');
+        setError(err instanceof Error ? err.message : 'Lỗi tải danh sách người dùng');
       } finally {
         setLoading(false);
       }
@@ -91,7 +102,7 @@ const UserManagement: React.FC = () => {
 
   const handleCreateSubmit = async () => {
     if (!createForm.userName || !createForm.fullName || !createForm.email || !createForm.password) {
-      setCreateError('Vui long dien day du cac truong bat buoc');
+      setCreateError('Vui lòng điền đầy đủ các trường bắt buộc');
       return;
     }
     setCreateLoading(true);
@@ -116,7 +127,7 @@ const UserManagement: React.FC = () => {
       });
       fetchUsers(0);
     } catch (err) {
-      setCreateError(err instanceof Error ? err.message : 'Tao nguoi dung that bai');
+      setCreateError(err instanceof Error ? err.message : 'Tạo người dùng thất bại');
     } finally {
       setCreateLoading(false);
     }
@@ -129,28 +140,28 @@ const UserManagement: React.FC = () => {
       setUsers((prev) => prev.map((u) => (u.id === user.id ? updated : u)));
       if (selectedUser?.id === user.id) setSelectedUser(updated);
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Cap nhat trang thai that bai');
+      alert(err instanceof Error ? err.message : 'Cập nhật trạng thái thất bại');
     }
   };
 
   const handleResetPassword = async (userId: string) => {
     try {
       await userManagementService.resetPassword(userId);
-      alert('Mat khau moi da duoc gui den email cua nguoi dung');
+      alert('Mật khẩu mới đã được gửi đến email của người dùng');
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Dat lai mat khau that bai');
+      alert(err instanceof Error ? err.message : 'Đặt lại mật khẩu thất bại');
     }
   };
 
   const handleDeleteUser = async (userId: string) => {
-    if (!globalThis.confirm('Ban co chac chan muon xoa tai khoan nay khong?')) return;
+    if (!globalThis.confirm('Bạn có chắc chắn muốn xóa tài khoản này không?')) return;
     try {
       await userManagementService.deleteUser(userId);
       setUsers((prev) => prev.filter((u) => u.id !== userId));
       if (selectedUser?.id === userId) setSelectedUser(null);
       setStats((prev) => ({ ...prev, total: prev.total - 1 }));
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Xoa tai khoan that bai');
+      alert(err instanceof Error ? err.message : 'Xóa tài khoản thất bại');
     }
   };
 
@@ -161,9 +172,9 @@ const UserManagement: React.FC = () => {
       await userManagementService.sendEmail(selectedUser.id, emailForm);
       setShowEmailModal(false);
       setEmailForm({ subject: '', body: '' });
-      alert('Email da duoc gui thanh cong');
+      alert('Email đã được gửi thành công');
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Gui email that bai');
+      alert(err instanceof Error ? err.message : 'Gửi email thất bại');
     } finally {
       setEmailLoading(false);
     }
@@ -183,7 +194,7 @@ const UserManagement: React.FC = () => {
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Xuat Excel that bai');
+      alert(err instanceof Error ? err.message : 'Xuất Excel thất bại');
     }
   };
 
@@ -194,11 +205,11 @@ const UserManagement: React.FC = () => {
   const getStatusLabel = (status: string) => {
     switch (status) {
       case 'ACTIVE':
-        return '\u2705 Hoat dong';
+        return 'Hoạt động';
       case 'INACTIVE':
-        return '\u23F8\uFE0F Tam ngung';
+        return 'Tạm ngưng';
       case 'BANNED':
-        return '\uD83D\uDEAB Bi cam';
+        return 'Bị cấm';
       default:
         return status;
     }
@@ -208,11 +219,11 @@ const UserManagement: React.FC = () => {
     const role = getHighestRole(roles);
     switch (role) {
       case 'TEACHER':
-        return '\uD83D\uDC68\u200D\uD83C\uDFEB Giao vien';
+        return 'Giáo viên';
       case 'STUDENT':
-        return '\uD83D\uDC68\u200D\uD83C\uDF93 Hoc sinh';
+        return 'Học sinh';
       case 'ADMIN':
-        return '\uD83D\uDC68\u200D\uD83D\uDCBC Admin';
+        return 'Admin';
       default:
         return role ?? '\u2014';
     }
@@ -235,40 +246,34 @@ const UserManagement: React.FC = () => {
   return (
     <DashboardLayout
       role="admin"
-      user={{ name: mockAdmin.name, avatar: mockAdmin.avatar as string, role: 'admin' }}
+      user={{ name: 'Admin System', avatar: 'AD', role: 'admin' }}
       notificationCount={8}
     >
       <div className="user-management-page">
         <div className="page-header">
           <div>
-            <h1 className="page-title">&#128101; Quan Ly Nguoi Dung</h1>
-            <p className="page-subtitle">Quan ly tai khoan va phan quyen nguoi dung</p>
+            <h1 className="page-title">User Management</h1>
+            <p className="page-subtitle">Quản lý tài khoản và phân quyền người dùng</p>
           </div>
           <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}>
-            <span>&#10133;</span> Them nguoi dung
+            <Plus className="w-3.5 h-3.5" /> Thêm người dùng
           </button>
         </div>
 
         {/* Stats */}
         <div className="user-stats">
           <div className="stat-card">
-            <div
-              className="stat-icon"
-              style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
-            >
-              &#128101;
+            <div className="stat-icon total">
+              <Users className="w-5 h-5" />
             </div>
             <div className="stat-content">
               <div className="stat-value">{stats.total}</div>
-              <div className="stat-label">Tong nguoi dung</div>
+              <div className="stat-label">Tổng người dùng</div>
             </div>
           </div>
           <div className="stat-card">
-            <div
-              className="stat-icon"
-              style={{ background: 'linear-gradient(135deg, #f7971e 0%, #ffd200 100%)' }}
-            >
-              &#128104;&#8205;&#128187;
+            <div className="stat-icon admin">
+              <Settings className="w-5 h-5" />
             </div>
             <div className="stat-content">
               <div className="stat-value">{stats.admins}</div>
@@ -276,39 +281,30 @@ const UserManagement: React.FC = () => {
             </div>
           </div>
           <div className="stat-card">
-            <div
-              className="stat-icon"
-              style={{ background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)' }}
-            >
-              &#128104;&#8205;&#127979;
+            <div className="stat-icon teacher">
+              <BookOpen className="w-5 h-5" />
             </div>
             <div className="stat-content">
               <div className="stat-value">{stats.teachers}</div>
-              <div className="stat-label">Giao vien</div>
+              <div className="stat-label">Giáo viên</div>
             </div>
           </div>
           <div className="stat-card">
-            <div
-              className="stat-icon"
-              style={{ background: 'linear-gradient(135deg, #ffd89b 0%, #19547b 100%)' }}
-            >
-              &#128104;&#8205;&#127891;
+            <div className="stat-icon student">
+              <GraduationCap className="w-5 h-5" />
             </div>
             <div className="stat-content">
               <div className="stat-value">{stats.students}</div>
-              <div className="stat-label">Hoc sinh</div>
+              <div className="stat-label">Học sinh</div>
             </div>
           </div>
           <div className="stat-card">
-            <div
-              className="stat-icon"
-              style={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' }}
-            >
-              &#9989;
+            <div className="stat-icon active">
+              <CheckCircle2 className="w-5 h-5" />
             </div>
             <div className="stat-content">
               <div className="stat-value">{stats.active}</div>
-              <div className="stat-label">Dang hoat dong</div>
+              <div className="stat-label">Đang hoạt động</div>
             </div>
           </div>
         </div>
@@ -320,7 +316,7 @@ const UserManagement: React.FC = () => {
               className={`filter-tab ${filterRole === 'all' ? 'active' : ''}`}
               onClick={() => setFilterRole('all')}
             >
-              Tat ca ({stats.total})
+              Tất cả ({stats.total})
             </button>
             <button
               className={`filter-tab ${filterRole === 'admin' ? 'active' : ''}`}
@@ -332,45 +328,48 @@ const UserManagement: React.FC = () => {
               className={`filter-tab ${filterRole === 'teacher' ? 'active' : ''}`}
               onClick={() => setFilterRole('teacher')}
             >
-              Giao vien ({stats.teachers})
+              Giáo viên ({stats.teachers})
             </button>
             <button
               className={`filter-tab ${filterRole === 'student' ? 'active' : ''}`}
               onClick={() => setFilterRole('student')}
             >
-              Hoc sinh ({stats.students})
+              Học sinh ({stats.students})
             </button>
           </div>
 
           <div className="toolbar-actions">
-            <input
-              type="text"
-              placeholder="Tim kiem nguoi dung..."
-              className="search-input"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+            <div className="search-field">
+              <Search className="search-icon" />
+              <input
+                type="text"
+                placeholder="Tìm kiếm người dùng..."
+                className="search-input"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
             <button className="btn btn-outline" onClick={handleExportExcel}>
-              Xuat Excel
+              Xuất Excel
             </button>
           </div>
         </div>
 
         {/* Users Table */}
         <div className="users-table-container">
-          {loading && <div className="table-loading">Dang tai...</div>}
+          {loading && <div className="table-loading">Đang tải...</div>}
           {error && <div className="table-error">{error}</div>}
           {!loading && !error && (
             <table className="users-table">
               <thead>
                 <tr>
-                  <th>Nguoi dung</th>
-                  <th>Vai tro</th>
+                  <th>Người dùng</th>
+                  <th>Vai trò</th>
                   <th>Email</th>
-                  <th>Ngay tham gia</th>
-                  <th>Dang nhap gan day</th>
-                  <th>Trang thai</th>
-                  <th>Hanh dong</th>
+                  <th>Ngày tham gia</th>
+                  <th>Đăng nhập gần đây</th>
+                  <th>Trạng thái</th>
+                  <th>Hành động</th>
                 </tr>
               </thead>
               <tbody>
@@ -395,7 +394,7 @@ const UserManagement: React.FC = () => {
                       </div>
                       <div className="user-info">
                         <div className="user-name">{user.fullName}</div>
-                        <div style={{ fontSize: '0.75rem', color: '#888' }}>@{user.userName}</div>
+                        <div className="user-handle">@{user.userName}</div>
                       </div>
                     </td>
                     <td>
@@ -424,17 +423,17 @@ const UserManagement: React.FC = () => {
                       <div className="action-buttons">
                         <button
                           className="action-btn view"
-                          title="Xem chi tiet"
+                          title="Xem chi tiết"
                           onClick={() => setSelectedUser(user)}
                         >
-                          &#128065;&#65039;
+                          <Eye className="w-4 h-4" />
                         </button>
                         <button
                           className="action-btn delete"
-                          title="Xoa"
+                          title="Xóa"
                           onClick={() => handleDeleteUser(user.id)}
                         >
-                          &#128465;&#65039;
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </td>
@@ -442,8 +441,8 @@ const UserManagement: React.FC = () => {
                 ))}
                 {users.length === 0 && (
                   <tr>
-                    <td colSpan={7} style={{ textAlign: 'center', padding: '2rem', color: '#888' }}>
-                      Khong co nguoi dung nao
+                    <td colSpan={7} className="empty-users-row">
+                      Không có người dùng nào
                     </td>
                   </tr>
                 )}
@@ -460,7 +459,7 @@ const UserManagement: React.FC = () => {
               disabled={pagination.page === 0}
               onClick={() => handlePageChange(pagination.page - 1)}
             >
-              Truoc
+              Trước
             </button>
             <div className="pagination-pages">
               {Array.from({ length: Math.min(pagination.totalPages, 10) }, (_, i) => (
@@ -486,21 +485,17 @@ const UserManagement: React.FC = () => {
 
         {/* Create User Modal */}
         {showCreateModal && (
-          <div
-            className="modal-overlay"
-            role="presentation"
-            onClick={() => setShowCreateModal(false)}
-          >
-            <div
-              className="modal"
-              role="dialog"
-              aria-modal="true"
-              onClick={(e) => e.stopPropagation()}
-            >
+          <div className="modal-overlay">
+            <button
+              className="modal-backdrop"
+              onClick={() => setShowCreateModal(false)}
+              aria-label="Đóng hộp thoại"
+            />
+            <dialog className="modal" open>
               <div className="modal-header">
-                <h2 className="modal-title">Them nguoi dung moi</h2>
+                <h2 className="modal-title">Thêm người dùng mới</h2>
                 <button className="modal-close" onClick={() => setShowCreateModal(false)}>
-                  X
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
@@ -512,22 +507,22 @@ const UserManagement: React.FC = () => {
                 )}
 
                 <div className="form-group">
-                  <label htmlFor="create-fullname">Ho va ten *</label>
+                  <label htmlFor="create-fullname">Họ và tên *</label>
                   <input
                     id="create-fullname"
                     type="text"
-                    placeholder="Nhap ho va ten"
+                    placeholder="Nhập họ và tên"
                     value={createForm.fullName}
                     onChange={(e) => setCreateForm((f) => ({ ...f, fullName: e.target.value }))}
                   />
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="create-username">Ten dang nhap *</label>
+                  <label htmlFor="create-username">Tên đăng nhập *</label>
                   <input
                     id="create-username"
                     type="text"
-                    placeholder="Nhap ten dang nhap (khong dau, khong khoang trang)"
+                    placeholder="Nhập tên đăng nhập (không dấu, không khoảng trắng)"
                     value={createForm.userName}
                     onChange={(e) => setCreateForm((f) => ({ ...f, userName: e.target.value }))}
                   />
@@ -546,7 +541,7 @@ const UserManagement: React.FC = () => {
 
                 <div className="form-row">
                   <div className="form-group">
-                    <label htmlFor="create-role">Vai tro *</label>
+                    <label htmlFor="create-role">Vai trò *</label>
                     <select
                       id="create-role"
                       value={createForm.role}
@@ -554,13 +549,13 @@ const UserManagement: React.FC = () => {
                         setCreateForm((f) => ({ ...f, role: e.target.value as UserRole }))
                       }
                     >
-                      <option value="TEACHER">Giao vien</option>
-                      <option value="STUDENT">Hoc sinh</option>
+                      <option value="TEACHER">Giáo viên</option>
+                      <option value="STUDENT">Học sinh</option>
                       <option value="ADMIN">Admin</option>
                     </select>
                   </div>
                   <div className="form-group">
-                    <label htmlFor="create-status">Trang thai *</label>
+                    <label htmlFor="create-status">Trạng thái *</label>
                     <select
                       id="create-status"
                       value={createForm.status}
@@ -571,18 +566,18 @@ const UserManagement: React.FC = () => {
                         }))
                       }
                     >
-                      <option value="ACTIVE">Hoat dong</option>
-                      <option value="INACTIVE">Tam ngung</option>
+                      <option value="ACTIVE">Hoạt động</option>
+                      <option value="INACTIVE">Tạm ngưng</option>
                     </select>
                   </div>
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="create-password">Mat khau tam thoi *</label>
+                  <label htmlFor="create-password">Mật khẩu tạm thời *</label>
                   <input
                     id="create-password"
                     type="password"
-                    placeholder="Toi thieu 8 ky tu, co chu hoa + so + ky tu dac biet"
+                    placeholder="Tối thiểu 8 ký tự, có chữ hoa + số + ký tự đặc biệt"
                     value={createForm.password}
                     onChange={(e) => setCreateForm((f) => ({ ...f, password: e.target.value }))}
                   />
@@ -595,59 +590,55 @@ const UserManagement: React.FC = () => {
                   onClick={() => setShowCreateModal(false)}
                   disabled={createLoading}
                 >
-                  Huy
+                  Hủy
                 </button>
                 <button
                   className="btn btn-primary"
                   onClick={handleCreateSubmit}
                   disabled={createLoading}
                 >
-                  {createLoading ? 'Dang tao...' : 'Tao nguoi dung'}
+                  {createLoading ? 'Đang tạo...' : 'Tạo người dùng'}
                 </button>
               </div>
-            </div>
+            </dialog>
           </div>
         )}
 
         {/* Send Email Modal */}
         {showEmailModal && selectedUser && (
-          <div
-            className="modal-overlay"
-            role="presentation"
-            onClick={() => setShowEmailModal(false)}
-          >
-            <div
-              className="modal"
-              role="dialog"
-              aria-modal="true"
-              onClick={(e) => e.stopPropagation()}
-            >
+          <div className="modal-overlay">
+            <button
+              className="modal-backdrop"
+              onClick={() => setShowEmailModal(false)}
+              aria-label="Đóng hộp thoại"
+            />
+            <dialog className="modal" open>
               <div className="modal-header">
-                <h2 className="modal-title">Gui email den {selectedUser.fullName}</h2>
+                <h2 className="modal-title">Gửi email đến {selectedUser.fullName}</h2>
                 <button className="modal-close" onClick={() => setShowEmailModal(false)}>
-                  X
+                  <X className="w-4 h-4" />
                 </button>
               </div>
               <div className="modal-body">
                 <div className="form-group">
-                  <label htmlFor="email-subject">Tieu de *</label>
+                  <label htmlFor="email-subject">Tiêu đề *</label>
                   <input
                     id="email-subject"
                     type="text"
-                    placeholder="Nhap tieu de email"
+                    placeholder="Nhập tiêu đề email"
                     value={emailForm.subject}
                     onChange={(e) => setEmailForm((f) => ({ ...f, subject: e.target.value }))}
                   />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="email-body">Noi dung *</label>
+                  <label htmlFor="email-body">Nội dung *</label>
                   <textarea
                     id="email-body"
                     rows={6}
-                    placeholder="Nhap noi dung email..."
+                    placeholder="Nhập nội dung email..."
                     value={emailForm.body}
                     onChange={(e) => setEmailForm((f) => ({ ...f, body: e.target.value }))}
-                    style={{ width: '100%', resize: 'vertical' }}
+                    className="email-textarea"
                   />
                 </div>
               </div>
@@ -657,33 +648,33 @@ const UserManagement: React.FC = () => {
                   onClick={() => setShowEmailModal(false)}
                   disabled={emailLoading}
                 >
-                  Huy
+                  Hủy
                 </button>
                 <button
                   className="btn btn-primary"
                   onClick={handleSendEmail}
                   disabled={emailLoading}
                 >
-                  {emailLoading ? 'Dang gui...' : 'Gui email'}
+                  {emailLoading ? 'Đang gửi...' : 'Gửi email'}
                 </button>
               </div>
-            </div>
+            </dialog>
           </div>
         )}
 
         {/* User Detail Modal */}
         {selectedUser && !showEmailModal && (
-          <div className="modal-overlay" role="presentation" onClick={() => setSelectedUser(null)}>
-            <div
-              className="modal large"
-              role="dialog"
-              aria-modal="true"
-              onClick={(e) => e.stopPropagation()}
-            >
+          <div className="modal-overlay">
+            <button
+              className="modal-backdrop"
+              onClick={() => setSelectedUser(null)}
+              aria-label="Đóng hộp thoại"
+            />
+            <dialog className="modal large" open>
               <div className="modal-header">
-                <h2 className="modal-title">Chi tiet nguoi dung</h2>
+                <h2 className="modal-title">Chi tiết người dùng</h2>
                 <button className="modal-close" onClick={() => setSelectedUser(null)}>
-                  X
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
@@ -707,9 +698,7 @@ const UserManagement: React.FC = () => {
                   </div>
                   <div className="detail-info">
                     <h3>{selectedUser.fullName}</h3>
-                    <div style={{ fontSize: '0.875rem', color: '#888' }}>
-                      @{selectedUser.userName}
-                    </div>
+                    <div className="detail-handle">@{selectedUser.userName}</div>
                     <p>{selectedUser.email}</p>
                     <span className={`role-badge ${getRoleBadgeClass(selectedUser.roles)}`}>
                       {getRoleLabel(selectedUser.roles)}
@@ -719,13 +708,13 @@ const UserManagement: React.FC = () => {
 
                 <div className="user-detail-stats">
                   <div className="detail-stat">
-                    <div className="stat-label">Ngay tham gia</div>
+                    <div className="stat-label">Ngày tham gia</div>
                     <div className="stat-value">
                       {new Date(selectedUser.createdDate).toLocaleDateString('vi-VN')}
                     </div>
                   </div>
                   <div className="detail-stat">
-                    <div className="stat-label">Dang nhap gan day</div>
+                    <div className="stat-label">Đăng nhập gần đây</div>
                     <div className="stat-value">
                       {selectedUser.lastLogin
                         ? new Date(selectedUser.lastLogin).toLocaleString('vi-VN')
@@ -733,7 +722,7 @@ const UserManagement: React.FC = () => {
                     </div>
                   </div>
                   <div className="detail-stat">
-                    <div className="stat-label">Trang thai</div>
+                    <div className="stat-label">Trạng thái</div>
                     <div className="stat-value">
                       <span className={`status-badge ${selectedUser.status.toLowerCase()}`}>
                         {getStatusLabel(selectedUser.status)}
@@ -743,30 +732,30 @@ const UserManagement: React.FC = () => {
                 </div>
 
                 <div className="user-actions-section">
-                  <h4>Hanh dong quan ly</h4>
+                  <h4>Hành động quản lý</h4>
                   <div className="action-buttons-grid">
                     <button
                       className="btn btn-outline"
                       onClick={() => handleResetPassword(selectedUser.id)}
                     >
-                      Dat lai mat khau
+                      Đặt lại mật khẩu
                     </button>
                     <button className="btn btn-outline" onClick={() => setShowEmailModal(true)}>
-                      Gui email
+                      Gửi email
                     </button>
                     {(selectedUser.status === 'ACTIVE' || selectedUser.status === 'INACTIVE') && (
                       <button
                         className="btn btn-outline"
                         onClick={() => handleToggleStatus(selectedUser)}
                       >
-                        {selectedUser.status === 'ACTIVE' ? 'Tam ngung' : 'Kich hoat'}
+                        {selectedUser.status === 'ACTIVE' ? 'Tạm ngưng' : 'Kích hoạt'}
                       </button>
                     )}
                     <button
                       className="btn btn-outline"
                       onClick={() => handleDeleteUser(selectedUser.id)}
                     >
-                      Xoa tai khoan
+                      Xóa tài khoản
                     </button>
                   </div>
                 </div>
@@ -774,10 +763,10 @@ const UserManagement: React.FC = () => {
 
               <div className="modal-footer">
                 <button className="btn btn-primary" onClick={() => setSelectedUser(null)}>
-                  Dong
+                  Đóng
                 </button>
               </div>
-            </div>
+            </dialog>
           </div>
         )}
       </div>

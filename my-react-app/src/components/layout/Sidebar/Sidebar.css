@@ -2,15 +2,15 @@
 .sidebar {
   --sb-w: 248px;
   --sb-w-col: 64px;
-  --sb-primary: #5e5ce6;
-  --sb-primary-soft: rgba(94, 92, 230, 0.08);
+  --sb-primary: #c96442;
+  --sb-primary-soft: rgba(201, 100, 66, 0.12);
   --sb-text-1: #0e0c15;
   --sb-text-2: #3f3a52;
   --sb-text-3: #9ca3af;
   --sb-border: #e8e5f0;
   --sb-bg: #ffffff;
   --sb-radius: 7px;
-  --sb-f-body: 'Inter', -apple-system, sans-serif;
+  --sb-f-body: 'Be Vietnam Pro', -apple-system, sans-serif;
   --sb-f-head: 'Be Vietnam Pro', -apple-system, sans-serif;
 
   width: var(--sb-w);
@@ -118,7 +118,7 @@
 .sb-toggle:hover {
   background: var(--sb-primary-soft);
   color: var(--sb-primary);
-  box-shadow: 2px 0 10px rgba(94, 92, 230, 0.18);
+  box-shadow: 2px 0 10px rgba(201, 100, 66, 0.2);
 }
 
 .sidebar--collapsed .sb-toggle {

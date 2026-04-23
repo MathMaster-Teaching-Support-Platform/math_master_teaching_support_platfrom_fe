@@ -3,8 +3,8 @@
 
 /* ── Design tokens ── */
 .rp {
-  --rp-primary: #5e5ce6;
-  --rp-primary-soft: rgba(94, 92, 230, 0.08);
+  --rp-primary: #c96442;
+  --rp-primary-soft: rgba(201, 100, 66, 0.12);
   --rp-text-1: #0e0c15;
   --rp-text-2: #3f3a52;
   --rp-text-3: #756b85;
@@ -14,7 +14,7 @@
   --rp-bg: #fafaff;
   --rp-radius: 12px;
   --rp-f-head: 'Be Vietnam Pro', -apple-system, sans-serif;
-  --rp-f-body: 'Inter', -apple-system, sans-serif;
+  --rp-f-body: 'Be Vietnam Pro', -apple-system, sans-serif;
 
   max-width: 1200px;
   margin: 0 auto;
@@ -860,8 +860,8 @@
 .rp-lightbox-toolbar button,
 .rp-lightbox-nav {
   border: 1px solid rgba(255, 255, 255, 0.25);
-  background: rgba(255, 255, 255, 0.14);
-  color: #fff;
+  background: rgba(20, 20, 19, 0.72);
+  color: #faf9f5;
   border-radius: 8px;
   cursor: pointer;
   display: flex;
@@ -908,12 +908,12 @@
   bottom: 22px;
   left: 50%;
   transform: translateX(-50%);
-  color: #fff;
+  color: #faf9f5;
   font-size: 0.8rem;
   font-weight: 600;
   padding: 0.3rem 0.65rem;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(20, 20, 19, 0.72);
 }
 
 /* ── Responsive ── */
@@ -961,7 +961,7 @@
   padding: 0.75rem 1rem;
   margin-top: 0.75rem;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  color: #141413;
   border: none;
   border-radius: var(--rp-radius);
   font-size: 0.875rem;

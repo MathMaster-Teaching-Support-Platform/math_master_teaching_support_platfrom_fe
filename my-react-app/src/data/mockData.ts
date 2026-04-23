@@ -223,7 +223,7 @@ export const mockStudents = [
     enrolledDate: '2026-01-15',
     completedLessons: 8,
     totalLessons: 12,
-    averageScore: 9.0,
+    averageScore: 9,
     lastActive: '2026-01-31',
   },
   {

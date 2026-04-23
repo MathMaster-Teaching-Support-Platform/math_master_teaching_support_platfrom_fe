@@ -133,7 +133,11 @@ function buildOptions(options: OptionInput[]): Record<string, unknown> {
   const mappedOptions: Record<string, unknown> = {};
   for (const option of options) {
     if (!option.key.trim() || !option.formula.trim()) continue;
-    mappedOptions[option.key.trim()] = option.formula.trim();
+    const formula = option.formula.trim();
+    const wrappedFormula = formula.startsWith('$$') && formula.endsWith('$$')
+      ? formula
+      : `$$${formula}$$`;
+    mappedOptions[option.key.trim()] = wrappedFormula;
   }
   return mappedOptions;
 }
@@ -252,7 +256,7 @@ export function TemplateFormModal({
     setCognitiveLevel(CognitiveLevel.THONG_HIEU);
     setIsPublic(false);
     setTemplateText('Giải phương trình: {{a}}x + {{b}} = 0');
-    setAnswerFormula('(-b)/a');
+    setAnswerFormula('(-{{b}})/{{a}}');
     setTags('đại số, lớp 9');
     setDiagramTemplateRaw('');
     setParameters([
@@ -260,10 +264,10 @@ export function TemplateFormModal({
       { name: 'b', type: 'int', min: '-10', max: '10', constraint: '' },
     ]);
     setOptions([
-      { key: 'A', formula: '(-b)/a' },
-      { key: 'B', formula: 'b/a' },
-      { key: 'C', formula: '-a/b' },
-      { key: 'D', formula: 'a+b' },
+      { key: 'A', formula: '$$(-{{b}})/{{a}}$$' },
+      { key: 'B', formula: '$${{b}}/{{a}}$$' },
+      { key: 'C', formula: '$$-{{a}}/{{b}}$$' },
+      { key: 'D', formula: '$${{a}}+{{b}}$$' },
     ]);
   }, [isOpen, initialData, mode]);
 
@@ -630,13 +634,13 @@ export function TemplateFormModal({
               <input
                 ref={answerFormulaRef}
                 className="input"
-                placeholder="Ví dụ: a + b"
+                placeholder="Ví dụ: (-{{b}})/{{a}}) — dùng {{tên_biến}} cho tham số"
                 value={answerFormula}
                 onFocus={() => setActiveMathField({ kind: 'answerFormula' })}
                 onChange={(event) => setAnswerFormula(event.target.value)}
               />
               <p className="muted" style={{ marginTop: 6, fontSize: '0.78rem' }}>
-                Công thức phải dùng đúng tên biến đã khai báo (ví dụ: 2 * {'{{a}}'} * x).
+                Dùng <code>{'{{tên_biến}}'}</code> cho tham số (ví dụ: <code>{'(-{{b}})/{{a}})'}</code>). Biến phải khớp với tên đã khai báo ở trước.
               </p>
               {answerFormula && (
                 <div className="preview-box">

@@ -3,13 +3,13 @@
    Homepage-inspired: dark gradient bg + floating math symbols
    ================================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap');
 
 /* ── Design tokens ─────────────────────────────────────────────── */
 :root {
-  --ob-primary: #5e5ce6;
+  --ob-primary: #c96442;
   --ob-primary-hover: #4f46e5;
-  --ob-primary-glow: rgba(94, 92, 230, 0.28);
+  --ob-primary-glow: rgba(201, 100, 66, 0.28);
   --ob-teal: #14b8a6;
   --ob-teal-hover: #0d9488;
   --ob-teal-glow: rgba(20, 184, 166, 0.28);
@@ -20,9 +20,9 @@
   --ob-text: #0e0c15;
   --ob-text-muted: #756b85;
   --ob-input-border: #ddd8ee;
-  --ob-input-focus: #5e5ce6;
+  --ob-input-focus: #c96442;
   --ob-r: 20px;
-  --ob-font: 'Inter', -apple-system, sans-serif;
+  --ob-font: 'Be Vietnam Pro', -apple-system, sans-serif;
   --ob-font-head: 'Be Vietnam Pro', -apple-system, sans-serif;
 }
 
@@ -36,7 +36,7 @@
   align-items: center;
   justify-content: center;
   background:
-    radial-gradient(ellipse 80% 60% at 20% 10%, rgba(94, 92, 230, 0.18) 0%, transparent 60%),
+    radial-gradient(ellipse 80% 60% at 20% 10%, rgba(201, 100, 66, 0.2) 0%, transparent 60%),
     radial-gradient(ellipse 60% 50% at 80% 80%, rgba(20, 184, 166, 0.13) 0%, transparent 55%),
     radial-gradient(ellipse 50% 40% at 60% 30%, rgba(167, 139, 250, 0.1) 0%, transparent 50%),
     linear-gradient(145deg, #16133d 0%, #1e1b4b 30%, #1a1832 60%, #111827 100%);
@@ -217,7 +217,7 @@
   right: -150px;
   background: radial-gradient(
     circle,
-    rgba(94, 92, 230, 0.22) 0%,
+    rgba(201, 100, 66, 0.24) 0%,
     rgba(94, 92, 230, 0.06) 50%,
     transparent 70%
   );
@@ -270,7 +270,7 @@
   align-items: center;
   padding: 1.5rem 2.5rem 1rem;
   background: linear-gradient(to bottom, #f8f7ff, transparent);
-  border-bottom: 1px solid rgba(94, 92, 230, 0.08);
+  border-bottom: 1px solid rgba(201, 100, 66, 0.12);
   flex-shrink: 0;
 }
 
@@ -441,7 +441,7 @@
 }
 .ob-role-card--teacher:active {
   transform: translateY(-1px) scale(0.985);
-  box-shadow: 0 4px 16px rgba(94, 92, 230, 0.18);
+  box-shadow: 0 4px 16px rgba(201, 100, 66, 0.2);
   background: #f3f1ff;
   border-color: var(--ob-primary);
 }

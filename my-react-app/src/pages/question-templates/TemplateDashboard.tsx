@@ -33,6 +33,7 @@ import {
   useBulkApproveCanonicalQuestions,
   useCreateCanonicalQuestion,
   useDeleteCanonicalQuestion,
+  useGetCanonicalQuestionById,
   useGetMyCanonicalQuestions,
   useReviewCanonicalQuestions,
   useUpdateCanonicalQuestion,
@@ -51,6 +52,7 @@ import {
   useGetMyQuestionTemplates,
   usePublishTemplate,
   useTogglePublicStatus,
+  useUnpublishTemplate,
   useUpdateQuestionTemplate,
 } from '../../hooks/useQuestionTemplate';
 import { questionTemplateService } from '../../services/questionTemplateService';
@@ -208,6 +210,7 @@ export function TemplateDashboard() {
   const [selectedCanonical, setSelectedCanonical] = useState<CanonicalQuestionResponse | null>(
     null
   );
+  const [editingCanonicalId, setEditingCanonicalId] = useState('');
   const [canonicalReviewOpen, setCanonicalReviewOpen] = useState(false);
   const [canonicalReviewId, setCanonicalReviewId] = useState('');
   const [selectedCanonicalQuestionIds, setSelectedCanonicalQuestionIds] = useState<Set<string>>(
@@ -242,12 +245,17 @@ export function TemplateDashboard() {
     debouncedStatus === 'ALL' ? undefined : debouncedStatus
   );
   const { data: canonicalData } = useGetMyCanonicalQuestions(0, 20, 'createdAt', 'DESC');
+  const { data: canonicalDetailData } = useGetCanonicalQuestionById(
+    editingCanonicalId,
+    canonicalOpen && canonicalMode === 'edit' && Boolean(editingCanonicalId)
+  );
 
   const createMutation = useCreateQuestionTemplate();
   const updateMutation = useUpdateQuestionTemplate();
   const deleteMutation = useDeleteQuestionTemplate();
   const publishMutation = usePublishTemplate();
   const archiveMutation = useArchiveTemplate();
+  const unpublishMutation = useUnpublishTemplate();
   const togglePublicMutation = useTogglePublicStatus();
   const bulkApproveMutation = useBulkApproveQuestions();
   const approveQuestionMutation = useApproveQuestion();
@@ -355,12 +363,14 @@ export function TemplateDashboard() {
   function openCanonicalCreateModal() {
     setCanonicalMode('create');
     setSelectedCanonical(null);
+    setEditingCanonicalId('');
     setCanonicalOpen(true);
   }
 
   function openCanonicalEditModal(canonical: CanonicalQuestionResponse) {
     setCanonicalMode('edit');
     setSelectedCanonical(canonical);
+    setEditingCanonicalId(canonical.id);
     setCanonicalOpen(true);
   }
 
@@ -806,7 +816,6 @@ export function TemplateDashboard() {
                   <thead>
                     <tr>
                       <th>Tiêu đề</th>
-                      <th style={{ width: 180 }}>Dạng bài toán</th>
                       <th style={{ width: 180 }}>Mức độ nhận thức</th>
                       <th style={{ width: 380 }}>Thao tác</th>
                     </tr>
@@ -815,7 +824,6 @@ export function TemplateDashboard() {
                     {canonicalQuestions.map((canonical) => (
                       <tr key={canonical.id}>
                         <td>{canonical.title}</td>
-                        <td>{canonical.problemType}</td>
                         <td>
                           {cognitiveLevelLabel[canonical.cognitiveLevel] ||
                             canonical.cognitiveLevel}
@@ -1109,6 +1117,15 @@ export function TemplateDashboard() {
                             Lưu trữ
                           </button>
                         )}
+                        {template.status === TemplateStatus.PUBLISHED && (
+                          <button
+                            className="btn secondary"
+                            onClick={() => unpublishMutation.mutate(template.id)}
+                          >
+                            <FileText size={14} />
+                            Hủy xuất bản
+                          </button>
+                        )}
                         <button
                           className="btn danger-outline"
                           onClick={() => deleteMutation.mutate(template.id)}
@@ -1176,9 +1193,12 @@ export function TemplateDashboard() {
 
           <CanonicalQuestionModal
             isOpen={canonicalOpen}
-            onClose={() => setCanonicalOpen(false)}
+            onClose={() => {
+              setCanonicalOpen(false);
+              setEditingCanonicalId('');
+            }}
             mode={canonicalMode}
-            initialData={selectedCanonical}
+            initialData={canonicalDetailData?.result ?? selectedCanonical}
             submitting={createCanonicalMutation.isPending || updateCanonicalMutation.isPending}
             onSubmit={async (payload) => {
               if (canonicalMode === 'edit' && selectedCanonical) {

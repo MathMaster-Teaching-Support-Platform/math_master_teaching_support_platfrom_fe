@@ -1,8 +1,19 @@
-import { useMemo, useState } from 'react';
-import { ArrowLeft, Eye, EyeOff, Link2, Pencil, RefreshCw, Search, Trash2, Unlink2 } from 'lucide-react';
+import {
+  ArrowLeft,
+  Eye,
+  EyeOff,
+  Link2,
+  Pencil,
+  RefreshCw,
+  Search,
+  Trash2,
+  Unlink2,
+} from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import MathText from '../../components/common/MathText';
+import Pagination from '../../components/common/Pagination';
+import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import {
   useBatchAssignQuestionsToBank,
   useBatchRemoveQuestionsFromBank,
@@ -15,9 +26,9 @@ import {
   useToggleQuestionBankPublicStatus,
   useUpdateQuestionBank,
 } from '../../hooks/useQuestionBank';
+import '../../styles/module-refactor.css';
 import type { QuestionResponse } from '../../types/question';
 import type { QuestionBankRequest } from '../../types/questionBank';
-import '../../styles/module-refactor.css';
 import { QuestionBankFormModal } from './QuestionBankFormModal';
 
 const questionTypeLabel: Record<string, string> = {
@@ -40,7 +51,6 @@ export function QuestionBankDetailPage() {
 
   const [search, setSearch] = useState('');
   const [questionSearchKeyword, setQuestionSearchKeyword] = useState('');
-  const [questionSearchType, setQuestionSearchType] = useState<QuestionResponse['questionType'] | ''>('');
   const [questionSearchPage, setQuestionSearchPage] = useState(0);
   const [questionSearchSize] = useState(10);
   const [selectedQuestionIds, setSelectedQuestionIds] = useState<Set<string>>(new Set());
@@ -69,13 +79,23 @@ export function QuestionBankDetailPage() {
     refetch: refetchSearchQuestions,
   } = useSearchQuestions(
     {
-      search: questionSearchKeyword,
-      type: questionSearchType,
+      keyword: questionSearchKeyword,
       page: questionSearchPage,
       size: questionSearchSize,
     },
     !!bankId
   );
+
+  useEffect(() => {
+    if (!bankId) return;
+    void refetchSearchQuestions();
+  }, [
+    bankId,
+    questionSearchPage,
+    questionSearchSize,
+    questionSearchKeyword,
+    refetchSearchQuestions,
+  ]);
 
   const updateMutation = useUpdateQuestionBank();
   const deleteMutation = useDeleteQuestionBank();
@@ -146,7 +166,9 @@ export function QuestionBankDetailPage() {
       setSelectedQuestionIds(new Set());
       await Promise.all([refetch(), refetchQuestions(), refetchSearchQuestions()]);
     } catch (error) {
-      setBatchError(error instanceof Error ? error.message : 'Không thể thêm câu hỏi vào question bank.');
+      setBatchError(
+        error instanceof Error ? error.message : 'Không thể thêm câu hỏi vào question bank.'
+      );
     }
   }
 
@@ -167,7 +189,9 @@ export function QuestionBankDetailPage() {
       setSelectedQuestionIds(new Set());
       await Promise.all([refetch(), refetchQuestions(), refetchSearchQuestions()]);
     } catch (error) {
-      setBatchError(error instanceof Error ? error.message : 'Không thể gỡ câu hỏi khỏi question bank.');
+      setBatchError(
+        error instanceof Error ? error.message : 'Không thể gỡ câu hỏi khỏi question bank.'
+      );
     }
   }
 
@@ -214,7 +238,9 @@ export function QuestionBankDetailPage() {
                 >
                   <span className="muted">Giáo viên: {bank.teacherName || 'Không xác định'}</span>
                   <span className="muted">Số câu hỏi: {bank.questionCount ?? 0}</span>
-                  <span className="muted">Chapter: {bank.chapterTitle || bank.chapterId || 'Chưa gán chapter'}</span>
+                  <span className="muted">
+                    Chapter: {bank.chapterTitle || bank.chapterId || 'Chưa gán chapter'}
+                  </span>
                 </div>
 
                 <div
@@ -266,14 +292,18 @@ export function QuestionBankDetailPage() {
                 <div className="row" style={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
                   <div>
                     <h3>Tìm câu hỏi và cập nhật theo lô</h3>
-                    <p className="muted">Dùng search để chọn nhiều câu hỏi rồi thêm/gỡ khỏi question bank hiện tại.</p>
+                    <p className="muted">
+                      Dùng search để chọn nhiều câu hỏi rồi thêm/gỡ khỏi question bank hiện tại.
+                    </p>
                   </div>
                   <span className="muted">Đã chọn: {selectedQuestionIds.size}</span>
                 </div>
 
                 <div className="form-grid" style={{ marginTop: 12 }}>
-                  <label>
-                    <p className="muted" style={{ marginBottom: 6 }}>Từ khóa</p>
+                  <label style={{ gridColumn: '1 / -1' }}>
+                    <p className="muted" style={{ marginBottom: 6 }}>
+                      Từ khóa
+                    </p>
                     <input
                       className="input"
                       placeholder="Ví dụ: hàm số, phương trình, giới hạn..."
@@ -283,24 +313,6 @@ export function QuestionBankDetailPage() {
                         setQuestionSearchPage(0);
                       }}
                     />
-                  </label>
-                  <label>
-                    <p className="muted" style={{ marginBottom: 6 }}>Loại câu hỏi</p>
-                    <select
-                      className="select"
-                      value={questionSearchType}
-                      onChange={(event) => {
-                        setQuestionSearchType(event.target.value as QuestionResponse['questionType'] | '');
-                        setQuestionSearchPage(0);
-                      }}
-                    >
-                      <option value="">Tất cả</option>
-                      <option value="MULTIPLE_CHOICE">Trắc nghiệm</option>
-                      <option value="TRUE_FALSE">Đúng/Sai</option>
-                      <option value="SHORT_ANSWER">Trả lời ngắn</option>
-                      <option value="ESSAY">Tự luận</option>
-                      <option value="CODING">Lập trình</option>
-                    </select>
                   </label>
                 </div>
 
@@ -332,7 +344,9 @@ export function QuestionBankDetailPage() {
                 </div>
 
                 {searchQuestionsLoading && (
-                  <div className="empty" style={{ marginTop: 12 }}>Đang tìm câu hỏi...</div>
+                  <div className="empty" style={{ marginTop: 12 }}>
+                    Đang tìm câu hỏi...
+                  </div>
                 )}
 
                 {searchQuestionsError && (
@@ -343,99 +357,103 @@ export function QuestionBankDetailPage() {
                   </div>
                 )}
 
-                {!searchQuestionsLoading && !searchQuestionsError && searchedQuestions.length > 0 && (
-                  <div className="table-wrap" style={{ marginTop: 12 }}>
-                    <table className="table">
-                      <thead>
-                        <tr>
-                          <th style={{ width: 50 }}>
-                            <input
-                              type="checkbox"
-                              checked={allSearchedSelected}
-                              onChange={(event) => {
-                                const checked = event.target.checked;
-                                if (!checked) {
-                                  setSelectedQuestionIds(new Set());
-                                  return;
-                                }
-                                setSelectedQuestionIds(new Set(searchedQuestions.map((question) => question.id)));
-                              }}
-                            />
-                          </th>
-                          <th>Câu hỏi</th>
-                          <th style={{ width: 150 }}>Loại</th>
-                          <th style={{ width: 180 }}>Trạng thái</th>
-                          <th style={{ width: 220 }}>Thuộc bank</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {searchedQuestions.map((question) => {
-                          const isInCurrentBank = question.questionBankId === bankId;
-                          return (
-                            <tr key={question.id}>
-                              <td>
-                                <input
-                                  type="checkbox"
-                                  checked={selectedQuestionIds.has(question.id)}
-                                  onChange={(event) => {
-                                    const checked = event.target.checked;
-                                    setSelectedQuestionIds((prev) => {
-                                      const next = new Set(prev);
-                                      if (checked) next.add(question.id);
-                                      else next.delete(question.id);
-                                      return next;
-                                    });
-                                  }}
-                                />
-                              </td>
-                              <td>
-                                <MathText text={question.questionText} />
-                                <p className="muted" style={{ margin: 0 }}>{question.id}</p>
-                              </td>
-                              <td>{questionTypeLabel[question.questionType] || question.questionType}</td>
-                              <td>{question.questionStatus || '-'}</td>
-                              <td>
-                                {isInCurrentBank
-                                  ? 'Bank hiện tại'
-                                  : question.questionBankName || question.questionBankId || 'Chưa gán'}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+                {!searchQuestionsLoading &&
+                  !searchQuestionsError &&
+                  searchedQuestions.length > 0 && (
+                    <div className="table-wrap" style={{ marginTop: 12 }}>
+                      <table className="table">
+                        <thead>
+                          <tr>
+                            <th style={{ width: 50 }}>
+                              <input
+                                type="checkbox"
+                                checked={allSearchedSelected}
+                                onChange={(event) => {
+                                  const checked = event.target.checked;
+                                  if (!checked) {
+                                    setSelectedQuestionIds(new Set());
+                                    return;
+                                  }
+                                  setSelectedQuestionIds(
+                                    new Set(searchedQuestions.map((question) => question.id))
+                                  );
+                                }}
+                              />
+                            </th>
+                            <th>Câu hỏi</th>
+                            <th style={{ width: 150 }}>Loại</th>
+                            <th style={{ width: 180 }}>Trạng thái</th>
+                            <th style={{ width: 220 }}>Thuộc bank</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {searchedQuestions.map((question) => {
+                            const isInCurrentBank = question.questionBankId === bankId;
+                            return (
+                              <tr key={question.id}>
+                                <td>
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedQuestionIds.has(question.id)}
+                                    onChange={(event) => {
+                                      const checked = event.target.checked;
+                                      setSelectedQuestionIds((prev) => {
+                                        const next = new Set(prev);
+                                        if (checked) next.add(question.id);
+                                        else next.delete(question.id);
+                                        return next;
+                                      });
+                                    }}
+                                  />
+                                </td>
+                                <td>
+                                  <MathText text={question.questionText} />
+                                </td>
+                                <td>
+                                  {questionTypeLabel[question.questionType] ||
+                                    question.questionType}
+                                </td>
+                                <td>{question.questionStatus || '-'}</td>
+                                <td>
+                                  {isInCurrentBank
+                                    ? 'Bank hiện tại'
+                                    : question.questionBankName ||
+                                      question.questionBankId ||
+                                      'Chưa gán'}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
 
-                {!searchQuestionsLoading && !searchQuestionsError && searchedQuestions.length === 0 && (
-                  <div className="empty" style={{ marginTop: 12 }}>Không tìm thấy câu hỏi phù hợp.</div>
-                )}
+                {!searchQuestionsLoading &&
+                  !searchQuestionsError &&
+                  searchedQuestions.length === 0 && (
+                    <div className="empty" style={{ marginTop: 12 }}>
+                      Không tìm thấy câu hỏi phù hợp.
+                    </div>
+                  )}
 
-                {totalSearchQuestionPages > 1 && (
-                  <div className="row" style={{ justifyContent: 'center', marginTop: 12 }}>
-                    <button
-                      className="btn secondary"
-                      disabled={questionSearchPage === 0}
-                      onClick={() => setQuestionSearchPage((prev) => prev - 1)}
-                    >
-                      Trước
-                    </button>
-                    <span className="muted">Trang {questionSearchPage + 1} / {totalSearchQuestionPages}</span>
-                    <button
-                      className="btn secondary"
-                      disabled={questionSearchPage >= totalSearchQuestionPages - 1}
-                      onClick={() => setQuestionSearchPage((prev) => prev + 1)}
-                    >
-                      Sau
-                    </button>
-                  </div>
-                )}
+                <Pagination
+                  page={questionSearchPage}
+                  totalPages={totalSearchQuestionPages}
+                  totalElements={searchQuestionsData?.result?.totalElements ?? 0}
+                  pageSize={questionSearchSize}
+                  onChange={setQuestionSearchPage}
+                />
 
                 {batchMessage && (
-                  <div className="empty" style={{ marginTop: 12, color: '#166534' }}>{batchMessage}</div>
+                  <div className="empty" style={{ marginTop: 12, color: '#166534' }}>
+                    {batchMessage}
+                  </div>
                 )}
                 {batchError && (
-                  <div className="empty" style={{ marginTop: 12, color: '#b91c1c' }}>{batchError}</div>
+                  <div className="empty" style={{ marginTop: 12, color: '#b91c1c' }}>
+                    {batchError}
+                  </div>
                 )}
               </article>
 
@@ -468,20 +486,33 @@ export function QuestionBankDetailPage() {
                         <tr key={question.id}>
                           <td>
                             <MathText text={question.questionText} />
-                            <div className="row" style={{ justifyContent: 'start', flexWrap: 'wrap', marginTop: 6 }}>
-                              {question.questionSourceType === 'AI_GENERATED' && <span className="badge draft">AI Generated</span>}
-                              {question.questionSourceType === 'TEMPLATE_GENERATED' && <span className="badge approved">Parametric</span>}
-                              {question.canonicalQuestionId && <span className="badge published">From Canonical</span>}
+                            <div
+                              className="row"
+                              style={{ justifyContent: 'start', flexWrap: 'wrap', marginTop: 6 }}
+                            >
+                              {question.questionSourceType === 'AI_GENERATED' && (
+                                <span className="badge draft">AI Generated</span>
+                              )}
+                              {question.questionSourceType === 'TEMPLATE_GENERATED' && (
+                                <span className="badge approved">Parametric</span>
+                              )}
+                              {question.canonicalQuestionId && (
+                                <span className="badge published">From Canonical</span>
+                              )}
                             </div>
                             {question.solutionSteps && (
                               <div className="preview-box" style={{ marginTop: 8 }}>
-                                <p className="muted" style={{ marginBottom: 6 }}>Solution Steps</p>
+                                <p className="muted" style={{ marginBottom: 6 }}>
+                                  Solution Steps
+                                </p>
                                 <MathText text={question.solutionSteps} />
                               </div>
                             )}
                             {question.diagramData && (
                               <div className="preview-box" style={{ marginTop: 8 }}>
-                                <p className="muted" style={{ marginBottom: 6 }}>Diagram</p>
+                                <p className="muted" style={{ marginBottom: 6 }}>
+                                  Diagram
+                                </p>
                                 <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
                                   {JSON.stringify(question.diagramData, null, 2)}
                                 </pre>
@@ -505,102 +536,18 @@ export function QuestionBankDetailPage() {
                 </div>
               )}
 
-              {!questionsLoading && !questionsError && questions.length > 0 && (
-                <div className="pagination-container" style={{ marginTop: 24, padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-                  <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
-                    <label className="row" style={{ gap: 8, alignItems: 'center' }}>
-                      <span className="muted" style={{ fontSize: '13px', fontWeight: 500 }}>Hiển thị</span>
-                      <select
-                        className="select"
-                        value={pageSize}
-                        onChange={(event) => {
-                          setPageSize(Number(event.target.value));
-                          setQuestionPage(0);
-                        }}
-                        style={{ width: 88, padding: '6px 8px', fontSize: '13px' }}
-                      >
-                        <option value={10}>10</option>
-                        <option value={20}>20</option>
-                        <option value={30}>30</option>
-                        <option value={50}>50</option>
-                      </select>
-                      <span className="muted" style={{ fontSize: '13px', fontWeight: 500 }}>câu hỏi</span>
-                    </label>
-
-                    {totalQuestionPages > 1 && (
-                      <div className="row" style={{ gap: 8, alignItems: 'center' }}>
-                        <button
-                          className="btn secondary"
-                          disabled={questionPage === 0}
-                          onClick={() => setQuestionPage((prev) => prev - 1)}
-                          style={{ padding: '6px 12px', fontSize: '13px' }}
-                        >
-                          ← Trước
-                        </button>
-
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 240 }}>
-                          <span className="muted" style={{ fontSize: '13px', fontWeight: 500 }}>
-                            Trang
-                          </span>
-                          <input
-                            type="number"
-                            min={1}
-                            max={totalQuestionPages}
-                            value={questionPage + 1}
-                            onChange={(event) => {
-                              const page = Number(event.target.value) - 1;
-                              if (page >= 0 && page < totalQuestionPages) {
-                                setQuestionPage(page);
-                              }
-                            }}
-                            style={{
-                              width: 50,
-                              padding: '6px 8px',
-                              border: '1px solid #d1d5db',
-                              borderRadius: '4px',
-                              textAlign: 'center',
-                              fontSize: '13px',
-                              fontWeight: 600,
-                            }}
-                          />
-                          <span className="muted" style={{ fontSize: '13px' }}>
-                            / {totalQuestionPages}
-                          </span>
-                          <button
-                            className="btn"
-                            onClick={() => {
-                              const inputValue = (document.querySelector('input[type="number"]') as HTMLInputElement)?.value;
-                              const page = Number(inputValue) - 1;
-                              if (page >= 0 && page < totalQuestionPages) {
-                                setQuestionPage(page);
-                              }
-                            }}
-                            style={{ padding: '6px 12px', fontSize: '13px' }}
-                          >
-                            Đi
-                          </button>
-                        </div>
-
-                        <button
-                          className="btn secondary"
-                          disabled={questionPage >= totalQuestionPages - 1}
-                          onClick={() => setQuestionPage((prev) => prev + 1)}
-                          style={{ padding: '6px 12px', fontSize: '13px' }}
-                        >
-                          Sau →
-                        </button>
-                      </div>
-                    )}
-
-                    <span className="muted" style={{ fontSize: '12px', color: '#6b7280' }}>
-                      {totalQuestionPages > 1 
-                        ? `Trang ${questionPage + 1} / ${totalQuestionPages} - Tổng: ${totalQuestionElements} câu hỏi`
-                        : `Tổng: ${totalQuestionElements} câu hỏi`
-                      }
-                    </span>
-                  </div>
-                </div>
-              )}
+              <Pagination
+                page={questionPage}
+                totalPages={totalQuestionPages}
+                totalElements={totalQuestionElements}
+                pageSize={pageSize}
+                onChange={setQuestionPage}
+                onPageSizeChange={(newSize) => {
+                  setPageSize(newSize);
+                  setQuestionPage(0);
+                }}
+                pageSizeOptions={[10, 20, 30, 50]}
+              />
 
               <QuestionBankFormModal
                 isOpen={formOpen}

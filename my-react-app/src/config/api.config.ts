@@ -71,6 +71,8 @@ export const API_ENDPOINTS = {
     `/assessments/${assessmentId}/questions/batch`,
   ASSESSMENTS_QUESTIONS_POINTS: (assessmentId: string) =>
     `/assessments/${assessmentId}/questions/points`,
+  ASSESSMENTS_QUESTIONS_DISTRIBUTE_POINTS: (assessmentId: string) =>
+    `/assessments/${assessmentId}/questions/distribute-points`,
   ASSESSMENTS_AUTO_DISTRIBUTE: (assessmentId: string) =>
     `/assessments/${assessmentId}/auto-distribute`,
   ASSESSMENTS_QUESTION_REMOVE: (assessmentId: string, questionId: string) =>
@@ -282,6 +284,7 @@ export const API_ENDPOINTS = {
   QUESTION_TEMPLATE_DETAIL: (id: string) => `/question-templates/${id}`,
   QUESTION_TEMPLATE_TOGGLE_PUBLIC: (id: string) => `/question-templates/${id}/toggle-public`,
   QUESTION_TEMPLATE_PUBLISH: (id: string) => `/question-templates/${id}/publish`,
+  QUESTION_TEMPLATE_UNPUBLISH: (id: string) => `/question-templates/${id}/unpublish`,
   QUESTION_TEMPLATE_ARCHIVE: (id: string) => `/question-templates/${id}/archive`,
   QUESTION_TEMPLATE_TEST: (id: string) => `/question-templates/${id}/test`,
   QUESTION_TEMPLATE_GENERATE_QUESTIONS: (id: string) =>

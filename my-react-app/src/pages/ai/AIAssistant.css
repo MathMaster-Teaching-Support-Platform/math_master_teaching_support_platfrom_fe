@@ -139,7 +139,7 @@
   top: -0.6rem;
   right: -1rem;
   background: #f59e0b;
-  color: #fff;
+  color: #141413;
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.03em;
@@ -248,7 +248,7 @@
   top: -8px;
   right: 14px;
   background: #f59e0b;
-  color: #fff;
+  color: #141413;
   font-size: 0.6rem;
   font-weight: 800;
   letter-spacing: 0.05em;
@@ -289,7 +289,7 @@
   --text-main: #0f172a;
   --text-secondary: #475569;
   --text-muted: #64748b;
-  --brand: var(--primary-color, #5b67f1);
+  --brand: var(--primary-color, #c96442);
   --brand-hover: var(--primary-dark, #4850d4);
   --brand-light: #eef2ff;
   --danger: var(--error-color, #ef4444);
@@ -302,7 +302,7 @@
   border-radius: var(--radius-xl, 16px);
   background: var(--bg-panel-2);
   border: 1px solid var(--line-soft);
-  font-family: 'Be Vietnam Pro', 'Inter', var(--font-heading), sans-serif;
+  font-family: 'Be Vietnam Pro', var(--font-heading), sans-serif;
   transition: grid-template-columns 260ms cubic-bezier(0.2, 0.7, 0.18, 1);
   overflow: hidden;
   box-shadow: var(--shadow-lg, 0 12px 32px -3px rgba(0, 0, 0, 0.08));
@@ -731,8 +731,8 @@
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-xl, 16px);
-  background: linear-gradient(135deg, #5b67f1, #8b5cf6);
-  color: #fff;
+  background: linear-gradient(135deg, #c96442, #d97757);
+  color: #141413;
   box-shadow: 0 8px 24px rgba(91, 103, 241, 0.25);
 }
 
@@ -783,14 +783,14 @@
 }
 
 .chat-assistant .chat-avatar {
-  background: linear-gradient(135deg, #5b67f1, #8b5cf6);
-  color: #fff;
+  background: linear-gradient(135deg, #c96442, #d97757);
+  color: #141413;
   box-shadow: 0 2px 8px rgba(91, 103, 241, 0.2);
 }
 
 .chat-user .chat-avatar {
   background: linear-gradient(135deg, #10b981, #14b8a6);
-  color: #fff;
+  color: #141413;
   box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
 }
 
@@ -998,8 +998,8 @@
   height: 36px;
   flex-shrink: 0;
   border: none;
-  background: var(--brand, #5b67f1);
-  color: #fff;
+  background: var(--brand, #c96442);
+  color: #141413;
   border-radius: var(--radius-full, 9999px);
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(91, 103, 241, 0.3);
@@ -1017,7 +1017,7 @@
 
 .send-btn:disabled {
   background: #d1d5db;
-  color: #9ca3af;
+  color: #141413;
   box-shadow: none;
   cursor: not-allowed;
   opacity: 1;

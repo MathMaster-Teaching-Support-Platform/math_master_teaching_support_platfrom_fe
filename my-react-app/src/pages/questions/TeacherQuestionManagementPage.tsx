@@ -5,11 +5,11 @@ import {
   Database,
   Edit3,
   FileQuestion,
+  FileSpreadsheet,
   Plus,
   RefreshCw,
   Search,
   Sparkles,
-  Tag,
   Trash2,
   X,
 } from 'lucide-react';
@@ -35,6 +35,7 @@ import type {
 } from '../../types/question';
 import { useToast } from '../../context/ToastContext';
 import './TeacherQuestionManagementPage.css';
+import { QuestionBulkImportModal } from './QuestionBulkImportModal';
 
 type FormMode = 'create' | 'edit';
 
@@ -282,21 +283,20 @@ function QuestionFormModal({
 export default function TeacherQuestionManagementPage() {
   const navigate = useNavigate();
   const [searchName, setSearchName] = useState('');
-  const [searchTag, setSearchTag] = useState('');
   const [page, setPage] = useState(0);
   const size = 10;
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [bulkImportOpen, setBulkImportOpen] = useState(false);
   const [formMode, setFormMode] = useState<FormMode>('create');
   const [selectedQuestion, setSelectedQuestion] = useState<QuestionResponse | null>(null);
   const [form, setForm] = useState<QuestionFormState>(initialFormState);
   const [formError, setFormError] = useState<string | null>(null);
 
   const debouncedSearchName = useDebounce(searchName, 300);
-  const debouncedSearchTag = useDebounce(searchTag, 300);
 
   useEffect(() => {
     setPage(0);
-  }, [debouncedSearchName, debouncedSearchTag]);
+  }, [debouncedSearchName]);
 
   const queryParams = useMemo(
     () => ({
@@ -305,9 +305,8 @@ export default function TeacherQuestionManagementPage() {
       sortBy: 'createdAt',
       sortDirection: 'DESC' as const,
       searchName: debouncedSearchName.trim() || undefined,
-      searchTag: debouncedSearchTag.trim() || undefined,
     }),
-    [page, debouncedSearchName, debouncedSearchTag, size]
+    [page, debouncedSearchName, size]
   );
 
   const { showToast } = useToast();
@@ -450,10 +449,16 @@ export default function TeacherQuestionManagementPage() {
                 đề thi.
               </p>
             </div>
-            <button className="btn" onClick={openingCreateModal}>
-              <Plus size={14} />
-              Tạo câu hỏi
-            </button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className="btn secondary" onClick={() => setBulkImportOpen(true)}>
+                <FileSpreadsheet size={14} />
+                Nhập từ Excel
+              </button>
+              <button className="btn" onClick={openingCreateModal}>
+                <Plus size={14} />
+                Tạo câu hỏi
+              </button>
+            </div>
           </header>
 
           <div
@@ -575,28 +580,6 @@ export default function TeacherQuestionManagementPage() {
               )}
             </span>
 
-            <span className="search-box" style={{ flex: '1 1 200px' }}>
-              <Tag size={15} className="search-box__icon" />
-              <input
-                className="input"
-                placeholder="Tìm theo tag"
-                value={searchTag}
-                onChange={(event) => {
-                  setSearchTag(event.target.value);
-                }}
-              />
-              {searchTag && (
-                <button
-                  className="search-box__clear"
-                  onClick={() => {
-                    setSearchTag('');
-                  }}
-                >
-                  <X size={13} />
-                </button>
-              )}
-            </span>
-
             <button className="btn secondary" onClick={() => void refetch()}>
               <RefreshCw size={14} />
               Làm mới
@@ -630,13 +613,12 @@ export default function TeacherQuestionManagementPage() {
             <div className="empty">
               <FileQuestion size={32} style={{ color: '#94a3b8', marginBottom: 8 }} />
               <p style={{ margin: 0 }}>Không tìm thấy câu hỏi phù hợp.</p>
-              {(searchName || searchTag) && (
+              {searchName && (
                 <button
                   className="btn secondary"
                   style={{ marginTop: 10 }}
                   onClick={() => {
                     setSearchName('');
-                    setSearchTag('');
                   }}
                 >
                   Xóa bộ lọc
@@ -728,6 +710,15 @@ export default function TeacherQuestionManagementPage() {
             onClose={closeModal}
             onChange={onFormFieldChange}
             onSubmit={() => void handleSubmitForm()}
+          />
+
+          <QuestionBulkImportModal
+            isOpen={bulkImportOpen}
+            onClose={() => setBulkImportOpen(false)}
+            onSuccess={() => {
+              setBulkImportOpen(false);
+              void refetch();
+            }}
           />
         </section>
       </div>

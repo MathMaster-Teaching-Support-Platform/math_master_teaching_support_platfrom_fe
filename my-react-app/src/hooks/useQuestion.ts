@@ -3,7 +3,6 @@ import { questionService } from '../services/questionService';
 import type {
   CreateQuestionRequest,
   GetMyQuestionsParams,
-  QuestionType,
   SearchQuestionsParams,
   UpdateQuestionRequest,
 } from '../types/question';
@@ -51,16 +50,16 @@ export const useGetQuestionsByBank = (bankId: string, page = 0, size = 20, enabl
 
 export const useSearchQuestions = (
   params: {
-    search?: string;
-    type?: QuestionType | '';
+    keyword?: string;
+    tag?: string;
     page?: number;
     size?: number;
   },
   enabled = true
 ) => {
   const normalizedParams: SearchQuestionsParams = {
-    search: params.search,
-    type: params.type || undefined,
+    keyword: params.keyword,
+    tag: params.tag,
     page: params.page ?? 0,
     size: params.size ?? 20,
   };

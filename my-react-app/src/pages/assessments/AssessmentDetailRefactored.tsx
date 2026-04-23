@@ -1,5 +1,5 @@
-import { ArrowLeft, Pencil } from 'lucide-react';
-import { useState } from 'react';
+import { ArrowLeft, Pencil, RefreshCw } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { QuestionCard } from '../../components/assessment';
@@ -7,12 +7,16 @@ import {
   useAddQuestion,
   useAssessment,
   useAssessmentQuestions,
+  useDistributeQuestionPoints,
   useGenerateQuestionsForAssessment,
   useRemoveQuestion,
   useSetPointsOverride,
   useUpdateAssessment,
   useUpdateAssessmentQuestionWorkaround,
 } from '../../hooks/useAssessment';
+import { useSearchQuestions } from '../../hooks/useQuestion';
+import MathText from '../../components/common/MathText';
+import { useToast } from '../../context/ToastContext';
 import '../../styles/module-refactor.css';
 import '../../components/assessment/question-card.css';
 import type { AssessmentRequest } from '../../types';
@@ -49,6 +53,7 @@ function getQuestionId(question: { questionId: string; id?: string }) {
 export default function AssessmentDetailRefactored() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   const [openEdit, setOpenEdit] = useState(false);
   const [newQuestionId, setNewQuestionId] = useState('');
@@ -56,6 +61,32 @@ export default function AssessmentDetailRefactored() {
   const [newPointsOverride, setNewPointsOverride] = useState('');
   const [generateError, setGenerateError] = useState<string | null>(null);
   const [questionCrudError, setQuestionCrudError] = useState<string | null>(null);
+
+  // Search-based add question states
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [searchTag, setSearchTag] = useState('');
+  const [searchPage, setSearchPage] = useState(0);
+  const [selectedToAdd, setSelectedToAdd] = useState<Set<string>>(new Set());
+  const [addPoints, setAddPoints] = useState('');
+  const [autoTotalPoints, setAutoTotalPoints] = useState('10');
+
+  function handleSelectAllSearch(checked: boolean, questionIds: string[]) {
+    setSelectedToAdd((prev) => {
+      const next = new Set(prev);
+      if (checked) questionIds.forEach((qId) => next.add(qId));
+      else questionIds.forEach((qId) => next.delete(qId));
+      return next;
+    });
+  }
+
+  function handleToggleSearchQuestion(checked: boolean, questionId: string) {
+    setSelectedToAdd((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(questionId);
+      else next.delete(questionId);
+      return next;
+    });
+  }
 
   const { data, isLoading, isError, error, refetch } = useAssessment(id ?? '');
   const {
@@ -72,10 +103,28 @@ export default function AssessmentDetailRefactored() {
   const removeQuestionMutation = useRemoveQuestion();
   const updateAssessmentQuestionMutation = useUpdateAssessmentQuestionWorkaround();
   const pointsOverrideMutation = useSetPointsOverride();
+  const distributePointsMutation = useDistributeQuestionPoints();
   const generateMutation = useGenerateQuestionsForAssessment();
+
+  const {
+    data: searchData,
+    isLoading: searchLoading,
+    isError: searchError,
+    refetch: refetchSearch,
+  } = useSearchQuestions(
+    { keyword: searchKeyword, tag: searchTag, page: searchPage, size: 20 },
+    true
+  );
+  const searchedQuestions = searchData?.result?.content ?? [];
+  const totalSearchPages = searchData?.result?.totalPages ?? 1;
 
   const assessment = data?.result;
   const questions = questionsData?.result ?? [];
+
+  useEffect(() => {
+    if (!assessment) return;
+    setAutoTotalPoints(String(assessment.totalPoints ?? 0));
+  }, [assessment?.id, assessment?.totalPoints]);
 
   async function save(payload: AssessmentRequest) {
     if (!id) return;
@@ -84,7 +133,9 @@ export default function AssessmentDetailRefactored() {
     await refetch();
   }
 
-  async function addQuestionToAssessment() {
+  // Reserved for future single-question-by-ID add feature
+  // @ts-ignore - Function reserved for future use
+  async function _addQuestionToAssessment() {
     if (!id) return;
     const normalizedQuestionId = newQuestionId.trim();
     if (!normalizedQuestionId) {
@@ -119,6 +170,31 @@ export default function AssessmentDetailRefactored() {
     await Promise.all([refetchQuestions(), refetch()]);
   }
 
+  async function handleBatchAddFromSearch() {
+    if (!id || selectedToAdd.size === 0) return;
+    setQuestionCrudError(null);
+    const parsedPoints = addPoints.trim() ? Number(addPoints) : undefined;
+    if (addPoints.trim() && (Number.isNaN(parsedPoints) || parsedPoints! < 0)) {
+      setQuestionCrudError('Điểm phải >= 0.');
+      return;
+    }
+    try {
+      await Promise.all(
+        Array.from(selectedToAdd).map((qId) =>
+          addQuestionMutation.mutateAsync({
+            assessmentId: id,
+            data: { questionId: qId, pointsOverride: parsedPoints },
+          })
+        )
+      );
+      setSelectedToAdd(new Set());
+      setAddPoints('');
+      await Promise.all([refetchQuestions(), refetch()]);
+    } catch (err) {
+      setQuestionCrudError(err instanceof Error ? err.message : 'Không thể thêm câu hỏi.');
+    }
+  }
+
   async function handleUpdateQuestion(
     questionId: string,
     orderIndex: number,
@@ -151,6 +227,37 @@ export default function AssessmentDetailRefactored() {
       },
     });
     await Promise.all([refetchQuestions(), refetch()]);
+  }
+
+  async function handleDistributePoints() {
+    if (!id) return;
+    setQuestionCrudError(null);
+    if (questions.length === 0) {
+      setQuestionCrudError('Bài kiểm tra chưa có câu hỏi để phân bổ điểm.');
+      return;
+    }
+
+    const total = Number(autoTotalPoints.trim());
+    if (Number.isNaN(total) || total < 0) {
+      setQuestionCrudError('Tổng điểm phải là số >= 0.');
+      return;
+    }
+
+    try {
+      await distributePointsMutation.mutateAsync({
+        assessmentId: id,
+        totalPoints: total,
+        strategy: 'EQUAL',
+        scale: 2,
+      });
+      await Promise.all([refetchQuestions(), refetch()]);
+      showToast({ type: 'success', message: 'Đã phân bổ điểm thành công' });
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Không thể phân bổ điểm tự động.';
+      setQuestionCrudError(message);
+      showToast({ type: 'error', message });
+    }
   }
 
   async function generateFromMatrix() {
@@ -306,6 +413,36 @@ export default function AssessmentDetailRefactored() {
           <div className="row" style={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
             <h3>Câu hỏi trong bài kiểm tra</h3>
             <div className="row" style={{ justifyContent: 'start', flexWrap: 'wrap' }}>
+              {assessment.status === 'DRAFT' && (
+                <>
+                  <input
+                    className="input"
+                    style={{ width: 140 }}
+                    type="number"
+                    min={0}
+                    step={0.01}
+                    value={autoTotalPoints}
+                    onChange={(event) => setAutoTotalPoints(event.target.value)}
+                    placeholder="Tổng điểm"
+                  />
+                  <button
+                    className="btn"
+                    onClick={() => void handleDistributePoints()}
+                    disabled={questions.length === 0 || distributePointsMutation.isPending}
+                  >
+                    {distributePointsMutation.isPending
+                      ? 'Đang phân bổ...'
+                      : 'Phân bổ điểm tự động'}
+                  </button>
+                  <button
+                    className="btn secondary"
+                    onClick={() => void handleDistributePoints()}
+                    disabled={questions.length === 0 || distributePointsMutation.isPending}
+                  >
+                    Reset về auto
+                  </button>
+                </>
+              )}
               {assessment.status === 'DRAFT' &&
                 assessment.assessmentMode === 'MATRIX_BASED' &&
                 assessment.examMatrixId && (
@@ -334,43 +471,105 @@ export default function AssessmentDetailRefactored() {
           {assessment.status === 'DRAFT' && (
             <div className="preview-box" style={{ marginBottom: 12 }}>
               <p className="muted" style={{ marginBottom: 8 }}>
-                Thêm câu hỏi vào assessment (manual)
+                Thêm câu hỏi vào assessment
               </p>
-              <div className="row" style={{ flexWrap: 'wrap', justifyContent: 'start' }}>
-                <input
-                  className="input"
-                  style={{ minWidth: 220 }}
-                  placeholder="Question ID"
-                  value={newQuestionId}
-                  onChange={(event) => setNewQuestionId(event.target.value)}
-                />
-                <input
-                  className="input"
-                  style={{ width: 140 }}
-                  type="number"
-                  min={1}
-                  placeholder="Order"
-                  value={newOrderIndex}
-                  onChange={(event) => setNewOrderIndex(event.target.value)}
-                />
+              <div className="form-grid" style={{ marginBottom: 10 }}>
+                <label>
+                  <p className="muted" style={{ marginBottom: 6 }}>Từ khóa</p>
+                  <input
+                    className="input"
+                    placeholder="Tìm theo nội dung câu hỏi..."
+                    value={searchKeyword}
+                    onChange={(event) => { setSearchKeyword(event.target.value); setSearchPage(0); }}
+                  />
+                </label>
+                <label>
+                  <p className="muted" style={{ marginBottom: 6 }}>Thẻ (tag)</p>
+                  <input
+                    className="input"
+                    placeholder="Ví dụ: đại số, hình học..."
+                    value={searchTag}
+                    onChange={(event) => { setSearchTag(event.target.value); setSearchPage(0); }}
+                  />
+                </label>
+              </div>
+              <div className="row" style={{ flexWrap: 'wrap', justifyContent: 'start', marginBottom: 8 }}>
                 <input
                   className="input"
                   style={{ width: 160 }}
                   type="number"
                   min={0}
                   step={0.25}
-                  placeholder="Points override"
-                  value={newPointsOverride}
-                  onChange={(event) => setNewPointsOverride(event.target.value)}
+                  placeholder="Điểm cho câu hỏi"
+                  value={addPoints}
+                  onChange={(event) => setAddPoints(event.target.value)}
                 />
                 <button
                   className="btn"
-                  onClick={() => void addQuestionToAssessment()}
-                  disabled={addQuestionMutation.isPending}
+                  onClick={() => void handleBatchAddFromSearch()}
+                  disabled={addQuestionMutation.isPending || selectedToAdd.size === 0}
                 >
-                  {addQuestionMutation.isPending ? 'Đang thêm...' : 'Thêm câu hỏi'}
+                  {addQuestionMutation.isPending ? 'Đang thêm...' : `Thêm vào bài (${selectedToAdd.size})`}
+                </button>
+                <button className="btn secondary" onClick={() => void refetchSearch()}>
+                  <RefreshCw size={14} />
+                  Làm mới
                 </button>
               </div>
+              {searchLoading && <div className="empty">Đang tìm câu hỏi...</div>}
+              {searchError && <div className="empty" style={{ color: '#b91c1c' }}>Không thể tìm câu hỏi</div>}
+              {!searchLoading && !searchError && searchedQuestions.length > 0 && (
+                <div className="table-wrap">
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th style={{ width: 40 }}>
+                          <input
+                            type="checkbox"
+                            checked={searchedQuestions.length > 0 && searchedQuestions.every((q) => selectedToAdd.has(q.id))}
+                            onChange={(event) => handleSelectAllSearch(event.target.checked, searchedQuestions.map((q) => q.id))}
+                          />
+                        </th>
+                        <th>Câu hỏi</th>
+                        <th style={{ width: 150 }}>Loại</th>
+                        <th style={{ width: 150 }}>Trạng thái</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {searchedQuestions.map((question) => (
+                        <tr key={question.id}>
+                          <td>
+                            <input
+                              type="checkbox"
+                              checked={selectedToAdd.has(question.id)}
+                              onChange={(event) => handleToggleSearchQuestion(event.target.checked, question.id)}
+                            />
+                          </td>
+                          <td>
+                            <MathText text={question.questionText} />
+                          </td>
+                          <td>{question.questionType}</td>
+                          <td>{question.questionStatus || '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              {!searchLoading && !searchError && searchedQuestions.length === 0 && (
+                <div className="empty">Không tìm thấy câu hỏi. Nhập từ khóa để tìm kiếm.</div>
+              )}
+              {totalSearchPages > 1 && (
+                <div className="row" style={{ justifyContent: 'center', marginTop: 8 }}>
+                  <button className="btn secondary" disabled={searchPage === 0} onClick={() => setSearchPage((p) => p - 1)}>
+                    &lt; Trước
+                  </button>
+                  <span className="muted" style={{ padding: '0 12px' }}>{searchPage + 1} / {totalSearchPages}</span>
+                  <button className="btn secondary" disabled={searchPage + 1 >= totalSearchPages} onClick={() => setSearchPage((p) => p + 1)}>
+                    Sau &gt;
+                  </button>
+                </div>
+              )}
             </div>
           )}
 

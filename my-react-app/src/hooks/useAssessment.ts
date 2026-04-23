@@ -404,3 +404,76 @@ export function useAutoDistributePoints() {
     },
   });
 }
+
+function buildEqualDistribution(totalPoints: number, count: number, scale: number): number[] {
+  if (count <= 0) return [];
+  const safeScale = Math.max(0, Math.min(6, scale));
+  const factor = 10 ** safeScale;
+  const totalUnits = Math.round(totalPoints * factor);
+  const baseUnits = Math.floor(totalUnits / count);
+  const remainder = totalUnits - baseUnits * count;
+
+  return Array.from({ length: count }, (_item, index) => {
+    const units = baseUnits + (index < remainder ? 1 : 0);
+    return units / factor;
+  });
+}
+
+export function useDistributeQuestionPoints() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      assessmentId,
+      totalPoints,
+      strategy,
+      scale,
+    }: {
+      assessmentId: string;
+      totalPoints: number;
+      strategy: 'EQUAL';
+      scale?: number;
+    }) =>
+      AssessmentService.distributeQuestionPoints(assessmentId, {
+        totalPoints,
+        strategy,
+        scale,
+      }),
+    onMutate: async ({ assessmentId, totalPoints, scale = 2 }) => {
+      await queryClient.cancelQueries({ queryKey: assessmentKeys.questions(assessmentId) });
+
+      const previousQuestions = queryClient.getQueryData<ApiResponse<AssessmentQuestionItem[]>>(
+        assessmentKeys.questions(assessmentId)
+      );
+
+      if (previousQuestions?.result) {
+        const distributed = buildEqualDistribution(totalPoints, previousQuestions.result.length, scale);
+        const nextQuestions = previousQuestions.result.map((question, index) => ({
+          ...question,
+          points: distributed[index] ?? question.points,
+        }));
+        queryClient.setQueryData<ApiResponse<AssessmentQuestionItem[]>>(
+          assessmentKeys.questions(assessmentId),
+          {
+            ...previousQuestions,
+            result: nextQuestions,
+          }
+        );
+      }
+
+      return { previousQuestions };
+    },
+    onError: (_error, { assessmentId }, context) => {
+      if (context?.previousQuestions) {
+        queryClient.setQueryData(
+          assessmentKeys.questions(assessmentId),
+          context.previousQuestions
+        );
+      }
+    },
+    onSuccess: (_data, { assessmentId }) => {
+      queryClient.invalidateQueries({ queryKey: assessmentKeys.questions(assessmentId) });
+      queryClient.invalidateQueries({ queryKey: assessmentKeys.detail(assessmentId) });
+      queryClient.invalidateQueries({ queryKey: assessmentKeys.publishSummary(assessmentId) });
+    },
+  });
+}

@@ -2,7 +2,7 @@
 
 /* ── Tokens that mirror the Homepage design system ── */
 .teacher-dashboard {
-  --td-primary: #5e5ce6;
+  --td-primary: #c96442;
   --td-primary-soft: rgba(94, 92, 230, 0.07);
   --td-text-1: #0e0c15;
   --td-text-2: #3f3a52;
@@ -12,7 +12,7 @@
   --td-surface: #ffffff;
   --td-radius: 14px;
   --td-f-head: 'Be Vietnam Pro', -apple-system, sans-serif;
-  --td-f-body: 'Inter', -apple-system, sans-serif;
+  --td-f-body: 'Be Vietnam Pro', -apple-system, sans-serif;
   max-width: 1180px;
   margin: 0 auto;
 }

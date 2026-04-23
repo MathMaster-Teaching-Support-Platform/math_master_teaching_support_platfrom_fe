@@ -1,9 +1,20 @@
-import { useState, useCallback } from 'react';
+import {
+  Archive,
+  ChevronLeft,
+  ChevronRight,
+  Circle,
+  Filter,
+  Loader2,
+  Pencil,
+  Plus,
+  Search,
+} from 'lucide-react';
+import { useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
-import { useAdminRoadmaps, useDeleteRoadmap } from '../../hooks/useRoadmaps';
-import { useDebounce } from '../../hooks/useDebounce';
 import { mockAdmin } from '../../data/mockData';
+import { useDebounce } from '../../hooks/useDebounce';
+import { useAdminRoadmaps, useDeleteRoadmap } from '../../hooks/useRoadmaps';
 import type { RoadmapCatalogItem } from '../../types';
 import './admin-roadmap-page.css';
 
@@ -16,13 +27,25 @@ const STATUS_LABELS: Record<string, string> = {
   ARCHIVED: 'Lưu trữ',
 };
 
-function normalizePage(result: unknown): { rows: RoadmapCatalogItem[]; totalPages: number; totalElements: number; page: number } {
+function normalizePage(result: unknown): {
+  rows: RoadmapCatalogItem[];
+  totalPages: number;
+  totalElements: number;
+  page: number;
+} {
   if (!result) return { rows: [], totalPages: 0, totalElements: 0, page: 0 };
   const r = result as Record<string, unknown>;
-  if (Array.isArray(r)) return { rows: r as RoadmapCatalogItem[], totalPages: 1, totalElements: (r as unknown[]).length, page: 0 };
+  if (Array.isArray(r))
+    return {
+      rows: r as RoadmapCatalogItem[],
+      totalPages: 1,
+      totalElements: (r as unknown[]).length,
+      page: 0,
+    };
   const content = Array.isArray(r['content']) ? (r['content'] as RoadmapCatalogItem[]) : [];
   const totalPages = typeof r['totalPages'] === 'number' ? r['totalPages'] : 1;
-  const totalElements = typeof r['totalElements'] === 'number' ? r['totalElements'] : content.length;
+  const totalElements =
+    typeof r['totalElements'] === 'number' ? r['totalElements'] : content.length;
   const page = typeof r['number'] === 'number' ? r['number'] : 0;
   return { rows: content, totalPages, totalElements, page };
 }
@@ -34,7 +57,11 @@ export default function AdminRoadmapManagementPage() {
 
   const searchDebounced = useDebounce(searchInput, 300);
 
-  const { data, isLoading, error, isFetching } = useAdminRoadmaps(searchDebounced, currentPage, PAGE_SIZE);
+  const { data, isLoading, error, isFetching } = useAdminRoadmaps(
+    searchDebounced,
+    currentPage,
+    PAGE_SIZE
+  );
   const deleteRoadmap = useDeleteRoadmap();
 
   const { rows: roadmaps, totalPages, totalElements, page } = normalizePage(data?.result);
@@ -60,17 +87,19 @@ export default function AdminRoadmapManagementPage() {
       <section className="admin-roadmap-page">
         <header className="admin-roadmap-page__header">
           <div>
-            <h1>Quản lý lộ trình</h1>
+            <h1>Roadmap Management</h1>
             <p>Tìm kiếm, lọc và quản lý tất cả lộ trình học tập.</p>
           </div>
           <Link to="/admin/roadmaps/create" className="admin-roadmap-page__action">
-            + Tạo lộ trình
+            <Plus className="admin-roadmap-page__action-icon" aria-hidden="true" />
+            Tạo lộ trình
           </Link>
         </header>
 
         {/* ── Search & Filter bar ── */}
         <div className="admin-roadmap-page__toolbar">
           <div className="admin-roadmap-page__search-wrap">
+            <Search className="admin-roadmap-page__search-icon" aria-hidden="true" />
             <input
               type="search"
               className="admin-roadmap-page__search"
@@ -78,18 +107,30 @@ export default function AdminRoadmapManagementPage() {
               value={searchInput}
               onChange={handleSearch}
             />
-            {isFetching && <span className="admin-roadmap-page__search-loading">⟳</span>}
+            {isFetching && (
+              <span className="admin-roadmap-page__search-loading" aria-hidden="true">
+                <Loader2 className="admin-roadmap-page__loading-icon" />
+              </span>
+            )}
           </div>
-          <select
-            className="admin-roadmap-page__filter-select"
-            value={statusFilter}
-            onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(0); }}
-          >
-            <option value="">Tất cả trạng thái</option>
-            {Object.entries(STATUS_LABELS).map(([val, label]) => (
-              <option key={val} value={val}>{label}</option>
-            ))}
-          </select>
+          <label className="admin-roadmap-page__filter-wrap">
+            <Filter className="admin-roadmap-page__filter-icon" aria-hidden="true" />
+            <select
+              className="admin-roadmap-page__filter-select"
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setCurrentPage(0);
+              }}
+            >
+              <option value="">Tất cả trạng thái</option>
+              {Object.entries(STATUS_LABELS).map(([val, label]) => (
+                <option key={val} value={val}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
 
         {isLoading && <p className="admin-roadmap-page__state">Đang tải lộ trình...</p>}
@@ -106,21 +147,31 @@ export default function AdminRoadmapManagementPage() {
               </div>
               {filteredRoadmaps.length === 0 && (
                 <p className="admin-roadmap-page__state" style={{ padding: '1rem' }}>
-                  {searchDebounced ? `Không tìm thấy kết quả cho "${searchDebounced}"` : 'Chưa có lộ trình nào.'}
+                  {searchDebounced
+                    ? `Không tìm thấy kết quả cho "${searchDebounced}"`
+                    : 'Chưa có lộ trình nào.'}
                 </p>
               )}
               {filteredRoadmaps.map((roadmap) => (
                 <div key={roadmap.id} className="admin-roadmap-page__row">
                   <span>{roadmap.name}</span>
                   <span>
-                    <span className={`admin-roadmap-page__status admin-roadmap-page__status--${roadmap.status.toLowerCase()}`}>
+                    <span
+                      className={`admin-roadmap-page__status admin-roadmap-page__status--${roadmap.status.toLowerCase()}`}
+                    >
+                      <Circle className="admin-roadmap-page__status-dot" aria-hidden="true" />
                       {STATUS_LABELS[roadmap.status] ?? roadmap.status}
                     </span>
                   </span>
                   <span>{roadmap.totalTopicsCount}</span>
-                  <span>
-                    <Link to={`/admin/roadmaps/edit/${roadmap.id}`}>Sửa</Link>
-                    {' | '}
+                  <span className="admin-roadmap-page__row-actions">
+                    <Link
+                      to={`/admin/roadmaps/edit/${roadmap.id}`}
+                      className="admin-roadmap-page__inline-action"
+                    >
+                      <Pencil className="admin-roadmap-page__inline-icon" aria-hidden="true" />
+                      Sửa
+                    </Link>
                     <button
                       type="button"
                       className="admin-roadmap-page__inline-danger"
@@ -130,6 +181,7 @@ export default function AdminRoadmapManagementPage() {
                         deleteRoadmap.mutate(roadmap.id);
                       }}
                     >
+                      <Archive className="admin-roadmap-page__inline-icon" aria-hidden="true" />
                       Lưu trữ
                     </button>
                   </span>
@@ -150,10 +202,14 @@ export default function AdminRoadmapManagementPage() {
                     disabled={currentPage <= 0}
                     onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
                   >
-                    ← Trước
+                    <ChevronLeft className="admin-roadmap-page__page-icon" aria-hidden="true" />
+                    Trước
                   </button>
                   {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
-                    const pageIdx = totalPages <= 7 ? i : Math.max(0, Math.min(totalPages - 7, currentPage - 3)) + i;
+                    const pageIdx =
+                      totalPages <= 7
+                        ? i
+                        : Math.max(0, Math.min(totalPages - 7, currentPage - 3)) + i;
                     return (
                       <button
                         key={pageIdx}
@@ -171,7 +227,8 @@ export default function AdminRoadmapManagementPage() {
                     disabled={currentPage >= totalPages - 1}
                     onClick={() => setCurrentPage((p) => Math.min(totalPages - 1, p + 1))}
                   >
-                    Sau →
+                    Sau
+                    <ChevronRight className="admin-roadmap-page__page-icon" aria-hidden="true" />
                   </button>
                 </div>
               </div>

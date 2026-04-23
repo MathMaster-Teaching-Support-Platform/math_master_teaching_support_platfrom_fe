@@ -79,16 +79,16 @@ export const questionService = {
       size: String(params.size ?? 20),
     });
 
-    if (params.search?.trim()) {
-      query.set('search', params.search.trim());
+    if (params.keyword?.trim()) {
+      query.set('keyword', params.keyword.trim());
     }
 
-    if (params.type) {
-      query.set('type', params.type);
+    if (params.tag?.trim()) {
+      query.set('tags', params.tag.trim());
     }
 
     return fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTIONS_SEARCH}?${query.toString()}`, {
-      method: 'POST',
+      method: 'GET',
       headers: getAuthHeaders(),
     }).then(handleResponse<PageResponse<QuestionResponse>>);
   },

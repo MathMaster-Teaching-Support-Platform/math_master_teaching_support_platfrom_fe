@@ -87,3 +87,48 @@ export interface ApiResponse<T> {
   message: string;
   result: T;
 }
+
+// ─── Question Bulk Import ───────────────────────────────────────────────────
+
+export interface QuestionImportRequest {
+  questionText: string;
+  questionType: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER' | 'ESSAY' | 'CODING';
+  cognitiveLevel:
+    | 'NHAN_BIET'
+    | 'THONG_HIEU'
+    | 'VAN_DUNG'
+    | 'VAN_DUNG_CAO'
+    | 'REMEMBER'
+    | 'UNDERSTAND'
+    | 'APPLY'
+    | 'ANALYZE'
+    | 'EVALUATE'
+    | 'CREATE';
+  points?: number;
+  correctAnswer?: string;
+  explanation?: string;
+  tags?: string[];
+  options?: Record<string, unknown>;
+  questionBankId?: string;
+}
+
+export interface QuestionPreviewRow {
+  rowNumber: number;
+  isValid: boolean;
+  data: QuestionImportRequest | null;
+  validationErrors: string[] | null;
+}
+
+export interface QuestionExcelPreviewResponse {
+  totalRows: number;
+  validRows: number;
+  invalidRows: number;
+  rows: QuestionPreviewRow[];
+}
+
+export interface QuestionBatchImportResponse {
+  totalRows: number;
+  successCount: number;
+  failedCount: number;
+  errors: string[] | null;
+}

@@ -191,13 +191,13 @@ export function QuestionCard({
               disabled={!isDraft}
             />
             <EditableField
-              label="Điểm override"
+              label="Điểm"
               value={pointsValue}
               onChange={setPointsValue}
               type="number"
               min={0}
               step={0.25}
-              placeholder="Để trống = dùng điểm gốc"
+              placeholder="Điểm"
               disabled={!isDraft}
             />
           </div>
@@ -240,7 +240,7 @@ export function QuestionCard({
                 disabled={isUpdating}
               >
                 <RotateCcw size={14} />
-                Reset override
+                Reset điểm
               </button>
             )}
             <button

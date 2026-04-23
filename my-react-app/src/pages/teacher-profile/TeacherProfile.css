@@ -40,7 +40,7 @@
   top: 0;
   bottom: 0;
   width: 4px;
-  background: linear-gradient(180deg, #5e5ce6 0%, #ff98e2 100%);
+  background: linear-gradient(180deg, #c96442 0%, #ff98e2 100%);
   border-radius: 20px 0 0 20px;
 }
 
@@ -75,7 +75,7 @@
 
 /* ── Gradient Text ── */
 .tp-gradient-text {
-  color: #5e5ce6;
+  color: #c96442;
 }
 
 /* ── Status Badges ── */
@@ -221,7 +221,7 @@
 }
 
 .tp-info-value a {
-  color: #5e5ce6;
+  color: #c96442;
   text-decoration: none;
   font-weight: 500;
 }
@@ -439,7 +439,7 @@
   border-radius: 10px;
   font-size: 0.875rem;
   font-family:
-    'Inter',
+    'Be Vietnam Pro',
     -apple-system,
     sans-serif;
   color: #0e0c15;
@@ -460,7 +460,7 @@
 .tp-input:focus,
 .tp-textarea:focus {
   outline: none;
-  border-color: #5e5ce6;
+  border-color: #c96442;
   box-shadow: 0 0 0 3px rgba(94, 92, 230, 0.1);
   background: #fafaff;
 }
@@ -506,7 +506,7 @@
 }
 
 .tp-file-zone:hover {
-  border-color: #5e5ce6;
+  border-color: #c96442;
   background: #f5f3ff;
 }
 
@@ -525,7 +525,7 @@
 }
 
 .tp-file-zone:hover .tp-file-zone__icon {
-  color: #5e5ce6;
+  color: #c96442;
 }
 
 .tp-file-zone--filled .tp-file-zone__icon {
@@ -593,7 +593,7 @@
   border: 1px solid transparent;
   text-decoration: none;
   font-family:
-    'Inter',
+    'Be Vietnam Pro',
     -apple-system,
     sans-serif;
   white-space: nowrap;
@@ -609,16 +609,16 @@
 }
 
 .tp-btn--primary {
-  background: #5e5ce6;
+  background: #c96442;
   color: #ffffff;
-  border-color: #5e5ce6;
+  border-color: #c96442;
   box-shadow: 0 1px 2px rgba(14, 12, 21, 0.04);
 }
 
 .tp-btn--primary:hover:not(:disabled) {
   background: #4e4cc6;
   border-color: #4e4cc6;
-  box-shadow: 0 4px 24px rgba(94, 92, 230, 0.22);
+  box-shadow: 0 4px 24px rgba(201, 100, 66, 0.24);
   transform: translateY(-1px);
 }
 
@@ -665,7 +665,7 @@
   width: 18px;
   height: 18px;
   border: 2px solid #e8e5f0;
-  border-top-color: #5e5ce6;
+  border-top-color: #c96442;
   border-radius: 50%;
   animation: tp-spin 0.7s linear infinite;
   flex-shrink: 0;

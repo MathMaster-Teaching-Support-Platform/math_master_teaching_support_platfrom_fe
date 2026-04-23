@@ -37,12 +37,9 @@ export function CanonicalQuestionModal({
   onSubmit,
   submitting,
 }: Readonly<Props>) {
-  const MULTIPLE_CHOICE_TYPE = 'MULTIPLE_CHOICE';
   const [title, setTitle] = useState('');
   const [problemText, setProblemText] = useState('');
   const [solutionSteps, setSolutionSteps] = useState('');
-  const [diagramDefinitionRaw, setDiagramDefinitionRaw] = useState('');
-  const [problemType, setProblemType] = useState(MULTIPLE_CHOICE_TYPE);
   const [cognitiveLevel, setCognitiveLevel] = useState<CanonicalCognitiveLevel>('THONG_HIEU');
   const [error, setError] = useState<string | null>(null);
 
@@ -56,18 +53,9 @@ export function CanonicalQuestionModal({
     setError(null);
 
     if (mode === 'edit' && initialData) {
-      let nextDiagramDefinition = '';
-      if (typeof initialData.diagramDefinition === 'string') {
-        nextDiagramDefinition = initialData.diagramDefinition;
-      } else if (initialData.diagramDefinition) {
-        nextDiagramDefinition = JSON.stringify(initialData.diagramDefinition, null, 2);
-      }
-
       setTitle(initialData.title || '');
       setProblemText(initialData.problemText || '');
       setSolutionSteps(initialData.solutionSteps || '');
-      setDiagramDefinitionRaw(nextDiagramDefinition);
-      setProblemType(initialData.problemType || MULTIPLE_CHOICE_TYPE);
       setCognitiveLevel(initialData.cognitiveLevel || 'THONG_HIEU');
       return;
     }
@@ -75,8 +63,6 @@ export function CanonicalQuestionModal({
     setTitle('');
     setProblemText('');
     setSolutionSteps('');
-    setDiagramDefinitionRaw('');
-    setProblemType(MULTIPLE_CHOICE_TYPE);
     setCognitiveLevel('THONG_HIEU');
   }, [isOpen, mode, initialData]);
 
@@ -96,15 +82,11 @@ export function CanonicalQuestionModal({
       return;
     }
 
-    const diagramDefinition = diagramDefinitionRaw.trim() || undefined;
-
     try {
       await onSubmit({
         title: title.trim(),
         problemText: problemText.trim(),
         solutionSteps: solutionSteps.trim(),
-        diagramDefinition,
-        problemType: mode === 'create' ? MULTIPLE_CHOICE_TYPE : problemType.trim(),
         cognitiveLevel,
       });
 
@@ -152,17 +134,6 @@ export function CanonicalQuestionModal({
               </label>
               <label>
                 <p className="muted" style={{ marginBottom: 6 }}>
-                  Dạng bài toán
-                </p>
-                <input
-                  className="input"
-                  value={problemType}
-                  onChange={(event) => setProblemType(event.target.value)}
-                  readOnly={mode === 'create'}
-                />
-              </label>
-              <label>
-                <p className="muted" style={{ marginBottom: 6 }}>
                   Mức độ nhận thức
                 </p>
                 <select
@@ -183,7 +154,7 @@ export function CanonicalQuestionModal({
 
             <label>
               <p className="muted" style={{ marginBottom: 6 }}>
-                Nội dung bài toán (hỗ trợ LaTeX)
+                Nội dung bài toán
               </p>
               <textarea
                 className="textarea"
@@ -214,19 +185,6 @@ export function CanonicalQuestionModal({
                 </div>
               )}
             </label>
-
-            <label>
-              <p className="muted" style={{ marginBottom: 6 }}>
-                Hình vẽ / Sơ đồ (LaTeX, tùy chọn)
-              </p>
-              <textarea
-                className="textarea"
-                rows={4}
-                value={diagramDefinitionRaw}
-                onChange={(event) => setDiagramDefinitionRaw(event.target.value)}
-                placeholder="Vi du: \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}"
-              />
-            </label>
           </div>
 
           <div className="modal-footer">
@@ -242,3 +200,4 @@ export function CanonicalQuestionModal({
     </div>
   );
 }
+
