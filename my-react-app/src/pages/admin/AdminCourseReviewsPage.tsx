@@ -1,3 +1,13 @@
+import {
+  BookOpen,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Clock3,
+  Eye,
+  History,
+  XCircle,
+} from 'lucide-react';
 import React from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { useToast } from '../../context/ToastContext';
@@ -52,9 +62,7 @@ function PendingTab() {
       ? approveMutation.variables
       : null;
   const rejectingId =
-    rejectMutation.isPending && rejectMutation.variables
-      ? rejectMutation.variables.courseId
-      : null;
+    rejectMutation.isPending && rejectMutation.variables ? rejectMutation.variables.courseId : null;
 
   const onApprove = (courseId: string) => {
     approveMutation.mutate(courseId, {
@@ -63,7 +71,10 @@ function PendingTab() {
         refetch();
       },
       onError: (err: unknown) => {
-        showToast({ type: 'error', message: err instanceof Error ? err.message : 'Không thể duyệt khóa học.' });
+        showToast({
+          type: 'error',
+          message: err instanceof Error ? err.message : 'Không thể duyệt khóa học.',
+        });
       },
     });
   };
@@ -85,70 +96,82 @@ function PendingTab() {
           refetch();
         },
         onError: (err: unknown) => {
-          showToast({ type: 'error', message: err instanceof Error ? err.message : 'Không thể từ chối khóa học.' });
+          showToast({
+            type: 'error',
+            message: err instanceof Error ? err.message : 'Không thể từ chối khóa học.',
+          });
         },
       }
     );
   };
 
+  let content: React.ReactNode;
+  if (isLoading) {
+    content = <div className="acr-empty">Đang tải danh sách chờ duyệt...</div>;
+  } else if (courses.length === 0) {
+    content = <div className="acr-empty">Không có khóa học nào đang chờ duyệt.</div>;
+  } else {
+    content = (
+      <>
+        <table className="acr-table">
+          <thead>
+            <tr>
+              <th>Tên khóa học</th>
+              <th>Giảng viên</th>
+              <th>Loại</th>
+              <th>Ngày tạo</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            {courses.map((course) => (
+              <CourseRow
+                key={course.id}
+                course={course}
+                actions={
+                  <div className="acr-actions">
+                    <a
+                      className="acr-btn acr-btn-preview"
+                      href={`/admin/courses/${course.id}/review`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Eye className="acr-icon" />
+                      Xem nội dung
+                    </a>
+                    <button
+                      className="acr-btn acr-btn-approve"
+                      onClick={() => onApprove(course.id)}
+                      disabled={approvingId === course.id || rejectingId === course.id}
+                    >
+                      <CheckCircle2 className="acr-icon" />
+                      {approvingId === course.id ? 'Đang duyệt...' : 'Duyệt'}
+                    </button>
+                    <button
+                      className="acr-btn acr-btn-reject"
+                      onClick={() => {
+                        setRejectCourseId(course.id);
+                        setRejectReason('');
+                      }}
+                      disabled={approvingId === course.id || rejectingId === course.id}
+                    >
+                      <XCircle className="acr-icon" />
+                      Từ chối
+                    </button>
+                  </div>
+                }
+              />
+            ))}
+          </tbody>
+        </table>
+        <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+      </>
+    );
+  }
+
   return (
     <>
-      <div className="acr-card">
-        {isLoading ? (
-          <div className="acr-empty">Đang tải danh sách chờ duyệt...</div>
-        ) : courses.length === 0 ? (
-          <div className="acr-empty">Không có khóa học nào đang chờ duyệt.</div>
-        ) : (
-          <>
-            <table className="acr-table">
-              <thead>
-                <tr>
-                  <th>Tên khóa học</th>
-                  <th>Giảng viên</th>
-                  <th>Loại</th>
-                  <th>Ngày tạo</th>
-                  <th>Thao tác</th>
-                </tr>
-              </thead>
-              <tbody>
-                {courses.map((course) => (
-                  <CourseRow
-                    key={course.id}
-                    course={course}
-                    actions={
-                      <div className="acr-actions">
-                        <a
-                          className="acr-btn acr-btn-preview"
-                          href={`/admin/courses/${course.id}/review`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          Xem nội dung
-                        </a>
-                        <button
-                          className="acr-btn acr-btn-approve"
-                          onClick={() => onApprove(course.id)}
-                          disabled={approvingId === course.id || rejectingId === course.id}
-                        >
-                          {approvingId === course.id ? 'Đang duyệt...' : 'Duyệt'}
-                        </button>
-                        <button
-                          className="acr-btn acr-btn-reject"
-                          onClick={() => { setRejectCourseId(course.id); setRejectReason(''); }}
-                          disabled={approvingId === course.id || rejectingId === course.id}
-                        >
-                          Từ chối
-                        </button>
-                      </div>
-                    }
-                  />
-                ))}
-              </tbody>
-            </table>
-            <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-          </>
-        )}
-      </div>
+      <div className="acr-card">{content}</div>
 
       {rejectCourseId && (
         <div className="acr-modal-backdrop">
@@ -162,7 +185,13 @@ function PendingTab() {
               placeholder="Ví dụ: Nội dung khóa học chưa đủ rõ ràng ở phần mục tiêu học tập..."
             />
             <div className="acr-modal-actions">
-              <button className="acr-btn" onClick={() => { setRejectCourseId(null); setRejectReason(''); }}>
+              <button
+                className="acr-btn"
+                onClick={() => {
+                  setRejectCourseId(null);
+                  setRejectReason('');
+                }}
+              >
                 Hủy
               </button>
               <button
@@ -195,6 +224,50 @@ function HistoryTab() {
     setPage(0);
   };
 
+  let content: React.ReactNode;
+  if (isLoading) {
+    content = <div className="acr-empty">Đang tải lịch sử...</div>;
+  } else if (courses.length === 0) {
+    content = <div className="acr-empty">Không có khóa học nào.</div>;
+  } else {
+    content = (
+      <>
+        <table className="acr-table">
+          <thead>
+            <tr>
+              <th>Tên khóa học</th>
+              <th>Giảng viên</th>
+              <th>Loại</th>
+              <th>Trạng thái</th>
+              <th>Cập nhật</th>
+            </tr>
+          </thead>
+          <tbody>
+            {courses.map((course) => (
+              <CourseRow
+                key={course.id}
+                course={course}
+                showStatus
+                actions={
+                  <a
+                    className="acr-btn acr-btn-preview"
+                    href={`/admin/courses/${course.id}/review`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Eye className="acr-icon" />
+                    Xem nội dung
+                  </a>
+                }
+              />
+            ))}
+          </tbody>
+        </table>
+        <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+      </>
+    );
+  }
+
   return (
     <div className="acr-card">
       <div className="acr-filter-bar">
@@ -209,45 +282,7 @@ function HistoryTab() {
         ))}
       </div>
 
-      {isLoading ? (
-        <div className="acr-empty">Đang tải lịch sử...</div>
-      ) : courses.length === 0 ? (
-        <div className="acr-empty">Không có khóa học nào.</div>
-      ) : (
-        <>
-          <table className="acr-table">
-            <thead>
-              <tr>
-                <th>Tên khóa học</th>
-                <th>Giảng viên</th>
-                <th>Loại</th>
-                <th>Trạng thái</th>
-                <th>Cập nhật</th>
-              </tr>
-            </thead>
-            <tbody>
-              {courses.map((course) => (
-                <CourseRow
-                  key={course.id}
-                  course={course}
-                  showStatus
-                  actions={
-                    <a
-                      className="acr-btn acr-btn-preview"
-                      href={`/admin/courses/${course.id}/review`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Xem nội dung
-                    </a>
-                  }
-                />
-              ))}
-            </tbody>
-          </table>
-          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-        </>
-      )}
+      {content}
     </div>
   );
 }
@@ -257,11 +292,11 @@ function CourseRow({
   course,
   actions,
   showStatus = false,
-}: {
+}: Readonly<{
   course: CourseResponse;
   actions: React.ReactNode;
   showStatus?: boolean;
-}) {
+}>) {
   return (
     <tr>
       <td>
@@ -293,22 +328,26 @@ function Pagination({
   page,
   totalPages,
   onPageChange,
-}: {
+}: Readonly<{
   page: number;
   totalPages: number;
   onPageChange: (p: number) => void;
-}) {
+}>) {
   return (
     <div className="acr-pagination">
       <button onClick={() => onPageChange(Math.max(0, page - 1))} disabled={page === 0}>
+        <ChevronLeft className="acr-icon" />
         Trước
       </button>
-      <span>Trang {page + 1} / {Math.max(totalPages, 1)}</span>
+      <span>
+        Trang {page + 1} / {Math.max(totalPages, 1)}
+      </span>
       <button
         onClick={() => onPageChange(Math.min(totalPages - 1, page + 1))}
         disabled={page + 1 >= totalPages}
       >
         Sau
+        <ChevronRight className="acr-icon" />
       </button>
     </div>
   );
@@ -323,7 +362,10 @@ const AdminCourseReviewsPage: React.FC = () => {
       <div className="acr-page">
         <div className="acr-header">
           <div>
-            <h1>Duyệt Khóa Học</h1>
+            <h1>
+              <BookOpen className="acr-header-icon" />
+              Duyệt Khóa Học
+            </h1>
             <p>Quản lý và theo dõi trạng thái phê duyệt khóa học.</p>
           </div>
         </div>
@@ -333,12 +375,14 @@ const AdminCourseReviewsPage: React.FC = () => {
             className={`acr-tab ${activeTab === 'pending' ? 'active' : ''}`}
             onClick={() => setActiveTab('pending')}
           >
+            <Clock3 className="acr-tab-icon" />
             Chờ duyệt
           </button>
           <button
             className={`acr-tab ${activeTab === 'history' ? 'active' : ''}`}
             onClick={() => setActiveTab('history')}
           >
+            <History className="acr-tab-icon" />
             Lịch sử duyệt
           </button>
         </div>

@@ -770,6 +770,74 @@
   border-radius: 0;
 }
 
+/* DESIGN.md-aligned Admin shell styling (warm tone) */
+.module-layout-container.admin-user-mgmt-page .courses-header-row {
+  align-items: flex-start;
+  padding-bottom: 1.2rem;
+  border-bottom: 1px solid #e8e6dc;
+}
+
+.module-layout-container.admin-user-mgmt-page .header-kicker {
+  color: #c96442;
+}
+
+.module-layout-container.admin-user-mgmt-page .header-kicker::before {
+  background: #c96442;
+}
+
+.module-layout-container.admin-user-mgmt-page .courses-header-row h2 {
+  color: #141413;
+}
+
+.module-layout-container.admin-user-mgmt-page .header-sub {
+  color: #5e5d59;
+}
+
+.module-layout-container.admin-user-mgmt-page .header-sub::before {
+  background: #c96442;
+}
+
+.module-layout-container.admin-user-mgmt-page .toolbar {
+  background: #faf9f5;
+  border-color: #e8e6dc;
+}
+
+.module-layout-container.admin-user-mgmt-page .pill-btn {
+  background: #f5f4ed;
+  border-color: #e8e6dc;
+  color: #5e5d59;
+}
+
+.module-layout-container.admin-user-mgmt-page .pill-btn.active {
+  background: #30302e;
+  border-color: #30302e;
+  color: #faf9f5;
+}
+
+.module-layout-container.admin-user-mgmt-page .search-box {
+  background: #ffffff;
+  border-color: #e8e6dc;
+  box-shadow: none;
+}
+
+.module-layout-container.admin-user-mgmt-page .search-box:focus-within {
+  border-color: #c96442;
+  box-shadow: 0 0 0 3px rgba(201, 100, 66, 0.14);
+}
+
+.module-layout-container.admin-user-mgmt-page .search-box__icon {
+  background: #f5f4ed;
+  border-color: #e8e6dc;
+  color: #4d4c48;
+}
+
+.module-layout-container.admin-user-mgmt-page .admin-mgmt-table-shell {
+  border-radius: 14px;
+  border: 1px solid #e8e6dc;
+  box-shadow: 0 4px 16px rgba(20, 20, 19, 0.06);
+  background: #fff;
+}
+
 .module-layout-container.admin-user-mgmt-page .admin-user-mgmt-search-pending {
   position: absolute;
   right: 0.55rem;
@@ -780,7 +848,9 @@
   pointer-events: none;
 }
 
-.module-layout-container.admin-user-mgmt-page .search-box:has(.search-box__clear) .admin-user-mgmt-search-pending {
+.module-layout-container.admin-user-mgmt-page
+  .search-box:has(.search-box__clear)
+  .admin-user-mgmt-search-pending {
   right: 2.5rem;
 }
 

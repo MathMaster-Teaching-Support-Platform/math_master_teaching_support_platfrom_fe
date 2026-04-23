@@ -5,13 +5,13 @@
 .rp {
   --rp-primary: #c96442;
   --rp-primary-soft: rgba(201, 100, 66, 0.12);
-  --rp-text-1: #0e0c15;
-  --rp-text-2: #3f3a52;
-  --rp-text-3: #756b85;
-  --rp-text-4: #9ca3af;
-  --rp-border: #e8e5f0;
+  --rp-text-1: #141413;
+  --rp-text-2: #4d4c48;
+  --rp-text-3: #5e5d59;
+  --rp-text-4: #87867f;
+  --rp-border: #e8e6dc;
   --rp-surface: #ffffff;
-  --rp-bg: #fafaff;
+  --rp-bg: #faf9f5;
   --rp-radius: 12px;
   --rp-f-head: 'Be Vietnam Pro', -apple-system, sans-serif;
   --rp-f-body: 'Be Vietnam Pro', -apple-system, sans-serif;
@@ -1173,8 +1173,70 @@
   border-bottom: none;
 }
 
+.module-layout-container.admin-review-profiles-page .courses-header-row {
+  align-items: flex-start;
+  padding-bottom: 1.2rem;
+  border-bottom: 1px solid #e8e6dc;
+}
+
+.module-layout-container.admin-review-profiles-page .header-kicker {
+  color: #c96442;
+}
+
+.module-layout-container.admin-review-profiles-page .header-kicker::before {
+  background: #c96442;
+}
+
+.module-layout-container.admin-review-profiles-page .courses-header-row h2 {
+  color: #141413;
+}
+
+.module-layout-container.admin-review-profiles-page .header-sub {
+  color: #5e5d59;
+}
+
+.module-layout-container.admin-review-profiles-page .header-sub::before {
+  background: #c96442;
+}
+
 .module-layout-container.admin-review-profiles-page .rp-toolbar {
   margin-bottom: 1.25rem;
+}
+
+.module-layout-container.admin-review-profiles-page .toolbar {
+  background: #faf9f5;
+  border-color: #e8e6dc;
+}
+
+.module-layout-container.admin-review-profiles-page .pill-btn {
+  background: #f5f4ed;
+  border-color: #e8e6dc;
+  color: #5e5d59;
+}
+
+.module-layout-container.admin-review-profiles-page .pill-btn.active {
+  background: #30302e;
+  border-color: #30302e;
+  color: #faf9f5;
+}
+
+.module-layout-container.admin-review-profiles-page .rp-search-wrap--module .search-box {
+  background: #ffffff;
+  border-color: #e8e6dc;
+  box-shadow: none;
+}
+
+.module-layout-container.admin-review-profiles-page
+  .rp-search-wrap--module
+  .search-box:focus-within {
+  border-color: #c96442;
+  box-shadow: 0 0 0 3px rgba(201, 100, 66, 0.14);
+}
+
+.module-layout-container.admin-review-profiles-page .rp-search-wrap--module .search-box__icon {
+  background: #f5f4ed;
+  border-color: #e8e6dc;
+  color: #4d4c48;
 }
 
 .module-layout-container.admin-review-profiles-page .pill-btn .rp-tab-badge {
@@ -1185,8 +1247,8 @@
 .module-layout-container.admin-review-profiles-page .rp-body {
   gap: 0;
   border-radius: 14px;
-  border: 1px solid #e5edf7;
-  box-shadow: 0 4px 16px rgba(20, 34, 53, 0.07);
+  border: 1px solid #e8e6dc;
+  box-shadow: 0 4px 16px rgba(20, 20, 19, 0.06);
   overflow: hidden;
   background: #fff;
 }
@@ -1209,6 +1271,18 @@
 
 .module-layout-container.admin-review-profiles-page .rp-search-wrap--module .search-box {
   width: 100%;
+}
+
+.module-layout-container.admin-review-profiles-page .rp-list,
+.module-layout-container.admin-review-profiles-page .rp-detail {
+  background: #fff;
+}
+
+.module-layout-container.admin-review-profiles-page .rpd-admin-note {
+  background: #fef9ec;
+  border: 1px solid #fde68a;
+  box-shadow: inset 2px 0 0 #f59e0b;
+  color: #4d4c48;
 }
 
 @media (max-width: 900px) {

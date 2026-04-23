@@ -1,3 +1,25 @@
+import {
+  Activity,
+  BarChart2,
+  BookOpen,
+  CalendarDays,
+  CheckCircle2,
+  Clock3,
+  CreditCard,
+  DollarSign,
+  Download,
+  FileText,
+  Globe,
+  GraduationCap,
+  LayoutGrid,
+  RotateCcw,
+  Target,
+  Trophy,
+  User,
+  Users,
+  Video,
+  Zap,
+} from 'lucide-react';
 import React, { useState } from 'react';
 import {
   Area,
@@ -50,16 +72,16 @@ const DAILY_TRAFFIC = [
 ];
 
 const PLAN_SALES = [
-  { name: 'Pro - 1 tháng', value: 510, revenue: 50490000, fill: '#667eea' },
-  { name: 'Pro - 3 tháng', value: 283, revenue: 78957000, fill: '#43e97b' },
-  { name: 'Pro - 6 tháng', value: 182, revenue: 99918000, fill: '#38f9d7' },
-  { name: 'Premium - 6 tháng', value: 164, revenue: 221400000, fill: '#f093fb' },
-  { name: 'Premium - 1 năm', value: 97, revenue: 96030000, fill: '#fbbf24' },
+  { name: 'Pro - 1 tháng', value: 510, revenue: 50490000, fill: '#c96442' },
+  { name: 'Pro - 3 tháng', value: 283, revenue: 78957000, fill: '#16a34a' },
+  { name: 'Pro - 6 tháng', value: 182, revenue: 99918000, fill: '#d97706' },
+  { name: 'Premium - 6 tháng', value: 164, revenue: 221400000, fill: '#8b5e3c' },
+  { name: 'Premium - 1 năm', value: 97, revenue: 96030000, fill: '#ca8a04' },
 ];
 
 const TXN_STATUS = [
   { name: 'Thành công', value: 1058, fill: '#22c55e' },
-  { name: 'Đang xử lý', value: 112, fill: '#fbbf24' },
+  { name: 'Đang xử lý', value: 112, fill: '#ca8a04' },
   { name: 'Thất bại', value: 66, fill: '#ef4444' },
 ];
 
@@ -103,75 +125,75 @@ const COURSE_ENGAGEMENT = [
 ];
 
 const RETENTION_RADIAL = [
-  { name: 'Ngày 1', value: 100, fill: '#667eea' },
-  { name: 'Ngày 7', value: 68, fill: '#43e97b' },
-  { name: 'Ngày 30', value: 44, fill: '#fbbf24' },
-  { name: 'Ngày 90', value: 29, fill: '#f093fb' },
+  { name: 'Ngày 1', value: 100, fill: '#c96442' },
+  { name: 'Ngày 7', value: 68, fill: '#16a34a' },
+  { name: 'Ngày 30', value: 44, fill: '#ca8a04' },
+  { name: 'Ngày 90', value: 29, fill: '#8b5e3c' },
 ];
 
 const KPI_CARDS = [
   {
-    icon: '👥',
+    icon: Users,
     label: 'Tổng người dùng',
     value: '2.530',
     sub: '+14.2% YoY',
-    color: '#667eea',
+    color: '#c96442',
     positive: true,
   },
   {
-    icon: '⚡',
+    icon: Zap,
     label: 'DAU trung bình',
     value: '1.840',
     sub: '72.7% tổng users',
-    color: '#43e97b',
+    color: '#16a34a',
     positive: true,
   },
   {
-    icon: '💰',
+    icon: DollarSign,
     label: 'Doanh thu năm',
     value: '₫734.8M',
     sub: '+18.5% YoY',
-    color: '#38f9d7',
+    color: '#d97706',
     positive: true,
   },
   {
-    icon: '🎯',
+    icon: Target,
     label: 'Tỷ lệ chuyển đổi',
     value: '22.4%',
     sub: '+3.1pp',
-    color: '#f093fb',
+    color: '#8b5e3c',
     positive: true,
   },
   {
-    icon: '📚',
+    icon: BookOpen,
     label: 'Khóa học đã đăng ký',
     value: '6.484',
     sub: '+25.3% YoY',
-    color: '#fbbf24',
+    color: '#ca8a04',
     positive: true,
   },
   {
-    icon: '🎬',
+    icon: Video,
     label: 'Lượt xem video',
     value: '55.200',
     sub: '+31.7% YoY',
-    color: '#fc8181',
+    color: '#b45309',
     positive: true,
   },
   {
-    icon: '✅',
+    icon: CheckCircle2,
     label: 'Bài kiểm tra hoàn thành',
     value: '8.214',
     sub: '+27.8% YoY',
-    color: '#a78bfa',
+    color: '#16a34a',
     positive: true,
   },
   {
-    icon: '🍎',
+    icon: GraduationCap,
     label: 'Giáo viên đã duyệt',
     value: '778',
     sub: '93.5% approval rate',
-    color: '#34d399',
+    color: '#a16207',
     positive: true,
   },
 ];
@@ -219,12 +241,16 @@ const AdminAnalytics: React.FC = () => {
     return `₫${n.toLocaleString('vi-VN')}`;
   };
 
-  const SECTIONS: { key: Section; label: string; icon: string }[] = [
-    { key: 'overview', label: 'Tổng quan', icon: '🏠' },
-    { key: 'traffic', label: 'Lưu lượng', icon: '📡' },
-    { key: 'revenue', label: 'Doanh thu & Giao dịch', icon: '💰' },
-    { key: 'engagement', label: 'Học sinh & Học tập', icon: '📚' },
-    { key: 'teachers', label: 'Giáo viên', icon: '🍎' },
+  const SECTIONS: {
+    key: Section;
+    label: string;
+    icon: React.ComponentType<{ className?: string }>;
+  }[] = [
+    { key: 'overview', label: 'Tổng quan', icon: LayoutGrid },
+    { key: 'traffic', label: 'Lưu lượng', icon: Activity },
+    { key: 'revenue', label: 'Doanh thu & Giao dịch', icon: CreditCard },
+    { key: 'engagement', label: 'Học sinh & Học tập', icon: BookOpen },
+    { key: 'teachers', label: 'Giáo viên', icon: GraduationCap },
   ];
 
   return (
@@ -232,28 +258,35 @@ const AdminAnalytics: React.FC = () => {
       role="admin"
       user={{ name: mockAdmin.name, avatar: mockAdmin.avatar, role: 'admin' }}
       notificationCount={3}
+      contentClassName="dashboard-content--flush-bleed"
     >
-      <div className="admin-analytics-page">
+      <div className="module-layout-container admin-analytics-page">
         {/* Page Header */}
-        <div className="ana-page-header">
-          <div>
-            <h1 className="ana-page-title">📈 Thống kê & Phân tích</h1>
-            <p className="ana-page-subtitle">
+        <div className="courses-header-row ana-page-header">
+          <div className="header-stack">
+            <span className="header-kicker">ADMIN</span>
+            <h1 className="ana-page-title">
+              <span>Thống kê & Phân tích</span>
+            </h1>
+            <p className="header-sub ana-page-subtitle">
               Dữ liệu hoạt động chi tiết của nền tảng MathMaster — năm 2026
             </p>
           </div>
-          <button className="ana-export-btn">📥 Xuất báo cáo</button>
+          <button className="ana-export-btn">
+            <Download className="ana-export-btn-icon" />
+            <span>Xuất báo cáo</span>
+          </button>
         </div>
 
         {/* Section Nav */}
         <div className="ana-section-nav">
-          {SECTIONS.map(({ key, label, icon }) => (
+          {SECTIONS.map(({ key, label, icon: Icon }) => (
             <button
               key={key}
               className={`ana-nav-btn${activeSection === key ? ' ana-nav-btn--active' : ''}`}
               onClick={() => setActiveSection(key)}
             >
-              <span>{icon}</span>
+              <Icon className="ana-nav-btn-icon" />
               <span>{label}</span>
             </button>
           ))}
@@ -272,7 +305,7 @@ const AdminAnalytics: React.FC = () => {
                     className="ana-kpi-icon"
                     style={{ background: `${k.color}18`, color: k.color }}
                   >
-                    {k.icon}
+                    <k.icon className="ana-kpi-svg" />
                   </div>
                   <div className="ana-kpi-info">
                     <div className="ana-kpi-label">{k.label}</div>
@@ -298,22 +331,22 @@ const AdminAnalytics: React.FC = () => {
               <div className="ana-chart-body">
                 <ResponsiveContainer width="100%" height={280}>
                   <BarChart data={MONTHLY_OVERVIEW} barGap={4} barCategoryGap="30%">
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1efe7" />
                     <XAxis
                       dataKey="month"
-                      tick={{ fontSize: 12, fill: '#94a3b8' }}
+                      tick={{ fontSize: 12, fill: '#87867f' }}
                       tickLine={false}
                       axisLine={false}
                     />
                     <YAxis
-                      tick={{ fontSize: 12, fill: '#94a3b8' }}
+                      tick={{ fontSize: 12, fill: '#87867f' }}
                       tickLine={false}
                       axisLine={false}
                     />
                     <Tooltip content={<ChartTooltip />} />
                     <Legend wrapperStyle={{ fontSize: 13, paddingTop: 12 }} />
-                    <Bar dataKey="students" name="Học sinh" fill="#667eea" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="teachers" name="Giáo viên" fill="#43e97b" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="students" name="Học sinh" fill="#c96442" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="teachers" name="Giáo viên" fill="#16a34a" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -333,25 +366,25 @@ const AdminAnalytics: React.FC = () => {
                     <AreaChart data={MONTHLY_OVERVIEW}>
                       <defs>
                         <linearGradient id="grad-rev" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#667eea" stopOpacity={0.3} />
-                          <stop offset="95%" stopColor="#667eea" stopOpacity={0} />
+                          <stop offset="5%" stopColor="#c96442" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="#c96442" stopOpacity={0} />
                         </linearGradient>
                         <linearGradient id="grad-ses" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#43e97b" stopOpacity={0.3} />
-                          <stop offset="95%" stopColor="#43e97b" stopOpacity={0} />
+                          <stop offset="5%" stopColor="#16a34a" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="#16a34a" stopOpacity={0} />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f1efe7" />
                       <XAxis
                         dataKey="month"
-                        tick={{ fontSize: 12, fill: '#94a3b8' }}
+                        tick={{ fontSize: 12, fill: '#87867f' }}
                         tickLine={false}
                         axisLine={false}
                       />
                       <YAxis
                         yAxisId="rev"
                         orientation="left"
-                        tick={{ fontSize: 11, fill: '#94a3b8' }}
+                        tick={{ fontSize: 11, fill: '#87867f' }}
                         tickLine={false}
                         axisLine={false}
                         tickFormatter={(v: number) => fmtCurrency(v)}
@@ -359,7 +392,7 @@ const AdminAnalytics: React.FC = () => {
                       <YAxis
                         yAxisId="ses"
                         orientation="right"
-                        tick={{ fontSize: 11, fill: '#94a3b8' }}
+                        tick={{ fontSize: 11, fill: '#87867f' }}
                         tickLine={false}
                         axisLine={false}
                       />
@@ -372,7 +405,7 @@ const AdminAnalytics: React.FC = () => {
                         type="monotone"
                         dataKey="revenue"
                         name="Doanh thu"
-                        stroke="#667eea"
+                        stroke="#c96442"
                         strokeWidth={2}
                         fill="url(#grad-rev)"
                       />
@@ -381,7 +414,7 @@ const AdminAnalytics: React.FC = () => {
                         type="monotone"
                         dataKey="sessions"
                         name="Phiên học"
-                        stroke="#43e97b"
+                        stroke="#16a34a"
                         strokeWidth={2}
                         fill="url(#grad-ses)"
                       />
@@ -445,26 +478,35 @@ const AdminAnalytics: React.FC = () => {
                 {
                   label: 'Lượt truy cập / ngày (TB)',
                   value: '1.424',
-                  icon: '🌐',
-                  color: '#667eea',
+                  icon: Globe,
+                  color: '#c96442',
                 },
                 {
                   label: 'Người dùng độc lập / ngày',
                   value: '1.026',
-                  icon: '👤',
-                  color: '#43e97b',
+                  icon: User,
+                  color: '#16a34a',
                 },
-                { label: 'Thời gian phiên TB', value: '18.6 phút', icon: '⏱️', color: '#fbbf24' },
+                {
+                  label: 'Thời gian phiên TB',
+                  value: '18.6 phút',
+                  icon: Clock3,
+                  color: '#ca8a04',
+                },
                 {
                   label: 'Tỷ lệ thoát (Bounce rate)',
                   value: '28.4%',
-                  icon: '↩️',
-                  color: '#f093fb',
+                  icon: RotateCcw,
+                  color: '#8b5e3c',
                 },
               ].map((k) => (
-                <div key={k.label} className="ana-inline-kpi" style={{ borderLeftColor: k.color }}>
+                <div
+                  key={k.label}
+                  className="ana-inline-kpi"
+                  style={{ ['--ana-accent' as string]: k.color }}
+                >
                   <div className="ana-inline-kpi-icon" style={{ color: k.color }}>
-                    {k.icon}
+                    <k.icon className="ana-inline-kpi-svg" />
                   </div>
                   <div>
                     <div className="ana-inline-kpi-value">{k.value}</div>
@@ -486,15 +528,15 @@ const AdminAnalytics: React.FC = () => {
               <div className="ana-chart-body">
                 <ResponsiveContainer width="100%" height={280}>
                   <BarChart data={DAILY_TRAFFIC} barGap={6}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1efe7" />
                     <XAxis
                       dataKey="day"
-                      tick={{ fontSize: 13, fill: '#94a3b8' }}
+                      tick={{ fontSize: 13, fill: '#87867f' }}
                       tickLine={false}
                       axisLine={false}
                     />
                     <YAxis
-                      tick={{ fontSize: 12, fill: '#94a3b8' }}
+                      tick={{ fontSize: 12, fill: '#87867f' }}
                       tickLine={false}
                       axisLine={false}
                     />
@@ -503,13 +545,13 @@ const AdminAnalytics: React.FC = () => {
                     <Bar
                       dataKey="visits"
                       name="Lượt truy cập"
-                      fill="#667eea"
+                      fill="#c96442"
                       radius={[5, 5, 0, 0]}
                     />
                     <Bar
                       dataKey="uniqueUsers"
                       name="Người dùng độc lập"
-                      fill="#38f9d7"
+                      fill="#d97706"
                       radius={[5, 5, 0, 0]}
                     />
                   </BarChart>
@@ -528,15 +570,15 @@ const AdminAnalytics: React.FC = () => {
                 <div className="ana-chart-body">
                   <ResponsiveContainer width="100%" height={220}>
                     <LineChart data={DAILY_TRAFFIC}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f1efe7" />
                       <XAxis
                         dataKey="day"
-                        tick={{ fontSize: 12, fill: '#94a3b8' }}
+                        tick={{ fontSize: 12, fill: '#87867f' }}
                         tickLine={false}
                         axisLine={false}
                       />
                       <YAxis
-                        tick={{ fontSize: 12, fill: '#94a3b8' }}
+                        tick={{ fontSize: 12, fill: '#87867f' }}
                         tickLine={false}
                         axisLine={false}
                         unit=" ph"
@@ -546,9 +588,9 @@ const AdminAnalytics: React.FC = () => {
                         type="monotone"
                         dataKey="avgDuration"
                         name="Thời gian TB"
-                        stroke="#fbbf24"
+                        stroke="#ca8a04"
                         strokeWidth={3}
-                        dot={{ fill: '#fbbf24', r: 5 }}
+                        dot={{ fill: '#ca8a04', r: 5 }}
                         activeDot={{ r: 7 }}
                       />
                     </LineChart>
@@ -576,7 +618,7 @@ const AdminAnalytics: React.FC = () => {
                     >
                       <RadialBar
                         dataKey="value"
-                        background={{ fill: '#f1f5f9' }}
+                        background={{ fill: '#f1efe7' }}
                         cornerRadius={6}
                         label={{
                           position: 'insideStart',
@@ -618,19 +660,19 @@ const AdminAnalytics: React.FC = () => {
                   <AreaChart data={MONTHLY_OVERVIEW}>
                     <defs>
                       <linearGradient id="grad-sess" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#667eea" stopOpacity={0.4} />
-                        <stop offset="95%" stopColor="#667eea" stopOpacity={0} />
+                        <stop offset="5%" stopColor="#c96442" stopOpacity={0.4} />
+                        <stop offset="95%" stopColor="#c96442" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1efe7" />
                     <XAxis
                       dataKey="month"
-                      tick={{ fontSize: 12, fill: '#94a3b8' }}
+                      tick={{ fontSize: 12, fill: '#87867f' }}
                       tickLine={false}
                       axisLine={false}
                     />
                     <YAxis
-                      tick={{ fontSize: 12, fill: '#94a3b8' }}
+                      tick={{ fontSize: 12, fill: '#87867f' }}
                       tickLine={false}
                       axisLine={false}
                     />
@@ -639,7 +681,7 @@ const AdminAnalytics: React.FC = () => {
                       type="monotone"
                       dataKey="sessions"
                       name="Phiên học"
-                      stroke="#667eea"
+                      stroke="#c96442"
                       strokeWidth={2.5}
                       fill="url(#grad-sess)"
                     />
@@ -657,14 +699,28 @@ const AdminAnalytics: React.FC = () => {
           <>
             <div className="ana-kpi-row">
               {[
-                { label: 'Tổng doanh thu năm', value: '₫734.8M', icon: '💰', color: '#43e97b' },
-                { label: 'Doanh thu tháng này', value: '₫99.8M', icon: '📅', color: '#667eea' },
-                { label: 'Tổng giao dịch', value: '1.236', icon: '📊', color: '#fbbf24' },
-                { label: 'Tỷ lệ thành công', value: '85.6%', icon: '✅', color: '#22c55e' },
+                {
+                  label: 'Tổng doanh thu năm',
+                  value: '₫734.8M',
+                  icon: DollarSign,
+                  color: '#16a34a',
+                },
+                {
+                  label: 'Doanh thu tháng này',
+                  value: '₫99.8M',
+                  icon: CalendarDays,
+                  color: '#c96442',
+                },
+                { label: 'Tổng giao dịch', value: '1.236', icon: BarChart2, color: '#ca8a04' },
+                { label: 'Tỷ lệ thành công', value: '85.6%', icon: CheckCircle2, color: '#22c55e' },
               ].map((k) => (
-                <div key={k.label} className="ana-inline-kpi" style={{ borderLeftColor: k.color }}>
+                <div
+                  key={k.label}
+                  className="ana-inline-kpi"
+                  style={{ ['--ana-accent' as string]: k.color }}
+                >
                   <div className="ana-inline-kpi-icon" style={{ color: k.color }}>
-                    {k.icon}
+                    <k.icon className="ana-inline-kpi-svg" />
                   </div>
                   <div>
                     <div className="ana-inline-kpi-value">{k.value}</div>
@@ -686,19 +742,19 @@ const AdminAnalytics: React.FC = () => {
                   <AreaChart data={MONTHLY_OVERVIEW}>
                     <defs>
                       <linearGradient id="grad-revenue" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#43e97b" stopOpacity={0.35} />
-                        <stop offset="95%" stopColor="#43e97b" stopOpacity={0} />
+                        <stop offset="5%" stopColor="#16a34a" stopOpacity={0.35} />
+                        <stop offset="95%" stopColor="#16a34a" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1efe7" />
                     <XAxis
                       dataKey="month"
-                      tick={{ fontSize: 12, fill: '#94a3b8' }}
+                      tick={{ fontSize: 12, fill: '#87867f' }}
                       tickLine={false}
                       axisLine={false}
                     />
                     <YAxis
-                      tick={{ fontSize: 12, fill: '#94a3b8' }}
+                      tick={{ fontSize: 12, fill: '#87867f' }}
                       tickLine={false}
                       axisLine={false}
                       tickFormatter={fmtCurrency}
@@ -708,7 +764,7 @@ const AdminAnalytics: React.FC = () => {
                       type="monotone"
                       dataKey="revenue"
                       name="Doanh thu"
-                      stroke="#43e97b"
+                      stroke="#16a34a"
                       strokeWidth={2.5}
                       fill="url(#grad-revenue)"
                     />
@@ -728,22 +784,22 @@ const AdminAnalytics: React.FC = () => {
                 <div className="ana-chart-body">
                   <ResponsiveContainer width="100%" height={230}>
                     <BarChart data={MONTHLY_OVERVIEW}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f1efe7" />
                       <XAxis
                         dataKey="month"
-                        tick={{ fontSize: 12, fill: '#94a3b8' }}
+                        tick={{ fontSize: 12, fill: '#87867f' }}
                         tickLine={false}
                         axisLine={false}
                       />
                       <YAxis
-                        tick={{ fontSize: 12, fill: '#94a3b8' }}
+                        tick={{ fontSize: 12, fill: '#87867f' }}
                         tickLine={false}
                         axisLine={false}
                       />
                       <Tooltip content={<ChartTooltip />} />
                       <Bar dataKey="txn" name="Giao dịch" radius={[4, 4, 0, 0]}>
-                        {MONTHLY_OVERVIEW.map((_, idx) => (
-                          <Cell key={idx} fill={`hsl(${220 + idx * 8}, 65%, 60%)`} />
+                        {MONTHLY_OVERVIEW.map((entry, idx) => (
+                          <Cell key={entry.month} fill={`hsl(${18 + idx * 5}, 55%, 56%)`} />
                         ))}
                       </Bar>
                     </BarChart>
@@ -804,10 +860,10 @@ const AdminAnalytics: React.FC = () => {
               <div className="ana-chart-body">
                 <ResponsiveContainer width="100%" height={260}>
                   <BarChart data={PLAN_SALES} layout="vertical" barCategoryGap="25%">
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1efe7" horizontal={false} />
                     <XAxis
                       type="number"
-                      tick={{ fontSize: 12, fill: '#94a3b8' }}
+                      tick={{ fontSize: 12, fill: '#87867f' }}
                       tickLine={false}
                       axisLine={false}
                       tickFormatter={fmtCurrency}
@@ -816,7 +872,7 @@ const AdminAnalytics: React.FC = () => {
                       type="category"
                       dataKey="name"
                       width={130}
-                      tick={{ fontSize: 12, fill: '#64748b' }}
+                      tick={{ fontSize: 12, fill: '#5e5d59' }}
                       tickLine={false}
                       axisLine={false}
                     />
@@ -845,14 +901,28 @@ const AdminAnalytics: React.FC = () => {
           <>
             <div className="ana-kpi-row">
               {[
-                { label: 'Tổng lượt đăng ký khoá', value: '6.484', icon: '📚', color: '#667eea' },
-                { label: 'Lượt xem video', value: '55.200', icon: '🎬', color: '#f093fb' },
-                { label: 'Bài kiểm tra hoàn thành', value: '8.214', icon: '✅', color: '#43e97b' },
-                { label: 'Tỷ lệ hoàn thành khoá', value: '63.4%', icon: '🏆', color: '#fbbf24' },
+                {
+                  label: 'Tổng lượt đăng ký khoá',
+                  value: '6.484',
+                  icon: BookOpen,
+                  color: '#c96442',
+                },
+                { label: 'Lượt xem video', value: '55.200', icon: Video, color: '#8b5e3c' },
+                {
+                  label: 'Bài kiểm tra hoàn thành',
+                  value: '8.214',
+                  icon: CheckCircle2,
+                  color: '#16a34a',
+                },
+                { label: 'Tỷ lệ hoàn thành khoá', value: '63.4%', icon: Trophy, color: '#ca8a04' },
               ].map((k) => (
-                <div key={k.label} className="ana-inline-kpi" style={{ borderLeftColor: k.color }}>
+                <div
+                  key={k.label}
+                  className="ana-inline-kpi"
+                  style={{ ['--ana-accent' as string]: k.color }}
+                >
                   <div className="ana-inline-kpi-icon" style={{ color: k.color }}>
-                    {k.icon}
+                    <k.icon className="ana-inline-kpi-svg" />
                   </div>
                   <div>
                     <div className="ana-inline-kpi-value">{k.value}</div>
@@ -874,15 +944,15 @@ const AdminAnalytics: React.FC = () => {
               <div className="ana-chart-body">
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={STUDENT_ENGAGEMENT}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1efe7" />
                     <XAxis
                       dataKey="month"
-                      tick={{ fontSize: 12, fill: '#94a3b8' }}
+                      tick={{ fontSize: 12, fill: '#87867f' }}
                       tickLine={false}
                       axisLine={false}
                     />
                     <YAxis
-                      tick={{ fontSize: 12, fill: '#94a3b8' }}
+                      tick={{ fontSize: 12, fill: '#87867f' }}
                       tickLine={false}
                       axisLine={false}
                     />
@@ -892,7 +962,7 @@ const AdminAnalytics: React.FC = () => {
                       type="monotone"
                       dataKey="enrolled"
                       name="Đăng ký khoá"
-                      stroke="#667eea"
+                      stroke="#c96442"
                       strokeWidth={2.5}
                       dot={false}
                       activeDot={{ r: 6 }}
@@ -901,7 +971,7 @@ const AdminAnalytics: React.FC = () => {
                       type="monotone"
                       dataKey="videoViews"
                       name="Lượt xem video"
-                      stroke="#f093fb"
+                      stroke="#8b5e3c"
                       strokeWidth={2.5}
                       dot={false}
                       activeDot={{ r: 6 }}
@@ -910,7 +980,7 @@ const AdminAnalytics: React.FC = () => {
                       type="monotone"
                       dataKey="assessments"
                       name="Bài kiểm tra"
-                      stroke="#fbbf24"
+                      stroke="#ca8a04"
                       strokeWidth={2.5}
                       dot={false}
                       activeDot={{ r: 6 }}
@@ -919,7 +989,7 @@ const AdminAnalytics: React.FC = () => {
                       type="monotone"
                       dataKey="completions"
                       name="Hoàn thành khoá"
-                      stroke="#43e97b"
+                      stroke="#16a34a"
                       strokeWidth={2.5}
                       dot={false}
                       activeDot={{ r: 6 }}
@@ -942,15 +1012,15 @@ const AdminAnalytics: React.FC = () => {
                 <div className="ana-chart-body">
                   <ResponsiveContainer width="100%" height={240}>
                     <BarChart data={STUDENT_ENGAGEMENT} barGap={4}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f1efe7" />
                       <XAxis
                         dataKey="month"
-                        tick={{ fontSize: 12, fill: '#94a3b8' }}
+                        tick={{ fontSize: 12, fill: '#87867f' }}
                         tickLine={false}
                         axisLine={false}
                       />
                       <YAxis
-                        tick={{ fontSize: 12, fill: '#94a3b8' }}
+                        tick={{ fontSize: 12, fill: '#87867f' }}
                         tickLine={false}
                         axisLine={false}
                       />
@@ -959,13 +1029,13 @@ const AdminAnalytics: React.FC = () => {
                       <Bar
                         dataKey="enrolled"
                         name="Đăng ký mới"
-                        fill="#667eea"
+                        fill="#c96442"
                         radius={[3, 3, 0, 0]}
                       />
                       <Bar
                         dataKey="completions"
                         name="Hoàn thành"
-                        fill="#43e97b"
+                        fill="#16a34a"
                         radius={[3, 3, 0, 0]}
                       />
                     </BarChart>
@@ -985,19 +1055,19 @@ const AdminAnalytics: React.FC = () => {
                     <AreaChart data={STUDENT_ENGAGEMENT}>
                       <defs>
                         <linearGradient id="grad-vid" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#f093fb" stopOpacity={0.35} />
-                          <stop offset="95%" stopColor="#f093fb" stopOpacity={0} />
+                          <stop offset="5%" stopColor="#8b5e3c" stopOpacity={0.35} />
+                          <stop offset="95%" stopColor="#8b5e3c" stopOpacity={0} />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f1efe7" />
                       <XAxis
                         dataKey="month"
-                        tick={{ fontSize: 12, fill: '#94a3b8' }}
+                        tick={{ fontSize: 12, fill: '#87867f' }}
                         tickLine={false}
                         axisLine={false}
                       />
                       <YAxis
-                        tick={{ fontSize: 12, fill: '#94a3b8' }}
+                        tick={{ fontSize: 12, fill: '#87867f' }}
                         tickLine={false}
                         axisLine={false}
                       />
@@ -1006,7 +1076,7 @@ const AdminAnalytics: React.FC = () => {
                         type="monotone"
                         dataKey="videoViews"
                         name="Lượt xem video"
-                        stroke="#f093fb"
+                        stroke="#8b5e3c"
                         strokeWidth={2.5}
                         fill="url(#grad-vid)"
                       />
@@ -1028,31 +1098,31 @@ const AdminAnalytics: React.FC = () => {
               <div className="ana-chart-body">
                 <ResponsiveContainer width="100%" height={280}>
                   <BarChart data={COURSE_ENGAGEMENT} barGap={4} barCategoryGap="25%">
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1efe7" />
                     <XAxis
                       dataKey="subject"
-                      tick={{ fontSize: 12, fill: '#94a3b8' }}
+                      tick={{ fontSize: 12, fill: '#87867f' }}
                       tickLine={false}
                       axisLine={false}
                     />
                     <YAxis
-                      tick={{ fontSize: 12, fill: '#94a3b8' }}
+                      tick={{ fontSize: 12, fill: '#87867f' }}
                       tickLine={false}
                       axisLine={false}
                     />
                     <Tooltip content={<ChartTooltip />} />
                     <Legend wrapperStyle={{ fontSize: 13, paddingTop: 12 }} />
-                    <Bar dataKey="enrolled" name="Đăng ký" fill="#667eea" radius={[3, 3, 0, 0]} />
+                    <Bar dataKey="enrolled" name="Đăng ký" fill="#c96442" radius={[3, 3, 0, 0]} />
                     <Bar
                       dataKey="videoViews"
                       name="Lượt xem video"
-                      fill="#f093fb"
+                      fill="#8b5e3c"
                       radius={[3, 3, 0, 0]}
                     />
                     <Bar
                       dataKey="completed"
                       name="Hoàn thành"
-                      fill="#43e97b"
+                      fill="#16a34a"
                       radius={[3, 3, 0, 0]}
                     />
                   </BarChart>
@@ -1069,14 +1139,28 @@ const AdminAnalytics: React.FC = () => {
           <>
             <div className="ana-kpi-row">
               {[
-                { label: 'Giáo viên đã đăng ký', value: '832', icon: '🍎', color: '#667eea' },
-                { label: 'Đã duyệt (Approved)', value: '778', icon: '✅', color: '#43e97b' },
-                { label: 'Tỷ lệ duyệt', value: '93.5%', icon: '📋', color: '#fbbf24' },
-                { label: 'Nội dung được tạo', value: '3.192', icon: '📝', color: '#f093fb' },
+                {
+                  label: 'Giáo viên đã đăng ký',
+                  value: '832',
+                  icon: GraduationCap,
+                  color: '#c96442',
+                },
+                {
+                  label: 'Đã duyệt (Approved)',
+                  value: '778',
+                  icon: CheckCircle2,
+                  color: '#16a34a',
+                },
+                { label: 'Tỷ lệ duyệt', value: '93.5%', icon: BarChart2, color: '#ca8a04' },
+                { label: 'Nội dung được tạo', value: '3.192', icon: FileText, color: '#8b5e3c' },
               ].map((k) => (
-                <div key={k.label} className="ana-inline-kpi" style={{ borderLeftColor: k.color }}>
+                <div
+                  key={k.label}
+                  className="ana-inline-kpi"
+                  style={{ ['--ana-accent' as string]: k.color }}
+                >
                   <div className="ana-inline-kpi-icon" style={{ color: k.color }}>
-                    {k.icon}
+                    <k.icon className="ana-inline-kpi-svg" />
                   </div>
                   <div>
                     <div className="ana-inline-kpi-value">{k.value}</div>
@@ -1096,15 +1180,15 @@ const AdminAnalytics: React.FC = () => {
               <div className="ana-chart-body">
                 <ResponsiveContainer width="100%" height={280}>
                   <BarChart data={TEACHER_STATS} barGap={6}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1efe7" />
                     <XAxis
                       dataKey="month"
-                      tick={{ fontSize: 12, fill: '#94a3b8' }}
+                      tick={{ fontSize: 12, fill: '#87867f' }}
                       tickLine={false}
                       axisLine={false}
                     />
                     <YAxis
-                      tick={{ fontSize: 12, fill: '#94a3b8' }}
+                      tick={{ fontSize: 12, fill: '#87867f' }}
                       tickLine={false}
                       axisLine={false}
                     />
@@ -1113,13 +1197,13 @@ const AdminAnalytics: React.FC = () => {
                     <Bar
                       dataKey="newTeachers"
                       name="Đăng ký mới"
-                      fill="#667eea"
+                      fill="#c96442"
                       radius={[4, 4, 0, 0]}
                     />
                     <Bar
                       dataKey="approved"
                       name="Được duyệt"
-                      fill="#43e97b"
+                      fill="#16a34a"
                       radius={[4, 4, 0, 0]}
                     />
                   </BarChart>
@@ -1142,19 +1226,19 @@ const AdminAnalytics: React.FC = () => {
                     <AreaChart data={TEACHER_STATS}>
                       <defs>
                         <linearGradient id="grad-content" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#fbbf24" stopOpacity={0.35} />
-                          <stop offset="95%" stopColor="#fbbf24" stopOpacity={0} />
+                          <stop offset="5%" stopColor="#ca8a04" stopOpacity={0.35} />
+                          <stop offset="95%" stopColor="#ca8a04" stopOpacity={0} />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f1efe7" />
                       <XAxis
                         dataKey="month"
-                        tick={{ fontSize: 12, fill: '#94a3b8' }}
+                        tick={{ fontSize: 12, fill: '#87867f' }}
                         tickLine={false}
                         axisLine={false}
                       />
                       <YAxis
-                        tick={{ fontSize: 12, fill: '#94a3b8' }}
+                        tick={{ fontSize: 12, fill: '#87867f' }}
                         tickLine={false}
                         axisLine={false}
                       />
@@ -1163,7 +1247,7 @@ const AdminAnalytics: React.FC = () => {
                         type="monotone"
                         dataKey="contentCreated"
                         name="Nội dung tạo mới"
-                        stroke="#fbbf24"
+                        stroke="#ca8a04"
                         strokeWidth={2.5}
                         fill="url(#grad-content)"
                       />
@@ -1182,15 +1266,15 @@ const AdminAnalytics: React.FC = () => {
                 <div className="ana-chart-body">
                   <ResponsiveContainer width="100%" height={230}>
                     <LineChart data={TEACHER_STATS}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f1efe7" />
                       <XAxis
                         dataKey="month"
-                        tick={{ fontSize: 12, fill: '#94a3b8' }}
+                        tick={{ fontSize: 12, fill: '#87867f' }}
                         tickLine={false}
                         axisLine={false}
                       />
                       <YAxis
-                        tick={{ fontSize: 12, fill: '#94a3b8' }}
+                        tick={{ fontSize: 12, fill: '#87867f' }}
                         tickLine={false}
                         axisLine={false}
                       />
@@ -1200,7 +1284,7 @@ const AdminAnalytics: React.FC = () => {
                         type="monotone"
                         dataKey="newTeachers"
                         name="Nộp hồ sơ"
-                        stroke="#667eea"
+                        stroke="#c96442"
                         strokeWidth={2}
                         dot={false}
                         activeDot={{ r: 5 }}
@@ -1209,7 +1293,7 @@ const AdminAnalytics: React.FC = () => {
                         type="monotone"
                         dataKey="approved"
                         name="Được duyệt"
-                        stroke="#43e97b"
+                        stroke="#16a34a"
                         strokeWidth={2}
                         dot={false}
                         activeDot={{ r: 5 }}
@@ -1232,10 +1316,10 @@ const AdminAnalytics: React.FC = () => {
               <div className="ana-chart-body">
                 <ResponsiveContainer width="100%" height={260}>
                   <BarChart data={COURSE_ENGAGEMENT} layout="vertical" barGap={4}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1efe7" horizontal={false} />
                     <XAxis
                       type="number"
-                      tick={{ fontSize: 12, fill: '#94a3b8' }}
+                      tick={{ fontSize: 12, fill: '#87867f' }}
                       tickLine={false}
                       axisLine={false}
                     />
@@ -1243,7 +1327,7 @@ const AdminAnalytics: React.FC = () => {
                       type="category"
                       dataKey="subject"
                       width={120}
-                      tick={{ fontSize: 12, fill: '#64748b' }}
+                      tick={{ fontSize: 12, fill: '#5e5d59' }}
                       tickLine={false}
                       axisLine={false}
                     />
@@ -1252,13 +1336,13 @@ const AdminAnalytics: React.FC = () => {
                     <Bar
                       dataKey="enrolled"
                       name="Học sinh đăng ký"
-                      fill="#667eea"
+                      fill="#c96442"
                       radius={[0, 4, 4, 0]}
                     />
                     <Bar
                       dataKey="completed"
                       name="Hoàn thành"
-                      fill="#43e97b"
+                      fill="#16a34a"
                       radius={[0, 4, 4, 0]}
                     />
                   </BarChart>

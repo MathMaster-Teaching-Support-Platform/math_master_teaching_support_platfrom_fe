@@ -11,6 +11,7 @@ import {
   Download,
   Eye,
   GraduationCap,
+  LayoutDashboard,
   TrendingUp,
   Users,
   XCircle,
@@ -102,8 +103,8 @@ const AdminDashboard: React.FC = () => {
           value: dashboardStats.totalUsers.toLocaleString('vi-VN'),
           trend: formatGrowth(dashboardStats.totalUsersGrowthPercent),
           trendPositive: dashboardStats.totalUsersGrowthPercent >= 0,
-          iconBg: 'bg-[#EEF2FF]',
-          iconColor: 'text-[#4338CA]',
+          iconBg: 'bg-[#FDF1EC]',
+          iconColor: 'text-[#A95536]',
         },
         {
           Icon: DollarSign,
@@ -120,8 +121,8 @@ const AdminDashboard: React.FC = () => {
           value: dashboardStats.activeEnrollments.toLocaleString('vi-VN'),
           trend: formatGrowth(dashboardStats.activeEnrollmentsGrowthPercent),
           trendPositive: dashboardStats.activeEnrollmentsGrowthPercent >= 0,
-          iconBg: 'bg-[#FDF4FF]',
-          iconColor: 'text-[#9333EA]',
+          iconBg: 'bg-[#FEF3E8]',
+          iconColor: 'text-[#A16207]',
         },
         {
           Icon: BarChart2,
@@ -154,7 +155,7 @@ const AdminDashboard: React.FC = () => {
   const getUserStatusClass = (status: RecentUser['status']) => {
     if (status === 'ACTIVE') return 'bg-[#F0FDF4] text-[#166534]';
     if (status === 'BANNED') return 'bg-[#FEF2F2] text-[#991B1B]';
-    return 'bg-[#F1F3F8] text-[#6B7280]';
+    return 'bg-[#F5F4ED] text-[#6B7280]';
   };
 
   const getTransactionStatusClass = (status: AdminTransaction['status']) => {
@@ -198,7 +199,7 @@ const AdminDashboard: React.FC = () => {
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
           <thead>
-            <tr className="border-b border-[#E5E7EB]">
+            <tr className="border-b border-[#E8E6DC]">
               <th className="text-left px-4 py-3 text-[11px] font-semibold tracking-[0.08em] uppercase text-[#6B7280]">
                 Tên
               </th>
@@ -217,11 +218,11 @@ const AdminDashboard: React.FC = () => {
             {recentUsers.map((user) => (
               <tr
                 key={user.id}
-                className="border-b border-[#F1F3F8] hover:bg-[#F8F9FC] transition-colors duration-150"
+                className="border-b border-[#F1EFE7] hover:bg-[#FAF9F5] transition-colors duration-150"
               >
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-[#EEF2FF] text-[#4338CA] flex items-center justify-center font-bold text-[14px] shrink-0">
+                    <div className="w-9 h-9 rounded-full bg-[#FDF1EC] text-[#A95536] flex items-center justify-center font-bold text-[14px] shrink-0">
                       {(user.fullName ?? user.email).charAt(0).toUpperCase()}
                     </div>
                     <div>
@@ -236,7 +237,7 @@ const AdminDashboard: React.FC = () => {
                   <span
                     className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${
                       (user.roles[0] ?? '').toUpperCase() === 'TEACHER'
-                        ? 'bg-[#EEF2FF] text-[#4338CA]'
+                        ? 'bg-[#FDF1EC] text-[#A95536]'
                         : 'bg-[#F0FDF4] text-[#166534]'
                     }`}
                   >
@@ -280,7 +281,7 @@ const AdminDashboard: React.FC = () => {
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
           <thead>
-            <tr className="border-b border-[#E5E7EB]">
+            <tr className="border-b border-[#E8E6DC]">
               {[
                 'ID',
                 'Người dùng',
@@ -304,7 +305,7 @@ const AdminDashboard: React.FC = () => {
             {transactions.map((transaction) => (
               <tr
                 key={transaction.id}
-                className="border-b border-[#F1F3F8] hover:bg-[#F8F9FC] transition-colors duration-150"
+                className="border-b border-[#F1EFE7] hover:bg-[#FAF9F5] transition-colors duration-150"
               >
                 <td className="px-4 py-3 text-[13px] font-mono text-[#6B7280]">
                   {transaction.id.slice(0, 8)}…
@@ -317,7 +318,7 @@ const AdminDashboard: React.FC = () => {
                   {transaction.amount.toLocaleString('vi-VN')}đ
                 </td>
                 <td className="px-4 py-3">
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#F1F3F8] text-[#0D0F1A] text-[11px] font-semibold">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#F5F4ED] text-[#0D0F1A] text-[11px] font-semibold">
                     <CreditCard className="w-3 h-3" />
                     {transaction.paymentMethod === 'payos' ? 'PayOS' : transaction.paymentMethod}
                   </span>
@@ -335,7 +336,7 @@ const AdminDashboard: React.FC = () => {
                 </td>
                 <td className="px-4 py-3">
                   <button
-                    className="w-8 h-8 rounded-lg flex items-center justify-center text-[#6B7280] hover:bg-[#EEF2FF] hover:text-[#3B6EF8] transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-[#3B6EF8] focus-visible:ring-offset-2"
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-[#6B7280] hover:bg-[#FDF1EC] hover:text-[#C96442] transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-[#C96442] focus-visible:ring-offset-2"
                     title="Chi tiết"
                     aria-label="Xem chi tiết giao dịch"
                   >
@@ -394,8 +395,9 @@ const AdminDashboard: React.FC = () => {
         role: 'admin',
       }}
       notificationCount={notificationCount}
+      contentClassName="dashboard-content--flush-bleed"
     >
-      <div className="max-w-[1600px] mx-auto px-1 space-y-6">
+      <div className="module-layout-container admin-dashboard-page space-y-6">
         {/* Error Banner */}
         {fetchError && (
           <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#FEF2F2] border border-[#FECACA] text-[#991B1B] text-[14px] font-medium">
@@ -405,14 +407,18 @@ const AdminDashboard: React.FC = () => {
         )}
 
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-[28px] font-bold tracking-tight text-[#0D0F1A]">Admin Dashboard</h1>
-            <p className="text-[14px] text-[#6B7280] mt-1">
+        <div className="courses-header-row admin-dashboard-header">
+          <div className="header-stack min-w-0">
+            <span className="header-kicker">ADMIN</span>
+            <h1 className="flex items-center gap-2 text-[28px] font-bold tracking-tight text-[#0D0F1A]">
+              <LayoutDashboard className="h-6 w-6 text-[#C96442]" />
+              <span>Admin Dashboard</span>
+            </h1>
+            <p className="header-sub text-[14px] text-[#6B7280] mt-1 max-w-[72ch]">
               Tổng quan quản trị hệ thống MathMaster
             </p>
           </div>
-          <button className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E5E7EB] bg-white text-[#0D0F1A] text-[13px] font-semibold shadow-[0_1px_3px_rgba(0,0,0,0.06)] hover:shadow-[0_4px_20px_rgba(0,0,0,0.12)] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 focus-visible:ring-2 focus-visible:ring-[#3B6EF8] focus-visible:ring-offset-2">
+          <button className="inline-flex shrink-0 items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E8E6DC] bg-[#0D0F1A] text-white text-[13px] font-semibold shadow-[0_1px_3px_rgba(0,0,0,0.06)] hover:bg-[#1a1d2e] hover:shadow-[0_4px_20px_rgba(0,0,0,0.12)] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 focus-visible:ring-2 focus-visible:ring-[#C96442] focus-visible:ring-offset-2">
             <Download className="w-3.5 h-3.5" />
             Xuất báo cáo
           </button>
@@ -424,20 +430,20 @@ const AdminDashboard: React.FC = () => {
             ? [0, 1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="bg-white rounded-2xl border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.08)] p-5 flex items-start gap-4 animate-pulse"
+                  className="bg-white rounded-2xl border border-[#E8E6DC] shadow-[0_2px_8px_rgba(0,0,0,0.08)] p-5 flex items-start gap-4 animate-pulse"
                   style={{ animationDelay: `${i * 100}ms` }}
                 >
-                  <div className="w-11 h-11 rounded-xl bg-[#F1F3F8]" />
+                  <div className="w-11 h-11 rounded-xl bg-[#F5F4ED]" />
                   <div className="flex-1 space-y-2 pt-1">
-                    <div className="h-3 w-24 bg-[#F1F3F8] rounded" />
-                    <div className="h-6 w-16 bg-[#F1F3F8] rounded" />
+                    <div className="h-3 w-24 bg-[#F5F4ED] rounded" />
+                    <div className="h-6 w-16 bg-[#F5F4ED] rounded" />
                   </div>
                 </div>
               ))
             : statsCards.map((stat, index) => (
                 <div
                   key={stat.label}
-                  className="bg-white rounded-2xl border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.08)] p-5 flex items-start gap-4 hover:shadow-[0_4px_20px_rgba(0,0,0,0.12)] transition-shadow duration-200 animate-[fadeInUp_0.4s_ease_both]"
+                  className="bg-white rounded-2xl border border-[#E8E6DC] shadow-[0_2px_8px_rgba(0,0,0,0.08)] p-5 flex items-start gap-4 hover:shadow-[0_4px_20px_rgba(0,0,0,0.12)] hover:-translate-y-0.5 transition-all duration-200 animate-[fadeInUp_0.4s_ease_both]"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
                   <div
@@ -464,12 +470,12 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         {/* Recent Users */}
-        <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.08)] overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-[#E5E7EB]">
+        <div className="bg-white rounded-2xl border border-[#E8E6DC] shadow-[0_2px_8px_rgba(0,0,0,0.08)] overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-[#E8E6DC]">
             <h2 className="text-[16px] font-semibold text-[#0D0F1A]">Người dùng mới</h2>
             <a
               href="/admin/users"
-              className="inline-flex items-center gap-1 text-[13px] font-semibold text-[#3B6EF8] hover:text-[#2952D9] transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-[#3B6EF8] focus-visible:ring-offset-2 rounded"
+              className="inline-flex items-center gap-1 text-[13px] font-semibold text-[#C96442] hover:text-[#A95536] transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-[#C96442] focus-visible:ring-offset-2 rounded"
             >
               Xem tất cả <ChevronRight className="w-3.5 h-3.5" />
             </a>
@@ -478,9 +484,9 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         {/* Teacher Profile Review */}
-        <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.08)] p-5 flex items-center justify-between gap-4">
+        <div className="bg-white rounded-2xl border border-[#E8E6DC] shadow-[0_2px_8px_rgba(0,0,0,0.08)] p-5 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-11 h-11 rounded-xl bg-[#EEF2FF] text-[#4338CA] flex items-center justify-center shrink-0">
+            <div className="w-11 h-11 rounded-xl bg-[#FDF1EC] text-[#A95536] flex items-center justify-center shrink-0">
               <GraduationCap className="w-5 h-5" />
             </div>
             <div>
@@ -500,7 +506,7 @@ const AdminDashboard: React.FC = () => {
             )}
             <a
               href="/admin/review-profiles"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0D0F1A] text-white text-[13px] font-semibold hover:bg-[#1a1d2e] active:scale-[0.98] transition-all duration-150 focus-visible:ring-2 focus-visible:ring-[#3B6EF8] focus-visible:ring-offset-2"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0D0F1A] text-white text-[13px] font-semibold hover:bg-[#1a1d2e] active:scale-[0.98] transition-all duration-150 focus-visible:ring-2 focus-visible:ring-[#C96442] focus-visible:ring-offset-2"
             >
               Duyệt ngay <ChevronRight className="w-3.5 h-3.5" />
             </a>
@@ -508,12 +514,12 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         {/* Recent Transactions */}
-        <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.08)] overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-[#E5E7EB]">
+        <div className="bg-white rounded-2xl border border-[#E8E6DC] shadow-[0_2px_8px_rgba(0,0,0,0.08)] overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-[#E8E6DC]">
             <h2 className="text-[16px] font-semibold text-[#0D0F1A]">Giao dịch gần đây</h2>
             <a
               href="/admin/transactions"
-              className="inline-flex items-center gap-1 text-[13px] font-semibold text-[#3B6EF8] hover:text-[#2952D9] transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-[#3B6EF8] focus-visible:ring-offset-2 rounded"
+              className="inline-flex items-center gap-1 text-[13px] font-semibold text-[#C96442] hover:text-[#A95536] transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-[#C96442] focus-visible:ring-offset-2 rounded"
             >
               Xem tất cả <ChevronRight className="w-3.5 h-3.5" />
             </a>
@@ -524,7 +530,7 @@ const AdminDashboard: React.FC = () => {
         {/* Revenue + Quick Stats */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Revenue Chart */}
-          <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.08)] p-5">
+          <div className="bg-white rounded-2xl border border-[#E8E6DC] shadow-[0_2px_8px_rgba(0,0,0,0.08)] p-5">
             <h2 className="text-[16px] font-semibold text-[#0D0F1A] mb-4">Doanh thu theo tháng</h2>
             {loading ? (
               <div className="flex items-center justify-center h-40 text-[#6B7280] text-[14px]">
@@ -538,11 +544,11 @@ const AdminDashboard: React.FC = () => {
                 ).map((item) => (
                   <div key={item.month} className="flex-1 flex flex-col items-center gap-1">
                     <div
-                      className="w-full rounded-t-md bg-[#3B6EF8] transition-all duration-500 hover:bg-[#2952D9] min-h-[4px]"
+                      className="w-full rounded-t-md bg-[#C96442] transition-all duration-500 hover:bg-[#A95536] min-h-[4px]"
                       style={{ height: `${Math.max((item.revenue / revenueMax) * 100, 4)}%` }}
                       title={`T${item.month}: ${formatRevenue(item.revenue)}`}
                     />
-                    <span className="text-[10px] text-[#9CA3AF] font-medium">T{item.month}</span>
+                    <span className="text-[10px] text-[#87867F] font-medium">T{item.month}</span>
                   </div>
                 ))}
               </div>
@@ -550,7 +556,7 @@ const AdminDashboard: React.FC = () => {
           </div>
 
           {/* Quick Stats */}
-          <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.08)] p-5">
+          <div className="bg-white rounded-2xl border border-[#E8E6DC] shadow-[0_2px_8px_rgba(0,0,0,0.08)] p-5">
             <h2 className="text-[16px] font-semibold text-[#0D0F1A] mb-4">Thống kê nhanh</h2>
             {loading || !quickStats ? (
               <div className="flex items-center justify-center h-40 text-[#6B7280] text-[14px]">
@@ -563,7 +569,7 @@ const AdminDashboard: React.FC = () => {
                     label: 'Tỷ lệ chuyển đổi',
                     value: `${quickStats.conversionRate.toFixed(1)}%`,
                     pct: Math.min(quickStats.conversionRate, 100),
-                    color: '#3B6EF8',
+                    color: '#C96442',
                   },
                   {
                     label: 'Người dùng hoạt động',
@@ -578,7 +584,7 @@ const AdminDashboard: React.FC = () => {
                     label: 'Tài liệu được tạo',
                     value: quickStats.documentsCreated.toLocaleString('vi-VN'),
                     pct: 100,
-                    color: '#9333EA',
+                    color: '#8B5E3C',
                   },
                   ...(quickStats.satisfactionRate === -1
                     ? [
@@ -603,7 +609,7 @@ const AdminDashboard: React.FC = () => {
                       <span className="text-[13px] text-[#6B7280]">{item.label}</span>
                       <span className="text-[13px] font-semibold text-[#0D0F1A]">{item.value}</span>
                     </div>
-                    <div className="h-1.5 bg-[#F1F3F8] rounded-full overflow-hidden">
+                    <div className="h-1.5 bg-[#F5F4ED] rounded-full overflow-hidden">
                       <div
                         className="h-full rounded-full transition-all duration-500"
                         style={{ width: `${item.pct}%`, backgroundColor: item.color }}
@@ -617,8 +623,8 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         {/* System Status */}
-        <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.08)] overflow-hidden">
-          <div className="px-5 py-4 border-b border-[#E5E7EB]">
+        <div className="bg-white rounded-2xl border border-[#E8E6DC] shadow-[0_2px_8px_rgba(0,0,0,0.08)] overflow-hidden">
+          <div className="px-5 py-4 border-b border-[#E8E6DC]">
             <h2 className="text-[16px] font-semibold text-[#0D0F1A]">Trạng thái hệ thống</h2>
           </div>
           {renderSystemStatus()}
