@@ -170,6 +170,51 @@
   margin: 0;
 }
 
+.rdp-level-banner {
+  margin-top: 0.85rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  align-items: center;
+}
+
+.rdp-level-banner__level {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  padding: 0.24rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.rdp-level-banner__progress {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+  padding: 0.24rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.rdp-level-banner__entry {
+  color: #6b7280;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.rdp-level-banner__entry-link {
+  color: #4f46e5;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.rdp-level-banner__entry-link:hover {
+  text-decoration: underline;
+}
+
 /* ── Tree container ── */
 .rdp-tree {
   width: 100%;

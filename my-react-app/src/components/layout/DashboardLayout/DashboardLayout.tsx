@@ -12,6 +12,8 @@ interface DashboardLayoutProps {
     role: string;
   };
   notificationCount?: number;
+  /** Extra class on the scrollable <main> (e.g. full-bleed / zero padding) */
+  contentClassName?: string;
 }
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({
@@ -19,6 +21,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   role,
   user,
   notificationCount,
+  contentClassName,
 }) => {
   const collapsedStorageKey = useMemo(() => `mm.sidebar.collapsed.${role}`, [role]);
   const [collapsed, setCollapsed] = useState<boolean>(() => {
@@ -41,7 +44,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       <Sidebar role={role} collapsed={collapsed} onToggle={() => setCollapsed((c) => !c)} />
       <div className="dashboard-main">
         <Navbar user={user} notificationCount={notificationCount} />
-        <main className="dashboard-content">{children}</main>
+        <main className={['dashboard-content', contentClassName].filter(Boolean).join(' ')}>{children}</main>
       </div>
     </div>
   );

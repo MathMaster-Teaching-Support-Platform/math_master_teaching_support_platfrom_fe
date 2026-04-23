@@ -46,8 +46,17 @@ export class SubjectService {
   }
 
   static async getSubjectsByGrade(gradeLevel: string): Promise<SubjectsApiResponse> {
+    const normalizedGradeLevel = gradeLevel?.trim?.() ?? '';
+    if (
+      !normalizedGradeLevel ||
+      normalizedGradeLevel.toLowerCase() === 'undefined' ||
+      normalizedGradeLevel.toLowerCase() === 'null'
+    ) {
+      throw new Error('Invalid grade level');
+    }
+
     const headers = await this.getHeaders();
-    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.SUBJECTS_BY_GRADE(gradeLevel)}`, {
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.SUBJECTS_BY_GRADE(normalizedGradeLevel)}`, {
       method: 'GET',
       headers,
     });

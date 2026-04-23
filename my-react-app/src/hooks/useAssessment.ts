@@ -11,9 +11,11 @@ import type {
   GenerateAssessmentFromMatrixRequest,
   GenerateQuestionsForAssessmentRequest,
   GetMyAssessmentsParams,
+  PagedDataResponse,
   PaginatedResponse,
   PointsOverrideRequest,
 } from '../types';
+import type { QuestionResponse } from '../types/question';
 
 // ─── Query Keys ───────────────────────────────────────────────────────────────
 export const assessmentKeys = {
@@ -22,6 +24,10 @@ export const assessmentKeys = {
   myList: (params: GetMyAssessmentsParams) => [...assessmentKeys.lists(), 'my', params] as const,
   detail: (id: string) => [...assessmentKeys.all, 'detail', id] as const,
   questions: (id: string) => [...assessmentKeys.detail(id), 'questions'] as const,
+  availableQuestions: (
+    id: string,
+    params: { keyword?: string; tag?: string; page?: number; size?: number }
+  ) => [...assessmentKeys.detail(id), 'available-questions', params] as const,
   preview: (id: string) => [...assessmentKeys.all, 'preview', id] as const,
   publishSummary: (id: string) => [...assessmentKeys.all, 'publish-summary', id] as const,
   canEdit: (id: string) => [...assessmentKeys.all, 'can-edit', id] as const,
@@ -66,6 +72,22 @@ export function useAssessmentQuestions(
   return useQuery({
     queryKey: assessmentKeys.questions(id),
     queryFn: () => AssessmentService.getAssessmentQuestions(id),
+    enabled: !!id,
+    ...options,
+  });
+}
+
+export function useAvailableAssessmentQuestions(
+  id: string,
+  params: { keyword?: string; tag?: string; page?: number; size?: number },
+  options?: Omit<
+    UseQueryOptions<ApiResponse<PagedDataResponse<QuestionResponse>>>,
+    'queryKey' | 'queryFn'
+  >
+) {
+  return useQuery({
+    queryKey: assessmentKeys.availableQuestions(id, params),
+    queryFn: () => AssessmentService.getAvailableQuestions(id, params),
     enabled: !!id,
     ...options,
   });

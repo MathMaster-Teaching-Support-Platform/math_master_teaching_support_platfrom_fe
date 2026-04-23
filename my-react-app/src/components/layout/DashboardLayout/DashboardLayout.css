@@ -20,10 +20,19 @@
   overflow-y: auto;
 }
 
+/* Main area flush to sidebar / top: remove outer inset (used e.g. Teacher courses) */
+.dashboard-content--flush-bleed {
+  padding: 0;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .dashboard-content {
     margin-top: 68px;
     padding: 1rem;
+  }
+
+  .dashboard-content--flush-bleed {
+    padding: 0;
   }
 }

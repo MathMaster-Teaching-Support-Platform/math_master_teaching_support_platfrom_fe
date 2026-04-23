@@ -317,8 +317,14 @@ export default function TeacherQuestionManagementPage() {
   const deleteMutation = useDeleteQuestion();
 
   const questions = useMemo(() => data?.result?.content ?? [], [data]);
-  const totalPages = data?.result?.totalPages ?? 0;
-  const totalElements = data?.result?.totalElements ?? 0;
+  const totalPages =
+    data?.result?.totalPages ??
+    (data?.result as { page?: { totalPages?: number } } | undefined)?.page?.totalPages ??
+    0;
+  const totalElements =
+    data?.result?.totalElements ??
+    (data?.result as { page?: { totalElements?: number } } | undefined)?.page?.totalElements ??
+    questions.length;
 
   const stats = useMemo(
     () => ({

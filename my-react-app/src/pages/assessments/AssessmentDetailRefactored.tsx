@@ -6,6 +6,7 @@ import { QuestionCard } from '../../components/assessment';
 import {
   useAddQuestion,
   useAssessment,
+  useAvailableAssessmentQuestions,
   useAssessmentQuestions,
   useDistributeQuestionPoints,
   useGenerateQuestionsForAssessment,
@@ -14,8 +15,8 @@ import {
   useUpdateAssessment,
   useUpdateAssessmentQuestionWorkaround,
 } from '../../hooks/useAssessment';
-import { useSearchQuestions } from '../../hooks/useQuestion';
 import MathText from '../../components/common/MathText';
+import Pagination from '../../components/common/Pagination';
 import { useToast } from '../../context/ToastContext';
 import '../../styles/module-refactor.css';
 import '../../components/assessment/question-card.css';
@@ -65,7 +66,10 @@ export default function AssessmentDetailRefactored() {
   // Search-based add question states
   const [searchKeyword, setSearchKeyword] = useState('');
   const [searchTag, setSearchTag] = useState('');
+  const [debouncedKeyword, setDebouncedKeyword] = useState('');
+  const [debouncedTag, setDebouncedTag] = useState('');
   const [searchPage, setSearchPage] = useState(0);
+  const [searchPageSize, setSearchPageSize] = useState(20);
   const [selectedToAdd, setSelectedToAdd] = useState<Set<string>>(new Set());
   const [addPoints, setAddPoints] = useState('');
   const [autoTotalPoints, setAutoTotalPoints] = useState('10');
@@ -111,12 +115,36 @@ export default function AssessmentDetailRefactored() {
     isLoading: searchLoading,
     isError: searchError,
     refetch: refetchSearch,
-  } = useSearchQuestions(
-    { keyword: searchKeyword, tag: searchTag, page: searchPage, size: 20 },
-    true
+  } = useAvailableAssessmentQuestions(
+    id ?? '',
+    {
+      keyword: debouncedKeyword,
+      tag: debouncedTag,
+      page: searchPage,
+      size: searchPageSize,
+    },
+    { enabled: !!id }
   );
-  const searchedQuestions = searchData?.result?.content ?? [];
-  const totalSearchPages = searchData?.result?.totalPages ?? 1;
+  const searchedQuestions = searchData?.result?.data ?? [];
+  const totalSearchPages =
+    searchData?.result?.totalPages ??
+    (searchData?.result as { page?: { totalPages?: number } } | undefined)?.page?.totalPages ??
+    0;
+  const totalSearchElements =
+    searchData?.result?.totalElements ??
+    (searchData?.result as { page?: { totalElements?: number } } | undefined)?.page
+      ?.totalElements ??
+    searchedQuestions.length;
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setDebouncedKeyword(searchKeyword.trim());
+      setDebouncedTag(searchTag.trim());
+      setSearchPage(0);
+    }, 350);
+
+    return () => window.clearTimeout(timer);
+  }, [searchKeyword, searchTag]);
 
   const assessment = data?.result;
   const questions = questionsData?.result ?? [];
@@ -480,7 +508,7 @@ export default function AssessmentDetailRefactored() {
                     className="input"
                     placeholder="Tìm theo nội dung câu hỏi..."
                     value={searchKeyword}
-                    onChange={(event) => { setSearchKeyword(event.target.value); setSearchPage(0); }}
+                    onChange={(event) => setSearchKeyword(event.target.value)}
                   />
                 </label>
                 <label>
@@ -489,7 +517,7 @@ export default function AssessmentDetailRefactored() {
                     className="input"
                     placeholder="Ví dụ: đại số, hình học..."
                     value={searchTag}
-                    onChange={(event) => { setSearchTag(event.target.value); setSearchPage(0); }}
+                    onChange={(event) => setSearchTag(event.target.value)}
                   />
                 </label>
               </div>
@@ -559,16 +587,18 @@ export default function AssessmentDetailRefactored() {
               {!searchLoading && !searchError && searchedQuestions.length === 0 && (
                 <div className="empty">Không tìm thấy câu hỏi. Nhập từ khóa để tìm kiếm.</div>
               )}
-              {totalSearchPages > 1 && (
-                <div className="row" style={{ justifyContent: 'center', marginTop: 8 }}>
-                  <button className="btn secondary" disabled={searchPage === 0} onClick={() => setSearchPage((p) => p - 1)}>
-                    &lt; Trước
-                  </button>
-                  <span className="muted" style={{ padding: '0 12px' }}>{searchPage + 1} / {totalSearchPages}</span>
-                  <button className="btn secondary" disabled={searchPage + 1 >= totalSearchPages} onClick={() => setSearchPage((p) => p + 1)}>
-                    Sau &gt;
-                  </button>
-                </div>
+              {totalSearchElements > 0 && (
+                <Pagination
+                  page={searchPage}
+                  totalPages={totalSearchPages}
+                  totalElements={totalSearchElements}
+                  pageSize={searchPageSize}
+                  onChange={setSearchPage}
+                  onPageSizeChange={(newSize) => {
+                    setSearchPageSize(newSize);
+                    setSearchPage(0);
+                  }}
+                />
               )}
             </div>
           )}

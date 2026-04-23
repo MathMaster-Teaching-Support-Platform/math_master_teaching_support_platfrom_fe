@@ -67,6 +67,8 @@ export const API_ENDPOINTS = {
   ASSESSMENTS_GENERATE_BY_PERCENTAGE: '/assessments/generate-by-percentage',
   ASSESSMENTS_GENERATE: (assessmentId: string) => `/assessments/${assessmentId}/generate`,
   ASSESSMENTS_QUESTIONS: (assessmentId: string) => `/assessments/${assessmentId}/questions`,
+  ASSESSMENTS_AVAILABLE_QUESTIONS: (assessmentId: string) =>
+    `/assessments/${assessmentId}/available-questions`,
   ASSESSMENTS_QUESTIONS_BATCH: (assessmentId: string) =>
     `/assessments/${assessmentId}/questions/batch`,
   ASSESSMENTS_QUESTIONS_POINTS: (assessmentId: string) =>
