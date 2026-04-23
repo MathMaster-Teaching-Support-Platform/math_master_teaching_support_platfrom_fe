@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { SubjectService } from '../../services/api/subject.service';
 import type {
@@ -30,6 +30,19 @@ const defaultUpdatePayload: UpdateAdminRoadmapRequest = {
   estimatedCompletionDays: 30,
   status: 'GENERATED',
 };
+
+function daysFieldDisplay(
+  mode: 'create' | 'edit',
+  createForm: CreateAdminRoadmapRequest,
+  updateForm: UpdateAdminRoadmapRequest
+): string {
+  if (mode === 'create') {
+    const d = createForm.estimatedDays;
+    return d !== undefined && d > 0 ? String(d) : '';
+  }
+  const d = updateForm.estimatedCompletionDays;
+  return d !== undefined && d > 0 ? String(d) : '';
+}
 
 export default function AdminRoadmapEditor({
   initialRoadmap,
@@ -70,6 +83,9 @@ export default function AdminRoadmapEditor({
 
   const [createForm, setCreateForm] = useState<CreateAdminRoadmapRequest>(createInitialValue);
   const [updateForm, setUpdateForm] = useState<UpdateAdminRoadmapRequest>(updateInitialValue);
+  const [estimatedDaysError, setEstimatedDaysError] = useState<string | null>(null);
+  const daysHintId = useId();
+  const daysErrorId = useId();
 
   useEffect(() => {
     setCreateForm(createInitialValue);
@@ -93,19 +109,24 @@ export default function AdminRoadmapEditor({
     setUpdateForm((prev) => ({ ...prev, [key]: value }));
   };
 
+  const isValidPositiveInt = (n: number | undefined) =>
+    n !== undefined && Number.isInteger(n) && n > 0;
+
   const handleSubmit = (event: React.SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setEstimatedDaysError(null);
     if (mode === 'create') {
-      const normalizedEstimatedDays =
-        typeof createForm.estimatedDays === 'number' && createForm.estimatedDays > 0
-          ? createForm.estimatedDays
-          : undefined;
+      const est = createForm.estimatedDays;
+      if (!isValidPositiveInt(est)) {
+        setEstimatedDaysError('Số ngày dự kiến phải là số nguyên lớn hơn 0.');
+        return;
+      }
 
       const payload: CreateAdminRoadmapRequest = {
         name: createForm.name.trim(),
         subjectId: createForm.subjectId,
         description: createForm.description.trim(),
-        estimatedDays: normalizedEstimatedDays,
+        estimatedDays: est,
       };
 
       if (!payload.name || !payload.subjectId || !payload.description) return;
@@ -113,9 +134,15 @@ export default function AdminRoadmapEditor({
       return;
     }
 
+    const est = updateForm.estimatedCompletionDays;
+    if (!isValidPositiveInt(est)) {
+      setEstimatedDaysError('Số ngày dự kiến hoàn thành phải là số nguyên lớn hơn 0.');
+      return;
+    }
+
     const payload: UpdateAdminRoadmapRequest = {
       description: updateForm.description,
-      estimatedCompletionDays: updateForm.estimatedCompletionDays,
+      estimatedCompletionDays: est,
       status: updateForm.status,
       subjectId:
         updateForm.subjectId && updateForm.subjectId !== initialRoadmap?.subjectId
@@ -126,29 +153,29 @@ export default function AdminRoadmapEditor({
     onSubmit(payload);
   };
 
-  const submitLabel = mode === 'create' ? 'Create roadmap' : 'Update roadmap';
-  let subjectPlaceholderLabel = 'Select subject';
+  const submitLabel = mode === 'create' ? 'Tạo lộ trình' : 'Cập nhật lộ trình';
+  let subjectPlaceholderLabel = 'Chọn môn học';
   if (subjectsQuery.isLoading) {
-    subjectPlaceholderLabel = 'Loading subjects...';
+    subjectPlaceholderLabel = 'Đang tải danh sách môn...';
   } else if (activeSubjects.length === 0) {
-    subjectPlaceholderLabel = 'No active subjects';
+    subjectPlaceholderLabel = 'Không có môn đang hoạt động';
   }
 
   return (
     <form className="admin-roadmap-editor" onSubmit={handleSubmit}>
       <header className="admin-roadmap-editor__header">
-        <h3>{mode === 'create' ? 'Create roadmap template' : 'Update roadmap metadata'}</h3>
+        <h3>{mode === 'create' ? 'Thông tin lộ trình mới' : 'Cập nhật thông tin lộ trình'}</h3>
         <p>
           {mode === 'create'
-            ? 'Fill in academic metadata. Topics and lesson links are managed in the topic panel below.'
-            : 'Update roadmap metadata first, then add topics with many lessons in one request.'}
+            ? 'Điền tên, môn, mô tả và số ngày dự kiến. Các chủ đề sẽ được thiết lập ở bước sau.'
+            : 'Cập nhật môn, mô tả, thời gian và trạng thái, rồi bổ sung chủ đề cùng bài học khi cần.'}
         </p>
       </header>
 
       <div className="admin-roadmap-editor__fields">
         {mode === 'create' && (
           <label className="admin-roadmap-editor__field">
-            <span>Roadmap name</span>
+            <span>Tên lộ trình</span>
             <input
               value={createForm.name}
               onChange={(event) => setCreateField('name', event.target.value)}
@@ -158,7 +185,7 @@ export default function AdminRoadmapEditor({
         )}
 
         <label className="admin-roadmap-editor__field">
-          <span>{mode === 'create' ? 'Subject' : 'Change subject (optional)'}</span>
+          <span>{mode === 'create' ? 'Môn học' : 'Đổi môn (tùy chọn)'}</span>
           <select
             value={mode === 'create' ? createForm.subjectId : updateForm.subjectId ?? ''}
             onChange={(event) =>
@@ -175,7 +202,7 @@ export default function AdminRoadmapEditor({
             {activeSubjects.map((subject) => (
               <option key={subject.id} value={subject.id}>
                 {subject.name}
-                {subject.primaryGradeLevel ? ` - Grade ${subject.primaryGradeLevel}` : ''}
+                {subject.primaryGradeLevel ? ` — Khối ${subject.primaryGradeLevel}` : ''}
               </option>
             ))}
           </select>
@@ -183,20 +210,20 @@ export default function AdminRoadmapEditor({
 
         {mode === 'edit' && initialRoadmap && (
           <label className="admin-roadmap-editor__field">
-            <span>Current subject (read-only)</span>
+            <span>Môn hiện tại (chỉ đọc)</span>
             <input value={initialRoadmap.subject} readOnly />
           </label>
         )}
 
         {mode === 'edit' && initialRoadmap && (
           <label className="admin-roadmap-editor__field">
-            <span>Current grade level (read-only)</span>
+            <span>Khối hiện tại (chỉ đọc)</span>
             <input value={initialRoadmap.gradeLevel} readOnly />
           </label>
         )}
 
         <label className="admin-roadmap-editor__field admin-roadmap-editor__field--wide">
-          <span>Description</span>
+          <span>Mô tả</span>
           <textarea
             value={mode === 'create' ? createForm.description : updateForm.description ?? ''}
             onChange={(event) =>
@@ -209,39 +236,69 @@ export default function AdminRoadmapEditor({
           />
         </label>
 
-        <label className="admin-roadmap-editor__field">
-          <span>{mode === 'create' ? 'Estimated days' : 'Estimated completion days'}</span>
+        <label
+          className={`admin-roadmap-editor__field${estimatedDaysError ? ' admin-roadmap-editor__field--invalid' : ''}`}
+        >
+          <span>
+            {mode === 'create' ? 'Số ngày dự kiến' : 'Số ngày dự kiến hoàn thành'}
+          </span>
           <input
-            type="number"
-            min={1}
-            value={
-              mode === 'create'
-                ? createForm.estimatedDays ?? 30
-                : updateForm.estimatedCompletionDays ?? 30
+            type="text"
+            inputMode="numeric"
+            autoComplete="off"
+            name="estimatedDays"
+            placeholder="ví dụ: 30"
+            aria-invalid={!!estimatedDaysError}
+            aria-describedby={
+              estimatedDaysError ? `${daysHintId} ${daysErrorId}` : daysHintId
             }
+            value={daysFieldDisplay(mode, createForm, updateForm)}
             onChange={(event) => {
-              const value = Number(event.target.value) || 30;
+              setEstimatedDaysError(null);
+              const raw = event.target.value.trim();
+              if (raw === '') {
+                if (mode === 'create') {
+                  setCreateField('estimatedDays', 0);
+                } else {
+                  setUpdateField('estimatedCompletionDays', 0);
+                }
+                return;
+              }
+              if (!/^\d+$/.test(raw)) {
+                return;
+              }
+              const n = Number.parseInt(raw, 10);
+              if (Number.isNaN(n)) {
+                return;
+              }
               if (mode === 'create') {
-                setCreateField('estimatedDays', value);
+                setCreateField('estimatedDays', n);
               } else {
-                setUpdateField('estimatedCompletionDays', value);
+                setUpdateField('estimatedCompletionDays', n);
               }
             }}
-            required
           />
+          <p id={daysHintId} className="admin-roadmap-editor__hint">
+            Chỉ nhập số nguyên dương (ví dụ 1, 7, 30).
+          </p>
+          {estimatedDaysError && (
+            <p id={daysErrorId} className="admin-roadmap-editor__inline-error" role="alert">
+              {estimatedDaysError}
+            </p>
+          )}
         </label>
 
         {mode === 'edit' && (
           <label className="admin-roadmap-editor__field">
-            <span>Status</span>
+            <span>Trạng thái</span>
             <select
               value={updateForm.status ?? 'GENERATED'}
               onChange={(event) => setUpdateField('status', event.target.value as RoadmapStatus)}
             >
-              <option value="GENERATED">GENERATED</option>
-              <option value="IN_PROGRESS">IN_PROGRESS</option>
-              <option value="COMPLETED">COMPLETED</option>
-              <option value="ARCHIVED">ARCHIVED</option>
+              <option value="GENERATED">Sẵn sàng</option>
+              <option value="IN_PROGRESS">Đang học</option>
+              <option value="COMPLETED">Hoàn thành</option>
+              <option value="ARCHIVED">Lưu trữ</option>
             </select>
           </label>
         )}
@@ -249,7 +306,7 @@ export default function AdminRoadmapEditor({
 
       <div className="admin-roadmap-editor__actions">
         <button type="submit" disabled={submitting}>
-          {submitting ? 'Saving...' : submitLabel}
+          {submitting ? 'Đang lưu...' : submitLabel}
         </button>
       </div>
     </form>

@@ -70,6 +70,28 @@
   grid-column: 1 / -1;
 }
 
+.admin-roadmap-editor__field--invalid input,
+.admin-roadmap-editor__field--invalid select,
+.admin-roadmap-editor__field--invalid textarea {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.admin-roadmap-editor__hint {
+  margin: 0.15rem 0 0;
+  font-size: 0.8125rem;
+  color: #64748b;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+.admin-roadmap-editor__inline-error {
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+  color: #b91c1c;
+  font-weight: 600;
+}
+
 .admin-roadmap-editor__actions {
   display: flex;
   justify-content: flex-end;
