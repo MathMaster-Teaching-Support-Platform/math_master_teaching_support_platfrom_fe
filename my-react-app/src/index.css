@@ -4,6 +4,10 @@
 /* Import fonts */
 @import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;500;600;700&display=swap');
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* Reset & Base Styles */
 * {
   margin: 0;
@@ -69,16 +73,8 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: var(--font-family);
-  background-color: var(--bg-dark);
-  color: var(--white);
   cursor: pointer;
   transition: all var(--transition-base);
-}
-
-button:hover {
-  background-color: var(--primary-color);
-  border-color: var(--primary-color);
-  color: var(--white);
 }
 
 button:focus,

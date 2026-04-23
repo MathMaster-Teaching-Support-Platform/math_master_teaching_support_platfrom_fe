@@ -1,3 +1,25 @@
+import {
+  ArrowRight,
+  BookOpen,
+  Bot,
+  ChevronDown,
+  Circle,
+  CreditCard,
+  FileText,
+  HelpCircle,
+  Lock,
+  Mail,
+  MessageCircle,
+  Phone,
+  Search,
+  Settings,
+  ThumbsDown,
+  ThumbsUp,
+  User,
+  Wrench,
+  X,
+  Zap,
+} from 'lucide-react';
 import React, { useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockStudent } from '../../data/mockData';
@@ -16,7 +38,7 @@ interface Article {
   title: string;
   description: string;
   category: string;
-  icon: string;
+  icon: React.ReactNode;
   readTime: string;
 }
 
@@ -27,11 +49,11 @@ const HelpCenter: React.FC = () => {
   const [showContactModal, setShowContactModal] = useState(false);
 
   const categories = [
-    { id: 'all', name: 'Tất cả', icon: '📚' },
-    { id: 'account', name: 'Tài khoản', icon: '👤' },
-    { id: 'courses', name: 'Giáo Trình', icon: '📖' },
-    { id: 'payment', name: 'Thanh toán', icon: '💳' },
-    { id: 'technical', name: 'Kỹ thuật', icon: '⚙️' },
+    { id: 'all', name: 'Tất cả', icon: <BookOpen className="w-4 h-4" /> },
+    { id: 'account', name: 'Tài khoản', icon: <User className="w-4 h-4" /> },
+    { id: 'courses', name: 'Giáo Trình', icon: <BookOpen className="w-4 h-4" /> },
+    { id: 'payment', name: 'Thanh toán', icon: <CreditCard className="w-4 h-4" /> },
+    { id: 'technical', name: 'Kỹ thuật', icon: <Settings className="w-4 h-4" /> },
   ];
 
   const faqs: FAQItem[] = [
@@ -107,7 +129,7 @@ const HelpCenter: React.FC = () => {
       title: 'Hướng dẫn sử dụng nền tảng cho người mới',
       description: 'Tìm hiểu các tính năng cơ bản và cách bắt đầu học tập hiệu quả',
       category: 'account',
-      icon: '🚀',
+      icon: <Zap className="w-5 h-5 text-[#3B6EF8]" />,
       readTime: '5 phút',
     },
     {
@@ -115,7 +137,7 @@ const HelpCenter: React.FC = () => {
       title: 'Tối ưu hóa trải nghiệm học tập',
       description: 'Những mẹo và thủ thuật giúp bạn học tập hiệu quả hơn',
       category: 'courses',
-      icon: '📚',
+      icon: <BookOpen className="w-5 h-5 text-[#3B6EF8]" />,
       readTime: '8 phút',
     },
     {
@@ -123,7 +145,7 @@ const HelpCenter: React.FC = () => {
       title: 'Bảo mật tài khoản của bạn',
       description: 'Cách bảo vệ tài khoản và dữ liệu cá nhân an toàn',
       category: 'account',
-      icon: '🔒',
+      icon: <Lock className="w-5 h-5 text-[#3B6EF8]" />,
       readTime: '6 phút',
     },
     {
@@ -131,7 +153,7 @@ const HelpCenter: React.FC = () => {
       title: 'Hướng dẫn thanh toán chi tiết',
       description: 'Các bước thanh toán và xử lý vấn đề phổ biến',
       category: 'payment',
-      icon: '💰',
+      icon: <CreditCard className="w-5 h-5 text-[#3B6EF8]" />,
       readTime: '10 phút',
     },
     {
@@ -139,7 +161,7 @@ const HelpCenter: React.FC = () => {
       title: 'Xử lý sự cố kỹ thuật thường gặp',
       description: 'Giải pháp cho các lỗi phổ biến khi sử dụng nền tảng',
       category: 'technical',
-      icon: '🛠️',
+      icon: <Wrench className="w-5 h-5 text-[#3B6EF8]" />,
       readTime: '12 phút',
     },
     {
@@ -147,7 +169,7 @@ const HelpCenter: React.FC = () => {
       title: 'Sử dụng AI Assistant hiệu quả',
       description: 'Khai thác tối đa tính năng trợ lý AI trong học tập',
       category: 'courses',
-      icon: '🤖',
+      icon: <Bot className="w-5 h-5 text-[#3B6EF8]" />,
       readTime: '7 phút',
     },
   ];
@@ -174,205 +196,322 @@ const HelpCenter: React.FC = () => {
       user={{ name: mockStudent.name, avatar: mockStudent.avatar!, role: 'student' }}
       notificationCount={5}
     >
-      <div className="help-center-page">
-        <div className="page-header">
-          <h1 className="page-title">❓ Trung Tâm Trợ Giúp</h1>
-          <p className="page-subtitle">Tìm câu trả lời cho mọi thắc mắc của bạn</p>
+      <div className="max-w-5xl mx-auto px-4 py-8 animate-[fadeInUp_0.4s_ease_both]">
+        {/* Header */}
+        <div className="mb-10 text-center">
+          <div className="inline-flex items-center justify-center p-3 bg-[#EEF2FF] rounded-2xl mb-4">
+            <HelpCircle className="w-8 h-8 text-[#3B6EF8]" />
+          </div>
+          <h1 className="text-[28px] font-bold tracking-tight text-[#0D0F1A] mb-3">
+            Trung Tâm Trợ Giúp
+          </h1>
+          <p className="text-[15px] font-normal text-[#6B7280]">
+            Tìm câu trả lời cho mọi thắc mắc của bạn
+          </p>
         </div>
 
         {/* Search */}
-        <div className="help-search-section">
-          <div className="search-container">
+        <div className="max-w-2xl mx-auto mb-12">
+          <div className="bg-white border border-[#E5E7EB] rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.08)] px-5 py-3.5 flex items-center gap-3 focus-within:border-[#3B6EF8] focus-within:shadow-[0_0_0_3px_rgba(59,110,248,0.12)] transition-all duration-200">
+            <Search className="w-5 h-5 text-[#9CA3AF]" />
             <input
               type="text"
               placeholder="Tìm kiếm câu hỏi, hướng dẫn..."
-              className="help-search-input"
+              className="flex-1 text-[15px] placeholder:text-[#9CA3AF] bg-transparent outline-none text-[#0D0F1A]"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <p className="search-hint">Ví dụ: "đặt lại mật khẩu", "thanh toán", "chứng chỉ"...</p>
+          <p className="text-center mt-3 text-[13px] text-[#6B7280]">
+            Ví dụ: "đặt lại mật khẩu", "thanh toán", "chứng chỉ"...
+          </p>
         </div>
 
         {/* Categories */}
-        <div className="help-categories">
+        <div className="flex flex-wrap items-center justify-center gap-2 mb-12">
           {categories.map((cat) => (
             <button
               key={cat.id}
-              className={`category-btn ${categoryFilter === cat.id ? 'active' : ''}`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[14px] font-semibold transition-all duration-150 active:scale-[0.98] ${
+                categoryFilter === cat.id
+                  ? 'bg-[#0D0F1A] text-white shadow-[0_2px_8px_rgba(0,0,0,0.12)]'
+                  : 'bg-white border border-[#E5E7EB] text-[#6B7280] hover:bg-[#F8F9FC] hover:text-[#0D0F1A]'
+              }`}
               onClick={() => setCategoryFilter(cat.id)}
             >
-              <span className="category-icon">{cat.icon}</span>
-              <span className="category-name">{cat.name}</span>
+              {cat.icon}
+              {cat.name}
             </button>
           ))}
         </div>
 
         {/* Quick Actions */}
-        <div className="quick-actions">
-          <div className="quick-action-card" onClick={() => setShowContactModal(true)}>
-            <div className="qa-icon">📧</div>
-            <div className="qa-content">
-              <h3>Liên hệ hỗ trợ</h3>
-              <p>Gửi yêu cầu hỗ trợ trực tiếp</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-12">
+          <div
+            className="bg-white rounded-2xl border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.08)] p-5 flex flex-col gap-3 hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)] hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group"
+            onClick={() => setShowContactModal(true)}
+          >
+            <div className="w-10 h-10 rounded-xl bg-[#EEF2FF] flex items-center justify-center text-[#3B6EF8] group-hover:scale-110 transition-transform duration-300">
+              <Mail className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-[15px] font-semibold text-[#0D0F1A] mb-1">Liên hệ hỗ trợ</h3>
+              <p className="text-[13px] text-[#6B7280]">Gửi yêu cầu hỗ trợ trực tiếp</p>
             </div>
           </div>
-          <div className="quick-action-card">
-            <div className="qa-icon">💬</div>
-            <div className="qa-content">
-              <h3>Chat với chúng tôi</h3>
-              <p>Trò chuyện trực tiếp (8:00 - 22:00)</p>
+
+          <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.08)] p-5 flex flex-col gap-3 hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)] hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group">
+            <div className="w-10 h-10 rounded-xl bg-[#EEF2FF] flex items-center justify-center text-[#3B6EF8] group-hover:scale-110 transition-transform duration-300">
+              <MessageCircle className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-[15px] font-semibold text-[#0D0F1A] mb-1">Chat với chúng tôi</h3>
+              <p className="text-[13px] text-[#6B7280]">Trò chuyện trực tiếp (8:00 - 22:00)</p>
             </div>
           </div>
-          <div className="quick-action-card">
-            <div className="qa-icon">📞</div>
-            <div className="qa-content">
-              <h3>Hotline: 1900-xxxx</h3>
-              <p>Hỗ trợ 24/7</p>
+
+          <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.08)] p-5 flex flex-col gap-3 hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)] hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group">
+            <div className="w-10 h-10 rounded-xl bg-[#EEF2FF] flex items-center justify-center text-[#3B6EF8] group-hover:scale-110 transition-transform duration-300">
+              <Phone className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-[15px] font-semibold text-[#0D0F1A] mb-1">Hotline: 1900-xxxx</h3>
+              <p className="text-[13px] text-[#6B7280]">Hỗ trợ 24/7</p>
             </div>
           </div>
-          <div className="quick-action-card">
-            <div className="qa-icon">📘</div>
-            <div className="qa-content">
-              <h3>Tài liệu hướng dẫn</h3>
-              <p>Tải PDF hướng dẫn sử dụng</p>
+
+          <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.08)] p-5 flex flex-col gap-3 hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)] hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group">
+            <div className="w-10 h-10 rounded-xl bg-[#EEF2FF] flex items-center justify-center text-[#3B6EF8] group-hover:scale-110 transition-transform duration-300">
+              <FileText className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-[15px] font-semibold text-[#0D0F1A] mb-1">Tài liệu hướng dẫn</h3>
+              <p className="text-[13px] text-[#6B7280]">Tải PDF hướng dẫn sử dụng</p>
             </div>
           </div>
         </div>
 
-        {/* Popular Articles */}
-        <div className="help-section">
-          <h2 className="section-title">📚 Bài viết hướng dẫn</h2>
-          <div className="articles-grid">
-            {filteredArticles.map((article) => (
-              <div key={article.id} className="article-card">
-                <div className="article-icon">{article.icon}</div>
-                <h3 className="article-title">{article.title}</h3>
-                <p className="article-description">{article.description}</p>
-                <div className="article-footer">
-                  <span className="read-time">🕐 {article.readTime}</span>
-                  <button className="read-btn">Đọc ngay →</button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* FAQs */}
-        <div className="help-section">
-          <h2 className="section-title">❓ Câu hỏi thường gặp</h2>
-          <div className="faqs-container">
-            {filteredFAQs.map((faq) => (
-              <div key={faq.id} className="faq-item">
-                <div
-                  className="faq-question"
-                  onClick={() => setExpandedFAQ(expandedFAQ === faq.id ? null : faq.id)}
-                >
-                  <span className="question-text">{faq.question}</span>
-                  <span className="expand-icon">{expandedFAQ === faq.id ? '▲' : '▼'}</span>
-                </div>
-                {expandedFAQ === faq.id && (
-                  <div className="faq-answer">
-                    <p>{faq.answer}</p>
-                    <div className="faq-footer">
-                      <span className="helpful-text">
-                        Hữu ích? {faq.helpful} người đã thấy hữu ích
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Content Area - Articles */}
+          <div className="lg:col-span-2 space-y-8">
+            <div>
+              <h2 className="text-[18px] font-bold text-[#0D0F1A] mb-5 flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-[#3B6EF8]" />
+                Bài viết hướng dẫn
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {filteredArticles.map((article) => (
+                  <div
+                    key={article.id}
+                    className="bg-white rounded-2xl border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.08)] p-5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)] hover:-translate-y-0.5 transition-all duration-200 group flex flex-col h-full cursor-pointer"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-[#EEF2FF] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                      {article.icon}
+                    </div>
+                    <h3 className="text-[15px] font-semibold text-[#0D0F1A] mb-2">
+                      {article.title}
+                    </h3>
+                    <p className="text-[13px] text-[#6B7280] mb-4 flex-1">{article.description}</p>
+                    <div className="flex items-center justify-between mt-auto pt-4 border-t border-[#F1F3F8]">
+                      <span className="text-[12px] font-medium text-[#6B7280] uppercase tracking-wide">
+                        {article.readTime}
                       </span>
-                      <div className="faq-actions">
-                        <button className="faq-action-btn">👍 Hữu ích</button>
-                        <button className="faq-action-btn">👎 Chưa hữu ích</button>
+                      <button className="text-[13px] font-semibold text-[#3B6EF8] flex items-center gap-1 group-hover:gap-2 transition-all duration-200">
+                        Đọc ngay <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Need Help CTA below articles */}
+            <div className="bg-[#0D0F1A] rounded-2xl p-8 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-[#3B6EF8] rounded-full filter blur-[100px] opacity-20 -translate-y-1/2 translate-x-1/4"></div>
+              <div className="relative z-10">
+                <h2 className="text-[20px] font-bold text-white mb-2">
+                  Vẫn chưa tìm được câu trả lời?
+                </h2>
+                <p className="text-[15px] text-[#9CA3AF] mb-6 max-w-md">
+                  Đừng lo lắng! Đội ngũ hỗ trợ của chúng tôi luôn sẵn sàng giúp đỡ bạn giải quyết
+                  mọi vấn đề.
+                </p>
+                <button
+                  className="bg-white text-[#0D0F1A] rounded-xl px-5 py-2.5 text-[14px] font-semibold hover:bg-[#F8F9FC] active:scale-[0.98] transition-all duration-150 inline-flex items-center gap-2"
+                  onClick={() => setShowContactModal(true)}
+                >
+                  <Mail className="w-4 h-4" />
+                  Liên hệ hỗ trợ
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Sidebar - FAQs */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.08)] p-6 sticky top-6">
+              <h2 className="text-[16px] font-bold text-[#0D0F1A] mb-5">Câu hỏi thường gặp</h2>
+              <div className="space-y-3">
+                {filteredFAQs.map((faq) => (
+                  <div
+                    key={faq.id}
+                    className="border border-[#E5E7EB] rounded-xl overflow-hidden bg-[#F8F9FC] transition-colors duration-200"
+                  >
+                    <button
+                      className="w-full px-4 py-3.5 flex items-center justify-between text-left hover:bg-[#F1F3F8] transition-colors duration-150 focus:outline-none"
+                      onClick={() => setExpandedFAQ(expandedFAQ === faq.id ? null : faq.id)}
+                    >
+                      <span className="text-[14px] font-semibold text-[#0D0F1A] pr-4">
+                        {faq.question}
+                      </span>
+                      <div
+                        className={`text-[#6B7280] transition-transform duration-200 ${expandedFAQ === faq.id ? 'rotate-180' : ''}`}
+                      >
+                        <ChevronDown className="w-4 h-4" />
+                      </div>
+                    </button>
+
+                    <div
+                      className={`grid transition-all duration-200 ease-in-out ${expandedFAQ === faq.id ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
+                    >
+                      <div className="overflow-hidden">
+                        <div className="px-4 pb-4 pt-1">
+                          <p className="text-[14px] text-[#6B7280] mb-4 leading-relaxed">
+                            {faq.answer}
+                          </p>
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-[#E5E7EB]">
+                            <span className="text-[12px] font-medium text-[#6B7280]">
+                              {faq.helpful} người thấy hữu ích
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <button className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium text-[#6B7280] hover:bg-white hover:text-[#3B6EF8] hover:shadow-[0_1px_3px_rgba(0,0,0,0.06)] transition-all duration-150 border border-transparent hover:border-[#E5E7EB]">
+                                <ThumbsUp className="w-3.5 h-3.5" /> Có
+                              </button>
+                              <button className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium text-[#6B7280] hover:bg-white hover:text-[#DC2626] hover:shadow-[0_1px_3px_rgba(0,0,0,0.06)] transition-all duration-150 border border-transparent hover:border-[#E5E7EB]">
+                                <ThumbsDown className="w-3.5 h-3.5" /> Không
+                              </button>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                )}
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Still Need Help */}
-        <div className="need-help-section">
-          <div className="need-help-content">
-            <h2>🤔 Vẫn chưa tìm được câu trả lời?</h2>
-            <p>Đừng lo lắng! Đội ngũ hỗ trợ của chúng tôi luôn sẵn sàng giúp đỡ bạn.</p>
-            <button className="btn btn-primary" onClick={() => setShowContactModal(true)}>
-              📧 Liên hệ hỗ trợ
-            </button>
+            </div>
           </div>
         </div>
 
         {/* Contact Modal */}
         {showContactModal && (
-          <div className="modal-overlay" onClick={() => setShowContactModal(false)}>
-            <div className="modal large" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h2 className="modal-title">📧 Gửi yêu cầu hỗ trợ</h2>
-                <button className="modal-close" onClick={() => setShowContactModal(false)}>
-                  ✕
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0D0F1A]/40 backdrop-blur-sm animate-[fadeIn_0.2s_ease_out]">
+            <div
+              className="bg-white rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] animate-[slideUp_0.3s_ease_out]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between p-5 border-b border-[#E5E7EB]">
+                <h2 className="text-[18px] font-bold text-[#0D0F1A] flex items-center gap-2">
+                  <Mail className="w-5 h-5 text-[#3B6EF8]" />
+                  Gửi yêu cầu hỗ trợ
+                </h2>
+                <button
+                  className="p-2 text-[#6B7280] hover:bg-[#F1F3F8] rounded-xl transition-colors duration-150"
+                  onClick={() => setShowContactModal(false)}
+                >
+                  <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <div className="modal-body">
-                <div className="form-group">
-                  <label>Danh mục vấn đề *</label>
-                  <select>
-                    <option>Chọn danh mục</option>
-                    <option>👤 Tài khoản</option>
-                    <option>📖 Giáo Trình</option>
-                    <option>💳 Thanh toán</option>
-                    <option>⚙️ Kỹ thuật</option>
-                    <option>📝 Khác</option>
-                  </select>
+              <div className="p-6 overflow-y-auto flex-1 space-y-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="space-y-1.5">
+                    <label className="text-[13px] font-semibold text-[#0D0F1A]">
+                      Danh mục vấn đề <span className="text-[#DC2626]">*</span>
+                    </label>
+                    <select className="w-full bg-white border border-[#E5E7EB] rounded-xl px-3.5 py-2.5 text-[14px] text-[#0D0F1A] focus:border-[#3B6EF8] focus:ring-2 focus:ring-[#3B6EF8]/20 outline-none transition-all duration-150">
+                      <option value="">Chọn danh mục</option>
+                      <option value="account">Tài khoản</option>
+                      <option value="courses">Giáo Trình</option>
+                      <option value="payment">Thanh toán</option>
+                      <option value="technical">Kỹ thuật</option>
+                      <option value="other">Khác</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[13px] font-semibold text-[#0D0F1A]">
+                      Email liên hệ <span className="text-[#DC2626]">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      defaultValue={mockStudent.email}
+                      className="w-full bg-white border border-[#E5E7EB] rounded-xl px-3.5 py-2.5 text-[14px] text-[#0D0F1A] focus:border-[#3B6EF8] focus:ring-2 focus:ring-[#3B6EF8]/20 outline-none transition-all duration-150"
+                    />
+                  </div>
                 </div>
 
-                <div className="form-group">
-                  <label>Tiêu đề *</label>
-                  <input type="text" placeholder="Mô tả ngắn gọn vấn đề của bạn" />
+                <div className="space-y-1.5">
+                  <label className="text-[13px] font-semibold text-[#0D0F1A]">
+                    Tiêu đề <span className="text-[#DC2626]">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Mô tả ngắn gọn vấn đề của bạn"
+                    className="w-full bg-white border border-[#E5E7EB] rounded-xl px-3.5 py-2.5 text-[14px] text-[#0D0F1A] placeholder:text-[#9CA3AF] focus:border-[#3B6EF8] focus:ring-2 focus:ring-[#3B6EF8]/20 outline-none transition-all duration-150"
+                  />
                 </div>
 
-                <div className="form-group">
-                  <label>Nội dung chi tiết *</label>
+                <div className="space-y-1.5">
+                  <label className="text-[13px] font-semibold text-[#0D0F1A]">
+                    Nội dung chi tiết <span className="text-[#DC2626]">*</span>
+                  </label>
                   <textarea
-                    rows={8}
+                    rows={6}
                     placeholder="Mô tả chi tiết vấn đề bạn đang gặp phải...&#10;&#10;Vui lòng cung cấp:&#10;• Mô tả chi tiết vấn đề&#10;• Các bước đã thực hiện&#10;• Ảnh chụp màn hình (nếu có)&#10;• Thời gian xảy ra lỗi"
+                    className="w-full bg-white border border-[#E5E7EB] rounded-xl px-3.5 py-2.5 text-[14px] text-[#0D0F1A] placeholder:text-[#9CA3AF] focus:border-[#3B6EF8] focus:ring-2 focus:ring-[#3B6EF8]/20 outline-none transition-all duration-150 resize-none"
                   ></textarea>
                 </div>
 
-                <div className="form-group">
-                  <label>Email liên hệ *</label>
-                  <input type="email" defaultValue={mockStudent.email} />
-                </div>
-
-                <div className="form-group">
-                  <label>Đính kèm file (tùy chọn)</label>
-                  <input type="file" multiple />
-                  <small>Hỗ trợ: JPG, PNG, PDF (tối đa 5MB mỗi file)</small>
-                </div>
-
-                <div className="form-group">
-                  <label>Độ ưu tiên</label>
-                  <div className="priority-options">
-                    <label className="priority-option">
-                      <input type="radio" name="priority" value="low" defaultChecked />
-                      <span>🟢 Thấp</span>
+                <div className="space-y-3 pt-2">
+                  <label className="text-[13px] font-semibold text-[#0D0F1A]">Độ ưu tiên</label>
+                  <div className="flex flex-wrap gap-3">
+                    <label className="relative flex items-center justify-center px-4 py-2 border border-[#E5E7EB] rounded-xl cursor-pointer hover:bg-[#F8F9FC] transition-colors duration-150 has-[:checked]:bg-[#EEF2FF] has-[:checked]:border-[#3B6EF8] has-[:checked]:ring-1 has-[:checked]:ring-[#3B6EF8]">
+                      <input
+                        type="radio"
+                        name="priority"
+                        value="low"
+                        defaultChecked
+                        className="sr-only"
+                      />
+                      <div className="flex items-center gap-2 text-[14px] font-medium text-[#0D0F1A]">
+                        <Circle className="w-3.5 h-3.5 text-[#16A34A] fill-current" /> Thấp
+                      </div>
                     </label>
-                    <label className="priority-option">
-                      <input type="radio" name="priority" value="medium" />
-                      <span>🟡 Trung bình</span>
+                    <label className="relative flex items-center justify-center px-4 py-2 border border-[#E5E7EB] rounded-xl cursor-pointer hover:bg-[#F8F9FC] transition-colors duration-150 has-[:checked]:bg-[#FFFBEB] has-[:checked]:border-[#F59E0B] has-[:checked]:ring-1 has-[:checked]:ring-[#F59E0B]">
+                      <input type="radio" name="priority" value="medium" className="sr-only" />
+                      <div className="flex items-center gap-2 text-[14px] font-medium text-[#0D0F1A]">
+                        <Circle className="w-3.5 h-3.5 text-[#F59E0B] fill-current" /> Trung bình
+                      </div>
                     </label>
-                    <label className="priority-option">
-                      <input type="radio" name="priority" value="high" />
-                      <span>🔴 Cao</span>
+                    <label className="relative flex items-center justify-center px-4 py-2 border border-[#E5E7EB] rounded-xl cursor-pointer hover:bg-[#F8F9FC] transition-colors duration-150 has-[:checked]:bg-[#FEF2F2] has-[:checked]:border-[#EF4444] has-[:checked]:ring-1 has-[:checked]:ring-[#EF4444]">
+                      <input type="radio" name="priority" value="high" className="sr-only" />
+                      <div className="flex items-center gap-2 text-[14px] font-medium text-[#0D0F1A]">
+                        <Circle className="w-3.5 h-3.5 text-[#EF4444] fill-current" /> Cao
+                      </div>
                     </label>
                   </div>
                 </div>
               </div>
 
-              <div className="modal-footer">
-                <button className="btn btn-outline" onClick={() => setShowContactModal(false)}>
+              <div className="p-5 border-t border-[#E5E7EB] bg-[#F8F9FC] flex justify-end gap-3">
+                <button
+                  className="px-5 py-2.5 rounded-xl text-[14px] font-semibold text-[#6B7280] bg-white border border-[#E5E7EB] hover:bg-[#F1F3F8] hover:text-[#0D0F1A] active:scale-[0.98] transition-all duration-150"
+                  onClick={() => setShowContactModal(false)}
+                >
                   Hủy
                 </button>
-                <button className="btn btn-primary">✅ Gửi yêu cầu</button>
+                <button className="px-5 py-2.5 rounded-xl text-[14px] font-semibold text-white bg-[#0D0F1A] hover:bg-[#1a1d2e] active:scale-[0.98] transition-all duration-150">
+                  Gửi yêu cầu
+                </button>
               </div>
             </div>
           </div>
