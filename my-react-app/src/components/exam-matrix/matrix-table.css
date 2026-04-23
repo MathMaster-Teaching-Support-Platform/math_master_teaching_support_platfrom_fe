@@ -98,8 +98,8 @@
 }
 
 .matrix-th--reference {
-  width: 200px;
-  min-width: 200px;
+  width: 120px;
+  min-width: 120px;
 }
 
 .matrix-th--level {
@@ -393,30 +393,36 @@
   background: #d1fae5;
   color: #065f46;
   border: 1px solid #6ee7b7;
+  padding: 12px 16px;
+  vertical-align: top;
 }
 
 .matrix-percentage-hint {
-  margin: 4px 8px 0;
+  margin: 6px 0 0;
   font-size: 12px;
   color: #047857;
+  line-height: 1.4;
 }
 
 .matrix-td--percentage-cell,
 .matrix-td--percentage-total-cell {
   background: #ecfdf5;
   position: relative;
+  padding: 12px 8px;
+  vertical-align: top;
 }
 
 .matrix-percentage-input {
   width: 100%;
   border: 1px solid #10b981;
   border-radius: 4px;
-  padding: 6px 22px 6px 6px;
+  padding: 8px 28px 8px 8px;
   text-align: right;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   color: #065f46;
   background: #fff;
+  box-sizing: border-box;
 }
 
 .matrix-percentage-input:focus {
@@ -430,23 +436,25 @@
 }
 
 .matrix-percentage-input--total {
-  padding-right: 6px;
+  padding-right: 8px;
 }
 
 .matrix-percentage-suffix {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  font-size: 12px;
+  top: 20px;
+  right: 16px;
+  font-size: 13px;
   color: #047857;
   font-weight: 700;
+  pointer-events: none;
 }
 
 .matrix-percentage-preview {
-  margin: 5px 0 0;
+  margin: 6px 0 0;
   font-size: 11px;
   color: #047857;
   text-align: right;
+  line-height: 1.4;
 }
 
 .matrix-percentage-error {
@@ -454,6 +462,7 @@
   font-size: 11px;
   color: #b91c1c;
   text-align: right;
+  font-weight: 600;
 }
 
 .matrix-td--percentage-total-value {
@@ -463,27 +472,40 @@
 
 .matrix-td--percentage-action {
   background: #ecfdf5;
+  padding: 12px 8px;
+  vertical-align: middle;
 }
 
 .matrix-save-percentage-btn {
   width: 100%;
   border: 1px solid #059669;
-  border-radius: 4px;
-  padding: 8px 6px;
-  font-size: 12px;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 13px;
   font-weight: 700;
   color: #fff;
-  background: #047857;
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
   cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2);
 }
 
 .matrix-save-percentage-btn:hover:not(:disabled) {
-  background: #065f46;
+  background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(5, 150, 105, 0.3);
+}
+
+.matrix-save-percentage-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2);
 }
 
 .matrix-save-percentage-btn:disabled {
-  opacity: 0.55;
+  opacity: 0.5;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 /* Actions cell */
@@ -563,6 +585,37 @@
 .matrix-delete-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* ============================================
+   BANK NAME BUTTON
+   ============================================ */
+
+.matrix-table__bank-name {
+  background: none;
+  border: none;
+  color: #2563eb;
+  font-size: inherit;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+  transition: all 0.15s;
+  text-align: left;
+  width: 100%;
+}
+
+.matrix-table__bank-name:hover:not(:disabled) {
+  color: #1d4ed8;
+  text-decoration-style: solid;
+}
+
+.matrix-table__bank-name:disabled {
+  color: #9ca3af;
+  cursor: not-allowed;
+  text-decoration: none;
 }
 
 /* ============================================

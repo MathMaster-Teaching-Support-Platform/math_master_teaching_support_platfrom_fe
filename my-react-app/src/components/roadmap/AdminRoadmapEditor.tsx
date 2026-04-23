@@ -25,6 +25,7 @@ const defaultCreatePayload: CreateAdminRoadmapRequest = {
 };
 
 const defaultUpdatePayload: UpdateAdminRoadmapRequest = {
+  name: '',
   subjectId: undefined,
   description: '',
   estimatedCompletionDays: 30,
@@ -74,6 +75,7 @@ export default function AdminRoadmapEditor({
     if (!initialRoadmap) return defaultUpdatePayload;
 
     return {
+      name: initialRoadmap.name,
       subjectId: initialRoadmap.subjectId,
       description: initialRoadmap.description,
       status: initialRoadmap.status,
@@ -141,6 +143,7 @@ export default function AdminRoadmapEditor({
     }
 
     const payload: UpdateAdminRoadmapRequest = {
+      name: updateForm.name?.trim(),
       description: updateForm.description,
       estimatedCompletionDays: est,
       status: updateForm.status,
@@ -180,6 +183,17 @@ export default function AdminRoadmapEditor({
               value={createForm.name}
               onChange={(event) => setCreateField('name', event.target.value)}
               required
+            />
+          </label>
+        )}
+
+        {mode === 'edit' && (
+          <label className="admin-roadmap-editor__field">
+            <span>Tên lộ trình</span>
+            <input
+              value={updateForm.name ?? ''}
+              onChange={(event) => setUpdateField('name', event.target.value)}
+              placeholder="Nhập tên lộ trình..."
             />
           </label>
         )}

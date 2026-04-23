@@ -5,6 +5,7 @@ import type {
   ExamMatrixTableChapter,
   ExamMatrixTableRow,
 } from '../../types/examMatrix';
+import { BankInfoPopup } from './BankInfoPopup';
 import { EditableCell } from './EditableCell';
 import './matrix-table.css';
 
@@ -149,6 +150,38 @@ export function MatrixTable({
     Record<MatrixLevel, number>
   > | null>(null);
   const [previewFromPercent, setPreviewFromPercent] = useState(false);
+  const [bankPopup, setBankPopup] = useState<{
+    bankName: string;
+    bankId: string;
+    distribution: Record<string, number>;
+    position: { x: number; y: number };
+  } | null>(null);
+
+  // Handler for bank name click
+  function handleBankNameClick(
+    event: React.MouseEvent,
+    row: ExamMatrixTableRow
+  ) {
+    event.preventDefault();
+    
+    const rect = event.currentTarget.getBoundingClientRect();
+    const distribution = {
+      NB: getLevelCount(row, 'NB'),
+      TH: getLevelCount(row, 'TH'),
+      VD: getLevelCount(row, 'VD'),
+      VDC: getLevelCount(row, 'VDC'),
+    };
+
+    setBankPopup({
+      bankName: row.questionBankName || 'Ngân hàng câu hỏi',
+      bankId: row.questionBankId || '',
+      distribution,
+      position: {
+        x: rect.left + rect.width / 2 - 160, // Center popup (320px width / 2)
+        y: rect.bottom + 8, // 8px below the element
+      },
+    });
+  }
 
   const flatRows = useMemo(
     () =>
@@ -629,7 +662,19 @@ export function MatrixTable({
 
                     {/* Question Type */}
                     <td className="matrix-td matrix-td--type">
-                      <div className="matrix-type-cell">{row.questionTypeName || 'N/A'}</div>
+                      <div className="matrix-type-cell">
+                        {row.questionBankName ? (
+                          <button
+                            className="matrix-table__bank-name"
+                            onClick={(e) => handleBankNameClick(e, row)}
+                            disabled={!row.questionBankId}
+                          >
+                            {row.questionBankName}
+                          </button>
+                        ) : (
+                          row.questionTypeName || 'N/A'
+                        )}
+                      </div>
                     </td>
 
                     {/* Reference */}
@@ -850,6 +895,17 @@ export function MatrixTable({
           </tbody>
         </table>
       </div>
+
+      {/* Bank Info Popup */}
+      {bankPopup && (
+        <BankInfoPopup
+          bankName={bankPopup.bankName}
+          bankId={bankPopup.bankId}
+          cognitiveDistribution={bankPopup.distribution}
+          position={bankPopup.position}
+          onClose={() => setBankPopup(null)}
+        />
+      )}
     </div>
   );
 }
