@@ -33,13 +33,9 @@ import {
 import '../../styles/module-refactor.css';
 import './TeacherCourses.css';
 import './TeacherCourseDetail.css';
-<<<<<<< HEAD
 import './tabs/CourseOverviewTab.css';
 import './tabs/course-detail-tabs.css';
 import type { CourseLevel, UpdateCourseRequest } from '../../types';
-=======
-import type { UpdateCourseRequest, CourseLevel } from '../../types';
->>>>>>> 46670d9ed18a7f978ef431b7f26c6efa563eae20
 
 // Import tab components
 import CourseOverviewTab from './tabs/CourseOverviewTab.tsx';
@@ -103,8 +99,7 @@ const TeacherCourseDetail: React.FC = () => {
     }
   }, [course]);
 
-  const handleEditSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleEditSubmit = () => {
     if (!course) return;
     updateMutation.mutate(
       { courseId: course.id, data: editForm },
@@ -380,24 +375,18 @@ const TeacherCourseDetail: React.FC = () => {
 
       {/* Edit Modal */}
       {showEditModal && (
-<<<<<<< HEAD
         <div className="modal-overlay course-edit-modal-overlay" lang="vi">
-          <button type="button" className="modal-backdrop" onClick={() => setShowEditModal(false)} />
+          <button
+            type="button"
+            className="modal-backdrop"
+            onClick={() => setShowEditModal(false)}
+          />
           <div
             className="modal-box wizard-modal-box course-edit-wizard"
             role="dialog"
             aria-modal="true"
             aria-labelledby="course-edit-wizard-title"
           >
-=======
-        <div className="modal-overlay">
-          <button
-            type="button"
-            className="modal-backdrop"
-            onClick={() => setShowEditModal(false)}
-          />
-          <div className="modal-box wizard-modal-box">
->>>>>>> 46670d9ed18a7f978ef431b7f26c6efa563eae20
             <div className="modal-header">
               <div className="modal-header-left">
                 <div className="modal-icon">
@@ -629,7 +618,6 @@ const TeacherCourseDetail: React.FC = () => {
                           </div>
                         </div>
 
-<<<<<<< HEAD
                         <div className="course-edit-pricing-summary">
                           <div className="course-edit-pricing-summary__row">
                             <span>Giá bán thực tế:</span>
@@ -640,38 +628,10 @@ const TeacherCourseDetail: React.FC = () => {
                           <div className="course-edit-pricing-summary__row">
                             <span>Tiết kiệm:</span>
                             <span className="course-edit-pricing-summary__save">
-                              {(Number(editForm.originalPrice) - Number(editForm.discountedPrice)).toLocaleString('vi-VN')}₫ ({discountPercent}%)
-=======
-                        <div
-                          className="pricing-summary-card"
-                          style={{
-                            background: '#f8fafc',
-                            padding: '1.25rem',
-                            borderRadius: '8px',
-                            border: '1px solid #e2e8f0',
-                            marginBottom: '1.5rem',
-                          }}
-                        >
-                          <div
-                            style={{
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              marginBottom: '0.5rem',
-                            }}
-                          >
-                            <span style={{ color: '#64748b' }}>Giá bán thực tế:</span>
-                            <strong style={{ fontSize: '1.1rem', color: '#1e293b' }}>
-                              {editForm.discountedPrice?.toLocaleString('vi-VN')}₫
-                            </strong>
-                          </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span style={{ color: '#64748b' }}>Tiết kiệm:</span>
-                            <span style={{ color: '#059669', fontWeight: 600 }}>
                               {(
                                 Number(editForm.originalPrice) - Number(editForm.discountedPrice)
                               ).toLocaleString('vi-VN')}
                               ₫ ({discountPercent}%)
->>>>>>> 46670d9ed18a7f978ef431b7f26c6efa563eae20
                             </span>
                           </div>
                         </div>
@@ -681,11 +641,7 @@ const TeacherCourseDetail: React.FC = () => {
                           <input
                             type="datetime-local"
                             className="form-input"
-                            value={
-                              editForm.discountExpiryDate
-                                ? editForm.discountExpiryDate.substring(0, 16)
-                                : ''
-                            }
+                            value={(editForm.discountExpiryDate ?? '').substring(0, 16)}
                             onChange={(e) => {
                               const val = e.target.value;
                               if (!val) {

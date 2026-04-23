@@ -1,10 +1,6 @@
 import React, { useState } from 'react';
 import { Star, MessageSquare, Send, Edit2, Filter } from 'lucide-react';
-import {
-  useCourseReviews,
-  useReviewSummary,
-  useReplyToReview,
-} from '../../../hooks/useCourses';
+import { useCourseReviews, useReviewSummary, useReplyToReview } from '../../../hooks/useCourses';
 import './course-detail-tabs.css';
 
 interface CourseReviewsTabProps {
@@ -115,9 +111,7 @@ const CourseReviewsTab: React.FC<CourseReviewsTabProps> = ({ courseId }) => {
             <Filter size={16} aria-hidden />
             <select
               value={filterRating ?? ''}
-              onChange={(e) =>
-                setFilterRating(e.target.value ? Number(e.target.value) : undefined)
-              }
+              onChange={(e) => setFilterRating(e.target.value ? Number(e.target.value) : undefined)}
             >
               <option value="">Tất cả đánh giá</option>
               {[5, 4, 3, 2, 1].map((s) => (
@@ -136,17 +130,13 @@ const CourseReviewsTab: React.FC<CourseReviewsTabProps> = ({ courseId }) => {
           </div>
         ) : (
           <div className="cdt-reviews__list">
-            {reviews.map((review: { id: string; studentName?: string; studentAvatar?: string; rating: number; comment?: string; createdAt?: string; instructorReply?: string; repliedAt?: string }) => {
+            {reviews.map((review) => {
               const initial = (review.studentName || '?').charAt(0);
               return (
                 <div key={review.id} className="cdt-reviews__card">
                   <div className="cdt-reviews__head">
                     {review.studentAvatar ? (
-                      <img
-                        src={review.studentAvatar}
-                        alt=""
-                        className="cdt-reviews__avatar"
-                      />
+                      <img src={review.studentAvatar} alt="" className="cdt-reviews__avatar" />
                     ) : (
                       <div className="cdt-reviews__avatar cdt-reviews__avatar-ph">{initial}</div>
                     )}
@@ -187,7 +177,9 @@ const CourseReviewsTab: React.FC<CourseReviewsTabProps> = ({ courseId }) => {
                           <button
                             type="button"
                             className="cdt-reviews__btn-ghost"
-                            onClick={() => setEditingReply((prev) => ({ ...prev, [review.id]: false }))}
+                            onClick={() =>
+                              setEditingReply((prev) => ({ ...prev, [review.id]: false }))
+                            }
                           >
                             Hủy
                           </button>
