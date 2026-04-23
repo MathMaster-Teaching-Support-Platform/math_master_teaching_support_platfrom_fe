@@ -388,6 +388,21 @@ export const API_ENDPOINTS = {
   ADMIN_DASHBOARD_QUICK_STATS: '/admin/dashboard/quick-stats',
   ADMIN_SYSTEM_STATUS: '/admin/system/status',
 
+  // Teacher Earnings
+  TEACHER_EARNINGS_STATS: '/teacher/earnings/stats',
+  TEACHER_EARNINGS_MONTHLY_REVENUE: '/teacher/earnings/monthly-revenue',
+  TEACHER_EARNINGS_TOP_COURSES: '/teacher/earnings/top-courses',
+  TEACHER_EARNINGS_TRANSACTIONS: '/teacher/earnings/transactions',
+
+  // Admin Financial Dashboard
+  ADMIN: {
+    FINANCIAL_OVERVIEW: '/admin/dashboard/financial-overview',
+    REVENUE_BREAKDOWN: '/admin/dashboard/revenue-breakdown',
+    TOP_COURSES: '/admin/marketplace/top-courses',
+    TOP_INSTRUCTORS: '/admin/marketplace/top-instructors',
+    SYSTEM_HEALTH: '/admin/system/health/financial',
+  },
+
   // Grading
   GRADING_QUEUE: '/grading/queue',
   GRADING_QUEUE_BY_TEACHER: '/grading/queue/my',

@@ -25,6 +25,7 @@ import TeacherCourseDetail from '../pages/courses/TeacherCourseDetail';
 import TeacherCourses from '../pages/courses/TeacherCourses';
 import AdminDashboard from '../pages/dashboard/admin/AdminDashboard';
 import TeacherDashboard from '../pages/dashboard/teacher/TeacherDashboard';
+import TeacherEarningsDashboard from '../pages/dashboard/teacher/TeacherEarningsDashboard';
 import Forum from '../pages/forum/Forum';
 import StudentGrades from '../pages/grades/StudentGrades';
 import HelpCenter from '../pages/help/HelpCenter';
@@ -260,6 +261,14 @@ export const router = createBrowserRouter([
     element: (
       <PrivateRoute>
         <TeacherDashboard />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/teacher/earnings',
+    element: (
+      <PrivateRoute>
+        <TeacherEarningsDashboard />
       </PrivateRoute>
     ),
   },
