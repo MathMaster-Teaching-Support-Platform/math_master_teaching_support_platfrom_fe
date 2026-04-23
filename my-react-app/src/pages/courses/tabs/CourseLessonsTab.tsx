@@ -45,6 +45,24 @@ import './CourseLessonsTab.css';
 import type { CourseLessonResponse, CourseResponse } from '../../../types';
 import type { ChapterBySubject, LessonByChapter } from '../../../types/lessonSlide.types';
 
+type LessonMaterial = {
+  id?: string;
+  name?: string;
+  url?: string;
+  size?: number;
+};
+
+const parseLessonMaterials = (materials?: string | null): LessonMaterial[] => {
+  if (!materials) return [];
+
+  try {
+    const parsed = JSON.parse(materials);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
 interface CourseLessonsTabProps {
   courseId: string;
   course: CourseResponse;
@@ -87,7 +105,12 @@ function CltConfirmDeleteModal({
           <div>
             <h3 id="clt-confirm-title">{title}</h3>
           </div>
-          <button type="button" className="clt-warm-icon-btn" onClick={onClose} disabled={isPending}>
+          <button
+            type="button"
+            className="clt-warm-icon-btn"
+            onClick={onClose}
+            disabled={isPending}
+          >
             <X size={18} aria-hidden />
           </button>
         </div>
@@ -156,7 +179,12 @@ function CltTextSectionModal({
             <h3 id="clt-text-section-title">{title}</h3>
             {description ? <p>{description}</p> : null}
           </div>
-          <button type="button" className="clt-warm-icon-btn" onClick={onClose} disabled={isPending}>
+          <button
+            type="button"
+            className="clt-warm-icon-btn"
+            onClick={onClose}
+            disabled={isPending}
+          >
             <X size={18} aria-hidden />
           </button>
         </div>
@@ -357,9 +385,7 @@ function UploadVideoModal({
         <div className="clt-warm-dialog__header">
           <div>
             <h3 id="clt-upload-lesson-title">Thêm bài học video</h3>
-            <p>
-              Chọn bài học (hoặc phần nội dung) và tải lên video giảng dạy.
-            </p>
+            <p>Chọn bài học (hoặc phần nội dung) và tải lên video giảng dạy.</p>
           </div>
           <button
             type="button"
@@ -693,7 +719,11 @@ function EditLessonModal({
             </label>
           </div>
 
-          {error ? <p className="clt-warm-err" style={{ marginTop: 12 }}>{error}</p> : null}
+          {error ? (
+            <p className="clt-warm-err" style={{ marginTop: 12 }}>
+              {error}
+            </p>
+          ) : null}
         </div>
 
         <div className="clt-warm-dialog__footer">
@@ -732,8 +762,43 @@ function LessonRow({
 }) {
   const [showMaterials, setShowMaterials] = useState(false);
   const [showPlayer, setShowPlayer] = useState(false);
+  const [resolvedVideoUrl, setResolvedVideoUrl] = useState<string | null>(null);
+  const [loadingVideoUrl, setLoadingVideoUrl] = useState(false);
+  const [videoUrlError, setVideoUrlError] = useState('');
   const addMaterialMutation = useAddMaterial();
   const updateMutation = useUpdateCourseLesson();
+
+  useEffect(() => {
+    if (!showPlayer || !lesson.id) {
+      return;
+    }
+
+    let cancelled = false;
+    setLoadingVideoUrl(true);
+    setVideoUrlError('');
+
+    VideoUploadService.getVideoUrl(courseId, lesson.id)
+      .then((response) => {
+        if (!cancelled) {
+          setResolvedVideoUrl(response.result || null);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setResolvedVideoUrl(null);
+          setVideoUrlError(err instanceof Error ? err.message : 'Không thể tải video bài học.');
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoadingVideoUrl(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [showPlayer, lesson.id, courseId]);
 
   const handleToggleFreePreview = () => {
     updateMutation.mutate({
@@ -745,14 +810,7 @@ function LessonRow({
     });
   };
 
-  const materialsList = useMemo(() => {
-    if (!lesson.materials) return [];
-    try {
-      return JSON.parse(lesson.materials);
-    } catch {
-      return [];
-    }
-  }, [lesson.materials]);
+  const materialsList = useMemo(() => parseLessonMaterials(lesson.materials), [lesson.materials]);
 
   const fmtDuration = (secs?: number | null) => {
     if (!secs) return null;
@@ -881,20 +939,32 @@ function LessonRow({
                 Đóng
               </button>
             </div>
-            <video
-              key={lesson.videoUrl}
-              controls
-              style={{
-                width: '100%',
-                maxHeight: '360px',
-                borderRadius: '8px',
-                background: '#000',
-                display: 'block',
-              }}
-            >
-              <source src={lesson.videoUrl} />
-              Trình duyệt của bạn không hỗ trợ phát video.
-            </video>
+            {loadingVideoUrl ? (
+              <p className="muted" style={{ margin: 0 }}>
+                Đang tải video bài học...
+              </p>
+            ) : videoUrlError ? (
+              <p style={{ margin: 0, color: '#ef4444' }}>{videoUrlError}</p>
+            ) : resolvedVideoUrl ? (
+              <video
+                key={resolvedVideoUrl}
+                controls
+                style={{
+                  width: '100%',
+                  maxHeight: '360px',
+                  borderRadius: '8px',
+                  background: '#000',
+                  display: 'block',
+                }}
+              >
+                <source src={resolvedVideoUrl} />
+                Trình duyệt của bạn không hỗ trợ phát video.
+              </video>
+            ) : (
+              <p className="muted" style={{ margin: 0 }}>
+                Không có đường dẫn video khả dụng.
+              </p>
+            )}
           </td>
         </tr>
       )}
@@ -1253,7 +1323,12 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
         <div className="cdt-empty">
           <Video size={40} strokeWidth={1.5} style={{ marginBottom: 12 }} />
           <p>Chưa có bài học nào. Hãy thêm bài học đầu tiên!</p>
-          <button type="button" className="btn cdt-btn-primary" style={{ marginTop: 12 }} onClick={() => setShowUpload(true)}>
+          <button
+            type="button"
+            className="btn cdt-btn-primary"
+            style={{ marginTop: 12 }}
+            onClick={() => setShowUpload(true)}
+          >
             <Plus size={14} />
             Thêm bài học
           </button>
@@ -1291,7 +1366,9 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                       courseId={courseId}
                       lesson={lesson}
                       onEdit={() => setEditingLesson(lesson)}
-                      onRequestDeleteLesson={() => setDeleteTarget({ k: 'lesson', lessonId: lesson.id })}
+                      onRequestDeleteLesson={() =>
+                        setDeleteTarget({ k: 'lesson', lessonId: lesson.id })
+                      }
                       onRequestDeleteMaterial={(materialId, name) =>
                         setDeleteTarget({ k: 'material', lessonId: lesson.id, materialId, name })
                       }
@@ -1344,7 +1421,9 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                         className="btn secondary"
                         style={{ padding: '0.35rem 0.6rem' }}
                         title="Chỉnh sửa phần"
-                        onClick={() => setRenameTarget({ id: section.id, value: section.title ?? '' })}
+                        onClick={() =>
+                          setRenameTarget({ id: section.id, value: section.title ?? '' })
+                        }
                       >
                         <Pencil size={13} />
                       </button>
@@ -1353,7 +1432,11 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                         style={{ padding: '0.35rem 0.6rem' }}
                         title="Xóa phần"
                         onClick={() =>
-                          setDeleteTarget({ k: 'section', sectionId: section.id, title: section.title })
+                          setDeleteTarget({
+                            k: 'section',
+                            sectionId: section.id,
+                            title: section.title,
+                          })
                         }
                       >
                         <Trash2 size={13} />
@@ -1410,9 +1493,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                     </div>
                   ) : (
                     <div className="cdt-empty" style={{ padding: '1.5rem' }}>
-                      <p style={{ margin: 0 }}>
-                        Chưa có bài học nào trong phần này.
-                      </p>
+                      <p style={{ margin: 0 }}>Chưa có bài học nào trong phần này.</p>
                     </div>
                   )}
                 </div>

@@ -167,10 +167,12 @@ export class CourseService {
     return this.handleResponse(res);
   }
 
-  static async getPendingReviewCourses(params: {
-    page?: number;
-    size?: number;
-  } = {}): Promise<ApiResponse<PaginatedResponse<CourseResponse>>> {
+  static async getPendingReviewCourses(
+    params: {
+      page?: number;
+      size?: number;
+    } = {}
+  ): Promise<ApiResponse<PaginatedResponse<CourseResponse>>> {
     const headers = await this.getHeaders();
     const qs = new URLSearchParams();
     if (params.page !== undefined) qs.append('page', String(params.page));
@@ -180,11 +182,13 @@ export class CourseService {
     return this.handleResponse(res);
   }
 
-  static async getCourseReviewHistory(params: {
-    status?: string;
-    page?: number;
-    size?: number;
-  } = {}): Promise<ApiResponse<PaginatedResponse<CourseResponse>>> {
+  static async getCourseReviewHistory(
+    params: {
+      status?: string;
+      page?: number;
+      size?: number;
+    } = {}
+  ): Promise<ApiResponse<PaginatedResponse<CourseResponse>>> {
     const headers = await this.getHeaders();
     const qs = new URLSearchParams();
     if (params.status) qs.append('status', params.status);
@@ -232,11 +236,13 @@ export class CourseService {
   }
 
   /** Admin: search ALL courses (published + unpublished) by keyword */
-  static async adminSearchCourses(params: {
-    keyword?: string;
-    page?: number;
-    size?: number;
-  } = {}): Promise<ApiResponse<PaginatedResponse<CourseResponse>>> {
+  static async adminSearchCourses(
+    params: {
+      keyword?: string;
+      page?: number;
+      size?: number;
+    } = {}
+  ): Promise<ApiResponse<PaginatedResponse<CourseResponse>>> {
     const headers = await this.getHeaders();
     const qs = new URLSearchParams();
     if (params.keyword) qs.append('keyword', params.keyword);
@@ -428,7 +434,7 @@ export class CourseService {
     if (filters?.status) qs.append('status', filters.status);
     if (filters?.type) qs.append('type', filters.type);
     if (filters?.isRequired !== undefined) qs.append('isRequired', String(filters.isRequired));
-    
+
     const url = `${API_BASE_URL}${API_ENDPOINTS.COURSE_DETAIL(courseId)}/assessments${qs.toString() ? `?${qs}` : ''}`;
     const headers = await this.getAuthHeaders();
     const res = await fetch(url, { method: 'GET', headers });
@@ -480,13 +486,10 @@ export class CourseService {
 
   // ─── Custom Course Sections ─────────────────────────────────────────────
 
-  static async listSections(
-    courseId: string
-  ): Promise<ApiResponse<CustomCourseSectionResponse[]>> {
-    const res = await fetch(
-      `${API_BASE_URL}${API_ENDPOINTS.COURSE_SECTIONS(courseId)}`,
-      { method: 'GET' }
-    );
+  static async listSections(courseId: string): Promise<ApiResponse<CustomCourseSectionResponse[]>> {
+    const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.COURSE_SECTIONS(courseId)}`, {
+      method: 'GET',
+    });
     return this.handleResponse(res);
   }
 
@@ -495,10 +498,11 @@ export class CourseService {
     data: CreateCustomCourseSectionRequest
   ): Promise<ApiResponse<CustomCourseSectionResponse>> {
     const headers = await this.getHeaders();
-    const res = await fetch(
-      `${API_BASE_URL}${API_ENDPOINTS.COURSE_SECTIONS(courseId)}`,
-      { method: 'POST', headers, body: JSON.stringify(data) }
-    );
+    const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.COURSE_SECTIONS(courseId)}`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(data),
+    });
     return this.handleResponse(res);
   }
 
@@ -515,10 +519,7 @@ export class CourseService {
     return this.handleResponse(res);
   }
 
-  static async deleteSection(
-    courseId: string,
-    sectionId: string
-  ): Promise<ApiResponse<void>> {
+  static async deleteSection(courseId: string, sectionId: string): Promise<ApiResponse<void>> {
     const headers = await this.getHeaders();
     const res = await fetch(
       `${API_BASE_URL}${API_ENDPOINTS.COURSE_SECTION_DETAIL(courseId, sectionId)}`,
@@ -557,8 +558,25 @@ export class CourseService {
     return this.handleResponse(res);
   }
 
+  static async getMaterialDownloadUrl(
+    courseId: string,
+    lessonId: string,
+    materialId: string
+  ): Promise<ApiResponse<string>> {
+    const headers = await this.getHeaders();
+    const res = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.COURSE_LESSON_MATERIAL_DOWNLOAD_URL(
+        courseId,
+        lessonId,
+        materialId
+      )}`,
+      { method: 'GET', headers }
+    );
+    return this.handleResponse(res);
+  }
+
   // ─── Course Reviews ────────────────────────────────────────────────────────
-  
+
   static async submitReview(
     courseId: string,
     data: CourseReviewRequest
@@ -586,8 +604,8 @@ export class CourseService {
   }
 
   static async getCourseReviews(
-    courseId: string, 
-    page = 0, 
+    courseId: string,
+    page = 0,
     size = 10,
     rating?: number
   ): Promise<ApiResponse<PaginatedResponse<CourseReviewResponse>>> {
@@ -603,7 +621,9 @@ export class CourseService {
     return response.json();
   }
 
-  static async getReviewSummary(courseId: string): Promise<ApiResponse<CourseReviewSummaryResponse>> {
+  static async getReviewSummary(
+    courseId: string
+  ): Promise<ApiResponse<CourseReviewSummaryResponse>> {
     const headers = await this.getHeaders();
     const response = await fetch(`${API_BASE_URL}/courses/${courseId}/reviews/summary`, {
       headers,
@@ -612,7 +632,7 @@ export class CourseService {
   }
 
   static async replyToReview(
-    reviewId: string, 
+    reviewId: string,
     data: InstructorReplyRequest
   ): Promise<ApiResponse<CourseReviewResponse>> {
     const headers = await this.getHeaders();
@@ -630,9 +650,12 @@ export class CourseService {
     size = 10
   ): Promise<ApiResponse<PaginatedResponse<CourseResponse>>> {
     const headers = await this.getHeaders();
-    const response = await fetch(`${API_BASE_URL}/courses/${courseId}/related?page=${page}&size=${size}`, {
-      headers,
-    });
+    const response = await fetch(
+      `${API_BASE_URL}/courses/${courseId}/related?page=${page}&size=${size}`,
+      {
+        headers,
+      }
+    );
     return response.json();
   }
 

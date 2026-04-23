@@ -76,6 +76,19 @@ const TeacherCourseDetail: React.FC = () => {
   const course = courseData?.result;
   const students = studentsData?.result?.content ?? [];
 
+  const loadingMessage = loadingCourse
+    ? 'Đang tải cấu hình giáo trình...'
+    : updateMutation.isPending
+      ? 'Đang lưu cấu hình giáo trình...'
+      : publishMutation.isPending
+        ? 'Đang cập nhật trạng thái công khai...'
+        : submitReviewMutation.isPending
+          ? 'Đang gửi giáo trình lên hàng chờ duyệt...'
+          : deleteMutation.isPending
+            ? 'Đang xóa giáo trình...'
+            : '';
+  const showMathLoadingPopup = Boolean(loadingMessage);
+
   useEffect(() => {
     if (course) {
       setEditForm({
@@ -160,21 +173,18 @@ const TeacherCourseDetail: React.FC = () => {
         user={{ name: 'Giáo viên', avatar: '', role: 'teacher' }}
         contentClassName="dashboard-content--flush-bleed dashboard-content--course-detail-parchment"
       >
-        <div className="module-layout-container">
-          <section className="module-page module-page--bleed" lang="vi">
-            <div className="course-detail-loading" aria-live="polite" aria-busy="true">
-              <div className="course-detail-loading__header" />
-              <div className="course-detail-loading__meta" />
-              <div className="course-detail-loading__meta course-detail-loading__meta--short" />
-              <div className="course-detail-loading__tabs">
-                <span />
-                <span />
-                <span />
-                <span />
-              </div>
-              <div className="course-detail-loading__panel" />
+        <div className="course-math-loading-overlay" role="dialog" aria-modal="true">
+          <div className="course-math-loading-popup" role="status" aria-live="polite">
+            <div className="course-math-loader-ring" aria-hidden="true" />
+            <div className="course-math-loader-symbols" aria-hidden="true">
+              <span>x²</span>
+              <span>∫</span>
+              <span>π</span>
+              <span>√</span>
+              <span>Δ</span>
             </div>
-          </section>
+            <p>{loadingMessage}</p>
+          </div>
         </div>
       </DashboardLayout>
     );
@@ -700,6 +710,22 @@ const TeacherCourseDetail: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {showMathLoadingPopup && (
+        <div className="course-math-loading-overlay" role="dialog" aria-modal="true">
+          <div className="course-math-loading-popup" role="status" aria-live="polite">
+            <div className="course-math-loader-ring" aria-hidden="true" />
+            <div className="course-math-loader-symbols" aria-hidden="true">
+              <span>x²</span>
+              <span>∫</span>
+              <span>π</span>
+              <span>√</span>
+              <span>Δ</span>
+            </div>
+            <p>{loadingMessage}</p>
           </div>
         </div>
       )}
