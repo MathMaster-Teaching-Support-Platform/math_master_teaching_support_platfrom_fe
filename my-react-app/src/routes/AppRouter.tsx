@@ -712,11 +712,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/admin/*',
-    element: (
-      <PrivateRoute>
-        <AdminDashboard />
-      </PrivateRoute>
-    ),
+    element: <NotFound />,
   },
   // Test Routes (remove in production)
   {

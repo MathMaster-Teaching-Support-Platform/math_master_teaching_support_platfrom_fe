@@ -11,7 +11,6 @@ import {
   DollarSign,
   FileCheck2,
   FileQuestion,
-  FileStack,
   FolderKanban,
   GraduationCap,
   LayoutDashboard,
@@ -129,7 +128,6 @@ const adminGroups: MenuGroup[] = [
     items: [
       { path: '/admin/courses/review', icon: BookOpen, label: 'Duyệt khóa học' },
       { path: '/admin/roadmaps', icon: Workflow, label: 'Lộ trình' },
-      { path: '/admin/templates', icon: FileStack, label: 'Mẫu' },
     ],
   },
   {
