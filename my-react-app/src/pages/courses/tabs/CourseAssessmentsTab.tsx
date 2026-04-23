@@ -8,6 +8,7 @@ import {
   Filter,
   GripVertical,
   Plus,
+  Star,
   Trash2,
   Users,
   X,
@@ -21,6 +22,7 @@ import {
 } from '../../../hooks/useCourses';
 import type { CourseAssessmentResponse, AddAssessmentToCourseRequest, CourseResponse } from '../../../types';
 import '../../../styles/module-refactor.css';
+import './course-detail-tabs.css';
 
 interface CourseAssessmentsTabProps {
   courseId: string;
@@ -375,35 +377,55 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
   };
 
   return (
-    <div className="assessments-tab">
+    <div className="course-detail-tab assessments-tab">
       {/* Stats */}
-      <div className="stats-grid" style={{ marginBottom: '1.5rem' }}>
-        <div className="stat-card">
-          <p>Tổng bài kiểm tra</p>
-          <h3>{stats.total}</h3>
-          <span>đã thêm vào giáo trình</span>
+      <div className="stats-grid">
+        <div className="stat-card stat-blue">
+          <div className="stat-icon-wrap" aria-hidden>
+            <FileText size={20} />
+          </div>
+          <div className="stat-card__text">
+            <h3>{stats.total}</h3>
+            <p>Tổng bài kiểm tra</p>
+            <span className="stat-card__sub">đã thêm vào giáo trình</span>
+          </div>
         </div>
-        <div className="stat-card">
-          <p>Bắt buộc</p>
-          <h3>{stats.required}</h3>
-          <span>bài kiểm tra bắt buộc</span>
+        <div className="stat-card stat-amber">
+          <div className="stat-icon-wrap" aria-hidden>
+            <Star size={20} />
+          </div>
+          <div className="stat-card__text">
+            <h3>{stats.required}</h3>
+            <p>Bắt buộc</p>
+            <span className="stat-card__sub">bài kiểm tra bắt buộc</span>
+          </div>
         </div>
-        <div className="stat-card">
-          <p>Đã xuất bản</p>
-          <h3>{stats.published}</h3>
-          <span>sẵn sàng cho học viên</span>
+        <div className="stat-card stat-emerald">
+          <div className="stat-icon-wrap" aria-hidden>
+            <CheckCircle2 size={20} />
+          </div>
+          <div className="stat-card__text">
+            <h3>{stats.published}</h3>
+            <p>Đã xuất bản</p>
+            <span className="stat-card__sub">sẵn sàng cho học viên</span>
+          </div>
         </div>
-        <div className="stat-card">
-          <p>Bài nộp</p>
-          <h3>{stats.totalSubmissions}</h3>
-          <span>tổng số bài đã nộp</span>
+        <div className="stat-card stat-violet">
+          <div className="stat-icon-wrap" aria-hidden>
+            <Users size={20} />
+          </div>
+          <div className="stat-card__text">
+            <h3>{stats.totalSubmissions}</h3>
+            <p>Bài nộp</p>
+            <span className="stat-card__sub">tổng số bài đã nộp</span>
+          </div>
         </div>
       </div>
 
       {/* Filters & Actions */}
-      <div className="toolbar" style={{ marginBottom: '1rem' }}>
-        <div className="row" style={{ gap: '0.5rem', flex: 1, flexWrap: 'wrap' }}>
-          <Filter size={16} style={{ color: '#64748b' }} />
+      <div className="cdt-toolbar cdt-toolbar--split">
+        <div className="cdt-filters">
+          <Filter size={16} style={{ color: '#87867f', flexShrink: 0 }} />
           <select
             className="select"
             style={{ minWidth: 140 }}
@@ -461,21 +483,21 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
           )}
         </div>
 
-        <button className="btn" onClick={() => setShowAddModal(true)}>
+        <button type="button" className="btn cdt-btn-primary" onClick={() => setShowAddModal(true)}>
           <Plus size={14} />
           Thêm bài kiểm tra
         </button>
       </div>
 
       {/* Loading */}
-      {isLoading && <div className="empty">Đang tải danh sách bài kiểm tra...</div>}
+      {isLoading && <div className="cdt-loading">Đang tải danh sách bài kiểm tra...</div>}
 
       {/* Empty State */}
       {!isLoading && assessments.length === 0 && (
-        <div className="empty">
-          <FileText size={40} strokeWidth={1.5} style={{ marginBottom: 12, color: '#94a3b8' }} />
+        <div className="cdt-empty">
+          <FileText size={40} strokeWidth={1.5} style={{ marginBottom: 12 }} />
           <p>Chưa có bài kiểm tra nào. Hãy thêm bài kiểm tra đầu tiên!</p>
-          <button className="btn" style={{ marginTop: 12 }} onClick={() => setShowAddModal(true)}>
+          <button type="button" className="btn cdt-btn-primary" style={{ marginTop: 12 }} onClick={() => setShowAddModal(true)}>
             <Plus size={14} />
             Thêm bài kiểm tra
           </button>

@@ -1,10 +1,11 @@
-/* Course Detail Header */
+/* Course Detail Header — warm surface (DESIGN.md ivory / border cream) */
 .course-detail-header {
-  background: #fff;
-  border: 1px solid #e8eef8;
+  background: #faf9f5;
+  border: 1px solid #f0eee6;
   border-radius: 12px;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
+  box-shadow: rgba(0, 0, 0, 0.04) 0 2px 16px;
 }
 
 .course-header-main {
@@ -27,12 +28,20 @@
   flex-wrap: wrap;
 }
 
+/* Title: sans with full VN glyph support (global h* uses Georgia → broken dấu on some engines) */
 .course-detail-title {
   margin: 0;
   font-size: 1.75rem;
-  font-weight: 800;
-  color: var(--mod-ink);
-  line-height: 1.2;
+  font-weight: 700;
+  color: #141413;
+  line-height: 1.35;
+  font-family: var(--f-body, 'Be Vietnam Pro', system-ui, sans-serif);
+  letter-spacing: 0;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'liga' 1;
 }
 
 .course-header-meta {
@@ -41,7 +50,9 @@
   gap: 0.5rem;
   flex-wrap: wrap;
   font-size: 0.9rem;
-  color: #64748b;
+  color: #5e5d59;
+  font-family: var(--f-body, 'Be Vietnam Pro', system-ui, sans-serif);
+  letter-spacing: 0;
 }
 
 .meta-item {
@@ -51,7 +62,7 @@
 }
 
 .meta-separator {
-  color: #cbd5e1;
+  color: #b0aea5;
 }
 
 .course-header-description {
@@ -76,10 +87,15 @@
 .course-tabs {
   display: flex;
   gap: 0.5rem;
-  border-bottom: 2px solid #e8eef8;
-  margin-bottom: 1.5rem;
+  border-bottom: 2px solid #e8e6dc;
+  margin-bottom: 0;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  background: #faf9f5;
+  border-radius: 12px 12px 0 0;
+  padding: 0.25rem 0.5rem 0 0.5rem;
+  border: 1px solid #f0eee6;
+  border-bottom: none;
 }
 
 .course-tab {
@@ -101,14 +117,14 @@
 }
 
 .course-tab:hover {
-  color: #1e40af;
-  background: #f8fafc;
+  color: #b45435;
+  background: #fdf4f0;
 }
 
 .course-tab.active {
-  color: #1e40af;
-  border-bottom-color: #1e40af;
-  background: #f0f7ff;
+  color: #c96442;
+  border-bottom-color: #c96442;
+  background: #fff8f5;
 }
 
 .tab-count {
@@ -118,21 +134,27 @@
   min-width: 1.5rem;
   height: 1.5rem;
   padding: 0 0.4rem;
-  background: #e0e7ff;
-  color: #3730a3;
+  background: #f0eee6;
+  color: #4d4c48;
   font-size: 0.75rem;
   font-weight: 700;
   border-radius: 999px;
 }
 
 .course-tab.active .tab-count {
-  background: #1e40af;
+  background: #c96442;
   color: #fff;
 }
 
-/* Tab Content */
+/* Tab Content — parchment panel for all tabs */
 .course-tab-content {
   animation: fadeIn 0.3s ease;
+  background: #f5f4ed;
+  border: 1px solid #e8e6dc;
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  padding: 1.25rem 1.15rem 1.5rem;
+  box-sizing: border-box;
 }
 
 @keyframes fadeIn {
@@ -206,6 +228,196 @@
   box-sizing: border-box;
   padding: 1.25rem 1.35rem 1.5rem;
   min-height: calc(100vh - 68px);
+  /* DESIGN.md — Parchment page canvas */
+  background: var(--bg-body, #f5f4ed);
+  border-radius: 0;
+}
+
+/* Full-bleed main column: parchment (pair with DashboardLayout contentClassName) */
+.dashboard-content.dashboard-content--course-detail-parchment {
+  background: var(--bg-body, #f5f4ed) !important;
+}
+
+/* —— Edit course wizard (warm modal, terracotta accents) —— */
+.course-edit-modal-overlay {
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+.course-edit-wizard.wizard-modal-box {
+  max-width: min(720px, 96vw) !important;
+  max-height: min(90vh, 820px);
+  display: flex;
+  flex-direction: column;
+  background: #faf9f5 !important;
+  border: 1px solid #e8e6dc !important;
+  border-radius: 16px !important;
+  box-shadow:
+    rgba(0, 0, 0, 0.08) 0 24px 64px,
+    0 0 0 1px #f0eee6 !important;
+  padding: 1.35rem 1.5rem 1.15rem !important;
+  overflow: hidden;
+}
+
+.course-edit-wizard .modal-header {
+  margin-bottom: 1.1rem;
+  flex-shrink: 0;
+}
+
+.course-edit-wizard .modal-header h2 {
+  font-family: var(--f-body, 'Be Vietnam Pro', system-ui, sans-serif) !important;
+  font-size: 1.2rem !important;
+  font-weight: 700 !important;
+  color: #141413 !important;
+  letter-spacing: 0 !important;
+}
+
+.course-edit-wizard .modal-header p {
+  color: #5e5d59 !important;
+}
+
+.course-edit-wizard .modal-icon {
+  background: #fdf4f0 !important;
+  color: #c96442 !important;
+  border: 1px solid #f0d4c8 !important;
+  border-radius: 10px !important;
+  box-shadow: 0 0 0 1px rgba(240, 238, 230, 0.9);
+}
+
+.course-edit-wizard .wizard-steps-indicator {
+  margin-bottom: 1.5rem;
+}
+
+.course-edit-wizard .wizard-steps-indicator::before {
+  background: #e8e6dc !important;
+}
+
+.course-edit-wizard .wizard-step-circle {
+  box-shadow: 0 0 0 4px #faf9f5 !important;
+  border-color: #e8e6dc !important;
+}
+
+.course-edit-wizard .wizard-step-item.active .wizard-step-circle {
+  border-color: #c96442 !important;
+  background: #c96442 !important;
+  color: #fff !important;
+  box-shadow:
+    0 0 0 4px #faf9f5,
+    0 4px 12px rgba(201, 100, 66, 0.3) !important;
+}
+
+.course-edit-wizard .wizard-step-item.active .wizard-step-label {
+  color: #b45435 !important;
+}
+
+.course-edit-wizard .wizard-step-item.completed .wizard-step-circle {
+  border-color: #059669 !important;
+  background: #059669 !important;
+}
+
+.course-edit-wizard .wizard-step-item.completed .wizard-step-label {
+  color: #047857 !important;
+}
+
+.course-edit-wizard .wizard-content-wrapper {
+  min-height: 0;
+  flex: 1 1 auto;
+  max-height: min(52vh, 520px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-right: 0.35rem;
+  scrollbar-gutter: stable;
+}
+
+.course-edit-wizard .modal-form {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.course-edit-wizard .form-section-header h3 {
+  font-family: var(--f-body, 'Be Vietnam Pro', system-ui, sans-serif) !important;
+  color: #141413 !important;
+}
+
+.course-edit-wizard .form-section-header p {
+  color: #5e5d59 !important;
+}
+
+.course-edit-wizard .form-label {
+  color: #4d4c48 !important;
+}
+
+.course-edit-wizard .form-input,
+.course-edit-wizard .form-select {
+  background: #ffffff !important;
+  border: 1.5px solid #e8e6dc !important;
+  border-radius: 11px !important;
+  color: #141413 !important;
+}
+
+.course-edit-wizard .form-input:focus,
+.course-edit-wizard .form-select:focus {
+  border-color: #c96442 !important;
+  box-shadow: 0 0 0 3px rgba(201, 100, 66, 0.15) !important;
+  outline: none !important;
+}
+
+.course-edit-wizard .wizard-footer {
+  border-top-color: #f0eee6 !important;
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  flex-shrink: 0;
+}
+
+.course-edit-wizard .wizard-footer .btn.primary {
+  background: #c96442 !important;
+  color: #faf9f5 !important;
+  border: 1px solid #c96442 !important;
+}
+
+.course-edit-wizard .wizard-footer .btn.primary:hover:not(:disabled) {
+  background: #b45435 !important;
+  border-color: #b45435 !important;
+}
+
+.course-edit-pricing-summary {
+  background: #f5f4ed;
+  padding: 1.15rem 1.2rem;
+  border-radius: 12px;
+  border: 1px solid #f0eee6;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 0 0 1px rgba(240, 238, 230, 0.6);
+}
+
+.course-edit-pricing-summary__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.course-edit-pricing-summary__row:first-child {
+  margin-bottom: 0.5rem;
+}
+
+.course-edit-pricing-summary__row span:first-child {
+  color: #5e5d59;
+}
+
+.course-edit-pricing-summary__strong {
+  font-size: 1.1rem;
+  color: #141413;
+}
+
+.course-edit-pricing-summary__save {
+  color: #047857;
+  font-weight: 600;
 }
 
 /* Detail loading skeleton */

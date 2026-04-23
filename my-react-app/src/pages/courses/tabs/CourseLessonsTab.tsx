@@ -37,6 +37,7 @@ import { CourseService } from '../../../services/api/course.service';
 import { LessonSlideService } from '../../../services/api/lesson-slide.service';
 import { VideoUploadService } from '../../../services/api/videoUpload.service';
 import '../../../styles/module-refactor.css';
+import './course-detail-tabs.css';
 import type { CourseLessonResponse, CourseResponse } from '../../../types';
 import type { ChapterBySubject, LessonByChapter } from '../../../types/lessonSlide.types';
 
@@ -949,49 +950,64 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
   };
 
   return (
-    <div className="lessons-tab">
+    <div className="course-detail-tab lessons-tab">
       {/* Stats */}
-      <div className="stats-grid" style={{ marginBottom: '1.5rem' }}>
-        <div className="stat-card">
-          <p>Tổng bài học</p>
-          <h3>{lessons.length}</h3>
-          <span>đã upload</span>
+      <div className="stats-grid">
+        <div className="stat-card stat-blue">
+          <div className="stat-icon-wrap" aria-hidden>
+            <FileText size={20} />
+          </div>
+          <div className="stat-card__text">
+            <h3>{lessons.length}</h3>
+            <p>Tổng bài học</p>
+            <span className="stat-card__sub">đã upload</span>
+          </div>
         </div>
-        <div className="stat-card">
-          <p>Xem thử miễn phí</p>
-          <h3>{lessons.filter((l) => l.isFreePreview).length}</h3>
-          <span>bài học</span>
+        <div className="stat-card stat-amber">
+          <div className="stat-icon-wrap" aria-hidden>
+            <Eye size={20} />
+          </div>
+          <div className="stat-card__text">
+            <h3>{lessons.filter((l) => l.isFreePreview).length}</h3>
+            <p>Xem thử miễn phí</p>
+            <span className="stat-card__sub">bài học</span>
+          </div>
         </div>
-        <div className="stat-card">
-          <p>Có video</p>
-          <h3>{lessons.filter((l) => l.videoUrl).length}</h3>
-          <span>bài học</span>
+        <div className="stat-card stat-emerald">
+          <div className="stat-icon-wrap" aria-hidden>
+            <Video size={20} />
+          </div>
+          <div className="stat-card__text">
+            <h3>{lessons.filter((l) => l.videoUrl).length}</h3>
+            <p>Có video</p>
+            <span className="stat-card__sub">bài học</span>
+          </div>
         </div>
       </div>
 
       {/* Action Bar */}
-      <div className="toolbar" style={{ marginBottom: '1rem', display: 'flex', gap: '0.5rem' }}>
+      <div className="cdt-toolbar">
         {course.provider === 'CUSTOM' && (
-          <button className="btn secondary" onClick={handleCreateSection}>
+          <button type="button" className="btn secondary" onClick={handleCreateSection}>
             <Plus size={14} />
             Thêm phần
           </button>
         )}
-        <button className="btn" onClick={() => setShowUpload(true)}>
+        <button type="button" className="btn cdt-btn-primary" onClick={() => setShowUpload(true)}>
           <Plus size={14} />
           Thêm bài học
         </button>
       </div>
 
       {/* Loading */}
-      {isLoading && <div className="empty">Đang tải danh sách bài học...</div>}
+      {isLoading && <div className="cdt-loading">Đang tải danh sách bài học...</div>}
 
       {/* Empty State */}
       {!isLoading && lessons.length === 0 && (
-        <div className="empty">
-          <Video size={40} strokeWidth={1.5} style={{ marginBottom: 12, color: '#94a3b8' }} />
+        <div className="cdt-empty">
+          <Video size={40} strokeWidth={1.5} style={{ marginBottom: 12 }} />
           <p>Chưa có bài học nào. Hãy thêm bài học đầu tiên!</p>
-          <button className="btn" style={{ marginTop: 12 }} onClick={() => setShowUpload(true)}>
+          <button type="button" className="btn cdt-btn-primary" style={{ marginTop: 12 }} onClick={() => setShowUpload(true)}>
             <Plus size={14} />
             Thêm bài học
           </button>
@@ -1069,11 +1085,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                 .filter((l) => l.sectionId === section.id)
                 .sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
               return (
-                <div
-                  key={section.id}
-                  className="data-card section-card"
-                  style={{ padding: '1.25rem', border: '1px solid #e2e8f0', borderRadius: '12px' }}
-                >
+                <div key={section.id} className="data-card section-card cdt-section-card">
                   <div
                     style={{
                       display: 'flex',
@@ -1082,7 +1094,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                       marginBottom: '1rem',
                     }}
                   >
-                    <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#0f172a' }}>
+                    <h3 className="cdt-section-title">
                       Phần {section.orderIndex}: {section.title}
                     </h3>
                     <div className="row" style={{ gap: '0.5rem' }}>
@@ -1163,8 +1175,8 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                       </table>
                     </div>
                   ) : (
-                    <div className="empty" style={{ padding: '1.5rem', background: '#f8fafc' }}>
-                      <p style={{ margin: 0, color: '#64748b' }}>
+                    <div className="cdt-empty" style={{ padding: '1.5rem' }}>
+                      <p style={{ margin: 0 }}>
                         Chưa có bài học nào trong phần này.
                       </p>
                     </div>
@@ -1173,8 +1185,8 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
               );
             })}
           {sections.length === 0 && (
-            <div className="empty" style={{ padding: '2rem' }}>
-              <p style={{ margin: 0, color: '#64748b' }}>
+            <div className="cdt-empty" style={{ padding: '2rem' }}>
+              <p style={{ margin: 0 }}>
                 Khóa học này chưa có phần nào. Hãy thêm phần trước khi upload video.
               </p>
             </div>

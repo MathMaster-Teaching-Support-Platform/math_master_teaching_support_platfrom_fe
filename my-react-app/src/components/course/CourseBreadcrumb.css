@@ -42,9 +42,13 @@
 }
 
 .breadcrumb-current {
-  color: #0f172a;
+  color: #141413;
   font-weight: 600;
   padding: 0.25rem 0.5rem;
+  /* Be Vietnam Pro: full Vietnamese combining marks (avoid Georgia / mixed-serif “floating” dấu) */
+  font-family: var(--f-body, 'Be Vietnam Pro', system-ui, sans-serif);
+  letter-spacing: 0;
+  font-synthesis: none;
 }
 
 /* Responsive */
