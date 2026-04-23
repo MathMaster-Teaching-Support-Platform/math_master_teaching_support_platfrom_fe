@@ -1,0 +1,395 @@
+/* Pricing — same visual language as Teacher Studio (terracotta + cream, not mixed rainbow stats) */
+
+.module-layout-container.pricing-module-page-wrap {
+  /* Warm mesh — aligns with #f9f8f3 / terracotta accent like Giáo trình */
+  --pricing-m-accent: #c96442;
+  --pricing-m-mesh-1: rgba(201, 100, 66, 0.07);
+  --pricing-m-mesh-2: rgba(30, 64, 175, 0.05);
+}
+
+/* Stat tints: same pair as Giáo trình (blue + emerald) — only two cards */
+.module-layout-container .stat-card.stat-emerald {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+}
+.module-layout-container .stat-card.stat-emerald h3 {
+  color: #065f46;
+}
+.module-layout-container .stat-card.stat-blue {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+.module-layout-container .stat-card.stat-blue h3 {
+  color: #1e40af;
+}
+
+.module-layout-container .stat-card.stat-emerald,
+.module-layout-container .stat-card.stat-blue {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  transition:
+    transform 0.18s,
+    box-shadow 0.18s;
+}
+
+.module-layout-container .stat-card.stat-emerald:hover,
+.module-layout-container .stat-card.stat-blue:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.09);
+}
+
+.module-layout-container .stats-grid--pricing-two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  max-width: 640px;
+}
+
+.module-layout-container .stat-icon-wrap {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.module-layout-container .stat-card.stat-emerald .stat-icon-wrap {
+  background: #047857;
+  color: #047857;
+}
+.module-layout-container .stat-card.stat-blue .stat-icon-wrap {
+  background: #1d4ed8;
+  color: #1d4ed8;
+}
+
+.module-layout-container .stat-icon-wrap svg {
+  color: #ffffff;
+}
+
+/* Header: dùng chung TeacherCourses.css (teacher-courses-page + kicker/h2/chip/btn) */
+
+/* Full-bleed soft mesh behind module content (like dashboard + course studio) */
+.module-layout-container .pricing-subscription-page {
+  position: relative;
+  z-index: 0;
+  padding-top: 0.5rem;
+}
+
+.module-layout-container .pricing-subscription-page::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  width: 100vw;
+  min-height: 100%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 90% 50% at 8% 0%, var(--pricing-m-mesh-1), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 92% 12%, var(--pricing-m-mesh-2), transparent 50%),
+    linear-gradient(180deg, #f9f8f3 0%, #f5f2eb 40%, #f7f5f0 100%);
+}
+
+/* Public marketing: cards band */
+.module-layout-container.pricing-public-plans {
+  max-width: 1220px;
+  margin: 0 auto;
+  padding: 0 1.5rem 0.5rem;
+}
+
+/* Lưới gói: 3 cột cân, gói spotlight nổi ở giữa (desktop) */
+.module-layout-container .grid-cards.pricing-m-plan-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.25rem;
+  align-items: stretch;
+}
+
+@media (max-width: 1100px) {
+  .module-layout-container .grid-cards.pricing-m-plan-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .module-layout-container .grid-cards.pricing-m-plan-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Plan card: nền trắng, bo lớn, bóng mềm — gói phụ */
+.module-layout-container .data-card.pricing-m-plan-card {
+  padding: 0;
+  min-height: 0;
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid rgba(20, 34, 53, 0.08);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 4px 20px rgba(20, 34, 53, 0.07);
+}
+
+.module-layout-container .data-card.pricing-m-plan-card--rest:hover {
+  border-color: #d4cfc4;
+  box-shadow: 0 8px 28px rgba(20, 34, 53, 0.1);
+}
+
+.module-layout-container .pricing-m-plan-card .course-desc {
+  -webkit-line-clamp: 3;
+}
+
+/* Gói cơ bản / nổi bật — viền terracotta, bóng sâu, hơi “nhô” */
+.module-layout-container .data-card.pricing-m-plan-card--featured {
+  border-color: rgba(201, 100, 66, 0.45);
+  box-shadow:
+    0 20px 48px -10px rgba(201, 100, 66, 0.28),
+    0 0 0 1px rgba(201, 100, 66, 0.22);
+  z-index: 1;
+}
+
+@media (min-width: 960px) {
+  .module-layout-container .data-card.pricing-m-plan-card--featured {
+    transform: translateY(-6px) scale(1.02);
+  }
+}
+
+.module-layout-container .pricing-m-plan-card--current {
+  border-color: #86efac;
+  box-shadow: 0 0 0 1px rgba(20, 83, 45, 0.15);
+}
+
+.module-layout-container .pricing-m-plan-card .course-cover {
+  min-height: 128px;
+  padding: 1rem 1.1rem 0.9rem;
+}
+
+.module-layout-container .pricing-m-plan-icon {
+  position: relative;
+  z-index: 1;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.45rem;
+}
+
+.module-layout-container .pricing-m-plan-icon svg {
+  width: 28px;
+  height: 28px;
+  stroke: currentColor;
+  opacity: 0.92;
+}
+
+.module-layout-container .course-badge.badge-pricing-popular {
+  background: rgba(255, 251, 235, 0.95);
+  color: #9a3412;
+  border: 1px solid rgba(201, 100, 66, 0.28);
+  font-size: 0.66rem;
+}
+
+.module-layout-container .course-badge.badge-pricing-current {
+  background: rgba(240, 253, 244, 0.95);
+  color: #14532d;
+  border: 1px solid rgba(22, 101, 52, 0.2);
+  font-size: 0.66rem;
+}
+
+/* Price + period */
+.module-layout-container .pricing-m-price-block {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2rem 0.45rem;
+  margin: 0.1rem 0 0.35rem;
+}
+
+.module-layout-container .pricing-m-price {
+  font-size: 1.45rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: var(--mod-ink);
+  font-family: var(--font-family, 'Segoe UI', system-ui, sans-serif);
+  line-height: 1.1;
+}
+
+.module-layout-container .pricing-m-period {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--mod-slate-500);
+  text-transform: lowercase;
+}
+
+/* CTA: single full-width action */
+.module-layout-container .course-actions.pricing-m-plan-actions {
+  flex-direction: column;
+  flex-wrap: wrap;
+  overflow: visible;
+  margin-top: 0.35rem;
+}
+
+.module-layout-container .pricing-m-plan-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: auto;
+  width: 100%;
+}
+
+.module-layout-container .pricing-m-plan-actions .action-primary,
+.module-layout-container .pricing-m-plan-actions .action-toggle {
+  width: 100%;
+  justify-content: center;
+  flex: 1 1 auto;
+}
+
+.module-layout-container .pricing-m-plan-actions a.action-primary,
+.module-layout-container .pricing-m-plan-actions a.action-toggle {
+  text-decoration: none;
+  text-align: center;
+}
+
+/* CTA mua: terracotta như "Tạo giáo trình" (không dùng xanh navy) */
+.module-layout-container .pricing-m-plan-card .action-primary {
+  background: var(--pricing-m-accent, #c96442) !important;
+  border: 1px solid var(--pricing-m-accent, #c96442) !important;
+  color: #141413 !important;
+  box-shadow: 0 0 0 1px rgba(201, 100, 66, 0.12);
+}
+
+.module-layout-container .pricing-m-plan-card .action-primary:hover:not(:disabled) {
+  background: #b85839 !important;
+  border-color: #b85839 !important;
+  color: #141413 !important;
+}
+
+/* Marketing: feature list in card */
+.module-layout-container .pricing-m-features {
+  list-style: none;
+  margin: 0.35rem 0 0;
+  padding: 0.65rem 0 0;
+  border-top: 1px solid var(--mod-slate-100);
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.module-layout-container .pricing-m-features li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--mod-slate-500);
+}
+
+.module-layout-container .pricing-m-check {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+  color: #065f46;
+  margin-top: 0.1rem;
+}
+
+.module-layout-container .pricing-m-check--primary {
+  background: linear-gradient(135deg, #fff7ed, #ffedd5);
+  color: #9a3412;
+}
+
+/* Wallet / token: optional detail block under stats */
+.module-layout-container .pricing-m-token-block {
+  margin-top: 0.75rem;
+  padding: 0.85rem 1rem;
+  background: #fff;
+  border: 1px solid var(--mod-slate-100);
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(14, 29, 52, 0.04);
+}
+
+.module-layout-container .pricing-m-token-bar {
+  height: 6px;
+  border-radius: 99px;
+  background: rgba(15, 23, 42, 0.07);
+  overflow: hidden;
+  margin-top: 0.35rem;
+}
+
+.module-layout-container .pricing-m-token-bar__fill {
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #c96442, #e8a077);
+  transition: width 0.4s ease;
+}
+
+.module-layout-container .pricing-m-token-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  color: var(--mod-slate-500);
+  margin-bottom: 0.25rem;
+}
+
+.module-layout-container .pricing-m-token-meta strong {
+  color: var(--mod-ink);
+  font-size: 0.92rem;
+}
+
+/* Empty state in grid */
+.module-layout-container .pricing-m-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 2.5rem 1.5rem;
+  background: #fff;
+  border: 1px dashed #d0defc;
+  border-radius: 14px;
+}
+
+/* Skeletons (match TeacherCourses density) */
+.module-layout-container .pricing-skeleton-mesh .skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.1rem;
+}
+
+.module-layout-container .pricing-skeleton-mesh .skeleton-card {
+  height: 320px;
+  border-radius: 14px;
+  background: linear-gradient(90deg, #f1f5f9 25%, #e8edf5 50%, #f1f5f9 75%);
+  background-size: 400% 100%;
+  animation: pricing-m-shimmer 1.5s infinite;
+}
+
+@keyframes pricing-m-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+@media (max-width: 1100px) {
+  .module-layout-container .pricing-skeleton-mesh .skeleton-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .module-layout-container .pricing-skeleton-mesh .skeleton-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .module-layout-container .stats-grid--pricing-two {
+    grid-template-columns: 1fr;
+    max-width: none;
+  }
+}
