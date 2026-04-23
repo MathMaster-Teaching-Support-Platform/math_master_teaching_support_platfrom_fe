@@ -41,14 +41,6 @@ const getTemplatePreviewUrl = (previewImage?: string | null): string | null => {
   return `${API_BASE_URL}${normalizedPath}`;
 };
 
-const resolveSlidePreviewImageUrl = (previewImageUrl?: string | null): string | null => {
-  if (!previewImageUrl) return null;
-  if (/^https?:\/\//i.test(previewImageUrl)) return previewImageUrl;
-
-  const normalizedPath = previewImageUrl.startsWith('/') ? previewImageUrl : `/${previewImageUrl}`;
-  return `${API_BASE_URL}${normalizedPath}`;
-};
-
 const normalizeVietnameseHeading = (heading?: string | null): string => {
   const value = (heading || '').trim();
   if (!value) return '';
@@ -344,11 +336,6 @@ const AISlideGenerator: React.FC = () => {
   const currentPreviewSlide = useMemo(
     () => editableSlides[activePreviewIndex] || null,
     [editableSlides, activePreviewIndex]
-  );
-
-  const currentPreviewImageUrl = useMemo(
-    () => resolveSlidePreviewImageUrl(currentPreviewSlide?.previewImageUrl),
-    [currentPreviewSlide?.previewImageUrl]
   );
 
   const selectedGeneratedFile = useMemo(
@@ -2148,30 +2135,20 @@ const AISlideGenerator: React.FC = () => {
                 </div>
 
                 <article className="ai-slide-preview-canvas">
-                  {currentPreviewImageUrl ? (
-                    <img
-                      src={currentPreviewImageUrl}
-                      alt={`Preview slide ${currentPreviewSlide.slideNumber}`}
-                      className="ai-slide-preview-rendered-image"
-                    />
-                  ) : (
-                    <>
-                      <div className="ai-slide-preview-heading" role="heading" aria-level={3}>
-                        {renderSlideText(
-                          currentPreviewSlide.heading || 'Chưa có tiêu đề',
-                          resolvedOutputFormat,
-                          `heading-${currentPreviewSlide.slideNumber}`
-                        )}
-                      </div>
-                      <div className="ai-slide-preview-content">
-                        {renderSlideText(
-                          currentPreviewSlide.content || 'Chưa có nội dung',
-                          resolvedOutputFormat,
-                          `content-${currentPreviewSlide.slideNumber}`
-                        )}
-                      </div>
-                    </>
-                  )}
+                  <div className="ai-slide-preview-heading" role="heading" aria-level={3}>
+                    {renderSlideText(
+                      currentPreviewSlide.heading || 'Chưa có tiêu đề',
+                      resolvedOutputFormat,
+                      `heading-${currentPreviewSlide.slideNumber}`
+                    )}
+                  </div>
+                  <div className="ai-slide-preview-content">
+                    {renderSlideText(
+                      currentPreviewSlide.content || 'Chưa có nội dung',
+                      resolvedOutputFormat,
+                      `content-${currentPreviewSlide.slideNumber}`
+                    )}
+                  </div>
                   {renderingPreviewSlideNumber === currentPreviewSlide.slideNumber && (
                     <span className="ai-slide-preview-loading">Đang render lại preview...</span>
                   )}
