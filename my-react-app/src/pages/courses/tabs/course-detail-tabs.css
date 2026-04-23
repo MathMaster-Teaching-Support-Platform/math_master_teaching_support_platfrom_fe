@@ -152,6 +152,118 @@
   min-width: 0;
 }
 
+/* Bài đánh giá (assessments) — lọc gọn, một hàng, không kéo full width */
+.assessments-tab .cdt-assessment-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.assessments-tab .cdt-assessment-filters__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 0.5rem;
+  padding: 0.5rem 0.65rem 0.55rem;
+  background: #f5f4ed;
+  border: 1px solid #e8e6dc;
+  border-radius: 11px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.assessments-tab .cdt-assessment-filters__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 9px;
+  background: #fdf4f0;
+  color: #b45435;
+  border: 1px solid #f0d4c8;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.6);
+}
+
+.assessments-tab .cdt-assessment-filters__fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.5rem 0.75rem;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.assessments-tab .cdt-assessment-filters__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+  flex: 0 1 12rem;
+}
+
+.assessments-tab .cdt-assessment-filters__label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #7a7770;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+/* module-refactor gán .select { width: 100% } — cần override cho cột lọc */
+.module-layout-container .assessments-tab .cdt-select-inline,
+.assessments-tab .cdt-select-inline {
+  width: auto !important;
+  min-width: 6.5rem;
+  max-width: 12rem;
+  border: 1.5px solid #e8e6dc;
+  border-radius: 9px;
+  padding: 0.45rem 0.5rem 0.45rem 0.5rem;
+  font-size: 0.86rem;
+  color: #141413;
+  background: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  line-height: 1.2;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.module-layout-container .assessments-tab .cdt-select-inline:hover,
+.assessments-tab .cdt-select-inline:hover {
+  border-color: #d4c9bc;
+}
+
+.module-layout-container .assessments-tab .cdt-select-inline:focus,
+.assessments-tab .cdt-select-inline:focus {
+  outline: none;
+  border-color: #c96442;
+  box-shadow: 0 0 0 3px rgba(201, 100, 66, 0.14);
+}
+
+.assessments-tab .cdt-assessment-filters__clear {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .assessments-tab .cdt-assessment-filters__field {
+    flex: 1 1 45%;
+  }
+
+  .module-layout-container .assessments-tab .cdt-select-inline,
+  .assessments-tab .cdt-select-inline {
+    max-width: none;
+    width: 100% !important;
+  }
+}
+
 .course-detail-tab .cdt-btn-primary,
 .module-layout-container .course-detail-tab .cdt-btn-primary {
   background: #c96442 !important;

@@ -424,56 +424,69 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
 
       {/* Filters & Actions */}
       <div className="cdt-toolbar cdt-toolbar--split">
-        <div className="cdt-filters">
-          <Filter size={16} style={{ color: '#87867f', flexShrink: 0 }} />
-          <select
-            className="select"
-            style={{ minWidth: 140 }}
-            value={filters.status || ''}
-            onChange={(e) =>
-              setFilters({ ...filters, status: e.target.value as AssessmentStatus | undefined })
-            }
-          >
-            <option value="">Tất cả trạng thái</option>
-            <option value="DRAFT">Nháp</option>
-            <option value="PUBLISHED">Đã xuất bản</option>
-            <option value="CLOSED">Đã đóng</option>
-          </select>
+        <div className="cdt-assessment-filters" role="search" aria-label="Lọc bài kiểm tra theo trạng thái, loại và bắt buộc">
+          <div className="cdt-assessment-filters__bar">
+            <div className="cdt-assessment-filters__icon" aria-hidden>
+              <Filter size={15} strokeWidth={2.25} />
+            </div>
+            <div className="cdt-assessment-filters__fields">
+              <label className="cdt-assessment-filters__field">
+                <span className="cdt-assessment-filters__label">Trạng thái</span>
+                <select
+                  className="cdt-select-inline"
+                  value={filters.status || ''}
+                  onChange={(e) =>
+                    setFilters({ ...filters, status: (e.target.value || undefined) as AssessmentStatus | undefined })
+                  }
+                >
+                  <option value="">Tất cả trạng thái</option>
+                  <option value="DRAFT">Nháp</option>
+                  <option value="PUBLISHED">Đã xuất bản</option>
+                  <option value="CLOSED">Đã đóng</option>
+                </select>
+              </label>
 
-          <select
-            className="select"
-            style={{ minWidth: 140 }}
-            value={filters.type || ''}
-            onChange={(e) =>
-              setFilters({ ...filters, type: e.target.value as AssessmentType | undefined })
-            }
-          >
-            <option value="">Tất cả loại</option>
-            <option value="QUIZ">Trắc nghiệm</option>
-            <option value="TEST">Kiểm tra</option>
-            <option value="EXAM">Thi</option>
-            <option value="HOMEWORK">Bài tập</option>
-          </select>
+              <label className="cdt-assessment-filters__field">
+                <span className="cdt-assessment-filters__label">Loại bài</span>
+                <select
+                  className="cdt-select-inline"
+                  value={filters.type || ''}
+                  onChange={(e) =>
+                    setFilters({ ...filters, type: (e.target.value || undefined) as AssessmentType | undefined })
+                  }
+                >
+                  <option value="">Tất cả loại</option>
+                  <option value="QUIZ">Trắc nghiệm</option>
+                  <option value="TEST">Kiểm tra</option>
+                  <option value="EXAM">Thi</option>
+                  <option value="HOMEWORK">Bài tập</option>
+                </select>
+              </label>
 
-          <select
-            className="select"
-            style={{ minWidth: 140 }}
-            value={filters.isRequired === undefined ? '' : String(filters.isRequired)}
-            onChange={(e) =>
-              setFilters({
-                ...filters,
-                isRequired: e.target.value === '' ? undefined : e.target.value === 'true',
-              })
-            }
-          >
-            <option value="">Tất cả</option>
-            <option value="true">Chỉ bắt buộc</option>
-            <option value="false">Chỉ tùy chọn</option>
-          </select>
+              <label className="cdt-assessment-filters__field">
+                <span className="cdt-assessment-filters__label">Bắt buộc</span>
+                <select
+                  className="cdt-select-inline"
+                  value={filters.isRequired === undefined ? '' : String(filters.isRequired)}
+                  onChange={(e) =>
+                    setFilters({
+                      ...filters,
+                      isRequired: e.target.value === '' ? undefined : e.target.value === 'true',
+                    })
+                  }
+                >
+                  <option value="">Tất cả</option>
+                  <option value="true">Chỉ bắt buộc</option>
+                  <option value="false">Chỉ tùy chọn</option>
+                </select>
+              </label>
+            </div>
+          </div>
 
           {(filters.status || filters.type || filters.isRequired !== undefined) && (
             <button
-              className="btn secondary"
+              type="button"
+              className="btn secondary cdt-assessment-filters__clear"
               style={{ padding: '0.5rem 0.85rem', fontSize: '0.82rem' }}
               onClick={() => setFilters({})}
             >
