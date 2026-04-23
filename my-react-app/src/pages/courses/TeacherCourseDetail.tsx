@@ -162,7 +162,18 @@ const TeacherCourseDetail: React.FC = () => {
       >
         <div className="module-layout-container">
           <section className="module-page module-page--bleed">
-            <div className="empty">Đang tải thông tin giáo trình...</div>
+            <div className="course-detail-loading" aria-live="polite" aria-busy="true">
+              <div className="course-detail-loading__header" />
+              <div className="course-detail-loading__meta" />
+              <div className="course-detail-loading__meta course-detail-loading__meta--short" />
+              <div className="course-detail-loading__tabs">
+                <span />
+                <span />
+                <span />
+                <span />
+              </div>
+              <div className="course-detail-loading__panel" />
+            </div>
           </section>
         </div>
       </DashboardLayout>
@@ -209,7 +220,11 @@ const TeacherCourseDetail: React.FC = () => {
       <div className="module-layout-container">
         <section className="module-page module-page--bleed">
           {/* Breadcrumb */}
-          <CourseBreadcrumb courseTitle={course.title} />
+          <CourseBreadcrumb
+            homePath="/teacher/courses"
+            items={[{ label: course.title }]}
+            courseTitle={course.title}
+          />
 
           {/* Course Header */}
           <div className="course-detail-header">
