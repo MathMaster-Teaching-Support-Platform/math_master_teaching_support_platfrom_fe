@@ -759,6 +759,10 @@
   background: #fef3c7;
   color: #d97706;
 }
+.art-badge--warning {
+  background: #fee2e2;
+  color: #dc2626;
+}
 
 /* ── Course Picker (full-screen overlay) ── */
 .art-picker {
@@ -805,6 +809,29 @@
   padding: 16px 24px;
   border-bottom: 1.5px solid #f3f4f6;
   flex-shrink: 0;
+  position: relative;
+}
+
+.art-picker__search-spinner {
+  position: absolute;
+  right: 36px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.2rem;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: translateY(-50%) rotate(0deg); }
+  to { transform: translateY(-50%) rotate(360deg); }
+}
+
+.art-picker__result-count {
+  padding: 8px 24px;
+  font-size: 0.875rem;
+  color: #6b7280;
+  border-bottom: 1px solid #e5e7eb;
+  background: #fafafa;
 }
 
 .art-picker__input {

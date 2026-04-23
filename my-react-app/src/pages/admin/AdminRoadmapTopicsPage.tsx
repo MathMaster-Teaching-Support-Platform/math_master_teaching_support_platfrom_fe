@@ -189,7 +189,7 @@ export default function AdminRoadmapTopicsPage() {
   const [coursePickerOpen, setCoursePickerOpen] = useState(false);
 
   // Debounce courseKw to avoid hammering the API on every keystroke
-  const courseKwDebounced = useDebounce(courseKw, 350);
+  const courseKwDebounced = useDebounce(courseKw, 200);
   const entryKwDebounced = useDebounce(entryKw, 350);
 
   // Drag & Drop sensors
@@ -339,10 +339,63 @@ export default function AdminRoadmapTopicsPage() {
     if (activeId === clientId) setActiveId(null);
   }
 
-  async function saveTopic(_: TopicDraft) {
-    // NOTE: This function is deprecated - use saveAll() for batch operations instead
-    showToast('error', 'Vui lòng sử dụng nút "Lưu tất cả" để lưu thay đổi.');
-    return false;
+  async function saveTopic(topic: TopicDraft) {
+    if (!topic.title.trim()) {
+      showToast('error', 'Vui lòng điền tiêu đề.');
+      return false;
+    }
+
+    // Validate mark
+    if (!Number.isFinite(topic.mark) || topic.mark <= 0) {
+      showToast('error', 'Điểm mốc phải > 0.');
+      return false;
+    }
+
+    try {
+      if (topic.isDraft) {
+        // CREATE new topic
+        await addMutation.mutateAsync({
+          roadmapId,
+          payload: {
+            title: topic.title.trim(),
+            description: topic.description.trim() || undefined,
+            sequenceOrder: topic.sequenceOrder,
+            difficulty: topic.difficulty,
+            mark: topic.mark,
+            courseId: topic.courseIds[0], // Use first course as primary
+          },
+        });
+        showToast('success', `Đã tạo "${topic.title}".`);
+      } else if (topic.persistedId) {
+        // UPDATE existing topic
+        const updates: UpdateRoadmapTopicRequest = {};
+        if (topic.dirtyFields.includes('title')) updates.title = topic.title.trim();
+        if (topic.dirtyFields.includes('description')) updates.description = topic.description.trim();
+        if (topic.dirtyFields.includes('sequenceOrder')) updates.sequenceOrder = topic.sequenceOrder;
+        if (topic.dirtyFields.includes('difficulty')) updates.difficulty = topic.difficulty;
+        if (topic.dirtyFields.includes('status')) updates.status = topic.status;
+        if (topic.dirtyFields.includes('mark')) updates.mark = topic.mark;
+
+        await updateMutation.mutateAsync({
+          roadmapId,
+          topicId: topic.persistedId,
+          payload: updates,
+        });
+
+        // Clear dirty flags
+        setTopics(prev => prev.map(t => 
+          t.clientId === topic.clientId 
+            ? { ...t, isDraft: false, dirtyFields: [] }
+            : t
+        ));
+
+        showToast('success', `Đã cập nhật "${topic.title}".`);
+      }
+      return true;
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : 'Lỗi lưu chủ đề');
+      return false;
+    }
   }
 
   async function saveAll() {
@@ -573,6 +626,9 @@ export default function AdminRoadmapTopicsPage() {
                   <h2 className="art-drawer__title">
                     Chủ đề #{activeTopic.sequenceOrder}
                     {activeTopic.isDraft && <span className="art-badge art-badge--new">Mới</span>}
+                    {activeTopic.dirtyFields.length > 0 && !activeTopic.isDraft && (
+                      <span className="art-badge art-badge--warning">⚠ {activeTopic.dirtyFields.length} thay đổi chưa lưu</span>
+                    )}
                   </h2>
                   <div className="art-drawer__actions">
                     <button
@@ -580,7 +636,7 @@ export default function AdminRoadmapTopicsPage() {
                       onClick={() => saveTopic(activeTopic)}
                       disabled={addMutation.isPending || updateMutation.isPending}
                     >
-                      {addMutation.isPending || updateMutation.isPending ? 'Đang lưu...' : 'Lưu thay đổi'}
+                      {addMutation.isPending || updateMutation.isPending ? 'Đang lưu...' : '💾 Lưu chủ đề này'}
                     </button>
                     <button className="art-btn art-btn--delete" onClick={() => setDeleteId(activeTopic.clientId)}>Xóa</button>
                     <button className="art-drawer__close" onClick={() => setActiveId(null)}>✕</button>
@@ -679,8 +735,29 @@ export default function AdminRoadmapTopicsPage() {
                   <button className="art-drawer__close" onClick={() => setCoursePickerOpen(false)}>✕</button>
                 </div>
                 <div className="art-picker__search">
-                  <input className="art-input art-picker__input" placeholder="🔍 Tìm khóa học..." value={courseKw} onChange={(e) => setCourseKw(e.target.value)} autoFocus />
+                  <input 
+                    className="art-input art-picker__input" 
+                    placeholder="🔍 Tìm khóa học (nhấn Esc để đóng)..." 
+                    value={courseKw} 
+                    onChange={(e) => setCourseKw(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') {
+                        setCoursePickerOpen(false);
+                      }
+                    }}
+                    autoFocus 
+                  />
+                  {coursesQuery.isFetching && (
+                    <div className="art-picker__search-spinner">
+                      <span className="spinner">⏳</span>
+                    </div>
+                  )}
                 </div>
+                {!coursesQuery.isLoading && courseOptions.length > 0 && (
+                  <div className="art-picker__result-count">
+                    Tìm thấy {courseOptions.length} khóa học{courseKw && ` cho "${courseKw}"`}
+                  </div>
+                )}
                 {coursesQuery.isLoading && <p className="art-loading-text">Đang tải...</p>}
                 {!coursesQuery.isLoading && courseOptions.length === 0 && (
                   <p className="art-loading-text">Không tìm thấy khóa học nào{courseKw ? ` cho "${courseKw}"` : ''}.</p>

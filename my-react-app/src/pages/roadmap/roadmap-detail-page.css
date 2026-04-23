@@ -899,11 +899,23 @@
   flex-shrink: 0;
 }
 
-.rdp-panel__lesson-title {
+.rdp-panel__lesson-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   flex: 1;
+}
+
+.rdp-panel__lesson-title {
   font-size: 0.85rem;
   color: #374151;
   line-height: 1.4;
+}
+
+.rdp-panel__lesson-video {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-style: italic;
 }
 
 .rdp-panel__lesson-duration {

@@ -167,15 +167,33 @@ function CoursePanel({ course, topic, isPending, isEnrolled, onClose, onEnroll }
               <span className="rdp-panel__section-title">Nội dung khóa học</span>
             </div>
             <div className="rdp-panel__lessons">
-              {preview.lessons.map((lesson: { id: string; title: string; durationMinutes?: number }, i: number) => (
-                <div key={lesson.id} className="rdp-panel__lesson-item">
-                  <span className="rdp-panel__lesson-num">{i + 1}</span>
-                  <span className="rdp-panel__lesson-title">{lesson.title}</span>
-                  {lesson.durationMinutes && (
-                    <span className="rdp-panel__lesson-duration">{lesson.durationMinutes}p</span>
-                  )}
-                </div>
-              ))}
+              {preview.lessons.map((lesson: { 
+                id: string; 
+                lessonTitle: string;
+                customTitle?: string;
+                videoTitle?: string;
+                videoUrl?: string;
+                durationMinutes?: number;
+                durationSeconds?: number;
+              }, i: number) => {
+                const durationMins = lesson.durationMinutes ?? (lesson.durationSeconds ? Math.round(lesson.durationSeconds / 60) : undefined);
+                return (
+                  <div key={lesson.id} className="rdp-panel__lesson-item">
+                    <span className="rdp-panel__lesson-num">{i + 1}</span>
+                    <div className="rdp-panel__lesson-content">
+                      <span className="rdp-panel__lesson-title">
+                        {lesson.customTitle || lesson.lessonTitle}
+                      </span>
+                      {lesson.videoTitle && (
+                        <span className="rdp-panel__lesson-video">🎥 {lesson.videoTitle}</span>
+                      )}
+                    </div>
+                    {durationMins && (
+                      <span className="rdp-panel__lesson-duration">{durationMins}p</span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
@@ -387,14 +405,26 @@ export default function RoadmapDetailPage() {
     feedbackRating >= 1 && feedbackRating <= 5 && feedbackContent.length <= 2000;
 
   function submitRoadmapFeedback() {
-    if (!roadmapId || !feedbackIsValid) return;
+    if (!roadmapId || !feedbackIsValid) {
+      console.error('Invalid feedback:', { roadmapId, feedbackIsValid });
+      return;
+    }
+    console.log('Submitting feedback:', { roadmapId, rating: feedbackRating, content: feedbackContent });
     submitFeedback.mutate(
       { roadmapId, payload: { rating: feedbackRating, content: feedbackContent.trim() } },
       {
         onSuccess: (res) => {
+          console.log('Feedback submitted successfully:', res);
           setFeedbackRating(res.result.rating);
           setFeedbackContent(res.result.content ?? '');
+          setCourseActionMessage({ type: 'success', text: '✓ Đã gửi đánh giá thành công!' });
+          setTimeout(() => setCourseActionMessage(null), 3000);
         },
+        onError: (err) => {
+          console.error('Feedback submission failed:', err);
+          const message = err instanceof Error ? err.message : 'Lỗi không xác định';
+          setCourseActionMessage({ type: 'error', text: `Không thể gửi đánh giá: ${message}` });
+        }
       }
     );
   }
@@ -481,7 +511,10 @@ export default function RoadmapDetailPage() {
                   </span>
                 )}
                 {roadmap.entryTest && roadmap.entryTest.studentStatus !== 'COMPLETED' && (
-                  <Link className="rdp-level-banner__entry-link" to={`/roadmaps/${roadmapId}/entry-test`}>
+                  <Link 
+                    className="rdp-level-banner__entry-link" 
+                    to={`/student/assessments/${roadmap.entryTest.assessmentId}`}
+                  >
                     Làm bài test đầu vào để xác định mức khởi điểm →
                   </Link>
                 )}

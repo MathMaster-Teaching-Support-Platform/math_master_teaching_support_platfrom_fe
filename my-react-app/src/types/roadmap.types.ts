@@ -108,6 +108,7 @@ export interface CreateRoadmapTopicRequest {
   description?: string;
   sequenceOrder: number;
   difficulty: QuestionDifficulty;
+  mark?: number;
   courseId: string;
 }
 
@@ -117,9 +118,9 @@ export interface UpdateRoadmapTopicRequest {
   description?: string;
   sequenceOrder?: number;
   difficulty?: QuestionDifficulty;
+  mark?: number;
   courseId?: string;
   status?: TopicStatus;
-  mark?: number;
 }
 
 export interface CreateRoadmapEntryTestRequest {
