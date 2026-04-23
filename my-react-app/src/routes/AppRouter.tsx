@@ -82,7 +82,7 @@ import MathTextTest from '../components/common/MathTextTest';
 import NotFound from '../pages/NotFound';
 import PrivateRoute from './PrivateRoute';
 
-const router = createBrowserRouter([
+export const router = createBrowserRouter([
   {
     path: '/',
     element: <Homepage />,
