@@ -295,6 +295,8 @@ const AISlideGenerator: React.FC = () => {
   const [loadingSelectedGeneratedLesson, setLoadingSelectedGeneratedLesson] = useState(false);
   const [downloadingGeneratedFileId, setDownloadingGeneratedFileId] = useState('');
   const [deletingGeneratedFileId, setDeletingGeneratedFileId] = useState('');
+  const [deletingGeneratedFile, setDeletingGeneratedFile] =
+    useState<LessonSlideGeneratedFile | null>(null);
   const [generatedPage, setGeneratedPage] = useState(1);
   const [generatedPageSize, setGeneratedPageSize] = useState(12);
   const [isGeneratedPreviewOpen, setIsGeneratedPreviewOpen] = useState(false);
@@ -497,31 +499,39 @@ const AISlideGenerator: React.FC = () => {
   const selectedGeneratedFileIdRef = useRef(selectedGeneratedFileId);
   selectedGeneratedFileIdRef.current = selectedGeneratedFileId;
 
-  const loadGeneratedFiles = useCallback(async (targetLessonId?: string) => {
-    setLoadingGeneratedFiles(true);
+  const loadGeneratedFiles = useCallback(
+    async (targetLessonId?: string, options?: { showLoading?: boolean }) => {
+      const showLoading = options?.showLoading ?? true;
+      if (showLoading) {
+        setLoadingGeneratedFiles(true);
+      }
 
-    try {
-      const response = await LessonSlideService.getGeneratedFiles(targetLessonId);
-      const files = response.result || [];
-      setGeneratedFiles(files);
+      try {
+        const response = await LessonSlideService.getGeneratedFiles(targetLessonId);
+        const files = response.result || [];
+        setGeneratedFiles(files);
 
-      if (files.length === 0) {
+        if (files.length === 0) {
+          setSelectedGeneratedFileId('');
+          setSelectedGeneratedLesson(null);
+        } else if (!files.some((file) => file.id === selectedGeneratedFileIdRef.current)) {
+          setSelectedGeneratedFileId(files[0].id);
+        }
+      } catch (err) {
+        setGeneratedFiles([]);
         setSelectedGeneratedFileId('');
         setSelectedGeneratedLesson(null);
-      } else if (!files.some((file) => file.id === selectedGeneratedFileIdRef.current)) {
-        setSelectedGeneratedFileId(files[0].id);
+        setError(
+          err instanceof Error ? err.message : 'Không thể tải danh sách file slide đã generate'
+        );
+      } finally {
+        if (showLoading) {
+          setLoadingGeneratedFiles(false);
+        }
       }
-    } catch (err) {
-      setGeneratedFiles([]);
-      setSelectedGeneratedFileId('');
-      setSelectedGeneratedLesson(null);
-      setError(
-        err instanceof Error ? err.message : 'Không thể tải danh sách file slide đã generate'
-      );
-    } finally {
-      setLoadingGeneratedFiles(false);
-    }
-  }, []);
+    },
+    []
+  );
 
   const loadLessonDetailFromGeneratedFile = useCallback(
     async (generatedFile: LessonSlideGeneratedFile) => {
@@ -578,16 +588,27 @@ const AISlideGenerator: React.FC = () => {
     }
   };
 
-  const handleDeleteGeneratedFile = async (generatedFileId: string) => {
-    const targetFile = generatedFiles.find((file) => file.id === generatedFileId);
-    const displayName = targetFile ? getGeneratedDisplayName(targetFile) : 'slide này';
-    const shouldDelete = window.confirm(
-      `Bạn có chắc muốn xóa ${displayName}? Hành động này sẽ ẩn file khỏi danh sách.`
-    );
-
-    if (!shouldDelete) {
+  const handleRequestDeleteGeneratedFile = (generatedFileId: string) => {
+    const targetFile = generatedFiles.find((file) => file.id === generatedFileId) || null;
+    if (!targetFile) {
+      setError('Không tìm thấy file để xóa. Vui lòng refresh danh sách.');
       return;
     }
+
+    setDeletingGeneratedFile(targetFile);
+    setError('');
+    setSuccess('');
+  };
+
+  const closeDeleteGeneratedModal = () => {
+    if (deletingGeneratedFileId) return;
+    setDeletingGeneratedFile(null);
+  };
+
+  const handleDeleteGeneratedFile = async () => {
+    if (!deletingGeneratedFile) return;
+    const generatedFileId = deletingGeneratedFile.id;
+    const targetLessonId = lessonId || undefined;
 
     setDeletingGeneratedFileId(generatedFileId);
     setError('');
@@ -595,6 +616,13 @@ const AISlideGenerator: React.FC = () => {
 
     try {
       await LessonSlideService.deleteGeneratedFile(generatedFileId);
+
+      setGeneratedFiles((prev) => prev.filter((file) => file.id !== generatedFileId));
+      setGeneratedThumbnailUrls((prev) => {
+        const next = { ...prev };
+        delete next[generatedFileId];
+        return next;
+      });
 
       if (selectedGeneratedFileId === generatedFileId) {
         setSelectedGeneratedFileId('');
@@ -606,8 +634,9 @@ const AISlideGenerator: React.FC = () => {
         setIsGeneratedPreviewOpen(false);
       }
 
+      setDeletingGeneratedFile(null);
       setSuccess('Đã xóa slide thành công.');
-      await loadGeneratedFiles(lessonId || undefined);
+      await loadGeneratedFiles(targetLessonId, { showLoading: false });
     } catch (err) {
       const apiError = err as Error & { code?: number };
       if (apiError.code === 1166) {
@@ -1643,7 +1672,7 @@ const AISlideGenerator: React.FC = () => {
                             title="Xóa"
                             onClick={(e) => {
                               e.stopPropagation();
-                              void handleDeleteGeneratedFile(file.id);
+                              handleRequestDeleteGeneratedFile(file.id);
                             }}
                             disabled={deletingGeneratedFileId === file.id}
                           >
@@ -2396,6 +2425,72 @@ const AISlideGenerator: React.FC = () => {
                   disabled={updatingMetadata}
                 >
                   {updatingMetadata ? 'Đang lưu...' : 'Lưu'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {deletingGeneratedFile && (
+          <div className="ai-slide-modal-overlay" onClick={closeDeleteGeneratedModal}>
+            <div
+              className="ai-slide-modal ai-slide-delete-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Xác nhận xóa slide"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="ai-slide-modal-header">
+                <h3>Xác nhận xóa slide</h3>
+                <button
+                  type="button"
+                  className="ai-slide-modal-close"
+                  onClick={closeDeleteGeneratedModal}
+                  aria-label="Đóng"
+                  disabled={Boolean(deletingGeneratedFileId)}
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="ai-slide-modal-body ai-slide-delete-modal-body">
+                {deletingGeneratedFileId ? (
+                  <div className="ai-slide-math-loader" role="status" aria-live="polite">
+                    <div className="ai-slide-math-loader-ring" aria-hidden="true" />
+                    <div className="ai-slide-math-loader-symbols" aria-hidden="true">
+                      <span>x²</span>
+                      <span>∫</span>
+                      <span>π</span>
+                      <span>√</span>
+                      <span>Δ</span>
+                    </div>
+                    <p>Đang xóa slide...</p>
+                  </div>
+                ) : (
+                  <p className="ai-slide-info ai-slide-delete-message">
+                    Bạn có chắc muốn xóa{' '}
+                    <strong>{getGeneratedDisplayName(deletingGeneratedFile)}</strong>?<br />
+                    File sẽ bị ẩn khỏi danh sách ngay sau khi xác nhận.
+                  </p>
+                )}
+              </div>
+
+              <div className="ai-slide-modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={closeDeleteGeneratedModal}
+                  disabled={Boolean(deletingGeneratedFileId)}
+                >
+                  Hủy
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => void handleDeleteGeneratedFile()}
+                  disabled={Boolean(deletingGeneratedFileId)}
+                >
+                  {deletingGeneratedFileId ? 'Đang xóa...' : 'Xác nhận xóa'}
                 </button>
               </div>
             </div>

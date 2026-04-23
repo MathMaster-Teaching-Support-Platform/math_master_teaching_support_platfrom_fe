@@ -1206,6 +1206,29 @@
   flex-direction: column;
 }
 
+.ai-slide-delete-modal {
+  width: min(520px, 94vw);
+}
+
+.ai-slide-delete-modal-body {
+  min-height: 190px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ai-slide-delete-modal-body .ai-slide-math-loader {
+  margin: 0;
+  width: 100%;
+  min-height: 170px;
+}
+
+.ai-slide-delete-message {
+  margin: 0;
+  text-align: center;
+  line-height: 1.6;
+}
+
 .ai-slide-metadata-form {
   flex: 1;
   overflow-y: auto;
