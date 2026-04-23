@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockStudent } from '../../data/mockData';
-import { notificationPreferencesService, NotificationPreference, NotificationPreferenceRequest } from '../../services/notification-preferences.service';
+import { notificationPreferencesService } from '../../services/notification-preferences.service';
+import type { NotificationPreferenceRequest } from '../../services/notification-preferences.service';
 import { useToast } from '../../context/ToastContext';
 import './NotificationPreferences.css';
 
@@ -20,10 +21,10 @@ const NotificationPreferences: React.FC = () => {
     mutationFn: notificationPreferencesService.updatePreference,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notification-preferences'] });
-      showToast('Cài đặt thông báo đã được cập nhật', 'success');
+      showToast({ message: 'Cài đặt thông báo đã được cập nhật', type: 'success' });
     },
     onError: (error: Error) => {
-      showToast(`Lỗi: ${error.message}`, 'error');
+      showToast({ message: `Lỗi: ${error.message}`, type: 'error' });
     },
   });
 
@@ -31,11 +32,11 @@ const NotificationPreferences: React.FC = () => {
     mutationFn: notificationPreferencesService.resetToDefaults,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notification-preferences'] });
-      showToast('Đã khôi phục cài đặt mặc định', 'success');
+      showToast({ message: 'Đã khôi phục cài đặt mặc định', type: 'success' });
       setIsResetting(false);
     },
     onError: (error: Error) => {
-      showToast(`Lỗi: ${error.message}`, 'error');
+      showToast({ message: `Lỗi: ${error.message}`, type: 'error' });
       setIsResetting(false);
     },
   });

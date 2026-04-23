@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useMemo } from '
 import { useQuery, useQueryClient, useMutation, useInfiniteQuery } from '@tanstack/react-query';
 import { notificationService } from '../services/notification.service';
 import { AuthService } from '../services/api/auth.service';
-import type { Notification } from '../types/notification';
+import type { Notification, PaginatedNotifications } from '../types/notification';
 import { pushNotificationService } from '../services/push-notification.service';
 
 interface NotificationContextValue {
@@ -45,10 +45,11 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     hasNextPage,
     isFetchingNextPage,
     fetchNextPage,
-  } = useInfiniteQuery({
+  } = useInfiniteQuery<PaginatedNotifications, Error, { pages: PaginatedNotifications[] }, string[], number>({
     queryKey: ['notifications', 'list'],
     queryFn: ({ pageParam = 0 }) => notificationService.getNotifications(pageParam, 20),
-    getNextPageParam: (lastPage, allPages) => {
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
       if (lastPage.number < lastPage.totalPages - 1) {
         return lastPage.number + 1;
       }
@@ -58,7 +59,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   });
 
   const notifications = useMemo(() => {
-    return notifsData?.pages.flatMap(page => page.content) || [];
+    return notifsData?.pages.flatMap((page) => page.content) ?? [];
   }, [notifsData]);
   const unreadCount = unreadData?.unreadCount ?? unreadData?.count ?? 0;
 
@@ -86,7 +87,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     queryClient.setQueryData<any>(
       ['notifications', 'list'],
-      (oldData) => {
+      (oldData: any) => {
         if (!oldData) return { pages: [{ content: [newNotif] }], pageParams: [0] };
         
         const firstPage = oldData.pages[0];
@@ -149,7 +150,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       ]);
       
       // Optimistic update
-      queryClient.setQueryData<any>(['notifications', 'list'], (old) => {
+      queryClient.setQueryData<any>(['notifications', 'list'], (old: any) => {
         if (!old) return old;
         return {
           ...old,
@@ -195,7 +196,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       queryClient.setQueryData<{ unreadCount?: number; count?: number }>(['notifications', 'unreadCount'], {
         unreadCount: 0,
       });
-      queryClient.setQueryData<any>(['notifications', 'list'], (old) => {
+      queryClient.setQueryData<any>(['notifications', 'list'], (old: any) => {
         if (!old) return old;
         return {
           ...old,

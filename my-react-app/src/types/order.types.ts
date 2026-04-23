@@ -6,13 +6,16 @@
 
 // ─── Order Types ─────────────────────────────────────────────────────────
 
-export enum OrderStatus {
-  PENDING = 'PENDING',
-  PROCESSING = 'PROCESSING',
-  COMPLETED = 'COMPLETED',
-  FAILED = 'FAILED',
-  CANCELLED = 'CANCELLED',
-}
+// Use const object instead of enum (required by erasableSyntaxOnly)
+export const OrderStatus = {
+  PENDING: 'PENDING',
+  PROCESSING: 'PROCESSING',
+  COMPLETED: 'COMPLETED',
+  FAILED: 'FAILED',
+  CANCELLED: 'CANCELLED',
+} as const;
+
+export type OrderStatus = (typeof OrderStatus)[keyof typeof OrderStatus];
 
 export interface Order {
   id: string;
@@ -29,12 +32,12 @@ export interface Order {
   finalPrice: number;
   instructorEarnings: number;
   platformCommission: number;
-  expiresAt?: string; // ISO 8601 timestamp
-  confirmedAt?: string; // ISO 8601 timestamp
-  cancelledAt?: string; // ISO 8601 timestamp
+  expiresAt?: string;
+  confirmedAt?: string;
+  cancelledAt?: string;
   cancellationReason?: string;
-  createdAt: string; // ISO 8601 timestamp
-  updatedAt: string; // ISO 8601 timestamp
+  createdAt: string;
+  updatedAt: string;
 }
 
 // ─── Helper Types ────────────────────────────────────────────────────────
@@ -47,24 +50,24 @@ export interface OrderStatusBadgeProps {
 
 export const getOrderStatusLabel = (status: OrderStatus): string => {
   const labels: Record<OrderStatus, string> = {
-    [OrderStatus.PENDING]: 'Chờ xác nhận',
-    [OrderStatus.PROCESSING]: 'Đang xử lý',
-    [OrderStatus.COMPLETED]: 'Hoàn thành',
-    [OrderStatus.FAILED]: 'Thất bại',
-    [OrderStatus.CANCELLED]: 'Đã hủy',
+    PENDING: 'Chờ xác nhận',
+    PROCESSING: 'Đang xử lý',
+    COMPLETED: 'Hoàn thành',
+    FAILED: 'Thất bại',
+    CANCELLED: 'Đã hủy',
   };
-  return labels[status] || status;
+  return labels[status] ?? status;
 };
 
 export const getOrderStatusColor = (status: OrderStatus): string => {
   const colors: Record<OrderStatus, string> = {
-    [OrderStatus.PENDING]: 'warning',
-    [OrderStatus.PROCESSING]: 'info',
-    [OrderStatus.COMPLETED]: 'success',
-    [OrderStatus.FAILED]: 'error',
-    [OrderStatus.CANCELLED]: 'default',
+    PENDING: 'warning',
+    PROCESSING: 'info',
+    COMPLETED: 'success',
+    FAILED: 'error',
+    CANCELLED: 'default',
   };
-  return colors[status] || 'default';
+  return colors[status] ?? 'default';
 };
 
 export const formatCurrency = (amount: number): string => {
@@ -74,28 +77,21 @@ export const formatCurrency = (amount: number): string => {
   }).format(amount);
 };
 
-export const calculateTimeRemaining = (expiresAt: string): {
-  minutes: number;
-  seconds: number;
-  isExpired: boolean;
-} => {
-  const now = new Date().getTime();
-  const expiry = new Date(expiresAt).getTime();
-  const diff = expiry - now;
-
-  if (diff <= 0) {
-    return { minutes: 0, seconds: 0, isExpired: true };
-  }
-
-  const minutes = Math.floor(diff / 60000);
-  const seconds = Math.floor((diff % 60000) / 1000);
-
-  return { minutes, seconds, isExpired: false };
+export const calculateTimeRemaining = (
+  expiresAt: string,
+): { minutes: number; seconds: number; isExpired: boolean } => {
+  const diff = new Date(expiresAt).getTime() - Date.now();
+  if (diff <= 0) return { minutes: 0, seconds: 0, isExpired: true };
+  return {
+    minutes: Math.floor(diff / 60000),
+    seconds: Math.floor((diff % 60000) / 1000),
+    isExpired: false,
+  };
 };
 
 export const isOrderExpired = (expiresAt?: string): boolean => {
   if (!expiresAt) return false;
-  return new Date(expiresAt).getTime() < new Date().getTime();
+  return new Date(expiresAt).getTime() < Date.now();
 };
 
 export const canCancelOrder = (order: Order): boolean => {
