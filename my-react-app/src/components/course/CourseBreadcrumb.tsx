@@ -11,15 +11,16 @@ interface BreadcrumbItem {
 interface CourseBreadcrumbProps {
   items?: BreadcrumbItem[];
   courseTitle?: string;
+  homePath?: string;
 }
 
-export const CourseBreadcrumb: React.FC<CourseBreadcrumbProps> = ({ items, courseTitle }) => {
+export const CourseBreadcrumb: React.FC<CourseBreadcrumbProps> = ({ items, courseTitle, homePath }) => {
   const location = useLocation();
 
   // Auto-generate breadcrumbs if not provided
   const breadcrumbs = items || generateBreadcrumbs(location.pathname, courseTitle);
 
-  const dashboardUrl = AuthService.getDashboardUrl();
+  const dashboardUrl = homePath || AuthService.getDashboardUrl();
   // Hide "Trang chủ" if it points to the same URL as the first breadcrumb item
   const showHome = breadcrumbs.length === 0 || breadcrumbs[0].path !== dashboardUrl;
 

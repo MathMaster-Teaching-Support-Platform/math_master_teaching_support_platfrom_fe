@@ -50,6 +50,7 @@ const coverGradients = [
 const coverAccents = ['#1d4ed8', '#0f766e', '#047857', '#c2410c', '#be185d', '#6d28d9'] as const;
 const PAGE_SIZE = 9;
 type CourseFilterStatus = 'all' | 'published' | 'draft' | 'rejected';
+const languageOptions = ['Tiếng Việt', 'English'] as const;
 
 // ─── Create Course Modal ───────────────────────────────────────────────────────
 interface CreateModalProps {
@@ -76,6 +77,9 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
   });
   const [thumbnailFile, setThumbnailFile] = useState<File | undefined>(undefined);
   const [discountPercent, setDiscountPercent] = useState(0);
+  const [pricingMode, setPricingMode] = useState<'free' | 'paid'>('free');
+  /** Chỉ số nguyên dương (nghìn VND) — dùng text + regex, không dùng type=number (tránh "1-1" / bước nhảy) */
+  const [originalThousandInput, setOriginalThousandInput] = useState('');
 
   const [grades, setGrades] = useState<SchoolGrade[]>([]);
   const [subjects, setSubjects] = useState<SubjectByGrade[]>([]);
@@ -92,7 +96,9 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
     try {
       const r = await LessonSlideService.getSubjectsBySchoolGrade(schoolGradeId);
       setSubjects(r.result || []);
-    } catch {}
+    } catch {
+      // ignore: catalog fetch failed, khối/môn rỗng
+    }
   };
 
   const [step, setStep] = useState(1);
@@ -100,6 +106,7 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
 
   const nextStep = () => setStep((s) => Math.min(s + 1, totalSteps));
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
+  const todayDate = new Date().toISOString().split('T')[0];
 
   const handlePriceChange = (original: number, percent: number) => {
     const discounted = Math.round(original * (1 - percent / 100));
@@ -107,22 +114,96 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
     setDiscountPercent(percent);
   };
 
+  const handlePricingModeChange = (mode: 'free' | 'paid') => {
+    setPricingMode(mode);
+    if (mode === 'free') {
+      setOriginalThousandInput('');
+      setDiscountPercent(0);
+      setForm({
+        ...form,
+        originalPrice: 0,
+        discountedPrice: 0,
+        discountExpiryDate: '',
+      });
+      return;
+    }
+
+    const original = Number(form.originalPrice) > 0 ? Number(form.originalPrice) : 10000;
+    const percent = Number.isInteger(discountPercent) && discountPercent >= 5 ? discountPercent : 10;
+    setOriginalThousandInput(String(Math.round(original / 1000)));
+    handlePriceChange(original, percent);
+  };
+
+  const handleOriginalThousandChange = (raw: string) => {
+    if (raw === '' || /^\d+$/.test(raw)) {
+      setOriginalThousandInput(raw);
+      const n = raw === '' ? 0 : Number.parseInt(raw, 10);
+      const original = n * 1000;
+      handlePriceChange(original, discountPercent);
+    }
+  };
+
+  const handleDiscountPercentInput = (rawInput: string) => {
+    const normalized = rawInput.replace(/\D+/g, '');
+    if (!normalized) {
+      setDiscountPercent(0);
+      setForm({ ...form, discountedPrice: Number(form.originalPrice) });
+      return;
+    }
+    const parsed = Number(normalized);
+    const bounded = Math.max(0, Math.min(100, parsed));
+    setDiscountPercent(bounded);
+    const discounted = Math.round(Number(form.originalPrice) * (1 - bounded / 100));
+    setForm({ ...form, discountedPrice: discounted });
+  };
+
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) setThumbnailFile(file);
   };
 
+  const handleClearThumbnail = () => {
+    setThumbnailFile(undefined);
+  };
+
+  const isDiscountPercentValid =
+    pricingMode === 'free' ||
+    (Number.isInteger(discountPercent) &&
+      discountPercent >= 5 &&
+      discountPercent <= 100 &&
+      discountPercent % 5 === 0);
+
+  const originalThousandInt =
+    originalThousandInput === '' ? NaN : Number.parseInt(originalThousandInput, 10);
+  const isOriginalPriceValid =
+    pricingMode === 'free' ||
+    (Number.isInteger(originalThousandInt) &&
+      originalThousandInt >= 1 &&
+      Number(form.originalPrice) === originalThousandInt * 1000);
+  const expiryDateValue = form.discountExpiryDate ? form.discountExpiryDate.split('T')[0] : '';
+  const isExpiryDateValid = !expiryDateValue || expiryDateValue >= todayDate;
+  const isStep1Valid = !!form.title && (form.provider !== 'MINISTRY' || (!!form.subjectId && !!form.schoolGradeId));
+  const canSubmit = !isLoading && (
+    step === 1
+      ? isStep1Valid
+      : step === totalSteps
+        ? pricingMode === 'free'
+          ? isStep1Valid
+          : (isStep1Valid && isOriginalPriceValid && isDiscountPercentValid && isExpiryDateValid)
+        : true
+  );
+
   return (
-    <div className="modal-overlay">
+    <div className="modal-overlay create-course-modal">
       <button type="button" className="modal-backdrop" onClick={onClose} aria-label="Đóng" />
-      <div className="modal-box wizard-modal-box">
+      <div className="modal-box wizard-modal-box create-course-wizard" aria-labelledby="create-course-title">
         <div className="modal-header">
           <div className="modal-header-left">
             <div className="modal-icon">
               <Sparkles size={18} />
             </div>
             <div>
-              <h2>Tạo giáo trình mới</h2>
+              <h2 id="create-course-title">Tạo giáo trình mới</h2>
               <p>Bước {step} trên {totalSteps}</p>
             </div>
           </div>
@@ -163,41 +244,33 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
                       <p>Chọn phương thức giảng dạy và đặt tên cho giáo trình của bạn.</p>
                     </div>
 
-                    <div className="provider-selector" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
-                      <div
-                        className={`provider-card ${form.provider === 'MINISTRY' ? 'active' : ''}`}
+                    <div className="provider-selector">
+                      <button
+                        type="button"
+                        className={`provider-card ${form.provider === 'MINISTRY' ? 'is-active' : ''}`}
                         onClick={() => setForm({ ...form, provider: 'MINISTRY' })}
-                        style={{
-                          border: `2px solid ${form.provider === 'MINISTRY' ? '#2563eb' : '#e2e8f0'}`,
-                          borderRadius: '8px',
-                          padding: '1rem',
-                          cursor: 'pointer',
-                          background: form.provider === 'MINISTRY' ? '#eff6ff' : '#fff',
-                        }}
                       >
-                        <GraduationCap size={24} style={{ color: form.provider === 'MINISTRY' ? '#2563eb' : '#64748b', marginBottom: '0.5rem' }} />
-                        <h4 style={{ margin: '0 0 0.5rem 0', color: '#0f172a' }}>Chương trình chuẩn</h4>
-                        <p style={{ fontSize: '0.85rem', color: '#64748b', margin: 0, lineHeight: 1.4 }}>Bám sát khung Bộ GD. Yêu cầu chọn khối/môn.</p>
-                      </div>
-                      <div
-                        className={`provider-card ${form.provider === 'CUSTOM' ? 'active' : ''}`}
+                        <div className="provider-card__icon" aria-hidden="true">
+                          <GraduationCap size={22} />
+                        </div>
+                        <h4>Chương trình chuẩn</h4>
+                        <p>Bám sát khung Bộ GD. Yêu cầu chọn khối/môn.</p>
+                      </button>
+                      <button
+                        type="button"
+                        className={`provider-card ${form.provider === 'CUSTOM' ? 'is-active' : ''}`}
                         onClick={() => setForm({ ...form, provider: 'CUSTOM', subjectId: '', schoolGradeId: '' })}
-                        style={{
-                          border: `2px solid ${form.provider === 'CUSTOM' ? '#059669' : '#e2e8f0'}`,
-                          borderRadius: '8px',
-                          padding: '1rem',
-                          cursor: 'pointer',
-                          background: form.provider === 'CUSTOM' ? '#f0fdf4' : '#fff',
-                        }}
                       >
-                        <Sparkles size={24} style={{ color: form.provider === 'CUSTOM' ? '#059669' : '#64748b', marginBottom: '0.5rem' }} />
-                        <h4 style={{ margin: '0 0 0.5rem 0', color: '#0f172a' }}>Giáo trình Tùy chỉnh</h4>
-                        <p style={{ fontSize: '0.85rem', color: '#64748b', margin: 0, lineHeight: 1.4 }}>Xây dựng bài giảng theo phong cách cá nhân.</p>
-                      </div>
+                        <div className="provider-card__icon" aria-hidden="true">
+                          <Sparkles size={22} />
+                        </div>
+                        <h4>Giáo trình tùy chỉnh</h4>
+                        <p>Xây dựng bài giảng theo phong cách cá nhân.</p>
+                      </button>
                     </div>
 
                     {form.provider === 'MINISTRY' && (
-                      <div className="form-row" style={{ marginBottom: '1rem' }}>
+                      <div className="form-row form-row--tight-below">
                         <div className="form-group">
                           <label className="form-label">Khối lớp <span className="required">*</span></label>
                           <select
@@ -252,7 +325,7 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
                       <p>Mô tả ngắn gọn và chọn hình ảnh đại diện cho giáo trình.</p>
                     </div>
 
-                    <div className="form-group" style={{ marginBottom: '1rem' }}>
+                    <div className="form-group form-group--tight-below">
                       <label className="form-label">Phụ đề (Catchy Subtitle)</label>
                       <input
                         className="form-input"
@@ -263,19 +336,46 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
                       />
                     </div>
 
-                    <div className="form-row" style={{ marginBottom: '1rem' }}>
+                    <div className="form-row form-row--tight-below">
                       <div className="form-group">
                         <label className="form-label">Ngôn ngữ</label>
-                        <input
-                          className="form-input"
-                          type="text"
+                        <select
+                          className="form-select"
                           value={form.language || ''}
                           onChange={(e) => setForm({ ...form, language: e.target.value })}
-                        />
+                        >
+                          <option value="">-- Chọn ngôn ngữ --</option>
+                          {languageOptions.map((lang) => (
+                            <option key={lang} value={lang}>{lang}</option>
+                          ))}
+                        </select>
                       </div>
                       <div className="form-group">
                         <label className="form-label">Ảnh thumbnail</label>
-                        <input className="form-input" type="file" accept="image/*" onChange={handleThumbnailChange} />
+                        <label className="file-upload-field" htmlFor="course-thumbnail">
+                          <span className="file-upload-title">
+                            {thumbnailFile ? 'Đã chọn tệp ảnh' : 'Chọn ảnh từ máy'}
+                          </span>
+                          <span className="file-upload-name">
+                            {thumbnailFile ? thumbnailFile.name : 'PNG, JPG, WEBP'}
+                          </span>
+                        </label>
+                        <input
+                          id="course-thumbnail"
+                          className="file-upload-input"
+                          type="file"
+                          accept="image/*"
+                          onChange={handleThumbnailChange}
+                        />
+                        {thumbnailFile && (
+                          <button
+                            type="button"
+                            className="file-upload-clear"
+                            onClick={handleClearThumbnail}
+                          >
+                            Bỏ ảnh đã chọn
+                          </button>
+                        )}
                       </div>
                     </div>
 
@@ -298,7 +398,7 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
                       <p>Giúp học viên hiểu rõ lợi ích và yêu cầu của khóa học này.</p>
                     </div>
 
-                    <div className="form-group" style={{ marginBottom: '1rem' }}>
+                    <div className="form-group form-group--tight-below">
                       <label className="form-label">Bạn sẽ học được gì? (Mỗi dòng một ý)</label>
                       <textarea
                         className="form-input form-textarea"
@@ -309,7 +409,7 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
                       />
                     </div>
 
-                    <div className="form-group" style={{ marginBottom: '1rem' }}>
+                    <div className="form-group form-group--tight-below">
                       <label className="form-label">Yêu cầu (Mỗi dòng một ý)</label>
                       <textarea
                         className="form-input form-textarea"
@@ -354,67 +454,101 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
                       <p>Thiết lập học phí và các chương trình giảm giá cho giáo trình của bạn.</p>
                     </div>
 
-                    <div className="form-row" style={{ marginBottom: '1.5rem' }}>
-                      <div className="form-group">
-                        <label className="form-label">Giá gốc (VND) <span className="required">*</span></label>
-                        <input
-                          className="form-input"
-                          type="number"
-                          value={form.originalPrice || ''}
-                          onChange={(e) => handlePriceChange(Number(e.target.value), discountPercent)}
-                          placeholder="0"
-                        />
-                        <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px' }}>
-                          Nhập 0 nếu bạn muốn cung cấp giáo trình miễn phí.
-                        </p>
-                      </div>
-                      <div className="form-group">
-                        <label className="form-label">Phần trăm giảm giá (%)</label>
-                        <input
-                          className="form-input"
-                          type="number"
-                          min="0"
-                          max="99"
-                          value={discountPercent || ''}
-                          onChange={(e) => handlePriceChange(Number(form.originalPrice), Number(e.target.value))}
-                          placeholder="0"
-                        />
-                      </div>
+                    <div className="pricing-mode-toggle form-group--tight-below">
+                      <button
+                        type="button"
+                        className={`pricing-mode-btn ${pricingMode === 'free' ? 'is-active' : ''}`}
+                        onClick={() => handlePricingModeChange('free')}
+                      >
+                        Miễn phí
+                      </button>
+                      <button
+                        type="button"
+                        className={`pricing-mode-btn ${pricingMode === 'paid' ? 'is-active' : ''}`}
+                        onClick={() => handlePricingModeChange('paid')}
+                      >
+                        Có phí
+                      </button>
                     </div>
 
-                    <div className="pricing-summary-card" style={{ 
-                      background: '#f8fafc',
-                      padding: '1.25rem',
-                      borderRadius: '8px',
-                      border: '1px solid #e2e8f0',
-                      marginBottom: '1.5rem'
-                    }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                        <span style={{ color: '#64748b' }}>Giá bán thực tế:</span>
-                        <strong style={{ fontSize: '1.1rem', color: '#1e293b' }}>
-                          {form.discountedPrice?.toLocaleString('vi-VN')}₫
-                        </strong>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: '#64748b' }}>Tiết kiệm cho học viên:</span>
-                        <span style={{ color: '#059669', fontWeight: 600 }}>
-                          {(Number(form.originalPrice) - Number(form.discountedPrice)).toLocaleString('vi-VN')}₫ ({discountPercent}%)
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="form-group">
-                      <label className="form-label">Ngày hết hạn giảm giá</label>
-                      <input
-                        className="form-input"
-                        type="date"
-                        value={form.discountExpiryDate ? form.discountExpiryDate.split('T')[0] : ''}
-                        onChange={(e) => setForm({ ...form, discountExpiryDate: e.target.value ? new Date(e.target.value).toISOString() : '' })}
-                      />
-                      <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px' }}>
-                        Sau ngày này, giáo trình sẽ quay trở về giá gốc. Để trống nếu không giới hạn thời gian.
+                    {pricingMode === 'free' && (
+                      <p className="form-hint pricing-free-note">
+                        Khoá học <strong>miễn phí</strong>: không cần nhập giá, giảm giá hay ngày hết hạn. Chọn &quot;Có phí&quot; nếu bạn muốn thiết lập học phí.
                       </p>
-                    </div>
+                    )}
+
+                    {pricingMode === 'paid' && (
+                      <>
+                        <div className="form-row form-row--loose-below">
+                          <div className="form-group">
+                            <label className="form-label" htmlFor="create-original-thousand">
+                              Giá gốc (nghìn VND) <span className="required">*</span>
+                            </label>
+                            <input
+                              id="create-original-thousand"
+                              className="form-input"
+                              type="text"
+                              inputMode="numeric"
+                              autoComplete="off"
+                              value={originalThousandInput}
+                              onChange={(e) => handleOriginalThousandChange(e.target.value)}
+                              placeholder="Ví dụ: 10 → 10.000"
+                            />
+                            <p className={`form-hint ${!isOriginalPriceValid && originalThousandInput !== '' ? 'is-error' : ''}`}>
+                              Chỉ nhập số nguyên dương (nghìn VND), ví dụ 10 tương ứng 10.000 VND.
+                            </p>
+                          </div>
+                          <div className="form-group">
+                            <label className="form-label" htmlFor="create-discount-pct">Phần trăm giảm giá (%)</label>
+                            <input
+                              id="create-discount-pct"
+                              className="form-input"
+                              type="text"
+                              inputMode="numeric"
+                              autoComplete="off"
+                              value={discountPercent === 0 ? '' : String(discountPercent)}
+                              onChange={(e) => handleDiscountPercentInput(e.target.value)}
+                              placeholder="5, 10, 15...100"
+                            />
+                            <p className={`form-hint ${!isDiscountPercentValid ? 'is-error' : ''}`}>
+                              Giảm giá: số nguyên từ 5 đến 100, chia hết cho 5.
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="pricing-summary-card">
+                          <div className="pricing-summary-row">
+                            <span>Giá bán thực tế:</span>
+                            <strong>
+                              {form.discountedPrice?.toLocaleString('vi-VN')}₫
+                            </strong>
+                          </div>
+                          <div className="pricing-summary-row">
+                            <span>Tiết kiệm cho học viên:</span>
+                            <span className="pricing-summary-savings">
+                              {(Number(form.originalPrice) - Number(form.discountedPrice)).toLocaleString('vi-VN')}₫ ({discountPercent}%)
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="form-group">
+                          <label className="form-label" htmlFor="create-discount-expiry">Ngày hết hạn giảm giá</label>
+                          <input
+                            id="create-discount-expiry"
+                            className="form-input"
+                            type="date"
+                            min={todayDate}
+                            value={expiryDateValue}
+                            onChange={(e) =>
+                              setForm({ ...form, discountExpiryDate: e.target.value ? new Date(e.target.value).toISOString() : '' })
+                            }
+                          />
+                          <p className={`form-hint ${!isExpiryDateValid ? 'is-error' : ''}`}>
+                            Chỉ chọn từ hôm nay trở đi. Để trống nếu không giới hạn thời gian.
+                          </p>
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
               </motion.div>
@@ -424,7 +558,7 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
           <div className="wizard-footer">
             <button
               type="button"
-              className="btn btn-ghost"
+              className="btn btn-sand"
               onClick={step === 1 ? onClose : prevStep}
               disabled={isLoading}
             >
@@ -437,8 +571,8 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
 
             <button
               type="button"
-              className="btn primary"
-              disabled={isLoading || (step === 1 && (!form.title || (form.provider === 'MINISTRY' && (!form.subjectId || !form.schoolGradeId))))}
+              className="btn btn-terracotta"
+              disabled={!canSubmit}
               onClick={step === totalSteps ? () => onSubmit(form, thumbnailFile) : nextStep}
             >
               {isLoading ? (
