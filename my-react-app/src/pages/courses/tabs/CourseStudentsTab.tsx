@@ -2,6 +2,7 @@ import { Award, Search, TrendingUp, Users, X } from 'lucide-react';
 import { useState } from 'react';
 import { useCourseStudents } from '../../../hooks/useCourses';
 import '../../../styles/module-refactor.css';
+import './course-detail-tabs.css';
 import type { StudentInCourseResponse } from '../../../types';
 
 interface CourseStudentsTabProps {
@@ -45,40 +46,43 @@ const CourseStudentsTab: React.FC<CourseStudentsTabProps> = ({ courseId }) => {
   };
 
   return (
-    <div className="students-tab">
+    <div className="course-detail-tab students-tab">
       {/* Stats */}
-      <div className="stats-grid" style={{ marginBottom: '1.5rem' }}>
+      <div className="stats-grid">
         <div className="stat-card stat-blue">
-          <div className="stat-icon-wrap">
+          <div className="stat-icon-wrap" aria-hidden>
             <Users size={20} />
           </div>
-          <div>
+          <div className="stat-card__text">
             <h3>{totalStudents}</h3>
             <p>Tổng học viên</p>
+            <span className="stat-card__sub">đăng ký</span>
           </div>
         </div>
         <div className="stat-card stat-emerald">
-          <div className="stat-icon-wrap">
+          <div className="stat-icon-wrap" aria-hidden>
             <TrendingUp size={20} />
           </div>
-          <div>
+          <div className="stat-card__text">
             <h3>{avgProgress.toFixed(1)}%</h3>
-            <p>Tiến độ trung bình</p>
+            <p>Tiến độ TB</p>
+            <span className="stat-card__sub">trung bình khóa</span>
           </div>
         </div>
         <div className="stat-card stat-amber">
-          <div className="stat-icon-wrap">
+          <div className="stat-icon-wrap" aria-hidden>
             <Award size={20} />
           </div>
-          <div>
+          <div className="stat-card__text">
             <h3>{completedCount}</h3>
-            <p>Đã hoàn thành</p>
+            <p>Hoàn thành</p>
+            <span className="stat-card__sub">học viên</span>
           </div>
         </div>
       </div>
 
       {/* Search */}
-      <div className="toolbar" style={{ marginBottom: '1rem' }}>
+      <div className="cdt-toolbar">
         <label className="search-box" style={{ flex: 1, maxWidth: 400 }}>
           <span className="search-box__icon">
             <Search size={15} />
@@ -97,12 +101,12 @@ const CourseStudentsTab: React.FC<CourseStudentsTabProps> = ({ courseId }) => {
       </div>
 
       {/* Loading */}
-      {isLoading && <div className="empty">Đang tải danh sách học viên...</div>}
+      {isLoading && <div className="cdt-loading">Đang tải danh sách học viên...</div>}
 
       {/* Empty State */}
       {!isLoading && students.length === 0 && (
-        <div className="empty">
-          <Users size={40} strokeWidth={1.5} style={{ marginBottom: 12, color: '#94a3b8' }} />
+        <div className="cdt-empty">
+          <Users size={40} strokeWidth={1.5} style={{ marginBottom: 12 }} />
           <p>Chưa có học viên nào đăng ký giáo trình này.</p>
         </div>
       )}
@@ -145,16 +149,16 @@ const CourseStudentsTab: React.FC<CourseStudentsTabProps> = ({ courseId }) => {
                       </td>
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <div
-                            style={{
-                              flex: 1,
-                              height: 6,
-                              background: '#e8eef8',
-                              borderRadius: 999,
-                              overflow: 'hidden',
-                              minWidth: 80,
-                            }}
-                          >
+                            <div
+                              style={{
+                                flex: 1,
+                                height: 6,
+                                background: '#e8e6dc',
+                                borderRadius: 999,
+                                overflow: 'hidden',
+                                minWidth: 80,
+                              }}
+                            >
                             <div
                               style={{
                                 transform: `scaleX(${progress / 100})`,
@@ -162,8 +166,8 @@ const CourseStudentsTab: React.FC<CourseStudentsTabProps> = ({ courseId }) => {
                                 width: '100%',
                                 height: '100%',
                                 background: isCompleted
-                                  ? '#10b981'
-                                  : 'linear-gradient(90deg, #1f5eff, #60a5fa)',
+                                  ? '#059669'
+                                  : 'linear-gradient(90deg, #c96442, #d97706)',
                                 borderRadius: 999,
                                 transition: 'transform 0.3s ease',
                               }}
@@ -173,7 +177,7 @@ const CourseStudentsTab: React.FC<CourseStudentsTabProps> = ({ courseId }) => {
                             style={{
                               fontSize: '0.82rem',
                               fontWeight: 600,
-                              color: isCompleted ? '#10b981' : '#1f5eff',
+                              color: isCompleted ? '#059669' : '#b45435',
                               minWidth: 45,
                             }}
                           >
@@ -195,7 +199,7 @@ const CourseStudentsTab: React.FC<CourseStudentsTabProps> = ({ courseId }) => {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="pagination" style={{ marginTop: '1.5rem' }}>
+            <div className="cdt-pagination">
               <button
                 className="btn secondary"
                 disabled={page === 0}
@@ -217,22 +221,13 @@ const CourseStudentsTab: React.FC<CourseStudentsTabProps> = ({ courseId }) => {
           )}
 
           {filteredStudents.length === 0 && search && (
-            <div className="empty" style={{ marginTop: '2rem' }}>
-              <Search size={32} style={{ marginBottom: 8, color: '#94a3b8' }} />
+            <div className="cdt-empty" style={{ marginTop: '2rem' }}>
+              <Search size={32} style={{ marginBottom: 8 }} />
               <p>Không tìm thấy học viên phù hợp với "{search}"</p>
             </div>
           )}
         </>
       )}
-
-      <style>{`
-        .pagination {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 1rem;
-        }
-      `}</style>
     </div>
   );
 };

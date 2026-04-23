@@ -1,9 +1,45 @@
-import { BookOpen, Calendar, CheckCircle2, Eye, GraduationCap, Star, Users, Sparkles, Languages, Clock, FileText, Download } from 'lucide-react';
+import React from 'react';
+import {
+  BookOpen,
+  Calendar,
+  CheckCircle2,
+  Clock,
+  Download,
+  Eye,
+  FileText,
+  GraduationCap,
+  Image,
+  Languages,
+  Sparkles,
+  Star,
+  Users,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import type { CourseResponse } from '../../../types';
-import '../../../styles/module-refactor.css';
+import './CourseOverviewTab.css';
 
 interface CourseOverviewTabProps {
   course: CourseResponse;
+}
+
+function MetaRow({
+  icon: Icon,
+  label,
+  children,
+}: Readonly<{
+  icon: LucideIcon;
+  label: string;
+  children: React.ReactNode;
+}>) {
+  return (
+    <div className="course-overview-tab__row">
+      <span className="course-overview-tab__row-label">
+        <Icon aria-hidden />
+        {label}
+      </span>
+      <div className="course-overview-tab__row-value">{children}</div>
+    </div>
+  );
 }
 
 const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({ course }) => {
@@ -15,211 +51,199 @@ const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({ course }) => {
     });
   };
 
+  const statSets = [
+    {
+      key: 'lessons',
+      cardClass: 'stat-blue' as const,
+      Icon: BookOpen,
+      label: 'Bài học',
+      value: course.lessonsCount.toLocaleString('vi-VN'),
+      sub: 'trong giáo trình',
+    },
+    {
+      key: 'students',
+      cardClass: 'stat-emerald' as const,
+      Icon: Users,
+      label: 'Học viên',
+      value: course.studentsCount.toLocaleString('vi-VN'),
+      sub: 'đã ghi danh',
+    },
+    {
+      key: 'rating',
+      cardClass: 'stat-amber' as const,
+      Icon: Star,
+      label: 'Đánh giá',
+      value: Number(course.rating).toFixed(1),
+      sub: 'trên 5.0',
+    },
+    {
+      key: 'status',
+      cardClass: 'stat-violet' as const,
+      Icon: course.published ? Eye : CheckCircle2,
+      label: 'Trạng thái',
+      value: course.published ? 'Công khai' : 'Nháp',
+      sub: course.published ? 'hiển thị cho học viên' : 'chỉ bạn thấy',
+    },
+  ];
+
+  const hasDesc = Boolean(course.description);
+  const hasThumb = Boolean(course.thumbnailUrl);
+  const grid2Split = hasDesc && hasThumb;
+
   return (
-    <div className="overview-tab">
-      {/* Quick Stats */}
-      <div className="stats-grid" style={{ marginBottom: '1.5rem' }}>
-        <div className="stat-card stat-blue">
-          <div className="stat-icon-wrap">
-            <BookOpen size={20} />
+    <div className="course-overview-tab">
+      <div className="stats-grid">
+        {statSets.map((stat, index) => (
+          <div
+            key={stat.key}
+            className={`stat-card ${stat.cardClass}`}
+            style={{ animationDelay: `${index * 70}ms` }}
+          >
+            <div className="stat-icon-wrap" aria-hidden>
+              <stat.Icon size={20} />
+            </div>
+            <div className="stat-card__text">
+              <h3>{stat.value}</h3>
+              <p>{stat.label}</p>
+              <span className="stat-card__sub">{stat.sub}</span>
+            </div>
           </div>
-          <div>
-            <h3>{course.lessonsCount}</h3>
-            <p>Bài học</p>
-          </div>
-        </div>
-        <div className="stat-card stat-emerald">
-          <div className="stat-icon-wrap">
-            <Users size={20} />
-          </div>
-          <div>
-            <h3>{course.studentsCount}</h3>
-            <p>Học viên</p>
-          </div>
-        </div>
-        <div className="stat-card stat-amber">
-          <div className="stat-icon-wrap">
-            <Star size={20} />
-          </div>
-          <div>
-            <h3>{Number(course.rating).toFixed(1)}</h3>
-            <p>Đánh giá</p>
-          </div>
-        </div>
-        <div className="stat-card stat-violet">
-          <div className="stat-icon-wrap">
-            {course.published ? <Eye size={20} /> : <CheckCircle2 size={20} />}
-          </div>
-          <div>
-            <h3>{course.published ? 'Công khai' : 'Nháp'}</h3>
-            <p>Trạng thái</p>
-          </div>
-        </div>
+        ))}
       </div>
 
-      {/* Course Information */}
-      <div className="data-card" style={{ marginBottom: '1.5rem' }}>
-        <h3 style={{ margin: '0 0 1rem', fontSize: '1.1rem', fontWeight: 700 }}>
-          Thông tin giáo trình
-        </h3>
+      <section className="course-overview-tab__summary" aria-label="Tóm tắt nhanh">
+        <div className="course-overview-tab__summary-pill">
+          <span className="course-overview-tab__summary-label">Video</span>
+          <strong className="course-overview-tab__summary-value">
+            {course.totalVideoHours ?? 0} giờ
+          </strong>
+        </div>
+        <div className="course-overview-tab__summary-pill">
+          <span className="course-overview-tab__summary-label">Tải về</span>
+          <strong className="course-overview-tab__summary-value">{course.resourcesCount ?? 0}</strong>
+        </div>
+        <div className="course-overview-tab__summary-pill course-overview-tab__summary-pill--wide">
+          <span className="course-overview-tab__summary-label">Cập nhật</span>
+          <strong className="course-overview-tab__summary-value course-overview-tab__summary-value--sm">
+            {formatDate(course.updatedAt)}
+          </strong>
+        </div>
+      </section>
 
-        <div style={{ display: 'grid', gap: '1rem' }}>
-          <div className="info-row">
-            <span className="info-label">
-              <Sparkles size={16} />
-              Loại giáo trình
-            </span>
-            <span className="info-value">
-              {course.provider === 'CUSTOM' ? (
-                <span style={{ color: '#059669', background: '#ecfdf5', padding: '2px 8px', borderRadius: '4px', fontSize: '0.85rem' }}>Khóa học Tùy chỉnh</span>
-              ) : (
-                <span style={{ color: '#2563eb', background: '#eff6ff', padding: '2px 8px', borderRadius: '4px', fontSize: '0.85rem' }}>Chương trình Bộ GD</span>
-              )}
-            </span>
-          </div>
+      <div className="course-overview-tab__config">
+        <div className="course-overview-tab__config-head">
+          <p className="course-overview-tab__kicker">Hồ sơ giáo trình</p>
+          <h2 className="course-overview-config-heading">Thông tin cấu hình</h2>
+          <p className="course-overview-tab__lede">
+            Chi tiết phân loại, thời lượng, tài nguyên và mốc thời gian.
+          </p>
+        </div>
+
+        <div className="course-overview-tab__config-body">
+          <MetaRow icon={Sparkles} label="Loại giáo trình">
+            {course.provider === 'CUSTOM' ? (
+              <span className="course-overview-tab__badge course-overview-tab__badge--custom">Khóa học tùy chỉnh</span>
+            ) : (
+              <span className="course-overview-tab__badge course-overview-tab__badge--ministry">Chương trình Bộ GD</span>
+            )}
+          </MetaRow>
 
           {course.provider === 'MINISTRY' && (
             <>
-              <div className="info-row">
-                <span className="info-label">
-                  <GraduationCap size={16} />
-                  Môn học
-                </span>
-                <span className="info-value">{course.subjectName || '—'}</span>
-              </div>
-
-              <div className="info-row">
-                <span className="info-label">
-                  <BookOpen size={16} />
-                  Khối lớp
-                </span>
-                <span className="info-value">Khối {course.gradeLevel}</span>
-              </div>
+              <MetaRow icon={GraduationCap} label="Môn học">
+                <strong>{course.subjectName || '—'}</strong>
+              </MetaRow>
+              <MetaRow icon={BookOpen} label="Khối lớp">
+                <strong>Khối {course.gradeLevel}</strong>
+              </MetaRow>
             </>
           )}
 
-          <div className="info-row">
-            <span className="info-label">
-              <Users size={16} />
-              Giáo viên
-            </span>
-            <span className="info-value">{course.teacherName || 'Bạn'}</span>
-          </div>
+          <MetaRow icon={Users} label="Giáo viên">
+            <strong>{course.teacherName || 'Bạn'}</strong>
+          </MetaRow>
 
-          <div className="info-row">
-            <span className="info-label">
-              <Languages size={16} />
-              Ngôn ngữ
-            </span>
-            <span className="info-value">{course.language || 'Tiếng Việt'}</span>
-          </div>
+          <MetaRow icon={Languages} label="Ngôn ngữ">
+            {course.language || 'Tiếng Việt'}
+          </MetaRow>
 
-          <div className="info-row">
-            <span className="info-label">
-              <Clock size={16} />
-              Tổng giờ video
-            </span>
-            <span className="info-value">{course.totalVideoHours || 0} giờ</span>
-          </div>
+          <MetaRow icon={Clock} label="Tổng giờ video">
+            <strong>
+              {course.totalVideoHours ?? 0} giờ
+            </strong>
+          </MetaRow>
 
-          <div className="info-row">
-            <span className="info-label">
-              <Download size={16} />
-              Tài nguyên tải về
-            </span>
-            <span className="info-value">{course.resourcesCount || 0} tài nguyên</span>
-          </div>
+          <MetaRow icon={Download} label="Tài nguyên tải về">
+            <strong>
+              {course.resourcesCount ?? 0} tài nguyên
+            </strong>
+          </MetaRow>
 
-          <div className="info-row">
-            <span className="info-label">
-              <FileText size={16} />
-              Bài đọc (Articles)
-            </span>
-            <span className="info-value">{course.articlesCount || 0} bài</span>
-          </div>
+          <MetaRow icon={FileText} label="Bài đọc (Articles)">
+            <strong>
+              {course.articlesCount ?? 0} bài
+            </strong>
+          </MetaRow>
 
-          <div className="info-row">
-            <span className="info-label">
-              <Calendar size={16} />
-              Ngày tạo
-            </span>
-            <span className="info-value">{formatDate(course.createdAt)}</span>
-          </div>
+          <MetaRow icon={Calendar} label="Ngày tạo">
+            <strong>{formatDate(course.createdAt)}</strong>
+          </MetaRow>
 
-          <div className="info-row">
-            <span className="info-label">
-              <Calendar size={16} />
-              Cập nhật lần cuối
-            </span>
-            <span className="info-value">{formatDate(course.updatedAt)}</span>
-          </div>
+          <MetaRow icon={Calendar} label="Cập nhật lần cuối">
+            <strong>{formatDate(course.updatedAt)}</strong>
+          </MetaRow>
         </div>
       </div>
 
-      {/* Description */}
-      {course.description && (
-        <div className="data-card">
-          <h3 style={{ margin: '0 0 0.75rem', fontSize: '1.1rem', fontWeight: 700 }}>Mô tả</h3>
-          <p style={{ margin: 0, color: '#475569', lineHeight: 1.6 }}>{course.description}</p>
-        </div>
-      )}
-
-      {/* Thumbnail Preview */}
-      {course.thumbnailUrl && (
-        <div className="data-card" style={{ marginTop: '1.5rem' }}>
-          <h3 style={{ margin: '0 0 0.75rem', fontSize: '1.1rem', fontWeight: 700 }}>
-            Ảnh bìa
-          </h3>
-          <img
-            src={course.thumbnailUrl}
-            alt={course.title}
-            style={{
-              width: '100%',
-              maxWidth: '400px',
-              height: 'auto',
-              borderRadius: '8px',
-              border: '1px solid #e8eef8',
-            }}
-          />
-        </div>
-      )}
-
-      <style>{`
-        .info-row {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 0.75rem 0;
-          border-bottom: 1px solid #f1f5f9;
-        }
-
-        .info-row:last-child {
-          border-bottom: none;
-        }
-
-        .info-label {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          font-size: 0.9rem;
-          color: #64748b;
-          font-weight: 500;
-        }
-
-        .info-value {
-          font-size: 0.95rem;
-          color: #0f172a;
-          font-weight: 600;
-        }
-
-        @media (max-width: 640px) {
-          .info-row {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 0.35rem;
+      {(hasDesc || hasThumb) && (
+        <div
+          className={
+            grid2Split
+              ? 'course-overview-tab__grid2 course-overview-tab__grid2--split'
+              : 'course-overview-tab__grid2'
           }
-        }
-      `}</style>
+        >
+          {hasDesc && (
+            <div className="course-overview-tab__panel">
+              <div className="course-overview-tab__panel-head">
+                <h2 className="course-overview-tab__panel-title">Mô tả</h2>
+                <p className="course-overview-tab__panel-mute">Lời giới thiệu dành cho học viên</p>
+              </div>
+              <div className="course-overview-tab__panel-body">
+                <p className="course-overview-tab__body-serif">{course.description}</p>
+              </div>
+            </div>
+          )}
+
+          {hasThumb && (
+            <div
+              className={
+                hasDesc
+                  ? 'course-overview-tab__panel'
+                  : 'course-overview-tab__panel course-overview-tab__panel--thumb-only'
+              }
+            >
+              <div className="course-overview-tab__panel-head course-overview-tab__panel-head--row">
+                <h2 className="course-overview-tab__panel-title">Ảnh bìa</h2>
+                <span className="course-overview-tab__thumb-hint">
+                  <Image aria-hidden />
+                  Xem trước
+                </span>
+              </div>
+              <div className="course-overview-tab__thumb-pad">
+                <div className="course-overview-tab__img-frame">
+                  <img
+                    src={course.thumbnailUrl ?? ''}
+                    alt={course.title}
+                    className="course-overview-tab__img"
+                    loading="lazy"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

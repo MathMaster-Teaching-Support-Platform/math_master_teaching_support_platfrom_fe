@@ -180,6 +180,21 @@ export class CourseService {
     return this.handleResponse(res);
   }
 
+  static async getCourseReviewHistory(params: {
+    status?: string;
+    page?: number;
+    size?: number;
+  } = {}): Promise<ApiResponse<PaginatedResponse<CourseResponse>>> {
+    const headers = await this.getHeaders();
+    const qs = new URLSearchParams();
+    if (params.status) qs.append('status', params.status);
+    if (params.page !== undefined) qs.append('page', String(params.page));
+    if (params.size !== undefined) qs.append('size', String(params.size));
+    const url = `${API_BASE_URL}${API_ENDPOINTS.ADMIN_COURSES_REVIEWS}${qs.toString() ? `?${qs}` : ''}`;
+    const res = await fetch(url, { method: 'GET', headers });
+    return this.handleResponse(res);
+  }
+
   static async approveCourse(courseId: string): Promise<ApiResponse<CourseResponse>> {
     const headers = await this.getHeaders();
     const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ADMIN_COURSE_APPROVE(courseId)}`, {

@@ -33,8 +33,13 @@ import {
 import '../../styles/module-refactor.css';
 import './TeacherCourses.css';
 import './TeacherCourseDetail.css';
-import type { UpdateCourseRequest } from '../../types';
-import type { CourseLevel } from '../../types/course.types';
+<<<<<<< HEAD
+import './tabs/CourseOverviewTab.css';
+import './tabs/course-detail-tabs.css';
+import type { CourseLevel, UpdateCourseRequest } from '../../types';
+=======
+import type { UpdateCourseRequest, CourseLevel } from '../../types';
+>>>>>>> 46670d9ed18a7f978ef431b7f26c6efa563eae20
 
 // Import tab components
 import CourseOverviewTab from './tabs/CourseOverviewTab.tsx';
@@ -158,10 +163,10 @@ const TeacherCourseDetail: React.FC = () => {
       <DashboardLayout
         role="teacher"
         user={{ name: 'Giáo viên', avatar: '', role: 'teacher' }}
-        contentClassName="dashboard-content--flush-bleed"
+        contentClassName="dashboard-content--flush-bleed dashboard-content--course-detail-parchment"
       >
         <div className="module-layout-container">
-          <section className="module-page module-page--bleed">
+          <section className="module-page module-page--bleed" lang="vi">
             <div className="course-detail-loading" aria-live="polite" aria-busy="true">
               <div className="course-detail-loading__header" />
               <div className="course-detail-loading__meta" />
@@ -185,10 +190,10 @@ const TeacherCourseDetail: React.FC = () => {
       <DashboardLayout
         role="teacher"
         user={{ name: 'Giáo viên', avatar: '', role: 'teacher' }}
-        contentClassName="dashboard-content--flush-bleed"
+        contentClassName="dashboard-content--flush-bleed dashboard-content--course-detail-parchment"
       >
         <div className="module-layout-container">
-          <section className="module-page module-page--bleed">
+          <section className="module-page module-page--bleed" lang="vi">
             <div className="empty">
               <AlertCircle size={32} style={{ marginBottom: 8, color: '#ef4444' }} />
               <p>Không tìm thấy giáo trình</p>
@@ -215,10 +220,10 @@ const TeacherCourseDetail: React.FC = () => {
     <DashboardLayout
       role="teacher"
       user={{ name: 'Giáo viên', avatar: '', role: 'teacher' }}
-      contentClassName="dashboard-content--flush-bleed"
+      contentClassName="dashboard-content--flush-bleed dashboard-content--course-detail-parchment"
     >
       <div className="module-layout-container">
-        <section className="module-page module-page--bleed">
+        <section className="module-page module-page--bleed" lang="vi">
           {/* Breadcrumb */}
           <CourseBreadcrumb
             homePath="/teacher/courses"
@@ -236,7 +241,9 @@ const TeacherCourseDetail: React.FC = () => {
 
               <div className="course-header-info">
                 <div className="course-header-title-row">
-                  <h1 className="course-detail-title">{course.title}</h1>
+                  <h1 className="course-detail-title" lang="vi">
+                    {course.title}
+                  </h1>
                   <span
                     className={`course-badge ${course.published ? 'badge-live' : 'badge-draft'}`}
                   >
@@ -373,6 +380,16 @@ const TeacherCourseDetail: React.FC = () => {
 
       {/* Edit Modal */}
       {showEditModal && (
+<<<<<<< HEAD
+        <div className="modal-overlay course-edit-modal-overlay" lang="vi">
+          <button type="button" className="modal-backdrop" onClick={() => setShowEditModal(false)} />
+          <div
+            className="modal-box wizard-modal-box course-edit-wizard"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="course-edit-wizard-title"
+          >
+=======
         <div className="modal-overlay">
           <button
             type="button"
@@ -380,13 +397,14 @@ const TeacherCourseDetail: React.FC = () => {
             onClick={() => setShowEditModal(false)}
           />
           <div className="modal-box wizard-modal-box">
+>>>>>>> 46670d9ed18a7f978ef431b7f26c6efa563eae20
             <div className="modal-header">
               <div className="modal-header-left">
                 <div className="modal-icon">
                   <Pencil size={18} />
                 </div>
                 <div>
-                  <h2>Chỉnh sửa giáo trình</h2>
+                  <h2 id="course-edit-wizard-title">Chỉnh sửa giáo trình</h2>
                   <p>Bước {editStep} trên 4</p>
                 </div>
               </div>
@@ -611,6 +629,19 @@ const TeacherCourseDetail: React.FC = () => {
                           </div>
                         </div>
 
+<<<<<<< HEAD
+                        <div className="course-edit-pricing-summary">
+                          <div className="course-edit-pricing-summary__row">
+                            <span>Giá bán thực tế:</span>
+                            <strong className="course-edit-pricing-summary__strong">
+                              {editForm.discountedPrice?.toLocaleString('vi-VN')}₫
+                            </strong>
+                          </div>
+                          <div className="course-edit-pricing-summary__row">
+                            <span>Tiết kiệm:</span>
+                            <span className="course-edit-pricing-summary__save">
+                              {(Number(editForm.originalPrice) - Number(editForm.discountedPrice)).toLocaleString('vi-VN')}₫ ({discountPercent}%)
+=======
                         <div
                           className="pricing-summary-card"
                           style={{
@@ -640,6 +671,7 @@ const TeacherCourseDetail: React.FC = () => {
                                 Number(editForm.originalPrice) - Number(editForm.discountedPrice)
                               ).toLocaleString('vi-VN')}
                               ₫ ({discountPercent}%)
+>>>>>>> 46670d9ed18a7f978ef431b7f26c6efa563eae20
                             </span>
                           </div>
                         </div>
