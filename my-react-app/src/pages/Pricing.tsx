@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Footer from '../components/Footer';
 import DashboardLayout from '../components/layout/DashboardLayout/DashboardLayout';
@@ -11,9 +11,13 @@ import {
   type SubscriptionPlan,
 } from '../services/api/subscription-plan.service';
 import { WalletService } from '../services/api/wallet.service';
+import { Plus } from 'lucide-react';
 import type { WalletSummary } from '../types/wallet.types';
+import '../styles/module-refactor.css';
+import './courses/TeacherCourses.css';
 import './Homepage.css';
 import './Pricing.css';
+import './PricingModule.css';
 
 /* ── Trust stats shown in the hero (unauthenticated) ── */
 const trustStats = [
@@ -51,6 +55,17 @@ const faqItems = [
 ];
 
 type PlanTier = 'free' | 'basic' | 'pro' | 'enterprise';
+
+/* Cover gradients (same palette as TeacherCourses) */
+const planCoverGradients = [
+  'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
+  'linear-gradient(135deg, #ecfeff 0%, #cffafe 100%)',
+  'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)',
+  'linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)',
+  'linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%)',
+  'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)',
+] as const;
+const planCoverAccents = ['#1d4ed8', '#0f766e', '#047857', '#c2410c', '#be185d', '#6d28d9'] as const;
 
 const getPlanTier = (name: string): PlanTier => {
   const lower = name.toLowerCase();
@@ -141,9 +156,98 @@ const PlanIcon: React.FC<{ tier: PlanTier }> = ({ tier }) => {
   );
 };
 
+/* Nổi bật gói cơ bản / Giáo viên — gradient warm, tách với gói phụ */
+const PRICING_SPOTLIGHT_COVER: React.CSSProperties = {
+  background: 'linear-gradient(165deg, #fffcf8 0%, #ffecd8 45%, #e0b38a 100%)',
+  color: '#7a2b0a',
+};
+
+/* ── Plan card: TeacherCourses-style cover + body (module layout) ── */
+type ModulePlanCardProps = {
+  listIndex: number;
+  displayIndex: number;
+  tier: PlanTier;
+  name: string;
+  description: string;
+  priceBlock: React.ReactNode;
+  tokenLine: string | null;
+  featured: boolean;
+  isCurrent: boolean;
+  cta: React.ReactNode;
+  features?: React.ReactNode;
+};
+
+const ModulePlanCard: React.FC<ModulePlanCardProps> = ({
+  listIndex,
+  displayIndex,
+  tier,
+  name,
+  description,
+  priceBlock,
+  tokenLine,
+  featured,
+  isCurrent,
+  cta,
+  features,
+}) => {
+  const gi = listIndex % planCoverGradients.length;
+  const g = planCoverGradients[gi];
+  const a = planCoverAccents[gi];
+  return (
+    <article
+      className={`data-card course-card pricing-m-plan-card ${featured ? 'pricing-m-plan-card--featured' : 'pricing-m-plan-card--rest'} ${isCurrent ? 'pricing-m-plan-card--current' : ''}`}
+    >
+      <div
+        className={`course-cover ${featured ? 'pricing-m-cover--spotlight' : 'pricing-m-cover--standard'}`}
+        style={featured ? PRICING_SPOTLIGHT_COVER : { background: g, color: a }}
+      >
+        <div className={`cover-overlay ${featured ? 'cover-overlay--spotlight' : ''}`} />
+        <div className="cover-index" aria-hidden>
+          #{String(displayIndex + 1).padStart(2, '0')}
+        </div>
+        {isCurrent && (
+          <span className="course-badge badge-pricing-current">Đang dùng</span>
+        )}
+        {featured && !isCurrent && (
+          <span className="course-badge badge-pricing-popular">Phổ biến</span>
+        )}
+        <div className="pricing-m-plan-icon" aria-hidden>
+          <PlanIcon tier={tier} />
+        </div>
+        <h3 className="cover-title">{name}</h3>
+      </div>
+      <div className="course-body">
+        <p className="course-desc">{description}</p>
+        {priceBlock}
+        {tokenLine && (
+          <div className="metric">
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 8v4l2 2" />
+            </svg>
+            {tokenLine}
+          </div>
+        )}
+        <div className="course-actions pricing-m-plan-actions">{cta}</div>
+        {features}
+      </div>
+    </article>
+  );
+};
+
 /* ── FAQ Accordion Item ── */
 const FaqItem: React.FC<{ q: string; a: string; index: number }> = ({ q, a, index }) => {
   const [open, setOpen] = useState(false);
+  const panelId = useId();
   return (
     <div
       className={`pricing-faq-item ${open ? 'pricing-faq-item--open' : ''}`}
@@ -154,6 +258,8 @@ const FaqItem: React.FC<{ q: string; a: string; index: number }> = ({ q, a, inde
         className="pricing-faq-question"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
+        aria-controls={panelId}
+        id={`${panelId}-trigger`}
       >
         <span>{q}</span>
         <svg
@@ -166,27 +272,22 @@ const FaqItem: React.FC<{ q: string; a: string; index: number }> = ({ q, a, inde
           strokeWidth="2.5"
           strokeLinecap="round"
           strokeLinejoin="round"
+          aria-hidden
         >
           <polyline points="6 9 12 15 18 9" />
         </svg>
       </button>
-      <div className="pricing-faq-answer">
+      <div
+        className="pricing-faq-answer"
+        id={panelId}
+        aria-labelledby={`${panelId}-trigger`}
+        aria-hidden={!open}
+      >
         <p>{a}</p>
       </div>
     </div>
   );
 };
-
-/* ── Skeleton Card ── */
-const PlanCardSkeleton: React.FC = () => (
-  <div className="pricing-plan-card pricing-skeleton-card">
-    <div className="pricing-skeleton pricing-skeleton--icon" />
-    <div className="pricing-skeleton pricing-skeleton--title" />
-    <div className="pricing-skeleton pricing-skeleton--subtitle" />
-    <div className="pricing-skeleton pricing-skeleton--price" />
-    <div className="pricing-skeleton pricing-skeleton--btn" />
-  </div>
-);
 
 const Pricing: React.FC = () => {
   const navigate = useNavigate();
@@ -196,6 +297,8 @@ const Pricing: React.FC = () => {
     currentRole === 'teacher' ? 'teacher' : currentRole === 'admin' ? 'admin' : 'student';
   const currentUser =
     layoutRole === 'teacher' ? mockTeacher : layoutRole === 'admin' ? mockAdmin : mockStudent;
+  const pricingHeaderKicker =
+    layoutRole === 'teacher' ? 'Teacher Studio' : layoutRole === 'admin' ? 'Admin' : 'MathMaster';
   const [userPlans, setUserPlans] = useState<SubscriptionPlan[]>([]);
   const [activeSubscription, setActiveSubscription] = useState<MySubscriptionResponse | null>(null);
   const [wallet, setWallet] = useState<WalletSummary | null>(null);
@@ -205,11 +308,20 @@ const Pricing: React.FC = () => {
   const [purchasingPlanId, setPurchasingPlanId] = useState<string | null>(null);
   const [showWalletModal, setShowWalletModal] = useState(false);
 
+  const scrollToPricingSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    e.preventDefault();
+    const el = document.getElementById(id);
+    if (!el) return;
+    const reduce = globalThis.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+  };
+
   const plans = [
     {
       name: 'Miễn phí',
       price: '0đ',
       period: '/tháng',
+      tokenLine: '50 token / kỳ',
       description: 'Phù hợp để trải nghiệm',
       features: [
         'Tạo tối đa 10 bài giảng/tháng',
@@ -225,6 +337,7 @@ const Pricing: React.FC = () => {
       name: 'Giáo viên',
       price: '199,000đ',
       period: '/tháng',
+      tokenLine: '150 token / kỳ',
       description: 'Dành cho giáo viên cá nhân',
       features: [
         'Tạo không giới hạn bài giảng',
@@ -242,6 +355,7 @@ const Pricing: React.FC = () => {
       name: 'Trường học',
       price: 'Liên hệ',
       period: '',
+      tokenLine: '400 token / kỳ',
       description: 'Giải pháp cho tổ chức',
       features: [
         'Tất cả tính năng gói Giáo viên',
@@ -273,10 +387,13 @@ const Pricing: React.FC = () => {
     { name: 'Tùy chỉnh theo yêu cầu', free: false, teacher: false, school: true },
   ];
 
-  /* ── Fade-in on scroll (IntersectionObserver) ── */
-  const sectionsRef = useRef<(HTMLElement | null)[]>([]);
-
+  /* ── Fade-in on scroll (public marketing page only) ── */
   useEffect(() => {
+    if (isAuthenticated) return;
+
+    const nodes = document.querySelectorAll<HTMLElement>('[data-pricing-reveal]');
+    if (nodes.length === 0) return;
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -289,48 +406,12 @@ const Pricing: React.FC = () => {
       { threshold: 0.08 }
     );
 
-    sectionsRef.current.forEach((el) => {
-      if (el) {
-        el.style.opacity = '0';
-        observer.observe(el);
-      }
+    nodes.forEach((el) => {
+      el.style.opacity = '0';
+      observer.observe(el);
     });
 
     return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (!isAuthenticated) return;
-
-    const loadData = async () => {
-      setLoadingSubscriptionData(true);
-      setSubscriptionError('');
-
-      try {
-        const [plansRes, walletRes] = await Promise.all([
-          SubscriptionPlanService.getUserPlans(),
-          WalletService.getMyWallet(),
-        ]);
-
-        setUserPlans(plansRes.result || []);
-        setWallet(walletRes.result || null);
-
-        try {
-          const subscriptionRes = await SubscriptionPlanService.getMySubscription();
-          setActiveSubscription(subscriptionRes.result || null);
-        } catch {
-          setActiveSubscription(null);
-        }
-      } catch (error) {
-        setSubscriptionError(
-          error instanceof Error ? error.message : 'Không thể tải dữ liệu gói đăng ký.'
-        );
-      } finally {
-        setLoadingSubscriptionData(false);
-      }
-    };
-
-    void loadData();
   }, [isAuthenticated]);
 
   const handlePurchase = async (plan: SubscriptionPlan) => {
@@ -373,9 +454,56 @@ const Pricing: React.FC = () => {
     }
   };
 
-  const addSectionRef = (index: number) => (el: HTMLElement | null) => {
-    sectionsRef.current[index] = el;
-  };
+  const refetchSubscriptionRef = useRef<(() => void) | undefined>(undefined);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      refetchSubscriptionRef.current = undefined;
+      return;
+    }
+
+    const loadData = () => {
+      (async () => {
+        setLoadingSubscriptionData(true);
+        setSubscriptionError('');
+
+        try {
+          const [plansRes, walletRes] = await Promise.all([
+            SubscriptionPlanService.getUserPlans(),
+            WalletService.getMyWallet(),
+          ]);
+
+          setUserPlans(plansRes.result || []);
+          setWallet(walletRes.result || null);
+
+          try {
+            const subscriptionRes = await SubscriptionPlanService.getMySubscription();
+            setActiveSubscription(subscriptionRes.result || null);
+          } catch {
+            setActiveSubscription(null);
+          }
+        } catch (error) {
+          setSubscriptionError(
+            error instanceof Error ? error.message : 'Không thể tải dữ liệu gói đăng ký.'
+          );
+        } finally {
+          setLoadingSubscriptionData(false);
+        }
+      })();
+    };
+
+    refetchSubscriptionRef.current = loadData;
+    loadData();
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (!showWalletModal) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowWalletModal(false);
+    };
+    globalThis.addEventListener('keydown', onKey);
+    return () => globalThis.removeEventListener('keydown', onKey);
+  }, [showWalletModal]);
 
   /* ── Helper: render comparison cell value ── */
   const renderCellValue = (value: boolean | string, isFeaturedCol: boolean) => {
@@ -415,8 +543,20 @@ const Pricing: React.FC = () => {
 
   /* ── Wallet Modal ── */
   const walletModal = showWalletModal ? (
-    <div className="pricing-modal-overlay">
-      <dialog open className="pricing-modal" aria-labelledby="wallet-modal-title">
+    <div className="pricing-modal-root">
+      <button
+        type="button"
+        className="pricing-modal-backdrop"
+        onClick={() => setShowWalletModal(false)}
+        tabIndex={-1}
+        aria-label="Đóng hộp thoại (nhấn Escape)"
+      />
+      <dialog
+        open
+        className="pricing-modal"
+        aria-labelledby="wallet-modal-title"
+        onClick={(ev) => ev.stopPropagation()}
+      >
         <div className="pricing-modal-icon">
           <svg
             width="32"
@@ -485,164 +625,66 @@ const Pricing: React.FC = () => {
           role={layoutRole}
           user={{ name: currentUser.name, avatar: currentUser.avatar!, role: layoutRole }}
           notificationCount={5}
+          contentClassName="dashboard-content--flush-bleed"
         >
-          <div className="homepage">
-            {/* Hero */}
-            <section className="pricing-hero pricing-hero--dashboard">
-              <div className="pricing-hero-dots" aria-hidden="true" />
-              <div className="container">
-                <div className="pricing-hero-content">
-                  <span className="ft-badge ft-badge--purple" style={{ marginBottom: '1.25rem' }}>
-                    Bảng giá
-                  </span>
-                  <h1 className="pricing-hero-title">Subscription &amp; Token</h1>
-                  <p className="pricing-hero-desc">
-                    Mua gói bằng ví và theo dõi token còn lại theo subscription active.
+          <div className="module-layout-container pricing-module-page-wrap">
+            <section className="module-page pricing-subscription-page teacher-courses-page teacher-courses-index-page">
+              <header className="page-header courses-header-row">
+                <div className="header-stack">
+                  <div className="header-kicker">{pricingHeaderKicker}</div>
+                  <div className="row" style={{ gap: '0.6rem' }}>
+                    <h2 id="pricing-dashboard-heading">Bảng giá &amp; token</h2>
+                    {!loadingSubscriptionData && userPlans.length > 0 && (
+                      <span className="count-chip">{userPlans.length}</span>
+                    )}
+                  </div>
+                  <p className="header-sub">
+                    {wallet
+                      ? `${formatPrice(wallet.balance)} trong ví${
+                          activeSubscription
+                            ? ` · ${activeSubscription.tokenRemaining}/${activeSubscription.tokenQuota} token`
+                            : ''
+                        }`
+                      : 'Mua gói bằng số dư ví, theo dõi hạn mức token theo gói đang hoạt động'}
                   </p>
-
-                  {/* Trust stats for dashboard view too */}
-                  <div className="pricing-trust-bar">
-                    {trustStats.map((stat, i) => (
-                      <div
-                        className="pricing-trust-pill"
-                        key={i}
-                        style={{ animationDelay: `${i * 0.12}s` }}
-                      >
-                        <span className="pricing-trust-pill__icon">{stat.icon}</span>
-                        <strong className="pricing-trust-pill__value">{stat.value}</strong>
-                        <span className="pricing-trust-pill__label">{stat.label}</span>
-                      </div>
-                    ))}
-                  </div>
                 </div>
-              </div>
-            </section>
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() => navigate(`/${layoutRole}/wallet`)}
+                >
+                  <Plus size={16} strokeWidth={2.5} />
+                  Nạp tiền
+                </button>
+              </header>
 
-            {/* Wallet Banner + Plan Cards */}
-            <section className="pricing-cards-section">
-              <div className="container">
-                {/* Premium wallet / subscription banner */}
-                <div className="pricing-wallet-banner">
-                  <div className="pricing-wallet-banner__glow" aria-hidden="true" />
-                  <div className="pricing-wallet-banner__col">
-                    <span className="pricing-wallet-banner__label">
-                      <svg
-                        width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
-                        <line x1="1" y1="10" x2="23" y2="10" />
-                      </svg>
-                      Số dư ví
-                    </span>
-                    <span className="pricing-wallet-banner__value">
-                      {wallet ? formatPrice(wallet.balance) : '—'}
-                    </span>
-                  </div>
-
-                  <div className="pricing-wallet-banner__divider" />
-
-                  <div className="pricing-wallet-banner__col">
-                    <span className="pricing-wallet-banner__label">
-                      <svg
-                        width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                      </svg>
-                      Gói hiện tại
-                    </span>
-                    <span className="pricing-wallet-banner__value">
-                      {activeSubscription ? (
-                        <span className="pricing-active-plan-badge">
-                          {activeSubscription.planName}
-                        </span>
-                      ) : (
-                        <span style={{ color: 'var(--c-text-3)' }}>Chưa có gói</span>
-                      )}
-                    </span>
-                  </div>
-
-                  {activeSubscription && tokenPercent !== null && (
-                    <>
-                      <div className="pricing-wallet-banner__divider" />
-                      <div className="pricing-wallet-banner__col pricing-wallet-banner__col--token">
-                        <span className="pricing-wallet-banner__label">
-                          <svg
-                            width="14"
-                            height="14"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <circle cx="12" cy="12" r="10" />
-                            <path d="M12 8v4l2 2" />
-                          </svg>
-                          Token còn lại
-                        </span>
-                        <span className="pricing-wallet-banner__value">
-                          {activeSubscription.tokenRemaining}
-                          <span className="pricing-wallet-banner__quota">
-                            {' '}
-                            / {activeSubscription.tokenQuota}
-                          </span>
-                        </span>
-                        <div className="pricing-token-bar">
-                          <div
-                            className="pricing-token-bar__fill"
-                            style={{ width: `${tokenPercent}%` }}
-                          />
-                        </div>
-                        <span className="pricing-token-percent">{tokenPercent}% còn lại</span>
-                      </div>
-                    </>
-                  )}
-
-                  <div className="pricing-wallet-banner__action">
-                    <button
-                      type="button"
-                      className="pricing-wallet-topup-btn"
-                      onClick={() => navigate(`/${layoutRole}/wallet`)}
-                    >
-                      <svg
-                        width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <line x1="12" y1="5" x2="12" y2="19" />
-                        <line x1="5" y1="12" x2="19" y2="12" />
-                      </svg>
-                      Nạp tiền
-                    </button>
-                  </div>
-                </div>
-
-                {/* Status messages */}
-                {subscriptionError && (
-                  <div className="pricing-alert pricing-alert--error">
+              <div className="stats-grid stats-grid--pricing-two">
+                <div className="stat-card stat-blue">
+                  <div className="stat-icon-wrap">
                     <svg
-                      width="16"
-                      height="16"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <rect x="1" y="4" width="22" height="16" rx="2" />
+                      <line x1="1" y1="10" x2="23" y2="10" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3>{wallet ? formatPrice(wallet.balance) : '—'}</h3>
+                    <p>Số dư ví</p>
+                  </div>
+                </div>
+                <div className="stat-card stat-emerald">
+                  <div className="stat-icon-wrap">
+                    <svg
+                      width="20"
+                      height="20"
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
@@ -651,14 +693,38 @@ const Pricing: React.FC = () => {
                       strokeLinejoin="round"
                     >
                       <circle cx="12" cy="12" r="10" />
-                      <line x1="12" y1="8" x2="12" y2="12" />
-                      <line x1="12" y1="16" x2="12.01" y2="16" />
+                      <path d="M12 8v4l2 2" />
                     </svg>
-                    {subscriptionError}
                   </div>
-                )}
-                {subscriptionSuccess && (
-                  <div className="pricing-alert pricing-alert--success">
+                  <div>
+                    <h3>
+                      {activeSubscription
+                        ? `${activeSubscription.tokenRemaining} / ${activeSubscription.tokenQuota}`
+                        : '—'}
+                    </h3>
+                    <p>Token còn lại</p>
+                  </div>
+                </div>
+              </div>
+
+              {activeSubscription && tokenPercent !== null && (
+                <div className="pricing-m-token-block">
+                  <div className="pricing-m-token-meta">
+                    <span>Tiến độ token (kỳ hiện tại)</span>
+                    <strong>{tokenPercent}%</strong>
+                  </div>
+                  <div className="pricing-m-token-bar" aria-hidden>
+                    <div
+                      className="pricing-m-token-bar__fill"
+                      style={{ width: `${tokenPercent}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Status messages + plans */}
+                {subscriptionError && (
+                  <div className="pricing-alert pricing-alert--error" role="alert">
                     <svg
                       width="16"
                       height="16"
@@ -668,109 +734,159 @@ const Pricing: React.FC = () => {
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
+                      aria-hidden
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="8" x2="12" y2="12" />
+                      <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                    <span className="pricing-alert__text">{subscriptionError}</span>
+                    <button
+                      type="button"
+                      className="pricing-alert-dismiss"
+                      onClick={() => setSubscriptionError('')}
+                      aria-label="Đóng thông báo lỗi"
+                    >
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden
+                      >
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+                {subscriptionSuccess && (
+                  <div className="pricing-alert pricing-alert--success" role="status">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden
                     >
                       <polyline points="20 6 9 17 4 12" />
                     </svg>
-                    {subscriptionSuccess}
+                    <span className="pricing-alert__text">{subscriptionSuccess}</span>
+                    <button
+                      type="button"
+                      className="pricing-alert-dismiss"
+                      onClick={() => setSubscriptionSuccess('')}
+                      aria-label="Đóng thông báo thành công"
+                    >
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden
+                      >
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                      </svg>
+                    </button>
                   </div>
                 )}
 
-                {/* Plan cards */}
-                <div className="pricing-cards-grid">
+                <div className="grid-cards pricing-m-plan-grid">
                   {loadingSubscriptionData ? (
-                    <>
-                      <PlanCardSkeleton />
-                      <PlanCardSkeleton />
-                      <PlanCardSkeleton />
-                    </>
+                    <div className="pricing-skeleton-mesh" style={{ gridColumn: '1 / -1' }}>
+                      <div className="skeleton-grid">
+                        <div className="skeleton-card" />
+                        <div className="skeleton-card" />
+                        <div className="skeleton-card" />
+                      </div>
+                    </div>
+                  ) : userPlans.length === 0 ? (
+                    <div className="empty pricing-m-empty" style={{ gridColumn: '1 / -1' }}>
+                      <p>Chưa có gói để hiển thị.</p>
+                      <p style={{ color: 'var(--mod-slate-500)', fontSize: '0.9rem' }}>
+                        Không tìm thấy gói đăng ký từ máy chủ. Bạn có thể thử tải lại.
+                      </p>
+                      <button
+                        type="button"
+                        className="btn"
+                        style={{ marginTop: '0.75rem' }}
+                        onClick={() => refetchSubscriptionRef.current?.()}
+                      >
+                        Tải lại
+                      </button>
+                    </div>
                   ) : (
                     [...userPlans]
                       .sort((a, b) => (a.price ?? 0) - (b.price ?? 0))
-                      .map((plan) => {
+                      .map((plan, idx) => {
                         const price = plan.price ?? 0;
                         const walletBalance = wallet?.balance ?? 0;
                         const isInsufficientBalance = price > 0 && walletBalance < price;
                         const isCurrentPlan = activeSubscription?.planId === plan.id;
                         const tier = getPlanTier(plan.name);
+                        const spotlight =
+                          Boolean(plan.featured) || getPlanTier(plan.name) === 'pro';
+                        const ctaPrimary = spotlight;
+
+                        const btn = (
+                          <button
+                            type="button"
+                            className={ctaPrimary ? 'action-primary' : 'action-toggle'}
+                            onClick={() => void handlePurchase(plan)}
+                            disabled={!!purchasingPlanId || isCurrentPlan || !price}
+                            title={isInsufficientBalance ? 'Số dư ví không đủ' : undefined}
+                          >
+                            {purchasingPlanId === plan.id ? (
+                              <>
+                                <span className="pricing-btn-spinner" />
+                                Đang mua...
+                              </>
+                            ) : isCurrentPlan ? (
+                              'Đang sử dụng'
+                            ) : !price ? (
+                              'Không mua trực tiếp'
+                            ) : (
+                              'Mua ngay'
+                            )}
+                          </button>
+                        );
 
                         return (
-                          <div
+                          <ModulePlanCard
                             key={plan.id}
-                            className={`pricing-plan-card pricing-plan-card--tier-${tier} ${plan.featured ? 'pricing-plan-card--featured' : ''} ${isCurrentPlan ? 'pricing-plan-card--active' : ''}`}
-                          >
-                            {/* Dark header */}
-                            <div className="pricing-plan-card__head">
-                              {plan.featured && !isCurrentPlan && (
-                                <span className="pricing-popular-ribbon">Phổ biến</span>
-                              )}
-                              {isCurrentPlan && (
-                                <span className="pricing-current-ribbon">Đang dùng</span>
-                              )}
-                              <div className="pricing-plan-icon">
-                                <PlanIcon tier={tier} />
+                            listIndex={idx}
+                            displayIndex={idx}
+                            tier={tier}
+                            name={plan.name}
+                            description={plan.description || 'Gói đăng ký cho người dùng'}
+                            priceBlock={
+                              <div className="pricing-m-price-block">
+                                <span className="pricing-m-price">{formatPrice(plan.price)}</span>
+                                <span className="pricing-m-period">/{plan.billingCycle.toLowerCase()}</span>
                               </div>
-                              <h3 className="pricing-plan-name">{plan.name}</h3>
-                            </div>
-
-                            {/* White body */}
-                            <div className="pricing-plan-card__body">
-                              <p className="pricing-plan-desc">
-                                {plan.description || 'Gói đăng ký cho người dùng'}
-                              </p>
-
-                              <div className="pricing-plan-price-block">
-                                <span className="pricing-plan-price">
-                                  {formatPrice(plan.price)}
-                                </span>
-                                <span className="pricing-plan-period">
-                                  /{plan.billingCycle.toLowerCase()}
-                                </span>
-                              </div>
-
-                              <div className="pricing-token-pill">
-                                <svg
-                                  width="12"
-                                  height="12"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                >
-                                  <circle cx="12" cy="12" r="10" />
-                                  <path d="M12 8v4l2 2" />
-                                </svg>
-                                {plan.tokenQuota.toLocaleString()} token / kỳ
-                              </div>
-
-                              <button
-                                type="button"
-                                className={`pricing-plan-btn ${plan.featured ? 'pricing-plan-btn--primary' : 'pricing-plan-btn--outline'}`}
-                                onClick={() => void handlePurchase(plan)}
-                                disabled={!!purchasingPlanId || isCurrentPlan || !price}
-                                title={isInsufficientBalance ? 'Số dư ví không đủ' : undefined}
-                              >
-                                {purchasingPlanId === plan.id ? (
-                                  <>
-                                    <span className="pricing-btn-spinner" />
-                                    Đang mua...
-                                  </>
-                                ) : isCurrentPlan ? (
-                                  'Đang sử dụng'
-                                ) : !price ? (
-                                  'Không mua trực tiếp'
-                                ) : (
-                                  'Mua ngay'
-                                )}
-                              </button>
-                            </div>
-                          </div>
+                            }
+                            tokenLine={`${plan.tokenQuota.toLocaleString()} token / kỳ`}
+                            featured={spotlight}
+                            isCurrent={isCurrentPlan}
+                            cta={btn}
+                          />
                         );
                       })
                   )}
                 </div>
-              </div>
             </section>
           </div>
         </DashboardLayout>
@@ -819,21 +935,46 @@ const Pricing: React.FC = () => {
         </div>
       </header>
 
+      <main id="pricing-main">
       {/* ── Hero ── */}
-      <section className="pricing-hero">
+      <section className="pricing-hero" aria-labelledby="pricing-public-heading">
         <div className="pricing-hero-dots" aria-hidden="true" />
         <div className="container">
           <div className="pricing-hero-content">
             <span className="ft-badge ft-badge--purple" style={{ marginBottom: '1.25rem' }}>
               Bảng giá
             </span>
-            <h1 className="pricing-hero-title">
+            <h1 className="pricing-hero-title" id="pricing-public-heading">
               Chọn gói <span className="gradient-text">phù hợp với bạn</span>
             </h1>
             <p className="pricing-hero-desc">
               Dùng thử miễn phí 30 ngày. Nâng cấp hoặc hạ cấp bất kỳ lúc nào. Không cần thẻ tín
               dụng.
             </p>
+
+            <nav className="pricing-subnav" aria-label="Mục lục nội dung bảng giá">
+              <a
+                href="#pricing-plans"
+                className="pricing-subnav__link"
+                onClick={(e) => scrollToPricingSection(e, 'pricing-plans')}
+              >
+                Các gói
+              </a>
+              <a
+                href="#pricing-compare"
+                className="pricing-subnav__link"
+                onClick={(e) => scrollToPricingSection(e, 'pricing-compare')}
+              >
+                So sánh
+              </a>
+              <a
+                href="#pricing-faq"
+                className="pricing-subnav__link"
+                onClick={(e) => scrollToPricingSection(e, 'pricing-faq')}
+              >
+                Câu hỏi thường gặp
+              </a>
+            </nav>
 
             {/* Trust stats bar */}
             <div className="pricing-trust-bar">
@@ -854,86 +995,96 @@ const Pricing: React.FC = () => {
       </section>
 
       {/* ── Pricing Cards ── */}
-      <section className="pricing-cards-section" ref={addSectionRef(0)}>
+      <section
+        className="pricing-cards-section pricing-cards-section--module pricing-section-anchor"
+        id="pricing-plans"
+        data-pricing-reveal
+        aria-label="Bảng giá các gói"
+      >
         <div className="container">
-          <div className="pricing-cards-grid">
-            {plans.map((plan, index) => {
-              const tier = getPlanTier(plan.name);
-              return (
-                <div
-                  key={index}
-                  className={`pricing-plan-card pricing-plan-card--tier-${tier} ${plan.highlighted ? 'pricing-plan-card--featured' : ''}`}
-                >
-                  {/* Dark header */}
-                  <div className="pricing-plan-card__head">
-                    {plan.highlighted && <span className="pricing-popular-ribbon">Phổ biến</span>}
-                    <div className="pricing-plan-icon">
-                      <PlanIcon tier={tier} />
-                    </div>
-                    <h3 className="pricing-plan-name">{plan.name}</h3>
-                  </div>
-
-                  {/* White body */}
-                  <div className="pricing-plan-card__body">
-                    <p className="pricing-plan-desc">{plan.description}</p>
-
-                    <div className="pricing-plan-price-block">
-                      <span className="pricing-plan-price">{plan.price}</span>
-                      {plan.period && <span className="pricing-plan-period">{plan.period}</span>}
-                    </div>
-
-                    <Link
-                      to="/register"
-                      className={`pricing-plan-btn ${plan.highlighted ? 'pricing-plan-btn--primary' : 'pricing-plan-btn--outline'}`}
-                    >
-                      {plan.buttonText}
-                    </Link>
-
-                    <div className="pricing-plan-divider" />
-
-                    <ul className="pricing-plan-features">
-                      {plan.features.map((feature, idx) => (
-                        <li key={idx}>
-                          <span
-                            className={`pricing-check ${plan.highlighted ? 'pricing-check--primary' : ''}`}
-                          >
-                            <svg
-                              width="14"
-                              height="14"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2.5"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
+          <div className="module-layout-container pricing-public-plans">
+            <div className="grid-cards pricing-m-plan-grid">
+              {plans.map((plan, index) => {
+                const tier = getPlanTier(plan.name);
+                const spotlight = plan.highlighted;
+                const ctaPrimary = spotlight;
+                return (
+                  <ModulePlanCard
+                    key={plan.name}
+                    listIndex={index}
+                    displayIndex={index}
+                    tier={tier}
+                    name={plan.name}
+                    description={plan.description}
+                    priceBlock={
+                      <div className="pricing-m-price-block">
+                        <span className="pricing-m-price">{plan.price}</span>
+                        {plan.period ? (
+                          <span className="pricing-m-period">{plan.period}</span>
+                        ) : null}
+                      </div>
+                    }
+                    tokenLine={plan.tokenLine}
+                    featured={spotlight}
+                    isCurrent={false}
+                    cta={
+                      <Link
+                        to="/register"
+                        className={ctaPrimary ? 'action-primary' : 'action-toggle'}
+                      >
+                        {plan.buttonText}
+                      </Link>
+                    }
+                    features={
+                      <ul className="pricing-m-features">
+                        {plan.features.map((feature, idx) => (
+                          <li key={idx}>
+                            <span
+                              className={`pricing-m-check ${plan.highlighted ? 'pricing-m-check--primary' : ''}`}
                             >
-                              <polyline points="20 6 9 17 4 12" />
-                            </svg>
-                          </span>
-                          {feature}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              );
-            })}
+                              <svg
+                                width="14"
+                                height="14"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <polyline points="20 6 9 17 4 12" />
+                              </svg>
+                            </span>
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+                    }
+                  />
+                );
+              })}
+            </div>
           </div>
         </div>
       </section>
 
       {/* ── Comparison Table ── */}
-      <section className="pricing-comparison-section" ref={addSectionRef(1)}>
+      <section
+        className="pricing-comparison-section pricing-section-anchor"
+        id="pricing-compare"
+        data-pricing-reveal
+        aria-labelledby="compare-heading"
+      >
         <div className="container">
           <div className="pricing-comparison-header">
             <span className="ft-badge ft-badge--orange" style={{ marginBottom: '1rem' }}>
               So sánh
             </span>
-            <h2 className="pricing-comparison-title">
+            <h2 className="pricing-comparison-title" id="compare-heading">
               So sánh chi tiết <span className="gradient-text">các gói</span>
             </h2>
           </div>
-          <div className="pricing-comparison-table-wrap">
+          <div className="pricing-comparison-table-wrap" aria-label="Bảng so sánh tính năng theo gói">
             <div className="pricing-comparison-table">
               {/* Header */}
               <div className="pricing-ct-header">
@@ -961,14 +1112,19 @@ const Pricing: React.FC = () => {
       </section>
 
       {/* ── FAQ Accordion ── */}
-      <section className="pricing-faq-section" ref={addSectionRef(2)}>
+      <section
+        className="pricing-faq-section pricing-section-anchor"
+        id="pricing-faq"
+        data-pricing-reveal
+        aria-labelledby="faq-heading"
+      >
         <div className="features-bg-dots" aria-hidden="true" />
         <div className="container">
           <div className="pricing-faq-header">
             <span className="ft-badge ft-badge--blue" style={{ marginBottom: '1rem' }}>
               FAQ
             </span>
-            <h2 className="pricing-faq-title">
+            <h2 className="pricing-faq-title" id="faq-heading">
               Câu hỏi <span className="gradient-text">thường gặp</span>
             </h2>
             <p className="pricing-hero-desc" style={{ marginTop: '0.75rem' }}>
@@ -987,7 +1143,7 @@ const Pricing: React.FC = () => {
       </section>
 
       {/* ── CTA ── */}
-      <section className="pricing-cta-section" ref={addSectionRef(3)}>
+      <section className="pricing-cta-section pricing-section-anchor" data-pricing-reveal>
         <div className="container">
           <div className="pricing-cta-card">
             <div className="pricing-cta-glow" aria-hidden="true" />
@@ -1026,6 +1182,7 @@ const Pricing: React.FC = () => {
 
       <Footer />
       {walletModal}
+      </main>
     </div>
   );
 };

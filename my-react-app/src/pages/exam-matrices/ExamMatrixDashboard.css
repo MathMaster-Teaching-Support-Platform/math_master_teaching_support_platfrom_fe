@@ -315,3 +315,63 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Detail navigation: spinner on "Xem chi tiết" */
+@keyframes exam-matrix-nav-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.module-layout-container .exam-matrix-nav-spin {
+  animation: exam-matrix-nav-spin 0.7s linear infinite;
+}
+
+/* Detail page (ExamMatrixDetailPageRefactored) — align with dashboard / Teacher Studio */
+.module-layout-container .exam-matrix-detail-page .exam-matrix-detail-back-row {
+  width: 100%;
+  margin-bottom: 0.15rem;
+}
+
+.module-layout-container .exam-matrix-detail-page .exam-matrix-detail-page-header {
+  align-items: flex-start;
+  padding-bottom: 1rem;
+  border-bottom: 1.5px solid var(--mod-slate-100);
+  margin-bottom: 0.25rem;
+}
+
+.module-layout-container .exam-matrix-detail-page .exam-matrix-detail-header-sub::before {
+  display: none;
+}
+
+.module-layout-container .exam-matrix-detail-skeleton {
+  width: 100%;
+}
+
+.module-layout-container .exam-matrix-detail-skeleton .skeleton-section {
+  min-height: 0;
+}
+
+.module-layout-container .exam-matrix-detail-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.75rem;
+  padding: 2.5rem 1rem;
+}
+
+.module-layout-container .exam-matrix-detail-hero .exam-matrix-detail-hero-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: var(--mod-ink);
+}
+
+.module-layout-container .exam-matrix-detail-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+}

@@ -7,6 +7,7 @@ import {
   FileText,
   Grid2x2,
   Library,
+  Loader2,
   Lock,
   Plus,
   RefreshCw,
@@ -14,7 +15,7 @@ import {
   Search,
   Trash2,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useTransition } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import Pagination from '../../components/common/Pagination';
@@ -66,6 +67,8 @@ const cardStatusLabel: Record<MatrixStatus, string> = {
 
 export function ExamMatrixDashboard() {
   const navigate = useNavigate();
+  const [navToDetailPending, startNavigateDetail] = useTransition();
+  const [pendingDetailId, setPendingDetailId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | MatrixStatus>('ALL');
   const [page, setPage] = useState(0);
@@ -132,7 +135,7 @@ export function ExamMatrixDashboard() {
   return (
     <DashboardLayout
       role="teacher"
-      user={{ name: 'Teacher', avatar: '', role: 'teacher' }}
+      user={{ name: 'Giáo viên', avatar: '', role: 'teacher' }}
       notificationCount={0}
       contentClassName="dashboard-content--flush-bleed"
     >
@@ -357,10 +360,22 @@ export function ExamMatrixDashboard() {
                       <button
                         type="button"
                         className="btn btn--feat-indigo exam-matrix-card__primary"
-                        onClick={() => navigate(`/teacher/exam-matrices/${matrix.id}`)}
+                        disabled={navToDetailPending && pendingDetailId === matrix.id}
+                        onClick={() => {
+                          setPendingDetailId(matrix.id);
+                          startNavigateDetail(() => {
+                            navigate(`/teacher/exam-matrices/${matrix.id}`);
+                          });
+                        }}
                       >
-                        <Eye size={14} />
-                        Xem chi tiết
+                        {navToDetailPending && pendingDetailId === matrix.id ? (
+                          <Loader2 size={14} className="exam-matrix-nav-spin" />
+                        ) : (
+                          <Eye size={14} />
+                        )}
+                        {navToDetailPending && pendingDetailId === matrix.id
+                          ? 'Đang mở...'
+                          : 'Xem chi tiết'}
                       </button>
                     </div>
 
