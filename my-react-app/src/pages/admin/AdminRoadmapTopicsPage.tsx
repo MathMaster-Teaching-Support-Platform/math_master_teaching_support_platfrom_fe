@@ -7,10 +7,14 @@ import {
   ChevronUp,
   Circle,
   Clock,
+  Plus,
+  Save,
   Target,
+  Trash2,
   X,
 } from 'lucide-react';
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -66,15 +70,16 @@ interface Toast {
   message: string;
 }
 
+/** Warm, legible accents (terracotta first per DESIGN.md brand) */
 const PIN_COLORS = [
-  '#ef4444',
-  '#f97316',
-  '#eab308',
-  '#22c55e',
-  '#06b6d4',
-  '#6366f1',
-  '#ec4899',
-  '#14b8a6',
+  '#c96442',
+  '#d97757',
+  '#b45309',
+  '#0d845d',
+  '#1d6fa8',
+  '#6b5b4f',
+  '#92400e',
+  '#047857',
 ];
 const DIFF_LABELS: Record<TopicDifficulty, string> = {
   EASY: 'Dễ',
@@ -114,6 +119,8 @@ const ROAD_W = 900;
 const ROW_H = 180;
 const PAD_TOP = 60;
 const COLS = 4;
+/** ViewBox Y distance from top of pin stack to bottom of tip (circle + tip), for anchoring tip on path */
+const PIN_STACK_TO_TIP = 61;
 
 function nodePos(index: number) {
   const row = Math.floor(index / COLS);
@@ -154,26 +161,43 @@ interface SortablePinProps {
   index: number;
   isActive: boolean;
   onActivate: () => void;
+  /** Point on road centerline (viewBox coords) where pin tip should meet the path */
+  pathAnchor: { x: number; y: number } | null;
+  roadH: number;
 }
 
-function SortablePin({ topic, index, isActive, onActivate }: SortablePinProps) {
+function SortablePin({
+  topic,
+  index,
+  isActive,
+  onActivate,
+  pathAnchor,
+  roadH,
+}: SortablePinProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: topic.clientId,
   });
 
-  const pos = nodePos(index);
+  const fallback = nodePos(index);
+  const ax = pathAnchor?.x ?? fallback.x;
+  const ay = pathAnchor?.y ?? fallback.y;
   const color = PIN_COLORS[index % PIN_COLORS.length];
   const hasCourses = topic.courseIds.length > 0;
 
+  const dragT = transform ? CSS.Transform.toString(transform) : '';
+  const transformParts = ['translateX(-50%)'];
+  if (dragT) transformParts.push(dragT);
+  if (isActive) transformParts.push('scale(1.08)');
+
   const style: React.CSSProperties = {
-    left: `${(pos.x / ROAD_W) * 100}%`,
-    top: `${pos.y - 56}px`,
+    left: `${(ax / ROAD_W) * 100}%`,
+    top: `${((ay - PIN_STACK_TO_TIP) / roadH) * 100}%`,
     '--pin-color': color,
-    transform: CSS.Transform.toString(transform),
-    transition,
+    transform: transformParts.join(' '),
+    transition: transition ?? 'transform 0.2s ease, opacity 0.18s ease',
     opacity: isDragging ? 0.5 : 1,
     cursor: isDragging ? 'grabbing' : 'grab',
-    zIndex: isDragging ? 1000 : 1,
+    zIndex: isDragging ? 1000 : isActive ? 20 : 10,
   } as React.CSSProperties;
 
   return (
@@ -226,6 +250,8 @@ export default function AdminRoadmapTopicsPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [entryOpen, setEntryOpen] = useState(false);
   const [coursePickerOpen, setCoursePickerOpen] = useState(false);
+  const roadSurfaceRef = useRef<SVGPathElement | null>(null);
+  const [pathAnchors, setPathAnchors] = useState<Array<{ x: number; y: number }> | null>(null);
 
   // Debounce courseKw to avoid hammering the API on every keystroke
   const courseKwDebounced = useDebounce(courseKw, 200);
@@ -359,7 +385,7 @@ export default function AdminRoadmapTopicsPage() {
       if (topic.mark <= prev) {
         return {
           valid: false,
-          message: 'Điểm mốc phải tăng dần theo thứ tự chủ đề (point[i] > point[i-1]).',
+          message: 'Điểm mốc phải tăng dần theo thứ tự chủ đề.',
         };
       }
       prev = topic.mark;
@@ -549,8 +575,46 @@ export default function AdminRoadmapTopicsPage() {
   }
 
   const pendingCount = topics.filter((t) => t.isDraft || t.dirtyFields.length > 0).length;
-  const roadH = Math.max(300, Math.ceil(topics.length / COLS) * ROW_H + 100);
-  const roadPath = buildRoadPath(topics.length);
+  const roadH = useMemo(
+    () => Math.max(300, Math.ceil(topics.length / COLS) * ROW_H + 100),
+    [topics.length]
+  );
+  const roadPath = useMemo(() => buildRoadPath(topics.length), [topics.length]);
+  const topicCount = topics.length;
+
+  useLayoutEffect(() => {
+    let cancelled = false;
+    let rafId = 0;
+    let attempts = 0;
+    const sample = () => {
+      if (cancelled) return;
+      const el = roadSurfaceRef.current;
+      if (!el || topicCount === 0) {
+        setPathAnchors(null);
+        return;
+      }
+      const len = el.getTotalLength();
+      if (!Number.isFinite(len) || len < 2) {
+        if (attempts++ < 12) {
+          rafId = requestAnimationFrame(sample);
+        } else {
+          setPathAnchors(null);
+        }
+        return;
+      }
+      const pts = Array.from({ length: topicCount }, (_, i) => {
+        const u = topicCount <= 1 ? 0.5 : i / (topicCount - 1);
+        const p = el.getPointAtLength(u * len);
+        return { x: p.x, y: p.y };
+      });
+      setPathAnchors(pts);
+    };
+    sample();
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(rafId);
+    };
+  }, [topicCount, roadPath]);
 
   const pageShell = (children: ReactNode) => (
     <DashboardLayout
@@ -681,7 +745,7 @@ export default function AdminRoadmapTopicsPage() {
             {/* Road shadow */}
             <path d={roadPath} className="art-road__shadow" />
             {/* Road surface */}
-            <path d={roadPath} className="art-road__surface" />
+            <path ref={roadSurfaceRef} d={roadPath} className="art-road__surface" />
             {/* Center dashes */}
             <path d={roadPath} className="art-road__dash" />
           </svg>
@@ -696,7 +760,7 @@ export default function AdminRoadmapTopicsPage() {
               items={topics.map((t) => t.clientId)}
               strategy={verticalListSortingStrategy}
             >
-              <div className="art-pins" style={{ height: roadH }}>
+              <div className="art-pins">
                 {topics.map((t, i) => (
                   <SortablePin
                     key={t.clientId}
@@ -704,6 +768,8 @@ export default function AdminRoadmapTopicsPage() {
                     index={i}
                     isActive={activeId === t.clientId}
                     onActivate={() => setActiveId(activeId === t.clientId ? null : t.clientId)}
+                    pathAnchor={pathAnchors?.[i] ?? null}
+                    roadH={roadH}
                   />
                 ))}
 
@@ -730,13 +796,23 @@ export default function AdminRoadmapTopicsPage() {
             aria-expanded={entryOpen}
           >
             <span className="art-entry__trigger-main">
-              <Target className="art-entry__trigger-icon" size={18} strokeWidth={2.25} aria-hidden />
+              <Target
+                className="art-entry__trigger-icon"
+                size={18}
+                strokeWidth={2.25}
+                aria-hidden
+              />
               <span className="art-entry__trigger-title">Cấu hình bài kiểm tra đầu vào</span>
             </span>
             {entryOpen ? (
               <ChevronUp className="art-entry__chevron-ico" size={18} strokeWidth={2} aria-hidden />
             ) : (
-              <ChevronDown className="art-entry__chevron-ico" size={18} strokeWidth={2} aria-hidden />
+              <ChevronDown
+                className="art-entry__chevron-ico"
+                size={18}
+                strokeWidth={2}
+                aria-hidden
+              />
             )}
           </button>
           {entryOpen && (
@@ -810,7 +886,9 @@ export default function AdminRoadmapTopicsPage() {
                   })}
                 </div>
               ) : (
-                <p className="art-entry__list-empty">Không có bài kiểm tra phù hợp. Thử từ khóa khác.</p>
+                <p className="art-entry__list-empty">
+                  Không có bài kiểm tra phù hợp. Thử từ khóa khác.
+                </p>
               )}
               <button
                 type="button"
@@ -824,349 +902,411 @@ export default function AdminRoadmapTopicsPage() {
           )}
         </div>
 
-        {/* ── Side Drawer ── */}
-        <AnimatePresence>
-          {activeTopic && (
+        {typeof document !== 'undefined' &&
+          createPortal(
             <>
-              <motion.div
-                className="art-overlay-bg"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setActiveId(null)}
-              />
-              <motion.aside
-                className="art-drawer"
-                initial={{ x: 440 }}
-                animate={{ x: 0 }}
-                exit={{ x: 440 }}
-                transition={{ type: 'spring', stiffness: 320, damping: 38 }}
-              >
-                <div className="art-drawer__header">
-                  <h2 className="art-drawer__title">
-                    Chủ đề #{activeTopic.sequenceOrder}
-                    {activeTopic.isDraft && <span className="art-badge art-badge--new">Mới</span>}
-                    {activeTopic.dirtyFields.length > 0 && !activeTopic.isDraft && (
-                      <span className="art-badge art-badge--warning">
-                        ⚠ {activeTopic.dirtyFields.length} thay đổi chưa lưu
-                      </span>
-                    )}
-                  </h2>
-                  <div className="art-drawer__actions">
-                    <button
-                      className="art-btn art-btn--save"
-                      onClick={() => saveTopic(activeTopic)}
-                      disabled={addMutation.isPending || updateMutation.isPending}
+              <AnimatePresence>
+                {activeTopic && (
+                  <>
+                    <motion.div
+                      className="art-overlay-bg"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      onClick={() => setActiveId(null)}
+                    />
+                    <motion.aside
+                      className="art-drawer art-drawer--studio"
+                      initial={{ x: 440 }}
+                      animate={{ x: 0 }}
+                      exit={{ x: 440 }}
+                      transition={{ type: 'spring', stiffness: 320, damping: 38 }}
                     >
-                      {addMutation.isPending || updateMutation.isPending
-                        ? 'Đang lưu...'
-                        : '💾 Lưu chủ đề này'}
-                    </button>
-                    <button
-                      className="art-btn art-btn--delete"
-                      onClick={() => setDeleteId(activeTopic.clientId)}
-                    >
-                      Xóa
-                    </button>
-                    <button className="art-drawer__close" onClick={() => setActiveId(null)}>
-                      ✕
-                    </button>
-                  </div>
-                </div>
-
-                <div className="art-drawer__content">
-                  {/* Basic Info */}
-                  <div className="art-drawer__section">
-                    <div className="art-section-title">🧩 Thông tin cơ bản</div>
-                    <div className="art-field">
-                      <label className="art-label">Tiêu đề *</label>
-                      <input
-                        className="art-input"
-                        value={activeTopic.title}
-                        onChange={(e) => patchActive('title', e.target.value, 'title')}
-                        placeholder="Tên chủ đề..."
-                      />
-                    </div>
-                    <div className="art-field">
-                      <label className="art-label">Mô tả</label>
-                      <textarea
-                        className="art-textarea"
-                        rows={3}
-                        value={activeTopic.description}
-                        onChange={(e) => patchActive('description', e.target.value, 'description')}
-                        placeholder="Mô tả ngắn (tùy chọn)"
-                      />
-                    </div>
-                    <div className="art-row">
-                      <div className="art-field">
-                        <label className="art-label">Độ khó</label>
-                        <select
-                          className="art-select"
-                          value={activeTopic.difficulty}
-                          onChange={(e) =>
-                            patchActive(
-                              'difficulty',
-                              e.target.value as TopicDifficulty,
-                              'difficulty'
-                            )
-                          }
-                        >
-                          {(['EASY', 'MEDIUM', 'HARD'] as TopicDifficulty[]).map((d) => (
-                            <option key={d} value={d}>
-                              {DIFF_LABELS[d]}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="art-field">
-                        <label className="art-label">Thứ tự</label>
-                        <input
-                          className="art-input"
-                          type="number"
-                          min={1}
-                          value={activeTopic.sequenceOrder}
-                          onChange={(e) =>
-                            patchActive('sequenceOrder', Number(e.target.value), 'sequenceOrder')
-                          }
-                        />
-                      </div>
-                      <div className="art-field">
-                        <label className="art-label">Điểm mốc *</label>
-                        <input
-                          className="art-input"
-                          type="number"
-                          min={1}
-                          step="0.1"
-                          value={activeTopic.mark}
-                          onChange={(e) => patchActive('mark', Number(e.target.value), 'mark')}
-                        />
-                      </div>
-                      {activeTopic.persistedId && (
-                        <div className="art-field">
-                          <label className="art-label">Trạng thái</label>
-                          <select
-                            className="art-select"
-                            value={activeTopic.status}
-                            onChange={(e) =>
-                              patchActive('status', e.target.value as TopicStatus, 'status')
-                            }
+                      <div className="art-drawer__header">
+                        <h2 className="art-drawer__title">
+                          Chủ đề #{activeTopic.sequenceOrder}
+                          {activeTopic.isDraft && (
+                            <span className="art-badge art-badge--new">Mới</span>
+                          )}
+                          {activeTopic.dirtyFields.length > 0 && !activeTopic.isDraft && (
+                            <span className="art-badge art-badge--warning">
+                              <AlertCircle size={12} strokeWidth={2.5} aria-hidden />
+                              {activeTopic.dirtyFields.length} thay đổi chưa lưu
+                            </span>
+                          )}
+                        </h2>
+                        <div className="art-drawer__actions">
+                          <button
+                            type="button"
+                            className="art-btn art-btn--save"
+                            onClick={() => saveTopic(activeTopic)}
+                            disabled={addMutation.isPending || updateMutation.isPending}
                           >
-                            {(['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED'] as TopicStatus[]).map(
-                              (s) => (
-                                <option key={s} value={s}>
-                                  {STATUS_LABELS[s]}
-                                </option>
-                              )
+                            {addMutation.isPending || updateMutation.isPending ? (
+                              'Đang lưu...'
+                            ) : (
+                              <>
+                                <Save size={16} strokeWidth={2.25} aria-hidden />
+                                Lưu chủ đề
+                              </>
                             )}
-                          </select>
+                          </button>
+                          <button
+                            type="button"
+                            className="art-btn art-btn--delete"
+                            onClick={() => setDeleteId(activeTopic.clientId)}
+                          >
+                            <Trash2 size={15} strokeWidth={2} aria-hidden />
+                            Xóa
+                          </button>
+                          <button
+                            type="button"
+                            className="art-drawer__close"
+                            onClick={() => setActiveId(null)}
+                            aria-label="Đóng bảng chỉnh sửa"
+                          >
+                            <X size={18} strokeWidth={2} aria-hidden />
+                          </button>
                         </div>
-                      )}
-                    </div>
-                  </div>
+                      </div>
 
-                  {/* Courses */}
-                  <div className="art-drawer__section">
-                    <div className="art-section-title">📚 Khóa học của chủ đề</div>
-                    <p className="art-section-hint">
-                      Chọn các khóa học liên quan đến chủ đề này (tùy chọn).
-                    </p>
-
-                    {activeTopic.courseIds.length > 0 && (
-                      <div
-                        style={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '8px',
-                          marginBottom: '12px',
-                        }}
-                      >
-                        {activeTopic.courseIds.map((courseId) => {
-                          const course = courseOptions.find((c) => c.id === courseId);
-                          if (!course) return null;
-                          return (
-                            <div
-                              key={courseId}
-                              style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                                padding: '8px 12px',
-                                background: '#f0fdf4',
-                                border: '1.5px solid #bbf7d0',
-                                borderRadius: '10px',
-                              }}
+                      <div className="art-drawer__content">
+                        {/* Basic Info */}
+                        <div className="art-drawer__section art-drawer__section--basic">
+                          <div className="art-section-title art-drawer__section-title">
+                            🧩 Thông tin cơ bản
+                          </div>
+                          <div className="art-field">
+                            <label
+                              className="art-label"
+                              htmlFor={`art-drawer-${activeTopic.clientId}-title`}
                             >
-                              <span style={{ flex: 1, fontSize: '0.88rem', fontWeight: 600 }}>
-                                {course.title}
-                              </span>
-                              <button
-                                onClick={() =>
+                              Tiêu đề *
+                            </label>
+                            <input
+                              id={`art-drawer-${activeTopic.clientId}-title`}
+                              className="art-input"
+                              value={activeTopic.title}
+                              onChange={(e) => patchActive('title', e.target.value, 'title')}
+                              placeholder="Tên chủ đề..."
+                            />
+                          </div>
+                          <div className="art-field">
+                            <label
+                              className="art-label"
+                              htmlFor={`art-drawer-${activeTopic.clientId}-desc`}
+                            >
+                              Mô tả
+                            </label>
+                            <textarea
+                              id={`art-drawer-${activeTopic.clientId}-desc`}
+                              className="art-textarea"
+                              rows={3}
+                              value={activeTopic.description}
+                              onChange={(e) =>
+                                patchActive('description', e.target.value, 'description')
+                              }
+                              placeholder="Mô tả ngắn (tùy chọn)"
+                            />
+                          </div>
+                          <div className="art-drawer__form-row">
+                            <div className="art-field">
+                              <label
+                                className="art-label"
+                                htmlFor={`art-drawer-${activeTopic.clientId}-difficulty`}
+                              >
+                                Độ khó
+                              </label>
+                              <select
+                                id={`art-drawer-${activeTopic.clientId}-difficulty`}
+                                className="art-select"
+                                value={activeTopic.difficulty}
+                                onChange={(e) =>
                                   patchActive(
-                                    'courseIds',
-                                    activeTopic.courseIds.filter((id) => id !== courseId),
-                                    'courseId'
+                                    'difficulty',
+                                    e.target.value as TopicDifficulty,
+                                    'difficulty'
                                   )
                                 }
-                                style={{
-                                  background: 'none',
-                                  border: 'none',
-                                  color: '#dc2626',
-                                  cursor: 'pointer',
-                                  fontSize: '1.2rem',
-                                  padding: '0 4px',
-                                }}
                               >
-                                ×
-                              </button>
+                                {(['EASY', 'MEDIUM', 'HARD'] as TopicDifficulty[]).map((d) => (
+                                  <option key={d} value={d}>
+                                    {DIFF_LABELS[d]}
+                                  </option>
+                                ))}
+                              </select>
                             </div>
+                            <div className="art-field">
+                              <label
+                                className="art-label"
+                                htmlFor={`art-drawer-${activeTopic.clientId}-order`}
+                              >
+                                Thứ tự
+                              </label>
+                              <input
+                                id={`art-drawer-${activeTopic.clientId}-order`}
+                                className="art-input"
+                                type="number"
+                                min={1}
+                                value={activeTopic.sequenceOrder}
+                                onChange={(e) =>
+                                  patchActive(
+                                    'sequenceOrder',
+                                    Number(e.target.value),
+                                    'sequenceOrder'
+                                  )
+                                }
+                              />
+                            </div>
+                          </div>
+                          <div
+                            className={`art-drawer__form-row${activeTopic.persistedId ? '' : ' art-drawer__form-row--single'}`}
+                          >
+                            <div className="art-field">
+                              <label
+                                className="art-label"
+                                htmlFor={`art-drawer-${activeTopic.clientId}-mark`}
+                              >
+                                Điểm mốc *
+                              </label>
+                              <input
+                                id={`art-drawer-${activeTopic.clientId}-mark`}
+                                className="art-input"
+                                type="number"
+                                min={1}
+                                step="0.1"
+                                value={activeTopic.mark}
+                                onChange={(e) =>
+                                  patchActive('mark', Number(e.target.value), 'mark')
+                                }
+                              />
+                            </div>
+                            {activeTopic.persistedId ? (
+                              <div className="art-field">
+                                <label
+                                  className="art-label"
+                                  htmlFor={`art-drawer-${activeTopic.clientId}-status`}
+                                >
+                                  Trạng thái
+                                </label>
+                                <select
+                                  id={`art-drawer-${activeTopic.clientId}-status`}
+                                  className="art-select"
+                                  value={activeTopic.status}
+                                  onChange={(e) =>
+                                    patchActive('status', e.target.value as TopicStatus, 'status')
+                                  }
+                                >
+                                  {(
+                                    ['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED'] as TopicStatus[]
+                                  ).map((s) => (
+                                    <option key={s} value={s}>
+                                      {STATUS_LABELS[s]}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            ) : null}
+                          </div>
+                        </div>
+
+                        {/* Courses */}
+                        <div className="art-drawer__section art-drawer__section--courses">
+                          <div className="art-section-title art-drawer__section-title">
+                            📚 Khóa học của chủ đề
+                          </div>
+                          <p className="art-section-hint">
+                            Chọn các khóa học liên quan đến chủ đề này (tùy chọn).
+                          </p>
+
+                          {activeTopic.courseIds.length > 0 && (
+                            <div className="art-drawer__course-stack">
+                              {activeTopic.courseIds.map((courseId) => {
+                                const course = courseOptions.find((c) => c.id === courseId);
+                                if (!course) return null;
+                                return (
+                                  <div key={courseId} className="art-drawer__course-pill">
+                                    <span className="art-drawer__course-title">{course.title}</span>
+                                    <button
+                                      type="button"
+                                      className="art-drawer__course-remove"
+                                      onClick={() =>
+                                        patchActive(
+                                          'courseIds',
+                                          activeTopic.courseIds.filter((id) => id !== courseId),
+                                          'courseId'
+                                        )
+                                      }
+                                      aria-label={`Gỡ ${course.title}`}
+                                    >
+                                      <X size={16} strokeWidth={2} aria-hidden />
+                                    </button>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          <button
+                            type="button"
+                            className="art-btn art-btn--pick"
+                            onClick={() => setCoursePickerOpen(true)}
+                          >
+                            <Plus size={16} strokeWidth={2.25} aria-hidden />
+                            Thêm khóa học
+                          </button>
+                        </div>
+                      </div>
+                    </motion.aside>
+                  </>
+                )}
+              </AnimatePresence>
+
+              {/* ── Course Picker (full-screen overlay) ── */}
+              <AnimatePresence>
+                {coursePickerOpen && (
+                  <motion.div
+                    className="art-picker art-picker--studio"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                  >
+                    <div className="art-picker__inner">
+                      <div className="art-picker__header">
+                        <h2 className="art-picker__title">Chọn khóa học</h2>
+                        <button
+                          type="button"
+                          className="art-drawer__close"
+                          onClick={() => setCoursePickerOpen(false)}
+                          aria-label="Đóng"
+                        >
+                          <X size={18} strokeWidth={2} aria-hidden />
+                        </button>
+                      </div>
+                      <div className="art-picker__search">
+                        <input
+                          className="art-input art-picker__input"
+                          placeholder="🔍 Tìm khóa học (nhấn Esc để đóng)..."
+                          value={courseKw}
+                          onChange={(e) => setCourseKw(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Escape') {
+                              setCoursePickerOpen(false);
+                            }
+                          }}
+                          autoFocus
+                        />
+                        {coursesQuery.isFetching && (
+                          <div className="art-picker__search-spinner">
+                            <span className="spinner">⏳</span>
+                          </div>
+                        )}
+                      </div>
+                      {!coursesQuery.isLoading && courseOptions.length > 0 && (
+                        <div className="art-picker__result-count">
+                          Tìm thấy {courseOptions.length} khóa học{courseKw && ` cho "${courseKw}"`}
+                        </div>
+                      )}
+                      {coursesQuery.isLoading && <p className="art-loading-text">Đang tải...</p>}
+                      {!coursesQuery.isLoading && courseOptions.length === 0 && (
+                        <p className="art-loading-text">
+                          Không tìm thấy khóa học nào{courseKw ? ` cho "${courseKw}"` : ''}.
+                        </p>
+                      )}
+                      <div className="art-picker__grid">
+                        {courseOptions.map((c) => {
+                          const isSelected = activeTopic?.courseIds.includes(c.id);
+                          return (
+                            <button
+                              key={c.id}
+                              type="button"
+                              className={`art-picker__card ${isSelected ? 'art-picker__card--selected' : ''}`}
+                              onClick={() => {
+                                if (!activeTopic) return;
+                                if (isSelected) {
+                                  patchActive(
+                                    'courseIds',
+                                    activeTopic.courseIds.filter((id) => id !== c.id),
+                                    'courseId'
+                                  );
+                                } else {
+                                  patchActive(
+                                    'courseIds',
+                                    [...activeTopic.courseIds, c.id],
+                                    'courseId'
+                                  );
+                                }
+                              }}
+                            >
+                              {c.thumbnailUrl && (
+                                <img
+                                  className="art-picker__card-thumb"
+                                  src={c.thumbnailUrl}
+                                  alt={c.title}
+                                />
+                              )}
+                              <div className="art-picker__card-body">
+                                <strong className="art-picker__card-title">{c.title}</strong>
+                                {c.description && (
+                                  <p className="art-picker__card-desc">{c.description}</p>
+                                )}
+                              </div>
+                              {isSelected && <div className="art-picker__card-check">✓</div>}
+                            </button>
                           );
                         })}
                       </div>
-                    )}
-
-                    <button
-                      className="art-btn art-btn--pick"
-                      onClick={() => setCoursePickerOpen(true)}
-                    >
-                      + Thêm khóa học
-                    </button>
-                  </div>
-                </div>
-              </motion.aside>
-            </>
-          )}
-        </AnimatePresence>
-
-        {/* ── Course Picker (full-screen overlay) ── */}
-        <AnimatePresence>
-          {coursePickerOpen && (
-            <motion.div
-              className="art-picker"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <div className="art-picker__inner">
-                <div className="art-picker__header">
-                  <h2 className="art-picker__title">Chọn khóa học</h2>
-                  <button className="art-drawer__close" onClick={() => setCoursePickerOpen(false)}>
-                    ✕
-                  </button>
-                </div>
-                <div className="art-picker__search">
-                  <input
-                    className="art-input art-picker__input"
-                    placeholder="🔍 Tìm khóa học (nhấn Esc để đóng)..."
-                    value={courseKw}
-                    onChange={(e) => setCourseKw(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Escape') {
-                        setCoursePickerOpen(false);
-                      }
-                    }}
-                    autoFocus
-                  />
-                  {coursesQuery.isFetching && (
-                    <div className="art-picker__search-spinner">
-                      <span className="spinner">⏳</span>
-                    </div>
-                  )}
-                </div>
-                {!coursesQuery.isLoading && courseOptions.length > 0 && (
-                  <div className="art-picker__result-count">
-                    Tìm thấy {courseOptions.length} khóa học{courseKw && ` cho "${courseKw}"`}
-                  </div>
-                )}
-                {coursesQuery.isLoading && <p className="art-loading-text">Đang tải...</p>}
-                {!coursesQuery.isLoading && courseOptions.length === 0 && (
-                  <p className="art-loading-text">
-                    Không tìm thấy khóa học nào{courseKw ? ` cho "${courseKw}"` : ''}.
-                  </p>
-                )}
-                <div className="art-picker__grid">
-                  {courseOptions.map((c) => {
-                    const isSelected = activeTopic?.courseIds.includes(c.id);
-                    return (
-                      <button
-                        key={c.id}
-                        className={`art-picker__card ${isSelected ? 'art-picker__card--selected' : ''}`}
-                        onClick={() => {
-                          if (!activeTopic) return;
-                          if (isSelected) {
-                            patchActive(
-                              'courseIds',
-                              activeTopic.courseIds.filter((id) => id !== c.id),
-                              'courseId'
-                            );
-                          } else {
-                            patchActive('courseIds', [...activeTopic.courseIds, c.id], 'courseId');
-                          }
+                      <div
+                        style={{
+                          padding: '16px 24px',
+                          borderTop: '1.5px solid #f3f4f6',
+                          background: '#fafafa',
                         }}
                       >
-                        {c.thumbnailUrl && (
-                          <img
-                            className="art-picker__card-thumb"
-                            src={c.thumbnailUrl}
-                            alt={c.title}
-                          />
-                        )}
-                        <div className="art-picker__card-body">
-                          <strong className="art-picker__card-title">{c.title}</strong>
-                          {c.description && (
-                            <p className="art-picker__card-desc">{c.description}</p>
-                          )}
-                        </div>
-                        {isSelected && <div className="art-picker__card-check">✓</div>}
-                      </button>
-                    );
-                  })}
-                </div>
-                <div
-                  style={{
-                    padding: '16px 24px',
-                    borderTop: '1.5px solid #f3f4f6',
-                    background: '#fafafa',
-                  }}
-                >
-                  <button
-                    className="art-btn art-btn--save"
-                    onClick={() => setCoursePickerOpen(false)}
-                    style={{ width: '100%' }}
-                  >
-                    Xong ({activeTopic?.courseIds.length || 0} khóa học đã chọn)
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                        <button
+                          type="button"
+                          className="art-btn art-btn--save"
+                          onClick={() => setCoursePickerOpen(false)}
+                          style={{ width: '100%' }}
+                        >
+                          Xong ({activeTopic?.courseIds.length || 0} khóa học đã chọn)
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-        {/* ── Delete modal ── */}
-        {deleteId && (
-          <div className="art-modal-overlay">
-            <div className="art-modal">
-              <h3 className="art-modal__title">Xác nhận xóa</h3>
-              <p className="art-modal__body">
-                Bạn có chắc muốn xóa chủ đề "
-                {topics.find((t) => t.clientId === deleteId)?.title || '(trống)'}"?
-              </p>
-              <div className="art-modal__actions">
-                <button
-                  className="art-btn art-btn--delete"
-                  onClick={() => {
-                    const t = topics.find((n) => n.clientId === deleteId);
-                    if (t) deleteTopic(t);
-                  }}
-                >
-                  Xóa
-                </button>
-                <button className="art-btn" onClick={() => setDeleteId(null)}>
-                  Hủy
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+              {/* ── Delete modal ── */}
+              {deleteId && (
+                <div className="art-modal-overlay">
+                  <div className="art-modal">
+                    <h3 className="art-modal__title">Xác nhận xóa</h3>
+                    <p className="art-modal__body">
+                      Bạn có chắc muốn xóa chủ đề "
+                      {topics.find((t) => t.clientId === deleteId)?.title || '(trống)'}"?
+                    </p>
+                    <div className="art-modal__actions">
+                      <button
+                        type="button"
+                        className="art-btn art-btn--delete"
+                        onClick={() => {
+                          const t = topics.find((n) => n.clientId === deleteId);
+                          if (t) deleteTopic(t);
+                        }}
+                      >
+                        Xóa
+                      </button>
+                      <button type="button" className="art-btn" onClick={() => setDeleteId(null)}>
+                        Hủy
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>,
+            document.body
+          )}
       </div>
     </>
   );
