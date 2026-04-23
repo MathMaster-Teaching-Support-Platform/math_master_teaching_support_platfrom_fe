@@ -18,7 +18,6 @@ import {
   Library,
   LineChart,
   LogOut,
-  NotebookTabs,
   Presentation,
   Ruler,
   Settings,

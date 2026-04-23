@@ -78,7 +78,7 @@ const SearchResults: React.FC = () => {
       description: 'Thực hành tính đạo hàm các hàm số thường gặp',
       thumbnail: '📝',
       metadata: 'Hạn nộp: 15/02/2026 • 100 điểm',
-      url: '/student/assignments/6',
+      url: '/student/assessments',
     },
     {
       id: 7,
@@ -87,7 +87,7 @@ const SearchResults: React.FC = () => {
       description: 'Kiểm tra tổng hợp kiến thức đã học',
       thumbnail: '📝',
       metadata: 'Hạn nộp: 20/02/2026 • 200 điểm',
-      url: '/student/assignments/7',
+      url: '/student/assessments',
     },
 
     // Materials

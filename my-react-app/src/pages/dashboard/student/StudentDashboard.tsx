@@ -421,8 +421,6 @@ const STREAK_ON = [true, true, true, true, true, false, false];
 
 const QUICK_ACTIONS = [
   { icon: <IBook />, label: 'Học bài mới', path: '/student/courses', color: '#818cf8' },
-  { icon: <IEdit />, label: 'Bài tập', path: '/student/assignments', color: '#34d399' },
-  { icon: <IGrade />, label: 'Xem điểm', path: '/student/grades', color: '#fbbf24' },
   { icon: <IBrain />, label: 'Hỏi AI', path: '/ai/chat', color: '#f9a8d4' },
   { icon: <IMap />, label: 'Lộ trình', path: '/student/roadmap', color: '#67e8f9' },
   { icon: <IWallet />, label: 'Ví của tôi', path: '/student/wallet', color: '#a78bfa' },
@@ -610,7 +608,11 @@ const StudentDashboard: React.FC = () => {
                 <h2 className="sd-card-title">
                   <IEdit /> Bài tập sắp tới
                 </h2>
-                <Link to="/student/assignments" className="sd-link" aria-label="Xem tất cả bài tập">
+                <Link
+                  to="/student/assessments"
+                  className="sd-link"
+                  aria-label="Xem tất cả bài kiểm tra"
+                >
                   Xem tất cả <IChevron />
                 </Link>
               </div>
@@ -658,7 +660,7 @@ const StudentDashboard: React.FC = () => {
                       <button
                         className="sd-btn sd-btn-sm"
                         style={{ borderColor: task.color, color: task.color }}
-                        onClick={() => navigate('/student/assignments')}
+                        onClick={() => navigate('/student/assessments')}
                         aria-label={`Làm bài: ${task.title}`}
                       >
                         Làm bài
@@ -727,7 +729,7 @@ const StudentDashboard: React.FC = () => {
                 <h2 className="sd-card-title">
                   <IStar /> Điểm số gần đây
                 </h2>
-                <Link to="/student/grades" className="sd-link" aria-label="Xem tất cả điểm số">
+                <Link to="/student/assessments" className="sd-link" aria-label="Xem tất cả điểm số">
                   Xem tất cả <IChevron />
                 </Link>
               </div>
