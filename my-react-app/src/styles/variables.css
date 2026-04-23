@@ -32,9 +32,9 @@
   --bg-primary: #f5f4ed;
   --bg-dark: #141413;
 
-  /* Typography */
-  --font-family: 'Be Vietnam Pro', system-ui, sans-serif;
-  --font-heading: Georgia, 'Times New Roman', serif;
+  /* Typography — Be Vietnam Pro for full Vietnamese combining marks (dấu); avoid Georgia/Times */
+  --font-family: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-heading: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
   --font-size-base: 1rem;
@@ -107,6 +107,6 @@
   --c-text-3: #87867f;
   --c-border: #f0eee6;
   --c-border-soft: #e8e6dc;
-  --f-body: 'Be Vietnam Pro', system-ui, sans-serif;
-  --f-heading: Georgia, 'Times New Roman', serif;
+  --f-body: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --f-heading: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }

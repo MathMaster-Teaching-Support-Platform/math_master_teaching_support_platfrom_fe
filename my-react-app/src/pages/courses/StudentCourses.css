@@ -410,7 +410,7 @@
 }
 
 .sc-thumb-glyph {
-  font-family: 'Georgia', 'Times New Roman', serif;
+  font-family: var(--sc-font);
   font-size: 64px;
   font-weight: 400;
   color: rgba(255, 255, 255, 0.85);

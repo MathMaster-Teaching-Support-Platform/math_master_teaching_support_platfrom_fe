@@ -29,6 +29,7 @@ import {
 } from '../../hooks/useExamMatrix';
 import { useToast } from '../../context/ToastContext';
 import '../../styles/module-refactor.css';
+import '../courses/TeacherCourses.css';
 import {
   MatrixStatus,
   type ExamMatrixRequest,
@@ -132,16 +133,17 @@ export function ExamMatrixDashboard() {
       role="teacher"
       user={{ name: 'Teacher', avatar: '', role: 'teacher' }}
       notificationCount={0}
+      contentClassName="dashboard-content--flush-bleed"
     >
       <div className="module-layout-container">
-        <section className="module-page">
+        <section className="module-page teacher-courses-page exam-matrix-dashboard-page">
           {/* ── Header ── */}
-          <header className="page-header">
+          <header className="page-header courses-header-row">
             <div className="header-stack">
-              <div className="header-kicker">Exam matrix management</div>
+              <div className="header-kicker">Teacher Studio</div>
               <div className="row" style={{ gap: '0.6rem' }}>
                 <h2>Ma trận đề</h2>
-                {!isLoading && <span className="count-chip">{matrices.length}</span>}
+                {!isLoading && <span className="count-chip">{totalElements}</span>}
               </div>
               <p className="header-sub">
                 {stats.approved} đã phê duyệt • {stats.locked} đã khóa
@@ -201,7 +203,7 @@ export function ExamMatrixDashboard() {
           </div>
 
           {/* ── Workflow hint ── */}
-          <section className="hero-card">
+          <section className="hero-card exam-matrix-workflow-hero">
             <p className="hero-kicker">Luồng làm việc</p>
             <h2 style={{ marginBottom: '1.1rem' }}>Từ ma trận đến bài kiểm tra hoàn chỉnh</h2>
             <div
@@ -371,14 +373,16 @@ export function ExamMatrixDashboard() {
 
           {/* ── Toolbar ── */}
           <div className="toolbar">
-            <label className="row" style={{ minWidth: 260 }}>
-              <Search size={15} />
+            <label className="search-box">
+              <span className="search-box__icon" aria-hidden="true">
+                <Search size={15} />
+              </span>
               <input
-                className="input"
-                style={{ border: '0', padding: 0, width: '100%' }}
-                placeholder="Tìm ma trận"
+                placeholder="Tìm ma trận..."
                 value={search}
-                onChange={(event) => { setSearch(event.target.value); }}
+                onChange={(event) => {
+                  setSearch(event.target.value);
+                }}
               />
             </label>
 
@@ -410,7 +414,13 @@ export function ExamMatrixDashboard() {
             </button>
           </div>
 
-          {isLoading && <div className="empty">Đang tải danh sách ma trận...</div>}
+          {isLoading && (
+            <div className="skeleton-grid" aria-hidden>
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="skeleton-card" />
+              ))}
+            </div>
+          )}
           {isError && (
             <div className="empty">
               {error instanceof Error ? error.message : 'Không thể tải danh sách ma trận'}
@@ -426,7 +436,7 @@ export function ExamMatrixDashboard() {
               {matrices.map((matrix) => (
                 <article
                   key={matrix.id}
-                  className="data-card"
+                  className="data-card course-card"
                   style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}
                 >
                   {/* Top meta row */}

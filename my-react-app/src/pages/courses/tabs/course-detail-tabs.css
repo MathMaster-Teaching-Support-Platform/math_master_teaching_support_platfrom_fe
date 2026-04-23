@@ -335,7 +335,7 @@
   font-size: 1.1rem;
   font-weight: 700;
   color: #141413;
-  font-family: var(--f-heading, Georgia, serif);
+  font-family: var(--f-heading);
 }
 
 /* —— Empty & loading —— */

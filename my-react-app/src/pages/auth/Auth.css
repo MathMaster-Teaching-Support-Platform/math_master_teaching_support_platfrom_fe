@@ -78,7 +78,7 @@
 
 .auth-math-sym {
   position: absolute;
-  font-family: 'Be Vietnam Pro', 'Georgia', serif;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
   font-weight: 300;
   color: rgba(255, 255, 255, 0.11);
   line-height: 1;
@@ -861,7 +861,7 @@
 }
 
 .auth-quote p {
-  font-family: 'Georgia', 'Times New Roman', serif;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
   font-size: 0.875rem;
   font-style: italic;
   color: rgba(255, 255, 255, 0.58);
@@ -989,7 +989,7 @@
 /* Formula chips */
 .rdeco-chip {
   position: absolute;
-  font-family: 'Georgia', 'Times New Roman', serif;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
   font-size: 0.72rem;
   font-style: italic;
   color: rgba(94, 92, 230, 0.55);
@@ -1090,7 +1090,7 @@
 /* Floating math symbols */
 .rdeco-sym {
   position: absolute;
-  font-family: 'Georgia', 'Times New Roman', serif;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
   font-style: italic;
   color: rgba(94, 92, 230, 0.1);
   user-select: none;

@@ -68,6 +68,8 @@ h6 {
   color: var(--gray-900);
   font-weight: 500;
   letter-spacing: 0;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
 }
 
 h1 {
@@ -102,9 +104,11 @@ button {
   font-family: var(--font-family);
 }
 
-/* Keep title-like classes visually consistent when local CSS omits font-family */
+/* Title-like class names: same VN-safe stack as headings (not legacy serif) */
 :where([class*='title'], [class*='heading']) {
   font-family: var(--font-heading);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
 }
 
 a {

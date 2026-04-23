@@ -516,7 +516,7 @@
 /* Floating math symbols */
 .math-symbol {
   position: absolute;
-  font-family: 'Be Vietnam Pro', serif;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
   font-weight: 700;
   color: #c96442;
   pointer-events: none;
