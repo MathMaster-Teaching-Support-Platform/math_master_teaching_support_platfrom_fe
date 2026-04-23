@@ -112,11 +112,12 @@ function CloneModal({
         </div>
 
         <div className="modal-footer">
-          <button className="btn secondary" onClick={onClose}>
+          <button type="button" className="btn secondary" onClick={onClose}>
             Hủy
           </button>
           <button
-            className="btn"
+            type="button"
+            className="btn btn--feat-violet"
             disabled={!newTitle.trim() || isLoading}
             onClick={() => onConfirm(newTitle, cloneQuestions)}
           >
@@ -176,10 +177,15 @@ function GenerateFromMatrixModal({
         </div>
 
         <div className="modal-footer">
-          <button className="btn secondary" onClick={onClose}>
+          <button type="button" className="btn secondary" onClick={onClose}>
             Hủy
           </button>
-          <button className="btn" disabled={!matrixId || isLoading} onClick={onConfirm}>
+          <button
+            type="button"
+            className="btn btn--feat-indigo"
+            disabled={!matrixId || isLoading}
+            onClick={onConfirm}
+          >
             {isLoading ? 'Đang tạo...' : 'Tạo assessment'}
           </button>
         </div>
@@ -311,12 +317,17 @@ export default function TeacherAssessments() {
               </p>
             </div>
             <div className="row" style={{ flexWrap: 'wrap' }}>
-              <button className="btn secondary" onClick={() => setGenerateModalOpen(true)}>
+              <button
+                type="button"
+                className="btn secondary btn--tint-indigo"
+                onClick={() => setGenerateModalOpen(true)}
+              >
                 <Sparkles size={14} />
                 Tạo nhanh từ ma trận
               </button>
               <button
-                className="btn"
+                type="button"
+                className="btn btn--feat-violet"
                 onClick={() => {
                   setMode('create');
                   setSelected(null);
@@ -478,7 +489,10 @@ export default function TeacherAssessments() {
                     )}
 
                     {assessment.status === 'DRAFT' && (
-                      <button className="btn" onClick={() => publishMutation.mutate(assessment.id, {
+                      <button
+                        type="button"
+                        className="btn btn--feat-emerald"
+                        onClick={() => publishMutation.mutate(assessment.id, {
                         onSuccess: () => showToast({ type: 'success', message: `Đã xuất bản bài kiểm tra “${assessment.title}”.` }),
                         onError: (err) => showToast({ type: 'error', message: err instanceof Error ? err.message : 'Không thể xuất bản bài kiểm tra.' }),
                       })}>

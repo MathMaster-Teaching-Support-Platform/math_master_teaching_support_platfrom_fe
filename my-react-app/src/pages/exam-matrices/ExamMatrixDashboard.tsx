@@ -36,6 +36,7 @@ import {
   type ExamMatrixResponse,
 } from '../../types/examMatrix';
 import { ExamMatrixFormModal } from './ExamMatrixFormModal';
+import './ExamMatrixDashboard.css';
 
 const filters: Array<'ALL' | MatrixStatus> = [
   'ALL',
@@ -150,7 +151,8 @@ export function ExamMatrixDashboard() {
               </p>
             </div>
             <button
-              className="btn"
+              type="button"
+              className="btn btn--feat-indigo"
               onClick={() => {
                 setMode('create');
                 setSelected(null);
@@ -203,166 +205,54 @@ export function ExamMatrixDashboard() {
           </div>
 
           {/* ── Workflow hint ── */}
-          <section className="hero-card exam-matrix-workflow-hero">
+          <section className="hero-card exam-matrix-workflow-hero" aria-label="Luồng ma trận đề">
             <p className="hero-kicker">Luồng làm việc</p>
-            <h2 style={{ marginBottom: '1.1rem' }}>Từ ma trận đến bài kiểm tra hoàn chỉnh</h2>
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                gap: '0.75rem',
-                marginBottom: '1.1rem',
-              }}
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '0.45rem',
-                  padding: '0.85rem 1rem',
-                  background: 'var(--mod-slate-50, #f8fafc)',
-                  borderRadius: 10,
-                  border: '1px solid var(--mod-slate-100)',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span
-                    style={{
-                      width: 24,
-                      height: 24,
-                      borderRadius: '50%',
-                      background: '#eff6ff',
-                      color: '#1d4ed8',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '0.72rem',
-                      fontWeight: 700,
-                      flexShrink: 0,
-                    }}
-                  >
+            <h2 className="exam-matrix-hero-title">Từ ma trận đến bài kiểm tra hoàn chỉnh</h2>
+            <div className="exam-matrix-wf-grid">
+              <div className="exam-matrix-wf-step exam-matrix-wf-step--1">
+                <div className="exam-matrix-wf-step__head">
+                  <span className="exam-matrix-wf-step__num" aria-hidden>
                     1
                   </span>
-                  <strong style={{ fontSize: '0.88rem', color: 'var(--mod-ink)' }}>
-                    Tạo draft
-                  </strong>
+                  <p className="exam-matrix-wf-step__title">Tạo draft</p>
                 </div>
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: '0.79rem',
-                    color: 'var(--mod-muted, #64748b)',
-                    lineHeight: 1.45,
-                  }}
-                >
-                  Đặt tên ma trận, mô tả và mục tiêu câu hỏi.
-                </p>
+                <p className="exam-matrix-wf-step__desc">Đặt tên ma trận, mô tả và mục tiêu câu hỏi.</p>
               </div>
-
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '0.45rem',
-                  padding: '0.85rem 1rem',
-                  background: 'var(--mod-slate-50, #f8fafc)',
-                  borderRadius: 10,
-                  border: '1px solid var(--mod-slate-100)',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span
-                    style={{
-                      width: 24,
-                      height: 24,
-                      borderRadius: '50%',
-                      background: '#f0fdf4',
-                      color: '#15803d',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '0.72rem',
-                      fontWeight: 700,
-                      flexShrink: 0,
-                    }}
-                  >
+              <div className="exam-matrix-wf-step exam-matrix-wf-step--2">
+                <div className="exam-matrix-wf-step__head">
+                  <span className="exam-matrix-wf-step__num" aria-hidden>
                     2
                   </span>
-                  <strong style={{ fontSize: '0.88rem', color: 'var(--mod-ink)' }}>
-                    Thêm cột phân bố
-                  </strong>
+                  <p className="exam-matrix-wf-step__title">Thêm cột phân bố</p>
                 </div>
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: '0.79rem',
-                    color: 'var(--mod-muted, #64748b)',
-                    lineHeight: 1.45,
-                  }}
-                >
+                <p className="exam-matrix-wf-step__desc">
                   Định nghĩa mức nhận thức, chương, số câu và điểm.
                 </p>
               </div>
-
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '0.45rem',
-                  padding: '0.85rem 1rem',
-                  background: 'var(--mod-slate-50, #f8fafc)',
-                  borderRadius: 10,
-                  border: '1px solid var(--mod-slate-100)',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span
-                    style={{
-                      width: 24,
-                      height: 24,
-                      borderRadius: '50%',
-                      background: '#faf5ff',
-                      color: '#7c3aed',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '0.72rem',
-                      fontWeight: 700,
-                      flexShrink: 0,
-                    }}
-                  >
+              <div className="exam-matrix-wf-step exam-matrix-wf-step--3">
+                <div className="exam-matrix-wf-step__head">
+                  <span className="exam-matrix-wf-step__num" aria-hidden>
                     3
                   </span>
-                  <strong style={{ fontSize: '0.88rem', color: 'var(--mod-ink)' }}>
-                    Phê duyệt & xuất
-                  </strong>
+                  <p className="exam-matrix-wf-step__title">Phê duyệt &amp; xuất</p>
                 </div>
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: '0.79rem',
-                    color: 'var(--mod-muted, #64748b)',
-                    lineHeight: 1.45,
-                  }}
-                >
-                  Phê duyệt ma trận rồi dùng ở Trình tạo đề.
-                </p>
+                <p className="exam-matrix-wf-step__desc">Phê duyệt ma trận rồi dùng ở Trình tạo đề.</p>
               </div>
             </div>
 
-            <div className="row" style={{ flexWrap: 'wrap', gap: '0.6rem' }}>
+            <div className="exam-matrix-wf-actions">
               <button
-                className="btn secondary"
+                type="button"
+                className="btn secondary btn--tint-emerald"
                 onClick={() => navigate('/teacher/question-banks')}
-                style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
               >
                 <Library size={15} />
                 Ngân hàng câu hỏi
               </button>
               <button
-                className="btn"
+                type="button"
+                className="btn btn--feat-violet"
                 onClick={() => navigate('/teacher/assessment-builder')}
-                style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
               >
                 <BookOpen size={15} />
                 Trình tạo đề
@@ -372,7 +262,7 @@ export function ExamMatrixDashboard() {
           </section>
 
           {/* ── Toolbar ── */}
-          <div className="toolbar">
+          <div className="toolbar exam-matrix-toolbar">
             <label className="search-box">
               <span className="search-box__icon" aria-hidden="true">
                 <Search size={15} />
@@ -386,7 +276,7 @@ export function ExamMatrixDashboard() {
               />
             </label>
 
-            <div className="pill-group">
+            <div className="pill-group" aria-label="Lọc theo trạng thái">
               {filters.map((filter) => {
                 let count = stats.total;
                 if (filter === MatrixStatus.DRAFT) count = stats.draft;
@@ -395,8 +285,11 @@ export function ExamMatrixDashboard() {
                 return (
                   <button
                     key={filter}
+                    type="button"
                     className={`pill-btn ${statusFilter === filter ? 'active' : ''}`}
-                    onClick={() => { setStatusFilter(filter); }}
+                    onClick={() => {
+                      setStatusFilter(filter);
+                    }}
                   >
                     {filterLabel[filter]} ({count})
                   </button>
@@ -405,9 +298,9 @@ export function ExamMatrixDashboard() {
             </div>
 
             <button
-              className="btn secondary"
+              type="button"
+              className="btn secondary btn--tint-indigo"
               onClick={() => void refetch()}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
             >
               <RefreshCw size={14} />
               Làm mới
@@ -432,150 +325,124 @@ export function ExamMatrixDashboard() {
           )}
 
           {!isLoading && !isError && matrices.length > 0 && (
-            <div className="grid-cards">
-              {matrices.map((matrix) => (
-                <article
-                  key={matrix.id}
-                  className="data-card course-card"
-                  style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}
-                >
-                  {/* Top meta row */}
-                  <div
-                    className="row"
-                    style={{ justifyContent: 'space-between', alignItems: 'center' }}
+            <div className="grid-cards exam-matrix-card-grid">
+              {matrices.map((matrix) => {
+                let cardStatus: 'draft' | 'approved' | 'locked' = 'locked';
+                if (matrix.status === MatrixStatus.DRAFT) cardStatus = 'draft';
+                else if (matrix.status === MatrixStatus.APPROVED) cardStatus = 'approved';
+                return (
+                  <article
+                    key={matrix.id}
+                    className={`data-card course-card exam-matrix-card exam-matrix-card--${cardStatus}`}
                   >
-                    <span className={statusClass[matrix.status]}>
-                      {cardStatusLabel[matrix.status]}
-                    </span>
-                  </div>
-
-                  {/* Title + description */}
-                  <div style={{ flex: 1 }}>
-                    <h3 style={{ marginBottom: 6 }}>{matrix.name}</h3>
-                  </div>
-
-                  {/* Grade / Subject meta */}
-                  {(matrix.gradeLevel || matrix.subjectName) && (
-                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                      {matrix.gradeLevel && (
-                        <span
-                          style={{
-                            fontSize: '0.75rem',
-                            background: '#eff6ff',
-                            color: '#1d4ed8',
-                            padding: '2px 8px',
-                            borderRadius: 20,
-                            fontWeight: 500,
-                          }}
-                        >
-                          Khối {matrix.gradeLevel}
-                        </span>
-                      )}
-                      {matrix.subjectName && (
-                        <span
-                          style={{
-                            fontSize: '0.75rem',
-                            background: '#f0fdf4',
-                            color: '#15803d',
-                            padding: '2px 8px',
-                            borderRadius: 20,
-                            fontWeight: 500,
-                          }}
-                        >
-                          {matrix.subjectName}
-                        </span>
-                      )}
+                    <div className="exam-matrix-card__head">
+                      <span className={`${statusClass[matrix.status]} exam-matrix-card__status`}>
+                        {cardStatusLabel[matrix.status]}
+                      </span>
+                      <h3 className="exam-matrix-card__title">{matrix.name}</h3>
                     </div>
-                  )}
 
-                  {/* Primary action */}
-                  <button
-                    className="btn"
-                    onClick={() => navigate(`/teacher/exam-matrices/${matrix.id}`)}
-                  >
-                    <Eye size={14} />
-                    Xem chi tiết
-                  </button>
-
-                  {/* Secondary actions */}
-                  <div className="row" style={{ gap: '0.4rem', flexWrap: 'wrap' }}>
-                    {matrix.status === MatrixStatus.DRAFT && (
-                      <button
-                        className="btn secondary"
-                        style={{ flex: 1, justifyContent: 'center', fontSize: '0.82rem' }}
-                        onClick={() => {
-                          setMode('edit');
-                          setSelected(matrix);
-                          setFormOpen(true);
-                        }}
-                      >
-                        <Edit size={13} />
-                        Chỉnh sửa
-                      </button>
+                    {(matrix.gradeLevel || matrix.subjectName) && (
+                      <div className="exam-matrix-card__chips" aria-label="Môn / khối">
+                        {matrix.gradeLevel && (
+                          <span className="exam-matrix-card__chip">Khối {matrix.gradeLevel}</span>
+                        )}
+                        {matrix.subjectName && (
+                          <span className="exam-matrix-card__chip">{matrix.subjectName}</span>
+                        )}
+                      </div>
                     )}
 
-                    {matrix.status === MatrixStatus.DRAFT && (
+                    <div className="exam-matrix-card__main-cta">
                       <button
-                        className="btn"
-                        style={{ flex: 1, justifyContent: 'center', fontSize: '0.82rem' }}
-                        disabled={approveMutation.isPending}
-                        onClick={() => {
-                          if (!globalThis.confirm(`Phê duyệt ma trận "${matrix.name}"?`)) return;
-                          approveMutation.mutate(matrix.id, {
-                            onSuccess: () => showToast({ type: 'success', message: `Đã phê duyệt ma trận “${matrix.name}”.` }),
-                            onError: (err) => showToast({ type: 'error', message: err instanceof Error ? err.message : 'Không thể phê duyệt ma trận.' }),
-                          });
-                        }}
+                        type="button"
+                        className="btn btn--feat-indigo exam-matrix-card__primary"
+                        onClick={() => navigate(`/teacher/exam-matrices/${matrix.id}`)}
                       >
-                        <CheckCircle2 size={13} />
-                        {approveMutation.isPending ? '...' : 'Phê duyệt'}
+                        <Eye size={14} />
+                        Xem chi tiết
                       </button>
-                    )}
-
-                    {matrix.status === MatrixStatus.APPROVED && (
-                      <button
-                        className="btn warn"
-                        style={{ flex: 1, justifyContent: 'center', fontSize: '0.82rem' }}
-                        disabled={resetMutation.isPending}
-                        onClick={() => {
-                          if (!globalThis.confirm(`Đặt lại ma trận "${matrix.name}" về nháp?`))
-                            return;
-                          resetMutation.mutate(matrix.id, {
-                            onSuccess: () => showToast({ type: 'success', message: `Đã đặt lại ma trận “${matrix.name}” về nháp.` }),
-                            onError: (err) => showToast({ type: 'error', message: err instanceof Error ? err.message : 'Không thể đặt lại ma trận.' }),
-                          });
-                        }}
-                      >
-                        <RotateCcw size={13} />
-                        {resetMutation.isPending ? '...' : 'Đặt lại'}
-                      </button>
-                    )}
+                    </div>
 
                     {matrix.status !== MatrixStatus.LOCKED && (
-                      <button
-                        className="btn danger"
-                        style={{ justifyContent: 'center', fontSize: '0.82rem' }}
-                        disabled={deleteMutation.isPending}
-                        onClick={() => {
-                          if (
-                            !globalThis.confirm(
-                              `Xóa ma trận "${matrix.name}"? Hành động này không thể hoàn tác.`
+                      <div className="exam-matrix-card__foot" aria-label="Thao tác bổ sung">
+                        {matrix.status === MatrixStatus.DRAFT && (
+                          <button
+                            type="button"
+                            className="exam-matrix-card__ghost-btn"
+                            onClick={() => {
+                              setMode('edit');
+                              setSelected(matrix);
+                              setFormOpen(true);
+                            }}
+                          >
+                            <Edit size={14} />
+                            Chỉnh sửa
+                          </button>
+                        )}
+
+                        {matrix.status === MatrixStatus.DRAFT && (
+                          <button
+                            type="button"
+                            className="exam-matrix-card__ghost-btn exam-matrix-card__ghost-btn--emphasis"
+                            disabled={approveMutation.isPending}
+                            onClick={() => {
+                              if (!globalThis.confirm(`Phê duyệt ma trận "${matrix.name}"?`)) return;
+                              approveMutation.mutate(matrix.id, {
+                                onSuccess: () => showToast({ type: 'success', message: `Đã phê duyệt ma trận “${matrix.name}”.` }),
+                                onError: (err) => showToast({ type: 'error', message: err instanceof Error ? err.message : 'Không thể phê duyệt ma trận.' }),
+                              });
+                            }}
+                          >
+                            <CheckCircle2 size={14} />
+                            {approveMutation.isPending ? '...' : 'Phê duyệt'}
+                          </button>
+                        )}
+
+                        {matrix.status === MatrixStatus.APPROVED && (
+                          <button
+                            type="button"
+                            className="exam-matrix-card__ghost-btn"
+                            disabled={resetMutation.isPending}
+                            onClick={() => {
+                              if (!globalThis.confirm(`Đặt lại ma trận "${matrix.name}" về nháp?`))
+                                return;
+                              resetMutation.mutate(matrix.id, {
+                                onSuccess: () => showToast({ type: 'success', message: `Đã đặt lại ma trận “${matrix.name}” về nháp.` }),
+                                onError: (err) => showToast({ type: 'error', message: err instanceof Error ? err.message : 'Không thể đặt lại ma trận.' }),
+                              });
+                            }}
+                          >
+                            <RotateCcw size={14} />
+                            {resetMutation.isPending ? '...' : 'Đặt lại'}
+                          </button>
+                        )}
+
+                        <button
+                          type="button"
+                          className="exam-matrix-card__ghost-btn exam-matrix-card__ghost-btn--danger"
+                          disabled={deleteMutation.isPending}
+                          onClick={() => {
+                            if (
+                              !globalThis.confirm(
+                                `Xóa ma trận "${matrix.name}"? Hành động này không thể hoàn tác.`
+                              )
                             )
-                          )
-                            return;
-                          deleteMutation.mutate(matrix.id, {
-                            onSuccess: () => showToast({ type: 'success', message: `Đã xóa ma trận “${matrix.name}”.` }),
-                            onError: (err) => showToast({ type: 'error', message: err instanceof Error ? err.message : 'Không thể xóa ma trận.' }),
-                          });
-                        }}
-                      >
-                        <Trash2 size={13} />
-                        {deleteMutation.isPending ? '...' : 'Xóa'}
-                      </button>
+                              return;
+                            deleteMutation.mutate(matrix.id, {
+                              onSuccess: () => showToast({ type: 'success', message: `Đã xóa ma trận “${matrix.name}”.` }),
+                              onError: (err) => showToast({ type: 'error', message: err instanceof Error ? err.message : 'Không thể xóa ma trận.' }),
+                            });
+                          }}
+                        >
+                          <Trash2 size={14} />
+                          {deleteMutation.isPending ? '...' : 'Xóa'}
+                        </button>
+                      </div>
                     )}
-                  </div>
-                </article>
-              ))}
+                  </article>
+                );
+              })}
             </div>
           )}
 

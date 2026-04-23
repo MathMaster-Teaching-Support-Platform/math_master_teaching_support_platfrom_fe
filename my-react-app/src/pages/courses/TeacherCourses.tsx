@@ -727,7 +727,7 @@ const TeacherCourses: React.FC = () => {
       contentClassName="dashboard-content--flush-bleed"
     >
       <div className="module-layout-container">
-        <section className="module-page teacher-courses-page">
+        <section className="module-page teacher-courses-page teacher-courses-index-page">
           {/* ── Header ── */}
           <header className="page-header courses-header-row">
             <div className="header-stack">

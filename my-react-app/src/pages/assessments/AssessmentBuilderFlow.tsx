@@ -186,7 +186,8 @@ export default function AssessmentBuilderFlow() {
                   </p>
                 </div>
                 <button
-                  className="btn secondary"
+                  type="button"
+                  className="btn secondary btn--tint-violet"
                   onClick={() => navigate('/teacher/question-templates')}
                 >
                   Mở <ArrowRight size={13} />
@@ -201,7 +202,8 @@ export default function AssessmentBuilderFlow() {
                   </p>
                 </div>
                 <button
-                  className="btn secondary"
+                  type="button"
+                  className="btn secondary btn--tint-emerald"
                   onClick={() => navigate('/teacher/question-banks')}
                 >
                   Mở <ArrowRight size={13} />
@@ -216,7 +218,8 @@ export default function AssessmentBuilderFlow() {
                   </p>
                 </div>
                 <button
-                  className="btn secondary"
+                  type="button"
+                  className="btn secondary btn--tint-indigo"
                   onClick={() => navigate('/teacher/exam-matrices')}
                 >
                   Mở <ArrowRight size={13} />
@@ -269,14 +272,16 @@ export default function AssessmentBuilderFlow() {
 
               <div className="row" style={{ flexWrap: 'wrap' }}>
                 <button
-                  className="btn"
+                  type="button"
+                  className="btn btn--feat-indigo"
                   onClick={() => void handleGenerate()}
                   disabled={!selectedMatrixId || generateMutation.isPending}
                 >
                   {generateMutation.isPending ? 'Đang tạo...' : 'Generate from Matrix'}
                 </button>
                 <button
-                  className="btn secondary"
+                  type="button"
+                  className="btn secondary btn--tint-indigo"
                   onClick={() => navigate('/teacher/exam-matrices')}
                 >
                   Quản lý ma trận
@@ -361,13 +366,15 @@ export default function AssessmentBuilderFlow() {
 
                   <div className="row" style={{ flexWrap: 'wrap' }}>
                     <button
-                      className="btn secondary"
+                      type="button"
+                      className="btn secondary btn--tint-violet"
                       onClick={() => navigate(`/teacher/assessments/${generatedAssessmentId}`)}
                     >
                       Mở chi tiết đề
                     </button>
                     <button
-                      className="btn"
+                      type="button"
+                      className="btn btn--feat-emerald"
                       onClick={() => void handlePublish()}
                       disabled={
                         !publishSummary?.canPublish ||
