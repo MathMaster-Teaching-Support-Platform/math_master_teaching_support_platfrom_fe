@@ -326,7 +326,132 @@
   max-width: 50%;
 }
 
-/* ── Modal overlay (Sửa / Xem chi tiết) ──────────────────── */
+/* Xem chi tiết — cùng shell create-course (warm, terracotta) */
+.module-layout-container .create-course-modal .lesson-plan-view-wizard {
+  max-width: min(720px, 96vw) !important;
+}
+
+.module-layout-container .create-course-modal .lesson-plan-view-wizard .lp-view-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #5e5d59;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  font-family: var(--font-family);
+  letter-spacing: 0;
+}
+
+.module-layout-container .create-course-modal .lesson-plan-view-wizard .lp-view-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.1rem 0 0.25rem;
+}
+
+.module-layout-container .create-course-modal .lesson-plan-view-wizard .lp-detail-section {
+  box-shadow: none;
+  border-left-width: 3px;
+  background: #ffffff;
+  border-color: #e8e6dc;
+}
+
+.module-layout-container .create-course-modal .lesson-plan-view-wizard .lp-ds--blue {
+  background: #faf7f3;
+  border-color: #e8e6dc;
+  border-left-color: #c96442;
+}
+.module-layout-container .create-course-modal .lesson-plan-view-wizard .lp-di--blue {
+  background: #ede8dc;
+  color: #7a5a4d;
+}
+.module-layout-container .create-course-modal .lesson-plan-view-wizard .lp-dc--blue {
+  background: #f0ebe3;
+  color: #6d4c3d;
+}
+
+.module-layout-container .create-course-modal .lesson-plan-view-wizard .lp-ds--amber {
+  background: #fffbf5;
+  border-color: #eee5d6;
+  border-left-color: #a67c32;
+}
+.module-layout-container .create-course-modal .lesson-plan-view-wizard .lp-di--amber {
+  background: #f5ebdc;
+  color: #6b5420;
+}
+.module-layout-container .create-course-modal .lesson-plan-view-wizard .lp-dc--amber {
+  background: #f0e8d8;
+  color: #5c4a22;
+}
+
+.module-layout-container .create-course-modal .lesson-plan-view-wizard .lp-ds--emerald {
+  background: #f4faf6;
+  border-color: #dde8e0;
+  border-left-color: #4d6b5c;
+}
+.module-layout-container .create-course-modal .lesson-plan-view-wizard .lp-di--emerald {
+  background: #e3ede6;
+  color: #3d5246;
+}
+
+.module-layout-container .create-course-modal .lesson-plan-view-wizard .lp-ds--violet {
+  background: #f8f5f2;
+  border-color: #e5e0db;
+  border-left-color: #7a5a4d;
+}
+.module-layout-container .create-course-modal .lesson-plan-view-wizard .lp-di--violet {
+  background: #ede6e0;
+  color: #5c4a40;
+}
+
+.module-layout-container .create-course-modal .lesson-plan-view-wizard .lp-ds--orange {
+  background: #fdf8f3;
+  border-color: #ebe3dc;
+  border-left-color: #b85839;
+}
+.module-layout-container .create-course-modal .lesson-plan-view-wizard .lp-di--orange {
+  background: #f5e6dc;
+  color: #7a3d28;
+}
+
+.module-layout-container .create-course-modal .lesson-plan-view-wizard .lp-detail-section-title,
+.module-layout-container .create-course-modal .lesson-plan-view-wizard .lp-detail-text,
+.module-layout-container .create-course-modal .lesson-plan-view-wizard .lp-detail-list li {
+  font-family: var(--font-family);
+  letter-spacing: 0;
+  text-rendering: optimizeLegibility;
+}
+
+.module-layout-container .create-course-modal .lesson-plan-view-wizard .lp-detail-section-title {
+  color: #141413;
+  font-weight: 600;
+}
+
+.module-layout-container .create-course-modal .lesson-plan-view-wizard .lp-detail-list li,
+.module-layout-container .create-course-modal .lesson-plan-view-wizard .lp-detail-text {
+  color: #3d3c39;
+}
+
+.module-layout-container .create-course-modal .lesson-plan-view-wizard .lp-ds--blue .lp-detail-list li::before {
+  background: #c96442;
+}
+.module-layout-container .create-course-modal .lesson-plan-view-wizard .lp-ds--amber .lp-detail-list li::before {
+  background: #a67c32;
+}
+
+.module-layout-container .create-course-modal .lesson-plan-view-wizard .lp-view-empty,
+.module-layout-container .create-course-modal .lesson-plan-view-wizard .lp-detail-empty {
+  color: #87867f;
+  font-family: var(--font-family);
+}
+
+.module-layout-container .create-course-modal .lesson-plan-view-wizard .lp-view-empty svg,
+.module-layout-container .create-course-modal .lesson-plan-view-wizard .lp-detail-empty svg {
+  color: #c96442;
+  opacity: 0.65;
+}
+
+/* ── Modal overlay (chỉ còn Sửa) ────────────────────────── */
 .lp-modal-overlay {
   position: fixed;
   inset: 0;

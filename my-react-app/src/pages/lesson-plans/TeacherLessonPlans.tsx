@@ -663,130 +663,139 @@ function EditLessonPlanModal({
 
 function LessonPlanDetail({
   plan,
-  idx,
   onClose,
   onEdit,
 }: {
   plan: LessonPlanResponse;
-  idx: number;
   onClose: () => void;
   onEdit: () => void;
 }) {
-  const gradient = coverGradients[idx % coverGradients.length];
-  const accent = coverAccents[idx % coverAccents.length];
-
   return (
-    <div className="lp-modal-overlay">
-      <div className="lp-modal lp-detail-modal">
-        {/* ── Hero banner ── */}
-        <div className="lp-detail-hero" style={{ background: gradient }}>
-          <div className="lp-detail-hero-overlay" />
-          <button className="lp-modal-close lp-detail-close" onClick={onClose} aria-label="Đóng">
-            ×
-          </button>
-          <div className="lp-detail-hero-meta">
-            <span className="lp-date-badge">
-              <CalendarDays size={11} />
-              {fmtDate(plan.updatedAt)}
-            </span>
+    <div className="modal-overlay create-course-modal" lang="vi">
+      <button type="button" className="modal-backdrop" onClick={onClose} aria-label="Đóng" />
+      <div
+        className="modal-box wizard-modal-box create-course-wizard lesson-plan-view-wizard"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="lp-view-title"
+      >
+        <div className="modal-header">
+          <div className="modal-header-left">
+            <div className="modal-icon" aria-hidden>
+              <BookOpen size={18} />
+            </div>
+            <div>
+              <h2 id="lp-view-title">{plan.lessonTitle ?? 'Chi tiết giáo án'}</h2>
+              <p>
+                <span className="lp-view-meta">
+                  <CalendarDays size={14} aria-hidden />
+                  Cập nhật {fmtDate(plan.updatedAt)}
+                </span>
+              </p>
+            </div>
           </div>
-          <h3 className="lp-detail-hero-title" style={{ color: accent }}>
-            {plan.lessonTitle ?? 'Chi tiết giáo án'}
-          </h3>
+          <button type="button" className="modal-close" onClick={onClose} aria-label="Đóng">
+            <X size={18} strokeWidth={2.5} />
+          </button>
         </div>
 
-        {/* ── Sections ── */}
-        <div className="lp-modal-body lp-detail-body">
-          {plan.objectives && plan.objectives.length > 0 && (
-            <div className="lp-detail-section lp-ds--blue">
-              <div className="lp-detail-section-head">
-                <span className="lp-detail-icon-wrap lp-di--blue">
-                  <Target size={14} />
-                </span>
-                <p className="lp-detail-section-title">Mục tiêu bài học</p>
-                <span className="lp-detail-count lp-dc--blue">{plan.objectives.length}</span>
-              </div>
-              <ul className="lp-detail-list">
-                {plan.objectives.map((obj, i) => (
-                  <li key={i}>{obj}</li>
-                ))}
-              </ul>
+        <div className="modal-form">
+          <div className="wizard-content-wrapper">
+            <div className="lp-view-body">
+              {plan.objectives && plan.objectives.length > 0 && (
+                <div className="lp-detail-section lp-ds--blue">
+                  <div className="lp-detail-section-head">
+                    <span className="lp-detail-icon-wrap lp-di--blue">
+                      <Target size={14} />
+                    </span>
+                    <p className="lp-detail-section-title">Mục tiêu bài học</p>
+                    <span className="lp-detail-count lp-dc--blue">{plan.objectives.length}</span>
+                  </div>
+                  <ul className="lp-detail-list">
+                    {plan.objectives.map((obj, i) => (
+                      <li key={i}>{obj}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {plan.materialsNeeded && plan.materialsNeeded.length > 0 && (
+                <div className="lp-detail-section lp-ds--amber">
+                  <div className="lp-detail-section-head">
+                    <span className="lp-detail-icon-wrap lp-di--amber">
+                      <BookOpen size={14} />
+                    </span>
+                    <p className="lp-detail-section-title">Tài liệu & thiết bị</p>
+                    <span className="lp-detail-count lp-dc--amber">
+                      {plan.materialsNeeded.length}
+                    </span>
+                  </div>
+                  <ul className="lp-detail-list">
+                    {plan.materialsNeeded.map((m, i) => (
+                      <li key={i}>{m}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {plan.teachingStrategy && (
+                <div className="lp-detail-section lp-ds--emerald">
+                  <div className="lp-detail-section-head">
+                    <span className="lp-detail-icon-wrap lp-di--emerald">
+                      <ClipboardList size={14} />
+                    </span>
+                    <p className="lp-detail-section-title">Phương pháp giảng dạy</p>
+                  </div>
+                  <p className="lp-detail-text">{plan.teachingStrategy}</p>
+                </div>
+              )}
+
+              {plan.assessmentMethods && (
+                <div className="lp-detail-section lp-ds--violet">
+                  <div className="lp-detail-section-head">
+                    <span className="lp-detail-icon-wrap lp-di--violet">
+                      <FileText size={14} />
+                    </span>
+                    <p className="lp-detail-section-title">Phương pháp đánh giá</p>
+                  </div>
+                  <p className="lp-detail-text">{plan.assessmentMethods}</p>
+                </div>
+              )}
+
+              {plan.notes && (
+                <div className="lp-detail-section lp-ds--orange">
+                  <div className="lp-detail-section-head">
+                    <span className="lp-detail-icon-wrap lp-di--orange">
+                      <Pencil size={14} />
+                    </span>
+                    <p className="lp-detail-section-title">Ghi chú</p>
+                  </div>
+                  <p className="lp-detail-text">{plan.notes}</p>
+                </div>
+              )}
+
+              {!plan.objectives?.length &&
+                !plan.materialsNeeded?.length &&
+                !plan.teachingStrategy &&
+                !plan.assessmentMethods &&
+                !plan.notes && (
+                  <div className="lp-detail-empty lp-view-empty">
+                    <ClipboardList size={28} aria-hidden />
+                    <p>Giáo án này chưa có nội dung chi tiết.</p>
+                  </div>
+                )}
             </div>
-          )}
+          </div>
 
-          {plan.materialsNeeded && plan.materialsNeeded.length > 0 && (
-            <div className="lp-detail-section lp-ds--amber">
-              <div className="lp-detail-section-head">
-                <span className="lp-detail-icon-wrap lp-di--amber">
-                  <BookOpen size={14} />
-                </span>
-                <p className="lp-detail-section-title">Tài liệu & thiết bị</p>
-                <span className="lp-detail-count lp-dc--amber">{plan.materialsNeeded.length}</span>
-              </div>
-              <ul className="lp-detail-list">
-                {plan.materialsNeeded.map((m, i) => (
-                  <li key={i}>{m}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {plan.teachingStrategy && (
-            <div className="lp-detail-section lp-ds--emerald">
-              <div className="lp-detail-section-head">
-                <span className="lp-detail-icon-wrap lp-di--emerald">
-                  <ClipboardList size={14} />
-                </span>
-                <p className="lp-detail-section-title">Phương pháp giảng dạy</p>
-              </div>
-              <p className="lp-detail-text">{plan.teachingStrategy}</p>
-            </div>
-          )}
-
-          {plan.assessmentMethods && (
-            <div className="lp-detail-section lp-ds--violet">
-              <div className="lp-detail-section-head">
-                <span className="lp-detail-icon-wrap lp-di--violet">
-                  <FileText size={14} />
-                </span>
-                <p className="lp-detail-section-title">Phương pháp đánh giá</p>
-              </div>
-              <p className="lp-detail-text">{plan.assessmentMethods}</p>
-            </div>
-          )}
-
-          {plan.notes && (
-            <div className="lp-detail-section lp-ds--orange">
-              <div className="lp-detail-section-head">
-                <span className="lp-detail-icon-wrap lp-di--orange">
-                  <Pencil size={14} />
-                </span>
-                <p className="lp-detail-section-title">Ghi chú</p>
-              </div>
-              <p className="lp-detail-text">{plan.notes}</p>
-            </div>
-          )}
-
-          {!plan.objectives?.length &&
-            !plan.materialsNeeded?.length &&
-            !plan.teachingStrategy &&
-            !plan.assessmentMethods &&
-            !plan.notes && (
-              <div className="lp-detail-empty">
-                <ClipboardList size={28} />
-                <p>Giáo án này chưa có nội dung chi tiết.</p>
-              </div>
-            )}
-        </div>
-
-        <div className="lp-modal-footer">
-          <button className="lp-btn lp-btn-secondary" onClick={onClose}>
-            Đóng
-          </button>
-          <button className="lp-btn lp-btn-primary" onClick={onEdit}>
-            <Pencil size={14} />
-            Chỉnh sửa
-          </button>
+          <div className="wizard-footer">
+            <button type="button" className="btn btn-sand" onClick={onClose}>
+              Đóng
+            </button>
+            <button type="button" className="btn btn-terracotta" onClick={onEdit}>
+              <Pencil size={16} />
+              Chỉnh sửa
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -1213,7 +1222,6 @@ export default function TeacherLessonPlans() {
         {viewing && (
           <LessonPlanDetail
             plan={viewing}
-            idx={plans.findIndex((p) => p.id === viewing.id)}
             onClose={() => setViewing(null)}
             onEdit={() => {
               setEditing(viewing);
