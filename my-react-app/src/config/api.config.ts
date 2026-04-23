@@ -256,6 +256,8 @@ export const API_ENDPOINTS = {
   NOTIFICATIONS_MARK_READ: (id: string) => `/v1/notifications/${id}/read`,
   NOTIFICATIONS_PUSH_TOKEN_REGISTER: '/v1/notifications/push-token/register',
   NOTIFICATIONS_PUSH_TOKEN_UNREGISTER: '/v1/notifications/push-token/unregister',
+  NOTIFICATIONS_PREFERENCES: '/v1/notifications/preferences',
+  NOTIFICATIONS_PREFERENCES_RESET: '/v1/notifications/preferences/reset',
 
   // Chat sessions
   CHAT_SESSIONS: '/chat-sessions',

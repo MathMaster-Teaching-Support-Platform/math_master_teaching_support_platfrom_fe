@@ -31,6 +31,7 @@ const mapPayload = (payload) => {
     content: payload?.notification?.body || data.content,
     timestamp: data.timestamp,
     createdAt: data.timestamp,
+    actionUrl: data.actionUrl,
     metadata,
   };
 };
@@ -56,19 +57,26 @@ messaging.onBackgroundMessage((payload) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
+  const actionUrl = event.notification.data?.actionUrl || '/notifications';
+
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
-      // Focus an existing window if available; do NOT re-inject the payload
-      // into app state — the notification is already persisted in the DB
-      // and will appear in the fetched list.
+      // Focus an existing window if available
       for (const client of clients) {
         if ('focus' in client) {
+          // Navigate to the action URL if it's different from current
+          if (client.url !== new URL(actionUrl, self.location.origin).href) {
+            client.postMessage({
+              type: 'navigate',
+              url: actionUrl,
+            });
+          }
           return client.focus();
         }
       }
 
       if (self.clients.openWindow) {
-        return self.clients.openWindow('/notifications');
+        return self.clients.openWindow(actionUrl);
       }
     })
   );

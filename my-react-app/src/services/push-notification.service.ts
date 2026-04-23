@@ -24,6 +24,7 @@ const resolveNotificationPayload = (
     content: payload.notification?.body || data.content,
     timestamp: data.timestamp,
     createdAt: data.timestamp,
+    actionUrl: data.actionUrl,
     metadata,
   };
 };

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockStudent } from '../../data/mockData';
 import './NotificationCenter.css';
@@ -6,7 +7,7 @@ import './NotificationCenter.css';
 import { useNotificationsContext } from '../../context/NotificationContext';
 
 const NotificationCenter: React.FC = () => {
-  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotificationsContext();
+  const { notifications, unreadCount, markAsRead, markAllAsRead, hasNextPage, isFetchingNextPage, loadMore } = useNotificationsContext();
   
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
@@ -62,9 +63,14 @@ const NotificationCenter: React.FC = () => {
             <h1 className="page-title">🔔 Trung Tâm Thông Báo</h1>
             <p className="page-subtitle">Quản lý tất cả thông báo của bạn</p>
           </div>
-          <button className="btn btn-outline" onClick={markAllAsRead}>
-            ✅ Đánh dấu đã đọc tất cả
-          </button>
+          <div className="header-actions">
+            <Link to="/notifications/preferences" className="btn btn-outline">
+              ⚙️ Cài đặt
+            </Link>
+            <button className="btn btn-outline" onClick={markAllAsRead}>
+              ✅ Đánh dấu đã đọc tất cả
+            </button>
+          </div>
         </div>
 
         {/* Stats */}
@@ -200,12 +206,17 @@ const NotificationCenter: React.FC = () => {
         </div>
 
         {/* Load More */}
-        {filteredNotifications.length > 0 &&
-          filteredNotifications.length < notifications.length && (
-            <div className="load-more-container">
-              <button className="btn btn-outline">Xem thêm thông báo</button>
-            </div>
-          )}
+        {filteredNotifications.length > 0 && hasNextPage && (
+          <div className="load-more-container">
+            <button 
+              className="btn btn-outline" 
+              onClick={loadMore}
+              disabled={isFetchingNextPage}
+            >
+              {isFetchingNextPage ? 'Đang tải...' : 'Xem thêm thông báo'}
+            </button>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );

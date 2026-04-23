@@ -10,6 +10,12 @@
   margin-bottom: 2rem;
 }
 
+.header-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
 /* Stats */
 .notification-stats {
   display: grid;

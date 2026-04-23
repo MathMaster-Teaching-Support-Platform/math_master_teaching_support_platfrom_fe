@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
-import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation, useInfiniteQuery } from '@tanstack/react-query';
 import { notificationService } from '../services/notification.service';
 import { AuthService } from '../services/api/auth.service';
 import type { Notification } from '../types/notification';
@@ -9,8 +9,11 @@ interface NotificationContextValue {
   notifications: Notification[];
   unreadCount: number;
   isLoading: boolean;
+  hasNextPage: boolean;
+  isFetchingNextPage: boolean;
   markAsRead: (id: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
+  loadMore: () => void;
 }
 
 const NotificationContext = createContext<NotificationContextValue | undefined>(undefined);
@@ -35,14 +38,28 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     enabled: isAuthenticated,
   });
 
-  // Fetch notifications list
-  const { data: notifsData, isLoading } = useQuery({
+  // Fetch notifications list with infinite query
+  const {
+    data: notifsData,
+    isLoading,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useInfiniteQuery({
     queryKey: ['notifications', 'list'],
-    queryFn: () => notificationService.getNotifications(0, 50),
+    queryFn: ({ pageParam = 0 }) => notificationService.getNotifications(pageParam, 20),
+    getNextPageParam: (lastPage, allPages) => {
+      if (lastPage.number < lastPage.totalPages - 1) {
+        return lastPage.number + 1;
+      }
+      return undefined;
+    },
     enabled: isAuthenticated,
   });
 
-  const notifications = useMemo(() => notifsData?.content || [], [notifsData]);
+  const notifications = useMemo(() => {
+    return notifsData?.pages.flatMap(page => page.content) || [];
+  }, [notifsData]);
   const unreadCount = unreadData?.unreadCount ?? unreadData?.count ?? 0;
 
   const applyIncomingNotification = (rawPayload: Record<string, unknown>) => {
@@ -67,15 +84,23 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       }
     );
 
-    queryClient.setQueryData<{ content: Notification[] } | undefined>(
+    queryClient.setQueryData<any>(
       ['notifications', 'list'],
       (oldData) => {
-        if (!oldData) return { content: [newNotif] };
-        const exists = oldData.content.find((n) => n.id === newNotif.id);
+        if (!oldData) return { pages: [{ content: [newNotif] }], pageParams: [0] };
+        
+        const firstPage = oldData.pages[0];
+        if (!firstPage) return { pages: [{ content: [newNotif] }], pageParams: [0] };
+        
+        const exists = firstPage.content.find((n: Notification) => n.id === newNotif.id);
         if (exists) return oldData;
+        
         return {
           ...oldData,
-          content: [newNotif, ...oldData.content],
+          pages: [
+            { ...firstPage, content: [newNotif, ...firstPage.content] },
+            ...oldData.pages.slice(1),
+          ],
         };
       }
     );
@@ -117,18 +142,21 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: ['notifications'] });
       
-      const prevList = queryClient.getQueryData<{ content: Notification[] }>(['notifications', 'list']);
+      const prevList = queryClient.getQueryData<any>(['notifications', 'list']);
       const prevCount = queryClient.getQueryData<{ unreadCount?: number; count?: number }>([
         'notifications',
         'unreadCount',
       ]);
       
       // Optimistic update
-      queryClient.setQueryData<{ content: Notification[] }>(['notifications', 'list'], (old) => {
+      queryClient.setQueryData<any>(['notifications', 'list'], (old) => {
         if (!old) return old;
         return {
           ...old,
-          content: old.content.map(n => n.id === id ? { ...n, read: true } : n),
+          pages: old.pages.map((page: any) => ({
+            ...page,
+            content: page.content.map((n: Notification) => n.id === id ? { ...n, read: true } : n),
+          })),
         };
       });
       
@@ -137,7 +165,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         (old) => {
           const current = old?.unreadCount ?? old?.count ?? 0;
           if (current === 0) return old;
-          const item = prevList?.content.find(n => n.id === id);
+          const item = prevList?.pages?.[0]?.content?.find((n: Notification) => n.id === id);
           return { unreadCount: Math.max(0, current - (item && !item.read ? 1 : 0)) };
         }
       );
@@ -158,7 +186,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     mutationFn: () => notificationService.markAllAsRead(),
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: ['notifications'] });
-      const prevList = queryClient.getQueryData<{ content: Notification[] }>(['notifications', 'list']);
+      const prevList = queryClient.getQueryData<any>(['notifications', 'list']);
       const prevCount = queryClient.getQueryData<{ unreadCount?: number; count?: number }>([
         'notifications',
         'unreadCount',
@@ -167,9 +195,15 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       queryClient.setQueryData<{ unreadCount?: number; count?: number }>(['notifications', 'unreadCount'], {
         unreadCount: 0,
       });
-      queryClient.setQueryData<{ content: Notification[] }>(['notifications', 'list'], (old) => {
+      queryClient.setQueryData<any>(['notifications', 'list'], (old) => {
         if (!old) return old;
-        return { ...old, content: old.content.map(n => ({ ...n, read: true })) };
+        return {
+          ...old,
+          pages: old.pages.map((page: any) => ({
+            ...page,
+            content: page.content.map((n: Notification) => ({ ...n, read: true })),
+          })),
+        };
       });
 
       return { prevList, prevCount };
@@ -188,8 +222,11 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     notifications,
     unreadCount,
     isLoading,
+    hasNextPage: hasNextPage ?? false,
+    isFetchingNextPage,
     markAsRead: async (id: string) => { await markAsReadMutation.mutateAsync(id); },
     markAllAsRead: async () => { await markAllAsReadMutation.mutateAsync(); },
+    loadMore: () => { if (hasNextPage) fetchNextPage(); },
   };
 
   return (

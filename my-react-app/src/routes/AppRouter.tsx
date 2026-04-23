@@ -1,5 +1,6 @@
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
+import ServiceWorkerNavigationHandler from '../components/common/ServiceWorkerNavigationHandler';
 import { ToastProvider } from '../context/ToastProvider';
 import About from '../pages/About';
 import Contact from '../pages/Contact';
@@ -29,6 +30,7 @@ import StudentGrades from '../pages/grades/StudentGrades';
 import HelpCenter from '../pages/help/HelpCenter';
 import MaterialsGenerator from '../pages/materials/MaterialsGenerator';
 import NotificationCenter from '../pages/notifications/NotificationCenter';
+import NotificationPreferences from '../pages/notifications/NotificationPreferences';
 import CoursePreview from '../pages/preview/CoursePreview';
 import RoadmapCatalogPage from '../pages/roadmap/RoadmapCatalogPage';
 import RoadmapDashboardPage from '../pages/roadmap/RoadmapDashboardPage';
@@ -175,6 +177,14 @@ const router = createBrowserRouter([
     element: (
       <PrivateRoute>
         <NotificationCenter />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/notifications/preferences',
+    element: (
+      <PrivateRoute>
+        <NotificationPreferences />
       </PrivateRoute>
     ),
   },
@@ -707,6 +717,7 @@ export default function AppRouter() {
     <GoogleOAuthProvider clientId="299660266172-38kfomfcv0pcvrhrg0pas04rhfskqn8u.apps.googleusercontent.com">
       <ToastProvider>
         <RouterProvider router={router} />
+        <ServiceWorkerNavigationHandler />
       </ToastProvider>
     </GoogleOAuthProvider>
   );
