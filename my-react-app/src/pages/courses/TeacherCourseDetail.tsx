@@ -33,8 +33,7 @@ import {
 import '../../styles/module-refactor.css';
 import './TeacherCourses.css';
 import './TeacherCourseDetail.css';
-import type { UpdateCourseRequest } from '../../types';
-import type { CourseLevel } from '../../types/course.types';
+import type { UpdateCourseRequest, CourseLevel } from '../../types';
 
 // Import tab components
 import CourseOverviewTab from './tabs/CourseOverviewTab.tsx';

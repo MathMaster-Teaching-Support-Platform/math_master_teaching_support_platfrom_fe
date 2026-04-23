@@ -16,6 +16,7 @@ import {
   GripVertical,
   Paperclip,
   Pencil,
+  PlayCircle,
   Plus,
   Trash2,
   Video,
@@ -569,6 +570,7 @@ function LessonRow({
   deletePending: boolean;
 }) {
   const [showMaterials, setShowMaterials] = useState(false);
+  const [showPlayer, setShowPlayer] = useState(false);
   const addMaterialMutation = useAddMaterial();
   const removeMaterialMutation = useRemoveMaterial();
   const updateMutation = useUpdateCourseLesson();
@@ -611,6 +613,14 @@ function LessonRow({
             <div className="row" style={{ gap: 6 }}>
               <CheckCircle2 size={14} style={{ color: '#059669' }} />
               <span>{lesson.videoTitle ?? 'Đã upload'}</span>
+              <button
+                className="btn secondary"
+                style={{ padding: '0.2rem 0.45rem', marginLeft: 4 }}
+                title="Xem lại video"
+                onClick={() => setShowPlayer((p) => !p)}
+              >
+                <PlayCircle size={13} style={{ color: showPlayer ? '#2563eb' : '#475569' }} />
+              </button>
             </div>
           ) : (
             <span className="muted">Chưa có video</span>
@@ -695,6 +705,39 @@ function LessonRow({
           </div>
         </td>
       </tr>
+      {showPlayer && lesson.videoUrl && (
+        <tr style={{ background: '#f0f7ff' }}>
+          <td colSpan={7} style={{ padding: '0.75rem 2rem 1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: '0.5rem' }}>
+              <Video size={14} style={{ color: '#2563eb' }} />
+              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#1e3a5f' }}>
+                {lesson.videoTitle ?? lesson.lessonTitle ?? 'Video bài học'}
+              </span>
+              <button
+                className="btn secondary"
+                style={{ padding: '0.15rem 0.4rem', fontSize: '0.75rem', marginLeft: 'auto' }}
+                onClick={() => setShowPlayer(false)}
+              >
+                Đóng
+              </button>
+            </div>
+            <video
+              key={lesson.videoUrl}
+              controls
+              style={{
+                width: '100%',
+                maxHeight: '360px',
+                borderRadius: '8px',
+                background: '#000',
+                display: 'block',
+              }}
+            >
+              <source src={lesson.videoUrl} />
+              Trình duyệt của bạn không hỗ trợ phát video.
+            </video>
+          </td>
+        </tr>
+      )}
       {showMaterials && (
         <tr style={{ background: '#f8fafc' }}>
           <td colSpan={7} style={{ padding: '1rem 2rem' }}>
