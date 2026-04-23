@@ -15,8 +15,10 @@ import type {
     DistributeAssessmentPointsRequest,
     DistributeAssessmentPointsResponse,
     ApiResponse,
+    PagedDataResponse,
     PaginatedResponse,
 } from '../../types';
+import type { QuestionResponse } from '../../types/question';
 
 export class AssessmentService {
     private static async getHeaders() {
@@ -542,6 +544,34 @@ export class AssessmentService {
         if (!response.ok) {
             const error = await response.json();
             throw new Error(error.message || 'Failed to search questions');
+        }
+        return response.json();
+    }
+
+    /** GET /assessments/{id}/available-questions?page=...&size=...&keyword=...&tag=... */
+    static async getAvailableQuestions(
+        assessmentId: string,
+        params: {
+            keyword?: string;
+            tag?: string;
+            page?: number;
+            size?: number;
+        }
+    ): Promise<ApiResponse<PagedDataResponse<QuestionResponse>>> {
+        const headers = await this.getHeaders();
+        const query = new URLSearchParams();
+        query.set('page', String(params.page ?? 0));
+        query.set('size', String(params.size ?? 20));
+        if (params.keyword?.trim()) query.set('keyword', params.keyword.trim());
+        if (params.tag?.trim()) query.set('tag', params.tag.trim());
+
+        const response = await fetch(
+            `${API_BASE_URL}${API_ENDPOINTS.ASSESSMENTS_AVAILABLE_QUESTIONS(assessmentId)}?${query.toString()}`,
+            { method: 'GET', headers }
+        );
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to fetch available questions');
         }
         return response.json();
     }

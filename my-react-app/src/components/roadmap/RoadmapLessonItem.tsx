@@ -8,7 +8,7 @@ interface RoadmapLessonItemProps {
 
 export default function RoadmapLessonItem(props: Readonly<RoadmapLessonItemProps>) {
   const { lesson, onMarkComplete } = props;
-  const canComplete = lesson.status !== 'COMPLETED' && lesson.status !== 'LOCKED';
+  const canComplete = lesson.status !== 'COMPLETED';
 
   return (
     <li className={`roadmap-lesson-item roadmap-lesson-item--${lesson.status?.toLowerCase() ?? 'default'}`}>
@@ -28,7 +28,6 @@ export default function RoadmapLessonItem(props: Readonly<RoadmapLessonItemProps
       )}
 
       {lesson.status === 'COMPLETED' && <span className="roadmap-lesson-item__done">Done</span>}
-      {lesson.status === 'LOCKED' && <span className="roadmap-lesson-item__locked">Locked</span>}
     </li>
   );
 }

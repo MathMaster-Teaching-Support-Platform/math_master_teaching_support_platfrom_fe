@@ -7,9 +7,15 @@ export const chapterKeys = {
 };
 
 export function useChaptersBySubject(subjectId: string, enabled = true) {
+  const normalizedSubjectId = subjectId?.trim?.() ?? '';
+  const hasValidSubjectId =
+    normalizedSubjectId.length > 0 &&
+    normalizedSubjectId.toLowerCase() !== 'undefined' &&
+    normalizedSubjectId.toLowerCase() !== 'null';
+
   return useQuery({
-    queryKey: chapterKeys.bySubject(subjectId),
-    queryFn: () => ChapterService.getChaptersBySubject(subjectId),
-    enabled: enabled && !!subjectId,
+    queryKey: chapterKeys.bySubject(normalizedSubjectId),
+    queryFn: () => ChapterService.getChaptersBySubject(normalizedSubjectId),
+    enabled: enabled && hasValidSubjectId,
   });
 }

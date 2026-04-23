@@ -53,12 +53,17 @@ export interface RoadmapTopic {
   status: TopicStatus;
   difficulty: QuestionDifficulty;
   sequenceOrder: number;
+  mark?: number;
   /** Multiple linked courses */
   courses?: RoadmapTopicCourse[];
   startedAt?: string | null;
   totalLessons?: number;
   completedLessons?: number;
   progress?: number;
+}
+
+export interface RoadmapProgressInfo {
+  current_topic_index: number;
 }
 
 export interface RoadmapStats {
@@ -80,6 +85,7 @@ export interface RoadmapDetail extends RoadmapCatalogItem {
   topics: RoadmapTopic[];
   stats?: RoadmapStats;
   entryTest?: RoadmapEntryTestInfo | null;
+  progress?: RoadmapProgressInfo;
 }
 
 export interface StudentRoadmapProgress {
@@ -124,6 +130,10 @@ export interface RoadmapEntryTestInfo {
   name: string;
   description?: string;
   totalQuestions: number;
+  studentStatus?: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED';
+  canStart?: boolean;
+  cannotStartReason?: string | null;
+  activeAttemptId?: string | null;
 }
 
 export interface StudentRoadmapEntryTestInfo {
@@ -135,7 +145,7 @@ export interface StudentRoadmapEntryTestInfo {
   startDate?: string;
   endDate?: string;
   totalQuestions: number;
-  studentStatus?: 'UPCOMING' | 'IN_PROGRESS' | 'COMPLETED';
+  studentStatus?: 'NOT_STARTED' | 'UPCOMING' | 'IN_PROGRESS' | 'COMPLETED';
   activeAttemptId?: string | null;
   attemptNumber?: number;
   maxAttempts?: number;
@@ -273,6 +283,7 @@ export interface RoadmapTopicResponse {
   status: TopicStatus;
   difficulty: QuestionDifficulty;
   sequenceOrder: number;
+  mark?: number;
   courses?: RoadmapTopicCourse[];
   startedAt?: string | null;
 }
