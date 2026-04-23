@@ -1,12 +1,15 @@
 import {
+  AlertCircle,
   ArrowLeft,
   CheckCircle2,
+  Grid2x2,
   Plus,
   RefreshCw,
   RotateCcw,
   ShieldCheck,
   Trash2,
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { MatrixTable } from '../../components/exam-matrix';
@@ -29,6 +32,8 @@ import {
   type MatrixValidationReport,
 } from '../../types/examMatrix';
 import { ExamMatrixRowModalRefactored } from './ExamMatrixRowModalRefactored';
+import '../courses/TeacherCourses.css';
+import './ExamMatrixDashboard.css';
 
 const matrixStatusLabel: Record<string, string> = {
   DRAFT: 'Nháp',
@@ -76,14 +81,20 @@ export default function ExamMatrixDetailPageRefactored() {
     },
   });
 
-  const { data, isLoading, isError, error, refetch } = useGetExamMatrixById(
-    matrixId ?? '',
-    !!matrixId
-  );
-  const { data: tableData, refetch: refetchTable } = useGetExamMatrixTable(
-    matrixId ?? '',
-    !!matrixId
-  );
+  const {
+    data,
+    isLoading: matrixQueryLoading,
+    isError,
+    error,
+    refetch,
+  } = useGetExamMatrixById(matrixId ?? '', !!matrixId);
+  const {
+    data: tableData,
+    isLoading: tableQueryLoading,
+    refetch: refetchTable,
+  } = useGetExamMatrixTable(matrixId ?? '', !!matrixId);
+
+  const isPageLoading = matrixQueryLoading || tableQueryLoading;
 
   const approveMutation = useApproveMatrix();
   const resetMutation = useResetMatrix();
@@ -224,63 +235,135 @@ export default function ExamMatrixDetailPageRefactored() {
   return (
     <DashboardLayout
       role="teacher"
-      user={{ name: 'Teacher', avatar: '', role: 'teacher' }}
+      user={{ name: 'Giáo viên', avatar: '', role: 'teacher' }}
       notificationCount={0}
+      contentClassName="dashboard-content--flush-bleed"
     >
       <div className="module-layout-container">
-        <section className="module-page">
-          <button className="btn secondary" onClick={() => navigate('/teacher/exam-matrices')}>
-            <ArrowLeft size={15} />
-            Quay lại danh sách ma trận
-          </button>
-
-          {isLoading && (
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '4rem 2rem',
-                gap: '1rem',
-              }}
+        <section className="module-page teacher-courses-page exam-matrix-dashboard-page exam-matrix-detail-page">
+          <div className="exam-matrix-detail-back-row">
+            <button
+              type="button"
+              className="btn secondary"
+              onClick={() => navigate('/teacher/exam-matrices')}
             >
-              <style>{`@keyframes emxd-spin { to { transform: rotate(360deg); } }`}</style>
-              <span
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: '50%',
-                  border: '3px solid #e2e8f0',
-                  borderTopColor: '#2563eb',
-                  animation: 'emxd-spin 0.75s linear infinite',
-                  display: 'inline-block',
-                }}
-              />
-              <p className="muted" style={{ fontSize: '0.9rem' }}>
-                Đang tải chi tiết ma trận...
+              <ArrowLeft size={15} />
+              Quay lại danh sách ma trận
+            </button>
+          </div>
+
+          <header className="page-header courses-header-row exam-matrix-detail-page-header">
+            <div className="header-stack">
+              <div className="header-kicker">Teacher Studio</div>
+              <div className="row" style={{ gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                <h2>{isPageLoading ? 'Chi tiết ma trận đề' : 'Ma trận đề'}</h2>
+                {matrix && !isPageLoading && (
+                  <span
+                    className={`badge ${matrix.status.toLowerCase()}`}
+                    style={{ fontSize: 12, padding: '4px 10px' }}
+                  >
+                    {matrixStatusLabel[matrix.status] || matrix.status}
+                  </span>
+                )}
+              </div>
+              <p className="header-sub exam-matrix-detail-header-sub">
+                {isPageLoading
+                  ? 'Đang tải thông tin ma trận và bảng phân bố...'
+                  : 'Xem bảng ma trận, điều chỉnh phân bố, kiểm tra và phê duyệt khi sẵn sàng.'}
               </p>
             </div>
-          )}
-          {isError && (
-            <div className="empty">
-              {error instanceof Error ? error.message : 'Không thể tải chi tiết ma trận'}
+          </header>
+
+          {isPageLoading && (
+            <div className="exam-matrix-detail-skeleton" aria-busy="true" aria-label="Đang tải">
+              <div className="skeleton-detail">
+                <div className="skeleton-detail-header">
+                  <div className="skeleton-line sk-xs" style={{ maxWidth: 120 }} />
+                  <div className="skeleton-line sk-xl" />
+                  <div className="skeleton-line sk-md" />
+                  <div className="skeleton-line sk-sm" />
+                </div>
+                <div className="skeleton-section">
+                  <div className="skeleton-line sk-lg" style={{ width: '40%' }} />
+                  <div
+                    className="row"
+                    style={{ gap: '1.25rem', flexWrap: 'wrap', marginTop: 8 }}
+                  >
+                    <div className="skeleton-info-item" style={{ minWidth: 100 }}>
+                      <div className="skeleton-line sk-sm" />
+                      <div className="skeleton-line sk-md" />
+                    </div>
+                    <div className="skeleton-info-item" style={{ minWidth: 100 }}>
+                      <div className="skeleton-line sk-sm" />
+                      <div className="skeleton-line sk-md" />
+                    </div>
+                    <div className="skeleton-info-item" style={{ minWidth: 80 }}>
+                      <div className="skeleton-line sk-sm" />
+                      <div className="skeleton-line sk-md" />
+                    </div>
+                  </div>
+                </div>
+                <div className="skeleton-section exam-matrix-detail-skeleton-table">
+                  <div className="skeleton-line sk-lg" style={{ width: '32%' }} />
+                  <div className="skeleton-block" style={{ height: 160 }} />
+                </div>
+              </div>
             </div>
           )}
-          {!isLoading && !isError && !matrix && (
-            <div className="empty">Không tìm thấy ma trận.</div>
+
+          {isError && (
+            <div className="empty exam-matrix-detail-empty">
+              <AlertCircle
+                size={32}
+                style={{ opacity: 0.45, color: 'var(--mod-danger)' }}
+                aria-hidden
+              />
+              <p>
+                {error instanceof Error ? error.message : 'Không thể tải chi tiết ma trận'}
+              </p>
+              <button type="button" className="btn secondary" onClick={() => void refetch()}>
+                <RefreshCw size={14} />
+                Thử lại
+              </button>
+            </div>
+          )}
+          {!isPageLoading && !isError && !matrix && (
+            <div className="empty exam-matrix-detail-empty">
+              <Grid2x2 size={32} style={{ opacity: 0.35 }} aria-hidden />
+              <p>Không tìm thấy ma trận.</p>
+              <button
+                type="button"
+                className="btn secondary"
+                onClick={() => navigate('/teacher/exam-matrices')}
+              >
+                <ArrowLeft size={15} />
+                Về danh sách
+              </button>
+            </div>
           )}
 
-          {!isLoading && !isError && matrix && (
-            <>
+          {!isPageLoading && !isError && matrix && (
+            <motion.div
+              className="exam-matrix-detail-content"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            >
               {/* Header Card */}
-              <article className="hero-card">
+              <article className="hero-card exam-matrix-detail-hero">
                 <div className="row" style={{ alignItems: 'start', flexWrap: 'wrap', gap: 16 }}>
                   <div style={{ flex: 1, minWidth: 300 }}>
                     <p className="hero-kicker">Ma trận đề kiểm tra</p>
-                    <h2 style={{ marginTop: 8, marginBottom: 12 }}>{matrix.name}</h2>
-                    <p style={{ marginBottom: 12 }}>{matrix.description || 'Không có mô tả'}</p>
-                    <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+                    <h2 className="exam-matrix-detail-hero-title" style={{ marginTop: 8, marginBottom: 12 }}>
+                      {matrix.name}
+                    </h2>
+                    <p className="exam-matrix-detail-desc" style={{ marginBottom: 12 }}>
+                      {matrix.description || 'Không có mô tả'}
+                    </p>
+                    <div
+                      className="exam-matrix-detail-meta"
+                      style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}
+                    >
                       <div>
                         <span className="muted" style={{ fontSize: 12 }}>
                           Khối
@@ -315,17 +398,21 @@ export default function ExamMatrixDetailPageRefactored() {
                   </span>
                 </div>
 
-                {/* Action Buttons */}
-                <div className="row" style={{ marginTop: 20, gap: 8, flexWrap: 'wrap' }}>
+                <div
+                  className="row exam-matrix-detail-actions"
+                  style={{ marginTop: 20, gap: 8, flexWrap: 'wrap' }}
+                >
                   <button
+                    type="button"
                     className="btn secondary"
                     onClick={() => void refreshMatrix()}
                     disabled={refreshing}
                   >
-                    <RefreshCw size={14} />
+                    <RefreshCw size={14} className={refreshing ? 'exam-matrix-nav-spin' : undefined} />
                     {refreshing ? 'Đang làm mới...' : 'Làm mới'}
                   </button>
                   <button
+                    type="button"
                     className="btn secondary"
                     onClick={() => void runValidation()}
                     disabled={validating}
@@ -335,6 +422,7 @@ export default function ExamMatrixDetailPageRefactored() {
                   </button>
                   {matrix.status === MatrixStatus.DRAFT && (
                     <button
+                      type="button"
                       className="btn"
                       onClick={() => void handleApprove()}
                       disabled={approveMutation.isPending}
@@ -345,6 +433,7 @@ export default function ExamMatrixDetailPageRefactored() {
                   )}
                   {matrix.status === MatrixStatus.APPROVED && (
                     <button
+                      type="button"
                       className="btn warn"
                       onClick={() => void handleReset()}
                       disabled={resetMutation.isPending}
@@ -355,6 +444,7 @@ export default function ExamMatrixDetailPageRefactored() {
                   )}
                   {matrix.status !== MatrixStatus.LOCKED && (
                     <button
+                      type="button"
                       className="btn danger"
                       onClick={() => void removeMatrix()}
                       disabled={deleteMutation.isPending}
@@ -366,9 +456,8 @@ export default function ExamMatrixDetailPageRefactored() {
                 </div>
               </article>
 
-              {/* Validation Report */}
               {validation && (
-                <article className="data-card" style={{ minHeight: 0 }}>
+                <article className="data-card exam-matrix-validation-card" style={{ minHeight: 0 }}>
                   <div className="row" style={{ alignItems: 'start', gap: 12 }}>
                     <div style={{ flex: 1 }}>
                       <h3 style={{ marginBottom: 8 }}>Báo cáo kiểm tra</h3>
@@ -432,9 +521,8 @@ export default function ExamMatrixDetailPageRefactored() {
                 </article>
               )}
 
-              {/* Matrix Table Header */}
               <div
-                className="row"
+                className="row exam-matrix-table-heading"
                 style={{
                   justifyContent: 'space-between',
                   alignItems: 'center',
@@ -449,14 +537,13 @@ export default function ExamMatrixDetailPageRefactored() {
                   </p>
                 </div>
                 {canEdit && (
-                  <button className="btn" onClick={() => setRowModalOpen(true)}>
+                  <button type="button" className="btn" onClick={() => setRowModalOpen(true)}>
                     <Plus size={15} />
                     Thêm dòng
                   </button>
                 )}
               </div>
 
-              {/* Matrix Table */}
               <MatrixTable
                 chapters={chapters}
                 gradeLevel={matrix.gradeLevel || table?.gradeLevel}
@@ -469,7 +556,7 @@ export default function ExamMatrixDetailPageRefactored() {
                 onSavePercentages={handleSavePercentages}
                 savingPercentages={upsertBatchCellsMutation.isPending}
               />
-            </>
+            </motion.div>
           )}
 
           {/* Add Row Modal */}
