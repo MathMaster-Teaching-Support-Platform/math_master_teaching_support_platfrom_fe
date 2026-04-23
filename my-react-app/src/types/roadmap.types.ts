@@ -298,6 +298,7 @@ export interface CreateAdminRoadmapRequest {
 }
 
 export interface UpdateAdminRoadmapRequest {
+  name?: string;
   subjectId?: string;
   description?: string;
   estimatedCompletionDays?: number;

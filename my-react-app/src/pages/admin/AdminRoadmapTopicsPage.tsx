@@ -1,5 +1,15 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { AlertCircle, ArrowLeft, Circle } from 'lucide-react';
+import {
+  AlertCircle,
+  ArrowLeft,
+  Check,
+  ChevronDown,
+  ChevronUp,
+  Circle,
+  Clock,
+  Target,
+  X,
+} from 'lucide-react';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
@@ -51,11 +61,31 @@ interface TopicDraft {
   dirtyFields: TopicFieldKey[];
 }
 
-interface Toast { type: 'success' | 'error'; message: string; }
+interface Toast {
+  type: 'success' | 'error';
+  message: string;
+}
 
-const PIN_COLORS = ['#ef4444','#f97316','#eab308','#22c55e','#06b6d4','#6366f1','#ec4899','#14b8a6'];
-const DIFF_LABELS: Record<TopicDifficulty, string> = { EASY: 'Dễ', MEDIUM: 'Trung bình', HARD: 'Khó' };
-const STATUS_LABELS: Record<TopicStatus, string> = { NOT_STARTED: 'Chưa bắt đầu', IN_PROGRESS: 'Đang học', COMPLETED: 'Hoàn thành' };
+const PIN_COLORS = [
+  '#ef4444',
+  '#f97316',
+  '#eab308',
+  '#22c55e',
+  '#06b6d4',
+  '#6366f1',
+  '#ec4899',
+  '#14b8a6',
+];
+const DIFF_LABELS: Record<TopicDifficulty, string> = {
+  EASY: 'Dễ',
+  MEDIUM: 'Trung bình',
+  HARD: 'Khó',
+};
+const STATUS_LABELS: Record<TopicStatus, string> = {
+  NOT_STARTED: 'Chưa bắt đầu',
+  IN_PROGRESS: 'Đang học',
+  COMPLETED: 'Hoàn thành',
+};
 
 const ROADMAP_STATUS_LABELS: Record<string, string> = {
   GENERATED: 'Sẵn sàng',
@@ -67,12 +97,15 @@ const ROADMAP_STATUS_LABELS: Record<string, string> = {
 function makeNewDraft(order: number): TopicDraft {
   return {
     clientId: `draft-${Date.now()}-${Math.random()}`,
-    title: '', description: '', difficulty: 'MEDIUM',
+    title: '',
+    description: '',
+    difficulty: 'MEDIUM',
     sequenceOrder: order,
     mark: order,
     courseIds: [],
     status: 'NOT_STARTED',
-    isDraft: true, dirtyFields: [],
+    isDraft: true,
+    dirtyFields: [],
   };
 }
 
@@ -86,7 +119,7 @@ function nodePos(index: number) {
   const row = Math.floor(index / COLS);
   const col = index % COLS;
   const visualCol = row % 2 === 1 ? COLS - 1 - col : col;
-  const step = ROAD_W * 0.7 / (COLS - 1);
+  const step = (ROAD_W * 0.7) / (COLS - 1);
   return {
     x: ROAD_W * 0.15 + visualCol * step,
     y: PAD_TOP + row * ROW_H,
@@ -124,14 +157,9 @@ interface SortablePinProps {
 }
 
 function SortablePin({ topic, index, isActive, onActivate }: SortablePinProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: topic.clientId });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: topic.clientId,
+  });
 
   const pos = nodePos(index);
   const color = PIN_COLORS[index % PIN_COLORS.length];
@@ -166,7 +194,9 @@ function SortablePin({ topic, index, isActive, onActivate }: SortablePinProps) {
       <div className="art-pin__label">
         <span className="art-pin__title">{topic.title || 'Chưa có tiêu đề'}</span>
         {!hasCourses && <span className="art-pin__warn">Chưa có khóa học</span>}
-        {hasCourses && <span className="art-pin__course-ok">✓ {topic.courseIds.length} khóa học</span>}
+        {hasCourses && (
+          <span className="art-pin__course-ok">✓ {topic.courseIds.length} khóa học</span>
+        )}
       </div>
     </button>
   );
@@ -218,7 +248,7 @@ export default function AdminRoadmapTopicsPage() {
     setTopics((items) => {
       const oldIndex = items.findIndex((t) => t.clientId === active.id);
       const newIndex = items.findIndex((t) => t.clientId === over.id);
-      
+
       if (oldIndex === -1 || newIndex === -1) return items;
 
       // Reorder array
@@ -230,7 +260,9 @@ export default function AdminRoadmapTopicsPage() {
       return reordered.map((t, i) => ({
         ...t,
         sequenceOrder: i + 1,
-        dirtyFields: t.isDraft ? t.dirtyFields : [...new Set([...t.dirtyFields, 'sequenceOrder' as TopicFieldKey])],
+        dirtyFields: t.isDraft
+          ? t.dirtyFields
+          : [...new Set([...t.dirtyFields, 'sequenceOrder' as TopicFieldKey])],
       }));
     });
   }
@@ -238,9 +270,17 @@ export default function AdminRoadmapTopicsPage() {
   // Course search — admin endpoint, returns ALL courses (published + draft)
   const coursesQuery = useQuery<ApiResponse<PaginatedResponse<CourseResponse>>, Error>({
     queryKey: ['admin-courses-search', courseKwDebounced],
-    queryFn: () => CourseService.adminSearchCourses({ keyword: courseKwDebounced || undefined, page: 0, size: 24 }),
+    queryFn: () =>
+      CourseService.adminSearchCourses({
+        keyword: courseKwDebounced || undefined,
+        page: 0,
+        size: 24,
+      }),
   });
-  const courseOptions = useMemo(() => coursesQuery.data?.result?.content ?? [], [coursesQuery.data]);
+  const courseOptions = useMemo(
+    () => coursesQuery.data?.result?.content ?? [],
+    [coursesQuery.data]
+  );
 
   // Assessment search — GET /assessments/search?name=keyword returns List<AssessmentResponse>
   const assessmentsQuery = useQuery<ApiResponse<AssessmentResponse[]>, Error>({
@@ -255,7 +295,10 @@ export default function AdminRoadmapTopicsPage() {
       return res.json();
     },
   });
-  const assessmentOptions = useMemo(() => assessmentsQuery.data?.result ?? [], [assessmentsQuery.data]);
+  const assessmentOptions = useMemo(
+    () => assessmentsQuery.data?.result ?? [],
+    [assessmentsQuery.data]
+  );
 
   // Sync entry test from loaded roadmap
   useEffect(() => {
@@ -268,7 +311,7 @@ export default function AdminRoadmapTopicsPage() {
       setEntryTestId('');
       setCurrentEntryTestName(null);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roadmap?.id]);
 
   // Load from API
@@ -276,13 +319,17 @@ export default function AdminRoadmapTopicsPage() {
     if (!roadmap) return;
     const sorted = [...(roadmap.topics ?? [])].sort((a, b) => a.sequenceOrder - b.sequenceOrder);
     const loaded: TopicDraft[] = sorted.map((t) => ({
-      clientId: t.id, persistedId: t.id,
-      title: t.title, description: t.description ?? '',
+      clientId: t.id,
+      persistedId: t.id,
+      title: t.title,
+      description: t.description ?? '',
       difficulty: (t.difficulty ?? 'MEDIUM') as TopicDifficulty,
       sequenceOrder: t.sequenceOrder,
       mark: Number((t as any).mark ?? t.sequenceOrder ?? 1),
       courseIds: ((t as any).courses ?? []).map((c: any) => c.id), // Load courses from API response
-      status: t.status as TopicStatus, isDraft: false, dirtyFields: [],
+      status: t.status as TopicStatus,
+      isDraft: false,
+      dirtyFields: [],
     }));
     setTopics(loaded);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -321,7 +368,11 @@ export default function AdminRoadmapTopicsPage() {
     return { valid: true, message: '' };
   }, [topics]);
 
-  function patchActive<K extends keyof TopicDraft>(field: K, value: TopicDraft[K], dirtyKey?: TopicFieldKey) {
+  function patchActive<K extends keyof TopicDraft>(
+    field: K,
+    value: TopicDraft[K],
+    dirtyKey?: TopicFieldKey
+  ) {
     setTopics((prev) =>
       prev.map((t) => {
         if (t.clientId !== activeId) return t;
@@ -379,8 +430,10 @@ export default function AdminRoadmapTopicsPage() {
         // UPDATE existing topic
         const updates: UpdateRoadmapTopicRequest = {};
         if (topic.dirtyFields.includes('title')) updates.title = topic.title.trim();
-        if (topic.dirtyFields.includes('description')) updates.description = topic.description.trim();
-        if (topic.dirtyFields.includes('sequenceOrder')) updates.sequenceOrder = topic.sequenceOrder;
+        if (topic.dirtyFields.includes('description'))
+          updates.description = topic.description.trim();
+        if (topic.dirtyFields.includes('sequenceOrder'))
+          updates.sequenceOrder = topic.sequenceOrder;
         if (topic.dirtyFields.includes('difficulty')) updates.difficulty = topic.difficulty;
         if (topic.dirtyFields.includes('status')) updates.status = topic.status;
         if (topic.dirtyFields.includes('mark')) updates.mark = topic.mark;
@@ -392,11 +445,11 @@ export default function AdminRoadmapTopicsPage() {
         });
 
         // Clear dirty flags
-        setTopics(prev => prev.map(t => 
-          t.clientId === topic.clientId 
-            ? { ...t, isDraft: false, dirtyFields: [] }
-            : t
-        ));
+        setTopics((prev) =>
+          prev.map((t) =>
+            t.clientId === topic.clientId ? { ...t, isDraft: false, dirtyFields: [] } : t
+          )
+        );
 
         showToast('success', `Đã cập nhật "${topic.title}".`);
       }
@@ -409,7 +462,7 @@ export default function AdminRoadmapTopicsPage() {
 
   async function saveAll() {
     // Validate all topics before saving
-    const invalid = topics.find(t => !t.title.trim());
+    const invalid = topics.find((t) => !t.title.trim());
     if (invalid) {
       showToast('error', 'Vui lòng điền tiêu đề cho tất cả chủ đề.');
       return;
@@ -435,9 +488,9 @@ export default function AdminRoadmapTopicsPage() {
           status: t.isDraft ? 'NOT_STARTED' : t.status,
         })),
       });
-      
+
       // Clear dirty flags after successful save
-      setTopics(prev => prev.map(t => ({ ...t, isDraft: false, dirtyFields: [] })));
+      setTopics((prev) => prev.map((t) => ({ ...t, isDraft: false, dirtyFields: [] })));
       showToast('success', `Đã lưu toàn bộ lộ trình (${topics.length} chủ đề).`);
     } catch (err) {
       showToast('error', err instanceof Error ? err.message : 'Lỗi không xác định');
@@ -447,12 +500,12 @@ export default function AdminRoadmapTopicsPage() {
   }
 
   async function deleteTopic(t: TopicDraft) {
-    if (t.isDraft) { 
-      removeLocal(t.clientId); 
+    if (t.isDraft) {
+      removeLocal(t.clientId);
       setDeleteId(null);
       setActiveId(null); // Close drawer after deleting draft
       showToast('success', `Đã xóa "${t.title}".`);
-      return; 
+      return;
     }
     if (!t.persistedId) return;
     try {
@@ -467,10 +520,15 @@ export default function AdminRoadmapTopicsPage() {
   }
 
   async function saveEntryTest() {
-    if (!entryTestId) { showToast('error', 'Vui lòng chọn bài kiểm tra.'); return; }
+    if (!entryTestId) {
+      showToast('error', 'Vui lòng chọn bài kiểm tra.');
+      return;
+    }
     try {
       await entryTestMutation.mutateAsync({ roadmapId, payload: { assessmentId: entryTestId } });
-      const selected = assessmentOptions.find((a: AssessmentResponse) => String(a.id) === entryTestId);
+      const selected = assessmentOptions.find(
+        (a: AssessmentResponse) => String(a.id) === entryTestId
+      );
       setCurrentEntryTestName(selected?.title ?? entryTestId);
       showToast('success', 'Đã cấu hình bài kiểm tra đầu vào.');
     } catch (err) {
@@ -534,9 +592,7 @@ export default function AdminRoadmapTopicsPage() {
           aria-hidden
         />
         <p>
-          {error instanceof Error
-            ? error.message
-            : 'Không thể tải lộ trình. Vui lòng thử lại.'}
+          {error instanceof Error ? error.message : 'Không thể tải lộ trình. Vui lòng thử lại.'}
         </p>
         <Link to="/admin/roadmaps" className="btn secondary">
           <ArrowLeft size={15} />
@@ -561,10 +617,7 @@ export default function AdminRoadmapTopicsPage() {
   return pageShell(
     <>
       <div className="admin-roadmap-create-top">
-        <Link
-          to={`/admin/roadmaps/edit/${roadmapId}`}
-          className="btn secondary"
-        >
+        <Link to={`/admin/roadmaps/edit/${roadmapId}`} className="btn secondary">
           <ArrowLeft size={15} aria-hidden="true" />
           Quay lại chỉnh sửa lộ trình
         </Link>
@@ -573,10 +626,7 @@ export default function AdminRoadmapTopicsPage() {
       <header className="page-header courses-header-row art-page-header--topics">
         <div className="header-stack" style={{ flex: 1, minWidth: 0 }}>
           <div className="header-kicker">Admin</div>
-          <div
-            className="row"
-            style={{ gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap' }}
-          >
+          <div className="row" style={{ gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap' }}>
             <h2 style={{ margin: 0 }}>{roadmap.name}</h2>
             <span
               className={`admin-roadmap-page__status admin-roadmap-page__status--${roadmap.status.toLowerCase()}`}
@@ -659,7 +709,11 @@ export default function AdminRoadmapTopicsPage() {
 
                 {topics.length === 0 && (
                   <div className="art-empty-road">
-                    <p>Chưa có chủ đề nào.<br />Nhấn <strong>"+ Thêm chủ đề"</strong> để bắt đầu xây dựng lộ trình.</p>
+                    <p>
+                      Chưa có chủ đề nào.
+                      <br />
+                      Nhấn <strong>"+ Thêm chủ đề"</strong> để bắt đầu xây dựng lộ trình.
+                    </p>
                   </div>
                 )}
               </div>
@@ -669,45 +723,101 @@ export default function AdminRoadmapTopicsPage() {
 
         {/* ── Entry Test (collapsible) ── */}
         <div className="art-entry">
-          <button className="art-entry__trigger" onClick={() => setEntryOpen((o) => !o)}>
-            <span>🎯 Cấu hình bài kiểm tra đầu vào</span>
-            <span className="art-entry__chevron">{entryOpen ? '▲' : '▼'}</span>
+          <button
+            type="button"
+            className="art-entry__trigger"
+            onClick={() => setEntryOpen((o) => !o)}
+            aria-expanded={entryOpen}
+          >
+            <span className="art-entry__trigger-main">
+              <Target className="art-entry__trigger-icon" size={18} strokeWidth={2.25} aria-hidden />
+              <span className="art-entry__trigger-title">Cấu hình bài kiểm tra đầu vào</span>
+            </span>
+            {entryOpen ? (
+              <ChevronUp className="art-entry__chevron-ico" size={18} strokeWidth={2} aria-hidden />
+            ) : (
+              <ChevronDown className="art-entry__chevron-ico" size={18} strokeWidth={2} aria-hidden />
+            )}
           </button>
           {entryOpen && (
             <div className="art-entry__body">
-              <p className="art-entry__hint">Kết quả bài test gợi ý điểm xuất phát phù hợp cho học sinh (không khoá chủ đề nào).</p>
+              <p className="art-entry__hint">
+                Kết quả bài test gợi ý điểm xuất phát phù hợp cho học sinh (không khoá chủ đề nào).
+              </p>
               {currentEntryTestName && (
                 <div className="art-entry__current">
-                  <span className="art-entry__current-label">Bài test hiện tại:</span>
-                  <span className="art-entry__current-name">{currentEntryTestName}</span>
+                  <div className="art-entry__current-text">
+                    <span className="art-entry__current-label">Bài test hiện tại</span>
+                    <span className="art-entry__current-name">{currentEntryTestName}</span>
+                  </div>
                   <button
+                    type="button"
                     className="art-entry__remove-btn"
                     onClick={removeEntryTest}
                     disabled={removeEntryTestMutation.isPending}
                     title="Xóa bài kiểm tra đầu vào"
                   >
-                    {removeEntryTestMutation.isPending ? 'Đang xóa...' : '✕ Xóa'}
+                    {removeEntryTestMutation.isPending ? (
+                      'Đang xóa...'
+                    ) : (
+                      <>
+                        <X size={14} strokeWidth={2.5} aria-hidden />
+                        Xóa
+                      </>
+                    )}
                   </button>
                 </div>
               )}
-              <div className="art-field">
-                <label className="art-label">Tìm bài kiểm tra</label>
-                <input className="art-input" placeholder="Tên bài kiểm tra..." value={entryKw} onChange={(e) => setEntryKw(e.target.value)} />
+              <div className="art-entry__search">
+                <label className="art-entry__search-label" htmlFor="art-entry-test-search">
+                  Tìm bài kiểm tra
+                </label>
+                <input
+                  id="art-entry-test-search"
+                  className="art-input art-entry__search-input"
+                  placeholder="Tên bài kiểm tra..."
+                  value={entryKw}
+                  onChange={(e) => setEntryKw(e.target.value)}
+                />
               </div>
-              {assessmentOptions.length > 0 && (
+              {assessmentOptions.length > 0 ? (
                 <div className="art-list">
-                  {assessmentOptions.map((a: AssessmentResponse) => (
-                    <button key={a.id.toString()} className={`art-list-item ${entryTestId === a.id?.toString() ? 'art-list-item--active' : ''}`} onClick={() => setEntryTestId(a.id?.toString())}>
-                      <div className="art-list-item__info">
-                        <span>{a.title}</span>
-                        {a.timeLimitMinutes && <span className="art-list-item__meta">⏱ {a.timeLimitMinutes} phút</span>}
-                      </div>
-                      {entryTestId === a.id?.toString() && <span className="art-check">✓</span>}
-                    </button>
-                  ))}
+                  {assessmentOptions.map((a: AssessmentResponse) => {
+                    const selected = entryTestId === a.id?.toString();
+                    return (
+                      <button
+                        key={a.id.toString()}
+                        type="button"
+                        className={`art-list-item ${selected ? 'art-list-item--active' : ''}`}
+                        onClick={() => setEntryTestId(a.id?.toString())}
+                      >
+                        <div className="art-list-item__info">
+                          <span className="art-list-item__title">{a.title}</span>
+                          {a.timeLimitMinutes != null && a.timeLimitMinutes > 0 && (
+                            <span className="art-list-item__meta">
+                              <Clock className="art-list-item__clock" size={13} aria-hidden />
+                              {a.timeLimitMinutes} phút
+                            </span>
+                          )}
+                        </div>
+                        {selected && (
+                          <span className="art-check" aria-hidden>
+                            <Check size={18} strokeWidth={2.75} />
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
+              ) : (
+                <p className="art-entry__list-empty">Không có bài kiểm tra phù hợp. Thử từ khóa khác.</p>
               )}
-              <button className="art-btn art-btn--save" onClick={saveEntryTest} disabled={!entryTestId || entryTestMutation.isPending} style={{ marginTop: 12 }}>
+              <button
+                type="button"
+                className="art-btn art-btn--save art-entry__save"
+                onClick={saveEntryTest}
+                disabled={!entryTestId || entryTestMutation.isPending}
+              >
                 {entryTestMutation.isPending ? 'Đang lưu...' : 'Lưu cấu hình'}
               </button>
             </div>
@@ -718,7 +828,13 @@ export default function AdminRoadmapTopicsPage() {
         <AnimatePresence>
           {activeTopic && (
             <>
-              <motion.div className="art-overlay-bg" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setActiveId(null)} />
+              <motion.div
+                className="art-overlay-bg"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setActiveId(null)}
+              />
               <motion.aside
                 className="art-drawer"
                 initial={{ x: 440 }}
@@ -731,7 +847,9 @@ export default function AdminRoadmapTopicsPage() {
                     Chủ đề #{activeTopic.sequenceOrder}
                     {activeTopic.isDraft && <span className="art-badge art-badge--new">Mới</span>}
                     {activeTopic.dirtyFields.length > 0 && !activeTopic.isDraft && (
-                      <span className="art-badge art-badge--warning">⚠ {activeTopic.dirtyFields.length} thay đổi chưa lưu</span>
+                      <span className="art-badge art-badge--warning">
+                        ⚠ {activeTopic.dirtyFields.length} thay đổi chưa lưu
+                      </span>
                     )}
                   </h2>
                   <div className="art-drawer__actions">
@@ -740,10 +858,19 @@ export default function AdminRoadmapTopicsPage() {
                       onClick={() => saveTopic(activeTopic)}
                       disabled={addMutation.isPending || updateMutation.isPending}
                     >
-                      {addMutation.isPending || updateMutation.isPending ? 'Đang lưu...' : '💾 Lưu chủ đề này'}
+                      {addMutation.isPending || updateMutation.isPending
+                        ? 'Đang lưu...'
+                        : '💾 Lưu chủ đề này'}
                     </button>
-                    <button className="art-btn art-btn--delete" onClick={() => setDeleteId(activeTopic.clientId)}>Xóa</button>
-                    <button className="art-drawer__close" onClick={() => setActiveId(null)}>✕</button>
+                    <button
+                      className="art-btn art-btn--delete"
+                      onClick={() => setDeleteId(activeTopic.clientId)}
+                    >
+                      Xóa
+                    </button>
+                    <button className="art-drawer__close" onClick={() => setActiveId(null)}>
+                      ✕
+                    </button>
                   </div>
                 </div>
 
@@ -753,24 +880,55 @@ export default function AdminRoadmapTopicsPage() {
                     <div className="art-section-title">🧩 Thông tin cơ bản</div>
                     <div className="art-field">
                       <label className="art-label">Tiêu đề *</label>
-                      <input className="art-input" value={activeTopic.title} onChange={(e) => patchActive('title', e.target.value, 'title')} placeholder="Tên chủ đề..." />
+                      <input
+                        className="art-input"
+                        value={activeTopic.title}
+                        onChange={(e) => patchActive('title', e.target.value, 'title')}
+                        placeholder="Tên chủ đề..."
+                      />
                     </div>
                     <div className="art-field">
                       <label className="art-label">Mô tả</label>
-                      <textarea className="art-textarea" rows={3} value={activeTopic.description} onChange={(e) => patchActive('description', e.target.value, 'description')} placeholder="Mô tả ngắn (tùy chọn)" />
+                      <textarea
+                        className="art-textarea"
+                        rows={3}
+                        value={activeTopic.description}
+                        onChange={(e) => patchActive('description', e.target.value, 'description')}
+                        placeholder="Mô tả ngắn (tùy chọn)"
+                      />
                     </div>
                     <div className="art-row">
                       <div className="art-field">
                         <label className="art-label">Độ khó</label>
-                        <select className="art-select" value={activeTopic.difficulty} onChange={(e) => patchActive('difficulty', e.target.value as TopicDifficulty, 'difficulty')}>
+                        <select
+                          className="art-select"
+                          value={activeTopic.difficulty}
+                          onChange={(e) =>
+                            patchActive(
+                              'difficulty',
+                              e.target.value as TopicDifficulty,
+                              'difficulty'
+                            )
+                          }
+                        >
                           {(['EASY', 'MEDIUM', 'HARD'] as TopicDifficulty[]).map((d) => (
-                            <option key={d} value={d}>{DIFF_LABELS[d]}</option>
+                            <option key={d} value={d}>
+                              {DIFF_LABELS[d]}
+                            </option>
                           ))}
                         </select>
                       </div>
                       <div className="art-field">
                         <label className="art-label">Thứ tự</label>
-                        <input className="art-input" type="number" min={1} value={activeTopic.sequenceOrder} onChange={(e) => patchActive('sequenceOrder', Number(e.target.value), 'sequenceOrder')} />
+                        <input
+                          className="art-input"
+                          type="number"
+                          min={1}
+                          value={activeTopic.sequenceOrder}
+                          onChange={(e) =>
+                            patchActive('sequenceOrder', Number(e.target.value), 'sequenceOrder')
+                          }
+                        />
                       </div>
                       <div className="art-field">
                         <label className="art-label">Điểm mốc *</label>
@@ -786,10 +944,20 @@ export default function AdminRoadmapTopicsPage() {
                       {activeTopic.persistedId && (
                         <div className="art-field">
                           <label className="art-label">Trạng thái</label>
-                          <select className="art-select" value={activeTopic.status} onChange={(e) => patchActive('status', e.target.value as TopicStatus, 'status')}>
-                            {(['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED'] as TopicStatus[]).map((s) => (
-                              <option key={s} value={s}>{STATUS_LABELS[s]}</option>
-                            ))}
+                          <select
+                            className="art-select"
+                            value={activeTopic.status}
+                            onChange={(e) =>
+                              patchActive('status', e.target.value as TopicStatus, 'status')
+                            }
+                          >
+                            {(['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED'] as TopicStatus[]).map(
+                              (s) => (
+                                <option key={s} value={s}>
+                                  {STATUS_LABELS[s]}
+                                </option>
+                              )
+                            )}
                           </select>
                         </div>
                       )}
@@ -799,27 +967,67 @@ export default function AdminRoadmapTopicsPage() {
                   {/* Courses */}
                   <div className="art-drawer__section">
                     <div className="art-section-title">📚 Khóa học của chủ đề</div>
-                    <p className="art-section-hint">Chọn các khóa học liên quan đến chủ đề này (tùy chọn).</p>
+                    <p className="art-section-hint">
+                      Chọn các khóa học liên quan đến chủ đề này (tùy chọn).
+                    </p>
 
                     {activeTopic.courseIds.length > 0 && (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '8px',
+                          marginBottom: '12px',
+                        }}
+                      >
                         {activeTopic.courseIds.map((courseId) => {
-                          const course = courseOptions.find(c => c.id === courseId);
+                          const course = courseOptions.find((c) => c.id === courseId);
                           if (!course) return null;
                           return (
-                            <div key={courseId} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: '#f0fdf4', border: '1.5px solid #bbf7d0', borderRadius: '10px' }}>
-                              <span style={{ flex: 1, fontSize: '0.88rem', fontWeight: 600 }}>{course.title}</span>
-                              <button 
-                                onClick={() => patchActive('courseIds', activeTopic.courseIds.filter(id => id !== courseId), 'courseId')}
-                                style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: '1.2rem', padding: '0 4px' }}
-                              >×</button>
+                            <div
+                              key={courseId}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                padding: '8px 12px',
+                                background: '#f0fdf4',
+                                border: '1.5px solid #bbf7d0',
+                                borderRadius: '10px',
+                              }}
+                            >
+                              <span style={{ flex: 1, fontSize: '0.88rem', fontWeight: 600 }}>
+                                {course.title}
+                              </span>
+                              <button
+                                onClick={() =>
+                                  patchActive(
+                                    'courseIds',
+                                    activeTopic.courseIds.filter((id) => id !== courseId),
+                                    'courseId'
+                                  )
+                                }
+                                style={{
+                                  background: 'none',
+                                  border: 'none',
+                                  color: '#dc2626',
+                                  cursor: 'pointer',
+                                  fontSize: '1.2rem',
+                                  padding: '0 4px',
+                                }}
+                              >
+                                ×
+                              </button>
                             </div>
                           );
                         })}
                       </div>
                     )}
 
-                    <button className="art-btn art-btn--pick" onClick={() => setCoursePickerOpen(true)}>
+                    <button
+                      className="art-btn art-btn--pick"
+                      onClick={() => setCoursePickerOpen(true)}
+                    >
                       + Thêm khóa học
                     </button>
                   </div>
@@ -832,24 +1040,31 @@ export default function AdminRoadmapTopicsPage() {
         {/* ── Course Picker (full-screen overlay) ── */}
         <AnimatePresence>
           {coursePickerOpen && (
-            <motion.div className="art-picker" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <motion.div
+              className="art-picker"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
               <div className="art-picker__inner">
                 <div className="art-picker__header">
                   <h2 className="art-picker__title">Chọn khóa học</h2>
-                  <button className="art-drawer__close" onClick={() => setCoursePickerOpen(false)}>✕</button>
+                  <button className="art-drawer__close" onClick={() => setCoursePickerOpen(false)}>
+                    ✕
+                  </button>
                 </div>
                 <div className="art-picker__search">
-                  <input 
-                    className="art-input art-picker__input" 
-                    placeholder="🔍 Tìm khóa học (nhấn Esc để đóng)..." 
-                    value={courseKw} 
+                  <input
+                    className="art-input art-picker__input"
+                    placeholder="🔍 Tìm khóa học (nhấn Esc để đóng)..."
+                    value={courseKw}
                     onChange={(e) => setCourseKw(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Escape') {
                         setCoursePickerOpen(false);
                       }
                     }}
-                    autoFocus 
+                    autoFocus
                   />
                   {coursesQuery.isFetching && (
                     <div className="art-picker__search-spinner">
@@ -864,7 +1079,9 @@ export default function AdminRoadmapTopicsPage() {
                 )}
                 {coursesQuery.isLoading && <p className="art-loading-text">Đang tải...</p>}
                 {!coursesQuery.isLoading && courseOptions.length === 0 && (
-                  <p className="art-loading-text">Không tìm thấy khóa học nào{courseKw ? ` cho "${courseKw}"` : ''}.</p>
+                  <p className="art-loading-text">
+                    Không tìm thấy khóa học nào{courseKw ? ` cho "${courseKw}"` : ''}.
+                  </p>
                 )}
                 <div className="art-picker__grid">
                   {courseOptions.map((c) => {
@@ -876,25 +1093,43 @@ export default function AdminRoadmapTopicsPage() {
                         onClick={() => {
                           if (!activeTopic) return;
                           if (isSelected) {
-                            patchActive('courseIds', activeTopic.courseIds.filter(id => id !== c.id), 'courseId');
+                            patchActive(
+                              'courseIds',
+                              activeTopic.courseIds.filter((id) => id !== c.id),
+                              'courseId'
+                            );
                           } else {
                             patchActive('courseIds', [...activeTopic.courseIds, c.id], 'courseId');
                           }
                         }}
                       >
-                        {c.thumbnailUrl && <img className="art-picker__card-thumb" src={c.thumbnailUrl} alt={c.title} />}
+                        {c.thumbnailUrl && (
+                          <img
+                            className="art-picker__card-thumb"
+                            src={c.thumbnailUrl}
+                            alt={c.title}
+                          />
+                        )}
                         <div className="art-picker__card-body">
                           <strong className="art-picker__card-title">{c.title}</strong>
-                          {c.description && <p className="art-picker__card-desc">{c.description}</p>}
+                          {c.description && (
+                            <p className="art-picker__card-desc">{c.description}</p>
+                          )}
                         </div>
                         {isSelected && <div className="art-picker__card-check">✓</div>}
                       </button>
                     );
                   })}
                 </div>
-                <div style={{ padding: '16px 24px', borderTop: '1.5px solid #f3f4f6', background: '#fafafa' }}>
-                  <button 
-                    className="art-btn art-btn--save" 
+                <div
+                  style={{
+                    padding: '16px 24px',
+                    borderTop: '1.5px solid #f3f4f6',
+                    background: '#fafafa',
+                  }}
+                >
+                  <button
+                    className="art-btn art-btn--save"
                     onClick={() => setCoursePickerOpen(false)}
                     style={{ width: '100%' }}
                   >
@@ -911,10 +1146,23 @@ export default function AdminRoadmapTopicsPage() {
           <div className="art-modal-overlay">
             <div className="art-modal">
               <h3 className="art-modal__title">Xác nhận xóa</h3>
-              <p className="art-modal__body">Bạn có chắc muốn xóa chủ đề "{topics.find((t) => t.clientId === deleteId)?.title || '(trống)'}"?</p>
+              <p className="art-modal__body">
+                Bạn có chắc muốn xóa chủ đề "
+                {topics.find((t) => t.clientId === deleteId)?.title || '(trống)'}"?
+              </p>
               <div className="art-modal__actions">
-                <button className="art-btn art-btn--delete" onClick={() => { const t = topics.find((n) => n.clientId === deleteId); if (t) deleteTopic(t); }}>Xóa</button>
-                <button className="art-btn" onClick={() => setDeleteId(null)}>Hủy</button>
+                <button
+                  className="art-btn art-btn--delete"
+                  onClick={() => {
+                    const t = topics.find((n) => n.clientId === deleteId);
+                    if (t) deleteTopic(t);
+                  }}
+                >
+                  Xóa
+                </button>
+                <button className="art-btn" onClick={() => setDeleteId(null)}>
+                  Hủy
+                </button>
               </div>
             </div>
           </div>

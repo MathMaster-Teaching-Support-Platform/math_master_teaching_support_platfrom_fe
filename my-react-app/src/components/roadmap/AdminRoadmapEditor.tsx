@@ -1,5 +1,5 @@
-import { useEffect, useId, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useEffect, useId, useMemo, useState } from 'react';
 import { SubjectService } from '../../services/api/subject.service';
 import type {
   CreateAdminRoadmapRequest,
@@ -201,7 +201,7 @@ export default function AdminRoadmapEditor({
         <label className="admin-roadmap-editor__field">
           <span>{mode === 'create' ? 'Môn học' : 'Đổi môn (tùy chọn)'}</span>
           <select
-            value={mode === 'create' ? createForm.subjectId : updateForm.subjectId ?? ''}
+            value={mode === 'create' ? createForm.subjectId : (updateForm.subjectId ?? '')}
             onChange={(event) =>
               mode === 'create'
                 ? setCreateField('subjectId', event.target.value)
@@ -239,7 +239,7 @@ export default function AdminRoadmapEditor({
         <label className="admin-roadmap-editor__field admin-roadmap-editor__field--wide">
           <span>Mô tả</span>
           <textarea
-            value={mode === 'create' ? createForm.description : updateForm.description ?? ''}
+            value={mode === 'create' ? createForm.description : (updateForm.description ?? '')}
             onChange={(event) =>
               mode === 'create'
                 ? setCreateField('description', event.target.value)
@@ -306,7 +306,9 @@ export default function AdminRoadmapEditor({
                   name="estimatedCompletionDays"
                   placeholder="ví dụ: 30"
                   aria-invalid={!!estimatedDaysError}
-                  aria-describedby={estimatedDaysError ? `${daysHintId} ${daysErrorId}` : daysHintId}
+                  aria-describedby={
+                    estimatedDaysError ? `${daysHintId} ${daysErrorId}` : daysHintId
+                  }
                   value={daysFieldDisplay('edit', createForm, updateForm)}
                   onChange={(event) => {
                     setEstimatedDaysError(null);
