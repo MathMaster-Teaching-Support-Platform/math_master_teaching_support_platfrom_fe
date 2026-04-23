@@ -250,71 +250,104 @@ export default function AdminRoadmapEditor({
           />
         </label>
 
-        <label
-          className={`admin-roadmap-editor__field${estimatedDaysError ? ' admin-roadmap-editor__field--invalid' : ''}`}
-        >
-          <span>
-            {mode === 'create' ? 'Số ngày dự kiến' : 'Số ngày dự kiến hoàn thành'}
-          </span>
-          <input
-            type="text"
-            inputMode="numeric"
-            autoComplete="off"
-            name="estimatedDays"
-            placeholder="ví dụ: 30"
-            aria-invalid={!!estimatedDaysError}
-            aria-describedby={
-              estimatedDaysError ? `${daysHintId} ${daysErrorId}` : daysHintId
-            }
-            value={daysFieldDisplay(mode, createForm, updateForm)}
-            onChange={(event) => {
-              setEstimatedDaysError(null);
-              const raw = event.target.value.trim();
-              if (raw === '') {
-                if (mode === 'create') {
+        {mode === 'create' && (
+          <label
+            className={`admin-roadmap-editor__field${estimatedDaysError ? ' admin-roadmap-editor__field--invalid' : ''}`}
+          >
+            <span>Số ngày dự kiến</span>
+            <input
+              type="text"
+              inputMode="numeric"
+              autoComplete="off"
+              name="estimatedDays"
+              placeholder="ví dụ: 30"
+              aria-invalid={!!estimatedDaysError}
+              aria-describedby={estimatedDaysError ? `${daysHintId} ${daysErrorId}` : daysHintId}
+              value={daysFieldDisplay('create', createForm, updateForm)}
+              onChange={(event) => {
+                setEstimatedDaysError(null);
+                const raw = event.target.value.trim();
+                if (raw === '') {
                   setCreateField('estimatedDays', 0);
-                } else {
-                  setUpdateField('estimatedCompletionDays', 0);
+                  return;
                 }
-                return;
-              }
-              if (!/^\d+$/.test(raw)) {
-                return;
-              }
-              const n = Number.parseInt(raw, 10);
-              if (Number.isNaN(n)) {
-                return;
-              }
-              if (mode === 'create') {
+                if (!/^\d+$/.test(raw)) {
+                  return;
+                }
+                const n = Number.parseInt(raw, 10);
+                if (Number.isNaN(n)) {
+                  return;
+                }
                 setCreateField('estimatedDays', n);
-              } else {
-                setUpdateField('estimatedCompletionDays', n);
-              }
-            }}
-          />
-          <p id={daysHintId} className="admin-roadmap-editor__hint">
-            Chỉ nhập số nguyên dương (ví dụ 1, 7, 30).
-          </p>
-          {estimatedDaysError && (
-            <p id={daysErrorId} className="admin-roadmap-editor__inline-error" role="alert">
-              {estimatedDaysError}
+              }}
+            />
+            <p id={daysHintId} className="admin-roadmap-editor__hint">
+              Chỉ nhập số nguyên dương (ví dụ 1, 7, 30).
             </p>
-          )}
-        </label>
+            {estimatedDaysError && (
+              <p id={daysErrorId} className="admin-roadmap-editor__inline-error" role="alert">
+                {estimatedDaysError}
+              </p>
+            )}
+          </label>
+        )}
 
         {mode === 'edit' && (
-          <label className="admin-roadmap-editor__field">
-            <span>Trạng thái</span>
-            <select
-              value={updateForm.status ?? 'GENERATED'}
-              onChange={(event) => setUpdateField('status', event.target.value as RoadmapStatus)}
-            >
-              <option value="GENERATED">Sẵn sàng</option>
-              <option value="IN_PROGRESS">Đang học</option>
-              <option value="COMPLETED">Hoàn thành</option>
-              <option value="ARCHIVED">Lưu trữ</option>
-            </select>
-          </label>
+          <div className="admin-roadmap-editor__pair-row">
+            <div className="admin-roadmap-editor__pair-left">
+              <label
+                className={`admin-roadmap-editor__field${estimatedDaysError ? ' admin-roadmap-editor__field--invalid' : ''}`}
+              >
+                <span>Số ngày dự kiến hoàn thành</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  name="estimatedCompletionDays"
+                  placeholder="ví dụ: 30"
+                  aria-invalid={!!estimatedDaysError}
+                  aria-describedby={estimatedDaysError ? `${daysHintId} ${daysErrorId}` : daysHintId}
+                  value={daysFieldDisplay('edit', createForm, updateForm)}
+                  onChange={(event) => {
+                    setEstimatedDaysError(null);
+                    const raw = event.target.value.trim();
+                    if (raw === '') {
+                      setUpdateField('estimatedCompletionDays', 0);
+                      return;
+                    }
+                    if (!/^\d+$/.test(raw)) {
+                      return;
+                    }
+                    const n = Number.parseInt(raw, 10);
+                    if (Number.isNaN(n)) {
+                      return;
+                    }
+                    setUpdateField('estimatedCompletionDays', n);
+                  }}
+                />
+              </label>
+              <p id={daysHintId} className="admin-roadmap-editor__hint">
+                Chỉ nhập số nguyên dương (ví dụ 1, 7, 30).
+              </p>
+              {estimatedDaysError && (
+                <p id={daysErrorId} className="admin-roadmap-editor__inline-error" role="alert">
+                  {estimatedDaysError}
+                </p>
+              )}
+            </div>
+            <label className="admin-roadmap-editor__field">
+              <span>Trạng thái</span>
+              <select
+                value={updateForm.status ?? 'GENERATED'}
+                onChange={(event) => setUpdateField('status', event.target.value as RoadmapStatus)}
+              >
+                <option value="GENERATED">Sẵn sàng</option>
+                <option value="IN_PROGRESS">Đang học</option>
+                <option value="COMPLETED">Hoàn thành</option>
+                <option value="ARCHIVED">Lưu trữ</option>
+              </select>
+            </label>
+          </div>
         )}
       </div>
 

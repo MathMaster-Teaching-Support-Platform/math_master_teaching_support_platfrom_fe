@@ -11,6 +11,47 @@
   position: relative;
 }
 
+/* Gắn trong module layout (trang xây chủ đề) — bỏ full-viewport, tránh nền trùng */
+.module-layout-container .art.art--in-module {
+  min-height: auto;
+  background: linear-gradient(180deg, #fafbfd 0%, #f4f6fb 100%);
+  border: 1px solid #e5edf7;
+  border-radius: 14px;
+  box-shadow: 0 4px 20px rgba(20, 34, 53, 0.06);
+  padding: 1.25rem 1.15rem 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+.module-layout-container .art-page-header--topics.courses-header-row {
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin-bottom: 0.35rem;
+}
+
+.module-layout-container .art-page-header--topics .art-header__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+@media (max-width: 720px) {
+  .module-layout-container .art-page-header--topics.courses-header-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .module-layout-container .art-page-header--topics .art-header__actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+  .module-layout-container .art-page-header--topics .art-header__actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 .art-loading {
   padding: 80px 40px;
   text-align: center;

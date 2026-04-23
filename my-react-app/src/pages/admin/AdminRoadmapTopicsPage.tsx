@@ -1,7 +1,8 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { useEffect, useMemo, useState } from 'react';
+import { AlertCircle, ArrowLeft, Circle } from 'lucide-react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
@@ -29,6 +30,8 @@ import type {
 } from '../../types';
 import { AuthService } from '../../services/api/auth.service';
 import { API_BASE_URL } from '../../config/api.config';
+import '../../styles/module-refactor.css';
+import '../courses/TeacherCourses.css';
 import './admin-roadmap-topics-page.css';
 
 type TopicDifficulty = 'EASY' | 'MEDIUM' | 'HARD';
@@ -53,6 +56,13 @@ interface Toast { type: 'success' | 'error'; message: string; }
 const PIN_COLORS = ['#ef4444','#f97316','#eab308','#22c55e','#06b6d4','#6366f1','#ec4899','#14b8a6'];
 const DIFF_LABELS: Record<TopicDifficulty, string> = { EASY: 'Dễ', MEDIUM: 'Trung bình', HARD: 'Khó' };
 const STATUS_LABELS: Record<TopicStatus, string> = { NOT_STARTED: 'Chưa bắt đầu', IN_PROGRESS: 'Đang học', COMPLETED: 'Hoàn thành' };
+
+const ROADMAP_STATUS_LABELS: Record<string, string> = {
+  GENERATED: 'Sẵn sàng',
+  IN_PROGRESS: 'Đang học',
+  COMPLETED: 'Hoàn thành',
+  ARCHIVED: 'Lưu trữ',
+};
 
 function makeNewDraft(order: number): TopicDraft {
   return {
@@ -165,8 +175,7 @@ function SortablePin({ topic, index, isActive, onActivate }: SortablePinProps) {
 // ── Main component ────────────────────────────────────────────────
 export default function AdminRoadmapTopicsPage() {
   const { roadmapId = '' } = useParams<{ roadmapId: string }>();
-  const navigate = useNavigate();
-  const { data: roadmapData, isLoading } = useAdminRoadmapDetail(roadmapId);
+  const { data: roadmapData, isLoading, isError, error } = useAdminRoadmapDetail(roadmapId);
   const addMutation = useAddRoadmapTopic();
   const updateMutation = useUpdateRoadmapTopic();
   const archiveMutation = useArchiveRoadmapTopic();
@@ -485,44 +494,132 @@ export default function AdminRoadmapTopicsPage() {
   const roadH = Math.max(300, Math.ceil(topics.length / COLS) * ROW_H + 100);
   const roadPath = buildRoadPath(topics.length);
 
+  const pageShell = (children: ReactNode) => (
+    <DashboardLayout
+      role="admin"
+      user={{ name: mockAdmin.name, avatar: mockAdmin.avatar, role: 'admin' }}
+      notificationCount={2}
+      contentClassName="dashboard-content--flush-bleed"
+    >
+      <div className="module-layout-container admin-roadmap-mgmt-page">
+        <div className="admin-roadmap-mgmt-page__bg" aria-hidden="true" />
+        <section className="module-page teacher-courses-page admin-roadmap-mgmt-page__content">
+          {children}
+        </section>
+      </div>
+    </DashboardLayout>
+  );
+
   if (isLoading) {
-    return (
-      <DashboardLayout role="admin" user={{ name: mockAdmin.name, avatar: mockAdmin.avatar, role: 'admin' }}>
-        <div className="art-loading">Đang tải lộ trình...</div>
-      </DashboardLayout>
+    return pageShell(
+      <>
+        <div className="skeleton-grid" aria-busy="true" aria-label="Đang tải">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="skeleton-card" />
+          ))}
+        </div>
+        <p className="muted" style={{ textAlign: 'center', marginTop: '0.5rem' }}>
+          Đang tải dữ liệu lộ trình...
+        </p>
+      </>
     );
   }
 
-  return (
-    <DashboardLayout role="admin" user={{ name: mockAdmin.name, avatar: mockAdmin.avatar, role: 'admin' }}>
-      <div className="art">
+  if (isError) {
+    return pageShell(
+      <div className="empty admin-roadmap-mgmt-empty" role="alert">
+        <AlertCircle
+          size={32}
+          style={{ opacity: 0.5, marginBottom: 8, color: 'var(--mod-danger, #c63f4d)' }}
+          aria-hidden
+        />
+        <p>
+          {error instanceof Error
+            ? error.message
+            : 'Không thể tải lộ trình. Vui lòng thử lại.'}
+        </p>
+        <Link to="/admin/roadmaps" className="btn secondary">
+          <ArrowLeft size={15} />
+          Về danh sách lộ trình
+        </Link>
+      </div>
+    );
+  }
 
-        {/* Toast */}
-        {toast && <div className={`art-toast art-toast--${toast.type}`}>{toast.message}</div>}
+  if (!roadmap) {
+    return pageShell(
+      <div className="empty admin-roadmap-mgmt-empty">
+        <p>Không tìm thấy lộ trình.</p>
+        <Link to="/admin/roadmaps" className="btn secondary">
+          <ArrowLeft size={15} />
+          Về danh sách
+        </Link>
+      </div>
+    );
+  }
 
-        {/* Header */}
-        <div className="art-header">
-          <button className="art-back" onClick={() => navigate(-1)}>← Quay lại</button>
-          <div className="art-header__info">
-            <h1 className="art-header__title">{roadmap?.name ?? 'Lộ trình'}</h1>
-            <p className="art-header__sub">{roadmap?.subject} · {roadmap?.gradeLevel}</p>
-            {!pointValidation.valid && (
-              <p className="art-header__warning">⚠ {pointValidation.message}</p>
-            )}
+  return pageShell(
+    <>
+      <div className="admin-roadmap-create-top">
+        <Link
+          to={`/admin/roadmaps/edit/${roadmapId}`}
+          className="btn secondary"
+        >
+          <ArrowLeft size={15} aria-hidden="true" />
+          Quay lại chỉnh sửa lộ trình
+        </Link>
+      </div>
+
+      <header className="page-header courses-header-row art-page-header--topics">
+        <div className="header-stack" style={{ flex: 1, minWidth: 0 }}>
+          <div className="header-kicker">Admin</div>
+          <div
+            className="row"
+            style={{ gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap' }}
+          >
+            <h2 style={{ margin: 0 }}>{roadmap.name}</h2>
+            <span
+              className={`admin-roadmap-page__status admin-roadmap-page__status--${roadmap.status.toLowerCase()}`}
+              style={{ fontSize: 12 }}
+            >
+              <Circle className="admin-roadmap-page__status-dot" aria-hidden="true" />
+              {ROADMAP_STATUS_LABELS[roadmap.status] ?? roadmap.status}
+            </span>
           </div>
-          <div className="art-header__actions">
-            {pendingCount > 0 && (
-              <button
-                className="art-btn art-btn--save-all"
-                onClick={saveAll}
-                disabled={isSavingAll || !pointValidation.valid}
-              >
-                {isSavingAll ? 'Đang lưu...' : `Lưu tất cả (${pendingCount})`}
-              </button>
-            )}
-            <button className="art-btn art-btn--add" onClick={addTopic}>+ Thêm chủ đề</button>
+          <p className="header-sub admin-roadmap-mgmt-header-sub">
+            {roadmap.subject} · {roadmap.gradeLevel}
+          </p>
+        </div>
+        <div className="art-header__actions" style={{ flexShrink: 0 }}>
+          {pendingCount > 0 && (
+            <button
+              type="button"
+              className="btn btn--feat-emerald"
+              onClick={() => void saveAll()}
+              disabled={isSavingAll || !pointValidation.valid}
+            >
+              {isSavingAll ? 'Đang lưu...' : `Lưu tất cả (${pendingCount})`}
+            </button>
+          )}
+          <button type="button" className="btn btn--feat-indigo" onClick={addTopic}>
+            + Thêm chủ đề
+          </button>
+        </div>
+      </header>
+
+      {!pointValidation.valid && (
+        <div className="assessment-summary-bar" style={{ marginTop: 0, marginBottom: 4 }}>
+          <div className="summary-item" style={{ width: '100%', justifyContent: 'flex-start' }}>
+            <span className="summary-label" style={{ color: 'var(--mod-warn, #a36a12)' }}>
+              ⚠ {pointValidation.message}
+            </span>
           </div>
         </div>
+      )}
+
+      <div className="art art--in-module">
+        {/* Toast */}
+        {toast && <div className={`art-toast art-toast--${toast.type}`}>{toast.message}</div>}
 
         {/* ── Road Canvas ── */}
         <div className="art-canvas-wrap">
@@ -823,6 +920,6 @@ export default function AdminRoadmapTopicsPage() {
           </div>
         )}
       </div>
-    </DashboardLayout>
+    </>
   );
 }

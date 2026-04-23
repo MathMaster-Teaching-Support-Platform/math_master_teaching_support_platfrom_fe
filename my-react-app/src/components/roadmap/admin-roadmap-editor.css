@@ -26,6 +26,8 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1.25rem;
+  /* Tránh cột thấp bị kéo giãn theo cột cao (hint) khiến select “Trạng thái” lệch dọc */
+  align-items: start;
 }
 
 .admin-roadmap-editor__field {
@@ -50,6 +52,8 @@
   background: #ffffff;
   transition: all 0.15s;
   font-size: 0.9375rem;
+  min-height: 2.75rem;
+  box-sizing: border-box;
 }
 
 .admin-roadmap-editor__field input:focus,
@@ -66,8 +70,29 @@
   cursor: not-allowed;
 }
 
+.admin-roadmap-editor__field textarea {
+  min-height: 5.5rem;
+  resize: vertical;
+}
+
 .admin-roadmap-editor__field--wide {
   grid-column: 1 / -1;
+}
+
+/* Cặp: Số ngày + Trạng thái (chỉnh sửa) — cùng hàng, hint chỉ dưới cột trái */
+.admin-roadmap-editor__pair-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+  grid-column: 1 / -1;
+}
+
+.admin-roadmap-editor__pair-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
 }
 
 .admin-roadmap-editor__field--invalid input,
