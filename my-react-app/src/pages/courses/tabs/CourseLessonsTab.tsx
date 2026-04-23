@@ -20,6 +20,7 @@ import {
   Plus,
   Trash2,
   Video,
+  X,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useToast } from '../../../context/ToastContext';
@@ -33,18 +34,161 @@ import {
   useRemoveMaterial,
   useReorderCourseLessons,
   useUpdateCourseLesson,
+  useUpdateSection,
 } from '../../../hooks/useCourses';
 import { CourseService } from '../../../services/api/course.service';
 import { LessonSlideService } from '../../../services/api/lesson-slide.service';
 import { VideoUploadService } from '../../../services/api/videoUpload.service';
 import '../../../styles/module-refactor.css';
 import './course-detail-tabs.css';
+import './CourseLessonsTab.css';
 import type { CourseLessonResponse, CourseResponse } from '../../../types';
 import type { ChapterBySubject, LessonByChapter } from '../../../types/lessonSlide.types';
 
 interface CourseLessonsTabProps {
   courseId: string;
   course: CourseResponse;
+}
+
+type CltDeleteTarget =
+  | { k: 'lesson'; lessonId: string }
+  | { k: 'material'; lessonId: string; materialId: string; name: string }
+  | { k: 'section'; sectionId: string; title: string };
+
+function CltConfirmDeleteModal({
+  onClose,
+  onConfirm,
+  title,
+  message,
+  extraHint,
+  confirmLabel,
+  danger,
+  isPending,
+}: {
+  onClose: () => void;
+  onConfirm: () => void;
+  title: string;
+  message: string;
+  extraHint?: string;
+  confirmLabel: string;
+  danger?: boolean;
+  isPending?: boolean;
+}) {
+  return (
+    <div className="clt-warm-overlay" role="presentation" onClick={onClose}>
+      <div
+        className="clt-warm-dialog clt-warm-dialog--sm"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="clt-confirm-title"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="clt-warm-dialog__header">
+          <div>
+            <h3 id="clt-confirm-title">{title}</h3>
+          </div>
+          <button type="button" className="clt-warm-icon-btn" onClick={onClose} disabled={isPending}>
+            <X size={18} aria-hidden />
+          </button>
+        </div>
+        <div className="clt-warm-dialog__body">
+          <p className="clt-warm-confirm-text">{message}</p>
+          {extraHint ? <p className="clt-warm-confirm-hint">{extraHint}</p> : null}
+        </div>
+        <div className="clt-warm-dialog__footer">
+          <button type="button" className="btn secondary" onClick={onClose} disabled={isPending}>
+            Hủy
+          </button>
+          <button
+            type="button"
+            className={danger ? 'btn danger' : 'btn cdt-btn-primary'}
+            onClick={onConfirm}
+            disabled={isPending}
+          >
+            {isPending ? 'Đang xử lý...' : confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CltTextSectionModal({
+  open,
+  onClose,
+  title,
+  description,
+  label,
+  value,
+  onChange,
+  onSubmit,
+  submitLabel,
+  isPending,
+  placeholder,
+  submitDisabled,
+}: {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  description?: string;
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  onSubmit: () => void;
+  submitLabel: string;
+  isPending: boolean;
+  placeholder?: string;
+  submitDisabled?: boolean;
+}) {
+  if (!open) return null;
+  return (
+    <div className="clt-warm-overlay" role="presentation" onClick={onClose}>
+      <div
+        className="clt-warm-dialog clt-warm-dialog--sm"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="clt-text-section-title"
+        lang="vi"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="clt-warm-dialog__header">
+          <div>
+            <h3 id="clt-text-section-title">{title}</h3>
+            {description ? <p>{description}</p> : null}
+          </div>
+          <button type="button" className="clt-warm-icon-btn" onClick={onClose} disabled={isPending}>
+            <X size={18} aria-hidden />
+          </button>
+        </div>
+        <div className="clt-warm-dialog__body">
+          <label className="clt-warm-form-field">
+            <span className="clt-warm-form-label">{label}</span>
+            <input
+              className="clt-warm-input"
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              placeholder={placeholder}
+              disabled={isPending}
+              autoFocus
+            />
+          </label>
+        </div>
+        <div className="clt-warm-dialog__footer">
+          <button type="button" className="btn secondary" onClick={onClose} disabled={isPending}>
+            Hủy
+          </button>
+          <button
+            type="button"
+            className="btn cdt-btn-primary"
+            onClick={onSubmit}
+            disabled={isPending || submitDisabled}
+          >
+            {isPending ? 'Đang lưu...' : submitLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // Upload Modal Component
@@ -82,21 +226,35 @@ function UploadVideoModal({
   const [customTitle, setCustomTitle] = useState(''); // for CUSTOM
   const [customDescription, setCustomDescription] = useState(''); // for CUSTOM
   const [durationSeconds, setDurationSeconds] = useState<number | undefined>(undefined);
+  const [loadingSections, setLoadingSections] = useState(false);
 
-  useState(() => {
-    if (provider === 'MINISTRY' && course.subjectId) {
-      setLoadingChapters(true);
-      LessonSlideService.getChaptersBySubject(course.subjectId)
-        .then((r) => setChapters(r.result || []))
-        .catch(() => setError('Không thể tải danh sách chương'))
-        .finally(() => setLoadingChapters(false));
-    } else if (provider === 'CUSTOM') {
-      // Mock fetch sections or from real API
-      CourseService.listSections(courseId)
-        .then((res) => setSections(res.result || []))
-        .catch(() => setError('Không thể tải danh sách phần'));
-    }
-  });
+  useEffect(() => {
+    const id = globalThis.setTimeout(() => {
+      if (provider === 'MINISTRY' && course.subjectId) {
+        setLoadingChapters(true);
+        LessonSlideService.getChaptersBySubject(course.subjectId)
+          .then((r) => {
+            setChapters(r.result || []);
+            setError('');
+          })
+          .catch(() => setError('Không thể tải danh sách chương'))
+          .finally(() => setLoadingChapters(false));
+      } else if (provider === 'CUSTOM') {
+        setLoadingSections(true);
+        CourseService.listSections(courseId)
+          .then((res) => {
+            setSections(res.result || []);
+            setError('');
+          })
+          .catch(() => setError('Không thể tải danh sách phần'))
+          .finally(() => setLoadingSections(false));
+      } else {
+        setChapters([]);
+        setSections([]);
+      }
+    }, 0);
+    return () => globalThis.clearTimeout(id);
+  }, [provider, course.subjectId, courseId]);
 
   // Auto-calculate orderIndex
   useEffect(() => {
@@ -187,33 +345,42 @@ function UploadVideoModal({
   const fileSizeMB = file ? (file.size / 1024 / 1024).toFixed(1) : null;
 
   return (
-    <div className="modal-layer" onClick={onClose}>
+    <div className="clt-warm-overlay" role="presentation" onClick={onClose}>
       <div
-        className="modal-card"
-        style={{ width: 'min(640px, 100%)' }}
+        className="clt-warm-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="clt-upload-lesson-title"
+        lang="vi"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="modal-header">
+        <div className="clt-warm-dialog__header">
           <div>
-            <h3>📹 Thêm bài học video</h3>
-            <p className="muted" style={{ marginTop: 4 }}>
-              Chọn bài học và upload video giảng dạy của bạn
+            <h3 id="clt-upload-lesson-title">Thêm bài học video</h3>
+            <p>
+              Chọn bài học (hoặc phần nội dung) và tải lên video giảng dạy.
             </p>
           </div>
-          <button className="icon-btn" onClick={onClose} disabled={uploading}>
-            ✕
+          <button
+            type="button"
+            className="clt-warm-icon-btn"
+            onClick={onClose}
+            disabled={uploading}
+            aria-label="Đóng"
+          >
+            <X size={18} />
           </button>
         </div>
 
-        <div className="modal-body">
+        <div className="clt-warm-dialog__body">
           {provider === 'MINISTRY' ? (
             <>
-              <label>
-                <p className="muted" style={{ marginBottom: 6 }}>
-                  Chương <span style={{ color: 'red' }}>*</span>
-                </p>
+              <label className="clt-warm-form-field">
+                <span className="clt-warm-form-label">
+                  Chương <span className="clt-warm-req">*</span>
+                </span>
                 <select
-                  className="select"
+                  className="clt-warm-select"
                   value={chapterId}
                   onChange={(e) => void handleChapterChange(e.target.value)}
                   disabled={loadingChapters || uploading}
@@ -227,12 +394,12 @@ function UploadVideoModal({
                 </select>
               </label>
 
-              <label>
-                <p className="muted" style={{ marginBottom: 6 }}>
-                  Bài học <span style={{ color: 'red' }}>*</span>
-                </p>
+              <label className="clt-warm-form-field">
+                <span className="clt-warm-form-label">
+                  Bài học <span className="clt-warm-req">*</span>
+                </span>
                 <select
-                  className="select"
+                  className="clt-warm-select"
                   value={lessonId}
                   onChange={(e) => setLessonId(e.target.value)}
                   disabled={!chapterId || loadingLessons || uploading}
@@ -254,17 +421,17 @@ function UploadVideoModal({
             </>
           ) : (
             <>
-              <label>
-                <p className="muted" style={{ marginBottom: 6 }}>
-                  Phần (Section) <span style={{ color: 'red' }}>*</span>
-                </p>
+              <label className="clt-warm-form-field">
+                <span className="clt-warm-form-label">
+                  Phần nội dung <span className="clt-warm-req">*</span>
+                </span>
                 <select
-                  className="select"
+                  className="clt-warm-select"
                   value={sectionId}
                   onChange={(e) => setSectionId(e.target.value)}
-                  disabled={uploading}
+                  disabled={uploading || loadingSections}
                 >
-                  <option value="">-- Chọn phần --</option>
+                  <option value="">{loadingSections ? 'Đang tải...' : '-- Chọn phần --'}</option>
                   {sections.map((s) => (
                     <option key={s.id} value={s.id}>
                       Phần {s.orderIndex}: {s.title}
@@ -273,51 +440,49 @@ function UploadVideoModal({
                 </select>
               </label>
 
-              <label>
-                <p className="muted" style={{ marginBottom: 6 }}>
-                  Tên bài học <span style={{ color: 'red' }}>*</span>
-                </p>
+              <label className="clt-warm-form-field">
+                <span className="clt-warm-form-label">
+                  Tên bài học <span className="clt-warm-req">*</span>
+                </span>
                 <input
-                  className="input"
+                  className="clt-warm-input"
                   value={customTitle}
                   onChange={(e) => setCustomTitle(e.target.value)}
-                  placeholder="Ví dụ: Bài 1: Giới thiệu..."
+                  placeholder="Ví dụ: Bài 1 — Giới thiệu"
                   disabled={uploading}
                   required
                 />
               </label>
 
-              <label>
-                <p className="muted" style={{ marginBottom: 6 }}>
-                  Mô tả ngắn (tùy chọn)
-                </p>
+              <label className="clt-warm-form-field">
+                <span className="clt-warm-form-label">Mô tả ngắn (tuỳ chọn)</span>
                 <textarea
-                  className="input"
+                  className="clt-warm-textarea"
                   rows={2}
                   value={customDescription}
                   onChange={(e) => setCustomDescription(e.target.value)}
-                  placeholder="Mô tả nội dung bài học..."
+                  placeholder="Ghi chú ngắn về nội dung bài học..."
                   disabled={uploading}
                 />
               </label>
             </>
           )}
 
-          <label>
-            <p className="muted" style={{ marginBottom: 6 }}>
-              File video <span style={{ color: 'red' }}>*</span>
-            </p>
+          <label className="clt-warm-form-field">
+            <span className="clt-warm-form-label">
+              File video <span className="clt-warm-req">*</span>
+            </span>
             <div
-              style={{
-                position: 'relative',
-                border: '2px dashed #dbe4f0',
-                borderRadius: 12,
-                padding: '1.5rem',
-                textAlign: 'center',
-                background: '#f8fafc',
-                cursor: 'pointer',
-              }}
+              className="clt-warm-dropzone"
               onClick={() => document.getElementById('video-input')?.click()}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  document.getElementById('video-input')?.click();
+                }
+              }}
+              role="button"
+              tabIndex={0}
             >
               <input
                 id="video-input"
@@ -329,91 +494,81 @@ function UploadVideoModal({
               />
               {file ? (
                 <div>
-                  <div style={{ color: '#2d7be7', fontWeight: 600, marginBottom: 4 }}>
-                    ✅ {file.name}
-                  </div>
-                  <div className="muted" style={{ fontSize: '0.82rem' }}>
-                    {fileSizeMB} MB{' '}
+                  <div className="clt-warm-dropzone__file">{file.name}</div>
+                  <div className="clt-warm-muted">
+                    {fileSizeMB} MB
                     {durationSeconds
-                      ? `• ${Math.floor(durationSeconds / 60)} phút ${durationSeconds % 60} giây`
+                      ? ` · ${Math.floor(durationSeconds / 60)} phút ${durationSeconds % 60} giây`
                       : ''}
                   </div>
                 </div>
               ) : (
-                <div className="muted">
-                  <Video size={32} style={{ marginBottom: 8, opacity: 0.5 }} />
-                  <p>Kéo thả hoặc click để chọn file video</p>
-                  <p style={{ fontSize: '0.75rem', marginTop: 4 }}>MP4, WebM hoặc OGG</p>
+                <div className="clt-warm-muted">
+                  <Video size={32} style={{ marginBottom: 8, opacity: 0.55 }} aria-hidden />
+                  <p style={{ margin: 0 }}>Kéo thả hoặc chọn file video</p>
+                  <p style={{ fontSize: '0.75rem', marginTop: 6, marginBottom: 0 }}>
+                    MP4, WebM hoặc OGG
+                  </p>
                 </div>
               )}
             </div>
           </label>
 
-          <label>
-            <p className="muted" style={{ marginBottom: 6 }}>
-              Tiêu đề video
-            </p>
+          <label className="clt-warm-form-field">
+            <span className="clt-warm-form-label">Tiêu đề video</span>
             <input
-              className="input"
+              className="clt-warm-input"
               value={videoTitle}
               onChange={(e) => setVideoTitle(e.target.value)}
-              placeholder="Tên hiển thị cho bài học này"
+              placeholder="Tên hiển thị khi học viên xem bài"
               disabled={uploading}
             />
           </label>
 
           <div className="row" style={{ gap: '1rem' }}>
-            <label className="row" style={{ alignItems: 'center', gap: 8, paddingTop: 10 }}>
+            <label className="row" style={{ alignItems: 'center', gap: 8, paddingTop: 4 }}>
               <input
                 type="checkbox"
                 checked={isFreePreview}
                 onChange={(e) => setIsFreePreview(e.target.checked)}
                 disabled={uploading}
               />
-              <span style={{ fontSize: '0.9rem' }}>Xem thử miễn phí</span>
+              <span style={{ fontSize: '0.9rem' }}>Cho phép xem thử miễn phí</span>
             </label>
           </div>
 
           {uploading && (
-            <div>
+            <div style={{ marginTop: '0.5rem' }}>
               <div className="row" style={{ justifyContent: 'space-between', marginBottom: 6 }}>
-                <span style={{ fontSize: '0.88rem', fontWeight: 600 }}>Đang upload...</span>
-                <span style={{ fontSize: '0.88rem', color: '#2563eb' }}>{progress}%</span>
+                <span style={{ fontSize: '0.88rem', fontWeight: 600 }}>Đang tải lên...</span>
+                <span style={{ fontSize: '0.88rem', color: '#b45435', fontWeight: 600 }}>
+                  {progress}%
+                </span>
               </div>
-              <div
-                style={{ height: 8, background: '#e2e8f0', borderRadius: 999, overflow: 'hidden' }}
-              >
+              <div className="clt-warm-progress">
                 <div
-                  style={{
-                    height: '100%',
-                    transform: `scaleX(${progress / 100})`,
-                    transformOrigin: 'left',
-                    width: '100%',
-                    background: 'linear-gradient(90deg, #2563eb, #60a5fa)',
-                    borderRadius: 999,
-                    transition: 'transform 0.3s ease',
-                  }}
+                  className="clt-warm-progress__bar"
+                  style={{ transform: `scaleX(${progress / 100})` }}
                 />
               </div>
-              {chunkInfo && (
-                <p className="muted" style={{ fontSize: '0.78rem', marginTop: 4 }}>
+              {chunkInfo ? (
+                <p className="clt-warm-muted" style={{ fontSize: '0.78rem', marginTop: 6 }}>
                   {chunkInfo}
                 </p>
-              )}
+              ) : null}
             </div>
           )}
 
-          {error && (
-            <p style={{ color: '#dc2626', fontSize: '0.88rem', fontWeight: 600 }}>{error}</p>
-          )}
+          {error ? <p className="clt-warm-err">{error}</p> : null}
         </div>
 
-        <div className="modal-footer">
-          <button className="btn secondary" onClick={onClose} disabled={uploading}>
+        <div className="clt-warm-dialog__footer">
+          <button type="button" className="btn secondary" onClick={onClose} disabled={uploading}>
             Hủy
           </button>
           <button
-            className="btn"
+            type="button"
+            className="btn cdt-btn-primary"
             disabled={
               uploading ||
               !file ||
@@ -422,7 +577,7 @@ function UploadVideoModal({
             }
             onClick={() => void handleUpload()}
           >
-            {uploading ? `Đang upload ${progress}%...` : 'Upload video'}
+            {uploading ? `Đang tải ${progress}%...` : 'Tải video lên'}
           </button>
         </div>
       </div>
@@ -477,52 +632,56 @@ function EditLessonModal({
   };
 
   return (
-    <div className="modal-layer" onClick={onClose}>
+    <div className="clt-warm-overlay" role="presentation" onClick={onClose}>
       <div
-        className="modal-card"
-        style={{ width: 'min(500px, 100%)' }}
+        className="clt-warm-dialog clt-warm-dialog--sm"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="clt-edit-lesson-title"
+        lang="vi"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="modal-header">
+        <div className="clt-warm-dialog__header">
           <div>
-            <h3>📝 Chỉnh sửa bài học</h3>
-            <p className="muted" style={{ marginTop: 4 }}>
-              Cập nhật thông tin bài học: {lesson.lessonTitle}
-            </p>
+            <h3 id="clt-edit-lesson-title">Chỉnh sửa bài học</h3>
+            <p>Bài: {lesson.lessonTitle}</p>
           </div>
-          <button className="icon-btn" onClick={onClose} disabled={updating}>
-            ✕
+          <button
+            type="button"
+            className="clt-warm-icon-btn"
+            onClick={onClose}
+            disabled={updating}
+            aria-label="Đóng"
+          >
+            <X size={18} />
           </button>
         </div>
 
-        <div className="modal-body">
-          <label>
-            <p className="muted" style={{ marginBottom: 6 }}>
-              Tiêu đề hiển thị
-            </p>
+        <div className="clt-warm-dialog__body">
+          <label className="clt-warm-form-field">
+            <span className="clt-warm-form-label">Tiêu đề hiển thị</span>
             <input
-              className="input"
+              className="clt-warm-input"
               value={videoTitle}
               onChange={(e) => setVideoTitle(e.target.value)}
-              placeholder="Tên hiển thị cho video bài học"
+              placeholder="Tên hiển thị trên trình phát"
               disabled={updating}
             />
           </label>
 
-          <label>
-            <p className="muted" style={{ marginBottom: 6 }}>
-              Thứ tự hiển thị
-            </p>
+          <label className="clt-warm-form-field">
+            <span className="clt-warm-form-label">Thứ tự</span>
             <input
               type="number"
-              className="input"
+              className="clt-warm-input"
               value={orderIndex}
-              onChange={(e) => setOrderIndex(parseInt(e.target.value) || 1)}
+              onChange={(e) => setOrderIndex(parseInt(e.target.value, 10) || 1)}
               disabled={updating}
+              min={1}
             />
           </label>
 
-          <div className="row" style={{ gap: '1rem', marginTop: '0.5rem' }}>
+          <div className="row" style={{ gap: '1rem', marginTop: '0.15rem' }}>
             <label className="row" style={{ alignItems: 'center', gap: 8 }}>
               <input
                 type="checkbox"
@@ -530,24 +689,23 @@ function EditLessonModal({
                 onChange={(e) => setIsFreePreview(e.target.checked)}
                 disabled={updating}
               />
-              <span style={{ fontSize: '0.9rem' }}>
-                Xem thử miễn phí (Students can watch without enrollment)
-              </span>
+              <span style={{ fontSize: '0.9rem' }}>Cho phép xem thử (không cần đăng ký)</span>
             </label>
           </div>
 
-          {error && (
-            <p style={{ color: '#dc2626', fontSize: '0.88rem', fontWeight: 600, marginTop: 12 }}>
-              {error}
-            </p>
-          )}
+          {error ? <p className="clt-warm-err" style={{ marginTop: 12 }}>{error}</p> : null}
         </div>
 
-        <div className="modal-footer">
-          <button className="btn secondary" onClick={onClose} disabled={updating}>
+        <div className="clt-warm-dialog__footer">
+          <button type="button" className="btn secondary" onClick={onClose} disabled={updating}>
             Hủy
           </button>
-          <button className="btn" disabled={updating} onClick={() => void handleUpdate()}>
+          <button
+            type="button"
+            className="btn cdt-btn-primary"
+            disabled={updating}
+            onClick={() => void handleUpdate()}
+          >
             {updating ? 'Đang lưu...' : 'Lưu thay đổi'}
           </button>
         </div>
@@ -559,21 +717,22 @@ function EditLessonModal({
 // Lesson Row Component
 function LessonRow({
   lesson,
-  onDelete,
+  onRequestDeleteLesson,
+  onRequestDeleteMaterial,
   onEdit,
   deletePending,
   courseId,
 }: {
   courseId: string;
   lesson: CourseLessonResponse;
-  onDelete: () => void;
+  onRequestDeleteLesson: () => void;
+  onRequestDeleteMaterial: (materialId: string, materialName: string) => void;
   onEdit: () => void;
   deletePending: boolean;
 }) {
   const [showMaterials, setShowMaterials] = useState(false);
   const [showPlayer, setShowPlayer] = useState(false);
   const addMaterialMutation = useAddMaterial();
-  const removeMaterialMutation = useRemoveMaterial();
   const updateMutation = useUpdateCourseLesson();
 
   const handleToggleFreePreview = () => {
@@ -699,7 +858,7 @@ function LessonRow({
               className="btn danger"
               style={{ padding: '0.35rem 0.6rem' }}
               disabled={deletePending}
-              onClick={onDelete}
+              onClick={onRequestDeleteLesson}
             >
               <Trash2 size={13} />
             </button>
@@ -807,15 +966,7 @@ function LessonRow({
                       <button
                         className="btn-icon"
                         style={{ color: '#ef4444' }}
-                        onClick={() => {
-                          if (confirm(`Xóa tài liệu ${m.name}?`)) {
-                            removeMaterialMutation.mutate({
-                              courseId,
-                              lessonId: lesson.id,
-                              materialId: m.id,
-                            });
-                          }
-                        }}
+                        onClick={() => onRequestDeleteMaterial(m.id, m.name)}
                       >
                         <Trash2 size={13} />
                       </button>
@@ -944,12 +1095,19 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
   const { showToast } = useToast();
   const [showUpload, setShowUpload] = useState(false);
   const [editingLesson, setEditingLesson] = useState<CourseLessonResponse | null>(null);
+  const [addSectionOpen, setAddSectionOpen] = useState(false);
+  const [newSectionTitle, setNewSectionTitle] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<CltDeleteTarget | null>(null);
+  const [renameTarget, setRenameTarget] = useState<null | { id: string; value: string }>(null);
+
   const { data: lessonsData, isLoading, refetch } = useCourseLessons(courseId);
   const { data: sectionsData } = useCustomCourseSections(courseId);
   const deleteMutation = useDeleteCourseLesson();
   const reorderMutation = useReorderCourseLessons();
+  const removeMaterialMutation = useRemoveMaterial();
 
   const createSectionMutation = useCreateSection();
+  const updateSectionMutation = useUpdateSection();
   const deleteSectionMutation = useDeleteSection();
 
   const lessons: CourseLessonResponse[] = lessonsData?.result ?? [];
@@ -985,11 +1143,49 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
     );
   };
 
-  const handleCreateSection = () => {
-    const title = window.prompt('Nhập tên phần mới:');
-    if (title) {
-      createSectionMutation.mutate({ courseId, data: { title, orderIndex: sections.length + 1 } });
+  const deleteBusy =
+    deleteMutation.isPending || removeMaterialMutation.isPending || deleteSectionMutation.isPending;
+
+  const submitAddSection = () => {
+    const t = newSectionTitle.trim();
+    if (!t) {
+      showToast({ type: 'error', message: 'Vui lòng nhập tên phần.' });
+      return;
     }
+    createSectionMutation.mutate(
+      { courseId, data: { title: t, orderIndex: sections.length + 1 } },
+      {
+        onSuccess: () => {
+          showToast({ type: 'success', message: 'Đã tạo phần mới.' });
+          setAddSectionOpen(false);
+          setNewSectionTitle('');
+        },
+        onError: () => {
+          showToast({ type: 'error', message: 'Không thể tạo phần.' });
+        },
+      }
+    );
+  };
+
+  const submitRenameSection = () => {
+    if (!renameTarget) return;
+    const t = renameTarget.value.trim();
+    if (!t) {
+      showToast({ type: 'error', message: 'Tên phần không được để trống.' });
+      return;
+    }
+    updateSectionMutation.mutate(
+      { courseId, sectionId: renameTarget.id, data: { title: t } },
+      {
+        onSuccess: () => {
+          showToast({ type: 'success', message: 'Đã cập nhật tên phần.' });
+          setRenameTarget(null);
+        },
+        onError: () => {
+          showToast({ type: 'error', message: 'Không thể đổi tên phần.' });
+        },
+      }
+    );
   };
 
   return (
@@ -1031,7 +1227,14 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
       {/* Action Bar */}
       <div className="cdt-toolbar">
         {course.provider === 'CUSTOM' && (
-          <button type="button" className="btn secondary" onClick={handleCreateSection}>
+          <button
+            type="button"
+            className="btn secondary"
+            onClick={() => {
+              setNewSectionTitle('');
+              setAddSectionOpen(true);
+            }}
+          >
             <Plus size={14} />
             Thêm phần
           </button>
@@ -1088,14 +1291,10 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                       courseId={courseId}
                       lesson={lesson}
                       onEdit={() => setEditingLesson(lesson)}
-                      onDelete={() => {
-                        if (confirm('Xóa bài học này?')) {
-                          deleteMutation.mutate(
-                            { courseId, lessonId: lesson.id },
-                            { onSuccess: () => void refetch() }
-                          );
-                        }
-                      }}
+                      onRequestDeleteLesson={() => setDeleteTarget({ k: 'lesson', lessonId: lesson.id })}
+                      onRequestDeleteMaterial={(materialId, name) =>
+                        setDeleteTarget({ k: 'material', lessonId: lesson.id, materialId, name })
+                      }
                       deletePending={deleteMutation.isPending}
                     />
                   ))}
@@ -1145,12 +1344,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                         className="btn secondary"
                         style={{ padding: '0.35rem 0.6rem' }}
                         title="Chỉnh sửa phần"
-                        onClick={() => {
-                          const newTitle = window.prompt('Đổi tên phần:', section.title);
-                          if (newTitle) {
-                            alert('Chức năng sửa tên đang được cập nhật...');
-                          }
-                        }}
+                        onClick={() => setRenameTarget({ id: section.id, value: section.title ?? '' })}
                       >
                         <Pencil size={13} />
                       </button>
@@ -1158,15 +1352,9 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                         className="btn danger"
                         style={{ padding: '0.35rem 0.6rem' }}
                         title="Xóa phần"
-                        onClick={() => {
-                          if (
-                            confirm(
-                              'Bạn có chắc muốn xóa phần này? (Các bài học bên trong sẽ không bị xóa)'
-                            )
-                          ) {
-                            deleteSectionMutation.mutate({ courseId, sectionId: section.id });
-                          }
-                        }}
+                        onClick={() =>
+                          setDeleteTarget({ k: 'section', sectionId: section.id, title: section.title })
+                        }
                       >
                         <Trash2 size={13} />
                       </button>
@@ -1203,14 +1391,17 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                               courseId={courseId}
                               lesson={lesson}
                               onEdit={() => setEditingLesson(lesson)}
-                              onDelete={() => {
-                                if (confirm('Xóa bài học này?')) {
-                                  deleteMutation.mutate(
-                                    { courseId, lessonId: lesson.id },
-                                    { onSuccess: () => void refetch() }
-                                  );
-                                }
-                              }}
+                              onRequestDeleteLesson={() =>
+                                setDeleteTarget({ k: 'lesson', lessonId: lesson.id })
+                              }
+                              onRequestDeleteMaterial={(materialId, name) =>
+                                setDeleteTarget({
+                                  k: 'material',
+                                  lessonId: lesson.id,
+                                  materialId,
+                                  name,
+                                })
+                              }
                               deletePending={deleteMutation.isPending}
                             />
                           ))}
@@ -1245,6 +1436,127 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
           existingLessons={lessons}
           onClose={() => setShowUpload(false)}
           onSuccess={() => void refetch()}
+        />
+      )}
+
+      {deleteTarget && (
+        <CltConfirmDeleteModal
+          title={
+            deleteTarget.k === 'lesson'
+              ? 'Xóa bài học?'
+              : deleteTarget.k === 'material'
+                ? 'Xóa tài liệu?'
+                : 'Xóa phần nội dung?'
+          }
+          message={
+            deleteTarget.k === 'lesson'
+              ? 'Bài học sẽ bị gỡ khỏi khóa học. Bạn có chắc chắn muốn xóa?'
+              : deleteTarget.k === 'material'
+                ? `Bạn sắp xóa tài liệu «${deleteTarget.name}».`
+                : `Bạn sắp xóa phần «${deleteTarget.title}».`
+          }
+          extraHint={
+            deleteTarget.k === 'section'
+              ? 'Các bài học thuộc phần này sẽ không bị xóa theo cấu hình hiện tại.'
+              : deleteTarget.k === 'material'
+                ? 'Thao tác này không thể hoàn tác sau khi xóa.'
+                : undefined
+          }
+          confirmLabel={
+            deleteTarget.k === 'lesson'
+              ? 'Xóa bài học'
+              : deleteTarget.k === 'material'
+                ? 'Xóa tài liệu'
+                : 'Xóa phần'
+          }
+          danger
+          isPending={deleteBusy}
+          onClose={() => {
+            if (!deleteBusy) setDeleteTarget(null);
+          }}
+          onConfirm={() => {
+            const t = deleteTarget;
+            if (t.k === 'lesson') {
+              deleteMutation.mutate(
+                { courseId, lessonId: t.lessonId },
+                {
+                  onSuccess: () => {
+                    setDeleteTarget(null);
+                    void refetch();
+                    showToast({ type: 'success', message: 'Đã xóa bài học.' });
+                  },
+                  onError: () => {
+                    showToast({ type: 'error', message: 'Không thể xóa bài học.' });
+                  },
+                }
+              );
+            } else if (t.k === 'material') {
+              removeMaterialMutation.mutate(
+                { courseId, lessonId: t.lessonId, materialId: t.materialId },
+                {
+                  onSuccess: () => {
+                    setDeleteTarget(null);
+                    void refetch();
+                    showToast({ type: 'success', message: 'Đã xóa tài liệu.' });
+                  },
+                  onError: () => {
+                    showToast({ type: 'error', message: 'Không thể xóa tài liệu.' });
+                  },
+                }
+              );
+            } else {
+              deleteSectionMutation.mutate(
+                { courseId, sectionId: t.sectionId },
+                {
+                  onSuccess: () => {
+                    setDeleteTarget(null);
+                    void refetch();
+                    showToast({ type: 'success', message: 'Đã xóa phần.' });
+                  },
+                  onError: () => {
+                    showToast({ type: 'error', message: 'Không thể xóa phần.' });
+                  },
+                }
+              );
+            }
+          }}
+        />
+      )}
+
+      <CltTextSectionModal
+        open={addSectionOpen}
+        onClose={() => {
+          if (createSectionMutation.isPending) return;
+          setAddSectionOpen(false);
+        }}
+        title="Thêm phần mới"
+        description="Mỗi phần nhóm các bài học liên quan, giúp lộ trình dễ theo dõi."
+        label="Tên phần"
+        value={newSectionTitle}
+        onChange={setNewSectionTitle}
+        placeholder="Ví dụ: Phần 1 — Nền tảng"
+        submitLabel="Tạo phần"
+        isPending={createSectionMutation.isPending}
+        submitDisabled={!newSectionTitle.trim()}
+        onSubmit={submitAddSection}
+      />
+
+      {renameTarget && (
+        <CltTextSectionModal
+          open
+          onClose={() => {
+            if (updateSectionMutation.isPending) return;
+            setRenameTarget(null);
+          }}
+          title="Đổi tên phần"
+          label="Tên phần"
+          value={renameTarget.value}
+          onChange={(v) => setRenameTarget((prev) => (prev ? { ...prev, value: v } : prev))}
+          placeholder="Nhập tên phần"
+          submitLabel="Lưu tên"
+          isPending={updateSectionMutation.isPending}
+          submitDisabled={!renameTarget.value.trim()}
+          onSubmit={submitRenameSection}
         />
       )}
     </div>
