@@ -159,9 +159,24 @@
   box-shadow: 0 0 0 1px rgba(20, 83, 45, 0.15);
 }
 
-.module-layout-container .pricing-m-plan-card .course-cover {
-  min-height: 128px;
-  padding: 1rem 1.1rem 0.9rem;
+.module-layout-container .pricing-m-plan-card .course-cover.pricing-m-cover--standard {
+  min-height: 132px;
+  padding: 1.05rem 1.2rem 0.95rem;
+}
+
+.module-layout-container .pricing-m-plan-card .course-cover.pricing-m-cover--spotlight {
+  min-height: 156px;
+  padding: 1.2rem 1.25rem 1rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  border-bottom: 1px solid rgba(122, 43, 10, 0.08);
+}
+
+/* Overlay ấm hơn cho cover spotlight */
+.module-layout-container .course-cover .cover-overlay--spotlight {
+  background:
+    radial-gradient(ellipse 90% 80% at 20% 0%, rgba(255, 255, 255, 0.45), transparent 55%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, transparent 55%),
+    linear-gradient(to top, rgba(122, 43, 10, 0.07) 0%, transparent 50%);
 }
 
 .module-layout-container .pricing-m-plan-icon {
@@ -248,6 +263,30 @@
 .module-layout-container .pricing-m-plan-actions a.action-toggle {
   text-decoration: none;
   text-align: center;
+}
+
+/* Thân thẻ: tách nền nhẹ, typography rõ */
+.module-layout-container .pricing-m-plan-card .course-body {
+  padding: 1.1rem 1.2rem 1.2rem;
+  background: linear-gradient(180deg, #ffffff 0%, #fbf9f6 100%);
+  border-top: 1px solid rgba(20, 34, 53, 0.05);
+}
+
+.module-layout-container .pricing-m-plan-card--featured .course-body {
+  background: linear-gradient(180deg, #ffffff 0%, #fffaf6 100%);
+}
+
+.module-layout-container .pricing-m-plan-card .metric {
+  background: #f3f1ec;
+  border-color: #e5e0d8;
+  font-size: 0.78rem;
+}
+
+.module-layout-container .pricing-m-plan-card--featured .metric {
+  background: linear-gradient(135deg, #fff7ed, #ffedd5);
+  border-color: rgba(201, 100, 66, 0.22);
+  color: #5c2e18;
+  font-weight: 700;
 }
 
 /* CTA mua: terracotta như "Tạo giáo trình" (không dùng xanh navy) */
