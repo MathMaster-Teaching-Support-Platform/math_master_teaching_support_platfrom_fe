@@ -67,6 +67,7 @@ const TeacherCourseDetail: React.FC = () => {
     originalPrice: 0,
     discountedPrice: 0,
     discountExpiryDate: '',
+    level: 'ALL_LEVELS' as CourseLevel,
   });
   const [discountPercent, setDiscountPercent] = useState(0);
 
@@ -86,6 +87,7 @@ const TeacherCourseDetail: React.FC = () => {
         originalPrice: course.originalPrice || 0,
         discountedPrice: course.discountedPrice || 0,
         discountExpiryDate: course.discountExpiryDate || '',
+        level: (course.level as CourseLevel) || 'ALL_LEVELS',
       });
       if (course.originalPrice && course.discountedPrice) {
         setDiscountPercent(Math.round(((course.originalPrice - course.discountedPrice) / course.originalPrice) * 100));
@@ -444,7 +446,7 @@ const TeacherCourseDetail: React.FC = () => {
                           />
                         </div>
 
-                        <div className="form-group full-width">
+                        <div className="form-group full-width" style={{ marginBottom: '1.25rem' }}>
                           <label className="form-label">Mô tả tổng quát</label>
                           <textarea
                             rows={5}
@@ -453,6 +455,20 @@ const TeacherCourseDetail: React.FC = () => {
                             onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
                             placeholder="Mô tả chi tiết về khóa học..."
                           />
+                        </div>
+
+                        <div className="form-group full-width">
+                          <label className="form-label">Cấp độ học</label>
+                          <select
+                            className="form-select"
+                            value={editForm.level || 'ALL_LEVELS'}
+                            onChange={(e) => setEditForm({ ...editForm, level: e.target.value as CourseLevel })}
+                          >
+                            <option value="ALL_LEVELS">Mọi cấp độ</option>
+                            <option value="BEGINNER">Cơ bản</option>
+                            <option value="INTERMEDIATE">Trung bình</option>
+                            <option value="ADVANCED">Nâng cao</option>
+                          </select>
                         </div>
                       </div>
                     )}
@@ -558,10 +574,18 @@ const TeacherCourseDetail: React.FC = () => {
                         <div className="form-group full-width">
                           <label className="form-label">Ngày hết hạn giảm giá</label>
                           <input
-                            type="date"
+                            type="datetime-local"
                             className="form-input"
-                            value={editForm.discountExpiryDate ? editForm.discountExpiryDate.split('T')[0] : ''}
-                            onChange={(e) => setEditForm({ ...editForm, discountExpiryDate: e.target.value ? new Date(e.target.value).toISOString() : '' })}
+                            value={editForm.discountExpiryDate ? editForm.discountExpiryDate.substring(0, 16) : ''}
+                            onChange={(e) => {
+                               const val = e.target.value;
+                               if (!val) {
+                                  setEditForm({ ...editForm, discountExpiryDate: '' });
+                               } else {
+                                  // append :00.000Z to make it compatible, or use new Date
+                                  setEditForm({ ...editForm, discountExpiryDate: new Date(val).toISOString() });
+                               }
+                            }}
                           />
                         </div>
                       </div>

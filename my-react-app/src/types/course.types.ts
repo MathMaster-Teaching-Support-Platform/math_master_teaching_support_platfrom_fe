@@ -34,6 +34,13 @@ export interface CourseResponse {
   isPublished: boolean; // Alias for compatibility
   status?: CourseStatus;
   rejectionReason?: string | null;
+  
+  // Approval audit trail
+  approvedBy?: string | null;
+  approvedAt?: string | null;
+  rejectedBy?: string | null;
+  rejectedAt?: string | null;
+  
   rating: number;
   ratingCount: number; // Add review count
   studentsCount: number;
