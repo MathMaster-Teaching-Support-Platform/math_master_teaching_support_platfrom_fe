@@ -33,9 +33,13 @@ import {
 import '../../styles/module-refactor.css';
 import './TeacherCourses.css';
 import './TeacherCourseDetail.css';
+<<<<<<< HEAD
 import './tabs/CourseOverviewTab.css';
 import './tabs/course-detail-tabs.css';
 import type { CourseLevel, UpdateCourseRequest } from '../../types';
+=======
+import type { UpdateCourseRequest, CourseLevel } from '../../types';
+>>>>>>> 46670d9ed18a7f978ef431b7f26c6efa563eae20
 
 // Import tab components
 import CourseOverviewTab from './tabs/CourseOverviewTab.tsx';
@@ -92,7 +96,9 @@ const TeacherCourseDetail: React.FC = () => {
         level: (course.level as CourseLevel) || 'ALL_LEVELS',
       });
       if (course.originalPrice && course.discountedPrice) {
-        setDiscountPercent(Math.round(((course.originalPrice - course.discountedPrice) / course.originalPrice) * 100));
+        setDiscountPercent(
+          Math.round(((course.originalPrice - course.discountedPrice) / course.originalPrice) * 100)
+        );
       }
     }
   }, [course]);
@@ -228,10 +234,7 @@ const TeacherCourseDetail: React.FC = () => {
           {/* Course Header */}
           <div className="course-detail-header">
             <div className="course-header-main">
-              <button
-                className="btn secondary btn-sm"
-                onClick={() => navigate('/teacher/courses')}
-              >
+              <button className="btn secondary btn-sm" onClick={() => navigate('/teacher/courses')}>
                 <ArrowLeft size={14} />
                 Quay lại
               </button>
@@ -315,7 +318,9 @@ const TeacherCourseDetail: React.FC = () => {
               <button
                 className={`btn ${course.published ? 'secondary' : ''}`}
                 onClick={handleTogglePublish}
-                disabled={publishMutation.isPending || !course.published && course.status !== 'PUBLISHED'}
+                disabled={
+                  publishMutation.isPending || (!course.published && course.status !== 'PUBLISHED')
+                }
                 title={
                   !course.published && course.status !== 'PUBLISHED'
                     ? 'Khóa học cần được admin duyệt trước khi công khai'
@@ -334,7 +339,11 @@ const TeacherCourseDetail: React.FC = () => {
                   </>
                 )}
               </button>
-              <button className="btn danger" onClick={handleDelete} disabled={deleteMutation.isPending}>
+              <button
+                className="btn danger"
+                onClick={handleDelete}
+                disabled={deleteMutation.isPending}
+              >
                 <Trash2 size={14} />
                 Xóa
               </button>
@@ -360,7 +369,9 @@ const TeacherCourseDetail: React.FC = () => {
           <div className="course-tab-content">
             {activeTab === 'overview' && <CourseOverviewTab course={course} />}
             {activeTab === 'lessons' && <CourseLessonsTab courseId={course.id} course={course} />}
-            {activeTab === 'assessments' && <CourseAssessmentsTab courseId={course.id} course={course} />}
+            {activeTab === 'assessments' && (
+              <CourseAssessmentsTab courseId={course.id} course={course} />
+            )}
             {activeTab === 'students' && <CourseStudentsTab courseId={course.id} />}
             {activeTab === 'reviews' && <CourseReviewsTab courseId={course.id} />}
           </div>
@@ -369,6 +380,7 @@ const TeacherCourseDetail: React.FC = () => {
 
       {/* Edit Modal */}
       {showEditModal && (
+<<<<<<< HEAD
         <div className="modal-overlay course-edit-modal-overlay" lang="vi">
           <button type="button" className="modal-backdrop" onClick={() => setShowEditModal(false)} />
           <div
@@ -377,6 +389,15 @@ const TeacherCourseDetail: React.FC = () => {
             aria-modal="true"
             aria-labelledby="course-edit-wizard-title"
           >
+=======
+        <div className="modal-overlay">
+          <button
+            type="button"
+            className="modal-backdrop"
+            onClick={() => setShowEditModal(false)}
+          />
+          <div className="modal-box wizard-modal-box">
+>>>>>>> 46670d9ed18a7f978ef431b7f26c6efa563eae20
             <div className="modal-header">
               <div className="modal-header-left">
                 <div className="modal-icon">
@@ -400,12 +421,19 @@ const TeacherCourseDetail: React.FC = () => {
             {/* Step Indicator */}
             <div className="wizard-steps-indicator">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className={`wizard-step-item ${editStep === i ? 'active' : ''} ${editStep > i ? 'completed' : ''}`}>
-                  <div className="wizard-step-circle">
-                    {editStep > i ? <Check size={18} /> : i}
-                  </div>
+                <div
+                  key={i}
+                  className={`wizard-step-item ${editStep === i ? 'active' : ''} ${editStep > i ? 'completed' : ''}`}
+                >
+                  <div className="wizard-step-circle">{editStep > i ? <Check size={18} /> : i}</div>
                   <span className="wizard-step-label">
-                    {i === 1 ? 'Phân loại' : i === 2 ? 'Chi tiết' : i === 3 ? 'Tiếp thị' : 'Định giá'}
+                    {i === 1
+                      ? 'Phân loại'
+                      : i === 2
+                        ? 'Chi tiết'
+                        : i === 3
+                          ? 'Tiếp thị'
+                          : 'Định giá'}
                   </span>
                 </div>
               ))}
@@ -476,7 +504,9 @@ const TeacherCourseDetail: React.FC = () => {
                             rows={5}
                             className="form-input form-textarea"
                             value={editForm.description}
-                            onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                            onChange={(e) =>
+                              setEditForm({ ...editForm, description: e.target.value })
+                            }
                             placeholder="Mô tả chi tiết về khóa học..."
                           />
                         </div>
@@ -486,7 +516,9 @@ const TeacherCourseDetail: React.FC = () => {
                           <select
                             className="form-select"
                             value={editForm.level || 'ALL_LEVELS'}
-                            onChange={(e) => setEditForm({ ...editForm, level: e.target.value as CourseLevel })}
+                            onChange={(e) =>
+                              setEditForm({ ...editForm, level: e.target.value as CourseLevel })
+                            }
                           >
                             <option value="ALL_LEVELS">Mọi cấp độ</option>
                             <option value="BEGINNER">Cơ bản</option>
@@ -510,7 +542,9 @@ const TeacherCourseDetail: React.FC = () => {
                             rows={3}
                             className="form-input form-textarea"
                             value={editForm.whatYouWillLearn}
-                            onChange={(e) => setEditForm({ ...editForm, whatYouWillLearn: e.target.value })}
+                            onChange={(e) =>
+                              setEditForm({ ...editForm, whatYouWillLearn: e.target.value })
+                            }
                             placeholder="✔️ Kỹ năng thực tế 1..."
                           />
                         </div>
@@ -521,7 +555,9 @@ const TeacherCourseDetail: React.FC = () => {
                             rows={2}
                             className="form-input form-textarea"
                             value={editForm.requirements}
-                            onChange={(e) => setEditForm({ ...editForm, requirements: e.target.value })}
+                            onChange={(e) =>
+                              setEditForm({ ...editForm, requirements: e.target.value })
+                            }
                             placeholder="• Kiến thức cơ bản về..."
                           />
                         </div>
@@ -532,7 +568,9 @@ const TeacherCourseDetail: React.FC = () => {
                             rows={2}
                             className="form-input form-textarea"
                             value={editForm.targetAudience}
-                            onChange={(e) => setEditForm({ ...editForm, targetAudience: e.target.value })}
+                            onChange={(e) =>
+                              setEditForm({ ...editForm, targetAudience: e.target.value })
+                            }
                             placeholder="Dành cho học sinh lớp 11 ôn thi THPT..."
                           />
                         </div>
@@ -546,14 +584,26 @@ const TeacherCourseDetail: React.FC = () => {
                           <p>Cập nhật học phí và các chương trình ưu đãi.</p>
                         </div>
 
-                        <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                        <div
+                          className="form-row"
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: '1fr 1fr',
+                            gap: '1rem',
+                            marginBottom: '1.5rem',
+                          }}
+                        >
                           <div className="form-group">
-                            <label className="form-label">Giá gốc (VND) <span className="required">*</span></label>
+                            <label className="form-label">
+                              Giá gốc (VND) <span className="required">*</span>
+                            </label>
                             <input
                               type="number"
                               className="form-input"
                               value={editForm.originalPrice || ''}
-                              onChange={(e) => handlePriceChange(Number(e.target.value), discountPercent)}
+                              onChange={(e) =>
+                                handlePriceChange(Number(e.target.value), discountPercent)
+                              }
                               placeholder="0"
                             />
                             <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px' }}>
@@ -568,12 +618,18 @@ const TeacherCourseDetail: React.FC = () => {
                               min="0"
                               max="99"
                               value={discountPercent || ''}
-                              onChange={(e) => handlePriceChange(Number(editForm.originalPrice), Number(e.target.value))}
+                              onChange={(e) =>
+                                handlePriceChange(
+                                  Number(editForm.originalPrice),
+                                  Number(e.target.value)
+                                )
+                              }
                               placeholder="0"
                             />
                           </div>
                         </div>
 
+<<<<<<< HEAD
                         <div className="course-edit-pricing-summary">
                           <div className="course-edit-pricing-summary__row">
                             <span>Giá bán thực tế:</span>
@@ -585,6 +641,37 @@ const TeacherCourseDetail: React.FC = () => {
                             <span>Tiết kiệm:</span>
                             <span className="course-edit-pricing-summary__save">
                               {(Number(editForm.originalPrice) - Number(editForm.discountedPrice)).toLocaleString('vi-VN')}₫ ({discountPercent}%)
+=======
+                        <div
+                          className="pricing-summary-card"
+                          style={{
+                            background: '#f8fafc',
+                            padding: '1.25rem',
+                            borderRadius: '8px',
+                            border: '1px solid #e2e8f0',
+                            marginBottom: '1.5rem',
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              marginBottom: '0.5rem',
+                            }}
+                          >
+                            <span style={{ color: '#64748b' }}>Giá bán thực tế:</span>
+                            <strong style={{ fontSize: '1.1rem', color: '#1e293b' }}>
+                              {editForm.discountedPrice?.toLocaleString('vi-VN')}₫
+                            </strong>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <span style={{ color: '#64748b' }}>Tiết kiệm:</span>
+                            <span style={{ color: '#059669', fontWeight: 600 }}>
+                              {(
+                                Number(editForm.originalPrice) - Number(editForm.discountedPrice)
+                              ).toLocaleString('vi-VN')}
+                              ₫ ({discountPercent}%)
+>>>>>>> 46670d9ed18a7f978ef431b7f26c6efa563eae20
                             </span>
                           </div>
                         </div>
@@ -594,15 +681,22 @@ const TeacherCourseDetail: React.FC = () => {
                           <input
                             type="datetime-local"
                             className="form-input"
-                            value={editForm.discountExpiryDate ? editForm.discountExpiryDate.substring(0, 16) : ''}
+                            value={
+                              editForm.discountExpiryDate
+                                ? editForm.discountExpiryDate.substring(0, 16)
+                                : ''
+                            }
                             onChange={(e) => {
-                               const val = e.target.value;
-                               if (!val) {
-                                  setEditForm({ ...editForm, discountExpiryDate: '' });
-                               } else {
-                                  // append :00.000Z to make it compatible, or use new Date
-                                  setEditForm({ ...editForm, discountExpiryDate: new Date(val).toISOString() });
-                               }
+                              const val = e.target.value;
+                              if (!val) {
+                                setEditForm({ ...editForm, discountExpiryDate: '' });
+                              } else {
+                                // append :00.000Z to make it compatible, or use new Date
+                                setEditForm({
+                                  ...editForm,
+                                  discountExpiryDate: new Date(val).toISOString(),
+                                });
+                              }
                             }}
                           />
                         </div>
@@ -616,10 +710,14 @@ const TeacherCourseDetail: React.FC = () => {
                 <button
                   type="button"
                   className="btn btn-ghost"
-                  onClick={editStep === 1 ? () => setShowEditModal(false) : () => setEditStep((s) => s - 1)}
+                  onClick={
+                    editStep === 1 ? () => setShowEditModal(false) : () => setEditStep((s) => s - 1)
+                  }
                   disabled={updateMutation.isPending}
                 >
-                  {editStep === 1 ? 'Hủy' : (
+                  {editStep === 1 ? (
+                    'Hủy'
+                  ) : (
                     <>
                       <ArrowLeft size={16} /> Quay lại
                     </>
@@ -632,7 +730,9 @@ const TeacherCourseDetail: React.FC = () => {
                   disabled={updateMutation.isPending || !editForm.title}
                   onClick={editStep === 4 ? handleEditSubmit : () => setEditStep((s) => s + 1)}
                 >
-                  {updateMutation.isPending ? 'Đang lưu...' : editStep === 4 ? (
+                  {updateMutation.isPending ? (
+                    'Đang lưu...'
+                  ) : editStep === 4 ? (
                     <>
                       <Save size={16} /> Lưu thay đổi
                     </>

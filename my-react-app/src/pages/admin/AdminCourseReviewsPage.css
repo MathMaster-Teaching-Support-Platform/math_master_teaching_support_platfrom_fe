@@ -177,3 +177,90 @@
   gap: 0.55rem;
   margin-top: 0.8rem;
 }
+
+/* ─── Tabs ─────────────────────────────────────────────────────────────────── */
+.acr-tabs {
+  display: flex;
+  gap: 0.25rem;
+  border-bottom: 2px solid #e4ecf7;
+  margin-bottom: 0.25rem;
+}
+
+.acr-tab {
+  background: none;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #6c809c;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.acr-tab.active {
+  color: #1f5eff;
+  border-bottom-color: #1f5eff;
+}
+
+/* ─── Filter bar (history tab) ──────────────────────────────────────────────── */
+.acr-filter-bar {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.75rem 0.9rem;
+  border-bottom: 1px solid #edf2fa;
+  flex-wrap: wrap;
+}
+
+.acr-filter-btn {
+  border: 1px solid #d7e3f4;
+  background: #f7faff;
+  border-radius: 20px;
+  padding: 0.3rem 0.8rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #2b4770;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.acr-filter-btn.active {
+  background: #1f5eff;
+  border-color: #1f5eff;
+  color: #fff;
+}
+
+/* ─── Status badges ─────────────────────────────────────────────────────────── */
+.acr-status-badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.badge-pending  { background: #fff7e6; color: #b45309; }
+.badge-approved { background: #edfdf3; color: #1b6a41; }
+.badge-rejected { background: #fff3f3; color: #9f2d2d; }
+.badge-draft    { background: #f1f5f9; color: #475569; }
+
+/* ─── Preview button ────────────────────────────────────────────────────────── */
+.acr-btn-preview {
+  border-color: #c3d4f0;
+  background: #eef4ff;
+  color: #1f5eff;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ─── Rejection reason ──────────────────────────────────────────────────────── */
+.acr-rejection-reason {
+  font-size: 0.78rem;
+  color: #9f2d2d;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 280px;
+}

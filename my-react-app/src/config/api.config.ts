@@ -320,6 +320,7 @@ export const API_ENDPOINTS = {
   COURSE_PUBLISH: (courseId: string) => `/courses/${courseId}/publish`,
   COURSE_SUBMIT_REVIEW: (courseId: string) => `/courses/${courseId}/submit-review`,
   ADMIN_COURSES_PENDING: '/courses/admin/pending',
+  ADMIN_COURSES_REVIEWS: '/courses/admin/reviews',
   ADMIN_COURSE_APPROVE: (courseId: string) => `/courses/admin/${courseId}/approve`,
   ADMIN_COURSE_REJECT: (courseId: string) => `/courses/admin/${courseId}/reject`,
   COURSE_STUDENTS: (courseId: string) => `/courses/${courseId}/students`,

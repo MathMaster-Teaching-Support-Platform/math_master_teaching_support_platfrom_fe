@@ -31,6 +31,8 @@ export const courseKeys = {
   progress: (enrollmentId: string) => ['enrollments', 'progress', enrollmentId] as const,
   pendingReview: (page: number, size: number) =>
     [...courseKeys.all, 'admin', 'pending-review', page, size] as const,
+  reviewHistory: (status: string, page: number, size: number) =>
+    [...courseKeys.all, 'admin', 'review-history', status, page, size] as const,
 };
 
 // ─── Teacher Hooks ────────────────────────────────────────────────────────────
@@ -114,6 +116,13 @@ export function usePendingReviewCourses(page = 0, size = 20) {
   return useQuery({
     queryKey: courseKeys.pendingReview(page, size),
     queryFn: () => CourseService.getPendingReviewCourses({ page, size }),
+  });
+}
+
+export function useCourseReviewHistory(status = 'ALL', page = 0, size = 20) {
+  return useQuery({
+    queryKey: courseKeys.reviewHistory(status, page, size),
+    queryFn: () => CourseService.getCourseReviewHistory({ status, page, size }),
   });
 }
 
