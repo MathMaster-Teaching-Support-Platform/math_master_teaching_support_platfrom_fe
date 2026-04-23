@@ -2,6 +2,8 @@ import {
   AlertCircle,
   ArrowLeft,
   CheckCircle2,
+  FileDown,
+  FileSpreadsheet,
   Grid2x2,
   Plus,
   RefreshCw,
@@ -23,7 +25,9 @@ import {
   useRemoveExamMatrixRow,
   useResetMatrix,
 } from '../../hooks/useExamMatrix';
+import { useToast } from '../../context/ToastContext';
 import { examMatrixService } from '../../services/examMatrixService';
+import { exportExamMatrixToExcel, exportExamMatrixToPdf } from '../../utils/examMatrixExport';
 import '../../styles/module-refactor.css';
 import {
   MatrixStatus,
@@ -71,6 +75,8 @@ export default function ExamMatrixDetailPageRefactored() {
   const [rowModalOpen, setRowModalOpen] = useState(false);
   const [validating, setValidating] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [exportBusy, setExportBusy] = useState<'excel' | 'pdf' | null>(null);
+  const { showToast } = useToast();
   const [percentageDraft, setPercentageDraft] = useState({
     totalQuestionsTarget: 40,
     cognitiveLevelPercentages: {
@@ -230,6 +236,46 @@ export default function ExamMatrixDetailPageRefactored() {
     if (!globalThis.confirm('Bạn có chắc muốn đặt lại ma trận về trạng thái nháp?')) return;
     await resetMutation.mutateAsync(matrix.id);
     await refetch();
+  }
+
+  function handleExportExcel() {
+    if (!matrix || !table) return;
+    if (!chapters.length) {
+      showToast({ type: 'info', message: 'Chưa có dòng ma trận để xuất.' });
+      return;
+    }
+    try {
+      setExportBusy('excel');
+      exportExamMatrixToExcel({ matrix, table });
+      showToast({ type: 'success', message: 'Đã tải file Excel.' });
+    } catch (err) {
+      showToast({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Không thể xuất Excel.',
+      });
+    } finally {
+      setExportBusy(null);
+    }
+  }
+
+  async function handleExportPdf() {
+    if (!matrix || !table) return;
+    if (!chapters.length) {
+      showToast({ type: 'info', message: 'Chưa có dòng ma trận để xuất.' });
+      return;
+    }
+    try {
+      setExportBusy('pdf');
+      await exportExamMatrixToPdf({ matrix, table });
+      showToast({ type: 'success', message: 'Đã tải file PDF.' });
+    } catch (err) {
+      showToast({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Không thể xuất PDF.',
+      });
+    } finally {
+      setExportBusy(null);
+    }
   }
 
   return (
@@ -410,6 +456,26 @@ export default function ExamMatrixDetailPageRefactored() {
                   >
                     <RefreshCw size={14} className={refreshing ? 'exam-matrix-nav-spin' : undefined} />
                     {refreshing ? 'Đang làm mới...' : 'Làm mới'}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn secondary btn--tint-emerald"
+                    onClick={() => handleExportExcel()}
+                    disabled={!!exportBusy}
+                    title="Xuất bảng ma trận ra file .xlsx (dữ liệu đã lưu)"
+                  >
+                    <FileSpreadsheet size={14} />
+                    {exportBusy === 'excel' ? 'Đang xuất...' : 'Xuất Excel'}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn secondary btn--tint-indigo"
+                    onClick={() => void handleExportPdf()}
+                    disabled={!!exportBusy}
+                    title="Xuất bảng ma trận ra PDF (ảnh bảng, hỗ trợ tiếng Việt)"
+                  >
+                    <FileDown size={14} />
+                    {exportBusy === 'pdf' ? 'Đang xuất...' : 'Xuất PDF'}
                   </button>
                   <button
                     type="button"
