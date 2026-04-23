@@ -3,6 +3,7 @@
   CheckCircle2,
   Eye,
   GraduationCap,
+  Loader2,
   Plus,
   Search,
   Settings,
@@ -12,6 +13,10 @@
 } from 'lucide-react';
 import React, { useCallback, useEffect, useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { mockAdmin } from '../../data/mockData';
+import '../../styles/module-refactor.css';
+import '../courses/TeacherCourses.css';
+import './admin-mgmt-shell.css';
 import {
   userManagementService,
   type AdminUserItem,
@@ -246,118 +251,138 @@ const UserManagement: React.FC = () => {
   return (
     <DashboardLayout
       role="admin"
-      user={{ name: 'Admin System', avatar: 'AD', role: 'admin' }}
-      notificationCount={8}
+      user={{ name: mockAdmin.name, avatar: mockAdmin.avatar, role: 'admin' }}
+      notificationCount={2}
+      contentClassName="dashboard-content--flush-bleed"
     >
-      <div className="user-management-page">
-        <div className="page-header">
-          <div>
-            <h1 className="page-title">User Management</h1>
-            <p className="page-subtitle">Quản lý tài khoản và phân quyền người dùng</p>
-          </div>
-          <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}>
-            <Plus className="w-3.5 h-3.5" /> Thêm người dùng
-          </button>
-        </div>
+      <div className="module-layout-container admin-mgmt-shell admin-user-mgmt-page">
+        <div className="admin-mgmt-shell__bg" aria-hidden="true" />
+        <section className="module-page teacher-courses-page admin-mgmt-shell__content admin-user-mgmt-page__inner">
+          <div className="user-management-page">
+            <header className="page-header courses-header-row">
+              <div className="header-stack">
+                <div className="header-kicker">Admin</div>
+                <h2 style={{ margin: 0 }}>Quản lý người dùng</h2>
+                <p className="header-sub">Tài khoản, vai trò và trạng thái hoạt động</p>
+              </div>
+              <button
+                type="button"
+                className="btn btn--feat-indigo"
+                onClick={() => setShowCreateModal(true)}
+              >
+                <Plus size={16} aria-hidden />
+                Thêm người dùng
+              </button>
+            </header>
 
-        {/* Stats */}
-        <div className="user-stats">
-          <div className="stat-card">
-            <div className="stat-icon total">
-              <Users className="w-5 h-5" />
+            <div className="stats-grid">
+              <div className="stat-card stat-blue">
+                <div className="stat-icon-wrap">
+                  <Users size={20} aria-hidden />
+                </div>
+                <div>
+                  <h3>{loading ? '…' : stats.total}</h3>
+                  <p>Tổng người dùng</p>
+                </div>
+              </div>
+              <div className="stat-card stat-violet">
+                <div className="stat-icon-wrap">
+                  <Settings size={20} aria-hidden />
+                </div>
+                <div>
+                  <h3>{loading ? '…' : stats.admins}</h3>
+                  <p>Admin</p>
+                </div>
+              </div>
+              <div className="stat-card stat-emerald">
+                <div className="stat-icon-wrap">
+                  <BookOpen size={20} aria-hidden />
+                </div>
+                <div>
+                  <h3>{loading ? '…' : stats.teachers}</h3>
+                  <p>Giáo viên</p>
+                </div>
+              </div>
+              <div className="stat-card stat-amber">
+                <div className="stat-icon-wrap">
+                  <GraduationCap size={20} aria-hidden />
+                </div>
+                <div>
+                  <h3>{loading ? '…' : stats.students}</h3>
+                  <p>Học sinh</p>
+                </div>
+              </div>
+              <div className="stat-card stat-emerald">
+                <div className="stat-icon-wrap">
+                  <CheckCircle2 size={20} aria-hidden />
+                </div>
+                <div>
+                  <h3>{loading ? '…' : stats.active}</h3>
+                  <p>Đang hoạt động</p>
+                </div>
+              </div>
             </div>
-            <div className="stat-content">
-              <div className="stat-value">{stats.total}</div>
-              <div className="stat-label">Tổng người dùng</div>
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon admin">
-              <Settings className="w-5 h-5" />
-            </div>
-            <div className="stat-content">
-              <div className="stat-value">{stats.admins}</div>
-              <div className="stat-label">Admin</div>
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon teacher">
-              <BookOpen className="w-5 h-5" />
-            </div>
-            <div className="stat-content">
-              <div className="stat-value">{stats.teachers}</div>
-              <div className="stat-label">Giáo viên</div>
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon student">
-              <GraduationCap className="w-5 h-5" />
-            </div>
-            <div className="stat-content">
-              <div className="stat-value">{stats.students}</div>
-              <div className="stat-label">Học sinh</div>
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon active">
-              <CheckCircle2 className="w-5 h-5" />
-            </div>
-            <div className="stat-content">
-              <div className="stat-value">{stats.active}</div>
-              <div className="stat-label">Đang hoạt động</div>
-            </div>
-          </div>
-        </div>
 
-        {/* Toolbar */}
-        <div className="users-toolbar">
-          <div className="filter-tabs">
-            <button
-              className={`filter-tab ${filterRole === 'all' ? 'active' : ''}`}
-              onClick={() => setFilterRole('all')}
-            >
-              Tất cả ({stats.total})
-            </button>
-            <button
-              className={`filter-tab ${filterRole === 'admin' ? 'active' : ''}`}
-              onClick={() => setFilterRole('admin')}
-            >
-              Admin ({stats.admins})
-            </button>
-            <button
-              className={`filter-tab ${filterRole === 'teacher' ? 'active' : ''}`}
-              onClick={() => setFilterRole('teacher')}
-            >
-              Giáo viên ({stats.teachers})
-            </button>
-            <button
-              className={`filter-tab ${filterRole === 'student' ? 'active' : ''}`}
-              onClick={() => setFilterRole('student')}
-            >
-              Học sinh ({stats.students})
-            </button>
-          </div>
-
-          <div className="toolbar-actions">
-            <div className="search-field">
-              <Search className="search-icon" />
-              <input
-                type="text"
-                placeholder="Tìm kiếm người dùng..."
-                className="search-input"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+            <div className="toolbar admin-mgmt-toolbar">
+              <div className="pill-group">
+                {(
+                  [
+                    { id: 'all' as const, label: `Tất cả (${stats.total})` },
+                    { id: 'admin' as const, label: `Admin (${stats.admins})` },
+                    { id: 'teacher' as const, label: `Giáo viên (${stats.teachers})` },
+                    { id: 'student' as const, label: `Học sinh (${stats.students})` },
+                  ] as const
+                ).map(({ id, label }) => (
+                  <button
+                    key={id}
+                    type="button"
+                    className={`pill-btn${filterRole === id ? ' active' : ''}`}
+                    onClick={() => setFilterRole(id)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <label className="search-box">
+                <span className="search-box__icon" aria-hidden="true">
+                  <Search size={15} />
+                </span>
+                <input
+                  type="search"
+                  placeholder="Tìm theo tên, email, username..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  aria-label="Tìm người dùng"
+                />
+                {searchTerm ? (
+                  <button
+                    type="button"
+                    className="search-box__clear"
+                    aria-label="Xóa tìm kiếm"
+                    onClick={() => setSearchTerm('')}
+                  >
+                    <X size={14} />
+                  </button>
+                ) : null}
+                {loading ? (
+                  <span className="admin-user-mgmt-search-pending" aria-hidden="true">
+                    <Loader2 size={16} className="admin-user-mgmt-spin" />
+                  </span>
+                ) : null}
+              </label>
+              <button type="button" className="btn secondary" onClick={handleExportExcel}>
+                Xuất Excel
+              </button>
             </div>
-            <button className="btn btn-outline" onClick={handleExportExcel}>
-              Xuất Excel
-            </button>
-          </div>
-        </div>
 
-        {/* Users Table */}
-        <div className="users-table-container">
-          {loading && <div className="table-loading">Đang tải...</div>}
+            {/* Users Table */}
+            <div className="users-table-container admin-mgmt-table-shell">
+              {loading && (
+                <div className="table-loading table-loading--studio">
+                  <Loader2 className="admin-user-mgmt-spin" size={22} aria-hidden />
+                  <span>Đang tải…</span>
+                </div>
+              )}
           {error && <div className="table-error">{error}</div>}
           {!loading && !error && (
             <table className="users-table">
@@ -769,6 +794,8 @@ const UserManagement: React.FC = () => {
             </dialog>
           </div>
         )}
+          </div>
+        </section>
       </div>
     </DashboardLayout>
   );

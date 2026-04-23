@@ -24,6 +24,9 @@ import { DashboardLayout } from '../../components/layout';
 import { mockAdmin } from '../../data/mockData';
 import { TeacherProfileService } from '../../services/api/teacher-profile.service';
 import type { ProfileStatus, TeacherProfile, OcrComparisonResult } from '../../types';
+import '../../styles/module-refactor.css';
+import '../courses/TeacherCourses.css';
+import './admin-mgmt-shell.css';
 import './ReviewProfiles.css';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -400,13 +403,18 @@ const ReviewProfiles: React.FC = () => {
       role="admin"
       user={{ name: mockAdmin.name, avatar: mockAdmin.avatar, role: 'admin' }}
       notificationCount={pendingCount}
+      contentClassName="dashboard-content--flush-bleed"
     >
-      <div className="rp">
+      <div className="module-layout-container admin-mgmt-shell admin-review-profiles-page">
+        <div className="admin-mgmt-shell__bg" aria-hidden="true" />
+        <section className="module-page teacher-courses-page admin-mgmt-shell__content admin-review-profiles-page__inner">
+          <div className="rp">
         {/* ── Header ── */}
-        <header className="rp-header">
-          <div>
-            <h1 className="rp-title">Duyệt hồ sơ giáo viên</h1>
-            <p className="rp-subtitle">
+        <header className="page-header courses-header-row rp-page-header">
+          <div className="header-stack">
+            <div className="header-kicker">Admin</div>
+            <h2 style={{ margin: 0 }}>Duyệt hồ sơ giáo viên</h2>
+            <p className="header-sub">
               {pendingCount > 0
                 ? `${pendingCount} hồ sơ đang chờ xem xét`
                 : 'Không có hồ sơ nào đang chờ'}
@@ -415,21 +423,29 @@ const ReviewProfiles: React.FC = () => {
         </header>
 
         {/* ── Filter Tabs ── */}
-        <div className="rp-tabs">
-          {tabs.map(({ status, label, icon }) => (
-            <button
-              key={status}
-              className={`rp-tab${currentStatus === status ? ' rp-tab--active' : ''}`}
-              onClick={() => handleStatusChange(status)}
-            >
-              {icon}
-              {label}
-              {status === 'PENDING' && pendingCount > 0 && (
-                <span className="rp-tab-badge">{pendingCount}</span>
-              )}
-            </button>
-          ))}
-        </div>
+        <nav
+          className="toolbar admin-mgmt-toolbar rp-toolbar"
+          aria-label="Lọc theo trạng thái hồ sơ"
+        >
+          <div className="pill-group" role="tablist">
+            {tabs.map(({ status, label, icon }) => (
+              <button
+                type="button"
+                key={status}
+                role="tab"
+                aria-selected={currentStatus === status}
+                className={`pill-btn${currentStatus === status ? ' active' : ''}`}
+                onClick={() => handleStatusChange(status)}
+              >
+                {icon}
+                {label}
+                {status === 'PENDING' && pendingCount > 0 && (
+                  <span className="rp-tab-badge">{pendingCount}</span>
+                )}
+              </button>
+            ))}
+          </div>
+        </nav>
 
         {error && <div className="rp-error">{error}</div>}
 
@@ -438,14 +454,29 @@ const ReviewProfiles: React.FC = () => {
           {/* Left: List */}
           <section className="rp-list">
             {/* Search */}
-            <div className="rp-search-wrap">
-              <Search size={14} className="rp-search-icon" />
-              <input
-                className="rp-search-input"
-                placeholder="Tìm theo tên, username, trường..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
+            <div className="rp-search-wrap rp-search-wrap--module">
+              <label className="search-box">
+                <span className="search-box__icon" aria-hidden="true">
+                  <Search size={15} />
+                </span>
+                <input
+                  type="search"
+                  placeholder="Tìm theo tên, username, trường..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  aria-label="Tìm hồ sơ"
+                />
+                {search ? (
+                  <button
+                    type="button"
+                    className="search-box__clear"
+                    aria-label="Xóa tìm kiếm"
+                    onClick={() => setSearch('')}
+                  >
+                    <X size={14} />
+                  </button>
+                ) : null}
+              </label>
             </div>
 
             {!loading && (
@@ -465,6 +496,7 @@ const ReviewProfiles: React.FC = () => {
                 filteredProfiles.length > 0 &&
                 filteredProfiles.map((profile) => (
                   <button
+                    type="button"
                     key={profile.id}
                     className={`rp-row${selectedProfile?.id === profile.id ? ' rp-row--active' : ''}`}
                     onClick={() => handleSelectProfile(profile)}
@@ -485,6 +517,7 @@ const ReviewProfiles: React.FC = () => {
             {totalPages > 1 && !loading && (
               <footer className="rp-pagination">
                 <button
+                  type="button"
                   className="rp-page-btn"
                   disabled={page === 0}
                   onClick={() => setPage((p) => p - 1)}
@@ -495,6 +528,7 @@ const ReviewProfiles: React.FC = () => {
                   {page + 1} / {totalPages}
                 </span>
                 <button
+                  type="button"
                   className="rp-page-btn"
                   disabled={page >= totalPages - 1}
                   onClick={() => setPage((p) => p + 1)}
@@ -517,7 +551,11 @@ const ReviewProfiles: React.FC = () => {
                     <p className="rpd-username">@{selectedProfile.userName}</p>
                     <StatusBadge status={selectedProfile.status} />
                   </div>
-                  <button className="rpd-close" onClick={() => setSelectedProfile(null)}>
+                  <button
+                    type="button"
+                    className="rpd-close"
+                    onClick={() => setSelectedProfile(null)}
+                  >
                     <X size={15} />
                   </button>
                 </div>
@@ -658,6 +696,7 @@ const ReviewProfiles: React.FC = () => {
                       </h3>
                       
                       <button
+                        type="button"
                         className="rpd-ocr-btn"
                         onClick={handleOcrVerify}
                         disabled={ocrVerifying}
@@ -741,6 +780,7 @@ const ReviewProfiles: React.FC = () => {
                     <section className="rpd-actions">
                       <div className="rpd-action-btns">
                         <button
+                          type="button"
                           className={`rpd-approve${reviewAction === 'APPROVED' ? ' rpd-approve--active' : ''}`}
                           onClick={() =>
                             setReviewAction(reviewAction === 'APPROVED' ? null : 'APPROVED')
@@ -749,6 +789,7 @@ const ReviewProfiles: React.FC = () => {
                           <UserCheck size={14} /> Phê duyệt
                         </button>
                         <button
+                          type="button"
                           className={`rpd-reject${reviewAction === 'REJECTED' ? ' rpd-reject--active' : ''}`}
                           onClick={() =>
                             setReviewAction(reviewAction === 'REJECTED' ? null : 'REJECTED')
@@ -769,6 +810,7 @@ const ReviewProfiles: React.FC = () => {
                             maxLength={1000}
                           />
                           <button
+                            type="button"
                             className={`rpd-submit ${reviewAction === 'APPROVED' ? 'rpd-submit--approve' : 'rpd-submit--reject'}`}
                             onClick={handleReviewSubmit}
                             disabled={submitting}
@@ -854,6 +896,8 @@ const ReviewProfiles: React.FC = () => {
             </div>
           </div>
         )}
+          </div>
+        </section>
       </div>
     </DashboardLayout>
   );

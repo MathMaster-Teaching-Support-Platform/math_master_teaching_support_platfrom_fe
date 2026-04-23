@@ -758,3 +758,48 @@
     flex-direction: column;
   }
 }
+
+/* Inside TeacherCourses module shell — avoid double card / max-width */
+.module-layout-container.admin-user-mgmt-page .user-management-page {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  border: none;
+  border-radius: 0;
+}
+
+.module-layout-container.admin-user-mgmt-page .admin-user-mgmt-search-pending {
+  position: absolute;
+  right: 0.55rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-tertiary, #87867f);
+  display: flex;
+  pointer-events: none;
+}
+
+.module-layout-container.admin-user-mgmt-page .search-box:has(.search-box__clear) .admin-user-mgmt-search-pending {
+  right: 2.5rem;
+}
+
+.module-layout-container.admin-user-mgmt-page .admin-user-mgmt-spin {
+  animation: admin-user-mgmt-spin 0.8s linear infinite;
+}
+
+@keyframes admin-user-mgmt-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.module-layout-container.admin-user-mgmt-page .table-loading--studio {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 2.5rem 1rem;
+  color: #60748f;
+  font-weight: 600;
+}

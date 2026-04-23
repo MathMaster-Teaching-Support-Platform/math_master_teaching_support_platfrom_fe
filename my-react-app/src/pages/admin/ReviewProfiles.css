@@ -1158,3 +1158,66 @@
   color: var(--rp-text-3);
   font-style: italic;
 }
+
+/* ── Studio shell (module layout + DESIGN.md canvas) ── */
+.module-layout-container.admin-review-profiles-page .rp {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.module-layout-container.admin-review-profiles-page .rp-page-header {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.module-layout-container.admin-review-profiles-page .rp-toolbar {
+  margin-bottom: 1.25rem;
+}
+
+.module-layout-container.admin-review-profiles-page .pill-btn .rp-tab-badge {
+  margin-left: 0.2rem;
+  vertical-align: middle;
+}
+
+.module-layout-container.admin-review-profiles-page .rp-body {
+  gap: 0;
+  border-radius: 14px;
+  border: 1px solid #e5edf7;
+  box-shadow: 0 4px 16px rgba(20, 34, 53, 0.07);
+  overflow: hidden;
+  background: #fff;
+}
+
+.module-layout-container.admin-review-profiles-page .rp-list {
+  border: none;
+  border-radius: 0;
+  border-right: 1px solid var(--rp-border);
+}
+
+.module-layout-container.admin-review-profiles-page .rp-detail {
+  border: none;
+  border-radius: 0;
+}
+
+.module-layout-container.admin-review-profiles-page .rp-search-wrap--module {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--rp-border);
+}
+
+.module-layout-container.admin-review-profiles-page .rp-search-wrap--module .search-box {
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .module-layout-container.admin-review-profiles-page .rp-body {
+    gap: 0;
+  }
+
+  .module-layout-container.admin-review-profiles-page .rp-list {
+    border-right: none;
+    border-bottom: 1px solid var(--rp-border);
+  }
+}
