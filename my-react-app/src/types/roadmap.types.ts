@@ -119,6 +119,7 @@ export interface UpdateRoadmapTopicRequest {
   difficulty?: QuestionDifficulty;
   courseId?: string;
   status?: TopicStatus;
+  mark?: number;
 }
 
 export interface CreateRoadmapEntryTestRequest {

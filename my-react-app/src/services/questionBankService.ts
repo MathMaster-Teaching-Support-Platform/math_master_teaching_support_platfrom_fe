@@ -83,16 +83,16 @@ export const questionBankService = {
       queryParams.append('isPublic', String(params.isPublic));
     }
     if (isValidParam(params.searchTerm)) {
-      queryParams.append('searchTerm', params.searchTerm);
+      queryParams.append('searchTerm', params.searchTerm!);
     }
     if (isValidParam(params.chapterId)) {
-      queryParams.append('chapterId', params.chapterId);
+      queryParams.append('chapterId', params.chapterId!);
     }
     if (isValidParam(params.subjectId)) {
-      queryParams.append('subjectId', params.subjectId);
+      queryParams.append('subjectId', params.subjectId!);
     }
     if (isValidParam(params.gradeLevel)) {
-      queryParams.append('gradeLevel', params.gradeLevel);
+      queryParams.append('gradeLevel', params.gradeLevel!);
     }
     if (params.mineOnly !== undefined) {
       queryParams.append('mineOnly', String(params.mineOnly));
