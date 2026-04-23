@@ -1,10 +1,14 @@
+import { ChevronLeft, ChevronRight, MessageSquareQuote, Star, Workflow } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, MessageSquareQuote, Star, Workflow } from 'lucide-react';
-import { AdminRoadmapEditor } from '../../components/roadmap';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
-import { useAdminRoadmapDetail, useAdminRoadmapFeedback, useUpdateRoadmap } from '../../hooks/useRoadmaps';
+import { AdminRoadmapEditor } from '../../components/roadmap';
 import { mockAdmin } from '../../data/mockData';
+import {
+  useAdminRoadmapDetail,
+  useAdminRoadmapFeedback,
+  useUpdateRoadmap,
+} from '../../hooks/useRoadmaps';
 import type { UpdateAdminRoadmapRequest } from '../../types';
 import './admin-roadmap-page.css';
 
@@ -31,7 +35,10 @@ export default function AdminRoadmapEditPage() {
   const renderStars = (rating: number) => {
     const clampedRating = Math.max(0, Math.min(5, rating));
     return (
-      <span className="admin-roadmap-page__rating-stars" aria-label={`Đánh giá ${clampedRating} trên 5`}>
+      <span
+        className="admin-roadmap-page__rating-stars"
+        aria-label={`Đánh giá ${clampedRating} trên 5`}
+      >
         {Array.from({ length: 5 }, (_, index) => (
           <Star
             key={`${rating}-${index}`}
@@ -63,8 +70,12 @@ export default function AdminRoadmapEditPage() {
           </div>
         </header>
 
-        {roadmapDetail.isLoading && <p className="admin-roadmap-page__state">Đang tải lộ trình...</p>}
-        {roadmapDetail.error && <p className="admin-roadmap-page__state">Không thể tải lộ trình.</p>}
+        {roadmapDetail.isLoading && (
+          <p className="admin-roadmap-page__state">Đang tải lộ trình...</p>
+        )}
+        {roadmapDetail.error && (
+          <p className="admin-roadmap-page__state">Không thể tải lộ trình.</p>
+        )}
 
         {roadmapDetail.data?.result && (
           <>
@@ -85,7 +96,9 @@ export default function AdminRoadmapEditPage() {
                     <Workflow className="admin-roadmap-page__section-icon" aria-hidden="true" />
                     Trình xây dựng chủ đề
                   </h3>
-                  <p>Quản lý các nút chủ đề của lộ trình trong trình chỉnh sửa toàn trang riêng biệt.</p>
+                  <p>
+                    Quản lý các nút chủ đề của lộ trình trong trình chỉnh sửa toàn trang riêng biệt.
+                  </p>
                 </div>
                 <div className="admin-roadmap-page__actions">
                   <button
@@ -104,7 +117,10 @@ export default function AdminRoadmapEditPage() {
               <div className="admin-roadmap-page__road-header">
                 <div>
                   <h3 className="admin-roadmap-page__section-title">
-                    <MessageSquareQuote className="admin-roadmap-page__section-icon" aria-hidden="true" />
+                    <MessageSquareQuote
+                      className="admin-roadmap-page__section-icon"
+                      aria-hidden="true"
+                    />
                     Phản hồi học viên
                   </h3>
                   <p>Xem đánh giá và nhận xét lộ trình do học viên gửi.</p>
@@ -139,7 +155,9 @@ export default function AdminRoadmapEditPage() {
                     ))}
 
                     {feedbackRows.length === 0 && (
-                      <p className="admin-roadmap-page__state">Chưa có phản hồi nào cho lộ trình này.</p>
+                      <p className="admin-roadmap-page__state">
+                        Chưa có phản hồi nào cho lộ trình này.
+                      </p>
                     )}
                   </div>
 
@@ -167,7 +185,10 @@ export default function AdminRoadmapEditPage() {
                       disabled={feedbackPage >= Math.max(0, totalFeedbackPages - 1)}
                     >
                       Sau
-                      <ChevronRight className="admin-roadmap-page__button-icon" aria-hidden="true" />
+                      <ChevronRight
+                        className="admin-roadmap-page__button-icon"
+                        aria-hidden="true"
+                      />
                     </button>
                   </div>
                 </>

@@ -707,8 +707,11 @@
   font-weight: 600;
   padding: 0.56rem 0.9rem;
   cursor: pointer;
-  box-shadow: #e8e6dc 0 0 0 0, #d1cfc5 0 0 0 1px;
-  transition: transform 150ms cubic-bezier(0.22, 1, 0.36, 1),
+  box-shadow:
+    #e8e6dc 0 0 0 0,
+    #d1cfc5 0 0 0 1px;
+  transition:
+    transform 150ms cubic-bezier(0.22, 1, 0.36, 1),
     background-color 150ms cubic-bezier(0.22, 1, 0.36, 1),
     box-shadow 150ms cubic-bezier(0.22, 1, 0.36, 1),
     color 150ms cubic-bezier(0.22, 1, 0.36, 1);
@@ -716,13 +719,18 @@
 
 .admin-roadmap-page__button:hover:not(:disabled) {
   background: #dedcd2;
-  box-shadow: #dedcd2 0 0 0 0, #c2c0b6 0 0 0 1px;
+  box-shadow:
+    #dedcd2 0 0 0 0,
+    #c2c0b6 0 0 0 1px;
   transform: translateY(-1px);
 }
 
 .admin-roadmap-page__button:focus-visible {
   outline: none;
-  box-shadow: #e8e6dc 0 0 0 0, #d1cfc5 0 0 0 1px, rgba(56, 152, 236, 0.23) 0 0 0 3px;
+  box-shadow:
+    #e8e6dc 0 0 0 0,
+    #d1cfc5 0 0 0 1px,
+    rgba(56, 152, 236, 0.23) 0 0 0 3px;
 }
 
 .admin-roadmap-page__button:active:not(:disabled) {
