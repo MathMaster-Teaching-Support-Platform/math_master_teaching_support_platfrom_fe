@@ -965,6 +965,18 @@
   background: #fff;
 }
 
+.module-layout-container .admin-roadmap-edit-section-inner {
+  padding: 1.15rem 1.25rem 1.25rem;
+}
+
+.module-layout-container .admin-roadmap-edit-feedback-skeleton.skeleton-grid {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+
+.module-layout-container .admin-roadmap-edit-section-inner .admin-roadmap-page__feedback-pagination {
+  margin-top: 0.75rem;
+}
+
 @media (max-width: 768px) {
   .module-layout-container .admin-roadmap-mgmt-page__content.module-page {
     padding: 1rem;
