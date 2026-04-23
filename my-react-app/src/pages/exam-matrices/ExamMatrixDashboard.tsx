@@ -402,7 +402,6 @@ export function ExamMatrixDashboard() {
                             className="exam-matrix-card__ghost-btn exam-matrix-card__ghost-btn--emphasis"
                             disabled={approveMutation.isPending}
                             onClick={() => {
-                              if (!globalThis.confirm(`Phê duyệt ma trận "${matrix.name}"?`)) return;
                               approveMutation.mutate(matrix.id, {
                                 onSuccess: () => showToast({ type: 'success', message: `Đã phê duyệt ma trận “${matrix.name}”.` }),
                                 onError: (err) => showToast({ type: 'error', message: err instanceof Error ? err.message : 'Không thể phê duyệt ma trận.' }),

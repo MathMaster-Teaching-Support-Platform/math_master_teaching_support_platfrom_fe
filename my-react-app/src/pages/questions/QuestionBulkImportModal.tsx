@@ -50,6 +50,7 @@ export function QuestionBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  const [clientWarnings, setClientWarnings] = useState<Map<number, string[]>>(new Map());
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDownloadTemplate = async () => {
@@ -85,6 +86,33 @@ export function QuestionBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
     try {
       const preview = await questionBulkImportService.previewExcel(selectedFile);
       setPreviewData(preview);
+      
+      // Client-side validation for additional warnings
+      const warnings = new Map<number, string[]>();
+      preview.rows.forEach((row) => {
+        if (row.data && row.isValid) {
+          const rowWarnings: string[] = [];
+          
+          // Check for {{}} parameter format recommendation
+          if (row.data.questionText && !row.data.questionText.includes('{{')) {
+            rowWarnings.push('💡 Gợi ý: Sử dụng {{tham_số}} cho câu hỏi động');
+          }
+          
+          // Check if options contain {{}} but question text doesn't
+          if (row.data.options) {
+            const optionsStr = JSON.stringify(row.data.options);
+            if (optionsStr.includes('{{') && !row.data.questionText?.includes('{{')) {
+              rowWarnings.push('⚠️ Đáp án có {{}} nhưng câu hỏi không có');
+            }
+          }
+          
+          if (rowWarnings.length > 0) {
+            warnings.set(row.rowNumber, rowWarnings);
+          }
+        }
+      });
+      
+      setClientWarnings(warnings);
       setStep('preview');
     } catch (err) {
       setError(
@@ -158,6 +186,7 @@ export function QuestionBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
     setSuccessMessage(null);
     setError(null);
     setDragActive(false);
+    setClientWarnings(new Map());
     onClose();
   };
 
@@ -165,6 +194,7 @@ export function QuestionBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
     setStep('upload');
     setPreviewData(null);
     setError(null);
+    setClientWarnings(new Map());
   };
 
   if (!isOpen) return null;
@@ -196,6 +226,17 @@ export function QuestionBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
 
           {step === 'upload' && (
             <div className="bulk-import-upload">
+              <div className="alert alert-info">
+                <AlertCircle size={16} />
+                <div>
+                  <strong>⚠️ QUY TẮC MỚI: Chỉ nhập câu hỏi trắc nghiệm</strong>
+                  <p style={{ marginTop: 4 }}>
+                    Từ nay, hệ thống chỉ chấp nhận câu hỏi loại <strong>MULTIPLE_CHOICE</strong> với đúng 4 đáp án (A, B, C, D).
+                    Sử dụng định dạng <code>{'{{'}</code>tham_số<code>{'}}'}</code> cho câu hỏi động.
+                  </p>
+                </div>
+              </div>
+              
               <div className="alert alert-info">
                 <AlertCircle size={16} />
                 <div>
@@ -331,6 +372,14 @@ export function QuestionBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
                               {row.validationErrors.map((err) => (
                                 <div key={`${row.rowNumber}-${err}`} className="error-item">
                                   • {err}
+                                </div>
+                              ))}
+                            </div>
+                          ) : clientWarnings.has(row.rowNumber) ? (
+                            <div className="warning-list" style={{ color: '#d97706' }}>
+                              {clientWarnings.get(row.rowNumber)?.map((warning) => (
+                                <div key={`${row.rowNumber}-${warning}`} className="warning-item">
+                                  {warning}
                                 </div>
                               ))}
                             </div>

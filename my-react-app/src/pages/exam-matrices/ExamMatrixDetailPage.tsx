@@ -18,6 +18,7 @@ import {
   useRemoveExamMatrixRow,
   useResetMatrix,
 } from '../../hooks/useExamMatrix';
+import { useToast } from '../../context/ToastContext';
 import { examMatrixService } from '../../services/examMatrixService';
 import '../../styles/module-refactor.css';
 import {
@@ -74,6 +75,7 @@ function pickDisplayValue(...values: Array<string | number | null | undefined>) 
 export default function ExamMatrixDetailPage() {
   const { matrixId } = useParams<{ matrixId: string }>();
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   const [validation, setValidation] = useState<MatrixValidationReport | null>(null);
   const [rowModalOpen, setRowModalOpen] = useState(false);
@@ -161,15 +163,23 @@ export default function ExamMatrixDetailPage() {
   }
 
   async function handleApprove() {
-    if (!matrix?.id) return;
-    if (
-      !globalThis.confirm(
-        'Bạn có chắc muốn phê duyệt ma trận này? Sau khi phê duyệt, bạn không thể chỉnh sửa.'
-      )
-    )
-      return;
-    await approveMutation.mutateAsync(matrix.id);
-    await refetch();
+    if (!matrix?.id || !matrix?.name) return;
+    
+    const matrixName = matrix.name; // Capture name before mutation
+    
+    try {
+      await approveMutation.mutateAsync(matrix.id);
+      showToast({ 
+        type: 'success', 
+        message: `Đã phê duyệt ma trận "${matrixName}" thành công!` 
+      });
+      await refetch();
+    } catch (error) {
+      showToast({ 
+        type: 'error', 
+        message: error instanceof Error ? error.message : 'Không thể phê duyệt ma trận.' 
+      });
+    }
   }
 
   async function handleReset() {

@@ -220,15 +220,23 @@ export default function ExamMatrixDetailPageRefactored() {
   }
 
   async function handleApprove() {
-    if (!matrix?.id) return;
-    if (
-      !globalThis.confirm(
-        'Bạn có chắc muốn phê duyệt ma trận này? Sau khi phê duyệt, bạn không thể chỉnh sửa.'
-      )
-    )
-      return;
-    await approveMutation.mutateAsync(matrix.id);
-    await refetch();
+    if (!matrix?.id || !matrix?.name) return;
+    
+    const matrixName = matrix.name; // Capture name before mutation
+    
+    try {
+      await approveMutation.mutateAsync(matrix.id);
+      showToast({ 
+        type: 'success', 
+        message: `Đã phê duyệt ma trận "${matrixName}" thành công!` 
+      });
+      await refetch();
+    } catch (error) {
+      showToast({ 
+        type: 'error', 
+        message: error instanceof Error ? error.message : 'Không thể phê duyệt ma trận.' 
+      });
+    }
   }
 
   async function handleReset() {
