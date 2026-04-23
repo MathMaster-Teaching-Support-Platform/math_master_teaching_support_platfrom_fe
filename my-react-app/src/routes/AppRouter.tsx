@@ -49,11 +49,14 @@ import TeacherProfilePage from '../pages/teacher-profile/TeacherProfilePage';
 // Admin Teacher Profile Routes
 import AdminAnalytics from '../pages/admin/AdminAnalytics';
 import AdminCourseReviewsPage from '../pages/admin/AdminCourseReviewsPage';
+import AdminFinancialOverview from '../pages/admin/AdminFinancialOverview';
 import AdminRoadmapCreatePage from '../pages/admin/AdminRoadmapCreatePage';
 import AdminRoadmapEditPage from '../pages/admin/AdminRoadmapEditPage';
 import AdminRoadmapManagementPage from '../pages/admin/AdminRoadmapManagementPage';
 import AdminRoadmapTopicsPage from '../pages/admin/AdminRoadmapTopicsPage';
 import AdminTransactions from '../pages/admin/AdminTransactions';
+import MarketplaceAnalytics from '../pages/admin/MarketplaceAnalytics';
+import RevenueBreakdown from '../pages/admin/RevenueBreakdown';
 import ReviewProfiles from '../pages/admin/ReviewProfiles';
 import AssessmentBuilderFlow from '../pages/assessments/AssessmentBuilderFlow';
 import AssessmentDetail from '../pages/assessments/AssessmentDetailRefactored';
@@ -682,6 +685,30 @@ export const router = createBrowserRouter([
     element: (
       <PrivateRoute>
         <AdminTransactions />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/admin/financial-overview',
+    element: (
+      <PrivateRoute>
+        <AdminFinancialOverview />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/admin/revenue-breakdown',
+    element: (
+      <PrivateRoute>
+        <RevenueBreakdown />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/admin/marketplace-analytics',
+    element: (
+      <PrivateRoute>
+        <MarketplaceAnalytics />
       </PrivateRoute>
     ),
   },
