@@ -123,7 +123,9 @@ export default function AssessmentDetailRefactored() {
     await refetch();
   }
 
-  async function addQuestionToAssessment() {
+  // Reserved for future single-question-by-ID add feature
+  // @ts-ignore - Function reserved for future use
+  async function _addQuestionToAssessment() {
     if (!id) return;
     const normalizedQuestionId = newQuestionId.trim();
     if (!normalizedQuestionId) {
