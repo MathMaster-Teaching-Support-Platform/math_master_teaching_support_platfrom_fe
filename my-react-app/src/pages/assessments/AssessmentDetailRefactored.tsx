@@ -1,5 +1,5 @@
 import { ArrowLeft, Pencil, RefreshCw } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { QuestionCard } from '../../components/assessment';
@@ -7,6 +7,7 @@ import {
   useAddQuestion,
   useAssessment,
   useAssessmentQuestions,
+  useDistributeQuestionPoints,
   useGenerateQuestionsForAssessment,
   useRemoveQuestion,
   useSetPointsOverride,
@@ -15,6 +16,7 @@ import {
 } from '../../hooks/useAssessment';
 import { useSearchQuestions } from '../../hooks/useQuestion';
 import MathText from '../../components/common/MathText';
+import { useToast } from '../../context/ToastContext';
 import '../../styles/module-refactor.css';
 import '../../components/assessment/question-card.css';
 import type { AssessmentRequest } from '../../types';
@@ -51,6 +53,7 @@ function getQuestionId(question: { questionId: string; id?: string }) {
 export default function AssessmentDetailRefactored() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   const [openEdit, setOpenEdit] = useState(false);
   const [newQuestionId, setNewQuestionId] = useState('');
@@ -65,6 +68,7 @@ export default function AssessmentDetailRefactored() {
   const [searchPage, setSearchPage] = useState(0);
   const [selectedToAdd, setSelectedToAdd] = useState<Set<string>>(new Set());
   const [addPoints, setAddPoints] = useState('');
+  const [autoTotalPoints, setAutoTotalPoints] = useState('10');
 
   function handleSelectAllSearch(checked: boolean, questionIds: string[]) {
     setSelectedToAdd((prev) => {
@@ -99,6 +103,7 @@ export default function AssessmentDetailRefactored() {
   const removeQuestionMutation = useRemoveQuestion();
   const updateAssessmentQuestionMutation = useUpdateAssessmentQuestionWorkaround();
   const pointsOverrideMutation = useSetPointsOverride();
+  const distributePointsMutation = useDistributeQuestionPoints();
   const generateMutation = useGenerateQuestionsForAssessment();
 
   const {
@@ -115,6 +120,11 @@ export default function AssessmentDetailRefactored() {
 
   const assessment = data?.result;
   const questions = questionsData?.result ?? [];
+
+  useEffect(() => {
+    if (!assessment) return;
+    setAutoTotalPoints(String(assessment.totalPoints ?? 0));
+  }, [assessment?.id, assessment?.totalPoints]);
 
   async function save(payload: AssessmentRequest) {
     if (!id) return;
@@ -217,6 +227,37 @@ export default function AssessmentDetailRefactored() {
       },
     });
     await Promise.all([refetchQuestions(), refetch()]);
+  }
+
+  async function handleDistributePoints() {
+    if (!id) return;
+    setQuestionCrudError(null);
+    if (questions.length === 0) {
+      setQuestionCrudError('Bài kiểm tra chưa có câu hỏi để phân bổ điểm.');
+      return;
+    }
+
+    const total = Number(autoTotalPoints.trim());
+    if (Number.isNaN(total) || total < 0) {
+      setQuestionCrudError('Tổng điểm phải là số >= 0.');
+      return;
+    }
+
+    try {
+      await distributePointsMutation.mutateAsync({
+        assessmentId: id,
+        totalPoints: total,
+        strategy: 'EQUAL',
+        scale: 2,
+      });
+      await Promise.all([refetchQuestions(), refetch()]);
+      showToast({ type: 'success', message: 'Đã phân bổ điểm thành công' });
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Không thể phân bổ điểm tự động.';
+      setQuestionCrudError(message);
+      showToast({ type: 'error', message });
+    }
   }
 
   async function generateFromMatrix() {
@@ -372,6 +413,36 @@ export default function AssessmentDetailRefactored() {
           <div className="row" style={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
             <h3>Câu hỏi trong bài kiểm tra</h3>
             <div className="row" style={{ justifyContent: 'start', flexWrap: 'wrap' }}>
+              {assessment.status === 'DRAFT' && (
+                <>
+                  <input
+                    className="input"
+                    style={{ width: 140 }}
+                    type="number"
+                    min={0}
+                    step={0.01}
+                    value={autoTotalPoints}
+                    onChange={(event) => setAutoTotalPoints(event.target.value)}
+                    placeholder="Tổng điểm"
+                  />
+                  <button
+                    className="btn"
+                    onClick={() => void handleDistributePoints()}
+                    disabled={questions.length === 0 || distributePointsMutation.isPending}
+                  >
+                    {distributePointsMutation.isPending
+                      ? 'Đang phân bổ...'
+                      : 'Phân bổ điểm tự động'}
+                  </button>
+                  <button
+                    className="btn secondary"
+                    onClick={() => void handleDistributePoints()}
+                    disabled={questions.length === 0 || distributePointsMutation.isPending}
+                  >
+                    Reset về auto
+                  </button>
+                </>
+              )}
               {assessment.status === 'DRAFT' &&
                 assessment.assessmentMode === 'MATRIX_BASED' &&
                 assessment.examMatrixId && (

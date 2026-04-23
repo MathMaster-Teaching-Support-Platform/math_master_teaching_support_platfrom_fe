@@ -12,6 +12,8 @@ import type {
     AddQuestionToAssessmentRequest,
     GenerateAssessmentFromMatrixRequest,
     GenerateQuestionsForAssessmentRequest,
+    DistributeAssessmentPointsRequest,
+    DistributeAssessmentPointsResponse,
     ApiResponse,
     PaginatedResponse,
 } from '../../types';
@@ -591,6 +593,23 @@ export class AssessmentService {
         if (!response.ok) {
             const error = await response.json();
             throw new Error(error.message || 'Failed to auto distribute points');
+        }
+        return response.json();
+    }
+
+    /** POST /assessments/{id}/questions/distribute-points */
+    static async distributeQuestionPoints(
+        assessmentId: string,
+        data: DistributeAssessmentPointsRequest
+    ): Promise<ApiResponse<DistributeAssessmentPointsResponse>> {
+        const headers = await this.getHeaders();
+        const response = await fetch(
+            `${API_BASE_URL}${API_ENDPOINTS.ASSESSMENTS_QUESTIONS_DISTRIBUTE_POINTS(assessmentId)}`,
+            { method: 'POST', headers, body: JSON.stringify(data) }
+        );
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to distribute points');
         }
         return response.json();
     }

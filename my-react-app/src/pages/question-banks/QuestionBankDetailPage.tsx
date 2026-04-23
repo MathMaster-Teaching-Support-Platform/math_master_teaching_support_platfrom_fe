@@ -76,6 +76,11 @@ export function QuestionBankDetailPage() {
     !!bankId
   );
 
+  useEffect(() => {
+    if (!bankId) return;
+    void refetchSearchQuestions();
+  }, [bankId, questionSearchPage, questionSearchSize, questionSearchKeyword, refetchSearchQuestions]);
+
   const updateMutation = useUpdateQuestionBank();
   const deleteMutation = useDeleteQuestionBank();
   const batchAssignQuestionsMutation = useBatchAssignQuestionsToBank();
@@ -371,7 +376,6 @@ export function QuestionBankDetailPage() {
                               </td>
                               <td>
                                 <MathText text={question.questionText} />
-                                <p className="muted" style={{ margin: 0 }}>{question.id}</p>
                               </td>
                               <td>{questionTypeLabel[question.questionType] || question.questionType}</td>
                               <td>{question.questionStatus || '-'}</td>

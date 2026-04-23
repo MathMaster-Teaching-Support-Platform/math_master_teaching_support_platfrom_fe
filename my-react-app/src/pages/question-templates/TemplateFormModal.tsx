@@ -133,7 +133,11 @@ function buildOptions(options: OptionInput[]): Record<string, unknown> {
   const mappedOptions: Record<string, unknown> = {};
   for (const option of options) {
     if (!option.key.trim() || !option.formula.trim()) continue;
-    mappedOptions[option.key.trim()] = option.formula.trim();
+    const formula = option.formula.trim();
+    const wrappedFormula = formula.startsWith('$$') && formula.endsWith('$$')
+      ? formula
+      : `$$${formula}$$`;
+    mappedOptions[option.key.trim()] = wrappedFormula;
   }
   return mappedOptions;
 }
@@ -260,10 +264,10 @@ export function TemplateFormModal({
       { name: 'b', type: 'int', min: '-10', max: '10', constraint: '' },
     ]);
     setOptions([
-      { key: 'A', formula: '(-b)/a' },
-      { key: 'B', formula: 'b/a' },
-      { key: 'C', formula: '-a/b' },
-      { key: 'D', formula: 'a+b' },
+      { key: 'A', formula: '$$(-{{b}})/{{a}}$$' },
+      { key: 'B', formula: '$${{b}}/{{a}}$$' },
+      { key: 'C', formula: '$$-{{a}}/{{b}}$$' },
+      { key: 'D', formula: '$${{a}}+{{b}}$$' },
     ]);
   }, [isOpen, initialData, mode]);
 

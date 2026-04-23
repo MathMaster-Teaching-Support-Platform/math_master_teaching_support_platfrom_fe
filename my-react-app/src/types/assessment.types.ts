@@ -112,6 +112,22 @@ export interface AutoDistributePointsRequest {
     distribution?: Record<string, number>;
 }
 
+export type DistributePointsStrategy = 'EQUAL';
+
+export interface DistributeAssessmentPointsRequest {
+    totalPoints: number;
+    strategy: DistributePointsStrategy;
+    scale?: number;
+}
+
+export interface DistributeAssessmentPointsResponse {
+    updated: number;
+    pointPerQuestion: number;
+    totalPoints: number;
+    scale: number;
+    strategy: DistributePointsStrategy;
+}
+
 // ─── Response DTOs ────────────────────────────────────────────────────────────
 export interface AssessmentResponse {
     id: string;
