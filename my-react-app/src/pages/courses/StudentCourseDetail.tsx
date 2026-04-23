@@ -22,7 +22,6 @@ import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLa
 import {
   useCourseDetail,
   useCourseProgress,
-  useDropEnrollment,
   useInstructorCourses,
   useMyEnrollments,
   useRelatedCourses,
@@ -69,7 +68,6 @@ const StudentCourseDetail: React.FC = () => {
 
   const { data: courseData } = useCourseDetail(enrollment?.courseId ?? '');
   const { data: progressData } = useCourseProgress(enrollmentId!);
-  const dropMutation = useDropEnrollment();
 
   const course = courseData?.result;
   const progress = progressData?.result;
@@ -88,36 +86,6 @@ const StudentCourseDetail: React.FC = () => {
 
   const handleTabChange = (tab: TabType) => {
     setSearchParams({ tab });
-  };
-
-  const handleDrop = () => {
-    if (!enrollment) return;
-    let isEligible = true;
-    let reason = '';
-
-    if (enrollment.enrolledAt) {
-      const hoursSinceEnrollment =
-        (new Date().getTime() - new Date(enrollment.enrolledAt).getTime()) / (1000 * 60 * 60);
-      if (hoursSinceEnrollment >= 24) {
-        isEligible = false;
-        reason = 'vượt quá 24h kể từ khi đăng ký';
-      }
-    }
-
-    if (progress && progress.completionRate >= 10) {
-      isEligible = false;
-      reason = 'hoàn thành từ 10% bài học trở lên';
-    }
-
-    const confirmMsg = isEligible
-      ? 'Bạn có chắc muốn hủy đăng ký khóa học này? Số tiền đã thanh toán sẽ được hoàn lại vào ví.'
-      : `CẢNH BÁO: Khóa học đã ${reason}. Hủy đăng ký lúc này sẽ KHÔNG được hoàn tiền. Bạn vẫn muốn hủy khóa học chứ?`;
-
-    if (window.confirm(confirmMsg)) {
-      dropMutation.mutate(enrollmentId!, {
-        onSuccess: () => navigate('/student/courses'),
-      });
-    }
   };
 
   if (!enrollment) {
@@ -362,16 +330,6 @@ const StudentCourseDetail: React.FC = () => {
                         </p>
                       </div>
                     )}
-
-                    <button
-                      className="btn danger"
-                      style={{ marginTop: '0.75rem' }}
-                      onClick={handleDrop}
-                      disabled={dropMutation.isPending || enrollment.status !== 'ACTIVE'}
-                      title={enrollment.status !== 'ACTIVE' ? 'Khóa học đã hủy' : undefined}
-                    >
-                      {dropMutation.isPending ? 'Đang hủy...' : 'Hủy đăng ký'}
-                    </button>
                   </div>
                 </div>
               </div>

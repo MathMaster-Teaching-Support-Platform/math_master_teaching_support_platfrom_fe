@@ -572,7 +572,27 @@ export class CourseService {
       )}`,
       { method: 'GET', headers }
     );
-    return this.handleResponse(res);
+    const payload = await this.handleResponse<any>(res);
+    const result = payload?.result;
+
+    const url =
+      (typeof result === 'string' ? result : undefined) ||
+      (result && typeof result === 'object'
+        ? result.downloadUrl || result.url || result.preSignedUrl || result.presignedUrl
+        : undefined) ||
+      payload?.downloadUrl ||
+      payload?.url ||
+      payload?.preSignedUrl ||
+      payload?.presignedUrl;
+
+    if (!url) {
+      throw new Error('Không nhận được URL tải tài liệu từ hệ thống.');
+    }
+
+    return {
+      ...(payload || {}),
+      result: url,
+    } as ApiResponse<string>;
   }
 
   // ─── Course Reviews ────────────────────────────────────────────────────────

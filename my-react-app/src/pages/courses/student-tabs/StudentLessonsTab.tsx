@@ -46,6 +46,16 @@ const parseLessonMaterials = (materials?: string | null): LessonMaterial[] => {
   }
 };
 
+const triggerFileDownload = (url: string) => {
+  const link = document.createElement('a');
+  link.href = url;
+  link.rel = 'noopener noreferrer';
+  link.target = '_self';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+};
+
 // Inline Video Player Component
 const InlinePlayer: React.FC<{
   courseId: string;
@@ -179,7 +189,7 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
   const handleDownloadMaterial = async (lesson: CourseLessonResponse, material: LessonMaterial) => {
     if (!material.id) {
       if (material.url) {
-        window.open(material.url, '_blank', 'noopener,noreferrer');
+        triggerFileDownload(material.url);
       }
       return;
     }
@@ -187,7 +197,7 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
     try {
       const response = await CourseService.getMaterialDownloadUrl(courseId, lesson.id, material.id);
       if (response.result) {
-        window.open(response.result, '_blank', 'noopener,noreferrer');
+        triggerFileDownload(response.result);
       }
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Không thể tải tài liệu.';
