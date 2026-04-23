@@ -247,7 +247,7 @@ const AISlideGenerator: React.FC = () => {
   const [slideCount, setSlideCount] = useState(10);
   const [additionalPrompt, setAdditionalPrompt] = useState('');
   const [outputFormat, setOutputFormat] = useState<LessonSlideOutputFormat>('PLAIN_TEXT');
-  const [equationMode, setEquationMode] = useState<LessonSlideEquationMode>('OMML');
+  const [equationMode] = useState<LessonSlideEquationMode>('OMML');
   const [templateId, setTemplateId] = useState('');
   const [templates, setTemplates] = useState<LessonSlideTemplate[]>([]);
   const [templatePreviewBlobUrls, setTemplatePreviewBlobUrls] = useState<Record<string, string>>(
@@ -1969,31 +1969,6 @@ const AISlideGenerator: React.FC = () => {
               <strong>{generated.slideCount}</strong> | Output format:{' '}
               <strong>{getOutputFormatLabel(resolvedOutputFormat)}</strong>
             </p>
-
-            {resolvedOutputFormat !== 'LATEX' && (
-              <label className="ai-slide-full-width">
-                <span>Cach xuat cong thuc cho PowerPoint</span>
-                <select
-                  value={equationMode}
-                  onChange={(e) => setEquationMode(e.target.value as LessonSlideEquationMode)}
-                >
-                  <option value="OMML">OMML (Office Equation, khuyen nghi)</option>
-                  <option value="IMAGE">IMAGE (ve cong thuc thanh anh)</option>
-                  <option value="PLAIN_TEXT">PLAIN_TEXT (khong khuyen nghi)</option>
-                </select>
-                <p className="ai-slide-format-hint">
-                  OMML giu cong thuc dang Equation native cua Office. IMAGE dung khi cong thuc phuc
-                  tap.
-                </p>
-              </label>
-            )}
-
-            {resolvedOutputFormat === 'LATEX' && (
-              <p className="ai-slide-format-hint">
-                Chế độ LATEX: nội dung mỗi slide sẽ được backend render thành một ảnh PNG duy nhất
-                trong vùng content của template.
-              </p>
-            )}
 
             {currentPreviewSlide && (
               <div className="ai-slide-preview-wrap">
