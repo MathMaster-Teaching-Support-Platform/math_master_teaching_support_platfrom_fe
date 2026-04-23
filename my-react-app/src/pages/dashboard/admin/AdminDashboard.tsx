@@ -1,3 +1,20 @@
+import {
+  AlertTriangle,
+  BarChart2,
+  BookOpen,
+  CheckCircle2,
+  ChevronRight,
+  Circle,
+  Clock,
+  CreditCard,
+  DollarSign,
+  Download,
+  Eye,
+  GraduationCap,
+  TrendingUp,
+  Users,
+  XCircle,
+} from 'lucide-react';
 import React from 'react';
 import DashboardLayout from '../../../components/layout/DashboardLayout/DashboardLayout';
 import {
@@ -80,32 +97,40 @@ const AdminDashboard: React.FC = () => {
   const statsCards = dashboardStats
     ? [
         {
-          icon: '👥',
+          Icon: Users,
           label: 'Tổng người dùng',
           value: dashboardStats.totalUsers.toLocaleString('vi-VN'),
           trend: formatGrowth(dashboardStats.totalUsersGrowthPercent),
-          color: '#667eea',
+          trendPositive: dashboardStats.totalUsersGrowthPercent >= 0,
+          iconBg: 'bg-[#EEF2FF]',
+          iconColor: 'text-[#4338CA]',
         },
         {
-          icon: '💰',
+          Icon: DollarSign,
           label: 'Doanh thu tháng',
           value: formatRevenue(dashboardStats.monthlyRevenue),
           trend: formatGrowth(dashboardStats.monthlyRevenueGrowthPercent),
-          color: '#43e97b',
+          trendPositive: dashboardStats.monthlyRevenueGrowthPercent >= 0,
+          iconBg: 'bg-[#F0FDF4]',
+          iconColor: 'text-[#16A34A]',
         },
         {
-          icon: '📚',
+          Icon: BookOpen,
           label: 'Enrollment hoạt động',
           value: dashboardStats.activeEnrollments.toLocaleString('vi-VN'),
           trend: formatGrowth(dashboardStats.activeEnrollmentsGrowthPercent),
-          color: '#f093fb',
+          trendPositive: dashboardStats.activeEnrollmentsGrowthPercent >= 0,
+          iconBg: 'bg-[#FDF4FF]',
+          iconColor: 'text-[#9333EA]',
         },
         {
-          icon: '📊',
+          Icon: BarChart2,
           label: 'Giao dịch',
           value: dashboardStats.totalTransactions.toLocaleString('vi-VN'),
           trend: formatGrowth(dashboardStats.totalTransactionsGrowthPercent),
-          color: '#fbbf24',
+          trendPositive: dashboardStats.totalTransactionsGrowthPercent >= 0,
+          iconBg: 'bg-[#FFFBEB]',
+          iconColor: 'text-[#D97706]',
         },
       ]
     : [];
@@ -126,111 +151,234 @@ const AdminDashboard: React.FC = () => {
     return 'Thất bại';
   };
 
+  const getUserStatusClass = (status: RecentUser['status']) => {
+    if (status === 'ACTIVE') return 'bg-[#F0FDF4] text-[#166534]';
+    if (status === 'BANNED') return 'bg-[#FEF2F2] text-[#991B1B]';
+    return 'bg-[#F1F3F8] text-[#6B7280]';
+  };
+
+  const getTransactionStatusClass = (status: AdminTransaction['status']) => {
+    if (status === 'completed') return 'bg-[#F0FDF4] text-[#166534]';
+    if (status === 'pending') return 'bg-[#FFFBEB] text-[#92400E]';
+    return 'bg-[#FEF2F2] text-[#991B1B]';
+  };
+
+  const getTransactionStatusIcon = (status: AdminTransaction['status']) => {
+    if (status === 'completed') return <CheckCircle2 className="w-3 h-3" />;
+    if (status === 'pending') return <Clock className="w-3 h-3" />;
+    return <XCircle className="w-3 h-3" />;
+  };
+
+  const getServiceClass = (status: SystemService['status']) => {
+    if (status === 'active') return { dot: 'bg-[#16A34A]', badge: 'bg-[#F0FDF4] text-[#166534]' };
+    if (status === 'warning') return { dot: 'bg-[#D97706]', badge: 'bg-[#FFFBEB] text-[#92400E]' };
+    return { dot: 'bg-[#DC2626]', badge: 'bg-[#FEF2F2] text-[#991B1B]' };
+  };
+
+  const getServiceLabel = (status: SystemService['status']) => {
+    if (status === 'active') return 'Hoạt động';
+    if (status === 'warning') return 'Chậm';
+    return 'Lỗi';
+  };
+
   const renderUsersTable = () => {
-    if (loading) return <p style={{ padding: '1rem', color: '#718096' }}>Đang tải...</p>;
+    if (loading)
+      return (
+        <div className="flex items-center justify-center py-10 text-[#6B7280] text-[14px]">
+          Đang tải...
+        </div>
+      );
     if (recentUsers.length === 0)
-      return <p style={{ padding: '1rem', color: '#718096' }}>Chưa có người dùng nào.</p>;
+      return (
+        <div className="flex items-center justify-center py-10 text-[#6B7280] text-[14px]">
+          Chưa có người dùng nào.
+        </div>
+      );
     return (
-      <table>
-        <thead>
-          <tr>
-            <th>Tên</th>
-            <th>Vai trò</th>
-            <th>Ngày tham gia</th>
-            <th>Trạng thái</th>
-          </tr>
-        </thead>
-        <tbody>
-          {recentUsers.map((user) => (
-            <tr key={user.id}>
-              <td>
-                <div className="user-cell">
-                  <div className="user-avatar">{(user.fullName ?? user.email).charAt(0)}</div>
-                  <div>
-                    <div className="user-name">{user.fullName ?? '—'}</div>
-                    <div className="user-email">{user.email}</div>
-                  </div>
-                </div>
-              </td>
-              <td>
-                <span className={`role-badge ${(user.roles[0] ?? '').toLowerCase()}`}>
-                  {(user.roles[0] ?? '').toUpperCase() === 'TEACHER' ? 'Giáo viên' : 'Học sinh'}
-                </span>
-              </td>
-              <td>{new Date(user.createdDate).toLocaleDateString('vi-VN')}</td>
-              <td>
-                <span className={`status-badge ${user.status.toLowerCase()}`}>
-                  {getUserStatusLabel(user.status)}
-                </span>
-              </td>
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="border-b border-[#E5E7EB]">
+              <th className="text-left px-4 py-3 text-[11px] font-semibold tracking-[0.08em] uppercase text-[#6B7280]">
+                Tên
+              </th>
+              <th className="text-left px-4 py-3 text-[11px] font-semibold tracking-[0.08em] uppercase text-[#6B7280]">
+                Vai trò
+              </th>
+              <th className="text-left px-4 py-3 text-[11px] font-semibold tracking-[0.08em] uppercase text-[#6B7280]">
+                Ngày tham gia
+              </th>
+              <th className="text-left px-4 py-3 text-[11px] font-semibold tracking-[0.08em] uppercase text-[#6B7280]">
+                Trạng thái
+              </th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {recentUsers.map((user) => (
+              <tr
+                key={user.id}
+                className="border-b border-[#F1F3F8] hover:bg-[#F8F9FC] transition-colors duration-150"
+              >
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-[#EEF2FF] text-[#4338CA] flex items-center justify-center font-bold text-[14px] shrink-0">
+                      {(user.fullName ?? user.email).charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <div className="text-[14px] font-semibold text-[#0D0F1A]">
+                        {user.fullName ?? '—'}
+                      </div>
+                      <div className="text-[12px] text-[#6B7280]">{user.email}</div>
+                    </div>
+                  </div>
+                </td>
+                <td className="px-4 py-3">
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${
+                      (user.roles[0] ?? '').toUpperCase() === 'TEACHER'
+                        ? 'bg-[#EEF2FF] text-[#4338CA]'
+                        : 'bg-[#F0FDF4] text-[#166534]'
+                    }`}
+                  >
+                    <Circle className="w-1.5 h-1.5 fill-current" />
+                    {(user.roles[0] ?? '').toUpperCase() === 'TEACHER' ? 'Giáo viên' : 'Học sinh'}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-[14px] text-[#6B7280]">
+                  {new Date(user.createdDate).toLocaleDateString('vi-VN')}
+                </td>
+                <td className="px-4 py-3">
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${getUserStatusClass(user.status)}`}
+                  >
+                    <Circle className="w-1.5 h-1.5 fill-current" />
+                    {getUserStatusLabel(user.status)}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     );
   };
 
   const renderTransactionsTable = () => {
-    if (loading) return <p style={{ padding: '1rem', color: '#718096' }}>Đang tải...</p>;
+    if (loading)
+      return (
+        <div className="flex items-center justify-center py-10 text-[#6B7280] text-[14px]">
+          Đang tải...
+        </div>
+      );
     if (!transactions || transactions.length === 0)
-      return <p style={{ padding: '1rem', color: '#718096' }}>Chưa có giao dịch nào.</p>;
+      return (
+        <div className="flex items-center justify-center py-10 text-[#6B7280] text-[14px]">
+          Chưa có giao dịch nào.
+        </div>
+      );
     return (
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Người dùng</th>
-            <th>Mô tả</th>
-            <th>Số tiền</th>
-            <th>Phương thức</th>
-            <th>Trạng thái</th>
-            <th>Thời gian</th>
-            <th>Hành động</th>
-          </tr>
-        </thead>
-        <tbody>
-          {transactions.map((transaction) => (
-            <tr key={transaction.id}>
-              <td className="transaction-id">{transaction.id.slice(0, 8)}…</td>
-              <td>{transaction.userName}</td>
-              <td>{transaction.planName}</td>
-              <td className="transaction-amount">{transaction.amount.toLocaleString('vi-VN')}đ</td>
-              <td>
-                <span className="payment-method">
-                  {transaction.paymentMethod === 'payos' ? '💳 PayOS' : transaction.paymentMethod}
-                </span>
-              </td>
-              <td>
-                <span className={`status-badge ${transaction.status}`}>
-                  {getTransactionStatusLabel(transaction.status)}
-                </span>
-              </td>
-              <td>{new Date(transaction.createdAt).toLocaleString('vi-VN')}</td>
-              <td>
-                <button className="btn-icon" title="Chi tiết">
-                  👁️
-                </button>
-              </td>
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="border-b border-[#E5E7EB]">
+              {[
+                'ID',
+                'Người dùng',
+                'Mô tả',
+                'Số tiền',
+                'Phương thức',
+                'Trạng thái',
+                'Thời gian',
+                '',
+              ].map((h) => (
+                <th
+                  key={h}
+                  className="text-left px-4 py-3 text-[11px] font-semibold tracking-[0.08em] uppercase text-[#6B7280]"
+                >
+                  {h}
+                </th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {transactions.map((transaction) => (
+              <tr
+                key={transaction.id}
+                className="border-b border-[#F1F3F8] hover:bg-[#F8F9FC] transition-colors duration-150"
+              >
+                <td className="px-4 py-3 text-[13px] font-mono text-[#6B7280]">
+                  {transaction.id.slice(0, 8)}…
+                </td>
+                <td className="px-4 py-3 text-[14px] text-[#0D0F1A] font-medium">
+                  {transaction.userName}
+                </td>
+                <td className="px-4 py-3 text-[14px] text-[#6B7280]">{transaction.planName}</td>
+                <td className="px-4 py-3 text-[14px] font-semibold text-[#0D0F1A]">
+                  {transaction.amount.toLocaleString('vi-VN')}đ
+                </td>
+                <td className="px-4 py-3">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#F1F3F8] text-[#0D0F1A] text-[11px] font-semibold">
+                    <CreditCard className="w-3 h-3" />
+                    {transaction.paymentMethod === 'payos' ? 'PayOS' : transaction.paymentMethod}
+                  </span>
+                </td>
+                <td className="px-4 py-3">
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${getTransactionStatusClass(transaction.status)}`}
+                  >
+                    {getTransactionStatusIcon(transaction.status)}
+                    {getTransactionStatusLabel(transaction.status)}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-[13px] text-[#6B7280]">
+                  {new Date(transaction.createdAt).toLocaleString('vi-VN')}
+                </td>
+                <td className="px-4 py-3">
+                  <button
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-[#6B7280] hover:bg-[#EEF2FF] hover:text-[#3B6EF8] transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-[#3B6EF8] focus-visible:ring-offset-2"
+                    title="Chi tiết"
+                    aria-label="Xem chi tiết giao dịch"
+                  >
+                    <Eye className="w-4 h-4" />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     );
   };
 
   const renderSystemStatus = () => {
-    if (loading) return <p style={{ padding: '1rem', color: '#718096' }}>Đang tải...</p>;
+    if (loading)
+      return (
+        <div className="flex items-center justify-center py-10 text-[#6B7280] text-[14px]">
+          Đang tải...
+        </div>
+      );
     if (systemServices.length === 0)
-      return <p style={{ padding: '1rem', color: '#718096' }}>Không có dữ liệu trạng thái.</p>;
+      return (
+        <div className="flex items-center justify-center py-10 text-[#6B7280] text-[14px]">
+          Không có dữ liệu trạng thái.
+        </div>
+      );
     return (
-      <div className="system-status">
+      <div className="divide-y divide-[#F1F3F8]">
         {systemServices.map((service) => (
-          <div key={service.name} className="status-item">
-            <div className={`status-indicator ${service.status}`}></div>
-            <div className="status-info">
-              <div className="status-name">{service.name}</div>
-              <div className="status-value">{service.description}</div>
+          <div key={service.name} className="flex items-center gap-4 px-5 py-3.5">
+            <div
+              className={`w-2.5 h-2.5 rounded-full shrink-0 ${getServiceClass(service.status).dot}`}
+            />
+            <div className="flex-1 min-w-0">
+              <div className="text-[14px] font-semibold text-[#0D0F1A]">{service.name}</div>
+              <div className="text-[12px] text-[#6B7280]">{service.description}</div>
             </div>
+            <span
+              className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold ${getServiceClass(service.status).badge}`}
+            >
+              {getServiceLabel(service.status)}
+            </span>
           </div>
         ))}
       </div>
@@ -247,212 +395,231 @@ const AdminDashboard: React.FC = () => {
       }}
       notificationCount={notificationCount}
     >
-      <div className="admin-dashboard">
+      <div className="max-w-[1600px] mx-auto px-1 space-y-6">
+        {/* Error Banner */}
         {fetchError && (
-          <div className="error-banner" style={{ color: '#e53e3e', marginBottom: 12 }}>
-            ⚠️ {fetchError}
+          <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#FEF2F2] border border-[#FECACA] text-[#991B1B] text-[14px] font-medium">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            {fetchError}
           </div>
         )}
 
-        <div className="dashboard-header">
+        {/* Header */}
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="dashboard-title">Admin Dashboard 🛠️</h1>
-            <p className="dashboard-subtitle">Tổng quan quản trị hệ thống MathMaster</p>
+            <h1 className="text-[28px] font-bold tracking-tight text-[#0D0F1A]">Admin Dashboard</h1>
+            <p className="text-[14px] text-[#6B7280] mt-1">
+              Tổng quan quản trị hệ thống MathMaster
+            </p>
           </div>
-          <div className="header-actions">
-            <button className="btn btn-outline">
-              <span>📊</span> Xuất báo cáo
-            </button>
-            <button className="btn btn-primary">
-              <span>⚙️</span> Cài đặt hệ thống
-            </button>
-          </div>
+          <button className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E5E7EB] bg-white text-[#0D0F1A] text-[13px] font-semibold shadow-[0_1px_3px_rgba(0,0,0,0.06)] hover:shadow-[0_4px_20px_rgba(0,0,0,0.12)] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 focus-visible:ring-2 focus-visible:ring-[#3B6EF8] focus-visible:ring-offset-2">
+            <Download className="w-3.5 h-3.5" />
+            Xuất báo cáo
+          </button>
         </div>
 
         {/* Stats Grid */}
-        <div className="stats-grid">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
           {loading || statsCards.length === 0
             ? [0, 1, 2, 3].map((i) => (
-                <div key={i} className="stat-card" style={{ borderTopColor: '#e2e8f0' }}>
-                  <div className="stat-icon" style={{ background: '#f7fafc', color: '#a0aec0' }}>
-                    —
-                  </div>
-                  <div className="stat-info">
-                    <div className="stat-label">Đang tải...</div>
-                    <div className="stat-value">—</div>
+                <div
+                  key={i}
+                  className="bg-white rounded-2xl border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.08)] p-5 flex items-start gap-4 animate-pulse"
+                  style={{ animationDelay: `${i * 100}ms` }}
+                >
+                  <div className="w-11 h-11 rounded-xl bg-[#F1F3F8]" />
+                  <div className="flex-1 space-y-2 pt-1">
+                    <div className="h-3 w-24 bg-[#F1F3F8] rounded" />
+                    <div className="h-6 w-16 bg-[#F1F3F8] rounded" />
                   </div>
                 </div>
               ))
-            : statsCards.map((stat) => (
-                <div key={stat.label} className="stat-card" style={{ borderTopColor: stat.color }}>
+            : statsCards.map((stat, index) => (
+                <div
+                  key={stat.label}
+                  className="bg-white rounded-2xl border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.08)] p-5 flex items-start gap-4 hover:shadow-[0_4px_20px_rgba(0,0,0,0.12)] transition-shadow duration-200 animate-[fadeInUp_0.4s_ease_both]"
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
                   <div
-                    className="stat-icon"
-                    style={{ background: `${stat.color}20`, color: stat.color }}
+                    className={`w-11 h-11 rounded-xl ${stat.iconBg} ${stat.iconColor} flex items-center justify-center shrink-0`}
                   >
-                    {stat.icon}
+                    <stat.Icon className="w-5 h-5" />
                   </div>
-                  <div className="stat-info">
-                    <div className="stat-label">{stat.label}</div>
-                    <div className="stat-value">{stat.value}</div>
-                    <div className="stat-trend positive">{stat.trend} so với tháng trước</div>
+                  <div>
+                    <div className="text-[12px] font-medium text-[#6B7280] uppercase tracking-wide">
+                      {stat.label}
+                    </div>
+                    <div className="text-[28px] font-bold tabular-nums text-[#0D0F1A] leading-tight mt-0.5">
+                      {stat.value}
+                    </div>
+                    <div
+                      className={`text-[12px] font-medium mt-1 flex items-center gap-1 ${stat.trendPositive ? 'text-[#16A34A]' : 'text-[#DC2626]'}`}
+                    >
+                      <TrendingUp className="w-3 h-3" />
+                      {stat.trend} so với tháng trước
+                    </div>
                   </div>
                 </div>
               ))}
         </div>
 
-        <div className="dashboard-grid">
-          {/* Recent Users */}
-          <div className="dashboard-card">
-            <div className="card-header">
-              <h2 className="card-title">Người dùng mới</h2>
-              <a href="/admin/users" className="card-link">
-                Xem tất cả →
-              </a>
-            </div>
-            <div className="users-table">{renderUsersTable()}</div>
+        {/* Recent Users */}
+        <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.08)] overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-[#E5E7EB]">
+            <h2 className="text-[16px] font-semibold text-[#0D0F1A]">Người dùng mới</h2>
+            <a
+              href="/admin/users"
+              className="inline-flex items-center gap-1 text-[13px] font-semibold text-[#3B6EF8] hover:text-[#2952D9] transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-[#3B6EF8] focus-visible:ring-offset-2 rounded"
+            >
+              Xem tất cả <ChevronRight className="w-3.5 h-3.5" />
+            </a>
           </div>
+          {renderUsersTable()}
         </div>
 
-        <div className="dashboard-grid full-width">
-          {/* Teacher Profile Review - Highlighted */}
-          <div className="dashboard-card highlight-card">
-            <div className="card-header">
-              <h2 className="card-title">Duyệt Profile Giáo Viên 🍎</h2>
-              <div className="pending-badge">{pendingProfiles} Chờ duyệt</div>
+        {/* Teacher Profile Review */}
+        <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.08)] p-5 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-11 h-11 rounded-xl bg-[#EEF2FF] text-[#4338CA] flex items-center justify-center shrink-0">
+              <GraduationCap className="w-5 h-5" />
             </div>
-            <div className="card-content">
-              <p>Có {pendingProfiles} giáo viên đang chờ xác minh danh tính và bằng cấp.</p>
-              <div className="card-footer">
-                <a href="/admin/review-profiles" className="btn btn-primary">
-                  Duyệt ngay →
-                </a>
-              </div>
+            <div>
+              <h2 className="text-[16px] font-semibold text-[#0D0F1A]">Duyệt Profile Giáo Viên</h2>
+              <p className="text-[14px] text-[#6B7280] mt-0.5">
+                Có <span className="font-semibold text-[#0D0F1A]">{pendingProfiles}</span> giáo viên
+                đang chờ xác minh danh tính và bằng cấp.
+              </p>
             </div>
+          </div>
+          <div className="flex items-center gap-3 shrink-0">
+            {pendingProfiles > 0 && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FFFBEB] text-[#92400E] text-[11px] font-semibold">
+                <Circle className="w-1.5 h-1.5 fill-current" />
+                {pendingProfiles} chờ duyệt
+              </span>
+            )}
+            <a
+              href="/admin/review-profiles"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0D0F1A] text-white text-[13px] font-semibold hover:bg-[#1a1d2e] active:scale-[0.98] transition-all duration-150 focus-visible:ring-2 focus-visible:ring-[#3B6EF8] focus-visible:ring-offset-2"
+            >
+              Duyệt ngay <ChevronRight className="w-3.5 h-3.5" />
+            </a>
           </div>
         </div>
 
         {/* Recent Transactions */}
-        <div className="dashboard-card">
-          <div className="card-header">
-            <h2 className="card-title">Giao dịch gần đây</h2>
-            <a href="/admin/transactions" className="card-link">
-              Xem tất cả →
+        <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.08)] overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-[#E5E7EB]">
+            <h2 className="text-[16px] font-semibold text-[#0D0F1A]">Giao dịch gần đây</h2>
+            <a
+              href="/admin/transactions"
+              className="inline-flex items-center gap-1 text-[13px] font-semibold text-[#3B6EF8] hover:text-[#2952D9] transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-[#3B6EF8] focus-visible:ring-offset-2 rounded"
+            >
+              Xem tất cả <ChevronRight className="w-3.5 h-3.5" />
             </a>
           </div>
-          <div className="transactions-table">{renderTransactionsTable()}</div>
+          {renderTransactionsTable()}
         </div>
 
-        {/* Revenue Chart */}
-        <div className="dashboard-grid-2">
-          <div className="dashboard-card">
-            <div className="card-header">
-              <h2 className="card-title">Doanh thu theo tháng</h2>
-            </div>
-            <div className="revenue-chart">
-              {loading ? (
-                <p style={{ padding: '1rem', color: '#718096' }}>Đang tải...</p>
-              ) : (
-                <div className="chart-bars">
-                  {(revenueMonthly.length === 12
-                    ? revenueMonthly
-                    : Array.from({ length: 12 }, (_, i) => ({ month: i + 1, revenue: 0 }))
-                  ).map((item) => (
-                    <div key={item.month} className="chart-bar">
-                      <div
-                        className="bar-fill"
-                        style={{ height: `${(item.revenue / revenueMax) * 100}%` }}
-                      ></div>
-                      <div className="bar-label">T{item.month}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+        {/* Revenue + Quick Stats */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Revenue Chart */}
+          <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.08)] p-5">
+            <h2 className="text-[16px] font-semibold text-[#0D0F1A] mb-4">Doanh thu theo tháng</h2>
+            {loading ? (
+              <div className="flex items-center justify-center h-40 text-[#6B7280] text-[14px]">
+                Đang tải...
+              </div>
+            ) : (
+              <div className="flex items-end gap-1.5 h-40">
+                {(revenueMonthly.length === 12
+                  ? revenueMonthly
+                  : Array.from({ length: 12 }, (_, i) => ({ month: i + 1, revenue: 0 }))
+                ).map((item) => (
+                  <div key={item.month} className="flex-1 flex flex-col items-center gap-1">
+                    <div
+                      className="w-full rounded-t-md bg-[#3B6EF8] transition-all duration-500 hover:bg-[#2952D9] min-h-[4px]"
+                      style={{ height: `${Math.max((item.revenue / revenueMax) * 100, 4)}%` }}
+                      title={`T${item.month}: ${formatRevenue(item.revenue)}`}
+                    />
+                    <span className="text-[10px] text-[#9CA3AF] font-medium">T{item.month}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          <div className="dashboard-card">
-            <div className="card-header">
-              <h2 className="card-title">Thống kê nhanh</h2>
-            </div>
+          {/* Quick Stats */}
+          <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.08)] p-5">
+            <h2 className="text-[16px] font-semibold text-[#0D0F1A] mb-4">Thống kê nhanh</h2>
             {loading || !quickStats ? (
-              <p style={{ padding: '1rem', color: '#718096' }}>Đang tải...</p>
+              <div className="flex items-center justify-center h-40 text-[#6B7280] text-[14px]">
+                Đang tải...
+              </div>
             ) : (
-              <div className="quick-stats">
-                <div className="quick-stat-item">
-                  <div className="quick-stat-label">Tỷ lệ chuyển đổi</div>
-                  <div className="quick-stat-value">{quickStats.conversionRate.toFixed(1)}%</div>
-                  <div className="quick-stat-bar">
-                    <div
-                      className="quick-stat-fill"
-                      style={{
-                        width: `${Math.min(quickStats.conversionRate, 100)}%`,
-                        background: '#667eea',
-                      }}
-                    ></div>
-                  </div>
-                </div>
-                <div className="quick-stat-item">
-                  <div className="quick-stat-label">Người dùng hoạt động</div>
-                  <div className="quick-stat-value">
-                    {quickStats.activeUsers.toLocaleString('vi-VN')}
-                  </div>
-                  <div className="quick-stat-bar">
-                    <div
-                      className="quick-stat-fill"
-                      style={{
-                        width: `${Math.min((quickStats.activeUsers / (dashboardStats?.totalUsers || 1)) * 100, 100)}%`,
-                        background: '#43e97b',
-                      }}
-                    ></div>
-                  </div>
-                </div>
-                <div className="quick-stat-item">
-                  <div className="quick-stat-label">Tài liệu được tạo</div>
-                  <div className="quick-stat-value">
-                    {quickStats.documentsCreated.toLocaleString('vi-VN')}
-                  </div>
-                  <div className="quick-stat-bar">
-                    <div
-                      className="quick-stat-fill"
-                      style={{ width: '100%', background: '#f093fb' }}
-                    ></div>
-                  </div>
-                </div>
-                <div className="quick-stat-item">
-                  <div className="quick-stat-label">Tỷ lệ hài lòng</div>
-                  {quickStats.satisfactionRate === -1 ? (
-                    <div
-                      className="quick-stat-value"
-                      style={{ color: '#a0aec0', fontSize: '0.875rem' }}
-                    >
-                      Chưa có dữ liệu
+              <div className="space-y-4">
+                {[
+                  {
+                    label: 'Tỷ lệ chuyển đổi',
+                    value: `${quickStats.conversionRate.toFixed(1)}%`,
+                    pct: Math.min(quickStats.conversionRate, 100),
+                    color: '#3B6EF8',
+                  },
+                  {
+                    label: 'Người dùng hoạt động',
+                    value: quickStats.activeUsers.toLocaleString('vi-VN'),
+                    pct: Math.min(
+                      (quickStats.activeUsers / (dashboardStats?.totalUsers || 1)) * 100,
+                      100
+                    ),
+                    color: '#16A34A',
+                  },
+                  {
+                    label: 'Tài liệu được tạo',
+                    value: quickStats.documentsCreated.toLocaleString('vi-VN'),
+                    pct: 100,
+                    color: '#9333EA',
+                  },
+                  ...(quickStats.satisfactionRate === -1
+                    ? [
+                        {
+                          label: 'Tỷ lệ hài lòng',
+                          value: 'Chưa có dữ liệu',
+                          pct: 0,
+                          color: '#D97706',
+                        },
+                      ]
+                    : [
+                        {
+                          label: 'Tỷ lệ hài lòng',
+                          value: `${quickStats.satisfactionRate.toFixed(1)}%`,
+                          pct: Math.min(quickStats.satisfactionRate, 100),
+                          color: '#D97706',
+                        },
+                      ]),
+                ].map((item) => (
+                  <div key={item.label}>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[13px] text-[#6B7280]">{item.label}</span>
+                      <span className="text-[13px] font-semibold text-[#0D0F1A]">{item.value}</span>
                     </div>
-                  ) : (
-                    <>
-                      <div className="quick-stat-value">
-                        {quickStats.satisfactionRate.toFixed(1)}%
-                      </div>
-                      <div className="quick-stat-bar">
-                        <div
-                          className="quick-stat-fill"
-                          style={{
-                            width: `${Math.min(quickStats.satisfactionRate, 100)}%`,
-                            background: '#fbbf24',
-                          }}
-                        ></div>
-                      </div>
-                    </>
-                  )}
-                </div>
+                    <div className="h-1.5 bg-[#F1F3F8] rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{ width: `${item.pct}%`, backgroundColor: item.color }}
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
         </div>
 
         {/* System Status */}
-        <div className="dashboard-card">
-          <div className="card-header">
-            <h2 className="card-title">Trạng thái hệ thống</h2>
+        <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.08)] overflow-hidden">
+          <div className="px-5 py-4 border-b border-[#E5E7EB]">
+            <h2 className="text-[16px] font-semibold text-[#0D0F1A]">Trạng thái hệ thống</h2>
           </div>
           {renderSystemStatus()}
         </div>
