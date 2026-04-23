@@ -33,21 +33,20 @@ export type QuestionGenerationMode = typeof QuestionGenerationMode[keyof typeof 
 export interface QuestionTemplateRequest {
     name: string;
     description?: string;
-    templateType?: QuestionType;
-    /** Simplified question content with {{param}} placeholders (new format). */
-    content?: string;
-    /** Legacy multi-language template map. Ignored if content is provided. */
-    templateText?: Record<string, unknown>;
-    parameters?: Record<string, unknown>;
-    answerFormula?: string;
+    templateType: QuestionType;
+    templateVariant?: string;
+    templateText: Record<string, unknown>;
+    parameters: Record<string, unknown>;
+    answerFormula: string;
     optionsGenerator?: Record<string, unknown>;
-    solution?: string;
     topic?: string;
+    constraints?: string[];
     cognitiveLevel: CognitiveLevel;
     tags: string[];
     isPublic?: boolean;
     questionBankId?: string | null;
     canonicalQuestionId?: string | null;
+    diagramTemplate?: DiagramValue;
 }
 
 export interface QuestionTemplateResponse {
@@ -57,15 +56,13 @@ export interface QuestionTemplateResponse {
     name: string;
     description?: string;
     templateType: QuestionType;
-    /** Simplified content with {{param}} placeholders (new format). */
-    content?: string;
-    /** Legacy multi-language template text (kept for backward compat). */
-    templateText?: Record<string, unknown>;
-    parameters?: Record<string, unknown>;
-    answerFormula?: string;
+    templateVariant?: string;
+    templateText: Record<string, unknown>;
+    parameters: Record<string, unknown>;
+    answerFormula: string;
     optionsGenerator?: Record<string, unknown>;
-    solution?: string;
     topic?: string;
+    constraints?: string[];
     cognitiveLevel: CognitiveLevel;
     tags: string[];
     isPublic?: boolean;
@@ -76,6 +73,7 @@ export interface QuestionTemplateResponse {
     updatedAt: string;
     questionBankId?: string | null;
     canonicalQuestionId?: string | null;
+    diagramTemplate?: DiagramValue;
 }
 
 export interface AIEnhancedQuestionResponse {
@@ -141,21 +139,6 @@ export interface TemplateImportResponse {
     confidenceScore?: number;
     warnings?: string[];
     analysisSuccessful?: boolean;
-}
-
-export interface ImportErrorDetail {
-    rowNumber?: number;
-    rowName?: string;
-    field?: string;
-    message?: string;
-}
-
-export interface TemplateBatchImportResponse {
-    totalRows: number;
-    successCount: number;
-    failedCount: number;
-    successfulTemplates: QuestionTemplateResponse[];
-    errors: ImportErrorDetail[];
 }
 
 export const QuestionDifficulty = {

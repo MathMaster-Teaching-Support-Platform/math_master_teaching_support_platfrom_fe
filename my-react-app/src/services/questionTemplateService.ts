@@ -5,7 +5,6 @@ import {
     type QuestionTemplateResponse,
     type TemplateTestResponse,
     type TemplateImportResponse,
-    type TemplateBatchImportResponse,
     type AIEnhancedQuestionResponse,
     type GenerateQuestionsRequest,
     type GeneratedQuestionsBatchResponse,
@@ -180,28 +179,6 @@ export const questionTemplateService = {
             headers: getAuthHeaders(),
         });
         return parseResponse<ApiResponse<QuestionTemplateResponse>>(response, 'Không thể lưu trữ template');
-    },
-
-    // Unpublish / revert to DRAFT
-    unpublishTemplate: async (id: string): Promise<ApiResponse<QuestionTemplateResponse>> => {
-        const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTION_TEMPLATE_UNPUBLISH(id)}`, {
-            method: 'PATCH',
-            headers: getAuthHeaders(),
-        });
-        return parseResponse<ApiResponse<QuestionTemplateResponse>>(response, 'Không thể bỏ xuất bản template');
-    },
-
-    // Import templates from Excel file (batch create)
-    importFromExcel: async (file: File): Promise<ApiResponse<TemplateBatchImportResponse>> => {
-        const token = AuthService.getToken();
-        const formData = new FormData();
-        formData.append('file', file);
-        const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTION_TEMPLATES_IMPORT}`, {
-            method: 'POST',
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
-            body: formData,
-        });
-        return parseResponse<ApiResponse<TemplateBatchImportResponse>>(response, 'Không thể import file Excel');
     },
 
     // Test Existing Template

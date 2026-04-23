@@ -282,8 +282,6 @@ export const API_ENDPOINTS = {
   QUESTION_TEMPLATE_TOGGLE_PUBLIC: (id: string) => `/question-templates/${id}/toggle-public`,
   QUESTION_TEMPLATE_PUBLISH: (id: string) => `/question-templates/${id}/publish`,
   QUESTION_TEMPLATE_ARCHIVE: (id: string) => `/question-templates/${id}/archive`,
-  QUESTION_TEMPLATE_UNPUBLISH: (id: string) => `/question-templates/${id}/unpublish`,
-  QUESTION_TEMPLATES_IMPORT: '/question-templates/import',
   QUESTION_TEMPLATE_TEST: (id: string) => `/question-templates/${id}/test`,
   QUESTION_TEMPLATE_GENERATE_QUESTIONS: (id: string) =>
     `/question-templates/${id}/generate-questions`,
