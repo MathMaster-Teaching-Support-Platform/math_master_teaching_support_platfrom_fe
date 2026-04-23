@@ -5,7 +5,7 @@ export interface ApiResponse<T> {
 }
 
 // ── Enums (confirmed by BE 2026-04-17) ──────────────────────────────────────
-export type TransactionType = 'DEPOSIT' | 'WITHDRAWAL' | 'PAYMENT' | 'REFUND';
+export type TransactionType = 'DEPOSIT' | 'WITHDRAWAL' | 'PAYMENT';
 export type TransactionStatus = 'PENDING' | 'PROCESSING' | 'SUCCESS' | 'FAILED' | 'CANCELLED';
 
 export interface WalletSummary {
