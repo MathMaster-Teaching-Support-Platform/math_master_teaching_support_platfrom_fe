@@ -9,10 +9,6 @@ import type {
   MarketplaceTopCourse,
   MarketplaceTopInstructor,
 } from '../../services/admin-financial.service';
-import type {
-  MarketplaceTopCourse,
-  MarketplaceTopInstructor,
-} from '../../services/admin-financial.service';
 import './MarketplaceAnalytics.css';
 
 const MarketplaceAnalytics: React.FC = () => {
