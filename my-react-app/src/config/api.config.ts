@@ -195,6 +195,7 @@ export const API_ENDPOINTS = {
   LESSON_SLIDES_GENERATE_CONTENT: '/lesson-slides/generate-content',
   LESSON_SLIDES_GENERATE_PPTX_DIRECT: '/lesson-slides/generate-pptx',
   LESSON_SLIDES_GENERATE_PPTX: '/lesson-slides/generate-pptx-from-json',
+  LESSON_SLIDES_RENDER_SLIDE_PREVIEW: '/lesson-slides/render-slide-preview',
   LESSON_SLIDES_GENERATED: '/lesson-slides/generated',
   LESSON_SLIDES_GENERATED_ITEM: (generatedFileId: string) =>
     `/lesson-slides/generated/${generatedFileId}`,

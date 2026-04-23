@@ -41,6 +41,14 @@ const getTemplatePreviewUrl = (previewImage?: string | null): string | null => {
   return `${API_BASE_URL}${normalizedPath}`;
 };
 
+const resolveSlidePreviewImageUrl = (previewImageUrl?: string | null): string | null => {
+  if (!previewImageUrl) return null;
+  if (/^https?:\/\//i.test(previewImageUrl)) return previewImageUrl;
+
+  const normalizedPath = previewImageUrl.startsWith('/') ? previewImageUrl : `/${previewImageUrl}`;
+  return `${API_BASE_URL}${normalizedPath}`;
+};
+
 const normalizeVietnameseHeading = (heading?: string | null): string => {
   const value = (heading || '').trim();
   if (!value) return '';
@@ -259,6 +267,9 @@ const AISlideGenerator: React.FC = () => {
   const [generated, setGenerated] = useState<GenerateSlideContentResult | null>(null);
   const [editableSlides, setEditableSlides] = useState<LessonSlideItem[]>([]);
   const [activePreviewIndex, setActivePreviewIndex] = useState(0);
+  const [renderingPreviewSlideNumber, setRenderingPreviewSlideNumber] = useState<number | null>(
+    null
+  );
   const [preparedPptxBlob, setPreparedPptxBlob] = useState<Blob | null>(null);
   const [preparedPptxFilename, setPreparedPptxFilename] = useState('lesson-slides.pptx');
   const [newSlideName, setNewSlideName] = useState('');
@@ -316,6 +327,9 @@ const AISlideGenerator: React.FC = () => {
   const [metadataThumbnailFile, setMetadataThumbnailFile] = useState<File | null>(null);
   const [metadataIsPublic, setMetadataIsPublic] = useState(false);
   const [updatingMetadata, setUpdatingMetadata] = useState(false);
+  const previewRenderRequestSeqRef = useRef(0);
+  const previewRenderTimerRef = useRef<number | null>(null);
+  const lastAutoPreviewSignatureRef = useRef('');
 
   const selectedLesson = useMemo(
     () => lessons.find((lesson) => lesson.id === lessonId),
@@ -330,6 +344,11 @@ const AISlideGenerator: React.FC = () => {
   const currentPreviewSlide = useMemo(
     () => editableSlides[activePreviewIndex] || null,
     [editableSlides, activePreviewIndex]
+  );
+
+  const currentPreviewImageUrl = useMemo(
+    () => resolveSlidePreviewImageUrl(currentPreviewSlide?.previewImageUrl),
+    [currentPreviewSlide?.previewImageUrl]
   );
 
   const selectedGeneratedFile = useMemo(
@@ -1189,6 +1208,111 @@ const AISlideGenerator: React.FC = () => {
     );
   };
 
+  const renderSlidePreview = useCallback(
+    async (slideIndex: number, slideSnapshot?: LessonSlideItem, options?: { silent?: boolean }) => {
+      const targetSlide = slideSnapshot;
+      if (!targetSlide || !lessonId || !templateId) return;
+
+      const requestSeq = ++previewRenderRequestSeqRef.current;
+      setRenderingPreviewSlideNumber(targetSlide.slideNumber);
+
+      try {
+        const previewImageUrl = await LessonSlideService.renderSlidePreview({
+          lessonId,
+          templateId,
+          outputFormat: resolvedOutputFormat,
+          equationMode: resolvedOutputFormat === 'LATEX' ? undefined : equationMode,
+          slideNumber: targetSlide.slideNumber,
+          slide: {
+            ...targetSlide,
+            heading: targetSlide.heading || '',
+            content: targetSlide.content || '',
+          },
+          slides: [
+            {
+              ...targetSlide,
+              heading: targetSlide.heading || '',
+              content: targetSlide.content || '',
+            },
+          ],
+          // Hint backend to expand LaTeX rendered area to reduce clipping.
+          renderHints: {
+            expandWidthPt: 72,
+            expandHeightPt: 36,
+          },
+        });
+
+        if (requestSeq !== previewRenderRequestSeqRef.current) return;
+
+        setEditableSlides((prev) =>
+          prev.map((slide, index) =>
+            slide.slideNumber === targetSlide.slideNumber || index === slideIndex
+              ? {
+                  ...slide,
+                  previewImageUrl,
+                }
+              : slide
+          )
+        );
+      } catch (err) {
+        if (!options?.silent) {
+          setError(err instanceof Error ? err.message : 'Không thể cập nhật ảnh preview cho slide');
+        }
+      } finally {
+        if (requestSeq === previewRenderRequestSeqRef.current) {
+          setRenderingPreviewSlideNumber(null);
+        }
+      }
+    },
+    [equationMode, lessonId, resolvedOutputFormat, templateId]
+  );
+
+  useEffect(() => {
+    if (activeWizardStep !== 4 || !currentPreviewSlide || !lessonId || !templateId) {
+      lastAutoPreviewSignatureRef.current = '';
+      return;
+    }
+
+    const nextSignature = [
+      activePreviewIndex,
+      currentPreviewSlide.slideNumber,
+      currentPreviewSlide.heading,
+      currentPreviewSlide.content,
+      lessonId,
+      templateId,
+      resolvedOutputFormat,
+    ].join('::');
+
+    if (lastAutoPreviewSignatureRef.current === nextSignature) {
+      return;
+    }
+
+    lastAutoPreviewSignatureRef.current = nextSignature;
+
+    if (previewRenderTimerRef.current) {
+      window.clearTimeout(previewRenderTimerRef.current);
+    }
+
+    previewRenderTimerRef.current = window.setTimeout(() => {
+      void renderSlidePreview(activePreviewIndex, currentPreviewSlide, { silent: true });
+    }, 700);
+
+    return () => {
+      if (previewRenderTimerRef.current) {
+        window.clearTimeout(previewRenderTimerRef.current);
+        previewRenderTimerRef.current = null;
+      }
+    };
+  }, [
+    activePreviewIndex,
+    activeWizardStep,
+    currentPreviewSlide,
+    lessonId,
+    renderSlidePreview,
+    resolvedOutputFormat,
+    templateId,
+  ]);
+
   const handlePreparePptx = async () => {
     setError('');
     setSuccess('');
@@ -2021,23 +2145,45 @@ const AISlideGenerator: React.FC = () => {
                   >
                     Slide sau
                   </button>
+                  <button
+                    className="btn btn-outline"
+                    onClick={() => void renderSlidePreview(activePreviewIndex, currentPreviewSlide)}
+                    disabled={Boolean(renderingPreviewSlideNumber)}
+                  >
+                    {renderingPreviewSlideNumber === currentPreviewSlide.slideNumber
+                      ? 'Đang cập nhật ảnh...'
+                      : 'Làm mới preview ảnh'}
+                  </button>
                 </div>
 
                 <article className="ai-slide-preview-canvas">
-                  <div className="ai-slide-preview-heading" role="heading" aria-level={3}>
-                    {renderSlideText(
-                      currentPreviewSlide.heading || 'Chưa có tiêu đề',
-                      resolvedOutputFormat,
-                      `heading-${currentPreviewSlide.slideNumber}`
-                    )}
-                  </div>
-                  <div className="ai-slide-preview-content">
-                    {renderSlideText(
-                      currentPreviewSlide.content || 'Chưa có nội dung',
-                      resolvedOutputFormat,
-                      `content-${currentPreviewSlide.slideNumber}`
-                    )}
-                  </div>
+                  {currentPreviewImageUrl ? (
+                    <img
+                      src={currentPreviewImageUrl}
+                      alt={`Preview slide ${currentPreviewSlide.slideNumber}`}
+                      className="ai-slide-preview-rendered-image"
+                    />
+                  ) : (
+                    <>
+                      <div className="ai-slide-preview-heading" role="heading" aria-level={3}>
+                        {renderSlideText(
+                          currentPreviewSlide.heading || 'Chưa có tiêu đề',
+                          resolvedOutputFormat,
+                          `heading-${currentPreviewSlide.slideNumber}`
+                        )}
+                      </div>
+                      <div className="ai-slide-preview-content">
+                        {renderSlideText(
+                          currentPreviewSlide.content || 'Chưa có nội dung',
+                          resolvedOutputFormat,
+                          `content-${currentPreviewSlide.slideNumber}`
+                        )}
+                      </div>
+                    </>
+                  )}
+                  {renderingPreviewSlideNumber === currentPreviewSlide.slideNumber && (
+                    <span className="ai-slide-preview-loading">Đang render lại preview...</span>
+                  )}
                   <span className="ai-slide-preview-tag">{currentPreviewSlide.slideType}</span>
                 </article>
 

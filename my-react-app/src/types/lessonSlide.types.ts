@@ -140,6 +140,28 @@ export interface GeneratePptxRequest {
   slides: LessonSlideItem[];
 }
 
+export interface RenderSlidePreviewRequest {
+  lessonId: string;
+  templateId: string;
+  outputFormat?: LessonSlideOutputFormat;
+  equationMode?: LessonSlideEquationMode;
+  slideNumber?: number;
+  slide: LessonSlideItem;
+  slides?: LessonSlideItem[];
+  renderHints?: {
+    expandWidthPt?: number;
+    expandHeightPt?: number;
+  };
+}
+
+export interface RenderSlidePreviewResult {
+  previewImageUrl?: string;
+  preSignedUrl?: string;
+  presignedUrl?: string;
+  previewUrl?: string;
+  url?: string;
+}
+
 export interface ApiEnvelope<T> {
   code: number;
   message?: string;

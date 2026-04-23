@@ -6,6 +6,8 @@ import type {
   ChapterBySubject,
   GeneratedFileListResult,
   GeneratePptxRequest,
+  RenderSlidePreviewRequest,
+  RenderSlidePreviewResult,
   GenerateSlideContentRequest,
   GenerateSlideContentResult,
   PageResult,
@@ -323,6 +325,55 @@ export class LessonSlideService {
       blob: await response.blob(),
       filename: this.getFilenameFromDisposition(response.headers.get('content-disposition')),
     };
+  }
+
+  static async renderSlidePreview(payload: RenderSlidePreviewRequest): Promise<string> {
+    const headers = await this.getAuthHeaders();
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.LESSON_SLIDES_RENDER_SLIDE_PREVIEW}`,
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(payload),
+      }
+    );
+
+    if (!response.ok) {
+      const parsedError = await this.parseApiError(response, 'Failed to render slide preview');
+      throw this.buildApiError(parsedError.message, parsedError.code);
+    }
+
+    const payloadResponse = (await response.json()) as
+      | ApiEnvelope<string | RenderSlidePreviewResult>
+      | (RenderSlidePreviewResult & { result?: string | RenderSlidePreviewResult });
+
+    const result =
+      typeof payloadResponse === 'object' && payloadResponse && 'result' in payloadResponse
+        ? payloadResponse.result
+        : payloadResponse;
+
+    const url =
+      (typeof result === 'string' ? result : undefined) ||
+      (typeof result === 'object' && result
+        ? result.previewImageUrl ||
+          result.preSignedUrl ||
+          result.presignedUrl ||
+          result.previewUrl ||
+          result.url
+        : undefined) ||
+      (typeof payloadResponse === 'object' && payloadResponse
+        ? (payloadResponse as RenderSlidePreviewResult).previewImageUrl ||
+          (payloadResponse as RenderSlidePreviewResult).preSignedUrl ||
+          (payloadResponse as RenderSlidePreviewResult).presignedUrl ||
+          (payloadResponse as RenderSlidePreviewResult).previewUrl ||
+          (payloadResponse as RenderSlidePreviewResult).url
+        : undefined);
+
+    if (!url) {
+      throw this.buildApiError('Preview image URL is missing in render response');
+    }
+
+    return url;
   }
 
   static async getGeneratedFiles(
