@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import {
   adminFinancialService,
-  MarketplaceTopCourse,
-  MarketplaceTopInstructor,
   formatCurrency,
   formatCompactNumber,
+} from '../../services/admin-financial.service';
+import type {
+  MarketplaceTopCourse,
+  MarketplaceTopInstructor,
 } from '../../services/admin-financial.service';
 import './MarketplaceAnalytics.css';
 

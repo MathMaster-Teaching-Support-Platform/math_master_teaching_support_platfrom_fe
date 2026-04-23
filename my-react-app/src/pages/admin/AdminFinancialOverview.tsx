@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import {
   adminFinancialService,
-  AdminFinancialOverview as OverviewData,
   formatCurrency,
   formatTrend,
   getTrendColor,
 } from '../../services/admin-financial.service';
+import type { AdminFinancialOverview as OverviewData } from '../../services/admin-financial.service';
 import './AdminFinancialOverview.css';
 
 const AdminFinancialOverview: React.FC = () => {

@@ -1,5 +1,24 @@
-import api from './api';
-import { API_ENDPOINTS } from '../config/api.config';
+import { API_BASE_URL, API_ENDPOINTS } from '../config/api.config';
+import { AuthService } from './api/auth.service';
+
+const getAuthHeaders = (): Record<string, string> => {
+  const token = AuthService.getToken();
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+};
+
+async function apiFetch<T>(path: string, params?: Record<string, string | number>): Promise<T> {
+  const url = new URL(`${API_BASE_URL}${path}`);
+  if (params) {
+    Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, String(v)));
+  }
+  const res = await fetch(url.toString(), { headers: getAuthHeaders() });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const json = await res.json();
+  return json.result ?? json;
+}
 
 // ==================== TYPE DEFINITIONS ====================
 
@@ -91,51 +110,25 @@ export interface SystemHealth {
 // ==================== API CLIENT ====================
 
 export const adminFinancialService = {
-  /**
-   * Get financial overview for admin dashboard
-   */
   getFinancialOverview: async (month?: string): Promise<AdminFinancialOverview> => {
-    const params = month ? { month } : {};
-    const response = await api.get(API_ENDPOINTS.ADMIN.FINANCIAL_OVERVIEW, { params });
-    return response.data.result;
+    const params = month ? { month } : undefined;
+    return apiFetch<AdminFinancialOverview>(API_ENDPOINTS.ADMIN.FINANCIAL_OVERVIEW, params);
   },
 
-  /**
-   * Get revenue breakdown by source
-   */
   getRevenueBreakdown: async (period: string = '30d'): Promise<RevenueBreakdown> => {
-    const response = await api.get(API_ENDPOINTS.ADMIN.REVENUE_BREAKDOWN, {
-      params: { period },
-    });
-    return response.data.result;
+    return apiFetch<RevenueBreakdown>(API_ENDPOINTS.ADMIN.REVENUE_BREAKDOWN, { period });
   },
 
-  /**
-   * Get top selling courses
-   */
   getTopCourses: async (limit: number = 10): Promise<MarketplaceTopCourse[]> => {
-    const response = await api.get(API_ENDPOINTS.ADMIN.TOP_COURSES, {
-      params: { limit },
-    });
-    return response.data.result;
+    return apiFetch<MarketplaceTopCourse[]>(API_ENDPOINTS.ADMIN.TOP_COURSES, { limit });
   },
 
-  /**
-   * Get top earning instructors
-   */
   getTopInstructors: async (limit: number = 10): Promise<MarketplaceTopInstructor[]> => {
-    const response = await api.get(API_ENDPOINTS.ADMIN.TOP_INSTRUCTORS, {
-      params: { limit },
-    });
-    return response.data.result;
+    return apiFetch<MarketplaceTopInstructor[]>(API_ENDPOINTS.ADMIN.TOP_INSTRUCTORS, { limit });
   },
 
-  /**
-   * Get financial system health
-   */
   getSystemHealth: async (): Promise<SystemHealth> => {
-    const response = await api.get(API_ENDPOINTS.ADMIN.SYSTEM_HEALTH);
-    return response.data.result;
+    return apiFetch<SystemHealth>(API_ENDPOINTS.ADMIN.SYSTEM_HEALTH);
   },
 };
 

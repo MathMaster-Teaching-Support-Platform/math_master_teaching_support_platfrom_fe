@@ -58,7 +58,7 @@ const TeacherEarningsDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <DashboardLayout role="teacher" user={{ name: 'Teacher', role: 'teacher' }}>
+      <DashboardLayout role="teacher" user={{ name: 'Teacher', avatar: '', role: 'teacher' }}>
         <div className="teacher-earnings-dashboard">
           <div className="loading-state">
             <div className="spinner"></div>
@@ -71,7 +71,7 @@ const TeacherEarningsDashboard: React.FC = () => {
 
   if (error) {
     return (
-      <DashboardLayout role="teacher" user={{ name: 'Teacher', role: 'teacher' }}>
+      <DashboardLayout role="teacher" user={{ name: 'Teacher', avatar: '', role: 'teacher' }}>
         <div className="teacher-earnings-dashboard">
           <div className="error-state">
             <p className="error-message">❌ {error}</p>
@@ -85,7 +85,7 @@ const TeacherEarningsDashboard: React.FC = () => {
   }
 
   return (
-    <DashboardLayout role="teacher" user={{ name: 'Teacher', role: 'teacher' }}>
+    <DashboardLayout role="teacher" user={{ name: 'Teacher', avatar: '', role: 'teacher' }}>
       <div className="teacher-earnings-dashboard">
         {/* Header */}
         <header className="dashboard-header">
