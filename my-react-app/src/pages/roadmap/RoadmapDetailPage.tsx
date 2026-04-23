@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { Fragment, useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Fragment, useEffect, useRef, useState } from 'react';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockStudent } from '../../data/mockData';
 import { useCoursePreview, useEnroll, useMyEnrollments } from '../../hooks/useCourses';
@@ -10,7 +10,12 @@ import {
   useSubmitRoadmapFeedback,
   useTopicMaterials,
 } from '../../hooks/useRoadmaps';
-import type { RoadmapTopic, RoadmapTopicCourse, TopicMaterial } from '../../types';
+import type {
+  RoadmapTopic,
+  RoadmapTopicCourse,
+  RoadmapEntryTestResultResponse,
+  TopicMaterial,
+} from '../../types';
 import './roadmap-detail-page.css';
 
 /* ─────────────────────────────────────────────────────
@@ -29,17 +34,6 @@ function getCourseButtonLabel(isPending: boolean, isEnrolled: boolean) {
 function shouldNavigateToCourseOnEnrollError(message: string) {
   const n = message.toLowerCase();
   return n.includes('already') || n.includes('đã đăng ký');
-}
-
-function getTopicStatus(
-  topic: { courses?: Array<{ id: string; progress?: number }> },
-  enrolledIds: Set<string>
-): 'done' | 'progress' | 'none' {
-  const courses = topic.courses ?? [];
-  if (courses.length === 0) return 'none';
-  if (courses.every((c) => (c.progress ?? 0) >= 100)) return 'done';
-  if (courses.some((c) => enrolledIds.has(c.id) || (c.progress ?? 0) > 0)) return 'progress';
-  return 'none';
 }
 
 function materialTypeLabel(t: string) {
@@ -261,6 +255,7 @@ function CoursePanel({ course, topic, isPending, isEnrolled, onClose, onEnroll }
 export default function RoadmapDetailPage() {
   const { roadmapId = '' } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const { data, isLoading, error } = useRoadmapDetail(roadmapId);
   const myEnrollmentsQuery = useMyEnrollments();
@@ -279,6 +274,7 @@ export default function RoadmapDetailPage() {
     type: 'success' | 'error';
     text: string;
   } | null>(null);
+  const currentTopicNodeRef = useRef<HTMLButtonElement | null>(null);
 
   const roadmap = data?.result;
   const myFeedback = myFeedbackQuery.data?.result ?? null;
@@ -286,6 +282,35 @@ export default function RoadmapDetailPage() {
   const sortedTopics = (roadmap?.topics ?? [])
     .slice()
     .sort((a, b) => a.sequenceOrder - b.sequenceOrder);
+
+  const deriveCurrentTopicIndexFromMark = () => {
+    if (!sortedTopics.length) return 0;
+    const score = Number(roadmap?.studentBestScore ?? NaN);
+    if (!Number.isFinite(score)) return Number(roadmap?.completedTopicsCount ?? 0);
+
+    for (let i = 0; i < sortedTopics.length; i += 1) {
+      const mark = Number(sortedTopics[i].mark ?? NaN);
+      if (Number.isFinite(mark) && score <= mark) {
+        return i;
+      }
+    }
+
+    return sortedTopics.length - 1;
+  };
+
+  const rawCurrentTopicIndex = Number(
+    roadmap?.progress?.current_topic_index ?? deriveCurrentTopicIndexFromMark()
+  );
+  const currentTopicIndex = Number.isFinite(rawCurrentTopicIndex) ? Math.max(0, rawCurrentTopicIndex) : 0;
+  const boundedCurrentTopicIndex = Math.min(currentTopicIndex, sortedTopics.length);
+  const completedByLevel = Math.min(boundedCurrentTopicIndex, sortedTopics.length);
+  const hasCurrentTopic = boundedCurrentTopicIndex < sortedTopics.length;
+  const currentLevelLabel = hasCurrentTopic
+    ? `Chủ đề ${boundedCurrentTopicIndex + 1}`
+    : `Đã hoàn thành ${sortedTopics.length}/${sortedTopics.length} chủ đề`;
+
+  const entryTestResult = (location.state as { entryTestResult?: RoadmapEntryTestResultResponse } | null)
+    ?.entryTestResult;
 
   const activeCourseIdSet = new Set(
     (myEnrollmentsQuery.data?.result ?? [])
@@ -299,6 +324,15 @@ export default function RoadmapDetailPage() {
     setFeedbackRating(myFeedback.rating);
     setFeedbackContent(myFeedback.content ?? '');
   }, [myFeedback]);
+
+  useEffect(() => {
+    if (!currentTopicNodeRef.current) return;
+    currentTopicNodeRef.current.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+      inline: 'nearest',
+    });
+  }, [boundedCurrentTopicIndex, roadmap?.id]);
 
   // Find currently selected topic (to pass to panel)
   const selectedTopic = selectedTopicId
@@ -436,11 +470,32 @@ export default function RoadmapDetailPage() {
             <div className="rdp-map-title">
               <h2>Lộ trình học tập</h2>
               <p>Nhấn vào từng chủ đề để xem khóa học</p>
+              <div className="rdp-level-banner">
+                <span className="rdp-level-banner__level">🎯 Mức hiện tại: {currentLevelLabel}</span>
+                <span className="rdp-level-banner__progress">
+                  Tiến độ: {completedByLevel} / {sortedTopics.length} chủ đề hoàn thành
+                </span>
+                {roadmap.entryTest && entryTestResult && (
+                  <span className="rdp-level-banner__entry">
+                    Điểm đầu vào đã đặt mức bắt đầu của bạn.
+                  </span>
+                )}
+                {roadmap.entryTest && roadmap.entryTest.studentStatus !== 'COMPLETED' && (
+                  <Link className="rdp-level-banner__entry-link" to={`/roadmaps/${roadmapId}/entry-test`}>
+                    Làm bài test đầu vào để xác định mức khởi điểm →
+                  </Link>
+                )}
+              </div>
             </div>
 
             <div className="rdp-tree">
               {sortedTopics.map((topic, topicIdx) => {
-                const topicStatus = getTopicStatus(topic, activeCourseIdSet);
+                const topicStatus: 'done' | 'progress' | 'none' =
+                  topicIdx < boundedCurrentTopicIndex || topic.status === 'COMPLETED'
+                    ? 'done'
+                    : topicIdx === boundedCurrentTopicIndex && boundedCurrentTopicIndex < sortedTopics.length
+                      ? 'progress'
+                      : 'none';
                 const isTopicActive = selectedTopicId === topic.id;
                 const courses = topic.courses ?? [];
 
@@ -458,6 +513,11 @@ export default function RoadmapDetailPage() {
                       <div className="rdp-topic-area">
                         <button
                           type="button"
+                          ref={(el) => {
+                            if (topicIdx === boundedCurrentTopicIndex && boundedCurrentTopicIndex < sortedTopics.length) {
+                              currentTopicNodeRef.current = el;
+                            }
+                          }}
                           className={[
                             'rdp-topic-node',
                             `rdp-topic-node--${topicStatus}`,

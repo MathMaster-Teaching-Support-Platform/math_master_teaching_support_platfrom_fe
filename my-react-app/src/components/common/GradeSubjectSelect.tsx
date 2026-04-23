@@ -23,8 +23,12 @@ export default function GradeSubjectSelect({
   required = false,
   className = '',
 }: GradeSubjectSelectProps) {
-  const { data: gradesData, isLoading: isLoadingGrades } = useGrades();
-  const { data: subjectsData, isLoading: isLoadingSubjects } = useSubjectsByGrade(gradeLevel, !!gradeLevel);
+  const { data: gradesData, isLoading: isLoadingGrades, isError: isGradesError } = useGrades();
+  const {
+    data: subjectsData,
+    isLoading: isLoadingSubjects,
+    isError: isSubjectsError,
+  } = useSubjectsByGrade(gradeLevel, !!gradeLevel);
 
   const grades = gradesData?.result ?? [];
   const subjects = subjectsData?.result ?? [];
@@ -75,6 +79,7 @@ export default function GradeSubjectSelect({
           ))}
         </select>
         {isLoadingGrades && <span className="grade-subject-loading">Đang tải...</span>}
+        {isGradesError && <span className="grade-subject-loading">Không tải được khối lớp</span>}
       </div>
 
       {/* Subject Select */}
@@ -116,6 +121,9 @@ export default function GradeSubjectSelect({
           <span className="grade-subject-hint">
             {subjects.length} môn học có sẵn
           </span>
+        )}
+        {isSubjectsError && (
+          <span className="grade-subject-loading">Không tải được môn học</span>
         )}
       </div>
     </div>

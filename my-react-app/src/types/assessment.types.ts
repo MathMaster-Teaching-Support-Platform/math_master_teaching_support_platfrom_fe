@@ -128,6 +128,14 @@ export interface DistributeAssessmentPointsResponse {
     strategy: DistributePointsStrategy;
 }
 
+export interface PagedDataResponse<T> {
+    data: T[];
+    page: number;
+    size: number;
+    totalElements: number;
+    totalPages: number;
+}
+
 // ─── Response DTOs ────────────────────────────────────────────────────────────
 export interface AssessmentResponse {
     id: string;

@@ -2145,15 +2145,6 @@ const AISlideGenerator: React.FC = () => {
                   >
                     Slide sau
                   </button>
-                  <button
-                    className="btn btn-outline"
-                    onClick={() => void renderSlidePreview(activePreviewIndex, currentPreviewSlide)}
-                    disabled={Boolean(renderingPreviewSlideNumber)}
-                  >
-                    {renderingPreviewSlideNumber === currentPreviewSlide.slideNumber
-                      ? 'Đang cập nhật ảnh...'
-                      : 'Làm mới preview ảnh'}
-                  </button>
                 </div>
 
                 <article className="ai-slide-preview-canvas">

@@ -11,7 +11,7 @@ export interface BatchTopicItem {
   difficulty: 'EASY' | 'MEDIUM' | 'HARD';
   courseIds?: string[]; // Multiple courses (all equal, no primary/additional distinction)
   mark?: number;
-  status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'LOCKED' | 'INACTIVE';
+  status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'INACTIVE';
 }
 
 export interface BatchTopicRequest {

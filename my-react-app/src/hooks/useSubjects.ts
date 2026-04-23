@@ -15,9 +15,15 @@ export function useSubjects() {
 }
 
 export function useSubjectsByGrade(gradeLevel: string, enabled = true) {
+  const normalizedGradeLevel = gradeLevel?.trim?.() ?? '';
+  const hasValidGradeLevel =
+    normalizedGradeLevel.length > 0 &&
+    normalizedGradeLevel.toLowerCase() !== 'undefined' &&
+    normalizedGradeLevel.toLowerCase() !== 'null';
+
   return useQuery({
-    queryKey: subjectKeys.byGrade(gradeLevel),
-    queryFn: () => SubjectService.getSubjectsByGrade(gradeLevel),
-    enabled: enabled && !!gradeLevel,
+    queryKey: subjectKeys.byGrade(normalizedGradeLevel),
+    queryFn: () => SubjectService.getSubjectsByGrade(normalizedGradeLevel),
+    enabled: enabled && hasValidGradeLevel,
   });
 }

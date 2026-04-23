@@ -11,6 +11,12 @@ import './AdminCourseReviewsPage.css';
 
 const PAGE_SIZE = 10;
 
+// Provider label mapping
+const PROVIDER_LABELS: Record<string, string> = {
+  MINISTRY: 'Bộ GD&ĐT',
+  CUSTOM: 'Tùy chỉnh',
+};
+
 const AdminCourseReviewsPage: React.FC = () => {
   const { showToast } = useToast();
   const [page, setPage] = React.useState(0);
@@ -113,7 +119,7 @@ const AdminCourseReviewsPage: React.FC = () => {
                         </div>
                       </td>
                       <td>{course.teacherName ?? '—'}</td>
-                      <td>{course.provider}</td>
+                      <td>{PROVIDER_LABELS[course.provider] || course.provider}</td>
                       <td>{new Date(course.createdAt).toLocaleDateString('vi-VN')}</td>
                       <td>
                         <div className="acr-actions">

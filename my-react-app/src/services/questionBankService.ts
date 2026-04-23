@@ -71,22 +71,28 @@ export const questionBankService = {
   },
 
   searchQuestionBanks: (params: SearchQuestionBanksParams) => {
+    const isValidParam = (value: string | undefined) => {
+      if (!value) return false;
+      const normalized = value.trim().toLowerCase();
+      return normalized !== '' && normalized !== 'undefined' && normalized !== 'null';
+    };
+
     const queryParams = new URLSearchParams();
 
     if (params.isPublic !== undefined) {
       queryParams.append('isPublic', String(params.isPublic));
     }
-    if (params.searchTerm) {
-      queryParams.append('searchTerm', params.searchTerm);
+    if (isValidParam(params.searchTerm)) {
+      queryParams.append('searchTerm', params.searchTerm!);
     }
-    if (params.chapterId) {
-      queryParams.append('chapterId', params.chapterId);
+    if (isValidParam(params.chapterId)) {
+      queryParams.append('chapterId', params.chapterId!);
     }
-    if (params.subjectId) {
-      queryParams.append('subjectId', params.subjectId);
+    if (isValidParam(params.subjectId)) {
+      queryParams.append('subjectId', params.subjectId!);
     }
-    if (params.gradeLevel) {
-      queryParams.append('gradeLevel', params.gradeLevel);
+    if (isValidParam(params.gradeLevel)) {
+      queryParams.append('gradeLevel', params.gradeLevel!);
     }
     if (params.mineOnly !== undefined) {
       queryParams.append('mineOnly', String(params.mineOnly));

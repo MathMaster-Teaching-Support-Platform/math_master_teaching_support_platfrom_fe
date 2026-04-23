@@ -5,6 +5,7 @@ import type { ApiResponse } from '../../types/auth.types';
 export interface GradeResponse {
   id: string;
   level: number;
+  gradeLevel?: number;
   name: string;
   code?: string;
   description?: string;
@@ -55,6 +56,14 @@ export class GradeService {
       throw this.parseApiError(data, 'Failed to fetch grades');
     }
 
-    return data;
+    const normalizedResult = (data.result ?? []).map((grade) => ({
+      ...grade,
+      level: grade.level ?? grade.gradeLevel ?? 0,
+    }));
+
+    return {
+      ...data,
+      result: normalizedResult,
+    };
   }
 }

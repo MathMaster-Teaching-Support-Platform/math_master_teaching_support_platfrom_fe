@@ -1,18 +1,9 @@
-import {
-  ArrowLeft,
-  Eye,
-  EyeOff,
-  Link2,
-  Pencil,
-  RefreshCw,
-  Search,
-  Trash2,
-  Unlink2,
-} from 'lucide-react';
+
 import { useEffect, useMemo, useState } from 'react';
+import { ArrowLeft, Eye, EyeOff, Link2, Pencil, RefreshCw, Search, Trash2, Unlink2 } from 'lucide-react';
+import Pagination from '../../components/common/Pagination';
 import { useNavigate, useParams } from 'react-router-dom';
 import MathText from '../../components/common/MathText';
-import Pagination from '../../components/common/Pagination';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import {
   useBatchAssignQuestionsToBank,
@@ -105,10 +96,27 @@ export function QuestionBankDetailPage() {
 
   const bank = data?.result;
   const questions = questionsData?.result?.content ?? [];
-  const totalQuestionPages = questionsData?.result?.totalPages ?? 0;
-  const totalQuestionElements = questionsData?.result?.totalElements ?? 0;
+  const totalQuestionPages =
+    questionsData?.result?.totalPages ??
+    (questionsData?.result as { page?: { totalPages?: number } } | undefined)?.page
+      ?.totalPages ??
+    0;
+  const totalQuestionElements =
+    questionsData?.result?.totalElements ??
+    (questionsData?.result as { page?: { totalElements?: number } } | undefined)?.page
+      ?.totalElements ??
+    questions.length;
   const searchedQuestions = searchQuestionsData?.result?.content ?? [];
-  const totalSearchQuestionPages = searchQuestionsData?.result?.totalPages ?? 0;
+  const totalSearchQuestionPages =
+    searchQuestionsData?.result?.totalPages ??
+    (searchQuestionsData?.result as { page?: { totalPages?: number } } | undefined)?.page
+      ?.totalPages ??
+    0;
+  const totalSearchQuestionElements =
+    searchQuestionsData?.result?.totalElements ??
+    (searchQuestionsData?.result as { page?: { totalElements?: number } } | undefined)?.page
+      ?.totalElements ??
+    searchedQuestions.length;
 
   const filteredQuestions = useMemo(() => {
     if (!search.trim()) return questions;
@@ -440,7 +448,7 @@ export function QuestionBankDetailPage() {
                 <Pagination
                   page={questionSearchPage}
                   totalPages={totalSearchQuestionPages}
-                  totalElements={searchQuestionsData?.result?.totalElements ?? 0}
+                  totalElements={totalSearchQuestionElements}
                   pageSize={questionSearchSize}
                   onChange={setQuestionSearchPage}
                 />

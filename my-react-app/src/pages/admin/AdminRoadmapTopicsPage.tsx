@@ -41,6 +41,7 @@ interface TopicDraft {
   description: string;
   difficulty: TopicDifficulty;
   sequenceOrder: number;
+  mark: number;
   courseIds: string[]; // Multiple courses (no primary/additional distinction)
   status: TopicStatus;
   isDraft: boolean;
@@ -57,7 +58,9 @@ function makeNewDraft(order: number): TopicDraft {
   return {
     clientId: `draft-${Date.now()}-${Math.random()}`,
     title: '', description: '', difficulty: 'MEDIUM',
-    sequenceOrder: order, courseIds: [],
+    sequenceOrder: order,
+    mark: order,
+    courseIds: [],
     status: 'NOT_STARTED',
     isDraft: true, dirtyFields: [],
   };
@@ -267,7 +270,8 @@ export default function AdminRoadmapTopicsPage() {
       clientId: t.id, persistedId: t.id,
       title: t.title, description: t.description ?? '',
       difficulty: (t.difficulty ?? 'MEDIUM') as TopicDifficulty,
-      sequenceOrder: t.sequenceOrder, 
+      sequenceOrder: t.sequenceOrder,
+      mark: Number((t as any).mark ?? t.sequenceOrder ?? 1),
       courseIds: ((t as any).courses ?? []).map((c: any) => c.id), // Load courses from API response
       status: t.status as TopicStatus, isDraft: false, dirtyFields: [],
     }));
@@ -281,6 +285,32 @@ export default function AdminRoadmapTopicsPage() {
   }
 
   const activeTopic = topics.find((t) => t.clientId === activeId) ?? null;
+
+  const pointValidation = useMemo(() => {
+    if (topics.length === 0) {
+      return { valid: true, message: '' };
+    }
+
+    const sorted = [...topics].sort((a, b) => a.sequenceOrder - b.sequenceOrder);
+    let prev = -Infinity;
+    for (const topic of sorted) {
+      if (!Number.isFinite(topic.mark) || topic.mark <= 0) {
+        return {
+          valid: false,
+          message: `Điểm mốc của "${topic.title || `Chủ đề #${topic.sequenceOrder}`}" phải > 0.`,
+        };
+      }
+      if (topic.mark <= prev) {
+        return {
+          valid: false,
+          message: 'Điểm mốc phải tăng dần theo thứ tự chủ đề (point[i] > point[i-1]).',
+        };
+      }
+      prev = topic.mark;
+    }
+
+    return { valid: true, message: '' };
+  }, [topics]);
 
   function patchActive<K extends keyof TopicDraft>(field: K, value: TopicDraft[K], dirtyKey?: TopicFieldKey) {
     setTopics((prev) =>
@@ -323,6 +353,11 @@ export default function AdminRoadmapTopicsPage() {
       return;
     }
 
+    if (!pointValidation.valid) {
+      showToast('error', pointValidation.message);
+      return;
+    }
+
     setIsSavingAll(true);
     try {
       await batchSaveMutation.mutateAsync({
@@ -333,6 +368,7 @@ export default function AdminRoadmapTopicsPage() {
           description: t.description.trim() || undefined,
           sequenceOrder: index + 1, // Use array index for order
           difficulty: t.difficulty,
+          mark: t.mark,
           courseIds: t.courseIds.length > 0 ? t.courseIds : undefined,
           status: t.isDraft ? 'NOT_STARTED' : t.status,
         })),
@@ -410,10 +446,17 @@ export default function AdminRoadmapTopicsPage() {
           <div className="art-header__info">
             <h1 className="art-header__title">{roadmap?.name ?? 'Lộ trình'}</h1>
             <p className="art-header__sub">{roadmap?.subject} · {roadmap?.gradeLevel}</p>
+            {!pointValidation.valid && (
+              <p className="art-header__warning">⚠ {pointValidation.message}</p>
+            )}
           </div>
           <div className="art-header__actions">
             {pendingCount > 0 && (
-              <button className="art-btn art-btn--save-all" onClick={saveAll} disabled={isSavingAll}>
+              <button
+                className="art-btn art-btn--save-all"
+                onClick={saveAll}
+                disabled={isSavingAll || !pointValidation.valid}
+              >
                 {isSavingAll ? 'Đang lưu...' : `Lưu tất cả (${pendingCount})`}
               </button>
             )}
@@ -568,6 +611,17 @@ export default function AdminRoadmapTopicsPage() {
                       <div className="art-field">
                         <label className="art-label">Thứ tự</label>
                         <input className="art-input" type="number" min={1} value={activeTopic.sequenceOrder} onChange={(e) => patchActive('sequenceOrder', Number(e.target.value), 'sequenceOrder')} />
+                      </div>
+                      <div className="art-field">
+                        <label className="art-label">Điểm mốc *</label>
+                        <input
+                          className="art-input"
+                          type="number"
+                          min={1}
+                          step="0.1"
+                          value={activeTopic.mark}
+                          onChange={(e) => patchActive('mark', Number(e.target.value), 'mark')}
+                        />
                       </div>
                       {activeTopic.persistedId && (
                         <div className="art-field">
