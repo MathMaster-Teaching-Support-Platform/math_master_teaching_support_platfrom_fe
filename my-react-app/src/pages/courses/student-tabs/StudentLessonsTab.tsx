@@ -34,6 +34,29 @@ type LessonMaterial = {
   name?: string;
   url?: string;
   size?: number;
+  key?: string;
+};
+
+const toSafeMaterial = (raw: any): LessonMaterial | null => {
+  if (!raw || typeof raw !== 'object') return null;
+
+  const id = typeof raw.id === 'string' && raw.id.trim() ? raw.id.trim() : undefined;
+  const name =
+    (typeof raw.name === 'string' && raw.name.trim() ? raw.name.trim() : undefined) ||
+    (typeof raw.fileName === 'string' && raw.fileName.trim() ? raw.fileName.trim() : undefined);
+  const key = typeof raw.key === 'string' && raw.key.trim() ? raw.key.trim() : undefined;
+
+  const rawUrl = typeof raw.url === 'string' ? raw.url.trim() : '';
+  const hasAbsoluteUrl = /^https?:\/\//i.test(rawUrl);
+  const url = hasAbsoluteUrl ? rawUrl : undefined;
+
+  const size = typeof raw.size === 'number' && Number.isFinite(raw.size) ? raw.size : undefined;
+
+  if (!id && !url) {
+    return null;
+  }
+
+  return { id, name, key, url, size };
 };
 
 const parseLessonMaterials = (materials?: string | null): LessonMaterial[] => {
@@ -41,7 +64,8 @@ const parseLessonMaterials = (materials?: string | null): LessonMaterial[] => {
 
   try {
     const parsed = JSON.parse(materials);
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map(toSafeMaterial).filter((item): item is LessonMaterial => Boolean(item));
   } catch {
     return [];
   }
@@ -224,7 +248,9 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
         if (!downloaded) {
           triggerFileDownload(material.url, fallbackName);
         }
+        return;
       }
+      window.alert('Tài liệu hiện chưa sẵn sàng để tải. Vui lòng tải lại trang và thử lại.');
       return;
     }
 

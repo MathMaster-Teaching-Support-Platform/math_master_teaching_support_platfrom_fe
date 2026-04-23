@@ -162,6 +162,8 @@ export function useCourseLessons(courseId: string) {
     queryKey: courseKeys.lessons(courseId),
     queryFn: () => CourseService.getLessons(courseId),
     enabled: !!courseId,
+    staleTime: 0,
+    refetchOnMount: 'always',
   });
 }
 
@@ -253,7 +255,7 @@ export function useEnroll() {
     },
     onError: (err: unknown) => {
       const code = (err as any)?.response?.data?.code;
-      
+
       if (code === 1029) {
         showToast({
           type: 'error',
@@ -349,7 +351,12 @@ export function useAvailableAssessmentsForCourse(
   includeOutOfCourseLessons = false
 ) {
   return useQuery({
-    queryKey: [...courseKeys.detail(courseId), 'assessments', 'available', includeOutOfCourseLessons],
+    queryKey: [
+      ...courseKeys.detail(courseId),
+      'assessments',
+      'available',
+      includeOutOfCourseLessons,
+    ],
     queryFn: () =>
       CourseService.getAvailableAssessmentsForCourse(courseId, includeOutOfCourseLessons),
     enabled: !!courseId,
@@ -363,7 +370,9 @@ export function useAddAssessmentToCourse() {
       CourseService.addAssessmentToCourse(courseId, data),
     onSuccess: (_data, { courseId }) => {
       qc.invalidateQueries({ queryKey: [...courseKeys.detail(courseId), 'assessments'] });
-      qc.invalidateQueries({ queryKey: [...courseKeys.detail(courseId), 'assessments', 'available'] });
+      qc.invalidateQueries({
+        queryKey: [...courseKeys.detail(courseId), 'assessments', 'available'],
+      });
       qc.invalidateQueries({ queryKey: courseKeys.detail(courseId) });
     },
   });
@@ -393,7 +402,9 @@ export function useRemoveAssessmentFromCourse() {
       CourseService.removeAssessmentFromCourse(courseId, assessmentId),
     onSuccess: (_data, { courseId }) => {
       qc.invalidateQueries({ queryKey: [...courseKeys.detail(courseId), 'assessments'] });
-      qc.invalidateQueries({ queryKey: [...courseKeys.detail(courseId), 'assessments', 'available'] });
+      qc.invalidateQueries({
+        queryKey: [...courseKeys.detail(courseId), 'assessments', 'available'],
+      });
       qc.invalidateQueries({ queryKey: courseKeys.detail(courseId) });
     },
   });
@@ -417,9 +428,15 @@ export function useCustomCourseSections(courseId: string) {
 export function useCreateSection() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ courseId, data }: { courseId: string; data: CreateCustomCourseSectionRequest }) =>
-      CourseService.createSection(courseId, data),
-    onSuccess: (_data, { courseId }) => qc.invalidateQueries({ queryKey: sectionKeys.course(courseId) }),
+    mutationFn: ({
+      courseId,
+      data,
+    }: {
+      courseId: string;
+      data: CreateCustomCourseSectionRequest;
+    }) => CourseService.createSection(courseId, data),
+    onSuccess: (_data, { courseId }) =>
+      qc.invalidateQueries({ queryKey: sectionKeys.course(courseId) }),
   });
 }
 
@@ -435,7 +452,8 @@ export function useUpdateSection() {
       sectionId: string;
       data: UpdateCustomCourseSectionRequest;
     }) => CourseService.updateSection(courseId, sectionId, data),
-    onSuccess: (_data, { courseId }) => qc.invalidateQueries({ queryKey: sectionKeys.course(courseId) }),
+    onSuccess: (_data, { courseId }) =>
+      qc.invalidateQueries({ queryKey: sectionKeys.course(courseId) }),
   });
 }
 
@@ -444,7 +462,8 @@ export function useDeleteSection() {
   return useMutation({
     mutationFn: ({ courseId, sectionId }: { courseId: string; sectionId: string }) =>
       CourseService.deleteSection(courseId, sectionId),
-    onSuccess: (_data, { courseId }) => qc.invalidateQueries({ queryKey: sectionKeys.course(courseId) }),
+    onSuccess: (_data, { courseId }) =>
+      qc.invalidateQueries({ queryKey: sectionKeys.course(courseId) }),
   });
 }
 
@@ -453,8 +472,15 @@ export function useDeleteSection() {
 export function useAddMaterial() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ courseId, lessonId, file }: { courseId: string; lessonId: string; file: File }) =>
-      CourseService.addMaterial(courseId, lessonId, file),
+    mutationFn: ({
+      courseId,
+      lessonId,
+      file,
+    }: {
+      courseId: string;
+      lessonId: string;
+      file: File;
+    }) => CourseService.addMaterial(courseId, lessonId, file),
     onSuccess: (_data, { courseId }) =>
       qc.invalidateQueries({ queryKey: courseKeys.lessons(courseId) }),
   });
@@ -519,8 +545,14 @@ export function useSubmitReview() {
 export function useUpdateReview() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ reviewId, data }: { reviewId: string; courseId: string; data: CourseReviewRequest }) =>
-      CourseService.updateReview(reviewId, data),
+    mutationFn: ({
+      reviewId,
+      data,
+    }: {
+      reviewId: string;
+      courseId: string;
+      data: CourseReviewRequest;
+    }) => CourseService.updateReview(reviewId, data),
     onSuccess: (_data, { courseId }) => {
       qc.invalidateQueries({ queryKey: [...courseKeys.detail(courseId), 'reviews'] });
       qc.invalidateQueries({ queryKey: [...courseKeys.detail(courseId), 'my-review'] });
@@ -571,8 +603,14 @@ export function useTeacherProfile(teacherId: string) {
 export function useReplyToReview() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ reviewId, data }: { reviewId: string; courseId: string; data: InstructorReplyRequest }) =>
-      CourseService.replyToReview(reviewId, data),
+    mutationFn: ({
+      reviewId,
+      data,
+    }: {
+      reviewId: string;
+      courseId: string;
+      data: InstructorReplyRequest;
+    }) => CourseService.replyToReview(reviewId, data),
     onSuccess: (_data, { courseId }) => {
       qc.invalidateQueries({ queryKey: [...courseKeys.detail(courseId), 'reviews'] });
     },
