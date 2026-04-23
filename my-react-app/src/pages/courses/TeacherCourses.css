@@ -991,7 +991,9 @@
   font-family: var(--font-family);
   font-weight: 600;
   color: #141413;
-  letter-spacing: 0.01em;
+  letter-spacing: 0;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
 }
 
 .module-layout-container .create-course-modal .modal-header h2 {
@@ -1002,6 +1004,8 @@
 .module-layout-container .create-course-modal .form-section-header p {
   color: #5e5d59;
   line-height: 1.55;
+  font-family: var(--font-family);
+  letter-spacing: 0;
 }
 
 .module-layout-container .create-course-modal .modal-icon {
@@ -1052,6 +1056,23 @@
 
 .module-layout-container .create-course-modal .wizard-step-item.completed .wizard-step-label {
   color: #4d4c48;
+}
+
+/* Stepper: tiếng Việt — không dùng uppercase (tránh lệch/tách dấu trên chữ tổng hợp) */
+.module-layout-container .create-course-modal .wizard-step-label {
+  font-family: var(--font-family);
+  letter-spacing: 0;
+  text-transform: none;
+  font-weight: 600;
+  font-size: 0.78rem;
+  text-align: center;
+  line-height: 1.35;
+  text-rendering: optimizeLegibility;
+  font-synthesis: none;
+}
+
+.module-layout-container .create-course-modal .wizard-step-item:not(.active):not(.completed) .wizard-step-label {
+  color: #87867f;
 }
 
 .module-layout-container .create-course-modal .wizard-footer {
@@ -1152,7 +1173,9 @@
   font-size: 0.78rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  /* letter-spacing gây tách dấu tiếng Việt khi dùng uppercase; giữ 0 (index.css) */
+  letter-spacing: 0;
+  font-family: var(--font-family);
 }
 
 .module-layout-container .create-course-modal .required {
@@ -1165,6 +1188,8 @@
   margin: 0.35rem 0 0;
   line-height: 1.5;
   font-weight: 500;
+  font-family: var(--font-family);
+  letter-spacing: 0;
 }
 
 .module-layout-container .create-course-modal .form-hint.is-error {
@@ -1177,6 +1202,9 @@
   border: 1px solid #e8e6dc;
   color: #141413;
   border-radius: 12px;
+  font-family: var(--font-family);
+  font-synthesis: none;
+  letter-spacing: 0;
 }
 
 .module-layout-container .create-course-modal .form-textarea {
@@ -1185,6 +1213,9 @@
   overflow-y: auto;
   resize: vertical;
   line-height: 1.55;
+  font-family: var(--font-family);
+  font-synthesis: none;
+  letter-spacing: 0;
 }
 
 .module-layout-container .create-course-modal .form-textarea::-webkit-scrollbar {
@@ -1197,9 +1228,11 @@
 }
 
 .module-layout-container .create-course-modal .form-select:focus,
-.module-layout-container .create-course-modal .form-input:focus {
-  border-color: #3898ec;
-  box-shadow: 0 0 0 3px rgba(56, 152, 236, 0.18);
+.module-layout-container .create-course-modal .form-input:focus,
+.module-layout-container .create-course-modal .form-textarea:focus {
+  outline: none;
+  border-color: #c96442;
+  box-shadow: 0 0 0 3px rgba(201, 100, 66, 0.18);
 }
 
 .module-layout-container .create-course-modal .form-select {
@@ -1209,6 +1242,11 @@
   background-position: right 0.75rem center;
   background-size: 16px;
   padding-right: 2.2rem;
+}
+
+.module-layout-container .create-course-modal .form-select option {
+  font-family: var(--font-family);
+  letter-spacing: 0;
 }
 
 .module-layout-container .create-course-modal .file-upload-field {
