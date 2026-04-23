@@ -46,6 +46,17 @@ import CourseStudentsTab from './tabs/CourseStudentsTab.tsx';
 
 type TabType = 'overview' | 'lessons' | 'assessments' | 'students' | 'reviews';
 
+/** Loading overlay — cùng ngôn ngữ UI với Teacher Studio (kem + terracotta) */
+const CourseDetailLoadingOverlay: React.FC<{ message: string }> = ({ message }) => (
+  <div className="course-math-loading-overlay" role="dialog" aria-modal="true">
+    <div className="course-math-loading-popup" role="status" aria-live="polite">
+      <div className="course-math-loader-ring" aria-hidden="true" />
+      <p className="course-math-loading-kicker">Teacher Studio</p>
+      <p className="course-math-loading-text">{message}</p>
+    </div>
+  </div>
+);
+
 const TeacherCourseDetail: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
@@ -173,19 +184,7 @@ const TeacherCourseDetail: React.FC = () => {
         user={{ name: 'Giáo viên', avatar: '', role: 'teacher' }}
         contentClassName="dashboard-content--flush-bleed dashboard-content--course-detail-parchment"
       >
-        <div className="course-math-loading-overlay" role="dialog" aria-modal="true">
-          <div className="course-math-loading-popup" role="status" aria-live="polite">
-            <div className="course-math-loader-ring" aria-hidden="true" />
-            <div className="course-math-loader-symbols" aria-hidden="true">
-              <span>x²</span>
-              <span>∫</span>
-              <span>π</span>
-              <span>√</span>
-              <span>Δ</span>
-            </div>
-            <p>{loadingMessage}</p>
-          </div>
-        </div>
+        <CourseDetailLoadingOverlay message={loadingMessage} />
       </DashboardLayout>
     );
   }
@@ -714,21 +713,7 @@ const TeacherCourseDetail: React.FC = () => {
         </div>
       )}
 
-      {showMathLoadingPopup && (
-        <div className="course-math-loading-overlay" role="dialog" aria-modal="true">
-          <div className="course-math-loading-popup" role="status" aria-live="polite">
-            <div className="course-math-loader-ring" aria-hidden="true" />
-            <div className="course-math-loader-symbols" aria-hidden="true">
-              <span>x²</span>
-              <span>∫</span>
-              <span>π</span>
-              <span>√</span>
-              <span>Δ</span>
-            </div>
-            <p>{loadingMessage}</p>
-          </div>
-        </div>
-      )}
+      {showMathLoadingPopup && <CourseDetailLoadingOverlay message={loadingMessage} />}
     </DashboardLayout>
   );
 };

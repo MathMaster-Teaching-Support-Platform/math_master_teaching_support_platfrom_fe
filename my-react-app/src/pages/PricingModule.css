@@ -133,6 +133,7 @@
 .module-layout-container .data-card.pricing-m-plan-card--rest:hover {
   border-color: #d4cfc4;
   box-shadow: 0 8px 28px rgba(20, 34, 53, 0.1);
+  transform: translateY(-4px);
 }
 
 .module-layout-container .pricing-m-plan-card .course-desc {
@@ -152,6 +153,13 @@
   .module-layout-container .data-card.pricing-m-plan-card--featured {
     transform: translateY(-6px) scale(1.02);
   }
+}
+
+.module-layout-container .data-card.pricing-m-plan-card--featured:hover {
+  box-shadow:
+    0 24px 56px -12px rgba(201, 100, 66, 0.35),
+    0 0 0 1px rgba(201, 100, 66, 0.28);
+  transform: translateY(-8px) scale(1.03);
 }
 
 .module-layout-container .pricing-m-plan-card--current {
