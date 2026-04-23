@@ -45,6 +45,11 @@ const normalizeVietnameseHeading = (heading?: string | null): string => {
   const value = (heading || '').trim();
   if (!value) return '';
 
+  const openingMatch = value.match(/^khoi\s+dong$/i);
+  if (openingMatch) {
+    return 'Khởi động';
+  }
+
   const mainContentMatch = value.match(/^noi\s+dung\s+chinh(\s+\d+)?$/i);
   if (mainContentMatch) {
     return `Nội dung chính${mainContentMatch[1] || ''}`;
@@ -180,18 +185,35 @@ const parseMathSegments = (text: string): MathSegment[] => {
   return segments.length ? segments : [{ type: 'text', value: text }];
 };
 
+const normalizePreviewText = (input: string): string => {
+  if (!input) return input;
+
+  return input
+    .replace(/^khoi\s+dong\b/gim, 'Khởi động')
+    .replace(/\\begin\{itemize\}/gi, '')
+    .replace(/\\end\{itemize\}/gi, '')
+    .replace(/\\item\s*/g, '\n• ')
+    .replace(/\\textbf\{([^{}]+)\}/g, '$1')
+    .replace(/\\textit\{([^{}]+)\}/g, '$1')
+    .replace(/\\emph\{([^{}]+)\}/g, '$1')
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/\n[ \t]+/g, '\n')
+    .trim();
+};
+
 const renderSlideText = (
   text: string,
   outputFormat: LessonSlideOutputFormat,
   keyPrefix: string
 ): React.ReactNode => {
   if (!text) return null;
+  const normalizedText = normalizePreviewText(text);
 
   if (!supportsMathRendering(outputFormat)) {
-    return text;
+    return normalizedText;
   }
 
-  return parseMathSegments(text).map((segment, index) => {
+  return parseMathSegments(normalizedText).map((segment, index) => {
     const key = `${keyPrefix}-${index}`;
 
     if (segment.type === 'text') {
