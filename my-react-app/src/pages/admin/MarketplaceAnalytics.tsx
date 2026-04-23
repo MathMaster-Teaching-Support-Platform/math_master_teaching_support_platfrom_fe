@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import {
   adminFinancialService,
-  formatCurrency,
+  exportToCSV,
   formatCompactNumber,
+  formatCurrency,
 } from '../../services/admin-financial.service';
 import type {
   MarketplaceTopCourse,
@@ -51,6 +52,40 @@ const MarketplaceAnalytics: React.FC = () => {
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 >= 0.5;
     return '⭐'.repeat(fullStars) + (hasHalfStar ? '½' : '');
+  };
+
+  const handleExportCourses = () => {
+    if (topCourses.length === 0) return;
+
+    const exportData = topCourses.map((course, index) => ({
+      'Hạng': index + 1,
+      'Khóa học': course.courseTitle,
+      'Giảng viên': course.instructorName,
+      'Lượt bán': course.salesCount,
+      'Doanh thu (VND)': course.totalRevenue,
+      'Hoa hồng (VND)': course.platformCommission,
+      'Thu nhập GV (VND)': course.instructorEarnings,
+      'Đánh giá': course.avgRating,
+    }));
+
+    exportToCSV(exportData, `top_courses_${courseLimit}`);
+  };
+
+  const handleExportInstructors = () => {
+    if (topInstructors.length === 0) return;
+
+    const exportData = topInstructors.map((instructor, index) => ({
+      'Hạng': index + 1,
+      'Giảng viên': instructor.instructorName,
+      'Số khóa học': instructor.courseCount,
+      'Tổng bán': instructor.totalSales,
+      'Doanh thu (VND)': instructor.totalRevenue,
+      'Thu nhập (VND)': instructor.totalEarnings,
+      'Học viên': instructor.totalStudents,
+      'Đánh giá': instructor.avgRating,
+    }));
+
+    exportToCSV(exportData, `top_instructors_${instructorLimit}`);
   };
 
   if (loading) {
@@ -137,6 +172,9 @@ const MarketplaceAnalytics: React.FC = () => {
         <div className="section-header">
           <h2>🏆 Khóa Học Bán Chạy Nhất</h2>
           <div className="section-controls">
+            <button onClick={handleExportCourses} className="export-button">
+              📥 Xuất CSV
+            </button>
             <label>
               Hiển thị:
               <select
@@ -218,6 +256,9 @@ const MarketplaceAnalytics: React.FC = () => {
         <div className="section-header">
           <h2>👨‍🏫 Giảng Viên Hàng Đầu</h2>
           <div className="section-controls">
+            <button onClick={handleExportInstructors} className="export-button">
+              📥 Xuất CSV
+            </button>
             <label>
               Hiển thị:
               <select
