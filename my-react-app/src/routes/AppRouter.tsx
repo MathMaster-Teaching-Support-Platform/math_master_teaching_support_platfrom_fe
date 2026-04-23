@@ -12,7 +12,6 @@ import UserManagement from '../pages/admin/UserManagement';
 import AIAssistant from '../pages/ai/AIAssistant';
 import AISlideGenerator from '../pages/ai/AISlideGenerator';
 import TeacherAnalytics from '../pages/analytics/TeacherAnalytics';
-import StudentAssignments from '../pages/assignments/StudentAssignments';
 import TeacherAssignments from '../pages/assignments/TeacherAssignments';
 import { ConfirmEmail, ForgotPassword, Login, Register, ResetPassword } from '../pages/auth';
 import OnboardingFlow from '../pages/auth/OnboardingFlow';
@@ -27,7 +26,6 @@ import AdminDashboard from '../pages/dashboard/admin/AdminDashboard';
 import TeacherDashboard from '../pages/dashboard/teacher/TeacherDashboard';
 import TeacherEarningsDashboard from '../pages/dashboard/teacher/TeacherEarningsDashboard';
 import Forum from '../pages/forum/Forum';
-import StudentGrades from '../pages/grades/StudentGrades';
 import HelpCenter from '../pages/help/HelpCenter';
 import MaterialsGenerator from '../pages/materials/MaterialsGenerator';
 import NotificationCenter from '../pages/notifications/NotificationCenter';
@@ -481,22 +479,6 @@ export const router = createBrowserRouter([
     element: (
       <PrivateRoute>
         <StudentCourseDetail />
-      </PrivateRoute>
-    ),
-  },
-  {
-    path: '/student/assignments',
-    element: (
-      <PrivateRoute>
-        <StudentAssignments />
-      </PrivateRoute>
-    ),
-  },
-  {
-    path: '/student/grades',
-    element: (
-      <PrivateRoute>
-        <StudentGrades />
       </PrivateRoute>
     ),
   },
