@@ -422,7 +422,7 @@ export default function TeacherMindmaps() {
                 {stats.published} đã xuất bản • {stats.aiGenerated} được tạo bởi AI
               </p>
             </div>
-            <button className="btn" onClick={toggleGenerator}>
+            <button type="button" className="btn btn--feat-violet" onClick={toggleGenerator}>
               <Sparkles size={16} />
               Tạo Mindmap AI
             </button>
@@ -862,7 +862,12 @@ export default function TeacherMindmaps() {
             <div className="empty">
               <Network size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
               <p>Bạn chưa có mindmap nào. Hãy tạo mindmap đầu tiên bằng AI.</p>
-              <button className="btn" style={{ marginTop: '1rem' }} onClick={toggleGenerator}>
+              <button
+                type="button"
+                className="btn btn--feat-violet"
+                style={{ marginTop: '1rem' }}
+                onClick={toggleGenerator}
+              >
                 Bắt đầu ngay
                 <ArrowRight size={16} />
               </button>

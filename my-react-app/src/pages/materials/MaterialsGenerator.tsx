@@ -382,10 +382,6 @@ const MaterialsGenerator: React.FC = () => {
                 Sử dụng AI để tạo slide, sơ đồ tư duy, hình vẽ và tài liệu giảng dạy chuyên nghiệp.
               </p>
             </div>
-            <button className="btn materials-history-btn">
-              <Clock3 size={15} />
-              Lịch sử tạo
-            </button>
           </header>
 
           {/* ── Stats ── */}
@@ -438,6 +434,7 @@ const MaterialsGenerator: React.FC = () => {
             {cards.map((card) => {
               const { Icon } = card;
               const available = card.route !== null;
+              const ctaVariant = card.accentClass.replace('tool-accent-', '');
               return (
                 <article key={card.title} className={`materials-tool-card ${card.accentClass}`}>
                   <div className="materials-tool-card__head">
@@ -453,7 +450,8 @@ const MaterialsGenerator: React.FC = () => {
                   <h3>{card.title}</h3>
                   <p>{card.desc}</p>
                   <button
-                    className={`btn${available ? '' : ' secondary'} materials-tool-cta`}
+                    type="button"
+                    className={`btn${available ? '' : ' secondary'} materials-tool-cta materials-tool-cta--${ctaVariant}`}
                     onClick={() => available && navigate(card.route!)}
                     disabled={!available}
                     title={available ? undefined : 'Tính năng đang phát triển'}
@@ -557,7 +555,8 @@ const MaterialsGenerator: React.FC = () => {
                         {row.kind === 'slide' ? (
                           <div className="materials-action-group">
                             <button
-                              className="btn secondary materials-action-btn"
+                              type="button"
+                              className="btn secondary materials-action-btn materials-action-btn--slide"
                               onClick={() => void handlePreviewSlide(row.id)}
                               disabled={loadingPreviewSlideId === row.id}
                             >
@@ -565,7 +564,8 @@ const MaterialsGenerator: React.FC = () => {
                               {loadingPreviewSlideId === row.id ? 'Đang tải...' : 'Xem thử'}
                             </button>
                             <button
-                              className="btn secondary materials-action-btn"
+                              type="button"
+                              className="btn secondary materials-action-btn materials-action-btn--slide"
                               onClick={() => void handleDownloadSlide(row.id)}
                               disabled={downloadingSlideId === row.id}
                             >
@@ -576,13 +576,15 @@ const MaterialsGenerator: React.FC = () => {
                         ) : (
                           <div className="materials-action-group">
                             <button
-                              className="btn secondary materials-action-btn"
+                              type="button"
+                              className="btn secondary materials-action-btn materials-action-btn--mindmap"
                               onClick={() => handlePreviewMindmap(row.id)}
                             >
                               <Eye size={13} /> Xem thử
                             </button>
                             <button
-                              className="btn secondary materials-action-btn"
+                              type="button"
+                              className="btn secondary materials-action-btn materials-action-btn--mindmap"
                               onClick={() => void handleDownloadMindmap(row.id, row.title)}
                               disabled={downloadingMindmapId === row.id}
                             >

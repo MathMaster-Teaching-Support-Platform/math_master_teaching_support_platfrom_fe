@@ -595,16 +595,25 @@ export function TemplateDashboard() {
               </p>
             </div>
             <div className="row" style={{ flexWrap: 'wrap' }}>
-              <button className="btn secondary" onClick={() => setBulkImportOpen(true)}>
+              <button
+                type="button"
+                className="btn secondary btn--tint-violet"
+                onClick={() => setBulkImportOpen(true)}
+              >
                 <Upload size={14} />
                 Nhập từ Excel
               </button>
-              <button className="btn secondary" onClick={openCanonicalCreateModal}>
+              <button
+                type="button"
+                className="btn secondary btn--tint-violet"
+                onClick={openCanonicalCreateModal}
+              >
                 <Plus size={14} />
                 Thêm bài toán gốc
               </button>
               <button
-                className="btn"
+                type="button"
+                className="btn btn--feat-violet"
                 onClick={() => {
                   setMode('create');
                   setSelected(null);
@@ -676,7 +685,8 @@ export function TemplateDashboard() {
                     cùng dạng toán.
                   </p>
                   <button
-                    className="btn secondary"
+                    type="button"
+                    className="btn secondary btn--tint-blue"
                     onClick={() => {
                       setMode('create');
                       setSelected(null);
@@ -702,7 +712,11 @@ export function TemplateDashboard() {
                 <div className="workflow-step-body">
                   <h4>Xem trước & duyệt câu hỏi</h4>
                   <p>Chọn mẫu, xem toàn bộ câu hỏi đã sinh và phê duyệt nhanh theo lô vào kho.</p>
-                  <button className="btn secondary" onClick={() => openReviewModal()}>
+                  <button
+                    type="button"
+                    className="btn secondary btn--tint-emerald"
+                    onClick={() => openReviewModal()}
+                  >
                     <CheckSquare size={13} /> Duyệt theo mẫu
                   </button>
                 </div>
@@ -726,7 +740,8 @@ export function TemplateDashboard() {
                     đây.
                   </p>
                   <button
-                    className="btn secondary"
+                    type="button"
+                    className="btn secondary btn--tint-violet"
                     onClick={() => navigate('/teacher/question-banks')}
                   >
                     <ArrowRight size={13} /> Mở ngân hàng
@@ -750,7 +765,11 @@ export function TemplateDashboard() {
                   <p>
                     Chọn câu hỏi từ kho, lắp thành đề theo cơ cấu ma trận và xuất bản cho học sinh.
                   </p>
-                  <button className="btn" onClick={() => navigate('/teacher/assessment-builder')}>
+                  <button
+                    type="button"
+                    className="btn btn--feat-amber"
+                    onClick={() => navigate('/teacher/assessment-builder')}
+                  >
                     Tạo đề ngay
                   </button>
                 </div>
@@ -972,7 +991,8 @@ export function TemplateDashboard() {
               <FileText size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
               <p>Bạn chưa có mẫu câu hỏi nào. Hãy tạo mẫu đầu tiên.</p>
               <button
-                className="btn"
+                type="button"
+                className="btn btn--feat-violet"
                 style={{ marginTop: '1rem' }}
                 onClick={() => {
                   setMode('create');
@@ -1103,7 +1123,8 @@ export function TemplateDashboard() {
                       <div className="mindmap-actions">
                         {template.status === TemplateStatus.DRAFT && (
                           <button
-                            className="btn"
+                            type="button"
+                            className="btn btn--feat-emerald"
                             onClick={() => publishMutation.mutate(template.id)}
                           >
                             <FileText size={14} />
@@ -1474,7 +1495,8 @@ export function TemplateDashboard() {
                                         Sửa
                                       </button>
                                       <button
-                                        className="btn"
+                                        type="button"
+                                        className="btn btn--feat-emerald"
                                         disabled={isApproved || approveQuestionMutation.isPending}
                                         onClick={() => void handleApproveQuestion(question.id)}
                                       >
@@ -1524,7 +1546,7 @@ export function TemplateDashboard() {
                   </button>
                   <button
                     type="button"
-                    className="btn"
+                    className="btn btn--feat-emerald"
                     disabled={selectedQuestionIds.size === 0 || bulkApproveMutation.isPending}
                     onClick={() => void handleApproveSelectedQuestions()}
                   >
@@ -1704,7 +1726,8 @@ export function TemplateDashboard() {
                                         Sửa
                                       </button>
                                       <button
-                                        className="btn"
+                                        type="button"
+                                        className="btn btn--feat-emerald"
                                         disabled={
                                           isApproved || approveCanonicalQuestionMutation.isPending
                                         }
@@ -1747,7 +1770,7 @@ export function TemplateDashboard() {
                   </button>
                   <button
                     type="button"
-                    className="btn"
+                    className="btn btn--feat-emerald"
                     disabled={
                       selectedCanonicalQuestionIds.size === 0 ||
                       bulkApproveCanonicalMutation.isPending
@@ -1813,7 +1836,8 @@ export function TemplateDashboard() {
                     Hủy
                   </button>
                   <button
-                    className="btn"
+                    type="button"
+                    className="btn btn--feat-violet"
                     onClick={() => void handleSaveQuestionEdit()}
                     disabled={updateQuestionMutation.isPending}
                   >

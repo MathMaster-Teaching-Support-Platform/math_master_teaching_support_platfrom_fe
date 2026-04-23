@@ -468,7 +468,7 @@ export default function TeacherQuestionManagementPage() {
                 <FileSpreadsheet size={14} />
                 Nhập từ Excel
               </button>
-              <button className="btn" onClick={openingCreateModal}>
+              <button type="button" className="btn btn--feat-blue" onClick={openingCreateModal}>
                 <Plus size={14} />
                 Tạo câu hỏi
               </button>
@@ -685,7 +685,8 @@ export default function TeacherQuestionManagementPage() {
                       <td>
                         <div className="row" style={{ flexWrap: 'wrap' }}>
                           <button
-                            className="btn secondary"
+                            type="button"
+                            className="btn secondary btn--tint-blue"
                             onClick={() => openingEditModal(question)}
                           >
                             <Edit3 size={14} />

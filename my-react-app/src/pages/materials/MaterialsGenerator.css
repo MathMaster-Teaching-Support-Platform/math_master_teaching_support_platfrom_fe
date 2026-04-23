@@ -55,19 +55,6 @@
   vertical-align: middle;
 }
 
-/* ── History button ──────────────────────────────────── */
-.module-layout-container .materials-history-btn {
-  background: #fff;
-  color: var(--mod-slate-700);
-  border-color: var(--mod-slate-200);
-  box-shadow: none;
-  flex-shrink: 0;
-}
-.module-layout-container .materials-history-btn:hover {
-  background: var(--mod-slate-50);
-  border-color: var(--mod-slate-300);
-}
-
 /* ── Stat cards colour variants ──────────────────────── */
 .module-layout-container .stat-card {
   display: flex;
@@ -158,7 +145,7 @@
   border-top: 3px solid #3b82f6;
 }
 .module-layout-container .materials-tool-card.tool-accent-violet {
-  border-top: 3px solid #d97757;
+  border-top: 3px solid #7c3aed;
 }
 .module-layout-container .materials-tool-card.tool-accent-amber {
   border-top: 3px solid #f59e0b;
@@ -248,6 +235,53 @@
   margin-top: auto;
 }
 
+/* CTA fill colors match each card accent (primary tools = solid; coming soon = soft tinted) */
+.module-layout-container .materials-tool-cta.materials-tool-cta--blue {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.28);
+}
+.module-layout-container .materials-tool-cta.materials-tool-cta--blue:hover:not(:disabled) {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  color: #fff;
+}
+
+.module-layout-container .materials-tool-cta.materials-tool-cta--violet {
+  background: #7c3aed;
+  border-color: #7c3aed;
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(124, 58, 237, 0.3);
+}
+.module-layout-container .materials-tool-cta.materials-tool-cta--violet:hover:not(:disabled) {
+  background: #6d28d9;
+  border-color: #6d28d9;
+  color: #fff;
+}
+
+.module-layout-container .materials-tool-cta.materials-tool-cta--amber.secondary {
+  background: #fffbeb;
+  color: #b45309;
+  border-color: #fcd34d;
+  box-shadow: none;
+}
+.module-layout-container .materials-tool-cta.materials-tool-cta--amber.secondary:disabled {
+  opacity: 1;
+  cursor: not-allowed;
+}
+
+.module-layout-container .materials-tool-cta.materials-tool-cta--emerald.secondary {
+  background: #ecfdf5;
+  color: #047857;
+  border-color: #6ee7b7;
+  box-shadow: none;
+}
+.module-layout-container .materials-tool-cta.materials-tool-cta--emerald.secondary:disabled {
+  opacity: 1;
+  cursor: not-allowed;
+}
+
 /* ── Table enhancements ──────────────────────────────── */
 .module-layout-container .materials-file-cell {
   display: flex;
@@ -316,6 +350,30 @@
   display: inline-flex;
   align-items: center;
   gap: 0.32rem;
+}
+
+.module-layout-container .materials-action-btn.materials-action-btn--slide {
+  color: #1d4ed8;
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  box-shadow: none;
+}
+.module-layout-container .materials-action-btn.materials-action-btn--slide:hover:not(:disabled) {
+  background: #dbeafe;
+  border-color: #93c5fd;
+  color: #1e3a8a;
+}
+
+.module-layout-container .materials-action-btn.materials-action-btn--mindmap {
+  color: #6d28d9;
+  background: #f5f3ff;
+  border-color: #ddd6fe;
+  box-shadow: none;
+}
+.module-layout-container .materials-action-btn.materials-action-btn--mindmap:hover:not(:disabled) {
+  background: #ede9fe;
+  border-color: #c4b5fd;
+  color: #5b21b6;
 }
 
 .module-layout-container .materials-action-group {

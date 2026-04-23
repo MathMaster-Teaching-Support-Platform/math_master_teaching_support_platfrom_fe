@@ -1499,16 +1499,139 @@
   background: #c96442;
 }
 
-.module-layout-container .teacher-courses-page .btn {
+/* Terracotta primary only on the Giáo trình index — other `teacher-courses-page` screens use default / feat accents */
+.module-layout-container .teacher-courses-page.teacher-courses-index-page .btn {
   background: #c96442;
   border-color: #c96442;
   color: #141413;
   box-shadow: 0 0 0 1px rgba(201, 100, 66, 0.16);
 }
 
-.module-layout-container .teacher-courses-page .btn:hover {
+.module-layout-container .teacher-courses-page.teacher-courses-index-page .btn:hover {
   background: #b85839;
   border-color: #b85839;
+}
+
+/* Teacher Studio — optional solid primaries (overrides default blue for feature branding) */
+.module-layout-container .teacher-courses-page .btn.btn--feat-blue {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.28);
+}
+.module-layout-container .teacher-courses-page .btn.btn--feat-blue:hover:not(:disabled) {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  color: #fff;
+}
+
+.module-layout-container .teacher-courses-page .btn.btn--feat-violet {
+  background: #7c3aed;
+  border-color: #7c3aed;
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(124, 58, 237, 0.3);
+}
+.module-layout-container .teacher-courses-page .btn.btn--feat-violet:hover:not(:disabled) {
+  background: #6d28d9;
+  border-color: #6d28d9;
+  color: #fff;
+}
+
+.module-layout-container .teacher-courses-page .btn.btn--feat-indigo {
+  background: #4f46e5;
+  border-color: #4f46e5;
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(79, 70, 229, 0.28);
+}
+.module-layout-container .teacher-courses-page .btn.btn--feat-indigo:hover:not(:disabled) {
+  background: #4338ca;
+  border-color: #4338ca;
+  color: #fff;
+}
+
+.module-layout-container .teacher-courses-page .btn.btn--feat-emerald {
+  background: #059669;
+  border-color: #059669;
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(5, 150, 105, 0.28);
+}
+.module-layout-container .teacher-courses-page .btn.btn--feat-emerald:hover:not(:disabled) {
+  background: #047857;
+  border-color: #047857;
+  color: #fff;
+}
+
+.module-layout-container .teacher-courses-page .btn.btn--feat-amber {
+  background: #d97706;
+  border-color: #d97706;
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(217, 119, 6, 0.28);
+}
+.module-layout-container .teacher-courses-page .btn.btn--feat-amber:hover:not(:disabled) {
+  background: #b45309;
+  border-color: #b45309;
+  color: #fff;
+}
+
+/* Soft secondary tints (pair with `btn secondary`) */
+.module-layout-container .teacher-courses-page .btn.secondary.btn--tint-blue {
+  color: #1d4ed8;
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  box-shadow: none;
+}
+.module-layout-container .teacher-courses-page .btn.secondary.btn--tint-blue:hover:not(:disabled) {
+  background: #dbeafe;
+  border-color: #93c5fd;
+  color: #1e3a8a;
+}
+
+.module-layout-container .teacher-courses-page .btn.secondary.btn--tint-violet {
+  color: #6d28d9;
+  background: #f5f3ff;
+  border-color: #ddd6fe;
+  box-shadow: none;
+}
+.module-layout-container .teacher-courses-page .btn.secondary.btn--tint-violet:hover:not(:disabled) {
+  background: #ede9fe;
+  border-color: #c4b5fd;
+  color: #5b21b6;
+}
+
+.module-layout-container .teacher-courses-page .btn.secondary.btn--tint-indigo {
+  color: #4338ca;
+  background: #eef2ff;
+  border-color: #c7d2fe;
+  box-shadow: none;
+}
+.module-layout-container .teacher-courses-page .btn.secondary.btn--tint-indigo:hover:not(:disabled) {
+  background: #e0e7ff;
+  border-color: #a5b4fc;
+  color: #3730a3;
+}
+
+.module-layout-container .teacher-courses-page .btn.secondary.btn--tint-emerald {
+  color: #047857;
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+  box-shadow: none;
+}
+.module-layout-container .teacher-courses-page .btn.secondary.btn--tint-emerald:hover:not(:disabled) {
+  background: #d1fae5;
+  border-color: #6ee7b7;
+  color: #065f46;
+}
+
+.module-layout-container .teacher-courses-page .btn.secondary.btn--tint-amber {
+  color: #b45309;
+  background: #fffbeb;
+  border-color: #fde68a;
+  box-shadow: none;
+}
+.module-layout-container .teacher-courses-page .btn.secondary.btn--tint-amber:hover:not(:disabled) {
+  background: #fef3c7;
+  border-color: #fcd34d;
+  color: #92400e;
 }
 
 .module-layout-container .teacher-courses-page .stats-grid {

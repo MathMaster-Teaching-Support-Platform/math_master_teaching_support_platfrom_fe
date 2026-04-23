@@ -168,14 +168,15 @@ export function QuestionBankDashboard() {
               <div className="header-kicker">Teacher Studio</div>
               <div className="row" style={{ gap: '0.6rem' }}>
                 <h2>Ngân hàng câu hỏi</h2>
-                {!isLoading && <span className="count-chip">{banks.length}</span>}
+                {!isLoading && <span className="count-chip">{totalElements}</span>}
               </div>
               <p className="header-sub">
                 {stats.public} công khai • {stats.private} riêng tư
               </p>
             </div>
             <button
-              className="btn"
+              type="button"
+              className="btn btn--feat-emerald"
               onClick={() => {
                 setMode('create');
                 setSelected(null);
@@ -357,7 +358,8 @@ export function QuestionBankDashboard() {
               <Database size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
               <p>Bạn chưa có ngân hàng câu hỏi nào. Hãy tạo ngân hàng đầu tiên.</p>
               <button
-                className="btn"
+                type="button"
+                className="btn btn--feat-emerald"
                 style={{ marginTop: '1rem' }}
                 onClick={() => {
                   setMode('create');
