@@ -58,12 +58,11 @@ self.addEventListener('notificationclick', (event) => {
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+      // Focus an existing window if available; do NOT re-inject the payload
+      // into app state — the notification is already persisted in the DB
+      // and will appear in the fetched list.
       for (const client of clients) {
         if ('focus' in client) {
-          client.postMessage({
-            type: 'notification-received',
-            payload: event.notification.data,
-          });
           return client.focus();
         }
       }

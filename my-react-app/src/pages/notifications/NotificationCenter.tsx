@@ -11,11 +11,14 @@ const NotificationCenter: React.FC = () => {
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
 
+  const normalizeType = (type: string) => type.toLowerCase();
+
   const filteredNotifications = notifications.filter((notif) => {
     const matchReadStatus =
       filter === 'all' ? true : filter === 'unread' ? !notif.read : notif.read;
 
-    const matchType = typeFilter === 'all' ? true : notif.type === typeFilter;
+    const matchType =
+      typeFilter === 'all' ? true : normalizeType(notif.type) === normalizeType(typeFilter);
 
     return matchReadStatus && matchType;
   });
@@ -27,7 +30,7 @@ const NotificationCenter: React.FC = () => {
   };
 
   const getNotificationIcon = (type: string) => {
-    switch (type) {
+    switch (normalizeType(type)) {
       case 'assignment':
         return '📝';
       case 'grade':
@@ -172,17 +175,17 @@ const NotificationCenter: React.FC = () => {
                     <div className="notification-footer">
                       <span className="notification-time">⏱️ {new Date(notif.createdAt).toLocaleString()}</span>
                       <span className={`notification-type type-${notif.type}`}>
-                        {notif.type === 'assignment'
+                        {normalizeType(notif.type) === 'assignment'
                           ? '📝 Bài tập'
-                          : notif.type === 'grade'
+                          : normalizeType(notif.type) === 'grade'
                             ? '📊 Điểm số'
-                            : notif.type === 'course'
+                            : normalizeType(notif.type) === 'course'
                               ? '📚 Giáo Trình'
-                              : notif.type === 'system'
+                              : normalizeType(notif.type) === 'system'
                                 ? '⚙️ Hệ thống'
-                                : notif.type === 'payment'
+                                : normalizeType(notif.type) === 'payment'
                                   ? '💰 Thanh toán'
-                                  : notif.type === 'PROFILE_VERIFICATION'
+                                  : normalizeType(notif.type) === 'profile_verification'
                                     ? '🛡️ Kiểm duyệt'
                                     : '💬 Tin nhắn'}
                       </span>

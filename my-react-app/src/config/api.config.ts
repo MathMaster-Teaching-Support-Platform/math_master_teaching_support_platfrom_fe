@@ -250,7 +250,6 @@ export const API_ENDPOINTS = {
   PAYMENT_ORDER_STATUS: (orderCode: number) => `/payment/order/${orderCode}/status`,
 
   // Notifications
-  NOTIFICATIONS_TOKEN: '/v1/notifications/token',
   NOTIFICATIONS: '/v1/notifications',
   NOTIFICATIONS_UNREAD_COUNT: '/v1/notifications/unread-count',
   NOTIFICATIONS_READ_ALL: '/v1/notifications/read-all',

@@ -117,10 +117,12 @@ const Navbar: React.FC<NavbarProps> = ({ user }) => {
             {notifications.slice(0, 3).map((notif) => (
               <div key={notif.id} className={`notification-item ${!notif.read ? 'unread' : ''}`}>
                 <div className="notification-icon">
-                  {notif.type === 'assignment'
+                  {notif.type?.toLowerCase() === 'assignment'
                     ? '📘'
-                    : notif.type === 'grade'
+                    : notif.type?.toLowerCase() === 'grade'
                       ? '✅'
+                      : notif.type?.toLowerCase() === 'course'
+                        ? '📚'
                       : notif.type === 'PROFILE_VERIFICATION'
                         ? '🛡️'
                         : '🔔'}

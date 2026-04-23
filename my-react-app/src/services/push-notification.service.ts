@@ -29,8 +29,6 @@ const resolveNotificationPayload = (
 };
 
 class PushNotificationService {
-  private initialized = false;
-
   private getFirebaseApp() {
     if (getApps().length > 0) {
       return getApp();
@@ -79,13 +77,13 @@ class PushNotificationService {
     }
 
     const previousToken = localStorage.getItem(FCM_TOKEN_KEY);
-    if (previousToken === token && this.initialized) {
+    if (previousToken === token) {
+      // Token unchanged — no need to re-register with the backend.
       return;
     }
 
     await notificationService.registerPushToken(token, navigator.userAgent);
     localStorage.setItem(FCM_TOKEN_KEY, token);
-    this.initialized = true;
   }
 
   async unregisterToken() {
@@ -98,7 +96,6 @@ class PushNotificationService {
       await notificationService.unregisterPushToken(token);
     } finally {
       localStorage.removeItem(FCM_TOKEN_KEY);
-      this.initialized = false;
     }
   }
 

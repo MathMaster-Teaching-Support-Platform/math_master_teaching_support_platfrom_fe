@@ -22,11 +22,6 @@ async function handleResponse<T>(res: Response): Promise<T> {
 }
 
 export const notificationService = {
-  getConnectionToken: () =>
-    fetch(`${API_BASE_URL}${API_ENDPOINTS.NOTIFICATIONS_TOKEN}`, {
-      headers: getAuthHeaders(),
-    }).then(handleResponse<{ token: string }>),
-
   getNotifications: (page: number = 0, size: number = 20) => {
     const query = new URLSearchParams({
       page: String(page),
