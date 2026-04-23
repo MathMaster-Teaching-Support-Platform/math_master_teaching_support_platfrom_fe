@@ -1091,6 +1091,35 @@
   margin: 0;
 }
 
+.rdp-feedback__loading {
+  text-align: center;
+  color: #9ca3af;
+  font-size: 0.875rem;
+  padding: 1rem;
+}
+
+.rdp-feedback__existing {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.rdp-feedback__existing-badge {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #16a34a;
+}
+
+.rdp-feedback__existing-date {
+  font-size: 0.8125rem;
+  color: #65a30d;
+}
+
 .rdp-stars {
   display: flex;
   gap: 0.3rem;

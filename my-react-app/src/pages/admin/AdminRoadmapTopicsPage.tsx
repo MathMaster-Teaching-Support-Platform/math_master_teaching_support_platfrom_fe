@@ -438,11 +438,18 @@ export default function AdminRoadmapTopicsPage() {
   }
 
   async function deleteTopic(t: TopicDraft) {
-    if (t.isDraft) { removeLocal(t.clientId); setDeleteId(null); return; }
+    if (t.isDraft) { 
+      removeLocal(t.clientId); 
+      setDeleteId(null);
+      setActiveId(null); // Close drawer after deleting draft
+      showToast('success', `Đã xóa "${t.title}".`);
+      return; 
+    }
     if (!t.persistedId) return;
     try {
       await archiveMutation.mutateAsync({ roadmapId, topicId: t.persistedId });
       removeLocal(t.clientId);
+      setActiveId(null); // Close drawer after deleting
       showToast('success', `Đã xóa "${t.title}".`);
     } catch (err) {
       showToast('error', err instanceof Error ? err.message : 'Lỗi xóa chủ đề');
