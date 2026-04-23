@@ -10,14 +10,10 @@ export type CanonicalCognitiveLevel =
   | 'EVALUATE'
   | 'CREATE';
 
-export type CanonicalDiagramValue = string | Record<string, unknown> | null;
-
 export interface CanonicalQuestionRequest {
   title: string;
   problemText: string;
   solutionSteps: string;
-  diagramDefinition?: CanonicalDiagramValue;
-  problemType: string;
   cognitiveLevel: CanonicalCognitiveLevel;
 }
 
@@ -28,8 +24,6 @@ export interface CanonicalQuestionResponse {
   title: string;
   problemText: string;
   solutionSteps: string;
-  diagramDefinition?: CanonicalDiagramValue;
-  problemType: string;
   cognitiveLevel: CanonicalCognitiveLevel;
   createdAt?: string;
   updatedAt?: string;

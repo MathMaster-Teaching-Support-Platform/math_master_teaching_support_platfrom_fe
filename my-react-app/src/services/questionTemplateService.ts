@@ -172,6 +172,15 @@ export const questionTemplateService = {
         return parseResponse<ApiResponse<QuestionTemplateResponse>>(response, 'Không thể xuất bản template');
     },
 
+    // Unpublish Template
+    unpublishTemplate: async (id: string): Promise<ApiResponse<QuestionTemplateResponse>> => {
+        const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTION_TEMPLATE_UNPUBLISH(id)}`, {
+            method: 'PATCH',
+            headers: getAuthHeaders(),
+        });
+        return parseResponse<ApiResponse<QuestionTemplateResponse>>(response, 'Không thể hủy xuất bản template');
+    },
+
     // Archive Template
     archiveTemplate: async (id: string): Promise<ApiResponse<QuestionTemplateResponse>> => {
         const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTION_TEMPLATE_ARCHIVE(id)}`, {

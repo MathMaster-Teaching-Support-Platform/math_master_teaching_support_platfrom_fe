@@ -335,12 +335,43 @@ export function MatrixTable({
     if (!percentageDraft || !onChangePercentageDraft) return;
     setManualCellsByRow(null);
     setPreviewFromPercent(true);
+
+    const allLevels: PercentageLevel[] = ['NHAN_BIET', 'THONG_HIEU', 'VAN_DUNG', 'VAN_DUNG_CAO'];
+    const prev = percentageDraft.cognitiveLevelPercentages;
+    const safeValue = Math.max(0, Math.min(100, value));
+    const oldValue = prev[level];
+    const diff = safeValue - oldValue;
+
+    // Auto-adjust: find the level with the highest percentage (excluding the changed one) and adjust it
+    const others = allLevels.filter((l) => l !== level);
+    const otherSum = others.reduce((sum, l) => sum + prev[l], 0);
+
+    let newPercentages: Record<PercentageLevel, number>;
+    if (diff === 0) {
+      newPercentages = { ...prev, [level]: safeValue };
+    } else if (Math.abs(otherSum) < 0.001) {
+      // All others are 0; distribute diff equally among them
+      const adjust = -diff / others.length;
+      newPercentages = { ...prev, [level]: safeValue };
+      for (const l of others) newPercentages[l] = Math.max(0, prev[l] + adjust);
+    } else {
+      // Adjust proportionally from the others, clamped to 0
+      newPercentages = { ...prev, [level]: safeValue };
+      let remaining = diff;
+      // Sort others by descending value to adjust largest first
+      const sortedOthers = [...others].sort((a, b) => prev[b] - prev[a]);
+      for (const l of sortedOthers) {
+        const maxReduce = prev[l];
+        const adjust = Math.min(remaining, maxReduce);
+        newPercentages[l] = Math.max(0, prev[l] - adjust);
+        remaining -= adjust;
+        if (Math.abs(remaining) < 0.0001) break;
+      }
+    }
+
     onChangePercentageDraft({
       ...percentageDraft,
-      cognitiveLevelPercentages: {
-        ...percentageDraft.cognitiveLevelPercentages,
-        [level]: value,
-      },
+      cognitiveLevelPercentages: newPercentages,
     });
   };
 

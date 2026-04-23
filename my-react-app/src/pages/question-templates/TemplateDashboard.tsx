@@ -51,6 +51,7 @@ import {
   useGetMyQuestionTemplates,
   usePublishTemplate,
   useTogglePublicStatus,
+  useUnpublishTemplate,
   useUpdateQuestionTemplate,
 } from '../../hooks/useQuestionTemplate';
 import { questionTemplateService } from '../../services/questionTemplateService';
@@ -248,6 +249,7 @@ export function TemplateDashboard() {
   const deleteMutation = useDeleteQuestionTemplate();
   const publishMutation = usePublishTemplate();
   const archiveMutation = useArchiveTemplate();
+  const unpublishMutation = useUnpublishTemplate();
   const togglePublicMutation = useTogglePublicStatus();
   const bulkApproveMutation = useBulkApproveQuestions();
   const approveQuestionMutation = useApproveQuestion();
@@ -806,7 +808,6 @@ export function TemplateDashboard() {
                   <thead>
                     <tr>
                       <th>Tiêu đề</th>
-                      <th style={{ width: 180 }}>Dạng bài toán</th>
                       <th style={{ width: 180 }}>Mức độ nhận thức</th>
                       <th style={{ width: 380 }}>Thao tác</th>
                     </tr>
@@ -815,7 +816,6 @@ export function TemplateDashboard() {
                     {canonicalQuestions.map((canonical) => (
                       <tr key={canonical.id}>
                         <td>{canonical.title}</td>
-                        <td>{canonical.problemType}</td>
                         <td>
                           {cognitiveLevelLabel[canonical.cognitiveLevel] ||
                             canonical.cognitiveLevel}
@@ -1107,6 +1107,15 @@ export function TemplateDashboard() {
                           >
                             <Archive size={14} />
                             Lưu trữ
+                          </button>
+                        )}
+                        {template.status === TemplateStatus.PUBLISHED && (
+                          <button
+                            className="btn secondary"
+                            onClick={() => unpublishMutation.mutate(template.id)}
+                          >
+                            <FileText size={14} />
+                            Hủy xuất bản
                           </button>
                         )}
                         <button

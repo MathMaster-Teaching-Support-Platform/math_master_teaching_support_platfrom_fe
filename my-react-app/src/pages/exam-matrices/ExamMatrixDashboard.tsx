@@ -437,17 +437,11 @@ export function ExamMatrixDashboard() {
                     <span className={statusClass[matrix.status]}>
                       {cardStatusLabel[matrix.status]}
                     </span>
-                    <span className="muted" style={{ fontSize: '0.78rem' }}>
-                      {matrix.rowCount ?? 0} dòng ma trận
-                    </span>
                   </div>
 
                   {/* Title + description */}
                   <div style={{ flex: 1 }}>
                     <h3 style={{ marginBottom: 6 }}>{matrix.name}</h3>
-                    <p className="muted" style={{ fontSize: '0.83rem', lineHeight: 1.45 }}>
-                      {matrix.description || 'Không có mô tả'}
-                    </p>
                   </div>
 
                   {/* Grade / Subject meta */}

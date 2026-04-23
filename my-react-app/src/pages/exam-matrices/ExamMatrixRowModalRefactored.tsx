@@ -309,6 +309,32 @@ export function ExamMatrixRowModalRefactored({
             </table>
           </div>
 
+          {/* Cognitive Stats Panel */}
+          {selectedQuestionBank && (
+            <div style={{ margin: '0 20px 12px', padding: '10px 14px', background: '#f8f9fa', borderRadius: 8, border: '1px solid #e5e7eb' }}>
+              <p style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: '#6b7280' }}>
+                Số câu trong bank: <strong style={{ color: '#111' }}>{selectedQuestionBank.name}</strong>
+              </p>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                {([
+                  { backendKey: 'NHAN_BIET', label: 'Nhận biết', color: '#6b7280', bg: '#f3f4f6' },
+                  { backendKey: 'THONG_HIEU', label: 'Thông hiểu', color: '#2563eb', bg: '#eff6ff' },
+                  { backendKey: 'VAN_DUNG', label: 'Vận dụng', color: '#ea580c', bg: '#fff7ed' },
+                  { backendKey: 'VAN_DUNG_CAO', label: 'Vận dụng cao', color: '#dc2626', bg: '#fef2f2' },
+                ] as const).map(({ backendKey, label, color, bg }) => {
+                  const available = selectedQuestionBank.cognitiveStats?.[backendKey] ?? 0;
+                  return (
+                    <div key={backendKey} style={{ flex: '1 1 calc(25% - 8px)', minWidth: 100, padding: '8px 10px', borderRadius: 6, background: bg, border: `1px solid ${color}33` }}>
+                      <div style={{ fontSize: 11, color, fontWeight: 600 }}>{label}</div>
+                      <div style={{ fontSize: 18, fontWeight: 700, color }}>{available}</div>
+                      <div style={{ fontSize: 11, color: '#9ca3af' }}>câu</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Compact Footer */}
           <div className="matrix-modal-footer">
             <button type="button" className="matrix-modal-btn matrix-modal-btn--secondary" onClick={onClose}>

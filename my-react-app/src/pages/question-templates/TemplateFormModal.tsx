@@ -252,7 +252,7 @@ export function TemplateFormModal({
     setCognitiveLevel(CognitiveLevel.THONG_HIEU);
     setIsPublic(false);
     setTemplateText('Giải phương trình: {{a}}x + {{b}} = 0');
-    setAnswerFormula('(-b)/a');
+    setAnswerFormula('(-{{b}})/{{a}}');
     setTags('đại số, lớp 9');
     setDiagramTemplateRaw('');
     setParameters([
@@ -630,13 +630,13 @@ export function TemplateFormModal({
               <input
                 ref={answerFormulaRef}
                 className="input"
-                placeholder="Ví dụ: a + b"
+                placeholder="Ví dụ: (-{{b}})/{{a}}) — dùng {{tên_biến}} cho tham số"
                 value={answerFormula}
                 onFocus={() => setActiveMathField({ kind: 'answerFormula' })}
                 onChange={(event) => setAnswerFormula(event.target.value)}
               />
               <p className="muted" style={{ marginTop: 6, fontSize: '0.78rem' }}>
-                Công thức phải dùng đúng tên biến đã khai báo (ví dụ: 2 * {'{{a}}'} * x).
+                Dùng <code>{'{{tên_biến}}'}</code> cho tham số (ví dụ: <code>{'(-{{b}})/{{a}})'}</code>). Biến phải khớp với tên đã khai báo ở trước.
               </p>
               {answerFormula && (
                 <div className="preview-box">

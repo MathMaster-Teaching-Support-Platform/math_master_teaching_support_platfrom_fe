@@ -68,8 +68,8 @@ export interface GetMyQuestionsParams {
 }
 
 export interface SearchQuestionsParams {
-  search?: string;
-  type?: QuestionType;
+  keyword?: string;
+  tag?: string;
   page?: number;
   size?: number;
 }
