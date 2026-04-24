@@ -18,10 +18,11 @@ import OnboardingFlow from '../pages/auth/OnboardingFlow';
 import Calendar from '../pages/calendar/Calendar';
 import Certificates from '../pages/certificates/Certificates';
 import LiveChat from '../pages/chat/LiveChat';
-import StudentCourseDetail from '../pages/courses/StudentCourseDetail';
 import StudentCourses from '../pages/courses/StudentCourses';
 import TeacherCourseDetail from '../pages/courses/TeacherCourseDetail';
 import TeacherCourses from '../pages/courses/TeacherCourses';
+import UnifiedCourseView from '../pages/courses/UnifiedCourseView';
+import EnrolledCourseWrapper from '../pages/courses/EnrolledCourseWrapper';
 import AdminDashboard from '../pages/dashboard/admin/AdminDashboard';
 import TeacherDashboard from '../pages/dashboard/teacher/TeacherDashboard';
 import TeacherEarningsDashboard from '../pages/dashboard/teacher/TeacherEarningsDashboard';
@@ -30,7 +31,6 @@ import HelpCenter from '../pages/help/HelpCenter';
 import MaterialsGenerator from '../pages/materials/MaterialsGenerator';
 import NotificationCenter from '../pages/notifications/NotificationCenter';
 import NotificationPreferences from '../pages/notifications/NotificationPreferences';
-import CoursePreview from '../pages/preview/CoursePreview';
 import RoadmapCatalogPage from '../pages/roadmap/RoadmapCatalogPage';
 import RoadmapDashboardPage from '../pages/roadmap/RoadmapDashboardPage';
 import RoadmapDetailPage from '../pages/roadmap/RoadmapDetailPage';
@@ -138,8 +138,8 @@ export const router = createBrowserRouter([
     element: <OnboardingFlow />,
   },
   {
-    path: '/course/:id',
-    element: <CoursePreview />,
+    path: '/course/:courseId',
+    element: <UnifiedCourseView />,
   },
   {
     path: '/dashboard',
@@ -478,7 +478,7 @@ export const router = createBrowserRouter([
     path: '/student/courses/:enrollmentId',
     element: (
       <PrivateRoute>
-        <StudentCourseDetail />
+        <EnrolledCourseWrapper />
       </PrivateRoute>
     ),
   },
