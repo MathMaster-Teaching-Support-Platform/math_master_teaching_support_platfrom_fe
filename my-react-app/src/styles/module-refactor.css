@@ -315,6 +315,12 @@
 }
 
 .module-layout-container .pill-btn {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.38rem;
+  white-space: nowrap;
   border: 1.5px solid var(--mod-slate-100);
   background: var(--mod-slate-50);
   color: var(--mod-slate-500);
@@ -325,6 +331,10 @@
   cursor: pointer;
   transition: all 0.16s ease;
   font-family: inherit;
+}
+
+.module-layout-container .pill-btn svg {
+  flex-shrink: 0;
 }
 
 .module-layout-container .pill-btn.active {

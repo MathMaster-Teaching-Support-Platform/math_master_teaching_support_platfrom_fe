@@ -1,13 +1,17 @@
 import {
+  AlertCircle,
+  ArrowLeft,
+  ArrowRight,
   BookOpen,
   CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
   Clock3,
   Eye,
+  FileText,
+  GraduationCap,
   History,
   XCircle,
 } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
 import React from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { useToast } from '../../context/ToastContext';
@@ -17,7 +21,9 @@ import {
   usePendingReviewCourses,
   useRejectCourseReview,
 } from '../../hooks/useCourses';
+import '../../styles/module-refactor.css';
 import type { CourseResponse } from '../../types';
+import '../courses/TeacherCourses.css';
 import './AdminCourseReviewsPage.css';
 
 const PAGE_SIZE = 10;
@@ -36,26 +42,40 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_BADGE: Record<string, string> = {
-  PENDING_REVIEW: 'badge-pending',
-  PUBLISHED: 'badge-approved',
-  REJECTED: 'badge-rejected',
-  DRAFT: 'badge-draft',
+  PENDING_REVIEW: 'course-badge badge-review',
+  PUBLISHED: 'course-badge badge-live',
+  REJECTED: 'course-badge badge-rejected',
+  DRAFT: 'course-badge badge-draft',
 };
 
+function pickTotalElements(data: { result?: { totalElements?: number } } | undefined): number {
+  return data?.result?.totalElements ?? 0;
+}
+
 // ─── Pending Tab ──────────────────────────────────────────────────────────────
-function PendingTab() {
+function PendingTab({
+  page,
+  onPageChange,
+  isLoading,
+  isError,
+  refetch,
+  courses,
+  totalPages,
+}: Readonly<{
+  page: number;
+  onPageChange: (p: number) => void;
+  isLoading: boolean;
+  isError: boolean;
+  refetch: () => void;
+  courses: CourseResponse[];
+  totalPages: number;
+}>) {
   const { showToast } = useToast();
-  const [page, setPage] = React.useState(0);
   const [rejectCourseId, setRejectCourseId] = React.useState<string | null>(null);
   const [rejectReason, setRejectReason] = React.useState('');
 
-  const { data, isLoading, refetch } = usePendingReviewCourses(page, PAGE_SIZE);
   const approveMutation = useApproveCourseReview();
   const rejectMutation = useRejectCourseReview();
-
-  const pendingPage = data?.result;
-  const courses = pendingPage?.content ?? [];
-  const totalPages = pendingPage?.totalPages ?? 1;
 
   const approvingId =
     approveMutation.isPending && typeof approveMutation.variables === 'string'
@@ -105,15 +125,47 @@ function PendingTab() {
     );
   };
 
-  let content: React.ReactNode;
+  if (isError) {
+    return (
+      <div className="empty">
+        <AlertCircle size={28} style={{ opacity: 0.55, color: 'var(--mod-danger)' }} />
+        <p>Không thể tải danh sách chờ duyệt. Vui lòng thử lại.</p>
+        <button type="button" className="btn secondary" onClick={() => refetch()}>
+          Thử lại
+        </button>
+      </div>
+    );
+  }
+
   if (isLoading) {
-    content = <div className="acr-empty">Đang tải danh sách chờ duyệt...</div>;
-  } else if (courses.length === 0) {
-    content = <div className="acr-empty">Không có khóa học nào đang chờ duyệt.</div>;
-  } else {
-    content = (
-      <>
-        <table className="acr-table">
+    return (
+      <div className="course-review-skeleton" aria-busy="true" aria-label="Đang tải">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <div key={i} className="course-review-skeleton__row">
+            <div className="course-review-skeleton__cell course-review-skeleton__cell--lg" />
+            <div className="course-review-skeleton__cell" />
+            <div className="course-review-skeleton__cell course-review-skeleton__cell--sm" />
+            <div className="course-review-skeleton__cell course-review-skeleton__cell--sm" />
+            <div className="course-review-skeleton__cell course-review-skeleton__cell--actions" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (courses.length === 0) {
+    return (
+      <div className="empty">
+        <Clock3 size={32} style={{ opacity: 0.35 }} />
+        <p>Không có khóa học nào đang chờ duyệt.</p>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="table-wrap">
+        <table className="table">
           <thead>
             <tr>
               <th>Tên khóa học</th>
@@ -129,33 +181,35 @@ function PendingTab() {
                 key={course.id}
                 course={course}
                 actions={
-                  <div className="acr-actions">
+                  <div className="course-review-actions">
                     <a
-                      className="acr-btn acr-btn-preview"
+                      className="btn secondary course-review-actions__btn"
                       href={`/admin/courses/${course.id}/review`}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      <Eye className="acr-icon" />
+                      <Eye size={15} strokeWidth={2} />
                       Xem nội dung
                     </a>
                     <button
-                      className="acr-btn acr-btn-approve"
+                      type="button"
+                      className="btn btn--feat-emerald course-review-actions__btn"
                       onClick={() => onApprove(course.id)}
                       disabled={approvingId === course.id || rejectingId === course.id}
                     >
-                      <CheckCircle2 className="acr-icon" />
+                      <CheckCircle2 size={15} strokeWidth={2} />
                       {approvingId === course.id ? 'Đang duyệt...' : 'Duyệt'}
                     </button>
                     <button
-                      className="acr-btn acr-btn-reject"
+                      type="button"
+                      className="btn danger course-review-actions__btn"
                       onClick={() => {
                         setRejectCourseId(course.id);
                         setRejectReason('');
                       }}
                       disabled={approvingId === course.id || rejectingId === course.id}
                     >
-                      <XCircle className="acr-icon" />
+                      <XCircle size={15} strokeWidth={2} />
                       Từ chối
                     </button>
                   </div>
@@ -164,75 +218,106 @@ function PendingTab() {
             ))}
           </tbody>
         </table>
-        <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-      </>
+      </div>
+      <Pagination page={page} totalPages={totalPages} onPageChange={onPageChange} />
+
+      <AnimatePresence>
+        {rejectCourseId && (
+          <motion.div
+            className="course-review-modal-root"
+            role="presentation"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+          >
+            <button
+              type="button"
+              className="course-review-modal-backdrop"
+              aria-label="Đóng"
+              onClick={() => setRejectCourseId(null)}
+            />
+            <div className="course-review-modal" role="dialog" aria-modal="true" aria-labelledby="course-review-reject-title">
+              <h2 id="course-review-reject-title">Từ chối khóa học</h2>
+              <p>Nhập lý do để giáo viên chỉnh sửa và gửi lại.</p>
+              <textarea
+                className="textarea course-review-modal__textarea"
+                rows={5}
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                placeholder="Ví dụ: Nội dung khóa học chưa đủ rõ ràng ở phần mục tiêu học tập..."
+              />
+              <div className="course-review-modal__actions">
+                <button
+                  type="button"
+                  className="btn secondary"
+                  onClick={() => {
+                    setRejectCourseId(null);
+                    setRejectReason('');
+                  }}
+                >
+                  Hủy
+                </button>
+                <button
+                  type="button"
+                  className="btn danger"
+                  onClick={onReject}
+                  disabled={rejectMutation.isPending}
+                >
+                  {rejectMutation.isPending ? 'Đang xử lý...' : 'Xác nhận từ chối'}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
+
+function HistoryTabBody({
+  isLoading,
+  courses,
+  page,
+  totalPages,
+  onPageChange,
+}: Readonly<{
+  isLoading: boolean;
+  courses: CourseResponse[];
+  page: number;
+  totalPages: number;
+  onPageChange: (p: number) => void;
+}>) {
+  if (isLoading) {
+    return (
+      <div className="course-review-skeleton" aria-busy="true" aria-label="Đang tải">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <div key={i} className="course-review-skeleton__row">
+            <div className="course-review-skeleton__cell course-review-skeleton__cell--lg" />
+            <div className="course-review-skeleton__cell" />
+            <div className="course-review-skeleton__cell course-review-skeleton__cell--sm" />
+            <div className="course-review-skeleton__cell course-review-skeleton__cell--sm" />
+            <div className="course-review-skeleton__cell course-review-skeleton__cell--sm" />
+            <div className="course-review-skeleton__cell course-review-skeleton__cell--actions" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (courses.length === 0) {
+    return (
+      <div className="empty">
+        <History size={32} style={{ opacity: 0.35 }} />
+        <p>Không có khóa học nào khớp bộ lọc.</p>
+      </div>
     );
   }
 
   return (
     <>
-      <div className="acr-card">{content}</div>
-
-      {rejectCourseId && (
-        <div className="acr-modal-backdrop">
-          <div className="acr-modal">
-            <h2>Từ chối khóa học</h2>
-            <p>Nhập lý do để giáo viên chỉnh sửa và gửi lại.</p>
-            <textarea
-              rows={5}
-              value={rejectReason}
-              onChange={(e) => setRejectReason(e.target.value)}
-              placeholder="Ví dụ: Nội dung khóa học chưa đủ rõ ràng ở phần mục tiêu học tập..."
-            />
-            <div className="acr-modal-actions">
-              <button
-                className="acr-btn"
-                onClick={() => {
-                  setRejectCourseId(null);
-                  setRejectReason('');
-                }}
-              >
-                Hủy
-              </button>
-              <button
-                className="acr-btn acr-btn-reject"
-                onClick={onReject}
-                disabled={rejectMutation.isPending}
-              >
-                {rejectMutation.isPending ? 'Đang xử lý...' : 'Xác nhận từ chối'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
-  );
-}
-
-// ─── History Tab ──────────────────────────────────────────────────────────────
-function HistoryTab() {
-  const [page, setPage] = React.useState(0);
-  const [status, setStatus] = React.useState('ALL');
-
-  const { data, isLoading } = useCourseReviewHistory(status, page, PAGE_SIZE);
-  const historyPage = data?.result;
-  const courses = historyPage?.content ?? [];
-  const totalPages = historyPage?.totalPages ?? 1;
-
-  const handleStatusChange = (s: string) => {
-    setStatus(s);
-    setPage(0);
-  };
-
-  let content: React.ReactNode;
-  if (isLoading) {
-    content = <div className="acr-empty">Đang tải lịch sử...</div>;
-  } else if (courses.length === 0) {
-    content = <div className="acr-empty">Không có khóa học nào.</div>;
-  } else {
-    content = (
-      <>
-        <table className="acr-table">
+      <div className="table-wrap">
+        <table className="table">
           <thead>
             <tr>
               <th>Tên khóa học</th>
@@ -240,6 +325,7 @@ function HistoryTab() {
               <th>Loại</th>
               <th>Trạng thái</th>
               <th>Cập nhật</th>
+              <th>Thao tác</th>
             </tr>
           </thead>
           <tbody>
@@ -250,12 +336,12 @@ function HistoryTab() {
                 showStatus
                 actions={
                   <a
-                    className="acr-btn acr-btn-preview"
+                    className="btn secondary course-review-actions__btn"
                     href={`/admin/courses/${course.id}/review`}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <Eye className="acr-icon" />
+                    <Eye size={15} strokeWidth={2} />
                     Xem nội dung
                   </a>
                 }
@@ -263,27 +349,74 @@ function HistoryTab() {
             ))}
           </tbody>
         </table>
-        <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-      </>
+      </div>
+      <Pagination page={page} totalPages={totalPages} onPageChange={onPageChange} />
+    </>
+  );
+}
+
+// ─── History Tab ──────────────────────────────────────────────────────────────
+function HistoryTab({
+  page,
+  onPageChange,
+  status,
+  onStatusChange,
+  isLoading,
+  isError,
+  refetch,
+  courses,
+  totalPages,
+}: Readonly<{
+  page: number;
+  onPageChange: (p: number) => void;
+  status: string;
+  onStatusChange: (s: string) => void;
+  isLoading: boolean;
+  isError: boolean;
+  refetch: () => void;
+  courses: CourseResponse[];
+  totalPages: number;
+}>) {
+  if (isError) {
+    return (
+      <div className="empty">
+        <AlertCircle size={28} style={{ opacity: 0.55, color: 'var(--mod-danger)' }} />
+        <p>Không thể tải lịch sử duyệt. Vui lòng thử lại.</p>
+        <button type="button" className="btn secondary" onClick={() => refetch()}>
+          Thử lại
+        </button>
+      </div>
     );
   }
 
   return (
-    <div className="acr-card">
-      <div className="acr-filter-bar">
-        {Object.entries(STATUS_LABELS).map(([key, label]) => (
-          <button
-            key={key}
-            className={`acr-filter-btn ${status === key ? 'active' : ''}`}
-            onClick={() => handleStatusChange(key)}
-          >
-            {label}
-          </button>
-        ))}
+    <>
+      <div className="toolbar course-review-history-toolbar">
+        <span className="course-review-filter-label">Trạng thái</span>
+        <div className="pill-group" role="tablist" aria-label="Lọc theo trạng thái">
+          {Object.entries(STATUS_LABELS).map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              role="tab"
+              aria-selected={status === key}
+              className={`pill-btn${status === key ? ' active' : ''}`}
+              onClick={() => onStatusChange(key)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {content}
-    </div>
+      <HistoryTabBody
+        isLoading={isLoading}
+        courses={courses}
+        page={page}
+        totalPages={totalPages}
+        onPageChange={onPageChange}
+      />
+    </>
   );
 }
 
@@ -300,10 +433,10 @@ function CourseRow({
   return (
     <tr>
       <td>
-        <div className="acr-title-cell">
-          <strong>{course.title}</strong>
+        <div className="course-review-title-cell">
+          <strong className="course-review-title">{course.title}</strong>
           {course.rejectionReason && (
-            <span className="acr-rejection-reason" title={course.rejectionReason}>
+            <span className="course-review-rejection" title={course.rejectionReason}>
               Lý do: {course.rejectionReason}
             </span>
           )}
@@ -313,12 +446,12 @@ function CourseRow({
       <td>{PROVIDER_LABELS[course.provider] ?? course.provider}</td>
       {showStatus && (
         <td>
-          <span className={`acr-status-badge ${STATUS_BADGE[course.status ?? ''] ?? ''}`}>
+          <span className={STATUS_BADGE[course.status ?? ''] ?? 'course-badge badge-draft'}>
             {STATUS_LABELS[course.status ?? ''] ?? course.status}
           </span>
         </td>
       )}
-      <td>{new Date(course.updatedAt ?? course.createdAt).toLocaleDateString('vi-VN')}</td>
+      <td className="course-review-meta-date">{new Date(course.updatedAt ?? course.createdAt).toLocaleDateString('vi-VN')}</td>
       <td>{actions}</td>
     </tr>
   );
@@ -333,21 +466,29 @@ function Pagination({
   totalPages: number;
   onPageChange: (p: number) => void;
 }>) {
+  const safeTotal = Math.max(totalPages, 1);
   return (
-    <div className="acr-pagination">
-      <button onClick={() => onPageChange(Math.max(0, page - 1))} disabled={page === 0}>
-        <ChevronLeft className="acr-icon" />
+    <div className="courses-pagination">
+      <button
+        type="button"
+        className="pagination-btn"
+        onClick={() => onPageChange(Math.max(0, page - 1))}
+        disabled={page === 0}
+      >
+        <ArrowLeft size={14} strokeWidth={2.25} />
         Trước
       </button>
-      <span>
-        Trang {page + 1} / {Math.max(totalPages, 1)}
+      <span className="pagination-info">
+        Trang <strong>{page + 1}</strong> / {safeTotal}
       </span>
       <button
-        onClick={() => onPageChange(Math.min(totalPages - 1, page + 1))}
-        disabled={page + 1 >= totalPages}
+        type="button"
+        className="pagination-btn"
+        onClick={() => onPageChange(Math.min(safeTotal - 1, page + 1))}
+        disabled={page + 1 >= safeTotal}
       >
         Sau
-        <ChevronRight className="acr-icon" />
+        <ArrowRight size={14} strokeWidth={2.25} />
       </button>
     </div>
   );
@@ -356,38 +497,195 @@ function Pagination({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 const AdminCourseReviewsPage: React.FC = () => {
   const [activeTab, setActiveTab] = React.useState<'pending' | 'history'>('pending');
+  const [pendingPage, setPendingPage] = React.useState(0);
+  const [historyPage, setHistoryPage] = React.useState(0);
+  const [historyStatus, setHistoryStatus] = React.useState('ALL');
+
+  const pendingQuery = usePendingReviewCourses(pendingPage, PAGE_SIZE);
+  const historyQuery = useCourseReviewHistory(historyStatus, historyPage, PAGE_SIZE);
+
+  const statAll = useCourseReviewHistory('ALL', 0, 1);
+  const statPublished = useCourseReviewHistory('PUBLISHED', 0, 1);
+  const statDraft = useCourseReviewHistory('DRAFT', 0, 1);
+
+  const pendingPageData = pendingQuery.data?.result;
+  const coursesPending = pendingPageData?.content ?? [];
+  const totalPagesPending = pendingPageData?.totalPages ?? 1;
+  const pendingTotal = pickTotalElements(pendingQuery.data);
+
+  const historyPageData = historyQuery.data?.result;
+  const coursesHistory = historyPageData?.content ?? [];
+  const totalPagesHistory = historyPageData?.totalPages ?? 1;
+  const historyListTotal = pickTotalElements(historyQuery.data);
+
+  const handleStatusChange = (s: string) => {
+    setHistoryStatus(s);
+    setHistoryPage(0);
+  };
+
+  const handleTab = (tab: 'pending' | 'history') => {
+    setActiveTab(tab);
+  };
+
+  const chipCount = activeTab === 'pending' ? pendingTotal : historyListTotal;
 
   return (
-    <DashboardLayout role="admin" user={{ name: 'Admin', avatar: '', role: 'admin' }}>
-      <div className="acr-page">
-        <div className="acr-header">
-          <div>
-            <h1>
-              <BookOpen className="acr-header-icon" />
-              Duyệt Khóa Học
-            </h1>
-            <p>Quản lý và theo dõi trạng thái phê duyệt khóa học.</p>
+    <DashboardLayout
+      role="admin"
+      user={{ name: 'Admin', avatar: '', role: 'admin' }}
+      contentClassName="dashboard-content--flush-bleed"
+    >
+      <div className="module-layout-container">
+        <section className="module-page teacher-courses-page admin-course-reviews-page">
+          <header className="page-header courses-header-row">
+            <div className="header-stack">
+              <div className="header-kicker">Admin Console</div>
+              <div className="row" style={{ gap: '0.6rem' }}>
+                <h2>Duyệt khóa học</h2>
+                {!pendingQuery.isPending && !historyQuery.isPending && (
+                  <span className="count-chip">{chipCount}</span>
+                )}
+              </div>
+              <p className="header-sub">
+                {pendingTotal} chờ xử lý • {pickTotalElements(statAll.data)} trong lịch sử
+              </p>
+            </div>
+          </header>
+
+          <div className="stats-grid">
+            <div className="stat-card stat-blue">
+              <div className="stat-icon-wrap" aria-hidden="true">
+                <Clock3 size={20} />
+              </div>
+              <div>
+                <h3>{pendingQuery.isPending && !pendingQuery.data ? '…' : pendingTotal}</h3>
+                <p>Chờ duyệt</p>
+              </div>
+            </div>
+            <div className="stat-card stat-emerald">
+              <div className="stat-icon-wrap" aria-hidden="true">
+                <CheckCircle2 size={20} />
+              </div>
+              <div>
+                <h3>{statPublished.isPending && !statPublished.data ? '…' : pickTotalElements(statPublished.data)}</h3>
+                <p>Đã xuất bản</p>
+              </div>
+            </div>
+            <div className="stat-card stat-amber">
+              <div className="stat-icon-wrap" aria-hidden="true">
+                <FileText size={20} />
+              </div>
+              <div>
+                <h3>{statDraft.isPending && !statDraft.data ? '…' : pickTotalElements(statDraft.data)}</h3>
+                <p>Bản nháp (lịch sử)</p>
+              </div>
+            </div>
+            <div className="stat-card stat-violet">
+              <div className="stat-icon-wrap" aria-hidden="true">
+                <GraduationCap size={20} />
+              </div>
+              <div>
+                <h3>{statAll.isPending && !statAll.data ? '…' : pickTotalElements(statAll.data)}</h3>
+                <p>Tổng lịch sử</p>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <div className="acr-tabs">
-          <button
-            className={`acr-tab ${activeTab === 'pending' ? 'active' : ''}`}
-            onClick={() => setActiveTab('pending')}
-          >
-            <Clock3 className="acr-tab-icon" />
-            Chờ duyệt
-          </button>
-          <button
-            className={`acr-tab ${activeTab === 'history' ? 'active' : ''}`}
-            onClick={() => setActiveTab('history')}
-          >
-            <History className="acr-tab-icon" />
-            Lịch sử duyệt
-          </button>
-        </div>
+          <div className="toolbar">
+            <div className="pill-group" role="tablist" aria-label="Chế độ xem">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeTab === 'pending'}
+                className={`pill-btn${activeTab === 'pending' ? ' active' : ''}`}
+                onClick={() => handleTab('pending')}
+              >
+                <Clock3 size={15} strokeWidth={2} />
+                Chờ duyệt
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeTab === 'history'}
+                className={`pill-btn${activeTab === 'history' ? ' active' : ''}`}
+                onClick={() => handleTab('history')}
+              >
+                <History size={15} strokeWidth={2} />
+                Lịch sử duyệt
+              </button>
+            </div>
+            <div className="row course-review-toolbar-hint" style={{ marginLeft: 'auto' }}>
+              <span className="meta-item">
+                <BookOpen size={14} strokeWidth={2} aria-hidden="true" />
+                Xem nội dung mở tab mới để đối chiếu trước khi phê duyệt.
+              </span>
+            </div>
+          </div>
 
-        {activeTab === 'pending' ? <PendingTab /> : <HistoryTab />}
+          {!pendingQuery.isPending && !historyQuery.isPending && (
+            <div className="assessment-summary-bar">
+              <div className="summary-item summary-item--primary">
+                <span className="summary-label">Hiển thị</span>
+                <strong className="summary-value">
+                  {activeTab === 'pending' ? coursesPending.length : coursesHistory.length} /{' '}
+                  {activeTab === 'pending' ? pendingTotal : historyListTotal}
+                </strong>
+              </div>
+              <div className="summary-item">
+                <span className="summary-dot summary-dot--progress" />
+                <span className="summary-label">Chờ duyệt</span>
+                <strong className="summary-value">{pendingTotal}</strong>
+              </div>
+              <div className="summary-item">
+                <span className="summary-dot summary-dot--upcoming" />
+                <span className="summary-label">Bản nháp (lịch sử)</span>
+                <strong className="summary-value">{pickTotalElements(statDraft.data)}</strong>
+              </div>
+            </div>
+          )}
+
+          <div className="course-review-tab-shell">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                role="tabpanel"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.18 }}
+                className="course-review-tab-panel"
+              >
+                {activeTab === 'pending' ? (
+                  <PendingTab
+                    page={pendingPage}
+                    onPageChange={setPendingPage}
+                    isLoading={pendingQuery.isPending}
+                    isError={pendingQuery.isError}
+                    refetch={() => {
+                      pendingQuery.refetch().catch(() => {});
+                    }}
+                    courses={coursesPending}
+                    totalPages={totalPagesPending}
+                  />
+                ) : (
+                  <HistoryTab
+                    page={historyPage}
+                    onPageChange={setHistoryPage}
+                    status={historyStatus}
+                    onStatusChange={handleStatusChange}
+                    isLoading={historyQuery.isPending}
+                    isError={historyQuery.isError}
+                    refetch={() => {
+                      historyQuery.refetch().catch(() => {});
+                    }}
+                    courses={coursesHistory}
+                    totalPages={totalPagesHistory}
+                  />
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </section>
       </div>
     </DashboardLayout>
   );

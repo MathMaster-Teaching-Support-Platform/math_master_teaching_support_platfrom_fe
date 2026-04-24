@@ -267,7 +267,7 @@ const UserManagement: React.FC = () => {
               </div>
               <button
                 type="button"
-                className="btn btn--feat-indigo"
+                className="btn btn-primary"
                 onClick={() => setShowCreateModal(true)}
               >
                 <Plus size={16} aria-hidden />
@@ -510,13 +510,13 @@ const UserManagement: React.FC = () => {
 
         {/* Create User Modal */}
         {showCreateModal && (
-          <div className="modal-overlay">
+          <div className="modal-overlay modal-overlay--anchored">
             <button
               className="modal-backdrop"
               onClick={() => setShowCreateModal(false)}
               aria-label="Đóng hộp thoại"
             />
-            <dialog className="modal" open>
+            <dialog className="modal modal--create-user" open>
               <div className="modal-header">
                 <h2 className="modal-title">Thêm người dùng mới</h2>
                 <button className="modal-close" onClick={() => setShowCreateModal(false)}>
@@ -526,86 +526,90 @@ const UserManagement: React.FC = () => {
 
               <div className="modal-body">
                 {createError && (
-                  <div style={{ color: 'red', marginBottom: '1rem', fontSize: '0.875rem' }}>
+                  <div className="modal-inline-error" role="alert">
                     {createError}
                   </div>
                 )}
 
-                <div className="form-group">
-                  <label htmlFor="create-fullname">Họ và tên *</label>
-                  <input
-                    id="create-fullname"
-                    type="text"
-                    placeholder="Nhập họ và tên"
-                    value={createForm.fullName}
-                    onChange={(e) => setCreateForm((f) => ({ ...f, fullName: e.target.value }))}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="create-username">Tên đăng nhập *</label>
-                  <input
-                    id="create-username"
-                    type="text"
-                    placeholder="Nhập tên đăng nhập (không dấu, không khoảng trắng)"
-                    value={createForm.userName}
-                    onChange={(e) => setCreateForm((f) => ({ ...f, userName: e.target.value }))}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="create-email">Email *</label>
-                  <input
-                    id="create-email"
-                    type="email"
-                    placeholder="example@email.com"
-                    value={createForm.email}
-                    onChange={(e) => setCreateForm((f) => ({ ...f, email: e.target.value }))}
-                  />
-                </div>
-
-                <div className="form-row">
-                  <div className="form-group">
-                    <label htmlFor="create-role">Vai trò *</label>
-                    <select
-                      id="create-role"
-                      value={createForm.role}
-                      onChange={(e) =>
-                        setCreateForm((f) => ({ ...f, role: e.target.value as UserRole }))
-                      }
-                    >
-                      <option value="TEACHER">Giáo viên</option>
-                      <option value="STUDENT">Học sinh</option>
-                      <option value="ADMIN">Admin</option>
-                    </select>
+                <div className="modal-form-grid">
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="create-fullname">Họ và tên *</label>
+                      <input
+                        id="create-fullname"
+                        type="text"
+                        placeholder="Nhập họ và tên"
+                        value={createForm.fullName}
+                        onChange={(e) => setCreateForm((f) => ({ ...f, fullName: e.target.value }))}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="create-username">Tên đăng nhập *</label>
+                      <input
+                        id="create-username"
+                        type="text"
+                        placeholder="Không dấu, không khoảng trắng"
+                        value={createForm.userName}
+                        onChange={(e) => setCreateForm((f) => ({ ...f, userName: e.target.value }))}
+                      />
+                    </div>
                   </div>
-                  <div className="form-group">
-                    <label htmlFor="create-status">Trạng thái *</label>
-                    <select
-                      id="create-status"
-                      value={createForm.status}
-                      onChange={(e) =>
-                        setCreateForm((f) => ({
-                          ...f,
-                          status: e.target.value as 'ACTIVE' | 'INACTIVE',
-                        }))
-                      }
-                    >
-                      <option value="ACTIVE">Hoạt động</option>
-                      <option value="INACTIVE">Tạm ngưng</option>
-                    </select>
-                  </div>
-                </div>
 
-                <div className="form-group">
-                  <label htmlFor="create-password">Mật khẩu tạm thời *</label>
-                  <input
-                    id="create-password"
-                    type="password"
-                    placeholder="Tối thiểu 8 ký tự, có chữ hoa + số + ký tự đặc biệt"
-                    value={createForm.password}
-                    onChange={(e) => setCreateForm((f) => ({ ...f, password: e.target.value }))}
-                  />
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="create-email">Email *</label>
+                      <input
+                        id="create-email"
+                        type="email"
+                        placeholder="example@email.com"
+                        value={createForm.email}
+                        onChange={(e) => setCreateForm((f) => ({ ...f, email: e.target.value }))}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="create-password">Mật khẩu tạm thời *</label>
+                      <input
+                        id="create-password"
+                        type="password"
+                        placeholder="≥8 ký tự, chữ hoa + số + ký tự đặc biệt"
+                        value={createForm.password}
+                        onChange={(e) => setCreateForm((f) => ({ ...f, password: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="create-role">Vai trò *</label>
+                      <select
+                        id="create-role"
+                        value={createForm.role}
+                        onChange={(e) =>
+                          setCreateForm((f) => ({ ...f, role: e.target.value as UserRole }))
+                        }
+                      >
+                        <option value="TEACHER">Giáo viên</option>
+                        <option value="STUDENT">Học sinh</option>
+                        <option value="ADMIN">Admin</option>
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="create-status">Trạng thái *</label>
+                      <select
+                        id="create-status"
+                        value={createForm.status}
+                        onChange={(e) =>
+                          setCreateForm((f) => ({
+                            ...f,
+                            status: e.target.value as 'ACTIVE' | 'INACTIVE',
+                          }))
+                        }
+                      >
+                        <option value="ACTIVE">Hoạt động</option>
+                        <option value="INACTIVE">Tạm ngưng</option>
+                      </select>
+                    </div>
+                  </div>
                 </div>
               </div>
 
