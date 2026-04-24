@@ -1,3 +1,4 @@
+import { Plus } from 'lucide-react';
 import React, { useCallback, useEffect, useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockAdmin } from '../../data/mockData';
@@ -13,6 +14,11 @@ import {
   type UpdatePlanPayload,
   type UserSubscription,
 } from '../../services/api/subscription-plan.service';
+import '../../styles/module-refactor.css';
+import '../courses/TeacherCourses.css';
+import './admin-mgmt-shell.css';
+import AdminFinanceStudioShell from './AdminFinanceStudioShell';
+import './admin-finance-studio.css';
 import './SubscriptionManagement.css';
 
 const BILLING_CYCLE_OPTIONS: { label: string; value: BillingCycle }[] = [
@@ -260,17 +266,27 @@ const SubscriptionManagement: React.FC = () => {
       role="admin"
       user={{ name: mockAdmin.name, avatar: mockAdmin.avatar!, role: 'admin' }}
       notificationCount={8}
+      contentClassName="dashboard-content--flush-bleed"
     >
-      <div className="subscription-management-page">
-        <div className="page-header">
-          <div>
-            <h1 className="page-title">💎 Quản Lý Gói Dịch Vụ</h1>
-            <p className="page-subtitle">Quản lý các gói đăng ký và doanh thu</p>
-          </div>
-          <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}>
-            <span>➕</span> Tạo gói mới
-          </button>
-        </div>
+      <AdminFinanceStudioShell>
+        <div className="subscription-management-page">
+          <header className="page-header courses-header-row">
+            <div className="header-stack">
+              <div className="header-kicker">Tài chính</div>
+              <h2 className="page-title" style={{ margin: 0 }}>
+                Gói đăng ký
+              </h2>
+              <p className="page-subtitle header-sub">Quản lý các gói đăng ký và doanh thu</p>
+            </div>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => setShowCreateModal(true)}
+            >
+              <Plus size={18} aria-hidden />
+              Tạo gói mới
+            </button>
+          </header>
 
         {/* Revenue Stats */}
         <div className="revenue-stats">
@@ -895,7 +911,8 @@ const SubscriptionManagement: React.FC = () => {
             </div>
           </div>
         )}
-      </div>
+        </div>
+      </AdminFinanceStudioShell>
     </DashboardLayout>
   );
 };

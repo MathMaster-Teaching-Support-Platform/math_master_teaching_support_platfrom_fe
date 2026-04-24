@@ -1,4 +1,7 @@
+import { Download, RefreshCw } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
+import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { mockAdmin } from '../../data/mockData';
 import {
   adminFinancialService,
   exportToCSV,
@@ -9,6 +12,11 @@ import type {
   MarketplaceTopCourse,
   MarketplaceTopInstructor,
 } from '../../services/admin-financial.service';
+import '../../styles/module-refactor.css';
+import '../courses/TeacherCourses.css';
+import './admin-mgmt-shell.css';
+import AdminFinanceStudioShell from './AdminFinanceStudioShell';
+import './admin-finance-studio.css';
 import './MarketplaceAnalytics.css';
 
 const MarketplaceAnalytics: React.FC = () => {
@@ -88,44 +96,53 @@ const MarketplaceAnalytics: React.FC = () => {
     exportToCSV(exportData, `top_instructors_${instructorLimit}`);
   };
 
+  const shell = (body: React.ReactNode) => (
+    <DashboardLayout
+      role="admin"
+      user={{ name: mockAdmin.name, avatar: mockAdmin.avatar, role: 'admin' }}
+      contentClassName="dashboard-content--flush-bleed"
+    >
+      <AdminFinanceStudioShell>
+        <div className="marketplace-analytics">{body}</div>
+      </AdminFinanceStudioShell>
+    </DashboardLayout>
+  );
+
   if (loading) {
-    return (
-      <div className="marketplace-analytics">
-        <div className="loading-container">
-          <div className="spinner"></div>
-          <p>Đang tải dữ liệu...</p>
-        </div>
+    return shell(
+      <div className="loading-container">
+        <div className="spinner" />
+        <p>Đang tải dữ liệu...</p>
       </div>
     );
   }
 
   if (error) {
-    return (
-      <div className="marketplace-analytics">
-        <div className="error-container">
-          <div className="error-icon">⚠️</div>
-          <h3>Lỗi tải dữ liệu</h3>
-          <p>{error}</p>
-          <button onClick={fetchData} className="retry-button">
-            Thử lại
-          </button>
-        </div>
+    return shell(
+      <div className="error-container">
+        <div className="error-icon">⚠️</div>
+        <h3>Lỗi tải dữ liệu</h3>
+        <p>{error}</p>
+        <button type="button" onClick={fetchData} className="retry-button">
+          Thử lại
+        </button>
       </div>
     );
   }
 
-  return (
-    <div className="marketplace-analytics">
-      {/* Header */}
-      <div className="analytics-header">
-        <div className="header-content">
-          <h1>Phân Tích Thị Trường</h1>
-          <p className="subtitle">Theo dõi hiệu suất khóa học và giảng viên hàng đầu</p>
+  return shell(
+    <>
+      <header className="page-header courses-header-row analytics-header">
+        <div className="header-stack">
+          <div className="header-kicker">Tài chính</div>
+          <h2 style={{ margin: 0 }}>Phân tích thị trường</h2>
+          <p className="header-sub">Theo dõi hiệu suất khóa học và giảng viên hàng đầu</p>
         </div>
-        <button onClick={fetchData} className="refresh-button">
-          🔄 Làm mới
+        <button type="button" onClick={fetchData} className="refresh-button">
+          <RefreshCw size={16} aria-hidden />
+          Làm mới
         </button>
-      </div>
+      </header>
 
       {/* Overview Stats */}
       <div className="overview-stats">
@@ -170,10 +187,11 @@ const MarketplaceAnalytics: React.FC = () => {
       {/* Top Courses Section */}
       <div className="section-container">
         <div className="section-header">
-          <h2>🏆 Khóa Học Bán Chạy Nhất</h2>
+          <h2>Khóa học bán chạy nhất</h2>
           <div className="section-controls">
-            <button onClick={handleExportCourses} className="export-button">
-              📥 Xuất CSV
+            <button type="button" onClick={handleExportCourses} className="export-button">
+              <Download size={16} aria-hidden />
+              Xuất CSV
             </button>
             <label>
               Hiển thị:
@@ -254,10 +272,11 @@ const MarketplaceAnalytics: React.FC = () => {
       {/* Top Instructors Section */}
       <div className="section-container">
         <div className="section-header">
-          <h2>👨‍🏫 Giảng Viên Hàng Đầu</h2>
+          <h2>Giảng viên hàng đầu</h2>
           <div className="section-controls">
-            <button onClick={handleExportInstructors} className="export-button">
-              📥 Xuất CSV
+            <button type="button" onClick={handleExportInstructors} className="export-button">
+              <Download size={16} aria-hidden />
+              Xuất CSV
             </button>
             <label>
               Hiển thị:
@@ -352,7 +371,7 @@ const MarketplaceAnalytics: React.FC = () => {
           </ul>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

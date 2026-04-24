@@ -1,0 +1,401 @@
+/* Admin “Tài chính” studio — DESIGN.md warm palette + TeacherCourses shell.
+   Import after page CSS so these overrides win. Scope: .admin-finance-studio */
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .admin-financial-overview,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .revenue-breakdown-page,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .marketplace-analytics,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .admin-transactions-page,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .subscription-management-page {
+  padding: 0;
+  max-width: 1600px;
+  margin: 0 auto;
+  background: transparent !important;
+  min-height: 0;
+}
+
+/* Headers (overview / breakdown / analytics) — ivory card on parchment */
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .overview-header,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .breakdown-header,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .analytics-header {
+  background: #faf9f5;
+  border: 1px solid #e8e6dc;
+  border-radius: 16px;
+  box-shadow: 0 0 0 1px rgba(209, 207, 197, 0.35), rgba(0, 0, 0, 0.04) 0 6px 20px;
+  padding: 1.1rem 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .header-content h1 {
+  font-size: 1.65rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #141413;
+  margin: 0 0 0.35rem;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .header-content .subtitle {
+  color: #5e5d59;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* Primary actions — terracotta (DESIGN brand), not purple */
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .refresh-button,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .export-button {
+  background: #c96442;
+  border: 1px solid #c96442;
+  color: #faf9f5;
+  border-radius: 11px;
+  font-weight: 600;
+  box-shadow: 0 0 0 1px rgba(201, 100, 66, 0.2);
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .refresh-button:hover,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .export-button:hover {
+  background: #b85535;
+  border-color: #b85535;
+  color: #faf9f5;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .refresh-button,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .export-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .admin-finance-spin {
+  animation: admin-finance-spin 0.75s linear infinite;
+}
+
+@keyframes admin-finance-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Marketplace — warm section + stat strip */
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .marketplace-analytics .overview-stats .stat-card,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .marketplace-analytics .section-container {
+  background: #fffefb;
+  border: 1px solid #e8e6dc;
+  box-shadow: 0 0 0 1px rgba(240, 238, 230, 0.55), rgba(20, 20, 19, 0.04) 0 8px 22px;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .marketplace-analytics .section-header {
+  border-bottom-color: #e8e6dc;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .marketplace-analytics .limit-select {
+  border-color: #ddd6c8;
+  border-radius: 12px;
+  background: #fffefb;
+  color: #141413;
+}
+
+/* Transactions — replace cold inline accent colors */
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .admin-transactions-page .txn-stats-grid .txn-stat-card:nth-child(1) {
+  border-top-color: #c96442 !important;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .admin-transactions-page .txn-stats-grid .txn-stat-card:nth-child(2) {
+  border-top-color: #047857 !important;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .admin-transactions-page .txn-stats-grid .txn-stat-card:nth-child(3) {
+  border-top-color: #d97706 !important;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .admin-transactions-page .txn-stats-grid .txn-stat-card:nth-child(4) {
+  border-top-color: #b91c1c !important;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .admin-transactions-page .txn-stats-grid .txn-stat-card:nth-child(5) {
+  border-top-color: #15803d !important;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .admin-transactions-page .txn-stats-grid .txn-stat-card:nth-child(1) .txn-stat-icon {
+  background: rgba(201, 100, 66, 0.12) !important;
+  color: #9a4a32 !important;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .admin-transactions-page .txn-stats-grid .txn-stat-card:nth-child(2) .txn-stat-icon {
+  background: rgba(4, 120, 87, 0.12) !important;
+  color: #047857 !important;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .admin-transactions-page .txn-stats-grid .txn-stat-card:nth-child(3) .txn-stat-icon {
+  background: rgba(217, 119, 6, 0.14) !important;
+  color: #b45309 !important;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .admin-transactions-page .txn-stats-grid .txn-stat-card:nth-child(4) .txn-stat-icon {
+  background: rgba(185, 28, 28, 0.1) !important;
+  color: #b91c1c !important;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .admin-transactions-page .txn-stats-grid .txn-stat-card:nth-child(5) .txn-stat-icon {
+  background: rgba(21, 128, 61, 0.12) !important;
+  color: #15803d !important;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .admin-transactions-page header.page-header .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .admin-transactions-page header.page-header .btn-outline {
+  border-color: #ddd6c8;
+  color: #4d4c48;
+  background: #fffefb;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .admin-transactions-page header.page-header .btn-outline:hover:not(:disabled) {
+  border-color: #c96442;
+  color: #9a4a32;
+  background: #fdf8f3;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .subscription-management-page header.page-header .btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .month-input,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .period-select {
+  border-color: #ddd6c8;
+  border-radius: 12px;
+  background: #fffefb;
+  color: #141413;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .month-input:focus,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .period-select:focus {
+  outline: none;
+  border-color: #c96442;
+  box-shadow: 0 0 0 3px rgba(56, 152, 236, 0.22);
+}
+
+/* Metric / content cards — warm surfaces */
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .metric-card,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .summary-card,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .course-card-analytics,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .instructor-card-analytics {
+  background: #fffefb;
+  border: 1px solid #e8e6dc;
+  box-shadow: 0 0 0 1px rgba(240, 238, 230, 0.6), rgba(20, 20, 19, 0.04) 0 8px 22px;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .metric-card::before {
+  background: linear-gradient(90deg, #c96442 0%, #d97757 100%) !important;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .metric-card.revenue::before {
+  background: linear-gradient(90deg, #047857 0%, #059669 100%) !important;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .metric-card.commission::before {
+  background: linear-gradient(90deg, #b45309 0%, #c96442 100%) !important;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .metric-card.subscriptions::before {
+  background: linear-gradient(90deg, #6d28d9 0%, #7c3aed 100%) !important;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .metric-card.instructors::before {
+  background: linear-gradient(90deg, #d97706 0%, #ea580c 100%) !important;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .metric-label,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .metric-header h4 {
+  color: #5e5d59;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .metric-value,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .metric-value-small {
+  color: #141413;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .metric-trend.positive {
+  color: #065f46;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .metric-trend.negative {
+  color: #991b1b;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .quick-actions h2,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .section-title {
+  color: #141413;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .action-card {
+  background: #faf9f5;
+  border: 1px solid #e8e6dc;
+  border-radius: 14px;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .action-card:hover {
+  border-color: #d0c7b8;
+  box-shadow: 0 8px 24px rgba(45, 35, 25, 0.08);
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .info-banner {
+  background: #fdf8f3;
+  border: 1px solid #e8e6dc;
+  border-radius: 14px;
+  color: #4d4c48;
+}
+
+/* Loading / error / empty — solid ivory card, terracotta spinner (overrides page .css) */
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .admin-financial-overview .loading-container,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .admin-financial-overview .error-container,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .admin-financial-overview .empty-container,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .revenue-breakdown-page .loading-container,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .revenue-breakdown-page .error-container,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .revenue-breakdown-page .empty-container,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .marketplace-analytics .loading-container,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .marketplace-analytics .error-container,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .marketplace-analytics .empty-container {
+  min-height: min(52vh, 400px);
+  padding: 2.5rem 1.75rem;
+  margin: 0 auto;
+  max-width: 420px;
+  width: 100%;
+  background: #fffefb;
+  border: 1px solid #e8e6dc;
+  border-radius: 18px;
+  box-shadow:
+    0 0 0 1px rgba(240, 238, 230, 0.75),
+    0 12px 36px rgba(45, 35, 25, 0.06);
+  color: #5e5d59;
+  box-sizing: border-box;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .admin-financial-overview .spinner,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .revenue-breakdown-page .spinner,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .marketplace-analytics .spinner {
+  width: 46px;
+  height: 46px;
+  border: 3px solid #ede8dc;
+  border-top-color: #c96442;
+  border-radius: 50%;
+  animation: admin-finance-spin 0.88s linear infinite;
+  flex-shrink: 0;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .admin-financial-overview .loading-container p,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .revenue-breakdown-page .loading-container p,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .marketplace-analytics .loading-container p {
+  margin-top: 1.25rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: #4d4c48;
+  text-align: center;
+  line-height: 1.45;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .admin-financial-overview .error-container h3,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .revenue-breakdown-page .error-container h3,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .marketplace-analytics .error-container h3 {
+  color: #141413;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0.5rem 0 0.35rem;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .admin-financial-overview .error-container p,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .revenue-breakdown-page .error-container p,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .marketplace-analytics .error-container p {
+  font-size: 0.9rem;
+  color: #5e5d59;
+  text-align: center;
+  margin: 0 0 1rem;
+  line-height: 1.5;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .admin-financial-overview .empty-container p,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .revenue-breakdown-page .empty-container p,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .marketplace-analytics .empty-container p {
+  font-size: 0.95rem;
+  color: #6b6860;
+  text-align: center;
+  margin: 0;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .retry-button {
+  background: #c96442;
+  color: #faf9f5;
+  border: 1px solid #c96442;
+  border-radius: 10px;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Transactions + subscriptions: shared page header from Teacher pattern */
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .admin-transactions-page .page-header,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .subscription-management-page .page-header {
+  padding-bottom: 1.1rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid #e8e6dc;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .admin-transactions-page header.page-header.courses-header-row,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .subscription-management-page header.page-header.courses-header-row {
+  background: #faf9f5;
+  border: 1px solid #e8e6dc;
+  border-radius: 16px;
+  box-shadow: 0 0 0 1px rgba(209, 207, 197, 0.35), rgba(0, 0, 0, 0.04) 0 6px 20px;
+  padding: 1.1rem 1.25rem;
+  margin-bottom: 1.25rem;
+  border-bottom: none;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .admin-transactions-page .page-title,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .subscription-management-page .page-title {
+  color: #141413;
+  font-size: 1.65rem;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .admin-transactions-page .page-subtitle,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .subscription-management-page .page-subtitle {
+  color: #5e5d59;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .admin-transactions-page .btn-primary,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .subscription-management-page .btn-primary {
+  background: #c96442;
+  border-color: #c96442;
+  color: #faf9f5;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .admin-transactions-page .btn-primary:hover:not(:disabled),
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .subscription-management-page .btn-primary:hover:not(:disabled) {
+  background: #b85535;
+  border-color: #b85535;
+  color: #faf9f5;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .txn-table-card,
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .txn-filters {
+  background: #fffefb;
+  border-color: #e8e6dc;
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .subscription-management-page .revenue-stats .stat-card {
+  background: #fffefb;
+  border: 1px solid #e8e6dc;
+  border-radius: 16px;
+  box-shadow: 0 0 0 1px rgba(240, 238, 230, 0.55);
+}
+
+.module-layout-container.admin-mgmt-shell.admin-finance-studio .subscription-management-page .revenue-stats .stat-icon {
+  background: #ede8dc !important;
+  color: #7a5a4d;
+  border: 1px solid #ddd6c8;
+}

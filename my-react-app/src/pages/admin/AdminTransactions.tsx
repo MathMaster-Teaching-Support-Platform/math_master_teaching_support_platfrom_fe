@@ -1,8 +1,14 @@
+import { Download, Loader2, RefreshCw } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
 import { mockAdmin } from '../../data/mockData';
 import { AuthService } from '../../services/api/auth.service';
+import '../../styles/module-refactor.css';
+import '../courses/TeacherCourses.css';
+import './admin-mgmt-shell.css';
+import AdminFinanceStudioShell from './AdminFinanceStudioShell';
+import './admin-finance-studio.css';
 import './AdminTransactions.css';
 
 interface AdminTransaction {
@@ -301,8 +307,6 @@ const AdminTransactions: React.FC = () => {
     return formatCurrency(stats.totalRevenue);
   };
 
-  const exportButtonLabel = exportLoading ? '⏳ Đang xuất...' : '📥 Xuất CSV';
-
   const handleRefresh = async () => {
     await Promise.all([fetchTransactions(), fetchStats()]);
   };
@@ -370,23 +374,48 @@ const AdminTransactions: React.FC = () => {
       role="admin"
       user={{ name: mockAdmin.name, avatar: mockAdmin.avatar, role: 'admin' }}
       notificationCount={3}
+      contentClassName="dashboard-content--flush-bleed"
     >
-      <div className="admin-transactions-page">
-        {/* Header */}
-        <div className="page-header">
-          <div>
-            <h1 className="page-title">💳 Quản lý Giao dịch</h1>
-            <p className="page-subtitle">Theo dõi toàn bộ lịch sử thanh toán trên hệ thống</p>
-          </div>
-          <div className="header-actions">
-            <button className="btn btn-outline" onClick={handleExportCsv} disabled={exportLoading}>
-              {exportButtonLabel}
-            </button>
-            <button className="btn btn-primary" onClick={handleRefresh}>
-              🔄 Làm mới
-            </button>
-          </div>
-        </div>
+      <AdminFinanceStudioShell>
+        <div className="admin-transactions-page">
+          <header className="page-header courses-header-row">
+            <div className="header-stack">
+              <div className="header-kicker">Tài chính</div>
+              <h2 className="page-title" style={{ margin: 0 }}>
+                Giao dịch
+              </h2>
+              <p className="page-subtitle header-sub">
+                Theo dõi toàn bộ lịch sử thanh toán trên hệ thống
+              </p>
+            </div>
+            <div
+              className="header-actions row"
+              style={{ flexWrap: 'wrap', gap: '0.65rem', alignItems: 'center' }}
+            >
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={handleExportCsv}
+                disabled={exportLoading}
+              >
+                {exportLoading ? (
+                  <>
+                    <Loader2 size={16} className="admin-finance-spin" aria-hidden />
+                    Đang xuất...
+                  </>
+                ) : (
+                  <>
+                    <Download size={16} aria-hidden />
+                    Xuất CSV
+                  </>
+                )}
+              </button>
+              <button type="button" className="btn btn-primary" onClick={handleRefresh}>
+                <RefreshCw size={16} aria-hidden />
+                Làm mới
+              </button>
+            </div>
+          </header>
 
         {/* Stats Cards */}
         <div className="txn-stats-grid">
@@ -593,7 +622,8 @@ const AdminTransactions: React.FC = () => {
             </dialog>
           </div>
         )}
-      </div>
+        </div>
+      </AdminFinanceStudioShell>
     </DashboardLayout>
   );
 };

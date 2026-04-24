@@ -1,5 +1,8 @@
+import { Download, RefreshCw } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import RevenueBreakdownChart from '../../components/charts/RevenueBreakdownChart';
+import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { mockAdmin } from '../../data/mockData';
 import {
   adminFinancialService,
   calculateTotalRevenue,
@@ -7,6 +10,11 @@ import {
   formatCurrency,
 } from '../../services/admin-financial.service';
 import type { RevenueBreakdown as RevenueBreakdownData } from '../../services/admin-financial.service';
+import '../../styles/module-refactor.css';
+import '../courses/TeacherCourses.css';
+import './admin-mgmt-shell.css';
+import AdminFinanceStudioShell from './AdminFinanceStudioShell';
+import './admin-finance-studio.css';
 import './RevenueBreakdown.css';
 
 const RevenueBreakdown: React.FC = () => {
@@ -47,38 +55,44 @@ const RevenueBreakdown: React.FC = () => {
     exportToCSV(exportData, `revenue_breakdown_${period}`);
   };
 
+  const shell = (body: React.ReactNode) => (
+    <DashboardLayout
+      role="admin"
+      user={{ name: mockAdmin.name, avatar: mockAdmin.avatar, role: 'admin' }}
+      contentClassName="dashboard-content--flush-bleed"
+    >
+      <AdminFinanceStudioShell>
+        <div className="revenue-breakdown-page">{body}</div>
+      </AdminFinanceStudioShell>
+    </DashboardLayout>
+  );
+
   if (loading) {
-    return (
-      <div className="revenue-breakdown-page">
-        <div className="loading-container">
-          <div className="spinner"></div>
-          <p>Đang tải dữ liệu...</p>
-        </div>
+    return shell(
+      <div className="loading-container">
+        <div className="spinner" />
+        <p>Đang tải dữ liệu...</p>
       </div>
     );
   }
 
   if (error) {
-    return (
-      <div className="revenue-breakdown-page">
-        <div className="error-container">
-          <div className="error-icon">⚠️</div>
-          <h3>Lỗi tải dữ liệu</h3>
-          <p>{error}</p>
-          <button onClick={fetchBreakdown} className="retry-button">
-            Thử lại
-          </button>
-        </div>
+    return shell(
+      <div className="error-container">
+        <div className="error-icon">⚠️</div>
+        <h3>Lỗi tải dữ liệu</h3>
+        <p>{error}</p>
+        <button type="button" onClick={fetchBreakdown} className="retry-button">
+          Thử lại
+        </button>
       </div>
     );
   }
 
   if (!breakdown) {
-    return (
-      <div className="revenue-breakdown-page">
-        <div className="empty-container">
-          <p>Không có dữ liệu</p>
-        </div>
+    return shell(
+      <div className="empty-container">
+        <p>Không có dữ liệu</p>
       </div>
     );
   }
@@ -88,17 +102,17 @@ const RevenueBreakdown: React.FC = () => {
   const totalSubscriptions = breakdown.data.reduce((sum, day) => sum + day.subscriptions, 0);
   const totalCourses = breakdown.data.reduce((sum, day) => sum + day.courseSales, 0);
 
-  return (
-    <div className="revenue-breakdown-page">
-      {/* Header */}
-      <div className="breakdown-header">
-        <div className="header-content">
-          <h1>Phân Tích Doanh Thu</h1>
-          <p className="subtitle">Theo dõi doanh thu theo nguồn và thời gian</p>
+  return shell(
+    <>
+      <header className="page-header courses-header-row breakdown-header">
+        <div className="header-stack">
+          <div className="header-kicker">Tài chính</div>
+          <h2 style={{ margin: 0 }}>Phân tích doanh thu</h2>
+          <p className="header-sub">Theo dõi doanh thu theo nguồn và thời gian</p>
         </div>
-        <div className="header-actions">
+        <div className="row" style={{ flexWrap: 'wrap', gap: '0.65rem', alignItems: 'center' }}>
           <div className="period-selector">
-            <label htmlFor="period-select">Khoảng thời gian:</label>
+            <label htmlFor="period-select">Khoảng thời gian</label>
             <select
               id="period-select"
               value={period}
@@ -111,14 +125,16 @@ const RevenueBreakdown: React.FC = () => {
               <option value="1y">1 năm qua</option>
             </select>
           </div>
-          <button onClick={handleExport} className="export-button">
-            📥 Xuất CSV
+          <button type="button" onClick={handleExport} className="export-button">
+            <Download size={16} aria-hidden />
+            Xuất CSV
           </button>
-          <button onClick={fetchBreakdown} className="refresh-button">
-            🔄 Làm mới
+          <button type="button" onClick={fetchBreakdown} className="refresh-button">
+            <RefreshCw size={16} aria-hidden />
+            Làm mới
           </button>
         </div>
-      </div>
+      </header>
 
       {/* Summary Cards */}
       <div className="summary-cards">
@@ -255,7 +271,7 @@ const RevenueBreakdown: React.FC = () => {
           </ul>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

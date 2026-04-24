@@ -1,4 +1,7 @@
+import { RefreshCw } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
+import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { mockAdmin } from '../../data/mockData';
 import {
   adminFinancialService,
   formatCurrency,
@@ -6,6 +9,11 @@ import {
   getTrendColor,
 } from '../../services/admin-financial.service';
 import type { AdminFinancialOverview as OverviewData } from '../../services/admin-financial.service';
+import '../../styles/module-refactor.css';
+import '../courses/TeacherCourses.css';
+import './admin-mgmt-shell.css';
+import AdminFinanceStudioShell from './AdminFinanceStudioShell';
+import './admin-finance-studio.css';
 import './AdminFinancialOverview.css';
 
 const AdminFinancialOverview: React.FC = () => {
@@ -38,53 +46,59 @@ const AdminFinancialOverview: React.FC = () => {
     setSelectedMonth(e.target.value);
   };
 
+  const shell = (body: React.ReactNode) => (
+    <DashboardLayout
+      role="admin"
+      user={{ name: mockAdmin.name, avatar: mockAdmin.avatar, role: 'admin' }}
+      contentClassName="dashboard-content--flush-bleed"
+    >
+      <AdminFinanceStudioShell>
+        <div className="admin-financial-overview">{body}</div>
+      </AdminFinanceStudioShell>
+    </DashboardLayout>
+  );
+
   if (loading) {
-    return (
-      <div className="admin-financial-overview">
-        <div className="loading-container">
-          <div className="spinner"></div>
-          <p>Đang tải dữ liệu...</p>
-        </div>
+    return shell(
+      <div className="loading-container">
+        <div className="spinner" />
+        <p>Đang tải dữ liệu...</p>
       </div>
     );
   }
 
   if (error) {
-    return (
-      <div className="admin-financial-overview">
-        <div className="error-container">
-          <div className="error-icon">⚠️</div>
-          <h3>Lỗi tải dữ liệu</h3>
-          <p>{error}</p>
-          <button onClick={fetchOverview} className="retry-button">
-            Thử lại
-          </button>
-        </div>
+    return shell(
+      <div className="error-container">
+        <div className="error-icon">⚠️</div>
+        <h3>Lỗi tải dữ liệu</h3>
+        <p>{error}</p>
+        <button type="button" onClick={fetchOverview} className="retry-button">
+          Thử lại
+        </button>
       </div>
     );
   }
 
   if (!overview) {
-    return (
-      <div className="admin-financial-overview">
-        <div className="empty-container">
-          <p>Không có dữ liệu</p>
-        </div>
+    return shell(
+      <div className="empty-container">
+        <p>Không có dữ liệu</p>
       </div>
     );
   }
 
-  return (
-    <div className="admin-financial-overview">
-      {/* Header */}
-      <div className="overview-header">
-        <div className="header-content">
-          <h1>Tổng Quan Tài Chính</h1>
-          <p className="subtitle">Theo dõi hiệu suất tài chính và các chỉ số quan trọng</p>
+  return shell(
+    <>
+      <header className="page-header courses-header-row overview-header">
+        <div className="header-stack">
+          <div className="header-kicker">Tài chính</div>
+          <h2 style={{ margin: 0 }}>Tổng quan tài chính</h2>
+          <p className="header-sub">Theo dõi hiệu suất tài chính và các chỉ số quan trọng</p>
         </div>
-        <div className="header-actions">
+        <div className="row" style={{ flexWrap: 'wrap', gap: '0.65rem', alignItems: 'center' }}>
           <div className="month-selector">
-            <label htmlFor="month-input">Tháng:</label>
+            <label htmlFor="month-input">Tháng</label>
             <input
               id="month-input"
               type="month"
@@ -93,11 +107,12 @@ const AdminFinancialOverview: React.FC = () => {
               className="month-input"
             />
           </div>
-          <button onClick={fetchOverview} className="refresh-button">
-            🔄 Làm mới
+          <button type="button" onClick={fetchOverview} className="refresh-button">
+            <RefreshCw size={16} aria-hidden />
+            Làm mới
           </button>
         </div>
-      </div>
+      </header>
 
       {/* Primary Metrics */}
       <div className="metrics-grid primary-metrics">
@@ -239,7 +254,7 @@ const AdminFinancialOverview: React.FC = () => {
             </div>
           </a>
 
-          <a href="/admin/subscription-management" className="action-card">
+          <a href="/admin/subscriptions" className="action-card">
             <div className="action-icon">📦</div>
             <div className="action-content">
               <h3>Quản Lý Đăng Ký</h3>
@@ -279,7 +294,7 @@ const AdminFinancialOverview: React.FC = () => {
           </ul>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
