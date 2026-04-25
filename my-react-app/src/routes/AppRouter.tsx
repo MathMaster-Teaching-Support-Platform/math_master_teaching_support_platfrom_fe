@@ -46,6 +46,7 @@ import Profile from '../pages/profile/Profile';
 import TeacherProfilePage from '../pages/teacher-profile/TeacherProfilePage';
 // Admin Teacher Profile Routes
 import AdminAnalytics from '../pages/admin/AdminAnalytics';
+import AdminCourseReviewDetail from '../pages/admin/AdminCourseReviewDetail';
 import AdminCourseReviewsPage from '../pages/admin/AdminCourseReviewsPage';
 import AdminFinancialOverview from '../pages/admin/AdminFinancialOverview';
 import AdminRoadmapCreatePage from '../pages/admin/AdminRoadmapCreatePage';
@@ -627,6 +628,14 @@ export const router = createBrowserRouter([
     element: (
       <PrivateRoute>
         <AdminCourseReviewsPage />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/admin/courses/:courseId/review',
+    element: (
+      <PrivateRoute>
+        <AdminCourseReviewDetail />
       </PrivateRoute>
     ),
   },

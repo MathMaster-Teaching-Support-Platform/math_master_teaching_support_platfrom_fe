@@ -1,9 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, Star, Users } from 'lucide-react';
+import { BookOpen, Star, Users, Loader2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { CourseResponse, CourseLevel } from '../../types';
-import { getEffectivePrice, isDiscountActive } from '../../utils/pricing';
+import { getEffectivePrice, hasActiveDiscount, formatPrice, getDiscountPercentage } from '../../utils/pricing';
 
 interface CourseCardProps {
   course: CourseResponse;
@@ -46,14 +46,25 @@ export const CourseCard: React.FC<CourseCardProps> = ({
 
   const handleEnrollClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    // Prevent enrollment if already enrolling or enrolled
+    if (isEnrolling || isEnrolled) {
+      return;
+    }
     if (onEnroll && !isEnrolled) {
       onEnroll(course.id);
     }
   };
 
-  let enrollBtnLabel = 'Đăng ký học';
-  if (isEnrolled) enrollBtnLabel = '✓ Đã đăng ký';
-  else if (isEnrolling) enrollBtnLabel = 'Đang đăng ký...';
+  const getEnrollBtnLabel = () => {
+    if (isEnrolled) return '✓ Đã đăng ký';
+    if (isEnrolling) return (
+      <>
+        <Loader2 size={14} className="animate-spin" style={{ display: 'inline-block', marginRight: '4px' }} />
+        Đang xử lý...
+      </>
+    );
+    return 'Đăng ký học';
+  };
 
   return (
     <motion.article
@@ -129,25 +140,25 @@ export const CourseCard: React.FC<CourseCardProps> = ({
           </div>
         </div>
         <div className="course-pricing">
-          {isDiscountActive(course) ? (
+          {hasActiveDiscount(course) ? (
             <div className="price-container">
               <span className="current-price">
-                {getEffectivePrice(course).toLocaleString('vi-VN')}₫
+                {formatPrice(getEffectivePrice(course))}
               </span>
               {course.originalPrice && course.originalPrice > getEffectivePrice(course) && (
                 <span className="original-price">
-                  {course.originalPrice.toLocaleString('vi-VN')}₫
+                  {formatPrice(course.originalPrice)}
                 </span>
               )}
             </div>
           ) : course.originalPrice && course.originalPrice > 0 ? (
-            <span className="current-price">{course.originalPrice.toLocaleString('vi-VN')}₫</span>
+            <span className="current-price">{formatPrice(course.originalPrice)}</span>
           ) : (
             <span className="current-price price-free">Miễn phí</span>
           )}
-          {isDiscountActive(course) && course.originalPrice && course.originalPrice > getEffectivePrice(course) && (
+          {hasActiveDiscount(course) && course.originalPrice && course.originalPrice > getEffectivePrice(course) && (
             <span className="discount-badge">
-              -{Math.round(((course.originalPrice - getEffectivePrice(course)) / course.originalPrice) * 100)}%
+              -{getDiscountPercentage(course)}%
             </span>
           )}
         </div>
@@ -179,7 +190,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({
               onClick={handleEnrollClick}
               disabled={isEnrolling || isEnrolled}
             >
-              {enrollBtnLabel}
+              {getEnrollBtnLabel()}
             </button>
           </div>
         )}
@@ -247,6 +258,13 @@ export const CourseCard: React.FC<CourseCardProps> = ({
           border-radius: 4px;
           font-size: 0.75rem;
           font-weight: 700;
+        }
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .animate-spin {
+          animation: spin 1s linear infinite;
         }
       `}</style>
     </motion.article>

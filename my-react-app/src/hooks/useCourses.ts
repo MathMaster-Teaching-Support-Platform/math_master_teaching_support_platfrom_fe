@@ -2,6 +2,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
 import { CourseService } from '../services/api/course.service';
+import { WalletService } from '../services/api/wallet.service';
+import { extractErrorCode, extractErrorMessage, getErrorMessage } from '../utils/errorCodes';
+import { isCourseAvailableForEnrollment } from '../utils/courseStatus';
+import { getEffectivePrice, validatePricing } from '../utils/pricing';
 import type {
   AddAssessmentToCourseRequest,
   CreateCourseLessonRequest,
@@ -103,11 +107,65 @@ export function usePublishCourse() {
 
 export function useSubmitCourseForReview() {
   const qc = useQueryClient();
+  const { showToast } = useToast();
+  
   return useMutation({
-    mutationFn: (courseId: string) => CourseService.submitForReview(courseId),
+    mutationFn: async (courseId: string) => {
+      // Pre-validate course before submission
+      const courseResp = await CourseService.getCourseById(courseId);
+      const course = courseResp.result;
+      
+      // Check if course has lessons
+      if (course.lessonsCount === 0) {
+        throw Object.assign(
+          new Error(getErrorMessage(1033)),
+          { code: 1033 }
+        );
+      }
+      
+      // Check if already pending
+      if (course.status === 'PENDING_REVIEW') {
+        throw Object.assign(
+          new Error(getErrorMessage(1034)),
+          { code: 1034 }
+        );
+      }
+      
+      // Check if already published
+      if (course.status === 'PUBLISHED') {
+        throw Object.assign(
+          new Error(getErrorMessage(1036)),
+          { code: 1036 }
+        );
+      }
+      
+      // Validate pricing
+      const pricingError = validatePricing(course.originalPrice ?? undefined, course.discountedPrice ?? undefined);
+      if (pricingError) {
+        throw Object.assign(
+          new Error(pricingError),
+          { code: 1032 }
+        );
+      }
+      
+      return CourseService.submitForReview(courseId);
+    },
     onSuccess: (_data, courseId) => {
+      showToast({ 
+        type: 'success', 
+        message: 'Đã gửi khóa học để duyệt. Quản trị viên sẽ xem xét trong thời gian sớm nhất.' 
+      });
       qc.invalidateQueries({ queryKey: courseKeys.my() });
       qc.invalidateQueries({ queryKey: courseKeys.detail(courseId) });
+    },
+    onError: (err: unknown) => {
+      const code = extractErrorCode(err);
+      const message = extractErrorMessage(err);
+      
+      showToast({
+        type: 'error',
+        message: getErrorMessage(code, message),
+      });
     },
   });
 }
@@ -128,21 +186,51 @@ export function useCourseReviewHistory(status = 'ALL', page = 0, size = 20) {
 
 export function useApproveCourseReview() {
   const qc = useQueryClient();
+  const { showToast } = useToast();
+  
   return useMutation({
     mutationFn: (courseId: string) => CourseService.approveCourse(courseId),
     onSuccess: () => {
+      showToast({ 
+        type: 'success', 
+        message: 'Đã duyệt và xuất bản khóa học thành công.' 
+      });
       qc.invalidateQueries({ queryKey: courseKeys.all });
+    },
+    onError: (err: unknown) => {
+      const code = extractErrorCode(err);
+      const message = extractErrorMessage(err);
+      
+      showToast({
+        type: 'error',
+        message: getErrorMessage(code, message),
+      });
     },
   });
 }
 
 export function useRejectCourseReview() {
   const qc = useQueryClient();
+  const { showToast } = useToast();
+  
   return useMutation({
     mutationFn: ({ courseId, data }: { courseId: string; data: RejectCourseRequest }) =>
       CourseService.rejectCourse(courseId, data),
     onSuccess: () => {
+      showToast({ 
+        type: 'success', 
+        message: 'Đã từ chối khóa học. Giảng viên sẽ nhận được thông báo.' 
+      });
       qc.invalidateQueries({ queryKey: courseKeys.all });
+    },
+    onError: (err: unknown) => {
+      const code = extractErrorCode(err);
+      const message = extractErrorMessage(err);
+      
+      showToast({
+        type: 'error',
+        message: getErrorMessage(code, message),
+      });
     },
   });
 }
@@ -245,32 +333,79 @@ export function useEnroll() {
   const navigate = useNavigate();
 
   return useMutation({
-    mutationFn: (courseId: string) => CourseService.enroll(courseId),
+    mutationFn: async (courseId: string) => {
+      // Step 1: Validate course status
+      const courseResp = await CourseService.getCourseById(courseId);
+      const course = courseResp.result;
+      
+      if (!isCourseAvailableForEnrollment(course)) {
+        const errorCode = course.status === 'PENDING_REVIEW' ? 1030 : 
+                         course.status === 'REJECTED' ? 1037 : 1030;
+        throw Object.assign(
+          new Error(getErrorMessage(errorCode)),
+          { code: errorCode }
+        );
+      }
+      
+      // Step 2: Check wallet balance for paid courses
+      const finalPrice = getEffectivePrice(course);
+      
+      if (finalPrice > 0) {
+        try {
+          const walletResp = await WalletService.getMyWallet();
+          const wallet = walletResp.result;
+          
+          if (wallet.balance < finalPrice) {
+            throw Object.assign(
+              new Error(getErrorMessage(1029)),
+              { code: 1029 }
+            );
+          }
+        } catch (walletError) {
+          // If wallet check fails, let the backend handle it
+          console.warn('Wallet pre-check failed:', walletError);
+        }
+      }
+      
+      // Step 3: Proceed with enrollment
+      return CourseService.enroll(courseId);
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: courseKeys.enrollments() });
+      qc.invalidateQueries({ queryKey: courseKeys.all });
       showToast({
         type: 'success',
         message: 'Đăng ký khóa học thành công!',
       });
     },
     onError: (err: unknown) => {
-      const code = (err as any)?.response?.data?.code;
+      const code = extractErrorCode(err);
+      const message = extractErrorMessage(err);
 
       if (code === 1029) {
         showToast({
           type: 'error',
-          message: 'Số dư ví không đủ! Vui lòng nạp thêm tiền để tiếp tục thanh toán khóa học.',
+          message: getErrorMessage(1029),
           duration: 10000,
           action: {
             label: 'Nạp tiền ngay',
             onClick: () => navigate('/student/wallet'),
           },
         });
-      } else {
-        const msg = (err as any)?.response?.data?.message || 'Có lỗi xảy ra khi đăng ký khóa học.';
+      } else if (code === 1031) {
+        showToast({
+          type: 'info',
+          message: getErrorMessage(1031),
+        });
+      } else if (code === 1030) {
         showToast({
           type: 'error',
-          message: msg,
+          message: getErrorMessage(1030),
+        });
+      } else {
+        showToast({
+          type: 'error',
+          message: message || 'Có lỗi xảy ra khi đăng ký khóa học.',
         });
       }
     },

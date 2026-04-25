@@ -39,7 +39,7 @@ import {
   useTeacherProfile,
 } from '../../hooks/useCourses';
 import { AuthService } from '../../services/api/auth.service';
-import { getEffectivePrice, isDiscountActive } from '../../utils/pricing';
+import { getEffectivePrice, hasActiveDiscount } from '../../utils/pricing';
 import '../../styles/module-refactor.css';
 import './StudentCourses.css';
 
@@ -134,6 +134,12 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
       navigate('/login', { state: { from: `/course/${courseId}` } });
       return;
     }
+    
+    // Prevent multiple clicks
+    if (enrollMutation.isPending) {
+      return;
+    }
+    
     enrollMutation.mutate(courseId!, {
       onSuccess: (resp) => {
         const newEnrollmentId = resp?.result?.id;
@@ -431,7 +437,7 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                       <div style={{ textAlign: 'right' }}>
-                        {isDiscountActive(course) ? (
+                        {hasActiveDiscount(course) ? (
                           <>
                             <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1e40af' }}>
                               {getEffectivePrice(course) === 0

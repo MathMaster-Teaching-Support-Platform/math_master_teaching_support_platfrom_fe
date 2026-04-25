@@ -28,7 +28,7 @@ import {
 } from '../../hooks/useCourses';
 import { AuthService } from '../../services/api/auth.service';
 import { VideoUploadService } from '../../services/api/videoUpload.service';
-import { getEffectivePrice, isDiscountActive } from '../../utils/pricing';
+import { getEffectivePrice, formatPrice, hasActiveDiscount } from '../../utils/pricing';
 import './CoursePreview.css';
 
 const CoursePreview: React.FC = () => {
@@ -145,6 +145,23 @@ const CoursePreview: React.FC = () => {
       navigate('/login', { state: { from: `/course/${id}` } });
       return;
     }
+    
+    // Prevent multiple clicks
+    if (enrollMutation.isPending) {
+      return;
+    }
+    
+    // Show confirmation for paid courses
+    if (course) {
+      const finalPrice = getEffectivePrice(course);
+      if (finalPrice > 0) {
+        const confirmed = window.confirm(
+          `Bạn có chắc muốn đăng ký khóa học này với giá ${formatPrice(finalPrice)}?\n\nSố tiền sẽ được trừ từ ví của bạn.`
+        );
+        if (!confirmed) return;
+      }
+    }
+    
     enrollMutation.mutate(id!, {
       onSuccess: (resp) => {
         const enrollmentId = resp?.result?.id;
@@ -507,7 +524,7 @@ const CoursePreview: React.FC = () => {
               </div>
 
               <div className="sidebar-price-container">
-                {isDiscountActive(course) ? (
+                {hasActiveDiscount(course) ? (
                   <div className="price-group">
                     <span className="price-primary">
                       {getEffectivePrice(course) === 0
@@ -555,7 +572,7 @@ const CoursePreview: React.FC = () => {
                   </div>
                 )}
 
-                {isDiscountActive(course) && course.discountExpiryDate && (
+                {hasActiveDiscount(course) && course.discountExpiryDate && (
                   <CountdownTimer expiryDate={course.discountExpiryDate} />
                 )}
               </div>

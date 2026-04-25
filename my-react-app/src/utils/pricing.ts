@@ -1,43 +1,71 @@
-export interface PricingCourseInfo {
-  originalPrice?: number | null;
-  discountedPrice?: number | null;
-  discountExpiryDate?: string | null;
-}
+import type { CourseResponse } from '../types/course.types';
 
 /**
- * Checks if the course currently has an active discount that hasn't expired.
- * Also validates that the discounted price is properly set and less than the original price.
+ * Get the effective price for a course (considering active discounts)
  */
-export function isDiscountActive(course: PricingCourseInfo): boolean {
-  if (
-    course.originalPrice == null ||
-    course.originalPrice <= 0 ||
-    course.discountedPrice == null ||
-    course.discountedPrice < 0 ||
-    course.discountedPrice >= course.originalPrice
-  ) {
-    // Basic structural conditions not met
-    return false;
-  }
-
-  // Check if expiration date has passed
-  if (course.discountExpiryDate) {
-    const expiry = new Date(course.discountExpiryDate);
-    if (expiry <= new Date()) {
-      return false; // Timer expired
+export const getEffectivePrice = (course: CourseResponse): number => {
+  if (course.discountedPrice !== null && course.discountedPrice !== undefined) {
+    const now = new Date();
+    const expiryDate = course.discountExpiryDate ? new Date(course.discountExpiryDate) : null;
+    
+    // If no expiry date or discount is still valid
+    if (!expiryDate || now <= expiryDate) {
+      return course.discountedPrice;
     }
   }
-
-  return true;
-}
+  
+  return course.originalPrice ?? 0;
+};
 
 /**
- * Returns the effective price a student would pay for the course at this exact moment.
- * Safely falls back to the original price if the discount is invalid or expired.
+ * Format price in Vietnamese currency
  */
-export function getEffectivePrice(course: PricingCourseInfo): number {
-  if (isDiscountActive(course) && course.discountedPrice != null) {
-    return course.discountedPrice;
+export const formatPrice = (price: number): string => {
+  if (price === 0) {
+    return 'Miễn phí';
   }
-  return course.originalPrice || 0;
-}
+  
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND',
+  }).format(price);
+};
+
+/**
+ * Check if course has an active discount
+ */
+export const hasActiveDiscount = (course: CourseResponse): boolean => {
+  if (!course.discountedPrice || !course.discountExpiryDate) return false;
+  return new Date() <= new Date(course.discountExpiryDate);
+};
+
+/**
+ * Calculate discount percentage
+ */
+export const getDiscountPercentage = (course: CourseResponse): number => {
+  if (!course.originalPrice || !course.discountedPrice) return 0;
+  if (course.originalPrice === 0) return 0;
+  
+  const discount = ((course.originalPrice - course.discountedPrice) / course.originalPrice) * 100;
+  return Math.round(discount);
+};
+
+/**
+ * Validate pricing for course creation/update
+ */
+export const validatePricing = (originalPrice?: number, discountedPrice?: number): string | null => {
+  if (discountedPrice !== undefined && discountedPrice !== null && originalPrice !== undefined && originalPrice !== null) {
+    if (discountedPrice >= originalPrice) {
+      return 'Giá khuyến mãi phải nhỏ hơn giá gốc';
+    }
+    if (discountedPrice < 0) {
+      return 'Giá khuyến mãi không được âm';
+    }
+  }
+  
+  if (originalPrice !== undefined && originalPrice !== null && originalPrice < 0) {
+    return 'Giá gốc không được âm';
+  }
+  
+  return null;
+};

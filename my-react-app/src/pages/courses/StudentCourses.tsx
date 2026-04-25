@@ -209,6 +209,11 @@ const StudentCourses: React.FC = () => {
   );
 
   const handleEnroll = (courseId: string) => {
+    // Prevent multiple enrollments
+    if (enrollMutation.isPending || enrollingCourseId) {
+      return;
+    }
+    
     setEnrollingCourseId(courseId);
     enrollMutation.mutate(courseId, {
       onSuccess: () => setActiveTab('enrolled'),
