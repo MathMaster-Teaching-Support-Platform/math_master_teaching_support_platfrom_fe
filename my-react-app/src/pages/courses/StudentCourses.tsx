@@ -182,7 +182,8 @@ const StudentCourses: React.FC = () => {
     schoolGradeId: filterGradeId || undefined,
     subjectId: filterSubjectId || undefined,
     keyword: searchQuery || undefined,
-    size: 20,
+    page: Math.max(0, browsePage - 1),
+    size: PAGE_SIZE,
   });
   const enrollMutation = useEnroll();
 
@@ -236,12 +237,13 @@ const StudentCourses: React.FC = () => {
     return filteredEnrollments.slice(start, start + PAGE_SIZE);
   }, [filteredEnrollments, safeEnrolledPage]);
 
-  const browseTotalPages = Math.max(1, Math.ceil(publicCourses.length / PAGE_SIZE));
+  const browseTotalPages = Math.max(1, publicCoursesData?.result?.totalPages ?? 1);
   const safeBrowsePage = Math.min(browsePage, browseTotalPages);
-  const paginatedPublicCourses = useMemo(() => {
-    const start = (safeBrowsePage - 1) * PAGE_SIZE;
-    return publicCourses.slice(start, start + PAGE_SIZE);
-  }, [publicCourses, safeBrowsePage]);
+  React.useEffect(() => {
+    if (browsePage !== safeBrowsePage) {
+      setBrowsePage(safeBrowsePage);
+    }
+  }, [browsePage, safeBrowsePage]);
 
   const stats = useMemo(
     () => ({
@@ -511,7 +513,7 @@ const StudentCourses: React.FC = () => {
               <>
                 {publicCourses.length > 0 ? (
                   <div className="grid-cards">
-                    {paginatedPublicCourses.map((course, i) => (
+                    {publicCourses.map((course, i) => (
                       <CourseCard
                         key={course.id}
                         course={course}

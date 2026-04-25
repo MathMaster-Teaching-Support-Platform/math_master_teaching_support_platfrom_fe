@@ -32,6 +32,24 @@ import type {
 import { AuthService } from './auth.service';
 
 export class CourseService {
+  private static normalizeCoursePublishFlags<T extends Record<string, any>>(course: T): T {
+    if (!course) return course;
+    const hasPublished = course.published !== undefined;
+    const hasIsPublished = course.isPublished !== undefined;
+
+    if (hasPublished && !hasIsPublished) {
+      return { ...course, isPublished: Boolean(course.published) };
+    }
+    if (!hasPublished && hasIsPublished) {
+      return { ...course, published: Boolean(course.isPublished) };
+    }
+    return course;
+  }
+
+  private static normalizeCourseListPublishFlags<T extends Record<string, any>>(courses: T[]): T[] {
+    return courses.map((course) => this.normalizeCoursePublishFlags(course));
+  }
+
   private static normalizeLessonFlags<T extends Record<string, any>>(lesson: T): T {
     if (!lesson) return lesson;
     if (typeof lesson.isFreePreview === 'undefined' && typeof lesson.freePreview !== 'undefined') {
@@ -93,14 +111,22 @@ export class CourseService {
       method: 'GET',
       headers,
     });
-    return this.handleResponse(res);
+    const data = await this.handleResponse<ApiResponse<CourseResponse[]>>(res);
+    if (Array.isArray(data?.result)) {
+      data.result = this.normalizeCourseListPublishFlags(data.result);
+    }
+    return data;
   }
 
   static async getCourseById(courseId: string): Promise<ApiResponse<CourseResponse>> {
     const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.COURSE_DETAIL(courseId)}`, {
       method: 'GET',
     });
-    return this.handleResponse(res);
+    const data = await this.handleResponse<ApiResponse<CourseResponse>>(res);
+    if (data?.result) {
+      data.result = this.normalizeCoursePublishFlags(data.result);
+    }
+    return data;
   }
 
   static async getCoursePreview(courseId: string): Promise<ApiResponse<any>> {
@@ -232,7 +258,11 @@ export class CourseService {
     if (params.size !== undefined) qs.append('size', String(params.size));
     const url = `${API_BASE_URL}${API_ENDPOINTS.COURSES}${qs.toString() ? `?${qs}` : ''}`;
     const res = await fetch(url, { method: 'GET' });
-    return this.handleResponse(res);
+    const data = await this.handleResponse<ApiResponse<PaginatedResponse<CourseResponse>>>(res);
+    if (Array.isArray(data?.result?.content)) {
+      data.result.content = this.normalizeCourseListPublishFlags(data.result.content);
+    }
+    return data;
   }
 
   /** Admin: search ALL courses (published + unpublished) by keyword */
