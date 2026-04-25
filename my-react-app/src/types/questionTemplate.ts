@@ -22,6 +22,141 @@ export const TemplateStatus = {
 } as const;
 export type TemplateStatus = typeof TemplateStatus[keyof typeof TemplateStatus];
 
+// Question Tag Enum - matches backend QuestionTag.java
+export const QuestionTag = {
+  // Algebra
+  LINEAR_EQUATIONS: 'LINEAR_EQUATIONS',
+  QUADRATIC_EQUATIONS: 'QUADRATIC_EQUATIONS',
+  POLYNOMIALS: 'POLYNOMIALS',
+  SYSTEMS_OF_EQUATIONS: 'SYSTEMS_OF_EQUATIONS',
+  INEQUALITIES: 'INEQUALITIES',
+  FUNCTIONS: 'FUNCTIONS',
+  SEQUENCES_SERIES: 'SEQUENCES_SERIES',
+  
+  // Geometry
+  TRIANGLES: 'TRIANGLES',
+  CIRCLES: 'CIRCLES',
+  POLYGONS: 'POLYGONS',
+  SOLID_GEOMETRY: 'SOLID_GEOMETRY',
+  COORDINATE_GEOMETRY: 'COORDINATE_GEOMETRY',
+  TRANSFORMATIONS: 'TRANSFORMATIONS',
+  VECTORS: 'VECTORS',
+  AREA_PERIMETER: 'AREA_PERIMETER',
+  
+  // Calculus
+  LIMITS: 'LIMITS',
+  DERIVATIVES: 'DERIVATIVES',
+  INTEGRALS: 'INTEGRALS',
+  DIFFERENTIAL_EQUATIONS: 'DIFFERENTIAL_EQUATIONS',
+  SERIES_CONVERGENCE: 'SERIES_CONVERGENCE',
+  
+  // Statistics & Probability
+  DESCRIPTIVE_STATISTICS: 'DESCRIPTIVE_STATISTICS',
+  PROBABILITY: 'PROBABILITY',
+  DISTRIBUTIONS: 'DISTRIBUTIONS',
+  HYPOTHESIS_TESTING: 'HYPOTHESIS_TESTING',
+  
+  // Trigonometry
+  TRIGONOMETRIC_FUNCTIONS: 'TRIGONOMETRIC_FUNCTIONS',
+  TRIGONOMETRIC_IDENTITIES: 'TRIGONOMETRIC_IDENTITIES',
+  INVERSE_TRIG: 'INVERSE_TRIG',
+  
+  // Number Theory
+  PRIME_NUMBERS: 'PRIME_NUMBERS',
+  DIVISIBILITY: 'DIVISIBILITY',
+  MODULAR_ARITHMETIC: 'MODULAR_ARITHMETIC',
+  GCD_LCM: 'GCD_LCM',
+  
+  // Combinatorics
+  PERMUTATIONS: 'PERMUTATIONS',
+  COMBINATIONS: 'COMBINATIONS',
+  COUNTING_PRINCIPLES: 'COUNTING_PRINCIPLES',
+  
+  // Logic & Sets
+  SET_THEORY: 'SET_THEORY',
+  LOGIC: 'LOGIC',
+  PROOF_TECHNIQUES: 'PROOF_TECHNIQUES',
+  
+  // Applied Math
+  OPTIMIZATION: 'OPTIMIZATION',
+  LINEAR_PROGRAMMING: 'LINEAR_PROGRAMMING',
+  MATRICES: 'MATRICES',
+  GRAPH_THEORY: 'GRAPH_THEORY',
+  
+  // Other
+  WORD_PROBLEMS: 'WORD_PROBLEMS',
+  PROBLEM_SOLVING: 'PROBLEM_SOLVING',
+  MATHEMATICAL_REASONING: 'MATHEMATICAL_REASONING',
+} as const;
+export type QuestionTag = typeof QuestionTag[keyof typeof QuestionTag];
+
+// Vietnamese labels for tags
+export const questionTagLabels: Record<QuestionTag, string> = {
+  // Algebra
+  LINEAR_EQUATIONS: 'Phương trình bậc nhất',
+  QUADRATIC_EQUATIONS: 'Phương trình bậc hai',
+  POLYNOMIALS: 'Đa thức',
+  SYSTEMS_OF_EQUATIONS: 'Hệ phương trình',
+  INEQUALITIES: 'Bất phương trình',
+  FUNCTIONS: 'Hàm số',
+  SEQUENCES_SERIES: 'Dãy số và chuỗi',
+  
+  // Geometry
+  TRIANGLES: 'Tam giác',
+  CIRCLES: 'Đường tròn',
+  POLYGONS: 'Đa giác',
+  SOLID_GEOMETRY: 'Hình học không gian',
+  COORDINATE_GEOMETRY: 'Hình học tọa độ',
+  TRANSFORMATIONS: 'Phép biến hình',
+  VECTORS: 'Vectơ',
+  AREA_PERIMETER: 'Diện tích và chu vi',
+  
+  // Calculus
+  LIMITS: 'Giới hạn',
+  DERIVATIVES: 'Đạo hàm',
+  INTEGRALS: 'Tích phân',
+  DIFFERENTIAL_EQUATIONS: 'Phương trình vi phân',
+  SERIES_CONVERGENCE: 'Hội tụ chuỗi',
+  
+  // Statistics & Probability
+  DESCRIPTIVE_STATISTICS: 'Thống kê mô tả',
+  PROBABILITY: 'Xác suất',
+  DISTRIBUTIONS: 'Phân phối xác suất',
+  HYPOTHESIS_TESTING: 'Kiểm định giả thuyết',
+  
+  // Trigonometry
+  TRIGONOMETRIC_FUNCTIONS: 'Hàm lượng giác',
+  TRIGONOMETRIC_IDENTITIES: 'Đồng nhất thức lượng giác',
+  INVERSE_TRIG: 'Hàm lượng giác ngược',
+  
+  // Number Theory
+  PRIME_NUMBERS: 'Số nguyên tố',
+  DIVISIBILITY: 'Tính chia hết',
+  MODULAR_ARITHMETIC: 'Số học modulo',
+  GCD_LCM: 'ƯCLN và BCNN',
+  
+  // Combinatorics
+  PERMUTATIONS: 'Hoán vị',
+  COMBINATIONS: 'Tổ hợp',
+  COUNTING_PRINCIPLES: 'Nguyên lý đếm',
+  
+  // Logic & Sets
+  SET_THEORY: 'Lý thuyết tập hợp',
+  LOGIC: 'Logic',
+  PROOF_TECHNIQUES: 'Kỹ thuật chứng minh',
+  
+  // Applied Math
+  OPTIMIZATION: 'Tối ưu hóa',
+  LINEAR_PROGRAMMING: 'Quy hoạch tuyến tính',
+  MATRICES: 'Ma trận',
+  GRAPH_THEORY: 'Lý thuyết đồ thị',
+  
+  // Other
+  WORD_PROBLEMS: 'Bài toán thực tế',
+  PROBLEM_SOLVING: 'Giải quyết vấn đề',
+  MATHEMATICAL_REASONING: 'Lập luận toán học',
+};
+
 export type DiagramValue = string | Record<string, unknown> | null;
 
 export const QuestionGenerationMode = {
@@ -42,7 +177,7 @@ export interface QuestionTemplateRequest {
     topic?: string;
     constraints?: string[];
     cognitiveLevel: CognitiveLevel;
-    tags: string[];
+    tags: QuestionTag[];
     isPublic?: boolean;
     questionBankId?: string | null;
     canonicalQuestionId?: string | null;
@@ -64,7 +199,7 @@ export interface QuestionTemplateResponse {
     topic?: string;
     constraints?: string[];
     cognitiveLevel: CognitiveLevel;
-    tags: string[];
+    tags: QuestionTag[];
     isPublic?: boolean;
     status: TemplateStatus;
     usageCount?: number;
@@ -118,7 +253,7 @@ export interface TemplateDraft {
     answerFormula?: string;
     optionsGenerator?: Record<string, unknown>;
     cognitiveLevel?: CognitiveLevel;
-    tags?: string[];
+    tags?: QuestionTag[];
 }
 
 export interface ImportPreviewResponse {

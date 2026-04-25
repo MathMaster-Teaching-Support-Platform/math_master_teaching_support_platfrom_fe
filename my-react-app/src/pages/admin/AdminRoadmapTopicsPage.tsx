@@ -29,6 +29,7 @@ import {
   useArchiveRoadmapTopic,
   useCreateRoadmapEntryTest,
   useRemoveRoadmapEntryTest,
+  useUpdateRoadmap,
   useUpdateRoadmapTopic,
 } from '../../hooks/useRoadmaps';
 import { useBatchSaveTopics } from '../../hooks/useBatchTopics';
@@ -229,13 +230,15 @@ function SortablePin({
 // ── Main component ────────────────────────────────────────────────
 export default function AdminRoadmapTopicsPage() {
   const { roadmapId = '' } = useParams<{ roadmapId: string }>();
-  const { data: roadmapData, isLoading, isError, error } = useAdminRoadmapDetail(roadmapId);
+  const { data: roadmapData, isLoading, isError, error, refetch } = useAdminRoadmapDetail(roadmapId);
   const addMutation = useAddRoadmapTopic();
   const updateMutation = useUpdateRoadmapTopic();
   const archiveMutation = useArchiveRoadmapTopic();
   const entryTestMutation = useCreateRoadmapEntryTest();
   const removeEntryTestMutation = useRemoveRoadmapEntryTest();
   const batchSaveMutation = useBatchSaveTopics();
+  // ✅ ADD: Mutation for updating roadmap
+  const updateRoadmapMutation = useUpdateRoadmap();
 
   const roadmap = roadmapData?.result;
 
@@ -250,6 +253,9 @@ export default function AdminRoadmapTopicsPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [entryOpen, setEntryOpen] = useState(false);
   const [coursePickerOpen, setCoursePickerOpen] = useState(false);
+  // ✅ ADD: State for editing roadmap name
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState('');
   const roadSurfaceRef = useRef<SVGPathElement | null>(null);
   const [pathAnchors, setPathAnchors] = useState<Array<{ x: number; y: number }> | null>(null);
 
@@ -364,6 +370,27 @@ export default function AdminRoadmapTopicsPage() {
   function showToast(type: Toast['type'], message: string) {
     setToast({ type, message });
     setTimeout(() => setToast(null), 3500);
+  }
+
+  // ✅ ADD: Function to save roadmap name
+  async function saveRoadmapName() {
+    if (!editedName.trim()) {
+      showToast('error', 'Vui lòng nhập tên lộ trình.');
+      return;
+    }
+
+    try {
+      await updateRoadmapMutation.mutateAsync({
+        roadmapId,
+        payload: { name: editedName.trim() },
+      });
+      setIsEditingName(false);
+      showToast('success', 'Đã cập nhật tên lộ trình.');
+      // Refetch roadmap data
+      await refetch();
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : 'Lỗi cập nhật tên');
+    }
   }
 
   const activeTopic = topics.find((t) => t.clientId === activeId) ?? null;
@@ -691,7 +718,93 @@ export default function AdminRoadmapTopicsPage() {
         <div className="header-stack" style={{ flex: 1, minWidth: 0 }}>
           <div className="header-kicker">Admin</div>
           <div className="row" style={{ gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap' }}>
-            <h2 style={{ margin: 0 }}>{roadmap.name}</h2>
+            {!isEditingName ? (
+              <>
+                <h2 style={{ margin: 0 }}>{roadmap.name}</h2>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditedName(roadmap.name);
+                    setIsEditingName(true);
+                  }}
+                  title="Sửa tên lộ trình"
+                  style={{
+                    padding: '4px 8px',
+                    fontSize: '0.85rem',
+                    background: '#f3f4f6',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#e5e7eb';
+                    e.currentTarget.style.borderColor = '#9ca3af';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = '#f3f4f6';
+                    e.currentTarget.style.borderColor = '#d1d5db';
+                  }}
+                >
+                  ✏️
+                </button>
+              </>
+            ) : (
+              <>
+                <input
+                  className="input"
+                  value={editedName}
+                  onChange={(e) => setEditedName(e.target.value)}
+                  placeholder="Tên lộ trình..."
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      void saveRoadmapName();
+                    } else if (e.key === 'Escape') {
+                      setIsEditingName(false);
+                    }
+                  }}
+                  style={{
+                    fontSize: '1.5rem',
+                    fontWeight: 700,
+                    padding: '8px 12px',
+                    border: '2px solid #3b82f6',
+                    borderRadius: '8px',
+                    minWidth: '300px',
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => void saveRoadmapName()}
+                  disabled={!editedName.trim() || updateRoadmapMutation.isPending}
+                  style={{
+                    padding: '8px 12px',
+                    background: updateRoadmapMutation.isPending ? '#9ca3af' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: updateRoadmapMutation.isPending ? 'not-allowed' : 'pointer',
+                    fontWeight: 600,
+                  }}
+                >
+                  {updateRoadmapMutation.isPending ? '...' : '✓'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsEditingName(false)}
+                  style={{
+                    padding: '8px 12px',
+                    background: '#f3f4f6',
+                    color: '#6b7280',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  ✕
+                </button>
+              </>
+            )}
             <span
               className={`admin-roadmap-page__status admin-roadmap-page__status--${roadmap.status.toLowerCase()}`}
               style={{ fontSize: 12 }}

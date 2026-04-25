@@ -74,6 +74,10 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
 
   const matrices = matrixData?.result ?? [];
 
+  // Determine if fields should be read-only based on matrix mode
+  // Use examMatrixId as indicator - more reliable than assessmentMode
+  const isEditingMatrixAssessment = mode === 'edit' && !!formData.examMatrixId;
+
   let submitLabel = 'Cập nhật bài kiểm tra';
   if (saving) submitLabel = 'Đang lưu...';
   else if (mode === 'create') submitLabel = 'Tạo bài kiểm tra';
@@ -108,7 +112,11 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
         <div className="modal-header">
           <div>
             <h3>{mode === 'create' ? 'Tạo bài kiểm tra' : 'Chỉnh sửa bài kiểm tra'}</h3>
-            <p className="muted" style={{ marginTop: 4 }}>Cấu hình bài kiểm tra theo ma trận đề.</p>
+            <p className="muted" style={{ marginTop: 4 }}>
+              {isEditingMatrixAssessment 
+                ? 'Bài kiểm tra này được tạo từ ma trận đề. Một số trường không thể chỉnh sửa.'
+                : 'Cấu hình bài kiểm tra theo ma trận đề.'}
+            </p>
           </div>
           <button className="icon-btn" onClick={onClose}>
             <X size={16} />
@@ -119,6 +127,7 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
           <div className="modal-body">
             {error && <p style={{ color: '#be123c', fontSize: 13 }}>{error}</p>}
 
+   
             <div className="form-grid">
               <label>
                 <p className="muted" style={{ marginBottom: 6 }}>Tiêu đề</p>
@@ -132,42 +141,63 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
 
               <label>
                 <p className="muted" style={{ marginBottom: 6 }}>Loại bài kiểm tra</p>
-                <select
-                  className="select"
-                  value={formData.assessmentType}
-                  onChange={(event) => setFormData({ ...formData, assessmentType: event.target.value as AssessmentType })}
-                >
-                  <option value="QUIZ">Trắc nghiệm nhanh</option>
-                  <option value="TEST">Bài kiểm tra</option>
-                  <option value="EXAM">Bài thi</option>
-                  <option value="HOMEWORK">Bài tập về nhà</option>
-                </select>
+                {isEditingMatrixAssessment ? (
+                  <div className="input-readonly">
+                    {formData.assessmentType === 'QUIZ' && 'Trắc nghiệm nhanh'}
+                    {formData.assessmentType === 'TEST' && 'Bài kiểm tra'}
+                    {formData.assessmentType === 'EXAM' && 'Bài thi'}
+                    {formData.assessmentType === 'HOMEWORK' && 'Bài tập về nhà'}
+                  </div>
+                ) : (
+                  <select
+                    className="select"
+                    value={formData.assessmentType}
+                    onChange={(event) => setFormData({ ...formData, assessmentType: event.target.value as AssessmentType })}
+                  >
+                    <option value="QUIZ">Trắc nghiệm nhanh</option>
+                    <option value="TEST">Bài kiểm tra</option>
+                    <option value="EXAM">Bài thi</option>
+                    <option value="HOMEWORK">Bài tập về nhà</option>
+                  </select>
+                )}
               </label>
 
               <label>
                 <p className="muted" style={{ marginBottom: 6 }}>Chế độ tạo đề</p>
-                <select
-                  className="select"
-                  value={formData.assessmentMode}
-                  onChange={(event) => setFormData({ ...formData, assessmentMode: event.target.value as AssessmentMode })}
-                >
-                  <option value="DIRECT">Trực tiếp</option>
-                  <option value="MATRIX_BASED">Theo ma trận đề</option>
-                </select>
+                {isEditingMatrixAssessment ? (
+                  <div className="input-readonly">
+                    Theo ma trận đề
+                  </div>
+                ) : (
+                  <select
+                    className="select"
+                    value={formData.assessmentMode}
+                    onChange={(event) => setFormData({ ...formData, assessmentMode: event.target.value as AssessmentMode })}
+                  >
+                    <option value="DIRECT">Trực tiếp</option>
+                    <option value="MATRIX_BASED">Theo ma trận đề</option>
+                  </select>
+                )}
               </label>
 
               <label>
                 <p className="muted" style={{ marginBottom: 6 }}>Ma trận đề</p>
-                <select
-                  className="select"
-                  value={formData.examMatrixId}
-                  onChange={(event) => setFormData({ ...formData, examMatrixId: event.target.value })}
-                >
-                  <option value="">Chọn ma trận</option>
-                  {matrices.map((matrix) => (
-                    <option key={matrix.id} value={matrix.id}>{matrix.name} ({matrix.status})</option>
-                  ))}
-                </select>
+                {isEditingMatrixAssessment ? (
+                  <div className="input-readonly">
+                    {matrices.find(m => m.id === formData.examMatrixId)?.name || formData.examMatrixId} (APPROVED)
+                  </div>
+                ) : (
+                  <select
+                    className="select"
+                    value={formData.examMatrixId}
+                    onChange={(event) => setFormData({ ...formData, examMatrixId: event.target.value })}
+                  >
+                    <option value="">Chọn ma trận</option>
+                    {matrices.map((matrix) => (
+                      <option key={matrix.id} value={matrix.id}>{matrix.name} ({matrix.status})</option>
+                    ))}
+                  </select>
+                )}
               </label>
             </div>
 

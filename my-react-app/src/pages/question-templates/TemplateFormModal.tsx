@@ -4,6 +4,8 @@ import MathText from '../../components/common/MathText';
 import {
   CognitiveLevel,
   QuestionType,
+  QuestionTag,
+  questionTagLabels,
   type QuestionTemplateRequest,
   type QuestionTemplateResponse,
 } from '../../types/questionTemplate';
@@ -33,13 +35,12 @@ type ValidationResult = {
   normalizedName: string;
   normalizedTemplateText: string;
   normalizedAnswerFormula?: string;
-  normalizedTags: string[];
+  normalizedTags: QuestionTag[];
 };
 
 type ActiveMathField =
   | { kind: 'name' }
   | { kind: 'description' }
-  | { kind: 'tags' }
   | { kind: 'templateText' }
   | { kind: 'answerFormula' }
   | { kind: 'diagramTemplateRaw' }
@@ -84,7 +85,7 @@ function validateFormInput(input: {
   name: string;
   templateText: string;
   answerFormula: string;
-  tags: string;
+  tags: QuestionTag[];
 }): { error?: string; result?: ValidationResult } {
   const normalizedName = input.name.trim();
   if (!normalizedName) return { error: 'Tên mẫu là bắt buộc.' };
@@ -95,13 +96,12 @@ function validateFormInput(input: {
 
   const normalizedAnswerFormula = input.answerFormula.trim();
 
-  const normalizedTags = input.tags
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean);
+  if (input.tags.length === 0) {
+    return { error: 'Bạn cần chọn ít nhất một tag cho template.' };
+  }
 
-  if (normalizedTags.length === 0) {
-    return { error: 'Bạn cần nhập ít nhất một tag cho template.' };
+  if (input.tags.length > 5) {
+    return { error: 'Bạn chỉ có thể chọn tối đa 5 tags.' };
   }
 
   return {
@@ -109,7 +109,7 @@ function validateFormInput(input: {
       normalizedName,
       normalizedTemplateText,
       normalizedAnswerFormula: normalizedAnswerFormula || undefined,
-      normalizedTags,
+      normalizedTags: input.tags,
     },
   };
 }
@@ -165,7 +165,7 @@ export function TemplateFormModal({
   const [isPublic, setIsPublic] = useState(false);
   const [templateText, setTemplateText] = useState('');
   const [answerFormula, setAnswerFormula] = useState('');
-  const [tags, setTags] = useState('');
+  const [tags, setTags] = useState<QuestionTag[]>([]);
   const [parameters, setParameters] = useState<ParameterInput[]>([]);
   const [options, setOptions] = useState<OptionInput[]>([]);
   const [diagramTemplateRaw, setDiagramTemplateRaw] = useState('');
@@ -175,7 +175,6 @@ export function TemplateFormModal({
   const [isGuideOpen, setIsGuideOpen] = useState(false);
   const nameRef = useRef<HTMLInputElement | null>(null);
   const descriptionRef = useRef<HTMLTextAreaElement | null>(null);
-  const tagsRef = useRef<HTMLInputElement | null>(null);
   const templateTextRef = useRef<HTMLTextAreaElement | null>(null);
   const answerFormulaRef = useRef<HTMLInputElement | null>(null);
   const diagramTemplateRef = useRef<HTMLTextAreaElement | null>(null);
@@ -204,7 +203,7 @@ export function TemplateFormModal({
       setIsPublic(initialData.isPublic ?? false);
       setTemplateText(parseTemplateText(initialData.templateText));
       setAnswerFormula(initialData.answerFormula || '');
-      setTags((initialData.tags || []).join(', '));
+      setTags(initialData.tags || []);
       if (typeof initialData.diagramTemplate === 'string') {
         setDiagramTemplateRaw(initialData.diagramTemplate);
       } else {
@@ -257,7 +256,7 @@ export function TemplateFormModal({
     setIsPublic(false);
     setTemplateText('Giải phương trình: {{a}}x + {{b}} = 0');
     setAnswerFormula('(-{{b}})/{{a}}');
-    setTags('đại số, lớp 9');
+    setTags([QuestionTag.LINEAR_EQUATIONS, QuestionTag.PROBLEM_SOLVING]);
     setDiagramTemplateRaw('');
     setParameters([
       { name: 'a', type: 'int', min: '1', max: '10', constraint: '' },
@@ -313,8 +312,6 @@ export function TemplateFormModal({
         return { value: name, setValue: setName, element: nameRef.current };
       case 'description':
         return { value: description, setValue: setDescription, element: descriptionRef.current };
-      case 'tags':
-        return { value: tags, setValue: setTags, element: tagsRef.current };
       case 'templateText':
         return { value: templateText, setValue: setTemplateText, element: templateTextRef.current };
       case 'answerFormula':
@@ -568,15 +565,246 @@ export function TemplateFormModal({
 
               <label>
                 <p className="muted" style={{ marginBottom: 6 }}>
-                  Từ khóa
+                  Tags <span style={{ color: '#ef4444' }}>*</span>
+                  <span style={{ fontSize: '0.8rem', marginLeft: 8, fontWeight: 400 }}>
+                    (Chọn 1-5 tags)
+                  </span>
                 </p>
-                <input
-                  ref={tagsRef}
-                  className="input"
-                  value={tags}
-                  onFocus={() => setActiveMathField({ kind: 'tags' })}
-                  onChange={(event) => setTags(event.target.value)}
-                />
+                
+                {/* Selected Tags Display */}
+                <div style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: '8px',
+                  minHeight: '40px',
+                  padding: '8px',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '6px',
+                  background: '#f9fafb',
+                  marginBottom: '8px'
+                }}>
+                  {tags.map((tag) => (
+                    <span
+                      key={tag}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '4px 8px',
+                        background: '#6366f1',
+                        color: 'white',
+                        borderRadius: '4px',
+                        fontSize: '13px',
+                        fontWeight: 500
+                      }}
+                    >
+                      {questionTagLabels[tag]}
+                      <button
+                        type="button"
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          padding: 0,
+                          background: 'transparent',
+                          border: 'none',
+                          color: 'white',
+                          cursor: 'pointer',
+                          opacity: 0.8
+                        }}
+                        onClick={() => setTags(tags.filter((t) => t !== tag))}
+                        onMouseOver={(e) => e.currentTarget.style.opacity = '1'}
+                        onMouseOut={(e) => e.currentTarget.style.opacity = '0.8'}
+                      >
+                        <X size={14} />
+                      </button>
+                    </span>
+                  ))}
+                  {tags.length === 0 && (
+                    <span style={{
+                      color: '#9ca3af',
+                      fontSize: '14px',
+                      fontStyle: 'italic'
+                    }}>
+                      Chọn tags từ dropdown bên dưới
+                    </span>
+                  )}
+                </div>
+
+                {/* Dropdown to Add Tags */}
+                <select
+                  className="select"
+                  value=""
+                  onChange={(e) => {
+                    const selectedTag = e.target.value as QuestionTag;
+                    if (selectedTag && !tags.includes(selectedTag)) {
+                      if (tags.length < 5) {
+                        setTags([...tags, selectedTag]);
+                      } else {
+                        alert('Bạn chỉ có thể chọn tối đa 5 tags');
+                      }
+                    }
+                  }}
+                  disabled={tags.length >= 5}
+                >
+                  <option value="">
+                    {tags.length >= 5 ? 'Đã chọn tối đa 5 tags' : 'Chọn tag để thêm...'}
+                  </option>
+                  
+                  <optgroup label="Đại số">
+                    {[
+                      QuestionTag.LINEAR_EQUATIONS,
+                      QuestionTag.QUADRATIC_EQUATIONS,
+                      QuestionTag.POLYNOMIALS,
+                      QuestionTag.SYSTEMS_OF_EQUATIONS,
+                      QuestionTag.INEQUALITIES,
+                      QuestionTag.FUNCTIONS,
+                      QuestionTag.SEQUENCES_SERIES,
+                    ]
+                      .filter(tag => !tags.includes(tag))
+                      .map(tag => (
+                        <option key={tag} value={tag}>
+                          {questionTagLabels[tag]}
+                        </option>
+                      ))}
+                  </optgroup>
+                  
+                  <optgroup label="Hình học">
+                    {[
+                      QuestionTag.TRIANGLES,
+                      QuestionTag.CIRCLES,
+                      QuestionTag.POLYGONS,
+                      QuestionTag.SOLID_GEOMETRY,
+                      QuestionTag.COORDINATE_GEOMETRY,
+                      QuestionTag.TRANSFORMATIONS,
+                      QuestionTag.VECTORS,
+                      QuestionTag.AREA_PERIMETER,
+                    ]
+                      .filter(tag => !tags.includes(tag))
+                      .map(tag => (
+                        <option key={tag} value={tag}>
+                          {questionTagLabels[tag]}
+                        </option>
+                      ))}
+                  </optgroup>
+                  
+                  <optgroup label="Giải tích">
+                    {[
+                      QuestionTag.LIMITS,
+                      QuestionTag.DERIVATIVES,
+                      QuestionTag.INTEGRALS,
+                      QuestionTag.DIFFERENTIAL_EQUATIONS,
+                      QuestionTag.SERIES_CONVERGENCE,
+                    ]
+                      .filter(tag => !tags.includes(tag))
+                      .map(tag => (
+                        <option key={tag} value={tag}>
+                          {questionTagLabels[tag]}
+                        </option>
+                      ))}
+                  </optgroup>
+                  
+                  <optgroup label="Thống kê & Xác suất">
+                    {[
+                      QuestionTag.DESCRIPTIVE_STATISTICS,
+                      QuestionTag.PROBABILITY,
+                      QuestionTag.DISTRIBUTIONS,
+                      QuestionTag.HYPOTHESIS_TESTING,
+                    ]
+                      .filter(tag => !tags.includes(tag))
+                      .map(tag => (
+                        <option key={tag} value={tag}>
+                          {questionTagLabels[tag]}
+                        </option>
+                      ))}
+                  </optgroup>
+                  
+                  <optgroup label="Lượng giác">
+                    {[
+                      QuestionTag.TRIGONOMETRIC_FUNCTIONS,
+                      QuestionTag.TRIGONOMETRIC_IDENTITIES,
+                      QuestionTag.INVERSE_TRIG,
+                    ]
+                      .filter(tag => !tags.includes(tag))
+                      .map(tag => (
+                        <option key={tag} value={tag}>
+                          {questionTagLabels[tag]}
+                        </option>
+                      ))}
+                  </optgroup>
+                  
+                  <optgroup label="Số học">
+                    {[
+                      QuestionTag.PRIME_NUMBERS,
+                      QuestionTag.DIVISIBILITY,
+                      QuestionTag.MODULAR_ARITHMETIC,
+                      QuestionTag.GCD_LCM,
+                    ]
+                      .filter(tag => !tags.includes(tag))
+                      .map(tag => (
+                        <option key={tag} value={tag}>
+                          {questionTagLabels[tag]}
+                        </option>
+                      ))}
+                  </optgroup>
+                  
+                  <optgroup label="Tổ hợp">
+                    {[
+                      QuestionTag.PERMUTATIONS,
+                      QuestionTag.COMBINATIONS,
+                      QuestionTag.COUNTING_PRINCIPLES,
+                    ]
+                      .filter(tag => !tags.includes(tag))
+                      .map(tag => (
+                        <option key={tag} value={tag}>
+                          {questionTagLabels[tag]}
+                        </option>
+                      ))}
+                  </optgroup>
+                  
+                  <optgroup label="Logic & Tập hợp">
+                    {[
+                      QuestionTag.SET_THEORY,
+                      QuestionTag.LOGIC,
+                      QuestionTag.PROOF_TECHNIQUES,
+                    ]
+                      .filter(tag => !tags.includes(tag))
+                      .map(tag => (
+                        <option key={tag} value={tag}>
+                          {questionTagLabels[tag]}
+                        </option>
+                      ))}
+                  </optgroup>
+                  
+                  <optgroup label="Toán ứng dụng">
+                    {[
+                      QuestionTag.OPTIMIZATION,
+                      QuestionTag.LINEAR_PROGRAMMING,
+                      QuestionTag.MATRICES,
+                      QuestionTag.GRAPH_THEORY,
+                    ]
+                      .filter(tag => !tags.includes(tag))
+                      .map(tag => (
+                        <option key={tag} value={tag}>
+                          {questionTagLabels[tag]}
+                        </option>
+                      ))}
+                  </optgroup>
+                  
+                  <optgroup label="Khác">
+                    {[
+                      QuestionTag.WORD_PROBLEMS,
+                      QuestionTag.PROBLEM_SOLVING,
+                      QuestionTag.MATHEMATICAL_REASONING,
+                    ]
+                      .filter(tag => !tags.includes(tag))
+                      .map(tag => (
+                        <option key={tag} value={tag}>
+                          {questionTagLabels[tag]}
+                        </option>
+                      ))}
+                  </optgroup>
+                </select>
               </label>
             </div>
 
