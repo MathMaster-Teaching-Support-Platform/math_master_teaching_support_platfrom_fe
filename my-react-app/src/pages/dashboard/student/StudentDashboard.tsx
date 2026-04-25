@@ -3,8 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../../components/layout/DashboardLayout/DashboardLayout';
 import { mockStudent } from '../../../data/mockData';
 import { useRoadmaps } from '../../../hooks/useRoadmaps';
-import { AuthService } from '../../../services/api/auth.service';
-import { TeacherProfileService } from '../../../services/api/teacher-profile.service';
 import type { RoadmapCatalogItem } from '../../../types';
 import './StudentDashboard.css';
 
@@ -195,20 +193,7 @@ const IChevron = () => (
     <polyline points="9 18 15 12 9 6" />
   </svg>
 );
-const IArrow = () => (
-  <svg
-    width="14"
-    height="14"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M5 12h14M12 5l7 7-7 7" />
-  </svg>
-);
+
 const IEdit = () => (
   <svg
     width="18"
@@ -464,7 +449,7 @@ const WeeklyChart: React.FC = () => {
 const StudentDashboard: React.FC = () => {
   const navigate = useNavigate();
   const roadmapsQuery = useRoadmaps();
-  const [isTeacherApproved, setIsTeacherApproved] = useState(false);
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -472,21 +457,7 @@ const StudentDashboard: React.FC = () => {
     return () => clearTimeout(t);
   }, []);
 
-  useEffect(() => {
-    const check = async () => {
-      if (AuthService.hasRole('teacher')) {
-        setIsTeacherApproved(true);
-        return;
-      }
-      try {
-        const res = await TeacherProfileService.getMyProfile();
-        if (res.result.status === 'APPROVED') setIsTeacherApproved(true);
-      } catch {
-        /* silent */
-      }
-    };
-    check();
-  }, []);
+
 
   const roadmapResult = roadmapsQuery.data?.result as
     | RoadmapCatalogItem[]
@@ -506,27 +477,7 @@ const StudentDashboard: React.FC = () => {
       notificationCount={3}
     >
       <div className="sd-page">
-        {/* ── Teacher Banner ── */}
-        {isTeacherApproved && (
-          <div className="sd-card sd-banner-teacher sd-anim-0">
-            <div className="sd-banner-left">
-              <div className="sd-banner-icon">
-                <ITrophy />
-              </div>
-              <div>
-                <h3>Bạn đã được duyệt làm Giáo viên!</h3>
-                <p>Bắt đầu tạo nội dung và quản lý lớp học ngay hôm nay.</p>
-              </div>
-            </div>
-            <button
-              className="sd-btn sd-btn-gradient"
-              onClick={() => navigate('/teacher/dashboard')}
-              aria-label="Chuyển sang giao diện Giáo viên"
-            >
-              Chuyển vai trò <IArrow />
-            </button>
-          </div>
-        )}
+
 
         {/* ── Header ── */}
         <div className="sd-header">
