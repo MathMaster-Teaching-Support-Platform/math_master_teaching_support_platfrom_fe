@@ -56,6 +56,7 @@ import AdminRoadmapTopicsPage from '../pages/admin/AdminRoadmapTopicsPage';
 import AdminTransactions from '../pages/admin/AdminTransactions';
 import MarketplaceAnalytics from '../pages/admin/MarketplaceAnalytics';
 import RevenueBreakdown from '../pages/admin/RevenueBreakdown';
+import CashFlowDashboard from '../pages/admin/CashFlowDashboard';
 import ReviewProfiles from '../pages/admin/ReviewProfiles';
 import AssessmentBuilderFlow from '../pages/assessments/AssessmentBuilderFlow';
 import AssessmentDetail from '../pages/assessments/AssessmentDetailRefactored';
@@ -700,6 +701,14 @@ export const router = createBrowserRouter([
     element: (
       <PrivateRoute>
         <MarketplaceAnalytics />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/admin/cash-flow',
+    element: (
+      <PrivateRoute>
+        <CashFlowDashboard />
       </PrivateRoute>
     ),
   },

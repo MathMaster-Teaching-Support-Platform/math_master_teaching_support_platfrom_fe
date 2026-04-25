@@ -138,7 +138,10 @@ const adminGroups: MenuGroup[] = [
   },
   {
     label: 'Hệ thống',
-    items: [{ path: '/admin/analytics', icon: LineChart, label: 'Thống kê' }],
+    items: [
+      { path: '/admin/analytics', icon: LineChart, label: 'Thống kê' },
+      { path: '/admin/cash-flow', icon: Wallet, label: 'Dòng tiền' },
+    ],
   },
 ];
 
