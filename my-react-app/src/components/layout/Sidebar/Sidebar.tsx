@@ -141,12 +141,13 @@ const Sidebar: React.FC<SidebarProps> = ({ role, collapsed, onToggle }) => {
   const navigate = useNavigate();
   const navRef = useRef<HTMLElement | null>(null);
   const navScrollStorageKey = useMemo(() => `mm.sidebar.scrollTop.${role}`, [role]);
+  const navId = useMemo(() => `sidebar-nav-${role}`, [role]);
 
   useEffect(() => {
     const nav = navRef.current;
     if (!nav) return;
 
-    const savedScroll = Number(window.sessionStorage.getItem(navScrollStorageKey) ?? '0');
+    const savedScroll = Number(globalThis.sessionStorage.getItem(navScrollStorageKey) ?? '0');
     nav.scrollTop = Number.isFinite(savedScroll) ? savedScroll : 0;
   }, [navScrollStorageKey]);
 
@@ -155,7 +156,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role, collapsed, onToggle }) => {
     if (!nav) return;
 
     const handleScroll = () => {
-      window.sessionStorage.setItem(navScrollStorageKey, String(nav.scrollTop));
+      globalThis.sessionStorage.setItem(navScrollStorageKey, String(nav.scrollTop));
     };
 
     nav.addEventListener('scroll', handleScroll, { passive: true });
@@ -175,6 +176,9 @@ const Sidebar: React.FC<SidebarProps> = ({ role, collapsed, onToggle }) => {
   else groups = adminGroups;
 
   const settingsPath = `/${role}/settings`;
+  let roleLabel = 'Quản trị viên';
+  if (role === 'teacher') roleLabel = 'Giáo viên';
+  else if (role === 'student') roleLabel = 'Học sinh';
 
   const isActive = (path: string) => {
     if (path.endsWith('/dashboard')) return location.pathname === path;
@@ -192,26 +196,23 @@ const Sidebar: React.FC<SidebarProps> = ({ role, collapsed, onToggle }) => {
       </div>
 
       {/* Collapse toggle — floating on right edge */}
-      <button className="sb-toggle" onClick={onToggle} aria-label="Toggle sidebar">
+      <button
+        className="sb-toggle"
+        onClick={onToggle}
+        aria-label={collapsed ? 'Mở rộng thanh điều hướng' : 'Thu gọn thanh điều hướng'}
+        aria-expanded={!collapsed}
+        aria-controls={navId}
+      >
         <ChevronLeft size={13} strokeWidth={2.5} />
         <ChevronLeft size={13} strokeWidth={2.5} />
       </button>
 
       {/* Role Switcher */}
       {role === 'student' && AuthService.hasRole('teacher') && (
-        <div
-          className="sb-group sb-role-switcher"
-          style={{
-            marginTop: '0',
-            borderBottom: '1px solid var(--gray-200)',
-            paddingBottom: '0.5rem',
-            marginBottom: '0.5rem',
-          }}
-        >
+        <div className="sb-group sb-role-switcher">
           <Link
             to={role === 'student' ? '/teacher/dashboard' : '/student/courses'}
             className="sb-item sb-item--switch"
-            style={{ color: 'var(--primary-color)', fontWeight: '600' }}
           >
             <span className="sb-icon">
               <ArrowLeftRight size={16} strokeWidth={2.5} />
@@ -231,7 +232,12 @@ const Sidebar: React.FC<SidebarProps> = ({ role, collapsed, onToggle }) => {
       )}
 
       {/* Nav */}
-      <nav ref={navRef} className="sidebar-nav">
+      <nav ref={navRef} id={navId} className="sidebar-nav" aria-label="Điều hướng chính">
+        {!collapsed && (
+          <p className="sb-group-label sb-role-label" aria-label={`Vai trò: ${roleLabel}`}>
+            {roleLabel}
+          </p>
+        )}
         {groups.map((group) => (
           <div key={group.label ?? '__root'} className="sb-group">
             {group.label && !collapsed && <p className="sb-group-label">{group.label}</p>}
@@ -261,7 +267,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role, collapsed, onToggle }) => {
           {!collapsed && <span className="sb-label">Cài đặt</span>}
           {collapsed && <span className="sb-tooltip">Cài đặt</span>}
         </Link>
-        <button onClick={handleLogout} className="sb-item sb-item--logout">
+        <button onClick={handleLogout} className="sb-item sb-item--logout" aria-label="Đăng xuất khỏi tài khoản">
           <span className="sb-icon">
             <LogOut size={16} strokeWidth={2} />
           </span>
