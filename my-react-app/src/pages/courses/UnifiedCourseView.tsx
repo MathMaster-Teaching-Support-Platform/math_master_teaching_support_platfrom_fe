@@ -24,6 +24,7 @@ import {
   Users,
   Globe,
   AlertCircle,
+  LoaderCircle,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
@@ -160,10 +161,20 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
     return (
       <DashboardLayout role={dashboardRole} user={{ name: 'User', avatar: '', role: dashboardRole }}>
         <div className="module-layout-container">
-          <section className="module-page">
-            <div className="empty">
-              <div className="spinner" />
-              <p>Đang tải khóa học...</p>
+          <section className="module-page teacher-courses-page">
+            <div className="rounded-xl border border-[#E8E6DC] bg-[#F5F4ED] p-5">
+              <div className="mb-2 flex items-center justify-center gap-2 text-[14px] text-[#5E5D59]">
+                <LoaderCircle className="h-5 w-5 animate-spin text-[#C96442]" />
+                <p className="m-0">Đang tải khóa học...</p>
+              </div>
+              <div className="mx-auto h-1.5 max-w-md overflow-hidden rounded-full bg-[#E8E6DC]">
+                <motion.div
+                  className="h-full rounded-full bg-[#C96442]"
+                  initial={{ width: '0%' }}
+                  animate={{ width: '100%' }}
+                  transition={{ duration: 1.2, ease: 'easeInOut' }}
+                />
+              </div>
             </div>
           </section>
         </div>

@@ -28,4 +28,4 @@ dist-ssr
 prompts/impeccable-rules.md
 .github
 .github/java-pgrade
-
+*.md

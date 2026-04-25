@@ -1,5 +1,16 @@
 import { motion } from 'framer-motion';
-import { Award, BookOpen, ChevronRight, Clock, Search, TrendingUp, X } from 'lucide-react';
+import {
+  ArrowLeft,
+  ArrowRight,
+  Award,
+  BookOpen,
+  ChevronRight,
+  Clock,
+  LoaderCircle,
+  Search,
+  TrendingUp,
+  X,
+} from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CourseCard } from '../../components/course/CourseCard';
@@ -14,15 +25,16 @@ import './TeacherCourses.css';
 
 // ─── Cover design tokens (shared with TeacherCourses) ────────────────────────
 const coverGradients = [
-  'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
-  'linear-gradient(135deg, #ecfeff 0%, #cffafe 100%)',
-  'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)',
-  'linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)',
-  'linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%)',
-  'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)',
+  'linear-gradient(135deg, #f5f4ed 0%, #ede8dc 100%)',
+  'linear-gradient(135deg, #faf9f5 0%, #f0eee6 100%)',
+  'linear-gradient(135deg, #f3efe4 0%, #e8e6dc 100%)',
+  'linear-gradient(135deg, #f7f3eb 0%, #ede3d4 100%)',
+  'linear-gradient(135deg, #faf7f3 0%, #efe7dc 100%)',
+  'linear-gradient(135deg, #f6f2ea 0%, #e7dfd2 100%)',
 ] as const;
 
-const coverAccents = ['#1d4ed8', '#0f766e', '#047857', '#c2410c', '#be185d', '#6d28d9'] as const;
+const coverAccents = ['#4d4c48', '#5e5d59', '#7a5a4d', '#81644c', '#6e5b7e', '#4a6a5a'] as const;
+const PAGE_SIZE = 9;
 
 // ─── Animated progress bar ────────────────────────────────────────────────────
 const AnimatedProgressBar: React.FC<{ value: number }> = ({ value }) => {
@@ -32,14 +44,14 @@ const AnimatedProgressBar: React.FC<{ value: number }> = ({ value }) => {
     return () => clearTimeout(t);
   }, [value]);
   return (
-    <div style={{ height: 6, background: '#e8eef8', borderRadius: 999, overflow: 'hidden' }}>
+    <div style={{ height: 6, background: '#e8e6dc', borderRadius: 999, overflow: 'hidden' }}>
       <div
         style={{
           transform: `scaleX(${width / 100})`,
           transformOrigin: 'left',
           width: '100%',
           height: '100%',
-          background: 'linear-gradient(90deg, #1f5eff, #60a5fa)',
+          background: 'linear-gradient(90deg, #c96442, #d97757)',
           borderRadius: 999,
           transition: 'transform 0.7s cubic-bezier(0.22, 1, 0.36, 1)',
         }}
@@ -52,8 +64,9 @@ const AnimatedProgressBar: React.FC<{ value: number }> = ({ value }) => {
 const EnrollmentCard: React.FC<{
   enrollment: EnrollmentResponse;
   index: number;
-}> = ({ enrollment, index }) => {
-  const navigate = useNavigate();
+  isOpening: boolean;
+  onOpen: (enrollmentId: string) => void;
+}> = ({ enrollment, index, isOpening, onOpen }) => {
   const completionRate = enrollment.completionRate ?? 0;
   const enrolledCourseThumbnailUrl = enrollment.courseThumbnailUrl;
 
@@ -64,13 +77,15 @@ const EnrollmentCard: React.FC<{
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.1 + index * 0.08, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
       style={{ cursor: 'pointer' }}
-      onClick={() => navigate(`/student/courses/${enrollment.id}`)}
+      onClick={() => {
+        if (!isOpening) onOpen(enrollment.id);
+      }}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          navigate(`/student/courses/${enrollment.id}`);
+          if (!isOpening) onOpen(enrollment.id);
         }
       }}
     >
@@ -84,36 +99,40 @@ const EnrollmentCard: React.FC<{
         {enrolledCourseThumbnailUrl && (
           <img
             src={enrolledCourseThumbnailUrl}
-            alt={enrollment.courseTitle ?? 'Course thumbnail'}
+            alt={enrollment.courseTitle ?? 'Ảnh bìa giáo trình'}
             className="cover-thumb"
           />
         )}
         <div className="cover-overlay" />
         <div className="cover-index">#{String(index + 1).padStart(2, '0')}</div>
-        <span
-          className={`course-badge ${enrollment.status === 'ACTIVE' ? 'badge-live' : 'badge-draft'}`}
-        >
-          {enrollment.status === 'ACTIVE' ? 'Đang học' : 'Đã hủy'}
-        </span>
-        <h3 className="cover-title">{enrollment.courseTitle}</h3>
       </div>
       <div className="course-body">
+        <div className="course-heading">
+          <div className="course-level-row">
+            <span
+              className={`course-badge ${enrollment.status === 'ACTIVE' ? 'badge-live' : 'badge-draft'}`}
+            >
+              {enrollment.status === 'ACTIVE' ? 'Đang học' : 'Đã hủy'}
+            </span>
+          </div>
+          <h3 className="cover-title">{enrollment.courseTitle}</h3>
+        </div>
         <div>
           <div
             style={{
               display: 'flex',
               justifyContent: 'space-between',
               fontSize: '0.81rem',
-              color: '#60748f',
+              color: '#5e5d59',
               marginBottom: '0.4rem',
               fontWeight: 600,
             }}
           >
             <span>Tiến độ học</span>
-            <strong style={{ color: '#1f5eff' }}>{completionRate.toFixed(0)}%</strong>
+            <strong style={{ color: '#c96442' }}>{completionRate.toFixed(0)}%</strong>
           </div>
           <AnimatedProgressBar value={completionRate} />
-          <p style={{ margin: '0.3rem 0 0', fontSize: '0.75rem', color: '#9aaece' }}>
+          <p style={{ margin: '0.3rem 0 0', fontSize: '0.75rem', color: '#87867f' }}>
             {enrollment.completedLessons ?? 0}/{enrollment.totalLessons ?? 0} bài hoàn thành
           </p>
         </div>
@@ -123,10 +142,19 @@ const EnrollmentCard: React.FC<{
             style={{ flex: 1 }}
             onClick={(e) => {
               e.stopPropagation();
-              navigate(`/student/courses/${enrollment.id}`);
+              if (!isOpening) onOpen(enrollment.id);
             }}
+            disabled={isOpening}
           >
-            <ChevronRight size={14} /> Xem chi tiết
+            {isOpening ? (
+              <>
+                <LoaderCircle size={14} className="animate-spin" /> Đang mở...
+              </>
+            ) : (
+              <>
+                <ChevronRight size={14} /> Xem chi tiết
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -138,6 +166,7 @@ const EnrollmentCard: React.FC<{
 
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 const StudentCourses: React.FC = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'enrolled' | 'browse'>('enrolled');
   const [filterGradeId, setFilterGradeId] = useState('');
@@ -145,6 +174,9 @@ const StudentCourses: React.FC = () => {
   const [grades, setGrades] = useState<SchoolGrade[]>([]);
   const [subjects, setSubjects] = useState<SubjectByGrade[]>([]);
   const [enrollingCourseId, setEnrollingCourseId] = useState<string | null>(null);
+  const [openingEnrollmentId, setOpeningEnrollmentId] = useState<string | null>(null);
+  const [enrolledPage, setEnrolledPage] = useState(1);
+  const [browsePage, setBrowsePage] = useState(1);
 
   const { data: enrollmentsData, isLoading: loadingEnrollments } = useMyEnrollments();
   const { data: publicCoursesData, isLoading: loadingPublic } = usePublicCourses({
@@ -192,6 +224,19 @@ const StudentCourses: React.FC = () => {
       ),
     [enrollments, searchQuery]
   );
+  const enrolledTotalPages = Math.max(1, Math.ceil(filteredEnrollments.length / PAGE_SIZE));
+  const safeEnrolledPage = Math.min(enrolledPage, enrolledTotalPages);
+  const paginatedEnrollments = useMemo(() => {
+    const start = (safeEnrolledPage - 1) * PAGE_SIZE;
+    return filteredEnrollments.slice(start, start + PAGE_SIZE);
+  }, [filteredEnrollments, safeEnrolledPage]);
+
+  const browseTotalPages = Math.max(1, Math.ceil(publicCourses.length / PAGE_SIZE));
+  const safeBrowsePage = Math.min(browsePage, browseTotalPages);
+  const paginatedPublicCourses = useMemo(() => {
+    const start = (safeBrowsePage - 1) * PAGE_SIZE;
+    return publicCourses.slice(start, start + PAGE_SIZE);
+  }, [publicCourses, safeBrowsePage]);
 
   const stats = useMemo(
     () => ({
@@ -208,6 +253,15 @@ const StudentCourses: React.FC = () => {
     [enrollments]
   );
 
+  const openEnrollmentDetails = (enrollmentId: string) => {
+    setOpeningEnrollmentId(enrollmentId);
+    navigate(`/student/courses/${enrollmentId}`);
+  };
+
+  const openPublicCourseDetails = (courseId: string) => {
+    navigate(`/course/${courseId}`);
+  };
+
   const handleEnroll = (courseId: string) => {
     // Prevent multiple enrollments
     if (enrollMutation.isPending || enrollingCourseId) {
@@ -222,9 +276,13 @@ const StudentCourses: React.FC = () => {
   };
 
   return (
-    <DashboardLayout role="student" user={{ name: 'Học sinh', avatar: '', role: 'student' }}>
+    <DashboardLayout
+      role="student"
+      contentClassName="dashboard-content--flush-bleed"
+      user={{ name: 'Học sinh', avatar: '', role: 'student' }}
+    >
       <div className="module-layout-container">
-        <section className="module-page">
+        <section className="module-page teacher-courses-page">
           <motion.div
             key="grid-view"
             initial={{ opacity: 0 }}
@@ -235,7 +293,6 @@ const StudentCourses: React.FC = () => {
             {/* ── Header ── */}
             <header className="page-header courses-header-row">
               <div className="header-stack">
-                <div className="header-kicker">Student dashboard</div>
                 <div className="row" style={{ gap: '0.6rem' }}>
                   <h2>Giáo trình của tôi</h2>
                   {!loadingEnrollments && <span className="count-chip">{enrollments.length}</span>}
@@ -312,13 +369,19 @@ const StudentCourses: React.FC = () => {
               <div className="pill-group">
                 <button
                   className={`pill-btn${activeTab === 'enrolled' ? ' active' : ''}`}
-                  onClick={() => setActiveTab('enrolled')}
+                  onClick={() => {
+                    setActiveTab('enrolled');
+                    setEnrolledPage(1);
+                  }}
                 >
                   <BookOpen size={13} strokeWidth={2} /> Đã đăng ký ({stats.active})
                 </button>
                 <button
                   className={`pill-btn${activeTab === 'browse' ? ' active' : ''}`}
-                  onClick={() => setActiveTab('browse')}
+                  onClick={() => {
+                    setActiveTab('browse');
+                    setBrowsePage(1);
+                  }}
                 >
                   <Search size={13} strokeWidth={2} /> Khám phá
                 </button>
@@ -329,16 +392,11 @@ const StudentCourses: React.FC = () => {
             {activeTab === 'browse' && (
               <div className="toolbar" style={{ gap: '0.5rem' }}>
                 <select
+                  className="grade-filter-select"
                   value={filterGradeId}
-                  onChange={(e) => void handleFilterGradeChange(e.target.value)}
-                  style={{
-                    padding: '0.5rem 0.75rem',
-                    borderRadius: '8px',
-                    border: '1px solid #dbe4f0',
-                    fontSize: '0.88rem',
-                    fontFamily: 'inherit',
-                    background: '#fff',
-                    color: '#142235',
+                  onChange={(e) => {
+                    setBrowsePage(1);
+                    void handleFilterGradeChange(e.target.value);
                   }}
                 >
                   <option value="">Tất cả khối lớp</option>
@@ -349,18 +407,13 @@ const StudentCourses: React.FC = () => {
                   ))}
                 </select>
                 <select
+                  className="grade-filter-select"
                   value={filterSubjectId}
-                  onChange={(e) => setFilterSubjectId(e.target.value)}
-                  disabled={!filterGradeId}
-                  style={{
-                    padding: '0.5rem 0.75rem',
-                    borderRadius: '8px',
-                    border: '1px solid #dbe4f0',
-                    fontSize: '0.88rem',
-                    fontFamily: 'inherit',
-                    background: '#fff',
-                    color: '#142235',
+                  onChange={(e) => {
+                    setFilterSubjectId(e.target.value);
+                    setBrowsePage(1);
                   }}
+                  disabled={!filterGradeId}
                 >
                   <option value="">Tất cả môn học</option>
                   {subjects.map((s) => (
@@ -378,7 +431,7 @@ const StudentCourses: React.FC = () => {
                 <div className="summary-item summary-item--primary">
                   <span className="summary-label">Hiển thị</span>
                   <strong className="summary-value">
-                    {filteredEnrollments.length} / {enrollments.length}
+                    {paginatedEnrollments.length} / {filteredEnrollments.length}
                   </strong>
                 </div>
                 <div className="summary-item">
@@ -396,10 +449,19 @@ const StudentCourses: React.FC = () => {
 
             {/* ── Loading skeletons ── */}
             {(activeTab === 'enrolled' ? loadingEnrollments : loadingPublic) && (
-              <div className="skeleton-grid">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="skeleton-card" />
-                ))}
+              <div className="rounded-xl border border-[#E8E6DC] bg-[#F5F4ED] p-4">
+                <div className="mb-2 flex items-center gap-2 text-[14px] text-[#5E5D59]">
+                  <LoaderCircle className="h-4 w-4 animate-spin text-[#C96442]" />
+                  {activeTab === 'enrolled' ? 'Đang tải khóa học đã đăng ký...' : 'Đang tải danh sách khóa học...'}
+                </div>
+                <div className="h-1.5 overflow-hidden rounded-full bg-[#E8E6DC]">
+                  <motion.div
+                    className="h-full rounded-full bg-[#C96442]"
+                    initial={{ width: '0%' }}
+                    animate={{ width: '100%' }}
+                    transition={{ duration: 1.2, ease: 'easeInOut' }}
+                  />
+                </div>
               </div>
             )}
 
@@ -408,8 +470,14 @@ const StudentCourses: React.FC = () => {
               <>
                 {filteredEnrollments.length > 0 ? (
                   <div className="grid-cards">
-                    {filteredEnrollments.map((enrollment, i) => (
-                      <EnrollmentCard key={enrollment.id} enrollment={enrollment} index={i} />
+                    {paginatedEnrollments.map((enrollment, i) => (
+                      <EnrollmentCard
+                        key={enrollment.id}
+                        enrollment={enrollment}
+                        index={i}
+                        isOpening={openingEnrollmentId === enrollment.id}
+                        onOpen={openEnrollmentDetails}
+                      />
                     ))}
                   </div>
                 ) : (
@@ -424,13 +492,36 @@ const StudentCourses: React.FC = () => {
                 )}
               </>
             )}
+            {activeTab === 'enrolled' && !loadingEnrollments && filteredEnrollments.length > PAGE_SIZE && (
+              <div className="courses-pagination">
+                <button
+                  type="button"
+                  className="pagination-btn"
+                  onClick={() => setEnrolledPage((p) => Math.max(1, p - 1))}
+                  disabled={safeEnrolledPage === 1}
+                >
+                  <ArrowLeft size={14} /> Trước
+                </button>
+                <span className="pagination-info">
+                  Trang <strong>{safeEnrolledPage}</strong> / {enrolledTotalPages}
+                </span>
+                <button
+                  type="button"
+                  className="pagination-btn"
+                  onClick={() => setEnrolledPage((p) => Math.min(enrolledTotalPages, p + 1))}
+                  disabled={safeEnrolledPage === enrolledTotalPages}
+                >
+                  Sau <ArrowRight size={14} />
+                </button>
+              </div>
+            )}
 
             {/* ── Browse grid ── */}
             {activeTab === 'browse' && !loadingPublic && (
               <>
                 {publicCourses.length > 0 ? (
                   <div className="grid-cards">
-                    {publicCourses.map((course, i) => (
+                    {paginatedPublicCourses.map((course, i) => (
                       <CourseCard
                         key={course.id}
                         course={course}
@@ -438,6 +529,7 @@ const StudentCourses: React.FC = () => {
                         onEnroll={handleEnroll}
                         isEnrolling={enrollingCourseId === course.id}
                         isEnrolled={enrolledCourseIds.has(course.id)}
+                        onClick={() => openPublicCourseDetails(course.id)}
                       />
                     ))}
                   </div>
@@ -448,6 +540,29 @@ const StudentCourses: React.FC = () => {
                   </div>
                 )}
               </>
+            )}
+            {activeTab === 'browse' && !loadingPublic && publicCourses.length > PAGE_SIZE && (
+              <div className="courses-pagination">
+                <button
+                  type="button"
+                  className="pagination-btn"
+                  onClick={() => setBrowsePage((p) => Math.max(1, p - 1))}
+                  disabled={safeBrowsePage === 1}
+                >
+                  <ArrowLeft size={14} /> Trước
+                </button>
+                <span className="pagination-info">
+                  Trang <strong>{safeBrowsePage}</strong> / {browseTotalPages}
+                </span>
+                <button
+                  type="button"
+                  className="pagination-btn"
+                  onClick={() => setBrowsePage((p) => Math.min(browseTotalPages, p + 1))}
+                  disabled={safeBrowsePage === browseTotalPages}
+                >
+                  Sau <ArrowRight size={14} />
+                </button>
+              </div>
             )}
           </motion.div>
         </section>

@@ -53,7 +53,7 @@ const teacherGroups: MenuGroup[] = [
   {
     label: 'Nội dung',
     items: [
-      { path: '/teacher/courses', icon: BookOpen, label: 'Giáo Trình' },
+      { path: '/teacher/courses', icon: BookOpen, label: 'Khóa học' },
       { path: '/teacher/lesson-plans', icon: ClipboardList, label: 'Giáo Án' },
       { path: '/teacher/materials', icon: FolderKanban, label: 'Tài liệu' },
       { path: '/teacher/mindmaps', icon: Workflow, label: 'Mindmap' },
@@ -80,7 +80,7 @@ const studentGroups: MenuGroup[] = [
   {
     label: null,
     items: [
-      { path: '/student/courses', icon: GraduationCap, label: 'Giáo Trình' },
+      { path: '/student/courses', icon: GraduationCap, label: 'Khóa học' },
       { path: '/student/public-slides', icon: Library, label: 'Slide' },
       { path: '/student/public-mindmaps', icon: Workflow, label: 'Mindmap' },
       { path: '/student/assessments', icon: FileCheck2, label: 'Bài kiểm tra' },
@@ -267,7 +267,11 @@ const Sidebar: React.FC<SidebarProps> = ({ role, collapsed, onToggle }) => {
           {!collapsed && <span className="sb-label">Cài đặt</span>}
           {collapsed && <span className="sb-tooltip">Cài đặt</span>}
         </Link>
-        <button onClick={handleLogout} className="sb-item sb-item--logout" aria-label="Đăng xuất khỏi tài khoản">
+        <button
+          onClick={handleLogout}
+          className="sb-item sb-item--logout"
+          aria-label="Đăng xuất khỏi tài khoản"
+        >
           <span className="sb-icon">
             <LogOut size={16} strokeWidth={2} />
           </span>

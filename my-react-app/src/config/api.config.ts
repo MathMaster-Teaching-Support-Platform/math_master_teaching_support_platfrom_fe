@@ -403,6 +403,15 @@ export const API_ENDPOINTS = {
   TEACHER_EARNINGS_TOP_COURSES: '/teacher/earnings/top-courses',
   TEACHER_EARNINGS_TRANSACTIONS: '/teacher/earnings/transactions',
 
+  // Student Dashboard
+  STUDENT_DASHBOARD: '/student/dashboard',
+  STUDENT_DASHBOARD_SUMMARY: '/student/dashboard/summary',
+  STUDENT_DASHBOARD_UPCOMING_TASKS: '/student/dashboard/upcoming-tasks',
+  STUDENT_DASHBOARD_RECENT_GRADES: '/student/dashboard/recent-grades',
+  STUDENT_DASHBOARD_LEARNING_PROGRESS: '/student/dashboard/learning-progress',
+  STUDENT_DASHBOARD_WEEKLY_ACTIVITY: '/student/dashboard/weekly-activity',
+  STUDENT_DASHBOARD_STREAK: '/student/dashboard/streak',
+
   // Admin Financial Dashboard
   ADMIN: {
     FINANCIAL_OVERVIEW: '/admin/dashboard/financial-overview',

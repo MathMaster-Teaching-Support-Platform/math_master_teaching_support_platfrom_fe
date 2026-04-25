@@ -16,21 +16,21 @@ interface CourseCardProps {
 }
 
 const coverGradients = [
-  'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
-  'linear-gradient(135deg, #ecfeff 0%, #cffafe 100%)',
-  'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)',
-  'linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)',
-  'linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%)',
-  'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)',
+  'linear-gradient(135deg, #f5f4ed 0%, #ede8dc 100%)',
+  'linear-gradient(135deg, #faf9f5 0%, #f0eee6 100%)',
+  'linear-gradient(135deg, #f3efe4 0%, #e8e6dc 100%)',
+  'linear-gradient(135deg, #f7f3eb 0%, #ede3d4 100%)',
+  'linear-gradient(135deg, #faf7f3 0%, #efe7dc 100%)',
+  'linear-gradient(135deg, #f6f2ea 0%, #e7dfd2 100%)',
 ] as const;
 
-const coverAccents = ['#1d4ed8', '#0f766e', '#047857', '#c2410c', '#be185d', '#6d28d9'] as const;
+const coverAccents = ['#4d4c48', '#5e5d59', '#7a5a4d', '#81644c', '#6e5b7e', '#4a6a5a'] as const;
 
-const levelMap: Record<CourseLevel | 'ALL_LEVELS', { label: string; color: string }> = {
-  BEGINNER: { label: 'Cơ bản', color: '#10b981' },
-  INTERMEDIATE: { label: 'Trung bình', color: '#f59e0b' },
-  ADVANCED: { label: 'Nâng cao', color: '#ef4444' },
-  ALL_LEVELS: { label: 'Mọi cấp độ', color: '#6366f1' },
+const levelMap: Record<CourseLevel | 'ALL_LEVELS', { label: string; bg: string; text: string }> = {
+  BEGINNER: { label: 'Cơ bản', bg: '#dfe9e3', text: '#355345' },
+  INTERMEDIATE: { label: 'Trung bình', bg: '#efe2d3', text: '#755437' },
+  ADVANCED: { label: 'Nâng cao', bg: '#f3dddd', text: '#8f2f2f' },
+  ALL_LEVELS: { label: 'Mọi cấp độ', bg: '#e6deef', text: '#5c4a70' },
 };
 
 export const CourseCard: React.FC<CourseCardProps> = ({ 
@@ -99,22 +99,26 @@ export const CourseCard: React.FC<CourseCardProps> = ({
         )}
         <div className="cover-overlay" />
         <div className="cover-index">#{String(index + 1).padStart(2, '0')}</div>
-        {course.level && (
-          <span 
-            className="course-badge" 
-            style={{ 
-              top: '10px', 
-              right: '10px', 
-              background: levelMap[course.level]?.color ?? '#6366f1' 
-            }}
-          >
-            {levelMap[course.level]?.label ?? 'Mọi cấp độ'}
-          </span>
-        )}
-        {isEnrolled && <span className="course-badge badge-live" style={{ top: '35px', right: '10px' }}>✓ Đã đăng ký</span>}
-        <h3 className="cover-title">{course.title}</h3>
       </div>
       <div className="course-body">
+        <div className="course-heading">
+          <div className="course-level-row">
+            {course.level && (
+              <span
+                className="course-badge"
+                style={{
+                  background: levelMap[course.level]?.bg ?? '#e6deef',
+                  color: levelMap[course.level]?.text ?? '#5c4a70',
+                  border: '1px solid #d1cfc5',
+                }}
+              >
+                {levelMap[course.level]?.label ?? 'Mọi cấp độ'}
+              </span>
+            )}
+            {isEnrolled && <span className="course-badge badge-live">✓ Đã đăng ký</span>}
+          </div>
+          <h3 className="cover-title">{course.title}</h3>
+        </div>
         <Link 
           to={`/student/instructors/${course.teacherId}`} 
           className="teacher-info-mini-link"
@@ -167,12 +171,12 @@ export const CourseCard: React.FC<CourseCardProps> = ({
             <button
               className="action-secondary"
               style={{
-                background: '#f1f5f9',
-                color: '#475569',
+                background: '#E8E6DC',
+                color: '#4D4C48',
                 flex: 1,
-                border: 'none',
+                border: '1px solid #D1CFC5',
                 padding: '0.6rem',
-                borderRadius: '6px',
+                borderRadius: '10px',
                 fontWeight: 600,
                 fontSize: '0.85rem',
                 cursor: 'pointer'
@@ -185,7 +189,9 @@ export const CourseCard: React.FC<CourseCardProps> = ({
               className="action-primary"
               style={{
                 flex: 1,
-                ...(isEnrolled ? { background: '#ecfdf5', color: '#065f46', cursor: 'default' } : {}),
+                ...(isEnrolled
+                  ? { background: '#ede8dc', color: '#4d4c48', cursor: 'default' }
+                  : {}),
               }}
               onClick={handleEnrollClick}
               disabled={isEnrolling || isEnrolled}
@@ -217,12 +223,12 @@ export const CourseCard: React.FC<CourseCardProps> = ({
           position: relative;
         }
         .teacher-info-mini-link:hover .course-desc-teacher {
-          color: #4f46e5;
+          color: #c96442;
           text-decoration: underline;
         }
         .course-desc-teacher {
           font-size: 0.85rem;
-          color: #64748b;
+          color: #5e5d59;
           margin: 0;
         }
         .course-pricing {
@@ -231,7 +237,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({
           justify-content: space-between;
           margin: 0.75rem 0;
           padding-top: 0.75rem;
-          border-top: 1px solid #f1f5f9;
+          border-top: 1px solid #e8e6dc;
         }
         .price-container {
           display: flex;
@@ -241,19 +247,19 @@ export const CourseCard: React.FC<CourseCardProps> = ({
         .current-price {
           font-size: 1.25rem;
           font-weight: 700;
-          color: #1e293b;
+          color: #141413;
         }
         .original-price {
           font-size: 0.875rem;
-          color: #94a3b8;
+          color: #87867f;
           text-decoration: line-through;
         }
         .price-free {
-          color: #059669;
+          color: #4a6a5a;
         }
         .discount-badge {
-          background: #fef08a;
-          color: #854d0e;
+          background: #f3efe4;
+          color: #7a5a4d;
           padding: 2px 8px;
           border-radius: 4px;
           font-size: 0.75rem;

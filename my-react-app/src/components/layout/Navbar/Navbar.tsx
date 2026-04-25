@@ -15,16 +15,21 @@ interface NavbarProps {
     avatar: string;
     role: string;
   };
-  notificationCount?: number;
 }
 
 const Navbar: React.FC<NavbarProps> = ({ user }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [tokenRemaining, setTokenRemaining] = useState<number | null>(null);
   const { unreadCount, notifications, markAllAsRead } = useNotificationsContext();
+  const notificationsPreview = notifications.slice(0, 3);
+  const unreadCountLabel = unreadCount > 99 ? '99+' : String(unreadCount);
 
-  const roleLabel =
-    user.role === 'teacher' ? 'Giao vien' : user.role === 'student' ? 'Hoc sinh' : 'Quan tri vien';
+  const roleLabelByRole: Record<string, string> = {
+    teacher: 'Giao vien',
+    student: 'Hoc sinh',
+    admin: 'Quan tri vien',
+  };
+  const roleLabel = roleLabelByRole[user.role] ?? 'Quan tri vien';
 
   const walletRoute = user.role === 'teacher' ? '/teacher/wallet' : '/student/wallet';
 
@@ -52,32 +57,70 @@ const Navbar: React.FC<NavbarProps> = ({ user }) => {
       void fetchToken();
     };
 
-    window.addEventListener(SUBSCRIPTION_UPDATED_EVENT, handleRefresh);
-    window.addEventListener('authChange', handleRefresh);
+    globalThis.addEventListener(SUBSCRIPTION_UPDATED_EVENT, handleRefresh);
+    globalThis.addEventListener('authChange', handleRefresh);
 
-    const timer = window.setInterval(() => {
+    const timer = globalThis.setInterval(() => {
       void fetchToken();
     }, 60000);
 
     return () => {
       mounted = false;
-      window.removeEventListener(SUBSCRIPTION_UPDATED_EVENT, handleRefresh);
-      window.removeEventListener('authChange', handleRefresh);
-      window.clearInterval(timer);
+      globalThis.removeEventListener(SUBSCRIPTION_UPDATED_EVENT, handleRefresh);
+      globalThis.removeEventListener('authChange', handleRefresh);
+      globalThis.clearInterval(timer);
     };
   }, []);
+
+  useEffect(() => {
+    if (!showNotifications) {
+      return;
+    }
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowNotifications(false);
+      }
+    };
+
+    const closeOnClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      const clickedInsideDropdown = target.closest('.notifications-dropdown');
+      const clickedToggle = target.closest('.notifications-toggle');
+      if (clickedInsideDropdown || clickedToggle) return;
+      setShowNotifications(false);
+    };
+
+    document.addEventListener('keydown', closeOnEscape);
+    document.addEventListener('mousedown', closeOnClickOutside);
+    return () => {
+      document.removeEventListener('keydown', closeOnEscape);
+      document.removeEventListener('mousedown', closeOnClickOutside);
+    };
+  }, [showNotifications]);
+
+  const getNotificationIcon = (notificationType?: string) => {
+    const normalizedType = notificationType?.toLowerCase();
+    if (normalizedType === 'assignment') return '📘';
+    if (normalizedType === 'grade') return '✅';
+    if (normalizedType === 'course') return '📚';
+    if (notificationType === 'PROFILE_VERIFICATION') return '🛡️';
+    return '🔔';
+  };
 
   return (
     <nav className="navbar-top">
       <div className="navbar-content">
         <div className="navbar-actions">
           <button
-            className="navbar-action-btn"
+            className="navbar-action-btn notifications-toggle"
             onClick={() => setShowNotifications(!showNotifications)}
             aria-label="Thông báo"
+            aria-expanded={showNotifications}
+            aria-haspopup="dialog"
           >
             <Bell size={18} className="action-icon" />
-            {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}
+            {unreadCount > 0 && <span className="notification-badge">{unreadCountLabel}</span>}
           </button>
 
           <Link to={walletRoute} className="navbar-action-btn wallet-btn" aria-label="Ví của tôi">
@@ -85,7 +128,11 @@ const Navbar: React.FC<NavbarProps> = ({ user }) => {
           </Link>
 
           {tokenRemaining !== null && (
-            <Link to="/pricing" className="token-chip" aria-label="Token subscription còn lại">
+            <Link
+              to="/pricing"
+              className="token-chip"
+              aria-label={`Token subscription còn lại ${tokenRemaining}`}
+            >
               <span className="token-chip-label">Token</span>
               <strong>{tokenRemaining}</strong>
             </Link>
@@ -106,7 +153,7 @@ const Navbar: React.FC<NavbarProps> = ({ user }) => {
       </div>
 
       {showNotifications && (
-        <div className="notifications-dropdown">
+        <div className="notifications-dropdown" aria-label="Danh sách thông báo">
           <div className="notifications-header">
             <h3>Thông báo</h3>
             <button className="mark-all-read" onClick={() => markAllAsRead()}>
@@ -114,18 +161,10 @@ const Navbar: React.FC<NavbarProps> = ({ user }) => {
             </button>
           </div>
           <div className="notifications-list">
-            {notifications.slice(0, 3).map((notif) => (
-              <div key={notif.id} className={`notification-item ${!notif.read ? 'unread' : ''}`}>
+            {notificationsPreview.map((notif) => (
+              <div key={notif.id} className={`notification-item${notif.read ? '' : ' unread'}`}>
                 <div className="notification-icon">
-                  {notif.type?.toLowerCase() === 'assignment'
-                    ? '📘'
-                    : notif.type?.toLowerCase() === 'grade'
-                      ? '✅'
-                      : notif.type?.toLowerCase() === 'course'
-                        ? '📚'
-                      : notif.type === 'PROFILE_VERIFICATION'
-                        ? '🛡️'
-                        : '🔔'}
+                  {getNotificationIcon(notif.type)}
                 </div>
                 <div className="notification-content">
                   <div className="notification-title">{notif.title}</div>
@@ -137,9 +176,7 @@ const Navbar: React.FC<NavbarProps> = ({ user }) => {
               </div>
             ))}
             {notifications.length === 0 && (
-              <div style={{ padding: '1rem', textAlign: 'center', color: '#999' }}>
-                Chưa có thông báo nào
-              </div>
+              <div className="notification-empty-state">Chưa có thông báo nào</div>
             )}
           </div>
           <Link to="/notifications" className="view-all-notifications">

@@ -327,6 +327,7 @@ const ProfileSettings: React.FC = () => {
       });
       setProfileDirty(false);
       setAvatarEditMode(false);
+      globalThis.dispatchEvent(new Event('authChange'));
       showToast('success', 'Hồ sơ cá nhân đã được cập nhật thành công');
     } catch (err: unknown) {
       showToast('error', err instanceof Error ? err.message : 'Cập nhật thất bại');
