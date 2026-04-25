@@ -86,7 +86,7 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
   // Get user info
   const userRole = AuthService.getUserRole();
   const isAuthenticated = AuthService.isAuthenticated();
-  const isTeacherOrAdmin = userRole === 'teacher' || userRole === 'admin';
+  const isAdmin = userRole === 'admin';
 
   // Fetch enrollment data
   const { data: enrollmentsData } = useMyEnrollments();
@@ -99,22 +99,40 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
   const courseId = enrollment?.courseId || courseIdFromParam;
 
   // Fetch course data
-  const { data: courseData, isLoading: loadingCourse } = useCourseDetail(courseId!);
+  const {
+    data: courseData,
+    isLoading: loadingCourse,
+    error: courseError,
+  } = useCourseDetail(courseId!);
   const { data: lessonsData } = useCourseLessons(courseId!);
   const { data: progressData } = useCourseProgress(enrollmentId || '');
   const { data: teacherProfileData } = useTeacherProfile(courseData?.result?.teacherId ?? '');
 
   const course = courseData?.result;
-  const lessons = lessonsData?.result || [];
+  const courseErrorCode =
+    (courseError as { response?: { data?: { code?: string } } } | null)?.response?.data?.code ?? '';
+  const courseErrorMessage = (courseError as Error | null)?.message ?? '';
+  const isAccessDeniedError =
+    courseErrorCode === 'COURSE_ACCESS_DENIED' ||
+    courseErrorMessage.toUpperCase().includes('COURSE_ACCESS_DENIED');
+  const lessons = useMemo(() => lessonsData?.result ?? [], [lessonsData?.result]);
   const progress = progressData?.result;
   const teacherProfile = teacherProfileData?.result;
+
+  const decodedToken = AuthService.getToken() ? AuthService.decodeToken(AuthService.getToken()!) : null;
+  const isOwnerTeacher =
+    userRole === 'teacher' &&
+    !!course &&
+    !!decodedToken?.sub &&
+    String(decodedToken.sub) === String(course.teacherId);
+  const canViewUnpublishedCourse = isAdmin || isOwnerTeacher;
 
   // Enrollment mutation
   const enrollMutation = useEnroll();
 
   // Determine enrollment status
   const isEnrolled = !!enrollment && enrollment.status === 'ACTIVE';
-  const hasFullAccess = isEnrolled || isTeacherOrAdmin;
+  const hasFullAccess = isEnrolled || canViewUnpublishedCourse;
 
   // Calculate free preview stats
   const freePreviewLessons = useMemo(
@@ -182,6 +200,25 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
     );
   }
 
+  if (isAccessDeniedError) {
+    return (
+      <DashboardLayout role={dashboardRole} user={{ name: 'User', avatar: '', role: dashboardRole }}>
+        <div className="module-layout-container">
+          <section className="module-page teacher-courses-page">
+            <div className="empty">
+              <AlertCircle size={32} style={{ marginBottom: 8, color: '#B53333' }} />
+              <p>Bạn không có quyền xem khóa học này.</p>
+              <button className="btn secondary" onClick={() => navigate('/student/courses')}>
+                <ArrowLeft size={14} />
+                Quay lại danh sách
+              </button>
+            </div>
+          </section>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   // Course not found
   if (!course) {
     return (
@@ -191,6 +228,27 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
             <div className="empty">
               <AlertCircle size={32} style={{ marginBottom: 8, color: '#94a3b8' }} />
               <p>Không tìm thấy khóa học</p>
+              <button className="btn secondary" onClick={() => navigate('/student/courses')}>
+                <ArrowLeft size={14} />
+                Quay lại danh sách
+              </button>
+            </div>
+          </section>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  const isCoursePublic =
+    course.isPublished === true && String(course.status ?? '').toUpperCase() === 'PUBLISHED';
+  if (!isCoursePublic && !canViewUnpublishedCourse) {
+    return (
+      <DashboardLayout role={dashboardRole} user={{ name: 'User', avatar: '', role: dashboardRole }}>
+        <div className="module-layout-container">
+          <section className="module-page teacher-courses-page">
+            <div className="empty">
+              <AlertCircle size={32} style={{ marginBottom: 8, color: '#B53333' }} />
+              <p>Khóa học này chưa được xuất bản hoặc đang chờ duyệt.</p>
               <button className="btn secondary" onClick={() => navigate('/student/courses')}>
                 <ArrowLeft size={14} />
                 Quay lại danh sách
@@ -439,7 +497,7 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
                     <Lock size={32} color="#1e40af" />
                     <div style={{ flex: 1, minWidth: 200 }}>
                       <h3 style={{ margin: '0 0 0.5rem', fontSize: '1.1rem', fontWeight: 700, color: '#1e40af' }}>
-                        🔒 Đăng ký để mở khóa toàn bộ khóa học
+                        Đăng ký để mở khóa toàn bộ khóa học
                       </h3>
                       <p style={{ margin: 0, fontSize: '0.9rem', color: '#475569' }}>
                         ✓ {freePreviewLessons.length} bài học miễn phí xem trước •{' '}

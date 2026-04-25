@@ -5,7 +5,6 @@ import {
   Award,
   BookOpen,
   ChevronRight,
-  Clock,
   LoaderCircle,
   Search,
   TrendingUp,
@@ -211,7 +210,13 @@ const StudentCourses: React.FC = () => {
     [enrollmentsData]
   );
   const publicCourses = useMemo<CourseResponse[]>(
-    () => publicCoursesData?.result?.content ?? [],
+    () =>
+      (publicCoursesData?.result?.content ?? []).filter((course) => {
+        const isPublishedFlag = course.isPublished === true;
+        const isPublishedStatus = String(course.status ?? '').toUpperCase() === 'PUBLISHED';
+        const isNotDeleted = !(course as CourseResponse & { deletedAt?: string | null }).deletedAt;
+        return isPublishedFlag && isPublishedStatus && isNotDeleted;
+      }),
     [publicCoursesData]
   );
 
@@ -243,7 +248,6 @@ const StudentCourses: React.FC = () => {
       active: enrollments.filter((e) => e.status === 'ACTIVE').length,
       total: enrollments.filter((e) => e.status === 'ACTIVE').length,
       browse: publicCourses.length,
-      dropped: enrollments.filter((e) => e.status !== 'ACTIVE').length,
     }),
     [enrollments, publicCourses.length]
   );
@@ -330,15 +334,6 @@ const StudentCourses: React.FC = () => {
                 <div>
                   <h3>{stats.browse}</h3>
                   <p>Khóa học mới</p>
-                </div>
-              </div>
-              <div className="stat-card stat-violet">
-                <div className="stat-icon-wrap">
-                  <Clock size={20} />
-                </div>
-                <div>
-                  <h3>{stats.dropped}</h3>
-                  <p>Đã hủy</p>
                 </div>
               </div>
             </div>
@@ -438,11 +433,6 @@ const StudentCourses: React.FC = () => {
                   <span className="summary-dot summary-dot--progress" />
                   <span className="summary-label">Đang học</span>
                   <strong className="summary-value">{stats.active}</strong>
-                </div>
-                <div className="summary-item">
-                  <span className="summary-dot summary-dot--upcoming" />
-                  <span className="summary-label">Đã hủy</span>
-                  <strong className="summary-value">{stats.dropped}</strong>
                 </div>
               </div>
             )}
