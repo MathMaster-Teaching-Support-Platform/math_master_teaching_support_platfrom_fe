@@ -76,11 +76,11 @@ export function ExamMatrixRowModalRefactored({
 
     const defaults = ['10', '11', '12'];
     if (matrixGradeLevel) {
-      gradeFromApi.add(matrixGradeLevel);
+      gradeFromApi.add(String(matrixGradeLevel));
     }
 
     return Array.from(new Set([...defaults, ...Array.from(gradeFromApi)])).sort((a, b) =>
-      a.localeCompare(b),
+      String(a).localeCompare(String(b)),
     );
   }, [allSubjects, matrixGradeLevel]);
 

@@ -194,56 +194,6 @@ export function ExamMatrixFormModal({
                     />
                   </div>
 
-                  <div className="form-grid">
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                      <label
-                        htmlFor="emf-questions"
-                        style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--mod-ink)' }}
-                      >
-                        Tổng số câu mục tiêu
-                      </label>
-                      <input
-                        id="emf-questions"
-                        className="input"
-                        type="number"
-                        min={1}
-                        placeholder="VD: 40"
-                        value={formData.totalQuestionsTarget ?? ''}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            totalQuestionsTarget: e.target.value
-                              ? Number(e.target.value)
-                              : undefined,
-                          })
-                        }
-                      />
-                    </div>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                      <label
-                        htmlFor="emf-points"
-                        style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--mod-ink)' }}
-                      >
-                        Tổng điểm mục tiêu
-                      </label>
-                      <input
-                        id="emf-points"
-                        className="input"
-                        type="number"
-                        min={1}
-                        placeholder="VD: 10"
-                        value={formData.totalPointsTarget ?? ''}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            totalPointsTarget: e.target.value ? Number(e.target.value) : undefined,
-                          })
-                        }
-                      />
-                    </div>
-                  </div>
-
                   <label
                     style={{
                       display: 'flex',
