@@ -11,7 +11,8 @@ import {
   X,
   Zap,
 } from 'lucide-react';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockAdmin, mockStudent, mockTeacher } from '../../data/mockData';
 import { AuthService } from '../../services/api/auth.service';
@@ -3584,10 +3585,6 @@ const TxCountdown = ({ expiresAt }: { expiresAt: string }) => {
 const StudentWallet: React.FC = () => {
   const currentRole = AuthService.getUserRole() || 'student';
 
-  const [wallet, setWallet] = useState<WalletSummary | null>(null);
-  const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
-  const [walletLoading, setWalletLoading] = useState(true);
-  const [transactionsLoading, setTransactionsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [errorDismissed, setErrorDismissed] = useState(false);
 
@@ -3664,56 +3661,62 @@ const StudentWallet: React.FC = () => {
     return 'N/A';
   };
 
-  const loadWallet = async () => {
-    try {
-      setWalletLoading(true);
-      const response = await WalletService.getMyWallet();
-      setWallet(response.result);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Không thể tải ví');
-      setErrorDismissed(false);
-    } finally {
-      setWalletLoading(false);
+  const walletQuery = useQuery({
+    queryKey: ['wallet', 'my-summary'],
+    queryFn: () => WalletService.getMyWallet(),
+    staleTime: 30_000,
+  });
+
+  const transactionsQuery = useQuery({
+    queryKey: ['wallet', 'transactions', statusFilter],
+    queryFn: () =>
+      statusFilter === 'all'
+        ? WalletService.getTransactions({ page: 0, size: API_PAGE_SIZE })
+        : WalletService.getTransactionsByStatus(STATUS_TO_API[statusFilter], {
+            page: 0,
+            size: API_PAGE_SIZE,
+          }),
+    staleTime: 15_000,
+  });
+
+  const wallet: WalletSummary | null = walletQuery.data?.result ?? null;
+  const transactions: WalletTransaction[] = transactionsQuery.data?.result.content ?? [];
+  const walletLoading = walletQuery.isLoading || walletQuery.isFetching;
+  const transactionsLoading = transactionsQuery.isLoading || transactionsQuery.isFetching;
+
+  const myInfoQuery = useQuery({
+    queryKey: ['users', 'my-info', 'student-wallet'],
+    queryFn: () => UserService.getMyInfo(),
+    staleTime: 60_000,
+  });
+
+  useEffect(() => {
+    if (myInfoQuery.data) {
+      setRealFullName(myInfoQuery.data.fullName || myInfoQuery.data.userName || null);
     }
-  };
+  }, [myInfoQuery.data]);
 
-  const loadTransactions = useCallback(async (filter: TransactionStatusFilter) => {
-    try {
-      setTransactionsLoading(true);
-      setError(null);
+  useEffect(() => {
+    if (walletQuery.error) {
+      setError(walletQuery.error instanceof Error ? walletQuery.error.message : 'Không thể tải ví');
       setErrorDismissed(false);
+    }
+  }, [walletQuery.error]);
 
-      const response =
-        filter === 'all'
-          ? await WalletService.getTransactions({ page: 0, size: API_PAGE_SIZE })
-          : await WalletService.getTransactionsByStatus(STATUS_TO_API[filter], {
-              page: 0,
-              size: API_PAGE_SIZE,
-            });
-
-      // BE always returns Spring Page object — `content` is always present
-      setTransactions(response.result.content ?? []);
+  useEffect(() => {
+    if (transactionsQuery.error) {
+      setError(
+        transactionsQuery.error instanceof Error
+          ? transactionsQuery.error.message
+          : 'Không thể tải giao dịch'
+      );
+      setErrorDismissed(false);
+      return;
+    }
+    if (transactionsQuery.data) {
       setPage(1);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Không thể tải giao dịch');
-      setErrorDismissed(false);
-    } finally {
-      setTransactionsLoading(false);
     }
-  }, []);
-
-  useEffect(() => {
-    void loadWallet();
-    UserService.getMyInfo()
-      .then((info) => setRealFullName(info.fullName || info.userName || null))
-      .catch(() => {
-        /* silently fall back to mock name */
-      });
-  }, []);
-
-  useEffect(() => {
-    void loadTransactions(statusFilter);
-  }, [statusFilter, loadTransactions]);
+  }, [transactionsQuery.error, transactionsQuery.data, statusFilter]);
 
   // Clean up any in-flight poll timer on unmount
   useEffect(
@@ -3773,7 +3776,7 @@ const StudentWallet: React.FC = () => {
       window.open(checkoutUrl, '_blank', 'noopener,noreferrer');
 
       // Immediately refresh transaction list so the new PENDING tx appears at the top
-      await loadTransactions(statusFilter);
+      await transactionsQuery.refetch();
 
       setDepositSuccess(true);
       setTimeout(() => setDepositSuccess(false), 3000);
@@ -3788,7 +3791,7 @@ const StudentWallet: React.FC = () => {
           const statusRes = await WalletService.getOrderStatus(orderCode);
           const txStatus = statusRes.result.status;
           if (txStatus === 'SUCCESS') {
-            await Promise.all([loadWallet(), loadTransactions(statusFilter)]);
+            await Promise.all([walletQuery.refetch(), transactionsQuery.refetch()]);
             return;
           }
           if (txStatus === 'FAILED' || txStatus === 'CANCELLED') {
@@ -3798,7 +3801,7 @@ const StudentWallet: React.FC = () => {
                 : 'Thanh toán thất bại. Vui lòng thử lại.'
             );
             setErrorDismissed(false);
-            await loadTransactions(statusFilter);
+            await transactionsQuery.refetch();
             return;
           }
         } catch {

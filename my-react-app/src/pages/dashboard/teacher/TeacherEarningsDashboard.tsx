@@ -1,40 +1,26 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../../components/layout/DashboardLayout/DashboardLayout';
 import {
   TeacherEarningsService,
-  type TeacherEarningsStats,
-  type TeacherMonthlyRevenue,
-  type TeacherTopCourse,
-  type TeacherTransaction,
   formatCurrency,
   formatNumber,
   formatGrowth,
 } from '../../../services/api/teacher-earnings.service';
 import { WalletService } from '../../../services/api/wallet.service';
-import type { WalletSummary } from '../../../types/wallet.types';
 import './TeacherEarningsDashboard.css';
 
 const TeacherEarningsDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const [stats, setStats] = useState<TeacherEarningsStats | null>(null);
-  const [wallet, setWallet] = useState<WalletSummary | null>(null);
-  const [monthlyRevenue, setMonthlyRevenue] = useState<TeacherMonthlyRevenue | null>(null);
-  const [topCourses, setTopCourses] = useState<TeacherTopCourse[]>([]);
-  const [transactions, setTransactions] = useState<TeacherTransaction[]>([]);
-
-  useEffect(() => {
-    loadDashboardData();
-  }, []);
-
-  const loadDashboardData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
+  const getTransactionStatusIcon = (status: string) => {
+    if (status === 'SUCCESS') return '✅';
+    if (status === 'PENDING') return '⏳';
+    return '❌';
+  };
+  const dashboardQuery = useQuery({
+    queryKey: ['teacher-dashboard', 'earnings-overview'],
+    queryFn: async () => {
       const [statsRes, walletRes, revenueRes, coursesRes, transactionsRes] = await Promise.all([
         TeacherEarningsService.getEarningsStats(),
         WalletService.getMyWallet(),
@@ -43,18 +29,24 @@ const TeacherEarningsDashboard: React.FC = () => {
         TeacherEarningsService.getTransactions({ page: 0, size: 10 }),
       ]);
 
-      setStats(statsRes.result);
-      setWallet(walletRes.result);
-      setMonthlyRevenue(revenueRes.result);
-      setTopCourses(coursesRes.result);
-      setTransactions(transactionsRes.result.content);
-    } catch (err: any) {
-      console.error('Failed to load dashboard data:', err);
-      setError(err.message || 'Không thể tải dữ liệu');
-    } finally {
-      setLoading(false);
-    }
-  };
+      return {
+        stats: statsRes.result,
+        wallet: walletRes.result,
+        monthlyRevenue: revenueRes.result,
+        topCourses: coursesRes.result,
+        transactions: transactionsRes.result.content,
+      };
+    },
+    staleTime: 30_000,
+  });
+
+  const loading = dashboardQuery.isLoading;
+  const error = dashboardQuery.error instanceof Error ? dashboardQuery.error.message : null;
+  const stats = dashboardQuery.data?.stats ?? null;
+  const wallet = dashboardQuery.data?.wallet ?? null;
+  const monthlyRevenue = dashboardQuery.data?.monthlyRevenue ?? null;
+  const topCourses = dashboardQuery.data?.topCourses ?? [];
+  const transactions = dashboardQuery.data?.transactions ?? [];
 
   if (loading) {
     return (
@@ -75,7 +67,7 @@ const TeacherEarningsDashboard: React.FC = () => {
         <div className="teacher-earnings-dashboard">
           <div className="error-state">
             <p className="error-message">❌ {error}</p>
-            <button onClick={loadDashboardData} className="retry-button">
+            <button onClick={() => void dashboardQuery.refetch()} className="retry-button">
               Thử lại
             </button>
           </div>
@@ -197,7 +189,8 @@ const TeacherEarningsDashboard: React.FC = () => {
                 </div>
               ) : (
                 topCourses.map((course) => (
-                  <div
+                  <button
+                    type="button"
                     key={course.courseId}
                     className="course-item"
                     onClick={() => navigate(`/teacher/courses/${course.courseId}`)}
@@ -219,7 +212,7 @@ const TeacherEarningsDashboard: React.FC = () => {
                     <div className="course-revenue">
                       {formatCurrency(course.totalRevenue)}
                     </div>
-                  </div>
+                  </button>
                 ))
               )}
             </div>
@@ -245,7 +238,7 @@ const TeacherEarningsDashboard: React.FC = () => {
                 transactions.map((tx) => (
                   <div key={tx.transactionId} className="transaction-item">
                     <div className="transaction-icon">
-                      {tx.status === 'SUCCESS' ? '✅' : tx.status === 'PENDING' ? '⏳' : '❌'}
+                      {getTransactionStatusIcon(tx.status)}
                     </div>
                     <div className="transaction-info">
                       <div className="transaction-desc">

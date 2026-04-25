@@ -11,6 +11,7 @@ import {
   Workflow,
   X,
 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
@@ -54,11 +55,6 @@ const emptyMindmapPage = (): PaginatedResponse<Mindmap> => ({
 export default function StudentPublicMindmaps() {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [schoolGrades, setSchoolGrades] = useState<SchoolGrade[]>([]);
-  const [subjects, setSubjects] = useState<SubjectByGrade[]>([]);
-  const [chapters, setChapters] = useState<ChapterBySubject[]>([]);
-  const [lessons, setLessons] = useState<LessonByChapter[]>([]);
-
   const [gradeId, setGradeId] = useState('');
   const [subjectId, setSubjectId] = useState('');
   const [chapterId, setChapterId] = useState('');
@@ -84,7 +80,6 @@ export default function StudentPublicMindmaps() {
   const [mindmapsResult, setMindmapsResult] =
     useState<PaginatedResponse<Mindmap>>(emptyMindmapPage());
 
-  const [loadingCatalog, setLoadingCatalog] = useState(false);
   const [loadingMindmaps, setLoadingMindmaps] = useState(false);
   const [previewingMindmapId, setPreviewingMindmapId] = useState('');
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -93,6 +88,52 @@ export default function StudentPublicMindmaps() {
   const [downloadingPreviewMindmapId, setDownloadingPreviewMindmapId] = useState('');
   const [mindmapsError, setMindmapsError] = useState('');
   const previewIframeRef = useRef<HTMLIFrameElement | null>(null);
+
+  const gradesQuery = useQuery({
+    queryKey: ['school-grades', 'active'],
+    queryFn: () => LessonSlideService.getSchoolGrades(true),
+    staleTime: 5 * 60 * 1000,
+  });
+  const subjectsQuery = useQuery({
+    queryKey: ['subjects', 'by-school-grade', gradeId],
+    queryFn: () => LessonSlideService.getSubjectsBySchoolGrade(gradeId),
+    enabled: !!gradeId,
+    staleTime: 5 * 60 * 1000,
+  });
+  const chaptersQuery = useQuery({
+    queryKey: ['chapters', 'by-subject', subjectId],
+    queryFn: () => LessonSlideService.getChaptersBySubject(subjectId),
+    enabled: !!subjectId,
+    staleTime: 5 * 60 * 1000,
+  });
+  const lessonsQuery = useQuery({
+    queryKey: ['lessons', 'by-chapter', chapterId],
+    queryFn: () => LessonSlideService.getLessonsByChapter(chapterId),
+    enabled: !!chapterId,
+    staleTime: 5 * 60 * 1000,
+  });
+  const mindmapsQuery = useQuery({
+    queryKey: [
+      'public-mindmaps',
+      { lessonId, name: mindmapKeywordDebounced, page: mindmapPage, size: mindmapSize, sortBy: mindmapSortBy, direction: mindmapDirection },
+    ],
+    queryFn: () =>
+      MindmapService.getPublicMindmaps({
+        lessonId: lessonId || undefined,
+        name: mindmapKeywordDebounced || undefined,
+        page: mindmapPage,
+        size: mindmapSize,
+        sortBy: mindmapSortBy,
+        direction: mindmapDirection,
+      }),
+    staleTime: 30_000,
+  });
+  const schoolGrades: SchoolGrade[] = gradesQuery.data?.result ?? [];
+  const subjects: SubjectByGrade[] = subjectsQuery.data?.result ?? [];
+  const chapters: ChapterBySubject[] = chaptersQuery.data?.result ?? [];
+  const lessons: LessonByChapter[] = lessonsQuery.data?.result ?? [];
+  const loadingCatalog =
+    gradesQuery.isFetching || subjectsQuery.isFetching || chaptersQuery.isFetching || lessonsQuery.isFetching;
 
   const selectedLesson = useMemo(
     () => lessons.find((lesson) => lesson.id === lessonId),
@@ -117,95 +158,31 @@ export default function StudentPublicMindmaps() {
     setSearchParams(params, { replace: true });
   }, [mindmapKeyword, mindmapPage, mindmapSize, mindmapSortBy, mindmapDirection, setSearchParams]);
 
-  useEffect(() => {
-    const loadGrades = async () => {
-      try {
-        setLoadingCatalog(true);
-        const response = await LessonSlideService.getSchoolGrades(true);
-        setSchoolGrades(response.result || []);
-      } catch (err) {
-        setMindmapsError(err instanceof Error ? err.message : 'Không thể tải danh sách khối lớp');
-      } finally {
-        setLoadingCatalog(false);
-      }
-    };
-
-    void loadGrades();
-  }, []);
-
   const resetResourceState = () => {
     setMindmapPage(0);
     setMindmapKeyword('');
     setMindmapsResult(emptyMindmapPage());
   };
 
-  const handleGradeChange = async (value: string) => {
+  const handleGradeChange = (value: string) => {
     setGradeId(value);
     setSubjectId('');
     setChapterId('');
     setLessonId('');
-    setSubjects([]);
-    setChapters([]);
-    setLessons([]);
     resetResourceState();
-
-    if (!value) return;
-
-    try {
-      setLoadingCatalog(true);
-      setMindmapsError('');
-      const response = await LessonSlideService.getSubjectsBySchoolGrade(value);
-      setSubjects(response.result || []);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Không thể tải danh sách môn học';
-      setMindmapsError(message);
-    } finally {
-      setLoadingCatalog(false);
-    }
   };
 
-  const handleSubjectChange = async (value: string) => {
+  const handleSubjectChange = (value: string) => {
     setSubjectId(value);
     setChapterId('');
     setLessonId('');
-    setChapters([]);
-    setLessons([]);
     resetResourceState();
-
-    if (!value) return;
-
-    try {
-      setLoadingCatalog(true);
-      setMindmapsError('');
-      const response = await LessonSlideService.getChaptersBySubject(value);
-      setChapters(response.result || []);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Không thể tải danh sách chương';
-      setMindmapsError(message);
-    } finally {
-      setLoadingCatalog(false);
-    }
   };
 
-  const handleChapterChange = async (value: string) => {
+  const handleChapterChange = (value: string) => {
     setChapterId(value);
     setLessonId('');
-    setLessons([]);
     resetResourceState();
-
-    if (!value) return;
-
-    try {
-      setLoadingCatalog(true);
-      setMindmapsError('');
-      const response = await LessonSlideService.getLessonsByChapter(value);
-      setLessons(response.result || []);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Không thể tải danh sách bài học';
-      setMindmapsError(message);
-    } finally {
-      setLoadingCatalog(false);
-    }
   };
 
   const handleLessonChange = (value: string) => {
@@ -359,48 +336,34 @@ export default function StudentPublicMindmaps() {
   }, [isPreviewOpen, selectedPreviewMindmap]);
 
   useEffect(() => {
-    let cancelled = false;
-    const loadMindmaps = async () => {
-      setLoadingMindmaps(true);
+    setLoadingMindmaps(mindmapsQuery.isLoading || mindmapsQuery.isFetching);
+    if (mindmapsQuery.data?.result) {
+      setMindmapsResult(mindmapsQuery.data.result);
+    }
+  }, [mindmapsQuery.isLoading, mindmapsQuery.isFetching, mindmapsQuery.data]);
+
+  useEffect(() => {
+    const catalogError =
+      gradesQuery.error || subjectsQuery.error || chaptersQuery.error || lessonsQuery.error;
+    if (catalogError instanceof Error) {
+      setMindmapsError(catalogError.message);
+      return;
+    }
+    if (mindmapsQuery.error instanceof Error) {
+      setMindmapsError(mindmapsQuery.error.message);
+      return;
+    }
+    if (!loadingCatalog && !loadingMindmaps) {
       setMindmapsError('');
-
-      try {
-        const response = await MindmapService.getPublicMindmaps({
-          lessonId: lessonId || undefined,
-          name: mindmapKeywordDebounced || undefined,
-          page: mindmapPage,
-          size: mindmapSize,
-          sortBy: mindmapSortBy,
-          direction: mindmapDirection,
-        });
-
-        if (!cancelled) {
-          setMindmapsResult(response.result);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setMindmapsError(
-            err instanceof Error ? err.message : 'Không thể tải danh sách mindmap công khai'
-          );
-        }
-      } finally {
-        if (!cancelled) {
-          setLoadingMindmaps(false);
-        }
-      }
-    };
-
-    void loadMindmaps();
-    return () => {
-      cancelled = true;
-    };
+    }
   }, [
-    lessonId,
-    mindmapKeywordDebounced,
-    mindmapPage,
-    mindmapSize,
-    mindmapSortBy,
-    mindmapDirection,
+    gradesQuery.error,
+    subjectsQuery.error,
+    chaptersQuery.error,
+    lessonsQuery.error,
+    mindmapsQuery.error,
+    loadingCatalog,
+    loadingMindmaps,
   ]);
 
   return (

@@ -1,4 +1,4 @@
-﻿import {
+import {
   BookOpen,
   CheckCircle2,
   Eye,
@@ -11,7 +11,8 @@
   Users,
   X,
 } from 'lucide-react';
-import React, { useCallback, useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import React, { useEffect, useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockAdmin } from '../../data/mockData';
 import '../../styles/module-refactor.css';
@@ -45,18 +46,10 @@ const UserManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<AdminUserItem | null>(null);
+  const [page, setPage] = useState(0);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
 
-  // List state
-  const [users, setUsers] = useState<AdminUserItem[]>([]);
-  const [stats, setStats] = useState({ total: 0, admins: 0, teachers: 0, students: 0, active: 0 });
-  const [pagination, setPagination] = useState({
-    page: 0,
-    pageSize: 10,
-    totalItems: 0,
-    totalPages: 1,
-  });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const EMPTY_STATS = { total: 0, admins: 0, teachers: 0, students: 0, active: 0 };
 
   // Create form state
   const [createForm, setCreateForm] = useState({
@@ -75,35 +68,38 @@ const UserManagement: React.FC = () => {
   const [emailForm, setEmailForm] = useState({ subject: '', body: '' });
   const [emailLoading, setEmailLoading] = useState(false);
 
-  const fetchUsers = useCallback(
-    async (page = 0) => {
-      setLoading(true);
-      setError(null);
-      try {
-        const result = await userManagementService.listUsers({
-          page,
-          pageSize: pagination.pageSize,
-          role: ROLE_FILTER_MAP[filterRole],
-          search: searchTerm || undefined,
-          status: 'all',
-        });
-        setUsers(result.users);
-        setStats(result.stats);
-        setPagination(result.pagination);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Lỗi tải danh sách người dùng');
-      } finally {
-        setLoading(false);
-      }
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [filterRole, searchTerm]
-  );
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchTerm.trim()), searchTerm ? 400 : 0);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const usersQuery = useQuery({
+    queryKey: ['admin-users', filterRole, debouncedSearch, page],
+    queryFn: () =>
+      userManagementService.listUsers({
+        page,
+        pageSize: 10,
+        role: ROLE_FILTER_MAP[filterRole],
+        search: debouncedSearch || undefined,
+        status: 'all',
+      }),
+    staleTime: 30_000,
+  });
+
+  const users = usersQuery.data?.users ?? [];
+  const stats = usersQuery.data?.stats ?? EMPTY_STATS;
+  const pagination = usersQuery.data?.pagination ?? {
+    page,
+    pageSize: 10,
+    totalItems: 0,
+    totalPages: 1,
+  };
+  const loading = usersQuery.isLoading || usersQuery.isFetching;
+  const error = usersQuery.error instanceof Error ? usersQuery.error.message : null;
 
   useEffect(() => {
-    const timer = setTimeout(() => fetchUsers(0), searchTerm ? 400 : 0);
-    return () => clearTimeout(timer);
-  }, [fetchUsers, searchTerm]);
+    setPage(0);
+  }, [filterRole, debouncedSearch]);
 
   const handleCreateSubmit = async () => {
     if (!createForm.userName || !createForm.fullName || !createForm.email || !createForm.password) {
@@ -130,7 +126,8 @@ const UserManagement: React.FC = () => {
         role: 'STUDENT',
         status: 'ACTIVE',
       });
-      fetchUsers(0);
+      setPage(0);
+      await usersQuery.refetch();
     } catch (err) {
       setCreateError(err instanceof Error ? err.message : 'Tạo người dùng thất bại');
     } finally {
@@ -142,8 +139,8 @@ const UserManagement: React.FC = () => {
     const newStatus = user.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
     try {
       const updated = await userManagementService.updateStatus(user.id, newStatus);
-      setUsers((prev) => prev.map((u) => (u.id === user.id ? updated : u)));
       if (selectedUser?.id === user.id) setSelectedUser(updated);
+      await usersQuery.refetch();
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Cập nhật trạng thái thất bại');
     }
@@ -162,9 +159,8 @@ const UserManagement: React.FC = () => {
     if (!globalThis.confirm('Bạn có chắc chắn muốn xóa tài khoản này không?')) return;
     try {
       await userManagementService.deleteUser(userId);
-      setUsers((prev) => prev.filter((u) => u.id !== userId));
       if (selectedUser?.id === userId) setSelectedUser(null);
-      setStats((prev) => ({ ...prev, total: prev.total - 1 }));
+      await usersQuery.refetch();
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Xóa tài khoản thất bại');
     }
@@ -204,7 +200,7 @@ const UserManagement: React.FC = () => {
   };
 
   const handlePageChange = (page: number) => {
-    fetchUsers(page);
+    setPage(page);
   };
 
   const getStatusLabel = (status: string) => {

@@ -250,8 +250,7 @@ export function useCourseLessons(courseId: string) {
     queryKey: courseKeys.lessons(courseId),
     queryFn: () => CourseService.getLessons(courseId),
     enabled: !!courseId,
-    staleTime: 0,
-    refetchOnMount: 'always',
+    staleTime: 30_000,
   });
 }
 

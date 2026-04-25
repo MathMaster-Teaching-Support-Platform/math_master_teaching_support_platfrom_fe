@@ -18,6 +18,7 @@ import {
   ZoomIn,
   ZoomOut,
 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import JSZip from 'jszip';
 import { DashboardLayout } from '../../components/layout';
@@ -97,14 +98,8 @@ const RowSkeleton: React.FC<{ count?: number }> = ({ count = 6 }) => (
 
 // ── Main Component ────────────────────────────────────────────────────────────
 const ReviewProfiles: React.FC = () => {
-  const [profiles, setProfiles] = useState<TeacherProfile[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [currentStatus, setCurrentStatus] = useState<ProfileStatus>('PENDING');
   const [page, setPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [totalElements, setTotalElements] = useState(0);
-  const [pendingCount, setPendingCount] = useState(0);
   const [search, setSearch] = useState('');
 
   const [selectedProfile, setSelectedProfile] = useState<TeacherProfile | null>(null);
@@ -131,34 +126,23 @@ const ReviewProfiles: React.FC = () => {
     setTimeout(() => setToast(null), 3500);
   }, []);
 
-  const loadProfiles = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await TeacherProfileService.getProfilesByStatus(currentStatus, page, 10);
-      setProfiles(res.result.content);
-      setTotalPages(res.result.totalPages);
-      setTotalElements(res.result.totalElements);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Không thể tải danh sách hồ sơ');
-    } finally {
-      setLoading(false);
-    }
-  }, [currentStatus, page]);
+  const profilesQuery = useQuery({
+    queryKey: ['teacher-profiles', currentStatus, page],
+    queryFn: () => TeacherProfileService.getProfilesByStatus(currentStatus, page, 10),
+    staleTime: 30_000,
+  });
+  const pendingCountQuery = useQuery({
+    queryKey: ['teacher-profiles', 'pending-count'],
+    queryFn: () => TeacherProfileService.countPendingProfiles(),
+    staleTime: 30_000,
+  });
 
-  const loadPendingCount = useCallback(async () => {
-    try {
-      const res = await TeacherProfileService.countPendingProfiles();
-      setPendingCount(res.result);
-    } catch {
-      /* silent */
-    }
-  }, []);
-
-  useEffect(() => {
-    loadProfiles();
-    loadPendingCount();
-  }, [loadProfiles, loadPendingCount]);
+  const profiles = profilesQuery.data?.result.content ?? [];
+  const totalPages = profilesQuery.data?.result.totalPages ?? 0;
+  const totalElements = profilesQuery.data?.result.totalElements ?? 0;
+  const loading = profilesQuery.isLoading || profilesQuery.isFetching;
+  const error = profilesQuery.error instanceof Error ? profilesQuery.error.message : null;
+  const pendingCount = pendingCountQuery.data?.result ?? 0;
 
   const handleStatusChange = (status: ProfileStatus) => {
     if (currentStatus === status) return;
@@ -187,8 +171,7 @@ const ReviewProfiles: React.FC = () => {
         status: reviewAction,
         adminComment: adminComment.trim() || undefined,
       });
-      await loadProfiles();
-      await loadPendingCount();
+      await Promise.all([profilesQuery.refetch(), pendingCountQuery.refetch()]);
       setSelectedProfile(null);
       showToast(
         `Hồ sơ đã được ${reviewAction === 'APPROVED' ? 'phê duyệt' : 'từ chối'} thành công!`,

@@ -1,4 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeftRight,
   BarChart3,
@@ -30,6 +31,11 @@ import {
 import React, { useEffect, useMemo, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthService } from '../../../services/api/auth.service';
+import { LessonSlideService } from '../../../services/api/lesson-slide.service';
+import { MindmapService } from '../../../services/api/mindmap.service';
+import { SubscriptionPlanService } from '../../../services/api/subscription-plan.service';
+import { TeacherProfileService } from '../../../services/api/teacher-profile.service';
+import { WalletService } from '../../../services/api/wallet.service';
 import './Sidebar.css';
 
 interface SidebarProps {
@@ -139,7 +145,9 @@ const adminGroups: MenuGroup[] = [
 const Sidebar: React.FC<SidebarProps> = ({ role, collapsed, onToggle }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const navRef = useRef<HTMLElement | null>(null);
+  const prefetchedPathsRef = useRef<Set<string>>(new Set());
   const navScrollStorageKey = useMemo(() => `mm.sidebar.scrollTop.${role}`, [role]);
   const navId = useMemo(() => `sidebar-nav-${role}`, [role]);
 
@@ -185,6 +193,110 @@ const Sidebar: React.FC<SidebarProps> = ({ role, collapsed, onToggle }) => {
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
   };
 
+  const prefetchByPath = async (path: string) => {
+    if (prefetchedPathsRef.current.has(path)) return;
+    prefetchedPathsRef.current.add(path);
+
+    try {
+      if (path === '/student/wallet') {
+        await Promise.all([
+          queryClient.prefetchQuery({
+            queryKey: ['wallet', 'my-summary'],
+            queryFn: () => WalletService.getMyWallet(),
+            staleTime: 30_000,
+          }),
+          queryClient.prefetchQuery({
+            queryKey: ['wallet', 'transactions', 'all'],
+            queryFn: () => WalletService.getTransactions({ page: 0, size: 20 }),
+            staleTime: 15_000,
+          }),
+        ]);
+        return;
+      }
+
+      if (path === '/pricing' && AuthService.isAuthenticated()) {
+        await Promise.all([
+          queryClient.prefetchQuery({
+            queryKey: ['pricing', 'user-plans'],
+            queryFn: () => SubscriptionPlanService.getUserPlans(),
+            staleTime: 30_000,
+          }),
+          queryClient.prefetchQuery({
+            queryKey: ['pricing', 'wallet-summary'],
+            queryFn: () => WalletService.getMyWallet(),
+            staleTime: 30_000,
+          }),
+          queryClient.prefetchQuery({
+            queryKey: ['pricing', 'my-subscription'],
+            queryFn: () => SubscriptionPlanService.getMySubscription(),
+            staleTime: 30_000,
+          }),
+        ]);
+        return;
+      }
+
+      if (path === '/submit-teacher-profile') {
+        await queryClient.prefetchQuery({
+          queryKey: ['teacher-profile', 'my-profile'],
+          queryFn: () => TeacherProfileService.getMyProfile(),
+          staleTime: 60_000,
+        });
+        return;
+      }
+
+      if (path === '/student/public-slides') {
+        await Promise.all([
+          queryClient.prefetchQuery({
+            queryKey: ['school-grades', 'active'],
+            queryFn: () => LessonSlideService.getSchoolGrades(true),
+            staleTime: 5 * 60 * 1000,
+          }),
+          queryClient.prefetchQuery({
+            queryKey: [
+              'public-slides',
+              { lessonId: '', keyword: '', page: 0, size: 9, sortBy: 'createdAt', direction: 'DESC' },
+            ],
+            queryFn: () =>
+              LessonSlideService.getAllPublicGeneratedFiles({
+                page: 0,
+                size: 9,
+                sortBy: 'createdAt',
+                direction: 'DESC',
+              }),
+            staleTime: 30_000,
+          }),
+        ]);
+        return;
+      }
+
+      if (path === '/student/public-mindmaps') {
+        await Promise.all([
+          queryClient.prefetchQuery({
+            queryKey: ['school-grades', 'active'],
+            queryFn: () => LessonSlideService.getSchoolGrades(true),
+            staleTime: 5 * 60 * 1000,
+          }),
+          queryClient.prefetchQuery({
+            queryKey: [
+              'public-mindmaps',
+              { lessonId: '', name: '', page: 0, size: 9, sortBy: 'createdAt', direction: 'DESC' },
+            ],
+            queryFn: () =>
+              MindmapService.getPublicMindmaps({
+                page: 0,
+                size: 9,
+                sortBy: 'createdAt',
+                direction: 'DESC',
+              }),
+            staleTime: 30_000,
+          }),
+        ]);
+      }
+    } catch {
+      // Prefetch is best-effort; page can still fetch normally.
+    }
+  };
+
   return (
     <aside className={`sidebar${collapsed ? ' sidebar--collapsed' : ''}`}>
       {/* Header */}
@@ -224,6 +336,15 @@ const Sidebar: React.FC<SidebarProps> = ({ role, collapsed, onToggle }) => {
                 key={item.path}
                 to={item.path}
                 className={`sb-item${isActive(item.path) ? ' active' : ''}`}
+                onMouseEnter={() => {
+                  void prefetchByPath(item.path);
+                }}
+                onFocus={() => {
+                  void prefetchByPath(item.path);
+                }}
+                onTouchStart={() => {
+                  void prefetchByPath(item.path);
+                }}
               >
                 <span className="sb-icon">
                   <item.icon size={16} strokeWidth={2} />

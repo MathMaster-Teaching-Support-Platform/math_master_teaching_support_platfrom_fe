@@ -29,6 +29,7 @@ import {
   type SystemService,
 } from '../../../services/api/admin-dashboard.service';
 import { TeacherProfileService } from '../../../services/api/teacher-profile.service';
+import { useQuery } from '@tanstack/react-query';
 import './AdminDashboard.css';
 
 function applyApiResult<T>(
@@ -41,22 +42,9 @@ function applyApiResult<T>(
 }
 
 const AdminDashboard: React.FC = () => {
-  const [adminUser, setAdminUser] = React.useState<AdminUserInfo | null>(null);
-  const [notificationCount, setNotificationCount] = React.useState<number>(0);
-  const [dashboardStats, setDashboardStats] = React.useState<DashboardStats | null>(null);
-  const [recentUsers, setRecentUsers] = React.useState<RecentUser[]>([]);
-  const [pendingProfiles, setPendingProfiles] = React.useState<number>(0);
-  const [transactions, setTransactions] = React.useState<AdminTransaction[]>([]);
-  const [revenueMonthly, setRevenueMonthly] = React.useState<MonthlyRevenue[]>([]);
-  const [quickStats, setQuickStats] = React.useState<QuickStats | null>(null);
-  const [systemServices, setSystemServices] = React.useState<SystemService[]>([]);
-  const [loading, setLoading] = React.useState<boolean>(true);
-  const [fetchError, setFetchError] = React.useState<string | null>(null);
-
-  React.useEffect(() => {
-    const fetchAll = async () => {
-      setLoading(true);
-      setFetchError(null);
+  const dashboardQuery = useQuery({
+    queryKey: ['admin-dashboard', 'overview'],
+    queryFn: async () => {
       const [myInfo, unread, stats, users, pending, txns, revenue, quick, sysStatus] =
         await Promise.allSettled([
           AdminDashboardService.getMyInfo(),
@@ -70,22 +58,72 @@ const AdminDashboard: React.FC = () => {
           AdminDashboardService.getSystemStatus(),
         ]);
 
-      applyApiResult(myInfo, setAdminUser);
-      if (unread.status === 'fulfilled') setNotificationCount(unread.value);
-      applyApiResult(stats, setDashboardStats);
-      if (stats.status === 'rejected') setFetchError('Không thể tải thống kê tổng quan.');
-      applyApiResult(users, (page) => setRecentUsers(page.content ?? []));
-      applyApiResult(pending, setPendingProfiles);
-      applyApiResult(txns, (page) => setTransactions(page.content ?? []));
-      applyApiResult(revenue, (data) => setRevenueMonthly(data.monthly));
-      applyApiResult(quick, setQuickStats);
-      applyApiResult(sysStatus, (data) => setSystemServices(data.services));
+      const data: {
+        adminUser: AdminUserInfo | null;
+        notificationCount: number;
+        dashboardStats: DashboardStats | null;
+        recentUsers: RecentUser[];
+        pendingProfiles: number;
+        transactions: AdminTransaction[];
+        revenueMonthly: MonthlyRevenue[];
+        quickStats: QuickStats | null;
+        systemServices: SystemService[];
+        fetchError: string | null;
+      } = {
+        adminUser: null,
+        notificationCount: 0,
+        dashboardStats: null,
+        recentUsers: [],
+        pendingProfiles: 0,
+        transactions: [],
+        revenueMonthly: [],
+        quickStats: null,
+        systemServices: [],
+        fetchError: null,
+      };
 
-      setLoading(false);
-    };
+      applyApiResult(myInfo, (val) => {
+        data.adminUser = val;
+      });
+      if (unread.status === 'fulfilled') data.notificationCount = unread.value;
+      applyApiResult(stats, (val) => {
+        data.dashboardStats = val;
+      });
+      if (stats.status === 'rejected') data.fetchError = 'Không thể tải thống kê tổng quan.';
+      applyApiResult(users, (page) => {
+        data.recentUsers = page.content ?? [];
+      });
+      applyApiResult(pending, (val) => {
+        data.pendingProfiles = val;
+      });
+      applyApiResult(txns, (page) => {
+        data.transactions = page.content ?? [];
+      });
+      applyApiResult(revenue, (val) => {
+        data.revenueMonthly = val.monthly;
+      });
+      applyApiResult(quick, (val) => {
+        data.quickStats = val;
+      });
+      applyApiResult(sysStatus, (val) => {
+        data.systemServices = val.services;
+      });
 
-    fetchAll();
-  }, []);
+      return data;
+    },
+    staleTime: 30_000,
+  });
+  const loading = dashboardQuery.isLoading;
+  const fetchError = dashboardQuery.data?.fetchError ?? null;
+  const adminUser = dashboardQuery.data?.adminUser ?? null;
+  const notificationCount = dashboardQuery.data?.notificationCount ?? 0;
+  const dashboardStats = dashboardQuery.data?.dashboardStats ?? null;
+  const recentUsers = dashboardQuery.data?.recentUsers ?? [];
+  const pendingProfiles = dashboardQuery.data?.pendingProfiles ?? 0;
+  const transactions = dashboardQuery.data?.transactions ?? [];
+  const revenueMonthly = dashboardQuery.data?.revenueMonthly ?? [];
+  const quickStats = dashboardQuery.data?.quickStats ?? null;
+  const systemServices = dashboardQuery.data?.systemServices ?? [];
 
   const formatRevenue = (amount: number): string => {
     if (amount >= 1_000_000) return `₫${(amount / 1_000_000).toFixed(1)}M`;

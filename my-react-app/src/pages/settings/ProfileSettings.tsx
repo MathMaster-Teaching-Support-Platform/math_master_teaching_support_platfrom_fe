@@ -1,4 +1,4 @@
-﻿import {
+import {
   AlertCircle,
   AtSign,
   Calendar,
@@ -19,6 +19,7 @@
   User,
   X,
 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { AuthService } from '../../services/api/auth.service';
@@ -211,7 +212,6 @@ const ProfileSettings: React.FC = () => {
     rawRole === 'teacher' ? 'teacher' : rawRole === 'admin' ? 'admin' : 'student';
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('profile');
-  const [pageLoading, setPageLoading] = useState(true);
   const [userData, setUserData] = useState<UserProfileResponse | null>(null);
   const [toast, setToast] = useState<ToastState>({ visible: false, type: 'success', message: '' });
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -267,25 +267,32 @@ const ProfileSettings: React.FC = () => {
     []
   );
 
+  const myInfoQuery = useQuery({
+    queryKey: ['users', 'my-info', 'profile-settings'],
+    queryFn: () => UserService.getMyInfo(),
+    staleTime: 60_000,
+  });
+
   useEffect(() => {
-    (async () => {
-      try {
-        const user = await UserService.getMyInfo();
-        setUserData(user);
-        setProfileForm({
-          fullName: user.fullName,
-          dob: user.dob || '',
-          gender: (user.gender as 'MALE' | 'FEMALE' | 'OTHER' | '') || '',
-          avatar: user.avatar || '',
-        });
-        setAccountForm({ email: user.email, phoneNumber: user.phoneNumber || '' });
-      } catch {
-        showToast('error', 'Không thể tải thông tin tài khoản. Vui lòng thử lại.');
-      } finally {
-        setPageLoading(false);
-      }
-    })();
-  }, [showToast]);
+    if (!myInfoQuery.data || userData) return;
+    const user = myInfoQuery.data;
+    setUserData(user);
+    setProfileForm({
+      fullName: user.fullName,
+      dob: user.dob || '',
+      gender: (user.gender as 'MALE' | 'FEMALE' | 'OTHER' | '') || '',
+      avatar: user.avatar || '',
+    });
+    setAccountForm({ email: user.email, phoneNumber: user.phoneNumber || '' });
+  }, [myInfoQuery.data, userData]);
+
+  useEffect(() => {
+    if (myInfoQuery.isError) {
+      showToast('error', 'Không thể tải thông tin tài khoản. Vui lòng thử lại.');
+    }
+  }, [myInfoQuery.isError, showToast]);
+
+  const pageLoading = myInfoQuery.isLoading && !userData;
 
   const validateProfile = (): boolean => {
     const errs: typeof profileErrors = {};

@@ -1,5 +1,6 @@
 import { Download, RefreshCw } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import React, { useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockAdmin } from '../../data/mockData';
 import {
@@ -20,34 +21,23 @@ import './admin-finance-studio.css';
 import './MarketplaceAnalytics.css';
 
 const MarketplaceAnalytics: React.FC = () => {
-  const [topCourses, setTopCourses] = useState<MarketplaceTopCourse[]>([]);
-  const [topInstructors, setTopInstructors] = useState<MarketplaceTopInstructor[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [courseLimit, setCourseLimit] = useState(10);
   const [instructorLimit, setInstructorLimit] = useState(10);
-
-  useEffect(() => {
-    fetchData();
-  }, [courseLimit, instructorLimit]);
-
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  const analyticsQuery = useQuery({
+    queryKey: ['admin-financial', 'marketplace-analytics', courseLimit, instructorLimit],
+    queryFn: async () => {
       const [courses, instructors] = await Promise.all([
         adminFinancialService.getTopCourses(courseLimit),
         adminFinancialService.getTopInstructors(instructorLimit),
       ]);
-      setTopCourses(courses);
-      setTopInstructors(instructors);
-    } catch (err: any) {
-      console.error('Error fetching marketplace analytics:', err);
-      setError(err.response?.data?.message || 'Không thể tải dữ liệu phân tích thị trường');
-    } finally {
-      setLoading(false);
-    }
-  };
+      return { courses, instructors };
+    },
+    staleTime: 30_000,
+  });
+  const topCourses: MarketplaceTopCourse[] = analyticsQuery.data?.courses ?? [];
+  const topInstructors: MarketplaceTopInstructor[] = analyticsQuery.data?.instructors ?? [];
+  const loading = analyticsQuery.isLoading || analyticsQuery.isFetching;
+  const error = analyticsQuery.error instanceof Error ? analyticsQuery.error.message : null;
 
   const getRankMedal = (rank: number): string => {
     if (rank === 1) return '🥇';
@@ -123,7 +113,7 @@ const MarketplaceAnalytics: React.FC = () => {
         <div className="error-icon">⚠️</div>
         <h3>Lỗi tải dữ liệu</h3>
         <p>{error}</p>
-        <button type="button" onClick={fetchData} className="retry-button">
+        <button type="button" onClick={() => void analyticsQuery.refetch()} className="retry-button">
           Thử lại
         </button>
       </div>
@@ -138,7 +128,7 @@ const MarketplaceAnalytics: React.FC = () => {
           <h2 style={{ margin: 0 }}>Phân tích thị trường</h2>
           <p className="header-sub">Theo dõi hiệu suất khóa học và giảng viên hàng đầu</p>
         </div>
-        <button type="button" onClick={fetchData} className="refresh-button">
+        <button type="button" onClick={() => void analyticsQuery.refetch()} className="refresh-button">
           <RefreshCw size={16} aria-hidden />
           Làm mới
         </button>
@@ -193,9 +183,10 @@ const MarketplaceAnalytics: React.FC = () => {
               <Download size={16} aria-hidden />
               Xuất CSV
             </button>
-            <label>
-              Hiển thị:
+            <label htmlFor="top-courses-limit">
+              <span>Hiển thị:</span>{' '}
               <select
+                id="top-courses-limit"
                 value={courseLimit}
                 onChange={(e) => setCourseLimit(Number(e.target.value))}
                 className="limit-select"
@@ -278,9 +269,10 @@ const MarketplaceAnalytics: React.FC = () => {
               <Download size={16} aria-hidden />
               Xuất CSV
             </button>
-            <label>
-              Hiển thị:
+            <label htmlFor="top-instructors-limit">
+              <span>Hiển thị:</span>{' '}
               <select
+                id="top-instructors-limit"
                 value={instructorLimit}
                 onChange={(e) => setInstructorLimit(Number(e.target.value))}
                 className="limit-select"

@@ -1,5 +1,6 @@
 import { Download, Loader2, RefreshCw } from 'lucide-react';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import React, { useEffect, useMemo, useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
 import { mockAdmin } from '../../data/mockData';
@@ -108,22 +109,14 @@ const statusLabel = (s: AdminTransaction['status']): string => {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const AdminTransactions: React.FC = () => {
-  const [transactions, setTransactions] = useState<AdminTransaction[]>([]);
-  const [stats, setStats] = useState<TransactionStats>(DEFAULT_STATS);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [page, setPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [totalItems, setTotalItems] = useState(0);
   const [selectedTxn, setSelectedTxn] = useState<AdminTransaction | null>(null);
 
-  const [listLoading, setListLoading] = useState(false);
-  const [statsLoading, setStatsLoading] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
   const [detailLoadingId, setDetailLoadingId] = useState<string | null>(null);
-
-  const [listError, setListError] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = globalThis.setTimeout(() => {
@@ -135,11 +128,9 @@ const AdminTransactions: React.FC = () => {
     };
   }, [search]);
 
-  const fetchTransactions = useCallback(async () => {
-    setListLoading(true);
-    setListError(null);
-
-    try {
+  const transactionsQuery = useQuery({
+    queryKey: ['admin-transactions', page, statusFilter, debouncedSearch],
+    queryFn: async () => {
       const params = new URLSearchParams({
         page: String(page),
         size: String(PAGE_SIZE),
@@ -151,63 +142,36 @@ const AdminTransactions: React.FC = () => {
       if (debouncedSearch) params.set('search', debouncedSearch);
 
       const requestUrl = `${API_BASE_URL}${API_ENDPOINTS.ADMIN_TRANSACTIONS}?${params.toString()}`;
-
-      const res = await fetch(requestUrl, {
-        method: 'GET',
-        headers: authHeaders(),
-      });
-
-      const result = await parseApiResponse<TransactionsPageResult>(res);
-      setTotalPages(result.totalPages);
-      setTotalItems(result.totalItems);
-
-      // Keep FE page aligned with server paging to avoid empty list due to stale page state.
-      if (result.totalPages > 0 && result.currentPage >= result.totalPages) {
-        setPage(0);
-        return;
-      }
-
-      if (result.currentPage !== page) {
-        setPage(result.currentPage);
-        return;
-      }
-
-      setTransactions(result.items);
-    } catch (error) {
-      setTransactions([]);
-      setTotalPages(0);
-      setTotalItems(0);
-      setListError(error instanceof Error ? error.message : 'Không thể tải danh sách giao dịch.');
-    } finally {
-      setListLoading(false);
-    }
-  }, [debouncedSearch, page, statusFilter]);
-
-  const fetchStats = useCallback(async () => {
-    setStatsLoading(true);
-
-    try {
+      const res = await fetch(requestUrl, { method: 'GET', headers: authHeaders() });
+      return parseApiResponse<TransactionsPageResult>(res);
+    },
+    staleTime: 30_000,
+  });
+  const statsQuery = useQuery({
+    queryKey: ['admin-transactions', 'stats'],
+    queryFn: async () => {
       const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ADMIN_TRANSACTIONS_STATS}`, {
         method: 'GET',
         headers: authHeaders(),
       });
+      return parseApiResponse<TransactionStats>(res);
+    },
+    staleTime: 30_000,
+  });
 
-      const result = await parseApiResponse<TransactionStats>(res);
-      setStats(result);
-    } catch (error) {
-      setStats(DEFAULT_STATS);
-    } finally {
-      setStatsLoading(false);
+  const transactions = transactionsQuery.data?.items ?? [];
+  const totalPages = transactionsQuery.data?.totalPages ?? 0;
+  const totalItems = transactionsQuery.data?.totalItems ?? 0;
+  const stats = statsQuery.data ?? DEFAULT_STATS;
+  const listLoading = transactionsQuery.isLoading || transactionsQuery.isFetching;
+  const statsLoading = statsQuery.isLoading || statsQuery.isFetching;
+  const listError = transactionsQuery.error instanceof Error ? transactionsQuery.error.message : null;
+
+  useEffect(() => {
+    if (totalPages > 0 && page >= totalPages) {
+      setPage(0);
     }
-  }, []);
-
-  useEffect(() => {
-    void fetchTransactions();
-  }, [fetchTransactions]);
-
-  useEffect(() => {
-    void fetchStats();
-  }, [fetchStats]);
+  }, [page, totalPages]);
 
   const pageStart = useMemo(() => {
     if (totalItems === 0) return 0;
@@ -308,7 +272,7 @@ const AdminTransactions: React.FC = () => {
   };
 
   const handleRefresh = async () => {
-    await Promise.all([fetchTransactions(), fetchStats()]);
+    await Promise.all([transactionsQuery.refetch(), statsQuery.refetch()]);
   };
 
   const handleExportCsv = async () => {

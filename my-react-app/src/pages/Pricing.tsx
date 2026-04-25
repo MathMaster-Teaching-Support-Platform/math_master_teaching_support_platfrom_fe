@@ -1,4 +1,5 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
 import Footer from '../components/Footer';
 import DashboardLayout from '../components/layout/DashboardLayout/DashboardLayout';
@@ -299,14 +300,35 @@ const Pricing: React.FC = () => {
     layoutRole === 'teacher' ? mockTeacher : layoutRole === 'admin' ? mockAdmin : mockStudent;
   const pricingHeaderKicker =
     layoutRole === 'teacher' ? 'Teacher Studio' : layoutRole === 'admin' ? 'Admin' : 'MathMaster';
-  const [userPlans, setUserPlans] = useState<SubscriptionPlan[]>([]);
-  const [activeSubscription, setActiveSubscription] = useState<MySubscriptionResponse | null>(null);
-  const [wallet, setWallet] = useState<WalletSummary | null>(null);
-  const [loadingSubscriptionData, setLoadingSubscriptionData] = useState(false);
   const [subscriptionError, setSubscriptionError] = useState('');
   const [subscriptionSuccess, setSubscriptionSuccess] = useState('');
   const [purchasingPlanId, setPurchasingPlanId] = useState<string | null>(null);
   const [showWalletModal, setShowWalletModal] = useState(false);
+
+  const userPlansQuery = useQuery({
+    queryKey: ['pricing', 'user-plans'],
+    queryFn: () => SubscriptionPlanService.getUserPlans(),
+    enabled: isAuthenticated,
+    staleTime: 30_000,
+  });
+  const walletQuery = useQuery({
+    queryKey: ['pricing', 'wallet-summary'],
+    queryFn: () => WalletService.getMyWallet(),
+    enabled: isAuthenticated,
+    staleTime: 30_000,
+  });
+  const mySubscriptionQuery = useQuery({
+    queryKey: ['pricing', 'my-subscription'],
+    queryFn: () => SubscriptionPlanService.getMySubscription(),
+    enabled: isAuthenticated,
+    staleTime: 30_000,
+    retry: false,
+  });
+
+  const userPlans: SubscriptionPlan[] = userPlansQuery.data?.result || [];
+  const activeSubscription: MySubscriptionResponse | null = mySubscriptionQuery.data?.result || null;
+  const wallet: WalletSummary | null = walletQuery.data?.result || null;
+  const loadingSubscriptionData = userPlansQuery.isLoading || walletQuery.isLoading;
 
   const scrollToPricingSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
@@ -432,12 +454,7 @@ const Pricing: React.FC = () => {
 
     try {
       await SubscriptionPlanService.purchasePlan(plan.id);
-      const [walletRes, subscriptionRes] = await Promise.all([
-        WalletService.getMyWallet(),
-        SubscriptionPlanService.getMySubscription(),
-      ]);
-      setWallet(walletRes.result || null);
-      setActiveSubscription(subscriptionRes.result || null);
+      await Promise.all([walletQuery.refetch(), mySubscriptionQuery.refetch()]);
       setSubscriptionSuccess('🎉 Mua gói thành công! Token đã được cập nhật vào tài khoản.');
     } catch (error) {
       const apiError = error as Error & { code?: number };
@@ -454,47 +471,14 @@ const Pricing: React.FC = () => {
     }
   };
 
-  const refetchSubscriptionRef = useRef<(() => void) | undefined>(undefined);
-
   useEffect(() => {
     if (!isAuthenticated) {
-      refetchSubscriptionRef.current = undefined;
       return;
     }
-
-    const loadData = () => {
-      (async () => {
-        setLoadingSubscriptionData(true);
-        setSubscriptionError('');
-
-        try {
-          const [plansRes, walletRes] = await Promise.all([
-            SubscriptionPlanService.getUserPlans(),
-            WalletService.getMyWallet(),
-          ]);
-
-          setUserPlans(plansRes.result || []);
-          setWallet(walletRes.result || null);
-
-          try {
-            const subscriptionRes = await SubscriptionPlanService.getMySubscription();
-            setActiveSubscription(subscriptionRes.result || null);
-          } catch {
-            setActiveSubscription(null);
-          }
-        } catch (error) {
-          setSubscriptionError(
-            error instanceof Error ? error.message : 'Không thể tải dữ liệu gói đăng ký.'
-          );
-        } finally {
-          setLoadingSubscriptionData(false);
-        }
-      })();
-    };
-
-    refetchSubscriptionRef.current = loadData;
-    loadData();
-  }, [isAuthenticated]);
+    if (userPlansQuery.error || walletQuery.error) {
+      setSubscriptionError('Không thể tải dữ liệu gói đăng ký.');
+    }
+  }, [isAuthenticated, userPlansQuery.error, walletQuery.error]);
 
   useEffect(() => {
     if (!showWalletModal) return;
@@ -823,7 +807,13 @@ const Pricing: React.FC = () => {
                         type="button"
                         className="btn"
                         style={{ marginTop: '0.75rem' }}
-                        onClick={() => refetchSubscriptionRef.current?.()}
+                        onClick={() => {
+                          void Promise.all([
+                            userPlansQuery.refetch(),
+                            walletQuery.refetch(),
+                            mySubscriptionQuery.refetch(),
+                          ]);
+                        }}
                       >
                         Tải lại
                       </button>

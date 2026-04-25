@@ -11,6 +11,7 @@ import {
   Search,
   X,
 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
@@ -71,11 +72,6 @@ const emptySlidePage = (): PageResult<LessonSlideGeneratedFile> => ({
 export default function StudentPublicSlides() {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [schoolGrades, setSchoolGrades] = useState<SchoolGrade[]>([]);
-  const [subjects, setSubjects] = useState<SubjectByGrade[]>([]);
-  const [chapters, setChapters] = useState<ChapterBySubject[]>([]);
-  const [lessons, setLessons] = useState<LessonByChapter[]>([]);
-
   const [gradeId, setGradeId] = useState('');
   const [subjectId, setSubjectId] = useState('');
   const [chapterId, setChapterId] = useState('');
@@ -97,11 +93,7 @@ export default function StudentPublicSlides() {
   const [slideDirection, setSlideDirection] = useState<SortDirection>(() =>
     getQueryDirection(searchParams.get('slideDir'))
   );
-  const [slidesResult, setSlidesResult] =
-    useState<PageResult<LessonSlideGeneratedFile>>(emptySlidePage());
-
-  const [loadingCatalog, setLoadingCatalog] = useState(false);
-  const [loadingSlides, setLoadingSlides] = useState(false);
+  const [slidesResult, setSlidesResult] = useState<PageResult<LessonSlideGeneratedFile>>(emptySlidePage());
   const [downloadingSlideId, setDownloadingSlideId] = useState('');
   const [previewSlideId, setPreviewSlideId] = useState('');
   const [previewSlidePdfUrl, setPreviewSlidePdfUrl] = useState('');
@@ -109,6 +101,54 @@ export default function StudentPublicSlides() {
   const [previewIframeLoaded, setPreviewIframeLoaded] = useState(false);
   const previewPdfObjectUrlRef = useRef<string | null>(null);
   const [slidesError, setSlidesError] = useState('');
+
+  const gradesQuery = useQuery({
+    queryKey: ['school-grades', 'active'],
+    queryFn: () => LessonSlideService.getSchoolGrades(true),
+    staleTime: 5 * 60 * 1000,
+  });
+  const subjectsQuery = useQuery({
+    queryKey: ['subjects', 'by-school-grade', gradeId],
+    queryFn: () => LessonSlideService.getSubjectsBySchoolGrade(gradeId),
+    enabled: !!gradeId,
+    staleTime: 5 * 60 * 1000,
+  });
+  const chaptersQuery = useQuery({
+    queryKey: ['chapters', 'by-subject', subjectId],
+    queryFn: () => LessonSlideService.getChaptersBySubject(subjectId),
+    enabled: !!subjectId,
+    staleTime: 5 * 60 * 1000,
+  });
+  const lessonsQuery = useQuery({
+    queryKey: ['lessons', 'by-chapter', chapterId],
+    queryFn: () => LessonSlideService.getLessonsByChapter(chapterId),
+    enabled: !!chapterId,
+    staleTime: 5 * 60 * 1000,
+  });
+  const slidesQuery = useQuery({
+    queryKey: [
+      'public-slides',
+      { lessonId, keyword: slideKeywordDebounced, page: slidePage, size: slideSize, sortBy: slideSortBy, direction: slideDirection },
+    ],
+    queryFn: () =>
+      LessonSlideService.getAllPublicGeneratedFiles({
+        lessonId: lessonId || undefined,
+        keyword: slideKeywordDebounced || undefined,
+        page: slidePage,
+        size: slideSize,
+        sortBy: slideSortBy,
+        direction: slideDirection,
+      }),
+    staleTime: 30_000,
+  });
+
+  const schoolGrades: SchoolGrade[] = gradesQuery.data?.result ?? [];
+  const subjects: SubjectByGrade[] = subjectsQuery.data?.result ?? [];
+  const chapters: ChapterBySubject[] = chaptersQuery.data?.result ?? [];
+  const lessons: LessonByChapter[] = lessonsQuery.data?.result ?? [];
+  const loadingCatalog =
+    gradesQuery.isFetching || subjectsQuery.isFetching || chaptersQuery.isFetching || lessonsQuery.isFetching;
+  const loadingSlides = slidesQuery.isLoading || slidesQuery.isFetching;
 
   const selectedLesson = useMemo(
     () => lessons.find((lesson) => lesson.id === lessonId),
@@ -148,92 +188,31 @@ export default function StudentPublicSlides() {
     setSearchParams(params, { replace: true });
   }, [slideKeyword, slidePage, slideSize, slideSortBy, slideDirection, setSearchParams]);
 
-  useEffect(() => {
-    const loadGrades = async () => {
-      try {
-        setLoadingCatalog(true);
-        const response = await LessonSlideService.getSchoolGrades(true);
-        setSchoolGrades(response.result || []);
-      } catch (err) {
-        setSlidesError(err instanceof Error ? err.message : 'Không thể tải danh sách khối lớp');
-      } finally {
-        setLoadingCatalog(false);
-      }
-    };
-
-    void loadGrades();
-  }, []);
-
   const resetResourceState = () => {
     setSlidePage(0);
     setSlideKeyword('');
     setSlidesResult(emptySlidePage());
   };
 
-  const handleGradeChange = async (value: string) => {
+  const handleGradeChange = (value: string) => {
     setGradeId(value);
     setSubjectId('');
     setChapterId('');
     setLessonId('');
-    setSubjects([]);
-    setChapters([]);
-    setLessons([]);
     resetResourceState();
-
-    if (!value) return;
-
-    try {
-      setLoadingCatalog(true);
-      setSlidesError('');
-      const response = await LessonSlideService.getSubjectsBySchoolGrade(value);
-      setSubjects(response.result || []);
-    } catch (err) {
-      setSlidesError(err instanceof Error ? err.message : 'Không thể tải danh sách môn học');
-    } finally {
-      setLoadingCatalog(false);
-    }
   };
 
-  const handleSubjectChange = async (value: string) => {
+  const handleSubjectChange = (value: string) => {
     setSubjectId(value);
     setChapterId('');
     setLessonId('');
-    setChapters([]);
-    setLessons([]);
     resetResourceState();
-
-    if (!value) return;
-
-    try {
-      setLoadingCatalog(true);
-      setSlidesError('');
-      const response = await LessonSlideService.getChaptersBySubject(value);
-      setChapters(response.result || []);
-    } catch (err) {
-      setSlidesError(err instanceof Error ? err.message : 'Không thể tải danh sách chương');
-    } finally {
-      setLoadingCatalog(false);
-    }
   };
 
-  const handleChapterChange = async (value: string) => {
+  const handleChapterChange = (value: string) => {
     setChapterId(value);
     setLessonId('');
-    setLessons([]);
     resetResourceState();
-
-    if (!value) return;
-
-    try {
-      setLoadingCatalog(true);
-      setSlidesError('');
-      const response = await LessonSlideService.getLessonsByChapter(value);
-      setLessons(response.result || []);
-    } catch (err) {
-      setSlidesError(err instanceof Error ? err.message : 'Không thể tải danh sách bài học');
-    } finally {
-      setLoadingCatalog(false);
-    }
   };
 
   const handleLessonChange = (value: string) => {
@@ -242,49 +221,39 @@ export default function StudentPublicSlides() {
   };
 
   useEffect(() => {
-    let cancelled = false;
-    const loadSlides = async () => {
-      setLoadingSlides(true);
+    if (slidesQuery.data?.result) {
+      const normalizedContent = (slidesQuery.data.result.content || []).filter((slide) => slide.isPublic);
+      setSlidesResult({
+        ...slidesQuery.data.result,
+        content: normalizedContent,
+        totalElements: Math.max(slidesQuery.data.result.totalElements ?? 0, normalizedContent.length),
+      });
+    }
+  }, [slidesQuery.data]);
+
+  useEffect(() => {
+    const catalogError =
+      gradesQuery.error || subjectsQuery.error || chaptersQuery.error || lessonsQuery.error;
+    if (catalogError instanceof Error) {
+      setSlidesError(catalogError.message);
+      return;
+    }
+    if (slidesQuery.error instanceof Error) {
+      setSlidesError(slidesQuery.error.message);
+      return;
+    }
+    if (!loadingCatalog && !loadingSlides) {
       setSlidesError('');
-
-      try {
-        const response = await LessonSlideService.getAllPublicGeneratedFiles({
-          lessonId: lessonId || undefined,
-          keyword: slideKeywordDebounced || undefined,
-          page: slidePage,
-          size: slideSize,
-          sortBy: slideSortBy,
-          direction: slideDirection,
-        });
-
-        if (!cancelled) {
-          const normalizedContent = (response.result.content || []).filter(
-            (slide) => slide.isPublic
-          );
-          setSlidesResult({
-            ...response.result,
-            content: normalizedContent,
-            totalElements: Math.max(response.result.totalElements ?? 0, normalizedContent.length),
-          });
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setSlidesError(
-            err instanceof Error ? err.message : 'Không thể tải danh sách slide công khai'
-          );
-        }
-      } finally {
-        if (!cancelled) {
-          setLoadingSlides(false);
-        }
-      }
-    };
-
-    void loadSlides();
-    return () => {
-      cancelled = true;
-    };
-  }, [lessonId, slideKeywordDebounced, slidePage, slideSize, slideSortBy, slideDirection]);
+    }
+  }, [
+    gradesQuery.error,
+    subjectsQuery.error,
+    chaptersQuery.error,
+    lessonsQuery.error,
+    slidesQuery.error,
+    loadingCatalog,
+    loadingSlides,
+  ]);
 
   const handleDownloadSlide = async (generatedFileId: string) => {
     setDownloadingSlideId(generatedFileId);

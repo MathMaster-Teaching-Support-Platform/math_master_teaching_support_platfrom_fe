@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
 import {
   ArrowLeft,
   ArrowRight,
@@ -170,8 +171,6 @@ const StudentCourses: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'enrolled' | 'browse'>('enrolled');
   const [filterGradeId, setFilterGradeId] = useState('');
   const [filterSubjectId, setFilterSubjectId] = useState('');
-  const [grades, setGrades] = useState<SchoolGrade[]>([]);
-  const [subjects, setSubjects] = useState<SubjectByGrade[]>([]);
   const [enrollingCourseId, setEnrollingCourseId] = useState<string | null>(null);
   const [openingEnrollmentId, setOpeningEnrollmentId] = useState<string | null>(null);
   const [enrolledPage, setEnrolledPage] = useState(1);
@@ -187,23 +186,25 @@ const StudentCourses: React.FC = () => {
   });
   const enrollMutation = useEnroll();
 
-  React.useEffect(() => {
-    LessonSlideService.getSchoolGrades(true)
-      .then((r) => setGrades(r.result || []))
-      .catch(() => {});
-  }, []);
+  const { data: gradesData } = useQuery({
+    queryKey: ['school-grades', 'active'],
+    queryFn: () => LessonSlideService.getSchoolGrades(true),
+    staleTime: 5 * 60 * 1000,
+  });
 
-  const handleFilterGradeChange = async (gradeId: string) => {
+  const { data: subjectsData } = useQuery({
+    queryKey: ['subjects', 'by-school-grade', filterGradeId],
+    queryFn: () => LessonSlideService.getSubjectsBySchoolGrade(filterGradeId),
+    enabled: !!filterGradeId,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const grades: SchoolGrade[] = gradesData?.result ?? [];
+  const subjects: SubjectByGrade[] = subjectsData?.result ?? [];
+
+  const handleFilterGradeChange = (gradeId: string) => {
     setFilterGradeId(gradeId);
     setFilterSubjectId('');
-    setSubjects([]);
-    if (!gradeId) return;
-    try {
-      const r = await LessonSlideService.getSubjectsBySchoolGrade(gradeId);
-      setSubjects(r.result || []);
-    } catch {
-      // silent
-    }
   };
 
   const enrollments = useMemo<EnrollmentResponse[]>(
@@ -393,7 +394,7 @@ const StudentCourses: React.FC = () => {
                   value={filterGradeId}
                   onChange={(e) => {
                     setBrowsePage(1);
-                    void handleFilterGradeChange(e.target.value);
+                    handleFilterGradeChange(e.target.value);
                   }}
                 >
                   <option value="">Tất cả khối lớp</option>

@@ -1,5 +1,6 @@
 import { Download, RefreshCw } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import React, { useState } from 'react';
 import RevenueBreakdownChart from '../../components/charts/RevenueBreakdownChart';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockAdmin } from '../../data/mockData';
@@ -18,28 +19,17 @@ import './admin-finance-studio.css';
 import './RevenueBreakdown.css';
 
 const RevenueBreakdown: React.FC = () => {
-  const [breakdown, setBreakdown] = useState<RevenueBreakdownData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [period, setPeriod] = useState<string>('30d');
-
-  useEffect(() => {
-    fetchBreakdown();
-  }, [period]);
-
-  const fetchBreakdown = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await adminFinancialService.getRevenueBreakdown(period);
-      setBreakdown(data);
-    } catch (err: any) {
-      console.error('Error fetching revenue breakdown:', err);
-      setError(err.response?.data?.message || 'Không thể tải dữ liệu phân tích doanh thu');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const breakdownQuery = useQuery({
+    queryKey: ['admin-financial', 'revenue-breakdown', period],
+    queryFn: () => adminFinancialService.getRevenueBreakdown(period),
+    staleTime: 30_000,
+  });
+  const breakdown: RevenueBreakdownData | null = breakdownQuery.data ?? null;
+  const loading = breakdownQuery.isLoading || breakdownQuery.isFetching;
+  const error = breakdownQuery.error instanceof Error
+    ? breakdownQuery.error.message
+    : null;
 
   const handleExport = () => {
     if (!breakdown || breakdown.data.length === 0) return;
@@ -82,7 +72,7 @@ const RevenueBreakdown: React.FC = () => {
         <div className="error-icon">⚠️</div>
         <h3>Lỗi tải dữ liệu</h3>
         <p>{error}</p>
-        <button type="button" onClick={fetchBreakdown} className="retry-button">
+        <button type="button" onClick={() => void breakdownQuery.refetch()} className="retry-button">
           Thử lại
         </button>
       </div>
@@ -129,7 +119,7 @@ const RevenueBreakdown: React.FC = () => {
             <Download size={16} aria-hidden />
             Xuất CSV
           </button>
-          <button type="button" onClick={fetchBreakdown} className="refresh-button">
+          <button type="button" onClick={() => void breakdownQuery.refetch()} className="refresh-button">
             <RefreshCw size={16} aria-hidden />
             Làm mới
           </button>
