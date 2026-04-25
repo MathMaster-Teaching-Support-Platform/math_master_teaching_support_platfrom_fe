@@ -342,6 +342,23 @@ export default function AssessmentBuilderFlow() {
                     </div>
                   )}
 
+                  {/* BUG FIX #4: Display auto-populated lessons */}
+                  {generatedAssessment?.lessons && generatedAssessment.lessons.length > 0 && (
+                    <div className="data-card" style={{ minHeight: 0 }}>
+                      <h3>Phạm vi bài học</h3>
+                      <p className="muted" style={{ marginBottom: 12 }}>
+                        Đề này kiểm tra {generatedAssessment.lessons.length} bài học (tự động lấy từ ma trận)
+                      </p>
+                      <div className="lesson-chips">
+                        {generatedAssessment.lessons.map((lesson) => (
+                          <span key={lesson.lessonId} className="chip">
+                            {lesson.chapterName} - {lesson.lessonName}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {publishSummary && (
                     <div
                       className={`assessment-builder-flow__publish-summary ${publishSummary.canPublish ? 'ok' : 'warn'}`}

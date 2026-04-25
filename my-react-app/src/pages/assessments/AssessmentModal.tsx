@@ -1,19 +1,12 @@
 import { X } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useGetExamMatrixById, useGetMyExamMatrices } from '../../hooks/useExamMatrix';
-import { useLessonsByChapter } from '../../hooks/useLessons';
-import { useSubjectsByGrade } from '../../hooks/useSubjects';
-import { useChaptersBySubject } from '../../hooks/useChapters';
-import { useGrades } from '../../hooks/useGrades';
-import { AssessmentService } from '../../services/api/assessment.service';
-import { LessonService } from '../../services/api/lesson.service';
 import type {
   AssessmentMode,
   AssessmentRequest,
   AssessmentResponse,
   AssessmentType,
   AttemptScoringPolicy,
-  LessonResponse,
 } from '../../types';
 
 type Props = {
@@ -28,7 +21,7 @@ const defaultForm: AssessmentRequest = {
   title: '',
   description: '',
   assessmentType: 'QUIZ',
-  lessonIds: [],
+  // lessonIds removed - auto-populated from matrix
   examMatrixId: '',
   assessmentMode: 'MATRIX_BASED',
   timeLimitMinutes: 45,
@@ -42,29 +35,12 @@ const defaultForm: AssessmentRequest = {
 };
 
 export default function AssessmentModal({ isOpen, mode, initialData, onClose, onSubmit }: Readonly<Props>) {
-  const [gradeLevel, setGradeLevel] = useState('');
-  const [selectedSubjectId, setSelectedSubjectId] = useState('');
-  const [selectedChapterId, setSelectedChapterId] = useState('');
-  const [lessonSearch, setLessonSearch] = useState('');
   const [formData, setFormData] = useState<AssessmentRequest>(defaultForm);
-  const [persistedLessons, setPersistedLessons] = useState<LessonResponse[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [compatibilityHint, setCompatibilityHint] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   const { data: matrixData } = useGetMyExamMatrices();
   useGetExamMatrixById(formData.examMatrixId, !!formData.examMatrixId && isOpen);
-  const { data: gradesData, isLoading: isLoadingGrades } = useGrades(isOpen);
-  const { data: subjectsData, isLoading: isLoadingSubjects } = useSubjectsByGrade(
-    gradeLevel,
-    !!gradeLevel && isOpen
-  );
-  const { data: chaptersData } = useChaptersBySubject(selectedSubjectId, !!selectedSubjectId && isOpen);
-  const { data: lessonsData, isLoading: loadingLessons } = useLessonsByChapter(
-    selectedChapterId,
-    lessonSearch,
-    !!selectedChapterId && isOpen
-  );
 
   useEffect(() => {
     if (!isOpen) return;
@@ -74,7 +50,7 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
         title: initialData.title,
         description: initialData.description || '',
         assessmentType: initialData.assessmentType,
-        lessonIds: initialData.lessonIds || [],
+        // lessonIds removed - auto-populated from matrix
         examMatrixId: initialData.examMatrixId || '',
         assessmentMode: initialData.assessmentMode || 'MATRIX_BASED',
         timeLimitMinutes: initialData.timeLimitMinutes,
@@ -92,64 +68,11 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
       setFormData(defaultForm);
     }
 
-    setGradeLevel(mode === 'edit' && initialData ? String(initialData.examMatrixGradeLevel ?? '') : '');
-    setLessonSearch('');
-    if (mode !== 'edit') {
-      setSelectedSubjectId('');
-      setSelectedChapterId('');
-    }
     setError(null);
-    setCompatibilityHint(null);
     setSaving(false);
   }, [isOpen, mode, initialData]);
 
   const matrices = matrixData?.result ?? [];
-  const grades = gradesData?.result ?? [];
-  const subjects = subjectsData?.result ?? [];
-  const chapters = chaptersData?.result ?? [];
-  const sortedGrades = [...grades].sort((a, b) => a.level - b.level);
-  const lessons = lessonsData?.result ?? [];
-  const lessonMap = useMemo(() => {
-    const map = new Map<string, LessonResponse>();
-    lessons.forEach((lesson) => map.set(lesson.id, lesson));
-    persistedLessons.forEach((lesson) => map.set(lesson.id, lesson));
-    return map;
-  }, [lessons, persistedLessons]);
-  const mergedLessons = useMemo(() => Array.from(lessonMap.values()), [lessonMap]);
-
-  useEffect(() => {
-    if (!isOpen || mode !== 'edit') {
-      setPersistedLessons([]);
-      return;
-    }
-
-    const lessonIds = initialData?.lessonIds ?? [];
-    if (lessonIds.length === 0) {
-      setPersistedLessons([]);
-      return;
-    }
-
-    let cancelled = false;
-    Promise.all(
-      lessonIds.map(async (lessonId) => {
-        try {
-          const response = await LessonService.getLessonById(lessonId);
-          return response.result;
-        } catch {
-          return undefined;
-        }
-      })
-    ).then((results) => {
-      if (cancelled) return;
-      setPersistedLessons(results.filter((lesson): lesson is LessonResponse => !!lesson));
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [isOpen, mode, initialData?.lessonIds]);
-
-  const filteredLessons = useMemo(() => mergedLessons, [mergedLessons]);
 
   let submitLabel = 'Cập nhật bài kiểm tra';
   if (saving) submitLabel = 'Đang lưu...';
@@ -160,45 +83,13 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
   async function submit(event: React.BaseSyntheticEvent) {
     event.preventDefault();
     setError(null);
-    setCompatibilityHint(null);
 
     if (!formData.examMatrixId) {
       setError('Vui lòng chọn ma trận đề trước.');
       return;
     }
 
-    if (mode === 'create' && formData.lessonIds.length === 0) {
-      setError('Vui lòng chọn ít nhất một bài học.');
-      return;
-    }
-
-    const availableLessonIds = new Set(mergedLessons.map((item) => item.id));
-    const invalidLesson = formData.lessonIds.find((id) => !availableLessonIds.has(id));
-    if (formData.lessonIds.length > 0 && invalidLesson) {
-      setError('Có bài học đã chọn không nằm trong danh sách hiện tại.');
-      return;
-    }
-
-    if (formData.lessonIds.length > 0) {
-      try {
-        const compatibility = await AssessmentService.checkMatrixLessonCompatibility({
-          examMatrixId: formData.examMatrixId,
-          lessonIds: formData.lessonIds,
-        });
-
-        if (compatibility.supported && !compatibility.compatible) {
-          setError(compatibility.message || 'Danh sách bài học không tương thích với ma trận đã chọn.');
-          return;
-        }
-
-        if (!compatibility.supported) {
-          setCompatibilityHint('Backend chưa hỗ trợ endpoint kiểm tra tương thích, hệ thống sẽ kiểm tra theo cách mặc định.');
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Không thể kiểm tra tương thích giữa ma trận và bài học.');
-        return;
-      }
-    }
+    // Lessons are auto-populated from matrix - no validation needed
 
     setSaving(true);
     try {
@@ -209,13 +100,6 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
     } finally {
       setSaving(false);
     }
-  }
-
-  function toggleLesson(lessonId: string) {
-    const selected = new Set(formData.lessonIds);
-    if (selected.has(lessonId)) selected.delete(lessonId);
-    else selected.add(lessonId);
-    setFormData({ ...formData, lessonIds: Array.from(selected) });
   }
 
   return (
@@ -234,7 +118,6 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
         <form onSubmit={submit}>
           <div className="modal-body">
             {error && <p style={{ color: '#be123c', fontSize: 13 }}>{error}</p>}
-            {compatibilityHint && <p style={{ color: '#9a4a00', fontSize: 13 }}>{compatibilityHint}</p>}
 
             <div className="form-grid">
               <label>
@@ -298,126 +181,80 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
               />
             </label>
 
-            <section className="data-card" style={{ minHeight: 0 }}>
-              <div className="form-grid">
-                {/* Grade Select */}
-                <label>
-                  <p className="muted" style={{ marginBottom: 6 }}>Khối lớp</p>
-                  <select
-                    className="select"
-                    value={gradeLevel}
-                    onChange={(event) => {
-                      const newGrade = event.target.value;
-                      setGradeLevel(newGrade);
-                      setSelectedSubjectId('');
-                      setSelectedChapterId('');
-                    }}
-                    disabled={isLoadingGrades}
-                  >
-                    <option value="">Chọn khối lớp</option>
-                    {sortedGrades.map((grade) => (
-                      <option key={grade.id} value={String(grade.level)}>
-                        {grade.name || `Lớp ${grade.level}`}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                {/* Subject Select */}
-                <label>
-                  <p className="muted" style={{ marginBottom: 6 }}>Môn học</p>
-                  <select
-                    className="select"
-                    value={selectedSubjectId}
-                    onChange={(event) => {
-                      setSelectedSubjectId(event.target.value);
-                      setSelectedChapterId('');
-                    }}
-                    disabled={isLoadingSubjects || !gradeLevel}
-                  >
-                    {!gradeLevel ? (
-                      <option value="">Chọn khối lớp trước</option>
-                    ) : isLoadingSubjects ? (
-                      <option value="">Đang tải môn học...</option>
-                    ) : subjects.length === 0 ? (
-                      <option value="">Không có môn học cho khối này</option>
-                    ) : (
-                      <>
-                        <option value="">Chọn môn học</option>
-                        {subjects.map((subject) => (
-                          <option key={subject.id} value={subject.id}>{subject.name}</option>
-                        ))}
-                      </>
-                    )}
-                  </select>
-                </label>
-
-                <label>
-                  <p className="muted" style={{ marginBottom: 6 }}>Chapter</p>
-                  <select
-                    className="select"
-                    value={selectedChapterId}
-                    onChange={(event) => setSelectedChapterId(event.target.value)}
-                    disabled={!selectedSubjectId}
-                  >
-                    {!selectedSubjectId ? (
-                      <option value="">Chọn môn học trước</option>
-                    ) : chapters.length === 0 ? (
-                      <option value="">Không có chapter</option>
-                    ) : (
-                      <>
-                        <option value="">Chọn chapter</option>
-                        {chapters.map((chapter) => (
-                          <option key={chapter.id} value={chapter.id}>
-                            {chapter.title || chapter.name || chapter.id}
-                          </option>
-                        ))}
-                      </>
-                    )}
-                  </select>
-                </label>
-              </div>
-
-              <label>
-                <p className="muted" style={{ marginBottom: 6 }}>Tìm bài học</p>
-                <input className="input" value={lessonSearch} onChange={(event) => setLessonSearch(event.target.value)} />
-              </label>
-
-              <div className="table-wrap">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th>Chọn</th>
-                      <th>Bài học</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {loadingLessons && (
-                      <tr>
-                        <td colSpan={2}>Đang tải bài học...</td>
-                      </tr>
-                    )}
-                    {!loadingLessons && filteredLessons.length === 0 && (
-                      <tr>
-                        <td colSpan={2}>Không tìm thấy bài học phù hợp.</td>
-                      </tr>
-                    )}
-                    {!loadingLessons && filteredLessons.map((lesson) => (
-                      <tr key={lesson.id}>
-                        <td>
-                          <input
-                            type="checkbox"
-                            checked={formData.lessonIds.includes(lesson.id)}
-                            onChange={() => toggleLesson(lesson.id)}
-                          />
-                        </td>
-                        <td>{lesson.title || lesson.id}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
+            {/* Display subject and grade summary only (no lesson details) */}
+            {mode === 'edit' && initialData?.lessons && initialData.lessons.length > 0 && (
+              <section className="data-card" style={{ minHeight: 0, marginTop: 12 }}>
+                <p className="muted" style={{ marginBottom: 8, fontWeight: 600 }}>
+                  Phạm vi bài học (tự động từ ma trận)
+                </p>
+                
+                {/* Subject & Grade Summary Only */}
+                {(() => {
+                  const subjects = [...new Set(initialData.lessons.map(l => l.subjectName).filter(Boolean))];
+                  const grades = [...new Set(initialData.lessons.map(l => l.gradeLevel).filter(Boolean))].sort((a, b) => (a ?? 0) - (b ?? 0));
+                  
+                  return (
+                    <div style={{ 
+                      marginBottom: 12, 
+                      padding: '12px 16px', 
+                      background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)', 
+                      borderRadius: 12, 
+                      border: '1px solid #bae6fd',
+                      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+                    }}>
+                      <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', fontSize: 14 }}>
+                        {subjects.length > 0 && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{ 
+                              fontWeight: 600, 
+                              color: '#0369a1',
+                              fontSize: 14
+                            }}>
+                              Môn học:
+                            </span>
+                            <span style={{ 
+                              color: '#1e40af', 
+                              fontWeight: 500,
+                              padding: '2px 8px',
+                              background: '#dbeafe',
+                              borderRadius: 6,
+                              fontSize: 13
+                            }}>
+                              {subjects.join(', ')}
+                            </span>
+                          </div>
+                        )}
+                        {grades.length > 0 && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{ 
+                              fontWeight: 600, 
+                              color: '#0369a1',
+                              fontSize: 14
+                            }}>
+                              Khối lớp:
+                            </span>
+                            <span style={{ 
+                              color: '#92400e', 
+                              fontWeight: 500,
+                              padding: '2px 8px',
+                              background: '#fef3c7',
+                              borderRadius: 6,
+                              fontSize: 13
+                            }}>
+                              {grades.map(g => `Lớp ${g}`).join(', ')}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
+                
+                <p className="muted" style={{ marginBottom: 0, fontSize: 13 }}>
+                  Đề này kiểm tra {initialData.lessons.length} bài học được lấy tự động từ ma trận đề.
+                </p>
+              </section>
+            )}
 
             <div className="form-grid">
               <label>

@@ -12,7 +12,7 @@ export interface AssessmentRequest {
     description?: string;
     /** @NotNull */
     assessmentType: AssessmentType;
-    lessonIds: string[];
+    lessonIds?: string[];  // Optional - auto-populated from matrix
     /** @Min(1) */
     timeLimitMinutes?: number;
     /** @DecimalMin(0) @DecimalMax(100) */
@@ -143,6 +143,7 @@ export interface AssessmentResponse {
     teacherName: string;
     lessonIds: string[];
     lessonTitles: string[];
+    lessons?: AssessmentLessonInfo[];  // BUG FIX #4: Detailed lesson info
     title: string;
     description?: string;
     assessmentType: AssessmentType;
@@ -167,6 +168,18 @@ export interface AssessmentResponse {
     submissionCount: number;
     createdAt: string;
     updatedAt: string;
+}
+
+// BUG FIX #4: Detailed lesson information with subject and grade
+export interface AssessmentLessonInfo {
+    lessonId: string;
+    lessonName: string;
+    chapterName: string;
+    orderIndex?: number;
+    // Subject and grade information from chapter
+    subjectName?: string;      // e.g., "Toán", "Vật lý"
+    gradeLevel?: number;       // e.g., 10, 11, 12
+    gradeName?: string;        // e.g., "Lớp 10", "Lớp 11"
 }
 
 export interface AssessmentSummary {

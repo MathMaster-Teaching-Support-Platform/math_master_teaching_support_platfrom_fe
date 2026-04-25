@@ -414,35 +414,6 @@ export default function ExamMatrixDetailPageRefactored() {
                     <p className="exam-matrix-detail-desc" style={{ marginBottom: 12 }}>
                       {matrix.description || 'Không có mô tả'}
                     </p>
-                    <div
-                      className="exam-matrix-detail-meta"
-                      style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}
-                    >
-                      <div>
-                        <span className="muted" style={{ fontSize: 12 }}>
-                          Khối
-                        </span>
-                        <p style={{ fontWeight: 600, marginTop: 4 }}>
-                          {matrix.gradeLevel || table?.gradeLevel || 'N/A'}
-                        </p>
-                      </div>
-                      <div>
-                        <span className="muted" style={{ fontSize: 12 }}>
-                          Môn học
-                        </span>
-                        <p style={{ fontWeight: 600, marginTop: 4 }}>
-                          {matrix.subjectName || table?.subjectName || 'N/A'}
-                        </p>
-                      </div>
-                      <div>
-                        <span className="muted" style={{ fontSize: 12 }}>
-                          Tổng điểm
-                        </span>
-                        <p style={{ fontWeight: 600, marginTop: 4 }}>
-                          {matrix.totalPointsTarget || 10}
-                        </p>
-                      </div>
-                    </div>
                   </div>
                   <span
                     className={`badge ${matrix.status.toLowerCase()}`}
