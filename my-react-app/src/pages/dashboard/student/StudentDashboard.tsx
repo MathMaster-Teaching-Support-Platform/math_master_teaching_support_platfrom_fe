@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import React, { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -23,15 +24,10 @@ import {
 } from 'lucide-react';
 import DashboardLayout from '../../../components/layout/DashboardLayout/DashboardLayout';
 import { useRoadmaps } from '../../../hooks/useRoadmaps';
-<<<<<<< HEAD
-import { AuthService } from '../../../services/api/auth.service';
 import {
   StudentDashboardService,
   type StudentDashboardPayload,
 } from '../../../services/api/student-dashboard.service';
-import { TeacherProfileService } from '../../../services/api/teacher-profile.service';
-=======
->>>>>>> 0f0f0fad8a5687050b023f12a297616edef2a506
 import type { RoadmapCatalogItem } from '../../../types';
 
 function normalizeRoadmaps(
@@ -57,233 +53,23 @@ function getUrgencyInfo(days: number): { color: string; label: string } {
   return { color: '#5E5D59', label: `${days}d` };
 }
 
-<<<<<<< HEAD
 const ROADMAP_PAGE_SIZE = 9;
-=======
-// ─── SVG Icons ────────────────────────────────────────────────
-const IBook = () => (
-  <svg
-    width="20"
-    height="20"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />
-    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
-  </svg>
-);
-const ICheck = () => (
-  <svg
-    width="20"
-    height="20"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
-    <polyline points="22 4 12 14.01 9 11.01" />
-  </svg>
-);
-const IStar = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-  </svg>
-);
-const ITarget = () => (
-  <svg
-    width="20"
-    height="20"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <circle cx="12" cy="12" r="10" />
-    <circle cx="12" cy="12" r="6" />
-    <circle cx="12" cy="12" r="2" />
-  </svg>
-);
-const IBrain = () => (
-  <svg
-    width="20"
-    height="20"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M9.5 2A2.5 2.5 0 007 4.5v0A2.5 2.5 0 004.5 7h0a2.5 2.5 0 000 5h0A2.5 2.5 0 007 14.5v0A2.5 2.5 0 009.5 17" />
-    <path d="M14.5 2A2.5 2.5 0 0117 4.5v0A2.5 2.5 0 0119.5 7h0a2.5 2.5 0 000 5h0A2.5 2.5 0 0117 14.5v0A2.5 2.5 0 0114.5 17" />
-    <path d="M12 17v5M9 22h6" />
-  </svg>
-);
-const IMap = () => (
-  <svg
-    width="20"
-    height="20"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21" />
-    <line x1="9" y1="3" x2="9" y2="18" />
-    <line x1="15" y1="6" x2="15" y2="21" />
-  </svg>
-);
-const IWallet = () => (
-  <svg
-    width="20"
-    height="20"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z" />
-    <circle cx="16" cy="13" r="2" fill="currentColor" stroke="none" />
-  </svg>
-);
-const IGrade = () => (
-  <svg
-    width="20"
-    height="20"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M9 11l3 3L22 4" />
-    <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
-  </svg>
-);
-const ITrophy = () => (
-  <svg
-    width="22"
-    height="22"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M6 9H4.5a2.5 2.5 0 010-5H6" />
-    <path d="M18 9h1.5a2.5 2.5 0 000-5H18" />
-    <path d="M4 22h16" />
-    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
-    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
-    <path d="M18 2H6v7a6 6 0 0012 0V2z" />
-  </svg>
-);
-const IClock = () => (
-  <svg
-    width="13"
-    height="13"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <circle cx="12" cy="12" r="10" />
-    <polyline points="12 6 12 12 16 14" />
-  </svg>
-);
-const IChevron = () => (
-  <svg
-    width="15"
-    height="15"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <polyline points="9 18 15 12 9 6" />
-  </svg>
-);
-
-const IEdit = () => (
-  <svg
-    width="18"
-    height="18"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
-    <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
-  </svg>
-);
-const IFire = () => (
-  <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M13.5 0.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5 0.67z" />
-  </svg>
-);
->>>>>>> 0f0f0fad8a5687050b023f12a297616edef2a506
 
 const StudentDashboard: React.FC = () => {
   const navigate = useNavigate();
   const roadmapsQuery = useRoadmaps();
-<<<<<<< HEAD
-  const [dashboardData, setDashboardData] = useState<StudentDashboardPayload | null>(null);
-  const [dashboardError, setDashboardError] = useState<string | null>(null);
-  const [isTeacherApproved, setIsTeacherApproved] = useState(false);
-=======
-
->>>>>>> 0f0f0fad8a5687050b023f12a297616edef2a506
-  const [loading, setLoading] = useState(true);
   const [navigatingTaskId, setNavigatingTaskId] = useState<string | null>(null);
   const [roadmapPage, setRoadmapPage] = useState(1);
 
-  useEffect(() => {
-    let active = true;
-
-    const fetchDashboard = async () => {
-      setLoading(true);
-      setDashboardError(null);
-      try {
-        const response = await StudentDashboardService.getDashboard();
-        if (active) setDashboardData(response.result);
-      } catch (error) {
-        if (active) {
-          setDashboardError(error instanceof Error ? error.message : 'Không thể tải dữ liệu');
-        }
-      } finally {
-        if (active) setLoading(false);
-      }
-    };
-
-    fetchDashboard();
-    return () => {
-      active = false;
-    };
-  }, []);
-
-
+  const dashboardQuery = useQuery({
+    queryKey: ['student-dashboard', 'overview'],
+    queryFn: () => StudentDashboardService.getDashboard(),
+    staleTime: 30_000,
+  });
+  const dashboardData: StudentDashboardPayload | null = dashboardQuery.data?.result ?? null;
+  const dashboardError =
+    dashboardQuery.error instanceof Error ? dashboardQuery.error.message : null;
+  const loading = dashboardQuery.isLoading || dashboardQuery.isFetching;
 
   const roadmapResult = roadmapsQuery.data?.result as
     | RoadmapCatalogItem[]
@@ -341,39 +127,7 @@ const StudentDashboard: React.FC = () => {
       }}
       notificationCount={summary?.notificationCount ?? 0}
     >
-<<<<<<< HEAD
-      <div className="flex-1 bg-[#F5F4ED] p-4 font-[Be_Vietnam_Pro] text-[#141413] md:p-6 lg:p-8">
-        {isTeacherApproved && (
-          <div className="mb-6 flex flex-col justify-between gap-4 rounded-2xl bg-[#FAF9F5] p-5 shadow-[0px_0px_0px_1px_#D1CFC5] transition-all duration-150 hover:shadow-[0px_0px_0px_1px_#C2C0B6] md:flex-row md:items-center">
-            <div className="flex items-start gap-3">
-              <div className="rounded-xl bg-[#E8E6DC] p-2 text-[#5E5D59]">
-                <Trophy className="h-5 w-5" />
-              </div>
-              <div>
-                <h3
-                  className="font-[Playfair_Display] text-[25px] font-medium leading-[1.2]"
-                  style={{ fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 500 }}
-                >
-                  Bạn đã được duyệt làm Giáo viên!
-                </h3>
-                <p className="mt-1 text-[15px] leading-[1.6] text-[#5E5D59]">
-                  Bắt đầu tạo nội dung và quản lý lớp học ngay hôm nay.
-                </p>
-              </div>
-            </div>
-            <button
-              className="inline-flex items-center gap-2 rounded-xl bg-[#C96442] px-4 py-2.5 font-[Be_Vietnam_Pro] text-[14px] font-semibold text-[#FAF9F5] shadow-[0px_0px_0px_1px_#C96442] transition-all duration-150 hover:brightness-95 focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:ring-offset-2 active:scale-[0.98]"
-              onClick={() => navigate('/teacher/dashboard')}
-              aria-label="Chuyển sang giao diện Giáo viên"
-            >
-              Chuyển vai trò <ArrowRight className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        )}
-=======
       <div className="sd-page">
-
->>>>>>> 0f0f0fad8a5687050b023f12a297616edef2a506
 
         <div className="mb-6 flex flex-col justify-between gap-4 rounded-2xl bg-[#FAF9F5] p-5 shadow-[0px_0px_0px_1px_#F0EEE6] md:flex-row md:items-center">
           <div>

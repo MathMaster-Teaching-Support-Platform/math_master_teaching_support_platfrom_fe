@@ -1,5 +1,6 @@
 import { RefreshCw } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import React, { useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockAdmin } from '../../data/mockData';
 import {
@@ -17,30 +18,15 @@ import './admin-finance-studio.css';
 import './AdminFinancialOverview.css';
 
 const AdminFinancialOverview: React.FC = () => {
-  const [overview, setOverview] = useState<OverviewData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [selectedMonth, setSelectedMonth] = useState<string>('');
-
-  useEffect(() => {
-    fetchOverview();
-  }, [selectedMonth]);
-
-  const fetchOverview = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await adminFinancialService.getFinancialOverview(
-        selectedMonth || undefined
-      );
-      setOverview(data);
-    } catch (err: any) {
-      console.error('Error fetching financial overview:', err);
-      setError(err.response?.data?.message || 'Không thể tải dữ liệu tổng quan tài chính');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const overviewQuery = useQuery({
+    queryKey: ['admin-financial', 'overview', selectedMonth],
+    queryFn: () => adminFinancialService.getFinancialOverview(selectedMonth || undefined),
+    staleTime: 30_000,
+  });
+  const overview: OverviewData | null = overviewQuery.data ?? null;
+  const loading = overviewQuery.isLoading || overviewQuery.isFetching;
+  const error = overviewQuery.error instanceof Error ? overviewQuery.error.message : null;
 
   const handleMonthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedMonth(e.target.value);
@@ -73,7 +59,7 @@ const AdminFinancialOverview: React.FC = () => {
         <div className="error-icon">⚠️</div>
         <h3>Lỗi tải dữ liệu</h3>
         <p>{error}</p>
-        <button type="button" onClick={fetchOverview} className="retry-button">
+        <button type="button" onClick={() => void overviewQuery.refetch()} className="retry-button">
           Thử lại
         </button>
       </div>
@@ -107,7 +93,7 @@ const AdminFinancialOverview: React.FC = () => {
               className="month-input"
             />
           </div>
-          <button type="button" onClick={fetchOverview} className="refresh-button">
+          <button type="button" onClick={() => void overviewQuery.refetch()} className="refresh-button">
             <RefreshCw size={16} aria-hidden />
             Làm mới
           </button>

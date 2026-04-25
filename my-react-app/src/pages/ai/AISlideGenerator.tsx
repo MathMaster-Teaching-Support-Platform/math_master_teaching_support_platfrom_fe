@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BlockMath, InlineMath } from 'react-katex';
 import { useNavigate } from 'react-router-dom';
@@ -241,7 +242,6 @@ const renderSlideText = (
 
 const AISlideGenerator: React.FC = () => {
   const navigate = useNavigate();
-  const [schoolGrades, setSchoolGrades] = useState<SchoolGrade[]>([]);
   const [subjects, setSubjects] = useState<SubjectByGrade[]>([]);
   const [chapters, setChapters] = useState<ChapterBySubject[]>([]);
   const [lessons, setLessons] = useState<LessonByChapter[]>([]);
@@ -256,7 +256,6 @@ const AISlideGenerator: React.FC = () => {
   const [outputFormat, setOutputFormat] = useState<LessonSlideOutputFormat>('PLAIN_TEXT');
   const [equationMode] = useState<LessonSlideEquationMode>('OMML');
   const [templateId, setTemplateId] = useState('');
-  const [templates, setTemplates] = useState<LessonSlideTemplate[]>([]);
   const [templatePreviewBlobUrls, setTemplatePreviewBlobUrls] = useState<Record<string, string>>(
     {}
   );
@@ -275,13 +274,25 @@ const AISlideGenerator: React.FC = () => {
   const [newSlideThumbnailFile, setNewSlideThumbnailFile] = useState<File | null>(null);
   const [newSlideThumbnailPreview, setNewSlideThumbnailPreview] = useState<string | null>(null);
 
-  const [loadingGrades, setLoadingGrades] = useState(false);
   const [loadingSubjects, setLoadingSubjects] = useState(false);
   const [loadingChapters, setLoadingChapters] = useState(false);
   const [loadingLessons, setLoadingLessons] = useState(false);
-  const [loadingTemplates, setLoadingTemplates] = useState(false);
   const [generatingContent, setGeneratingContent] = useState(false);
   const [generatingPptx, setGeneratingPptx] = useState(false);
+  const schoolGradesQuery = useQuery({
+    queryKey: ['lesson-slide', 'school-grades', 'ai-slide-generator'],
+    queryFn: () => LessonSlideService.getSchoolGrades(true),
+    staleTime: 5 * 60_000,
+  });
+  const templatesQuery = useQuery({
+    queryKey: ['lesson-slide', 'templates', 'ai-slide-generator'],
+    queryFn: () => LessonSlideService.getTemplates(true),
+    staleTime: 5 * 60_000,
+  });
+  const schoolGrades: SchoolGrade[] = schoolGradesQuery.data?.result || [];
+  const templates: LessonSlideTemplate[] = templatesQuery.data?.result || [];
+  const loadingGrades = schoolGradesQuery.isLoading || schoolGradesQuery.isFetching;
+  const loadingTemplates = templatesQuery.isLoading || templatesQuery.isFetching;
 
   const [activeMainTab, setActiveMainTab] = useState<'GENERATE' | 'MANAGE'>('GENERATE');
   const [activeWizardStep, setActiveWizardStep] = useState(1);
@@ -763,39 +774,16 @@ const AISlideGenerator: React.FC = () => {
   }, [generatedPreviewPdfUrl, selectedGeneratedFile]);
 
   useEffect(() => {
-    const loadSchoolGrades = async () => {
-      setLoadingGrades(true);
-      setError('');
-
-      try {
-        const response = await LessonSlideService.getSchoolGrades(true);
-        setSchoolGrades(response.result || []);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Không thể tải danh sách khối lớp');
-      } finally {
-        setLoadingGrades(false);
-      }
-    };
-
-    void loadSchoolGrades();
-  }, []);
+    if (schoolGradesQuery.error instanceof Error) {
+      setError(schoolGradesQuery.error.message);
+    }
+  }, [schoolGradesQuery.error]);
 
   useEffect(() => {
-    const loadTemplates = async () => {
-      setLoadingTemplates(true);
-
-      try {
-        const response = await LessonSlideService.getTemplates(true);
-        setTemplates(response.result || []);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Khong the tai danh sach template slide');
-      } finally {
-        setLoadingTemplates(false);
-      }
-    };
-
-    void loadTemplates();
-  }, []);
+    if (templatesQuery.error instanceof Error) {
+      setError(templatesQuery.error.message);
+    }
+  }, [templatesQuery.error]);
 
   useEffect(() => {
     if (!templates.length) {

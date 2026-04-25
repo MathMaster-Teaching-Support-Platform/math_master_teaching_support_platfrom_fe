@@ -20,6 +20,7 @@ import {
   Users,
   X,
 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -81,24 +82,22 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
   /** Chỉ số nguyên dương (nghìn VND) — dùng text + regex, không dùng type=number (tránh "1-1" / bước nhảy) */
   const [originalThousandInput, setOriginalThousandInput] = useState('');
 
-  const [grades, setGrades] = useState<SchoolGrade[]>([]);
-  const [subjects, setSubjects] = useState<SubjectByGrade[]>([]);
-  React.useEffect(() => {
-    LessonSlideService.getSchoolGrades(true)
-      .then((r) => setGrades(r.result || []))
-      .catch(() => {});
-  }, []);
+  const gradesQuery = useQuery({
+    queryKey: ['lesson-slide', 'school-grades', 'teacher-courses-modal'],
+    queryFn: () => LessonSlideService.getSchoolGrades(true),
+    staleTime: 5 * 60_000,
+  });
+  const subjectsQuery = useQuery({
+    queryKey: ['lesson-slide', 'subjects-by-grade', form.schoolGradeId, 'teacher-courses-modal'],
+    queryFn: () => LessonSlideService.getSubjectsBySchoolGrade(form.schoolGradeId),
+    enabled: form.provider === 'MINISTRY' && !!form.schoolGradeId,
+    staleTime: 5 * 60_000,
+  });
+  const grades: SchoolGrade[] = gradesQuery.data?.result || [];
+  const subjects: SubjectByGrade[] = subjectsQuery.data?.result || [];
 
-  const handleGradeChange = async (schoolGradeId: string) => {
+  const handleGradeChange = (schoolGradeId: string) => {
     setForm({ ...form, schoolGradeId, subjectId: '' });
-    setSubjects([]);
-    if (!schoolGradeId) return;
-    try {
-      const r = await LessonSlideService.getSubjectsBySchoolGrade(schoolGradeId);
-      setSubjects(r.result || []);
-    } catch {
-      // ignore: catalog fetch failed, khối/môn rỗng
-    }
   };
 
   const [step, setStep] = useState(1);

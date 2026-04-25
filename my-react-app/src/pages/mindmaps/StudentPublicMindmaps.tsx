@@ -401,7 +401,7 @@ export default function StudentPublicMindmaps() {
                 <select
                   className="spm-select"
                   value={gradeId}
-                  onChange={(e) => void handleGradeChange(e.target.value)}
+                  onChange={(e) => handleGradeChange(e.target.value)}
                   disabled={loadingCatalog}
                 >
                   <option value="">Tất cả khối lớp</option>
@@ -421,7 +421,7 @@ export default function StudentPublicMindmaps() {
                 <select
                   className="spm-select"
                   value={subjectId}
-                  onChange={(e) => void handleSubjectChange(e.target.value)}
+                  onChange={(e) => handleSubjectChange(e.target.value)}
                   disabled={!gradeId || loadingCatalog}
                 >
                   <option value="">{gradeId ? 'Tất cả môn học' : 'Chọn khối trước'}</option>
@@ -441,7 +441,7 @@ export default function StudentPublicMindmaps() {
                 <select
                   className="spm-select"
                   value={chapterId}
-                  onChange={(e) => void handleChapterChange(e.target.value)}
+                  onChange={(e) => handleChapterChange(e.target.value)}
                   disabled={!subjectId || loadingCatalog}
                 >
                   <option value="">{subjectId ? 'Tất cả chương' : 'Chọn môn trước'}</option>

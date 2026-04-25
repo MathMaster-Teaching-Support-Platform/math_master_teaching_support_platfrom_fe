@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query';
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload } from 'lucide-react';
@@ -68,7 +69,6 @@ function extractOcrSubtitle(comment: string): string {
 const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<TeacherProfile | null>(null);
-  const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -104,29 +104,33 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    loadProfile();
-  }, []);
+  const profileQuery = useQuery({
+    queryKey: ['teacher-profile', 'my-profile'],
+    queryFn: () => TeacherProfileService.getMyProfile(),
+    staleTime: 60_000,
+  });
+  const loading = profileQuery.isLoading || profileQuery.isFetching;
 
-  const loadProfile = async () => {
-    try {
-      const response = await TeacherProfileService.getMyProfile();
-      setProfile(response.result);
+  useEffect(() => {
+    if (profileQuery.data?.result) {
+      const p = profileQuery.data.result;
+      setProfile(p);
       setFormData({
-        fullName: response.result.fullName || '',
-        schoolName: response.result.schoolName,
-        schoolAddress: response.result.schoolAddress || '',
-        schoolWebsite: response.result.schoolWebsite || '',
-        position: response.result.position,
-        description: response.result.description || '',
+        fullName: p.fullName || '',
+        schoolName: p.schoolName,
+        schoolAddress: p.schoolAddress || '',
+        schoolWebsite: p.schoolWebsite || '',
+        position: p.position,
+        description: p.description || '',
       });
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Không thể tải hồ sơ';
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [profileQuery.data]);
+
+  useEffect(() => {
+    if (profileQuery.error instanceof Error) {
+      setError(profileQuery.error.message);
+    }
+  }, [profileQuery.error]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>

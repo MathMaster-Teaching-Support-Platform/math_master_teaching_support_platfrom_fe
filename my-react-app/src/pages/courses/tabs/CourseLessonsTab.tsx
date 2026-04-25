@@ -1,4 +1,5 @@
 import type { DragEndEvent } from '@dnd-kit/core';
+import { useQuery } from '@tanstack/react-query';
 import { closestCenter, DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import {
   arrayMove,
@@ -113,28 +114,15 @@ const InlinePlayer: React.FC<{
   onTimeUpdate?: (time: number) => void;
   onLessonComplete?: () => void;
 }> = ({ courseId, courseLessonId, title, initialTime = 0, onTimeUpdate, onLessonComplete }) => {
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setError('');
-    VideoUploadService.getVideoUrl(courseId, courseLessonId)
-      .then((r) => {
-        if (!cancelled) setVideoUrl(r.result);
-      })
-      .catch((e) => {
-        if (!cancelled) setError(e instanceof Error ? e.message : 'Không thể tải video');
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [courseId, courseLessonId]);
+  const videoUrlQuery = useQuery({
+    queryKey: ['course-lesson-video', courseId, courseLessonId],
+    queryFn: () => VideoUploadService.getVideoUrl(courseId, courseLessonId),
+    staleTime: 5 * 60_000,
+    enabled: !!courseId && !!courseLessonId,
+  });
+  const videoUrl = videoUrlQuery.data?.result ?? null;
+  const loading = videoUrlQuery.isLoading || videoUrlQuery.isFetching;
+  const error = videoUrlQuery.error instanceof Error ? videoUrlQuery.error.message : '';
 
   return (
     <div style={{ background: '#000', borderRadius: 12, overflow: 'hidden', width: '100%' }}>
@@ -351,55 +339,57 @@ function UploadVideoModal({
   existingLessons: CourseLessonResponse[];
 }) {
   const provider = course.provider;
-  const [chapters, setChapters] = useState<ChapterBySubject[]>([]);
-  const [lessons, setLessons] = useState<LessonByChapter[]>([]);
   const [chapterId, setChapterId] = useState('');
   const [lessonId, setLessonId] = useState('');
   const [videoTitle, setVideoTitle] = useState('');
   const [orderIndex, setOrderIndex] = useState(1);
   const [isFreePreview, setIsFreePreview] = useState(false);
   const [file, setFile] = useState<File | null>(null);
-  const [loadingChapters, setLoadingChapters] = useState(false);
-  const [loadingLessons, setLoadingLessons] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [chunkInfo, setChunkInfo] = useState('');
   const [error, setError] = useState('');
 
-  const [sections, setSections] = useState<any[]>([]); // for CUSTOM
   const [sectionId, setSectionId] = useState(''); // for CUSTOM
   const [customTitle, setCustomTitle] = useState(''); // for CUSTOM
   const [customDescription, setCustomDescription] = useState(''); // for CUSTOM
   const [durationSeconds, setDurationSeconds] = useState<number | undefined>(undefined);
-  const [loadingSections, setLoadingSections] = useState(false);
+  const chaptersQuery = useQuery({
+    queryKey: ['lesson-slide', 'chapters-by-subject', course.subjectId, 'course-lessons-tab'],
+    queryFn: () => LessonSlideService.getChaptersBySubject(course.subjectId as string),
+    enabled: provider === 'MINISTRY' && !!course.subjectId,
+    staleTime: 5 * 60_000,
+  });
+  const lessonsQuery = useQuery({
+    queryKey: ['lesson-slide', 'lessons-by-chapter', chapterId, 'course-lessons-tab'],
+    queryFn: () => LessonSlideService.getLessonsByChapter(chapterId),
+    enabled: provider === 'MINISTRY' && !!chapterId,
+    staleTime: 5 * 60_000,
+  });
+  const sectionsQuery = useQuery({
+    queryKey: ['course-sections', courseId, 'course-lessons-tab'],
+    queryFn: () => CourseService.listSections(courseId),
+    enabled: provider === 'CUSTOM',
+    staleTime: 30_000,
+  });
+  const chapters: ChapterBySubject[] = chaptersQuery.data?.result || [];
+  const lessons: LessonByChapter[] = lessonsQuery.data?.result || [];
+  const loadingChapters = chaptersQuery.isLoading || chaptersQuery.isFetching;
+  const loadingLessons = lessonsQuery.isLoading || lessonsQuery.isFetching;
+  const loadingSections = sectionsQuery.isLoading || sectionsQuery.isFetching;
+  const sectionOptions = useMemo(() => sectionsQuery.data?.result || [], [sectionsQuery.data]);
 
   useEffect(() => {
-    const id = globalThis.setTimeout(() => {
-      if (provider === 'MINISTRY' && course.subjectId) {
-        setLoadingChapters(true);
-        LessonSlideService.getChaptersBySubject(course.subjectId)
-          .then((r) => {
-            setChapters(r.result || []);
-            setError('');
-          })
-          .catch(() => setError('Không thể tải danh sách chương'))
-          .finally(() => setLoadingChapters(false));
-      } else if (provider === 'CUSTOM') {
-        setLoadingSections(true);
-        CourseService.listSections(courseId)
-          .then((res) => {
-            setSections(res.result || []);
-            setError('');
-          })
-          .catch(() => setError('Không thể tải danh sách phần'))
-          .finally(() => setLoadingSections(false));
-      } else {
-        setChapters([]);
-        setSections([]);
-      }
-    }, 0);
-    return () => globalThis.clearTimeout(id);
-  }, [provider, course.subjectId, courseId]);
+    if (chaptersQuery.error instanceof Error) {
+      setError('Không thể tải danh sách chương');
+    }
+  }, [chaptersQuery.error]);
+
+  useEffect(() => {
+    if (sectionsQuery.error instanceof Error) {
+      setError('Không thể tải danh sách phần');
+    }
+  }, [sectionsQuery.error]);
 
   // Auto-calculate orderIndex
   useEffect(() => {
@@ -413,18 +403,9 @@ function UploadVideoModal({
     }
   }, [sectionId, existingLessons, provider]);
 
-  const handleChapterChange = async (val: string) => {
+  const handleChapterChange = (val: string) => {
     setChapterId(val);
     setLessonId('');
-    setLessons([]);
-    if (!val) return;
-    setLoadingLessons(true);
-    try {
-      const r = await LessonSlideService.getLessonsByChapter(val);
-      setLessons(r.result || []);
-    } finally {
-      setLoadingLessons(false);
-    }
   };
 
   const getVideoDuration = (file: File): Promise<number> => {
@@ -525,7 +506,7 @@ function UploadVideoModal({
                 <select
                   className="clt-warm-select"
                   value={chapterId}
-                  onChange={(e) => void handleChapterChange(e.target.value)}
+                  onChange={(e) => handleChapterChange(e.target.value)}
                   disabled={loadingChapters || uploading}
                 >
                   <option value="">{loadingChapters ? 'Đang tải...' : '-- Chọn chương --'}</option>
@@ -575,7 +556,7 @@ function UploadVideoModal({
                   disabled={uploading || loadingSections}
                 >
                   <option value="">{loadingSections ? 'Đang tải...' : '-- Chọn phần --'}</option>
-                  {sections.map((s) => (
+                  {sectionOptions.map((s) => (
                     <option key={s.id} value={s.id}>
                       Phần {s.orderIndex}: {s.title}
                     </option>

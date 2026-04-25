@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import React, { useState, useMemo, useRef } from 'react';
 import {
   BookOpen,
   CheckCircle,
@@ -92,18 +93,15 @@ const InlinePlayer: React.FC<{
   onTimeUpdate?: (time: number) => void;
   onLessonComplete: () => void;
 }> = ({ courseId, courseLessonId, title, initialTime = 0, onTimeUpdate, onLessonComplete }) => {
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    setLoading(true);
-    setError('');
-    VideoUploadService.getVideoUrl(courseId, courseLessonId)
-      .then((r) => setVideoUrl(r.result))
-      .catch((e) => setError(e instanceof Error ? e.message : 'Không thể tải video'))
-      .finally(() => setLoading(false));
-  }, [courseId, courseLessonId]);
+  const videoUrlQuery = useQuery({
+    queryKey: ['course-lesson-video', 'student', courseId, courseLessonId],
+    queryFn: () => VideoUploadService.getVideoUrl(courseId, courseLessonId),
+    staleTime: 5 * 60_000,
+    enabled: !!courseId && !!courseLessonId,
+  });
+  const videoUrl = videoUrlQuery.data?.result ?? null;
+  const loading = videoUrlQuery.isLoading || videoUrlQuery.isFetching;
+  const error = videoUrlQuery.error instanceof Error ? videoUrlQuery.error.message : '';
 
   return (
     <div style={{ background: '#000', borderRadius: 12, overflow: 'hidden', width: '100%' }}>

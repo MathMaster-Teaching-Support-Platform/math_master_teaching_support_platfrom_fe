@@ -1,4 +1,5 @@
 import { Upload } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TeacherProfileService } from '../../services/api/teacher-profile.service';
@@ -33,28 +34,37 @@ const SubmitTeacherProfile: React.FC<SubmitTeacherProfileProps> = ({ onSuccess }
   const [isSearchingSchool, setIsSearchingSchool] = useState(false);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autocompleteRef = useRef<HTMLDivElement>(null);
+  const existingProfileQuery = useQuery({
+    queryKey: ['teacher-profile', 'my-profile'],
+    queryFn: () => TeacherProfileService.getMyProfile(),
+    staleTime: 60_000,
+    retry: false,
+  });
 
   useEffect(() => {
-    checkExistingProfile();
+    if (existingProfileQuery.isSuccess && !onSuccess) {
+      navigate('/profile');
+    }
+
     const handleClickOutside = (event: MouseEvent) => {
         if (autocompleteRef.current && !autocompleteRef.current.contains(event.target as Node)) {
             setShowSuggestions(false);
         }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const checkExistingProfile = async () => {
-    try {
-      await TeacherProfileService.getMyProfile();
-      if (!onSuccess) {
-        navigate('/profile');
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
       }
-    } catch {
-      console.log('No existing profile found');
+    };
+  }, [existingProfileQuery.isSuccess, navigate, onSuccess]);
+
+  useEffect(() => {
+    if (existingProfileQuery.isError) {
+      // 404/no profile is expected here; keep submit form visible.
     }
-  };
+  }, [existingProfileQuery.isError]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>

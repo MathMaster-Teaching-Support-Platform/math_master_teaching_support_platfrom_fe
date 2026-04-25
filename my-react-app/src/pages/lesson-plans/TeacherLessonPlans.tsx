@@ -16,6 +16,7 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import {
@@ -110,21 +111,42 @@ function CreateLessonPlanModal({
   isLoading: boolean;
 }) {
   // Cascading state
-  const [grades, setGrades] = useState<SchoolGrade[]>([]);
-  const [subjects, setSubjects] = useState<SubjectByGrade[]>([]);
-  const [chapters, setChapters] = useState<ChapterBySubject[]>([]);
-  const [lessons, setLessons] = useState<LessonByChapter[]>([]);
-
   const [gradeId, setGradeId] = useState('');
   const [subjectId, setSubjectId] = useState('');
   const [chapterId, setChapterId] = useState('');
   const [lessonId, setLessonId] = useState('');
   const [selectedLesson, setSelectedLesson] = useState<LessonByChapter | null>(null);
-
-  const [loadingGrades, setLoadingGrades] = useState(false);
-  const [loadingSubjects, setLoadingSubjects] = useState(false);
-  const [loadingChapters, setLoadingChapters] = useState(false);
-  const [loadingLessons, setLoadingLessons] = useState(false);
+  const gradesQuery = useQuery({
+    queryKey: ['lesson-slide', 'school-grades', 'lesson-plans-modal'],
+    queryFn: () => LessonSlideService.getSchoolGrades(true),
+    staleTime: 5 * 60_000,
+  });
+  const subjectsQuery = useQuery({
+    queryKey: ['lesson-slide', 'subjects-by-grade', gradeId, 'lesson-plans-modal'],
+    queryFn: () => LessonSlideService.getSubjectsBySchoolGrade(gradeId),
+    enabled: !!gradeId,
+    staleTime: 5 * 60_000,
+  });
+  const chaptersQuery = useQuery({
+    queryKey: ['lesson-slide', 'chapters-by-subject', subjectId, 'lesson-plans-modal'],
+    queryFn: () => LessonSlideService.getChaptersBySubject(subjectId),
+    enabled: !!subjectId,
+    staleTime: 5 * 60_000,
+  });
+  const lessonsQuery = useQuery({
+    queryKey: ['lesson-slide', 'lessons-by-chapter', chapterId, 'lesson-plans-modal'],
+    queryFn: () => LessonSlideService.getLessonsByChapter(chapterId),
+    enabled: !!chapterId,
+    staleTime: 5 * 60_000,
+  });
+  const grades: SchoolGrade[] = gradesQuery.data?.result || [];
+  const subjects: SubjectByGrade[] = subjectsQuery.data?.result || [];
+  const chapters: ChapterBySubject[] = chaptersQuery.data?.result || [];
+  const lessons: LessonByChapter[] = lessonsQuery.data?.result || [];
+  const loadingGrades = gradesQuery.isLoading || gradesQuery.isFetching;
+  const loadingSubjects = subjectsQuery.isLoading || subjectsQuery.isFetching;
+  const loadingChapters = chaptersQuery.isLoading || chaptersQuery.isFetching;
+  const loadingLessons = lessonsQuery.isLoading || lessonsQuery.isFetching;
 
   // Form fields
   const [objectives, setObjectives] = useState('');
@@ -136,63 +158,25 @@ function CreateLessonPlanModal({
   // Step: 1 = chọn bài học, 2 = điền nội dung
   const [step, setStep] = useState(1);
 
-  useEffect(() => {
-    setLoadingGrades(true);
-    LessonSlideService.getSchoolGrades(true)
-      .then((r) => setGrades(r.result || []))
-      .catch(() => {})
-      .finally(() => setLoadingGrades(false));
-  }, []);
-
-  const handleGradeChange = async (val: string) => {
+  const handleGradeChange = (val: string) => {
     setGradeId(val);
     setSubjectId('');
     setChapterId('');
     setLessonId('');
-    setSubjects([]);
-    setChapters([]);
-    setLessons([]);
     setSelectedLesson(null);
-    if (!val) return;
-    setLoadingSubjects(true);
-    try {
-      const r = await LessonSlideService.getSubjectsBySchoolGrade(val);
-      setSubjects(r.result || []);
-    } finally {
-      setLoadingSubjects(false);
-    }
   };
 
-  const handleSubjectChange = async (val: string) => {
+  const handleSubjectChange = (val: string) => {
     setSubjectId(val);
     setChapterId('');
     setLessonId('');
-    setChapters([]);
-    setLessons([]);
     setSelectedLesson(null);
-    if (!val) return;
-    setLoadingChapters(true);
-    try {
-      const r = await LessonSlideService.getChaptersBySubject(val);
-      setChapters(r.result || []);
-    } finally {
-      setLoadingChapters(false);
-    }
   };
 
-  const handleChapterChange = async (val: string) => {
+  const handleChapterChange = (val: string) => {
     setChapterId(val);
     setLessonId('');
-    setLessons([]);
     setSelectedLesson(null);
-    if (!val) return;
-    setLoadingLessons(true);
-    try {
-      const r = await LessonSlideService.getLessonsByChapter(val);
-      setLessons(r.result || []);
-    } finally {
-      setLoadingLessons(false);
-    }
   };
 
   const handleLessonChange = (val: string) => {
@@ -276,7 +260,7 @@ function CreateLessonPlanModal({
                     id="lp-grade"
                     className="form-select"
                     value={gradeId}
-                    onChange={(e) => void handleGradeChange(e.target.value)}
+                    onChange={(e) => handleGradeChange(e.target.value)}
                     disabled={loadingGrades}
                   >
                     <option value="">{loadingGrades ? 'Đang tải...' : '-- Chọn khối --'}</option>
@@ -297,7 +281,7 @@ function CreateLessonPlanModal({
                       id="lp-subject"
                       className="form-select"
                       value={subjectId}
-                      onChange={(e) => void handleSubjectChange(e.target.value)}
+                      onChange={(e) => handleSubjectChange(e.target.value)}
                       disabled={loadingSubjects}
                     >
                       <option value="">{loadingSubjects ? 'Đang tải...' : '-- Chọn môn --'}</option>
@@ -319,7 +303,7 @@ function CreateLessonPlanModal({
                       id="lp-chapter"
                       className="form-select"
                       value={chapterId}
-                      onChange={(e) => void handleChapterChange(e.target.value)}
+                      onChange={(e) => handleChapterChange(e.target.value)}
                       disabled={loadingChapters}
                     >
                       <option value="">
