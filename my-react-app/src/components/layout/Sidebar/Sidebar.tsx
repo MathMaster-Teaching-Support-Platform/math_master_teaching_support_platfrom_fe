@@ -207,29 +207,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role, collapsed, onToggle }) => {
         <ChevronLeft size={13} strokeWidth={2.5} />
       </button>
 
-      {/* Role Switcher */}
-      {role === 'student' && AuthService.hasRole('teacher') && (
-        <div className="sb-group sb-role-switcher">
-          <Link
-            to={role === 'student' ? '/teacher/dashboard' : '/student/courses'}
-            className="sb-item sb-item--switch"
-          >
-            <span className="sb-icon">
-              <ArrowLeftRight size={16} strokeWidth={2.5} />
-            </span>
-            {!collapsed && (
-              <span className="sb-label">
-                {role === 'student' ? 'Giao diện Giáo viên' : 'Giao diện Học sinh'}
-              </span>
-            )}
-            {collapsed && (
-              <span className="sb-tooltip">
-                {role === 'student' ? 'Giao diện Giáo viên' : 'Giao diện Học sinh'}
-              </span>
-            )}
-          </Link>
-        </div>
-      )}
+
 
       {/* Nav */}
       <nav ref={navRef} id={navId} className="sidebar-nav" aria-label="Điều hướng chính">

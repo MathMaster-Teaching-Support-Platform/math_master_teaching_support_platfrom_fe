@@ -346,6 +346,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   word-break: break-word;
+  min-height: calc(1.35em * 2);
 }
 
 .module-layout-container .course-heading {
