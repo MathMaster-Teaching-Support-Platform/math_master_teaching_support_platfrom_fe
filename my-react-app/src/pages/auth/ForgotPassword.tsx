@@ -1,197 +1,34 @@
 import React, { useState } from 'react';
+import { ArrowLeft, Clock3, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { AuthService } from '../../services/api/auth.service';
 import './Auth.css';
 
-// ─── Icons ───────────────────────────────────────────────────────────────────
-
-const EmailIcon = () => (
-  <svg
-    viewBox="0 0 20 20"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.6"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <rect x="2" y="5" width="16" height="12" rx="2" />
-    <polyline points="2,5 10,12 18,5" />
-  </svg>
-);
-
-const MailSentIcon = () => (
-  <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <defs>
-      <linearGradient id="mailGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#6b69f0" />
-        <stop offset="100%" stopColor="#9896f5" />
-      </linearGradient>
-    </defs>
-    {/* Circle bg */}
-    <circle cx="32" cy="32" r="32" fill="url(#mailGrad)" opacity="0.12" />
-    <circle cx="32" cy="32" r="26" fill="url(#mailGrad)" opacity="0.18" />
-    {/* Envelope */}
-    <rect x="14" y="22" width="36" height="24" rx="3" fill="url(#mailGrad)" />
-    <polyline
-      points="14,22 32,36 50,22"
-      stroke="white"
-      strokeWidth="2"
-      strokeLinejoin="round"
-      fill="none"
-    />
-    {/* Check badge */}
-    <circle cx="46" cy="20" r="9" fill="#22c55e" />
-    <polyline
-      points="41,20 44.5,23.5 51,17"
-      stroke="white"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      fill="none"
-    />
-  </svg>
-);
-
-// ─── Decorative SVG — Lemniscate of Bernoulli (∞) ────────────────────────────
-
-const MathLemniscate = () => (
-  <svg
-    className="auth-graph"
-    viewBox="0 0 440 260"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    aria-hidden="true"
-  >
-    <defs>
-      <linearGradient id="lemGradF" x1="0%" y1="0%" x2="100%" y2="0%">
-        <stop offset="0%" stopColor="#9896f5" />
-        <stop offset="100%" stopColor="#c084fc" />
-      </linearGradient>
-    </defs>
-
-    {/* Polar grid — concentric ellipses */}
-    <ellipse cx="220" cy="130" rx="50" ry="30" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
-    <ellipse cx="220" cy="130" rx="95" ry="55" stroke="rgba(255,255,255,0.07)" strokeWidth="1" />
-
-    {/* Polar grid — radial lines */}
-    {[0, 45, 90, 135].map((deg) => {
-      const rad = (deg * Math.PI) / 180;
-      const x2 = Math.round(220 + 100 * Math.cos(rad));
-      const y2 = Math.round(130 + 60 * Math.sin(rad));
-      const x1 = Math.round(220 - 100 * Math.cos(rad));
-      const y1 = Math.round(130 - 60 * Math.sin(rad));
-      return (
-        <line
-          key={deg}
-          x1={x1}
-          y1={y1}
-          x2={x2}
-          y2={y2}
-          stroke="rgba(255,255,255,0.05)"
-          strokeWidth="1"
-        />
-      );
-    })}
-
-    {/* Right lobe */}
+const MathLemniscateWarm = () => (
+  <svg className="auth-graph" viewBox="0 0 520 260" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <ellipse cx="260" cy="130" rx="118" ry="62" stroke="rgba(250,249,245,0.2)" strokeWidth="1" />
+    <ellipse cx="260" cy="130" rx="86" ry="44" stroke="rgba(250,249,245,0.12)" strokeWidth="1" />
     <path
-      d="M 220,130 C 248,98 310,98 310,130 C 310,162 248,162 220,130"
-      stroke="url(#lemGradF)"
-      strokeWidth="2.5"
-      fill="rgba(152,150,245,0.07)"
-      strokeLinecap="round"
+      d="M 260,130 C 298,94 368,94 368,130 C 368,166 298,166 260,130"
+      stroke="#C96442"
+      strokeWidth="2.7"
+      fill="rgba(201,100,66,0.1)"
     />
-
-    {/* Left lobe — dashed, softer */}
     <path
-      d="M 220,130 C 192,98 130,98 130,130 C 130,162 192,162 220,130"
-      stroke="rgba(192,132,252,0.6)"
-      strokeWidth="2"
-      fill="rgba(192,132,252,0.04)"
-      strokeLinecap="round"
+      d="M 260,130 C 222,94 152,94 152,130 C 152,166 222,166 260,130"
+      stroke="rgba(250,249,245,0.7)"
+      strokeWidth="2.2"
       strokeDasharray="5 3"
+      fill="rgba(250,249,245,0.08)"
     />
-
-    {/* Right lobe tip */}
-    <circle cx="310" cy="130" r="4.5" fill="#9896f5" />
-    {/* Left lobe tip */}
-    <circle cx="130" cy="130" r="4.5" fill="#9896f5" />
-
-    {/* Center crossing point */}
-    <circle
-      cx="220"
-      cy="130"
-      r="3.5"
-      fill="rgba(255,255,255,0.5)"
-      stroke="rgba(255,255,255,0.2)"
-      strokeWidth="1"
-    />
-
-    {/* Equation label */}
-    <text
-      x="60"
-      y="72"
-      fill="rgba(152,150,245,0.88)"
-      fontSize="13"
-      fontFamily="Georgia, serif"
-      fontStyle="italic"
-    >
+    <circle cx="260" cy="130" r="3.8" fill="rgba(250,249,245,0.75)" />
+    <circle cx="368" cy="130" r="4.2" fill="#C96442" />
+    <circle cx="152" cy="130" r="4.2" fill="#C96442" />
+    <text x="64" y="74" fill="rgba(250,249,245,0.82)" fontSize="13" fontFamily="Georgia, serif" fontStyle="italic">
       (x² + y²)² = a²(x² − y²)
     </text>
-    <text
-      x="60"
-      y="90"
-      fill="rgba(192,132,252,0.5)"
-      fontSize="10"
-      fontFamily="Georgia, serif"
-      fontStyle="italic"
-    >
-      Lemniscate of Bernoulli
-    </text>
-
-    {/* Small θ arc indicator */}
-    <path
-      d="M 238,130 A 18,18 0 0,0 234,116"
-      stroke="rgba(255,255,255,0.18)"
-      strokeWidth="1"
-      fill="none"
-    />
-    <text
-      x="240"
-      y="122"
-      fill="rgba(255,255,255,0.3)"
-      fontSize="9"
-      fontFamily="Georgia, serif"
-      fontStyle="italic"
-    >
-      θ
-    </text>
-
-    {/* Tip labels */}
-    <text
-      x="316"
-      y="127"
-      fill="rgba(152,150,245,0.9)"
-      fontSize="10"
-      fontFamily="Georgia, serif"
-      fontStyle="italic"
-    >
-      a
-    </text>
-    <text
-      x="112"
-      y="127"
-      fill="rgba(152,150,245,0.9)"
-      fontSize="10"
-      fontFamily="Georgia, serif"
-      fontStyle="italic"
-    >
-      −a
-    </text>
   </svg>
 );
-
-// ─── Component ────────────────────────────────────────────────────────────────
 
 const ForgotPassword: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -230,20 +67,25 @@ const ForgotPassword: React.FC = () => {
   };
 
   return (
-    <div className="auth-container">
+    <div className="auth-container bg-[#F5F4ED] font-[Be_Vietnam_Pro]">
       {/* ── Left panel ── */}
       <div className="auth-left">
         <div className="auth-brand">
           <Link to="/" className="auth-brand-link" aria-label="Về trang chủ MathMaster">
             <span className="auth-logo-text-icon">∑π</span>
             <div>
-              <h1>MathMaster</h1>
+              <h1
+                className="font-medium text-[#141413]"
+                style={{ fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 500 }}
+              >
+                MathMaster
+              </h1>
             </div>
           </Link>
           <p className="brand-tagline">Nền tảng hỗ trợ giảng dạy toán học</p>
         </div>
 
-        <MathLemniscate />
+        <MathLemniscateWarm />
 
         <blockquote className="auth-quote">
           <p>"Không có vấn đề nào trong toán học không thể giải quyết được."</p>
@@ -267,79 +109,42 @@ const ForgotPassword: React.FC = () => {
       </div>
 
       {/* ── Right panel ── */}
-      <div className="auth-right">
-        <div className="auth-right-deco" aria-hidden="true">
-          <span className="rdeco-chip rdeco-chip--1">
-            e<sup>iπ</sup> + 1 = 0
-          </span>
-          <span className="rdeco-chip rdeco-chip--2">∫₀^∞ e⁻ˣ dx = 1</span>
-          <span className="rdeco-chip rdeco-chip--3">a² + b² = c²</span>
-          <span className="rdeco-chip rdeco-chip--4">lim(x→∞)</span>
-
-          <svg
-            className="rdeco-orbit"
-            viewBox="0 0 200 200"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <circle
-              cx="100"
-              cy="100"
-              r="70"
-              stroke="rgba(94,92,230,0.12)"
-              strokeWidth="1"
-              strokeDasharray="4 3"
-            />
-            <circle cx="100" cy="30" r="5" fill="rgba(94,92,230,0.4)" />
-          </svg>
-
-          <svg
-            className="rdeco-parabola"
-            viewBox="0 0 180 100"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M10,90 Q90,5 170,90"
-              stroke="rgba(94,92,230,0.2)"
-              strokeWidth="1.5"
-              strokeDasharray="5 4"
-              strokeLinecap="round"
-            />
-            <circle className="rdeco-tracer" r="4" fill="rgba(94,92,230,0.55)" />
-          </svg>
-
-          <span className="rdeco-sym rdeco-sym--1">∑</span>
-          <span className="rdeco-sym rdeco-sym--2">∞</span>
-          <span className="rdeco-sym rdeco-sym--3">θ</span>
-          <span className="rdeco-sym rdeco-sym--4">∂</span>
-        </div>
-
-        <Link to="/login" className="auth-nav-link auth-nav" aria-label="Quay lại đăng nhập">
-          ← Quay lại đăng nhập
+      <div className="auth-right flex-1 bg-[#F5F4ED]">
+        <Link
+          to="/login"
+          className="auth-nav-link auth-nav inline-flex items-center gap-2 rounded-xl px-3 py-2 font-[Be_Vietnam_Pro] text-[#5E5D59] shadow-[0px_0px_0px_1px_#D1CFC5] transition-all duration-150 hover:text-[#141413] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:ring-offset-2"
+          aria-label="Quay lại đăng nhập"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Quay lại đăng nhập
         </Link>
 
-        <div className="auth-card">
+        <div className="auth-card bg-[#FAF9F5] shadow-[0px_0px_0px_1px_#D1CFC5]">
           <div className="auth-card-inner">
             {isSuccess ? (
               /* ── Success state ── */
               <div className="reg-success">
                 <div className="reg-success__icon-wrap">
                   <div className="reg-success__icon">
-                    <MailSentIcon />
+                    <Mail className="h-12 w-12 text-[#5E5D59]" />
                   </div>
                 </div>
-                <h2 className="reg-success__title">Kiểm tra hộp thư!</h2>
+                <h2
+                  className="reg-success__title font-medium"
+                  style={{ fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 500 }}
+                >
+                  Kiểm tra hộp thư!
+                </h2>
                 <p className="reg-success__body">
                   Nếu địa chỉ <strong>{email}</strong> tồn tại trong hệ thống, chúng tôi đã gửi link
                   đặt lại mật khẩu. Vui lòng kiểm tra hộp thư đến (và thư mục spam).
                 </p>
-                <span className="reg-success__hint">
-                  ⏱ Link có hiệu lực trong <strong>15 phút</strong>
+                <span className="reg-success__hint inline-flex items-center gap-2">
+                  <Clock3 className="h-4 w-4" /> Link có hiệu lực trong <strong>15 phút</strong>
                 </span>
                 <button
                   type="button"
-                  className="btn btn-primary btn-block reg-success__btn"
+                  className="btn btn-primary btn-block reg-success__btn bg-[#C96442] font-[Be_Vietnam_Pro] shadow-[0px_0px_0px_1px_#D1CFC5] transition-all duration-150 hover:brightness-95 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:ring-offset-2"
                   onClick={() => {
                     setIsSuccess(false);
                     setEmail('');
@@ -362,7 +167,12 @@ const ForgotPassword: React.FC = () => {
               /* ── Request form ── */
               <>
                 <div className="auth-header">
-                  <h2>Quên mật khẩu</h2>
+                  <h2
+                    className="font-medium text-[#141413]"
+                    style={{ fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 500 }}
+                  >
+                    Quên mật khẩu
+                  </h2>
                   <p>Nhập email đã đăng ký — chúng tôi sẽ gửi link đặt lại mật khẩu</p>
                 </div>
 
@@ -375,13 +185,13 @@ const ForgotPassword: React.FC = () => {
                     </label>
                     <div className="input-icon-wrap">
                       <span className="input-icon">
-                        <EmailIcon />
+                        <Mail className="h-4 w-4" />
                       </span>
                       <input
                         type="email"
                         id="email"
                         name="email"
-                        className="form-control with-icon"
+                        className="form-control with-icon font-[Be_Vietnam_Pro] shadow-[0px_0px_0px_1px_#D1CFC5] focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:ring-offset-2"
                         placeholder="your.email@example.com"
                         value={email}
                         onChange={handleChange}
@@ -395,7 +205,7 @@ const ForgotPassword: React.FC = () => {
 
                   <button
                     type="submit"
-                    className="btn btn-primary btn-block"
+                    className="btn btn-primary btn-block bg-[#C96442] font-[Be_Vietnam_Pro] shadow-[0px_0px_0px_1px_#D1CFC5] transition-all duration-150 hover:brightness-95 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:ring-offset-2"
                     disabled={isLoading}
                     style={{ marginTop: '0.5rem' }}
                   >

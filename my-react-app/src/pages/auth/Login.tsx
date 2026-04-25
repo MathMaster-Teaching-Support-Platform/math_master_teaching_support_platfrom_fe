@@ -1,235 +1,42 @@
 import type { CredentialResponse } from '@react-oauth/google';
 import { GoogleLogin } from '@react-oauth/google';
 import React, { useState } from 'react';
+import { ArrowLeft, Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthService } from '../../services/api/auth.service';
 import type { LoginRequest } from '../../types/auth.types';
 import { ApiError } from '../../types/auth.types';
 import './Auth.css';
 
-const EmailIcon = () => (
-  <svg
-    viewBox="0 0 20 20"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.6"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <rect x="2" y="5" width="16" height="12" rx="2" />
-    <polyline points="2,5 10,12 18,5" />
-  </svg>
-);
-
-const LockIcon = () => (
-  <svg
-    viewBox="0 0 20 20"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.6"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <rect x="4" y="9" width="12" height="8" rx="2" />
-    <path d="M7 9V7a3 3 0 016 0v2" />
-    <circle cx="10" cy="13.5" r="1" fill="currentColor" stroke="none" />
-  </svg>
-);
-
-const EyeIcon = () => (
-  <svg
-    viewBox="0 0 20 20"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.6"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M1.5 10S4.5 3.5 10 3.5 18.5 10 18.5 10 15.5 16.5 10 16.5 1.5 10 1.5 10z" />
-    <circle cx="10" cy="10" r="2.5" />
-  </svg>
-);
-
-const EyeOffIcon = () => (
-  <svg
-    viewBox="0 0 20 20"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.6"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <line x1="2" y1="2" x2="18" y2="18" />
-    <path d="M6.7 6.8A7.3 7.3 0 002 10s3 6.5 8 6.5c1.7 0 3.2-.6 4.4-1.6M9 4.1A8.4 8.4 0 0110 4c5 0 8 6 8 6a14 14 0 01-2 2.9" />
-  </svg>
-);
-
-const MathGraph = () => (
-  <svg
-    className="auth-graph"
-    viewBox="0 0 440 260"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    aria-hidden="true"
-  >
-    <defs>
-      <linearGradient id="sinGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-        <stop offset="0%" stopColor="#9896f5" />
-        <stop offset="100%" stopColor="#c084fc" />
-      </linearGradient>
-    </defs>
-
-    {/* Grid — vertical */}
-    {[80, 150, 220, 290, 360].map((x) => (
-      <line
-        key={`v${x}`}
-        x1={x}
-        y1="20"
-        x2={x}
-        y2="240"
-        stroke="rgba(255,255,255,0.06)"
-        strokeWidth="1"
-      />
+const MathGraphWarm = () => (
+  <svg className="auth-graph" viewBox="0 0 520 260" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    {[90, 140, 190, 330, 380, 430].map((x) => (
+      <line key={x} x1={x} y1="32" x2={x} y2="228" stroke="rgba(250,249,245,0.12)" strokeWidth="1" />
     ))}
-    {/* Grid — horizontal */}
-    {[75, 130, 185].map((y) => (
-      <line
-        key={`h${y}`}
-        x1="40"
-        y1={y}
-        x2="410"
-        y2={y}
-        stroke="rgba(255,255,255,0.06)"
-        strokeWidth="1"
-      />
+    {[80, 130, 180].map((y) => (
+      <line key={y} x1="52" y1={y} x2="468" y2={y} stroke="rgba(250,249,245,0.12)" strokeWidth="1" />
     ))}
-
-    {/* X axis */}
-    <line x1="40" y1="130" x2="405" y2="130" stroke="rgba(255,255,255,0.22)" strokeWidth="1.5" />
-    <polygon points="405,126 413,130 405,134" fill="rgba(255,255,255,0.22)" />
-    {/* Y axis */}
-    <line x1="220" y1="245" x2="220" y2="22" stroke="rgba(255,255,255,0.22)" strokeWidth="1.5" />
-    <polygon points="216,22 220,14 224,22" fill="rgba(255,255,255,0.22)" />
-
-    {/* Axis labels */}
-    <text
-      x="416"
-      y="135"
-      fill="rgba(255,255,255,0.3)"
-      fontSize="13"
-      fontFamily="Georgia, serif"
-      fontStyle="italic"
-    >
-      x
-    </text>
-    <text
-      x="226"
-      y="16"
-      fill="rgba(255,255,255,0.3)"
-      fontSize="13"
-      fontFamily="Georgia, serif"
-      fontStyle="italic"
-    >
-      y
-    </text>
-
-    {/* Tick marks on x-axis */}
-    {[80, 150, 290, 360].map((x) => (
-      <line
-        key={`tx${x}`}
-        x1={x}
-        y1="126"
-        x2={x}
-        y2="134"
-        stroke="rgba(255,255,255,0.2)"
-        strokeWidth="1"
-      />
-    ))}
-    {/* Tick marks on y-axis */}
-    {[75, 185].map((y) => (
-      <line
-        key={`ty${y}`}
-        x1="216"
-        y1={y}
-        x2="224"
-        y2={y}
-        stroke="rgba(255,255,255,0.2)"
-        strokeWidth="1"
-      />
-    ))}
-
-    {/* Cosine curve — dashed, light purple */}
-    {/* cos: starts at peak (x=80,y=75), zero at x=150, trough at x=220, zero at x=290, peak at x=360 */}
+    <line x1="52" y1="130" x2="468" y2="130" stroke="rgba(250,249,245,0.42)" strokeWidth="1.3" />
+    <line x1="260" y1="24" x2="260" y2="236" stroke="rgba(250,249,245,0.42)" strokeWidth="1.3" />
     <path
-      d="M 80,75 C 119,75 111,130 150,130 C 189,130 181,185 220,185 C 259,185 251,130 290,130 C 329,130 321,75 360,75"
-      stroke="rgba(192,132,252,0.35)"
-      strokeWidth="1.5"
+      d="M 90,130 C 132,130 124,76 170,76 C 214,76 214,130 260,130 C 306,130 306,184 350,184 C 396,184 388,130 430,130"
+      stroke="#C96442"
+      strokeWidth="2.8"
       strokeLinecap="round"
+    />
+    <path
+      d="M 90,76 C 132,76 124,130 170,130 C 214,130 214,184 260,184 C 306,184 306,130 350,130 C 396,130 388,76 430,76"
+      stroke="rgba(250,249,245,0.55)"
+      strokeWidth="1.8"
       strokeDasharray="5 4"
-    />
-
-    {/* Sine curve — main, gradient */}
-    {/* sin: zero at x=80, peak at x=150, zero at x=220, trough at x=290, zero at x=360 */}
-    <path
-      d="M 80,130 C 119,130 111,75 150,75 C 189,75 181,130 220,130 C 259,130 251,185 290,185 C 329,185 321,130 360,130"
-      stroke="url(#sinGrad)"
-      strokeWidth="2.5"
       strokeLinecap="round"
     />
-
-    {/* Highlight points */}
-    <circle cx="150" cy="75" r="4.5" fill="#9896f5" />
-    <circle cx="290" cy="185" r="4.5" fill="#9896f5" />
-    <circle
-      cx="220"
-      cy="130"
-      r="3.5"
-      fill="rgba(255,255,255,0.4)"
-      stroke="rgba(255,255,255,0.3)"
-      strokeWidth="1"
-    />
-
-    {/* Point labels */}
-    <text
-      x="157"
-      y="70"
-      fill="rgba(152,150,245,0.9)"
-      fontSize="10"
-      fontFamily="Georgia, serif"
-      fontStyle="italic"
-    >
-      max
-    </text>
-    <text
-      x="297"
-      y="200"
-      fill="rgba(152,150,245,0.9)"
-      fontSize="10"
-      fontFamily="Georgia, serif"
-      fontStyle="italic"
-    >
-      min
-    </text>
-
-    {/* Function label */}
-    <text
-      x="58"
-      y="54"
-      fill="rgba(152,150,245,0.75)"
-      fontSize="12"
-      fontFamily="Georgia, serif"
-      fontStyle="italic"
-    >
+    <circle cx="170" cy="76" r="4.6" fill="#C96442" />
+    <circle cx="350" cy="184" r="4.6" fill="#C96442" />
+    <text x="68" y="56" fill="rgba(250,249,245,0.82)" fontSize="13" fontFamily="Georgia, serif" fontStyle="italic">
       f(x) = sin x
     </text>
-    <text
-      x="58"
-      y="72"
-      fill="rgba(192,132,252,0.5)"
-      fontSize="10"
-      fontFamily="Georgia, serif"
-      fontStyle="italic"
-    >
+    <text x="68" y="74" fill="rgba(250,249,245,0.58)" fontSize="11" fontFamily="Georgia, serif" fontStyle="italic">
       g(x) = cos x
     </text>
   </svg>
@@ -339,20 +146,25 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="auth-container">
+    <div className="auth-container bg-[#F5F4ED] font-[Be_Vietnam_Pro]">
       {/* ── Left panel ── */}
       <div className="auth-left">
         <div className="auth-brand">
           <Link to="/" className="auth-brand-link" aria-label="Về trang chủ MathMaster">
             <span className="auth-logo-text-icon">∑π</span>
             <div>
-              <h1>MathMaster</h1>
+              <h1
+                className="font-medium text-[#141413]"
+                style={{ fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 500 }}
+              >
+                MathMaster
+              </h1>
             </div>
           </Link>
           <p className="brand-tagline">Nền tảng hỗ trợ giảng dạy toán học</p>
         </div>
 
-        <MathGraph />
+        <MathGraphWarm />
 
         <blockquote className="auth-quote">
           <p>"Toán học là ngôn ngữ mà Chúa dùng để viết nên vũ trụ."</p>
@@ -376,87 +188,24 @@ const Login: React.FC = () => {
       </div>
 
       {/* ── Right panel ── */}
-      <div className="auth-right">
-        {/* Animated math decorations */}
-        <div className="auth-right-deco" aria-hidden="true">
-          {/* Floating formula chips */}
-          <span className="rdeco-chip rdeco-chip--1">
-            e<sup>iπ</sup> + 1 = 0
-          </span>
-          <span className="rdeco-chip rdeco-chip--2">∫₀^∞ e⁻ˣ dx = 1</span>
-          <span className="rdeco-chip rdeco-chip--3">a² + b² = c²</span>
-          <span className="rdeco-chip rdeco-chip--4">lim(x→∞)</span>
-
-          {/* Animated SVG — orbiting ring */}
-          <svg
-            className="rdeco-orbit"
-            viewBox="0 0 200 200"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <circle
-              cx="100"
-              cy="100"
-              r="70"
-              stroke="rgba(94,92,230,0.12)"
-              strokeWidth="1.5"
-              strokeDasharray="6 4"
-            />
-            <circle
-              cx="100"
-              cy="100"
-              r="45"
-              stroke="rgba(94,92,230,0.08)"
-              strokeWidth="1"
-              strokeDasharray="4 5"
-            />
-            <circle
-              className="rdeco-dot rdeco-dot--a"
-              cx="170"
-              cy="100"
-              r="5"
-              fill="rgba(94,92,230,0.45)"
-            />
-            <circle
-              className="rdeco-dot rdeco-dot--b"
-              cx="55"
-              cy="100"
-              r="3.5"
-              fill="rgba(192,132,252,0.4)"
-            />
-          </svg>
-
-          {/* Animated SVG — parabola trace */}
-          <svg
-            className="rdeco-parabola"
-            viewBox="0 0 180 100"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M10,90 Q90,5 170,90"
-              stroke="rgba(94,92,230,0.2)"
-              strokeWidth="1.5"
-              strokeDasharray="5 4"
-              strokeLinecap="round"
-            />
-            <circle className="rdeco-tracer" r="4" fill="rgba(94,92,230,0.55)" />
-          </svg>
-
-          {/* Floating symbols */}
-          <span className="rdeco-sym rdeco-sym--1">∑</span>
-          <span className="rdeco-sym rdeco-sym--2">∞</span>
-          <span className="rdeco-sym rdeco-sym--3">θ</span>
-          <span className="rdeco-sym rdeco-sym--4">∂</span>
-        </div>
-
-        <Link to="/" className="auth-nav-link auth-nav" aria-label="Về trang chủ">
-          ← Trang chủ
+      <div className="auth-right flex-1 bg-[#F5F4ED]">
+        <Link
+          to="/"
+          className="auth-nav-link auth-nav inline-flex items-center gap-2 rounded-xl px-3 py-2 font-[Be_Vietnam_Pro] text-[#5E5D59] shadow-[0px_0px_0px_1px_#D1CFC5] transition-all duration-150 hover:text-[#141413] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:ring-offset-2"
+          aria-label="Về trang chủ"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Trang chủ
         </Link>
-        <div className="auth-card">
+        <div className="auth-card bg-[#FAF9F5] shadow-[0px_0px_0px_1px_#D1CFC5]">
           <div className="auth-card-inner">
             <div className="auth-header">
-              <h2>Đăng nhập</h2>
+              <h2
+                className="font-medium text-[#141413]"
+                style={{ fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 500 }}
+              >
+                Đăng nhập
+              </h2>
               <p>Chào mừng trở lại — nhập thông tin để tiếp tục</p>
             </div>
 
@@ -469,13 +218,13 @@ const Login: React.FC = () => {
                 </label>
                 <div className="input-icon-wrap">
                   <span className="input-icon">
-                    <EmailIcon />
+                    <Mail className="h-4 w-4" />
                   </span>
                   <input
                     type="email"
                     id="email"
                     name="email"
-                    className="form-control with-icon"
+                    className="form-control with-icon font-[Be_Vietnam_Pro] shadow-[0px_0px_0px_1px_#D1CFC5] focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:ring-offset-2"
                     placeholder="your.email@example.com"
                     value={formData.email}
                     onChange={handleChange}
@@ -491,13 +240,13 @@ const Login: React.FC = () => {
                 </label>
                 <div className="input-icon-wrap">
                   <span className="input-icon">
-                    <LockIcon />
+                    <Lock className="h-4 w-4" />
                   </span>
                   <input
                     type={showPassword ? 'text' : 'password'}
                     id="password"
                     name="password"
-                    className="form-control with-icon with-toggle"
+                    className="form-control with-icon with-toggle font-[Be_Vietnam_Pro] shadow-[0px_0px_0px_1px_#D1CFC5] focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:ring-offset-2"
                     placeholder="••••••••"
                     value={formData.password}
                     onChange={handleChange}
@@ -506,12 +255,12 @@ const Login: React.FC = () => {
                   />
                   <button
                     type="button"
-                    className="pwd-toggle"
+                    className="pwd-toggle transition-all duration-150 hover:text-[#141413] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:ring-offset-2"
                     onClick={() => setShowPassword(!showPassword)}
                     aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
                     tabIndex={-1}
                   >
-                    {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
               </div>
@@ -527,12 +276,19 @@ const Login: React.FC = () => {
                   />
                   <span>Ghi nhớ đăng nhập</span>
                 </label>
-                <Link to="/forgot-password" className="link-text">
+                <Link
+                  to="/forgot-password"
+                  className="link-text transition-colors duration-150 hover:text-[#C96442] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:ring-offset-2"
+                >
                   Quên mật khẩu?
                 </Link>
               </div>
 
-              <button type="submit" className="btn btn-primary btn-block" disabled={isLoading}>
+              <button
+                type="submit"
+                className="btn btn-primary btn-block bg-[#C96442] font-[Be_Vietnam_Pro] shadow-[0px_0px_0px_1px_#D1CFC5] transition-all duration-150 hover:brightness-95 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:ring-offset-2"
+                disabled={isLoading}
+              >
                 {isLoading ? (
                   <>
                     <span className="btn-spinner" /> Đang đăng nhập...
