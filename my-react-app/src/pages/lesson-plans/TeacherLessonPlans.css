@@ -351,7 +351,7 @@
 
 .module-layout-container .create-course-modal .lesson-plan-view-wizard .lp-detail-section {
   box-shadow: none;
-  border-left-width: 3px;
+  border-left-width: 1px;
   background: #ffffff;
   border-color: #e8e6dc;
 }
@@ -432,10 +432,20 @@
   color: #3d3c39;
 }
 
-.module-layout-container .create-course-modal .lesson-plan-view-wizard .lp-ds--blue .lp-detail-list li::before {
+.module-layout-container
+  .create-course-modal
+  .lesson-plan-view-wizard
+  .lp-ds--blue
+  .lp-detail-list
+  li::before {
   background: #c96442;
 }
-.module-layout-container .create-course-modal .lesson-plan-view-wizard .lp-ds--amber .lp-detail-list li::before {
+.module-layout-container
+  .create-course-modal
+  .lesson-plan-view-wizard
+  .lp-ds--amber
+  .lp-detail-list
+  li::before {
   background: #a67c32;
 }
 

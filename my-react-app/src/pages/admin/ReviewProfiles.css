@@ -1257,7 +1257,7 @@
 .module-layout-container.admin-review-profiles-page .rp-list {
   border: none;
   border-radius: 0;
-  border-right: 1px solid var(--rp-border);
+  box-shadow: inset -1px 0 0 var(--rp-border);
 }
 
 .module-layout-container.admin-review-profiles-page .rp-detail {

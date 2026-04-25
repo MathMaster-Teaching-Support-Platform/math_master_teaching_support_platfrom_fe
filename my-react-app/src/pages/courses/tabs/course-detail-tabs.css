@@ -25,7 +25,9 @@
   box-shadow: 0 4px 14px rgba(21, 44, 74, 0.06);
   min-width: 0;
   background: #fff;
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .course-detail-tab .stat-card:hover {
@@ -232,7 +234,9 @@
   font-weight: 600;
   cursor: pointer;
   line-height: 1.2;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .module-layout-container .assessments-tab .cdt-select-inline:hover,
@@ -471,7 +475,7 @@
   height: 100%;
   background: linear-gradient(90deg, #d97706, #fbbf24);
   border-radius: 99px;
-  transition: width 0.3s ease;
+  transition: opacity 0.3s ease;
 }
 
 .cdt-reviews__dist-count {
@@ -519,7 +523,9 @@
   border-radius: 14px;
   border: 1px solid #f0eee6;
   padding: 1.25rem 1.35rem;
-  transition: box-shadow 0.2s ease, border-color 0.2s;
+  transition:
+    box-shadow 0.2s ease,
+    border-color 0.2s;
   box-shadow: rgba(0, 0, 0, 0.03) 0 2px 10px;
 }
 
@@ -594,7 +600,9 @@
   font-weight: 600;
   color: #c96442;
   cursor: pointer;
-  transition: background 0.2s, border-color 0.2s;
+  transition:
+    background 0.2s,
+    border-color 0.2s;
 }
 
 .cdt-reviews__btn-reply:hover {

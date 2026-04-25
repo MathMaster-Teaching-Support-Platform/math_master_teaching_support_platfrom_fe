@@ -371,7 +371,7 @@
   height: 100%;
   border-radius: 99px;
   background: linear-gradient(90deg, #c96442, #e8a077);
-  transition: width 0.4s ease;
+  transition: opacity 0.4s ease;
 }
 
 .module-layout-container .pricing-m-token-meta {

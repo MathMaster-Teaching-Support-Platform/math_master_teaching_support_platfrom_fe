@@ -1,15 +1,20 @@
 /**
  * UnifiedLessonItem
- * 
+ *
  * Lesson item component that works for both enrolled and non-enrolled users
  * Shows clear lock states and access indicators
  */
 
+import { CheckCircle, Clock, Lock, Paperclip, Play } from 'lucide-react';
 import React from 'react';
-import { Play, Lock, CheckCircle, Clock, Paperclip } from 'lucide-react';
 import type { CourseLessonResponse } from '../../types';
 
-export type AccessReason = 'ENROLLED' | 'FREE_PREVIEW' | 'LOCKED' | 'TEACHER_ACCESS' | 'ADMIN_ACCESS';
+export type AccessReason =
+  | 'ENROLLED'
+  | 'FREE_PREVIEW'
+  | 'LOCKED'
+  | 'TEACHER_ACCESS'
+  | 'ADMIN_ACCESS';
 
 interface UnifiedLessonItemProps {
   lesson: CourseLessonResponse;
@@ -44,10 +49,10 @@ export const UnifiedLessonItem: React.FC<UnifiedLessonItemProps> = ({
     switch (accessReason) {
       case 'FREE_PREVIEW':
         return (
-          <span 
-            className="badge" 
-            style={{ 
-              background: '#dbeafe', 
+          <span
+            className="badge"
+            style={{
+              background: '#dbeafe',
               color: '#1e40af',
               fontSize: '0.7rem',
               padding: '2px 8px',
@@ -60,10 +65,10 @@ export const UnifiedLessonItem: React.FC<UnifiedLessonItemProps> = ({
         );
       case 'LOCKED':
         return (
-          <span 
-            className="badge" 
-            style={{ 
-              background: '#f1f5f9', 
+          <span
+            className="badge"
+            style={{
+              background: '#f1f5f9',
               color: '#64748b',
               fontSize: '0.7rem',
               padding: '2px 8px',
@@ -80,10 +85,10 @@ export const UnifiedLessonItem: React.FC<UnifiedLessonItemProps> = ({
       case 'TEACHER_ACCESS':
       case 'ADMIN_ACCESS':
         return (
-          <span 
-            className="badge" 
-            style={{ 
-              background: '#f3e8ff', 
+          <span
+            className="badge"
+            style={{
+              background: '#f3e8ff',
               color: '#7c3aed',
               fontSize: '0.7rem',
               padding: '2px 8px',
@@ -134,7 +139,7 @@ export const UnifiedLessonItem: React.FC<UnifiedLessonItemProps> = ({
         padding: '0.85rem 1.2rem',
         background: getBackgroundColor(),
         cursor: canAccess ? 'pointer' : 'not-allowed',
-        borderLeft: `4px solid ${getBorderColor()}`,
+        boxShadow: `inset 2px 0 0 ${getBorderColor()}`,
         borderBottom: '1px solid #f1f5f9',
         transition: 'all 0.2s ease',
         opacity: canAccess ? 1 : 0.7,
@@ -158,20 +163,14 @@ export const UnifiedLessonItem: React.FC<UnifiedLessonItemProps> = ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: isCompleted 
-            ? '#dcfce7' 
-            : isPlaying 
-              ? '#1f5eff' 
+          background: isCompleted
+            ? '#dcfce7'
+            : isPlaying
+              ? '#1f5eff'
               : !canAccess
                 ? '#e2e8f0'
                 : '#e8eef8',
-          color: isCompleted 
-            ? '#15803d' 
-            : isPlaying 
-              ? '#fff' 
-              : !canAccess
-                ? '#94a3b8'
-                : '#60748f',
+          color: isCompleted ? '#15803d' : isPlaying ? '#fff' : !canAccess ? '#94a3b8' : '#60748f',
         }}
       >
         {getIcon()}
@@ -191,20 +190,22 @@ export const UnifiedLessonItem: React.FC<UnifiedLessonItemProps> = ({
             flexWrap: 'wrap',
           }}
         >
-          <span style={{ 
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-          }}>
+          <span
+            style={{
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
             {lesson.videoTitle ?? lesson.lessonTitle ?? 'Bài học'}
           </span>
           {getAccessBadge()}
         </div>
         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
           {lesson.durationSeconds && (
-            <span 
-              className="muted" 
-              style={{ 
+            <span
+              className="muted"
+              style={{
                 fontSize: '0.75rem',
                 display: 'flex',
                 alignItems: 'center',
@@ -238,9 +239,9 @@ export const UnifiedLessonItem: React.FC<UnifiedLessonItemProps> = ({
         {canAccess && (
           <button
             className="btn secondary"
-            style={{ 
-              padding: '0.4rem 0.8rem', 
-              fontSize: '0.75rem', 
+            style={{
+              padding: '0.4rem 0.8rem',
+              fontSize: '0.75rem',
               height: 'fit-content',
               display: 'flex',
               alignItems: 'center',
@@ -257,9 +258,9 @@ export const UnifiedLessonItem: React.FC<UnifiedLessonItemProps> = ({
         {!canAccess && onEnroll && (
           <button
             className="btn primary"
-            style={{ 
-              padding: '0.4rem 0.8rem', 
-              fontSize: '0.75rem', 
+            style={{
+              padding: '0.4rem 0.8rem',
+              fontSize: '0.75rem',
               height: 'fit-content',
               display: 'flex',
               alignItems: 'center',
