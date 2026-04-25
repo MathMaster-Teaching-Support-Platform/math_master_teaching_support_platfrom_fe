@@ -20,6 +20,8 @@ import {
   Pie,
   Cell,
 } from 'recharts';
+import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { mockAdmin } from '../../data/mockData';
 import AdminFinanceStudioShell from './AdminFinanceStudioShell';
 import {
   cashFlowService,
@@ -174,8 +176,13 @@ const CashFlowDashboard: React.FC = () => {
   };
 
   return (
-    <AdminFinanceStudioShell title="Dòng tiền (Cash Flow)">
-      {/* ─── Header & Filters ─── */}
+    <DashboardLayout
+      role="admin"
+      user={{ name: mockAdmin.name, avatar: mockAdmin.avatar, role: 'admin' }}
+      contentClassName="dashboard-content--flush-bleed"
+    >
+      <AdminFinanceStudioShell title="Dòng tiền (Cash Flow)">
+        {/* ─── Header & Filters ─── */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div className="flex items-center gap-3">
           <div className="flex items-center bg-white border border-gray-200 rounded-lg overflow-hidden">
@@ -471,6 +478,7 @@ const CashFlowDashboard: React.FC = () => {
         )}
       </div>
     </AdminFinanceStudioShell>
+    </DashboardLayout>
   );
 };
 
