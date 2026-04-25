@@ -8,15 +8,16 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
-  CheckCircle2,
+  BookOpen,
+  ChevronDown,
   Clock,
   Eye,
-  EyeOff,
   FileText,
   GripVertical,
+  Layout,
   Paperclip,
   Pencil,
-  PlayCircle,
+  Play,
   Plus,
   Trash2,
   Video,
@@ -39,7 +40,9 @@ import {
 import { CourseService } from '../../../services/api/course.service';
 import { LessonSlideService } from '../../../services/api/lesson-slide.service';
 import { VideoUploadService } from '../../../services/api/videoUpload.service';
+import { AuthService } from '../../../services/api/auth.service';
 import '../../../styles/module-refactor.css';
+import '../StudentCourses.css';
 import './course-detail-tabs.css';
 import './CourseLessonsTab.css';
 import type { CourseLessonResponse, CourseResponse } from '../../../types';
@@ -99,6 +102,82 @@ const triggerBlobDownload = (blob: Blob, filename?: string) => {
   link.click();
   link.remove();
   setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+};
+
+// Inline Video Player Component
+const InlinePlayer: React.FC<{
+  courseId: string;
+  courseLessonId: string;
+  title: string;
+  initialTime?: number;
+  onTimeUpdate?: (time: number) => void;
+  onLessonComplete?: () => void;
+}> = ({ courseId, courseLessonId, title, initialTime = 0, onTimeUpdate, onLessonComplete }) => {
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError('');
+    VideoUploadService.getVideoUrl(courseId, courseLessonId)
+      .then((r) => {
+        if (!cancelled) setVideoUrl(r.result);
+      })
+      .catch((e) => {
+        if (!cancelled) setError(e instanceof Error ? e.message : 'Không thể tải video');
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [courseId, courseLessonId]);
+
+  return (
+    <div style={{ background: '#000', borderRadius: 12, overflow: 'hidden', width: '100%' }}>
+      <div
+        style={{
+          aspectRatio: '16/9',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          position: 'relative',
+        }}
+      >
+        {loading && <p style={{ color: '#94a3b8' }}>Đang tải video...</p>}
+        {error && <p style={{ color: '#f87171' }}>{error}</p>}
+        {videoUrl && !loading && (
+          <video
+            key={videoUrl}
+            src={videoUrl}
+            controls
+            autoPlay
+            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+            onLoadedMetadata={(e) => {
+              if (initialTime > 0) {
+                (e.target as HTMLVideoElement).currentTime = initialTime;
+              }
+            }}
+            onTimeUpdate={(e) => {
+              if (onTimeUpdate) {
+                onTimeUpdate((e.target as HTMLVideoElement).currentTime);
+              }
+            }}
+            onEnded={onLessonComplete}
+            onError={() => setError('Không thể phát video. Vui lòng thử lại.')}
+          />
+        )}
+      </div>
+      <div style={{ padding: '1rem', background: '#fff', borderBottom: '1px solid #e2e8f0' }}>
+        <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--mod-ink)' }}>
+          {title}
+        </h3>
+      </div>
+    </div>
+  );
 };
 
 interface CourseLessonsTabProps {
@@ -782,333 +861,7 @@ function EditLessonModal({
   );
 }
 
-// Lesson Row Component
-function LessonRow({
-  lesson,
-  onRequestDeleteLesson,
-  onRequestDeleteMaterial,
-  onDownloadMaterial,
-  onEdit,
-  deletePending,
-  courseId,
-}: {
-  courseId: string;
-  lesson: CourseLessonResponse;
-  onRequestDeleteLesson: () => void;
-  onRequestDeleteMaterial: (materialId: string, materialName: string) => void;
-  onDownloadMaterial: (lesson: CourseLessonResponse, material: LessonMaterial) => void;
-  onEdit: () => void;
-  deletePending: boolean;
-}) {
-  const [showMaterials, setShowMaterials] = useState(false);
-  const [showPlayer, setShowPlayer] = useState(false);
-  const [resolvedVideoUrl, setResolvedVideoUrl] = useState<string | null>(null);
-  const [loadingVideoUrl, setLoadingVideoUrl] = useState(false);
-  const [videoUrlError, setVideoUrlError] = useState('');
-  const addMaterialMutation = useAddMaterial();
-  const updateMutation = useUpdateCourseLesson();
 
-  useEffect(() => {
-    if (!showPlayer || !lesson.id) {
-      return;
-    }
-
-    let cancelled = false;
-    setLoadingVideoUrl(true);
-    setVideoUrlError('');
-
-    VideoUploadService.getVideoUrl(courseId, lesson.id)
-      .then((response) => {
-        if (!cancelled) {
-          setResolvedVideoUrl(response.result || null);
-        }
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          setResolvedVideoUrl(null);
-          setVideoUrlError(err instanceof Error ? err.message : 'Không thể tải video bài học.');
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setLoadingVideoUrl(false);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [showPlayer, lesson.id, courseId]);
-
-  const handleToggleFreePreview = () => {
-    updateMutation.mutate({
-      courseId,
-      lessonId: lesson.id,
-      request: {
-        isFreePreview: !lesson.isFreePreview,
-      },
-    });
-  };
-
-  const materialsList = useMemo(() => parseLessonMaterials(lesson.materials), [lesson.materials]);
-
-  const fmtDuration = (secs?: number | null) => {
-    if (!secs) return null;
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
-    return `${m}:${String(s).padStart(2, '0')}`;
-  };
-
-  return (
-    <>
-      <tr>
-        <td className="muted">{lesson.orderIndex ?? '—'}</td>
-        <td>
-          <div style={{ fontWeight: 600 }}>{lesson.lessonTitle ?? '—'}</div>
-        </td>
-        <td>
-          {lesson.videoUrl ? (
-            <div className="row" style={{ gap: 6 }}>
-              <CheckCircle2 size={14} style={{ color: '#059669' }} />
-              <span>{lesson.videoTitle ?? 'Đã upload'}</span>
-              <button
-                className="btn secondary"
-                style={{ padding: '0.2rem 0.45rem', marginLeft: 4 }}
-                title="Xem lại video"
-                onClick={() => setShowPlayer((p) => !p)}
-              >
-                <PlayCircle size={13} style={{ color: showPlayer ? '#2563eb' : '#475569' }} />
-              </button>
-            </div>
-          ) : (
-            <span className="muted">Chưa có video</span>
-          )}
-        </td>
-        <td>
-          {lesson.durationSeconds ? (
-            <div className="row" style={{ gap: 4 }}>
-              <Clock size={13} />
-              <span>{fmtDuration(lesson.durationSeconds)}</span>
-            </div>
-          ) : (
-            <span className="muted">—</span>
-          )}
-        </td>
-        <td
-          onClick={handleToggleFreePreview}
-          style={{ cursor: updateMutation.isPending ? 'wait' : 'pointer' }}
-          title={
-            lesson.isFreePreview
-              ? 'Click to lock this lesson'
-              : 'Click to make this lesson free for preview'
-          }
-        >
-          {lesson.isFreePreview ? (
-            <span
-              className="badge published"
-              style={{ display: 'inline-flex', alignItems: 'center', transition: 'all 0.2s' }}
-            >
-              <Eye size={11} style={{ marginRight: 4 }} />
-              Xem trước
-            </span>
-          ) : (
-            <span
-              className="badge draft"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                opacity: 0.7,
-                transition: 'all 0.2s',
-              }}
-            >
-              <EyeOff size={11} style={{ marginRight: 4 }} />
-              Đăng ký để xem
-            </span>
-          )}
-        </td>
-        <td>
-          <div
-            className={`row ${showMaterials ? 'active' : ''}`}
-            style={{
-              gap: 6,
-              cursor: 'pointer',
-              color: materialsList.length > 0 ? '#2563eb' : '#64748b',
-            }}
-            onClick={() => setShowMaterials(!showMaterials)}
-          >
-            <Paperclip size={14} />
-            <span style={{ fontWeight: materialsList.length > 0 ? 600 : 400 }}>
-              {materialsList.length} tài liệu
-            </span>
-          </div>
-        </td>
-        <td>
-          <div className="row" style={{ gap: 6 }}>
-            <button
-              className="btn secondary"
-              style={{ padding: '0.35rem 0.6rem' }}
-              title="Chỉnh sửa"
-              onClick={onEdit}
-            >
-              <Pencil size={13} />
-            </button>
-            <button
-              className="btn danger"
-              style={{ padding: '0.35rem 0.6rem' }}
-              disabled={deletePending}
-              onClick={onRequestDeleteLesson}
-            >
-              <Trash2 size={13} />
-            </button>
-          </div>
-        </td>
-      </tr>
-      {showPlayer && lesson.videoUrl && (
-        <tr style={{ background: '#f0f7ff' }}>
-          <td colSpan={7} style={{ padding: '0.75rem 2rem 1rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: '0.5rem' }}>
-              <Video size={14} style={{ color: '#2563eb' }} />
-              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#1e3a5f' }}>
-                {lesson.videoTitle ?? lesson.lessonTitle ?? 'Video bài học'}
-              </span>
-              <button
-                className="btn secondary"
-                style={{ padding: '0.15rem 0.4rem', fontSize: '0.75rem', marginLeft: 'auto' }}
-                onClick={() => setShowPlayer(false)}
-              >
-                Đóng
-              </button>
-            </div>
-            {loadingVideoUrl ? (
-              <p className="muted" style={{ margin: 0 }}>
-                Đang tải video bài học...
-              </p>
-            ) : videoUrlError ? (
-              <p style={{ margin: 0, color: '#ef4444' }}>{videoUrlError}</p>
-            ) : resolvedVideoUrl ? (
-              <video
-                key={resolvedVideoUrl}
-                controls
-                style={{
-                  width: '100%',
-                  maxHeight: '360px',
-                  borderRadius: '8px',
-                  background: '#000',
-                  display: 'block',
-                }}
-              >
-                <source src={resolvedVideoUrl} />
-                Trình duyệt của bạn không hỗ trợ phát video.
-              </video>
-            ) : (
-              <p className="muted" style={{ margin: 0 }}>
-                Không có đường dẫn video khả dụng.
-              </p>
-            )}
-          </td>
-        </tr>
-      )}
-      {showMaterials && (
-        <tr style={{ background: '#f8fafc' }}>
-          <td colSpan={7} style={{ padding: '1rem 2rem' }}>
-            <div style={{ boxShadow: 'inset 2px 0 0 #e2e8f0', paddingLeft: '1.5rem' }}>
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: '1rem',
-                }}
-              >
-                <h4 style={{ margin: 0, fontSize: '0.9rem', color: '#475569' }}>
-                  Tài liệu đính kèm
-                </h4>
-                <label
-                  className="btn secondary"
-                  style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', cursor: 'pointer' }}
-                >
-                  <Plus size={12} style={{ marginRight: 4 }} />
-                  Tải lên tài liệu
-                  <input
-                    type="file"
-                    style={{ display: 'none' }}
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        addMaterialMutation.mutate({ courseId, lessonId: lesson.id, file });
-                      }
-                    }}
-                  />
-                </label>
-              </div>
-
-              {materialsList.length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  {materialsList.map((m: LessonMaterial) => (
-                    <div
-                      key={m.id || m.name || 'material-item'}
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        background: 'white',
-                        padding: '0.5rem 0.75rem',
-                        borderRadius: '6px',
-                        border: '1px solid #e2e8f0',
-                      }}
-                    >
-                      <div className="row" style={{ gap: 8 }}>
-                        <FileText size={14} style={{ color: '#64748b' }} />
-                        {m.id ? (
-                          <button
-                            type="button"
-                            onClick={() => onDownloadMaterial(lesson, m)}
-                            style={{
-                              fontSize: '0.85rem',
-                              color: '#1e293b',
-                              background: 'transparent',
-                              border: 'none',
-                              padding: 0,
-                              cursor: 'pointer',
-                              textDecoration: 'none',
-                            }}
-                            onMouseOver={(e) =>
-                              (e.currentTarget.style.textDecoration = 'underline')
-                            }
-                            onMouseOut={(e) => (e.currentTarget.style.textDecoration = 'none')}
-                          >
-                            {m.name}
-                          </button>
-                        ) : (
-                          <span style={{ fontSize: '0.85rem', color: '#64748b' }}>{m.name}</span>
-                        )}
-                        <span className="muted" style={{ fontSize: '0.75rem' }}>
-                          ({((m.size || 0) / 1024).toFixed(1)} KB)
-                        </span>
-                      </div>
-                      <button
-                        className="btn-icon"
-                        style={{ color: '#ef4444' }}
-                        onClick={() => m.id && onRequestDeleteMaterial(m.id, m.name || 'Tài liệu')}
-                        disabled={!m.id}
-                      >
-                        <Trash2 size={13} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="muted" style={{ fontSize: '0.85rem', fontStyle: 'italic' }}>
-                  Chưa có tài liệu nào.
-                </p>
-              )}
-            </div>
-          </td>
-        </tr>
-      )}
-    </>
-  );
-}
 
 function SortableLessonChip({ lesson }: { lesson: CourseLessonResponse }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -1217,6 +970,11 @@ function LessonReorderStrip({
 // Main Component
 const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course }) => {
   const { showToast } = useToast();
+  const isAdmin = useMemo(() => AuthService.getUserRole() === 'admin', []);
+  const [playingLessonId, setPlayingLessonId] = useState<string | null>(null);
+  const [showResources, setShowResources] = useState<string | null>(null);
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+
   const [showUpload, setShowUpload] = useState(false);
   const [editingLesson, setEditingLesson] = useState<CourseLessonResponse | null>(null);
   const [addSectionOpen, setAddSectionOpen] = useState(false);
@@ -1227,15 +985,60 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
   const { data: lessonsData, isLoading, refetch } = useCourseLessons(courseId);
   const { data: sectionsData } = useCustomCourseSections(courseId);
   const deleteMutation = useDeleteCourseLesson();
+  const updateMutation = useUpdateCourseLesson();
   const reorderMutation = useReorderCourseLessons();
+  const addMaterialMutation = useAddMaterial();
   const removeMaterialMutation = useRemoveMaterial();
 
   const createSectionMutation = useCreateSection();
   const updateSectionMutation = useUpdateSection();
   const deleteSectionMutation = useDeleteSection();
 
-  const lessons: CourseLessonResponse[] = lessonsData?.result ?? [];
-  const sections = sectionsData?.result ?? [];
+  const lessons: CourseLessonResponse[] = useMemo(() => {
+    return (lessonsData?.result ?? []).sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
+  }, [lessonsData]);
+
+  const sections = useMemo(() => {
+    return (sectionsData?.result ?? []).sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
+  }, [sectionsData]);
+
+  // Group lessons by section OR chapter
+  const curriculumHierarchy = useMemo(() => {
+    const groups: Array<{
+      id: string;
+      title: string;
+      lessons: CourseLessonResponse[];
+      type: 'SECTION' | 'CHAPTER' | 'OTHER';
+    }> = [];
+
+    lessons.forEach((lesson) => {
+      const section = sections.find((s) => s.id === lesson.sectionId);
+      const groupId = lesson.sectionId || lesson.chapterId || 'no-group';
+      const groupTitle =
+        section?.title ||
+        lesson.chapterTitle ||
+        (lesson.sectionId ? 'Mục chưa đặt tên' : lesson.chapterId ? 'Chương chưa đặt tên' : 'Khác');
+      const groupType = lesson.sectionId ? 'SECTION' : lesson.chapterId ? 'CHAPTER' : 'OTHER';
+
+      let group = groups.find((g) => g.id === groupId);
+      if (!group) {
+        group = { id: groupId, title: groupTitle, lessons: [], type: groupType };
+        groups.push(group);
+      }
+      group.lessons.push(lesson);
+    });
+
+    return groups;
+  }, [lessons, sections]);
+
+  const toggleSection = (sId: string) => {
+    setCollapsedSections((prev) => ({ ...prev, [sId]: !prev[sId] }));
+  };
+
+  const handleLessonSelect = (lesson: CourseLessonResponse) => {
+    setPlayingLessonId(lesson.id);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const persistReorder = (orderedLessons: CourseLessonResponse[]) => {
     reorderMutation.mutate(
@@ -1294,6 +1097,318 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
     }
   };
 
+  const renderCurriculum = (isSidebar = false) => {
+    if (curriculumHierarchy.length === 0) {
+      return isSidebar ? null : (
+        <div className="cdt-empty">
+          <BookOpen size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
+          <p>Chưa có bài học nào.</p>
+        </div>
+      );
+    }
+
+    return curriculumHierarchy.map((group, idx) => (
+      <div key={group.id} className="curriculum-group">
+        <div
+          className="section-header"
+          onClick={() => toggleSection(group.id)}
+          style={isSidebar ? { padding: '0.65rem 1rem', background: '#f8fafc' } : {}}
+        >
+          <div className="section-title-area">
+            <ChevronDown
+              size={isSidebar ? 14 : 18}
+              style={{
+                transform: collapsedSections[group.id] ? 'rotate(-90deg)' : 'none',
+                transition: 'transform 0.2s',
+              }}
+            />
+            <span className="section-label" style={isSidebar ? { fontSize: '0.65rem' } : {}}>
+              {group.type === 'CHAPTER'
+                ? `Chương ${idx + 1}`
+                : group.type === 'SECTION'
+                  ? `Mục ${idx + 1}`
+                  : 'Khác'}
+            </span>
+            <span className="section-title" style={isSidebar ? { fontSize: '0.82rem' } : {}}>
+              {group.title}
+            </span>
+          </div>
+          {!isSidebar && !isAdmin && (
+            <div className="section-meta">
+              <span>{group.lessons.length} bài học</span>
+              {group.type === 'SECTION' && (
+                <div className="row" style={{ gap: '0.5rem', marginLeft: '1rem' }}>
+                  <button
+                    className="btn secondary"
+                    style={{ padding: '0.2rem 0.4rem' }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setRenameTarget({ id: group.id, value: group.title });
+                    }}
+                  >
+                    <Pencil size={12} />
+                  </button>
+                  <button
+                    className="btn danger"
+                    style={{ padding: '0.2rem 0.4rem' }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeleteTarget({ k: 'section', sectionId: group.id, title: group.title });
+                    }}
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+          {!isSidebar && isAdmin && (
+            <div className="section-meta">
+              <span>{group.lessons.length} bài học</span>
+            </div>
+          )}
+        </div>
+        <div className={`lessons-group ${collapsedSections[group.id] ? 'collapsed' : ''}`}>
+          {!isSidebar && !isAdmin && group.lessons.length > 1 && (
+            <div style={{ padding: '1rem 1.25rem 0.5rem' }}>
+              <LessonReorderStrip
+                title="Sắp xếp bài học trong phần"
+                lessons={group.lessons}
+                disabled={reorderMutation.isPending}
+                onReordered={persistReorder}
+              />
+            </div>
+          )}
+          {group.lessons.map((l) => renderLessonItem(l, isSidebar))}
+        </div>
+      </div>
+    ));
+  };
+
+  const renderLessonItem = (lesson: CourseLessonResponse, isSidebar = false) => {
+    const isPlaying = lesson.id === playingLessonId;
+    const materialsList = parseLessonMaterials(lesson.materials);
+
+    return (
+      <div key={lesson.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+        <div
+          onClick={() => handleLessonSelect(lesson)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            padding: isSidebar ? '0.65rem 1rem' : '0.85rem 1.2rem',
+            background: isPlaying ? '#eff6ff' : '#fff',
+            cursor: 'pointer',
+            borderLeft: isPlaying ? '4px solid #1f5eff' : '4px solid transparent',
+            transition: 'all 0.2s ease',
+          }}
+        >
+          <div
+            style={{
+              width: 30,
+              height: 30,
+              borderRadius: 8,
+              flexShrink: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: isPlaying ? '#1f5eff' : '#e8eef8',
+              color: isPlaying ? '#fff' : '#60748f',
+            }}
+          >
+            <Play size={16} />
+          </div>
+
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div
+              style={{
+                fontSize: isSidebar ? '0.8rem' : '0.88rem',
+                fontWeight: isPlaying ? 700 : 600,
+                color: isPlaying ? '#1e40af' : 'var(--mod-ink)',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              {lesson.videoTitle ?? lesson.lessonTitle ?? 'Bài học'}
+            </div>
+            {!isSidebar && (
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 4 }}>
+                {lesson.durationSeconds && (
+                  <span className="muted" style={{ fontSize: '0.75rem' }}>
+                    <Clock size={11} style={{ marginRight: 3 }} />
+                    {Math.floor(lesson.durationSeconds / 60)} phút
+                  </span>
+                )}
+                {materialsList.length > 0 && (
+                  <span
+                    style={{
+                      fontSize: '0.75rem',
+                      color: '#6366f1',
+                      fontWeight: 600,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 3,
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowResources(showResources === lesson.id ? null : lesson.id);
+                    }}
+                  >
+                    <Paperclip size={11} /> {materialsList.length} tài liệu
+                  </span>
+                )}
+                <span
+                  className={`badge ${lesson.isFreePreview ? 'published' : 'draft'}`}
+                  style={{
+                    fontSize: '0.65rem',
+                    padding: '1px 6px',
+                    cursor: !isAdmin ? 'pointer' : 'default',
+                    opacity: lesson.isFreePreview ? 1 : 0.6,
+                  }}
+                  onClick={(e) => {
+                    if (isAdmin) return;
+                    e.stopPropagation();
+                    updateMutation.mutate({
+                      courseId,
+                      lessonId: lesson.id,
+                      request: { isFreePreview: !lesson.isFreePreview },
+                    });
+                  }}
+                  title={
+                    isAdmin
+                      ? undefined
+                      : lesson.isFreePreview
+                        ? 'Click để khóa bài học'
+                        : 'Click để mở xem thử miễn phí'
+                  }
+                >
+                  {lesson.isFreePreview ? 'Xem trước' : 'Đã khóa'}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {!isSidebar && !isAdmin && (
+            <div className="row" style={{ gap: 8, flexShrink: 0 }}>
+              <button
+                className="btn secondary"
+                style={{ padding: '0.3rem 0.5rem' }}
+                title="Sửa bài học"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setEditingLesson(lesson);
+                }}
+              >
+                <Pencil size={12} />
+              </button>
+              <button
+                className="btn danger"
+                style={{ padding: '0.3rem 0.5rem' }}
+                title="Xóa bài học"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDeleteTarget({ k: 'lesson', lessonId: lesson.id });
+                }}
+              >
+                <Trash2 size={12} />
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Materials List */}
+        {!isSidebar && showResources === lesson.id && materialsList.length > 0 && (
+          <div style={{ padding: '0.5rem 1.25rem 1rem 3.5rem', background: '#f8fafc' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {materialsList.map((m: LessonMaterial) => (
+                <div
+                  key={m.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 8,
+                    padding: '6px 10px',
+                    borderRadius: 6,
+                    border: '1px solid #e2e8f0',
+                    background: '#fff',
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => void handleDownloadMaterial(lesson, m)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      fontSize: '0.8rem',
+                      color: '#475569',
+                      border: 'none',
+                      background: 'none',
+                      cursor: 'pointer',
+                      flex: 1,
+                      textAlign: 'left',
+                    }}
+                  >
+                    <FileText size={13} style={{ color: '#1f5eff' }} />
+                    <span>{m.name}</span>
+                    <span className="muted" style={{ fontSize: '0.7rem' }}>
+                      ({((m.size || 0) / 1024).toFixed(1)} KB)
+                    </span>
+                  </button>
+                  {!isAdmin && (
+                    <button
+                      className="btn-icon"
+                      style={{ color: '#ef4444' }}
+                      onClick={() =>
+                        m.id &&
+                        setDeleteTarget({
+                          k: 'material',
+                          lessonId: lesson.id,
+                          materialId: m.id,
+                          name: m.name || 'Tài liệu',
+                        })
+                      }
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  )}
+                </div>
+              ))}
+              {!isAdmin && (
+                <label
+                  className="btn secondary"
+                  style={{
+                    padding: '0.3rem 0.6rem',
+                    fontSize: '0.75rem',
+                    cursor: 'pointer',
+                    width: 'fit-content',
+                    marginTop: 4,
+                  }}
+                >
+                  <Plus size={12} style={{ marginRight: 4 }} />
+                  Thêm tài liệu
+                  <input
+                    type="file"
+                    style={{ display: 'none' }}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        addMaterialMutation.mutate({ courseId, lessonId: lesson.id, file });
+                      }
+                    }}
+                  />
+                </label>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const submitAddSection = () => {
     const t = newSectionTitle.trim();
     if (!t) {
@@ -1338,259 +1453,211 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
 
   return (
     <div className="course-detail-tab lessons-tab">
-      {/* Stats */}
-      <div className="stats-grid">
-        <div className="stat-card stat-blue">
-          <div className="stat-icon-wrap" aria-hidden>
-            <FileText size={20} />
-          </div>
-          <div className="stat-card__text">
-            <h3>{lessons.length}</h3>
-            <p>Tổng bài học</p>
-            <span className="stat-card__sub">đã upload</span>
-          </div>
-        </div>
-        <div className="stat-card stat-amber">
-          <div className="stat-icon-wrap" aria-hidden>
-            <Eye size={20} />
-          </div>
-          <div className="stat-card__text">
-            <h3>{lessons.filter((l) => l.isFreePreview).length}</h3>
-            <p>Xem thử miễn phí</p>
-            <span className="stat-card__sub">bài học</span>
-          </div>
-        </div>
-        <div className="stat-card stat-emerald">
-          <div className="stat-icon-wrap" aria-hidden>
-            <Video size={20} />
-          </div>
-          <div className="stat-card__text">
-            <h3>{lessons.filter((l) => l.videoUrl).length}</h3>
-            <p>Có video</p>
-            <span className="stat-card__sub">bài học</span>
-          </div>
-        </div>
-      </div>
+      {playingLessonId && lessons.find((l) => l.id === playingLessonId) ? (
+        /* Integrated Player Layout */
+        <div className="player-container">
+          {/* Main Player Area */}
+          <div className="player-main">
+            <InlinePlayer
+              courseId={courseId}
+              courseLessonId={playingLessonId}
+              title={
+                lessons.find((l) => l.id === playingLessonId)?.videoTitle ??
+                lessons.find((l) => l.id === playingLessonId)?.lessonTitle ??
+                'Bài học'
+              }
+              onLessonComplete={() => {
+                const currentIndex = lessons.findIndex((l) => l.id === playingLessonId);
+                if (currentIndex !== -1 && currentIndex < lessons.length - 1) {
+                  const nextLesson = lessons[currentIndex + 1];
+                  setPlayingLessonId(nextLesson.id);
+                }
+              }}
+            />
 
-      {/* Action Bar */}
-      <div className="cdt-toolbar">
-        {course.provider === 'CUSTOM' && (
-          <button
-            type="button"
-            className="btn secondary"
-            onClick={() => {
-              setNewSectionTitle('');
-              setAddSectionOpen(true);
-            }}
-          >
-            <Plus size={14} />
-            Thêm phần
-          </button>
-        )}
-        <button type="button" className="btn cdt-btn-primary" onClick={() => setShowUpload(true)}>
-          <Plus size={14} />
-          Thêm bài học
-        </button>
-      </div>
-
-      {/* Loading */}
-      {isLoading && <div className="cdt-loading">Đang tải danh sách bài học...</div>}
-
-      {/* Empty State */}
-      {!isLoading && lessons.length === 0 && (
-        <div className="cdt-empty">
-          <Video size={40} strokeWidth={1.5} style={{ marginBottom: 12 }} />
-          <p>Chưa có bài học nào. Hãy thêm bài học đầu tiên!</p>
-          <button
-            type="button"
-            className="btn cdt-btn-primary"
-            style={{ marginTop: 12 }}
-            onClick={() => setShowUpload(true)}
-          >
-            <Plus size={14} />
-            Thêm bài học
-          </button>
-        </div>
-      )}
-
-      {/* Lesson Table */}
-      {!isLoading && lessons.length > 0 && course.provider === 'MINISTRY' && (
-        <>
-          <LessonReorderStrip
-            title="Sắp xếp bài học"
-            lessons={[...lessons].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))}
-            disabled={reorderMutation.isPending}
-            onReordered={persistReorder}
-          />
-          <div className="table-wrap">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Bài học</th>
-                  <th>Tiêu đề video</th>
-                  <th>Thời lượng</th>
-                  <th>Xem thử</th>
-                  <th>Tài liệu</th>
-                  <th>Thao tác</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[...lessons]
-                  .sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
-                  .map((lesson) => (
-                    <LessonRow
-                      key={lesson.id}
-                      courseId={courseId}
-                      lesson={lesson}
-                      onDownloadMaterial={handleDownloadMaterial}
-                      onEdit={() => setEditingLesson(lesson)}
-                      onRequestDeleteLesson={() =>
-                        setDeleteTarget({ k: 'lesson', lessonId: lesson.id })
+            {/* Resources Tab below video */}
+            <div className="data-card" style={{ padding: '1.25rem' }}>
+              <h4 style={{ margin: '0 0 1rem', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Paperclip size={18} color="#1f5eff" /> Tài liệu bài học
+              </h4>
+              {lessons.find((l) => l.id === playingLessonId)?.materials ? (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                  {parseLessonMaterials(
+                    lessons.find((l) => l.id === playingLessonId)?.materials
+                  ).map((m: LessonMaterial) => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() =>
+                        void handleDownloadMaterial(
+                          lessons.find((l) => l.id === playingLessonId)!,
+                          m
+                        )
                       }
-                      onRequestDeleteMaterial={(materialId, name) =>
-                        setDeleteTarget({ k: 'material', lessonId: lesson.id, materialId, name })
-                      }
-                      deletePending={deleteMutation.isPending}
-                    />
+                      className="sc-cta-btn"
+                      style={{
+                        fontSize: '0.82rem',
+                        padding: '8px 16px',
+                        border: '1px solid #e2e8f0',
+                      }}
+                    >
+                      <FileText size={14} /> {m.name}
+                    </button>
                   ))}
-              </tbody>
-            </table>
+                </div>
+              ) : (
+                <p className="muted" style={{ fontSize: '0.88rem', fontStyle: 'italic' }}>
+                  Bài học này chưa có tài liệu đính kèm.
+                </p>
+              )}
+            </div>
+
+            <button
+              className="btn secondary"
+              onClick={() => setPlayingLessonId(null)}
+              style={{ alignSelf: 'flex-start' }}
+            >
+              Thoát chế độ xem
+            </button>
           </div>
+
+          {/* Sidebar Curriculum */}
+          <div className="data-card player-sidebar">
+            <div
+              style={{ padding: '1rem', borderBottom: '1px solid #e2e8f0', background: '#f8fbff' }}
+            >
+              <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 800 }}>Nội dung khóa học</h4>
+            </div>
+            <div style={{ maxHeight: 'calc(100vh - 300px)', overflowY: 'auto' }}>
+              {renderCurriculum(true)}
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* Regular Dashboard List Layout */
+        <>
+          {/* Stats */}
+          <div className="stats-grid">
+            <div className="stat-card stat-blue">
+              <div className="stat-icon-wrap" aria-hidden>
+                <FileText size={20} />
+              </div>
+              <div className="stat-card__text">
+                <h3>{lessons.length}</h3>
+                <p>Tổng bài học</p>
+                <span className="stat-card__sub">đã upload</span>
+              </div>
+            </div>
+            <div className="stat-card stat-amber">
+              <div className="stat-icon-wrap" aria-hidden>
+                <Eye size={20} />
+              </div>
+              <div className="stat-card__text">
+                <h3>{lessons.filter((l) => l.isFreePreview).length}</h3>
+                <p>Xem thử miễn phí</p>
+                <span className="stat-card__sub">bài học</span>
+              </div>
+            </div>
+            <div className="stat-card stat-emerald">
+              <div className="stat-icon-wrap" aria-hidden>
+                <Video size={20} />
+              </div>
+              <div className="stat-card__text">
+                <h3>{lessons.filter((l) => l.videoUrl).length}</h3>
+                <p>Có video</p>
+                <span className="stat-card__sub">bài học</span>
+              </div>
+            </div>
+          </div>
+
+          {!isAdmin && (
+            <div className="cdt-toolbar">
+              {course.provider === 'CUSTOM' && (
+                <button
+                  type="button"
+                  className="btn secondary"
+                  onClick={() => {
+                    setNewSectionTitle('');
+                    setAddSectionOpen(true);
+                  }}
+                >
+                  <Plus size={14} />
+                  Thêm phần
+                </button>
+              )}
+              <button
+                type="button"
+                className="btn cdt-btn-primary"
+                onClick={() => setShowUpload(true)}
+              >
+                <Plus size={14} />
+                Thêm bài học
+              </button>
+            </div>
+          )}
+
+          {/* Loading */}
+          {isLoading && <div className="cdt-loading">Đang tải danh sách bài học...</div>}
+
+          {/* Empty State */}
+          {!isLoading && lessons.length === 0 && (
+            <div className="cdt-empty">
+              <Video size={40} strokeWidth={1.5} style={{ marginBottom: 12 }} />
+              <p>Chưa có bài học nào.</p>
+              {!isAdmin && (
+                <button
+                  type="button"
+                  className="btn cdt-btn-primary"
+                  style={{ marginTop: 12 }}
+                  onClick={() => setShowUpload(true)}
+                >
+                  <Plus size={14} />
+                  Thêm bài học
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Lesson Curriculum */}
+          {!isLoading && lessons.length > 0 && (
+            <div className="data-card" style={{ gap: 0, padding: 0, overflow: 'hidden' }}>
+              <div
+                style={{
+                  padding: '1rem 1.2rem',
+                  borderBottom: '1px solid #e8eef8',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+              >
+                <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800 }}>
+                  Giáo trình khóa học
+                </h4>
+                <div className="pill-btn active">
+                  <Layout size={13} style={{ marginRight: 4 }} /> Phân cấp
+                </div>
+              </div>
+
+              {/* Show reorder strips above sections if needed */}
+              {course.provider === 'MINISTRY' && !isAdmin && (
+                <div style={{ padding: '1rem 1.2rem' }}>
+                  <LessonReorderStrip
+                    title="Sắp xếp bài học"
+                    lessons={lessons}
+                    disabled={reorderMutation.isPending}
+                    onReordered={persistReorder}
+                  />
+                </div>
+              )}
+
+              {renderCurriculum()}
+            </div>
+          )}
         </>
       )}
 
-      {/* Edit Modal */}
-      {editingLesson && (
-        <EditLessonModal
-          courseId={courseId}
-          lesson={editingLesson}
-          onClose={() => setEditingLesson(null)}
-          onSuccess={() => void refetch()}
-        />
-      )}
-
-      {/* Custom Sections and Lessons */}
-      {!isLoading && course.provider === 'CUSTOM' && (
-        <div
-          className="sections-container"
-          style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}
-        >
-          {sections
-            .sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
-            .map((section) => {
-              const sectionLessons = lessons
-                .filter((l) => l.sectionId === section.id)
-                .sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
-              return (
-                <div key={section.id} className="data-card section-card cdt-section-card">
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      marginBottom: '1rem',
-                    }}
-                  >
-                    <h3 className="cdt-section-title">
-                      Phần {section.orderIndex}: {section.title}
-                    </h3>
-                    <div className="row" style={{ gap: '0.5rem' }}>
-                      <button
-                        className="btn secondary"
-                        style={{ padding: '0.35rem 0.6rem' }}
-                        title="Chỉnh sửa phần"
-                        onClick={() =>
-                          setRenameTarget({ id: section.id, value: section.title ?? '' })
-                        }
-                      >
-                        <Pencil size={13} />
-                      </button>
-                      <button
-                        className="btn danger"
-                        style={{ padding: '0.35rem 0.6rem' }}
-                        title="Xóa phần"
-                        onClick={() =>
-                          setDeleteTarget({
-                            k: 'section',
-                            sectionId: section.id,
-                            title: section.title,
-                          })
-                        }
-                      >
-                        <Trash2 size={13} />
-                      </button>
-                    </div>
-                  </div>
-
-                  {sectionLessons.length > 1 && (
-                    <LessonReorderStrip
-                      title="Sắp xếp bài học trong phần"
-                      lessons={sectionLessons}
-                      disabled={reorderMutation.isPending}
-                      onReordered={persistReorder}
-                    />
-                  )}
-
-                  {sectionLessons.length > 0 ? (
-                    <div className="table-wrap">
-                      <table className="table">
-                        <thead>
-                          <tr>
-                            <th>#</th>
-                            <th>Bài học</th>
-                            <th>Tiêu đề video</th>
-                            <th>Thời lượng</th>
-                            <th>Xem thử</th>
-                            <th>Tài liệu</th>
-                            <th>Thao tác</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {sectionLessons.map((lesson) => (
-                            <LessonRow
-                              key={lesson.id}
-                              courseId={courseId}
-                              lesson={lesson}
-                              onDownloadMaterial={handleDownloadMaterial}
-                              onEdit={() => setEditingLesson(lesson)}
-                              onRequestDeleteLesson={() =>
-                                setDeleteTarget({ k: 'lesson', lessonId: lesson.id })
-                              }
-                              onRequestDeleteMaterial={(materialId, name) =>
-                                setDeleteTarget({
-                                  k: 'material',
-                                  lessonId: lesson.id,
-                                  materialId,
-                                  name,
-                                })
-                              }
-                              deletePending={deleteMutation.isPending}
-                            />
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <div className="cdt-empty" style={{ padding: '1.5rem' }}>
-                      <p style={{ margin: 0 }}>Chưa có bài học nào trong phần này.</p>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          {sections.length === 0 && (
-            <div className="cdt-empty" style={{ padding: '2rem' }}>
-              <p style={{ margin: 0 }}>
-                Khóa học này chưa có phần nào. Hãy thêm phần trước khi upload video.
-              </p>
-            </div>
-          )}
-        </div>
-      )}
-
       {/* Upload Modal */}
-      {showUpload && course && (
+      {showUpload && course && !isAdmin && (
         <UploadVideoModal
           courseId={courseId}
           course={course}
@@ -1600,7 +1667,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
         />
       )}
 
-      {deleteTarget && (
+      {deleteTarget && !isAdmin && (
         <CltConfirmDeleteModal
           title={
             deleteTarget.k === 'lesson'
@@ -1684,25 +1751,27 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
         />
       )}
 
-      <CltTextSectionModal
-        open={addSectionOpen}
-        onClose={() => {
-          if (createSectionMutation.isPending) return;
-          setAddSectionOpen(false);
-        }}
-        title="Thêm phần mới"
-        description="Mỗi phần nhóm các bài học liên quan, giúp lộ trình dễ theo dõi."
-        label="Tên phần"
-        value={newSectionTitle}
-        onChange={setNewSectionTitle}
-        placeholder="Ví dụ: Phần 1 — Nền tảng"
-        submitLabel="Tạo phần"
-        isPending={createSectionMutation.isPending}
-        submitDisabled={!newSectionTitle.trim()}
-        onSubmit={submitAddSection}
-      />
+      {!isAdmin && (
+        <CltTextSectionModal
+          open={addSectionOpen}
+          onClose={() => {
+            if (createSectionMutation.isPending) return;
+            setAddSectionOpen(false);
+          }}
+          title="Thêm phần mới"
+          description="Mỗi phần nhóm các bài học liên quan, giúp lộ trình dễ theo dõi."
+          label="Tên phần"
+          value={newSectionTitle}
+          onChange={setNewSectionTitle}
+          placeholder="Ví dụ: Phần 1 — Nền tảng"
+          submitLabel="Tạo phần"
+          isPending={createSectionMutation.isPending}
+          submitDisabled={!newSectionTitle.trim()}
+          onSubmit={submitAddSection}
+        />
+      )}
 
-      {renameTarget && (
+      {renameTarget && !isAdmin && (
         <CltTextSectionModal
           open
           onClose={() => {
@@ -1718,6 +1787,16 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
           isPending={updateSectionMutation.isPending}
           submitDisabled={!renameTarget.value.trim()}
           onSubmit={submitRenameSection}
+        />
+      )}
+
+      {/* Edit Modal */}
+      {editingLesson && !isAdmin && (
+        <EditLessonModal
+          courseId={courseId}
+          lesson={editingLesson}
+          onClose={() => setEditingLesson(null)}
+          onSuccess={() => void refetch()}
         />
       )}
     </div>
