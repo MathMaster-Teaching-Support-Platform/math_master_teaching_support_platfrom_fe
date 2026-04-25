@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Download,
   Filter,
@@ -181,7 +181,7 @@ const CashFlowDashboard: React.FC = () => {
       user={{ name: mockAdmin.name, avatar: mockAdmin.avatar, role: 'admin' }}
       contentClassName="dashboard-content--flush-bleed"
     >
-      <AdminFinanceStudioShell title="Dòng tiền (Cash Flow)">
+      <AdminFinanceStudioShell>
         {/* ─── Header & Filters ─── */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div className="flex items-center gap-3">
@@ -287,7 +287,7 @@ const CashFlowDashboard: React.FC = () => {
                   tickFormatter={(val) => `${(val / 1000000).toFixed(0)}M`}
                 />
                 <RechartsTooltip
-                  formatter={(val: number) => formatVND(val)}
+                  formatter={(val) => formatVND(Number(val ?? 0))}
                   labelStyle={{ color: '#374151', fontWeight: 600, marginBottom: 4 }}
                   contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                 />
@@ -316,7 +316,7 @@ const CashFlowDashboard: React.FC = () => {
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <RechartsTooltip formatter={(val: number) => formatVND(val)} />
+                  <RechartsTooltip formatter={(val) => formatVND(Number(val ?? 0))} />
                 </PieChart>
               </ResponsiveContainer>
               <div className="flex-1 overflow-y-auto mt-4 pr-2">

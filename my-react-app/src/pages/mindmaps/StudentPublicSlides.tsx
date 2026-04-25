@@ -8,6 +8,7 @@ import {
   FileText,
   Filter,
   GraduationCap,
+  LoaderCircle,
   Search,
   X,
 } from 'lucide-react';
@@ -16,7 +17,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { API_BASE_URL } from '../../config/api.config';
-import { mockStudent } from '../../data/mockData';
 import { LessonSlideService } from '../../services/api/lesson-slide.service';
 import '../../styles/module-refactor.css';
 import type {
@@ -56,7 +56,8 @@ const resolveThumbnailUrl = (thumbnail?: string | null): string | null => {
   if (!thumbnail) return null;
   if (/^https?:\/\//i.test(thumbnail)) return thumbnail;
   if (thumbnail.startsWith('/api/')) return thumbnail;
-  return `${API_BASE_URL}${thumbnail.startsWith('/') ? thumbnail : `/${thumbnail}`}`;
+  const normalizedThumbnail = thumbnail.startsWith('/') ? thumbnail : `/${thumbnail}`;
+  return `${API_BASE_URL}${normalizedThumbnail}`;
 };
 
 const emptySlidePage = (): PageResult<LessonSlideGeneratedFile> => ({
@@ -304,35 +305,40 @@ export default function StudentPublicSlides() {
   };
 
   return (
-    <DashboardLayout user={mockStudent} role="student">
-      <div className="module-layout-container">
-        <section className="module-page">
+    <DashboardLayout user={{ name: 'Người dùng', avatar: 'ND', role: 'student' }} role="student">
+      <div className="module-layout-container flex-1 bg-[#F5F4ED] font-[Be_Vietnam_Pro] text-[#141413]">
+        <section className="module-page bg-[#F5F4ED] font-[Be_Vietnam_Pro]">
           {/* ── Header ── */}
           <header className="page-header">
             <div className="header-stack">
-              <div className="header-kicker">Student Public Slides</div>
+              <div className="header-kicker font-[Be_Vietnam_Pro] text-[#87867F]">Student Public Slides</div>
               <div className="row" style={{ gap: '0.6rem' }}>
-                <h2>Thư viện slide công khai</h2>
-                {!loadingSlides && <span className="count-chip">{slidesResult.totalElements}</span>}
+                <h2
+                  className="font-medium text-[#141413]"
+                  style={{ fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 500 }}
+                >
+                  Thư viện slide công khai
+                </h2>
+                {!loadingSlides && <span className="count-chip font-[Be_Vietnam_Pro]">{slidesResult.totalElements}</span>}
               </div>
-              <p className="header-sub">Tìm kiếm và tải slide bài giảng công khai</p>
+              <p className="header-sub font-[Be_Vietnam_Pro] text-[#5E5D59]">Tìm kiếm và tải slide bài giảng công khai</p>
             </div>
           </header>
 
           {/* ── Filter panel ── */}
-          <div className="sps-filter-panel">
+          <div className="sps-filter-panel bg-[#FAF9F5] shadow-[0px_0px_0px_1px_#D1CFC5]">
             <div className="sps-filter-panel__head">
               <Filter size={13} />
-              <span>Bộ lọc tìm kiếm</span>
+              <span className="font-[Be_Vietnam_Pro]">Bộ lọc tìm kiếm</span>
             </div>
             <div className="sps-filter-bar">
               <div className="sps-filter-field">
-                <span className="sps-filter-label">
+                <span className="sps-filter-label font-[Be_Vietnam_Pro]">
                   <GraduationCap size={12} />
                   Khối lớp
                 </span>
                 <select
-                  className="sps-select"
+                  className="sps-select font-[Be_Vietnam_Pro] bg-[#FAF9F5] shadow-[0px_0px_0px_1px_#D1CFC5] transition-all duration-150 hover:shadow-[0px_0px_0px_1px_#C2C0B6] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:ring-offset-2"
                   value={gradeId}
                   onChange={(e) => handleGradeChange(e.target.value)}
                   disabled={loadingCatalog}
@@ -347,12 +353,12 @@ export default function StudentPublicSlides() {
               </div>
 
               <div className="sps-filter-field">
-                <span className="sps-filter-label">
+                <span className="sps-filter-label font-[Be_Vietnam_Pro]">
                   <BookOpen size={12} />
                   Môn học
                 </span>
                 <select
-                  className="sps-select"
+                  className="sps-select font-[Be_Vietnam_Pro] bg-[#FAF9F5] shadow-[0px_0px_0px_1px_#D1CFC5] transition-all duration-150 hover:shadow-[0px_0px_0px_1px_#C2C0B6] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:ring-offset-2"
                   value={subjectId}
                   onChange={(e) => handleSubjectChange(e.target.value)}
                   disabled={!gradeId || loadingCatalog}
@@ -367,12 +373,12 @@ export default function StudentPublicSlides() {
               </div>
 
               <div className="sps-filter-field">
-                <span className="sps-filter-label">
+                <span className="sps-filter-label font-[Be_Vietnam_Pro]">
                   <BookMarked size={12} />
                   Chương
                 </span>
                 <select
-                  className="sps-select"
+                  className="sps-select font-[Be_Vietnam_Pro] bg-[#FAF9F5] shadow-[0px_0px_0px_1px_#D1CFC5] transition-all duration-150 hover:shadow-[0px_0px_0px_1px_#C2C0B6] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:ring-offset-2"
                   value={chapterId}
                   onChange={(e) => handleChapterChange(e.target.value)}
                   disabled={!subjectId || loadingCatalog}
@@ -387,12 +393,12 @@ export default function StudentPublicSlides() {
               </div>
 
               <div className="sps-filter-field">
-                <span className="sps-filter-label">
+                <span className="sps-filter-label font-[Be_Vietnam_Pro]">
                   <FileText size={12} />
                   Bài học
                 </span>
                 <select
-                  className="sps-select"
+                  className="sps-select font-[Be_Vietnam_Pro] bg-[#FAF9F5] shadow-[0px_0px_0px_1px_#D1CFC5] transition-all duration-150 hover:shadow-[0px_0px_0px_1px_#C2C0B6] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:ring-offset-2"
                   value={lessonId}
                   onChange={(e) => handleLessonChange(e.target.value)}
                   disabled={!chapterId || loadingCatalog}
@@ -409,12 +415,13 @@ export default function StudentPublicSlides() {
           </div>
 
           {/* ── Toolbar ── */}
-          <div className="toolbar">
+          <div className="toolbar font-[Be_Vietnam_Pro]">
             <label className="search-box">
               <span className="search-box__icon" aria-hidden="true">
                 <Search size={15} />
               </span>
               <input
+                className="font-[Be_Vietnam_Pro] focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:ring-offset-2"
                 placeholder="Tìm theo tên file slide..."
                 value={slideKeyword}
                 onChange={(e) => {
@@ -425,7 +432,7 @@ export default function StudentPublicSlides() {
               {slideKeyword && (
                 <button
                   type="button"
-                  className="search-box__clear"
+                  className="search-box__clear transition-all duration-150 hover:text-[#C96442] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:ring-offset-2"
                   aria-label="Xóa tìm kiếm"
                   onClick={() => {
                     setSlideKeyword('');
@@ -439,7 +446,7 @@ export default function StudentPublicSlides() {
 
             <div className="pill-group">
               <select
-                className="sps-select sps-select--sm"
+                className="sps-select sps-select--sm font-[Be_Vietnam_Pro] bg-[#FAF9F5] shadow-[0px_0px_0px_1px_#D1CFC5] transition-all duration-150 hover:shadow-[0px_0px_0px_1px_#C2C0B6] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:ring-offset-2"
                 value={slideSortBy}
                 onChange={(e) => {
                   setSlideSortBy(e.target.value);
@@ -450,7 +457,7 @@ export default function StudentPublicSlides() {
                 <option value="updatedAt">Cập nhật</option>
               </select>
               <select
-                className="sps-select sps-select--sm"
+                className="sps-select sps-select--sm font-[Be_Vietnam_Pro] bg-[#FAF9F5] shadow-[0px_0px_0px_1px_#D1CFC5] transition-all duration-150 hover:shadow-[0px_0px_0px_1px_#C2C0B6] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:ring-offset-2"
                 value={slideDirection}
                 onChange={(e) => {
                   setSlideDirection(e.target.value as SortDirection);
@@ -461,7 +468,7 @@ export default function StudentPublicSlides() {
                 <option value="ASC">Cũ nhất</option>
               </select>
               <select
-                className="sps-select sps-select--sm"
+                className="sps-select sps-select--sm font-[Be_Vietnam_Pro] bg-[#FAF9F5] shadow-[0px_0px_0px_1px_#D1CFC5] transition-all duration-150 hover:shadow-[0px_0px_0px_1px_#C2C0B6] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:ring-offset-2"
                 value={slideSize}
                 onChange={(e) => {
                   setSlideSize(Number(e.target.value));
@@ -518,7 +525,10 @@ export default function StudentPublicSlides() {
             <>
               <div className="sps-card-grid">
                 {slidesResult.content.map((slide) => (
-                  <div key={slide.id} className="sps-slide-card">
+                  <div
+                    key={slide.id}
+                    className="sps-slide-card bg-[#FAF9F5] shadow-[0px_0px_0px_1px_#D1CFC5] transition-all duration-200 hover:shadow-[0px_0px_0px_1px_#C2C0B6] hover:-translate-y-0.5"
+                  >
                     <div className="sps-slide-card__thumb">
                       {resolveThumbnailUrl(slide.thumbnail) ? (
                         <img
@@ -553,7 +563,7 @@ export default function StudentPublicSlides() {
                     <div className="sps-slide-card__actions">
                       <button
                         type="button"
-                        className="sps-slide-card__btn secondary"
+                        className="sps-slide-card__btn secondary font-[Be_Vietnam_Pro] transition-all duration-150 hover:shadow-[0px_0px_0px_1px_#C2C0B6] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:ring-offset-2"
                         onClick={() => void handlePreviewSlide(slide.id)}
                         disabled={loadingPreviewSlideId === slide.id}
                       >
@@ -562,7 +572,7 @@ export default function StudentPublicSlides() {
                       </button>
                       <button
                         type="button"
-                        className="sps-slide-card__btn primary"
+                        className="sps-slide-card__btn primary font-[Be_Vietnam_Pro] bg-[#C96442] text-[#FAF9F5] shadow-[0px_0px_0px_1px_#C96442] transition-all duration-150 hover:brightness-95 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:ring-offset-2"
                         onClick={() => void handleDownloadSlide(slide.id)}
                         disabled={downloadingSlideId === slide.id || !slide.isPublic}
                       >
@@ -578,7 +588,7 @@ export default function StudentPublicSlides() {
               <div className="sps-pagination">
                 <button
                   type="button"
-                  className="btn secondary"
+                  className="btn secondary font-[Be_Vietnam_Pro] bg-[#E8E6DC] text-[#4D4C48] shadow-[0px_0px_0px_1px_#D1CFC5] transition-all duration-150 hover:shadow-[0px_0px_0px_1px_#C2C0B6] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:ring-offset-2"
                   onClick={() => setSlidePage((prev) => Math.max(prev - 1, 0))}
                   disabled={slidesResult.first}
                 >
@@ -591,7 +601,7 @@ export default function StudentPublicSlides() {
                 </span>
                 <button
                   type="button"
-                  className="btn secondary"
+                  className="btn secondary font-[Be_Vietnam_Pro] bg-[#E8E6DC] text-[#4D4C48] shadow-[0px_0px_0px_1px_#D1CFC5] transition-all duration-150 hover:shadow-[0px_0px_0px_1px_#C2C0B6] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:ring-offset-2"
                   onClick={() =>
                     setSlidePage((prev) =>
                       slidesResult.totalPages > 0
@@ -619,14 +629,19 @@ export default function StudentPublicSlides() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="ai-slide-modal-header">
-              <h3>Xem thử slide</h3>
+              <h3
+                className="font-medium text-[#141413]"
+                style={{ fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 500 }}
+              >
+                Xem thử slide
+              </h3>
               <button
                 type="button"
-                className="ai-slide-modal-close"
+                className="ai-slide-modal-close transition-all duration-150 hover:text-[#C96442] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:ring-offset-2"
                 onClick={closePreview}
                 aria-label="Đóng xem trước"
               >
-                ×
+                <X size={16} />
               </button>
             </div>
             <div className="ai-slide-modal-body">
@@ -634,11 +649,7 @@ export default function StudentPublicSlides() {
                 <div className="ai-slide-math-loader" role="status" aria-live="polite">
                   <div className="ai-slide-math-loader-ring" aria-hidden="true" />
                   <div className="ai-slide-math-loader-symbols" aria-hidden="true">
-                    <span>x²</span>
-                    <span>∫</span>
-                    <span>π</span>
-                    <span>√</span>
-                    <span>Δ</span>
+                    <LoaderCircle className="h-4 w-4 animate-spin text-[#C96442]" />
                   </div>
                   <p>Đang dựng slide toán học...</p>
                 </div>
@@ -657,7 +668,7 @@ export default function StudentPublicSlides() {
                       </div>
                       <div className="ai-slide-iframe-skeleton__hint">
                         <span className="ai-slide-iframe-skeleton__ring" />
-                        Đang tải slide...
+                        {' '}Đang tải slide...
                       </div>
                     </div>
                   )}

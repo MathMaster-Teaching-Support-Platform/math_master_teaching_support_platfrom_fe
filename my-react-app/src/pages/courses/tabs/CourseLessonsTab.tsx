@@ -155,7 +155,6 @@ const InlinePlayer: React.FC<{
               }
             }}
             onEnded={onLessonComplete}
-            onError={() => setError('Không thể phát video. Vui lòng thử lại.')}
           />
         )}
       </div>

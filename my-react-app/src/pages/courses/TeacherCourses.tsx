@@ -89,7 +89,7 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
   });
   const subjectsQuery = useQuery({
     queryKey: ['lesson-slide', 'subjects-by-grade', form.schoolGradeId, 'teacher-courses-modal'],
-    queryFn: () => LessonSlideService.getSubjectsBySchoolGrade(form.schoolGradeId),
+    queryFn: () => LessonSlideService.getSubjectsBySchoolGrade(form.schoolGradeId ?? ''),
     enabled: form.provider === 'MINISTRY' && !!form.schoolGradeId,
     staleTime: 5 * 60_000,
   });
