@@ -119,8 +119,10 @@ export class CourseService {
   }
 
   static async getCourseById(courseId: string): Promise<ApiResponse<CourseResponse>> {
+    const headers = await this.getAuthHeaders().catch(() => ({}));
     const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.COURSE_DETAIL(courseId)}`, {
       method: 'GET',
+      headers: Object.keys(headers).length > 0 ? headers : undefined,
     });
     const data = await this.handleResponse<ApiResponse<CourseResponse>>(res);
     if (data?.result) {
