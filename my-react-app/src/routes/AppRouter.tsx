@@ -54,6 +54,7 @@ import AdminRoadmapEditPage from '../pages/admin/AdminRoadmapEditPage';
 import AdminRoadmapManagementPage from '../pages/admin/AdminRoadmapManagementPage';
 import AdminRoadmapTopicsPage from '../pages/admin/AdminRoadmapTopicsPage';
 import AdminTransactions from '../pages/admin/AdminTransactions';
+import AdminWithdrawals from '../pages/admin/AdminWithdrawals';
 import MarketplaceAnalytics from '../pages/admin/MarketplaceAnalytics';
 import RevenueBreakdown from '../pages/admin/RevenueBreakdown';
 import CashFlowDashboard from '../pages/admin/CashFlowDashboard';
@@ -677,6 +678,14 @@ export const router = createBrowserRouter([
     element: (
       <PrivateRoute>
         <AdminTransactions />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/admin/withdrawals',
+    element: (
+      <PrivateRoute>
+        <AdminWithdrawals />
       </PrivateRoute>
     ),
   },

@@ -5,7 +5,13 @@ export interface ApiResponse<T> {
 }
 
 // ── Enums (confirmed by BE 2026-04-17) ──────────────────────────────────────
-export type TransactionType = 'DEPOSIT' | 'WITHDRAWAL' | 'PAYMENT' | 'COURSE_PURCHASE' | 'INSTRUCTOR_REVENUE' | 'PLATFORM_COMMISSION';
+export type TransactionType =
+  | 'DEPOSIT'
+  | 'WITHDRAWAL'
+  | 'PAYMENT'
+  | 'COURSE_PURCHASE'
+  | 'INSTRUCTOR_REVENUE'
+  | 'PLATFORM_COMMISSION';
 export type TransactionStatus = 'PENDING' | 'PROCESSING' | 'SUCCESS' | 'FAILED' | 'CANCELLED';
 
 export interface WalletSummary {
@@ -61,4 +67,54 @@ export interface DepositResponse {
   qrCode: string;
   orderCode: number;
   paymentLinkId: string;
+}
+
+// ── Withdrawal ────────────────────────────────────────────────────────────────
+export type WithdrawalStatus =
+  | 'PENDING_VERIFY'
+  | 'PENDING_ADMIN'
+  | 'PROCESSING'
+  | 'SUCCESS'
+  | 'REJECTED'
+  | 'CANCELLED';
+
+export interface WithdrawalRequestResponse {
+  withdrawalRequestId: string;
+  amount: number;
+  bankName: string;
+  bankAccountNumber: string;
+  bankAccountName: string;
+  status: WithdrawalStatus;
+  proofImageUrl: string | null;
+  adminNote: string | null;
+  /** transactionId của WalletTransaction (type=WITHDRAWAL) — set khi SUCCESS */
+  transactionId: string | null;
+  processedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  // Admin-only fields
+  userId?: string;
+  userName?: string;
+  userEmail?: string;
+}
+
+export interface WithdrawalPage {
+  content: WithdrawalRequestResponse[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+  size: number;
+}
+
+export interface CreateWithdrawalRequest {
+  amount: number;
+  bankName: string;
+  bankAccountNumber: string;
+  bankAccountName: string;
+  password: string;
+}
+
+export interface VerifyWithdrawalOtpRequest {
+  withdrawalRequestId: string;
+  otpCode: string;
 }
