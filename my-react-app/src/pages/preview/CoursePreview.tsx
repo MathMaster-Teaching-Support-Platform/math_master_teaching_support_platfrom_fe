@@ -16,6 +16,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { CountdownTimer } from '../../components/common/CountdownTimer';
 import { CourseIncludesList } from '../../components/course/CourseIncludesList';
 import { CourseLearningPanels } from '../../components/course/CourseLearningPanels';
+import { InvoiceModal } from '../../components/course/InvoiceModal';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import {
   useCourseDetail,
@@ -29,12 +30,17 @@ import {
 import { AuthService } from '../../services/api/auth.service';
 import { VideoUploadService } from '../../services/api/videoUpload.service';
 import { getEffectivePrice, formatPrice, hasActiveDiscount } from '../../utils/pricing';
+import type { Order } from '../../types/order.types';
 import './CoursePreview.css';
 
 const CoursePreview: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const isAuthenticated = AuthService.isAuthenticated();
+
+  // Invoice state
+  const [showInvoice, setShowInvoice] = useState(false);
+  const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
 
   const [activeTab, setActiveTab] = useState<'overview' | 'curriculum' | 'instructor' | 'reviews'>(
     'overview'
@@ -164,9 +170,16 @@ const CoursePreview: React.FC = () => {
     
     enrollMutation.mutate(id!, {
       onSuccess: (resp) => {
-        const enrollmentId = resp?.result?.id;
-        if (enrollmentId) {
-          navigate(`/student/courses/${enrollmentId}`);
+        if (resp && resp.type === 'order' && resp.result) {
+          // It's an Order
+          setCompletedOrder(resp.result);
+          setShowInvoice(true);
+        } else {
+          // Fallback if it's the old direct enrollment response
+          const enrollmentId = resp?.result?.id;
+          if (enrollmentId) {
+            navigate(`/student/courses/${enrollmentId}`);
+          }
         }
       },
     });
@@ -757,6 +770,13 @@ const CoursePreview: React.FC = () => {
           <p>Đang chuẩn bị video...</p>
         </div>
       )}
+
+      {/* ── Invoice Modal ── */}
+      <InvoiceModal
+        order={completedOrder}
+        isOpen={showInvoice}
+        onClose={() => setShowInvoice(false)}
+      />
 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }

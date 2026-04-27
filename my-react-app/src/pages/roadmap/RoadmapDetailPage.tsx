@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { InvoiceModal } from '../../components/course/InvoiceModal';
 import { mockStudent } from '../../data/mockData';
 import { useCoursePreview, useEnroll, useMyEnrollments } from '../../hooks/useCourses';
 import {
@@ -16,6 +17,7 @@ import type {
   RoadmapEntryTestResultResponse,
   TopicMaterial,
 } from '../../types';
+import type { Order } from '../../types/order.types';
 import './roadmap-detail-page.css';
 
 /* ─────────────────────────────────────────────────────
@@ -285,6 +287,8 @@ export default function RoadmapDetailPage() {
 
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null);
+  const [showInvoice, setShowInvoice] = useState(false);
+  const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
   const [feedbackRating, setFeedbackRating] = useState(0);
   const [feedbackContent, setFeedbackContent] = useState('');
   const [feedbackChip, setFeedbackChip] = useState<string>('');
@@ -375,18 +379,23 @@ export default function RoadmapDetailPage() {
 
     enrollMutation.mutate(courseId, {
       onSuccess: (response) => {
-        setCourseActionMessage({
-          type: 'success',
-          text: 'Đăng ký thành công! Đang mở khóa học...',
-        });
-        const enrollmentId = response.result?.id;
-        if (enrollmentId) {
-          navigate(`/student/courses/${enrollmentId}`);
+        if (response && response.type === 'order' && response.result) {
+          setCompletedOrder(response.result);
+          setShowInvoice(true);
         } else {
-          myEnrollmentsQuery.refetch().then((res) => {
-            const refreshed = findActiveEnrollment(res.data?.result ?? [], courseId);
-            if (refreshed) navigate(`/student/courses/${refreshed.id}`);
+          setCourseActionMessage({
+            type: 'success',
+            text: 'Đăng ký thành công! Đang mở khóa học...',
           });
+          const enrollmentId = response.result?.id;
+          if (enrollmentId) {
+            navigate(`/student/courses/${enrollmentId}`);
+          } else {
+            myEnrollmentsQuery.refetch().then((res) => {
+              const refreshed = findActiveEnrollment(res.data?.result ?? [], courseId);
+              if (refreshed) navigate(`/student/courses/${refreshed.id}`);
+            });
+          }
         }
       },
       onError: (err) => {
@@ -756,6 +765,12 @@ export default function RoadmapDetailPage() {
         </div>
       </div>
       {/* /rdp-page */}
+      {/* ── Invoice Modal ── */}
+      <InvoiceModal
+        order={completedOrder}
+        isOpen={showInvoice}
+        onClose={() => setShowInvoice(false)}
+      />
     </DashboardLayout>
   );
 }

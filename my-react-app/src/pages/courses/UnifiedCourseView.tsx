@@ -241,7 +241,7 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
 
   const isCoursePublic =
     course.isPublished === true && String(course.status ?? '').toUpperCase() === 'PUBLISHED';
-  if (!isCoursePublic && !canViewUnpublishedCourse) {
+  if (!isCoursePublic && !hasFullAccess) {
     return (
       <DashboardLayout role={dashboardRole} user={{ name: 'User', avatar: '', role: dashboardRole }}>
         <div className="module-layout-container">
