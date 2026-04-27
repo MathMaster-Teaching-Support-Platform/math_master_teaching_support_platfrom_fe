@@ -16,7 +16,6 @@ import {
 import React, { useEffect, useRef, useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockAdmin } from '../../data/mockData';
-import { AuthService } from '../../services/api/auth.service';
 import {
   useAdminProcessWithdrawal,
   useAdminRejectWithdrawal,
@@ -29,8 +28,6 @@ import './admin-mgmt-shell.css';
 import AdminFinanceStudioShell from './AdminFinanceStudioShell';
 import './admin-finance-studio.css';
 import './AdminWithdrawals.css';
-
-const PAGE_SIZE = 10;
 
 type FilterStatus = 'ALL' | WithdrawalStatus;
 
