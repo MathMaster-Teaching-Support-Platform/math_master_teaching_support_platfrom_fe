@@ -7,12 +7,14 @@
 ## 🗄️ Database Migration
 
 ### Step 1: Backup Database
+
 - [ ] Create full database backup
 - [ ] Verify backup integrity
 - [ ] Store backup in secure location
 - [ ] Document backup location and timestamp
 
 ### Step 2: Run Migration Script
+
 - [ ] Review migration script: `V1__Create_Order_And_Refund_Tables.sql`
 - [ ] Test migration on development database
 - [ ] Test migration on staging database
@@ -26,6 +28,7 @@
 - [ ] Verify constraints created
 
 ### Step 3: Verify Migration
+
 ```sql
 -- Check orders table
 SELECT COUNT(*) FROM orders;
@@ -46,6 +49,7 @@ SELECT indexname FROM pg_indexes WHERE tablename = 'refund_requests';
 ## 🔧 Backend Deployment
 
 ### Step 1: Code Review
+
 - [ ] Review all new Java files
 - [ ] Check for security vulnerabilities
 - [ ] Verify error handling
@@ -54,6 +58,7 @@ SELECT indexname FROM pg_indexes WHERE tablename = 'refund_requests';
 - [ ] Verify authorization checks
 
 ### Step 2: Build & Test
+
 - [ ] Run unit tests
 - [ ] Run integration tests
 - [ ] Build application: `mvn clean package`
@@ -61,6 +66,7 @@ SELECT indexname FROM pg_indexes WHERE tablename = 'refund_requests';
 - [ ] Check for compilation warnings
 
 ### Step 3: Configuration
+
 - [ ] Verify scheduled job is enabled (@EnableScheduling)
 - [ ] Check application.properties/yml:
   - [ ] Database connection settings
@@ -69,12 +75,14 @@ SELECT indexname FROM pg_indexes WHERE tablename = 'refund_requests';
 - [ ] Verify environment variables
 
 ### Step 4: Deploy to Staging
+
 - [ ] Deploy backend to staging environment
 - [ ] Verify application starts successfully
 - [ ] Check logs for errors
 - [ ] Verify scheduled job runs (OrderExpiryJob)
 
 ### Step 5: Test Endpoints (Staging)
+
 ```bash
 # Test order creation
 curl -X POST http://staging-api/api/orders/courses/{courseId} \
@@ -92,6 +100,7 @@ curl -X POST http://staging-api/api/refunds/orders/{orderId} \
 ```
 
 ### Step 6: Monitor Logs
+
 - [ ] Check application logs
 - [ ] Check database logs
 - [ ] Check notification logs
@@ -102,6 +111,7 @@ curl -X POST http://staging-api/api/refunds/orders/{orderId} \
 ## 🎨 Frontend Deployment
 
 ### Step 1: Code Review
+
 - [ ] Review all new TypeScript/React files
 - [ ] Check for security vulnerabilities
 - [ ] Verify error handling
@@ -109,6 +119,7 @@ curl -X POST http://staging-api/api/refunds/orders/{orderId} \
 - [ ] Review responsive design
 
 ### Step 2: Build & Test
+
 - [ ] Run linter: `npm run lint`
 - [ ] Run type checker: `npm run type-check`
 - [ ] Run tests: `npm run test`
@@ -116,6 +127,7 @@ curl -X POST http://staging-api/api/refunds/orders/{orderId} \
 - [ ] Verify build success
 
 ### Step 3: Deploy to Staging
+
 - [ ] Deploy frontend to staging environment
 - [ ] Verify application loads
 - [ ] Check browser console for errors
@@ -126,6 +138,7 @@ curl -X POST http://staging-api/api/refunds/orders/{orderId} \
   - [ ] Edge
 
 ### Step 4: Test User Flows (Staging)
+
 - [ ] Test order creation flow
 - [ ] Test order confirmation flow
 - [ ] Test order cancellation flow
@@ -135,6 +148,7 @@ curl -X POST http://staging-api/api/refunds/orders/{orderId} \
 - [ ] Test admin refund management
 
 ### Step 5: Responsive Testing
+
 - [ ] Test on mobile (iOS)
 - [ ] Test on mobile (Android)
 - [ ] Test on tablet
@@ -145,6 +159,7 @@ curl -X POST http://staging-api/api/refunds/orders/{orderId} \
 ## 🧪 End-to-End Testing
 
 ### Scenario 1: Successful Order Flow
+
 1. [ ] Student navigates to course preview
 2. [ ] Student clicks "Enroll"
 3. [ ] Order created successfully
@@ -158,6 +173,7 @@ curl -X POST http://staging-api/api/refunds/orders/{orderId} \
 11. [ ] Order appears in order history
 
 ### Scenario 2: Insufficient Balance
+
 1. [ ] Student with low balance clicks "Enroll"
 2. [ ] Order created successfully
 3. [ ] Student clicks "Confirm Payment"
@@ -166,6 +182,7 @@ curl -X POST http://staging-api/api/refunds/orders/{orderId} \
 6. [ ] Student can cancel order
 
 ### Scenario 3: Order Expiry
+
 1. [ ] Student creates order
 2. [ ] Wait 15 minutes (or adjust expiry for testing)
 3. [ ] Scheduled job runs
@@ -173,12 +190,14 @@ curl -X POST http://staging-api/api/refunds/orders/{orderId} \
 5. [ ] Student cannot confirm expired order
 
 ### Scenario 4: Order Cancellation
+
 1. [ ] Student creates order
 2. [ ] Student clicks "Cancel Order"
 3. [ ] Order status updated to CANCELLED
 4. [ ] Student can create new order
 
 ### Scenario 5: Auto-Approved Refund
+
 1. [ ] Student completes order
 2. [ ] Student requests refund within 24 hours
 3. [ ] Refund auto-approved
@@ -189,6 +208,7 @@ curl -X POST http://staging-api/api/refunds/orders/{orderId} \
 8. [ ] Notifications sent
 
 ### Scenario 6: Manual Refund Approval
+
 1. [ ] Student completes order
 2. [ ] Wait 25 hours
 3. [ ] Student requests refund
@@ -199,6 +219,7 @@ curl -X POST http://staging-api/api/refunds/orders/{orderId} \
 8. [ ] Notifications sent
 
 ### Scenario 7: Refund Rejection
+
 1. [ ] Student requests refund
 2. [ ] Admin reviews refund
 3. [ ] Admin rejects with reason
@@ -210,6 +231,7 @@ curl -X POST http://staging-api/api/refunds/orders/{orderId} \
 ## 📊 Monitoring Setup
 
 ### Application Metrics
+
 - [ ] Set up order creation rate monitoring
 - [ ] Set up order confirmation rate monitoring
 - [ ] Set up order cancellation rate monitoring
@@ -218,16 +240,19 @@ curl -X POST http://staging-api/api/refunds/orders/{orderId} \
 - [ ] Set up auto-approval rate monitoring
 
 ### Error Monitoring
+
 - [ ] Set up error tracking (Sentry, etc.)
 - [ ] Configure alerts for critical errors
 - [ ] Set up log aggregation (ELK, etc.)
 
 ### Performance Monitoring
+
 - [ ] Monitor API response times
 - [ ] Monitor database query performance
 - [ ] Monitor scheduled job execution time
 
 ### Business Metrics
+
 - [ ] Track total revenue
 - [ ] Track instructor earnings
 - [ ] Track platform commission
@@ -239,6 +264,7 @@ curl -X POST http://staging-api/api/refunds/orders/{orderId} \
 ## 🔒 Security Checklist
 
 ### Authentication & Authorization
+
 - [ ] Verify JWT token validation
 - [ ] Check role-based access control
 - [ ] Test unauthorized access attempts
@@ -246,12 +272,14 @@ curl -X POST http://staging-api/api/refunds/orders/{orderId} \
 - [ ] Verify admin can access all refunds
 
 ### Data Validation
+
 - [ ] Test SQL injection prevention
 - [ ] Test XSS prevention
 - [ ] Verify input validation
 - [ ] Check output encoding
 
 ### Transaction Security
+
 - [ ] Verify transaction atomicity
 - [ ] Check for race conditions
 - [ ] Test concurrent order creation
@@ -262,17 +290,20 @@ curl -X POST http://staging-api/api/refunds/orders/{orderId} \
 ## 📝 Documentation
 
 ### User Documentation
+
 - [ ] Create user guide for order flow
 - [ ] Create user guide for refund flow
 - [ ] Create FAQ document
 - [ ] Update help center
 
 ### Admin Documentation
+
 - [ ] Create admin guide for refund management
 - [ ] Document refund approval process
 - [ ] Create troubleshooting guide
 
 ### Developer Documentation
+
 - [ ] Update API documentation
 - [ ] Document database schema
 - [ ] Update architecture diagrams
@@ -283,6 +314,7 @@ curl -X POST http://staging-api/api/refunds/orders/{orderId} \
 ## 🚀 Production Deployment
 
 ### Pre-Deployment
+
 - [ ] All staging tests passed
 - [ ] Code review completed
 - [ ] Security review completed
@@ -290,11 +322,13 @@ curl -X POST http://staging-api/api/refunds/orders/{orderId} \
 - [ ] Stakeholder approval obtained
 
 ### Deployment Window
+
 - [ ] Schedule maintenance window
 - [ ] Notify users of maintenance
 - [ ] Prepare rollback plan
 
 ### Deployment Steps
+
 1. [ ] Create production database backup
 2. [ ] Run database migration on production
 3. [ ] Deploy backend to production
@@ -305,6 +339,7 @@ curl -X POST http://staging-api/api/refunds/orders/{orderId} \
 8. [ ] Monitor logs for errors
 
 ### Post-Deployment
+
 - [ ] Verify scheduled job is running
 - [ ] Test critical user flows
 - [ ] Monitor error rates
@@ -313,6 +348,7 @@ curl -X POST http://staging-api/api/refunds/orders/{orderId} \
 - [ ] Verify wallet transactions
 
 ### Rollback Plan (If Needed)
+
 1. [ ] Stop application
 2. [ ] Restore database backup
 3. [ ] Deploy previous version
@@ -324,12 +360,14 @@ curl -X POST http://staging-api/api/refunds/orders/{orderId} \
 ## 📞 Support Preparation
 
 ### Support Team Training
+
 - [ ] Train support team on new flow
 - [ ] Provide troubleshooting guide
 - [ ] Create support scripts
 - [ ] Set up escalation process
 
 ### Common Issues & Solutions
+
 - [ ] Document common errors
 - [ ] Provide resolution steps
 - [ ] Create FAQ for support team
@@ -339,6 +377,7 @@ curl -X POST http://staging-api/api/refunds/orders/{orderId} \
 ## ✅ Go-Live Checklist
 
 ### Day Before
+
 - [ ] Final code review
 - [ ] Final testing on staging
 - [ ] Backup all databases
@@ -346,6 +385,7 @@ curl -X POST http://staging-api/api/refunds/orders/{orderId} \
 - [ ] Prepare rollback plan
 
 ### Go-Live Day
+
 - [ ] Deploy to production
 - [ ] Run smoke tests
 - [ ] Monitor logs (first hour)
@@ -354,6 +394,7 @@ curl -X POST http://staging-api/api/refunds/orders/{orderId} \
 - [ ] Notify stakeholders of success
 
 ### Day After
+
 - [ ] Review error logs
 - [ ] Review performance metrics
 - [ ] Review user feedback
@@ -365,6 +406,7 @@ curl -X POST http://staging-api/api/refunds/orders/{orderId} \
 ## 📊 Success Criteria
 
 ### Technical Success
+
 - [ ] All endpoints responding correctly
 - [ ] No critical errors in logs
 - [ ] Response times within SLA
@@ -372,6 +414,7 @@ curl -X POST http://staging-api/api/refunds/orders/{orderId} \
 - [ ] Database performance acceptable
 
 ### Business Success
+
 - [ ] Order creation rate > 0
 - [ ] Order confirmation rate > 80%
 - [ ] Order expiry rate < 10%
@@ -383,18 +426,21 @@ curl -X POST http://staging-api/api/refunds/orders/{orderId} \
 ## 🎉 Post-Launch
 
 ### Week 1
+
 - [ ] Daily monitoring of metrics
 - [ ] Daily review of error logs
 - [ ] Collect user feedback
 - [ ] Address critical issues
 
 ### Week 2-4
+
 - [ ] Weekly monitoring of metrics
 - [ ] Weekly review of error logs
 - [ ] Analyze user behavior
 - [ ] Plan improvements
 
 ### Month 2+
+
 - [ ] Monthly metric review
 - [ ] Quarterly feature planning
 - [ ] Continuous improvement
@@ -404,21 +450,24 @@ curl -X POST http://staging-api/api/refunds/orders/{orderId} \
 ## 📋 Sign-Off
 
 ### Development Team
-- [ ] Backend Lead: _________________ Date: _______
-- [ ] Frontend Lead: ________________ Date: _______
-- [ ] QA Lead: _____________________ Date: _______
+
+- [ ] Backend Lead: ********\_******** Date: **\_\_\_**
+- [ ] Frontend Lead: ******\_\_\_\_****** Date: **\_\_\_**
+- [ ] QA Lead: **********\_********** Date: **\_\_\_**
 
 ### Operations Team
-- [ ] DevOps Lead: _________________ Date: _______
-- [ ] Database Admin: ______________ Date: _______
+
+- [ ] DevOps Lead: ********\_******** Date: **\_\_\_**
+- [ ] Database Admin: ******\_\_****** Date: **\_\_\_**
 
 ### Business Team
-- [ ] Product Manager: _____________ Date: _______
-- [ ] Business Owner: ______________ Date: _______
+
+- [ ] Product Manager: ******\_****** Date: **\_\_\_**
+- [ ] Business Owner: ******\_\_****** Date: **\_\_\_**
 
 ---
 
-**Deployment Date:** __________________
-**Deployed By:** __________________
+**Deployment Date:** ********\_\_********
+**Deployed By:** ********\_\_********
 **Version:** 1.0
 **Status:** ☐ Pending | ☐ In Progress | ☐ Complete
