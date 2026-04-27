@@ -262,6 +262,17 @@ export const API_ENDPOINTS = {
   PAYMENT_DEPOSIT: '/payment/deposit',
   PAYMENT_ORDER_STATUS: (orderCode: number) => `/payment/order/${orderCode}/status`,
 
+  // Withdrawal (user side) — no /api prefix per BE contract
+  WITHDRAWAL_REQUEST: '/withdrawal/request',
+  WITHDRAWAL_VERIFY_OTP: '/withdrawal/verify-otp',
+  WITHDRAWAL_MY_REQUESTS: '/withdrawal/my-requests',
+  WITHDRAWAL_CANCEL: (id: string) => `/withdrawal/${id}/cancel`,
+
+  // Withdrawal (admin side)
+  ADMIN_WITHDRAWAL_REQUESTS: '/admin/withdrawal-requests',
+  ADMIN_WITHDRAWAL_PROCESS: (id: string) => `/admin/withdrawal-requests/${id}/process`,
+  ADMIN_WITHDRAWAL_REJECT: (id: string) => `/admin/withdrawal-requests/${id}/reject`,
+
   // Notifications
   NOTIFICATIONS: '/v1/notifications',
   NOTIFICATIONS_UNREAD_COUNT: '/v1/notifications/unread-count',

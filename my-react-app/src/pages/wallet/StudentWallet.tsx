@@ -5,6 +5,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Download,
+  FileText,
   Lock,
   Search,
   TrendingUp,
@@ -18,7 +19,15 @@ import { mockAdmin, mockStudent, mockTeacher } from '../../data/mockData';
 import { AuthService } from '../../services/api/auth.service';
 import { UserService } from '../../services/api/user.service';
 import { WalletService } from '../../services/api/wallet.service';
-import type { TransactionStatus, WalletSummary, WalletTransaction } from '../../types/wallet.types';
+import type {
+  TransactionStatus,
+  WalletSummary,
+  WalletTransaction,
+  WithdrawalRequestResponse,
+} from '../../types/wallet.types';
+import WithdrawModal from '../../components/wallet/WithdrawModal';
+import WithdrawalBillCard from '../../components/wallet/WithdrawalBillCard';
+import { WithdrawalService } from '../../services/api/withdrawal.service';
 import './StudentWallet.css';
 
 type TransactionStatusFilter = 'all' | 'completed' | 'pending' | 'failed' | 'cancelled';
@@ -3610,6 +3619,10 @@ const StudentWallet: React.FC = () => {
   const [balanceCardFlipped, setBalanceCardFlipped] = useState(false);
   const [balanceCardTemplate, setBalanceCardTemplate] = useState(0);
 
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [billRequest, setBillRequest] = useState<WithdrawalRequestResponse | null>(null);
+  const [billLoadingId, setBillLoadingId] = useState<string | null>(null);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<TransactionStatusFilter>('all');
   const [page, setPage] = useState(1);
@@ -3818,6 +3831,19 @@ const StudentWallet: React.FC = () => {
     }
   };
 
+  const handleViewBill = async (refCode: string) => {
+    setBillLoadingId(refCode);
+    try {
+      const res = await WithdrawalService.getMyRequests({ page: 0, size: 50, status: 'SUCCESS' });
+      const found = (res.result?.content ?? []).find((w) => w.withdrawalRequestId === refCode);
+      if (found) setBillRequest(found);
+    } catch {
+      // silent
+    } finally {
+      setBillLoadingId(null);
+    }
+  };
+
   const handleDepositClick = () => {
     if (amount < 10_000) {
       setError('Số tiền nạp tối thiểu là 10.000 VND');
@@ -3893,9 +3919,22 @@ const StudentWallet: React.FC = () => {
               <h1>Ví của tôi</h1>
               <p>Quản lý số dư và theo dõi lịch sử giao dịch</p>
             </div>
-            <button className="btn-report" onClick={exportCsv}>
-              <Download size={15} /> Xuất báo cáo
-            </button>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button
+                className="btn-report"
+                style={{
+                  background: 'linear-gradient(135deg,#6366f1,#818cf8)',
+                  color: '#fff',
+                  borderColor: 'transparent',
+                }}
+                onClick={() => setShowWithdrawModal(true)}
+              >
+                <FileText size={15} /> Rút tiền
+              </button>
+              <button className="btn-report" onClick={exportCsv}>
+                <Download size={15} /> Xuất báo cáo
+              </button>
+            </div>
           </header>
 
           {/* Error Banner */}
@@ -4567,6 +4606,23 @@ const StudentWallet: React.FC = () => {
                         {status === 'pending' && tx.expiresAt && (
                           <TxCountdown expiresAt={tx.expiresAt} />
                         )}
+                        {tx.type === 'WITHDRAWAL' && status === 'completed' && tx.referenceCode && (
+                          <button
+                            className="tx-bill-btn"
+                            title="Xem hóa đơn rút tiền"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              void handleViewBill(tx.referenceCode!);
+                            }}
+                            disabled={billLoadingId === tx.referenceCode}
+                          >
+                            {billLoadingId === tx.referenceCode ? (
+                              <span className="tx-bill-spin" />
+                            ) : (
+                              <FileText size={14} />
+                            )}
+                          </button>
+                        )}
                       </div>
                     </div>
                   );
@@ -4947,6 +5003,22 @@ const StudentWallet: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+      {showWithdrawModal && (
+        <WithdrawModal
+          walletBalance={wallet?.balance ?? 0}
+          userEmail={myInfoQuery.data?.email ?? ''}
+          onClose={() => setShowWithdrawModal(false)}
+          onSuccess={() => {
+            setShowWithdrawModal(false);
+            void walletQuery.refetch();
+            void transactionsQuery.refetch();
+          }}
+        />
+      )}
+
+      {billRequest && (
+        <WithdrawalBillCard request={billRequest} onClose={() => setBillRequest(null)} />
       )}
     </>
   );
