@@ -1,6 +1,12 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type UseQueryOptions,
+} from '@tanstack/react-query';
 import { RoadmapService } from '../services/api/roadmap.service';
 import type {
+  ApiResponse,
   CreateAdminRoadmapRequest,
   RoadmapEntryTestAnswerRequest,
   RoadmapEntryTestFlagRequest,
@@ -32,10 +38,21 @@ export const roadmapKeys = {
   topicMaterials: (topicId: string) => [...roadmapKeys.all, 'topic-materials', topicId] as const,
 };
 
-export function useRoadmaps(name = '', page = 0, size = 20) {
+type UseRoadmapsOptions<TData> = Omit<
+  UseQueryOptions<ApiResponse<unknown>, Error, TData, ReturnType<typeof roadmapKeys.list>>,
+  'queryKey' | 'queryFn'
+>;
+
+export function useRoadmaps<TData = ApiResponse<unknown>>(
+  name = '',
+  page = 0,
+  size = 20,
+  options?: UseRoadmapsOptions<TData>
+) {
   return useQuery({
     queryKey: roadmapKeys.list(name, page, size),
     queryFn: () => RoadmapService.getRoadmaps({ name, page, size }),
+    ...options,
   });
 }
 
