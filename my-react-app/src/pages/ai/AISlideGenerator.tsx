@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BlockMath, InlineMath } from 'react-katex';
 import { useNavigate } from 'react-router-dom';
@@ -242,6 +242,7 @@ const renderSlideText = (
 
 const AISlideGenerator: React.FC = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [subjects, setSubjects] = useState<SubjectByGrade[]>([]);
   const [chapters, setChapters] = useState<ChapterBySubject[]>([]);
   const [lessons, setLessons] = useState<LessonByChapter[]>([]);
@@ -470,6 +471,7 @@ const AISlideGenerator: React.FC = () => {
 
       setSuccess('Đã cập nhật slide thành công.');
       closeMetadataModal();
+      await queryClient.invalidateQueries({ queryKey: ['lesson-slides'] });
       await loadGeneratedFiles(lessonId || undefined);
     } catch (err) {
       const apiError = err as Error & { code?: number };
@@ -660,6 +662,7 @@ const AISlideGenerator: React.FC = () => {
 
       setDeletingGeneratedFile(null);
       setSuccess('Đã xóa slide thành công.');
+      await queryClient.invalidateQueries({ queryKey: ['lesson-slides'] });
       await loadGeneratedFiles(targetLessonId, { showLoading: false });
     } catch (err) {
       const apiError = err as Error & { code?: number };
