@@ -28,6 +28,9 @@ import type {
 import WithdrawModal from '../../components/wallet/WithdrawModal';
 import WithdrawalBillCard from '../../components/wallet/WithdrawalBillCard';
 import { WithdrawalService } from '../../services/api/withdrawal.service';
+import { orderService } from '../../services/order.service';
+import { InvoiceModal } from '../../components/course/InvoiceModal';
+import type { Order } from '../../types/order.types';
 import './StudentWallet.css';
 
 type TransactionStatusFilter = 'all' | 'completed' | 'pending' | 'failed' | 'cancelled';
@@ -3627,6 +3630,18 @@ const StudentWallet: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<TransactionStatusFilter>('all');
   const [page, setPage] = useState(1);
 
+  // Order History State
+  const [activeTab, setActiveTab] = useState<'transactions' | 'orders'>('transactions');
+  const [orderPage, setOrderPage] = useState(0);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [showInvoice, setShowInvoice] = useState(false);
+
+  const { data: ordersData, isLoading: isOrdersLoading } = useQuery({
+    queryKey: ['orders', 'my', orderPage],
+    queryFn: () => orderService.getMyOrders(orderPage, 10),
+    enabled: activeTab === 'orders',
+  });
+
   const cardRef = useRef<HTMLDivElement>(null);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
 
@@ -4503,44 +4518,63 @@ const StudentWallet: React.FC = () => {
           <section className="transactions-panel">
             <div className="transactions-head">
               <div>
-                <h2>Lịch sử giao dịch</h2>
-                <p>
-                  Tổng nạp thành công: <strong>{formatCurrency(totalDeposit)} VND</strong>
-                </p>
+              <div className="wallet-tabs-header">
+                <div className="wallet-tabs">
+                  <button 
+                    className={`wallet-tab ${activeTab === 'transactions' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('transactions')}
+                  >
+                    Lịch sử giao dịch
+                  </button>
+                  <button 
+                    className={`wallet-tab ${activeTab === 'orders' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('orders')}
+                  >
+                    Lịch sử mua hàng
+                  </button>
+                </div>
+                {activeTab === 'transactions' && (
+                  <p>
+                    Tổng nạp thành công: <strong>{formatCurrency(totalDeposit)} VND</strong>
+                  </p>
+                )}
+              </div>
               </div>
 
-              <div className="transactions-controls">
-                <div className="search-box">
-                  <Search size={15} />
-                  <input
-                    type="text"
-                    placeholder="Tìm theo mã giao dịch..."
-                    value={searchTerm}
-                    onChange={(e) => {
-                      setSearchTerm(e.target.value);
-                      setPage(1);
-                    }}
-                  />
+              {activeTab === 'transactions' && (
+                <div className="transactions-controls">
+                  <div className="search-box">
+                    <Search size={15} />
+                    <input
+                      type="text"
+                      placeholder="Tìm theo mã giao dịch..."
+                      value={searchTerm}
+                      onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setPage(1);
+                      }}
+                    />
+                  </div>
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value as TransactionStatusFilter)}
+                  >
+                    <option value="all">Tất cả trạng thái</option>
+                    <option value="completed">Thành công</option>
+                    <option value="pending">Đang chờ</option>
+                    <option value="failed">Thanh toán lỗi</option>
+                    <option value="cancelled">Đã hủy</option>
+                  </select>
                 </div>
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value as TransactionStatusFilter)}
-                >
-                  <option value="all">Tất cả trạng thái</option>
-                  <option value="completed">Thành công</option>
-                  <option value="pending">Đang chờ</option>
-                  <option value="failed">Thanh toán lỗi</option>
-                  <option value="cancelled">Đã hủy</option>
-                </select>
-              </div>
+              )}
             </div>
 
             {/* List Body */}
             <div className="transaction-list">
-              {transactionsLoading &&
+              {activeTab === 'transactions' && transactionsLoading &&
                 Array.from({ length: 4 }).map((_, i) => <div key={i} className="tx-skeleton" />)}
 
-              {!transactionsLoading && paginatedTransactions.length === 0 && (
+              {activeTab === 'transactions' && !transactionsLoading && paginatedTransactions.length === 0 && (
                 <div className="empty-state">
                   <TrendingUp size={52} className="empty-icon" />
                   <h3>Chưa có giao dịch nào</h3>
@@ -4556,7 +4590,7 @@ const StudentWallet: React.FC = () => {
                 </div>
               )}
 
-              {!transactionsLoading &&
+              {activeTab === 'transactions' && !transactionsLoading &&
                 paginatedTransactions.map((tx) => {
                   const status = normalizeStatus(tx.status);
                   const type = normalizeType(tx);
@@ -4627,42 +4661,133 @@ const StudentWallet: React.FC = () => {
                     </div>
                   );
                 })}
+
+              {activeTab === 'orders' && isOrdersLoading &&
+                Array.from({ length: 4 }).map((_, i) => <div key={i} className="tx-skeleton" />)}
+
+              {activeTab === 'orders' && !isOrdersLoading && (!ordersData || ordersData.content.length === 0) && (
+                <div className="empty-state">
+                  <FileText size={52} className="empty-icon" />
+                  <h3>Chưa có hóa đơn nào</h3>
+                  <p>Các hóa đơn sẽ xuất hiện sau khi bạn mua khóa học</p>
+                </div>
+              )}
+
+              {activeTab === 'orders' && !isOrdersLoading && ordersData &&
+                ordersData.content.map((order: Order) => (
+                  <div key={order.id} className="tx-row order-row">
+                    <div className="tx-icon-wrap payment">
+                      <FileText size={18} />
+                    </div>
+                    <div className="tx-info">
+                      <div className="tx-title">{order.courseTitle}</div>
+                      <div className="tx-meta">
+                        <span className="tx-code">#{order.orderNumber}</span>
+                        <span className="tx-sep">·</span>
+                        <span className="tx-time">
+                          {new Date(order.confirmedAt || order.createdAt).toLocaleString('vi-VN')}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="tx-right">
+                      <div className="tx-amount negative">
+                        −{formatCurrency(order.finalPrice)}đ
+                      </div>
+                      <span className={`tx-status-badge completed`}>
+                        {order.status === 'COMPLETED' ? 'Thành công' : order.status}
+                      </span>
+                      <button
+                        className="tx-bill-btn"
+                        title="Xem hóa đơn chi tiết"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedOrder(order);
+                          setShowInvoice(true);
+                        }}
+                      >
+                        <FileText size={14} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
             </div>
 
             <footer className="transactions-footer">
-              <span>
-                Hiển thị {displayStart}–{displayEnd} / {filteredTransactions.length} giao dịch
-              </span>
+              {activeTab === 'transactions' ? (
+                <>
+                  <span>
+                    Hiển thị {displayStart}–{displayEnd} / {filteredTransactions.length} giao dịch
+                  </span>
 
-              <div className="pagination">
-                <button
-                  onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-                  disabled={safePage === 1}
-                >
-                  <ChevronLeft size={15} />
-                </button>
+                  <div className="pagination">
+                    <button
+                      onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                      disabled={safePage === 1}
+                    >
+                      <ChevronLeft size={15} />
+                    </button>
 
-                {Array.from({ length: totalPages }, (_, idx) => idx + 1).map((n) => (
-                  <button
-                    key={n}
-                    className={n === safePage ? 'active' : ''}
-                    onClick={() => setPage(n)}
-                  >
-                    {n}
-                  </button>
-                ))}
+                    {Array.from({ length: totalPages }, (_, idx) => idx + 1).map((n) => (
+                      <button
+                        key={n}
+                        className={n === safePage ? 'active' : ''}
+                        onClick={() => setPage(n)}
+                      >
+                        {n}
+                      </button>
+                    ))}
 
-                <button
-                  onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
-                  disabled={safePage === totalPages}
-                >
-                  <ChevronRight size={15} />
-                </button>
-              </div>
+                    <button
+                      onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+                      disabled={safePage === totalPages}
+                    >
+                      <ChevronRight size={15} />
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <span>
+                    Hiển thị {ordersData?.number! * ordersData?.size! + 1}–{Math.min((ordersData?.number! + 1) * ordersData?.size!, ordersData?.totalElements!)} / {ordersData?.totalElements} hóa đơn
+                  </span>
+
+                  <div className="pagination">
+                    <button
+                      onClick={() => setOrderPage((prev) => Math.max(0, prev - 1))}
+                      disabled={orderPage === 0}
+                    >
+                      <ChevronLeft size={15} />
+                    </button>
+
+                    {Array.from({ length: ordersData?.totalPages || 0 }, (_, idx) => idx).map((n) => (
+                      <button
+                        key={n}
+                        className={n === orderPage ? 'active' : ''}
+                        onClick={() => setOrderPage(n)}
+                      >
+                        {n + 1}
+                      </button>
+                    ))}
+
+                    <button
+                      onClick={() => setOrderPage((prev) => Math.min((ordersData?.totalPages || 1) - 1, prev + 1))}
+                      disabled={orderPage >= (ordersData?.totalPages || 1) - 1}
+                    >
+                      <ChevronRight size={15} />
+                    </button>
+                  </div>
+                </>
+              )}
             </footer>
           </section>
         </div>
       </DashboardLayout>
+
+      <InvoiceModal 
+        order={selectedOrder}
+        isOpen={showInvoice}
+        onClose={() => setShowInvoice(false)}
+      />
 
       {/* ── Balance Card Template Picker Modal ── */}
       {showTplModal && (

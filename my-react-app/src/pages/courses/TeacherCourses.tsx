@@ -50,7 +50,7 @@ const coverGradients = [
 
 const coverAccents = ['#1d4ed8', '#0f766e', '#047857', '#c2410c', '#be185d', '#6d28d9'] as const;
 const PAGE_SIZE = 9;
-type CourseFilterStatus = 'all' | 'published' | 'draft' | 'rejected';
+type CourseFilterStatus = 'all' | 'published' | 'draft' | 'rejected' | 'archived';
 const languageOptions = ['Tiếng Việt', 'English'] as const;
 
 // ─── Create Course Modal ───────────────────────────────────────────────────────
@@ -614,7 +614,8 @@ const TeacherCourses: React.FC = () => {
 
   const courses: CourseResponse[] = useMemo(() => coursesData?.result ?? [], [coursesData]);
 
-  const getNormalizedStatus = (course: CourseResponse): 'published' | 'draft' | 'rejected' => {
+  const getNormalizedStatus = (course: CourseResponse): 'published' | 'draft' | 'rejected' | 'archived' => {
+    if (course.status === 'ARCHIVED') return 'archived';
     if (course.status === 'REJECTED') return 'rejected';
     if (course.published || course.status === 'PUBLISHED') return 'published';
     return 'draft';
@@ -654,6 +655,7 @@ const TeacherCourses: React.FC = () => {
       if (filterStatus === 'published') statusMatch = normalizedStatus === 'published';
       else if (filterStatus === 'draft') statusMatch = normalizedStatus === 'draft';
       else if (filterStatus === 'rejected') statusMatch = normalizedStatus === 'rejected';
+      else if (filterStatus === 'archived') statusMatch = normalizedStatus === 'archived';
       const searchMatch = course.title.toLowerCase().includes(search.toLowerCase());
       const gradeMatch = filterGrade === 'all' || getGradeMeta(course).value === filterGrade;
       return statusMatch && searchMatch && gradeMatch;
@@ -673,6 +675,7 @@ const TeacherCourses: React.FC = () => {
       active: courses.filter((c) => getNormalizedStatus(c) === 'published').length,
       draft: courses.filter((c) => getNormalizedStatus(c) === 'draft').length,
       rejected: courses.filter((c) => getNormalizedStatus(c) === 'rejected').length,
+      archived: courses.filter((c) => getNormalizedStatus(c) === 'archived').length,
       students: courses.reduce((sum, c) => sum + c.studentsCount, 0),
     }),
     [courses]
@@ -711,11 +714,13 @@ const TeacherCourses: React.FC = () => {
     { id: 'published' as const, label: `Công khai (${stats.active})` },
     { id: 'draft' as const, label: `Nháp (${stats.draft})` },
     { id: 'rejected' as const, label: `Bị từ chối (${stats.rejected})` },
+    { id: 'archived' as const, label: `Đã lưu trữ (${stats.archived})` },
   ];
 
   const getBadgeClass = (course: CourseResponse) => {
     if (course.status === 'PENDING_REVIEW') return 'badge-review';
     if (course.status === 'REJECTED') return 'badge-rejected';
+    if (course.status === 'ARCHIVED') return 'badge-archived';
     return course.published ? 'badge-live' : 'badge-draft';
   };
 
@@ -934,6 +939,10 @@ const TeacherCourses: React.FC = () => {
                       ) : course.status === 'REJECTED' ? (
                         <>
                           <AlertCircle size={11} /> Bị từ chối
+                        </>
+                      ) : course.status === 'ARCHIVED' ? (
+                        <>
+                          <BookOpen size={11} /> Đã lưu trữ
                         </>
                       ) : course.published ? (
                         <>

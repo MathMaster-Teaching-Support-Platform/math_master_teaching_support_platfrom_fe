@@ -11,6 +11,15 @@ export interface UserProfileResponse {
   avatar: string | null;
   dob: string | null;
   code: string | null;
+  schoolGrades?: Array<{
+    id: string;
+    gradeLevel: number;
+    name: string;
+    description?: string;
+    active: boolean;
+    createdAt: string;
+    updatedAt: string;
+  }>;
   status: string;
   banReason: string | null;
   banDate: string | null;
@@ -28,6 +37,7 @@ export interface UpdateMyInfoRequest {
   gender?: 'MALE' | 'FEMALE' | 'OTHER';
   avatar?: string;
   dob?: string;
+  schoolGradeIds?: string[];
 }
 
 export interface ChangePasswordRequest {

@@ -1,5 +1,6 @@
 import { Plus } from 'lucide-react';
 import React, { useCallback, useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockAdmin } from '../../data/mockData';
 import {
@@ -45,6 +46,8 @@ const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 
 const SubscriptionManagement: React.FC = () => {
+  const queryClient = useQueryClient();
+
   // ── Plans state ─────────────────────────────────────────────────────────────
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [plansLoading, setPlansLoading] = useState(true);
@@ -158,6 +161,7 @@ const SubscriptionManagement: React.FC = () => {
       setCreateForm(INITIAL_CREATE_FORM);
       setFeaturesText('');
       setPriceIsContact(false);
+      await queryClient.invalidateQueries({ queryKey: ['subscription-plans'] });
       fetchPlans();
     } catch (err: unknown) {
       const e = err as Error & { code?: number };
@@ -213,6 +217,7 @@ const SubscriptionManagement: React.FC = () => {
         features,
       });
       setEditingPlan(null);
+      await queryClient.invalidateQueries({ queryKey: ['subscription-plans'] });
       fetchPlans();
     } catch (err: unknown) {
       const e = err as Error & { code?: number };
@@ -233,6 +238,7 @@ const SubscriptionManagement: React.FC = () => {
     try {
       await SubscriptionPlanService.deletePlan(plan.id);
       setSelectedPlan(null);
+      await queryClient.invalidateQueries({ queryKey: ['subscription-plans'] });
       fetchPlans();
     } catch (err: unknown) {
       const e = err as Error & { code?: number };

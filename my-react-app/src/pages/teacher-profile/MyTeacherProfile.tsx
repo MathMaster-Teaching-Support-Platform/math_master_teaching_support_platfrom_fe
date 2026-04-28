@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload } from 'lucide-react';
@@ -68,6 +68,7 @@ function extractOcrSubtitle(comment: string): string {
 
 const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [profile, setProfile] = useState<TeacherProfile | null>(null);
   const [editing, setEditing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -206,6 +207,7 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
       setOcrDismissed(false);
       setEditing(false);
       setSuccess('Cập nhật hồ sơ thành công!');
+      await queryClient.invalidateQueries({ queryKey: ['teacher-profile'] });
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Không thể cập nhật hồ sơ';
       setError(errorMessage);
@@ -220,6 +222,7 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
     setSubmitting(true);
     try {
       await TeacherProfileService.deleteMyProfile();
+      await queryClient.invalidateQueries({ queryKey: ['teacher-profile'] });
       if (onDelete) {
         onDelete();
       } else {

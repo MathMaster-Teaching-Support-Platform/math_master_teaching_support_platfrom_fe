@@ -249,7 +249,13 @@ const TeacherCourseDetail: React.FC = () => {
                     {course.title}
                   </h1>
                   <span
-                    className={`course-badge ${course.published ? 'badge-live' : 'badge-draft'}`}
+                    className={`course-badge ${
+                      course.status === 'ARCHIVED' 
+                        ? 'badge-archived' 
+                        : course.published 
+                        ? 'badge-live' 
+                        : 'badge-draft'
+                    }`}
                   >
                     {course.status === 'PENDING_REVIEW' ? (
                       <>
@@ -258,6 +264,10 @@ const TeacherCourseDetail: React.FC = () => {
                     ) : course.status === 'REJECTED' ? (
                       <>
                         <AlertCircle size={11} /> Bị từ chối
+                      </>
+                    ) : course.status === 'ARCHIVED' ? (
+                      <>
+                        <BookOpen size={11} /> Đã lưu trữ
                       </>
                     ) : course.published ? (
                       <>

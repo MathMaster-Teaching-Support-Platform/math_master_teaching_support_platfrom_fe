@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
 import { CourseService } from '../services/api/course.service';
 import { WalletService } from '../services/api/wallet.service';
+import { orderService } from '../services/order.service';
 import { extractErrorCode, extractErrorMessage, getErrorMessage } from '../utils/errorCodes';
 import { isCourseAvailableForEnrollment } from '../utils/courseStatus';
 import { getEffectivePrice, validatePricing } from '../utils/pricing';
@@ -366,8 +367,17 @@ export function useEnroll() {
         }
       }
       
-      // Step 3: Proceed with enrollment
-      return CourseService.enroll(courseId);
+      // Step 3: Proceed with enrollment via Order flow
+      // Both free and paid courses now go through the order flow for consistent billing records
+      const order = await orderService.createOrder(courseId);
+      const confirmedOrder = await orderService.confirmOrder(order.id);
+      
+      return { 
+        result: confirmedOrder, 
+        type: 'order',
+        // Include enrollmentId directly for convenience if available
+        enrollmentId: confirmedOrder.enrollmentId || null
+      };
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: courseKeys.enrollments() });

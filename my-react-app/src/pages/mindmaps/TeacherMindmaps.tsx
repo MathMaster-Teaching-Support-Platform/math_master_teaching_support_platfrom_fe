@@ -17,6 +17,7 @@ import {
 import type React from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockTeacher } from '../../data/mockData';
 import { LessonSlideService } from '../../services/api/lesson-slide.service';
@@ -103,6 +104,7 @@ function MindmapConfirmModal({
 
 export default function TeacherMindmaps() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [mindmaps, setMindmaps] = useState<Mindmap[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -385,6 +387,7 @@ export default function TeacherMindmaps() {
       onConfirm: async () => {
         try {
           await MindmapService.deleteMindmap(id);
+          await queryClient.invalidateQueries({ queryKey: ['mindmaps'] });
           loadMindmaps();
         } catch (err) {
           setGeneratorError(err instanceof Error ? err.message : 'Không thể xóa mindmap.');

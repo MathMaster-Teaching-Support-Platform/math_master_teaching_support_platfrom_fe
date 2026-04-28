@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Award, BookOpen, Calendar, CheckCircle, Clock, TrendingUp } from 'lucide-react';
-import { useCourseProgress, useCourseLessons } from '../../../hooks/useCourses';
+import { useCourseProgress, useCourseLessons, useCustomCourseSections } from '../../../hooks/useCourses';
 import type { EnrollmentResponse } from '../../../types';
 import '../../../styles/module-refactor.css';
 
@@ -12,9 +12,41 @@ interface StudentProgressTabProps {
 const StudentProgressTab: React.FC<StudentProgressTabProps> = ({ enrollmentId, enrollment }) => {
   const { data: progressData, isLoading } = useCourseProgress(enrollmentId);
   const { data: lessonsData } = useCourseLessons(enrollment.courseId);
+  const { data: sectionsData } = useCustomCourseSections(enrollment.courseId);
 
   const progress = progressData?.result;
   const lessons = lessonsData?.result ?? [];
+  const sections = sectionsData?.result ?? [];
+
+  const curriculumLessons = useMemo(() => {
+    const sectionOrderMap = new Map(
+      sections.map((section, index) => [section.id, section.orderIndex ?? index + 1] as const)
+    );
+
+    const groupsMap: Record<
+      string,
+      { id: string; type: 'SECTION' | 'CHAPTER' | 'OTHER'; firstSeenIndex: number; lessons: typeof lessons }
+    > = {};
+
+    lessons.forEach((lesson, index) => {
+      const groupId = lesson.sectionId || lesson.chapterId || 'no-group';
+      const groupType = lesson.sectionId ? 'SECTION' : lesson.chapterId ? 'CHAPTER' : 'OTHER';
+
+      if (!groupsMap[groupId]) {
+        groupsMap[groupId] = { id: groupId, type: groupType, firstSeenIndex: index, lessons: [] };
+      }
+      groupsMap[groupId].lessons.push(lesson);
+    });
+
+    const orderedGroups = Object.values(groupsMap).sort((a, b) => {
+      const orderA = a.type === 'SECTION' ? sectionOrderMap.get(a.id) ?? a.firstSeenIndex : a.firstSeenIndex;
+      const orderB = b.type === 'SECTION' ? sectionOrderMap.get(b.id) ?? b.firstSeenIndex : b.firstSeenIndex;
+      if (orderA !== orderB) return orderA - orderB;
+      return a.id.localeCompare(b.id);
+    });
+
+    return orderedGroups.flatMap((group) => [...group.lessons].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0)));
+  }, [lessons, sections]);
 
   const stats = useMemo(() => {
     if (!progress) return null;
@@ -57,10 +89,10 @@ const StudentProgressTab: React.FC<StudentProgressTabProps> = ({ enrollmentId, e
 
   const getNextLesson = () => {
     if (!progress) return null;
-    const incompleteLessons = lessons.filter(
+    const incompleteLessons = curriculumLessons.filter(
       (lesson) => !progress.lessons.find((l) => l.courseLessonId === lesson.id && l.isCompleted)
     );
-    return incompleteLessons.sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))[0];
+    return incompleteLessons[0];
   };
 
   const nextLesson = getNextLesson();
