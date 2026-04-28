@@ -12,7 +12,7 @@ import {
   X,
   Zap,
 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockAdmin, mockStudent, mockTeacher } from '../../data/mockData';
@@ -24,6 +24,7 @@ import type {
   WalletSummary,
   WalletTransaction,
   WithdrawalRequestResponse,
+  WithdrawalStatus,
 } from '../../types/wallet.types';
 import WithdrawModal from '../../components/wallet/WithdrawModal';
 import WithdrawalBillCard from '../../components/wallet/WithdrawalBillCard';
@@ -3631,10 +3632,25 @@ const StudentWallet: React.FC = () => {
   const [page, setPage] = useState(1);
 
   // Order History State
-  const [activeTab, setActiveTab] = useState<'transactions' | 'orders'>('transactions');
+  const [activeTab, setActiveTab] = useState<'transactions' | 'orders' | 'withdrawals'>('transactions');
   const [orderPage, setOrderPage] = useState(0);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showInvoice, setShowInvoice] = useState(false);
+
+  // Withdrawal History State
+  const [withdrawalPage, setWithdrawalPage] = useState(0);
+  const [withdrawalStatusFilter, setWithdrawalStatusFilter] = useState<'ALL' | WithdrawalStatus>('ALL');
+
+  const { data: withdrawalHistoryData, isLoading: isWithdrawalHistoryLoading, refetch: refetchWithdrawalHistory } = useQuery({
+    queryKey: ['withdrawal', 'my', withdrawalPage, withdrawalStatusFilter],
+    queryFn: () => WithdrawalService.getMyRequests({
+      page: withdrawalPage,
+      size: 10,
+      ...(withdrawalStatusFilter !== 'ALL' ? { status: withdrawalStatusFilter } : {}),
+    }),
+    enabled: activeTab === 'withdrawals',
+    staleTime: 15_000,
+  });
 
   const { data: ordersData, isLoading: isOrdersLoading } = useQuery({
     queryKey: ['orders', 'my', orderPage],
@@ -3672,6 +3688,43 @@ const StudentWallet: React.FC = () => {
     const [day = '-', time = '-'] = full.split(' ');
     return { day, time };
   };
+
+  const queryClient = useQueryClient();
+
+  const cancelWithdrawal = useMutation({
+    mutationFn: (id: string) => WithdrawalService.cancelRequest(id),
+    onSuccess: () => {
+      void refetchWithdrawalHistory();
+      void walletQuery.refetch();
+    },
+  });
+
+  const WITHDRAWAL_STATUS_LABELS: Record<WithdrawalStatus, string> = {
+    PENDING_VERIFY: 'Chờ OTP',
+    PENDING_ADMIN: 'Chờ duyệt',
+    PROCESSING: 'Đang xử lý',
+    SUCCESS: 'Thành công',
+    REJECTED: 'Từ chối',
+    CANCELLED: 'Đã hủy',
+  };
+
+  const WITHDRAWAL_STATUS_COLORS: Record<WithdrawalStatus, string> = {
+    PENDING_VERIFY: '#f59e0b',
+    PENDING_ADMIN: '#6366f1',
+    PROCESSING: '#3b82f6',
+    SUCCESS: '#10b981',
+    REJECTED: '#ef4444',
+    CANCELLED: '#9ca3af',
+  };
+
+  const handleCancelWithdrawal = (id: string) => {
+    if (!confirm('Bạn chắc chắn muốn hủy yêu cầu rút tiền này?')) return;
+    cancelWithdrawal.mutate(id);
+  };
+
+  const withdrawalHistoryItems = withdrawalHistoryData?.result?.content ?? [];
+  const withdrawalTotalPages = withdrawalHistoryData?.result?.totalPages ?? 1;
+  const withdrawalTotalElements = withdrawalHistoryData?.result?.totalElements ?? 0;
 
   const handleCardMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!cardRef.current) return;
@@ -4532,6 +4585,12 @@ const StudentWallet: React.FC = () => {
                   >
                     Lịch sử mua hàng
                   </button>
+                  <button
+                    className={`wallet-tab ${activeTab === 'withdrawals' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('withdrawals')}
+                  >
+                    Yêu cầu rút tiền
+                  </button>
                 </div>
                 {activeTab === 'transactions' && (
                   <p>
@@ -4710,10 +4769,132 @@ const StudentWallet: React.FC = () => {
                     </div>
                   </div>
                 ))}
+
+              {/* ── Withdrawal History Tab ── */}
+              {activeTab === 'withdrawals' && (
+                <div className="wd-filter-bar">
+                  <span className="wd-filter-label">Lọc:</span>
+                  {(['ALL', 'PENDING_VERIFY', 'PENDING_ADMIN', 'PROCESSING', 'SUCCESS', 'REJECTED', 'CANCELLED'] as const).map((s) => (
+                    <button
+                      key={s}
+                      className={`wd-filter-chip${withdrawalStatusFilter === s ? ' active' : ''}`}
+                      onClick={() => { setWithdrawalStatusFilter(s); setWithdrawalPage(0); }}
+                    >
+                      {s === 'ALL' ? 'Tất cả' : WITHDRAWAL_STATUS_LABELS[s as WithdrawalStatus]}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {activeTab === 'withdrawals' && isWithdrawalHistoryLoading &&
+                Array.from({ length: 4 }).map((_, i) => <div key={i} className="tx-skeleton" />)}
+
+              {activeTab === 'withdrawals' && !isWithdrawalHistoryLoading && withdrawalHistoryItems.length === 0 && (
+                <div className="empty-state">
+                  <ArrowDownLeft size={52} className="empty-icon" />
+                  <h3>Chưa có yêu cầu rút tiền nào</h3>
+                  <p>Nhấn "Rút tiền" ở góc trên bên phải để tạo yêu cầu mới</p>
+                </div>
+              )}
+
+              {activeTab === 'withdrawals' && !isWithdrawalHistoryLoading &&
+                withdrawalHistoryItems.map((wr: WithdrawalRequestResponse) => {
+                  const statusColor = WITHDRAWAL_STATUS_COLORS[wr.status] ?? '#9ca3af';
+                  const canCancel = wr.status === 'PENDING_VERIFY' || wr.status === 'PENDING_ADMIN';
+                  const canViewBill = wr.status === 'SUCCESS';
+                  return (
+                    <div key={wr.withdrawalRequestId} className="tx-row wd-row">
+                      <div className="tx-icon-wrap payment">
+                        <ArrowDownLeft size={18} />
+                      </div>
+                      <div className="tx-info">
+                        <div className="tx-title">Rút tiền — {wr.bankName}</div>
+                        <div className="tx-meta">
+                          <span className="tx-code">{wr.bankAccountNumber}</span>
+                          <span className="tx-sep">·</span>
+                          <span className="wd-acct-name">{wr.bankAccountName}</span>
+                          <span className="tx-sep">·</span>
+                          <span className="tx-time">
+                            {new Date(wr.createdAt).toLocaleString('vi-VN')}
+                          </span>
+                        </div>
+                        {wr.adminNote && (
+                          <div className="wd-admin-note">📋 {wr.adminNote}</div>
+                        )}
+                      </div>
+                      <div className="tx-right">
+                        <div className="tx-amount negative">
+                          −{formatCurrency(wr.amount)}đ
+                        </div>
+                        <span
+                          className="tx-status-badge"
+                          style={{ '--badge-color': statusColor } as React.CSSProperties}
+                        >
+                          {WITHDRAWAL_STATUS_LABELS[wr.status]}
+                        </span>
+                        <div className="wd-actions">
+                          {canViewBill && (
+                            <button
+                              className="tx-bill-btn"
+                              title="Xem hóa đơn"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setBillRequest(wr);
+                              }}
+                            >
+                              <FileText size={14} />
+                            </button>
+                          )}
+                          {canCancel && (
+                            <button
+                              className="tx-bill-btn wd-cancel-btn"
+                              title="Hủy yêu cầu"
+                              disabled={cancelWithdrawal.isPending}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleCancelWithdrawal(wr.withdrawalRequestId);
+                              }}
+                            >
+                              <X size={14} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
             </div>
 
             <footer className="transactions-footer">
-              {activeTab === 'transactions' ? (
+                <>
+                  <span>
+                    Tổng {withdrawalTotalElements} yêu cầu
+                  </span>
+                  <div className="pagination">
+                    <button
+                      onClick={() => setWithdrawalPage((p) => Math.max(0, p - 1))}
+                      disabled={withdrawalPage === 0}
+                    >
+                      <ChevronLeft size={15} />
+                    </button>
+                    {Array.from({ length: withdrawalTotalPages }, (_, i) => i).map((n) => (
+                      <button
+                        key={n}
+                        className={n === withdrawalPage ? 'active' : ''}
+                        onClick={() => setWithdrawalPage(n)}
+                      >
+                        {n + 1}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => setWithdrawalPage((p) => Math.min(withdrawalTotalPages - 1, p + 1))}
+                      disabled={withdrawalPage >= withdrawalTotalPages - 1}
+                    >
+                      <ChevronRight size={15} />
+                    </button>
+                  </div>
+                </>
+              ) : activeTab === 'transactions' ? (
                 <>
                   <span>
                     Hiển thị {displayStart}–{displayEnd} / {filteredTransactions.length} giao dịch
