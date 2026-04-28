@@ -2638,6 +2638,86 @@
   color: #8b5cf6;
 }
 
+/* ── Withdrawal History Tab ───────────────────────────────── */
+.wd-row {
+  border-left: 4px solid #6366f1 !important;
+}
+
+.wd-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.wd-filter-label {
+  font-size: 0.8125rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.wd-filter-chip {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  border: 1.5px solid #e5e7eb;
+  background: #fff;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.wd-filter-chip:hover {
+  border-color: #6366f1;
+  color: #6366f1;
+}
+
+.wd-filter-chip.active {
+  background: #6366f1;
+  border-color: #6366f1;
+  color: #fff;
+}
+
+.wd-acct-name {
+  color: #374151;
+  font-weight: 500;
+  font-size: 0.8125rem;
+}
+
+.wd-admin-note {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+  font-style: italic;
+}
+
+.wd-actions {
+  display: flex;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+.wd-cancel-btn {
+  color: #ef4444 !important;
+}
+
+.wd-cancel-btn:hover:not(:disabled) {
+  border-color: #ef4444 !important;
+  background: #fef2f2 !important;
+}
+
+/* override badge to use CSS var like admin page */
+.tx-status-badge {
+  display: inline-block;
+  padding: 0.2rem 0.625rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
 .tx-amount.negative {
   color: #ef4444;
 }
