@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
+  ArrowDownToLine,
   ArrowLeftRight,
   BarChart3,
   BookOpen,
@@ -133,6 +134,7 @@ const adminGroups: MenuGroup[] = [
       { path: '/admin/revenue-breakdown', icon: BarChart3, label: 'Phân tích Doanh thu' },
       { path: '/admin/marketplace-analytics', icon: TrendingUp, label: 'Phân tích Thị trường' },
       { path: '/admin/transactions', icon: ArrowLeftRight, label: 'Giao dịch' },
+      { path: '/admin/withdrawals', icon: ArrowDownToLine, label: 'Duyệt Rút tiền' },
       { path: '/admin/subscriptions', icon: CreditCard, label: 'Gói đăng ký' },
     ],
   },
@@ -264,7 +266,14 @@ const Sidebar: React.FC<SidebarProps> = ({ role, collapsed, onToggle }) => {
           queryClient.prefetchQuery({
             queryKey: [
               'public-slides',
-              { lessonId: '', keyword: '', page: 0, size: 9, sortBy: 'createdAt', direction: 'DESC' },
+              {
+                lessonId: '',
+                keyword: '',
+                page: 0,
+                size: 9,
+                sortBy: 'createdAt',
+                direction: 'DESC',
+              },
             ],
             queryFn: () =>
               LessonSlideService.getAllPublicGeneratedFiles({
@@ -328,8 +337,6 @@ const Sidebar: React.FC<SidebarProps> = ({ role, collapsed, onToggle }) => {
         <ChevronLeft size={13} strokeWidth={2.5} />
         <ChevronLeft size={13} strokeWidth={2.5} />
       </button>
-
-
 
       {/* Nav */}
       <nav ref={navRef} id={navId} className="sidebar-nav" aria-label="Điều hướng chính">
