@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { InvoiceModal } from '../../components/course/InvoiceModal';
 import { mockStudent } from '../../data/mockData';
 import { useCoursePreview, useEnroll, useMyEnrollments } from '../../hooks/useCourses';
 import {
@@ -16,6 +17,7 @@ import type {
   RoadmapEntryTestResultResponse,
   TopicMaterial,
 } from '../../types';
+import type { Order } from '../../types/order.types';
 import './roadmap-detail-page.css';
 
 /* ─────────────────────────────────────────────────────
@@ -285,6 +287,8 @@ export default function RoadmapDetailPage() {
 
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null);
+  const [showInvoice, setShowInvoice] = useState(false);
+  const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
   const [feedbackRating, setFeedbackRating] = useState(0);
   const [feedbackContent, setFeedbackContent] = useState('');
   const [feedbackChip, setFeedbackChip] = useState<string>('');
@@ -374,22 +378,32 @@ export default function RoadmapDetailPage() {
     }
 
     enrollMutation.mutate(courseId, {
-      onSuccess: (response) => {
-        setCourseActionMessage({
-          type: 'success',
-          text: 'Đăng ký thành công! Đang mở khóa học...',
-        });
-        const enrollmentId = response.result?.id;
-        if (enrollmentId) {
-          navigate(`/student/courses/${enrollmentId}`);
+      onSuccess: (response: any) => {
+        console.log('[Roadmap] Enroll success:', response);
+        if (response && response.type === 'order' && response.result) {
+          console.log('[Roadmap] Showing invoice for order:', response.result.orderNumber);
+          setCompletedOrder(response.result);
+          setShowInvoice(true);
         } else {
-          myEnrollmentsQuery.refetch().then((res) => {
-            const refreshed = findActiveEnrollment(res.data?.result ?? [], courseId);
-            if (refreshed) navigate(`/student/courses/${refreshed.id}`);
+          console.warn('[Roadmap] Unexpected response structure:', response);
+          setCourseActionMessage({
+            type: 'success',
+            text: 'Đăng ký thành công! Đang mở khóa học...',
           });
+          
+          const enrollmentId = response?.enrollmentId || response?.result?.id || (response as any)?.id;
+          if (enrollmentId) {
+            navigate(`/student/courses/${enrollmentId}`);
+          } else {
+            myEnrollmentsQuery.refetch().then((res) => {
+              const refreshed = findActiveEnrollment(res.data?.result ?? [], courseId);
+              if (refreshed) navigate(`/student/courses/${refreshed.id}`);
+            });
+          }
         }
       },
       onError: (err) => {
+        console.error('[Roadmap] Enroll error:', err);
         const message = err instanceof Error ? err.message : 'Không thể đăng ký';
         if (shouldNavigateToCourseOnEnrollError(message)) {
           const enrollment = findActiveEnrollment(enrollments, courseId);
@@ -429,40 +443,22 @@ export default function RoadmapDetailPage() {
     );
   }
 
+  let mainContent;
+
   if (isLoading) {
-    return (
-      <DashboardLayout
-        role="student"
-        user={{ name: mockStudent.name, avatar: mockStudent.avatar, role: 'student' }}
-        notificationCount={3}
-      >
-        <div className="rdp-skeleton-wrap">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="rdp-skeleton" />
-          ))}
-        </div>
-      </DashboardLayout>
+    mainContent = (
+      <div className="rdp-skeleton-wrap">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="rdp-skeleton" />
+        ))}
+      </div>
     );
-  }
-
-  if (error || !roadmap) {
-    return (
-      <DashboardLayout
-        role="student"
-        user={{ name: mockStudent.name, avatar: mockStudent.avatar, role: 'student' }}
-        notificationCount={3}
-      >
-        <div className="rdp-error">⚠ Không thể tải lộ trình. Vui lòng thử lại.</div>
-      </DashboardLayout>
+  } else if (error || !roadmap) {
+    mainContent = (
+      <div className="rdp-error">⚠ Không thể tải lộ trình. Vui lòng thử lại.</div>
     );
-  }
-
-  return (
-    <DashboardLayout
-      role="student"
-      user={{ name: mockStudent.name, avatar: mockStudent.avatar, role: 'student' }}
-      notificationCount={3}
-    >
+  } else {
+    mainContent = (
       <div className="rdp-page">
         {/* ── Minimal sticky header ── */}
         <div className="rdp-header">
@@ -755,7 +751,23 @@ export default function RoadmapDetailPage() {
           )}
         </div>
       </div>
-      {/* /rdp-page */}
+    );
+  }
+
+  return (
+    <DashboardLayout
+      role="student"
+      user={{ name: mockStudent.name, avatar: mockStudent.avatar, role: 'student' }}
+      notificationCount={3}
+    >
+      {mainContent}
+
+      {/* ── Invoice Modal ── */}
+      <InvoiceModal
+        order={completedOrder}
+        isOpen={showInvoice}
+        onClose={() => setShowInvoice(false)}
+      />
     </DashboardLayout>
   );
 }

@@ -1,6 +1,5 @@
 import {
   AlertCircle,
-  AtSign,
   Calendar,
   Camera,
   Check,
@@ -19,10 +18,11 @@ import {
   User,
   X,
 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { AuthService } from '../../services/api/auth.service';
+import { LessonSlideService } from '../../services/api/lesson-slide.service';
 import {
   UserService,
   type ChangePasswordRequest,
@@ -31,7 +31,7 @@ import {
 } from '../../services/api/user.service';
 import './ProfileSettings.css';
 
-type ActiveTab = 'profile' | 'account' | 'security' | 'preferences';
+type ActiveTab = 'profile' | 'security' | 'preferences';
 type ToastType = 'success' | 'error';
 
 interface ToastState {
@@ -45,6 +45,7 @@ interface ProfileForm {
   dob: string;
   gender: 'MALE' | 'FEMALE' | 'OTHER' | '';
   avatar: string;
+  schoolGradeIds: string[];
 }
 
 interface AccountForm {
@@ -211,6 +212,7 @@ const ProfileSettings: React.FC = () => {
   const role: 'teacher' | 'student' | 'admin' =
     rawRole === 'teacher' ? 'teacher' : rawRole === 'admin' ? 'admin' : 'student';
 
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<ActiveTab>('profile');
   const [userData, setUserData] = useState<UserProfileResponse | null>(null);
   const [toast, setToast] = useState<ToastState>({ visible: false, type: 'success', message: '' });
@@ -221,6 +223,7 @@ const ProfileSettings: React.FC = () => {
     dob: '',
     gender: '',
     avatar: '',
+    schoolGradeIds: [],
   });
   const [profileDirty, setProfileDirty] = useState(false);
   const [profileLoading, setProfileLoading] = useState(false);
@@ -230,8 +233,6 @@ const ProfileSettings: React.FC = () => {
   const [avatarEditMode, setAvatarEditMode] = useState(false);
 
   const [accountForm, setAccountForm] = useState<AccountForm>({ email: '', phoneNumber: '' });
-  const [accountDirty, setAccountDirty] = useState(false);
-  const [accountLoading, setAccountLoading] = useState(false);
   const [accountErrors, setAccountErrors] = useState<Partial<Record<keyof AccountForm, string>>>(
     {}
   );
@@ -273,6 +274,12 @@ const ProfileSettings: React.FC = () => {
     staleTime: 60_000,
   });
 
+  const schoolGradesQuery = useQuery({
+    queryKey: ['school-grades', 'active'],
+    queryFn: () => LessonSlideService.getSchoolGrades(true),
+    staleTime: 5 * 60 * 1000,
+  });
+
   useEffect(() => {
     if (!myInfoQuery.data || userData) return;
     const user = myInfoQuery.data;
@@ -282,6 +289,7 @@ const ProfileSettings: React.FC = () => {
       dob: user.dob || '',
       gender: (user.gender as 'MALE' | 'FEMALE' | 'OTHER' | '') || '',
       avatar: user.avatar || '',
+      schoolGradeIds: user.schoolGrades?.map((g) => g.id) || [],
     });
     setAccountForm({ email: user.email, phoneNumber: user.phoneNumber || '' });
   }, [myInfoQuery.data, userData]);
@@ -296,6 +304,8 @@ const ProfileSettings: React.FC = () => {
 
   const validateProfile = (): boolean => {
     const errs: typeof profileErrors = {};
+    const accountErrs: typeof accountErrors = {};
+
     const name = profileForm.fullName.trim();
     if (!name) errs.fullName = 'Họ và tên không được để trống';
     else if (name.length < 2) errs.fullName = 'Họ và tên phải có ít nhất 2 ký tự';
@@ -308,8 +318,26 @@ const ProfileSettings: React.FC = () => {
     }
     if (profileForm.avatar && profileForm.avatar.length > 2048)
       errs.avatar = 'URL ảnh quá dài (tối đa 2048 ký tự)';
+
+    // Validate school grades: Students can only select 1 grade
+    const isStudent = userData?.roles.includes('STUDENT');
+    if (isStudent && profileForm.schoolGradeIds.length > 1) {
+      errs.schoolGradeIds = 'Học sinh chỉ được chọn 1 khối lớp';
+    }
+
+    // Validate email
+    const email = accountForm.email.trim();
+    if (!email) accountErrs.email = 'Email không được để trống';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) accountErrs.email = 'Địa chỉ email không hợp lệ!';
+    else if (email.length > 50) accountErrs.email = 'Email không được vượt quá 50 ký tự';
+
+    // Validate phone
+    if (accountForm.phoneNumber && !/^(\+84|0)[0-9]{9}$/.test(accountForm.phoneNumber))
+      accountErrs.phoneNumber = 'Số điện thoại không hợp lệ (VD: 0912345678)';
+
     setProfileErrors(errs);
-    return Object.keys(errs).length === 0;
+    setAccountErrors(accountErrs);
+    return Object.keys(errs).length === 0 && Object.keys(accountErrs).length === 0;
   };
 
   const handleProfileSave = async () => {
@@ -318,25 +346,35 @@ const ProfileSettings: React.FC = () => {
     try {
       const payload: UpdateMyInfoRequest = {
         fullName: profileForm.fullName.trim(),
-        email: userData.email,
-        phoneNumber: userData.phoneNumber || undefined,
-        gender: (profileForm.gender as 'MALE' | 'FEMALE' | 'OTHER') || undefined,
-        avatar: profileForm.avatar || undefined,
+        email: accountForm.email.trim(),
+        phoneNumber: accountForm.phoneNumber.trim() || undefined,
+        gender: profileForm.gender ? (profileForm.gender as 'MALE' | 'FEMALE' | 'OTHER') : undefined,
+        avatar: profileForm.avatar.trim() || undefined,
         dob: profileForm.dob || undefined,
+        schoolGradeIds: profileForm.schoolGradeIds.length > 0 ? profileForm.schoolGradeIds : undefined,
       };
+      console.log('Sending update payload:', payload);
       const updated = await UserService.updateMyInfo(payload);
+      console.log('Update response:', updated);
+
+      // Invalidate all user-related queries to force refetch
+      await queryClient.invalidateQueries({ queryKey: ['users'] });
+
       setUserData(updated);
       setProfileForm({
         fullName: updated.fullName,
         dob: updated.dob || '',
         gender: (updated.gender as 'MALE' | 'FEMALE' | 'OTHER' | '') || '',
         avatar: updated.avatar || '',
+        schoolGradeIds: updated.schoolGrades?.map((g) => g.id) || [],
       });
+      setAccountForm({ email: updated.email, phoneNumber: updated.phoneNumber || '' });
       setProfileDirty(false);
       setAvatarEditMode(false);
       globalThis.dispatchEvent(new Event('authChange'));
       showToast('success', 'Hồ sơ cá nhân đã được cập nhật thành công');
     } catch (err: unknown) {
+      console.error('Update error:', err);
       showToast('error', err instanceof Error ? err.message : 'Cập nhật thất bại');
     } finally {
       setProfileLoading(false);
@@ -350,56 +388,13 @@ const ProfileSettings: React.FC = () => {
       dob: userData.dob || '',
       gender: (userData.gender as 'MALE' | 'FEMALE' | 'OTHER' | '') || '',
       avatar: userData.avatar || '',
+      schoolGradeIds: userData.schoolGrades?.map((g) => g.id) || [],
     });
+    setAccountForm({ email: userData.email, phoneNumber: userData.phoneNumber || '' });
     setProfileDirty(false);
     setProfileErrors({});
-    setAvatarEditMode(false);
-  };
-
-  const validateAccount = (): boolean => {
-    const errs: typeof accountErrors = {};
-    const email = accountForm.email.trim();
-    if (!email) errs.email = 'Email không được để trống';
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errs.email = 'Địa chỉ email không hợp lệ!';
-    else if (email.length > 50) errs.email = 'Email không được vượt quá 50 ký tự';
-    if (accountForm.phoneNumber && !/^(\+84|0)[0-9]{9}$/.test(accountForm.phoneNumber))
-      errs.phoneNumber = 'Số điện thoại không hợp lệ (VD: 0912345678)';
-    setAccountErrors(errs);
-    return Object.keys(errs).length === 0;
-  };
-
-  const handleAccountSave = async () => {
-    if (!validateAccount() || !userData) return;
-    setAccountLoading(true);
-    try {
-      const payload: UpdateMyInfoRequest = {
-        fullName: userData.fullName,
-        email: accountForm.email.trim(),
-        phoneNumber: accountForm.phoneNumber || undefined,
-        gender: (userData.gender as 'MALE' | 'FEMALE' | 'OTHER') || undefined,
-        avatar: userData.avatar || undefined,
-        dob: userData.dob || undefined,
-      };
-      const updated = await UserService.updateMyInfo(payload);
-      setUserData(updated);
-      setAccountForm({ email: updated.email, phoneNumber: updated.phoneNumber || '' });
-      setAccountDirty(false);
-      showToast('success', 'Thông tin tài khoản đã được cập nhật');
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Cập nhật thất bại';
-      if (msg.includes('1013') || msg.toLowerCase().includes('email'))
-        setAccountErrors({ email: 'Email này đã được sử dụng bởi tài khoản khác' });
-      else showToast('error', msg);
-    } finally {
-      setAccountLoading(false);
-    }
-  };
-
-  const resetAccountForm = () => {
-    if (!userData) return;
-    setAccountForm({ email: userData.email, phoneNumber: userData.phoneNumber || '' });
-    setAccountDirty(false);
     setAccountErrors({});
+    setAvatarEditMode(false);
   };
 
   const validatePassword = (): boolean => {
@@ -482,11 +477,6 @@ const ProfileSettings: React.FC = () => {
       id: 'profile' as ActiveTab,
       label: 'Hồ sơ cá nhân',
       icon: <User size={17} strokeWidth={1.8} />,
-    },
-    {
-      id: 'account' as ActiveTab,
-      label: 'Thông tin tài khoản',
-      icon: <AtSign size={17} strokeWidth={1.8} />,
     },
     {
       id: 'security' as ActiveTab,
@@ -633,21 +623,72 @@ const ProfileSettings: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* Avatar URL editor */}
+                      {/* Avatar upload */}
                       {avatarEditMode && (
                         <div className="ps-avatar-edit">
-                          <PremiumInput
-                            label="URL ảnh đại diện"
-                            id="avatar-url"
-                            value={profileForm.avatar}
-                            onChange={(v) => {
-                              setProfileForm((f) => ({ ...f, avatar: v }));
-                              setProfileDirty(true);
-                            }}
-                            placeholder="https://example.com/your-photo.jpg"
-                            error={profileErrors.avatar}
-                            hint="Dán URL ảnh từ internet (JPG, PNG, WebP tối đa 2048 ký tự)"
-                          />
+                          <div className="ps-field">
+                            <label className="ps-field__label" htmlFor="avatar-upload">
+                              Tải ảnh lên
+                            </label>
+                            <input
+                              type="file"
+                              id="avatar-upload"
+                              accept="image/*"
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+
+                                // Validate file size (max 5MB)
+                                if (file.size > 5 * 1024 * 1024) {
+                                  showToast('error', 'Kích thước ảnh không được vượt quá 5MB');
+                                  return;
+                                }
+
+                                // Validate file type
+                                if (!file.type.startsWith('image/')) {
+                                  showToast('error', 'Vui lòng chọn file ảnh (JPG, PNG, WebP)');
+                                  return;
+                                }
+
+                                try {
+                                  setProfileLoading(true);
+                                  const formData = new FormData();
+                                  formData.append('file', file);
+
+                                  const token = AuthService.getToken();
+                                  const response = await fetch('/api/v1/users/upload-avatar', {
+                                    method: 'POST',
+                                    headers: {
+                                      ...(token && { Authorization: `Bearer ${token}` }),
+                                    },
+                                    body: formData,
+                                  });
+
+                                  if (!response.ok) {
+                                    throw new Error('Upload failed');
+                                  }
+
+                                  const data = await response.json();
+                                  const avatarUrl = data.result;
+
+                                  setProfileForm((f) => ({ ...f, avatar: avatarUrl }));
+                                  setProfileDirty(true);
+                                  setAvatarEditMode(false);
+                                  showToast('success', 'Ảnh đã được tải lên thành công');
+                                } catch (err) {
+                                  console.error('Avatar upload error:', err);
+                                  showToast('error', 'Tải ảnh lên thất bại');
+                                } finally {
+                                  setProfileLoading(false);
+                                }
+                              }}
+                              className="ps-field__input"
+                              style={{ padding: '8px' }}
+                            />
+                            <p className="ps-field__hint">
+                              Chọn ảnh từ máy tính (JPG, PNG, WebP - tối đa 5MB)
+                            </p>
+                          </div>
                           <button
                             className="ps-btn ps-btn--ghost ps-btn--sm"
                             onClick={() => setAvatarEditMode(false)}
@@ -717,6 +758,67 @@ const ProfileSettings: React.FC = () => {
                           error={profileErrors.dob}
                         />
 
+                        {/* School Grade Selection */}
+                        <div className="ps-field">
+                          <label className="ps-field__label" htmlFor="schoolGrades">
+                            Khối lớp
+                            {userData?.roles.includes('STUDENT') && (
+                              <span className="ps-field__required" aria-hidden="true">
+                                *
+                              </span>
+                            )}
+                          </label>
+                          <div className="ps-field__wrap">
+                            <select
+                              id="schoolGrades"
+                              className="ps-field__select"
+                              multiple={userData?.roles.includes('TEACHER')}
+                              value={
+                                userData?.roles.includes('TEACHER')
+                                  ? profileForm.schoolGradeIds
+                                  : profileForm.schoolGradeIds[0] || ''
+                              }
+                              onChange={(e) => {
+                                const isStudent = userData?.roles.includes('STUDENT');
+                                const options = Array.from(e.target.selectedOptions);
+                                const selectedIds = options.map((opt) => opt.value);
+
+                                // For students, only allow 1 selection
+                                if (isStudent && selectedIds.length > 1) {
+                                  setProfileForm((f) => ({ ...f, schoolGradeIds: [selectedIds[selectedIds.length - 1]] }));
+                                } else {
+                                  setProfileForm((f) => ({ ...f, schoolGradeIds: selectedIds }));
+                                }
+                                setProfileDirty(true);
+                                setProfileErrors((e) => ({ ...e, schoolGradeIds: undefined }));
+                              }}
+                              disabled={schoolGradesQuery.isLoading}
+                            >
+                              {!userData?.roles.includes('TEACHER') && (
+                                <option value="">Chọn khối lớp</option>
+                              )}
+                              {schoolGradesQuery.data?.result?.map((grade) => (
+                                <option key={grade.id} value={grade.id}>
+                                  {grade.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          {profileErrors.schoolGradeIds && (
+                            <p className="ps-field__error" role="alert">
+                              <AlertCircle size={12} aria-hidden="true" />
+                              {profileErrors.schoolGradeIds}
+                            </p>
+                          )}
+                          <p className="ps-field__hint">
+                            {userData?.roles.includes('STUDENT')
+                              ? 'Chọn khối lớp bạn đang học'
+                              : userData?.roles.includes('TEACHER')
+                                ? 'Giữ Ctrl/Cmd để chọn nhiều khối lớp bạn dạy'
+                                : 'Chọn khối lớp của bạn'}
+                          </p>
+                        </div>
+
                         {userData?.code && (
                           <PremiumInput
                             label="Mã học viên / giáo viên"
@@ -727,75 +829,6 @@ const ProfileSettings: React.FC = () => {
                             hint="Mã hệ thống — không thể thay đổi"
                           />
                         )}
-                      </div>
-
-                      {/* Role chips */}
-                      <div className="ps-role-section">
-                        <span className="ps-field__label">Vai trò trong hệ thống</span>
-                        <div className="ps-roles">
-                          {userData?.roles.map((r) => (
-                            <span key={r} className="ps-role-chip">
-                              <Star size={11} aria-hidden="true" />
-                              {ROLE_LABELS[r] || r}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </SettingsSection>
-
-                    {/* Pending changes bar */}
-                    <div className={`ps-save-bar${profileDirty ? ' ps-save-bar--visible' : ''}`}>
-                      <p className="ps-save-bar__msg">
-                        <AlertCircle size={14} aria-hidden="true" />
-                        Bạn có thay đổi chưa được lưu
-                      </p>
-                      <div className="ps-save-bar__actions">
-                        <button
-                          className="ps-btn ps-btn--ghost"
-                          onClick={resetProfileForm}
-                          type="button"
-                        >
-                          Hủy bỏ
-                        </button>
-                        <button
-                          className="ps-btn ps-btn--primary"
-                          onClick={handleProfileSave}
-                          disabled={profileLoading}
-                          type="button"
-                        >
-                          {profileLoading ? (
-                            <>
-                              <Loader2 size={14} className="ps-spin" aria-hidden="true" />
-                              Đang lưu...
-                            </>
-                          ) : (
-                            <>
-                              <Check size={14} aria-hidden="true" />
-                              Lưu thay đổi
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* TAB: Thông tin tài khoản */}
-                {activeTab === 'account' && (
-                  <div className="ps-tab">
-                    <SettingsSection
-                      title="Thông tin tài khoản"
-                      description="Quản lý thông tin đăng nhập và liên hệ của bạn."
-                    >
-                      <div className="ps-form-grid">
-                        <PremiumInput
-                          label="Tên đăng nhập"
-                          id="userName"
-                          value={userData?.userName || ''}
-                          readOnly
-                          icon={<AtSign size={15} aria-hidden="true" />}
-                          hint="Tên đăng nhập không thể thay đổi sau khi tạo"
-                        />
 
                         <PremiumInput
                           label="Địa chỉ email"
@@ -804,7 +837,7 @@ const ProfileSettings: React.FC = () => {
                           value={accountForm.email}
                           onChange={(v) => {
                             setAccountForm((f) => ({ ...f, email: v }));
-                            setAccountDirty(true);
+                            setProfileDirty(true);
                             setAccountErrors((e) => ({ ...e, email: undefined }));
                           }}
                           placeholder="ten@example.com"
@@ -820,7 +853,7 @@ const ProfileSettings: React.FC = () => {
                           value={accountForm.phoneNumber}
                           onChange={(v) => {
                             setAccountForm((f) => ({ ...f, phoneNumber: v }));
-                            setAccountDirty(true);
+                            setProfileDirty(true);
                             setAccountErrors((e) => ({ ...e, phoneNumber: undefined }));
                           }}
                           placeholder="0912 345 678"
@@ -828,6 +861,19 @@ const ProfileSettings: React.FC = () => {
                           icon={<Phone size={15} aria-hidden="true" />}
                           hint="Định dạng Việt Nam: 0912345678 hoặc +84912345678"
                         />
+                      </div>
+
+                      {/* Role chips */}
+                      <div className="ps-role-section">
+                        <span className="ps-field__label">Vai trò trong hệ thống</span>
+                        <div className="ps-roles">
+                          {userData?.roles.map((r) => (
+                            <span key={r} className="ps-role-chip">
+                              <Star size={11} aria-hidden="true" />
+                              {ROLE_LABELS[r] || r}
+                            </span>
+                          ))}
+                        </div>
                       </div>
 
                       {/* Read-only account metadata */}
@@ -865,7 +911,8 @@ const ProfileSettings: React.FC = () => {
                       </div>
                     </SettingsSection>
 
-                    <div className={`ps-save-bar${accountDirty ? ' ps-save-bar--visible' : ''}`}>
+                    {/* Pending changes bar */}
+                    <div className={`ps-save-bar${profileDirty ? ' ps-save-bar--visible' : ''}`}>
                       <p className="ps-save-bar__msg">
                         <AlertCircle size={14} aria-hidden="true" />
                         Bạn có thay đổi chưa được lưu
@@ -873,18 +920,18 @@ const ProfileSettings: React.FC = () => {
                       <div className="ps-save-bar__actions">
                         <button
                           className="ps-btn ps-btn--ghost"
-                          onClick={resetAccountForm}
+                          onClick={resetProfileForm}
                           type="button"
                         >
                           Hủy bỏ
                         </button>
                         <button
                           className="ps-btn ps-btn--primary"
-                          onClick={handleAccountSave}
-                          disabled={accountLoading}
+                          onClick={handleProfileSave}
+                          disabled={profileLoading}
                           type="button"
                         >
-                          {accountLoading ? (
+                          {profileLoading ? (
                             <>
                               <Loader2 size={14} className="ps-spin" aria-hidden="true" />
                               Đang lưu...

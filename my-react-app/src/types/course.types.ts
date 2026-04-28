@@ -2,7 +2,7 @@
 
 export type CourseProvider = 'MINISTRY' | 'CUSTOM';
 export type CourseLevel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'ALL_LEVELS';
-export type CourseStatus = 'DRAFT' | 'PENDING_REVIEW' | 'PUBLISHED' | 'REJECTED';
+export type CourseStatus = 'DRAFT' | 'PENDING_REVIEW' | 'PUBLISHED' | 'REJECTED' | 'ARCHIVED';
 
 export interface MaterialItem {
   type: 'slide' | 'mindmap' | 'document';

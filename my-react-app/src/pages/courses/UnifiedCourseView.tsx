@@ -41,6 +41,8 @@ import {
 } from '../../hooks/useCourses';
 import { AuthService } from '../../services/api/auth.service';
 import { getEffectivePrice, hasActiveDiscount } from '../../utils/pricing';
+import { InvoiceModal } from '../../components/course/InvoiceModal';
+import type { Order } from '../../types/order.types';
 import '../../styles/module-refactor.css';
 import './StudentCourses.css';
 
@@ -93,7 +95,7 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
   const enrollments = enrollmentsData?.result ?? [];
   const enrollment = enrollmentId
     ? enrollments.find((e) => e.id === enrollmentId)
-    : undefined;
+    : enrollments.find((e) => e.courseId === (propCourseId || paramCourseId));
 
   // Determine the actual courseId
   const courseId = enrollment?.courseId || courseIdFromParam;
@@ -104,7 +106,7 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
     isLoading: loadingCourse,
     error: courseError,
   } = useCourseDetail(courseId!);
-  const { data: lessonsData } = useCourseLessons(courseId!);
+  const { data: lessonsData, refetch: refetchLessons } = useCourseLessons(courseId!);
   const { data: progressData } = useCourseProgress(enrollmentId || '');
   const { data: teacherProfileData } = useTeacherProfile(courseData?.result?.teacherId ?? '');
 
@@ -129,6 +131,8 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
 
   // Enrollment mutation
   const enrollMutation = useEnroll();
+  const [showInvoice, setShowInvoice] = React.useState(false);
+  const [completedOrder, setCompletedOrder] = React.useState<Order | null>(null);
 
   // Determine enrollment status
   const isEnrolled = !!enrollment && enrollment.status === 'ACTIVE';
@@ -143,6 +147,9 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
     () => lessons.length - freePreviewLessons.length,
     [lessons.length, freePreviewLessons.length]
   );
+
+  const isCoursePublic =
+    course?.isPublished === true && String(course?.status ?? '').toUpperCase() === 'PUBLISHED';
 
   const handleTabChange = (tab: TabType) => {
     setSearchParams({ tab });
@@ -161,11 +168,31 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
     
     enrollMutation.mutate(courseId!, {
       onSuccess: (resp) => {
-        const newEnrollmentId = resp?.result?.id;
-        if (newEnrollmentId) {
-          navigate(`/student/courses/${newEnrollmentId}`);
+        console.log('[handleEnroll] Success resp:', resp);
+        
+        // Harden the check for the order object
+        // useEnroll returns { result: Order, type: 'order', enrollmentId: string }
+        const orderData = resp?.result || (resp as any)?.order || (resp?.type === 'order' ? resp : null);
+        
+        if (orderData && (orderData.orderNumber || orderData.id)) {
+          console.log('[handleEnroll] Showing invoice modal for order:', orderData.orderNumber || orderData.id);
+          setCompletedOrder(orderData);
+          setShowInvoice(true);
+        } else {
+          // Fallback if the structure is different but we have an enrollment ID
+          console.warn('[handleEnroll] Could not find order in response, falling back to direct navigation:', resp);
+          const newEnrollmentId = (resp as any)?.enrollmentId || (resp as any)?.result?.enrollmentId || (resp as any)?.result?.id;
+          if (newEnrollmentId) {
+            navigate(`/student/courses/${newEnrollmentId}`);
+          } else {
+            // Last resort: refetch to see if we're enrolled
+            void refetchLessons();
+          }
         }
       },
+      onError: (err) => {
+        console.error('[handleEnroll] Error:', err);
+      }
     });
   };
 
@@ -174,107 +201,90 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
     ? userRole 
     : 'student';
 
+  let mainContent;
+
   // Loading state
   if (loadingCourse) {
-    return (
-      <DashboardLayout role={dashboardRole} user={{ name: 'User', avatar: '', role: dashboardRole }}>
-        <div className="module-layout-container">
-          <section className="module-page teacher-courses-page">
-            <div className="rounded-xl border border-[#E8E6DC] bg-[#F5F4ED] p-5">
-              <div className="mb-2 flex items-center justify-center gap-2 text-[14px] text-[#5E5D59]">
-                <LoaderCircle className="h-5 w-5 animate-spin text-[#C96442]" />
-                <p className="m-0">Đang tải khóa học...</p>
-              </div>
-              <div className="mx-auto h-1.5 max-w-md overflow-hidden rounded-full bg-[#E8E6DC]">
-                <motion.div
-                  className="h-full rounded-full bg-[#C96442]"
-                  initial={{ width: '0%' }}
-                  animate={{ width: '100%' }}
-                  transition={{ duration: 1.2, ease: 'easeInOut' }}
-                />
-              </div>
+    mainContent = (
+      <div className="module-layout-container">
+        <section className="module-page teacher-courses-page">
+          <div className="rounded-xl border border-[#E8E6DC] bg-[#F5F4ED] p-5">
+            <div className="mb-2 flex items-center justify-center gap-2 text-[14px] text-[#5E5D59]">
+              <LoaderCircle className="h-5 w-5 animate-spin text-[#C96442]" />
+              <p className="m-0">Đang tải khóa học...</p>
             </div>
-          </section>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
-  if (isAccessDeniedError) {
-    return (
-      <DashboardLayout role={dashboardRole} user={{ name: 'User', avatar: '', role: dashboardRole }}>
-        <div className="module-layout-container">
-          <section className="module-page teacher-courses-page">
-            <div className="empty">
-              <AlertCircle size={32} style={{ marginBottom: 8, color: '#B53333' }} />
-              <p>Bạn không có quyền xem khóa học này.</p>
-              <button className="btn secondary" onClick={() => navigate('/student/courses')}>
-                <ArrowLeft size={14} />
-                Quay lại danh sách
-              </button>
+            <div className="mx-auto h-1.5 max-w-md overflow-hidden rounded-full bg-[#E8E6DC]">
+              <motion.div
+                className="h-full rounded-full bg-[#C96442]"
+                initial={{ width: '0%' }}
+                animate={{ width: '100%' }}
+                transition={{ duration: 1.2, ease: 'easeInOut' }}
+              />
             </div>
-          </section>
-        </div>
-      </DashboardLayout>
+          </div>
+        </section>
+      </div>
     );
-  }
-
-  // Course not found
-  if (!course) {
-    return (
-      <DashboardLayout role={dashboardRole} user={{ name: 'User', avatar: '', role: dashboardRole }}>
-        <div className="module-layout-container">
-          <section className="module-page">
-            <div className="empty">
-              <AlertCircle size={32} style={{ marginBottom: 8, color: '#94a3b8' }} />
-              <p>Không tìm thấy khóa học</p>
-              <button className="btn secondary" onClick={() => navigate('/student/courses')}>
-                <ArrowLeft size={14} />
-                Quay lại danh sách
-              </button>
-            </div>
-          </section>
-        </div>
-      </DashboardLayout>
+  } else if (isAccessDeniedError) {
+    mainContent = (
+      <div className="module-layout-container">
+        <section className="module-page teacher-courses-page">
+          <div className="empty">
+            <AlertCircle size={32} style={{ marginBottom: 8, color: '#B53333' }} />
+            <p>Bạn không có quyền xem khóa học này.</p>
+            <button className="btn secondary" onClick={() => navigate('/student/courses')}>
+              <ArrowLeft size={14} />
+              Quay lại danh sách
+            </button>
+          </div>
+        </section>
+      </div>
     );
-  }
-
-  const isCoursePublic =
-    course.isPublished === true && String(course.status ?? '').toUpperCase() === 'PUBLISHED';
-  if (!isCoursePublic && !canViewUnpublishedCourse) {
-    return (
-      <DashboardLayout role={dashboardRole} user={{ name: 'User', avatar: '', role: dashboardRole }}>
-        <div className="module-layout-container">
-          <section className="module-page teacher-courses-page">
-            <div className="empty">
-              <AlertCircle size={32} style={{ marginBottom: 8, color: '#B53333' }} />
-              <p>Khóa học này chưa được xuất bản hoặc đang chờ duyệt.</p>
-              <button className="btn secondary" onClick={() => navigate('/student/courses')}>
-                <ArrowLeft size={14} />
-                Quay lại danh sách
-              </button>
-            </div>
-          </section>
-        </div>
-      </DashboardLayout>
+  } else if (!course) {
+    mainContent = (
+      <div className="module-layout-container">
+        <section className="module-page">
+          <div className="empty">
+            <AlertCircle size={32} style={{ marginBottom: 8, color: '#94a3b8' }} />
+            <p>Không tìm thấy khóa học</p>
+            <button className="btn secondary" onClick={() => navigate('/student/courses')}>
+              <ArrowLeft size={14} />
+              Quay lại danh sách
+            </button>
+          </div>
+        </section>
+      </div>
     );
-  }
+  } else if (!isCoursePublic && !hasFullAccess) {
+    mainContent = (
+      <div className="module-layout-container">
+        <section className="module-page teacher-courses-page">
+          <div className="empty">
+            <AlertCircle size={32} style={{ marginBottom: 8, color: '#B53333' }} />
+            <p>Khóa học này chưa được xuất bản hoặc đang chờ duyệt.</p>
+            <button className="btn secondary" onClick={() => navigate('/student/courses')}>
+              <ArrowLeft size={14} />
+              Quay lại danh sách
+            </button>
+          </div>
+        </section>
+      </div>
+    );
+  } else {
+    // Determine tabs based on access level
+    const currentTabs = [
+      { id: 'lessons' as const, label: 'Bài học', icon: BookOpen },
+      { id: 'overview' as const, label: 'Tổng quan', icon: FileText },
+      ...(hasFullAccess
+        ? [
+            { id: 'assessments' as const, label: 'Bài đánh giá', icon: FileText },
+            { id: 'progress' as const, label: 'Tiến độ', icon: TrendingUp },
+          ]
+        : []),
+      { id: 'reviews' as const, label: 'Đánh giá', icon: Star },
+    ];
 
-  // Define tabs based on access level
-  const tabs = [
-    { id: 'lessons' as const, label: 'Bài học', icon: BookOpen },
-    { id: 'overview' as const, label: 'Tổng quan', icon: FileText },
-    ...(hasFullAccess
-      ? [
-          { id: 'assessments' as const, label: 'Bài đánh giá', icon: FileText },
-          { id: 'progress' as const, label: 'Tiến độ', icon: TrendingUp },
-        ]
-      : []),
-    { id: 'reviews' as const, label: 'Đánh giá', icon: Star },
-  ];
-
-  return (
-    <DashboardLayout role={dashboardRole} user={{ name: 'User', avatar: '', role: dashboardRole }}>
+    mainContent = (
       <div className="module-layout-container">
         <section className="module-page">
           <AnimatePresence mode="wait">
@@ -285,7 +295,6 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
             >
-              {/* Breadcrumb */}
               <CourseBreadcrumb courseTitle={course.title} />
 
               {/* Back Button */}
@@ -546,9 +555,8 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
                 </div>
               )}
 
-              {/* Tab Navigation - SAME FOR ALL USERS */}
-              <div className="course-tabs">
-                {tabs.map((tab) => (
+               <div className="course-tabs">
+                {currentTabs.map((tab) => (
                   <button
                     key={tab.id}
                     className={`course-tab ${activeTab === tab.id ? 'active' : ''}`}
@@ -603,11 +611,34 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
                 )}
                 {activeTab === 'reviews' && <StudentReviewsTab courseId={courseId!} />}
               </div>
-            </motion.div>
-          </AnimatePresence>
-        </section>
-      </div>
-    </DashboardLayout>
+          </motion.div>
+        </AnimatePresence>
+      </section>
+    </div>
+    );
+  }
+
+  return (
+    <>
+      <DashboardLayout role={dashboardRole} user={{ name: 'User', avatar: '', role: dashboardRole }}>
+        {mainContent}
+      </DashboardLayout>
+
+      {/* ── Invoice Modal ── */}
+      <InvoiceModal
+        order={completedOrder}
+        isOpen={showInvoice}
+        onClose={() => setShowInvoice(false)}
+        onGoToCourse={() => {
+          if (completedOrder?.enrollmentId) {
+            navigate(`/student/courses/${completedOrder.enrollmentId}`);
+          } else {
+            // Re-fetch enrollments and navigate to the list
+            navigate('/student/courses');
+          }
+        }}
+      />
+    </>
   );
 };
 

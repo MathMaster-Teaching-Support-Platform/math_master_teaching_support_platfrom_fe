@@ -173,14 +173,19 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
 
   // Group lessons by section OR chapter
   const curriculumHierarchy = useMemo(() => {
-    const groups: Array<{
+    const groupsMap: Record<string, {
       id: string;
       title: string;
       lessons: CourseLessonResponse[];
       type: 'SECTION' | 'CHAPTER' | 'OTHER';
-    }> = [];
+      firstSeenIndex: number;
+    }> = {};
 
-    lessons.forEach((lesson) => {
+    const sectionOrderMap = new Map(
+      sections.map((section, index) => [section.id, section.orderIndex ?? index + 1] as const)
+    );
+
+    lessons.forEach((lesson, index) => {
       const section = sections.find((s) => s.id === lesson.sectionId);
       const groupId = lesson.sectionId || lesson.chapterId || 'no-group';
       const groupTitle =
@@ -189,15 +194,37 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
         (lesson.sectionId ? 'Mục chưa đặt tên' : lesson.chapterId ? 'Chương chưa đặt tên' : 'Khác');
       const groupType = lesson.sectionId ? 'SECTION' : lesson.chapterId ? 'CHAPTER' : 'OTHER';
 
-      let group = groups.find((g) => g.id === groupId);
-      if (!group) {
-        group = { id: groupId, title: groupTitle, lessons: [], type: groupType };
-        groups.push(group);
+      if (!groupsMap[groupId]) {
+        groupsMap[groupId] = {
+          id: groupId,
+          title: groupTitle,
+          lessons: [],
+          type: groupType,
+          firstSeenIndex: index,
+        };
       }
-      group.lessons.push(lesson);
+      groupsMap[groupId].lessons.push(lesson);
     });
 
-    return groups;
+    const getGroupSortOrder = (group: (typeof groupsMap)[string]) => {
+      if (group.type === 'SECTION') {
+        return sectionOrderMap.get(group.id) ?? group.firstSeenIndex;
+      }
+
+      return group.firstSeenIndex;
+    };
+
+    return Object.values(groupsMap)
+      .sort((a, b) => {
+        const orderA = getGroupSortOrder(a);
+        const orderB = getGroupSortOrder(b);
+        if (orderA !== orderB) return orderA - orderB;
+        return a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: 'base' });
+      })
+      .map((group) => ({
+        ...group,
+        lessons: [...group.lessons].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0)),
+      }));
   }, [lessons, sections]);
 
   const progress = progressData?.result;

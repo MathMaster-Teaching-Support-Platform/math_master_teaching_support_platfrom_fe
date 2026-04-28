@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import html2canvas from 'html2canvas';
 import MindElixir from 'mind-elixir';
 import 'mind-elixir/style.css';
@@ -123,6 +124,7 @@ const getSubtreeDeleteOrder = (nodes: MindmapNode[], rootId: string): string[] =
 export default function MindmapEditor() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const isEmbedPreview = searchParams.get('embedPreview') === '1';
 
@@ -396,6 +398,7 @@ export default function MindmapEditor() {
         color: editForm.color,
         icon: editForm.icon,
       });
+      await queryClient.invalidateQueries({ queryKey: ['mindmaps'] });
       setSelectedNodeId(null);
     } catch (err) {
       if (id) await loadMindmap(id);
@@ -451,6 +454,7 @@ export default function MindmapEditor() {
           node.id === tempId ? { ...response.result, children: [] } : node
         )
       );
+      await queryClient.invalidateQueries({ queryKey: ['mindmaps'] });
       setNewNodeForm((prev) => ({ ...prev, content: '' }));
       setNodePanelMode('EDIT');
     } catch (err) {
@@ -507,6 +511,7 @@ export default function MindmapEditor() {
       for (const nodeId of deleteOrder) {
         await MindmapService.deleteNode(nodeId);
       }
+      await queryClient.invalidateQueries({ queryKey: ['mindmaps'] });
     } catch (err) {
       if (id) await loadMindmap(id);
       alert(err instanceof Error ? err.message : 'Failed to delete node');
@@ -531,6 +536,7 @@ export default function MindmapEditor() {
         });
       }
 
+      await queryClient.invalidateQueries({ queryKey: ['mindmaps'] });
       setMindmap({ ...mindmap, status });
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to update status');

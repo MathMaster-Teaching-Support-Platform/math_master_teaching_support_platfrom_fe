@@ -11,7 +11,7 @@ import {
   Users,
   X,
 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import React, { useEffect, useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockAdmin } from '../../data/mockData';
@@ -42,6 +42,7 @@ const getHighestRole = (roles: UserRole[]): UserRole =>
   );
 
 const UserManagement: React.FC = () => {
+  const queryClient = useQueryClient();
   const [filterRole, setFilterRole] = useState<'all' | 'admin' | 'teacher' | 'student'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -127,6 +128,7 @@ const UserManagement: React.FC = () => {
         status: 'ACTIVE',
       });
       setPage(0);
+      await queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       await usersQuery.refetch();
     } catch (err) {
       setCreateError(err instanceof Error ? err.message : 'Tạo người dùng thất bại');
@@ -140,6 +142,7 @@ const UserManagement: React.FC = () => {
     try {
       const updated = await userManagementService.updateStatus(user.id, newStatus);
       if (selectedUser?.id === user.id) setSelectedUser(updated);
+      await queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       await usersQuery.refetch();
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Cập nhật trạng thái thất bại');
@@ -160,6 +163,7 @@ const UserManagement: React.FC = () => {
     try {
       await userManagementService.deleteUser(userId);
       if (selectedUser?.id === userId) setSelectedUser(null);
+      await queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       await usersQuery.refetch();
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Xóa tài khoản thất bại');

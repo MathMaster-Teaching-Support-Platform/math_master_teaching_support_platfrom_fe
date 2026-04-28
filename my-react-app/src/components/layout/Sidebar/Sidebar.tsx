@@ -92,6 +92,12 @@ const studentGroups: MenuGroup[] = [
       { path: '/student/public-mindmaps', icon: Workflow, label: 'Mindmap' },
       { path: '/student/assessments', icon: FileCheck2, label: 'Bài kiểm tra' },
       { path: '/student/roadmap', icon: Workflow, label: 'Lộ trình' },
+    ],
+  },
+  {
+    label: 'Tài chính',
+    items: [
+      { path: '/student/wallet', icon: Wallet, label: 'Ví của tôi' },
       { path: '/pricing', icon: CreditCard, label: 'Gói đăng ký' },
     ],
   },
@@ -99,12 +105,13 @@ const studentGroups: MenuGroup[] = [
     label: 'Công cụ',
     items: [
       { path: '/student/ai-assistant', icon: Bot, label: 'AI Trợ lý' },
-      { path: '/student/wallet', icon: Wallet, label: 'Ví của tôi' },
     ],
   },
   {
-    label: 'Giáo viên',
-    items: [{ path: '/submit-teacher-profile', icon: ShieldCheck, label: 'Đăng ký Giáo viên' }],
+    label: 'Nâng cấp',
+    items: [
+      { path: '/submit-teacher-profile', icon: ShieldCheck, label: 'Đăng ký Giáo viên' }
+    ],
   },
 ];
 
