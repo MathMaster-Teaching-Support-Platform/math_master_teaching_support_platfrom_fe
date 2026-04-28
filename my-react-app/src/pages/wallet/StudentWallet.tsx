@@ -12,7 +12,7 @@ import {
   X,
   Zap,
 } from 'lucide-react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockAdmin, mockStudent, mockTeacher } from '../../data/mockData';
@@ -3632,22 +3632,31 @@ const StudentWallet: React.FC = () => {
   const [page, setPage] = useState(1);
 
   // Order History State
-  const [activeTab, setActiveTab] = useState<'transactions' | 'orders' | 'withdrawals'>('transactions');
+  const [activeTab, setActiveTab] = useState<'transactions' | 'orders' | 'withdrawals'>(
+    'transactions'
+  );
   const [orderPage, setOrderPage] = useState(0);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showInvoice, setShowInvoice] = useState(false);
 
   // Withdrawal History State
   const [withdrawalPage, setWithdrawalPage] = useState(0);
-  const [withdrawalStatusFilter, setWithdrawalStatusFilter] = useState<'ALL' | WithdrawalStatus>('ALL');
+  const [withdrawalStatusFilter, setWithdrawalStatusFilter] = useState<'ALL' | WithdrawalStatus>(
+    'ALL'
+  );
 
-  const { data: withdrawalHistoryData, isLoading: isWithdrawalHistoryLoading, refetch: refetchWithdrawalHistory } = useQuery({
+  const {
+    data: withdrawalHistoryData,
+    isLoading: isWithdrawalHistoryLoading,
+    refetch: refetchWithdrawalHistory,
+  } = useQuery({
     queryKey: ['withdrawal', 'my', withdrawalPage, withdrawalStatusFilter],
-    queryFn: () => WithdrawalService.getMyRequests({
-      page: withdrawalPage,
-      size: 10,
-      ...(withdrawalStatusFilter !== 'ALL' ? { status: withdrawalStatusFilter } : {}),
-    }),
+    queryFn: () =>
+      WithdrawalService.getMyRequests({
+        page: withdrawalPage,
+        size: 10,
+        ...(withdrawalStatusFilter !== 'ALL' ? { status: withdrawalStatusFilter } : {}),
+      }),
     enabled: activeTab === 'withdrawals',
     staleTime: 15_000,
   });
@@ -3688,8 +3697,6 @@ const StudentWallet: React.FC = () => {
     const [day = '-', time = '-'] = full.split(' ');
     return { day, time };
   };
-
-  const queryClient = useQueryClient();
 
   const cancelWithdrawal = useMutation({
     mutationFn: (id: string) => WithdrawalService.cancelRequest(id),
@@ -4571,33 +4578,33 @@ const StudentWallet: React.FC = () => {
           <section className="transactions-panel">
             <div className="transactions-head">
               <div>
-              <div className="wallet-tabs-header">
-                <div className="wallet-tabs">
-                  <button 
-                    className={`wallet-tab ${activeTab === 'transactions' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('transactions')}
-                  >
-                    Lịch sử giao dịch
-                  </button>
-                  <button 
-                    className={`wallet-tab ${activeTab === 'orders' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('orders')}
-                  >
-                    Lịch sử mua hàng
-                  </button>
-                  <button
-                    className={`wallet-tab ${activeTab === 'withdrawals' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('withdrawals')}
-                  >
-                    Yêu cầu rút tiền
-                  </button>
+                <div className="wallet-tabs-header">
+                  <div className="wallet-tabs">
+                    <button
+                      className={`wallet-tab ${activeTab === 'transactions' ? 'active' : ''}`}
+                      onClick={() => setActiveTab('transactions')}
+                    >
+                      Lịch sử giao dịch
+                    </button>
+                    <button
+                      className={`wallet-tab ${activeTab === 'orders' ? 'active' : ''}`}
+                      onClick={() => setActiveTab('orders')}
+                    >
+                      Lịch sử mua hàng
+                    </button>
+                    <button
+                      className={`wallet-tab ${activeTab === 'withdrawals' ? 'active' : ''}`}
+                      onClick={() => setActiveTab('withdrawals')}
+                    >
+                      Yêu cầu rút tiền
+                    </button>
+                  </div>
+                  {activeTab === 'transactions' && (
+                    <p>
+                      Tổng nạp thành công: <strong>{formatCurrency(totalDeposit)} VND</strong>
+                    </p>
+                  )}
                 </div>
-                {activeTab === 'transactions' && (
-                  <p>
-                    Tổng nạp thành công: <strong>{formatCurrency(totalDeposit)} VND</strong>
-                  </p>
-                )}
-              </div>
               </div>
 
               {activeTab === 'transactions' && (
@@ -4630,26 +4637,30 @@ const StudentWallet: React.FC = () => {
 
             {/* List Body */}
             <div className="transaction-list">
-              {activeTab === 'transactions' && transactionsLoading &&
+              {activeTab === 'transactions' &&
+                transactionsLoading &&
                 Array.from({ length: 4 }).map((_, i) => <div key={i} className="tx-skeleton" />)}
 
-              {activeTab === 'transactions' && !transactionsLoading && paginatedTransactions.length === 0 && (
-                <div className="empty-state">
-                  <TrendingUp size={52} className="empty-icon" />
-                  <h3>Chưa có giao dịch nào</h3>
-                  <p>Nạp tiền lần đầu để bắt đầu hành trình học tập của bạn</p>
-                  <button
-                    className="btn-empty-cta"
-                    onClick={() =>
-                      document.querySelector<HTMLInputElement>('#deposit-amount')?.focus()
-                    }
-                  >
-                    Nạp tiền lần đầu
-                  </button>
-                </div>
-              )}
+              {activeTab === 'transactions' &&
+                !transactionsLoading &&
+                paginatedTransactions.length === 0 && (
+                  <div className="empty-state">
+                    <TrendingUp size={52} className="empty-icon" />
+                    <h3>Chưa có giao dịch nào</h3>
+                    <p>Nạp tiền lần đầu để bắt đầu hành trình học tập của bạn</p>
+                    <button
+                      className="btn-empty-cta"
+                      onClick={() =>
+                        document.querySelector<HTMLInputElement>('#deposit-amount')?.focus()
+                      }
+                    >
+                      Nạp tiền lần đầu
+                    </button>
+                  </div>
+                )}
 
-              {activeTab === 'transactions' && !transactionsLoading &&
+              {activeTab === 'transactions' &&
+                !transactionsLoading &&
                 paginatedTransactions.map((tx) => {
                   const status = normalizeStatus(tx.status);
                   const type = normalizeType(tx);
@@ -4721,18 +4732,23 @@ const StudentWallet: React.FC = () => {
                   );
                 })}
 
-              {activeTab === 'orders' && isOrdersLoading &&
+              {activeTab === 'orders' &&
+                isOrdersLoading &&
                 Array.from({ length: 4 }).map((_, i) => <div key={i} className="tx-skeleton" />)}
 
-              {activeTab === 'orders' && !isOrdersLoading && (!ordersData || ordersData.content.length === 0) && (
-                <div className="empty-state">
-                  <FileText size={52} className="empty-icon" />
-                  <h3>Chưa có hóa đơn nào</h3>
-                  <p>Các hóa đơn sẽ xuất hiện sau khi bạn mua khóa học</p>
-                </div>
-              )}
+              {activeTab === 'orders' &&
+                !isOrdersLoading &&
+                (!ordersData || ordersData.content.length === 0) && (
+                  <div className="empty-state">
+                    <FileText size={52} className="empty-icon" />
+                    <h3>Chưa có hóa đơn nào</h3>
+                    <p>Các hóa đơn sẽ xuất hiện sau khi bạn mua khóa học</p>
+                  </div>
+                )}
 
-              {activeTab === 'orders' && !isOrdersLoading && ordersData &&
+              {activeTab === 'orders' &&
+                !isOrdersLoading &&
+                ordersData &&
                 ordersData.content.map((order: Order) => (
                   <div key={order.id} className="tx-row order-row">
                     <div className="tx-icon-wrap payment">
@@ -4749,9 +4765,7 @@ const StudentWallet: React.FC = () => {
                       </div>
                     </div>
                     <div className="tx-right">
-                      <div className="tx-amount negative">
-                        −{formatCurrency(order.finalPrice)}đ
-                      </div>
+                      <div className="tx-amount negative">−{formatCurrency(order.finalPrice)}đ</div>
                       <span className={`tx-status-badge completed`}>
                         {order.status === 'COMPLETED' ? 'Thành công' : order.status}
                       </span>
@@ -4774,11 +4788,24 @@ const StudentWallet: React.FC = () => {
               {activeTab === 'withdrawals' && (
                 <div className="wd-filter-bar">
                   <span className="wd-filter-label">Lọc:</span>
-                  {(['ALL', 'PENDING_VERIFY', 'PENDING_ADMIN', 'PROCESSING', 'SUCCESS', 'REJECTED', 'CANCELLED'] as const).map((s) => (
+                  {(
+                    [
+                      'ALL',
+                      'PENDING_VERIFY',
+                      'PENDING_ADMIN',
+                      'PROCESSING',
+                      'SUCCESS',
+                      'REJECTED',
+                      'CANCELLED',
+                    ] as const
+                  ).map((s) => (
                     <button
                       key={s}
                       className={`wd-filter-chip${withdrawalStatusFilter === s ? ' active' : ''}`}
-                      onClick={() => { setWithdrawalStatusFilter(s); setWithdrawalPage(0); }}
+                      onClick={() => {
+                        setWithdrawalStatusFilter(s);
+                        setWithdrawalPage(0);
+                      }}
                     >
                       {s === 'ALL' ? 'Tất cả' : WITHDRAWAL_STATUS_LABELS[s as WithdrawalStatus]}
                     </button>
@@ -4786,18 +4813,22 @@ const StudentWallet: React.FC = () => {
                 </div>
               )}
 
-              {activeTab === 'withdrawals' && isWithdrawalHistoryLoading &&
+              {activeTab === 'withdrawals' &&
+                isWithdrawalHistoryLoading &&
                 Array.from({ length: 4 }).map((_, i) => <div key={i} className="tx-skeleton" />)}
 
-              {activeTab === 'withdrawals' && !isWithdrawalHistoryLoading && withdrawalHistoryItems.length === 0 && (
-                <div className="empty-state">
-                  <ArrowDownLeft size={52} className="empty-icon" />
-                  <h3>Chưa có yêu cầu rút tiền nào</h3>
-                  <p>Nhấn "Rút tiền" ở góc trên bên phải để tạo yêu cầu mới</p>
-                </div>
-              )}
+              {activeTab === 'withdrawals' &&
+                !isWithdrawalHistoryLoading &&
+                withdrawalHistoryItems.length === 0 && (
+                  <div className="empty-state">
+                    <ArrowDownLeft size={52} className="empty-icon" />
+                    <h3>Chưa có yêu cầu rút tiền nào</h3>
+                    <p>Nhấn "Rút tiền" ở góc trên bên phải để tạo yêu cầu mới</p>
+                  </div>
+                )}
 
-              {activeTab === 'withdrawals' && !isWithdrawalHistoryLoading &&
+              {activeTab === 'withdrawals' &&
+                !isWithdrawalHistoryLoading &&
                 withdrawalHistoryItems.map((wr: WithdrawalRequestResponse) => {
                   const statusColor = WITHDRAWAL_STATUS_COLORS[wr.status] ?? '#9ca3af';
                   const canCancel = wr.status === 'PENDING_VERIFY' || wr.status === 'PENDING_ADMIN';
@@ -4818,14 +4849,10 @@ const StudentWallet: React.FC = () => {
                             {new Date(wr.createdAt).toLocaleString('vi-VN')}
                           </span>
                         </div>
-                        {wr.adminNote && (
-                          <div className="wd-admin-note">📋 {wr.adminNote}</div>
-                        )}
+                        {wr.adminNote && <div className="wd-admin-note">📋 {wr.adminNote}</div>}
                       </div>
                       <div className="tx-right">
-                        <div className="tx-amount negative">
-                          −{formatCurrency(wr.amount)}đ
-                        </div>
+                        <div className="tx-amount negative">−{formatCurrency(wr.amount)}đ</div>
                         <span
                           className="tx-status-badge"
                           style={{ '--badge-color': statusColor } as React.CSSProperties}
@@ -4866,10 +4893,9 @@ const StudentWallet: React.FC = () => {
             </div>
 
             <footer className="transactions-footer">
+              {activeTab === 'withdrawals' ? (
                 <>
-                  <span>
-                    Tổng {withdrawalTotalElements} yêu cầu
-                  </span>
+                  <span>Tổng {withdrawalTotalElements} yêu cầu</span>
                   <div className="pagination">
                     <button
                       onClick={() => setWithdrawalPage((p) => Math.max(0, p - 1))}
@@ -4887,7 +4913,9 @@ const StudentWallet: React.FC = () => {
                       </button>
                     ))}
                     <button
-                      onClick={() => setWithdrawalPage((p) => Math.min(withdrawalTotalPages - 1, p + 1))}
+                      onClick={() =>
+                        setWithdrawalPage((p) => Math.min(withdrawalTotalPages - 1, p + 1))
+                      }
                       disabled={withdrawalPage >= withdrawalTotalPages - 1}
                     >
                       <ChevronRight size={15} />
@@ -4929,7 +4957,12 @@ const StudentWallet: React.FC = () => {
               ) : (
                 <>
                   <span>
-                    Hiển thị {ordersData?.number! * ordersData?.size! + 1}–{Math.min((ordersData?.number! + 1) * ordersData?.size!, ordersData?.totalElements!)} / {ordersData?.totalElements} hóa đơn
+                    Hiển thị {ordersData?.number! * ordersData?.size! + 1}–
+                    {Math.min(
+                      (ordersData?.number! + 1) * ordersData?.size!,
+                      ordersData?.totalElements!
+                    )}{' '}
+                    / {ordersData?.totalElements} hóa đơn
                   </span>
 
                   <div className="pagination">
@@ -4940,18 +4973,24 @@ const StudentWallet: React.FC = () => {
                       <ChevronLeft size={15} />
                     </button>
 
-                    {Array.from({ length: ordersData?.totalPages || 0 }, (_, idx) => idx).map((n) => (
-                      <button
-                        key={n}
-                        className={n === orderPage ? 'active' : ''}
-                        onClick={() => setOrderPage(n)}
-                      >
-                        {n + 1}
-                      </button>
-                    ))}
+                    {Array.from({ length: ordersData?.totalPages || 0 }, (_, idx) => idx).map(
+                      (n) => (
+                        <button
+                          key={n}
+                          className={n === orderPage ? 'active' : ''}
+                          onClick={() => setOrderPage(n)}
+                        >
+                          {n + 1}
+                        </button>
+                      )
+                    )}
 
                     <button
-                      onClick={() => setOrderPage((prev) => Math.min((ordersData?.totalPages || 1) - 1, prev + 1))}
+                      onClick={() =>
+                        setOrderPage((prev) =>
+                          Math.min((ordersData?.totalPages || 1) - 1, prev + 1)
+                        )
+                      }
                       disabled={orderPage >= (ordersData?.totalPages || 1) - 1}
                     >
                       <ChevronRight size={15} />
@@ -4964,7 +5003,7 @@ const StudentWallet: React.FC = () => {
         </div>
       </DashboardLayout>
 
-      <InvoiceModal 
+      <InvoiceModal
         order={selectedOrder}
         isOpen={showInvoice}
         onClose={() => setShowInvoice(false)}
