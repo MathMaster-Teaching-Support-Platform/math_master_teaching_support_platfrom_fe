@@ -14,11 +14,13 @@ import {
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CourseCard } from '../../components/course/CourseCard';
+import { InvoiceModal } from '../../components/course/InvoiceModal';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { useEnroll, useMyEnrollments, usePublicCourses } from '../../hooks/useCourses';
 import { LessonSlideService } from '../../services/api/lesson-slide.service';
 import '../../styles/module-refactor.css';
 import type { CourseResponse, EnrollmentResponse } from '../../types';
+import type { Order } from '../../types/order.types';
 import type { SchoolGrade, SubjectByGrade } from '../../types/lessonSlide.types';
 import './StudentCourses.css';
 import './TeacherCourses.css';
@@ -173,6 +175,8 @@ const StudentCourses: React.FC = () => {
   const [filterSubjectId, setFilterSubjectId] = useState('');
   const [enrollingCourseId, setEnrollingCourseId] = useState<string | null>(null);
   const [openingEnrollmentId, setOpeningEnrollmentId] = useState<string | null>(null);
+  const [showInvoice, setShowInvoice] = useState(false);
+  const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
   const [enrolledPage, setEnrolledPage] = useState(1);
   const [browsePage, setBrowsePage] = useState(1);
 
@@ -277,12 +281,28 @@ const StudentCourses: React.FC = () => {
     
     setEnrollingCourseId(courseId);
     enrollMutation.mutate(courseId, {
-      onSuccess: () => setActiveTab('enrolled'),
+      onSuccess: (resp) => {
+        const orderData = resp?.result || (resp as any)?.order || (resp?.type === 'order' ? resp : null);
+
+        if (orderData && (orderData.orderNumber || orderData.id)) {
+          setCompletedOrder(orderData);
+          setShowInvoice(true);
+        } else {
+          const newEnrollmentId =
+            (resp as any)?.enrollmentId || (resp as any)?.result?.enrollmentId || (resp as any)?.result?.id;
+          if (newEnrollmentId) {
+            navigate(`/student/courses/${newEnrollmentId}`);
+          }
+        }
+
+        setActiveTab('enrolled');
+      },
       onSettled: () => setEnrollingCourseId(null),
     });
   };
 
   return (
+    <>
     <DashboardLayout
       role="student"
       contentClassName="dashboard-content--flush-bleed"
@@ -561,6 +581,20 @@ const StudentCourses: React.FC = () => {
         </section>
       </div>
     </DashboardLayout>
+
+    <InvoiceModal
+      order={completedOrder}
+      isOpen={showInvoice}
+      onClose={() => setShowInvoice(false)}
+      onGoToCourse={() => {
+        if (completedOrder?.enrollmentId) {
+          navigate(`/student/courses/${completedOrder.enrollmentId}`);
+        } else {
+          navigate('/student/courses');
+        }
+      }}
+    />
+    </>
   );
 };
 

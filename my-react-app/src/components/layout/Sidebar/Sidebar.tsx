@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeftRight,
   BarChart3,
@@ -29,13 +29,12 @@ import {
   Workflow,
 } from 'lucide-react';
 import React, { useEffect, useMemo, useRef } from 'react';
-import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthService } from '../../../services/api/auth.service';
 import { LessonSlideService } from '../../../services/api/lesson-slide.service';
 import { MindmapService } from '../../../services/api/mindmap.service';
 import { SubscriptionPlanService } from '../../../services/api/subscription-plan.service';
 import { TeacherProfileService } from '../../../services/api/teacher-profile.service';
-import { UserService } from '../../../services/api/user.service';
 import { WalletService } from '../../../services/api/wallet.service';
 import './Sidebar.css';
 
@@ -157,46 +156,10 @@ const Sidebar: React.FC<SidebarProps> = ({ role, collapsed, onToggle }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [searchParams, setSearchParams] = useSearchParams();
   const navRef = useRef<HTMLElement | null>(null);
   const prefetchedPathsRef = useRef<Set<string>>(new Set());
   const navScrollStorageKey = useMemo(() => `mm.sidebar.scrollTop.${role}`, [role]);
   const navId = useMemo(() => `sidebar-nav-${role}`, [role]);
-
-  // Fetch user info to get their school grades (for students/teachers)
-  const userInfoQuery = useQuery({
-    queryKey: ['users', 'my-info', 'sidebar'],
-    queryFn: () => UserService.getMyInfo(),
-    staleTime: 60_000,
-    enabled: role === 'student' || role === 'teacher',
-  });
-
-  // Fetch all school grades for selection
-  const schoolGradesQuery = useQuery({
-    queryKey: ['school-grades', 'active'],
-    queryFn: () => LessonSlideService.getSchoolGrades(true),
-    staleTime: 5 * 60 * 1000,
-    enabled: role === 'student' || role === 'teacher',
-  });
-
-  // Get selected grade from URL or user's first grade
-  const selectedGradeId = useMemo(() => {
-    const urlGrade = searchParams.get('gradeId');
-    if (urlGrade) return urlGrade;
-
-    // Default to user's first grade if available
-    const userGrades = userInfoQuery.data?.schoolGrades;
-    return userGrades && userGrades.length > 0 ? userGrades[0].id : '';
-  }, [searchParams, userInfoQuery.data]);
-
-  const handleGradeChange = (gradeId: string) => {
-    if (!gradeId) return;
-
-    // Update URL params
-    const newParams = new URLSearchParams(searchParams);
-    newParams.set('gradeId', gradeId);
-    setSearchParams(newParams, { replace: true });
-  };
 
   useEffect(() => {
     const nav = navRef.current;

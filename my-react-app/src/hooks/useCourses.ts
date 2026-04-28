@@ -368,19 +368,16 @@ export function useEnroll() {
       }
       
       // Step 3: Proceed with enrollment via Order flow
-      if (finalPrice > 0) {
-        const order = await orderService.createOrder(courseId);
-        const confirmedOrder = await orderService.confirmOrder(order.id);
-        // Map the order to match the expected format or return the order itself
-        return { result: confirmedOrder, type: 'order' };
-      } else {
-        // Free courses might still use the direct enroll, or we can use the order flow if it supports 0-price
-        // The backend `CourseServiceImpl.enroll` was supporting free courses by just enrolling them.
-        // Let's assume order flow supports free courses (discountAmount = originalPrice).
-        const order = await orderService.createOrder(courseId);
-        const confirmedOrder = await orderService.confirmOrder(order.id);
-        return { result: confirmedOrder, type: 'order' };
-      }
+      // Both free and paid courses now go through the order flow for consistent billing records
+      const order = await orderService.createOrder(courseId);
+      const confirmedOrder = await orderService.confirmOrder(order.id);
+      
+      return { 
+        result: confirmedOrder, 
+        type: 'order',
+        // Include enrollmentId directly for convenience if available
+        enrollmentId: confirmedOrder.enrollmentId || null
+      };
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: courseKeys.enrollments() });
