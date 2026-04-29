@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Clock, FileText, MessageSquare } from 'lucide-react';
 import { UI_TEXT } from '../../constants/uiText';
 import { useMyResult, useCreateRegradeRequest } from '../../hooks/useGrading';
-import { ClauseDetailDisplay } from '../../components/assessment/ClauseDetailDisplay';
+import { ResultRenderer } from '../../components/question';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import MathText from '../../components/common/MathText';
 import '../../styles/module-refactor.css';
@@ -171,41 +171,18 @@ export default function AssessmentResult() {
                     <MathText text={answer.questionText} />
                   </p>
 
-                  <div style={{ marginBottom: 12 }}>
-                    <p className="muted" style={{ fontSize: '0.875rem', marginBottom: 4 }}>
-                      Câu trả lời của bạn:
-                    </p>
-                    <p
-                      style={{
-                        padding: 12,
-                        backgroundColor: 'var(--bg-secondary)',
-                        borderRadius: 6,
-                        whiteSpace: 'pre-wrap',
-                      }}
-                    >
-                      {answer.answerText || '(Không có câu trả lời)'}
-                    </p>
-                  </div>
-
-                  {answer.correctAnswer && (
-                    <div style={{ marginBottom: 12 }}>
-                      <p className="muted" style={{ fontSize: '0.875rem', marginBottom: 4 }}>
-                        Đáp án đúng:
-                      </p>
-                      <p
-                        style={{
-                          padding: 12,
-                          backgroundColor: 'var(--success-color-light)',
-                          borderRadius: 6,
-                        }}
-                      >
-                        {answer.correctAnswer}
-                      </p>
-                    </div>
-                  )}
+                  {/* Use new ResultRenderer component */}
+                  <ResultRenderer
+                    answer={answer}
+                    questionText={answer.questionText}
+                    options={answer.questionType === 'MULTIPLE_CHOICE' || answer.questionType === 'TRUE_FALSE' 
+                      ? (typeof answer.correctAnswer === 'object' ? answer.correctAnswer as Record<string, string> : undefined)
+                      : undefined
+                    }
+                  />
 
                   {answer.feedback && (
-                    <div style={{ marginBottom: 12 }}>
+                    <div style={{ marginTop: 12, marginBottom: 12 }}>
                       <p className="muted" style={{ fontSize: '0.875rem', marginBottom: 4 }}>
                         Nhận xét từ giáo viên:
                       </p>
@@ -220,41 +197,6 @@ export default function AssessmentResult() {
                       </p>
                     </div>
                   )}
-
-                  {/* NEW: Clause detail display for TRUE_FALSE questions */}
-                  {answer.scoringDetail && (
-                    <ClauseDetailDisplay scoringDetail={answer.scoringDetail} />
-                  )}
-
-                  {/* AI Reviews - Not yet implemented in BE
-                  {answer.aiReviews && answer.aiReviews.length > 0 && (
-                    <div style={{ marginBottom: 12 }}>
-                      <p className="muted" style={{ fontSize: '0.875rem', marginBottom: 4 }}>
-                        Đánh giá AI:
-                      </p>
-                      {answer.aiReviews.map((review, idx) => (
-                        <div
-                          key={idx}
-                          style={{
-                            padding: 12,
-                            backgroundColor: 'var(--bg-secondary)',
-                            borderRadius: 6,
-                            marginBottom: 8,
-                          }}
-                        >
-                          <p style={{ fontSize: '0.875rem' }}>{review.reviewContent}</p>
-                          {review.suggestions && review.suggestions.length > 0 && (
-                            <ul style={{ marginTop: 8, paddingLeft: 20, fontSize: '0.875rem' }}>
-                              {review.suggestions.map((suggestion, sIdx) => (
-                                <li key={sIdx}>{suggestion}</li>
-                              ))}
-                            </ul>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  */}
 
                   {result.gradesReleased && (
                     <button

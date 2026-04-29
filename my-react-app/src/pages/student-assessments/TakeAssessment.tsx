@@ -1,8 +1,7 @@
 import { AlertCircle, ChevronLeft, ChevronRight, Flag, Save } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import QuestionDisplay from '../../components/assessment/QuestionDisplay';
-import { QuestionRenderer } from '../../components/assessment/QuestionRenderer';
+import { QuestionRenderer } from '../../components/question';
 import QuestionNavigator from '../../components/assessment/QuestionNavigator';
 import Timer from '../../components/assessment/Timer';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
@@ -330,19 +329,11 @@ export default function TakeAssessment() {
           >
             {/* Main content */}
             <div>
-              {currentQuestion.questionType === 'MULTIPLE_CHOICE' ? (
-                <QuestionDisplay
-                  question={currentQuestion}
-                  answer={answers[currentQuestion.questionId]}
-                  onAnswerChange={(value) => handleAnswerChange(currentQuestion.questionId, value)}
-                />
-              ) : (
-                <QuestionRenderer
-                  question={currentQuestion}
-                  studentAnswer={answers[currentQuestion.questionId]}
-                  onAnswerChange={(value) => handleAnswerChange(currentQuestion.questionId, value)}
-                />
-              )}
+              <QuestionRenderer
+                question={currentQuestion}
+                studentAnswer={answers[currentQuestion.questionId]}
+                onAnswerChange={(value) => handleAnswerChange(currentQuestion.questionId, value)}
+              />
 
               {/* Navigation */}
               <div className="row" style={{ marginTop: 24, justifyContent: 'space-between' }}>
