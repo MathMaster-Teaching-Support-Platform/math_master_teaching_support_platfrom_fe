@@ -698,13 +698,14 @@ export class CourseService {
     size = 10,
     rating?: number
   ): Promise<ApiResponse<PaginatedResponse<CourseReviewResponse>>> {
-    const url = new URL(`${API_BASE_URL}/courses/${courseId}/reviews`);
-    url.searchParams.append('page', page.toString());
-    url.searchParams.append('size', size.toString());
-    if (rating) url.searchParams.append('rating', rating.toString());
+    const qs = new URLSearchParams();
+    qs.append('page', page.toString());
+    qs.append('size', size.toString());
+    if (rating) qs.append('rating', rating.toString());
 
+    const url = `${API_BASE_URL}/courses/${courseId}/reviews?${qs.toString()}`;
     const headers = await this.getAuthHeaders().catch(() => ({} as Record<string, string>));
-    const response = await fetch(url.toString(), {
+    const response = await fetch(url, {
       headers: Object.keys(headers).length > 0 ? headers : undefined,
     });
     return this.handleResponse(response);

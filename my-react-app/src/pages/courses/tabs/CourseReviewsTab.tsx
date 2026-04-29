@@ -2,6 +2,7 @@ import { Edit2, Filter, MessageSquare, Send, Star } from 'lucide-react';
 import React, { useState } from 'react';
 import { useCourseReviews, useReplyToReview, useReviewSummary } from '../../../hooks/useCourses';
 import { useToast } from '../../../context/ToastContext';
+import { UI_TEXT } from '../../../constants/uiText';
 import './course-detail-tabs.css';
 
 interface CourseReviewsTabProps {
@@ -136,7 +137,11 @@ const CourseReviewsTab: React.FC<CourseReviewsTabProps> = ({ courseId }) => {
         {reviews.length === 0 ? (
           <div className="cdt-reviews__empty">
             <MessageSquare size={48} strokeWidth={1.25} />
-            <p>Chưa có đánh giá nào phù hợp với bộ lọc.</p>
+            <p>
+              {filterRating 
+                ? `Chưa có đánh giá ${filterRating} sao nào.` 
+                : `Chưa có đánh giá nào cho ${UI_TEXT.COURSE.toLowerCase()} này.`}
+            </p>
           </div>
         ) : (
           <div className="cdt-reviews__list">
