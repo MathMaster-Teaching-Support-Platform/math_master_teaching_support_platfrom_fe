@@ -39,6 +39,12 @@ const cognitiveOrder = ['NB', 'TH', 'VD', 'VDC'] as const;
 
 type MatrixLevel = (typeof cognitiveOrder)[number];
 
+const partLabels: Record<number, string> = {
+  1: 'Phần I (MCQ)',
+  2: 'Phần II (TF)',
+  3: 'Phần III (SA)',
+};
+
 function normalizeLevel(level: string): MatrixLevel | null {
   const upper = level.toUpperCase();
   if (upper === 'NB' || upper === 'NHAN_BIET' || upper === 'REMEMBER') return 'NB';
@@ -433,32 +439,43 @@ export default function ExamMatrixDetailPage() {
                         <th>Môn</th>
                         <th>Chương</th>
                         <th>Bank</th>
-                        <th>Dạng bài</th>
-                        <th
-                          className="matrix-level-header matrix-level-header--nb"
-                          title="questions will be randomly selected from Question Bank"
-                        >
-                          NB
-                        </th>
-                        <th
-                          className="matrix-level-header matrix-level-header--th"
-                          title="questions will be randomly selected from Question Bank"
-                        >
-                          TH
-                        </th>
-                        <th
-                          className="matrix-level-header matrix-level-header--vd"
-                          title="questions will be randomly selected from Question Bank"
-                        >
-                          VD
-                        </th>
-                        <th
-                          className="matrix-level-header matrix-level-header--vdc"
-                          title="questions will be randomly selected from Question Bank"
-                        >
-                          VDC
-                        </th>
-                        <th>Tổng dạng bài</th>
+                        {/* NEW: Dynamic part columns based on numberOfParts */}
+                        {(() => {
+                          const numberOfParts = table?.numberOfParts ?? 1;
+                          const parts = [];
+                          for (let i = 1; i <= numberOfParts; i++) {
+                            parts.push(
+                              <th key={`part-header-${i}`} colSpan={4} style={{ textAlign: 'center' }}>
+                                {partLabels[i]}
+                              </th>
+                            );
+                          }
+                          return parts;
+                        })()}
+                        <th>Tổng</th>
+                      </tr>
+                      {/* Sub-header row for cognitive levels */}
+                      <tr>
+                        <th colSpan={4}></th>
+                        {(() => {
+                          const numberOfParts = table?.numberOfParts ?? 1;
+                          const subHeaders: React.ReactElement[] = [];
+                          for (let i = 1; i <= numberOfParts; i++) {
+                            cognitiveOrder.forEach((level) => {
+                              subHeaders.push(
+                                <th
+                                  key={`part-${i}-${level}`}
+                                  className={`matrix-level-header matrix-level-header--${level.toLowerCase()}`}
+                                  title="questions will be randomly selected from Question Bank"
+                                >
+                                  {level}
+                                </th>
+                              );
+                            });
+                          }
+                          return subHeaders;
+                        })()}
+                        <th></th>
                       </tr>
                     </thead>
                     <tbody>
@@ -500,30 +517,28 @@ export default function ExamMatrixDetailPage() {
                               </button>
                             )}
                           </td>
-                          <td>
-                            <div>
-                              <strong>{row.questionTypeName}</strong>
-                              {row.referenceQuestions && (
-                                <p className="muted" style={{ marginTop: 4, fontSize: 12 }}>
-                                  {row.referenceQuestions}
-                                </p>
-                              )}
-                            </div>
-                          </td>
-                          {cognitiveOrder.map((level) => {
-                            const cell = getRowCell(row, level);
-                            const isEmpty = cell.questionCount <= 0;
-                            return (
-                              <td
-                                key={`${row.rowId}-${level}`}
-                                className={
-                                  isEmpty ? 'matrix-cell matrix-cell--empty' : 'matrix-cell'
-                                }
-                              >
-                                <strong>{cell.questionCount || 0}</strong>
-                              </td>
-                            );
-                          })}
+                          {/* NEW: Dynamic part columns */}
+                          {(() => {
+                            const numberOfParts = table?.numberOfParts ?? 1;
+                            const cells: React.ReactElement[] = [];
+                            for (let partNum = 1; partNum <= numberOfParts; partNum++) {
+                              cognitiveOrder.forEach((level) => {
+                                const cell = getRowCell(row, level);
+                                const isEmpty = cell.questionCount <= 0;
+                                cells.push(
+                                  <td
+                                    key={`${row.rowId}-part${partNum}-${level}`}
+                                    className={
+                                      isEmpty ? 'matrix-cell matrix-cell--empty' : 'matrix-cell'
+                                    }
+                                  >
+                                    <strong>{cell.questionCount || 0}</strong>
+                                  </td>
+                                );
+                              });
+                            }
+                            return cells;
+                          })()}
                           <td>
                             <strong>{row.rowTotalQuestions}</strong>
                           </td>
@@ -531,21 +546,33 @@ export default function ExamMatrixDetailPage() {
                       ))}
 
                       <tr className="matrix-grand-total-row">
-                        <td colSpan={5}>
+                        <td colSpan={4}>
                           <strong>Tổng</strong>
                         </td>
-                        <td>
-                          <strong>{tableTotals.nb}</strong>
-                        </td>
-                        <td>
-                          <strong>{tableTotals.th}</strong>
-                        </td>
-                        <td>
-                          <strong>{tableTotals.vd}</strong>
-                        </td>
-                        <td>
-                          <strong>{tableTotals.vdc}</strong>
-                        </td>
+                        {/* NEW: Dynamic total columns */}
+                        {(() => {
+                          const numberOfParts = table?.numberOfParts ?? 1;
+                          const totals: React.ReactElement[] = [];
+                          for (let partNum = 1; partNum <= numberOfParts; partNum++) {
+                            cognitiveOrder.forEach((level) => {
+                              totals.push(
+                                <td key={`total-part${partNum}-${level}`}>
+                                  <strong>
+                                    {(() => {
+                                      let sum = 0;
+                                      for (const row of tableRows) {
+                                        const cell = getRowCell(row, level);
+                                        sum += cell.questionCount;
+                                      }
+                                      return sum;
+                                    })()}
+                                  </strong>
+                                </td>
+                              );
+                            });
+                          }
+                          return totals;
+                        })()}
                         <td>
                           <strong>{tableTotals.total}</strong>
                         </td>
@@ -564,6 +591,7 @@ export default function ExamMatrixDetailPage() {
               matrixGradeLevel={matrix?.gradeLevel ?? table?.gradeLevel}
               subjectId={matrix?.subjectId ?? table?.subjectId}
               matrixTotalPointsTarget={matrix?.totalPointsTarget}
+              numberOfParts={table?.numberOfParts ?? 1}  // NEW: Pass numberOfParts
               onClose={() => {
                 setRowModalOpen(false);
               }}

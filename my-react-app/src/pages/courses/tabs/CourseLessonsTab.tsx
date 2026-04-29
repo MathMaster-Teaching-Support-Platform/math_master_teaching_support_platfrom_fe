@@ -46,8 +46,10 @@ import '../../../styles/module-refactor.css';
 import '../StudentCourses.css';
 import './course-detail-tabs.css';
 import './CourseLessonsTab.css';
+import { extractChapterNumber, sortCurriculumGroups } from '../../../utils/curriculum';
 import type { CourseLessonResponse, CourseResponse } from '../../../types';
 import type { ChapterBySubject, LessonByChapter } from '../../../types/lessonSlide.types';
+import { UI_TEXT } from '../../../constants/uiText';
 
 type LessonMaterial = {
   id?: string;
@@ -987,62 +989,52 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
     return (sectionsData?.result ?? []).sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
   }, [sectionsData]);
 
-  // Group lessons by section OR chapter
-  // Group lessons by section OR chapter
-  const curriculumHierarchy = useMemo(() => {
-    const groupsMap: Record<string, {
-      id: string;
-      title: string;
-      lessons: CourseLessonResponse[];
-      type: 'SECTION' | 'CHAPTER' | 'OTHER';
-      firstSeenIndex: number;
-    }> = {};
+    const curriculumHierarchy = useMemo(() => {
+      const groupsMap: Record<
+        string,
+        {
+          id: string;
+          title: string;
+          lessons: CourseLessonResponse[];
+          type: 'SECTION' | 'CHAPTER' | 'OTHER';
+          firstSeenIndex: number;
+          orderIndex?: number;
+        }
+      > = {};
 
-    const sectionOrderMap = new Map(
-      sections.map((section, index) => [section.id, section.orderIndex ?? index + 1] as const)
-    );
+      const sectionOrderMap = new Map(
+        sections.map((section, index) => [section.id, section.orderIndex ?? index + 1] as const)
+      );
 
-    lessons.forEach((lesson, index) => {
-      const section = sections.find((s) => s.id === lesson.sectionId);
-      const groupId = lesson.sectionId || lesson.chapterId || 'no-group';
-      const groupTitle =
-        section?.title ||
-        lesson.chapterTitle ||
-        (lesson.sectionId ? 'Mục chưa đặt tên' : lesson.chapterId ? 'Chương chưa đặt tên' : 'Khác');
-      const groupType = lesson.sectionId ? 'SECTION' : lesson.chapterId ? 'CHAPTER' : 'OTHER';
+      lessons.forEach((lesson, index) => {
+        const section = sections.find((s) => s.id === lesson.sectionId);
+        const groupId = lesson.sectionId || lesson.chapterId || 'no-group';
+        const groupTitle =
+          section?.title ||
+          lesson.chapterTitle ||
+          (lesson.sectionId ? 'Mục chưa đặt tên' : lesson.chapterId ? 'Chương chưa đặt tên' : 'Khác');
+        const groupType = lesson.sectionId ? 'SECTION' : lesson.chapterId ? 'CHAPTER' : 'OTHER';
 
-      if (!groupsMap[groupId]) {
-        groupsMap[groupId] = {
-          id: groupId,
-          title: groupTitle,
-          lessons: [],
-          type: groupType,
-          firstSeenIndex: index,
-        };
-      }
-      groupsMap[groupId].lessons.push(lesson);
-    });
+        if (!groupsMap[groupId]) {
+          groupsMap[groupId] = {
+            id: groupId,
+            title: groupTitle,
+            lessons: [],
+            type: groupType,
+            firstSeenIndex: index,
+            orderIndex: groupType === 'SECTION' ? sectionOrderMap.get(groupId) : undefined,
+          };
+        }
+        groupsMap[groupId].lessons.push(lesson);
+      });
 
-    const getGroupSortOrder = (group: (typeof groupsMap)[string]) => {
-      if (group.type === 'SECTION') {
-        return sectionOrderMap.get(group.id) ?? group.firstSeenIndex;
-      }
-
-      return group.firstSeenIndex;
-    };
-
-    return Object.values(groupsMap)
-      .sort((a, b) => {
-        const orderA = getGroupSortOrder(a);
-        const orderB = getGroupSortOrder(b);
-        if (orderA !== orderB) return orderA - orderB;
-        return a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: 'base' });
-      })
-      .map((group) => ({
-        ...group,
-        lessons: [...group.lessons].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0)),
-      }));
-  }, [lessons, sections]);
+      return Object.values(groupsMap)
+        .sort(sortCurriculumGroups)
+        .map((group) => ({
+          ...group,
+          lessons: [...group.lessons].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0)),
+        }));
+    }, [lessons, sections]);
 
   const toggleSection = (sId: string) => {
     setCollapsedSections((prev) => ({ ...prev, [sId]: !prev[sId] }));
@@ -1137,7 +1129,10 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
             />
             <span className="section-label" style={isSidebar ? { fontSize: '0.65rem' } : {}}>
               {group.type === 'CHAPTER'
-                ? `Chương ${idx + 1}`
+                ? (() => {
+                    const num = extractChapterNumber(group.title) ?? extractChapterNumber(group.id);
+                    return num !== null ? `Chương ${num}` : `Chương ${idx + 1}`;
+                  })()
                 : group.type === 'SECTION'
                   ? `Mục ${idx + 1}`
                   : 'Khác'}
@@ -1644,7 +1639,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                 }}
               >
                 <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800 }}>
-                  Giáo trình khóa học
+                  {UI_TEXT.COURSE_CONTENT}
                 </h4>
                 <div className="pill-btn active">
                   <Layout size={13} style={{ marginRight: 4 }} /> Phân cấp

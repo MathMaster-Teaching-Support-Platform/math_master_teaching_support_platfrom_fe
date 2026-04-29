@@ -318,7 +318,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Badge trạng thái loại giáo trình */
+/* Badge trạng thái loại khóa học */
 .course-overview-tab__badge {
   display: inline-flex;
   align-items: center;

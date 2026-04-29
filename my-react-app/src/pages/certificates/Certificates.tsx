@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockStudent } from '../../data/mockData';
+import { UI_TEXT } from '../../constants/uiText';
 import './Certificates.css';
 
 interface Certificate {
@@ -32,7 +33,7 @@ const Certificates: React.FC = () => {
   const certificates: Certificate[] = [
     {
       id: 1,
-      title: 'Chứng chỉ Hoàn thành Giáo Trình Đại số',
+      title: `Chứng chỉ Hoàn thành ${UI_TEXT.COURSE} Đại số`,
       course: 'Toán 11 - Đại số',
       issueDate: '15/01/2026',
       score: 9.2,
@@ -41,7 +42,7 @@ const Certificates: React.FC = () => {
     },
     {
       id: 2,
-      title: 'Chứng chỉ Hoàn thành Giáo Trình Hình học',
+      title: `Chứng chỉ Hoàn thành ${UI_TEXT.COURSE} Hình học`,
       course: 'Toán 10 - Hình học',
       issueDate: '20/12/2025',
       score: 8.8,
@@ -354,7 +355,7 @@ const Certificates: React.FC = () => {
                     <h2 className="cert-name">{mockStudent.name}</h2>
 
                     <p className="cert-achievement">
-                      Đã hoàn thành xuất sắc Giáo Trình
+                      Đã hoàn thành xuất sắc {UI_TEXT.COURSE.toLowerCase()}
                       <br />
                       <strong>{selectedCertificate.course}</strong>
                       <br />

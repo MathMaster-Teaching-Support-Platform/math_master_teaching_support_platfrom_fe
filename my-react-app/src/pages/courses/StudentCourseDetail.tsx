@@ -29,6 +29,7 @@ import {
 } from '../../hooks/useCourses';
 import '../../styles/module-refactor.css';
 import './StudentCourses.css';
+import { UI_TEXT } from '../../constants/uiText';
 // Import tab components
 import StudentAssessmentsTab from './student-tabs/StudentAssessmentsTab';
 import StudentLessonsTab from './student-tabs/StudentLessonsTab';
@@ -109,7 +110,7 @@ const StudentCourseDetail: React.FC = () => {
 
   const tabs = [
     { id: 'lessons' as const, label: 'Bài học', icon: BookOpen },
-    { id: 'assessments' as const, label: 'Bài đánh giá', icon: FileText },
+    { id: 'assessments' as const, label: UI_TEXT.QUIZ, icon: FileText },
     { id: 'reviews' as const, label: 'Đánh giá', icon: Star },
     { id: 'progress' as const, label: 'Tiến độ', icon: TrendingUp },
   ];
@@ -127,7 +128,7 @@ const StudentCourseDetail: React.FC = () => {
               transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
             >
               {/* Breadcrumb */}
-              <CourseBreadcrumb courseTitle={enrollment.courseTitle ?? 'Giáo trình'} />
+              <CourseBreadcrumb courseTitle={enrollment.courseTitle ?? UI_TEXT.COURSE} />
 
               {/* Course Header */}
               <div className="course-detail-header">

@@ -2,6 +2,7 @@ import { AlertTriangle, BarChart2, CheckCircle, Search, Users, X } from 'lucide-
 import React, { useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockTeacher } from '../../data/mockData';
+import { UI_TEXT } from '../../constants/uiText';
 import '../../styles/module-refactor.css';
 import './TeacherStudents.css';
 
@@ -246,7 +247,7 @@ const TeacherStudents: React.FC = () => {
               value={courseFilter}
               onChange={(e) => setCourseFilter(e.target.value)}
             >
-              <option value="all">Tất cả Giáo Trình</option>
+              <option value="all">Tất cả {UI_TEXT.COURSE}</option>
               <option value="Toán 11">Toán 11</option>
               <option value="Toán 12">Toán 12</option>
             </select>

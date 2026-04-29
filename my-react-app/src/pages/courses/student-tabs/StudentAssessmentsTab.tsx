@@ -4,6 +4,7 @@ import { AlertCircle, CheckCircle, Clock, FileText, Lock, Play, Star } from 'luc
 import { useMyAssessmentsByCourse } from '../../../hooks/useStudentAssessment';
 import type { StudentAssessmentResponse } from '../../../types/studentAssessment.types';
 import '../../../styles/module-refactor.css';
+import { UI_TEXT } from '../../../constants/uiText';
 
 interface StudentAssessmentsTabProps {
   courseId: string;
@@ -75,7 +76,7 @@ const StudentAssessmentsTab: React.FC<StudentAssessmentsTabProps> = ({ courseId 
           </div>
           <div>
             <h3>{stats.total}</h3>
-            <p>Tổng đánh giá</p>
+            <p>Tổng {UI_TEXT.QUIZ.toLowerCase()}</p>
           </div>
         </div>
         <div className="stat-card stat-amber">
@@ -111,19 +112,19 @@ const StudentAssessmentsTab: React.FC<StudentAssessmentsTabProps> = ({ courseId 
         <div className="row" style={{ gap: 8, color: '#1e40af' }}>
           <AlertCircle size={16} />
           <span style={{ fontSize: '0.88rem', fontWeight: 600 }}>
-            Hoàn thành các bài đánh giá để đánh giá kiến thức của bạn
+            Hoàn thành các {UI_TEXT.QUIZ.toLowerCase()} để đánh giá kiến thức của bạn
           </span>
         </div>
       </div>
 
       {/* Loading */}
-      {isLoading && <div className="empty">Đang tải danh sách đánh giá...</div>}
+      {isLoading && <div className="empty">Đang tải danh sách {UI_TEXT.QUIZ.toLowerCase()}...</div>}
 
       {/* Empty State */}
       {!isLoading && assessments.length === 0 && (
         <div className="empty">
           <FileText size={40} strokeWidth={1.5} style={{ marginBottom: 12, color: '#94a3b8' }} />
-          <p>Chưa có bài đánh giá nào trong giáo trình này.</p>
+          <p>Chưa có {UI_TEXT.QUIZ.toLowerCase()} nào trong {UI_TEXT.COURSE.toLowerCase()} này.</p>
         </div>
       )}
 

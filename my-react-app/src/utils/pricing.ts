@@ -54,17 +54,21 @@ export const getDiscountPercentage = (course: CourseResponse): number => {
  * Validate pricing for course creation/update
  */
 export const validatePricing = (originalPrice?: number, discountedPrice?: number): string | null => {
-  if (discountedPrice !== undefined && discountedPrice !== null && originalPrice !== undefined && originalPrice !== null) {
-    if (discountedPrice >= originalPrice) {
+  const op = originalPrice ?? 0;
+  const dp = discountedPrice ?? 0;
+
+  if (op < 0) return 'Giá gốc không được âm';
+  if (dp < 0) return 'Giá khuyến mãi không được âm';
+
+  if (op > 0) {
+    if (dp >= op) {
       return 'Giá khuyến mãi phải nhỏ hơn giá gốc';
     }
-    if (discountedPrice < 0) {
-      return 'Giá khuyến mãi không được âm';
+  } else {
+    // Free course: originalPrice is 0
+    if (dp > 0) {
+      return 'Khóa học miễn phí không thể có giá khuyến mãi';
     }
-  }
-  
-  if (originalPrice !== undefined && originalPrice !== null && originalPrice < 0) {
-    return 'Giá gốc không được âm';
   }
   
   return null;

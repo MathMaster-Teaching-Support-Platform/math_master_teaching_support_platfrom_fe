@@ -24,6 +24,7 @@ import type { Order } from '../../types/order.types';
 import type { SchoolGrade, SubjectByGrade } from '../../types/lessonSlide.types';
 import './StudentCourses.css';
 import './TeacherCourses.css';
+import { UI_TEXT } from '../../constants/uiText';
 
 // ─── Cover design tokens (shared with TeacherCourses) ────────────────────────
 const coverGradients = [
@@ -101,7 +102,7 @@ const EnrollmentCard: React.FC<{
         {enrolledCourseThumbnailUrl && (
           <img
             src={enrolledCourseThumbnailUrl}
-            alt={enrollment.courseTitle ?? 'Ảnh bìa giáo trình'}
+            alt={enrollment.courseTitle ?? `Ảnh bìa ${UI_TEXT.COURSE.toLowerCase()}`}
             className="cover-thumb"
           />
         )}
@@ -321,7 +322,7 @@ const StudentCourses: React.FC = () => {
             <header className="page-header courses-header-row">
               <div className="header-stack">
                 <div className="row" style={{ gap: '0.6rem' }}>
-                  <h2>Giáo trình của tôi</h2>
+                  <h2>{UI_TEXT.MY_COURSES}</h2>
                   {!loadingEnrollments && <span className="count-chip">{enrollments.length}</span>}
                 </div>
                 <p className="header-sub">
@@ -368,10 +369,10 @@ const StudentCourses: React.FC = () => {
                   <Search size={15} />
                 </span>
                 <input
-                  placeholder="Tìm kiếm giáo trình..."
+                  placeholder={`Tìm kiếm ${UI_TEXT.COURSE.toLowerCase()}...`}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  aria-label="Tìm kiếm giáo trình"
+                  aria-label={`Tìm kiếm ${UI_TEXT.COURSE.toLowerCase()}`}
                 />
                 {searchQuery && (
                   <button

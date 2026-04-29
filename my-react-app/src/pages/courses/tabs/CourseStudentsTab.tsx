@@ -107,7 +107,7 @@ const CourseStudentsTab: React.FC<CourseStudentsTabProps> = ({ courseId }) => {
       {!isLoading && students.length === 0 && (
         <div className="cdt-empty">
           <Users size={40} strokeWidth={1.5} style={{ marginBottom: 12 }} />
-          <p>Chưa có học viên nào đăng ký giáo trình này.</p>
+          <p>Chưa có học viên nào đăng ký khóa học này.</p>
         </div>
       )}
 

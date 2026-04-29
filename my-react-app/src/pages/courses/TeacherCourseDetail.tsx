@@ -34,6 +34,7 @@ import '../../styles/module-refactor.css';
 import type { CourseLevel, UpdateCourseRequest } from '../../types';
 import './TeacherCourseDetail.css';
 import './TeacherCourses.css';
+import { UI_TEXT } from '../../constants/uiText';
 import './tabs/CourseOverviewTab.css';
 import './tabs/course-detail-tabs.css';
 
@@ -88,15 +89,15 @@ const TeacherCourseDetail: React.FC = () => {
   const students = studentsData?.result?.content ?? [];
 
   const loadingMessage = loadingCourse
-    ? 'Đang tải cấu hình giáo trình...'
+    ? `Đang tải cấu hình ${UI_TEXT.COURSE.toLowerCase()}...`
     : updateMutation.isPending
-      ? 'Đang lưu cấu hình giáo trình...'
+      ? `Đang lưu cấu hình ${UI_TEXT.COURSE.toLowerCase()}...`
       : publishMutation.isPending
         ? 'Đang cập nhật trạng thái công khai...'
         : submitReviewMutation.isPending
-          ? 'Đang gửi giáo trình lên hàng chờ duyệt...'
+          ? `Đang gửi ${UI_TEXT.COURSE.toLowerCase()} lên hàng chờ duyệt...`
           : deleteMutation.isPending
-            ? 'Đang xóa giáo trình...'
+            ? `Đang xóa ${UI_TEXT.COURSE.toLowerCase()}...`
             : '';
   const showMathLoadingPopup = Boolean(loadingMessage);
 
@@ -168,7 +169,7 @@ const TeacherCourseDetail: React.FC = () => {
     if (!course) return;
     if (
       window.confirm(
-        `Bạn có chắc muốn xóa giáo trình "${course.title}"? Hành động này không thể hoàn tác.`
+        `Bạn có chắc muốn xóa ${UI_TEXT.COURSE.toLowerCase()} "${course.title}"? Hành động này không thể hoàn tác.`
       )
     ) {
       deleteMutation.mutate(course.id, {
@@ -200,7 +201,7 @@ const TeacherCourseDetail: React.FC = () => {
           <section className="module-page module-page--bleed" lang="vi">
             <div className="empty">
               <AlertCircle size={32} style={{ marginBottom: 8, color: '#ef4444' }} />
-              <p>Không tìm thấy giáo trình</p>
+              <p>Không tìm thấy {UI_TEXT.COURSE.toLowerCase()}</p>
               <button className="btn secondary" onClick={() => navigate('/teacher/courses')}>
                 <ArrowLeft size={14} />
                 Quay lại danh sách
@@ -215,7 +216,7 @@ const TeacherCourseDetail: React.FC = () => {
   const tabs = [
     { id: 'overview' as const, label: 'Tổng quan', icon: BookOpen },
     { id: 'lessons' as const, label: 'Bài học', icon: FileText, count: course.lessonsCount },
-    { id: 'assessments' as const, label: 'Bài đánh giá', icon: CheckCircle2 },
+    { id: 'assessments' as const, label: UI_TEXT.QUIZ, icon: CheckCircle2 },
     { id: 'students' as const, label: 'Học viên', icon: Users, count: students.length },
     { id: 'reviews' as const, label: 'Đánh giá', icon: Star },
   ];
@@ -324,7 +325,7 @@ const TeacherCourseDetail: React.FC = () => {
               <button
                 className="btn secondary"
                 onClick={() => setShowEditModal(true)}
-                title="Chỉnh sửa thông tin giáo trình"
+                title={`Chỉnh sửa thông tin ${UI_TEXT.COURSE.toLowerCase()}`}
               >
                 <Pencil size={14} />
                 Chỉnh sửa
@@ -344,7 +345,7 @@ const TeacherCourseDetail: React.FC = () => {
                 {course.published ? (
                   <>
                     <EyeOff size={14} />
-                    Ẩn giáo trình
+                    Ẩn {UI_TEXT.COURSE.toLowerCase()}
                   </>
                 ) : (
                   <>
@@ -412,7 +413,7 @@ const TeacherCourseDetail: React.FC = () => {
                   <Pencil size={18} />
                 </div>
                 <div>
-                  <h2 id="course-edit-wizard-title">Chỉnh sửa giáo trình</h2>
+                  <h2 id="course-edit-wizard-title">Chỉnh sửa {UI_TEXT.COURSE.toLowerCase()}</h2>
                   <p>Bước {editStep} trên 4</p>
                 </div>
               </div>
@@ -462,11 +463,11 @@ const TeacherCourseDetail: React.FC = () => {
                       <div className="edit-step-1">
                         <div className="form-section-header">
                           <h3>Thông tin cơ bản</h3>
-                          <p>Cập nhật lại tiêu đề và mục tiêu chính của giáo trình.</p>
+                          <p>Cập nhật lại tiêu đề và mục tiêu chính của {UI_TEXT.COURSE.toLowerCase()}.</p>
                         </div>
 
                         <div className="form-group full-width" style={{ marginBottom: '1.25rem' }}>
-                          <label className="form-label">Tiêu đề giáo trình</label>
+                          <label className="form-label">Tiêu đề {UI_TEXT.COURSE.toLowerCase()}</label>
                           <input
                             type="text"
                             className="form-input"
@@ -615,7 +616,7 @@ const TeacherCourseDetail: React.FC = () => {
                               placeholder="0"
                             />
                             <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px' }}>
-                              Nhập 0 cho giáo trình miễn phí.
+                              Nhập 0 cho {UI_TEXT.COURSE.toLowerCase()} miễn phí.
                             </p>
                           </div>
                           <div className="form-group">

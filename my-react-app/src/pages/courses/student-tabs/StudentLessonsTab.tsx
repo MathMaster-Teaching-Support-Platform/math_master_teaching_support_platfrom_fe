@@ -22,6 +22,8 @@ import { VideoUploadService } from '../../../services/api/videoUpload.service';
 import type { CourseLessonResponse } from '../../../types';
 import '../../../styles/module-refactor.css';
 import '../StudentCourses.css';
+import { extractChapterNumber, sortCurriculumGroups } from '../../../utils/curriculum';
+import { UI_TEXT } from '../../../constants/uiText';
 
 interface StudentLessonsTabProps {
   enrollmentId: string;
@@ -171,15 +173,18 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
     return (sectionsData?.result ?? []).sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
   }, [sectionsData]);
 
-  // Group lessons by section OR chapter
   const curriculumHierarchy = useMemo(() => {
-    const groupsMap: Record<string, {
-      id: string;
-      title: string;
-      lessons: CourseLessonResponse[];
-      type: 'SECTION' | 'CHAPTER' | 'OTHER';
-      firstSeenIndex: number;
-    }> = {};
+    const groupsMap: Record<
+      string,
+      {
+        id: string;
+        title: string;
+        lessons: CourseLessonResponse[];
+        type: 'SECTION' | 'CHAPTER' | 'OTHER';
+        firstSeenIndex: number;
+        orderIndex?: number;
+      }
+    > = {};
 
     const sectionOrderMap = new Map(
       sections.map((section, index) => [section.id, section.orderIndex ?? index + 1] as const)
@@ -201,26 +206,14 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
           lessons: [],
           type: groupType,
           firstSeenIndex: index,
+          orderIndex: groupType === 'SECTION' ? sectionOrderMap.get(groupId) : undefined,
         };
       }
       groupsMap[groupId].lessons.push(lesson);
     });
 
-    const getGroupSortOrder = (group: (typeof groupsMap)[string]) => {
-      if (group.type === 'SECTION') {
-        return sectionOrderMap.get(group.id) ?? group.firstSeenIndex;
-      }
-
-      return group.firstSeenIndex;
-    };
-
     return Object.values(groupsMap)
-      .sort((a, b) => {
-        const orderA = getGroupSortOrder(a);
-        const orderB = getGroupSortOrder(b);
-        if (orderA !== orderB) return orderA - orderB;
-        return a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: 'base' });
-      })
+      .sort(sortCurriculumGroups)
       .map((group) => ({
         ...group,
         lessons: [...group.lessons].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0)),
@@ -296,7 +289,10 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
             />
             <span className="section-label" style={isSidebar ? { fontSize: '0.65rem' } : {}}>
               {group.type === 'CHAPTER'
-                ? `Chương ${idx + 1}`
+                ? (() => {
+                    const num = extractChapterNumber(group.title) ?? extractChapterNumber(group.id);
+                    return num !== null ? `Chương ${num}` : `Chương ${idx + 1}`;
+                  })()
                 : group.type === 'SECTION'
                   ? `Mục ${idx + 1}`
                   : 'Khác'}
@@ -572,7 +568,7 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
               </div>
               <div>
                 <h3>{totalCount}</h3>
-                <p>Tổng bài học</p>
+                <p>{UI_TEXT.TOTAL_LESSONS}</p>
               </div>
             </div>
             <div className="stat-card stat-emerald">
@@ -609,7 +605,7 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
                 }}
               >
                 <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800 }}>
-                  Giáo trình học tập
+                  {UI_TEXT.COURSE_CONTENT}
                 </h4>
                 <div className="pill-btn active">
                   <Layout size={13} style={{ marginRight: 4 }} /> Phân cấp

@@ -16,6 +16,35 @@ export type QuestionCognitiveLevel =
 
 export type QuestionStatus = 'AI_DRAFT' | 'UNDER_REVIEW' | 'APPROVED' | 'ARCHIVED';
 
+// NEW: TF Clause Metadata
+export interface TFClauseMetadata {
+  chapterId?: string;
+  cognitiveLevel?: QuestionCognitiveLevel;
+}
+
+export interface TFClausesMetadata {
+  A?: TFClauseMetadata;
+  B?: TFClauseMetadata;
+  C?: TFClauseMetadata;
+  D?: TFClauseMetadata;
+}
+
+// NEW: Scoring Detail for TF questions
+export interface ClauseResult {
+  expected: boolean;
+  actual: boolean;
+  correct: boolean;
+}
+
+export interface ScoringDetail {
+  questionType: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER';
+  clauseResults?: Record<string, ClauseResult>;  // For TF questions
+  correctCount?: number;  // For TF questions
+  totalClauses?: number;  // For TF questions
+  scoringRule?: string;  // e.g., "VIET_THPT"
+  earnedRatio?: number;  // 0-1
+}
+
 export interface QuestionResponse {
   id: string;
   createdBy: string;

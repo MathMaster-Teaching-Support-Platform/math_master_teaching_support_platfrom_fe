@@ -14,6 +14,7 @@ import {
 import { WalletService } from '../services/api/wallet.service';
 import { Plus } from 'lucide-react';
 import type { WalletSummary } from '../types/wallet.types';
+import { UI_TEXT } from '../constants/uiText';
 import '../styles/module-refactor.css';
 import './courses/TeacherCourses.css';
 import './Homepage.css';
@@ -50,8 +51,8 @@ const faqItems = [
     a: 'Token AI là đơn vị tính cho các tính năng AI như sinh đề, chấm điểm tự động. Mỗi gói đăng ký đi kèm một quota token tương ứng.',
   },
   {
-    q: 'Dữ liệu bài giảng của tôi có được bảo mật không?',
-    a: 'Toàn bộ dữ liệu được mã hóa AES-256 và lưu trữ trên hạ tầng bảo mật chuẩn SOC 2. Chúng tôi không chia sẻ dữ liệu với bất kỳ bên thứ ba nào.',
+    q: `Dữ liệu ${UI_TEXT.COURSE.toLowerCase()} của tôi có được bảo mật không?`,
+    a: `Toàn bộ dữ liệu được mã hóa AES-256 và lưu trữ trên hạ tầng bảo mật chuẩn SOC 2. Chúng tôi không chia sẻ dữ liệu với bất kỳ bên thứ ba nào.`,
   },
 ];
 
@@ -346,7 +347,7 @@ const Pricing: React.FC = () => {
       tokenLine: '50 token / kỳ',
       description: 'Phù hợp để trải nghiệm',
       features: [
-        'Tạo tối đa 10 bài giảng/tháng',
+        `Tạo tối đa 10 ${UI_TEXT.COURSE.toLowerCase()}/tháng`,
         'Lưu trữ 100MB',
         'Quản lý 1 lớp học',
         'AI trợ lý cơ bản',
@@ -362,7 +363,7 @@ const Pricing: React.FC = () => {
       tokenLine: '150 token / kỳ',
       description: 'Dành cho giáo viên cá nhân',
       features: [
-        'Tạo không giới hạn bài giảng',
+        `Tạo không giới hạn ${UI_TEXT.COURSE.toLowerCase()}`,
         'Lưu trữ 10GB',
         'Quản lý không giới hạn lớp học',
         'AI trợ lý nâng cao',
@@ -395,7 +396,7 @@ const Pricing: React.FC = () => {
 
   /* ── Comparison table data ── */
   const comparisonFeatures = [
-    { name: 'Số bài giảng/tháng', free: '10', teacher: 'Không giới hạn', school: 'Không giới hạn' },
+    { name: `Số ${UI_TEXT.COURSE.toLowerCase()}/tháng`, free: '10', teacher: 'Không giới hạn', school: 'Không giới hạn' },
     { name: 'Lưu trữ', free: '100MB', teacher: '10GB', school: 'Không giới hạn' },
     { name: 'Số lớp học', free: '1', teacher: 'Không giới hạn', school: 'Không giới hạn' },
     { name: 'AI trợ lý', free: 'Cơ bản', teacher: 'Nâng cao', school: 'Nâng cao' },
@@ -1141,7 +1142,7 @@ const Pricing: React.FC = () => {
               Bắt đầu ngay
             </span>
             <h2 className="pricing-cta-title">
-              Sẵn sàng tối ưu hóa <span className="gradient-text">bài giảng</span> của bạn?
+              Sẵn sàng tối ưu hóa <span className="gradient-text">{UI_TEXT.COURSE.toLowerCase()}</span> của bạn?
             </h2>
             <p className="pricing-cta-desc">
               Tham gia cùng <strong>5,000+</strong> giáo viên đã lựa chọn MathMaster. Dùng thử miễn

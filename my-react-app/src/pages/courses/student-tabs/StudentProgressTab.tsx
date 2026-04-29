@@ -360,7 +360,7 @@ const StudentProgressTab: React.FC<StudentProgressTabProps> = ({ enrollmentId, e
                 Chúc mừng!
               </h3>
               <p style={{ margin: 0, color: '#047857', fontSize: '0.95rem' }}>
-                Bạn đã hoàn thành tất cả bài học trong giáo trình này!
+                Bạn đã hoàn thành tất cả bài học trong khóa học này!
               </p>
             </div>
           )}

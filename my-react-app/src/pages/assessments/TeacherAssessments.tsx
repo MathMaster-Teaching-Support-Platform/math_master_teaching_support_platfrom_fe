@@ -32,6 +32,7 @@ import { useGetMyExamMatrices } from '../../hooks/useExamMatrix';
 import { useToast } from '../../context/ToastContext';
 import '../../styles/module-refactor.css';
 import '../courses/TeacherCourses.css';
+import { UI_TEXT } from '../../constants/uiText';
 import type { AssessmentRequest, AssessmentResponse, AssessmentStatus } from '../../types';
 import AssessmentModal from './AssessmentModal';
 
@@ -82,9 +83,9 @@ function CloneModal({
       <div className="modal-card" style={{ width: 'min(520px, 100%)' }}>
         <div className="modal-header">
           <div>
-            <h3>Nhân bản bài kiểm tra</h3>
+            <h3>Nhân bản {UI_TEXT.QUIZ.toLowerCase()}</h3>
             <p className="muted" style={{ marginTop: 4 }}>
-              Tạo một bản nháp mới từ bài kiểm tra này.
+              Tạo một bản nháp mới từ {UI_TEXT.QUIZ.toLowerCase()} này.
             </p>
           </div>
         </div>
@@ -253,14 +254,14 @@ export default function TeacherAssessments() {
     try {
       if (mode === 'create') {
         await createMutation.mutateAsync(payload);
-        showToast({ type: 'success', message: 'Tạo bài kiểm tra thành công.' });
+        showToast({ type: 'success', message: `Tạo ${UI_TEXT.QUIZ.toLowerCase()} thành công.` });
         return;
       }
       if (!selected) return;
       await updateMutation.mutateAsync({ id: selected.id, data: payload });
-      showToast({ type: 'success', message: 'Cập nhật bài kiểm tra thành công.' });
+      showToast({ type: 'success', message: `Cập nhật ${UI_TEXT.QUIZ.toLowerCase()} thành công.` });
     } catch (error) {
-      showToast({ type: 'error', message: error instanceof Error ? error.message : 'Không thể lưu bài kiểm tra.' });
+      showToast({ type: 'error', message: error instanceof Error ? error.message : `Không thể lưu ${UI_TEXT.QUIZ.toLowerCase()}.` });
     }
   }
 
@@ -271,10 +272,10 @@ export default function TeacherAssessments() {
         id: cloneTarget.id,
         data: { newTitle, cloneQuestions },
       });
-      showToast({ type: 'success', message: `Đã nhân bản bài kiểm tra thành “${newTitle}”.` });
+      showToast({ type: 'success', message: `Đã nhân bản ${UI_TEXT.QUIZ.toLowerCase()} thành “${newTitle}”.` });
       setCloneTarget(null);
     } catch (error) {
-      showToast({ type: 'error', message: error instanceof Error ? error.message : 'Không thể nhân bản bài kiểm tra.' });
+      showToast({ type: 'error', message: error instanceof Error ? error.message : `Không thể nhân bản ${UI_TEXT.QUIZ.toLowerCase()}.` });
     }
   }
 
@@ -284,7 +285,7 @@ export default function TeacherAssessments() {
       const response = await generateFromMatrixMutation.mutateAsync({
         examMatrixId: selectedMatrixId,
       });
-      showToast({ type: 'success', message: 'Tạo bài kiểm tra từ ma trận thành công.' });
+      showToast({ type: 'success', message: `Tạo ${UI_TEXT.QUIZ.toLowerCase()} từ ma trận thành công.` });
       const generatedAssessmentId = response.result?.id;
       setGenerateModalOpen(false);
       setSelectedMatrixId('');
@@ -292,7 +293,7 @@ export default function TeacherAssessments() {
         navigate(`/teacher/assessments/${generatedAssessmentId}`);
       }
     } catch (error) {
-      showToast({ type: 'error', message: error instanceof Error ? error.message : 'Không thể tạo bài kiểm tra từ ma trận.' });
+      showToast({ type: 'error', message: error instanceof Error ? error.message : `Không thể tạo ${UI_TEXT.QUIZ.toLowerCase()} từ ma trận.` });
     }
   }
 
@@ -309,11 +310,11 @@ export default function TeacherAssessments() {
             <div className="header-stack">
               <div className="header-kicker">Teacher Studio</div>
               <div className="row" style={{ gap: '0.6rem' }}>
-                <h2>Bài Kiểm Tra</h2>
+                <h2>{UI_TEXT.QUIZ}</h2>
                 {!isLoading && <span className="count-chip">{stats.total}</span>}
               </div>
               <p className="header-sub">
-                Tạo, xuất bản và quản lý vòng đời bài kiểm tra cho học sinh.
+                Tạo, xuất bản và quản lý vòng đời {UI_TEXT.QUIZ.toLowerCase()} cho học sinh.
               </p>
             </div>
             <div className="row" style={{ flexWrap: 'wrap' }}>
@@ -335,7 +336,7 @@ export default function TeacherAssessments() {
                 }}
               >
                 <Plus size={14} />
-                Tạo bài kiểm tra
+                Tạo {UI_TEXT.QUIZ.toLowerCase()}
               </button>
             </div>
           </header>
@@ -348,7 +349,7 @@ export default function TeacherAssessments() {
               </div>
               <div>
                 <h3>{stats.total}</h3>
-                <p>Tổng bài kiểm tra</p>
+                <p>Tổng {UI_TEXT.QUIZ.toLowerCase()}</p>
               </div>
             </div>
             <div className="stat-card stat-blue">
@@ -386,7 +387,7 @@ export default function TeacherAssessments() {
                 <Search size={15} />
               </span>
               <input
-                placeholder="Tìm bài kiểm tra..."
+                placeholder={`Tìm ${UI_TEXT.QUIZ.toLowerCase()}...`}
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
               />
@@ -432,11 +433,11 @@ export default function TeacherAssessments() {
           )}
           {isError && (
             <div className="empty">
-              {error instanceof Error ? error.message : 'Không thể tải danh sách bài kiểm tra'}
+              {error instanceof Error ? error.message : `Không thể tải danh sách ${UI_TEXT.QUIZ.toLowerCase()}`}
             </div>
           )}
           {!isLoading && !isError && assessments.length === 0 && (
-            <div className="empty">Chưa có bài kiểm tra nào.</div>
+            <div className="empty">Chưa có {UI_TEXT.QUIZ.toLowerCase()} nào.</div>
           )}
 
           {!isLoading && !isError && assessments.length > 0 && (
@@ -493,8 +494,8 @@ export default function TeacherAssessments() {
                         type="button"
                         className="btn btn--feat-emerald"
                         onClick={() => publishMutation.mutate(assessment.id, {
-                        onSuccess: () => showToast({ type: 'success', message: `Đã xuất bản bài kiểm tra “${assessment.title}”.` }),
-                        onError: (err) => showToast({ type: 'error', message: err instanceof Error ? err.message : 'Không thể xuất bản bài kiểm tra.' }),
+                        onSuccess: () => showToast({ type: 'success', message: `Đã xuất bản ${UI_TEXT.QUIZ.toLowerCase()} “${assessment.title}”.` }),
+                        onError: (err) => showToast({ type: 'error', message: err instanceof Error ? err.message : `Không thể xuất bản ${UI_TEXT.QUIZ.toLowerCase()}.` }),
                       })}>
                         <Send size={14} />
                         Xuất bản
@@ -505,7 +506,7 @@ export default function TeacherAssessments() {
                       <button
                         className="btn warn"
                         onClick={() => unpublishMutation.mutate(assessment.id, {
-                          onSuccess: () => showToast({ type: 'success', message: `Đã hủy xuất bản bài kiểm tra “${assessment.title}”.` }),
+                          onSuccess: () => showToast({ type: 'success', message: `Đã hủy xuất bản ${UI_TEXT.QUIZ.toLowerCase()} “${assessment.title}”.` }),
                           onError: (err) => showToast({ type: 'error', message: err instanceof Error ? err.message : 'Không thể hủy xuất bản.' }),
                         })}
                       >
@@ -517,8 +518,8 @@ export default function TeacherAssessments() {
                       <button
                         className="btn warn"
                         onClick={() => closeMutation.mutate(assessment.id, {
-                          onSuccess: () => showToast({ type: 'success', message: `Đã đóng bài kiểm tra “${assessment.title}”.` }),
-                          onError: (err) => showToast({ type: 'error', message: err instanceof Error ? err.message : 'Không thể đóng bài kiểm tra.' }),
+                          onSuccess: () => showToast({ type: 'success', message: `Đã đóng ${UI_TEXT.QUIZ.toLowerCase()} “${assessment.title}”.` }),
+                          onError: (err) => showToast({ type: 'error', message: err instanceof Error ? err.message : `Không thể đóng ${UI_TEXT.QUIZ.toLowerCase()}.` }),
                         })}
                       >
                         <Lock size={14} />
@@ -530,8 +531,8 @@ export default function TeacherAssessments() {
                       <button
                         className="btn danger"
                         onClick={() => deleteMutation.mutate(assessment.id, {
-                          onSuccess: () => showToast({ type: 'success', message: `Đã xóa bài kiểm tra “${assessment.title}”.` }),
-                          onError: (err) => showToast({ type: 'error', message: err instanceof Error ? err.message : 'Không thể xóa bài kiểm tra.' }),
+                          onSuccess: () => showToast({ type: 'success', message: `Đã xóa ${UI_TEXT.QUIZ.toLowerCase()} “${assessment.title}”.` }),
+                          onError: (err) => showToast({ type: 'error', message: err instanceof Error ? err.message : `Không thể xóa ${UI_TEXT.QUIZ.toLowerCase()}.` }),
                         })}
                       >
                         <Trash2 size={14} />

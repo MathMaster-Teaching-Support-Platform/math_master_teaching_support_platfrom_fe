@@ -17,6 +17,7 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import type { CourseResponse } from '../../../types';
 import './CourseOverviewTab.css';
+import { UI_TEXT } from '../../../constants/uiText';
 
 interface CourseOverviewTabProps {
   course: CourseResponse;
@@ -58,7 +59,7 @@ const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({ course }) => {
       Icon: BookOpen,
       label: 'Bài học',
       value: course.lessonsCount.toLocaleString('vi-VN'),
-      sub: 'trong giáo trình',
+      sub: `trong ${UI_TEXT.COURSE.toLowerCase()}`,
     },
     {
       key: 'students',
@@ -132,7 +133,7 @@ const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({ course }) => {
 
       <div className="course-overview-tab__config">
         <div className="course-overview-tab__config-head">
-          <p className="course-overview-tab__kicker">Hồ sơ giáo trình</p>
+          <p className="course-overview-tab__kicker">Hồ sơ {UI_TEXT.COURSE.toLowerCase()}</p>
           <h2 className="course-overview-config-heading">Thông tin cấu hình</h2>
           <p className="course-overview-tab__lede">
             Chi tiết phân loại, thời lượng, tài nguyên và mốc thời gian.
@@ -140,7 +141,7 @@ const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({ course }) => {
         </div>
 
         <div className="course-overview-tab__config-body">
-          <MetaRow icon={Sparkles} label="Loại giáo trình">
+          <MetaRow icon={Sparkles} label={`Loại ${UI_TEXT.COURSE.toLowerCase()}`}>
             {course.provider === 'CUSTOM' ? (
               <span className="course-overview-tab__badge course-overview-tab__badge--custom">Khóa học tùy chỉnh</span>
             ) : (

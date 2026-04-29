@@ -91,6 +91,8 @@ export interface AssessmentQuestionItem {
     cognitiveLevel?: string;
     questionSourceType?: 'MANUAL' | 'TEMPLATE_GENERATED' | 'AI_GENERATED' | 'BANK_IMPORTED' | 'BANK' | 'AI';
     source?: 'BANK' | 'AI';
+    studentAnswer?: string;  // NEW: MCQ="B", SA="8", TF="A,C"
+    scoringDetail?: Record<string, unknown>;  // NEW: Clause breakdown for TF questions
 }
 
 // ─── Batch request types ──────────────────────────────────────────────────────

@@ -16,6 +16,7 @@ export interface ExamMatrixRequest {
 export interface BuildExamMatrixRequest extends ExamMatrixRequest {
     gradeLevel?: string;
     subjectId?: string;
+    numberOfParts?: number;  // NEW: 1, 2, or 3 (Part I=MCQ, Part II=TF, Part III=SA)
 }
 
 export type MatrixCognitiveLevel =
@@ -47,6 +48,8 @@ export interface ExamMatrixRowCellRequest {
     cognitiveLevel: MatrixCognitiveLevel;
     questionCount: number;
     pointsPerQuestion: number;
+    partNumber?: number;  // NEW: 1, 2, or 3 (derived from part selection)
+    questionType?: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER';  // NEW
 }
 
 export interface ExamMatrixRowRequest {
@@ -64,6 +67,8 @@ export interface MatrixCellRequest {
     cognitiveLevel: MatrixCognitiveLevel;
     questionCount: number;
     pointsPerQuestion: number;
+    partNumber?: number;  // NEW: 1, 2, or 3 (derived from part selection)
+    questionType?: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER';  // NEW
 }
 
 export interface UpdateMatrixRowCellsRequest {
@@ -132,6 +137,8 @@ export interface ExamMatrixTableResponse {
     subjectId?: string;
     subjectName?: string;
     status?: MatrixStatus;
+    numberOfParts?: number;  // NEW: 1, 2, or 3
+    partTypeMapping?: Record<number, 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER'>;  // NEW: {1: MCQ, 2: TF, 3: SA}
     chapters: ExamMatrixTableChapter[];
     grandTotalByCognitive?: MatrixCognitiveDistribution;
     grandTotalQuestions: number;

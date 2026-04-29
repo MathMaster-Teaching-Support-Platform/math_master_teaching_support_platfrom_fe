@@ -11,6 +11,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { useAssessmentDetails } from '../../hooks/useStudentAssessment';
 import '../../styles/module-refactor.css';
+import { UI_TEXT } from '../../constants/uiText';
 
 const assessmentTypeLabel: Record<string, string> = {
   QUIZ: 'Trắc nghiệm',
@@ -92,7 +93,7 @@ export default function AssessmentDetail() {
       <Layout>
         <div className="empty">
           <AlertCircle size={32} style={{ opacity: 0.45, color: 'var(--mod-danger)' }} />
-          <p>Không thể tải thông tin bài kiểm tra</p>
+          <p>Không thể tải thông tin {UI_TEXT.QUIZ.toLowerCase()}</p>
         </div>
       </Layout>
     );
@@ -125,7 +126,7 @@ export default function AssessmentDetail() {
 
       {/* Info section */}
       <div className="detail-section">
-        <p className="detail-section__title">Thông tin bài kiểm tra</p>
+        <p className="detail-section__title">Thông tin {UI_TEXT.QUIZ.toLowerCase()}</p>
 
         <div className="detail-info-grid">
           <div className="detail-info-item">
@@ -213,7 +214,7 @@ export default function AssessmentDetail() {
           <p className="detail-action-bar__sub">
             {assessment.canStart
               ? 'Đảm bảo kết nối ổn định trước khi bắt đầu làm bài.'
-              : (assessment.cannotStartReason ?? 'Bài kiểm tra này chưa thể bắt đầu.')}
+              : (assessment.cannotStartReason ?? `${UI_TEXT.QUIZ} này chưa thể bắt đầu.`)}
           </p>
         </div>
         <button

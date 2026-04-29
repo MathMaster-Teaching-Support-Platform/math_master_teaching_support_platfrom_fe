@@ -14,6 +14,7 @@ import '../../styles/module-refactor.css';
 import '../courses/TeacherCourses.css';
 import { MatrixStatus } from '../../types/examMatrix';
 import './assessment-builder-flow.css';
+import { UI_TEXT } from '../../constants/uiText';
 
 type ToastState = {
   type: 'success' | 'error';
@@ -228,7 +229,7 @@ export default function AssessmentBuilderFlow() {
               <li className="abf-step">
                 <span className="abf-step__num abf-step__num--active">4</span>
                 <div className="abf-step__body">
-                  <strong className="abf-step__title">Assessment</strong>
+                  <strong className="abf-step__title">{UI_TEXT.QUIZ}</strong>
                   <p className="abf-step__desc">
                     Chọn ma trận đã duyệt, Generate đề nháp, rà soát cuối và xuất bản.
                   </p>
@@ -266,7 +267,7 @@ export default function AssessmentBuilderFlow() {
               </label>
 
               <p className="muted" style={{ marginTop: 8 }}>
-                Generation Mode: BANK_FIRST (cố định). Không dùng AI trong bước tạo assessment từ
+                Generation Mode: BANK_FIRST (cố định). Không dùng AI trong bước tạo {UI_TEXT.QUIZ.toLowerCase()} từ
                 matrix.
               </p>
 
@@ -347,7 +348,7 @@ export default function AssessmentBuilderFlow() {
                     <div className="data-card" style={{ minHeight: 0 }}>
                       <h3>Phạm vi bài học</h3>
                       <p className="muted" style={{ marginBottom: 12 }}>
-                        Đề này kiểm tra {generatedAssessment.lessons.length} bài học (tự động lấy từ ma trận)
+                        Đề này bao gồm {generatedAssessment.lessons.length} bài học (tự động lấy từ ma trận)
                       </p>
                       <div className="lesson-chips">
                         {generatedAssessment.lessons.map((lesson) => (

@@ -45,6 +45,7 @@ import { InvoiceModal } from '../../components/course/InvoiceModal';
 import type { Order } from '../../types/order.types';
 import '../../styles/module-refactor.css';
 import './StudentCourses.css';
+import { UI_TEXT } from '../../constants/uiText';
 
 // Import existing tab components
 import StudentLessonsTab from './student-tabs/StudentLessonsTab';
@@ -211,7 +212,7 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
           <div className="rounded-xl border border-[#E8E6DC] bg-[#F5F4ED] p-5">
             <div className="mb-2 flex items-center justify-center gap-2 text-[14px] text-[#5E5D59]">
               <LoaderCircle className="h-5 w-5 animate-spin text-[#C96442]" />
-              <p className="m-0">Đang tải khóa học...</p>
+              <p className="m-0">Đang tải {UI_TEXT.COURSE.toLowerCase()}...</p>
             </div>
             <div className="mx-auto h-1.5 max-w-md overflow-hidden rounded-full bg-[#E8E6DC]">
               <motion.div
@@ -231,7 +232,7 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
         <section className="module-page teacher-courses-page">
           <div className="empty">
             <AlertCircle size={32} style={{ marginBottom: 8, color: '#B53333' }} />
-            <p>Bạn không có quyền xem khóa học này.</p>
+            <p>Bạn không có quyền xem {UI_TEXT.COURSE.toLowerCase()} này.</p>
             <button className="btn secondary" onClick={() => navigate('/student/courses')}>
               <ArrowLeft size={14} />
               Quay lại danh sách
@@ -246,7 +247,7 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
         <section className="module-page">
           <div className="empty">
             <AlertCircle size={32} style={{ marginBottom: 8, color: '#94a3b8' }} />
-            <p>Không tìm thấy khóa học</p>
+            <p>Không tìm thấy {UI_TEXT.COURSE.toLowerCase()}</p>
             <button className="btn secondary" onClick={() => navigate('/student/courses')}>
               <ArrowLeft size={14} />
               Quay lại danh sách
@@ -261,7 +262,7 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
         <section className="module-page teacher-courses-page">
           <div className="empty">
             <AlertCircle size={32} style={{ marginBottom: 8, color: '#B53333' }} />
-            <p>Khóa học này chưa được xuất bản hoặc đang chờ duyệt.</p>
+            <p>{UI_TEXT.COURSE} này chưa được xuất bản hoặc đang chờ duyệt.</p>
             <button className="btn secondary" onClick={() => navigate('/student/courses')}>
               <ArrowLeft size={14} />
               Quay lại danh sách
@@ -277,7 +278,7 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
       { id: 'overview' as const, label: 'Tổng quan', icon: FileText },
       ...(hasFullAccess
         ? [
-            { id: 'assessments' as const, label: 'Bài đánh giá', icon: FileText },
+            { id: 'assessments' as const, label: UI_TEXT.QUIZ, icon: FileText },
             { id: 'progress' as const, label: 'Tiến độ', icon: TrendingUp },
           ]
         : []),
@@ -506,10 +507,10 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
                     <Lock size={32} color="#1e40af" />
                     <div style={{ flex: 1, minWidth: 200 }}>
                       <h3 style={{ margin: '0 0 0.5rem', fontSize: '1.1rem', fontWeight: 700, color: '#1e40af' }}>
-                        Đăng ký để mở khóa toàn bộ khóa học
+                        Đăng ký để mở khóa toàn bộ {UI_TEXT.COURSE.toLowerCase()}
                       </h3>
                       <p style={{ margin: 0, fontSize: '0.9rem', color: '#475569' }}>
-                        ✓ {freePreviewLessons.length} bài học miễn phí xem trước •{' '}
+                        ✓ {freePreviewLessons.length} bài học thử miễn phí •{' '}
                         {lockedLessonsCount} bài học mở sau khi đăng ký
                       </p>
                     </div>
@@ -587,7 +588,7 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
                     {course.description && (
                       <div className="data-card" style={{ padding: '1.5rem', marginTop: '1.5rem' }}>
                         <h3 style={{ margin: '0 0 1rem', fontSize: '1.2rem', fontWeight: 700 }}>
-                          Mô tả khóa học
+                          Mô tả {UI_TEXT.COURSE.toLowerCase()}
                         </h3>
                         <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.7, color: '#475569' }}>
                           {course.description}

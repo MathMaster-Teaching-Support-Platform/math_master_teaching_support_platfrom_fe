@@ -1,4 +1,5 @@
 import { ArrowLeft, Pencil, RefreshCw } from 'lucide-react';
+import { UI_TEXT } from '../../constants/uiText';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
@@ -323,7 +324,7 @@ export default function AssessmentDetailRefactored() {
     if (isLoading) {
       return (
         <section className="module-page">
-          <div className="empty">Đang tải chi tiết bài kiểm tra...</div>
+          <div className="empty">Đang tải chi tiết {UI_TEXT.QUIZ.toLowerCase()}...</div>
         </section>
       );
     }
@@ -332,7 +333,7 @@ export default function AssessmentDetailRefactored() {
       return (
         <section className="module-page">
           <div className="empty">
-            {error instanceof Error ? error.message : 'Không thể tải chi tiết bài kiểm tra'}
+            {error instanceof Error ? error.message : `Không thể tải chi tiết ${UI_TEXT.QUIZ.toLowerCase()}`}
           </div>
         </section>
       );
@@ -341,7 +342,7 @@ export default function AssessmentDetailRefactored() {
     if (!assessment) {
       return (
         <section className="module-page">
-          <div className="empty">Không tìm thấy bài kiểm tra.</div>
+          <div className="empty">Không tìm thấy {UI_TEXT.QUIZ.toLowerCase()}.</div>
         </section>
       );
     }
@@ -350,13 +351,13 @@ export default function AssessmentDetailRefactored() {
       <section className="module-page">
         <button className="btn secondary" onClick={() => navigate('/teacher/assessments')}>
           <ArrowLeft size={14} />
-          Quay lại danh sách bài kiểm tra
+          Quay lại danh sách {UI_TEXT.QUIZ.toLowerCase()}
         </button>
 
         <article className="hero-card">
           <div className="row" style={{ alignItems: 'start', flexWrap: 'wrap' }}>
             <div>
-              <p className="hero-kicker">Chi tiết bài kiểm tra</p>
+              <p className="hero-kicker">Chi tiết {UI_TEXT.QUIZ.toLowerCase()}</p>
               <h2>{assessment.title}</h2>
               <p>{assessment.description || 'Không có mô tả'}</p>
             </div>
@@ -439,7 +440,7 @@ export default function AssessmentDetailRefactored() {
 
         <article className="data-card" style={{ marginTop: 16 }}>
           <div className="row" style={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
-            <h3>Câu hỏi trong bài kiểm tra</h3>
+            <h3>Câu hỏi trong {UI_TEXT.QUIZ.toLowerCase()}</h3>
             <div className="row" style={{ justifyContent: 'start', flexWrap: 'wrap' }}>
               {assessment.status === 'DRAFT' && (
                 <>
@@ -626,12 +627,12 @@ export default function AssessmentDetailRefactored() {
             <div className="question-list__empty" style={{ color: '#dc2626' }}>
               {questionsErrorValue instanceof Error
                 ? questionsErrorValue.message
-                : 'Không thể tải câu hỏi trong bài kiểm tra.'}
+                : `Không thể tải câu hỏi trong ${UI_TEXT.QUIZ.toLowerCase()}.`}
             </div>
           )}
           
           {!questionsLoading && !questionsError && questions.length === 0 && (
-            <div className="question-list__empty">Bài kiểm tra chưa có câu hỏi.</div>
+            <div className="question-list__empty">{UI_TEXT.QUIZ} chưa có câu hỏi.</div>
           )}
 
           {!questionsLoading && !questionsError && questions.length > 0 && (

@@ -9,6 +9,7 @@ import {
   User,
   X,
 } from 'lucide-react';
+import { UI_TEXT } from '../../../constants/uiText';
 import React, { useState } from 'react';
 import {
   useCourseReviews,
@@ -129,7 +130,7 @@ const StudentReviewsTab: React.FC<StudentReviewsTabProps> = ({ courseId }) => {
               ))}
             </div>
             <span className="total-label">
-              Xếp hạng khóa học ({summary?.totalReviews || 0} đánh giá)
+              Xếp hạng {UI_TEXT.COURSE.toLowerCase()} ({summary?.totalReviews || 0} đánh giá)
             </span>
           </div>
         </div>
@@ -225,7 +226,7 @@ const StudentReviewsTab: React.FC<StudentReviewsTabProps> = ({ courseId }) => {
 
               <div className="comment-input">
                 <textarea
-                  placeholder="Chia sẻ trải nghiệm cụ thể của bạn về khóa học này..."
+                  placeholder={`Chia sẻ trải nghiệm cụ thể của bạn về ${UI_TEXT.COURSE.toLowerCase()} này...`}
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   required

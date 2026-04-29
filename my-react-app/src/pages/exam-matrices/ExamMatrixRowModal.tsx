@@ -5,6 +5,7 @@ import { useAddExamMatrixRow } from '../../hooks/useExamMatrix';
 import { useSearchQuestionBanks } from '../../hooks/useQuestionBank';
 import { useSubjectsByGrade } from '../../hooks/useSubjects';
 import { useGrades } from '../../hooks/useGrades';
+import { TFQuestionEditor } from '../../components/exam-matrix/TFQuestionEditor';
 import type { ExamMatrixRowRequest, MatrixCognitiveLevel } from '../../types/examMatrix';
 
 type UiCognitiveLevel = 'NB' | 'TH' | 'VD' | 'VDC';
@@ -24,12 +25,20 @@ type CellDraft = {
 
 type CellDraftMap = Record<UiCognitiveLevel, CellDraft>;
 
+interface TFClause {
+  text: string;
+  chapterId?: string;
+  cognitiveLevel?: MatrixCognitiveLevel;
+  truthValue: boolean;
+}
+
 type Props = {
   isOpen: boolean;
   matrixId: string;
   matrixGradeLevel?: string;
   subjectId?: string;
   matrixTotalPointsTarget?: number;
+  numberOfParts?: number;  // NEW: Number of parts in the matrix (1, 2, or 3)
   onClose: () => void;
   onSuccess: () => void;
 };
@@ -47,6 +56,7 @@ export function ExamMatrixRowModal({
   matrixGradeLevel,
   subjectId,
   matrixTotalPointsTarget,
+  numberOfParts = 1,  // NEW: Default to 1 part
   onClose,
   onSuccess,
 }: Readonly<Props>) {
@@ -55,8 +65,16 @@ export function ExamMatrixRowModal({
   const [chapterId, setChapterId] = useState('');
   const [questionBankId, setQuestionBankId] = useState('');
   const [questionBankSearch, setQuestionBankSearch] = useState('');
+  const [partNumber, setPartNumber] = useState(1);  // NEW: Selected part number
   const [cells, setCells] = useState<CellDraftMap>(defaultCells);
   const [error, setError] = useState<string | null>(null);
+  const [tfClauses, setTfClauses] = useState<TFClause[]>([
+    { text: '', truthValue: false },
+    { text: '', truthValue: false },
+    { text: '', truthValue: false },
+    { text: '', truthValue: false },
+  ]);
+  const [tfStem, setTfStem] = useState('');
 
   const addRowMutation = useAddExamMatrixRow();
   const { data: gradesData, isLoading: isLoadingGrades } = useGrades(isOpen);
@@ -109,6 +127,14 @@ export function ExamMatrixRowModal({
     setError(null);
     setCells(defaultCells);
     setChapterId('');
+    setPartNumber(1);  // NEW: Reset to part 1
+    setTfStem('');
+    setTfClauses([
+      { text: '', truthValue: false },
+      { text: '', truthValue: false },
+      { text: '', truthValue: false },
+      { text: '', truthValue: false },
+    ]);
   }, [isOpen, subjectId, matrixGradeLevel]);
 
   useEffect(() => {
@@ -180,9 +206,18 @@ export function ExamMatrixRowModal({
           cognitiveLevel: BACKEND_COGNITIVE_LEVEL[level],
           questionCount: cells[level].questionCount,
           pointsPerQuestion: Number(((matrixTotalPointsTarget && matrixTotalPointsTarget > 0 ? matrixTotalPointsTarget : 10) / rowTotalQuestions).toFixed(4)),
+          partNumber: partNumber,  // NEW: Include part number
         }),
       ),
     };
+
+    // NEW: Include TF metadata if part 2 is selected
+    if (partNumber === 2) {
+      (payload as any).tfMetadata = {
+        stem: tfStem,
+        clauses: tfClauses,
+      };
+    }
 
     try {
       await addRowMutation.mutateAsync({ matrixId, request: payload });
@@ -211,6 +246,61 @@ export function ExamMatrixRowModal({
         <form onSubmit={submit}>
           <div className="modal-body">
             {error && <p style={{ color: '#be123c', fontSize: 13 }}>{error}</p>}
+
+            {/* NEW: Part Number Selector */}
+            {numberOfParts > 1 && (
+              <div style={{ marginBottom: 16, padding: '12px 14px', background: '#f0f9ff', borderRadius: 8, border: '1px solid #bfdbfe' }}>
+                <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--mod-ink)', display: 'block', marginBottom: 8 }}>
+                  Chọn phần đề
+                </label>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  {[1, 2, 3].map((num) => {
+                    if (num > numberOfParts) return null;
+                    const partLabels: Record<number, string> = {
+                      1: 'Phần I (MCQ)',
+                      2: 'Phần II (TF)',
+                      3: 'Phần III (SA)',
+                    };
+                    return (
+                      <button
+                        key={num}
+                        type="button"
+                        onClick={() => setPartNumber(num)}
+                        style={{
+                          flex: 1,
+                          padding: '0.6rem 0.8rem',
+                          borderRadius: 6,
+                          border: '2px solid',
+                          fontSize: '0.85rem',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          transition: 'all 0.15s',
+                          backgroundColor: partNumber === num ? '#1d4ed8' : 'transparent',
+                          borderColor: partNumber === num ? '#1d4ed8' : '#cbd5e1',
+                          color: partNumber === num ? '#fff' : '#64748b',
+                        }}
+                      >
+                        {partLabels[num]}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* NEW: TF Question Editor */}
+            {partNumber === 2 && (
+              <TFQuestionEditor
+                stem={tfStem}
+                clauses={tfClauses}
+                onStemChange={setTfStem}
+                onClauseChange={(index, clause) => {
+                  const newClauses = [...tfClauses];
+                  newClauses[index] = clause;
+                  setTfClauses(newClauses);
+                }}
+              />
+            )}
 
             <div className="table-wrap">
               <table className="table">

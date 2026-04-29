@@ -7,7 +7,18 @@ export const ERROR_MESSAGES: Record<number, string> = {
   // Wallet & Payment errors
   1029: 'Số dư ví không đủ để thanh toán. Vui lòng nạp thêm tiền.',
   
-  // Course errors (from backend fixes)
+  // Course errors (synchronized with backend)
+  1145: 'Không tìm thấy khóa học.',
+  1147: 'Khóa học đã được xuất bản rồi.',
+  1197: 'Khóa học phải có ít nhất một bài học trước khi gửi duyệt.',
+  1198: 'Khóa học đã được gửi duyệt trước đó.',
+  1199: 'Giá khuyến mãi phải nhỏ hơn giá gốc.',
+  1200: 'Vui lòng đợi một lát trước khi gửi duyệt lại.',
+  1148: 'Bạn đã đăng ký khóa học này rồi.',
+  1152: 'Khóa học này chưa được xuất bản hoặc đang chờ duyệt.',
+  1154: 'Không tìm thấy video cho bài học này.',
+
+  // Legacy/Internal course codes
   1030: 'Khóa học này chưa được xuất bản hoặc đang chờ duyệt.',
   1031: 'Bạn đã đăng ký khóa học này rồi.',
   1032: 'Giá khuyến mãi phải nhỏ hơn giá gốc.',

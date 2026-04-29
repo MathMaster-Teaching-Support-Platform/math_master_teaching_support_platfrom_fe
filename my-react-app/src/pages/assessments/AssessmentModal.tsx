@@ -1,4 +1,5 @@
 import { X } from 'lucide-react';
+import { UI_TEXT } from '../../constants/uiText';
 import { useEffect, useState } from 'react';
 import { useGetExamMatrixById, useGetMyExamMatrices } from '../../hooks/useExamMatrix';
 import type {
@@ -78,9 +79,9 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
   // Use examMatrixId as indicator - more reliable than assessmentMode
   const isEditingMatrixAssessment = mode === 'edit' && !!formData.examMatrixId;
 
-  let submitLabel = 'Cập nhật bài kiểm tra';
+  let submitLabel = `Cập nhật ${UI_TEXT.QUIZ.toLowerCase()}`;
   if (saving) submitLabel = 'Đang lưu...';
-  else if (mode === 'create') submitLabel = 'Tạo bài kiểm tra';
+  else if (mode === 'create') submitLabel = `Tạo ${UI_TEXT.QUIZ.toLowerCase()}`;
 
   if (!isOpen) return null;
 
@@ -100,7 +101,7 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
       await onSubmit(formData);
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Không thể lưu bài kiểm tra.');
+      setError(err instanceof Error ? err.message : `Không thể lưu ${UI_TEXT.QUIZ.toLowerCase()}.`);
     } finally {
       setSaving(false);
     }
@@ -111,11 +112,11 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
       <div className="modal-card">
         <div className="modal-header">
           <div>
-            <h3>{mode === 'create' ? 'Tạo bài kiểm tra' : 'Chỉnh sửa bài kiểm tra'}</h3>
+            <h3>{mode === 'create' ? `Tạo ${UI_TEXT.QUIZ.toLowerCase()}` : `Chỉnh sửa ${UI_TEXT.QUIZ.toLowerCase()}`}</h3>
             <p className="muted" style={{ marginTop: 4 }}>
               {isEditingMatrixAssessment 
-                ? 'Bài kiểm tra này được tạo từ ma trận đề. Một số trường không thể chỉnh sửa.'
-                : 'Cấu hình bài kiểm tra theo ma trận đề.'}
+                ? `${UI_TEXT.QUIZ} này được tạo từ ma trận đề. Một số trường không thể chỉnh sửa.`
+                : `Cấu hình ${UI_TEXT.QUIZ.toLowerCase()} theo ma trận đề.`}
             </p>
           </div>
           <button className="icon-btn" onClick={onClose}>
@@ -140,11 +141,11 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
               </label>
 
               <label>
-                <p className="muted" style={{ marginBottom: 6 }}>Loại bài kiểm tra</p>
+                <p className="muted" style={{ marginBottom: 6 }}>Loại {UI_TEXT.QUIZ.toLowerCase()}</p>
                 {isEditingMatrixAssessment ? (
                   <div className="input-readonly">
                     {formData.assessmentType === 'QUIZ' && 'Trắc nghiệm nhanh'}
-                    {formData.assessmentType === 'TEST' && 'Bài kiểm tra'}
+                    {formData.assessmentType === 'TEST' && UI_TEXT.QUIZ}
                     {formData.assessmentType === 'EXAM' && 'Bài thi'}
                     {formData.assessmentType === 'HOMEWORK' && 'Bài tập về nhà'}
                   </div>
@@ -155,7 +156,7 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
                     onChange={(event) => setFormData({ ...formData, assessmentType: event.target.value as AssessmentType })}
                   >
                     <option value="QUIZ">Trắc nghiệm nhanh</option>
-                    <option value="TEST">Bài kiểm tra</option>
+                    <option value="TEST">{UI_TEXT.QUIZ}</option>
                     <option value="EXAM">Bài thi</option>
                     <option value="HOMEWORK">Bài tập về nhà</option>
                   </select>

@@ -1,7 +1,7 @@
 import { AlertCircle, ChevronLeft, ChevronRight, Flag, Save } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import QuestionDisplay from '../../components/assessment/QuestionDisplay';
+import { QuestionRenderer } from '../../components/question';
 import QuestionNavigator from '../../components/assessment/QuestionNavigator';
 import Timer from '../../components/assessment/Timer';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
@@ -14,6 +14,7 @@ import {
   useUpdateFlag,
 } from '../../hooks/useStudentAssessment';
 import '../../styles/module-refactor.css';
+import { UI_TEXT } from '../../constants/uiText';
 import type { AttemptStartResponse } from '../../types/studentAssessment.types';
 
 export default function TakeAssessment() {
@@ -254,7 +255,7 @@ export default function TakeAssessment() {
         notificationCount={0}
       >
         <div className="module-layout-container">
-          <div className="empty">Không thể tải bài kiểm tra</div>
+          <div className="empty">Không thể tải {UI_TEXT.QUIZ.toLowerCase()}</div>
         </div>
       </DashboardLayout>
     );
@@ -274,7 +275,7 @@ export default function TakeAssessment() {
             style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: 16 }}
           >
             <div>
-              <h2>{attemptData.instructions || 'Bài kiểm tra'}</h2>
+              <h2>{attemptData.instructions || UI_TEXT.QUIZ}</h2>
               <p className="muted">
                 Câu {currentIndex + 1} / {totalQuestions} • Đã trả lời: {answeredCount}
               </p>
@@ -328,9 +329,9 @@ export default function TakeAssessment() {
           >
             {/* Main content */}
             <div>
-              <QuestionDisplay
+              <QuestionRenderer
                 question={currentQuestion}
-                answer={answers[currentQuestion.questionId]}
+                studentAnswer={answers[currentQuestion.questionId]}
                 onAnswerChange={(value) => handleAnswerChange(currentQuestion.questionId, value)}
               />
 
