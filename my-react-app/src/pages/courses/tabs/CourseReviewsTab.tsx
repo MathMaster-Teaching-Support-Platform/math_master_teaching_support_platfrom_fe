@@ -1,6 +1,7 @@
 import { Edit2, Filter, MessageSquare, Send, Star } from 'lucide-react';
 import React, { useState } from 'react';
 import { useCourseReviews, useReplyToReview, useReviewSummary } from '../../../hooks/useCourses';
+import { useToast } from '../../../context/ToastContext';
 import './course-detail-tabs.css';
 
 interface CourseReviewsTabProps {
@@ -15,6 +16,9 @@ const CourseReviewsTab: React.FC<CourseReviewsTabProps> = ({ courseId }) => {
   const { data: summaryData } = useReviewSummary(courseId);
   const { data: reviewsData, isLoading } = useCourseReviews(courseId, 0, 50, filterRating);
   const replyMutation = useReplyToReview();
+  const { showToast } = useToast();
+
+  const pendingReplyId = replyMutation.isPending ? replyMutation.variables?.reviewId : null;
 
   const reviews = reviewsData?.result?.content ?? [];
   const summary = summaryData?.result;
@@ -32,6 +36,12 @@ const CourseReviewsTab: React.FC<CourseReviewsTabProps> = ({ courseId }) => {
       {
         onSuccess: () => {
           setEditingReply((prev) => ({ ...prev, [reviewId]: false }));
+        },
+        onError: (err) => {
+          showToast({
+            type: 'error',
+            message: err instanceof Error ? err.message : 'Không thể gửi phản hồi.',
+          });
         },
       }
     );
@@ -187,9 +197,14 @@ const CourseReviewsTab: React.FC<CourseReviewsTabProps> = ({ courseId }) => {
                             type="button"
                             className="cdt-reviews__btn-save"
                             onClick={() => handleReplySubmit(review.id)}
-                            disabled={replyMutation.isPending || !replyText[review.id]?.trim()}
+                            disabled={
+                              (pendingReplyId === review.id && replyMutation.isPending) ||
+                              !replyText[review.id]?.trim()
+                            }
                           >
-                            {replyMutation.isPending ? 'Đang gửi...' : 'Gửi phản hồi'}
+                            {pendingReplyId === review.id && replyMutation.isPending
+                              ? 'Đang gửi...'
+                              : 'Gửi phản hồi'}
                           </button>
                         </div>
                       </div>
