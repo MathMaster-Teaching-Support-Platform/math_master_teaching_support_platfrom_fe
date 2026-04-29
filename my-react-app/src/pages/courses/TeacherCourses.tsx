@@ -726,13 +726,6 @@ const TeacherCourses: React.FC = () => {
     { id: 'archived' as const, label: `Đã lưu trữ (${stats.archived})` },
   ];
 
-  const getBadgeClass = (course: CourseResponse) => {
-    if (course.status === 'PENDING_REVIEW') return 'badge-review';
-    if (course.status === 'REJECTED') return 'badge-rejected';
-    if (course.status === 'ARCHIVED') return 'badge-archived';
-    return course.published ? 'badge-live' : 'badge-draft';
-  };
-
   return (
     <DashboardLayout
       role="teacher"
@@ -940,29 +933,37 @@ const TeacherCourses: React.FC = () => {
                     )}
                     <div className="cover-overlay" />
                     <div className="cover-index">#{String((safeCurrentPage - 1) * PAGE_SIZE + idx + 1).padStart(2, '0')}</div>
-                    <span className={`course-badge ${getBadgeClass(course)}`}>
-                      {course.status === 'PENDING_REVIEW' ? (
-                        <>
-                          <CheckCircle2 size={11} /> Chờ duyệt
-                        </>
-                      ) : course.status === 'REJECTED' ? (
-                        <>
-                          <AlertCircle size={11} /> Bị từ chối
-                        </>
-                      ) : course.status === 'ARCHIVED' ? (
-                        <>
-                          <BookOpen size={11} /> Đã lưu trữ
-                        </>
-                      ) : course.published ? (
-                        <>
-                          <Eye size={11} /> Công khai
-                        </>
-                      ) : (
-                        <>
-                          <EyeOff size={11} /> Nháp
-                        </>
-                      )}
-                    </span>
+                    <span
+                        style={{
+                          position: 'absolute',
+                          top: '0.6rem',
+                          left: '0.7rem',
+                          zIndex: 2,
+                          background: 'rgba(0,0,0,0.38)',
+                          color: '#fff',
+                          borderRadius: '999px',
+                          padding: '2px 8px',
+                          fontSize: '0.68rem',
+                          fontWeight: 700,
+                          backdropFilter: 'blur(6px)',
+                          border: '1px solid rgba(255,255,255,0.18)',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                        }}
+                      >
+                        {course.status === 'PENDING_REVIEW' ? (
+                          <><CheckCircle2 size={11} /> Chờ duyệt</>
+                        ) : course.status === 'REJECTED' ? (
+                          <><AlertCircle size={11} /> Bị từ chối</>
+                        ) : course.status === 'ARCHIVED' ? (
+                          <><BookOpen size={11} /> Đã lưu trữ</>
+                        ) : course.published ? (
+                          <><Eye size={11} /> Công khai</>
+                        ) : (
+                          <><EyeOff size={11} /> Nháp</>
+                        )}
+                      </span>
                     <h3 className="cover-title">{course.title}</h3>
                   </div>
 

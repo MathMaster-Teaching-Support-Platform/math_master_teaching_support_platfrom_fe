@@ -99,26 +99,52 @@ export const CourseCard: React.FC<CourseCardProps> = ({
         )}
         <div className="cover-overlay" />
         <div className="cover-index">#{String(index + 1).padStart(2, '0')}</div>
+        {/* Level badge pinned top-left inside the cover */}
+        {course.level && (
+          <span
+            className="cover-level-badge"
+            style={{
+              position: 'absolute',
+              top: '0.6rem',
+              left: '0.7rem',
+              zIndex: 2,
+              background: 'rgba(0,0,0,0.4)',
+              color: '#fff',
+              backdropFilter: 'blur(6px)',
+              border: '1px solid rgba(255,255,255,0.18)',
+              borderRadius: '999px',
+              padding: '2px 8px',
+              fontSize: '0.68rem',
+              fontWeight: 700,
+              letterSpacing: '0.04em',
+            }}
+          >
+            {levelMap[course.level]?.label ?? 'Mọi cấp độ'}
+          </span>
+        )}
+        {isEnrolled && (
+          <span
+            style={{
+              position: 'absolute',
+              top: '0.6rem',
+              left: course.level ? '6rem' : '0.7rem',
+              zIndex: 2,
+              background: 'rgba(34,197,94,0.8)',
+              color: '#fff',
+              borderRadius: '999px',
+              padding: '2px 8px',
+              fontSize: '0.68rem',
+              fontWeight: 700,
+              backdropFilter: 'blur(6px)',
+            }}
+          >
+            ✓ Đã đăng ký
+          </span>
+        )}
+        {/* Title overlaid on the image */}
+        <h3 className="cover-title">{course.title}</h3>
       </div>
       <div className="course-body">
-        <div className="course-heading">
-          <div className="course-level-row">
-            {course.level && (
-              <span
-                className="course-badge"
-                style={{
-                  background: levelMap[course.level]?.bg ?? '#e6deef',
-                  color: levelMap[course.level]?.text ?? '#5c4a70',
-                  border: '1px solid #d1cfc5',
-                }}
-              >
-                {levelMap[course.level]?.label ?? 'Mọi cấp độ'}
-              </span>
-            )}
-            {isEnrolled && <span className="course-badge badge-live">✓ Đã đăng ký</span>}
-          </div>
-          <h3 className="cover-title">{course.title}</h3>
-        </div>
         <Link 
           to={`/student/instructors/${course.teacherId}`} 
           className="teacher-info-mini-link"

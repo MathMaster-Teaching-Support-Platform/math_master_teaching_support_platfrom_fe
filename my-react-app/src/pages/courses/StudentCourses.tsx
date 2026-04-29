@@ -108,18 +108,27 @@ const EnrollmentCard: React.FC<{
         )}
         <div className="cover-overlay" />
         <div className="cover-index">#{String(index + 1).padStart(2, '0')}</div>
+        <span
+          style={{
+            position: 'absolute',
+            top: '0.6rem',
+            left: '0.7rem',
+            zIndex: 2,
+            background: enrollment.status === 'ACTIVE' ? 'rgba(34,197,94,0.75)' : 'rgba(100,116,139,0.75)',
+            color: '#fff',
+            borderRadius: '999px',
+            padding: '2px 8px',
+            fontSize: '0.68rem',
+            fontWeight: 700,
+            backdropFilter: 'blur(6px)',
+            border: '1px solid rgba(255,255,255,0.18)',
+          }}
+        >
+          {enrollment.status === 'ACTIVE' ? 'Đang học' : 'Đã hủy'}
+        </span>
+        <h3 className="cover-title">{enrollment.courseTitle}</h3>
       </div>
       <div className="course-body">
-        <div className="course-heading">
-          <div className="course-level-row">
-            <span
-              className={`course-badge ${enrollment.status === 'ACTIVE' ? 'badge-live' : 'badge-draft'}`}
-            >
-              {enrollment.status === 'ACTIVE' ? 'Đang học' : 'Đã hủy'}
-            </span>
-          </div>
-          <h3 className="cover-title">{enrollment.courseTitle}</h3>
-        </div>
         <div>
           <div
             style={{
