@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockStudent } from '../../data/mockData';
+import { UI_TEXT } from '../../constants/uiText';
 import './NotificationCenter.css';
 
 import { useNotificationsContext } from '../../context/NotificationContext';
@@ -144,7 +145,7 @@ const NotificationCenter: React.FC = () => {
             <option value="all">Tất cả loại</option>
             <option value="assignment">📝 Bài tập</option>
             <option value="grade">📊 Điểm số</option>
-            <option value="course">📚 Giáo Trình</option>
+            <option value="course">📚 {UI_TEXT.COURSE}</option>
             <option value="system">⚙️ Hệ thống</option>
             <option value="payment">💰 Thanh toán</option>
             <option value="message">💬 Tin nhắn</option>
@@ -186,7 +187,7 @@ const NotificationCenter: React.FC = () => {
                           : normalizeType(notif.type) === 'grade'
                             ? '📊 Điểm số'
                             : normalizeType(notif.type) === 'course'
-                              ? '📚 Giáo Trình'
+                              ? `📚 ${UI_TEXT.COURSE}`
                               : normalizeType(notif.type) === 'system'
                                 ? '⚙️ Hệ thống'
                                 : normalizeType(notif.type) === 'payment'

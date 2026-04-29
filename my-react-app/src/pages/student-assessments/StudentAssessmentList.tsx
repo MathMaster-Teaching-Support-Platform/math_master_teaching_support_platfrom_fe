@@ -22,6 +22,7 @@ import { useMyAssessments } from '../../hooks/useStudentAssessment';
 import '../../styles/module-refactor.css';
 import type { StudentAssessmentResponse } from '../../types/studentAssessment.types';
 import './StudentAssessmentList.css';
+import { UI_TEXT } from '../../constants/uiText';
 
 const statusFilters = ['ALL', 'UPCOMING', 'IN_PROGRESS', 'COMPLETED'] as const;
 type StatusFilter = (typeof statusFilters)[number];
@@ -100,10 +101,10 @@ export default function StudentAssessmentList() {
             <div className="header-stack">
               <div className="header-kicker">Student Assessment</div>
               <div className="row" style={{ gap: '0.6rem' }}>
-                <h2>Bài kiểm tra của tôi</h2>
+                <h2>{UI_TEXT.QUIZ} của tôi</h2>
                 {!isLoading && !isError && <span className="count-chip">{filtered.length}</span>}
               </div>
-              <p className="sal-header-sub">Theo dõi tiến độ và kết quả các bài kiểm tra của bạn</p>
+              <p className="sal-header-sub">Theo dõi tiến độ và kết quả các {UI_TEXT.QUIZ.toLowerCase()} của bạn</p>
             </div>
           </header>
 
@@ -113,7 +114,7 @@ export default function StudentAssessmentList() {
                 <Search size={15} />
               </span>
               <input
-                placeholder="Tìm kiếm bài kiểm tra..."
+                placeholder={`Tìm kiếm ${UI_TEXT.QUIZ.toLowerCase()}...`}
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
               />
@@ -181,7 +182,7 @@ export default function StudentAssessmentList() {
           {isLoading && (
             <div className="empty">
               <Hourglass size={28} style={{ opacity: 0.4, marginBottom: 8 }} />
-              <p>Đang tải danh sách bài kiểm tra...</p>
+              <p>Đang tải danh sách {UI_TEXT.QUIZ.toLowerCase()}...</p>
             </div>
           )}
 
@@ -192,7 +193,7 @@ export default function StudentAssessmentList() {
                 style={{ opacity: 0.5, marginBottom: 8, color: 'var(--mod-danger)' }}
               />
               <p>
-                {error instanceof Error ? error.message : 'Không thể tải danh sách bài kiểm tra'}
+                {error instanceof Error ? error.message : `Không thể tải danh sách ${UI_TEXT.QUIZ.toLowerCase()}`}
               </p>
             </div>
           )}
@@ -200,7 +201,7 @@ export default function StudentAssessmentList() {
           {!isLoading && !isError && filtered.length === 0 && (
             <div className="empty">
               <BookOpen size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
-              <p>Chưa có bài kiểm tra nào{search ? ` khớp với "${search}"` : ''}.</p>
+              <p>Chưa có {UI_TEXT.QUIZ.toLowerCase()} nào{search ? ` khớp với "${search}"` : ''}.</p>
             </div>
           )}
 

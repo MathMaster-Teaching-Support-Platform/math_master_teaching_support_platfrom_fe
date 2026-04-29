@@ -29,6 +29,7 @@ import {
   type StudentDashboardPayload,
 } from '../../../services/api/student-dashboard.service';
 import type { RoadmapCatalogItem } from '../../../types';
+import { UI_TEXT } from '../../../constants/uiText';
 
 function normalizeRoadmaps(
   result:
@@ -92,7 +93,7 @@ const StudentDashboard: React.FC = () => {
 
   const statsCards = useMemo(
     () => [
-      { icon: BookOpen, label: 'Giáo trình đang học', value: summary?.stats.enrolledCourses ?? 0 },
+      { icon: BookOpen, label: UI_TEXT.LEARNING_COURSES, value: summary?.stats.enrolledCourses ?? 0 },
       {
         icon: CheckCircle2,
         label: 'Bài tập hoàn thành',
@@ -216,7 +217,7 @@ const StudentDashboard: React.FC = () => {
                 <Link
                   to="/student/assessments"
                   className="inline-flex items-center gap-1 font-[Be_Vietnam_Pro] text-[14px] font-medium text-[#3D3D3A] transition-colors duration-150 hover:text-[#C96442] focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:ring-offset-2 active:scale-[0.98]"
-                  aria-label="Xem tất cả bài kiểm tra"
+                  aria-label={`Xem tất cả ${UI_TEXT.QUIZ.toLowerCase()}`}
                 >
                   Xem tất cả <ChevronRight className="h-4 w-4" />
                 </Link>

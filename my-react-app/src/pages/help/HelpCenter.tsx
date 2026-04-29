@@ -23,6 +23,7 @@ import {
 import React, { useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockStudent } from '../../data/mockData';
+import { UI_TEXT } from '../../constants/uiText';
 import './HelpCenter.css';
 
 interface FAQItem {
@@ -51,7 +52,7 @@ const HelpCenter: React.FC = () => {
   const categories = [
     { id: 'all', name: 'Tất cả', icon: <BookOpen className="w-4 h-4" /> },
     { id: 'account', name: 'Tài khoản', icon: <User className="w-4 h-4" /> },
-    { id: 'courses', name: 'Giáo Trình', icon: <BookOpen className="w-4 h-4" /> },
+    { id: 'courses', name: UI_TEXT.COURSE, icon: <BookOpen className="w-4 h-4" /> },
     { id: 'payment', name: 'Thanh toán', icon: <CreditCard className="w-4 h-4" /> },
     { id: 'technical', name: 'Kỹ thuật', icon: <Settings className="w-4 h-4" /> },
   ];
@@ -67,9 +68,9 @@ const HelpCenter: React.FC = () => {
     },
     {
       id: 2,
-      question: 'Cách đăng ký Giáo Trình mới?',
+      question: `Cách đăng ký ${UI_TEXT.COURSE} mới?`,
       answer:
-        'Để đăng ký Giáo Trình: 1) Vào trang Giáo Trình, 2) Chọn Giáo Trình bạn quan tâm, 3) Nhấn "Đăng ký ngay", 4) Chọn gói thanh toán phù hợp, 5) Hoàn tất thanh toán.',
+        `Để đăng ký ${UI_TEXT.COURSE.toLowerCase()}: 1) Vào trang ${UI_TEXT.COURSE}, 2) Chọn ${UI_TEXT.COURSE} bạn quan tâm, 3) Nhấn "Đăng ký ngay", 4) Chọn gói thanh toán phù hợp, 5) Hoàn tất thanh toán.`,
       category: 'courses',
       helpful: 98,
     },
@@ -93,7 +94,7 @@ const HelpCenter: React.FC = () => {
       id: 5,
       question: 'Thời gian học tập có giới hạn không?',
       answer:
-        'Sau khi đăng ký Giáo Trình, bạn có thể truy cập nội dung trong 12 tháng kể từ ngày đăng ký. Các bài tập và tài liệu có thể tải về để sử dụng vĩnh viễn.',
+        `Sau khi đăng ký ${UI_TEXT.COURSE.toLowerCase()}, bạn có thể truy cập nội dung trong 12 tháng kể từ ngày đăng ký. Các bài tập và tài liệu có thể tải về để sử dụng vĩnh viễn.`,
       category: 'courses',
       helpful: 65,
     },
@@ -109,7 +110,7 @@ const HelpCenter: React.FC = () => {
       id: 7,
       question: 'Chứng chỉ hoàn thành được cấp như thế nào?',
       answer:
-        'Chứng chỉ sẽ được tự động cấp khi bạn hoàn thành 100% nội dung Giáo Trình và đạt điểm trung bình ≥ 7.0 trong các bài kiểm tra. Bạn có thể tải xuống PDF hoặc chia sẻ trực tuyến.',
+        `Chứng chỉ sẽ được tự động cấp khi bạn hoàn thành 100% nội dung ${UI_TEXT.COURSE.toLowerCase()} và đạt điểm trung bình ≥ 7.0 trong các bài kiểm tra. Bạn có thể tải xuống PDF hoặc chia sẻ trực tuyến.`,
       category: 'courses',
       helpful: 92,
     },
@@ -117,7 +118,7 @@ const HelpCenter: React.FC = () => {
       id: 8,
       question: 'Hoàn tiền trong trường hợp nào?',
       answer:
-        'Bạn có thể yêu cầu hoàn tiền 100% trong vòng 7 ngày đầu nếu chưa hoàn thành quá 20% Giáo Trình. Sau 7 ngày, chúng tôi không hỗ trợ hoàn tiền nhưng có thể chuyển sang Giáo Trình khác.',
+        `Bạn có thể yêu cầu hoàn tiền 100% trong vòng 7 ngày đầu nếu chưa hoàn thành quá 20% ${UI_TEXT.COURSE.toLowerCase()}. Sau 7 ngày, chúng tôi không hỗ trợ hoàn tiền nhưng có thể chuyển sang ${UI_TEXT.COURSE.toLowerCase()} khác.`,
       category: 'payment',
       helpful: 43,
     },
@@ -431,7 +432,7 @@ const HelpCenter: React.FC = () => {
                     <select className="w-full bg-white border border-[#E5E7EB] rounded-xl px-3.5 py-2.5 text-[14px] text-[#0D0F1A] focus:border-[#3B6EF8] focus:ring-2 focus:ring-[#3B6EF8]/20 outline-none transition-all duration-150">
                       <option value="">Chọn danh mục</option>
                       <option value="account">Tài khoản</option>
-                      <option value="courses">Giáo Trình</option>
+                      <option value="courses">{UI_TEXT.COURSE}</option>
                       <option value="payment">Thanh toán</option>
                       <option value="technical">Kỹ thuật</option>
                       <option value="other">Khác</option>

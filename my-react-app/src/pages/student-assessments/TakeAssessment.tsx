@@ -15,6 +15,7 @@ import {
   useUpdateFlag,
 } from '../../hooks/useStudentAssessment';
 import '../../styles/module-refactor.css';
+import { UI_TEXT } from '../../constants/uiText';
 import type { AttemptStartResponse } from '../../types/studentAssessment.types';
 
 export default function TakeAssessment() {
@@ -255,7 +256,7 @@ export default function TakeAssessment() {
         notificationCount={0}
       >
         <div className="module-layout-container">
-          <div className="empty">Không thể tải bài kiểm tra</div>
+          <div className="empty">Không thể tải {UI_TEXT.QUIZ.toLowerCase()}</div>
         </div>
       </DashboardLayout>
     );
@@ -275,7 +276,7 @@ export default function TakeAssessment() {
             style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: 16 }}
           >
             <div>
-              <h2>{attemptData.instructions || 'Bài kiểm tra'}</h2>
+              <h2>{attemptData.instructions || UI_TEXT.QUIZ}</h2>
               <p className="muted">
                 Câu {currentIndex + 1} / {totalQuestions} • Đã trả lời: {answeredCount}
               </p>

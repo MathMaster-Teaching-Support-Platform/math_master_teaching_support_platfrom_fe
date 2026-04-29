@@ -1,13 +1,13 @@
 /* Pricing — same visual language as Teacher Studio (terracotta + cream, not mixed rainbow stats) */
 
 .module-layout-container.pricing-module-page-wrap {
-  /* Warm mesh — aligns with #f9f8f3 / terracotta accent like Giáo trình */
+  /* Warm mesh — aligns with #f9f8f3 / terracotta accent like Khóa học */
   --pricing-m-accent: #c96442;
   --pricing-m-mesh-1: rgba(201, 100, 66, 0.07);
   --pricing-m-mesh-2: rgba(30, 64, 175, 0.05);
 }
 
-/* Stat tints: same pair as Giáo trình (blue + emerald) — only two cards */
+/* Stat tints: same pair as Khóa học (blue + emerald) — only two cards */
 .module-layout-container .stat-card.stat-emerald {
   background: #ecfdf5;
   border-color: #a7f3d0;
@@ -297,7 +297,7 @@
   font-weight: 700;
 }
 
-/* CTA mua: terracotta như "Tạo giáo trình" (không dùng xanh navy) */
+/* CTA mua: terracotta như "Tạo khóa học" (không dùng xanh navy) */
 .module-layout-container .pricing-m-plan-card .action-primary {
   background: var(--pricing-m-accent, #c96442) !important;
   border: 1px solid var(--pricing-m-accent, #c96442) !important;

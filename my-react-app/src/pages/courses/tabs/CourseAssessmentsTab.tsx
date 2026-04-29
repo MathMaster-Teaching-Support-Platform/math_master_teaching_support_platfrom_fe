@@ -23,6 +23,7 @@ import {
 import type { CourseAssessmentResponse, AddAssessmentToCourseRequest, CourseResponse } from '../../../types';
 import '../../../styles/module-refactor.css';
 import './course-detail-tabs.css';
+import { UI_TEXT } from '../../../constants/uiText';
 
 interface CourseAssessmentsTabProps {
   courseId: string;
@@ -118,7 +119,7 @@ function AddAssessmentModal({
       <div className="modal-card" style={{ width: 'min(720px, 100%)' }} onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <div>
-            <h3>➕ Thêm bài kiểm tra vào giáo trình</h3>
+            <h3>➕ Thêm bài kiểm tra vào {UI_TEXT.COURSE.toLowerCase()}</h3>
             <p className="muted" style={{ marginTop: 6, fontSize: '0.88rem' }}>
               Chọn bài kiểm tra đã xuất bản từ danh sách của bạn
             </p>
@@ -249,7 +250,7 @@ function AddAssessmentModal({
                     </>
                   ) : (
                     <p style={{ fontSize: '0.78rem', marginTop: 8, color: '#059669', fontWeight: 600 }}>
-                      ✓ Khóa học tự do (Cho phép chọn bất kỳ bài đánh giá nào)
+                      ✓ {UI_TEXT.COURSE} tự do (Cho phép chọn bất kỳ bài kiểm tra nào)
                     </p>
                   )}
                 </div>
@@ -295,7 +296,7 @@ function AddAssessmentModal({
             disabled={!selectedId || addMutation.isPending}
             onClick={() => void handleAdd()}
           >
-            {addMutation.isPending ? 'Đang thêm...' : 'Thêm vào giáo trình'}
+            {addMutation.isPending ? 'Đang thêm...' : `Thêm vào ${UI_TEXT.COURSE.toLowerCase()}`}
           </button>
         </div>
       </div>
@@ -334,7 +335,7 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
       return;
     }
 
-    if (!confirm(`Xóa "${assessment.assessmentTitle}" khỏi giáo trình?`)) return;
+    if (!confirm(`Xóa "${assessment.assessmentTitle}" khỏi ${UI_TEXT.COURSE.toLowerCase()}?`)) return;
 
     try {
       await removeMutation.mutateAsync({ courseId, assessmentId: assessment.assessmentId });
@@ -387,7 +388,7 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
           <div className="stat-card__text">
             <h3>{stats.total}</h3>
             <p>Tổng bài kiểm tra</p>
-            <span className="stat-card__sub">đã thêm vào giáo trình</span>
+            <span className="stat-card__sub">đã thêm vào {UI_TEXT.COURSE.toLowerCase()}</span>
           </div>
         </div>
         <div className="stat-card stat-amber">
@@ -582,7 +583,7 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
                     <div style={{ marginTop: 8 }}>
                       {course.provider === 'CUSTOM' ? (
                         <p style={{ fontSize: '0.82rem', margin: 0, color: '#059669', fontWeight: 600 }}>
-                          ✓ Bài đánh giá tự do (Khóa học Custom)
+                          ✓ Bài kiểm tra tự do ({UI_TEXT.COURSE} Custom)
                         </p>
                       ) : assessment.lessonMatched ? (
                         <p className="muted" style={{ fontSize: '0.82rem', margin: 0 }}>

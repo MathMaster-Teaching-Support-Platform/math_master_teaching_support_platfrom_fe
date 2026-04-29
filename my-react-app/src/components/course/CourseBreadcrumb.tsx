@@ -1,6 +1,7 @@
 import { ChevronRight, Home } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { AuthService } from '../../services/api/auth.service';
+import { UI_TEXT } from '../../constants/uiText';
 import './CourseBreadcrumb.css';
 
 interface BreadcrumbItem {
@@ -61,23 +62,23 @@ function generateBreadcrumbs(pathname: string, courseTitle?: string): Breadcrumb
     breadcrumbs.push({ label: 'Giáo viên', path: '/teacher/dashboard' });
 
     if (segments[1] === 'courses') {
-      breadcrumbs.push({ label: 'Giáo trình', path: '/teacher/courses' });
+      breadcrumbs.push({ label: UI_TEXT.COURSE, path: '/teacher/courses' });
 
       if (segments[2]) {
         // Course detail
         breadcrumbs.push({
-          label: courseTitle || 'Chi tiết giáo trình',
+          label: courseTitle || `Chi tiết ${UI_TEXT.COURSE.toLowerCase()}`,
           path: `/teacher/courses/${segments[2]}`,
         });
 
         if (segments[3] === 'lessons') {
           breadcrumbs.push({ label: 'Bài học' });
         } else if (segments[3] === 'assessments') {
-          breadcrumbs.push({ label: 'Đánh giá' });
+          breadcrumbs.push({ label: UI_TEXT.QUIZ });
         }
       }
     } else if (segments[1] === 'assessments') {
-      breadcrumbs.push({ label: 'Đánh giá', path: '/teacher/assessments' });
+      breadcrumbs.push({ label: UI_TEXT.QUIZ, path: '/teacher/assessments' });
       if (segments[2]) {
         breadcrumbs.push({ label: 'Chi tiết' });
       }
@@ -87,11 +88,11 @@ function generateBreadcrumbs(pathname: string, courseTitle?: string): Breadcrumb
   // Student routes
   if (segments[0] === 'student') {
     if (segments[1] === 'courses') {
-      breadcrumbs.push({ label: 'Giáo trình của tôi', path: '/student/courses' });
+      breadcrumbs.push({ label: `${UI_TEXT.COURSE} của tôi`, path: '/student/courses' });
 
       if (segments[2]) {
         breadcrumbs.push({
-          label: courseTitle || 'Chi tiết giáo trình',
+          label: courseTitle || `Chi tiết ${UI_TEXT.COURSE.toLowerCase()}`,
         });
       }
     }
@@ -99,9 +100,9 @@ function generateBreadcrumbs(pathname: string, courseTitle?: string): Breadcrumb
 
   // Public course preview
   if (segments[0] === 'course') {
-    breadcrumbs.push({ label: 'Khám phá giáo trình', path: '/courses' });
+    breadcrumbs.push({ label: `Khám phá ${UI_TEXT.COURSE.toLowerCase()}`, path: '/courses' });
     if (segments[1]) {
-      breadcrumbs.push({ label: courseTitle || 'Xem trước giáo trình' });
+      breadcrumbs.push({ label: courseTitle || `Xem trước ${UI_TEXT.COURSE.toLowerCase()}` });
     }
   }
 

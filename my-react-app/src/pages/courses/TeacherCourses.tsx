@@ -38,6 +38,7 @@ import '../../styles/module-refactor.css';
 import type { CourseResponse, CreateCourseRequest, CourseLevel } from '../../types';
 import type { SchoolGrade, SubjectByGrade } from '../../types/lessonSlide.types';
 import './TeacherCourses.css';
+import { UI_TEXT } from '../../constants/uiText';
 
 const coverGradients = [
   'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
@@ -202,7 +203,7 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
               <Sparkles size={18} />
             </div>
             <div>
-              <h2 id="create-course-title">Tạo giáo trình mới</h2>
+              <h2 id="create-course-title">Tạo {UI_TEXT.COURSE.toLowerCase()} mới</h2>
               <p>Bước {step} trên {totalSteps}</p>
             </div>
           </div>
@@ -239,8 +240,8 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
                 {step === 1 && (
                   <div className="step-1-classification">
                     <div className="form-section-header">
-                      <h3>Phân loại giáo trình</h3>
-                      <p>Chọn phương thức giảng dạy và đặt tên cho giáo trình của bạn.</p>
+                      <h3>Phân loại {UI_TEXT.COURSE.toLowerCase()}</h3>
+                      <p>Chọn phương thức giảng dạy và đặt tên cho {UI_TEXT.COURSE.toLowerCase()} của bạn.</p>
                     </div>
 
                     <div className="provider-selector">
@@ -263,7 +264,7 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
                         <div className="provider-card__icon" aria-hidden="true">
                           <Sparkles size={22} />
                         </div>
-                        <h4>Giáo trình tùy chỉnh</h4>
+                        <h4>{UI_TEXT.COURSE} tùy chỉnh</h4>
                         <p>Xây dựng bài giảng theo phong cách cá nhân.</p>
                       </button>
                     </div>
@@ -303,7 +304,7 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
                     )}
 
                     <div className="form-group">
-                      <label htmlFor="course-title" className="form-label">Tiêu đề giáo trình <span className="required">*</span></label>
+                      <label htmlFor="course-title" className="form-label">Tiêu đề {UI_TEXT.COURSE.toLowerCase()} <span className="required">*</span></label>
                       <input
                         id="course-title"
                         className="form-input"
@@ -321,7 +322,7 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
                   <div className="step-2-details">
                     <div className="form-section-header">
                       <h3>Chi tiết nội dung</h3>
-                      <p>Mô tả ngắn gọn và chọn hình ảnh đại diện cho giáo trình.</p>
+                      <p>Mô tả ngắn gọn và chọn hình ảnh đại diện cho {UI_TEXT.COURSE.toLowerCase()}.</p>
                     </div>
 
                     <div className="form-group form-group--tight-below">
@@ -393,7 +394,7 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
                 {step === 3 && (
                   <div className="step-3-marketing">
                     <div className="form-section-header">
-                      <h3>Tiếp thị giáo trình</h3>
+                      <h3>Tiếp thị {UI_TEXT.COURSE.toLowerCase()}</h3>
                       <p>Giúp học viên hiểu rõ lợi ích và yêu cầu của khóa học này.</p>
                     </div>
 
@@ -450,7 +451,7 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
                   <div className="step-4-pricing">
                     <div className="form-section-header">
                       <h3>Định giá & Khuyến mãi</h3>
-                      <p>Thiết lập học phí và các chương trình giảm giá cho giáo trình của bạn.</p>
+                      <p>Thiết lập học phí và các chương trình giảm giá cho {UI_TEXT.COURSE.toLowerCase()} của bạn.</p>
                     </div>
 
                     <div className="pricing-mode-toggle form-group--tight-below">
@@ -580,7 +581,7 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
                 </>
               ) : step === totalSteps ? (
                 <>
-                  <Plus size={16} /> Tạo giáo trình
+                  <Plus size={16} /> Tạo {UI_TEXT.COURSE.toLowerCase()}
                 </>
               ) : (
                 <>
@@ -682,7 +683,15 @@ const TeacherCourses: React.FC = () => {
   );
 
   const handleCreate = (data: CreateCourseRequest, thumbnailFile?: File) => {
-    createMutation.mutate({ data, thumbnailFile }, {
+    // Sanitize data for free courses
+    const sanitizedData = { ...data };
+    if (Number(data.originalPrice) === 0) {
+      sanitizedData.originalPrice = 0;
+      sanitizedData.discountedPrice = 0;
+      sanitizedData.discountExpiryDate = '';
+    }
+
+    createMutation.mutate({ data: sanitizedData, thumbnailFile }, {
       onSuccess: () => setShowCreateModal(false),
     });
   };
@@ -704,7 +713,7 @@ const TeacherCourses: React.FC = () => {
   };
 
   const handleDelete = (courseId: string) => {
-    if (globalThis.confirm('Bạn có chắc muốn xóa giáo trình này?')) {
+    if (globalThis.confirm(`Bạn có chắc muốn xóa ${UI_TEXT.COURSE.toLowerCase()} này?`)) {
       deleteMutation.mutate(courseId);
     }
   };
@@ -737,17 +746,17 @@ const TeacherCourses: React.FC = () => {
             <div className="header-stack">
               <div className="header-kicker">Teacher Studio</div>
               <div className="row" style={{ gap: '0.6rem' }}>
-                <h2>Giáo trình</h2>
+                <h2>{UI_TEXT.COURSE}</h2>
                 {!isLoading && <span className="count-chip">{courses.length}</span>}
               </div>
               <p className="header-sub">
                 {stats.active} đang hoạt động • {stats.students} học viên
               </p>
             </div>
-            <button className="btn" onClick={() => setShowCreateModal(true)}>
-              <Plus size={16} />
-              Tạo giáo trình
-            </button>
+              <button className="btn" onClick={() => setShowCreateModal(true)}>
+                <Plus size={16} />
+                Tạo {UI_TEXT.COURSE.toLowerCase()}
+              </button>
           </header>
 
           {/* ── Stats ── */}
@@ -758,7 +767,7 @@ const TeacherCourses: React.FC = () => {
               </div>
               <div>
                 <h3>{stats.total}</h3>
-                <p>Tổng giáo trình</p>
+                <p>{UI_TEXT.TOTAL_COURSES}</p>
               </div>
             </div>
             <div className="stat-card stat-emerald">
@@ -797,7 +806,7 @@ const TeacherCourses: React.FC = () => {
                 <Search size={15} />
               </span>
               <input
-                placeholder="Tìm kiếm giáo trình..."
+                placeholder={`Tìm kiếm ${UI_TEXT.COURSE.toLowerCase()}...`}
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
@@ -910,7 +919,7 @@ const TeacherCourses: React.FC = () => {
                 size={28}
                 style={{ opacity: 0.5, marginBottom: 8, color: 'var(--mod-danger)' }}
               />
-              <p>Không thể tải giáo trình. Vui lòng thử lại.</p>
+              <p>Không thể tải {UI_TEXT.COURSE.toLowerCase()}. Vui lòng thử lại.</p>
             </div>
           )}
 
@@ -959,7 +968,7 @@ const TeacherCourses: React.FC = () => {
 
                   <div className="course-body">
                     <p className="course-desc">
-                      {course.description || 'Chưa có mô tả cho giáo trình này.'}
+                      {course.description || `Chưa có mô tả cho ${UI_TEXT.COURSE.toLowerCase()} này.`}
                     </p>
 
                     <div className="course-metrics">
@@ -1018,7 +1027,7 @@ const TeacherCourses: React.FC = () => {
                         className="action-danger"
                         onClick={() => handleDelete(course.id)}
                         disabled={deleteMutation.isPending}
-                        aria-label="Xóa giáo trình"
+                        aria-label={`Xóa ${UI_TEXT.COURSE.toLowerCase()}`}
                       >
                         <Trash2 size={14} />
                       </button>
@@ -1058,7 +1067,7 @@ const TeacherCourses: React.FC = () => {
             <div className="empty">
               <Search size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
               <p>
-                Không tìm thấy giáo trình{search ? ` khớp với "${search}"` : ' với bộ lọc này'}.
+                Không tìm thấy {UI_TEXT.COURSE.toLowerCase()}{search ? ` khớp với "${search}"` : ' với bộ lọc này'}.
               </p>
             </div>
           )}
@@ -1067,9 +1076,9 @@ const TeacherCourses: React.FC = () => {
           {!isLoading && !error && courses.length === 0 && (
             <div className="empty">
               <BookOpen size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
-              <p>Bạn chưa có giáo trình nào. Hãy tạo giáo trình để bắt đầu giảng dạy.</p>
+              <p>Bạn chưa có {UI_TEXT.COURSE.toLowerCase()} nào. Hãy tạo {UI_TEXT.COURSE.toLowerCase()} để bắt đầu giảng dạy.</p>
               <button className="btn" onClick={() => setShowCreateModal(true)}>
-                <Plus size={16} /> Tạo giáo trình đầu tiên
+                <Plus size={16} /> Tạo {UI_TEXT.COURSE.toLowerCase()} đầu tiên
               </button>
             </div>
           )}

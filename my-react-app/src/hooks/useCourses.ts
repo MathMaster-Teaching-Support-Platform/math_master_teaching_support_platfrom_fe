@@ -119,24 +119,24 @@ export function useSubmitCourseForReview() {
       // Check if course has lessons
       if (course.lessonsCount === 0) {
         throw Object.assign(
-          new Error(getErrorMessage(1033)),
-          { code: 1033 }
+          new Error(getErrorMessage(1197)),
+          { code: 1197 }
         );
       }
       
       // Check if already pending
       if (course.status === 'PENDING_REVIEW') {
         throw Object.assign(
-          new Error(getErrorMessage(1034)),
-          { code: 1034 }
+          new Error(getErrorMessage(1198)),
+          { code: 1198 }
         );
       }
       
       // Check if already published
       if (course.status === 'PUBLISHED') {
         throw Object.assign(
-          new Error(getErrorMessage(1036)),
-          { code: 1036 }
+          new Error(getErrorMessage(1147)),
+          { code: 1147 }
         );
       }
       
@@ -145,7 +145,7 @@ export function useSubmitCourseForReview() {
       if (pricingError) {
         throw Object.assign(
           new Error(pricingError),
-          { code: 1032 }
+          { code: 1199 }
         );
       }
       

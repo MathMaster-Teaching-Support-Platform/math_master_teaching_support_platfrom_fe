@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Clock, FileText, MessageSquare } from 'lucide-react';
+import { UI_TEXT } from '../../constants/uiText';
 import { useMyResult, useCreateRegradeRequest } from '../../hooks/useGrading';
 import { ClauseDetailDisplay } from '../../components/assessment/ClauseDetailDisplay';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
@@ -69,7 +70,7 @@ export default function AssessmentResult() {
                 Quay lại
               </button>
               <h2 style={{ marginTop: 12 }}>{result.assessmentTitle}</h2>
-              <p className="muted">Kết quả bài làm</p>
+              <p className="muted">Kết quả {UI_TEXT.QUIZ.toLowerCase()}</p>
             </div>
           </header>
 
