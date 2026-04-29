@@ -103,15 +103,11 @@ const studentGroups: MenuGroup[] = [
   },
   {
     label: 'Công cụ',
-    items: [
-      { path: '/student/ai-assistant', icon: Bot, label: 'AI Trợ lý' },
-    ],
+    items: [{ path: '/student/ai-assistant', icon: Bot, label: 'AI Trợ lý' }],
   },
   {
     label: 'Nâng cấp',
-    items: [
-      { path: '/submit-teacher-profile', icon: ShieldCheck, label: 'Đăng ký Giáo viên' }
-    ],
+    items: [{ path: '/submit-teacher-profile', icon: ShieldCheck, label: 'Đăng ký Giáo viên' }],
   },
 ];
 
@@ -143,6 +139,7 @@ const adminGroups: MenuGroup[] = [
     items: [
       { path: '/admin/courses/review', icon: BookOpen, label: 'Duyệt khóa học' },
       { path: '/admin/roadmaps', icon: Workflow, label: 'Lộ trình' },
+      { path: '/admin/slide-templates', icon: Presentation, label: 'Slide Template' },
     ],
   },
   {

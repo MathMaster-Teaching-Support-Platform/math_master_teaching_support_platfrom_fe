@@ -53,6 +53,7 @@ import AdminRoadmapCreatePage from '../pages/admin/AdminRoadmapCreatePage';
 import AdminRoadmapEditPage from '../pages/admin/AdminRoadmapEditPage';
 import AdminRoadmapManagementPage from '../pages/admin/AdminRoadmapManagementPage';
 import AdminRoadmapTopicsPage from '../pages/admin/AdminRoadmapTopicsPage';
+import AdminSlideTemplates from '../pages/admin/AdminSlideTemplates';
 import AdminTransactions from '../pages/admin/AdminTransactions';
 import AdminWithdrawals from '../pages/admin/AdminWithdrawals';
 import MarketplaceAnalytics from '../pages/admin/MarketplaceAnalytics';
@@ -670,6 +671,14 @@ export const router = createBrowserRouter([
     element: (
       <PrivateRoute>
         <AdminRoadmapTopicsPage />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/admin/slide-templates',
+    element: (
+      <PrivateRoute>
+        <AdminSlideTemplates />
       </PrivateRoute>
     ),
   },
