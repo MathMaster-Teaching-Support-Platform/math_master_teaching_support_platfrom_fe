@@ -111,6 +111,7 @@ const CoursePreview: React.FC = () => {
           id: section.id,
           title: section.title,
           description: section.description,
+          type: 'CHAPTER' as const,
           lessons: lessons
             .filter((l) => l.sectionId === section.id)
             .sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0)),
