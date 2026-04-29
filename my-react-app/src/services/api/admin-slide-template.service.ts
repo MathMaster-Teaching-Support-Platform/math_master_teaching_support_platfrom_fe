@@ -175,7 +175,7 @@ export class AdminSlideTemplateService {
   }
 
   /** GET /admin/slide-templates/{id}/preview-image */
-  static async getPreviewImageUrl(id: string): Promise<string> {
+  static getPreviewImageUrl(id: string): string {
     return `${API_BASE_URL}${API_ENDPOINTS.ADMIN_SLIDE_TEMPLATE_PREVIEW_IMAGE(id)}`;
   }
 }
