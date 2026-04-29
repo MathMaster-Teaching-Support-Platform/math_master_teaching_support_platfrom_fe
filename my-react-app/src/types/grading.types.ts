@@ -38,6 +38,7 @@ export interface AnswerGradeResponse {
   // FE-only fields (not in BE response, will be undefined)
   questionType?: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER' | 'ESSAY' | 'CODING';
   needsManualGrading?: boolean;
+  scoringDetail?: Record<string, unknown>;  // NEW: Clause breakdown for TF questions
 }
 
 export interface AiReviewResponse {

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Clock, FileText, MessageSquare } from 'lucide-react';
 import { useMyResult, useCreateRegradeRequest } from '../../hooks/useGrading';
+import { ClauseDetailDisplay } from '../../components/assessment/ClauseDetailDisplay';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import MathText from '../../components/common/MathText';
 import '../../styles/module-refactor.css';
@@ -217,6 +218,11 @@ export default function AssessmentResult() {
                         {answer.feedback}
                       </p>
                     </div>
+                  )}
+
+                  {/* NEW: Clause detail display for TRUE_FALSE questions */}
+                  {answer.scoringDetail && (
+                    <ClauseDetailDisplay scoringDetail={answer.scoringDetail} />
                   )}
 
                   {/* AI Reviews - Not yet implemented in BE

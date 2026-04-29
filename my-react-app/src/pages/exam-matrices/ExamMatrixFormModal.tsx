@@ -33,10 +33,11 @@ export function ExamMatrixFormModal({
   onClose,
   onSubmit,
 }: Readonly<Props>) {
-  const [formData, setFormData] = useState<ExamMatrixRequest>({
+  const [formData, setFormData] = useState<ExamMatrixRequest & { numberOfParts?: number }>({
     name: '',
     description: '',
     isReusable: false,
+    numberOfParts: 1,  // NEW: Default to 1 part (MCQ only)
   });
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -49,6 +50,7 @@ export function ExamMatrixFormModal({
       isReusable: initialData?.isReusable ?? false,
       totalQuestionsTarget: initialData?.totalQuestionsTarget,
       totalPointsTarget: initialData?.totalPointsTarget,
+      numberOfParts: (initialData as any)?.numberOfParts ?? 1,  // NEW
     });
     setError(null);
     setSaving(false);
@@ -226,6 +228,54 @@ export function ExamMatrixFormModal({
                       (chia sẻ với giáo viên khác)
                     </span>
                   </label>
+
+                  {/* NEW: Number of Parts Toggle */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                    <label
+                      style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--mod-ink)' }}
+                    >
+                      Số phần đề
+                    </label>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      {[1, 2, 3].map((num) => (
+                        <button
+                          key={num}
+                          type="button"
+                          onClick={() => setFormData({ ...formData, numberOfParts: num })}
+                          style={{
+                            flex: 1,
+                            padding: '0.6rem 0.8rem',
+                            borderRadius: 8,
+                            border: '2px solid',
+                            fontSize: '0.85rem',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            transition: 'all 0.15s',
+                            backgroundColor:
+                              formData.numberOfParts === num ? '#1d4ed8' : 'transparent',
+                            borderColor:
+                              formData.numberOfParts === num ? '#1d4ed8' : '#cbd5e1',
+                            color: formData.numberOfParts === num ? '#fff' : '#64748b',
+                          }}
+                        >
+                          {num === 1 ? '① MCQ' : num === 2 ? '② TF' : '③ SA'}
+                        </button>
+                      ))}
+                    </div>
+                    <p
+                      style={{
+                        fontSize: '0.75rem',
+                        color: 'var(--mod-muted, #64748b)',
+                        margin: '0.3rem 0 0 0',
+                      }}
+                    >
+                      {formData.numberOfParts === 1
+                        ? 'Phần I: Trắc nghiệm (MCQ)'
+                        : formData.numberOfParts === 2
+                          ? 'Phần I: Trắc nghiệm (MCQ) + Phần II: Đúng/Sai (TF)'
+                          : 'Phần I: Trắc nghiệm (MCQ) + Phần II: Đúng/Sai (TF) + Phần III: Tự luận ngắn (SA)'}
+                    </p>
+                  </div>
                 </>
               )}
             </div>
