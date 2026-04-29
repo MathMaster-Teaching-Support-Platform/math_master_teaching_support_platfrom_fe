@@ -1085,3 +1085,7 @@
 .lessons-group.collapsed {
   grid-template-rows: 0fr;
 }
+
+/* Override opacity from TeacherCourses.css to display student course images clearly */
+.sc-page.module-layout-container .cover-thumb { opacity: 1 !important; }
+

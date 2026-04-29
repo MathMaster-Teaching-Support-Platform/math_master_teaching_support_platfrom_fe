@@ -235,6 +235,14 @@ export const API_ENDPOINTS = {
   LESSON_SLIDES_PUBLIC_GENERATED_THUMBNAIL_IMAGE: (generatedFileId: string) =>
     `/lesson-slides/public/generated/${generatedFileId}/thumbnail-image`,
 
+  // Admin Slide Templates
+  ADMIN_SLIDE_TEMPLATES: '/admin/slide-templates',
+  ADMIN_SLIDE_TEMPLATE_DETAIL: (id: string) => `/admin/slide-templates/${id}`,
+  ADMIN_SLIDE_TEMPLATE_ACTIVATE: (id: string) => `/admin/slide-templates/${id}/activate`,
+  ADMIN_SLIDE_TEMPLATE_DEACTIVATE: (id: string) => `/admin/slide-templates/${id}/deactivate`,
+  ADMIN_SLIDE_TEMPLATE_DOWNLOAD: (id: string) => `/admin/slide-templates/${id}/download`,
+  ADMIN_SLIDE_TEMPLATE_PREVIEW_IMAGE: (id: string) => `/admin/slide-templates/${id}/preview-image`,
+
   // Lesson Plans (Giáo án)
   LESSON_PLANS: '/lesson-plans',
   LESSON_PLANS_MY: '/lesson-plans/my',

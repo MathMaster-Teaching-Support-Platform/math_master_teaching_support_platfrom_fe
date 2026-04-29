@@ -354,9 +354,9 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, isOpen, onClo
         }
 
         .invoice-product-img {
-          width: 72px;
+          width: 128px;
           height: 72px;
-          border-radius: 12px;
+          border-radius: 8px;
           object-fit: cover;
           background: #f1f5f9;
         }

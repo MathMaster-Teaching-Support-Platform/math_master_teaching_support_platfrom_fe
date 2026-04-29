@@ -218,7 +218,7 @@ const TeacherCourseDetail: React.FC = () => {
     { id: 'lessons' as const, label: 'Bài học', icon: FileText, count: course.lessonsCount },
     { id: 'assessments' as const, label: UI_TEXT.QUIZ, icon: CheckCircle2 },
     { id: 'students' as const, label: 'Học viên', icon: Users, count: students.length },
-    { id: 'reviews' as const, label: 'Đánh giá', icon: Star },
+    { id: 'reviews' as const, label: 'Đánh giá', icon: Star, count: course.ratingCount },
   ];
 
   return (

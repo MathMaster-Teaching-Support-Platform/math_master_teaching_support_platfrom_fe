@@ -698,26 +698,27 @@ export class CourseService {
     size = 10,
     rating?: number
   ): Promise<ApiResponse<PaginatedResponse<CourseReviewResponse>>> {
-    const url = new URL(`${API_BASE_URL}/courses/${courseId}/reviews`);
-    url.searchParams.append('page', page.toString());
-    url.searchParams.append('size', size.toString());
-    if (rating) url.searchParams.append('rating', rating.toString());
+    const qs = new URLSearchParams();
+    qs.append('page', page.toString());
+    qs.append('size', size.toString());
+    if (rating) qs.append('rating', rating.toString());
 
-    const headers = await this.getHeaders();
-    const response = await fetch(url.toString(), {
-      headers,
+    const url = `${API_BASE_URL}/courses/${courseId}/reviews?${qs.toString()}`;
+    const headers = await this.getAuthHeaders().catch(() => ({} as Record<string, string>));
+    const response = await fetch(url, {
+      headers: Object.keys(headers).length > 0 ? headers : undefined,
     });
-    return response.json();
+    return this.handleResponse(response);
   }
 
   static async getReviewSummary(
     courseId: string
   ): Promise<ApiResponse<CourseReviewSummaryResponse>> {
-    const headers = await this.getHeaders();
+    const headers = await this.getAuthHeaders().catch(() => ({} as Record<string, string>));
     const response = await fetch(`${API_BASE_URL}/courses/${courseId}/reviews/summary`, {
-      headers,
+      headers: Object.keys(headers).length > 0 ? headers : undefined,
     });
-    return response.json();
+    return this.handleResponse(response);
   }
 
   static async replyToReview(
@@ -730,7 +731,7 @@ export class CourseService {
       headers,
       body: JSON.stringify(data),
     });
-    return response.json();
+    return this.handleResponse(response);
   }
 
   static async getRelatedCourses(
@@ -738,30 +739,30 @@ export class CourseService {
     page = 0,
     size = 10
   ): Promise<ApiResponse<PaginatedResponse<CourseResponse>>> {
-    const headers = await this.getHeaders();
+    const headers = await this.getAuthHeaders().catch(() => ({} as Record<string, string>));
     const response = await fetch(
       `${API_BASE_URL}/courses/${courseId}/related?page=${page}&size=${size}`,
       {
-        headers,
+        headers: Object.keys(headers).length > 0 ? headers : undefined,
       }
     );
-    return response.json();
+    return this.handleResponse(response);
   }
 
   static async getTeacherCourses(teacherId: string): Promise<ApiResponse<CourseResponse[]>> {
-    const headers = await this.getHeaders();
+    const headers = await this.getAuthHeaders().catch(() => ({} as Record<string, string>));
     const response = await fetch(`${API_BASE_URL}/courses/teachers/${teacherId}/courses`, {
-      headers,
+      headers: Object.keys(headers).length > 0 ? headers : undefined,
     });
-    return response.json();
+    return this.handleResponse(response);
   }
 
   static async getTeacherProfile(teacherId: string): Promise<ApiResponse<TeacherProfileResponse>> {
-    const headers = await this.getHeaders();
+    const headers = await this.getAuthHeaders().catch(() => ({} as Record<string, string>));
     const response = await fetch(`${API_BASE_URL}/courses/teachers/${teacherId}/profile`, {
-      headers,
+      headers: Object.keys(headers).length > 0 ? headers : undefined,
     });
-    return response.json();
+    return this.handleResponse(response);
   }
 
   static async deleteReview(reviewId: string): Promise<ApiResponse<string>> {

@@ -199,7 +199,7 @@ const StudentReviewsTab: React.FC<StudentReviewsTabProps> = ({ courseId }) => {
                     <button
                       key={s}
                       type="button"
-                      onMouseEnter={() => !isEditing && setRating(s)}
+                      onMouseEnter={() => setRating(s)}
                       onClick={() => setRating(s)}
                       className={`star-btn ${s <= rating ? 'active' : ''}`}
                     >
