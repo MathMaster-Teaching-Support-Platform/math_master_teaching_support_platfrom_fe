@@ -1,10 +1,6 @@
 import { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import type { QuestionBankRequest, QuestionBankResponse } from '../../types/questionBank';
-import { useSubjectsByGrade } from '../../hooks/useSubjects';
-import { useChaptersBySubject } from '../../hooks/useChapters';
-import { useGrades } from '../../hooks/useGrades';
-import '../../components/common/grade-subject-select.css';
 
 type Props = {
   isOpen: boolean;
@@ -18,34 +14,8 @@ export function QuestionBankFormModal({ isOpen, mode, initialData, onClose, onSu
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [isPublic, setIsPublic] = useState(false);
-  const [gradeLevel, setGradeLevel] = useState('');
-  const [selectedSubjectId, setSelectedSubjectId] = useState('');
-  const [selectedChapterId, setSelectedChapterId] = useState('');
-  const [chapterSearch, setChapterSearch] = useState('');
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-
-  // Fetch grades
-  const { data: gradesData, isLoading: isLoadingGrades } = useGrades(isOpen);
-  // Fetch subjects by grade (only when grade is selected)
-  const { data: subjectsData, isLoading: isLoadingSubjects } = useSubjectsByGrade(
-    gradeLevel,
-    !!gradeLevel && isOpen
-  );
-  const { data: chaptersData } = useChaptersBySubject(selectedSubjectId, !!selectedSubjectId && isOpen);
-
-  const grades = gradesData?.result ?? [];
-  const subjects = subjectsData?.result ?? [];
-  const chapters = chaptersData?.result ?? [];
-  const filteredChapters = chapters.filter((chapter) => {
-    if (!chapterSearch.trim()) return true;
-    const query = chapterSearch.toLowerCase();
-    const title = (chapter.title || chapter.name || '').toLowerCase();
-    return title.includes(query);
-  });
-
-  // Sort grades by level
-  const sortedGrades = [...grades].sort((a, b) => a.level - b.level);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -54,8 +24,6 @@ export function QuestionBankFormModal({ isOpen, mode, initialData, onClose, onSu
       setName(initialData.name || '');
       setDescription(initialData.description || '');
       setIsPublic(initialData.isPublic ?? false);
-      setSelectedChapterId(initialData.chapterId ?? '');
-      setChapterSearch(initialData.chapterTitle ?? '');
       setSubmitError(null);
       return;
     }
@@ -63,9 +31,6 @@ export function QuestionBankFormModal({ isOpen, mode, initialData, onClose, onSu
     setName('');
     setDescription('');
     setIsPublic(false);
-    setSelectedSubjectId('');
-    setSelectedChapterId('');
-    setChapterSearch('');
     setSubmitError(null);
   }, [isOpen, mode, initialData]);
 
@@ -80,18 +45,13 @@ export function QuestionBankFormModal({ isOpen, mode, initialData, onClose, onSu
     setSubmitError(null);
     if (!name.trim()) return;
 
-    if (!selectedChapterId) {
-      setSubmitError('Vui lòng chọn chapter cho question bank.');
-      return;
-    }
-
     setSaving(true);
     try {
       await onSubmit({
         name: name.trim(),
         description: description.trim() || undefined,
         isPublic,
-        chapterId: selectedChapterId,
+        // ❌ REMOVED: chapterId (QuestionBank is now a simple container)
       });
       onClose();
     } catch (error) {
@@ -126,94 +86,12 @@ export function QuestionBankFormModal({ isOpen, mode, initialData, onClose, onSu
                 maxLength={255}
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                placeholder="Ví dụ: Đại số lớp 9 - Chương 1"
+                placeholder="Ví dụ: Ngân hàng câu hỏi Toán 12 HK1"
               />
             </label>
 
-            {/* Grade Select */}
-            <label>
-              <p className="muted" style={{ marginBottom: 6 }}>Khối lớp</p>
-              <select
-                className="select"
-                value={gradeLevel}
-                onChange={(event) => {
-                  const newGrade = event.target.value;
-                  setGradeLevel(newGrade);
-                  setSelectedSubjectId('');
-                  setSelectedChapterId('');
-                  setChapterSearch('');
-                }}
-                disabled={isLoadingGrades}
-              >
-                <option value="">Chọn khối lớp</option>
-                {sortedGrades.map((grade) => (
-                  <option key={grade.id} value={String(grade.level)}>
-                    {grade.name || `Lớp ${grade.level}`}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            {/* Subject Select */}
-            <label>
-              <p className="muted" style={{ marginBottom: 6 }}>Môn học</p>
-              <select
-                className="select"
-                value={selectedSubjectId}
-                onChange={(event) => {
-                  setSelectedSubjectId(event.target.value);
-                  setSelectedChapterId('');
-                  setChapterSearch('');
-                }}
-                disabled={isLoadingSubjects || !gradeLevel}
-              >
-                {!gradeLevel ? (
-                  <option value="">Chọn khối lớp trước</option>
-                ) : isLoadingSubjects ? (
-                  <option value="">Đang tải môn học...</option>
-                ) : subjects.length === 0 ? (
-                  <option value="">Không có môn học cho khối này</option>
-                ) : (
-                  <>
-                    <option value="">Chọn môn học để tải chapter</option>
-                    {subjects.map((subject) => (
-                      <option key={subject.id} value={subject.id}>{subject.name}</option>
-                    ))}
-                  </>
-                )}
-              </select>
-            </label>
-
-            <label>
-              <p className="muted" style={{ marginBottom: 6 }}>Tìm chapter</p>
-              <input
-                className="input"
-                value={chapterSearch}
-                onChange={(event) => setChapterSearch(event.target.value)}
-                placeholder="Nhập tên chapter để lọc"
-              />
-            </label>
-
-            <label>
-              <p className="muted" style={{ marginBottom: 6 }}>Chapter</p>
-              <select
-                className="select"
-                required
-                value={selectedChapterId}
-                onChange={(event) => setSelectedChapterId(event.target.value)}
-              >
-                <option value="">Chọn chapter</option>
-                {filteredChapters.map((chapter) => {
-                  const chapterTitle = chapter.title || chapter.name || chapter.id;
-                  return (
-                    <option key={chapter.id} value={chapter.id}>{chapterTitle}</option>
-                  );
-                })}
-                {mode === 'edit' && initialData?.chapterId && filteredChapters.every((item) => item.id !== initialData.chapterId) && (
-                  <option value={initialData.chapterId}>{initialData.chapterTitle || initialData.chapterId}</option>
-                )}
-              </select>
-            </label>
+            {/* ❌ REMOVED: Grade/Subject/Chapter cascade selector */}
+            {/* QuestionBank is now a simple container with NO academic context */}
 
             <label>
               <p className="muted" style={{ marginBottom: 6 }}>Mô tả</p>
@@ -240,7 +118,7 @@ export function QuestionBankFormModal({ isOpen, mode, initialData, onClose, onSu
 
           <div className="modal-footer">
             <button type="button" className="btn secondary" onClick={onClose}>Hủy</button>
-            <button type="submit" className="btn" disabled={saving || !name.trim() || !selectedChapterId}>
+            <button type="submit" className="btn" disabled={saving || !name.trim()}>
               {submitLabel}
             </button>
           </div>

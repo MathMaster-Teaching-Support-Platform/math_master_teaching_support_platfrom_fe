@@ -83,16 +83,14 @@ export function ExamMatrixRowModal({
   const questionBanksQuery = useSearchQuestionBanks(
     {
       searchTerm: questionBankSearch || undefined,
-      chapterId: chapterId || undefined,
-      subjectId: selectedSubjectId || undefined,
-      gradeLevel: gradeLevel || undefined,
+      // ❌ REMOVED: chapterId, subjectId, gradeLevel (QuestionBank no longer has academic context)
       mineOnly: true,
       page: 0,
       size: 20,
       sortBy: 'updatedAt',
       sortDirection: 'DESC',
     },
-    isOpen && !!chapterId,
+    isOpen,  // ❌ CHANGED: No longer depends on chapterId
   );
 
   const chapters = chapterQuery.data?.result ?? [];

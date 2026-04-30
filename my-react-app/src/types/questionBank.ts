@@ -4,7 +4,7 @@ export interface QuestionBankRequest {
   name: string;
   description?: string;
   isPublic?: boolean;
-  chapterId?: string | null;
+  // ❌ REMOVED: chapterId (QuestionBank is now a simple container with NO academic context)
 }
 
 export interface QuestionBankResponse {
@@ -14,8 +14,7 @@ export interface QuestionBankResponse {
   name: string;
   description?: string;
   isPublic: boolean;
-  chapterId?: string | null;
-  chapterTitle?: string | null;
+  // ❌ REMOVED: chapterId, chapterTitle (QuestionBank is now a simple container)
   questionCount: number;
   cognitiveStats?: Record<string, number>;
   createdAt: string;
@@ -67,9 +66,7 @@ export interface ApiResponse<T> {
 export interface SearchQuestionBanksParams {
   isPublic?: boolean;
   searchTerm?: string;
-  chapterId?: string;
-  subjectId?: string;
-  gradeLevel?: string;
+  // ❌ REMOVED: chapterId, subjectId, gradeLevel (search by name/visibility only)
   mineOnly?: boolean;
   page?: number;
   size?: number;

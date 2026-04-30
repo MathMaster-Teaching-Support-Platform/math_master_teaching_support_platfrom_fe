@@ -9,6 +9,10 @@ import {
   type QuestionTemplateRequest,
   type QuestionTemplateResponse,
 } from '../../types/questionTemplate';
+// ✅ NEW: Import hooks for Grade→Subject→Chapter cascade
+import { useGrades } from '../../hooks/useGrades';
+import { useSubjectsByGrade } from '../../hooks/useSubjects';
+import { useChaptersBySubject } from '../../hooks/useChapters';
 
 type ParameterInput = {
   name: string;
@@ -149,8 +153,6 @@ const cognitiveLevelLabels: Record<CognitiveLevel, string> = {
   VAN_DUNG_CAO: '4. Vận dụng cao',
 };
 
-const multipleChoiceLabel = 'Trắc nghiệm (Nhiều lựa chọn)';
-
 export function TemplateFormModal({
   isOpen,
   mode,
@@ -160,6 +162,10 @@ export function TemplateFormModal({
 }: Readonly<Props>) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  // ✅ NEW: Academic context state (Template owns chapter)
+  const [gradeLevel, setGradeLevel] = useState('');
+  const [selectedSubjectId, setSelectedSubjectId] = useState('');
+  const [selectedChapterId, setSelectedChapterId] = useState('');
   const [templateType, setTemplateType] = useState<QuestionType>(QuestionType.MULTIPLE_CHOICE);
   const [cognitiveLevel, setCognitiveLevel] = useState<CognitiveLevel>(CognitiveLevel.THONG_HIEU);
   const [isPublic, setIsPublic] = useState(false);
@@ -173,6 +179,23 @@ export function TemplateFormModal({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [activeMathField, setActiveMathField] = useState<ActiveMathField>({ kind: 'templateText' });
   const [isGuideOpen, setIsGuideOpen] = useState(false);
+
+  // ✅ NEW: Fetch academic hierarchy data
+  const { data: gradesData, isLoading: isLoadingGrades } = useGrades(isOpen);
+  const { data: subjectsData, isLoading: isLoadingSubjects } = useSubjectsByGrade(
+    gradeLevel,
+    !!gradeLevel && isOpen
+  );
+  const { data: chaptersData, isLoading: isLoadingChapters } = useChaptersBySubject(
+    selectedSubjectId,
+    !!selectedSubjectId && isOpen
+  );
+
+  const grades = gradesData?.result ?? [];
+  const subjects = subjectsData?.result ?? [];
+  const chapters = chaptersData?.result ?? [];
+  const sortedGrades = [...grades].sort((a, b) => a.level - b.level);
+
   const nameRef = useRef<HTMLInputElement | null>(null);
   const descriptionRef = useRef<HTMLTextAreaElement | null>(null);
   const templateTextRef = useRef<HTMLTextAreaElement | null>(null);
@@ -198,6 +221,10 @@ export function TemplateFormModal({
       setSubmitError(null);
       setName(initialData.name || '');
       setDescription(initialData.description || '');
+      // ✅ NEW: Initialize academic context from initialData
+      setGradeLevel(initialData.gradeLevel || '');
+      setSelectedSubjectId(initialData.subjectId || '');
+      setSelectedChapterId(initialData.chapterId || '');
       setTemplateType(initialData.templateType || QuestionType.MULTIPLE_CHOICE);
       setCognitiveLevel(initialData.cognitiveLevel || CognitiveLevel.THONG_HIEU);
       setIsPublic(initialData.isPublic ?? false);
@@ -251,6 +278,10 @@ export function TemplateFormModal({
     setName('');
     setSubmitError(null);
     setDescription('');
+    // ✅ NEW: Reset academic context for create mode
+    setGradeLevel('');
+    setSelectedSubjectId('');
+    setSelectedChapterId('');
     setTemplateType(QuestionType.MULTIPLE_CHOICE);
     setCognitiveLevel(CognitiveLevel.THONG_HIEU);
     setIsPublic(false);
@@ -477,7 +508,11 @@ export function TemplateFormModal({
     const payload: QuestionTemplateRequest = {
       name: validation.result.normalizedName,
       description: description.trim() || undefined,
-      templateType: mode === 'create' ? QuestionType.MULTIPLE_CHOICE : templateType,
+      // ✅ NEW: Include academic context (Template owns chapter)
+      gradeLevel: gradeLevel || undefined,
+      subjectId: selectedSubjectId || undefined,
+      chapterId: selectedChapterId || undefined,
+      templateType: templateType,
       templateText: { vi: validation.result.normalizedTemplateText },
       parameters: mappedParameters,
       answerFormula: validation.result.normalizedAnswerFormula || '',
@@ -539,11 +574,111 @@ export function TemplateFormModal({
                 />
               </label>
 
+              {/* ✅ NEW: Grade→Subject→Chapter Cascade Selector */}
+              <label>
+                <p className="muted" style={{ marginBottom: 6 }}>
+                  Khối lớp
+                </p>
+                <select
+                  className="select"
+                  value={gradeLevel}
+                  onChange={(event) => {
+                    const newGrade = event.target.value;
+                    setGradeLevel(newGrade);
+                    setSelectedSubjectId('');
+                    setSelectedChapterId('');
+                  }}
+                  disabled={isLoadingGrades}
+                >
+                  <option value="">Chọn khối lớp</option>
+                  {sortedGrades.map((grade) => (
+                    <option key={grade.id} value={String(grade.level)}>
+                      {grade.name || `Lớp ${grade.level}`}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <p className="muted" style={{ marginBottom: 6 }}>
+                  Môn học
+                </p>
+                <select
+                  className="select"
+                  value={selectedSubjectId}
+                  onChange={(event) => {
+                    setSelectedSubjectId(event.target.value);
+                    setSelectedChapterId('');
+                  }}
+                  disabled={isLoadingSubjects || !gradeLevel}
+                >
+                  {!gradeLevel ? (
+                    <option value="">Chọn khối lớp trước</option>
+                  ) : isLoadingSubjects ? (
+                    <option value="">Đang tải môn học...</option>
+                  ) : subjects.length === 0 ? (
+                    <option value="">Không có môn học cho khối này</option>
+                  ) : (
+                    <>
+                      <option value="">Chọn môn học</option>
+                      {subjects.map((subject) => (
+                        <option key={subject.id} value={subject.id}>
+                          {subject.name}
+                        </option>
+                      ))}
+                    </>
+                  )}
+                </select>
+              </label>
+
+              <label>
+                <p className="muted" style={{ marginBottom: 6 }}>
+                  Chương học
+                </p>
+                <select
+                  className="select"
+                  value={selectedChapterId}
+                  onChange={(event) => setSelectedChapterId(event.target.value)}
+                  disabled={isLoadingChapters || !selectedSubjectId}
+                >
+                  {!selectedSubjectId ? (
+                    <option value="">Chọn môn học trước</option>
+                  ) : isLoadingChapters ? (
+                    <option value="">Đang tải chương...</option>
+                  ) : chapters.length === 0 ? (
+                    <option value="">Không có chương cho môn này</option>
+                  ) : (
+                    <>
+                      <option value="">Chọn chương học</option>
+                      {chapters.map((chapter) => (
+                        <option key={chapter.id} value={chapter.id}>
+                          {chapter.title || chapter.name || chapter.id}
+                        </option>
+                      ))}
+                    </>
+                  )}
+                </select>
+              </label>
+
               <label>
                 <p className="muted" style={{ marginBottom: 6 }}>
                   Loại câu hỏi
                 </p>
-                <input className="input" value={multipleChoiceLabel} readOnly />
+                <select
+                  className="select"
+                  value={templateType}
+                  onChange={(event) => setTemplateType(event.target.value as QuestionType)}
+                  disabled={mode === 'edit'}
+                >
+                  <option value={QuestionType.MULTIPLE_CHOICE}>Trắc nghiệm (MCQ)</option>
+                  <option value={QuestionType.TRUE_FALSE}>Đúng/Sai (TF)</option>
+                  <option value={QuestionType.SHORT_ANSWER}>Trả lời ngắn (SA)</option>
+                </select>
+                {mode === 'edit' && (
+                  <p className="muted" style={{ marginTop: 4, fontSize: '0.75rem' }}>
+                    Loại câu hỏi không thể thay đổi sau khi tạo
+                  </p>
+                )}
               </label>
 
               <label>
@@ -1016,74 +1151,131 @@ export function TemplateFormModal({
               ))}
             </section>
 
-            <section className="data-card" style={{ minHeight: 0, border: '1px solid #fef3c7' }}>
-              <div className="row">
+            {/* Type-Specific Sections */}
+            {templateType === QuestionType.MULTIPLE_CHOICE && (
+              <section className="data-card" style={{ minHeight: 0, border: '1px solid #fef3c7' }}>
+                <div className="row">
+                  <div>
+                    <h3 style={{ color: '#92400e' }}>Phương án trắc nghiệm (tùy chọn)</h3>
+                    <p className="muted" style={{ fontSize: '0.8rem' }}>
+                      Viết công thức để máy tính tự tính ra kết quả cho các lựa chọn A, B, C, D.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn secondary"
+                    onClick={() => setOptions((prev) => [...prev, { key: '', formula: '' }])}
+                  >
+                    <Plus size={14} />
+                    Thêm lựa chọn
+                  </button>
+                </div>
+
+                {options.map((item, index) => (
+                  <div key={`${item.key}-${index}`} className="form-grid">
+                    <input
+                      ref={(node) => {
+                        optionKeyRefs.current[index] = node;
+                      }}
+                      className="input"
+                      placeholder="Mã (A, B...)"
+                      value={item.key}
+                      onFocus={() => setActiveMathField({ kind: 'optionKey', index })}
+                      onChange={(event) => {
+                        const next = [...options];
+                        next[index] = { ...next[index], key: event.target.value };
+                        setOptions(next);
+                      }}
+                    />
+                    <div className="row" style={{ gridColumn: 'span 3' }}>
+                      <div style={{ width: '100%' }}>
+                        <input
+                          ref={(node) => {
+                            optionFormulaRefs.current[index] = node;
+                          }}
+                          className="input"
+                          style={{ width: '100%' }}
+                          placeholder="Công thức"
+                          value={item.formula}
+                          onFocus={() => setActiveMathField({ kind: 'optionFormula', index })}
+                          onChange={(event) => {
+                            const next = [...options];
+                            next[index] = { ...next[index], formula: event.target.value };
+                            setOptions(next);
+                          }}
+                        />
+                        {item.formula && (
+                          <div className="preview-box">
+                            <MathText text={item.formula} />
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        className="btn danger"
+                        onClick={() => removeOptionAt(index)}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </section>
+            )}
+
+            {templateType === QuestionType.TRUE_FALSE && (
+              <section className="data-card" style={{ minHeight: 0, border: '1px solid #dbeafe' }}>
                 <div>
-                  <h3 style={{ color: '#92400e' }}>Phương án trắc nghiệm (tùy chọn)</h3>
-                  <p className="muted" style={{ fontSize: '0.8rem' }}>
-                    Viết công thức để máy tính tự tính ra kết quả cho các lựa chọn A, B, C, D.
+                  <h3 style={{ color: '#1e40af' }}>Cấu hình mệnh đề Đúng/Sai</h3>
+                  <p className="muted" style={{ fontSize: '0.8rem', marginBottom: 16 }}>
+                    Câu hỏi TRUE_FALSE có 4 mệnh đề (A, B, C, D). Mỗi mệnh đề có thể thuộc chương và mức độ khác nhau.
                   </p>
                 </div>
-                <button
-                  type="button"
-                  className="btn secondary"
-                  onClick={() => setOptions((prev) => [...prev, { key: '', formula: '' }])}
-                >
-                  <Plus size={14} />
-                  Thêm lựa chọn
-                </button>
-              </div>
-
-              {options.map((item, index) => (
-                <div key={`${item.key}-${index}`} className="form-grid">
-                  <input
-                    ref={(node) => {
-                      optionKeyRefs.current[index] = node;
-                    }}
-                    className="input"
-                    placeholder="Mã (A, B...)"
-                    value={item.key}
-                    onFocus={() => setActiveMathField({ kind: 'optionKey', index })}
-                    onChange={(event) => {
-                      const next = [...options];
-                      next[index] = { ...next[index], key: event.target.value };
-                      setOptions(next);
-                    }}
-                  />
-                  <div className="row" style={{ gridColumn: 'span 3' }}>
-                    <div style={{ width: '100%' }}>
-                      <input
-                        ref={(node) => {
-                          optionFormulaRefs.current[index] = node;
-                        }}
-                        className="input"
-                        style={{ width: '100%' }}
-                        placeholder="Công thức"
-                        value={item.formula}
-                        onFocus={() => setActiveMathField({ kind: 'optionFormula', index })}
-                        onChange={(event) => {
-                          const next = [...options];
-                          next[index] = { ...next[index], formula: event.target.value };
-                          setOptions(next);
-                        }}
-                      />
-                      {item.formula && (
-                        <div className="preview-box">
-                          <MathText text={item.formula} />
-                        </div>
-                      )}
-                    </div>
-                    <button
-                      type="button"
-                      className="btn danger"
-                      onClick={() => removeOptionAt(index)}
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
+                <div style={{ 
+                  padding: '12px 16px', 
+                  backgroundColor: '#fef3c7', 
+                  borderRadius: 8,
+                  marginBottom: 16,
+                  fontSize: '0.875rem'
+                }}>
+                  <strong>Lưu ý:</strong> Template TRUE_FALSE sẽ tạo câu hỏi với 4 mệnh đề. Học sinh chọn Đúng/Sai cho từng mệnh đề. 
+                  Điểm được tính theo quy tắc THPT: 4/4 đúng = 1 điểm, 3/4 đúng = 0.25 điểm.
                 </div>
-              ))}
-            </section>
+                <p className="muted" style={{ fontSize: '0.875rem', fontStyle: 'italic' }}>
+                  💡 Để tạo template TRUE_FALSE, bạn cần định nghĩa cách sinh ra 4 mệnh đề từ các biến số. 
+                  Hiện tại hệ thống chưa hỗ trợ UI chi tiết cho TF template - vui lòng sử dụng MCQ hoặc SA.
+                </p>
+              </section>
+            )}
+
+            {templateType === QuestionType.SHORT_ANSWER && (
+              <section className="data-card" style={{ minHeight: 0, border: '1px solid #dcfce7' }}>
+                <div>
+                  <h3 style={{ color: '#166534' }}>Cấu hình trả lời ngắn</h3>
+                  <p className="muted" style={{ fontSize: '0.8rem', marginBottom: 16 }}>
+                    Câu hỏi SHORT_ANSWER yêu cầu học sinh nhập đáp án dạng text hoặc số.
+                  </p>
+                </div>
+                <div style={{ 
+                  padding: '12px 16px', 
+                  backgroundColor: '#dbeafe', 
+                  borderRadius: 8,
+                  marginBottom: 16,
+                  fontSize: '0.875rem'
+                }}>
+                  <strong>Chế độ đánh giá:</strong>
+                  <ul style={{ marginTop: 8, marginBottom: 0, paddingLeft: 20 }}>
+                    <li><strong>EXACT:</strong> So sánh chuỗi chính xác (phân biệt hoa/thường)</li>
+                    <li><strong>NUMERIC:</strong> So sánh số với sai số cho phép (ví dụ: ±0.01)</li>
+                    <li><strong>REGEX:</strong> Kiểm tra theo biểu thức chính quy</li>
+                  </ul>
+                </div>
+                <p className="muted" style={{ fontSize: '0.875rem', fontStyle: 'italic' }}>
+                  💡 Công thức đáp án (answerFormula) sẽ được dùng làm đáp án đúng. 
+                  Chế độ đánh giá mặc định là EXACT - có thể cấu hình sau khi tạo câu hỏi.
+                </p>
+              </section>
+            )}
 
             <label className="row" style={{ justifyContent: 'start' }}>
               <input

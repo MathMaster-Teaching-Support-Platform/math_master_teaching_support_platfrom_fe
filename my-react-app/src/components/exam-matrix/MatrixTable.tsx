@@ -5,7 +5,6 @@ import type {
   ExamMatrixTableChapter,
   ExamMatrixTableRow,
 } from '../../types/examMatrix';
-import { BankInfoPopup } from './BankInfoPopup';
 import { EditableCell } from './EditableCell';
 import './matrix-table.css';
 
@@ -20,6 +19,7 @@ interface MatrixTableProps {
   chapters: ExamMatrixTableChapter[];
   gradeLevel?: string;
   subjectName?: string;
+  numberOfParts?: number;  // ✅ NEW: 1, 2, or 3 (Part I/II/III)
   matrixTotalPointsTarget?: number;
   canEdit: boolean;
   onRemoveRow: (rowId: string) => Promise<void>;
@@ -38,6 +38,20 @@ const levelLabels: Record<MatrixLevel, string> = {
   VD: 'Vận dụng',
   VDC: 'Vận dụng cao',
 };
+
+// ✅ NEW: Part labels
+const PART_LABELS: Record<number, string> = {
+  1: 'Phần I (TN)',
+  2: 'Phần II (Đ/S)',
+  3: 'Phần III (TLN)',
+};
+
+// Part type mapping (for future use in cell save operations)
+// const PART_TYPE_MAP: Record<number, string> = {
+//   1: 'MULTIPLE_CHOICE',
+//   2: 'TRUE_FALSE',
+//   3: 'SHORT_ANSWER',
+// };
 
 function normalizeLevel(level: string): MatrixLevel | null {
   const upper = level.toUpperCase();
@@ -135,6 +149,7 @@ export function MatrixTable({
   chapters,
   gradeLevel,
   subjectName: _subjectName,
+  numberOfParts = 1,  // ✅ NEW: Default to 1 part (MCQ only)
   matrixTotalPointsTarget,
   canEdit,
   onRemoveRow,
@@ -150,38 +165,6 @@ export function MatrixTable({
     Record<MatrixLevel, number>
   > | null>(null);
   const [previewFromPercent, setPreviewFromPercent] = useState(false);
-  const [bankPopup, setBankPopup] = useState<{
-    bankName: string;
-    bankId: string;
-    distribution: Record<string, number>;
-    position: { x: number; y: number };
-  } | null>(null);
-
-  // Handler for bank name click
-  function handleBankNameClick(
-    event: React.MouseEvent,
-    row: ExamMatrixTableRow
-  ) {
-    event.preventDefault();
-    
-    const rect = event.currentTarget.getBoundingClientRect();
-    const distribution = {
-      NB: getLevelCount(row, 'NB'),
-      TH: getLevelCount(row, 'TH'),
-      VD: getLevelCount(row, 'VD'),
-      VDC: getLevelCount(row, 'VDC'),
-    };
-
-    setBankPopup({
-      bankName: row.questionBankName || 'Ngân hàng câu hỏi',
-      bankId: row.questionBankId || '',
-      distribution,
-      position: {
-        x: rect.left + rect.width / 2 - 160, // Center popup (320px width / 2)
-        y: rect.bottom + 8, // 8px below the element
-      },
-    });
-  }
 
   const flatRows = useMemo(
     () =>
@@ -514,30 +497,41 @@ export function MatrixTable({
     const request: BatchUpsertMatrixRowCellsRequest = {
       rows: flatRows.map(({ row }) => {
         const calculated = displayedCellsByRow[row.rowId] ?? { NB: 0, TH: 0, VD: 0, VDC: 0 };
-        return {
-          rowId: row.rowId,
-          cells: [
+        
+        // ✅ NEW: For multi-part matrices, create cells for each part × cognitive level
+        const cells = [];
+        for (let partNumber = 1; partNumber <= numberOfParts; partNumber++) {
+          cells.push(
             {
-              cognitiveLevel: 'NHAN_BIET',
+              cognitiveLevel: 'NHAN_BIET' as const,
+              partNumber,  // ✅ Include partNumber
               questionCount: calculated.NB,
               pointsPerQuestion,
             },
             {
-              cognitiveLevel: 'THONG_HIEU',
+              cognitiveLevel: 'THONG_HIEU' as const,
+              partNumber,  // ✅ Include partNumber
               questionCount: calculated.TH,
               pointsPerQuestion,
             },
             {
-              cognitiveLevel: 'VAN_DUNG',
+              cognitiveLevel: 'VAN_DUNG' as const,
+              partNumber,  // ✅ Include partNumber
               questionCount: calculated.VD,
               pointsPerQuestion,
             },
             {
-              cognitiveLevel: 'VAN_DUNG_CAO',
+              cognitiveLevel: 'VAN_DUNG_CAO' as const,
+              partNumber,  // ✅ Include partNumber
               questionCount: calculated.VDC,
               pointsPerQuestion,
-            },
-          ],
+            }
+          );
+        }
+        
+        return {
+          rowId: row.rowId,
+          cells,
         };
       }),
     };
@@ -578,15 +572,19 @@ export function MatrixTable({
               <th className="matrix-th matrix-th--chapter" rowSpan={2}>
                 Chương
               </th>
-              <th className="matrix-th matrix-th--type" rowSpan={2}>
-                Dạng bài
-              </th>
               <th className="matrix-th matrix-th--reference" rowSpan={2}>
                 Trích dẫn
               </th>
-              <th className="matrix-th matrix-th--cognitive-group" colSpan={4}>
-                Mức độ nhận thức
-              </th>
+              {/* ✅ NEW: Part column groups */}
+              {Array.from({ length: numberOfParts }, (_, i) => i + 1).map((partNum) => (
+                <th
+                  key={partNum}
+                  className="matrix-th matrix-th--part-group"
+                  colSpan={4}
+                >
+                  {PART_LABELS[partNum] || `Phần ${partNum}`}
+                </th>
+              ))}
               <th className="matrix-th matrix-th--total-type" rowSpan={2}>
                 Tổng
                 <br />
@@ -599,17 +597,20 @@ export function MatrixTable({
               )}
             </tr>
             <tr>
-              {cognitiveOrder.map((level) => (
-                <th
-                  key={level}
-                  className={`matrix-th matrix-th--level matrix-th--level-${level.toLowerCase()}`}
-                >
-                  <div className="matrix-level-header">
-                    <span className="matrix-level-code">{level}</span>
-                    <span className="matrix-level-label">{levelLabels[level]}</span>
-                  </div>
-                </th>
-              ))}
+              {/* ✅ NEW: Cognitive levels repeated for each part */}
+              {Array.from({ length: numberOfParts }, (_, i) => i + 1).map((partNum) =>
+                cognitiveOrder.map((level) => (
+                  <th
+                    key={`${partNum}-${level}`}
+                    className={`matrix-th matrix-th--level matrix-th--level-${level.toLowerCase()}`}
+                  >
+                    <div className="matrix-level-header">
+                      <span className="matrix-level-code">{level}</span>
+                      <span className="matrix-level-label">{levelLabels[level]}</span>
+                    </div>
+                  </th>
+                ))
+              )}
             </tr>
           </thead>
 
@@ -660,50 +661,36 @@ export function MatrixTable({
                       </td>
                     )}
 
-                    {/* Question Type */}
-                    <td className="matrix-td matrix-td--type">
-                      <div className="matrix-type-cell">
-                        {row.questionBankName ? (
-                          <button
-                            className="matrix-table__bank-name"
-                            onClick={(e) => handleBankNameClick(e, row)}
-                            disabled={!row.questionBankId}
-                          >
-                            {row.questionBankName}
-                          </button>
-                        ) : (
-                          row.questionTypeName || 'N/A'
-                        )}
-                      </div>
-                    </td>
-
                     {/* Reference */}
                     <td className="matrix-td matrix-td--reference">
                       <div className="matrix-reference-cell">
-                        {row.subject_name || row.subjectName || row.subject || '-'}
+                        {row.questionTypeName || row.subject_name || row.subjectName || row.subject || '-'}
                       </div>
                     </td>
 
-                    {/* Cognitive Levels */}
-                    {cognitiveOrder.map((level) => {
-                      const count = percentageDraft
-                        ? (displayedCellsByRow[row.rowId]?.[level] ?? 0)
-                        : getLevelCount(row, level);
-                      return (
-                        <td
-                          key={level}
-                          className={`matrix-td matrix-td--level matrix-td--level-${level.toLowerCase()} ${
-                            count === 0 ? 'matrix-td--empty' : ''
-                          }`}
-                        >
-                          <EditableCell
-                            value={count}
-                            editable={canEdit && !!percentageDraft}
-                            onChange={getCellChangeHandler(row.rowId, level)}
-                          />
-                        </td>
-                      );
-                    })}
+                    {/* ✅ NEW: Cognitive Levels for each Part */}
+                    {Array.from({ length: numberOfParts }, (_, i) => i + 1).map((partNum) =>
+                      cognitiveOrder.map((level) => {
+                        const count = percentageDraft
+                          ? (displayedCellsByRow[row.rowId]?.[level] ?? 0)
+                          : getLevelCount(row, level);
+                        return (
+                          <td
+                            key={`${partNum}-${level}`}
+                            className={`matrix-td matrix-td--level matrix-td--level-${level.toLowerCase()} ${
+                              count === 0 ? 'matrix-td--empty' : ''
+                            }`}
+                            data-part={partNum}
+                          >
+                            <EditableCell
+                              value={count}
+                              editable={canEdit && !!percentageDraft}
+                              onChange={getCellChangeHandler(row.rowId, level)}
+                            />
+                          </td>
+                        );
+                      })
+                    )}
 
                     {/* Row Total */}
                     <td className="matrix-td matrix-td--total-type">
@@ -750,7 +737,7 @@ export function MatrixTable({
 
             {/* Grand Total Row */}
             <tr className="matrix-row matrix-row--grand-total">
-              <td className="matrix-td matrix-td--total-label" colSpan={4}>
+              <td className="matrix-td matrix-td--total-label" colSpan={3}>
                 <div className="matrix-grand-total-label">TỔNG CỘNG</div>
               </td>
               {cognitiveOrder.map((level) => (
@@ -769,7 +756,7 @@ export function MatrixTable({
 
             {canShowPercentageControls && (
               <tr className="matrix-row matrix-row--percentage-config">
-                <td className="matrix-td matrix-td--percentage-label" colSpan={4}>
+                <td className="matrix-td matrix-td--percentage-label" colSpan={3}>
                   <div className="matrix-grand-total-label">CẤU HÌNH PHẦN TRĂM</div>
                   <p className="matrix-percentage-hint">
                     Nhập % theo mức độ và tổng số câu cần tạo ở dòng này.
@@ -895,17 +882,6 @@ export function MatrixTable({
           </tbody>
         </table>
       </div>
-
-      {/* Bank Info Popup */}
-      {bankPopup && (
-        <BankInfoPopup
-          bankName={bankPopup.bankName}
-          bankId={bankPopup.bankId}
-          cognitiveDistribution={bankPopup.distribution}
-          position={bankPopup.position}
-          onClose={() => setBankPopup(null)}
-        />
-      )}
     </div>
   );
 }

@@ -70,12 +70,13 @@ export class VideoUploadService {
   static async initiateUpload(
     courseId: string,
     fileName: string,
-    contentType: string
+    contentType: string,
+    fileSize: number
   ): Promise<ApiResponse<InitiateUploadResponse>> {
     const headers = await this.getHeaders();
     const res = await fetch(
       `${API_BASE_URL}${API_ENDPOINTS.COURSE_VIDEO_UPLOAD_INITIATE(courseId)}`,
-      { method: 'POST', headers, body: JSON.stringify({ fileName, contentType }) }
+      { method: 'POST', headers, body: JSON.stringify({ fileName, contentType, fileSize }) }
     );
     return this.handleResponse(res);
   }
@@ -130,7 +131,7 @@ export class VideoUploadService {
     callbacks?: UploadProgressCallback
   ): Promise<CourseLessonResponse> {
     // Step 1
-    const initiateRes = await this.initiateUpload(courseId, file.name, file.type);
+    const initiateRes = await this.initiateUpload(courseId, file.name, file.type, file.size);
     const { uploadId, objectKey } = initiateRes.result;
 
     const totalChunks = Math.ceil(file.size / CHUNK_SIZE);

@@ -29,40 +29,17 @@ import {
 import '../../styles/module-refactor.css';
 import type {
   CreateQuestionRequest,
-  QuestionDifficulty,
   QuestionResponse,
-  QuestionType,
   UpdateQuestionRequest,
 } from '../../types/question';
 import '../courses/TeacherCourses.css';
+import { EnhancedQuestionFormModal } from './EnhancedQuestionFormModal';
 import { QuestionBulkImportModal } from './QuestionBulkImportModal';
 import './TeacherQuestionManagementPage.css';
 
 type FormMode = 'create' | 'edit';
 
-type QuestionFormState = {
-  questionText: string;
-  questionType: QuestionType;
-  difficulty: QuestionDifficulty;
-  points: string;
-  correctAnswer: string;
-  explanation: string;
-  tags: string;
-  optionsJson: string;
-};
-
-const initialFormState: QuestionFormState = {
-  questionText: '',
-  questionType: 'MULTIPLE_CHOICE',
-  difficulty: 'MEDIUM',
-  points: '1',
-  correctAnswer: '',
-  explanation: '',
-  tags: '',
-  optionsJson: '',
-};
-
-const questionTypeLabel: Record<QuestionType, string> = {
+const questionTypeLabel: Record<string, string> = {
   MULTIPLE_CHOICE: 'Trac nghiem',
   TRUE_FALSE: 'Dung/Sai',
   SHORT_ANSWER: 'Tra loi ngan',
@@ -70,215 +47,17 @@ const questionTypeLabel: Record<QuestionType, string> = {
   CODING: 'Lap trinh',
 };
 
-const difficultyLabel: Record<QuestionDifficulty, string> = {
+const difficultyLabel: Record<string, string> = {
   EASY: 'De',
   MEDIUM: 'Trung binh',
   HARD: 'Kho',
 };
-
-function toTagList(value: string): string[] {
-  return value
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
-function parseOptionsJson(value: string): Record<string, unknown> | undefined {
-  const trimmed = value.trim();
-  if (!trimmed) return undefined;
-
-  const parsed = JSON.parse(trimmed) as unknown;
-  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-    throw new Error('Options phai la mot JSON object hop le.');
-  }
-
-  return parsed as Record<string, unknown>;
-}
 
 function formatDate(value?: string): string {
   if (!value) return '-';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleString('vi-VN');
-}
-
-function QuestionFormModal({
-  isOpen,
-  mode,
-  form,
-  error,
-  saving,
-  onClose,
-  onChange,
-  onSubmit,
-}: Readonly<{
-  isOpen: boolean;
-  mode: FormMode;
-  form: QuestionFormState;
-  error: string | null;
-  saving: boolean;
-  onClose: () => void;
-  onChange: (field: keyof QuestionFormState, value: string) => void;
-  onSubmit: () => void;
-}>) {
-  if (!isOpen) return null;
-
-  const submitLabel = mode === 'create' ? 'Tao câu hỏi' : 'Luu thay doi';
-
-  return (
-    <div className="module-layout-container">
-      <div className="modal-layer">
-        <div className="modal-card">
-          <header className="modal-header">
-            <div>
-              <h3 style={{ margin: 0 }}>
-                {mode === 'create' ? 'Tao câu hỏi moi' : 'Cap nhat câu hỏi'}
-              </h3>
-              <p className="muted" style={{ margin: '6px 0 0' }}>
-                Ho tro soan câu hỏi, gan tag va cap nhat noi dung nhanh.
-              </p>
-            </div>
-            <button className="icon-btn" onClick={onClose}>
-              <X size={16} />
-            </button>
-          </header>
-
-          <div className="modal-body">
-            <label>
-              <p className="muted" style={{ marginBottom: 6 }}>
-                Noi dung câu hỏi
-              </p>
-              <textarea
-                className="textarea"
-                rows={4}
-                value={form.questionText}
-                onChange={(event) => onChange('questionText', event.target.value)}
-                placeholder="Nhap noi dung câu hỏi"
-              />
-            </label>
-
-            <div className="form-grid">
-              <label>
-                <p className="muted" style={{ marginBottom: 6 }}>
-                  Loai câu hỏi
-                </p>
-                <select
-                  className="select"
-                  value={form.questionType}
-                  onChange={(event) => onChange('questionType', event.target.value)}
-                  disabled={mode === 'edit'}
-                >
-                  {Object.entries(questionTypeLabel).map(([value, label]) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label>
-                <p className="muted" style={{ marginBottom: 6 }}>
-                  Do kho
-                </p>
-                <select
-                  className="select"
-                  value={form.difficulty}
-                  onChange={(event) => onChange('difficulty', event.target.value)}
-                >
-                  {Object.entries(difficultyLabel).map(([value, label]) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label>
-                <p className="muted" style={{ marginBottom: 6 }}>
-                  Diem
-                </p>
-                <input
-                  className="input"
-                  type="number"
-                  min={0}
-                  step="0.25"
-                  value={form.points}
-                  onChange={(event) => onChange('points', event.target.value)}
-                />
-              </label>
-            </div>
-
-            <div className="form-grid">
-              <label>
-                <p className="muted" style={{ marginBottom: 6 }}>
-                  Dap an dung
-                </p>
-                <input
-                  className="input"
-                  value={form.correctAnswer}
-                  onChange={(event) => onChange('correctAnswer', event.target.value)}
-                  placeholder="Vi du: A"
-                />
-              </label>
-
-              <label>
-                <p className="muted" style={{ marginBottom: 6 }}>
-                  Tag (tach boi dau phay)
-                </p>
-                <input
-                  className="input"
-                  value={form.tags}
-                  onChange={(event) => onChange('tags', event.target.value)}
-                  placeholder="dai-so, lop-9"
-                />
-              </label>
-            </div>
-
-            <label>
-              <p className="muted" style={{ marginBottom: 6 }}>
-                Giai thich
-              </p>
-              <textarea
-                className="textarea"
-                rows={3}
-                value={form.explanation}
-                onChange={(event) => onChange('explanation', event.target.value)}
-                placeholder="Nhap loi giai ngan gon"
-              />
-            </label>
-
-            <label>
-              <p className="muted" style={{ marginBottom: 6 }}>
-                Options JSON (khong bat buoc)
-              </p>
-              <textarea
-                className="textarea"
-                rows={5}
-                value={form.optionsJson}
-                onChange={(event) => onChange('optionsJson', event.target.value)}
-                placeholder='{"A":"Lua chon A","B":"Lua chon B"}'
-              />
-            </label>
-
-            {error && (
-              <div className="empty" style={{ color: '#b91c1c', padding: '0.9rem 1rem' }}>
-                {error}
-              </div>
-            )}
-          </div>
-
-          <footer className="modal-footer">
-            <button className="btn secondary" onClick={onClose}>
-              Huy
-            </button>
-            <button className="btn" onClick={onSubmit} disabled={saving}>
-              {saving ? 'Dang luu...' : submitLabel}
-            </button>
-          </footer>
-        </div>
-      </div>
-    </div>
-  );
 }
 
 export default function TeacherQuestionManagementPage() {
@@ -290,8 +69,6 @@ export default function TeacherQuestionManagementPage() {
   const [bulkImportOpen, setBulkImportOpen] = useState(false);
   const [formMode, setFormMode] = useState<FormMode>('create');
   const [selectedQuestion, setSelectedQuestion] = useState<QuestionResponse | null>(null);
-  const [form, setForm] = useState<QuestionFormState>(initialFormState);
-  const [formError, setFormError] = useState<string | null>(null);
 
   const debouncedSearchName = useDebounce(searchName, 300);
 
@@ -339,76 +116,42 @@ export default function TeacherQuestionManagementPage() {
   const openingCreateModal = () => {
     setFormMode('create');
     setSelectedQuestion(null);
-    setForm(initialFormState);
-    setFormError(null);
     setIsModalOpen(true);
   };
 
   const openingEditModal = (question: QuestionResponse) => {
     setFormMode('edit');
     setSelectedQuestion(question);
-    setFormError(null);
-    setForm({
-      questionText: question.questionText,
-      questionType: question.questionType,
-      difficulty: question.difficulty ?? 'MEDIUM',
-      points: question.points == null ? '1' : String(question.points),
-      correctAnswer: question.correctAnswer ?? '',
-      explanation: question.explanation ?? '',
-      tags: (question.tags ?? []).join(', '),
-      optionsJson: question.options ? JSON.stringify(question.options, null, 2) : '',
-    });
     setIsModalOpen(true);
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
-    setFormError(null);
   };
 
-  const onFormFieldChange = (field: keyof QuestionFormState, value: string) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-  };
-
-  async function handleSubmitForm() {
-    const questionText = form.questionText.trim();
-    if (!questionText) {
-      setFormError('Noi dung câu hỏi khong duoc de trong.');
-      return;
-    }
-
-    const pointsNumber = form.points.trim() === '' ? undefined : Number(form.points);
-    if (pointsNumber != null && Number.isNaN(pointsNumber)) {
-      setFormError('Diem phai la so hop le.');
-      return;
-    }
-
+  async function handleSubmitForm(data: Record<string, unknown>) {
     try {
-      setFormError(null);
-      const tags = toTagList(form.tags);
-      const options = parseOptionsJson(form.optionsJson);
-
       if (formMode === 'create') {
         const payload: CreateQuestionRequest = {
-          questionText,
-          questionType: form.questionType,
-          difficulty: form.difficulty,
-          points: pointsNumber,
-          correctAnswer: form.correctAnswer.trim() || undefined,
-          explanation: form.explanation.trim() || undefined,
-          tags,
-          options,
+          questionText: String(data.questionText || ''),
+          questionType: data.questionType as CreateQuestionRequest['questionType'],
+          difficulty: data.difficulty as CreateQuestionRequest['difficulty'],
+          points: typeof data.points === 'number' ? data.points : undefined,
+          correctAnswer: data.correctAnswer ? String(data.correctAnswer) : undefined,
+          explanation: data.explanation ? String(data.explanation) : undefined,
+          tags: Array.isArray(data.tags) ? data.tags as string[] : [],
+          options: data.options as Record<string, unknown> | undefined,
         };
         await createMutation.mutateAsync(payload);
       } else if (selectedQuestion) {
         const payload: UpdateQuestionRequest = {
-          questionText,
-          difficulty: form.difficulty,
-          points: pointsNumber,
-          correctAnswer: form.correctAnswer.trim() || undefined,
-          explanation: form.explanation.trim() || undefined,
-          tags,
-          options,
+          questionText: String(data.questionText || ''),
+          difficulty: data.difficulty as UpdateQuestionRequest['difficulty'],
+          points: typeof data.points === 'number' ? data.points : undefined,
+          correctAnswer: data.correctAnswer ? String(data.correctAnswer) : undefined,
+          explanation: data.explanation ? String(data.explanation) : undefined,
+          tags: Array.isArray(data.tags) ? data.tags as string[] : [],
+          options: data.options as Record<string, unknown> | undefined,
         };
         await updateMutation.mutateAsync({ questionId: selectedQuestion.id, request: payload });
       }
@@ -420,7 +163,11 @@ export default function TeacherQuestionManagementPage() {
       closeModal();
       await refetch();
     } catch (error_) {
-      setFormError(error_ instanceof Error ? error_.message : 'Khong the luu câu hỏi.');
+      showToast({
+        type: 'error',
+        message: error_ instanceof Error ? error_.message : 'Khong the luu câu hỏi.',
+      });
+      throw error_;
     }
   }
 
@@ -439,8 +186,6 @@ export default function TeacherQuestionManagementPage() {
       });
     }
   }
-
-  const isSaving = createMutation.isPending || updateMutation.isPending;
 
   return (
     <DashboardLayout
@@ -717,15 +462,27 @@ export default function TeacherQuestionManagementPage() {
             onChange={(p) => setPage(p)}
           />
 
-          <QuestionFormModal
+          <EnhancedQuestionFormModal
             isOpen={isModalOpen}
             mode={formMode}
-            form={form}
-            error={formError}
-            saving={isSaving}
+            initialData={
+              selectedQuestion
+                ? {
+                    questionId: selectedQuestion.id,
+                    questionText: selectedQuestion.questionText,
+                    questionType: selectedQuestion.questionType,
+                    difficulty: selectedQuestion.difficulty,
+                    points: selectedQuestion.points,
+                    correctAnswer: selectedQuestion.correctAnswer,
+                    explanation: selectedQuestion.explanation,
+                    tags: selectedQuestion.tags,
+                    options: selectedQuestion.options as Record<string, string> | undefined,
+                    generationMetadata: selectedQuestion.generationMetadata || undefined,
+                  }
+                : undefined
+            }
             onClose={closeModal}
-            onChange={onFormFieldChange}
-            onSubmit={() => void handleSubmitForm()}
+            onSubmit={(data) => handleSubmitForm(data)}
           />
 
           <QuestionBulkImportModal

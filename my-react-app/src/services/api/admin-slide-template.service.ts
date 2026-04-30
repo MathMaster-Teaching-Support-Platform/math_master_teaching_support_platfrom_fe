@@ -84,7 +84,7 @@ export class AdminSlideTemplateService {
     const formData = new FormData();
     formData.append('name', payload.name);
     if (payload.description) formData.append('description', payload.description);
-    formData.append('pptxFile', payload.pptxFile);
+    formData.append('file', payload.pptxFile);
     if (payload.previewImageFile) formData.append('previewImageFile', payload.previewImageFile);
 
     const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ADMIN_SLIDE_TEMPLATES}`, {
@@ -107,7 +107,7 @@ export class AdminSlideTemplateService {
     const formData = new FormData();
     if (payload.name !== undefined) formData.append('name', payload.name);
     if (payload.description !== undefined) formData.append('description', payload.description);
-    if (payload.pptxFile) formData.append('pptxFile', payload.pptxFile);
+    if (payload.pptxFile) formData.append('file', payload.pptxFile);
     if (payload.previewImageFile) formData.append('previewImageFile', payload.previewImageFile);
 
     const response = await fetch(
