@@ -16,6 +16,7 @@ import {
   X,
 } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { AuthService } from '../../services/api/auth.service';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockAdmin } from '../../data/mockData';
 import {
@@ -430,7 +431,41 @@ interface PreviewModalProps {
 }
 
 const PreviewModal: React.FC<PreviewModalProps> = ({ template, onClose }) => {
-  const src = AdminSlideTemplateService.getPreviewImageUrl(template.id);
+  const token = AuthService.getToken();
+  const hasPreview = Boolean(template.previewImage) && Boolean(token);
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [loadingImg, setLoadingImg] = useState(hasPreview);
+  const [imgError, setImgError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!hasPreview) return;
+
+    let objectUrl: string | null = null;
+
+    fetch(AdminSlideTemplateService.getPreviewImageUrl(template.id), {
+      headers: { Authorization: `Bearer ${token}`, accept: '*/*' },
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          const body = (await res.json().catch(() => ({}))) as { message?: string };
+          throw new Error(body.message ?? `Lỗi ${res.status}`);
+        }
+        return res.blob();
+      })
+      .then((blob) => {
+        objectUrl = URL.createObjectURL(blob);
+        setBlobUrl(objectUrl);
+      })
+      .catch((err: unknown) => {
+        setImgError(err instanceof Error ? err.message : 'Không thể tải ảnh preview.');
+      })
+      .finally(() => setLoadingImg(false));
+
+    return () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [hasPreview, template.id, token]);
+
   return (
     <div
       style={{
@@ -478,20 +513,68 @@ const PreviewModal: React.FC<PreviewModalProps> = ({ template, onClose }) => {
             <X size={20} />
           </button>
         </div>
-        <img
-          src={src}
-          alt={`Preview: ${template.name}`}
-          style={{
-            width: '100%',
-            borderRadius: 8,
-            objectFit: 'contain',
-            maxHeight: 500,
-            background: '#f3f4f6',
-          }}
-          onError={(e) => {
-            (e.currentTarget as HTMLImageElement).style.display = 'none';
-          }}
-        />
+
+        {!template.previewImage ? (
+          <div
+            style={{
+              height: 200,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: '#f9fafb',
+              borderRadius: 8,
+              color: '#9ca3af',
+              gap: 8,
+            }}
+          >
+            <FileSliders size={36} style={{ opacity: 0.4 }} />
+            <span style={{ fontSize: 14 }}>Chưa có ảnh preview cho template này.</span>
+          </div>
+        ) : loadingImg ? (
+          <div
+            style={{
+              height: 200,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              color: '#6b7280',
+            }}
+          >
+            <Loader2 size={20} className="ast-spin" /> Đang tải ảnh...
+          </div>
+        ) : imgError ? (
+          <div
+            style={{
+              height: 200,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: '#fef2f2',
+              borderRadius: 8,
+              color: '#dc2626',
+              gap: 8,
+              fontSize: 14,
+            }}
+          >
+            <AlertCircle size={24} />
+            {imgError}
+          </div>
+        ) : blobUrl ? (
+          <img
+            src={blobUrl}
+            alt={`Preview: ${template.name}`}
+            style={{
+              width: '100%',
+              borderRadius: 8,
+              objectFit: 'contain',
+              maxHeight: 500,
+              background: '#f3f4f6',
+            }}
+          />
+        ) : null}
       </div>
     </div>
   );
