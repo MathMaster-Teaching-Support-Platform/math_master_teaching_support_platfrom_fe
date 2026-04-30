@@ -9,6 +9,7 @@ export interface ExamMatrixRequest {
     name: string;
     description?: string;
     isReusable?: boolean;
+    questionBankId?: string;  // ✅ NEW: Matrix owns ONE bank (not per row)
     totalQuestionsTarget?: number | null;
     totalPointsTarget?: number | null;
 }
@@ -16,6 +17,7 @@ export interface ExamMatrixRequest {
 export interface BuildExamMatrixRequest extends ExamMatrixRequest {
     gradeLevel?: string;
     subjectId?: string;
+    questionBankId?: string;  // ✅ Inherited from ExamMatrixRequest
     numberOfParts?: number;  // NEW: 1, 2, or 3 (Part I=MCQ, Part II=TF, Part III=SA)
 }
 
@@ -55,7 +57,7 @@ export interface ExamMatrixRowCellRequest {
 export interface ExamMatrixRowRequest {
     chapterId: string;
     lessonId?: string;
-    questionBankId: string;
+    questionBankId?: string;  // ❌ DEPRECATED: Bank is now at matrix level, not row level
     questionDifficulty?: 'EASY' | 'MEDIUM' | 'HARD';
     questionTypeName: string;
     referenceQuestions?: string;
@@ -89,6 +91,8 @@ export interface ExamMatrixRowCellResponse {
     questionCount: number;
     pointsPerQuestion: number;
     totalPoints?: number;
+    partNumber?: number;  // ✅ NEW: 1, 2, or 3 (for multi-part matrices)
+    questionType?: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER';  // ✅ NEW: Derived from partNumber
 }
 
 export interface ExamMatrixTableRow {
@@ -104,7 +108,7 @@ export interface ExamMatrixTableRow {
     chapter?: string;
     lessonId?: string;
     lessonName?: string;
-    questionBankId: string;
+    questionBankId?: string;  // ❌ DEPRECATED: Bank is now at matrix level
     questionBankName?: string;
     questionDifficulty?: string;
     questionTypeName: string;
@@ -152,6 +156,9 @@ export interface ExamMatrixResponse {
     name: string;
     description?: string;
     isReusable: boolean;
+    questionBankId?: string;  // ✅ NEW: Matrix owns ONE bank
+    questionBankName?: string;  // ✅ NEW: For display
+    numberOfParts?: number;  // ✅ NEW: 1, 2, or 3
     totalQuestionsTarget?: number;
     totalPointsTarget?: number;
     cognitiveLevelPercentages?: MatrixCognitiveDistribution;

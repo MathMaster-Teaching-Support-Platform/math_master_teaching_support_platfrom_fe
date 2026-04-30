@@ -593,6 +593,7 @@ export default function ExamMatrixDetailPageRefactored() {
                 chapters={chapters}
                 gradeLevel={matrix.gradeLevel || table?.gradeLevel}
                 subjectName={matrix.subjectName || table?.subjectName}
+                numberOfParts={(matrix as any)?.numberOfParts || (table as any)?.numberOfParts || 1}  // ✅ NEW
                 matrixTotalPointsTarget={matrix.totalPointsTarget}
                 canEdit={canEdit}
                 onRemoveRow={removeRow}

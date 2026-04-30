@@ -407,11 +407,7 @@ export function QuestionBankDashboard() {
                       <div className="metric">
                         <span>GV: {bank.teacherName || 'Không xác định'}</span>
                       </div>
-                      {(bank.chapterTitle || bank.chapterId) && (
-                        <div className="metric">
-                          <span>Chương: {bank.chapterTitle || bank.chapterId}</span>
-                        </div>
-                      )}
+                      {/* ❌ REMOVED: Chapter display (QuestionBank no longer has chapter) */}
                     </div>
 
                     {bank.cognitiveStats && Object.keys(bank.cognitiveStats).length > 0 && (

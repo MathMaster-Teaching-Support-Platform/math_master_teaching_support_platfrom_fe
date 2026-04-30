@@ -168,6 +168,9 @@ export type QuestionGenerationMode = typeof QuestionGenerationMode[keyof typeof 
 export interface QuestionTemplateRequest {
     name: string;
     description?: string;
+    gradeLevel?: string;  // ✅ NEW: Template owns academic context
+    subjectId?: string;   // ✅ NEW: Template owns academic context
+    chapterId?: string;   // ✅ NEW: Template owns academic context (CRITICAL)
     templateType: QuestionType;
     templateVariant?: string;
     templateText: Record<string, unknown>;
@@ -190,6 +193,11 @@ export interface QuestionTemplateResponse {
     creatorName: string;
     name: string;
     description?: string;
+    gradeLevel?: string;      // ✅ NEW: Template owns academic context
+    subjectId?: string;       // ✅ NEW: Template owns academic context
+    subjectName?: string;     // ✅ NEW: For display
+    chapterId?: string;       // ✅ NEW: Template owns academic context (CRITICAL)
+    chapterName?: string;     // ✅ NEW: For display
     templateType: QuestionType;
     templateVariant?: string;
     templateText: Record<string, unknown>;

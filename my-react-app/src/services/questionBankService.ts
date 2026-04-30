@@ -85,15 +85,7 @@ export const questionBankService = {
     if (isValidParam(params.searchTerm)) {
       queryParams.append('searchTerm', params.searchTerm!);
     }
-    if (isValidParam(params.chapterId)) {
-      queryParams.append('chapterId', params.chapterId!);
-    }
-    if (isValidParam(params.subjectId)) {
-      queryParams.append('subjectId', params.subjectId!);
-    }
-    if (isValidParam(params.gradeLevel)) {
-      queryParams.append('gradeLevel', params.gradeLevel!);
-    }
+    // ❌ REMOVED: chapterId, subjectId, gradeLevel (QuestionBank no longer has academic context)
     if (params.mineOnly !== undefined) {
       queryParams.append('mineOnly', String(params.mineOnly));
     }

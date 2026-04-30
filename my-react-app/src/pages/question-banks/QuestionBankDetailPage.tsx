@@ -246,9 +246,7 @@ export function QuestionBankDetailPage() {
                 >
                   <span className="muted">Giáo viên: {bank.teacherName || 'Không xác định'}</span>
                   <span className="muted">Số câu hỏi: {bank.questionCount ?? 0}</span>
-                  <span className="muted">
-                    Chapter: {bank.chapterTitle || bank.chapterId || 'Chưa gán chapter'}
-                  </span>
+                  {/* ❌ REMOVED: Chapter display (QuestionBank no longer has chapter) */}
                 </div>
 
                 <div

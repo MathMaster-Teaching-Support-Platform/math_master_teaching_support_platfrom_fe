@@ -66,6 +66,15 @@ export interface QuestionResponse {
   templateId?: string;
   questionBankId?: string;
   questionBankName?: string;
+  // ✅ NEW: Generation metadata for TF clause tracking and SA validation
+  generationMetadata?: {
+    tfClauses?: TFClausesMetadata;  // For TRUE_FALSE: tracks chapter/level per clause
+    answerValidation?: {  // For SHORT_ANSWER: validation mode
+      mode: 'EXACT' | 'NUMERIC' | 'REGEX';
+      tolerance?: number;
+      pattern?: string;
+    };
+  } | null;
   createdAt: string;
   updatedAt: string;
 }
