@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BlockMath, InlineMath } from 'react-katex';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
-import { API_BASE_URL } from '../../config/api.config';
+import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
 import { mockTeacher } from '../../data/mockData';
 import { AuthService } from '../../services/api/auth.service';
 import { LessonSlideService } from '../../services/api/lesson-slide.service';
@@ -31,15 +31,16 @@ const LoadingSpinner: React.FC<{ label: string }> = ({ label }) => (
   </span>
 );
 
-const getTemplatePreviewUrl = (previewImage?: string | null): string | null => {
-  if (!previewImage) return null;
-
-  if (/^https?:\/\//i.test(previewImage)) {
+const getTemplatePreviewUrl = (templateId: string, previewImage?: string | null): string => {
+  if (previewImage && /^https?:\/\//i.test(previewImage)) {
     return previewImage;
   }
-
-  const normalizedPath = previewImage.startsWith('/') ? previewImage : `/${previewImage}`;
-  return `${API_BASE_URL}${normalizedPath}`;
+  if (previewImage) {
+    const normalizedPath = previewImage.startsWith('/') ? previewImage : `/${previewImage}`;
+    return `${API_BASE_URL}${normalizedPath}`;
+  }
+  // Fallback: use teacher-accessible endpoint by template ID
+  return `${API_BASE_URL}${API_ENDPOINTS.LESSON_SLIDES_TEMPLATE_PREVIEW_IMAGE(templateId)}`;
 };
 
 const normalizeVietnameseHeading = (heading?: string | null): string => {
@@ -965,7 +966,7 @@ const AISlideGenerator: React.FC = () => {
   }, [totalManagedGeneratedPages]);
 
   useEffect(() => {
-    const previewsToLoad = templates.filter((template) => Boolean(template.previewImage));
+    const previewsToLoad = templates;
 
     if (!previewsToLoad.length) {
       templatePreviewObjectUrlsRef.current.forEach((url) => {
@@ -996,8 +997,7 @@ const AISlideGenerator: React.FC = () => {
 
         await Promise.all(
           previewsToLoad.map(async (template) => {
-            const previewUrl = getTemplatePreviewUrl(template.previewImage);
-            if (!previewUrl) return;
+            const previewUrl = getTemplatePreviewUrl(template.id, template.previewImage);
 
             const response = await fetch(previewUrl, {
               method: 'GET',
@@ -1888,7 +1888,6 @@ const AISlideGenerator: React.FC = () => {
                   {templates.map((template) => {
                     const previewUrl = templatePreviewBlobUrls[template.id];
                     const selected = template.id === templateId;
-                    const hasPreviewSource = Boolean(template.previewImage);
 
                     return (
                       <button
@@ -1907,11 +1906,9 @@ const AISlideGenerator: React.FC = () => {
                             />
                           ) : (
                             <div className="ai-slide-template-placeholder">
-                              {hasPreviewSource
-                                ? loadingTemplatePreviews
-                                  ? 'Dang tai preview...'
-                                  : 'Preview unavailable'
-                                : 'No preview'}
+                              {loadingTemplatePreviews
+                                ? 'Đang tải preview...'
+                                : 'Preview unavailable'}
                             </div>
                           )}
                         </div>
