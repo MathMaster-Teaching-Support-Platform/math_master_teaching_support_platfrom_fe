@@ -443,6 +443,8 @@ export function useCourseProgress(enrollmentId: string) {
 
 export function useMarkLessonComplete() {
   const qc = useQueryClient();
+  const { showToast } = useToast();
+
   return useMutation({
     mutationFn: ({
       enrollmentId,
@@ -451,8 +453,13 @@ export function useMarkLessonComplete() {
       enrollmentId: string;
       courseLessonId: string;
     }) => CourseService.markLessonComplete(enrollmentId, courseLessonId),
-    onSuccess: (_data, { enrollmentId }) =>
-      qc.invalidateQueries({ queryKey: courseKeys.progress(enrollmentId) }),
+    onSuccess: (_data, { enrollmentId }) => {
+      showToast({
+        type: 'success',
+        message: 'Bài học đã được đánh dấu là hoàn thành!',
+      });
+      qc.invalidateQueries({ queryKey: courseKeys.progress(enrollmentId) });
+    },
   });
 }
 

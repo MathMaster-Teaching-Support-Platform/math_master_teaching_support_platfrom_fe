@@ -136,6 +136,7 @@ export interface LessonProgressItem {
   isCompleted: boolean;
   completedAt: string | null;
   watchedSeconds?: number;
+  progressPercent: number;
 }
 
 export interface StudentProgressResponse {

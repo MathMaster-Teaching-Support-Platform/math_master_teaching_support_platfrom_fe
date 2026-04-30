@@ -424,8 +424,12 @@ export class CourseService {
   ): Promise<ApiResponse<LessonProgressItem>> {
     const headers = await this.getHeaders();
     const res = await fetch(
-      `${API_BASE_URL}/enrollments/${enrollmentId}/lessons/${courseLessonId}/progress?watchedSeconds=${watchedSeconds}`,
-      { method: 'POST', headers }
+      `${API_BASE_URL}/enrollments/${enrollmentId}/lessons/${courseLessonId}/progress`,
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ watchedSeconds }),
+      }
     );
     return this.handleResponse(res);
   }

@@ -316,7 +316,9 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
 
   const renderLessonItem = (lesson: CourseLessonResponse, isSidebar = false) => {
     const lessonProgress = progress?.lessons.find((l) => l.courseLessonId === lesson.id);
-    const isCompleted = lessonProgress?.isCompleted ?? false;
+    const progressPercent = lessonProgress?.progressPercent ?? 0;
+    const isCompleted = (lessonProgress?.isCompleted ?? false) || progressPercent >= 90;
+    const isInProgress = !isCompleted && progressPercent > 0;
     const isPlaying = lesson.id === playingLessonId;
 
     const materialsList = parseLessonMaterials(lesson.materials);
@@ -330,10 +332,22 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
             alignItems: 'center',
             gap: '0.75rem',
             padding: isSidebar ? '0.65rem 1rem' : '0.85rem 1.2rem',
-            background: isPlaying ? '#eff6ff' : isCompleted ? '#f0fdf4' : '#fff',
+            background: isCompleted 
+              ? '#ecfdf5' 
+              : isInProgress 
+                ? '#fffbeb' 
+                : isPlaying 
+                  ? '#eff6ff' 
+                  : '#fff',
             cursor: 'pointer',
-            borderLeft: isPlaying ? '4px solid #1f5eff' : '4px solid transparent',
-            transition: 'all 0.2s ease',
+            borderLeft: isPlaying 
+              ? '4px solid #1f5eff' 
+              : isCompleted 
+                ? '4px solid #10b981' 
+                : isInProgress
+                  ? '4px solid #f59e0b'
+                  : '4px solid transparent',
+            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
           }}
         >
           <div
@@ -345,25 +359,78 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              background: isCompleted ? '#dcfce7' : isPlaying ? '#1f5eff' : '#e8eef8',
-              color: isCompleted ? '#15803d' : isPlaying ? '#fff' : '#60748f',
+              background: isCompleted 
+                ? '#dcfce7' 
+                : isPlaying 
+                  ? '#1f5eff' 
+                  : isInProgress 
+                    ? '#fef3c7' 
+                    : '#e8eef8',
+              color: isCompleted 
+                ? '#10b981' 
+                : isPlaying 
+                  ? '#fff' 
+                  : isInProgress 
+                    ? '#d97706' 
+                    : '#60748f',
+              boxShadow: isCompleted ? '0 0 0 1px #10b98133' : 'none',
             }}
           >
-            {isCompleted ? <CheckCircle size={16} /> : <Play size={16} />}
+            {isCompleted ? <CheckCircle size={16} /> : isInProgress && !isPlaying ? <Clock size={16} /> : <Play size={16} />}
           </div>
 
           <div style={{ flex: 1, minWidth: 0 }}>
             <div
               style={{
                 fontSize: isSidebar ? '0.8rem' : '0.88rem',
-                fontWeight: isPlaying || isCompleted ? 700 : 600,
-                color: isPlaying ? '#1e40af' : 'var(--mod-ink)',
+                fontWeight: isPlaying || isCompleted || isInProgress ? 700 : 600,
+                color: isPlaying 
+                  ? '#1e40af' 
+                  : isCompleted 
+                    ? '#065f46' 
+                    : isInProgress 
+                      ? '#92400e' 
+                      : 'var(--mod-ink)',
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
               }}
             >
               {lesson.videoTitle ?? lesson.lessonTitle ?? 'Bài học'}
+              {isCompleted && (
+                <span
+                  className="badge completed"
+                  style={{
+                    fontSize: '0.6rem',
+                    padding: '0.05rem 0.35rem',
+                    borderRadius: '4px',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.02em',
+                  }}
+                >
+                  Hoàn thành
+                </span>
+              )}
+              {isInProgress && !isCompleted && (
+                <span
+                  style={{
+                    fontSize: '0.6rem',
+                    padding: '0.05rem 0.35rem',
+                    borderRadius: '4px',
+                    background: '#fef3c7',
+                    color: '#92400e',
+                    border: '1px solid #fde68a',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.02em',
+                    fontWeight: 800
+                  }}
+                >
+                  Đang học {Math.round(progressPercent)}%
+                </span>
+              )}
             </div>
             {!isSidebar && (
               <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 4 }}>
