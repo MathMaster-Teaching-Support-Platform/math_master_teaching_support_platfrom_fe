@@ -10,6 +10,7 @@ import {
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { MatrixTable } from '../../components/exam-matrix/MatrixTable';
 import {
   useApproveMatrix,
   useDeleteExamMatrix,
@@ -23,8 +24,6 @@ import { examMatrixService } from '../../services/examMatrixService';
 import '../../styles/module-refactor.css';
 import {
   MatrixStatus,
-  type ExamMatrixTableRow,
-  type MatrixCognitiveDistribution,
   type MatrixValidationReport,
 } from '../../types/examMatrix';
 import { ExamMatrixRowModal } from './ExamMatrixRowModal';
@@ -34,49 +33,6 @@ const matrixStatusLabel: Record<string, string> = {
   APPROVED: 'Đã phê duyệt',
   LOCKED: 'Đã khóa',
 };
-
-const cognitiveOrder = ['NB', 'TH', 'VD', 'VDC'] as const;
-
-type MatrixLevel = (typeof cognitiveOrder)[number];
-
-const partLabels: Record<number, string> = {
-  1: 'Phần I (MCQ)',
-  2: 'Phần II (TF)',
-  3: 'Phần III (SA)',
-};
-
-function normalizeLevel(level: string): MatrixLevel | null {
-  const upper = level.toUpperCase();
-  if (upper === 'NB' || upper === 'NHAN_BIET' || upper === 'REMEMBER') return 'NB';
-  if (upper === 'TH' || upper === 'THONG_HIEU' || upper === 'UNDERSTAND') return 'TH';
-  if (upper === 'VD' || upper === 'VAN_DUNG' || upper === 'APPLY') return 'VD';
-  if (upper === 'VDC' || upper === 'VAN_DUNG_CAO' || upper === 'ANALYZE') return 'VDC';
-  return null;
-}
-
-function getLevelCount(distribution: MatrixCognitiveDistribution | undefined, level: MatrixLevel) {
-  if (!distribution) return 0;
-  if (level === 'NB')
-    return distribution.NB ?? distribution.NHAN_BIET ?? distribution.REMEMBER ?? 0;
-  if (level === 'TH')
-    return distribution.TH ?? distribution.THONG_HIEU ?? distribution.UNDERSTAND ?? 0;
-  if (level === 'VD') return distribution.VD ?? distribution.VAN_DUNG ?? distribution.APPLY ?? 0;
-  return distribution.VDC ?? distribution.VAN_DUNG_CAO ?? distribution.ANALYZE ?? 0;
-}
-
-function getRowCell(row: ExamMatrixTableRow, level: MatrixLevel) {
-  const fromCells = row.cells?.find((cell) => normalizeLevel(cell.cognitiveLevel) === level);
-  const questionCount = fromCells?.questionCount ?? getLevelCount(row.countByCognitive, level);
-  const pointsPerQuestion = fromCells?.pointsPerQuestion ?? 0;
-  return { questionCount, pointsPerQuestion };
-}
-
-function pickDisplayValue(...values: Array<string | number | null | undefined>) {
-  const found = values.find(
-    (value) => value !== undefined && value !== null && String(value).trim() !== ''
-  );
-  return found !== undefined && found !== null ? String(found) : '-';
-}
 
 export default function ExamMatrixDetailPage() {
   const { matrixId } = useParams<{ matrixId: string }>();
@@ -105,33 +61,6 @@ export default function ExamMatrixDetailPage() {
   const matrix = data?.result;
   const table = tableData?.result;
   const chapters = useMemo(() => table?.chapters ?? [], [table]);
-
-  const tableRows = useMemo(() => {
-    return chapters.flatMap((chapter) =>
-      chapter.rows.map((row) => ({
-        ...row,
-        chapterName: row.chapterName || row.chapter_name || chapter.chapterName || 'N/A',
-      }))
-    );
-  }, [chapters]);
-
-  const tableTotals = useMemo(() => {
-    let nb = 0;
-    let th = 0;
-    let vd = 0;
-    let vdc = 0;
-    let total = 0;
-
-    for (const row of tableRows) {
-      nb += getRowCell(row, 'NB').questionCount;
-      th += getRowCell(row, 'TH').questionCount;
-      vd += getRowCell(row, 'VD').questionCount;
-      vdc += getRowCell(row, 'VDC').questionCount;
-      total += row.rowTotalQuestions;
-    }
-
-    return { nb, th, vd, vdc, total };
-  }, [tableRows]);
 
   const canEdit = matrix?.status === MatrixStatus.DRAFT;
 
@@ -426,160 +355,20 @@ export default function ExamMatrixDetailPage() {
                 )}
               </div>
 
-              {tableRows.length === 0 ? (
+              {chapters.length === 0 ? (
                 <div className="empty">
                   Ma trận chưa có dòng nào. Hãy thêm dòng từ ngân hàng câu hỏi.
                 </div>
               ) : (
-                <div className="table-wrap">
-                  <table className="table matrix-table">
-                    <thead>
-                      <tr>
-                        <th>Lớp</th>
-                        <th>Môn</th>
-                        <th>Chương</th>
-                        <th>Bank</th>
-                        {/* NEW: Dynamic part columns based on numberOfParts */}
-                        {(() => {
-                          const numberOfParts = table?.numberOfParts ?? 1;
-                          const parts = [];
-                          for (let i = 1; i <= numberOfParts; i++) {
-                            parts.push(
-                              <th key={`part-header-${i}`} colSpan={4} style={{ textAlign: 'center' }}>
-                                {partLabels[i]}
-                              </th>
-                            );
-                          }
-                          return parts;
-                        })()}
-                        <th>Tổng</th>
-                      </tr>
-                      {/* Sub-header row for cognitive levels */}
-                      <tr>
-                        <th colSpan={4}></th>
-                        {(() => {
-                          const numberOfParts = table?.numberOfParts ?? 1;
-                          const subHeaders: React.ReactElement[] = [];
-                          for (let i = 1; i <= numberOfParts; i++) {
-                            cognitiveOrder.forEach((level) => {
-                              subHeaders.push(
-                                <th
-                                  key={`part-${i}-${level}`}
-                                  className={`matrix-level-header matrix-level-header--${level.toLowerCase()}`}
-                                  title="questions will be randomly selected from Question Bank"
-                                >
-                                  {level}
-                                </th>
-                              );
-                            });
-                          }
-                          return subHeaders;
-                        })()}
-                        <th></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {tableRows.map((row) => (
-                        <tr key={row.rowId}>
-                          <td>
-                            {pickDisplayValue(
-                              row.schoolGradeName,
-                              row.school_grade_name,
-                              row.gradeLevel,
-                              row.grade_level,
-                              row.schoolGrade,
-                              row.school_grade,
-                              matrix?.gradeLevel,
-                              table?.gradeLevel
-                            )}
-                          </td>
-                          <td>
-                            {pickDisplayValue(
-                              row.subjectName,
-                              row.subject_name,
-                              row.subject,
-                              matrix?.subjectName,
-                              table?.subjectName
-                            )}
-                          </td>
-                          <td>
-                            {pickDisplayValue(row.chapterName, row.chapter_name, row.chapter)}
-                          </td>
-                          <td>
-                            <div>{row.questionBankName || row.questionBankId || '-'}</div>
-                            {canEdit && (
-                              <button
-                                className="btn danger"
-                                style={{ marginTop: 6 }}
-                                onClick={() => void removeRow(row.rowId)}
-                              >
-                                Xóa
-                              </button>
-                            )}
-                          </td>
-                          {/* NEW: Dynamic part columns */}
-                          {(() => {
-                            const numberOfParts = table?.numberOfParts ?? 1;
-                            const cells: React.ReactElement[] = [];
-                            for (let partNum = 1; partNum <= numberOfParts; partNum++) {
-                              cognitiveOrder.forEach((level) => {
-                                const cell = getRowCell(row, level);
-                                const isEmpty = cell.questionCount <= 0;
-                                cells.push(
-                                  <td
-                                    key={`${row.rowId}-part${partNum}-${level}`}
-                                    className={
-                                      isEmpty ? 'matrix-cell matrix-cell--empty' : 'matrix-cell'
-                                    }
-                                  >
-                                    <strong>{cell.questionCount || 0}</strong>
-                                  </td>
-                                );
-                              });
-                            }
-                            return cells;
-                          })()}
-                          <td>
-                            <strong>{row.rowTotalQuestions}</strong>
-                          </td>
-                        </tr>
-                      ))}
-
-                      <tr className="matrix-grand-total-row">
-                        <td colSpan={4}>
-                          <strong>Tổng</strong>
-                        </td>
-                        {/* NEW: Dynamic total columns */}
-                        {(() => {
-                          const numberOfParts = table?.numberOfParts ?? 1;
-                          const totals: React.ReactElement[] = [];
-                          for (let partNum = 1; partNum <= numberOfParts; partNum++) {
-                            cognitiveOrder.forEach((level) => {
-                              totals.push(
-                                <td key={`total-part${partNum}-${level}`}>
-                                  <strong>
-                                    {(() => {
-                                      let sum = 0;
-                                      for (const row of tableRows) {
-                                        const cell = getRowCell(row, level);
-                                        sum += cell.questionCount;
-                                      }
-                                      return sum;
-                                    })()}
-                                  </strong>
-                                </td>
-                              );
-                            });
-                          }
-                          return totals;
-                        })()}
-                        <td>
-                          <strong>{tableTotals.total}</strong>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
+                <MatrixTable
+                  chapters={chapters}
+                  gradeLevel={String(matrix?.gradeLevel || table?.gradeLevel || '')}
+                  subjectName={matrix?.subjectName || table?.subjectName}
+                  numberOfParts={table?.numberOfParts ?? 1}
+                  matrixTotalPointsTarget={matrix?.totalPointsTarget}
+                  canEdit={canEdit}
+                  onRemoveRow={removeRow}
+                />
               )}
             </>
           )}

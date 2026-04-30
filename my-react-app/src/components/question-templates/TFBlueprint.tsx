@@ -37,38 +37,42 @@ const cognitiveLevelLabels: Record<CognitiveLevel, string> = {
 
 export const TFBlueprint = forwardRef<TFBlueprintRef, TFBlueprintProps>(
   ({ defaultChapterId, chapters, onFocusField }, ref) => {
-    const [stemText, setStemText] = useState('Cho hàm số f(x). Xét các mệnh đề sau:');
+    const [stemText, setStemText] = useState('Cho hàm số $f(x) = {{a}}x^2 + {{b}}x + {{c}}$. Xét các mệnh đề sau:');
     const [clauses, setClauses] = useState<TFClauseInput[]>([
       {
         key: 'A',
-        text: '',
+        text: 'Hàm số đạt cực tiểu tại $x = \\frac{-{{b}}}{2 \\cdot {{a}}}$',
         chapterId: defaultChapterId,
         cognitiveLevel: CognitiveLevel.NHAN_BIET,
         truthValue: true,
       },
       {
         key: 'B',
-        text: '',
+        text: 'Đồ thị hàm số có trục đối xứng là đường thẳng $x = {{b}}$',
         chapterId: defaultChapterId,
         cognitiveLevel: CognitiveLevel.THONG_HIEU,
         truthValue: false,
       },
       {
         key: 'C',
-        text: '',
+        text: '$f(0) = {{c}}$',
         chapterId: defaultChapterId,
         cognitiveLevel: CognitiveLevel.VAN_DUNG,
         truthValue: true,
       },
       {
         key: 'D',
-        text: '',
+        text: 'Hàm số đồng biến trên khoảng $(-\\infty; +\\infty)$',
         chapterId: defaultChapterId,
         cognitiveLevel: CognitiveLevel.VAN_DUNG_CAO,
         truthValue: false,
       },
     ]);
-    const [parameters, setParameters] = useState<ParameterInput[]>([]);
+    const [parameters, setParameters] = useState<ParameterInput[]>([
+      { name: 'a', type: 'int', min: '1', max: '5', constraint: '' },
+      { name: 'b', type: 'int', min: '-6', max: '6', constraint: '' },
+      { name: 'c', type: 'int', min: '-10', max: '10', constraint: '' },
+    ]);
 
     const stemTextRef = useRef<HTMLTextAreaElement | null>(null);
     const clauseTextRefs = useRef<Record<number, HTMLTextAreaElement | null>>({});
@@ -141,8 +145,36 @@ export const TFBlueprint = forwardRef<TFBlueprintRef, TFBlueprintProps>(
           <div>
             <h3 style={{ color: '#1e40af' }}>Mệnh đề Đúng/Sai (4 mệnh đề)</h3>
             <p className="muted" style={{ fontSize: '0.8rem', marginBottom: 16 }}>
-              Mỗi mệnh đề có thể thuộc chương và mức độ khác nhau. Chọn Đúng/Sai cho từng mệnh đề.
+              Mỗi mệnh đề là một phát biểu toán học mà học sinh đánh giá Đúng hoặc Sai.
+              Dùng biến số <code>{'{{a}}'}</code>, <code>{'{{b}}'}</code> trong mệnh đề
+              để tạo câu hỏi tự động. Mỗi mệnh đề có thể thuộc chương và mức độ khác nhau.
             </p>
+          </div>
+
+          {/* Example Banner */}
+          <div style={{
+            padding: '12px 16px',
+            backgroundColor: '#eff6ff',
+            borderRadius: 8,
+            marginBottom: 16,
+            border: '1px solid #bfdbfe',
+            fontSize: '0.85rem',
+          }}>
+            <strong style={{ color: '#1e40af' }}>📝 Ví dụ câu Đúng/Sai hoàn chỉnh:</strong>
+            <div style={{ marginTop: 8, paddingLeft: 12 }}>
+              <p style={{ fontStyle: 'italic', marginBottom: 4 }}>
+                Đề bài: "Cho hàm số f(x) = 2x² + 4x - 3. Xét các mệnh đề sau:"
+              </p>
+              <ul style={{ paddingLeft: 20, margin: '4px 0', lineHeight: 1.6 }}>
+                <li><strong>A)</strong> Hàm số đạt cực tiểu tại x = -1 → <span style={{ color: '#16a34a' }}>Đúng</span></li>
+                <li><strong>B)</strong> Đồ thị có trục đối xứng x = 4 → <span style={{ color: '#dc2626' }}>Sai</span></li>
+                <li><strong>C)</strong> f(0) = -3 → <span style={{ color: '#16a34a' }}>Đúng</span></li>
+                <li><strong>D)</strong> Hàm số đồng biến trên (-∞; +∞) → <span style={{ color: '#dc2626' }}>Sai</span></li>
+              </ul>
+              <p style={{ color: '#6b7280', fontSize: '0.8rem', marginTop: 4 }}>
+                Đáp án: A,C (mệnh đề đúng) → Điểm: 4/4 đúng = 1đ, 3/4 = 0.25đ
+              </p>
+            </div>
           </div>
 
           <div
@@ -157,7 +189,15 @@ export const TFBlueprint = forwardRef<TFBlueprintRef, TFBlueprintProps>(
             <strong>⚠ Điểm THPT:</strong> 4/4 đúng = 1 điểm, 3/4 đúng = 0.25 điểm, dưới 3/4 = 0 điểm
           </div>
 
-          {clauses.map((clause, index) => (
+          {clauses.map((clause, index) => {
+            const clausePlaceholders: Record<string, string> = {
+              A: 'Ví dụ: Hàm số đạt cực tiểu tại $x = \\frac{-{{b}}}{2{{a}}}$',
+              B: 'Ví dụ: Đồ thị hàm số đi qua điểm $(0; {{b}})$',
+              C: 'Ví dụ: $f(0) = {{c}}$',
+              D: 'Ví dụ: Hàm số đồng biến trên khoảng $(-\\infty; +\\infty)$',
+            };
+            
+            return (
             <div
               key={clause.key}
               style={{
@@ -183,7 +223,7 @@ export const TFBlueprint = forwardRef<TFBlueprintRef, TFBlueprintProps>(
                   className="textarea"
                   rows={2}
                   required
-                  placeholder={`Nhập nội dung mệnh đề ${clause.key}...`}
+                  placeholder={clausePlaceholders[clause.key] ?? `Nhập nội dung mệnh đề ${clause.key}...`}
                   value={clause.text}
                   onFocus={() => onFocusField?.('clauseText', index)}
                   onChange={(event) => updateClause(index, 'text', event.target.value)}
@@ -261,7 +301,8 @@ export const TFBlueprint = forwardRef<TFBlueprintRef, TFBlueprintProps>(
                 </label>
               </div>
             </div>
-          ))}
+            );
+          })}
         </section>
 
         {parameters.length > 0 && (
