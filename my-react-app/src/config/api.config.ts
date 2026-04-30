@@ -196,6 +196,8 @@ export const API_ENDPOINTS = {
   SUBJECTS_BY_SCHOOL_GRADE: (schoolGradeId: string) => `/subjects/school-grade/${schoolGradeId}`,
   LESSONS_BY_CHAPTER: (chapterId: string) => `/lessons/chapters/${chapterId}/lessons`,
   LESSON_SLIDES_TEMPLATES: '/lesson-slides/templates',
+  LESSON_SLIDES_TEMPLATE_PREVIEW_IMAGE: (id: string) =>
+    `/lesson-slides/templates/${id}/preview-image`,
   LESSON_SLIDES_GENERATE_CONTENT: '/lesson-slides/generate-content',
   LESSON_SLIDES_GENERATE_PPTX_DIRECT: '/lesson-slides/generate-pptx',
   LESSON_SLIDES_GENERATE_PPTX: '/lesson-slides/generate-pptx-from-json',
