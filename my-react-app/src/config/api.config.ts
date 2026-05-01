@@ -244,6 +244,8 @@ export const API_ENDPOINTS = {
   ADMIN_SLIDE_TEMPLATE_DEACTIVATE: (id: string) => `/admin/slide-templates/${id}/deactivate`,
   ADMIN_SLIDE_TEMPLATE_DOWNLOAD: (id: string) => `/admin/slide-templates/${id}/download`,
   ADMIN_SLIDE_TEMPLATE_PREVIEW_IMAGE: (id: string) => `/admin/slide-templates/${id}/preview-image`,
+  ADMIN_SLIDE_TEMPLATE_REGENERATE_PREVIEW: (id: string) =>
+    `/admin/slide-templates/${id}/regenerate-preview`,
 
   // Lesson Plans (Giáo án)
   LESSON_PLANS: '/lesson-plans',
