@@ -12,7 +12,7 @@ import {
   ShieldCheck,
   Trash2,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { MatrixTable } from '../../components/exam-matrix';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
@@ -36,7 +36,6 @@ import { exportExamMatrixToExcel, exportExamMatrixToPdf } from '../../utils/exam
 import { ExamMatrixRowModal } from './ExamMatrixRowModal';
 import '../courses/TeacherCourses.css';
 import './ExamMatrixDashboard.css';
-import { ExamMatrixRowModalRefactored } from './ExamMatrixRowModalRefactored';
 
 const matrixStatusLabel: Record<string, string> = {
   DRAFT: 'Nháp',
