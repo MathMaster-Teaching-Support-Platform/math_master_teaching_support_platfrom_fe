@@ -24,6 +24,7 @@ import '../../../styles/module-refactor.css';
 import '../StudentCourses.css';
 import { extractChapterNumber, sortCurriculumGroups } from '../../../utils/curriculum';
 import { UI_TEXT } from '../../../constants/uiText';
+import { HlsVideoPlayer } from '../../../components/HlsVideoPlayer';
 
 interface StudentLessonsTabProps {
   enrollmentId: string;
@@ -119,17 +120,13 @@ const InlinePlayer: React.FC<{
         {loading && <p style={{ color: '#94a3b8' }}>Đang tải video...</p>}
         {error && <p style={{ color: '#f87171' }}>{error}</p>}
         {videoUrl && !loading && (
-          <video
+          <HlsVideoPlayer
             key={videoUrl}
             src={videoUrl}
             controls
             autoPlay
             style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-            onLoadedMetadata={(e) => {
-              if (initialTime > 0) {
-                (e.target as HTMLVideoElement).currentTime = initialTime;
-              }
-            }}
+            initialTime={initialTime}
             onTimeUpdate={(e) => {
               if (onTimeUpdate) {
                 onTimeUpdate((e.target as HTMLVideoElement).currentTime);

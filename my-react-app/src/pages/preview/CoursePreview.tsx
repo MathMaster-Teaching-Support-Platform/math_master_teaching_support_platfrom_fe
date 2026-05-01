@@ -34,6 +34,7 @@ import { extractChapterNumber, sortCurriculumGroups } from '../../utils/curricul
 import type { Order } from '../../types/order.types';
 import { useToast } from '../../context/ToastContext';
 import { UI_TEXT } from '../../constants/uiText';
+import { HlsVideoPlayer } from '../../components/HlsVideoPlayer';
 import './CoursePreview.css';
 
 const CoursePreview: React.FC = () => {
@@ -748,7 +749,7 @@ const CoursePreview: React.FC = () => {
                 </div>
 
                 <div className="modal-video-box">
-                  <video
+                  <HlsVideoPlayer
                     src={previewUrl}
                     controls
                     autoPlay

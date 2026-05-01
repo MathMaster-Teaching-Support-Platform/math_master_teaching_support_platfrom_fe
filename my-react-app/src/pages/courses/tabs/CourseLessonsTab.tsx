@@ -637,7 +637,7 @@ function UploadVideoModal({
                   <Video size={32} style={{ marginBottom: 8, opacity: 0.55 }} aria-hidden />
                   <p style={{ margin: 0 }}>Kéo thả hoặc chọn file video</p>
                   <p style={{ fontSize: '0.75rem', marginTop: 6, marginBottom: 0 }}>
-                    MP4, WebM hoặc OGG
+                    Hỗ trợ mọi định dạng (MP4, MKV, AVI, MOV...)
                   </p>
                 </div>
               )}
