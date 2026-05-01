@@ -17,8 +17,9 @@ import {
 } from 'lucide-react';
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import { useNavigate } from 'react-router-dom';
-import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import Pagination from '../../components/common/Pagination';
+import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { useToast } from '../../context/ToastContext';
 import { useDebounce } from '../../hooks/useDebounce';
 import {
   useApproveMatrix,
@@ -28,16 +29,15 @@ import {
   useResetMatrix,
   useUpdateExamMatrix,
 } from '../../hooks/useExamMatrix';
-import { useToast } from '../../context/ToastContext';
 import '../../styles/module-refactor.css';
-import '../courses/TeacherCourses.css';
 import {
   MatrixStatus,
   type ExamMatrixRequest,
   type ExamMatrixResponse,
 } from '../../types/examMatrix';
-import { ExamMatrixFormModal } from './ExamMatrixFormModal';
+import '../courses/TeacherCourses.css';
 import './ExamMatrixDashboard.css';
+import { ExamMatrixFormModal } from './ExamMatrixFormModal';
 
 const filters: Array<'ALL' | MatrixStatus> = [
   'ALL',
@@ -128,7 +128,10 @@ export function ExamMatrixDashboard() {
       await updateMutation.mutateAsync({ matrixId: selected.id, request: payload });
       showToast({ type: 'success', message: 'Cập nhật ma trận đề thành công.' });
     } catch (error) {
-      showToast({ type: 'error', message: error instanceof Error ? error.message : 'Không thể lưu ma trận đề.' });
+      showToast({
+        type: 'error',
+        message: error instanceof Error ? error.message : 'Không thể lưu ma trận đề.',
+      });
     }
   }
 
@@ -144,7 +147,7 @@ export function ExamMatrixDashboard() {
           {/* ── Header ── */}
           <header className="page-header courses-header-row">
             <div className="header-stack">
-              <div className="header-kicker">Teacher Studio</div>
+              <div className="header-kicker"></div>
               <div className="row" style={{ gap: '0.6rem' }}>
                 <h2>Ma trận đề</h2>
                 {!isLoading && <span className="count-chip">{totalElements}</span>}
@@ -219,7 +222,9 @@ export function ExamMatrixDashboard() {
                   </span>
                   <p className="exam-matrix-wf-step__title">Tạo draft</p>
                 </div>
-                <p className="exam-matrix-wf-step__desc">Đặt tên ma trận, mô tả và mục tiêu câu hỏi.</p>
+                <p className="exam-matrix-wf-step__desc">
+                  Đặt tên ma trận, mô tả và mục tiêu câu hỏi.
+                </p>
               </div>
               <div className="exam-matrix-wf-step exam-matrix-wf-step--2">
                 <div className="exam-matrix-wf-step__head">
@@ -239,7 +244,9 @@ export function ExamMatrixDashboard() {
                   </span>
                   <p className="exam-matrix-wf-step__title">Phê duyệt &amp; xuất</p>
                 </div>
-                <p className="exam-matrix-wf-step__desc">Phê duyệt ma trận rồi dùng ở Trình tạo đề.</p>
+                <p className="exam-matrix-wf-step__desc">
+                  Phê duyệt ma trận rồi dùng ở Trình tạo đề.
+                </p>
               </div>
             </div>
 
@@ -403,8 +410,19 @@ export function ExamMatrixDashboard() {
                             disabled={approveMutation.isPending}
                             onClick={() => {
                               approveMutation.mutate(matrix.id, {
-                                onSuccess: () => showToast({ type: 'success', message: `Đã phê duyệt ma trận “${matrix.name}”.` }),
-                                onError: (err) => showToast({ type: 'error', message: err instanceof Error ? err.message : 'Không thể phê duyệt ma trận.' }),
+                                onSuccess: () =>
+                                  showToast({
+                                    type: 'success',
+                                    message: `Đã phê duyệt ma trận “${matrix.name}”.`,
+                                  }),
+                                onError: (err) =>
+                                  showToast({
+                                    type: 'error',
+                                    message:
+                                      err instanceof Error
+                                        ? err.message
+                                        : 'Không thể phê duyệt ma trận.',
+                                  }),
                               });
                             }}
                           >
@@ -422,8 +440,19 @@ export function ExamMatrixDashboard() {
                               if (!globalThis.confirm(`Đặt lại ma trận "${matrix.name}" về nháp?`))
                                 return;
                               resetMutation.mutate(matrix.id, {
-                                onSuccess: () => showToast({ type: 'success', message: `Đã đặt lại ma trận “${matrix.name}” về nháp.` }),
-                                onError: (err) => showToast({ type: 'error', message: err instanceof Error ? err.message : 'Không thể đặt lại ma trận.' }),
+                                onSuccess: () =>
+                                  showToast({
+                                    type: 'success',
+                                    message: `Đã đặt lại ma trận “${matrix.name}” về nháp.`,
+                                  }),
+                                onError: (err) =>
+                                  showToast({
+                                    type: 'error',
+                                    message:
+                                      err instanceof Error
+                                        ? err.message
+                                        : 'Không thể đặt lại ma trận.',
+                                  }),
                               });
                             }}
                           >
@@ -444,8 +473,17 @@ export function ExamMatrixDashboard() {
                             )
                               return;
                             deleteMutation.mutate(matrix.id, {
-                              onSuccess: () => showToast({ type: 'success', message: `Đã xóa ma trận “${matrix.name}”.` }),
-                              onError: (err) => showToast({ type: 'error', message: err instanceof Error ? err.message : 'Không thể xóa ma trận.' }),
+                              onSuccess: () =>
+                                showToast({
+                                  type: 'success',
+                                  message: `Đã xóa ma trận “${matrix.name}”.`,
+                                }),
+                              onError: (err) =>
+                                showToast({
+                                  type: 'error',
+                                  message:
+                                    err instanceof Error ? err.message : 'Không thể xóa ma trận.',
+                                }),
                             });
                           }}
                         >

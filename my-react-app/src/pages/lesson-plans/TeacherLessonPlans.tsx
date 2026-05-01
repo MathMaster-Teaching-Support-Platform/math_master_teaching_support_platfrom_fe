@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query';
 import {
   AlertCircle,
   ArrowLeft,
@@ -16,7 +17,6 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import {
@@ -27,7 +27,6 @@ import {
 } from '../../hooks/useLessonPlans';
 import { LessonSlideService } from '../../services/api/lesson-slide.service';
 import '../../styles/module-refactor.css';
-import '../courses/TeacherCourses.css';
 import type {
   CreateLessonPlanRequest,
   LessonPlanResponse,
@@ -39,6 +38,7 @@ import type {
   SchoolGrade,
   SubjectByGrade,
 } from '../../types/lessonSlide.types';
+import '../courses/TeacherCourses.css';
 import './TeacherLessonPlans.css';
 
 const PAGE_SIZE = 9;
@@ -859,7 +859,7 @@ export default function TeacherLessonPlans() {
           {/* ── Header (aligned with Giáo trình) ── */}
           <header className="page-header courses-header-row">
             <div className="header-stack">
-              <div className="header-kicker">Teacher Studio</div>
+              <div className="header-kicker"></div>
               <div className="row" style={{ gap: '0.6rem' }}>
                 <h2>Giáo án</h2>
                 {!isLoading && <span className="count-chip">{plans.length}</span>}

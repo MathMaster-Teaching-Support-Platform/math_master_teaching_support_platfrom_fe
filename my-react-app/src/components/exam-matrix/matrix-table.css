@@ -117,6 +117,17 @@
   min-width: 80px;
 }
 
+/* Part group header (Phần I, Phần II, Phần III) */
+.matrix-th--part-group {
+  background: #059669;
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+  border: 2px solid #065f46;
+  letter-spacing: 0.3px;
+  text-transform: none;
+}
+
 /* Cognitive group header */
 .matrix-th--cognitive-group {
   background: #dbeafe;
@@ -734,4 +745,104 @@
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
+}
+
+/* ============================================
+   INLINE EDITING STYLES
+   ============================================ */
+
+/* Save status indicator */
+.matrix-save-status {
+  padding: 8px 16px;
+  background: #f3f4f6;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.matrix-save-status--saving {
+  color: #3b82f6;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.matrix-save-status--pending {
+  color: #f59e0b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.matrix-save-status--saved {
+  color: #10b981;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.matrix-save-status--error {
+  color: #ef4444;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Editable cell styles */
+.matrix-td--editable {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.matrix-td--editable:hover {
+  background-color: #eff6ff !important;
+}
+
+.matrix-td--dirty {
+  background-color: #fef3c7 !important;
+  position: relative;
+}
+
+.matrix-td--dirty::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 6px;
+  height: 6px;
+  background-color: #f59e0b;
+  border-radius: 50%;
+}
+
+/* Cell input */
+.matrix-cell-input {
+  width: 100%;
+  height: 100%;
+  border: 2px solid #3b82f6;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  background: white;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.matrix-cell-input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+
+/* Remove spinner from number input */
+.matrix-cell-input::-webkit-outer-spin-button,
+.matrix-cell-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.matrix-cell-input[type=number] {
+  -moz-appearance: textfield;
 }

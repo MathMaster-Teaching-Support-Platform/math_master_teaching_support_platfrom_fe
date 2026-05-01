@@ -1,5 +1,5 @@
-import React from 'react';
 import { CheckCircle2, ChevronRight, Circle, Sparkles } from 'lucide-react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import type { RoadmapCatalogItem } from '../../../types';
 
@@ -34,7 +34,13 @@ const RoadmapCard: React.FC<{ roadmap: RoadmapCatalogItem }> = ({ roadmap }) => 
 
       <div className="srp__grid-progress-wrap">
         <div className="srp__grid-progress">
-          <div className="srp__grid-progress-fill" style={{ width: `${roadmap.progressPercentage}%` }} />
+          <div
+            className="srp__grid-progress-fill"
+            style={{
+              transform: `scaleX(${roadmap.progressPercentage / 100})`,
+              transformOrigin: 'left',
+            }}
+          />
         </div>
         <span className="srp__grid-progress-pct">{roadmap.progressPercentage}%</span>
       </div>

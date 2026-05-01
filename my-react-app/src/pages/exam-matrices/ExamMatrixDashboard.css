@@ -1,4 +1,4 @@
-/* Exam Matrix dashboard — layout & accents aligned with Teacher Studio */
+/* Exam Matrix dashboard — layout & accents aligned with  */
 
 .module-layout-container .exam-matrix-workflow-hero {
   position: relative;
@@ -98,7 +98,7 @@
   gap: 0.6rem;
 }
 
-/* Matrix item cards — calm editorial (Teacher Studio) */
+/* Matrix item cards — calm editorial () */
 .module-layout-container .exam-matrix-dashboard-page .data-card.exam-matrix-card {
   min-height: auto;
   padding: 0;
@@ -327,7 +327,7 @@
   animation: exam-matrix-nav-spin 0.7s linear infinite;
 }
 
-/* Detail page (ExamMatrixDetailPageRefactored) — align with dashboard / Teacher Studio */
+/* Detail page (ExamMatrixDetailPageRefactored) — align with dashboard /  */
 .module-layout-container .exam-matrix-detail-page .exam-matrix-detail-back-row {
   width: 100%;
   margin-bottom: 0.15rem;

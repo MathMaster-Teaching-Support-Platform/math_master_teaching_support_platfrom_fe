@@ -46,10 +46,22 @@ const RevenueBreakdownChart: React.FC<RevenueBreakdownChartProps> = ({ data, per
     }
   };
 
+  interface TooltipPayloadEntry {
+    name: string;
+    value: number;
+    color: string;
+  }
+
+  interface CustomTooltipProps {
+    active?: boolean;
+    payload?: TooltipPayloadEntry[];
+    label?: string;
+  }
+
   // Custom tooltip
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
     if (active && payload && payload.length) {
-      const date = new Date(label);
+      const date = new Date(label!);
       const formattedDate = new Intl.DateTimeFormat('vi-VN', {
         year: 'numeric',
         month: 'long',
@@ -60,7 +72,7 @@ const RevenueBreakdownChart: React.FC<RevenueBreakdownChartProps> = ({ data, per
         <div className="revenue-chart-tooltip">
           <p className="tooltip-date">{formattedDate}</p>
           <div className="tooltip-items">
-            {payload.map((entry: any, index: number) => (
+            {payload.map((entry: TooltipPayloadEntry, index: number) => (
               <div key={index} className="tooltip-item" style={{ color: entry.color }}>
                 <span className="tooltip-label">{entry.name}:</span>
                 <span className="tooltip-value">{formatCurrency(entry.value)}</span>
@@ -70,7 +82,7 @@ const RevenueBreakdownChart: React.FC<RevenueBreakdownChartProps> = ({ data, per
               <span className="tooltip-label">Tổng:</span>
               <span className="tooltip-value">
                 {formatCurrency(
-                  payload.reduce((sum: number, entry: any) => sum + entry.value, 0)
+                  payload.reduce((sum: number, entry: TooltipPayloadEntry) => sum + entry.value, 0)
                 )}
               </span>
             </div>

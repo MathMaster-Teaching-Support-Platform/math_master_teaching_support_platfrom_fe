@@ -27,7 +27,7 @@ import LatexRenderer from '../../components/common/LatexRenderer';
 import MathText from '../../components/common/MathText';
 import Pagination from '../../components/common/Pagination';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
-import { useDebounce } from '../../hooks/useDebounce';
+import { useToast } from '../../context/ToastContext';
 import {
   useApproveCanonicalQuestion,
   useBulkApproveCanonicalQuestions,
@@ -38,6 +38,7 @@ import {
   useReviewCanonicalQuestions,
   useUpdateCanonicalQuestion,
 } from '../../hooks/useCanonicalQuestion';
+import { useDebounce } from '../../hooks/useDebounce';
 import {
   useApproveQuestion,
   useBulkApproveQuestions,
@@ -64,10 +65,9 @@ import {
   type QuestionTemplateRequest,
   type QuestionTemplateResponse,
 } from '../../types/questionTemplate';
+import '../courses/TeacherCourses.css';
 import { CanonicalGenerateModal } from './CanonicalGenerateModal';
 import { CanonicalQuestionModal } from './CanonicalQuestionModal';
-import { useToast } from '../../context/ToastContext';
-import '../courses/TeacherCourses.css';
 import './template-review.css';
 import { TemplateBulkImportModal } from './TemplateBulkImportModal';
 import { TemplateFormModal } from './TemplateFormModal';
@@ -585,7 +585,7 @@ export function TemplateDashboard() {
           {/* ── Header ── */}
           <header className="page-header courses-header-row">
             <div className="header-stack">
-              <div className="header-kicker">Teacher Studio</div>
+              <div className="header-kicker"></div>
               <div className="row" style={{ gap: '0.6rem' }}>
                 <h2>Mẫu câu hỏi</h2>
                 {!isLoading && <span className="count-chip">{templates.length}</span>}
@@ -905,14 +905,18 @@ export function TemplateDashboard() {
               <input
                 placeholder="Tìm mẫu câu hỏi..."
                 value={search}
-                onChange={(event) => { setSearch(event.target.value); }}
+                onChange={(event) => {
+                  setSearch(event.target.value);
+                }}
               />
               {search && (
                 <button
                   type="button"
                   className="search-box__clear"
                   aria-label="Xóa nội dung tìm kiếm"
-                  onClick={() => { setSearch(''); }}
+                  onClick={() => {
+                    setSearch('');
+                  }}
                 >
                   <X size={14} />
                 </button>
@@ -924,7 +928,9 @@ export function TemplateDashboard() {
                 <button
                   key={item}
                   className={`pill-btn${status === item ? ' active' : ''}`}
-                  onClick={() => { setStatus(item); }}
+                  onClick={() => {
+                    setStatus(item);
+                  }}
                 >
                   {statusLabel[item]}
                 </button>
@@ -978,12 +984,15 @@ export function TemplateDashboard() {
           )}
 
           {/* ── Empty: no results ── */}
-          {!isLoading && !isError && templates.length === 0 && (debouncedSearch || status !== 'ALL') && (
-            <div className="empty">
-              <Search size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
-              <p>Không tìm thấy mẫu phù hợp với bộ lọc.</p>
-            </div>
-          )}
+          {!isLoading &&
+            !isError &&
+            templates.length === 0 &&
+            (debouncedSearch || status !== 'ALL') && (
+              <div className="empty">
+                <Search size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
+                <p>Không tìm thấy mẫu phù hợp với bộ lọc.</p>
+              </div>
+            )}
 
           {/* ── Empty: no templates ── */}
           {!isLoading && !isError && templates.length === 0 && (
@@ -1899,8 +1908,6 @@ export function TemplateDashboard() {
               </div>
             </div>
           )}
-
-
         </section>
       </div>
     </DashboardLayout>

@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query';
 import {
   AlertCircle,
   Archive,
@@ -17,14 +18,12 @@ import {
 import type React from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQueryClient } from '@tanstack/react-query';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockTeacher } from '../../data/mockData';
 import { LessonSlideService } from '../../services/api/lesson-slide.service';
 import { MindmapService } from '../../services/api/mindmap.service';
 import { notifySubscriptionUpdated } from '../../services/api/subscription-plan.service';
 import '../../styles/module-refactor.css';
-import '../courses/TeacherCourses.css';
 import type { Mindmap } from '../../types';
 import type {
   ChapterBySubject,
@@ -32,6 +31,7 @@ import type {
   SchoolGrade,
   SubjectByGrade,
 } from '../../types/lessonSlide.types';
+import '../courses/TeacherCourses.css';
 import './TeacherMindmaps.css';
 
 const coverGradients = [
@@ -416,7 +416,7 @@ export default function TeacherMindmaps() {
           {/* ── Header ── */}
           <header className="page-header courses-header-row">
             <div className="header-stack">
-              <div className="header-kicker">Teacher Studio</div>
+              <div className="header-kicker"></div>
               <div className="row" style={{ gap: '0.6rem' }}>
                 <h2>Mindmap</h2>
                 {!loading && <span className="count-chip">{mindmaps.length}</span>}

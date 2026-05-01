@@ -840,7 +840,7 @@
   font-weight: 600;
 }
 
-/* ── Admin roadmap list (management) — full-bleed + Teacher Studio shell ── */
+/* ── Admin roadmap list (management) — full-bleed +  shell ── */
 .module-layout-container .admin-roadmap-mgmt-page {
   position: relative;
   min-height: calc(100vh - 68px);
@@ -973,7 +973,9 @@
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
 }
 
-.module-layout-container .admin-roadmap-edit-section-inner .admin-roadmap-page__feedback-pagination {
+.module-layout-container
+  .admin-roadmap-edit-section-inner
+  .admin-roadmap-page__feedback-pagination {
   margin-top: 0.75rem;
 }
 

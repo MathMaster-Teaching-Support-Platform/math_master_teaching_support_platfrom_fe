@@ -139,7 +139,7 @@ export default function TeacherQuestionManagementPage() {
           points: typeof data.points === 'number' ? data.points : undefined,
           correctAnswer: data.correctAnswer ? String(data.correctAnswer) : undefined,
           explanation: data.explanation ? String(data.explanation) : undefined,
-          tags: Array.isArray(data.tags) ? data.tags as string[] : [],
+          tags: Array.isArray(data.tags) ? (data.tags as string[]) : [],
           options: data.options as Record<string, unknown> | undefined,
         };
         await createMutation.mutateAsync(payload);
@@ -150,7 +150,7 @@ export default function TeacherQuestionManagementPage() {
           points: typeof data.points === 'number' ? data.points : undefined,
           correctAnswer: data.correctAnswer ? String(data.correctAnswer) : undefined,
           explanation: data.explanation ? String(data.explanation) : undefined,
-          tags: Array.isArray(data.tags) ? data.tags as string[] : [],
+          tags: Array.isArray(data.tags) ? (data.tags as string[]) : [],
           options: data.options as Record<string, unknown> | undefined,
         };
         await updateMutation.mutateAsync({ questionId: selectedQuestion.id, request: payload });
@@ -198,7 +198,7 @@ export default function TeacherQuestionManagementPage() {
         <section className="module-page teacher-courses-page teacher-question-management-page">
           <header className="page-header courses-header-row">
             <div className="header-stack">
-              <div className="header-kicker">Teacher Studio</div>
+              <div className="header-kicker"></div>
               <div className="row" style={{ gap: '0.6rem' }}>
                 <h2>Quản lý câu hỏi của tôi</h2>
                 {!isLoading && <span className="count-chip">{questions.length}</span>}

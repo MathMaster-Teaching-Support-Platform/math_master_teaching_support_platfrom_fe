@@ -21,6 +21,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { CourseBreadcrumb } from '../../components/course/CourseBreadcrumb';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { UI_TEXT } from '../../constants/uiText';
 import { useToast } from '../../context/ToastContext';
 import {
   useCourseDetail,
@@ -34,7 +35,6 @@ import '../../styles/module-refactor.css';
 import type { CourseLevel, UpdateCourseRequest } from '../../types';
 import './TeacherCourseDetail.css';
 import './TeacherCourses.css';
-import { UI_TEXT } from '../../constants/uiText';
 import './tabs/CourseOverviewTab.css';
 import './tabs/course-detail-tabs.css';
 
@@ -47,12 +47,12 @@ import CourseStudentsTab from './tabs/CourseStudentsTab.tsx';
 
 type TabType = 'overview' | 'lessons' | 'assessments' | 'students' | 'reviews';
 
-/** Loading overlay — cùng ngôn ngữ UI với Teacher Studio (kem + terracotta) */
+/** Loading overlay — cùng ngôn ngữ UI với  (kem + terracotta) */
 const CourseDetailLoadingOverlay: React.FC<{ message: string }> = ({ message }) => (
   <div className="course-math-loading-overlay" role="dialog" aria-modal="true">
     <div className="course-math-loading-popup" role="status" aria-live="polite">
       <div className="course-math-loader-ring" aria-hidden="true" />
-      <p className="course-math-loading-kicker">Teacher Studio</p>
+      <p className="course-math-loading-kicker"></p>
       <p className="course-math-loading-text">{message}</p>
     </div>
   </div>
@@ -251,11 +251,11 @@ const TeacherCourseDetail: React.FC = () => {
                   </h1>
                   <span
                     className={`course-badge ${
-                      course.status === 'ARCHIVED' 
-                        ? 'badge-archived' 
-                        : course.published 
-                        ? 'badge-live' 
-                        : 'badge-draft'
+                      course.status === 'ARCHIVED'
+                        ? 'badge-archived'
+                        : course.published
+                          ? 'badge-live'
+                          : 'badge-draft'
                     }`}
                   >
                     {course.status === 'PENDING_REVIEW' ? (
@@ -463,11 +463,16 @@ const TeacherCourseDetail: React.FC = () => {
                       <div className="edit-step-1">
                         <div className="form-section-header">
                           <h3>Thông tin cơ bản</h3>
-                          <p>Cập nhật lại tiêu đề và mục tiêu chính của {UI_TEXT.COURSE.toLowerCase()}.</p>
+                          <p>
+                            Cập nhật lại tiêu đề và mục tiêu chính của{' '}
+                            {UI_TEXT.COURSE.toLowerCase()}.
+                          </p>
                         </div>
 
                         <div className="form-group full-width" style={{ marginBottom: '1.25rem' }}>
-                          <label className="form-label">Tiêu đề {UI_TEXT.COURSE.toLowerCase()}</label>
+                          <label className="form-label">
+                            Tiêu đề {UI_TEXT.COURSE.toLowerCase()}
+                          </label>
                           <input
                             type="text"
                             className="form-input"
