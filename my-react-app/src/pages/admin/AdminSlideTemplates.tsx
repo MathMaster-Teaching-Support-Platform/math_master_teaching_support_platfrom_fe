@@ -10,6 +10,7 @@ import {
   Loader2,
   Pencil,
   Plus,
+  RefreshCw,
   Search,
   Trash2,
   Upload,
@@ -683,6 +684,22 @@ export default function AdminSlideTemplates() {
     [showToast]
   );
 
+  const handleRegeneratePreview = useCallback(
+    async (t: LessonSlideTemplate) => {
+      setActionLoading(`regen-${t.id}`);
+      try {
+        await AdminSlideTemplateService.regeneratePreview(t.id);
+        showToast(`Đã tạo lại preview cho "${t.name}"`);
+        await loadTemplates();
+      } catch (err) {
+        showToast(err instanceof Error ? err.message : 'Tạo lại preview thất bại.', 'error');
+      } finally {
+        setActionLoading(null);
+      }
+    },
+    [loadTemplates, showToast]
+  );
+
   const toggleSort = useCallback(
     (field: 'name' | 'createdAt') => {
       if (sortField === field) {
@@ -1063,6 +1080,7 @@ export default function AdminSlideTemplates() {
                 {filtered.map((t, idx) => {
                   const isActionLoading = actionLoading === t.id;
                   const isDownloading = actionLoading === `dl-${t.id}`;
+                  const isRegenerating = actionLoading === `regen-${t.id}`;
                   return (
                     <tr
                       key={t.id}
@@ -1195,6 +1213,23 @@ export default function AdminSlideTemplates() {
                               <Download size={16} />
                             )}
                           </button>
+
+                          {/* Regenerate preview — only when no preview image */}
+                          {!t.previewImage && (
+                            <button
+                              className="ast-btn-icon"
+                              title="Tạo lại preview từ PPTX"
+                              disabled={isRegenerating}
+                              onClick={() => void handleRegeneratePreview(t)}
+                              style={{ color: '#6366f1' }}
+                            >
+                              {isRegenerating ? (
+                                <Loader2 size={16} className="ast-spin" />
+                              ) : (
+                                <RefreshCw size={16} />
+                              )}
+                            </button>
+                          )}
 
                           {/* Edit */}
                           <button

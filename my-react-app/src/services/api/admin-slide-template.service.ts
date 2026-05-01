@@ -178,4 +178,17 @@ export class AdminSlideTemplateService {
   static getPreviewImageUrl(id: string): string {
     return `${API_BASE_URL}${API_ENDPOINTS.ADMIN_SLIDE_TEMPLATE_PREVIEW_IMAGE(id)}`;
   }
+
+  /** PATCH /admin/slide-templates/{id}/regenerate-preview */
+  static async regeneratePreview(id: string): Promise<ApiEnvelope<LessonSlideTemplate>> {
+    const headers = await this.getAuthHeaders();
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.ADMIN_SLIDE_TEMPLATE_REGENERATE_PREVIEW(id)}`,
+      { method: 'PATCH', headers }
+    );
+    if (!response.ok) {
+      throw new Error(await this.readErrorMessage(response, 'Failed to regenerate preview'));
+    }
+    return response.json() as Promise<ApiEnvelope<LessonSlideTemplate>>;
+  }
 }
