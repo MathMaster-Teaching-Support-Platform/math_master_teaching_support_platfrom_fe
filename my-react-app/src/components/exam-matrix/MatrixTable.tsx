@@ -1,32 +1,26 @@
-import { Trash2 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { Trash2, Save, X, Check } from 'lucide-react';
+import { useMemo, useState, useCallback, useRef, useEffect } from 'react';
 import type {
-  BatchUpsertMatrixRowCellsRequest,
+  ExamMatrixPartConfig,
   ExamMatrixTableChapter,
   ExamMatrixTableRow,
+  MatrixCellRequest,
+  BatchUpsertMatrixRowCellsRequest,
 } from '../../types/examMatrix';
-import { EditableCell } from './EditableCell';
+import { getPartLabel, getNumberOfParts } from '../../utils/partHelpers';
 import './matrix-table.css';
-
-type PercentageLevel = 'NHAN_BIET' | 'THONG_HIEU' | 'VAN_DUNG' | 'VAN_DUNG_CAO';
-
-export interface PercentageDraftValues {
-  totalQuestionsTarget: number;
-  cognitiveLevelPercentages: Record<PercentageLevel, number>;
-}
 
 interface MatrixTableProps {
   chapters: ExamMatrixTableChapter[];
   gradeLevel?: string;
   subjectName?: string;
-  numberOfParts?: number;  // ✅ NEW: 1, 2, or 3 (Part I/II/III)
+  parts?: ExamMatrixPartConfig[];
+  numberOfParts?: number;  // DEPRECATED
   matrixTotalPointsTarget?: number;
   canEdit: boolean;
   onRemoveRow: (rowId: string) => Promise<void>;
-  percentageDraft?: PercentageDraftValues;
-  onChangePercentageDraft?: (draft: PercentageDraftValues) => void;
-  onSavePercentages?: (request: BatchUpsertMatrixRowCellsRequest) => Promise<void>;
-  savingPercentages?: boolean;
+  onCellChange?: (matrixId: string, updates: BatchUpsertMatrixRowCellsRequest) => Promise<void>;
+  matrixId?: string;
 }
 
 const cognitiveOrder = ['NB', 'TH', 'VD', 'VDC'] as const;
@@ -39,19 +33,15 @@ const levelLabels: Record<MatrixLevel, string> = {
   VDC: 'Vận dụng cao',
 };
 
-// ✅ NEW: Part labels
-const PART_LABELS: Record<number, string> = {
-  1: 'Phần I (TN)',
-  2: 'Phần II (Đ/S)',
-  3: 'Phần III (TLN)',
-};
+type CellKey = string; // Format: "P1:NB", "P2:TH", etc.
+function makeCellKey(partNumber: number, level: MatrixLevel): CellKey {
+  return `P${partNumber}:${level}`;
+}
 
-// Part type mapping (for future use in cell save operations)
-// const PART_TYPE_MAP: Record<number, string> = {
-//   1: 'MULTIPLE_CHOICE',
-//   2: 'TRUE_FALSE',
-//   3: 'SHORT_ANSWER',
-// };
+type CellId = string; // Format: "rowId:P1:NB"
+function makeCellId(rowId: string, partNumber: number, level: MatrixLevel): CellId {
+  return `${rowId}:P${partNumber}:${level}`;
+}
 
 function normalizeLevel(level: string): MatrixLevel | null {
   const upper = level.toUpperCase();
@@ -62,487 +52,257 @@ function normalizeLevel(level: string): MatrixLevel | null {
   return null;
 }
 
-function getLevelCount(row: ExamMatrixTableRow, level: MatrixLevel, partNumber?: number): number {
+function getLevelCount(row: ExamMatrixTableRow, level: MatrixLevel, partNumber: number): number {
   const fromCells = row.cells?.find(
-    (cell) => normalizeLevel(cell.cognitiveLevel) === level
-      && (partNumber == null || cell.partNumber === partNumber)
+    (cell) => normalizeLevel(cell.cognitiveLevel) === level && cell.partNumber === partNumber
   );
   if (fromCells) return fromCells.questionCount ?? 0;
 
-  const dist = row.countByCognitive;
-  if (!dist) return 0;
-
-  if (level === 'NB') return dist.NB ?? dist.NHAN_BIET ?? dist.REMEMBER ?? 0;
-  if (level === 'TH') return dist.TH ?? dist.THONG_HIEU ?? dist.UNDERSTAND ?? 0;
-  if (level === 'VD') return dist.VD ?? dist.VAN_DUNG ?? dist.APPLY ?? 0;
-  return dist.VDC ?? dist.VAN_DUNG_CAO ?? dist.ANALYZE ?? 0;
+  if (partNumber === 1) {
+    const dist = row.countByCognitive;
+    if (!dist) return 0;
+    if (level === 'NB') return dist.NB ?? dist.NHAN_BIET ?? dist.REMEMBER ?? 0;
+    if (level === 'TH') return dist.TH ?? dist.THONG_HIEU ?? dist.UNDERSTAND ?? 0;
+    if (level === 'VD') return dist.VD ?? dist.VAN_DUNG ?? dist.APPLY ?? 0;
+    return dist.VDC ?? dist.VAN_DUNG_CAO ?? dist.ANALYZE ?? 0;
+  }
+  return 0;
 }
 
-function allocateByPercent(total: number, percentages: number[]): number[] {
-  const safeTotal = Number.isFinite(total) ? Math.max(0, Math.round(total)) : 0;
-  if (safeTotal === 0) return percentages.map(() => 0);
-
-  const weights = percentages.map((value) => (Number.isFinite(value) ? Math.max(0, value) : 0));
-  const weightSum = weights.reduce((sum, value) => sum + value, 0);
-  const normalized =
-    weightSum > 0
-      ? weights.map((value) => value / weightSum)
-      : weights.map(() => 1 / Math.max(weights.length, 1));
-
-  const raw = normalized.map((ratio) => ratio * safeTotal);
-  const base = raw.map((value) => Math.floor(value));
-  let remainder = safeTotal - base.reduce((sum, value) => sum + value, 0);
-
-  const ranked = raw
-    .map((value, index) => ({ index, fraction: value - Math.floor(value) }))
-    .sort((a, b) => b.fraction - a.fraction);
-
-  let pointer = 0;
-  while (remainder > 0 && ranked.length > 0) {
-    const index = ranked[pointer % ranked.length].index;
-    base[index] += 1;
-    remainder -= 1;
-    pointer += 1;
+// Redistribution algorithm (available for future percentage editing feature)
+// Currently not used but will be needed when implementing editable percentage rows/columns
+// @ts-expect-error - Function defined for future use
+function redistribute(cells: number[], newTotal: number): number[] {
+  const oldTotal = cells.reduce((a, b) => a + b, 0);
+  if (oldTotal === 0) {
+    // Distribute evenly
+    const each = Math.floor(newTotal / cells.length);
+    const remainder = newTotal - each * cells.length;
+    return cells.map((_, i) => each + (i < remainder ? 1 : 0));
   }
-
-  return base;
-}
-
-function distributeByRowAndColumn(rowTargets: number[], colTargets: number[]): number[][] {
-  const rowCount = rowTargets.length;
-  const colCount = colTargets.length;
-  const matrix = Array.from({ length: rowCount }, () => Array.from({ length: colCount }, () => 0));
-
-  const remainingRows = [...rowTargets];
-  const remainingCols = [...colTargets];
-  let remainingTotal = remainingRows.reduce((sum, value) => sum + value, 0);
-
-  for (let rowIndex = 0; rowIndex < rowCount; rowIndex += 1) {
-    for (let colIndex = 0; colIndex < colCount; colIndex += 1) {
-      let nextValue = 0;
-
-      if (rowIndex === rowCount - 1 && colIndex === colCount - 1) {
-        nextValue = Math.min(remainingRows[rowIndex], remainingCols[colIndex]);
-      } else if (rowIndex === rowCount - 1) {
-        nextValue = remainingCols[colIndex];
-      } else if (colIndex === colCount - 1) {
-        nextValue = remainingRows[rowIndex];
-      } else if (remainingTotal > 0) {
-        const expected =
-          (remainingRows[rowIndex] * remainingCols[colIndex]) / Math.max(remainingTotal, 1);
-        nextValue = Math.min(
-          remainingRows[rowIndex],
-          remainingCols[colIndex],
-          Math.max(0, Math.round(expected))
-        );
-      }
-
-      const value = Math.max(0, nextValue);
-      matrix[rowIndex][colIndex] = value;
-      remainingRows[rowIndex] -= value;
-      remainingCols[colIndex] -= value;
-      remainingTotal -= value;
-    }
-  }
-
-  return matrix;
+  // Proportional redistribution
+  const result = cells.map(c => Math.round((c / oldTotal) * newTotal));
+  // Fix rounding error on last cell
+  const diff = newTotal - result.reduce((a, b) => a + b, 0);
+  result[result.length - 1] += diff;
+  return result;
 }
 
 export function MatrixTable({
   chapters,
   gradeLevel,
   subjectName: _subjectName,
-  numberOfParts = 1,  // ✅ NEW: Default to 1 part (MCQ only)
-  matrixTotalPointsTarget,
+  parts,
+  numberOfParts: _numberOfParts,
+  matrixTotalPointsTarget: _matrixTotalPointsTarget,
   canEdit,
   onRemoveRow,
-  percentageDraft,
-  onChangePercentageDraft,
-  onSavePercentages,
-  savingPercentages,
+  onCellChange,
+  matrixId,
 }: Readonly<MatrixTableProps>) {
   const [deletingRowId, setDeletingRowId] = useState<string | null>(null);
-  const [rowPercentages, setRowPercentages] = useState<Record<string, number>>({});
-  const [manualCellsByRow, setManualCellsByRow] = useState<Record<
-    string,
-    Record<MatrixLevel, number>
-  > | null>(null);
-  const [previewFromPercent, setPreviewFromPercent] = useState(false);
+  
+  // Inline editing state
+  const [editingCell, setEditingCell] = useState<CellId | null>(null);
+  const [editValue, setEditValue] = useState<string>('');
+  const inputRef = useRef<HTMLInputElement>(null);
+  
+  // Local state for optimistic updates
+  const [localCells, setLocalCells] = useState<Map<CellId, number>>(new Map());
+  const [dirtyCells, setDirtyCells] = useState<Set<CellId>>(new Set());
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  
+  // Debounce timer
+  const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const DEBOUNCE_MS = 500;
 
-  const flatRows = useMemo(
-    () =>
-      chapters.flatMap((chapter) =>
-        chapter.rows.map((row) => ({
-          chapter,
-          row,
-        }))
-      ),
-    [chapters]
-  );
+  const effectiveParts = (parts && parts.length > 0) ? parts : [
+    { partNumber: 1, questionType: 'MULTIPLE_CHOICE' as const, name: undefined },
+    { partNumber: 2, questionType: 'TRUE_FALSE' as const, name: undefined },
+    { partNumber: 3, questionType: 'SHORT_ANSWER' as const, name: undefined },
+  ].slice(0, _numberOfParts || 3);
+  const numberOfParts = getNumberOfParts(effectiveParts);
 
+  // Initialize local cells from chapters
   useEffect(() => {
-    if (flatRows.length === 0) {
-      setRowPercentages({});
-      return;
-    }
-
-    setRowPercentages((prev) => {
-      const hasAllExisting = flatRows.every(({ row }) => prev[row.rowId] !== undefined);
-      if (hasAllExisting && Object.keys(prev).length === flatRows.length) {
-        return prev;
-      }
-
-      const totalExistingQuestions = flatRows.reduce(
-        (sum, item) => sum + Math.max(0, item.row.rowTotalQuestions || 0),
-        0
-      );
-
-      const defaults: Record<string, number> = {};
-      if (totalExistingQuestions > 0) {
-        for (const item of flatRows) {
-          defaults[item.row.rowId] =
-            ((item.row.rowTotalQuestions || 0) / totalExistingQuestions) * 100;
-        }
-      } else {
-        const equal = 100 / flatRows.length;
-        for (const item of flatRows) {
-          defaults[item.row.rowId] = equal;
+    const newLocalCells = new Map<CellId, number>();
+    for (const chapter of chapters) {
+      for (const row of chapter.rows) {
+        for (let p = 1; p <= numberOfParts; p++) {
+          for (const level of cognitiveOrder) {
+            const cellId = makeCellId(row.rowId, p, level);
+            const count = getLevelCount(row, level, p);
+            newLocalCells.set(cellId, count);
+          }
         }
       }
-
-      return defaults;
-    });
-  }, [flatRows]);
-
-  const calculatedCellsByRow = useMemo(() => {
-    if (!percentageDraft || flatRows.length === 0)
-      return {} as Record<string, Record<MatrixLevel, number>>;
-
-    const colPercentages = [
-      percentageDraft.cognitiveLevelPercentages.NHAN_BIET,
-      percentageDraft.cognitiveLevelPercentages.THONG_HIEU,
-      percentageDraft.cognitiveLevelPercentages.VAN_DUNG,
-      percentageDraft.cognitiveLevelPercentages.VAN_DUNG_CAO,
-    ];
-
-    const rowPercentagesList = flatRows.map(
-      ({ row }) => Number(rowPercentages[row.rowId] ?? 0) || 0
-    );
-    const rowTargets = allocateByPercent(percentageDraft.totalQuestionsTarget, rowPercentagesList);
-    const colTargets = allocateByPercent(percentageDraft.totalQuestionsTarget, colPercentages);
-    const matrix = distributeByRowAndColumn(rowTargets, colTargets);
-
-    return matrix.reduce<Record<string, Record<MatrixLevel, number>>>((acc, values, rowIndex) => {
-      acc[flatRows[rowIndex].row.rowId] = {
-        NB: values[0] ?? 0,
-        TH: values[1] ?? 0,
-        VD: values[2] ?? 0,
-        VDC: values[3] ?? 0,
-      };
-      return acc;
-    }, {});
-  }, [flatRows, percentageDraft, rowPercentages]);
-
-  const serverCellsByRow = useMemo(() => {
-    const cellsByRow: Record<string, Record<MatrixLevel, number>> = {};
-    for (const item of flatRows) {
-      cellsByRow[item.row.rowId] = {
-        NB: getLevelCount(item.row, 'NB'),
-        TH: getLevelCount(item.row, 'TH'),
-        VD: getLevelCount(item.row, 'VD'),
-        VDC: getLevelCount(item.row, 'VDC'),
-      };
     }
-    return cellsByRow;
-  }, [flatRows]);
+    setLocalCells(newLocalCells);
+    setDirtyCells(new Set());
+  }, [chapters, numberOfParts]);
 
-  const displayedCellsByRow = useMemo(() => {
-    if (manualCellsByRow) return manualCellsByRow;
-    if (previewFromPercent && percentageDraft) return calculatedCellsByRow;
-    return serverCellsByRow;
-  }, [
-    calculatedCellsByRow,
-    manualCellsByRow,
-    percentageDraft,
-    previewFromPercent,
-    serverCellsByRow,
-  ]);
+  // Get cell value (local or from chapters)
+  const getCellValue = useCallback((rowId: string, partNumber: number, level: MatrixLevel): number => {
+    const cellId = makeCellId(rowId, partNumber, level);
+    return localCells.get(cellId) ?? 0;
+  }, [localCells]);
 
-  useEffect(() => {
-    if (!savingPercentages) {
-      setManualCellsByRow(null);
-      setPreviewFromPercent(false);
-    }
-  }, [savingPercentages]);
-
-  // Calculate totals
-  const { columnTotals, grandTotal } = useMemo(() => {
-    const columnTotals = { NB: 0, TH: 0, VD: 0, VDC: 0, total: 0 };
+  // Calculate totals from local state
+  const { columnTotals, rowTotals, grandTotal } = useMemo(() => {
+    const colTotals: Record<CellKey, number> = {};
+    const rowTotals: Record<string, number> = {};
+    let total = 0;
 
     for (const chapter of chapters) {
       for (const row of chapter.rows) {
-        for (const level of cognitiveOrder) {
-          const count = percentageDraft
-            ? (displayedCellsByRow[row.rowId]?.[level] ?? 0)
-            : getLevelCount(row, level);
-          columnTotals[level] += count;
+        let rowTotal = 0;
+        for (let p = 1; p <= numberOfParts; p++) {
+          for (const level of cognitiveOrder) {
+            const ck = makeCellKey(p, level);
+            const count = getCellValue(row.rowId, p, level);
+            colTotals[ck] = (colTotals[ck] ?? 0) + count;
+            rowTotal += count;
+            total += count;
+          }
         }
-        const rowTotal = percentageDraft
-          ? cognitiveOrder.reduce(
-              (sum, level) => sum + (displayedCellsByRow[row.rowId]?.[level] ?? 0),
-              0
-            )
-          : row.rowTotalQuestions || 0;
-        columnTotals.total += rowTotal;
+        rowTotals[row.rowId] = rowTotal;
       }
     }
 
-    return {
-      columnTotals,
-      grandTotal: columnTotals.total,
+    return { columnTotals: colTotals, rowTotals, grandTotal: total };
+  }, [chapters, numberOfParts, getCellValue]);
+
+  // Use refs to avoid stale closure in setTimeout
+  const dirtyCellsRef = useRef<Set<CellId>>(dirtyCells);
+  const localCellsRef = useRef<Map<CellId, number>>(localCells);
+  
+  useEffect(() => { 
+    dirtyCellsRef.current = dirtyCells; 
+  }, [dirtyCells]);
+  
+  useEffect(() => { 
+    localCellsRef.current = localCells; 
+  }, [localCells]);
+
+  // Debounced save
+  const scheduleSave = useCallback(() => {
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
+    }
+    
+    saveTimerRef.current = setTimeout(() => {
+      void performSave();
+    }, DEBOUNCE_MS);
+  }, []); // [] is now SAFE because performSave reads from refs
+
+  // Map short codes to full enum values for backend
+  const mapLevelToBackend = (level: MatrixLevel): import('../../types/examMatrix').MatrixCognitiveLevel => {
+    const mapping: Record<MatrixLevel, import('../../types/examMatrix').MatrixCognitiveLevel> = {
+      'NB': 'NHAN_BIET',
+      'TH': 'THONG_HIEU',
+      'VD': 'VAN_DUNG',
+      'VDC': 'VAN_DUNG_CAO',
     };
-  }, [chapters, displayedCellsByRow, percentageDraft]);
-
-  const totalPercentage = useMemo(() => {
-    if (!percentageDraft) return 0;
-    const p = percentageDraft.cognitiveLevelPercentages;
-    return p.NHAN_BIET + p.THONG_HIEU + p.VAN_DUNG + p.VAN_DUNG_CAO;
-  }, [percentageDraft]);
-
-  const estimatedDistribution = useMemo(() => {
-    if (!percentageDraft) {
-      return {
-        NHAN_BIET: 0,
-        THONG_HIEU: 0,
-        VAN_DUNG: 0,
-        VAN_DUNG_CAO: 0,
-      };
-    }
-    const totalQuestions = Number.isFinite(percentageDraft.totalQuestionsTarget)
-      ? Math.max(0, percentageDraft.totalQuestionsTarget)
-      : 0;
-    const p = percentageDraft.cognitiveLevelPercentages;
-    return {
-      NHAN_BIET: Math.round((totalQuestions * p.NHAN_BIET) / 100),
-      THONG_HIEU: Math.round((totalQuestions * p.THONG_HIEU) / 100),
-      VAN_DUNG: Math.round((totalQuestions * p.VAN_DUNG) / 100),
-      VAN_DUNG_CAO: Math.round((totalQuestions * p.VAN_DUNG_CAO) / 100),
-    };
-  }, [percentageDraft]);
-
-  const canShowPercentageControls = !!percentageDraft;
-
-  const isPercentageTotalValid = Math.abs(totalPercentage - 100) <= 0.01;
-  const totalRowPercentage = useMemo(
-    () =>
-      flatRows.reduce((sum, item) => sum + (Number(rowPercentages[item.row.rowId] ?? 0) || 0), 0),
-    [flatRows, rowPercentages]
-  );
-  const isRowPercentageTotalValid = Math.abs(totalRowPercentage - 100) <= 0.01;
-
-  const updateDraft = (partial: Partial<PercentageDraftValues>) => {
-    if (!percentageDraft || !onChangePercentageDraft) return;
-    setManualCellsByRow(null);
-    setPreviewFromPercent(true);
-    onChangePercentageDraft({
-      ...percentageDraft,
-      ...partial,
-    });
+    return mapping[level];
   };
 
-  const updateLevel = (level: PercentageLevel, value: number) => {
-    if (!percentageDraft || !onChangePercentageDraft) return;
-    setManualCellsByRow(null);
-    setPreviewFromPercent(true);
+  const performSave = async () => {
+    const currentDirty = dirtyCellsRef.current;
+    const currentLocal = localCellsRef.current;
+    
+    if (!onCellChange || !matrixId || currentDirty.size === 0) return;
 
-    const allLevels: PercentageLevel[] = ['NHAN_BIET', 'THONG_HIEU', 'VAN_DUNG', 'VAN_DUNG_CAO'];
-    const prev = percentageDraft.cognitiveLevelPercentages;
-    const safeValue = Math.max(0, Math.min(100, value));
-    const oldValue = prev[level];
-    const diff = safeValue - oldValue;
+    setSaving(true);
+    setSaveError(null);
 
-    // Auto-adjust: find the level with the highest percentage (excluding the changed one) and adjust it
-    const others = allLevels.filter((l) => l !== level);
-    const otherSum = others.reduce((sum, l) => sum + prev[l], 0);
-
-    let newPercentages: Record<PercentageLevel, number>;
-    if (diff === 0) {
-      newPercentages = { ...prev, [level]: safeValue };
-    } else if (Math.abs(otherSum) < 0.001) {
-      // All others are 0; distribute diff equally among them
-      const adjust = -diff / others.length;
-      newPercentages = { ...prev, [level]: safeValue };
-      for (const l of others) newPercentages[l] = Math.max(0, prev[l] + adjust);
-    } else {
-      // Adjust proportionally from the others, clamped to 0
-      newPercentages = { ...prev, [level]: safeValue };
-      let remaining = diff;
-      // Sort others by descending value to adjust largest first
-      const sortedOthers = [...others].sort((a, b) => prev[b] - prev[a]);
-      for (const l of sortedOthers) {
-        const maxReduce = prev[l];
-        const adjust = Math.min(remaining, maxReduce);
-        newPercentages[l] = Math.max(0, prev[l] - adjust);
-        remaining -= adjust;
-        if (Math.abs(remaining) < 0.0001) break;
-      }
-    }
-
-    onChangePercentageDraft({
-      ...percentageDraft,
-      cognitiveLevelPercentages: newPercentages,
-    });
-  };
-
-  const updateRowPercentage = (rowId: string, value: number) => {
-    setManualCellsByRow(null);
-    setPreviewFromPercent(true);
-    setRowPercentages((previous) => ({
-      ...previous,
-      [rowId]: value,
-    }));
-  };
-
-  const syncPercentagesFromCells = (cellsByRow: Record<string, Record<MatrixLevel, number>>) => {
-    if (!percentageDraft || !onChangePercentageDraft || flatRows.length === 0) return;
-
-    const totalQuestions = flatRows.reduce(
-      (sum, item) =>
-        sum +
-        cognitiveOrder.reduce(
-          (rowSum, level) => rowSum + (cellsByRow[item.row.rowId]?.[level] ?? 0),
-          0
-        ),
-      0
-    );
-
-    if (totalQuestions <= 0) {
-      return;
-    }
-
-    const nextRowPercentages: Record<string, number> = {};
-    for (const item of flatRows) {
-      const rowSum = cognitiveOrder.reduce(
-        (sum, level) => sum + (cellsByRow[item.row.rowId]?.[level] ?? 0),
-        0
-      );
-      nextRowPercentages[item.row.rowId] = Number(((rowSum / totalQuestions) * 100).toFixed(2));
-    }
-    setRowPercentages(nextRowPercentages);
-
-    const colSums = {
-      NB: 0,
-      TH: 0,
-      VD: 0,
-      VDC: 0,
-    };
-
-    for (const item of flatRows) {
-      colSums.NB += cellsByRow[item.row.rowId]?.NB ?? 0;
-      colSums.TH += cellsByRow[item.row.rowId]?.TH ?? 0;
-      colSums.VD += cellsByRow[item.row.rowId]?.VD ?? 0;
-      colSums.VDC += cellsByRow[item.row.rowId]?.VDC ?? 0;
-    }
-
-    onChangePercentageDraft({
-      totalQuestionsTarget: totalQuestions,
-      cognitiveLevelPercentages: {
-        NHAN_BIET: Number(((colSums.NB / totalQuestions) * 100).toFixed(2)),
-        THONG_HIEU: Number(((colSums.TH / totalQuestions) * 100).toFixed(2)),
-        VAN_DUNG: Number(((colSums.VD / totalQuestions) * 100).toFixed(2)),
-        VAN_DUNG_CAO: Number(((colSums.VDC / totalQuestions) * 100).toFixed(2)),
-      },
-    });
-  };
-
-  const handleCellChange = (rowId: string, level: MatrixLevel, newValue: number) => {
-    if (!percentageDraft || !canEdit) return;
-
-    const base = manualCellsByRow ?? calculatedCellsByRow;
-    const nextCellsByRow: Record<string, Record<MatrixLevel, number>> = {};
-
-    for (const item of flatRows) {
-      const current = base[item.row.rowId] ?? { NB: 0, TH: 0, VD: 0, VDC: 0 };
-      nextCellsByRow[item.row.rowId] = {
-        NB: current.NB,
-        TH: current.TH,
-        VD: current.VD,
-        VDC: current.VDC,
-      };
-    }
-
-    const safeValue = Math.max(0, Math.round(newValue));
-    if (!nextCellsByRow[rowId]) {
-      nextCellsByRow[rowId] = { NB: 0, TH: 0, VD: 0, VDC: 0 };
-    }
-    nextCellsByRow[rowId][level] = safeValue;
-
-    setManualCellsByRow(nextCellsByRow);
-    setPreviewFromPercent(false);
-    syncPercentagesFromCells(nextCellsByRow);
-  };
-
-  const getCellChangeHandler = (rowId: string, level: MatrixLevel) => {
-    return (nextValue: number) => {
-      handleCellChange(rowId, level, nextValue);
-    };
-  };
-
-  const handleSaveCellBatch = async () => {
-    if (!percentageDraft || !onSavePercentages || flatRows.length === 0) return;
-
-    const pointsPerQuestionBase =
-      (matrixTotalPointsTarget && matrixTotalPointsTarget > 0
-        ? matrixTotalPointsTarget
-        : percentageDraft.totalQuestionsTarget) / Math.max(percentageDraft.totalQuestionsTarget, 1);
-    const pointsPerQuestion = Math.max(0.01, Number(pointsPerQuestionBase.toFixed(4)));
-
-    const request: BatchUpsertMatrixRowCellsRequest = {
-      rows: flatRows.map(({ row }) => {
-        const calculated = displayedCellsByRow[row.rowId] ?? { NB: 0, TH: 0, VD: 0, VDC: 0 };
+    try {
+      // Group dirty cells by row
+      const rowUpdates = new Map<string, MatrixCellRequest[]>();
+      
+      for (const cellId of currentDirty) {
+        const [rowId, partStr, level] = cellId.split(':');
+        const partNumber = parseInt(partStr.substring(1), 10);
+        const count = currentLocal.get(cellId) ?? 0;
         
-        // ✅ NEW: For multi-part matrices, create cells for each part × cognitive level
-        const cells = [];
-        for (let partNumber = 1; partNumber <= numberOfParts; partNumber++) {
-          cells.push(
-            {
-              cognitiveLevel: 'NHAN_BIET' as const,
-              partNumber,  // ✅ Include partNumber
-              questionCount: calculated.NB,
-              pointsPerQuestion,
-            },
-            {
-              cognitiveLevel: 'THONG_HIEU' as const,
-              partNumber,  // ✅ Include partNumber
-              questionCount: calculated.TH,
-              pointsPerQuestion,
-            },
-            {
-              cognitiveLevel: 'VAN_DUNG' as const,
-              partNumber,  // ✅ Include partNumber
-              questionCount: calculated.VD,
-              pointsPerQuestion,
-            },
-            {
-              cognitiveLevel: 'VAN_DUNG_CAO' as const,
-              partNumber,  // ✅ Include partNumber
-              questionCount: calculated.VDC,
-              pointsPerQuestion,
-            }
-          );
+        if (!rowUpdates.has(rowId)) {
+          rowUpdates.set(rowId, []);
         }
         
-        return {
-          rowId: row.rowId,
+        rowUpdates.get(rowId)!.push({
+          partNumber,
+          cognitiveLevel: mapLevelToBackend(level as MatrixLevel),
+          questionCount: count,
+          pointsPerQuestion: 1, // Default points per question
+        });
+      }
+
+      // Build batch request
+      const request: BatchUpsertMatrixRowCellsRequest = {
+        rows: Array.from(rowUpdates.entries()).map(([rowId, cells]) => ({
+          rowId,
           cells,
-        };
-      }),
-    };
+        })),
+      };
 
-    await onSavePercentages(request);
-    setManualCellsByRow(null);
-    setPreviewFromPercent(false);
+      await onCellChange(matrixId, request);
+      setDirtyCells(new Set());
+      setSaveError(null);
+    } catch (error) {
+      console.error('Failed to save cells:', error);
+      setSaveError(error instanceof Error ? error.message : 'Failed to save');
+    } finally {
+      setSaving(false);
+    }
   };
+
+  // Update cell value
+  const updateCellValue = useCallback((rowId: string, partNumber: number, level: MatrixLevel, newValue: number) => {
+    const cellId = makeCellId(rowId, partNumber, level);
+    const clampedValue = Math.max(0, Math.floor(newValue));
+    
+    setLocalCells(prev => {
+      const next = new Map(prev);
+      next.set(cellId, clampedValue);
+      return next;
+    });
+    
+    setDirtyCells(prev => new Set(prev).add(cellId));
+    scheduleSave();
+  }, [scheduleSave]);
+
+  // Start editing a cell
+  const startEdit = useCallback((rowId: string, partNumber: number, level: MatrixLevel) => {
+    if (!canEdit) return;
+    const cellId = makeCellId(rowId, partNumber, level);
+    const currentValue = getCellValue(rowId, partNumber, level);
+    setEditingCell(cellId);
+    setEditValue(currentValue.toString());
+  }, [canEdit, getCellValue]);
+
+  // Commit edit
+  const commitEdit = useCallback((rowId: string, partNumber: number, level: MatrixLevel) => {
+    const newValue = parseInt(editValue, 10);
+    if (!isNaN(newValue)) {
+      updateCellValue(rowId, partNumber, level, newValue);
+    }
+    setEditingCell(null);
+    setEditValue('');
+  }, [editValue, updateCellValue]);
+
+  // Cancel edit
+  const cancelEdit = useCallback(() => {
+    setEditingCell(null);
+    setEditValue('');
+  }, []);
+
+  // Focus input when editing starts
+  useEffect(() => {
+    if (editingCell && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [editingCell]);
 
   const handleRemoveRow = async (rowId: string) => {
     if (!globalThis.confirm('Bạn có chắc muốn xóa dòng này?')) return;
@@ -557,13 +317,39 @@ export function MatrixTable({
   if (chapters.length === 0) {
     return (
       <div className="matrix-empty">
-        Ma trận chưa có dòng nào. Hãy thêm dòng từ ngân hàng câu hỏi.
+        Ma trận chưa có dòng nào. Hãy thêm dòng mới.
       </div>
     );
   }
 
   return (
     <div className="matrix-container">
+      {/* Save status indicator */}
+      {canEdit && onCellChange && (
+        <div className="matrix-save-status">
+          {saving && (
+            <span className="matrix-save-status--saving">
+              <Save size={14} /> Đang lưu...
+            </span>
+          )}
+          {!saving && dirtyCells.size > 0 && (
+            <span className="matrix-save-status--pending">
+              <Save size={14} /> {dirtyCells.size} thay đổi chưa lưu
+            </span>
+          )}
+          {!saving && dirtyCells.size === 0 && !saveError && (
+            <span className="matrix-save-status--saved">
+              <Check size={14} /> Đã lưu
+            </span>
+          )}
+          {saveError && (
+            <span className="matrix-save-status--error">
+              <X size={14} /> Lỗi: {saveError}
+            </span>
+          )}
+        </div>
+      )}
+
       <div className="matrix-scroll-wrapper">
         <table className="matrix-table">
           {/* Header */}
@@ -573,25 +359,24 @@ export function MatrixTable({
                 Lớp
               </th>
               <th className="matrix-th matrix-th--chapter" rowSpan={2}>
-                Chương
+                Chủ đề
               </th>
-              <th className="matrix-th matrix-th--reference" rowSpan={2}>
-                Trích dẫn
-              </th>
-              {/* ✅ NEW: Part column groups */}
-              {Array.from({ length: numberOfParts }, (_, i) => i + 1).map((partNum) => (
+              {effectiveParts.map((part) => (
                 <th
-                  key={partNum}
+                  key={part.partNumber}
                   className="matrix-th matrix-th--part-group"
                   colSpan={4}
                 >
-                  {PART_LABELS[partNum] || `Phần ${partNum}`}
+                  {getPartLabel(part)}
                 </th>
               ))}
               <th className="matrix-th matrix-th--total-type" rowSpan={2}>
                 Tổng
                 <br />
-                dạng bài
+                chủ đề
+              </th>
+              <th className="matrix-th matrix-th--total-type" rowSpan={2}>
+                Tỉ lệ
               </th>
               {canEdit && (
                 <th className="matrix-th matrix-th--actions" rowSpan={2}>
@@ -600,11 +385,10 @@ export function MatrixTable({
               )}
             </tr>
             <tr>
-              {/* ✅ NEW: Cognitive levels repeated for each part */}
-              {Array.from({ length: numberOfParts }, (_, i) => i + 1).map((partNum) =>
+              {effectiveParts.map((part) =>
                 cognitiveOrder.map((level) => (
                   <th
-                    key={`${partNum}-${level}`}
+                    key={`${part.partNumber}-${level}`}
                     className={`matrix-th matrix-th--level matrix-th--level-${level.toLowerCase()}`}
                   >
                     <div className="matrix-level-header">
@@ -620,26 +404,19 @@ export function MatrixTable({
           {/* Body */}
           <tbody className="matrix-body">
             {chapters.map((chapter, chapterIndex) => {
-              const chapterName = chapter.chapterName || 'Chương không xác định';
+              const chapterName = chapter.chapterName || 'Chủ đề không xác định';
               const rowCount = chapter.rows.length;
 
               return chapter.rows.map((row, rowIndex) => {
                 const isFirstRowInChapter = rowIndex === 0;
-                const rowTotal = percentageDraft
-                  ? cognitiveOrder.reduce(
-                      (sum, level) => sum + (displayedCellsByRow[row.rowId]?.[level] ?? 0),
-                      0
-                    )
-                  : row.rowTotalQuestions || 0;
+                const rowTotal = rowTotals[row.rowId] ?? 0;
 
-                // Get grade from multiple possible sources
                 const displayGrade =
                   gradeLevel || row.schoolGradeName || row.gradeLevel || row.schoolGrade || 'N/A';
 
-                // Get chapter name from multiple possible sources
                 const displayChapter =
-                  chapterName === 'Chương không xác định'
-                    ? row.chapterName || row.chapter || 'Chương không xác định'
+                  chapterName === 'Chủ đề không xác định'
+                    ? row.chapterName || row.chapter || 'Chủ đề không xác định'
                     : chapterName;
 
                 return (
@@ -647,7 +424,6 @@ export function MatrixTable({
                     key={row.rowId}
                     className={`matrix-row ${chapterIndex % 2 === 0 ? 'matrix-row--even' : 'matrix-row--odd'}`}
                   >
-                    {/* Grade (only show on first row of first chapter) */}
                     {chapterIndex === 0 && isFirstRowInChapter && (
                       <td
                         className="matrix-td matrix-td--grade"
@@ -657,70 +433,64 @@ export function MatrixTable({
                       </td>
                     )}
 
-                    {/* Chapter (rowspan for all rows in chapter) */}
                     {isFirstRowInChapter && (
                       <td className="matrix-td matrix-td--chapter" rowSpan={rowCount}>
                         <div className="matrix-chapter-cell">{displayChapter}</div>
                       </td>
                     )}
 
-                    {/* Reference */}
-                    <td className="matrix-td matrix-td--reference">
-                      <div className="matrix-reference-cell">
-                        {row.questionTypeName || row.subject_name || row.subjectName || row.subject || '-'}
-                      </div>
-                    </td>
-
-                    {/* ✅ NEW: Cognitive Levels for each Part */}
-                    {Array.from({ length: numberOfParts }, (_, i) => i + 1).map((partNum) =>
+                    {/* Editable cells */}
+                    {effectiveParts.map((part) =>
                       cognitiveOrder.map((level) => {
-                        const count = percentageDraft
-                          ? (displayedCellsByRow[row.rowId]?.[level] ?? 0)
-                          : getLevelCount(row, level, partNum);
+                        const cellId = makeCellId(row.rowId, part.partNumber, level);
+                        const count = getCellValue(row.rowId, part.partNumber, level);
+                        const isEditing = editingCell === cellId;
+                        const isDirty = dirtyCells.has(cellId);
+
                         return (
                           <td
-                            key={`${partNum}-${level}`}
+                            key={`${part.partNumber}-${level}`}
                             className={`matrix-td matrix-td--level matrix-td--level-${level.toLowerCase()} ${
                               count === 0 ? 'matrix-td--empty' : ''
-                            }`}
-                            data-part={partNum}
+                            } ${isDirty ? 'matrix-td--dirty' : ''} ${canEdit ? 'matrix-td--editable' : ''}`}
+                            data-part={part.partNumber}
+                            onClick={() => !isEditing && startEdit(row.rowId, part.partNumber, level)}
                           >
-                            <EditableCell
-                              value={count}
-                              editable={canEdit && !!percentageDraft}
-                              onChange={getCellChangeHandler(row.rowId, level)}
-                            />
+                            {isEditing ? (
+                              <input
+                                ref={inputRef}
+                                type="number"
+                                min="0"
+                                className="matrix-cell-input"
+                                value={editValue}
+                                onChange={(e) => setEditValue(e.target.value)}
+                                onBlur={() => commitEdit(row.rowId, part.partNumber, level)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    commitEdit(row.rowId, part.partNumber, level);
+                                  } else if (e.key === 'Escape') {
+                                    cancelEdit();
+                                  }
+                                }}
+                              />
+                            ) : (
+                              <div className="matrix-cell-value">{count}</div>
+                            )}
                           </td>
                         );
                       })
                     )}
 
-                    {/* Row Total */}
+                    <td className="matrix-td matrix-td--total-type">
+                      <div className="matrix-total-cell">{rowTotal}</div>
+                    </td>
+
                     <td className="matrix-td matrix-td--total-type">
                       <div className="matrix-total-cell">
-                        {percentageDraft ? (
-                          <div style={{ width: '100%' }}>
-                            <input
-                              className="matrix-percentage-input"
-                              type="number"
-                              min={0}
-                              max={100}
-                              step={0.1}
-                              value={Number((rowPercentages[row.rowId] ?? 0).toFixed(2))}
-                              disabled={!canEdit}
-                              onChange={(event) =>
-                                updateRowPercentage(row.rowId, Number(event.target.value))
-                              }
-                            />
-                            <p className="matrix-percentage-preview">~ {rowTotal} câu</p>
-                          </div>
-                        ) : (
-                          rowTotal
-                        )}
+                        {grandTotal > 0 ? Math.round((rowTotal / grandTotal) * 100) : 0}%
                       </div>
                     </td>
 
-                    {/* Actions */}
                     {canEdit && (
                       <td className="matrix-td matrix-td--actions">
                         <button
@@ -740,148 +510,60 @@ export function MatrixTable({
 
             {/* Grand Total Row */}
             <tr className="matrix-row matrix-row--grand-total">
-              <td className="matrix-td matrix-td--total-label" colSpan={3}>
+              <td className="matrix-td matrix-td--total-label" colSpan={2}>
                 <div className="matrix-grand-total-label">TỔNG CỘNG</div>
               </td>
-              {cognitiveOrder.map((level) => (
-                <td
-                  key={level}
-                  className={`matrix-td matrix-td--level matrix-td--level-${level.toLowerCase()} matrix-td--grand-total`}
-                >
-                  <div className="matrix-grand-total-cell">{columnTotals[level]}</div>
-                </td>
-              ))}
+              {effectiveParts.map((part) =>
+                cognitiveOrder.map((level) => {
+                  const ck = makeCellKey(part.partNumber, level);
+                  return (
+                    <td
+                      key={`${part.partNumber}-${level}`}
+                      className={`matrix-td matrix-td--level matrix-td--level-${level.toLowerCase()} matrix-td--grand-total`}
+                    >
+                      <div className="matrix-grand-total-cell">{columnTotals[ck] ?? 0}</div>
+                    </td>
+                  );
+                })
+              )}
               <td className="matrix-td matrix-td--total-type matrix-td--grand-total">
                 <div className="matrix-grand-total-cell">{grandTotal}</div>
+              </td>
+              <td className="matrix-td matrix-td--total-type matrix-td--grand-total">
+                <div className="matrix-grand-total-cell">{grandTotal > 0 ? '100%' : '0%'}</div>
               </td>
               {canEdit && <td className="matrix-td matrix-td--actions"></td>}
             </tr>
 
-            {canShowPercentageControls && (
-              <tr className="matrix-row matrix-row--percentage-config">
-                <td className="matrix-td matrix-td--percentage-label" colSpan={3}>
-                  <div className="matrix-grand-total-label">CẤU HÌNH PHẦN TRĂM</div>
-                  <p className="matrix-percentage-hint">
-                    Nhập % theo mức độ và tổng số câu cần tạo ở dòng này.
-                  </p>
-                </td>
-
-                <td className="matrix-td matrix-td--percentage-cell">
-                  <input
-                    className="matrix-percentage-input"
-                    type="number"
-                    min={0}
-                    max={100}
-                    step={0.1}
-                    value={percentageDraft.cognitiveLevelPercentages.NHAN_BIET}
-                    disabled={!canEdit}
-                    onChange={(event) => updateLevel('NHAN_BIET', Number(event.target.value))}
-                  />
-                  <span className="matrix-percentage-suffix">%</span>
-                  <p className="matrix-percentage-preview">
-                    ~ {estimatedDistribution.NHAN_BIET} câu
-                  </p>
-                </td>
-
-                <td className="matrix-td matrix-td--percentage-cell">
-                  <input
-                    className="matrix-percentage-input"
-                    type="number"
-                    min={0}
-                    max={100}
-                    step={0.1}
-                    value={percentageDraft.cognitiveLevelPercentages.THONG_HIEU}
-                    disabled={!canEdit}
-                    onChange={(event) => updateLevel('THONG_HIEU', Number(event.target.value))}
-                  />
-                  <span className="matrix-percentage-suffix">%</span>
-                  <p className="matrix-percentage-preview">
-                    ~ {estimatedDistribution.THONG_HIEU} câu
-                  </p>
-                </td>
-
-                <td className="matrix-td matrix-td--percentage-cell">
-                  <input
-                    className="matrix-percentage-input"
-                    type="number"
-                    min={0}
-                    max={100}
-                    step={0.1}
-                    value={percentageDraft.cognitiveLevelPercentages.VAN_DUNG}
-                    disabled={!canEdit}
-                    onChange={(event) => updateLevel('VAN_DUNG', Number(event.target.value))}
-                  />
-                  <span className="matrix-percentage-suffix">%</span>
-                  <p className="matrix-percentage-preview">
-                    ~ {estimatedDistribution.VAN_DUNG} câu
-                  </p>
-                </td>
-
-                <td className="matrix-td matrix-td--percentage-cell">
-                  <input
-                    className="matrix-percentage-input"
-                    type="number"
-                    min={0}
-                    max={100}
-                    step={0.1}
-                    value={percentageDraft.cognitiveLevelPercentages.VAN_DUNG_CAO}
-                    disabled={!canEdit}
-                    onChange={(event) => updateLevel('VAN_DUNG_CAO', Number(event.target.value))}
-                  />
-                  <span className="matrix-percentage-suffix">%</span>
-                  <p className="matrix-percentage-preview">
-                    ~ {estimatedDistribution.VAN_DUNG_CAO} câu
-                  </p>
-                </td>
-
-                <td className="matrix-td matrix-td--percentage-total-cell">
-                  <input
-                    className="matrix-percentage-input matrix-percentage-input--total"
-                    type="number"
-                    min={1}
-                    max={200}
-                    step={1}
-                    value={percentageDraft.totalQuestionsTarget}
-                    disabled={!canEdit}
-                    onChange={(event) =>
-                      updateDraft({
-                        totalQuestionsTarget: Number(event.target.value),
-                      })
-                    }
-                  />
-                  <p className="matrix-percentage-preview">Tổng %: {totalPercentage.toFixed(1)}%</p>
-                  {!isPercentageTotalValid && (
-                    <p className="matrix-percentage-error">Tổng phần trăm phải bằng 100%</p>
-                  )}
-                  <p className="matrix-percentage-preview">
-                    Tổng % dòng: {totalRowPercentage.toFixed(1)}%
-                  </p>
-                  {!isRowPercentageTotalValid && (
-                    <p className="matrix-percentage-error">
-                      Tổng phần trăm theo dòng phải bằng 100%
-                    </p>
-                  )}
-                </td>
-
-                {canEdit && (
-                  <td className="matrix-td matrix-td--actions matrix-td--percentage-action">
-                    <button
-                      className="matrix-save-percentage-btn"
-                      onClick={() => void handleSaveCellBatch()}
-                      disabled={
-                        savingPercentages ||
-                        !isPercentageTotalValid ||
-                        !isRowPercentageTotalValid ||
-                        !onSavePercentages
-                      }
-                      title="Lưu phân bổ số câu theo phần trăm"
+            {/* Percentage Row */}
+            <tr className="matrix-row matrix-row--ratio">
+              <td className="matrix-td matrix-td--total-label" colSpan={2}>
+                <div className="matrix-grand-total-label">TỈ LỆ</div>
+              </td>
+              {effectiveParts.map((part) =>
+                cognitiveOrder.map((level) => {
+                  const ck = makeCellKey(part.partNumber, level);
+                  const percentage = grandTotal > 0
+                    ? Math.round(((columnTotals[ck] ?? 0) / grandTotal) * 100)
+                    : 0;
+                  return (
+                    <td
+                      key={`${part.partNumber}-${level}-ratio`}
+                      className={`matrix-td matrix-td--level matrix-td--level-${level.toLowerCase()}`}
                     >
-                      {savingPercentages ? 'Đang lưu...' : 'Lưu phân bổ'}
-                    </button>
-                  </td>
-                )}
-              </tr>
-            )}
+                      <div className="matrix-grand-total-cell">{percentage}%</div>
+                    </td>
+                  );
+                })
+              )}
+              <td className="matrix-td matrix-td--total-type">
+                <div className="matrix-grand-total-cell">{grandTotal > 0 ? '100%' : '0%'}</div>
+              </td>
+              <td className="matrix-td matrix-td--total-type">
+                <div className="matrix-grand-total-cell"></div>
+              </td>
+              {canEdit && <td className="matrix-td matrix-td--actions"></td>}
+            </tr>
           </tbody>
         </table>
       </div>

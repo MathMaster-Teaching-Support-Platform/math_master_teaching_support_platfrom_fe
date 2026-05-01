@@ -12,7 +12,7 @@ import {
   ShieldCheck,
   Trash2,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { MatrixTable } from '../../components/exam-matrix';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
@@ -30,14 +30,12 @@ import { examMatrixService } from '../../services/examMatrixService';
 import '../../styles/module-refactor.css';
 import {
   MatrixStatus,
-  type BatchUpsertMatrixRowCellsRequest,
-  type MatrixCognitiveDistribution,
   type MatrixValidationReport,
 } from '../../types/examMatrix';
 import { exportExamMatrixToExcel, exportExamMatrixToPdf } from '../../utils/examMatrixExport';
+import { ExamMatrixRowModal } from './ExamMatrixRowModal';
 import '../courses/TeacherCourses.css';
 import './ExamMatrixDashboard.css';
-import { ExamMatrixRowModalRefactored } from './ExamMatrixRowModalRefactored';
 
 const matrixStatusLabel: Record<string, string> = {
   DRAFT: 'Nháp',
@@ -45,47 +43,15 @@ const matrixStatusLabel: Record<string, string> = {
   LOCKED: 'Đã khóa',
 };
 
-function getPercentageValue(
-  distribution: MatrixCognitiveDistribution | undefined,
-  level: 'NHAN_BIET' | 'THONG_HIEU' | 'VAN_DUNG' | 'VAN_DUNG_CAO'
-): number {
-  if (!distribution) return 0;
-  if (level === 'NHAN_BIET') {
-    return Number(distribution.NHAN_BIET ?? distribution.NB ?? distribution.REMEMBER ?? 0);
-  }
-  if (level === 'THONG_HIEU') {
-    return Number(distribution.THONG_HIEU ?? distribution.TH ?? distribution.UNDERSTAND ?? 0);
-  }
-  if (level === 'VAN_DUNG') {
-    return Number(distribution.VAN_DUNG ?? distribution.VD ?? distribution.APPLY ?? 0);
-  }
-  return Number(distribution.VAN_DUNG_CAO ?? distribution.VDC ?? distribution.ANALYZE ?? 0);
-}
-
-function toPercent(value: number, total: number): number {
-  if (total <= 0) return 0;
-  return Number(((value / total) * 100).toFixed(2));
-}
-
 export default function ExamMatrixDetailPageRefactored() {
   const { matrixId } = useParams<{ matrixId: string }>();
   const navigate = useNavigate();
-
   const [validation, setValidation] = useState<MatrixValidationReport | null>(null);
   const [rowModalOpen, setRowModalOpen] = useState(false);
   const [validating, setValidating] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [exportBusy, setExportBusy] = useState<'excel' | 'pdf' | null>(null);
   const { showToast } = useToast();
-  const [percentageDraft, setPercentageDraft] = useState({
-    totalQuestionsTarget: 40,
-    cognitiveLevelPercentages: {
-      NHAN_BIET: 25,
-      THONG_HIEU: 25,
-      VAN_DUNG: 25,
-      VAN_DUNG_CAO: 25,
-    },
-  });
 
   const {
     data,
@@ -106,85 +72,13 @@ export default function ExamMatrixDetailPageRefactored() {
   const resetMutation = useResetMatrix();
   const deleteMutation = useDeleteExamMatrix();
   const removeRowMutation = useRemoveExamMatrixRow();
-  const upsertBatchCellsMutation = useBatchUpsertMatrixRowCells();
+  const batchUpsertCellsMutation = useBatchUpsertMatrixRowCells();
 
   const matrix = data?.result;
   const table = tableData?.result;
   const chapters = useMemo(() => table?.chapters ?? [], [table]);
 
   const canEdit = matrix?.status === MatrixStatus.DRAFT;
-
-  useEffect(() => {
-    if (!matrix) return;
-
-    const totalQuestionsTarget = Number(
-      matrix.totalQuestionsTarget ?? table?.grandTotalQuestions ?? 40
-    );
-    const fromServer = matrix.cognitiveLevelPercentages;
-
-    const pFromMatrix = {
-      NHAN_BIET: getPercentageValue(fromServer, 'NHAN_BIET'),
-      THONG_HIEU: getPercentageValue(fromServer, 'THONG_HIEU'),
-      VAN_DUNG: getPercentageValue(fromServer, 'VAN_DUNG'),
-      VAN_DUNG_CAO: getPercentageValue(fromServer, 'VAN_DUNG_CAO'),
-    };
-    const matrixTotal =
-      pFromMatrix.NHAN_BIET +
-      pFromMatrix.THONG_HIEU +
-      pFromMatrix.VAN_DUNG +
-      pFromMatrix.VAN_DUNG_CAO;
-    const hasMatrixPercentages =
-      matrixTotal > 0 &&
-      matrixTotal <= 100.01 &&
-      Object.values(pFromMatrix).every((value) => value >= 0 && value <= 100);
-
-    if (hasMatrixPercentages) {
-      setPercentageDraft({
-        totalQuestionsTarget,
-        cognitiveLevelPercentages: pFromMatrix,
-      });
-      return;
-    }
-
-    const fromTable = table?.grandTotalByCognitive;
-    const cFromTable = {
-      NHAN_BIET: getPercentageValue(fromTable, 'NHAN_BIET'),
-      THONG_HIEU: getPercentageValue(fromTable, 'THONG_HIEU'),
-      VAN_DUNG: getPercentageValue(fromTable, 'VAN_DUNG'),
-      VAN_DUNG_CAO: getPercentageValue(fromTable, 'VAN_DUNG_CAO'),
-    };
-    const tableTotal =
-      cFromTable.NHAN_BIET + cFromTable.THONG_HIEU + cFromTable.VAN_DUNG + cFromTable.VAN_DUNG_CAO;
-
-    if (tableTotal > 0) {
-      setPercentageDraft({
-        totalQuestionsTarget: Math.max(1, tableTotal),
-        cognitiveLevelPercentages: {
-          NHAN_BIET: toPercent(cFromTable.NHAN_BIET, tableTotal),
-          THONG_HIEU: toPercent(cFromTable.THONG_HIEU, tableTotal),
-          VAN_DUNG: toPercent(cFromTable.VAN_DUNG, tableTotal),
-          VAN_DUNG_CAO: toPercent(cFromTable.VAN_DUNG_CAO, tableTotal),
-        },
-      });
-      return;
-    }
-
-    setPercentageDraft({
-      totalQuestionsTarget,
-      cognitiveLevelPercentages: {
-        NHAN_BIET: 25,
-        THONG_HIEU: 25,
-        VAN_DUNG: 25,
-        VAN_DUNG_CAO: 25,
-      },
-    });
-  }, [matrix, table]);
-
-  async function handleSavePercentages(request: BatchUpsertMatrixRowCellsRequest) {
-    if (!matrixId) return;
-    await upsertBatchCellsMutation.mutateAsync({ matrixId, request });
-    await refetchTable();
-  }
 
   async function refreshMatrix() {
     setRefreshing(true);
@@ -209,6 +103,14 @@ export default function ExamMatrixDetailPageRefactored() {
   async function removeRow(rowId: string) {
     if (!matrixId) return;
     await removeRowMutation.mutateAsync({ matrixId, rowId });
+    await refetchTable();
+  }
+
+  async function handleCellChange(
+    matrixId: string,
+    updates: import('../../types/examMatrix').BatchUpsertMatrixRowCellsRequest
+  ) {
+    await batchUpsertCellsMutation.mutateAsync({ matrixId, request: updates });
     await refetchTable();
   }
 
@@ -598,20 +500,19 @@ export default function ExamMatrixDetailPageRefactored() {
                 gradeLevel={matrix.gradeLevel || table?.gradeLevel}
                 subjectName={matrix.subjectName || table?.subjectName}
                 numberOfParts={(matrix as any)?.numberOfParts || (table as any)?.numberOfParts || 1} // ✅ NEW
+                parts={table?.parts}
                 matrixTotalPointsTarget={matrix.totalPointsTarget}
                 canEdit={canEdit}
                 onRemoveRow={removeRow}
-                percentageDraft={percentageDraft}
-                onChangePercentageDraft={setPercentageDraft}
-                onSavePercentages={handleSavePercentages}
-                savingPercentages={upsertBatchCellsMutation.isPending}
+                onCellChange={handleCellChange}
+                matrixId={matrixId}
               />
             </motion.div>
           )}
 
           {/* Add Row Modal */}
           {matrixId && (
-            <ExamMatrixRowModalRefactored
+            <ExamMatrixRowModal
               isOpen={rowModalOpen}
               matrixId={matrixId}
               matrixGradeLevel={matrix?.gradeLevel ?? table?.gradeLevel}

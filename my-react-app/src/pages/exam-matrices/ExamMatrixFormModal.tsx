@@ -4,6 +4,8 @@ import type { ExamMatrixRequest, ExamMatrixResponse } from '../../types/examMatr
 // ✅ NEW: Import hook to fetch question banks
 import { useSearchQuestionBanks } from '../../hooks/useQuestionBank';
 import type { QuestionBankResponse } from '../../types/questionBank';
+// ✅ ISSUE-1 FIX: Import PartConfigSection component
+import { PartConfigSection } from '../../components/exam-matrix/PartConfigSection';
 
 type Props = {
   isOpen: boolean;
@@ -40,7 +42,8 @@ export function ExamMatrixFormModal({
     name: '',
     description: '',
     isReusable: false,
-    numberOfParts: 1,  // NEW: Default to 1 part (MCQ only)
+    numberOfParts: 1,  // DEPRECATED: Use parts[] instead
+    parts: [{ partNumber: 1, questionType: 'MULTIPLE_CHOICE', name: 'Phần 1: Trắc nghiệm' }],  // ✅ ISSUE-1 FIX: Default parts
     questionBankId: undefined,  // ✅ NEW: Matrix owns ONE bank
   });
   const [error, setError] = useState<string | null>(null);
@@ -61,13 +64,20 @@ export function ExamMatrixFormModal({
 
   useEffect(() => {
     if (!isOpen) return;
+    
+    // ✅ ISSUE-1 FIX: Initialize parts from initialData or use defaults
+    const initialParts = (initialData as any)?.parts || [
+      { partNumber: 1, questionType: 'MULTIPLE_CHOICE', name: 'Phần 1: Trắc nghiệm' }
+    ];
+    
     setFormData({
       name: initialData?.name ?? '',
       description: initialData?.description ?? '',
       isReusable: initialData?.isReusable ?? false,
       totalQuestionsTarget: initialData?.totalQuestionsTarget,
       totalPointsTarget: initialData?.totalPointsTarget,
-      numberOfParts: (initialData as any)?.numberOfParts ?? 1,  // NEW
+      numberOfParts: initialParts.length,  // DEPRECATED: Derived from parts.length
+      parts: initialParts,  // ✅ ISSUE-1 FIX: Use parts array
       questionBankId: (initialData as any)?.questionBankId ?? undefined,  // ✅ NEW
     });
     setError(null);
@@ -87,17 +97,18 @@ export function ExamMatrixFormModal({
     setError(null);
     try {
       if (mode === 'create') {
-        // ✅ FIXED: Include numberOfParts and questionBankId in create payload
+        // ✅ ISSUE-1 FIX: Send parts[] instead of numberOfParts
         await onSubmit({
           name: normalizedName,
-          numberOfParts: formData.numberOfParts ?? 1,
+          parts: formData.parts,  // ✅ Send configurable parts
           questionBankId: formData.questionBankId || undefined,
-        } as any);  // Type assertion needed because numberOfParts is not in base ExamMatrixRequest
+        });
       } else {
         await onSubmit({
           ...formData,
           name: normalizedName,
           description: formData.description?.trim() || undefined,
+          parts: formData.parts,  // ✅ Send configurable parts
         });
       }
       onClose();
@@ -199,53 +210,12 @@ export function ExamMatrixFormModal({
                 />
               </div>
 
-              {/* ✅ MOVED: Number of Parts Toggle - NOW VISIBLE IN BOTH CREATE AND EDIT */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                <label
-                  style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--mod-ink)' }}
-                >
-                  Số phần đề
-                </label>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  {[1, 2, 3].map((num) => (
-                    <button
-                      key={num}
-                      type="button"
-                      onClick={() => setFormData({ ...formData, numberOfParts: num })}
-                      style={{
-                        flex: 1,
-                        padding: '0.6rem 0.8rem',
-                        borderRadius: 8,
-                        border: '2px solid',
-                        fontSize: '0.85rem',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        transition: 'all 0.15s',
-                        backgroundColor:
-                          formData.numberOfParts === num ? '#1d4ed8' : 'transparent',
-                        borderColor:
-                          formData.numberOfParts === num ? '#1d4ed8' : '#cbd5e1',
-                        color: formData.numberOfParts === num ? '#fff' : '#64748b',
-                      }}
-                    >
-                      {num === 1 ? '① MCQ' : num === 2 ? '② TF' : '③ SA'}
-                    </button>
-                  ))}
-                </div>
-                <p
-                  style={{
-                    fontSize: '0.75rem',
-                    color: 'var(--mod-muted, #64748b)',
-                    margin: '0.3rem 0 0 0',
-                  }}
-                >
-                  {formData.numberOfParts === 1
-                    ? 'Phần I: Trắc nghiệm (MCQ)'
-                    : formData.numberOfParts === 2
-                      ? 'Phần I: Trắc nghiệm (MCQ) + Phần II: Đúng/Sai (TF)'
-                      : 'Phần I: Trắc nghiệm (MCQ) + Phần II: Đúng/Sai (TF) + Phần III: Tự luận ngắn (SA)'}
-                </p>
-              </div>
+              {/* ✅ ISSUE-1 FIX: Replace radio buttons with PartConfigSection */}
+              <PartConfigSection
+                value={formData.parts || []}
+                onChange={(parts) => setFormData({ ...formData, parts, numberOfParts: parts.length })}
+                disabled={saving}
+              />
 
               {/* ✅ NEW: Question Bank Selector - OPTIONAL */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
