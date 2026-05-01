@@ -247,7 +247,7 @@ export function ExamMatrixFormModal({
                 </p>
               </div>
 
-              {/* ✅ NEW: Question Bank Selector */}
+              {/* ✅ NEW: Question Bank Selector - OPTIONAL */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
                 <label
                   htmlFor="emf-bank"

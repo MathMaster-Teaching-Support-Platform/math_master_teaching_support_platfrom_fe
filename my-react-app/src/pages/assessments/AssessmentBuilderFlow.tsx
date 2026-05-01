@@ -2,6 +2,7 @@ import { ArrowRight, CheckCircle2, FileCheck2, Library, Ruler, Sparkles } from '
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { UI_TEXT } from '../../constants/uiText';
 import {
   useAssessment,
   useAssessmentQuestions,
@@ -11,10 +12,9 @@ import {
 } from '../../hooks/useAssessment';
 import { useGetMyExamMatrices } from '../../hooks/useExamMatrix';
 import '../../styles/module-refactor.css';
-import '../courses/TeacherCourses.css';
 import { MatrixStatus } from '../../types/examMatrix';
+import '../courses/TeacherCourses.css';
 import './assessment-builder-flow.css';
-import { UI_TEXT } from '../../constants/uiText';
 
 type ToastState = {
   type: 'success' | 'error';
@@ -113,7 +113,7 @@ export default function AssessmentBuilderFlow() {
         <section className="module-page teacher-courses-page assessment-builder-flow-page">
           <header className="page-header courses-header-row">
             <div className="header-stack">
-              <div className="header-kicker">Teacher Studio</div>
+              <div className="header-kicker"></div>
               <div className="row" style={{ gap: '0.6rem' }}>
                 <h2>Trình tạo đề thi</h2>
               </div>
@@ -267,8 +267,8 @@ export default function AssessmentBuilderFlow() {
               </label>
 
               <p className="muted" style={{ marginTop: 8 }}>
-                Generation Mode: BANK_FIRST (cố định). Không dùng AI trong bước tạo {UI_TEXT.QUIZ.toLowerCase()} từ
-                matrix.
+                Generation Mode: BANK_FIRST (cố định). Không dùng AI trong bước tạo{' '}
+                {UI_TEXT.QUIZ.toLowerCase()} từ matrix.
               </p>
 
               <div className="row" style={{ flexWrap: 'wrap' }}>
@@ -348,7 +348,8 @@ export default function AssessmentBuilderFlow() {
                     <div className="data-card" style={{ minHeight: 0 }}>
                       <h3>Phạm vi bài học</h3>
                       <p className="muted" style={{ marginBottom: 12 }}>
-                        Đề này bao gồm {generatedAssessment.lessons.length} bài học (tự động lấy từ ma trận)
+                        Đề này bao gồm {generatedAssessment.lessons.length} bài học (tự động lấy từ
+                        ma trận)
                       </p>
                       <div className="lesson-chips">
                         {generatedAssessment.lessons.map((lesson) => (

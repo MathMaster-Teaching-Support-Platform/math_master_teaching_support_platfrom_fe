@@ -20,9 +20,9 @@ import { AuthService } from '../../services/api/auth.service';
 import { LessonSlideService } from '../../services/api/lesson-slide.service';
 import { MindmapService } from '../../services/api/mindmap.service';
 import '../../styles/module-refactor.css';
-import '../courses/TeacherCourses.css';
 import type { Mindmap } from '../../types';
 import type { LessonSlideGeneratedFile } from '../../types/lessonSlide.types';
+import '../courses/TeacherCourses.css';
 import './MaterialsGenerator.css';
 
 // ─── Unified row type for the recent-materials table ─────────────────────────
@@ -373,7 +373,7 @@ const MaterialsGenerator: React.FC = () => {
           {/* ── Header ── */}
           <header className="page-header courses-header-row">
             <div className="header-stack">
-              <div className="header-kicker">Teacher Studio</div>
+              <div className="header-kicker"></div>
               <div className="row" style={{ gap: '0.6rem' }}>
                 <h2>Tạo tài liệu với AI</h2>
                 {!loading && <span className="count-chip">{stats.total}</span>}

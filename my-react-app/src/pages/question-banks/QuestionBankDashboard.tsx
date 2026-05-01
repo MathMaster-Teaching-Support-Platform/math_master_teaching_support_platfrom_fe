@@ -20,8 +20,9 @@ import {
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import Pagination from '../../components/common/Pagination';
+import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { useToast } from '../../context/ToastContext';
 import { useDebounce } from '../../hooks/useDebounce';
 import {
   useCreateQuestionBank,
@@ -32,7 +33,6 @@ import {
 } from '../../hooks/useQuestionBank';
 import '../../styles/module-refactor.css';
 import type { QuestionBankRequest, QuestionBankResponse } from '../../types/questionBank';
-import { useToast } from '../../context/ToastContext';
 import '../courses/TeacherCourses.css';
 import './QuestionBankDashboard.css';
 import { QuestionBankFormModal } from './QuestionBankFormModal';
@@ -136,7 +136,10 @@ export function QuestionBankDashboard() {
       await updateMutation.mutateAsync({ id: selected.id, request: payload });
       showToast({ type: 'success', message: 'Cập nhật ngân hàng câu hỏi thành công.' });
     } catch (error) {
-      showToast({ type: 'error', message: error instanceof Error ? error.message : 'Không thể lưu ngân hàng câu hỏi.' });
+      showToast({
+        type: 'error',
+        message: error instanceof Error ? error.message : 'Không thể lưu ngân hàng câu hỏi.',
+      });
     }
   }
 
@@ -149,7 +152,10 @@ export function QuestionBankDashboard() {
       await deleteMutation.mutateAsync(bank.id);
       showToast({ type: 'success', message: `Đã xóa ngân hàng “${bank.name}”.` });
     } catch (error) {
-      showToast({ type: 'error', message: error instanceof Error ? error.message : 'Không thể xóa ngân hàng câu hỏi.' });
+      showToast({
+        type: 'error',
+        message: error instanceof Error ? error.message : 'Không thể xóa ngân hàng câu hỏi.',
+      });
     }
   }
 
@@ -165,7 +171,7 @@ export function QuestionBankDashboard() {
           {/* ── Header ── */}
           <header className="page-header courses-header-row">
             <div className="header-stack">
-              <div className="header-kicker">Teacher Studio</div>
+              <div className="header-kicker"></div>
               <div className="row" style={{ gap: '0.6rem' }}>
                 <h2>Ngân hàng câu hỏi</h2>
                 {!isLoading && <span className="count-chip">{totalElements}</span>}
@@ -345,12 +351,15 @@ export function QuestionBankDashboard() {
           )}
 
           {/* ── Empty: no results ── */}
-          {!isLoading && !isError && banks.length === 0 && (debouncedSearch || visibilityFilter !== 'ALL') && (
-            <div className="empty">
-              <Search size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
-              <p>Không tìm thấy ngân hàng phù hợp với bộ lọc.</p>
-            </div>
-          )}
+          {!isLoading &&
+            !isError &&
+            banks.length === 0 &&
+            (debouncedSearch || visibilityFilter !== 'ALL') && (
+              <div className="empty">
+                <Search size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
+                <p>Không tìm thấy ngân hàng phù hợp với bộ lọc.</p>
+              </div>
+            )}
 
           {/* ── Empty: no banks ── */}
           {!isLoading && !isError && banks.length === 0 && (

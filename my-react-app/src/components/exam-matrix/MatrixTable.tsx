@@ -62,8 +62,11 @@ function normalizeLevel(level: string): MatrixLevel | null {
   return null;
 }
 
-function getLevelCount(row: ExamMatrixTableRow, level: MatrixLevel): number {
-  const fromCells = row.cells?.find((cell) => normalizeLevel(cell.cognitiveLevel) === level);
+function getLevelCount(row: ExamMatrixTableRow, level: MatrixLevel, partNumber?: number): number {
+  const fromCells = row.cells?.find(
+    (cell) => normalizeLevel(cell.cognitiveLevel) === level
+      && (partNumber == null || cell.partNumber === partNumber)
+  );
   if (fromCells) return fromCells.questionCount ?? 0;
 
   const dist = row.countByCognitive;
@@ -673,7 +676,7 @@ export function MatrixTable({
                       cognitiveOrder.map((level) => {
                         const count = percentageDraft
                           ? (displayedCellsByRow[row.rowId]?.[level] ?? 0)
-                          : getLevelCount(row, level);
+                          : getLevelCount(row, level, partNum);
                         return (
                           <td
                             key={`${partNum}-${level}`}

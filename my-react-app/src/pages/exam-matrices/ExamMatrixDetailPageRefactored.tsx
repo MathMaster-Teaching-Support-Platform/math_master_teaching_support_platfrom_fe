@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import {
   AlertCircle,
   ArrowLeft,
@@ -11,11 +12,11 @@ import {
   ShieldCheck,
   Trash2,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { MatrixTable } from '../../components/exam-matrix';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { useToast } from '../../context/ToastContext';
 import {
   useApproveMatrix,
   useBatchUpsertMatrixRowCells,
@@ -25,9 +26,7 @@ import {
   useRemoveExamMatrixRow,
   useResetMatrix,
 } from '../../hooks/useExamMatrix';
-import { useToast } from '../../context/ToastContext';
 import { examMatrixService } from '../../services/examMatrixService';
-import { exportExamMatrixToExcel, exportExamMatrixToPdf } from '../../utils/examMatrixExport';
 import '../../styles/module-refactor.css';
 import {
   MatrixStatus,
@@ -35,9 +34,10 @@ import {
   type MatrixCognitiveDistribution,
   type MatrixValidationReport,
 } from '../../types/examMatrix';
-import { ExamMatrixRowModalRefactored } from './ExamMatrixRowModalRefactored';
+import { exportExamMatrixToExcel, exportExamMatrixToPdf } from '../../utils/examMatrixExport';
 import '../courses/TeacherCourses.css';
 import './ExamMatrixDashboard.css';
+import { ExamMatrixRowModalRefactored } from './ExamMatrixRowModalRefactored';
 
 const matrixStatusLabel: Record<string, string> = {
   DRAFT: 'Nháp',
@@ -221,20 +221,20 @@ export default function ExamMatrixDetailPageRefactored() {
 
   async function handleApprove() {
     if (!matrix?.id || !matrix?.name) return;
-    
+
     const matrixName = matrix.name; // Capture name before mutation
-    
+
     try {
       await approveMutation.mutateAsync(matrix.id);
-      showToast({ 
-        type: 'success', 
-        message: `Đã phê duyệt ma trận "${matrixName}" thành công!` 
+      showToast({
+        type: 'success',
+        message: `Đã phê duyệt ma trận "${matrixName}" thành công!`,
       });
       await refetch();
     } catch (error) {
-      showToast({ 
-        type: 'error', 
-        message: error instanceof Error ? error.message : 'Không thể phê duyệt ma trận.' 
+      showToast({
+        type: 'error',
+        message: error instanceof Error ? error.message : 'Không thể phê duyệt ma trận.',
       });
     }
   }
@@ -308,8 +308,11 @@ export default function ExamMatrixDetailPageRefactored() {
 
           <header className="page-header courses-header-row exam-matrix-detail-page-header">
             <div className="header-stack">
-              <div className="header-kicker">Teacher Studio</div>
-              <div className="row" style={{ gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap' }}>
+              <div className="header-kicker"></div>
+              <div
+                className="row"
+                style={{ gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap' }}
+              >
                 <h2>{isPageLoading ? 'Chi tiết ma trận đề' : 'Ma trận đề'}</h2>
                 {matrix && !isPageLoading && (
                   <span
@@ -339,10 +342,7 @@ export default function ExamMatrixDetailPageRefactored() {
                 </div>
                 <div className="skeleton-section">
                   <div className="skeleton-line sk-lg" style={{ width: '40%' }} />
-                  <div
-                    className="row"
-                    style={{ gap: '1.25rem', flexWrap: 'wrap', marginTop: 8 }}
-                  >
+                  <div className="row" style={{ gap: '1.25rem', flexWrap: 'wrap', marginTop: 8 }}>
                     <div className="skeleton-info-item" style={{ minWidth: 100 }}>
                       <div className="skeleton-line sk-sm" />
                       <div className="skeleton-line sk-md" />
@@ -372,9 +372,7 @@ export default function ExamMatrixDetailPageRefactored() {
                 style={{ opacity: 0.45, color: 'var(--mod-danger)' }}
                 aria-hidden
               />
-              <p>
-                {error instanceof Error ? error.message : 'Không thể tải chi tiết ma trận'}
-              </p>
+              <p>{error instanceof Error ? error.message : 'Không thể tải chi tiết ma trận'}</p>
               <button type="button" className="btn secondary" onClick={() => void refetch()}>
                 <RefreshCw size={14} />
                 Thử lại
@@ -408,7 +406,10 @@ export default function ExamMatrixDetailPageRefactored() {
                 <div className="row" style={{ alignItems: 'start', flexWrap: 'wrap', gap: 16 }}>
                   <div style={{ flex: 1, minWidth: 300 }}>
                     <p className="hero-kicker">Ma trận đề kiểm tra</p>
-                    <h2 className="exam-matrix-detail-hero-title" style={{ marginTop: 8, marginBottom: 12 }}>
+                    <h2
+                      className="exam-matrix-detail-hero-title"
+                      style={{ marginTop: 8, marginBottom: 12 }}
+                    >
                       {matrix.name}
                     </h2>
                     <p className="exam-matrix-detail-desc" style={{ marginBottom: 12 }}>
@@ -433,7 +434,10 @@ export default function ExamMatrixDetailPageRefactored() {
                     onClick={() => void refreshMatrix()}
                     disabled={refreshing}
                   >
-                    <RefreshCw size={14} className={refreshing ? 'exam-matrix-nav-spin' : undefined} />
+                    <RefreshCw
+                      size={14}
+                      className={refreshing ? 'exam-matrix-nav-spin' : undefined}
+                    />
                     {refreshing ? 'Đang làm mới...' : 'Làm mới'}
                   </button>
                   <button
@@ -593,7 +597,7 @@ export default function ExamMatrixDetailPageRefactored() {
                 chapters={chapters}
                 gradeLevel={matrix.gradeLevel || table?.gradeLevel}
                 subjectName={matrix.subjectName || table?.subjectName}
-                numberOfParts={(matrix as any)?.numberOfParts || (table as any)?.numberOfParts || 1}  // ✅ NEW
+                numberOfParts={(matrix as any)?.numberOfParts || (table as any)?.numberOfParts || 1} // ✅ NEW
                 matrixTotalPointsTarget={matrix.totalPointsTarget}
                 canEdit={canEdit}
                 onRemoveRow={removeRow}

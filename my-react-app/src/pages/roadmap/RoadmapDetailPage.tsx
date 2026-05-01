@@ -1,8 +1,8 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { InvoiceModal } from '../../components/course/InvoiceModal';
+import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockStudent } from '../../data/mockData';
 import { useCoursePreview, useEnroll, useMyEnrollments } from '../../hooks/useCourses';
 import {
@@ -12,9 +12,9 @@ import {
   useTopicMaterials,
 } from '../../hooks/useRoadmaps';
 import type {
+  RoadmapEntryTestResultResponse,
   RoadmapTopic,
   RoadmapTopicCourse,
-  RoadmapEntryTestResultResponse,
   TopicMaterial,
 } from '../../types';
 import type { Order } from '../../types/order.types';
@@ -70,7 +70,14 @@ interface CoursePanelProps {
   readonly onEnroll: (courseId: string) => void;
 }
 
-function CoursePanel({ course, topic, isPending, isEnrolled, onClose, onEnroll }: CoursePanelProps) {
+function CoursePanel({
+  course,
+  topic,
+  isPending,
+  isEnrolled,
+  onClose,
+  onEnroll,
+}: CoursePanelProps) {
   const { data, isLoading } = useCoursePreview(course.id);
   const materialsQuery = useTopicMaterials(topic.id);
   const preview = data?.result;
@@ -81,8 +88,13 @@ function CoursePanel({ course, topic, isPending, isEnrolled, onClose, onEnroll }
   const progress = course.progress ?? 0;
   let statusLabel = 'Chưa bắt đầu';
   let statusCls = 'none';
-  if (progress >= 100) { statusLabel = 'Hoàn thành'; statusCls = 'done'; }
-  else if (isEnrolled) { statusLabel = 'Đang học'; statusCls = 'progress'; }
+  if (progress >= 100) {
+    statusLabel = 'Hoàn thành';
+    statusCls = 'done';
+  } else if (isEnrolled) {
+    statusLabel = 'Đang học';
+    statusCls = 'progress';
+  }
 
   return (
     <motion.aside
@@ -96,9 +108,7 @@ function CoursePanel({ course, topic, isPending, isEnrolled, onClose, onEnroll }
       <div className="rdp-panel__header">
         <div className="rdp-panel__header-tabs">
           <span className="rdp-panel__tab rdp-panel__tab--active">Khóa học</span>
-          {materials.length > 0 && (
-            <span className="rdp-panel__tab-divider">·</span>
-          )}
+          {materials.length > 0 && <span className="rdp-panel__tab-divider">·</span>}
           {materials.length > 0 && (
             <span className="rdp-panel__tab">{materials.length} tài liệu</span>
           )}
@@ -107,7 +117,9 @@ function CoursePanel({ course, topic, isPending, isEnrolled, onClose, onEnroll }
           <span className={`rdp-panel__status-badge rdp-panel__status-badge--${statusCls}`}>
             {statusLabel}
           </span>
-          <button className="rdp-panel__close" onClick={onClose} aria-label="Đóng">✕</button>
+          <button className="rdp-panel__close" onClick={onClose} aria-label="Đóng">
+            ✕
+          </button>
         </div>
       </div>
 
@@ -153,7 +165,10 @@ function CoursePanel({ course, topic, isPending, isEnrolled, onClose, onEnroll }
         {isEnrolled && progress > 0 && (
           <div className="rdp-panel__progress-wrap">
             <div className="rdp-panel__progress-bar">
-              <div className="rdp-panel__progress-fill" style={{ width: `${Math.min(100, progress)}%` }} />
+              <div
+                className="rdp-panel__progress-fill"
+                style={{ transform: `scaleX(${Math.min(100, progress) / 100})` }}
+              />
             </div>
             <span className="rdp-panel__progress-pct">{Math.round(progress)}%</span>
           </div>
@@ -169,33 +184,40 @@ function CoursePanel({ course, topic, isPending, isEnrolled, onClose, onEnroll }
               <span className="rdp-panel__section-title">Nội dung khóa học</span>
             </div>
             <div className="rdp-panel__lessons">
-              {preview.lessons.map((lesson: { 
-                id: string; 
-                lessonTitle: string;
-                customTitle?: string;
-                videoTitle?: string;
-                videoUrl?: string;
-                durationMinutes?: number;
-                durationSeconds?: number;
-              }, i: number) => {
-                const durationMins = lesson.durationMinutes ?? (lesson.durationSeconds ? Math.round(lesson.durationSeconds / 60) : undefined);
-                return (
-                  <div key={lesson.id} className="rdp-panel__lesson-item">
-                    <span className="rdp-panel__lesson-num">{i + 1}</span>
-                    <div className="rdp-panel__lesson-content">
-                      <span className="rdp-panel__lesson-title">
-                        {lesson.customTitle || lesson.lessonTitle}
-                      </span>
-                      {lesson.videoTitle && (
-                        <span className="rdp-panel__lesson-video">🎥 {lesson.videoTitle}</span>
+              {preview.lessons.map(
+                (
+                  lesson: {
+                    id: string;
+                    lessonTitle: string;
+                    customTitle?: string;
+                    videoTitle?: string;
+                    videoUrl?: string;
+                    durationMinutes?: number;
+                    durationSeconds?: number;
+                  },
+                  i: number
+                ) => {
+                  const durationMins =
+                    lesson.durationMinutes ??
+                    (lesson.durationSeconds ? Math.round(lesson.durationSeconds / 60) : undefined);
+                  return (
+                    <div key={lesson.id} className="rdp-panel__lesson-item">
+                      <span className="rdp-panel__lesson-num">{i + 1}</span>
+                      <div className="rdp-panel__lesson-content">
+                        <span className="rdp-panel__lesson-title">
+                          {lesson.customTitle || lesson.lessonTitle}
+                        </span>
+                        {lesson.videoTitle && (
+                          <span className="rdp-panel__lesson-video">🎥 {lesson.videoTitle}</span>
+                        )}
+                      </div>
+                      {durationMins && (
+                        <span className="rdp-panel__lesson-duration">{durationMins}p</span>
                       )}
                     </div>
-                    {durationMins && (
-                      <span className="rdp-panel__lesson-duration">{durationMins}p</span>
-                    )}
-                  </div>
-                );
-              })}
+                  );
+                }
+              )}
             </div>
           </div>
         )}
@@ -216,7 +238,9 @@ function CoursePanel({ course, topic, isPending, isEnrolled, onClose, onEnroll }
                   rel="noopener noreferrer"
                   className="rdp-panel__resource-item"
                 >
-                  <span className={`rdp-panel__resource-badge rdp-panel__resource-badge--${m.resourceType.toLowerCase()}`}>
+                  <span
+                    className={`rdp-panel__resource-badge rdp-panel__resource-badge--${m.resourceType.toLowerCase()}`}
+                  >
                     {materialTypeLabel(m.resourceType)}
                   </span>
                   <span className="rdp-panel__resource-title">{m.title}</span>
@@ -243,7 +267,9 @@ function CoursePanel({ course, topic, isPending, isEnrolled, onClose, onEnroll }
                   rel="noopener noreferrer"
                   className="rdp-panel__resource-item rdp-panel__resource-item--premium"
                 >
-                  <span className={`rdp-panel__resource-badge rdp-panel__resource-badge--${m.resourceType.toLowerCase()}`}>
+                  <span
+                    className={`rdp-panel__resource-badge rdp-panel__resource-badge--${m.resourceType.toLowerCase()}`}
+                  >
                     {materialTypeLabel(m.resourceType)}
                   </span>
                   <span className="rdp-panel__resource-title">{m.title}</span>
@@ -323,7 +349,9 @@ export default function RoadmapDetailPage() {
   const rawCurrentTopicIndex = Number(
     roadmap?.progress?.current_topic_index ?? deriveCurrentTopicIndexFromMark()
   );
-  const currentTopicIndex = Number.isFinite(rawCurrentTopicIndex) ? Math.max(0, rawCurrentTopicIndex) : 0;
+  const currentTopicIndex = Number.isFinite(rawCurrentTopicIndex)
+    ? Math.max(0, rawCurrentTopicIndex)
+    : 0;
   const boundedCurrentTopicIndex = Math.min(currentTopicIndex, sortedTopics.length);
   const completedByLevel = Math.min(boundedCurrentTopicIndex, sortedTopics.length);
   const hasCurrentTopic = boundedCurrentTopicIndex < sortedTopics.length;
@@ -331,8 +359,9 @@ export default function RoadmapDetailPage() {
     ? `Chủ đề ${boundedCurrentTopicIndex + 1}`
     : `Đã hoàn thành ${sortedTopics.length}/${sortedTopics.length} chủ đề`;
 
-  const entryTestResult = (location.state as { entryTestResult?: RoadmapEntryTestResultResponse } | null)
-    ?.entryTestResult;
+  const entryTestResult = (
+    location.state as { entryTestResult?: RoadmapEntryTestResultResponse } | null
+  )?.entryTestResult;
 
   const activeCourseIdSet = new Set(
     (myEnrollmentsQuery.data?.result ?? [])
@@ -357,9 +386,7 @@ export default function RoadmapDetailPage() {
   }, [boundedCurrentTopicIndex, roadmap?.id]);
 
   // Find currently selected topic (to pass to panel)
-  const selectedTopic = selectedTopicId
-    ? sortedTopics.find((t) => t.id === selectedTopicId)
-    : null;
+  const selectedTopic = selectedTopicId ? sortedTopics.find((t) => t.id === selectedTopicId) : null;
 
   // Find currently selected course object
   const selectedCourse = selectedCourseId
@@ -390,8 +417,9 @@ export default function RoadmapDetailPage() {
             type: 'success',
             text: 'Đăng ký thành công! Đang mở khóa học...',
           });
-          
-          const enrollmentId = response?.enrollmentId || response?.result?.id || (response as any)?.id;
+
+          const enrollmentId =
+            response?.enrollmentId || response?.result?.id || (response as any)?.id;
           if (enrollmentId) {
             navigate(`/student/courses/${enrollmentId}`);
           } else {
@@ -423,7 +451,11 @@ export default function RoadmapDetailPage() {
       console.error('Invalid feedback:', { roadmapId, feedbackIsValid });
       return;
     }
-    console.log('Submitting feedback:', { roadmapId, rating: feedbackRating, content: feedbackContent });
+    console.log('Submitting feedback:', {
+      roadmapId,
+      rating: feedbackRating,
+      content: feedbackContent,
+    });
     submitFeedback.mutate(
       { roadmapId, payload: { rating: feedbackRating, content: feedbackContent.trim() } },
       {
@@ -438,7 +470,7 @@ export default function RoadmapDetailPage() {
           console.error('Feedback submission failed:', err);
           const message = err instanceof Error ? err.message : 'Lỗi không xác định';
           setCourseActionMessage({ type: 'error', text: `Không thể gửi đánh giá: ${message}` });
-        }
+        },
       }
     );
   }
@@ -454,9 +486,7 @@ export default function RoadmapDetailPage() {
       </div>
     );
   } else if (error || !roadmap) {
-    mainContent = (
-      <div className="rdp-error">⚠ Không thể tải lộ trình. Vui lòng thử lại.</div>
-    );
+    mainContent = <div className="rdp-error">⚠ Không thể tải lộ trình. Vui lòng thử lại.</div>;
   } else {
     mainContent = (
       <div className="rdp-page">
@@ -497,7 +527,9 @@ export default function RoadmapDetailPage() {
               <h2>Lộ trình học tập</h2>
               <p>Nhấn vào từng chủ đề để xem khóa học</p>
               <div className="rdp-level-banner">
-                <span className="rdp-level-banner__level">🎯 Mức hiện tại: {currentLevelLabel}</span>
+                <span className="rdp-level-banner__level">
+                  🎯 Mức hiện tại: {currentLevelLabel}
+                </span>
                 <span className="rdp-level-banner__progress">
                   Tiến độ: {completedByLevel} / {sortedTopics.length} chủ đề hoàn thành
                 </span>
@@ -507,8 +539,8 @@ export default function RoadmapDetailPage() {
                   </span>
                 )}
                 {roadmap.entryTest && roadmap.entryTest.studentStatus !== 'COMPLETED' && (
-                  <Link 
-                    className="rdp-level-banner__entry-link" 
+                  <Link
+                    className="rdp-level-banner__entry-link"
                     to={`/student/assessments/${roadmap.entryTest.assessmentId}`}
                   >
                     Làm bài test đầu vào để xác định mức khởi điểm →
@@ -522,7 +554,8 @@ export default function RoadmapDetailPage() {
                 const topicStatus: 'done' | 'progress' | 'none' =
                   topicIdx < boundedCurrentTopicIndex || topic.status === 'COMPLETED'
                     ? 'done'
-                    : topicIdx === boundedCurrentTopicIndex && boundedCurrentTopicIndex < sortedTopics.length
+                    : topicIdx === boundedCurrentTopicIndex &&
+                        boundedCurrentTopicIndex < sortedTopics.length
                       ? 'progress'
                       : 'none';
                 const isTopicActive = selectedTopicId === topic.id;
@@ -543,7 +576,10 @@ export default function RoadmapDetailPage() {
                         <button
                           type="button"
                           ref={(el) => {
-                            if (topicIdx === boundedCurrentTopicIndex && boundedCurrentTopicIndex < sortedTopics.length) {
+                            if (
+                              topicIdx === boundedCurrentTopicIndex &&
+                              boundedCurrentTopicIndex < sortedTopics.length
+                            ) {
                               currentTopicNodeRef.current = el;
                             }
                           }}
@@ -575,7 +611,10 @@ export default function RoadmapDetailPage() {
                               {courses.length} khóa
                             </span>
                           </div>
-                          <span className={`rdp-topic-node__chevron ${isTopicActive ? 'rdp-topic-node__chevron--open' : ''}`} aria-hidden="true">
+                          <span
+                            className={`rdp-topic-node__chevron ${isTopicActive ? 'rdp-topic-node__chevron--open' : ''}`}
+                            aria-hidden="true"
+                          >
                             ›
                           </span>
                         </button>
@@ -591,7 +630,10 @@ export default function RoadmapDetailPage() {
                           <div className="rdp-courses-tree">
                             {courses.length === 0 ? (
                               <div className="rdp-course-card rdp-course-card--empty">
-                                <span className="rdp-course-card__title" style={{ color: '#9ca3af' }}>
+                                <span
+                                  className="rdp-course-card__title"
+                                  style={{ color: '#9ca3af' }}
+                                >
                                   Chưa có khóa học
                                 </span>
                                 <span className="rdp-course-card__meta">Đang cập nhật...</span>
@@ -616,19 +658,27 @@ export default function RoadmapDetailPage() {
                                       }
                                     >
                                       <div className="rdp-course-card__left">
-                                        <span className={`rdp-status-dot rdp-status-dot--${dotCls}`} />
+                                        <span
+                                          className={`rdp-status-dot rdp-status-dot--${dotCls}`}
+                                        />
                                       </div>
                                       <div className="rdp-course-card__body">
-                                        <span className="rdp-course-card__title">{course.title}</span>
+                                        <span className="rdp-course-card__title">
+                                          {course.title}
+                                        </span>
                                         <div className="rdp-course-card__bottom">
                                           <span className="rdp-course-card__meta">
                                             {course.totalLessons ?? 0} bài học
                                           </span>
                                           {p >= 100 && (
-                                            <span className="rdp-course-tag rdp-course-tag--done">✓ Hoàn thành</span>
+                                            <span className="rdp-course-tag rdp-course-tag--done">
+                                              ✓ Hoàn thành
+                                            </span>
                                           )}
                                           {isEnrolled && p < 100 && (
-                                            <span className="rdp-course-tag rdp-course-tag--enrolled">Đang học</span>
+                                            <span className="rdp-course-tag rdp-course-tag--enrolled">
+                                              Đang học
+                                            </span>
                                           )}
                                         </div>
                                         {isEnrolled && p > 0 && (
@@ -680,7 +730,7 @@ export default function RoadmapDetailPage() {
             <div>
               <h3 className="rdp-feedback__title">Đánh giá lộ trình</h3>
               <p className="rdp-feedback__sub">
-                {myFeedback 
+                {myFeedback
                   ? 'Cập nhật đánh giá của bạn về lộ trình học này.'
                   : 'Chia sẻ cảm nhận của bạn về lộ trình học này.'}
               </p>
@@ -745,7 +795,11 @@ export default function RoadmapDetailPage() {
                 onClick={submitRoadmapFeedback}
                 disabled={submitFeedback.isPending || !feedbackIsValid}
               >
-                {submitFeedback.isPending ? 'Đang lưu...' : myFeedback ? '✓ Cập nhật đánh giá' : '✓ Gửi đánh giá'}
+                {submitFeedback.isPending
+                  ? 'Đang lưu...'
+                  : myFeedback
+                    ? '✓ Cập nhật đánh giá'
+                    : '✓ Gửi đánh giá'}
               </button>
             </>
           )}
