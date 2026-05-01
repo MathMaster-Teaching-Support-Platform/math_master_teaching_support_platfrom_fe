@@ -2630,7 +2630,7 @@
 
 /* ── Order Items ────────────────────────────────────────── */
 .order-row {
-  border-left: 4px solid #8b5cf6 !important;
+  border-top: 1px solid #e8e6dc;
 }
 
 .tx-icon-wrap.payment {
@@ -2640,7 +2640,7 @@
 
 /* ── Withdrawal History Tab ───────────────────────────────── */
 .wd-row {
-  border-left: 4px solid #6366f1 !important;
+  border-top: 1px solid #e8e6dc;
 }
 
 .wd-filter-bar {
