@@ -13,6 +13,7 @@ import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLa
 import { MatrixTable } from '../../components/exam-matrix/MatrixTable';
 import {
   useApproveMatrix,
+  useBatchUpsertMatrixRowCells,
   useDeleteExamMatrix,
   useGetExamMatrixById,
   useGetExamMatrixTable,
@@ -57,6 +58,7 @@ export default function ExamMatrixDetailPage() {
   const resetMutation = useResetMatrix();
   const deleteMutation = useDeleteExamMatrix();
   const removeRowMutation = useRemoveExamMatrixRow();
+  const batchUpsertCellsMutation = useBatchUpsertMatrixRowCells();
 
   const matrix = data?.result;
   const table = tableData?.result;
@@ -122,6 +124,12 @@ export default function ExamMatrixDetailPage() {
     if (!globalThis.confirm('Bạn có chắc muốn đặt lại ma trận về trạng thái nháp?')) return;
     await resetMutation.mutateAsync(matrix.id);
     await refetch();
+  }
+
+  async function handleCellChange(matrixId: string, updates: import('../../types/examMatrix').BatchUpsertMatrixRowCellsRequest) {
+    await batchUpsertCellsMutation.mutateAsync({ matrixId, request: updates });
+    // Refetch table data to get updated values
+    await refetchTable();
   }
 
   return (
@@ -364,10 +372,13 @@ export default function ExamMatrixDetailPage() {
                   chapters={chapters}
                   gradeLevel={String(matrix?.gradeLevel || table?.gradeLevel || '')}
                   subjectName={matrix?.subjectName || table?.subjectName}
+                  parts={table?.parts}
                   numberOfParts={table?.numberOfParts ?? 1}
                   matrixTotalPointsTarget={matrix?.totalPointsTarget}
                   canEdit={canEdit}
                   onRemoveRow={removeRow}
+                  onCellChange={handleCellChange}
+                  matrixId={matrixId}
                 />
               )}
             </>
@@ -379,8 +390,6 @@ export default function ExamMatrixDetailPage() {
               matrixId={matrixId}
               matrixGradeLevel={matrix?.gradeLevel ?? table?.gradeLevel}
               subjectId={matrix?.subjectId ?? table?.subjectId}
-              matrixTotalPointsTarget={matrix?.totalPointsTarget}
-              numberOfParts={table?.numberOfParts ?? 1}  // NEW: Pass numberOfParts
               onClose={() => {
                 setRowModalOpen(false);
               }}

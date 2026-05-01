@@ -5,11 +5,24 @@ export const MatrixStatus = {
 } as const;
 export type MatrixStatus = typeof MatrixStatus[keyof typeof MatrixStatus];
 
+// FE-1: Question types supported in exam matrix parts (subset of QuestionType)
+export type MatrixQuestionType = 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER';
+
+// FE-1: New interface for configurable parts
+export interface ExamMatrixPartConfig {
+    id?: string;
+    partNumber: number;
+    questionType: MatrixQuestionType;
+    name?: string;
+}
+
 export interface ExamMatrixRequest {
     name: string;
     description?: string;
     isReusable?: boolean;
-    questionBankId?: string;  // ✅ NEW: Matrix owns ONE bank (not per row)
+    questionBankId?: string;
+    numberOfParts?: number;  // DEPRECATED: Use parts[] instead
+    parts?: ExamMatrixPartConfig[];  // FE-1: NEW - Configurable parts
     totalQuestionsTarget?: number | null;
     totalPointsTarget?: number | null;
 }
@@ -17,8 +30,9 @@ export interface ExamMatrixRequest {
 export interface BuildExamMatrixRequest extends ExamMatrixRequest {
     gradeLevel?: string;
     subjectId?: string;
-    questionBankId?: string;  // ✅ Inherited from ExamMatrixRequest
-    numberOfParts?: number;  // NEW: 1, 2, or 3 (Part I=MCQ, Part II=TF, Part III=SA)
+    questionBankId?: string;
+    numberOfParts?: number;  // DEPRECATED: Use parts[] instead
+    parts?: ExamMatrixPartConfig[];  // FE-1: NEW - Configurable parts
 }
 
 export type MatrixCognitiveLevel =
@@ -50,8 +64,8 @@ export interface ExamMatrixRowCellRequest {
     cognitiveLevel: MatrixCognitiveLevel;
     questionCount: number;
     pointsPerQuestion: number;
-    partNumber?: number;  // NEW: 1, 2, or 3 (derived from part selection)
-    questionType?: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER';  // NEW
+    partNumber: number;  // REQUIRED: 1, 2, or 3 (matches BE @NotNull)
+    questionType?: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER';
 }
 
 export interface ExamMatrixRowRequest {
@@ -69,8 +83,8 @@ export interface MatrixCellRequest {
     cognitiveLevel: MatrixCognitiveLevel;
     questionCount: number;
     pointsPerQuestion: number;
-    partNumber?: number;  // NEW: 1, 2, or 3 (derived from part selection)
-    questionType?: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER';  // NEW
+    partNumber: number;  // REQUIRED: 1, 2, or 3 (matches BE @NotNull)
+    questionType?: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER';  // Derived from partNumber by BE
 }
 
 export interface UpdateMatrixRowCellsRequest {
@@ -141,8 +155,9 @@ export interface ExamMatrixTableResponse {
     subjectId?: string;
     subjectName?: string;
     status?: MatrixStatus;
-    numberOfParts?: number;  // NEW: 1, 2, or 3
-    partTypeMapping?: Record<number, 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER'>;  // NEW: {1: MCQ, 2: TF, 3: SA}
+    numberOfParts?: number;  // DEPRECATED: Use parts.length instead
+    parts?: ExamMatrixPartConfig[];  // FE-1: NEW - ALWAYS populated from API
+    partTypeMapping?: Record<number, 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER'>;  // DEPRECATED: Use parts[] instead
     chapters: ExamMatrixTableChapter[];
     grandTotalByCognitive?: MatrixCognitiveDistribution;
     grandTotalQuestions: number;
@@ -156,9 +171,10 @@ export interface ExamMatrixResponse {
     name: string;
     description?: string;
     isReusable: boolean;
-    questionBankId?: string;  // ✅ NEW: Matrix owns ONE bank
-    questionBankName?: string;  // ✅ NEW: For display
-    numberOfParts?: number;  // ✅ NEW: 1, 2, or 3
+    questionBankId?: string;
+    questionBankName?: string;
+    numberOfParts?: number;  // DEPRECATED: Use parts.length instead
+    parts?: ExamMatrixPartConfig[];  // FE-1: NEW - ALWAYS populated from API
     totalQuestionsTarget?: number;
     totalPointsTarget?: number;
     cognitiveLevelPercentages?: MatrixCognitiveDistribution;

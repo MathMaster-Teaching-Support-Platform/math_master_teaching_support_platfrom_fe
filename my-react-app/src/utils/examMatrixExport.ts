@@ -184,7 +184,6 @@ function buildExportTableHtml(
         chapterName === 'Chương không xác định'
           ? row.chapterName || row.chapter || chapterName
           : chapterName;
-      const ref = row.subject_name || row.subjectName || row.subject || '-';
       const counts = cognitiveOrder
         .map(
           (lv) =>
@@ -195,7 +194,6 @@ function buildExportTableHtml(
         <td style="border:1px solid #d6e0ee;padding:6px 8px;text-align:center">${stt}</td>
         <td style="border:1px solid #d6e0ee;padding:6px 8px">${escapeHtml(String(displayChapter))}</td>
         <td style="border:1px solid #d6e0ee;padding:6px 8px">${escapeHtml(row.questionTypeName || 'N/A')}</td>
-        <td style="border:1px solid #d6e0ee;padding:6px 8px;font-size:10px">${escapeHtml(String(ref))}</td>
         ${counts}
         <td style="border:1px solid #d6e0ee;padding:6px 8px;text-align:center">${row.rowTotalQuestions ?? 0}</td>
         <td style="border:1px solid #d6e0ee;padding:6px 8px;text-align:center">${row.rowTotalPoints ?? 0}</td>
@@ -221,14 +219,13 @@ function buildExportTableHtml(
       <tr>
         <th style="border:1px solid #b7c8df;padding:6px 8px;background:#1f5eff;color:#fff;font-weight:700">STT</th>
         <th style="border:1px solid #b7c8df;padding:6px 8px;background:#1f5eff;color:#fff;font-weight:700">Chương</th>
-        <th style="border:1px solid #b7c8df;padding:6px 8px;background:#1f5eff;color:#fff;font-weight:700">Dạng bài</th>
-        <th style="border:1px solid #b7c8df;padding:6px 8px;background:#1f5eff;color:#fff;font-weight:700">Trích dẫn</th>
+        <th style="border:1px solid #b7c8df;padding:6px 8px;background:#1f5eff;color:#fff;font-weight:700">Chủ đề</th>
         <th colspan="4" style="border:1px solid #b7c8df;padding:6px 8px;background:#1f5eff;color:#fff;font-weight:700">Mức độ nhận thức (số câu)</th>
         <th style="border:1px solid #b7c8df;padding:6px 8px;background:#1f5eff;color:#fff;font-weight:700">Tổng câu</th>
         <th style="border:1px solid #b7c8df;padding:6px 8px;background:#1f5eff;color:#fff;font-weight:700">Tổng điểm</th>
       </tr>
       <tr>
-        <th colspan="4" style="border:1px solid #b7c8df;background:#edf3ff"></th>
+        <th colspan="3" style="border:1px solid #b7c8df;background:#edf3ff"></th>
         ${headerCells}
         <th colspan="2" style="border:1px solid #b7c8df;background:#edf3ff"></th>
       </tr>
@@ -236,7 +233,7 @@ function buildExportTableHtml(
     <tbody>${bodyRows.join('')}</tbody>
     <tfoot>
       <tr>
-        <td colspan="4" style="border:1px solid #b7c8df;padding:6px 8px;font-weight:700;background:#f3f7fd">Tổng cộng</td>
+        <td colspan="3" style="border:1px solid #b7c8df;padding:6px 8px;font-weight:700;background:#f3f7fd">Tổng cộng</td>
         ${footCounts}
         <td style="border:1px solid #b7c8df;padding:6px 8px;text-align:center;font-weight:700;background:#f3f7fd">${table.grandTotalQuestions ?? ''}</td>
         <td style="border:1px solid #b7c8df;padding:6px 8px;text-align:center;font-weight:700;background:#f3f7fd">${table.grandTotalPoints ?? ''}</td>
