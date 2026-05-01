@@ -382,24 +382,32 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
           <div style={{ flex: 1, minWidth: 0 }}>
             <div
               style={{
-                fontSize: isSidebar ? '0.8rem' : '0.88rem',
-                fontWeight: isPlaying || isCompleted || isInProgress ? 700 : 600,
-                color: isPlaying 
-                  ? '#1e40af' 
-                  : isCompleted 
-                    ? '#065f46' 
-                    : isInProgress 
-                      ? '#92400e' 
-                      : 'var(--mod-ink)',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.5rem',
+                width: '100%',
               }}
             >
-              {lesson.videoTitle ?? lesson.lessonTitle ?? 'Bài học'}
+              <div
+                style={{
+                  fontSize: isSidebar ? '0.8rem' : '0.88rem',
+                  fontWeight: isPlaying || isCompleted || isInProgress ? 700 : 600,
+                  color: isPlaying 
+                    ? '#1e40af' 
+                    : isCompleted 
+                      ? '#065f46' 
+                      : isInProgress 
+                        ? '#92400e' 
+                        : 'var(--mod-ink)',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  flexShrink: 1,
+                }}
+                title={lesson.lessonTitle ?? 'Bài học'}
+              >
+                {lesson.lessonTitle ?? 'Bài học'}
+              </div>
               {isCompleted && (
                 <span
                   className="badge completed"
@@ -409,6 +417,7 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
                     borderRadius: '4px',
                     textTransform: 'uppercase',
                     letterSpacing: '0.02em',
+                    flexShrink: 0,
                   }}
                 >
                   Hoàn thành
@@ -425,13 +434,29 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
                     border: '1px solid #fde68a',
                     textTransform: 'uppercase',
                     letterSpacing: '0.02em',
-                    fontWeight: 800
+                    fontWeight: 800,
+                    flexShrink: 0,
                   }}
                 >
                   Đang học {Math.round(progressPercent)}%
                 </span>
               )}
             </div>
+            {lesson.videoTitle && lesson.videoTitle !== lesson.lessonTitle && (
+              <div
+                style={{
+                  fontSize: isSidebar ? '0.75rem' : '0.8rem',
+                  color: '#64748b',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  marginTop: 2,
+                }}
+                title={lesson.videoTitle}
+              >
+                {lesson.videoTitle}
+              </div>
+            )}
             {!isSidebar && (
               <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 4 }}>
                 {lesson.durationSeconds && (
@@ -529,7 +554,11 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
             <InlinePlayer
               courseId={courseId}
               courseLessonId={playingLessonId}
-              title={currentLesson.videoTitle ?? currentLesson.lessonTitle ?? 'Bài học'}
+              title={
+                currentLesson.lessonTitle && currentLesson.videoTitle && currentLesson.lessonTitle !== currentLesson.videoTitle
+                  ? `${currentLesson.lessonTitle} - ${currentLesson.videoTitle}`
+                  : currentLesson.lessonTitle ?? currentLesson.videoTitle ?? 'Bài học'
+              }
               initialTime={
                 progress?.lessons.find((l) => l.courseLessonId === playingLessonId)
                   ?.watchedSeconds ?? 0

@@ -1238,9 +1238,25 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
               }}
+              title={lesson.lessonTitle ?? 'Bài học'}
             >
-              {lesson.videoTitle ?? lesson.lessonTitle ?? 'Bài học'}
+              {lesson.lessonTitle ?? 'Bài học'}
             </div>
+            {lesson.videoTitle && lesson.videoTitle !== lesson.lessonTitle && (
+              <div
+                style={{
+                  fontSize: isSidebar ? '0.75rem' : '0.8rem',
+                  color: '#64748b',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  marginTop: 2,
+                }}
+                title={lesson.videoTitle}
+              >
+                {lesson.videoTitle}
+              </div>
+            )}
             {!isSidebar && (
               <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 4 }}>
                 {lesson.durationSeconds && (
@@ -1469,11 +1485,14 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
             <InlinePlayer
               courseId={courseId}
               courseLessonId={playingLessonId}
-              title={
-                lessons.find((l) => l.id === playingLessonId)?.videoTitle ??
-                lessons.find((l) => l.id === playingLessonId)?.lessonTitle ??
-                'Bài học'
-              }
+              title={(() => {
+                const l = lessons.find((x) => x.id === playingLessonId);
+                if (!l) return 'Bài học';
+                if (l.lessonTitle && l.videoTitle && l.lessonTitle !== l.videoTitle) {
+                  return `${l.lessonTitle} - ${l.videoTitle}`;
+                }
+                return l.lessonTitle ?? l.videoTitle ?? 'Bài học';
+              })()}
               onLessonComplete={() => {
                 const currentIndex = lessons.findIndex((l) => l.id === playingLessonId);
                 if (currentIndex !== -1 && currentIndex < lessons.length - 1) {
