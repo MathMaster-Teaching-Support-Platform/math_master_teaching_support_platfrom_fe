@@ -281,11 +281,12 @@
 .module-layout-container .cover-overlay {
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(to top,
-      rgba(10, 10, 8, 0.72) 0%,
-      rgba(10, 10, 8, 0.28) 45%,
-      transparent 75%);
+  background: linear-gradient(
+    to top,
+    rgba(10, 10, 8, 0.72) 0%,
+    rgba(10, 10, 8, 0.28) 45%,
+    transparent 75%
+  );
   z-index: 1;
 }
 
@@ -298,7 +299,7 @@
   font-weight: 800;
   letter-spacing: 0.08em;
   color: rgba(255, 255, 255, 0.65);
-  background: rgba(0,0,0,0.25);
+  background: rgba(0, 0, 0, 0.25);
   padding: 2px 7px;
   border-radius: 999px;
   backdrop-filter: blur(4px);
@@ -367,7 +368,7 @@
   text-overflow: ellipsis;
   word-break: break-word;
   min-height: calc(1.35em * 2);
-  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
 }
 
 .module-layout-container .course-heading {
@@ -1000,7 +1001,9 @@
   background: #faf9f5;
   border: 1px solid #e8e6dc;
   border-radius: 16px;
-  box-shadow: rgba(0, 0, 0, 0.05) 0 4px 24px, 0 0 0 1px #f0eee6;
+  box-shadow:
+    rgba(0, 0, 0, 0.05) 0 4px 24px,
+    0 0 0 1px #f0eee6;
   padding: 1.35rem 1.5rem 1.1rem;
   overflow: hidden;
   animation: tc-modalIn 0.25s cubic-bezier(0.22, 1, 0.36, 1);
@@ -1115,7 +1118,10 @@
   font-synthesis: none;
 }
 
-.module-layout-container .create-course-modal .wizard-step-item:not(.active):not(.completed) .wizard-step-label {
+.module-layout-container
+  .create-course-modal
+  .wizard-step-item:not(.active):not(.completed)
+  .wizard-step-label {
   color: #87867f;
 }
 
@@ -1556,7 +1562,7 @@
   border-color: #b85839;
 }
 
-/* Teacher Studio — optional solid primaries (overrides default blue for feature branding) */
+/*  — optional solid primaries (overrides default blue for feature branding) */
 .module-layout-container .teacher-courses-page .btn.btn--feat-blue {
   background: #2563eb;
   border-color: #2563eb;
@@ -1636,7 +1642,9 @@
   border-color: #ddd6fe;
   box-shadow: none;
 }
-.module-layout-container .teacher-courses-page .btn.secondary.btn--tint-violet:hover:not(:disabled) {
+.module-layout-container
+  .teacher-courses-page
+  .btn.secondary.btn--tint-violet:hover:not(:disabled) {
   background: #ede9fe;
   border-color: #c4b5fd;
   color: #5b21b6;
@@ -1648,7 +1656,9 @@
   border-color: #c7d2fe;
   box-shadow: none;
 }
-.module-layout-container .teacher-courses-page .btn.secondary.btn--tint-indigo:hover:not(:disabled) {
+.module-layout-container
+  .teacher-courses-page
+  .btn.secondary.btn--tint-indigo:hover:not(:disabled) {
   background: #e0e7ff;
   border-color: #a5b4fc;
   color: #3730a3;
@@ -1660,7 +1670,9 @@
   border-color: #a7f3d0;
   box-shadow: none;
 }
-.module-layout-container .teacher-courses-page .btn.secondary.btn--tint-emerald:hover:not(:disabled) {
+.module-layout-container
+  .teacher-courses-page
+  .btn.secondary.btn--tint-emerald:hover:not(:disabled) {
   background: #d1fae5;
   border-color: #6ee7b7;
   color: #065f46;
@@ -1793,7 +1805,10 @@
   justify-items: stretch;
 }
 
-.module-layout-container .teacher-courses-page .grid-cards:not(.list-view) > .data-card.course-card {
+.module-layout-container
+  .teacher-courses-page
+  .grid-cards:not(.list-view)
+  > .data-card.course-card {
   width: 100%;
   min-width: 0;
 }
@@ -1813,7 +1828,12 @@
 
 .module-layout-container .teacher-courses-page .cover-overlay {
   background:
-    linear-gradient(to top, rgba(250, 249, 245, 0.62) 0%, rgba(250, 249, 245, 0.2) 42%, transparent 78%),
+    linear-gradient(
+      to top,
+      rgba(250, 249, 245, 0.62) 0%,
+      rgba(250, 249, 245, 0.2) 42%,
+      transparent 78%
+    ),
     radial-gradient(circle at top right, rgba(255, 255, 255, 0.35), transparent 48%);
 }
 
@@ -1923,7 +1943,7 @@
   }
 }
 
-/* ══ Teacher Studio — pages reusing this shell (materials, mindmaps, matrices, Q bank, v.v.) ══ */
+/* ══  — pages reusing this shell (materials, mindmaps, matrices, Q bank, v.v.) ══ */
 .module-layout-container .teacher-courses-page section.hero-card,
 .module-layout-container .teacher-courses-page .hero-card {
   background: linear-gradient(165deg, #fffefb 0%, #f6f0e6 45%, #faf7f0 100%);
@@ -1958,7 +1978,11 @@
 }
 
 /* Ma trận đề — thẻ bước luồng (ghi đè nền xám lạnh) */
-.module-layout-container .teacher-courses-page .exam-matrix-workflow-hero > div:first-of-type > div {
+.module-layout-container
+  .teacher-courses-page
+  .exam-matrix-workflow-hero
+  > div:first-of-type
+  > div {
   background: #faf7f3 !important;
   border: 1px solid #e8e6dc !important;
   border-radius: 12px !important;

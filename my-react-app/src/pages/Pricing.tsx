@@ -1,8 +1,10 @@
-import React, { useEffect, useId, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { Plus } from 'lucide-react';
+import React, { useEffect, useId, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Footer from '../components/Footer';
 import DashboardLayout from '../components/layout/DashboardLayout/DashboardLayout';
+import { UI_TEXT } from '../constants/uiText';
 import { mockAdmin, mockStudent, mockTeacher } from '../data/mockData';
 import { AuthService } from '../services/api/auth.service';
 import {
@@ -12,10 +14,8 @@ import {
   type SubscriptionPlan,
 } from '../services/api/subscription-plan.service';
 import { WalletService } from '../services/api/wallet.service';
-import { Plus } from 'lucide-react';
-import type { WalletSummary } from '../types/wallet.types';
-import { UI_TEXT } from '../constants/uiText';
 import '../styles/module-refactor.css';
+import type { WalletSummary } from '../types/wallet.types';
 import './courses/TeacherCourses.css';
 import './Homepage.css';
 import './Pricing.css';
@@ -67,7 +67,14 @@ const planCoverGradients = [
   'linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%)',
   'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)',
 ] as const;
-const planCoverAccents = ['#1d4ed8', '#0f766e', '#047857', '#c2410c', '#be185d', '#6d28d9'] as const;
+const planCoverAccents = [
+  '#1d4ed8',
+  '#0f766e',
+  '#047857',
+  '#c2410c',
+  '#be185d',
+  '#6d28d9',
+] as const;
 
 const getPlanTier = (name: string): PlanTier => {
   const lower = name.toLowerCase();
@@ -207,9 +214,7 @@ const ModulePlanCard: React.FC<ModulePlanCardProps> = ({
         <div className="cover-index" aria-hidden>
           #{String(displayIndex + 1).padStart(2, '0')}
         </div>
-        {isCurrent && (
-          <span className="course-badge badge-pricing-current">Đang dùng</span>
-        )}
+        {isCurrent && <span className="course-badge badge-pricing-current">Đang dùng</span>}
         {featured && !isCurrent && (
           <span className="course-badge badge-pricing-popular">Phổ biến</span>
         )}
@@ -300,7 +305,7 @@ const Pricing: React.FC = () => {
   const currentUser =
     layoutRole === 'teacher' ? mockTeacher : layoutRole === 'admin' ? mockAdmin : mockStudent;
   const pricingHeaderKicker =
-    layoutRole === 'teacher' ? 'Teacher Studio' : layoutRole === 'admin' ? 'Admin' : 'MathMaster';
+    layoutRole === 'teacher' ? '' : layoutRole === 'admin' ? 'Admin' : 'MathMaster';
   const [subscriptionError, setSubscriptionError] = useState('');
   const [subscriptionSuccess, setSubscriptionSuccess] = useState('');
   const [purchasingPlanId, setPurchasingPlanId] = useState<string | null>(null);
@@ -327,7 +332,8 @@ const Pricing: React.FC = () => {
   });
 
   const userPlans: SubscriptionPlan[] = userPlansQuery.data?.result || [];
-  const activeSubscription: MySubscriptionResponse | null = mySubscriptionQuery.data?.result || null;
+  const activeSubscription: MySubscriptionResponse | null =
+    mySubscriptionQuery.data?.result || null;
   const wallet: WalletSummary | null = walletQuery.data?.result || null;
   const loadingSubscriptionData = userPlansQuery.isLoading || walletQuery.isLoading;
 
@@ -396,7 +402,12 @@ const Pricing: React.FC = () => {
 
   /* ── Comparison table data ── */
   const comparisonFeatures = [
-    { name: `Số ${UI_TEXT.COURSE.toLowerCase()}/tháng`, free: '10', teacher: 'Không giới hạn', school: 'Không giới hạn' },
+    {
+      name: `Số ${UI_TEXT.COURSE.toLowerCase()}/tháng`,
+      free: '10',
+      teacher: 'Không giới hạn',
+      school: 'Không giới hạn',
+    },
     { name: 'Lưu trữ', free: '100MB', teacher: '10GB', school: 'Không giới hạn' },
     { name: 'Số lớp học', free: '1', teacher: 'Không giới hạn', school: 'Không giới hạn' },
     { name: 'AI trợ lý', free: 'Cơ bản', teacher: 'Nâng cao', school: 'Nâng cao' },
@@ -708,8 +719,30 @@ const Pricing: React.FC = () => {
               )}
 
               {/* Status messages + plans */}
-                {subscriptionError && (
-                  <div className="pricing-alert pricing-alert--error" role="alert">
+              {subscriptionError && (
+                <div className="pricing-alert pricing-alert--error" role="alert">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                  <span className="pricing-alert__text">{subscriptionError}</span>
+                  <button
+                    type="button"
+                    className="pricing-alert-dismiss"
+                    onClick={() => setSubscriptionError('')}
+                    aria-label="Đóng thông báo lỗi"
+                  >
                     <svg
                       width="16"
                       height="16"
@@ -721,163 +754,142 @@ const Pricing: React.FC = () => {
                       strokeLinejoin="round"
                       aria-hidden
                     >
-                      <circle cx="12" cy="12" r="10" />
-                      <line x1="12" y1="8" x2="12" y2="12" />
-                      <line x1="12" y1="16" x2="12.01" y2="16" />
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
                     </svg>
-                    <span className="pricing-alert__text">{subscriptionError}</span>
-                    <button
-                      type="button"
-                      className="pricing-alert-dismiss"
-                      onClick={() => setSubscriptionError('')}
-                      aria-label="Đóng thông báo lỗi"
-                    >
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        aria-hidden
-                      >
-                        <line x1="18" y1="6" x2="6" y2="18" />
-                        <line x1="6" y1="6" x2="18" y2="18" />
-                      </svg>
-                    </button>
-                  </div>
-                )}
-                {subscriptionSuccess && (
-                  <div className="pricing-alert pricing-alert--success" role="status">
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden
-                    >
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                    <span className="pricing-alert__text">{subscriptionSuccess}</span>
-                    <button
-                      type="button"
-                      className="pricing-alert-dismiss"
-                      onClick={() => setSubscriptionSuccess('')}
-                      aria-label="Đóng thông báo thành công"
-                    >
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        aria-hidden
-                      >
-                        <line x1="18" y1="6" x2="6" y2="18" />
-                        <line x1="6" y1="6" x2="18" y2="18" />
-                      </svg>
-                    </button>
-                  </div>
-                )}
-
-                <div className="grid-cards pricing-m-plan-grid">
-                  {loadingSubscriptionData ? (
-                    <div className="pricing-skeleton-mesh" style={{ gridColumn: '1 / -1' }}>
-                      <div className="skeleton-grid">
-                        <div className="skeleton-card" />
-                        <div className="skeleton-card" />
-                        <div className="skeleton-card" />
-                      </div>
-                    </div>
-                  ) : userPlans.length === 0 ? (
-                    <div className="empty pricing-m-empty" style={{ gridColumn: '1 / -1' }}>
-                      <p>Chưa có gói để hiển thị.</p>
-                      <p style={{ color: 'var(--mod-slate-500)', fontSize: '0.9rem' }}>
-                        Không tìm thấy gói đăng ký từ máy chủ. Bạn có thể thử tải lại.
-                      </p>
-                      <button
-                        type="button"
-                        className="btn"
-                        style={{ marginTop: '0.75rem' }}
-                        onClick={() => {
-                          void Promise.all([
-                            userPlansQuery.refetch(),
-                            walletQuery.refetch(),
-                            mySubscriptionQuery.refetch(),
-                          ]);
-                        }}
-                      >
-                        Tải lại
-                      </button>
-                    </div>
-                  ) : (
-                    [...userPlans]
-                      .sort((a, b) => (a.price ?? 0) - (b.price ?? 0))
-                      .map((plan, idx) => {
-                        const price = plan.price ?? 0;
-                        const walletBalance = wallet?.balance ?? 0;
-                        const isInsufficientBalance = price > 0 && walletBalance < price;
-                        const isCurrentPlan = activeSubscription?.planId === plan.id;
-                        const tier = getPlanTier(plan.name);
-                        const spotlight =
-                          Boolean(plan.featured) || getPlanTier(plan.name) === 'pro';
-                        const ctaPrimary = spotlight;
-
-                        const btn = (
-                          <button
-                            type="button"
-                            className={ctaPrimary ? 'action-primary' : 'action-toggle'}
-                            onClick={() => void handlePurchase(plan)}
-                            disabled={!!purchasingPlanId || isCurrentPlan || !price}
-                            title={isInsufficientBalance ? 'Số dư ví không đủ' : undefined}
-                          >
-                            {purchasingPlanId === plan.id ? (
-                              <>
-                                <span className="pricing-btn-spinner" />
-                                Đang mua...
-                              </>
-                            ) : isCurrentPlan ? (
-                              'Đang sử dụng'
-                            ) : !price ? (
-                              'Không mua trực tiếp'
-                            ) : (
-                              'Mua ngay'
-                            )}
-                          </button>
-                        );
-
-                        return (
-                          <ModulePlanCard
-                            key={plan.id}
-                            listIndex={idx}
-                            displayIndex={idx}
-                            tier={tier}
-                            name={plan.name}
-                            description={plan.description || 'Gói đăng ký cho người dùng'}
-                            priceBlock={
-                              <div className="pricing-m-price-block">
-                                <span className="pricing-m-price">{formatPrice(plan.price)}</span>
-                                <span className="pricing-m-period">/{plan.billingCycle.toLowerCase()}</span>
-                              </div>
-                            }
-                            tokenLine={`${plan.tokenQuota.toLocaleString()} token / kỳ`}
-                            featured={spotlight}
-                            isCurrent={isCurrentPlan}
-                            cta={btn}
-                          />
-                        );
-                      })
-                  )}
+                  </button>
                 </div>
+              )}
+              {subscriptionSuccess && (
+                <div className="pricing-alert pricing-alert--success" role="status">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  <span className="pricing-alert__text">{subscriptionSuccess}</span>
+                  <button
+                    type="button"
+                    className="pricing-alert-dismiss"
+                    onClick={() => setSubscriptionSuccess('')}
+                    aria-label="Đóng thông báo thành công"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden
+                    >
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                </div>
+              )}
+
+              <div className="grid-cards pricing-m-plan-grid">
+                {loadingSubscriptionData ? (
+                  <div className="pricing-skeleton-mesh" style={{ gridColumn: '1 / -1' }}>
+                    <div className="skeleton-grid">
+                      <div className="skeleton-card" />
+                      <div className="skeleton-card" />
+                      <div className="skeleton-card" />
+                    </div>
+                  </div>
+                ) : userPlans.length === 0 ? (
+                  <div className="empty pricing-m-empty" style={{ gridColumn: '1 / -1' }}>
+                    <p>Chưa có gói để hiển thị.</p>
+                    <p style={{ color: 'var(--mod-slate-500)', fontSize: '0.9rem' }}>
+                      Không tìm thấy gói đăng ký từ máy chủ. Bạn có thể thử tải lại.
+                    </p>
+                    <button
+                      type="button"
+                      className="btn"
+                      style={{ marginTop: '0.75rem' }}
+                      onClick={() => {
+                        void Promise.all([
+                          userPlansQuery.refetch(),
+                          walletQuery.refetch(),
+                          mySubscriptionQuery.refetch(),
+                        ]);
+                      }}
+                    >
+                      Tải lại
+                    </button>
+                  </div>
+                ) : (
+                  [...userPlans]
+                    .sort((a, b) => (a.price ?? 0) - (b.price ?? 0))
+                    .map((plan, idx) => {
+                      const price = plan.price ?? 0;
+                      const walletBalance = wallet?.balance ?? 0;
+                      const isInsufficientBalance = price > 0 && walletBalance < price;
+                      const isCurrentPlan = activeSubscription?.planId === plan.id;
+                      const tier = getPlanTier(plan.name);
+                      const spotlight = Boolean(plan.featured) || getPlanTier(plan.name) === 'pro';
+                      const ctaPrimary = spotlight;
+
+                      const btn = (
+                        <button
+                          type="button"
+                          className={ctaPrimary ? 'action-primary' : 'action-toggle'}
+                          onClick={() => void handlePurchase(plan)}
+                          disabled={!!purchasingPlanId || isCurrentPlan || !price}
+                          title={isInsufficientBalance ? 'Số dư ví không đủ' : undefined}
+                        >
+                          {purchasingPlanId === plan.id ? (
+                            <>
+                              <span className="pricing-btn-spinner" />
+                              Đang mua...
+                            </>
+                          ) : isCurrentPlan ? (
+                            'Đang sử dụng'
+                          ) : !price ? (
+                            'Không mua trực tiếp'
+                          ) : (
+                            'Mua ngay'
+                          )}
+                        </button>
+                      );
+
+                      return (
+                        <ModulePlanCard
+                          key={plan.id}
+                          listIndex={idx}
+                          displayIndex={idx}
+                          tier={tier}
+                          name={plan.name}
+                          description={plan.description || 'Gói đăng ký cho người dùng'}
+                          priceBlock={
+                            <div className="pricing-m-price-block">
+                              <span className="pricing-m-price">{formatPrice(plan.price)}</span>
+                              <span className="pricing-m-period">
+                                /{plan.billingCycle.toLowerCase()}
+                              </span>
+                            </div>
+                          }
+                          tokenLine={`${plan.tokenQuota.toLocaleString()} token / kỳ`}
+                          featured={spotlight}
+                          isCurrent={isCurrentPlan}
+                          cta={btn}
+                        />
+                      );
+                    })
+                )}
+              </div>
             </section>
           </div>
         </DashboardLayout>
@@ -927,252 +939,256 @@ const Pricing: React.FC = () => {
       </header>
 
       <main id="pricing-main">
-      {/* ── Hero ── */}
-      <section className="pricing-hero" aria-labelledby="pricing-public-heading">
-        <div className="pricing-hero-dots" aria-hidden="true" />
-        <div className="container">
-          <div className="pricing-hero-content">
-            <span className="ft-badge ft-badge--purple" style={{ marginBottom: '1.25rem' }}>
-              Bảng giá
-            </span>
-            <h1 className="pricing-hero-title" id="pricing-public-heading">
-              Chọn gói <span className="gradient-text">phù hợp với bạn</span>
-            </h1>
-            <p className="pricing-hero-desc">
-              Dùng thử miễn phí 30 ngày. Nâng cấp hoặc hạ cấp bất kỳ lúc nào. Không cần thẻ tín
-              dụng.
-            </p>
+        {/* ── Hero ── */}
+        <section className="pricing-hero" aria-labelledby="pricing-public-heading">
+          <div className="pricing-hero-dots" aria-hidden="true" />
+          <div className="container">
+            <div className="pricing-hero-content">
+              <span className="ft-badge ft-badge--purple" style={{ marginBottom: '1.25rem' }}>
+                Bảng giá
+              </span>
+              <h1 className="pricing-hero-title" id="pricing-public-heading">
+                Chọn gói <span className="gradient-text">phù hợp với bạn</span>
+              </h1>
+              <p className="pricing-hero-desc">
+                Dùng thử miễn phí 30 ngày. Nâng cấp hoặc hạ cấp bất kỳ lúc nào. Không cần thẻ tín
+                dụng.
+              </p>
 
-            <nav className="pricing-subnav" aria-label="Mục lục nội dung bảng giá">
-              <a
-                href="#pricing-plans"
-                className="pricing-subnav__link"
-                onClick={(e) => scrollToPricingSection(e, 'pricing-plans')}
-              >
-                Các gói
-              </a>
-              <a
-                href="#pricing-compare"
-                className="pricing-subnav__link"
-                onClick={(e) => scrollToPricingSection(e, 'pricing-compare')}
-              >
-                So sánh
-              </a>
-              <a
-                href="#pricing-faq"
-                className="pricing-subnav__link"
-                onClick={(e) => scrollToPricingSection(e, 'pricing-faq')}
-              >
-                Câu hỏi thường gặp
-              </a>
-            </nav>
-
-            {/* Trust stats bar */}
-            <div className="pricing-trust-bar">
-              {trustStats.map((stat, i) => (
-                <div
-                  className="pricing-trust-pill"
-                  key={i}
-                  style={{ animationDelay: `${i * 0.12}s` }}
+              <nav className="pricing-subnav" aria-label="Mục lục nội dung bảng giá">
+                <a
+                  href="#pricing-plans"
+                  className="pricing-subnav__link"
+                  onClick={(e) => scrollToPricingSection(e, 'pricing-plans')}
                 >
-                  <span className="pricing-trust-pill__icon">{stat.icon}</span>
-                  <strong className="pricing-trust-pill__value">{stat.value}</strong>
-                  <span className="pricing-trust-pill__label">{stat.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+                  Các gói
+                </a>
+                <a
+                  href="#pricing-compare"
+                  className="pricing-subnav__link"
+                  onClick={(e) => scrollToPricingSection(e, 'pricing-compare')}
+                >
+                  So sánh
+                </a>
+                <a
+                  href="#pricing-faq"
+                  className="pricing-subnav__link"
+                  onClick={(e) => scrollToPricingSection(e, 'pricing-faq')}
+                >
+                  Câu hỏi thường gặp
+                </a>
+              </nav>
 
-      {/* ── Pricing Cards ── */}
-      <section
-        className="pricing-cards-section pricing-cards-section--module pricing-section-anchor"
-        id="pricing-plans"
-        data-pricing-reveal
-        aria-label="Bảng giá các gói"
-      >
-        <div className="container">
-          <div className="module-layout-container pricing-public-plans">
-            <div className="grid-cards pricing-m-plan-grid">
-              {plans.map((plan, index) => {
-                const tier = getPlanTier(plan.name);
-                const spotlight = plan.highlighted;
-                const ctaPrimary = spotlight;
-                return (
-                  <ModulePlanCard
-                    key={plan.name}
-                    listIndex={index}
-                    displayIndex={index}
-                    tier={tier}
-                    name={plan.name}
-                    description={plan.description}
-                    priceBlock={
-                      <div className="pricing-m-price-block">
-                        <span className="pricing-m-price">{plan.price}</span>
-                        {plan.period ? (
-                          <span className="pricing-m-period">{plan.period}</span>
-                        ) : null}
-                      </div>
-                    }
-                    tokenLine={plan.tokenLine}
-                    featured={spotlight}
-                    isCurrent={false}
-                    cta={
-                      <Link
-                        to="/register"
-                        className={ctaPrimary ? 'action-primary' : 'action-toggle'}
-                      >
-                        {plan.buttonText}
-                      </Link>
-                    }
-                    features={
-                      <ul className="pricing-m-features">
-                        {plan.features.map((feature, idx) => (
-                          <li key={idx}>
-                            <span
-                              className={`pricing-m-check ${plan.highlighted ? 'pricing-m-check--primary' : ''}`}
-                            >
-                              <svg
-                                width="14"
-                                height="14"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <polyline points="20 6 9 17 4 12" />
-                              </svg>
-                            </span>
-                            {feature}
-                          </li>
-                        ))}
-                      </ul>
-                    }
-                  />
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Comparison Table ── */}
-      <section
-        className="pricing-comparison-section pricing-section-anchor"
-        id="pricing-compare"
-        data-pricing-reveal
-        aria-labelledby="compare-heading"
-      >
-        <div className="container">
-          <div className="pricing-comparison-header">
-            <span className="ft-badge ft-badge--orange" style={{ marginBottom: '1rem' }}>
-              So sánh
-            </span>
-            <h2 className="pricing-comparison-title" id="compare-heading">
-              So sánh chi tiết <span className="gradient-text">các gói</span>
-            </h2>
-          </div>
-          <div className="pricing-comparison-table-wrap" aria-label="Bảng so sánh tính năng theo gói">
-            <div className="pricing-comparison-table">
-              {/* Header */}
-              <div className="pricing-ct-header">
-                <div className="pricing-ct-header-cell">Tính năng</div>
-                <div className="pricing-ct-header-cell">Miễn phí</div>
-                <div className="pricing-ct-header-cell pricing-ct-header-cell--featured">
-                  Giáo viên
-                </div>
-                <div className="pricing-ct-header-cell">Trường học</div>
-              </div>
-              {/* Rows */}
-              {comparisonFeatures.map((row, idx) => (
-                <div className="pricing-ct-row" key={idx}>
-                  <div className="pricing-ct-cell">{row.name}</div>
-                  <div className="pricing-ct-cell">{renderCellValue(row.free, false)}</div>
-                  <div className="pricing-ct-cell pricing-ct-cell--featured">
-                    {renderCellValue(row.teacher, true)}
+              {/* Trust stats bar */}
+              <div className="pricing-trust-bar">
+                {trustStats.map((stat, i) => (
+                  <div
+                    className="pricing-trust-pill"
+                    key={i}
+                    style={{ animationDelay: `${i * 0.12}s` }}
+                  >
+                    <span className="pricing-trust-pill__icon">{stat.icon}</span>
+                    <strong className="pricing-trust-pill__value">{stat.value}</strong>
+                    <span className="pricing-trust-pill__label">{stat.label}</span>
                   </div>
-                  <div className="pricing-ct-cell">{renderCellValue(row.school, false)}</div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Pricing Cards ── */}
+        <section
+          className="pricing-cards-section pricing-cards-section--module pricing-section-anchor"
+          id="pricing-plans"
+          data-pricing-reveal
+          aria-label="Bảng giá các gói"
+        >
+          <div className="container">
+            <div className="module-layout-container pricing-public-plans">
+              <div className="grid-cards pricing-m-plan-grid">
+                {plans.map((plan, index) => {
+                  const tier = getPlanTier(plan.name);
+                  const spotlight = plan.highlighted;
+                  const ctaPrimary = spotlight;
+                  return (
+                    <ModulePlanCard
+                      key={plan.name}
+                      listIndex={index}
+                      displayIndex={index}
+                      tier={tier}
+                      name={plan.name}
+                      description={plan.description}
+                      priceBlock={
+                        <div className="pricing-m-price-block">
+                          <span className="pricing-m-price">{plan.price}</span>
+                          {plan.period ? (
+                            <span className="pricing-m-period">{plan.period}</span>
+                          ) : null}
+                        </div>
+                      }
+                      tokenLine={plan.tokenLine}
+                      featured={spotlight}
+                      isCurrent={false}
+                      cta={
+                        <Link
+                          to="/register"
+                          className={ctaPrimary ? 'action-primary' : 'action-toggle'}
+                        >
+                          {plan.buttonText}
+                        </Link>
+                      }
+                      features={
+                        <ul className="pricing-m-features">
+                          {plan.features.map((feature, idx) => (
+                            <li key={idx}>
+                              <span
+                                className={`pricing-m-check ${plan.highlighted ? 'pricing-m-check--primary' : ''}`}
+                              >
+                                <svg
+                                  width="14"
+                                  height="14"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2.5"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                              </span>
+                              {feature}
+                            </li>
+                          ))}
+                        </ul>
+                      }
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Comparison Table ── */}
+        <section
+          className="pricing-comparison-section pricing-section-anchor"
+          id="pricing-compare"
+          data-pricing-reveal
+          aria-labelledby="compare-heading"
+        >
+          <div className="container">
+            <div className="pricing-comparison-header">
+              <span className="ft-badge ft-badge--orange" style={{ marginBottom: '1rem' }}>
+                So sánh
+              </span>
+              <h2 className="pricing-comparison-title" id="compare-heading">
+                So sánh chi tiết <span className="gradient-text">các gói</span>
+              </h2>
+            </div>
+            <div
+              className="pricing-comparison-table-wrap"
+              aria-label="Bảng so sánh tính năng theo gói"
+            >
+              <div className="pricing-comparison-table">
+                {/* Header */}
+                <div className="pricing-ct-header">
+                  <div className="pricing-ct-header-cell">Tính năng</div>
+                  <div className="pricing-ct-header-cell">Miễn phí</div>
+                  <div className="pricing-ct-header-cell pricing-ct-header-cell--featured">
+                    Giáo viên
+                  </div>
+                  <div className="pricing-ct-header-cell">Trường học</div>
                 </div>
+                {/* Rows */}
+                {comparisonFeatures.map((row, idx) => (
+                  <div className="pricing-ct-row" key={idx}>
+                    <div className="pricing-ct-cell">{row.name}</div>
+                    <div className="pricing-ct-cell">{renderCellValue(row.free, false)}</div>
+                    <div className="pricing-ct-cell pricing-ct-cell--featured">
+                      {renderCellValue(row.teacher, true)}
+                    </div>
+                    <div className="pricing-ct-cell">{renderCellValue(row.school, false)}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── FAQ Accordion ── */}
+        <section
+          className="pricing-faq-section pricing-section-anchor"
+          id="pricing-faq"
+          data-pricing-reveal
+          aria-labelledby="faq-heading"
+        >
+          <div className="features-bg-dots" aria-hidden="true" />
+          <div className="container">
+            <div className="pricing-faq-header">
+              <span className="ft-badge ft-badge--blue" style={{ marginBottom: '1rem' }}>
+                FAQ
+              </span>
+              <h2 className="pricing-faq-title" id="faq-heading">
+                Câu hỏi <span className="gradient-text">thường gặp</span>
+              </h2>
+              <p className="pricing-hero-desc" style={{ marginTop: '0.75rem' }}>
+                Không tìm được câu trả lời?{' '}
+                <Link to="/contact" style={{ color: 'var(--c-primary)', fontWeight: 600 }}>
+                  Liên hệ chúng tôi
+                </Link>
+              </p>
+            </div>
+            <div className="pricing-faq-accordion">
+              {faqItems.map((item, i) => (
+                <FaqItem key={i} q={item.q} a={item.a} index={i} />
               ))}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ── FAQ Accordion ── */}
-      <section
-        className="pricing-faq-section pricing-section-anchor"
-        id="pricing-faq"
-        data-pricing-reveal
-        aria-labelledby="faq-heading"
-      >
-        <div className="features-bg-dots" aria-hidden="true" />
-        <div className="container">
-          <div className="pricing-faq-header">
-            <span className="ft-badge ft-badge--blue" style={{ marginBottom: '1rem' }}>
-              FAQ
-            </span>
-            <h2 className="pricing-faq-title" id="faq-heading">
-              Câu hỏi <span className="gradient-text">thường gặp</span>
-            </h2>
-            <p className="pricing-hero-desc" style={{ marginTop: '0.75rem' }}>
-              Không tìm được câu trả lời?{' '}
-              <Link to="/contact" style={{ color: 'var(--c-primary)', fontWeight: 600 }}>
-                Liên hệ chúng tôi
-              </Link>
-            </p>
-          </div>
-          <div className="pricing-faq-accordion">
-            {faqItems.map((item, i) => (
-              <FaqItem key={i} q={item.q} a={item.a} index={i} />
-            ))}
-          </div>
-        </div>
-      </section>
+        {/* ── CTA ── */}
+        <section className="pricing-cta-section pricing-section-anchor" data-pricing-reveal>
+          <div className="container">
+            <div className="pricing-cta-card">
+              <div className="pricing-cta-glow" aria-hidden="true" />
+              <span className="ft-badge ft-badge--green" style={{ marginBottom: '1rem' }}>
+                Bắt đầu ngay
+              </span>
+              <h2 className="pricing-cta-title">
+                Sẵn sàng tối ưu hóa{' '}
+                <span className="gradient-text">{UI_TEXT.COURSE.toLowerCase()}</span> của bạn?
+              </h2>
+              <p className="pricing-cta-desc">
+                Tham gia cùng <strong>5,000+</strong> giáo viên đã lựa chọn MathMaster. Dùng thử
+                miễn phí, không cần thẻ tín dụng.
+              </p>
 
-      {/* ── CTA ── */}
-      <section className="pricing-cta-section pricing-section-anchor" data-pricing-reveal>
-        <div className="container">
-          <div className="pricing-cta-card">
-            <div className="pricing-cta-glow" aria-hidden="true" />
-            <span className="ft-badge ft-badge--green" style={{ marginBottom: '1rem' }}>
-              Bắt đầu ngay
-            </span>
-            <h2 className="pricing-cta-title">
-              Sẵn sàng tối ưu hóa <span className="gradient-text">{UI_TEXT.COURSE.toLowerCase()}</span> của bạn?
-            </h2>
-            <p className="pricing-cta-desc">
-              Tham gia cùng <strong>5,000+</strong> giáo viên đã lựa chọn MathMaster. Dùng thử miễn
-              phí, không cần thẻ tín dụng.
-            </p>
+              {/* Social proof avatars */}
+              <div className="pricing-cta-avatars">
+                {['👩‍🏫', '👨‍🏫', '👩‍💻', '👨‍🎓', '👩‍🔬'].map((emoji, i) => (
+                  <span key={i} className="pricing-cta-avatar" style={{ zIndex: 5 - i }}>
+                    {emoji}
+                  </span>
+                ))}
+                <span className="pricing-cta-avatar-label">+5,000 giáo viên</span>
+              </div>
 
-            {/* Social proof avatars */}
-            <div className="pricing-cta-avatars">
-              {['👩‍🏫', '👨‍🏫', '👩‍💻', '👨‍🎓', '👩‍🔬'].map((emoji, i) => (
-                <span key={i} className="pricing-cta-avatar" style={{ zIndex: 5 - i }}>
-                  {emoji}
-                </span>
-              ))}
-              <span className="pricing-cta-avatar-label">+5,000 giáo viên</span>
-            </div>
-
-            <div className="pricing-cta-actions">
-              <Link to="/register" className="btn-primary-large">
-                Đăng ký miễn phí <span className="btn-icon">→</span>
-              </Link>
-              <Link to="/features" className="btn-video">
-                Khám phá tính năng
-              </Link>
+              <div className="pricing-cta-actions">
+                <Link to="/register" className="btn-primary-large">
+                  Đăng ký miễn phí <span className="btn-icon">→</span>
+                </Link>
+                <Link to="/features" className="btn-video">
+                  Khám phá tính năng
+                </Link>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <Footer />
-      {walletModal}
+        <Footer />
+        {walletModal}
       </main>
     </div>
   );
