@@ -36,6 +36,25 @@ const difficultyLabel: Record<string, string> = {
   HARD: 'Khó',
 };
 
+const cognitiveLevelLabel: Record<string, string> = {
+  NHAN_BIET: 'NB',
+  THONG_HIEU: 'TH',
+  VAN_DUNG: 'VD',
+  VAN_DUNG_CAO: 'VDC',
+  REMEMBER: 'NB',
+  UNDERSTAND: 'TH',
+  APPLY: 'VD',
+  ANALYZE: 'VDC',
+};
+
+function extractDiagramLatex(diagramData: Record<string, unknown> | undefined): string | null {
+  if (!diagramData) return null;
+  if (typeof diagramData.latex === 'string') return diagramData.latex;
+  if (typeof diagramData.latexCode === 'string') return diagramData.latexCode;
+  if (typeof diagramData.code === 'string') return diagramData.code;
+  return null;
+}
+
 export function QuestionBankDetailPage() {
   const { bankId } = useParams<{ bankId: string }>();
   const navigate = useNavigate();
@@ -482,6 +501,7 @@ export function QuestionBankDetailPage() {
                       <tr>
                         <th>Câu hỏi</th>
                         <th>Loại</th>
+                        <th>Mức độ</th>
                         <th>Độ khó</th>
                         <th>Điểm</th>
                         <th>Tags</th>
@@ -514,19 +534,34 @@ export function QuestionBankDetailPage() {
                                 <MathText text={question.solutionSteps} />
                               </div>
                             )}
-                            {question.diagramData && (
-                              <div className="preview-box" style={{ marginTop: 8 }}>
-                                <p className="muted" style={{ marginBottom: 6 }}>
-                                  Diagram
-                                </p>
-                                <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
-                                  {JSON.stringify(question.diagramData, null, 2)}
-                                </pre>
-                              </div>
-                            )}
+                            {question.diagramData && (() => {
+                              const diagramLatex = extractDiagramLatex(question.diagramData);
+                              return diagramLatex ? (
+                                <div className="preview-box" style={{ marginTop: 8 }}>
+                                  <p className="muted" style={{ marginBottom: 6 }}>
+                                    Diagram
+                                  </p>
+                                  <MathText text={`$$${diagramLatex}$$`} />
+                                </div>
+                              ) : (
+                                <div className="preview-box" style={{ marginTop: 8 }}>
+                                  <p className="muted" style={{ marginBottom: 6 }}>
+                                    Diagram
+                                  </p>
+                                  <pre style={{ margin: 0, whiteSpace: 'pre-wrap', fontSize: '0.75rem' }}>
+                                    {JSON.stringify(question.diagramData, null, 2)}
+                                  </pre>
+                                </div>
+                              );
+                            })()}
                           </td>
                           <td>
                             {questionTypeLabel[question.questionType] || question.questionType}
+                          </td>
+                          <td>
+                            {question.cognitiveLevel
+                              ? <span className="badge">{cognitiveLevelLabel[question.cognitiveLevel] || question.cognitiveLevel}</span>
+                              : '-'}
                           </td>
                           <td>
                             {(question.difficulty && difficultyLabel[question.difficulty]) ||

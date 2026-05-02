@@ -193,6 +193,7 @@ export interface QuestionTemplateRequest {
     questionBankId?: string | null;
     canonicalQuestionId?: string | null;
     diagramTemplate?: DiagramValue;
+    solutionStepsTemplate?: string;
 }
 
 export interface QuestionTemplateResponse {
@@ -226,6 +227,7 @@ export interface QuestionTemplateResponse {
     questionBankId?: string | null;
     canonicalQuestionId?: string | null;
     diagramTemplate?: DiagramValue;
+    solutionStepsTemplate?: string;
 }
 
 export interface AIEnhancedQuestionResponse {

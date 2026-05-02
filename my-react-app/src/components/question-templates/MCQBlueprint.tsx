@@ -14,11 +14,20 @@ export interface MCQBlueprintData {
   answerFormula: string;
   options: OptionInput[];
   diagramTemplateRaw: string;
+  solutionStepsTemplate: string;
 }
 
 interface MCQBlueprintProps {
   defaultChapterId: string;
   onFocusField?: (field: string, index?: number) => void;
+  initialData?: {
+    templateText?: string;
+    parameters?: ParameterInput[];
+    answerFormula?: string;
+    options?: { key: string; formula: string }[];
+    diagramTemplateRaw?: string;
+    solutionStepsTemplate?: string;
+  };
 }
 
 export interface MCQBlueprintRef {
@@ -27,20 +36,33 @@ export interface MCQBlueprintRef {
 }
 
 export const MCQBlueprint = forwardRef<MCQBlueprintRef, MCQBlueprintProps>(
-  ({ onFocusField }, ref) => {
-    const [templateText, setTemplateText] = useState('Giải phương trình: {{a}}x + {{b}} = 0');
-    const [answerFormula, setAnswerFormula] = useState('(-{{b}})/{{a}}');
-    const [diagramTemplateRaw, setDiagramTemplateRaw] = useState('');
-    const [parameters, setParameters] = useState<ParameterInput[]>([
-      { name: 'a', type: 'int', min: '1', max: '10', constraint: '' },
-      { name: 'b', type: 'int', min: '-10', max: '10', constraint: '' },
-    ]);
-    const [options, setOptions] = useState<OptionInput[]>([
-      { key: 'A', formula: '$(-{{b}})/{{a}}$' },
-      { key: 'B', formula: '${{b}}/{{a}}$' },
-      { key: 'C', formula: '$-{{a}}/{{b}}$' },
-      { key: 'D', formula: '${{a}}+{{b}}$' },
-    ]);
+  ({ onFocusField, initialData }, ref) => {
+    const [templateText, setTemplateText] = useState(
+      initialData?.templateText ?? 'Giải phương trình: {{a}}x + {{b}} = 0'
+    );
+    const [answerFormula, setAnswerFormula] = useState(
+      initialData?.answerFormula ?? '(-{{b}})/{{a}}'
+    );
+    const [diagramTemplateRaw, setDiagramTemplateRaw] = useState(
+      initialData?.diagramTemplateRaw ?? ''
+    );
+    const [solutionStepsTemplate, setSolutionStepsTemplate] = useState(
+      initialData?.solutionStepsTemplate ?? ''
+    );
+    const [parameters, setParameters] = useState<ParameterInput[]>(
+      initialData?.parameters ?? [
+        { name: 'a', type: 'int', min: '1', max: '10', constraint: '' },
+        { name: 'b', type: 'int', min: '-10', max: '10', constraint: '' },
+      ]
+    );
+    const [options, setOptions] = useState<OptionInput[]>(
+      initialData?.options ?? [
+        { key: 'A', formula: '$(-{{b}})/{{a}}$' },
+        { key: 'B', formula: '${{b}}/{{a}}$' },
+        { key: 'C', formula: '$-{{a}}/{{b}}$' },
+        { key: 'D', formula: '${{a}}+{{b}}$' },
+      ]
+    );
 
     const templateTextRef = useRef<HTMLTextAreaElement | null>(null);
     const answerFormulaRef = useRef<HTMLInputElement | null>(null);
@@ -59,6 +81,7 @@ export const MCQBlueprint = forwardRef<MCQBlueprintRef, MCQBlueprintProps>(
         answerFormula,
         options,
         diagramTemplateRaw,
+        solutionStepsTemplate,
       }),
       getFieldRef: (field: string, index?: number) => {
         switch (field) {
@@ -229,6 +252,24 @@ export const MCQBlueprint = forwardRef<MCQBlueprintRef, MCQBlueprintProps>(
             onChange={(event) => setDiagramTemplateRaw(event.target.value)}
             placeholder="Vi du: \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}"
           />
+        </label>
+
+        <label>
+          <p className="muted" style={{ marginBottom: 6 }}>
+            Hướng dẫn giải mẫu (cho AI tạo lời giải)
+          </p>
+          <textarea
+            className="textarea"
+            rows={3}
+            value={solutionStepsTemplate}
+            onChange={(e) => setSolutionStepsTemplate(e.target.value)}
+            placeholder="Ví dụ: Bước 1: Chuyển {{b}} sang vế phải. Bước 2: Chia hai vế cho {{a}}. Bước 3: x = (-{{b}})/{{a}}"
+          />
+          {solutionStepsTemplate && (
+            <div className="preview-box">
+              <MathText text={solutionStepsTemplate} />
+            </div>
+          )}
         </label>
       </>
     );

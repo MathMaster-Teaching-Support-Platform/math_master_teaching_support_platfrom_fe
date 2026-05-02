@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertCircle, CheckCircle, Clock, FileText, Lock, Play, Star } from 'lucide-react';
+import { AlertCircle, CheckCircle, Clock, FileText, Lock, Play, Star, HelpCircle } from 'lucide-react';
 import { useMyAssessmentsByCourse } from '../../../hooks/useStudentAssessment';
 import type { StudentAssessmentResponse } from '../../../types/studentAssessment.types';
-import '../../../styles/module-refactor.css';
+import './StudentAssessmentsTab.css';
 import { UI_TEXT } from '../../../constants/uiText';
 
 interface StudentAssessmentsTabProps {
@@ -29,18 +29,26 @@ const StudentAssessmentsTab: React.FC<StudentAssessmentsTabProps> = ({ courseId 
     };
   }, [assessments]);
 
+  // MoE Terminology Mapping
   const typeLabel: Record<string, string> = {
-    QUIZ: 'Trắc nghiệm',
-    TEST: 'Kiểm tra',
-    EXAM: 'Thi',
-    HOMEWORK: 'Bài tập',
+    QUIZ: 'Trắc nghiệm (Thường xuyên)',
+    HOMEWORK: 'Bài tập (Thường xuyên)',
+    TEST: 'Kiểm tra (Định kỳ)',
+    EXAM: 'Thi (Cuối kỳ)',
+  };
+
+  const typeCategory: Record<string, 'formative' | 'summative'> = {
+    QUIZ: 'formative',
+    HOMEWORK: 'formative',
+    TEST: 'summative',
+    EXAM: 'summative',
   };
 
   const typeIcon: Record<string, React.ReactNode> = {
     QUIZ: '📝',
+    HOMEWORK: '📚',
     TEST: '📋',
     EXAM: '🎓',
-    HOMEWORK: '📚',
   };
 
   const fmtDate = (d?: string | null) => {
@@ -49,6 +57,8 @@ const StudentAssessmentsTab: React.FC<StudentAssessmentsTabProps> = ({ courseId 
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     });
   };
 
@@ -67,32 +77,32 @@ const StudentAssessmentsTab: React.FC<StudentAssessmentsTabProps> = ({ courseId 
   };
 
   return (
-    <div className="assessments-tab">
+    <div className="sat-container">
       {/* Stats */}
-      <div className="stats-grid" style={{ marginBottom: '1.5rem' }}>
-        <div className="stat-card stat-blue">
-          <div className="stat-icon-wrap">
-            <FileText size={20} />
+      <div className="sat-stats-grid">
+        <div className="sat-stat-card sat-stat-blue">
+          <div className="sat-stat-icon">
+            <FileText size={24} strokeWidth={2.5} />
           </div>
-          <div>
+          <div className="sat-stat-content">
             <h3>{stats.total}</h3>
-            <p>Tổng {UI_TEXT.QUIZ.toLowerCase()}</p>
+            <p>Tổng bài kiểm tra</p>
           </div>
         </div>
-        <div className="stat-card stat-amber">
-          <div className="stat-icon-wrap">
-            <Star size={20} />
+        <div className="sat-stat-card sat-stat-amber">
+          <div className="sat-stat-icon">
+            <Star size={24} strokeWidth={2.5} />
           </div>
-          <div>
+          <div className="sat-stat-content">
             <h3>{stats.required}</h3>
             <p>Bắt buộc</p>
           </div>
         </div>
-        <div className="stat-card stat-emerald">
-          <div className="stat-icon-wrap">
-            <CheckCircle size={20} />
+        <div className="sat-stat-card sat-stat-emerald">
+          <div className="sat-stat-icon">
+            <CheckCircle size={24} strokeWidth={2.5} />
           </div>
-          <div>
+          <div className="sat-stat-content">
             <h3>{stats.optional}</h3>
             <p>Tùy chọn</p>
           </div>
@@ -100,136 +110,108 @@ const StudentAssessmentsTab: React.FC<StudentAssessmentsTabProps> = ({ courseId 
       </div>
 
       {/* Info Banner */}
-      <div
-        style={{
-          padding: '1rem',
-          background: '#eff6ff',
-          border: '1px solid #bfdbfe',
-          borderRadius: 10,
-          marginBottom: '1.5rem',
-        }}
-      >
-        <div className="row" style={{ gap: 8, color: '#1e40af' }}>
-          <AlertCircle size={16} />
-          <span style={{ fontSize: '0.88rem', fontWeight: 600 }}>
-            Hoàn thành các {UI_TEXT.QUIZ.toLowerCase()} để đánh giá kiến thức của bạn
-          </span>
-        </div>
+      <div className="sat-banner">
+        <AlertCircle size={20} strokeWidth={2.5} />
+        <span>
+          Hoàn thành các bài kiểm tra thường xuyên và định kỳ để đánh giá mức độ hiểu bài của bạn.
+        </span>
       </div>
 
       {/* Loading */}
-      {isLoading && <div className="empty">Đang tải danh sách {UI_TEXT.QUIZ.toLowerCase()}...</div>}
+      {isLoading && <div className="sat-empty">Đang tải danh sách bài kiểm tra...</div>}
 
       {/* Empty State */}
       {!isLoading && assessments.length === 0 && (
-        <div className="empty">
-          <FileText size={40} strokeWidth={1.5} style={{ marginBottom: 12, color: '#94a3b8' }} />
-          <p>Chưa có {UI_TEXT.QUIZ.toLowerCase()} nào trong {UI_TEXT.COURSE.toLowerCase()} này.</p>
+        <div className="sat-empty">
+          <FileText size={56} strokeWidth={1} />
+          <p>Chưa có bài kiểm tra nào trong {UI_TEXT.COURSE.toLowerCase()} này.</p>
         </div>
       )}
 
       {/* Assessment List */}
       {!isLoading && assessments.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div className="sat-list">
           {assessments
             .sort((a, b) => (a.courseOrderIndex ?? 0) - (b.courseOrderIndex ?? 0))
             .map((assessment) => {
               const available = isAssessmentAvailable(assessment);
               const expired = isAssessmentExpired(assessment);
               const canTake = available && !expired;
+              const typeCode = assessment.assessmentType ?? 'QUIZ';
+              const category = typeCategory[typeCode];
 
               return (
                 <div
                   key={assessment.id}
-                  className="data-card"
-                  style={{
-                    opacity: canTake ? 1 : 0.7,
-                    border: assessment.isRequired ? '2px solid #fbbf24' : '1px solid #e8eef8',
-                  }}
+                  className={`sat-card ${
+                    assessment.isRequired ? 'sat-required' : 'sat-optional'
+                  } ${!canTake ? 'sat-disabled' : ''}`}
                 >
-                  <div className="row" style={{ justifyContent: 'space-between', marginBottom: 8 }}>
-                    <div className="row" style={{ gap: 8 }}>
-                      <span style={{ fontSize: '1.5rem' }}>
-                        {typeIcon[assessment.assessmentType ?? 'QUIZ']}
+                  <div className="sat-card-head">
+                    <div className="sat-badges">
+                      <span style={{ fontSize: '1.5rem', marginRight: '0.25rem' }}>
+                        {typeIcon[typeCode]}
                       </span>
-                      <span className="badge">
-                        {typeLabel[assessment.assessmentType ?? 'QUIZ']}
+                      <span className={`sat-badge ${category}`}>
+                        {typeLabel[typeCode]}
                       </span>
                       {assessment.isRequired && (
-                        <span
-                          className="badge"
-                          style={{ background: '#fef3c7', color: '#92400e', fontWeight: 700 }}
-                        >
+                        <span className="sat-badge required">
                           ⭐ Bắt buộc
                         </span>
                       )}
                     </div>
-                    <span className="muted" style={{ fontSize: '0.78rem' }}>
+                    <span className="sat-order">
                       #{assessment.courseOrderIndex ?? '—'}
                     </span>
                   </div>
 
-                  <h3 style={{ margin: '0 0 8px', fontSize: '1.1rem', fontWeight: 700 }}>
-                    {assessment.title ?? 'Không có tiêu đề'}
-                  </h3>
+                  <div>
+                    <h3 className="sat-title">
+                      {assessment.title ?? 'Không có tiêu đề'}
+                    </h3>
+                    {assessment.description && (
+                      <p className="sat-desc" style={{ marginTop: '0.5rem' }}>
+                        {assessment.description}
+                      </p>
+                    )}
+                  </div>
 
-                  {assessment.description && (
-                    <p className="muted" style={{ fontSize: '0.9rem', margin: '0 0 12px' }}>
-                      {assessment.description}
-                    </p>
-                  )}
-
-                  <div
-                    className="row"
-                    style={{
-                      gap: 16,
-                      fontSize: '0.85rem',
-                      color: '#64748b',
-                      marginBottom: 12,
-                      flexWrap: 'wrap',
-                    }}
-                  >
-                    <span>
-                      <FileText size={13} style={{ marginRight: 4 }} />
+                  <div className="sat-meta">
+                    <div className="sat-meta-item">
+                      <HelpCircle size={16} />
                       {assessment.totalQuestions ?? 0} câu hỏi
-                    </span>
-                    <span>
-                      <Star size={13} style={{ marginRight: 4 }} />
+                    </div>
+                    <div className="sat-meta-item">
+                      <Star size={16} />
                       {assessment.totalPoints ?? 0} điểm
-                    </span>
+                    </div>
                     {assessment.timeLimitMinutes && (
-                      <span>
-                        <Clock size={13} style={{ marginRight: 4 }} />
+                      <div className="sat-meta-item">
+                        <Clock size={16} />
                         {assessment.timeLimitMinutes} phút
-                      </span>
+                      </div>
                     )}
                     {assessment.passingScore && (
-                      <span>
-                        ✅ Điểm đạt: {assessment.passingScore}
-                      </span>
+                      <div className="sat-meta-item" style={{ color: '#059669' }}>
+                        <CheckCircle size={16} color="#059669" />
+                        Điểm đạt: {assessment.passingScore}
+                      </div>
                     )}
                   </div>
 
                   {/* Date Information */}
                   {(assessment.startDate || assessment.endDate) && (
-                    <div
-                      style={{
-                        padding: '0.75rem',
-                        background: '#f8fafc',
-                        borderRadius: 8,
-                        marginBottom: 12,
-                        fontSize: '0.85rem',
-                      }}
-                    >
+                    <div className="sat-dates">
                       {assessment.startDate && (
-                        <div className="row" style={{ gap: 8, marginBottom: 4 }}>
-                          <span className="muted">Bắt đầu:</span>
+                        <div className="sat-date-row">
+                          <span>Bắt đầu:</span>
                           <strong>{fmtDate(assessment.startDate)}</strong>
                         </div>
                       )}
                       {assessment.endDate && (
-                        <div className="row" style={{ gap: 8 }}>
-                          <span className="muted">Kết thúc:</span>
+                        <div className="sat-date-row">
+                          <span>Kết thúc:</span>
                           <strong>{fmtDate(assessment.endDate)}</strong>
                         </div>
                       )}
@@ -238,66 +220,41 @@ const StudentAssessmentsTab: React.FC<StudentAssessmentsTabProps> = ({ courseId 
 
                   {/* Status Messages */}
                   {!available && (
-                    <div
-                      style={{
-                        padding: '0.75rem',
-                        background: '#fef3c7',
-                        borderRadius: 8,
-                        marginBottom: 12,
-                      }}
-                    >
-                      <div className="row" style={{ gap: 8, color: '#92400e' }}>
-                        <Lock size={14} />
-                        <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>
-                          Chưa mở - Bắt đầu từ {fmtDate(assessment.startDate)}
-                        </span>
-                      </div>
+                    <div className="sat-status-msg sat-status-locked">
+                      <Lock size={16} />
+                      <span>Chưa mở - Có thể làm bài từ {fmtDate(assessment.startDate)}</span>
                     </div>
                   )}
 
                   {expired && (
-                    <div
-                      style={{
-                        padding: '0.75rem',
-                        background: '#fee2e2',
-                        borderRadius: 8,
-                        marginBottom: 12,
-                      }}
-                    >
-                      <div className="row" style={{ gap: 8, color: '#dc2626' }}>
-                        <AlertCircle size={14} />
-                        <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>
-                          Đã hết hạn - Kết thúc {fmtDate(assessment.endDate)}
-                        </span>
-                      </div>
+                    <div className="sat-status-msg sat-status-expired">
+                      <AlertCircle size={16} />
+                      <span>Đã hết hạn - Kết thúc vào {fmtDate(assessment.endDate)}</span>
                     </div>
                   )}
 
                   {/* Actions */}
-                  <div className="row" style={{ gap: 8 }}>
+                  <div className="sat-actions">
                     <button
-                      className="btn"
-                      style={{ flex: 1 }}
+                      className="sat-btn primary"
                       disabled={!canTake}
                       onClick={() => navigate(`/student/assessments/${assessment.id}/take`)}
                     >
                       {canTake ? (
                         <>
-                          <Play size={14} />
+                          <Play size={16} />
                           Làm bài
                         </>
                       ) : (
                         <>
-                          <Lock size={14} />
+                          <Lock size={16} />
                           {!available ? 'Chưa mở' : 'Đã hết hạn'}
                         </>
                       )}
                     </button>
                     <button
-                      className="btn secondary"
-                      onClick={() =>
-                        navigate(`/student/assessments/${assessment.id}`)
-                      }
+                      className="sat-btn secondary"
+                      onClick={() => navigate(`/student/assessments/${assessment.id}`)}
                     >
                       Xem chi tiết
                     </button>

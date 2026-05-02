@@ -3,6 +3,7 @@ import { AuthService } from './api/auth.service';
 import type {
   ApiResponse,
   PageResponse,
+  QuestionBankMatrixStatsResponse,
   QuestionBankRequest,
   QuestionBankResponse,
   QuestionBankTemplatesResponse,
@@ -134,4 +135,9 @@ export const questionBankService = {
       method: 'DELETE',
       headers: getAuthHeaders(),
     }).then(handleResponse<void>),
+
+  getMatrixStats: (bankId: string) =>
+    fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTION_BANK_DETAIL(bankId)}/matrix-stats`, {
+      headers: getAuthHeaders(),
+    }).then(handleResponse<QuestionBankMatrixStatsResponse[]>),
 };

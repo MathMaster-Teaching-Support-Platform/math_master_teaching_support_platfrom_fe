@@ -7,7 +7,6 @@ import {
   Play,
   Paperclip,
   FileText,
-  Layout,
   ChevronDown,
 } from 'lucide-react';
 import {
@@ -20,8 +19,7 @@ import {
 import { CourseService } from '../../../services/api/course.service';
 import { VideoUploadService } from '../../../services/api/videoUpload.service';
 import type { CourseLessonResponse } from '../../../types';
-import '../../../styles/module-refactor.css';
-import '../StudentCourses.css';
+import './StudentLessonsTab.css';
 import { extractChapterNumber, sortCurriculumGroups } from '../../../utils/curriculum';
 import { UI_TEXT } from '../../../constants/uiText';
 
@@ -106,7 +104,7 @@ const InlinePlayer: React.FC<{
   const error = videoUrlQuery.error instanceof Error ? videoUrlQuery.error.message : '';
 
   return (
-    <div style={{ background: '#000', borderRadius: 12, overflow: 'hidden', width: '100%' }}>
+    <div style={{ background: '#000', borderRadius: '18px', overflow: 'hidden', width: '100%', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}>
       <div
         style={{
           aspectRatio: '16/9',
@@ -116,8 +114,8 @@ const InlinePlayer: React.FC<{
           position: 'relative',
         }}
       >
-        {loading && <p style={{ color: '#94a3b8' }}>Đang tải video...</p>}
-        {error && <p style={{ color: '#f87171' }}>{error}</p>}
+        {loading && <p style={{ color: '#94a3b8', fontWeight: 600 }}>Đang tải video...</p>}
+        {error && <p style={{ color: '#f87171', fontWeight: 600 }}>{error}</p>}
         {videoUrl && !loading && (
           <video
             key={videoUrl}
@@ -139,8 +137,8 @@ const InlinePlayer: React.FC<{
           />
         )}
       </div>
-      <div style={{ padding: '1rem', background: '#fff', borderBottom: '1px solid #e2e8f0' }}>
-        <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--mod-ink)' }}>
+      <div style={{ padding: '1.25rem 1.5rem', background: '#fff', borderBottom: '1px solid #f0eee6' }}>
+        <h3 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 800, color: '#141413' }}>
           {title}
         </h3>
       </div>
@@ -265,8 +263,8 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
   const renderCurriculum = (isSidebar = false) => {
     if (curriculumHierarchy.length === 0) {
       return isSidebar ? null : (
-        <div className="empty">
-          <BookOpen size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
+        <div className="slt-empty">
+          <BookOpen size={48} strokeWidth={1} style={{ marginBottom: 8 }} />
           <p>Chưa có bài học nào.</p>
         </div>
       );
@@ -274,40 +272,36 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
 
     return curriculumHierarchy.map((group, idx) => (
       <div key={group.id}>
-        <div
-          className="section-header"
-          onClick={() => toggleSection(group.id)}
-          style={isSidebar ? { padding: '0.65rem 1rem', background: '#f8fafc' } : {}}
-        >
-          <div className="section-title-area">
+        <div className="slt-section-header" onClick={() => toggleSection(group.id)}>
+          <div className="slt-section-title-area">
             <ChevronDown
-              size={isSidebar ? 14 : 18}
+              size={18}
               style={{
                 transform: collapsedSections[group.id] ? 'rotate(-90deg)' : 'none',
-                transition: 'transform 0.2s',
+                transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
               }}
             />
-            <span className="section-label" style={isSidebar ? { fontSize: '0.65rem' } : {}}>
+            <span className="slt-section-label">
               {group.type === 'CHAPTER'
                 ? (() => {
                     const num = extractChapterNumber(group.title) ?? extractChapterNumber(group.id);
                     return num !== null ? `Chương ${num}` : `Chương ${idx + 1}`;
                   })()
                 : group.type === 'SECTION'
-                  ? `Mục ${idx + 1}`
+                  ? `Phần ${idx + 1}`
                   : 'Khác'}
             </span>
-            <span className="section-title" style={isSidebar ? { fontSize: '0.82rem' } : {}}>
+            <span className="slt-section-title">
               {group.title}
             </span>
           </div>
           {!isSidebar && (
-            <div className="section-meta">
+            <div className="slt-section-meta">
               <span>{group.lessons.length} bài học</span>
             </div>
           )}
         </div>
-        <div className={`lessons-group ${collapsedSections[group.id] ? 'collapsed' : ''}`}>
+        <div className={`slt-lessons-group ${collapsedSections[group.id] ? 'collapsed' : ''}`}>
           {group.lessons.map((l) => renderLessonItem(l, isSidebar))}
         </div>
       </div>
@@ -323,140 +317,59 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
 
     const materialsList = parseLessonMaterials(lesson.materials);
 
+    const statusClass = isCompleted ? 'completed' : isPlaying ? 'playing' : isInProgress ? 'in-progress' : 'default';
+
     return (
-      <div key={lesson.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+      <div key={lesson.id}>
         <div
+          className={`slt-lesson-item ${statusClass}`}
           onClick={() => handleLessonSelect(lesson)}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem',
-            padding: isSidebar ? '0.65rem 1rem' : '0.85rem 1.2rem',
-            background: isCompleted 
-              ? '#ecfdf5' 
-              : isInProgress 
-                ? '#fffbeb' 
-                : isPlaying 
-                  ? '#eff6ff' 
-                  : '#fff',
-            cursor: 'pointer',
-            borderLeft: isPlaying 
-              ? '4px solid #1f5eff' 
-              : isCompleted 
-                ? '4px solid #10b981' 
-                : isInProgress
-                  ? '4px solid #f59e0b'
-                  : '4px solid transparent',
-            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-          }}
         >
-          <div
-            style={{
-              width: 30,
-              height: 30,
-              borderRadius: 8,
-              flexShrink: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: isCompleted 
-                ? '#dcfce7' 
-                : isPlaying 
-                  ? '#1f5eff' 
-                  : isInProgress 
-                    ? '#fef3c7' 
-                    : '#e8eef8',
-              color: isCompleted 
-                ? '#10b981' 
-                : isPlaying 
-                  ? '#fff' 
-                  : isInProgress 
-                    ? '#d97706' 
-                    : '#60748f',
-              boxShadow: isCompleted ? '0 0 0 1px #10b98133' : 'none',
-            }}
-          >
-            {isCompleted ? <CheckCircle size={16} /> : isInProgress && !isPlaying ? <Clock size={16} /> : <Play size={16} />}
+          <div className="slt-lesson-icon">
+            {isCompleted ? <CheckCircle size={18} /> : isInProgress && !isPlaying ? <Clock size={18} /> : <Play size={18} />}
           </div>
 
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div
-              style={{
-                fontSize: isSidebar ? '0.8rem' : '0.88rem',
-                fontWeight: isPlaying || isCompleted || isInProgress ? 700 : 600,
-                color: isPlaying 
-                  ? '#1e40af' 
-                  : isCompleted 
-                    ? '#065f46' 
-                    : isInProgress 
-                      ? '#92400e' 
-                      : 'var(--mod-ink)',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-              }}
-            >
-              {lesson.videoTitle ?? lesson.lessonTitle ?? 'Bài học'}
+          <div className="slt-lesson-content">
+            <div className="slt-lesson-title-row">
+              <span className="slt-lesson-title" title={lesson.lessonTitle ?? 'Bài học'}>
+                {lesson.lessonTitle ?? 'Bài học'}
+              </span>
               {isCompleted && (
-                <span
-                  className="badge completed"
-                  style={{
-                    fontSize: '0.6rem',
-                    padding: '0.05rem 0.35rem',
-                    borderRadius: '4px',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.02em',
-                  }}
-                >
+                <span className="slt-lesson-badge completed">
                   Hoàn thành
                 </span>
               )}
               {isInProgress && !isCompleted && (
-                <span
-                  style={{
-                    fontSize: '0.6rem',
-                    padding: '0.05rem 0.35rem',
-                    borderRadius: '4px',
-                    background: '#fef3c7',
-                    color: '#92400e',
-                    border: '1px solid #fde68a',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.02em',
-                    fontWeight: 800
-                  }}
-                >
+                <span className="slt-lesson-badge progress">
                   Đang học {Math.round(progressPercent)}%
                 </span>
               )}
             </div>
+
+            {lesson.videoTitle && lesson.videoTitle !== lesson.lessonTitle && (
+              <div className="slt-lesson-subtitle" title={lesson.videoTitle}>
+                {lesson.videoTitle}
+              </div>
+            )}
+
             {!isSidebar && (
-              <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 4 }}>
+              <div className="slt-lesson-meta">
                 {lesson.durationSeconds && (
-                  <span className="muted" style={{ fontSize: '0.75rem' }}>
-                    <Clock size={11} style={{ marginRight: 3 }} />
+                  <div className="slt-lesson-meta-item">
+                    <Clock size={12} />
                     {Math.floor(lesson.durationSeconds / 60)} phút
-                  </span>
+                  </div>
                 )}
                 {materialsList.length > 0 && (
-                  <span
-                    style={{
-                      fontSize: '0.75rem',
-                      color: '#6366f1',
-                      fontWeight: 600,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 3,
-                    }}
+                  <div
+                    className="slt-lesson-meta-item slt-materials-toggle"
                     onClick={(e) => {
                       e.stopPropagation();
                       setShowResources(showResources === lesson.id ? null : lesson.id);
                     }}
                   >
-                    <Paperclip size={11} /> {materialsList.length} tài liệu
-                  </span>
+                    <Paperclip size={12} /> {materialsList.length} tài liệu
+                  </div>
                 )}
               </div>
             )}
@@ -466,15 +379,14 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
             <div style={{ flexShrink: 0 }}>
               {!isCompleted && enrollmentStatus === 'ACTIVE' && (
                 <button
-                  className="btn secondary"
-                  style={{ padding: '0.3rem 0.6rem', fontSize: '0.7rem', height: 'fit-content' }}
+                  className="slt-btn-small"
                   onClick={(e) => {
                     e.stopPropagation();
                     markComplete.mutate({ enrollmentId, courseLessonId: lesson.id });
                   }}
                   disabled={markComplete.isPending}
                 >
-                  Xong
+                  Đánh dấu Xong
                 </button>
               )}
             </div>
@@ -483,36 +395,21 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
 
         {/* Materials List */}
         {!isSidebar && showResources === lesson.id && materialsList.length > 0 && (
-          <div style={{ padding: '0.5rem 1.25rem 1rem 3.5rem', background: '#f8fafc' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {materialsList.map((m: LessonMaterial) => (
-                <button
-                  key={m.id}
-                  type="button"
-                  onClick={() => void handleDownloadMaterial(lesson, m)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    fontSize: '0.8rem',
-                    color: '#475569',
-                    padding: '6px 10px',
-                    borderRadius: 6,
-                    border: '1px solid #e2e8f0',
-                    background: '#fff',
-                    width: '100%',
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <FileText size={13} style={{ color: '#1f5eff' }} />
-                  <span>{m.name}</span>
-                  <span className="muted" style={{ fontSize: '0.7rem' }}>
-                    ({((m.size || 0) / 1024).toFixed(1)} KB)
-                  </span>
-                </button>
-              ))}
-            </div>
+          <div className="slt-materials-drawer">
+            {materialsList.map((m: LessonMaterial) => (
+              <button
+                key={m.id}
+                type="button"
+                className="slt-material-btn"
+                onClick={() => void handleDownloadMaterial(lesson, m)}
+              >
+                <FileText size={16} style={{ color: '#3b82f6', flexShrink: 0 }} />
+                <span className="slt-material-name">{m.name}</span>
+                <span className="slt-material-size">
+                  ({((m.size || 0) / 1024).toFixed(1)} KB)
+                </span>
+              </button>
+            ))}
           </div>
         )}
       </div>
@@ -520,16 +417,20 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
   };
 
   return (
-    <div className="lessons-tab">
+    <div className="slt-container">
       {playingLessonId && currentLesson ? (
         /* Integrated Player Layout */
-        <div className="player-container">
+        <div className="slt-player-container">
           {/* Main Player Area */}
-          <div className="player-main">
+          <div className="slt-player-main">
             <InlinePlayer
               courseId={courseId}
               courseLessonId={playingLessonId}
-              title={currentLesson.videoTitle ?? currentLesson.lessonTitle ?? 'Bài học'}
+              title={
+                currentLesson.lessonTitle && currentLesson.videoTitle && currentLesson.lessonTitle !== currentLesson.videoTitle
+                  ? `${currentLesson.lessonTitle} - ${currentLesson.videoTitle}`
+                  : currentLesson.lessonTitle ?? currentLesson.videoTitle ?? 'Bài học'
+              }
               initialTime={
                 progress?.lessons.find((l) => l.courseLessonId === playingLessonId)
                   ?.watchedSeconds ?? 0
@@ -572,37 +473,33 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
             />
 
             {/* Resources Tab below video */}
-            <div className="data-card" style={{ padding: '1.25rem' }}>
-              <h4 style={{ margin: '0 0 1rem', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Paperclip size={18} color="#1f5eff" /> Tài liệu bài học
+            <div className="slt-resources-card">
+              <h4 style={{ margin: '0 0 1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.2rem', color: '#141413' }}>
+                <Paperclip size={20} color="#3b82f6" /> Tài liệu đính kèm
               </h4>
-              {currentLesson.materials ? (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+              {currentLesson.materials && parseLessonMaterials(currentLesson.materials).length > 0 ? (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
                   {parseLessonMaterials(currentLesson.materials).map((m: LessonMaterial) => (
                     <button
                       key={m.id}
                       type="button"
+                      className="slt-material-btn"
                       onClick={() => void handleDownloadMaterial(currentLesson, m)}
-                      className="sc-cta-btn"
-                      style={{
-                        fontSize: '0.82rem',
-                        padding: '8px 16px',
-                        border: '1px solid #e2e8f0',
-                      }}
                     >
-                      <FileText size={14} /> {m.name}
+                      <FileText size={16} style={{ color: '#3b82f6', flexShrink: 0 }} />
+                      <span className="slt-material-name">{m.name}</span>
                     </button>
                   ))}
                 </div>
               ) : (
-                <p className="muted" style={{ fontSize: '0.88rem', fontStyle: 'italic' }}>
+                <p style={{ margin: 0, fontSize: '0.95rem', color: '#87867f', fontStyle: 'italic' }}>
                   Bài học này chưa có tài liệu đính kèm.
                 </p>
               )}
             </div>
 
             <button
-              className="btn secondary"
+              className="slt-btn secondary"
               onClick={() => setPlayingLessonId(null)}
               style={{ alignSelf: 'flex-start' }}
             >
@@ -611,16 +508,14 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
           </div>
 
           {/* Sidebar Curriculum */}
-          <div className="data-card player-sidebar">
-            <div
-              style={{ padding: '1rem', borderBottom: '1px solid #e2e8f0', background: '#f8fbff' }}
-            >
-              <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 800 }}>Nội dung khóa học</h4>
-              <p className="muted" style={{ fontSize: '0.75rem', marginTop: 4 }}>
+          <div className="slt-player-sidebar slt-sidebar-override">
+            <div className="slt-sidebar-header">
+              <h4>Nội dung khóa học</h4>
+              <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>
                 {completedCount}/{totalCount} bài học hoàn thành
               </p>
             </div>
-            <div style={{ maxHeight: 'calc(100vh - 300px)', overflowY: 'auto' }}>
+            <div className="slt-sidebar-content">
               {renderCurriculum(true)}
             </div>
           </div>
@@ -628,21 +523,21 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
       ) : (
         /* Regular Dashboard List Layout */
         <>
-          <div className="stats-grid" style={{ marginBottom: '1.5rem' }}>
-            <div className="stat-card stat-blue">
-              <div className="stat-icon-wrap">
-                <BookOpen size={20} />
+          <div className="slt-stats-grid">
+            <div className="slt-stat-card slt-stat-blue">
+              <div className="slt-stat-icon">
+                <BookOpen size={24} strokeWidth={2.5} />
               </div>
-              <div>
+              <div className="slt-stat-content">
                 <h3>{totalCount}</h3>
                 <p>{UI_TEXT.TOTAL_LESSONS}</p>
               </div>
             </div>
-            <div className="stat-card stat-emerald">
-              <div className="stat-icon-wrap">
-                <CheckCircle size={20} />
+            <div className="slt-stat-card slt-stat-emerald">
+              <div className="slt-stat-icon">
+                <CheckCircle size={24} strokeWidth={2.5} />
               </div>
-              <div>
+              <div className="slt-stat-content">
                 <h3>{completedCount}</h3>
                 <p>Đã hoàn thành</p>
               </div>
@@ -650,35 +545,26 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
           </div>
 
           {loadingLessons ? (
-            <div className="skeleton-grid">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {[1, 2, 3].map((i) => (
-                <div key={i} className="skeleton-card" />
+                <div key={i} style={{ height: '80px', background: '#f1f5f9', borderRadius: '12px', animation: 'pulse 2s infinite' }} />
               ))}
             </div>
           ) : lessons.length === 0 ? (
-            <div className="empty">
-              <BookOpen size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
-              <p>Chưa có bài học nào.</p>
+            <div className="slt-empty">
+              <BookOpen size={56} strokeWidth={1} style={{ marginBottom: 8 }} />
+              <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: 500 }}>Chưa có bài học nào trong khóa học này.</p>
             </div>
           ) : (
-            <div className="data-card" style={{ gap: 0, padding: 0, overflow: 'hidden' }}>
-              <div
-                style={{
-                  padding: '1rem 1.2rem',
-                  borderBottom: '1px solid #e8eef8',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}
-              >
-                <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800 }}>
+            <div className="slt-curriculum-card">
+              <div className="slt-curriculum-header">
+                <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: '#141413' }}>
                   {UI_TEXT.COURSE_CONTENT}
                 </h4>
-                <div className="pill-btn active">
-                  <Layout size={13} style={{ marginRight: 4 }} /> Phân cấp
-                </div>
               </div>
-              {renderCurriculum()}
+              <div>
+                {renderCurriculum()}
+              </div>
             </div>
           )}
         </>

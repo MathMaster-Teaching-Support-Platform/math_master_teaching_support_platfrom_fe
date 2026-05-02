@@ -100,6 +100,89 @@ function buildOptions(options: OptionInput[]): Record<string, unknown> {
   return mappedOptions;
 }
 
+function extractBlueprintInitialData(
+  data: QuestionTemplateResponse | null | undefined,
+  type: QuestionType
+) {
+  if (!data) return undefined;
+
+  const templateTextStr =
+    typeof data.templateText === 'object' && data.templateText?.vi
+      ? String(data.templateText.vi)
+      : '';
+
+  const params: ParameterInput[] = data.parameters
+    ? Object.entries(data.parameters).map(([name, val]) => {
+        const v = val as Record<string, unknown>;
+        return {
+          name,
+          type: String(v.type || 'int'),
+          min: String(v.min ?? ''),
+          max: String(v.max ?? ''),
+          constraint: String(v.constraint || ''),
+        };
+      })
+    : [];
+
+  const diag = typeof data.diagramTemplate === 'string' ? data.diagramTemplate : '';
+
+  if (type === QuestionType.MULTIPLE_CHOICE) {
+    const options = data.optionsGenerator
+      ? Object.entries(data.optionsGenerator).map(([key, formula]) => ({
+          key,
+          formula: String(formula),
+        }))
+      : [];
+    return {
+      templateText: templateTextStr,
+      parameters: params.length > 0 ? params : undefined,
+      answerFormula: data.answerFormula || '',
+      options: options.length > 0 ? options : undefined,
+      diagramTemplateRaw: diag,
+      solutionStepsTemplate: data.solutionStepsTemplate || '',
+    };
+  }
+
+  if (type === QuestionType.TRUE_FALSE) {
+    const sm = data.statementMutations as
+      | {
+          clauseTemplates?: Array<{
+            text: string;
+            truthValue: boolean;
+            chapterId?: string;
+            cognitiveLevel?: string;
+          }>;
+        }
+      | undefined;
+    const clauses = sm?.clauseTemplates?.map((c, i) => ({
+      key: String.fromCharCode(65 + i),
+      text: c.text || '',
+      chapterId: c.chapterId || data.chapterId || '',
+      cognitiveLevel: (c.cognitiveLevel || 'THONG_HIEU') as CognitiveLevel,
+      truthValue: c.truthValue ?? true,
+    }));
+    return {
+      stemText: templateTextStr,
+      clauses,
+      parameters: params.length > 0 ? params : undefined,
+      diagramTemplateRaw: diag,
+      solutionStepsTemplate: data.solutionStepsTemplate || '',
+    };
+  }
+
+  if (type === QuestionType.SHORT_ANSWER) {
+    return {
+      templateText: templateTextStr,
+      parameters: params.length > 0 ? params : undefined,
+      answerFormula: data.answerFormula || '',
+      diagramTemplateRaw: diag,
+      solutionStepsTemplate: data.solutionStepsTemplate || '',
+    };
+  }
+
+  return undefined;
+}
+
 export function TemplateFormModal({
   isOpen,
   mode,
@@ -148,8 +231,10 @@ export function TemplateFormModal({
       setSubmitError(null);
       setName(initialData.name || '');
       setDescription(initialData.description || '');
-      setGradeLevel(initialData.gradeLevel || '');
-      setSelectedSubjectId(initialData.subjectId || '');
+      // Note: gradeLevel and subjectId are not stored in backend, only chapterId
+      // User will need to select grade/subject manually if they want to change chapter
+      setGradeLevel('');
+      setSelectedSubjectId('');
       setSelectedChapterId(initialData.chapterId || '');
       setTemplateType(initialData.templateType || QuestionType.MULTIPLE_CHOICE);
       setCognitiveLevel(initialData.cognitiveLevel || CognitiveLevel.THONG_HIEU);
@@ -222,6 +307,7 @@ export function TemplateFormModal({
             isPublic,
             questionBankId: initialData?.questionBankId ?? null,
             diagramTemplate: mcqData.diagramTemplateRaw.trim() || undefined,
+            solutionStepsTemplate: mcqData.solutionStepsTemplate.trim() || undefined,
           };
           break;
         }
@@ -265,10 +351,12 @@ export function TemplateFormModal({
                 cognitiveLevel: c.cognitiveLevel,
               })),
             },
-            cognitiveLevel,
+            cognitiveLevel: tfData.clauses[0]?.cognitiveLevel || CognitiveLevel.THONG_HIEU,
             tags: validation.result.normalizedTags,
             isPublic,
             questionBankId: initialData?.questionBankId ?? null,
+            diagramTemplate: tfData.diagramTemplateRaw?.trim() || undefined,
+            solutionStepsTemplate: tfData.solutionStepsTemplate?.trim() || undefined,
           };
           break;
         }
@@ -307,6 +395,7 @@ export function TemplateFormModal({
             isPublic,
             questionBankId: initialData?.questionBankId ?? null,
             diagramTemplate: saData.diagramTemplateRaw.trim() || undefined,
+            solutionStepsTemplate: saData.solutionStepsTemplate.trim() || undefined,
           };
           break;
         }
@@ -380,22 +469,24 @@ export function TemplateFormModal({
                 disabled={mode === 'edit'}
               />
 
-              <label>
-                <p className="muted" style={{ marginBottom: 6 }}>
-                  Mức độ nhận thức
-                </p>
-                <select
-                  className="select"
-                  value={cognitiveLevel}
-                  onChange={(event) => setCognitiveLevel(event.target.value as CognitiveLevel)}
-                >
-                  {Object.entries(cognitiveLevelLabels).map(([key, label]) => (
-                    <option key={key} value={key}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              {templateType !== QuestionType.TRUE_FALSE && (
+                <label>
+                  <p className="muted" style={{ marginBottom: 6 }}>
+                    Mức độ nhận thức
+                  </p>
+                  <select
+                    className="select"
+                    value={cognitiveLevel}
+                    onChange={(event) => setCognitiveLevel(event.target.value as CognitiveLevel)}
+                  >
+                    {Object.entries(cognitiveLevelLabels).map(([key, label]) => (
+                      <option key={key} value={key}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
 
               <TagSelector
                 selectedTags={tags}
@@ -423,6 +514,11 @@ export function TemplateFormModal({
               <MCQBlueprint
                 ref={mcqBlueprintRef}
                 defaultChapterId={selectedChapterId}
+                initialData={
+                  mode === 'edit'
+                    ? extractBlueprintInitialData(initialData, QuestionType.MULTIPLE_CHOICE)
+                    : undefined
+                }
               />
             )}
 
@@ -431,6 +527,11 @@ export function TemplateFormModal({
                 ref={tfBlueprintRef}
                 defaultChapterId={selectedChapterId}
                 chapters={chapters}
+                initialData={
+                  mode === 'edit'
+                    ? extractBlueprintInitialData(initialData, QuestionType.TRUE_FALSE)
+                    : undefined
+                }
               />
             )}
 
@@ -438,6 +539,11 @@ export function TemplateFormModal({
               <SABlueprint
                 ref={saBlueprintRef}
                 defaultChapterId={selectedChapterId}
+                initialData={
+                  mode === 'edit'
+                    ? extractBlueprintInitialData(initialData, QuestionType.SHORT_ANSWER)
+                    : undefined
+                }
               />
             )}
 

@@ -53,6 +53,13 @@ const difficultyLabel: Record<string, string> = {
   HARD: 'Kho',
 };
 
+const cognitiveLevelLabel: Record<string, string> = {
+  NHAN_BIET: 'Nhận biết',
+  THONG_HIEU: 'Thông hiểu',
+  VAN_DUNG: 'Vận dụng',
+  VAN_DUNG_CAO: 'Vận dụng cao',
+};
+
 function formatDate(value?: string): string {
   if (!value) return '-';
   const date = new Date(value);
@@ -394,6 +401,7 @@ export default function TeacherQuestionManagementPage() {
                   <tr>
                     <th>Câu hỏi</th>
                     <th>Loai</th>
+                    <th>Mức độ</th>
                     <th>Do kho</th>
                     <th>Diem</th>
                     <th>Tag</th>
@@ -414,6 +422,11 @@ export default function TeacherQuestionManagementPage() {
                       </td>
                       <td>
                         <span className="badge">{questionTypeLabel[question.questionType]}</span>
+                      </td>
+                      <td>
+                        {question.cognitiveLevel
+                          ? <span className="badge">{cognitiveLevelLabel[question.cognitiveLevel] || question.cognitiveLevel}</span>
+                          : '-'}
                       </td>
                       <td>
                         {question.difficulty ? (

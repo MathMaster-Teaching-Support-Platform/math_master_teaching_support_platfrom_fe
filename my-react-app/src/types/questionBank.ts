@@ -73,3 +73,23 @@ export interface SearchQuestionBanksParams {
   sortBy?: string;
   sortDirection?: 'ASC' | 'DESC';
 }
+
+// Matrix Stats Types
+export interface QuestionBankMatrixStatsResponse {
+  gradeLevel: string;
+  totalQuestions: number;
+  chapters: ChapterStats[];
+}
+
+export interface ChapterStats {
+  chapterId: string;
+  chapterName: string;
+  totalQuestions: number;
+  types: TypeStats[];
+}
+
+export interface TypeStats {
+  questionType: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER';
+  totalQuestions: number;
+  cognitiveCounts: Record<string, number>;
+}

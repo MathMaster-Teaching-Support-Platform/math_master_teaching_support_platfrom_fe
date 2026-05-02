@@ -2,12 +2,14 @@ import {
   AlertCircle,
   Archive,
   ArrowRight,
+  BookOpen,
   Check,
   CheckCircle2,
   CheckSquare,
   Eye,
   EyeOff,
   FileText,
+  GraduationCap,
   Grid2x2,
   List,
   Network,
@@ -1068,6 +1070,25 @@ export function TemplateDashboard() {
                         </span>
                       </div>
 
+                      {template.chapterName && (
+                        <div className="metric">
+                          <BookOpen size={13} />
+                          <span>{template.chapterName}</span>
+                        </div>
+                      )}
+                      {template.gradeLevel && (
+                        <div className="metric">
+                          <GraduationCap size={13} />
+                          <span>Lớp {template.gradeLevel}</span>
+                        </div>
+                      )}
+                      {template.subjectName && (
+                        <div className="metric">
+                          <FileText size={13} />
+                          <span>{template.subjectName}</span>
+                        </div>
+                      )}
+
                       {template.isPublic && (
                         <div className="metric metric--ai">
                           <Eye size={13} />
@@ -1298,6 +1319,33 @@ export function TemplateDashboard() {
                       Làm mới danh sách câu
                     </button>
                   </div>
+
+                  {/* Template metadata info */}
+                  {reviewTemplateId && (() => {
+                    const selectedTemplate = templates.find(t => t.id === reviewTemplateId);
+                    if (!selectedTemplate) return null;
+                    return (
+                      <div className="row" style={{ justifyContent: 'start', flexWrap: 'wrap', gap: '0.5rem', marginTop: 8, marginBottom: 8, paddingLeft: 16 }}>
+                        {selectedTemplate.chapterName && (
+                          <span className="muted" style={{ fontSize: '0.85rem' }}>
+                            <BookOpen size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />
+                            {selectedTemplate.chapterName}
+                          </span>
+                        )}
+                        {selectedTemplate.gradeLevel && (
+                          <span className="muted" style={{ fontSize: '0.85rem' }}>
+                            <GraduationCap size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />
+                            Lớp {selectedTemplate.gradeLevel}
+                          </span>
+                        )}
+                        {selectedTemplate.cognitiveLevel && (
+                          <span className="badge" style={{ fontSize: '0.75rem' }}>
+                            {cognitiveLevelLabel[selectedTemplate.cognitiveLevel] || selectedTemplate.cognitiveLevel}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })()}
 
                   {!reviewTemplateId && (
                     <div className="empty">Hãy chọn một mẫu để bắt đầu xét duyệt.</div>

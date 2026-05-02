@@ -1,4 +1,5 @@
-/* Self-contained: không phụ thuộc Tailwind cho layout/khung (tránh mất style khi utility không được bundle). */
+/* CourseOverviewTab.css */
+/* Premium Glassmorphic Overview Dashboard */
 
 @keyframes course-overview-fade-in-up {
   from {
@@ -11,7 +12,6 @@
   }
 }
 
-/* Root: spacing thay cho space-y-6 + full width */
 .course-overview-tab {
   display: flex;
   flex-direction: column;
@@ -19,50 +19,34 @@
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
+  animation: course-overview-fade-in-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* —— Stats —— */
 .course-overview-tab .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 0.8rem;
+  gap: 1rem;
 }
 
 .course-overview-tab .stat-card {
   display: flex;
   align-items: center;
-  gap: 0.85rem;
-  padding: 0.95rem 1rem;
-  border-radius: 16px;
-  border: 1px solid #e8eef8;
-  box-shadow: 0 4px 14px rgba(21, 44, 74, 0.06);
+  gap: 1rem;
+  padding: 1.15rem 1.25rem;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 0 0 1px rgba(226, 232, 240, 0.4);
   min-width: 0;
-  transition:
-    transform 0.18s ease,
-    box-shadow 0.18s ease;
-  animation: course-overview-fade-in-up 0.45s ease both;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .course-overview-tab .stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.09);
-}
-
-.course-overview-tab .stat-card.stat-blue {
-  background: #eff6ff;
-  border-color: #bfdbfe;
-}
-.course-overview-tab .stat-card.stat-emerald {
-  background: #ecfdf5;
-  border-color: #a7f3d0;
-}
-.course-overview-tab .stat-card.stat-amber {
-  background: #fffbeb;
-  border-color: #fde68a;
-}
-.course-overview-tab .stat-card.stat-violet {
-  background: #f5f3ff;
-  border-color: #ddd6fe;
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(226, 232, 240, 0.6);
+  background: rgba(255, 255, 255, 0.95);
 }
 
 .course-overview-tab .stat-card__text {
@@ -72,29 +56,16 @@
 
 .course-overview-tab .stat-card h3 {
   font-family: var(--f-body, 'Be Vietnam Pro', system-ui, sans-serif);
-  font-size: 1.65rem;
+  font-size: 1.6rem;
   font-weight: 800;
   line-height: 1;
   margin: 0;
-  letter-spacing: -0.02em;
-}
-
-.course-overview-tab .stat-card.stat-blue h3 {
-  color: #1e40af;
-}
-.course-overview-tab .stat-card.stat-emerald h3 {
-  color: #065f46;
-}
-.course-overview-tab .stat-card.stat-amber h3 {
-  color: #92400e;
-}
-.course-overview-tab .stat-card.stat-violet h3 {
-  color: #6d28d9;
+  color: #0f172a;
 }
 
 .course-overview-tab .stat-card p {
-  margin: 0.2rem 0 0;
-  font-size: 0.74rem;
+  margin: 0.3rem 0 0;
+  font-size: 0.8rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -104,366 +75,232 @@
 
 .course-overview-tab .stat-card__sub {
   display: block;
-  margin: 0.35rem 0 0;
-  font-size: 0.8rem;
-  font-weight: 600;
-  line-height: 1.35;
-  color: #5e5d59;
-  text-transform: none;
-  letter-spacing: 0;
-  font-family: var(--f-body, 'Be Vietnam Pro', system-ui, sans-serif);
+  margin: 0.25rem 0 0;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #94a3b8;
 }
 
 .course-overview-tab .stat-icon-wrap {
   flex-shrink: 0;
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
 }
 
 .course-overview-tab .stat-card.stat-blue .stat-icon-wrap {
-  background: #2563eb;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  box-shadow: 0 8px 16px rgba(37, 99, 235, 0.25);
 }
 .course-overview-tab .stat-card.stat-emerald .stat-icon-wrap {
-  background: #059669;
+  background: linear-gradient(135deg, #10b981, #047857);
+  box-shadow: 0 8px 16px rgba(16, 185, 129, 0.25);
 }
 .course-overview-tab .stat-card.stat-amber .stat-icon-wrap {
-  background: #d97706;
+  background: linear-gradient(135deg, #f59e0b, #b45309);
+  box-shadow: 0 8px 16px rgba(245, 158, 11, 0.25);
 }
 .course-overview-tab .stat-card.stat-violet .stat-icon-wrap {
-  background: #7c3aed;
+  background: linear-gradient(135deg, #8b5cf6, #5b21b6);
+  box-shadow: 0 8px 16px rgba(139, 92, 246, 0.25);
 }
 
 .course-overview-tab .stat-icon-wrap svg {
   color: #ffffff;
+  width: 24px;
+  height: 24px;
 }
 
-/* —— Tóm tắt nhanh —— */
-.course-overview-tab__summary {
+/* —— Banners —— */
+.course-overview-banner {
   display: flex;
-  flex-wrap: wrap;
-  align-items: stretch;
-  gap: 0.65rem 0.75rem;
-  padding: 0.25rem;
-  border-radius: 1rem;
-  background: rgba(245, 244, 237, 0.92);
-  box-shadow: 0 0 0 1px #e8e6dc;
-  box-sizing: border-box;
-}
-
-.course-overview-tab__summary-pill {
-  display: inline-flex;
-  flex: 1 1 140px;
-  min-width: 0;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  border-radius: 0.75rem;
-  border: 1px solid #e8e6dc;
-  background: #faf9f5;
-  padding: 0.6rem 0.9rem;
-  box-shadow: rgba(0, 0, 0, 0.04) 0 2px 12px;
-  box-sizing: border-box;
+  gap: 1.25rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(12px);
+  border-left: 5px solid transparent;
 }
 
-.course-overview-tab__summary-pill--wide {
-  flex-basis: 180px;
+.course-overview-banner.ministry {
+  border-left-color: #3b82f6;
+  background: linear-gradient(to right, rgba(239, 246, 255, 0.9), rgba(255, 255, 255, 0.9));
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08), 0 0 0 1px rgba(226, 232, 240, 0.5);
 }
 
-.course-overview-tab__summary-label {
-  font-size: 0.78rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #5e5d59;
-  font-family: var(--f-body, 'Be Vietnam Pro', system-ui, sans-serif);
+.course-overview-banner.custom {
+  border-left-color: #eab308;
+  background: linear-gradient(to right, rgba(254, 252, 232, 0.9), rgba(255, 255, 255, 0.9));
+  box-shadow: 0 4px 12px rgba(234, 179, 8, 0.08), 0 0 0 1px rgba(226, 232, 240, 0.5);
 }
 
-.course-overview-tab__summary-value {
-  color: #141413;
-  font-size: 0.95rem;
-  font-family: var(--f-body, 'Be Vietnam Pro', system-ui, sans-serif);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
+.course-overview-banner__icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
-.course-overview-tab__summary-value--sm {
+.course-overview-banner.ministry .course-overview-banner__icon {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.course-overview-banner.custom .course-overview-banner__icon {
+  background: #fef08a;
+  color: #854d0e;
+}
+
+.course-overview-banner__content h4 {
+  margin: 0 0 0.25rem;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.course-overview-banner__content p {
+  margin: 0;
   font-size: 0.9rem;
-  line-height: 1.3;
-  text-align: right;
+  color: #475569;
+  line-height: 1.5;
 }
 
 /* —— Card cấu hình —— */
 .course-overview-tab__config {
   overflow: hidden;
-  border-radius: 1rem;
-  border: 1px solid #f0eee6;
-  background: #faf9f5;
-  box-shadow:
-    0 0 0 1px #e8e6dc,
-    rgba(0, 0, 0, 0.04) 0 4px 24px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.6);
+  box-shadow: 0 8px 32px -4px rgba(15, 23, 42, 0.06);
   box-sizing: border-box;
 }
 
 .course-overview-tab__config-head {
-  padding: 1rem 1.25rem 1.1rem;
-  border-bottom: 1px solid #f0eee6;
-  background: #faf9f5;
-  box-sizing: border-box;
+  padding: 1.5rem 1.75rem;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+  background: rgba(248, 250, 252, 0.5);
 }
 
 .course-overview-tab__kicker {
-  margin: 0 0 0.35rem;
-  font-size: 0.65rem;
-  font-weight: 600;
+  margin: 0 0 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.16em;
-  color: #c96442;
-  font-family: var(--f-body, 'Be Vietnam Pro', system-ui, sans-serif);
+  letter-spacing: 0.1em;
+  color: #3b82f6;
 }
 
 .course-overview-config-heading {
-  font-family: var(--f-body, 'Be Vietnam Pro', system-ui, sans-serif);
-  font-size: 1.35rem;
-  font-weight: 700;
-  line-height: 1.25;
+  font-size: 1.45rem;
+  font-weight: 800;
   color: #0f172a;
   margin: 0;
 }
 
-@media (min-width: 640px) {
-  .course-overview-config-heading {
-    font-size: 1.45rem;
-  }
-}
-
 .course-overview-tab__lede {
-  margin: 0.4rem 0 0;
-  font-size: 0.9rem;
-  line-height: 1.55;
-  color: #5e5d59;
+  margin: 0.5rem 0 0;
+  font-size: 0.95rem;
+  color: #64748b;
   max-width: 42rem;
-  font-family: var(--f-body, 'Be Vietnam Pro', system-ui, sans-serif);
 }
 
 .course-overview-tab__config-body {
-  background: #fffcf7;
+  padding: 1.5rem 1.75rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem 2rem;
 }
 
 /* —— Meta row —— */
 .course-overview-tab__row {
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-  gap: 0.4rem 1rem;
-  padding: 0.9rem 1.25rem 1rem;
-  border-top: 1px solid #e8e6dc;
-  background: rgba(250, 249, 245, 0.6);
-  box-sizing: border-box;
+  gap: 0.4rem;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
 }
 
-.course-overview-tab__row:first-of-type {
-  border-top: none;
-  padding-top: 1.1rem;
-}
-
-@media (min-width: 640px) {
-  .course-overview-tab__row {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-  }
+.course-overview-tab__row:hover {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
 }
 
 .course-overview-tab__row-label {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: #5e5d59;
-  flex-shrink: 0;
-  font-family: var(--f-body, 'Be Vietnam Pro', system-ui, sans-serif);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #64748b;
 }
 
 .course-overview-tab__row-label svg {
-  width: 1rem;
-  height: 1rem;
-  color: #87867f;
-  flex-shrink: 0;
+  width: 1.1rem;
+  height: 1.1rem;
+  color: #94a3b8;
 }
 
 .course-overview-tab__row-value {
-  font-size: 0.875rem;
-  color: #141413;
+  font-size: 1rem;
+  color: #0f172a;
   font-weight: 500;
-  min-width: 0;
   word-break: break-word;
-  font-family: var(--f-body, 'Be Vietnam Pro', system-ui, sans-serif);
-}
-
-@media (min-width: 640px) {
-  .course-overview-tab__row-value {
-    text-align: right;
-  }
 }
 
 .course-overview-tab__row-value strong {
-  font-weight: 600;
-  color: #141413;
-  font-variant-numeric: tabular-nums;
-}
-
-/* Badge trạng thái loại khóa học */
-.course-overview-tab__badge {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 9999px;
-  padding: 0.25rem 0.6rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  font-family: var(--f-body, 'Be Vietnam Pro', system-ui, sans-serif);
-}
-
-.course-overview-tab__badge--custom {
-  background: #fdf4f0;
-  color: #c96442;
-  box-shadow: inset 0 0 0 1px #f0d4c8;
-}
-
-.course-overview-tab__badge--ministry {
-  background: #f5f4ed;
-  color: #4d4c48;
-  box-shadow: inset 0 0 0 1px #e8e6dc;
-}
-
-/* —— Mô tả + ảnh —— */
-.course-overview-tab__grid2 {
-  display: grid;
-  gap: 1.5rem;
-  align-items: start;
-  box-sizing: border-box;
-}
-
-@media (min-width: 1024px) {
-  .course-overview-tab__grid2--split {
-    grid-template-columns: 1fr 1fr;
-  }
+  font-weight: 700;
+  color: #1e293b;
 }
 
 .course-overview-tab__panel {
-  min-width: 0;
   overflow: hidden;
-  border-radius: 1rem;
-  border: 1px solid #f0eee6;
-  background: #faf9f5;
-  box-shadow:
-    0 0 0 1px #e8e6dc,
-    rgba(0, 0, 0, 0.04) 0 4px 24px;
-  box-sizing: border-box;
-}
-
-.course-overview-tab__panel--thumb-only {
-  max-width: 42rem;
-}
-
-@media (min-width: 1024px) {
-  .course-overview-tab__panel--thumb-only {
-    max-width: none;
-  }
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.6);
+  box-shadow: 0 8px 32px -4px rgba(15, 23, 42, 0.06);
 }
 
 .course-overview-tab__panel-head {
-  padding: 1rem 1.25rem;
-  border-bottom: 1px solid #f0eee6;
-  box-sizing: border-box;
-}
-
-.course-overview-tab__panel-head--row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+  background: rgba(248, 250, 252, 0.5);
 }
 
 .course-overview-tab__panel-title {
   margin: 0;
-  font-size: 1.2rem;
-  font-weight: 500;
-  line-height: 1.3;
-  color: #141413;
-  font-family: var(--f-heading);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f172a;
 }
 
 .course-overview-tab__panel-mute {
   margin: 0.25rem 0 0;
-  font-size: 0.8rem;
-  line-height: 1.5;
-  color: #87867f;
-  font-family: var(--f-body, 'Be Vietnam Pro', system-ui, sans-serif);
+  font-size: 0.85rem;
+  color: #64748b;
 }
 
 .course-overview-tab__panel-body {
-  padding: 1.15rem 1.25rem 1.35rem;
-  box-sizing: border-box;
+  padding: 1.5rem;
 }
 
 .course-overview-tab__body-serif {
   margin: 0;
-  font-size: 1.05rem;
-  line-height: 1.65;
-  color: #5e5d59;
-  max-width: 65ch;
-  font-family: var(--f-heading);
+  font-size: 1rem;
+  line-height: 1.7;
+  color: #334155;
+  white-space: pre-wrap;
 }
 
-.course-overview-tab__thumb-hint {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: #87867f;
-  letter-spacing: 0.02em;
-  font-family: var(--f-body, 'Be Vietnam Pro', system-ui, sans-serif);
-}
-
-.course-overview-tab__thumb-hint svg {
-  width: 0.875rem;
-  height: 0.875rem;
-}
-
-.course-overview-tab__img-frame {
-  display: inline-block;
-  max-width: 100%;
-  border-radius: 1rem;
-  overflow: hidden;
-  background: #f5f4ed;
-  box-shadow: 0 0 0 1px #f0eee6, rgba(0, 0, 0, 0.05) 0 4px 24px;
-  box-sizing: border-box;
-}
-
-.course-overview-tab__img {
-  display: block;
-  width: 100%;
-  max-width: 28rem;
-  height: auto;
-  object-fit: cover;
-  vertical-align: middle;
-}
-
-.course-overview-tab__thumb-pad {
-  padding: 0.4rem 1.25rem 1.25rem;
-  box-sizing: border-box;
-}
-
-@media (max-width: 640px) {
-  .course-overview-tab .stats-grid {
-    grid-template-columns: 1fr;
-  }
-}

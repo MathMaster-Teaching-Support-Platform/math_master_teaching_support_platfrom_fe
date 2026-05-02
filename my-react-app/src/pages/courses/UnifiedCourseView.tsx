@@ -42,6 +42,7 @@ import {
 import { AuthService } from '../../services/api/auth.service';
 import { getEffectivePrice, hasActiveDiscount } from '../../utils/pricing';
 import { InvoiceModal } from '../../components/course/InvoiceModal';
+import { PurchaseConfirmationModal } from '../../components/course/PurchaseConfirmationModal';
 import type { Order } from '../../types/order.types';
 import '../../styles/module-refactor.css';
 import './StudentCourses.css';
@@ -134,6 +135,9 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
   const enrollMutation = useEnroll();
   const [showInvoice, setShowInvoice] = React.useState(false);
   const [completedOrder, setCompletedOrder] = React.useState<Order | null>(null);
+  // Purchase confirmation modal state
+  const [showPurchaseModal, setShowPurchaseModal] = React.useState(false);
+  const [purchaseError, setPurchaseError] = React.useState<string | null>(null);
 
   // Determine enrollment status
   const isEnrolled = !!enrollment && enrollment.status === 'ACTIVE';
@@ -161,39 +165,36 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
       navigate('/login', { state: { from: `/course/${courseId}` } });
       return;
     }
-    
-    // Prevent multiple clicks
-    if (enrollMutation.isPending) {
-      return;
-    }
-    
+    // Open confirmation modal instead of directly purchasing
+    setPurchaseError(null);
+    setShowPurchaseModal(true);
+  };
+
+  const handleConfirmPurchase = () => {
+    if (enrollMutation.isPending) return;
     enrollMutation.mutate(courseId!, {
       onSuccess: (resp) => {
-        console.log('[handleEnroll] Success resp:', resp);
-        
-        // Harden the check for the order object
-        // useEnroll returns { result: Order, type: 'order', enrollmentId: string }
         const orderData = resp?.result || (resp as any)?.order || (resp?.type === 'order' ? resp : null);
-        
         if (orderData && (orderData.orderNumber || orderData.id)) {
-          console.log('[handleEnroll] Showing invoice modal for order:', orderData.orderNumber || orderData.id);
           setCompletedOrder(orderData);
           setShowInvoice(true);
         } else {
-          // Fallback if the structure is different but we have an enrollment ID
-          console.warn('[handleEnroll] Could not find order in response, falling back to direct navigation:', resp);
-          const newEnrollmentId = (resp as any)?.enrollmentId || (resp as any)?.result?.enrollmentId || (resp as any)?.result?.id;
+          const newEnrollmentId =
+            (resp as any)?.enrollmentId ||
+            (resp as any)?.result?.enrollmentId ||
+            (resp as any)?.result?.id;
           if (newEnrollmentId) {
             navigate(`/student/courses/${newEnrollmentId}`);
           } else {
-            // Last resort: refetch to see if we're enrolled
             void refetchLessons();
           }
         }
+        setShowPurchaseModal(false);
       },
       onError: (err) => {
-        console.error('[handleEnroll] Error:', err);
-      }
+        const msg = err instanceof Error ? err.message : 'Không thể đăng ký khóa học. Vui lòng thử lại.';
+        setPurchaseError(msg);
+      },
     });
   };
 
@@ -625,6 +626,18 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
         {mainContent}
       </DashboardLayout>
 
+      {/* ── Purchase Confirmation Modal ── */}
+      {course && (
+        <PurchaseConfirmationModal
+          course={course}
+          isOpen={showPurchaseModal}
+          onConfirm={handleConfirmPurchase}
+          onCancel={() => { setShowPurchaseModal(false); setPurchaseError(null); }}
+          isPurchasing={enrollMutation.isPending}
+          purchaseError={purchaseError}
+        />
+      )}
+
       {/* ── Invoice Modal ── */}
       <InvoiceModal
         order={completedOrder}
@@ -634,7 +647,6 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
           if (completedOrder?.enrollmentId) {
             navigate(`/student/courses/${completedOrder.enrollmentId}`);
           } else {
-            // Re-fetch enrollments and navigate to the list
             navigate('/student/courses');
           }
         }}

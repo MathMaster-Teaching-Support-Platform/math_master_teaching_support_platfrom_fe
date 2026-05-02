@@ -11,11 +11,21 @@ export interface SABlueprintData {
   validationMode: ValidationMode;
   tolerance: string;
   diagramTemplateRaw: string;
+  solutionStepsTemplate: string;
 }
 
 interface SABlueprintProps {
   defaultChapterId: string;
   onFocusField?: (field: string, index?: number) => void;
+  initialData?: {
+    templateText?: string;
+    parameters?: ParameterInput[];
+    answerFormula?: string;
+    validationMode?: ValidationMode;
+    tolerance?: string;
+    diagramTemplateRaw?: string;
+    solutionStepsTemplate?: string;
+  };
 }
 
 export interface SABlueprintRef {
@@ -24,15 +34,30 @@ export interface SABlueprintRef {
 }
 
 export const SABlueprint = forwardRef<SABlueprintRef, SABlueprintProps>(
-  ({ onFocusField }, ref) => {
-    const [templateText, setTemplateText] = useState('Tính ∫₀¹ {{a}}x dx = ?');
-    const [answerFormula, setAnswerFormula] = useState('{{a}}/2');
-    const [diagramTemplateRaw, setDiagramTemplateRaw] = useState('');
-    const [validationMode, setValidationMode] = useState<ValidationMode>('NUMERIC');
-    const [tolerance, setTolerance] = useState('0.01');
-    const [parameters, setParameters] = useState<ParameterInput[]>([
-      { name: 'a', type: 'int', min: '1', max: '10', constraint: '' },
-    ]);
+  ({ onFocusField, initialData }, ref) => {
+    const [templateText, setTemplateText] = useState(
+      initialData?.templateText ?? 'Tính ∫₀¹ {{a}}x dx = ?'
+    );
+    const [answerFormula, setAnswerFormula] = useState(
+      initialData?.answerFormula ?? '{{a}}/2'
+    );
+    const [diagramTemplateRaw, setDiagramTemplateRaw] = useState(
+      initialData?.diagramTemplateRaw ?? ''
+    );
+    const [solutionStepsTemplate, setSolutionStepsTemplate] = useState(
+      initialData?.solutionStepsTemplate ?? ''
+    );
+    const [validationMode, setValidationMode] = useState<ValidationMode>(
+      initialData?.validationMode ?? 'NUMERIC'
+    );
+    const [tolerance, setTolerance] = useState(
+      initialData?.tolerance ?? '0.01'
+    );
+    const [parameters, setParameters] = useState<ParameterInput[]>(
+      initialData?.parameters ?? [
+        { name: 'a', type: 'int', min: '1', max: '10', constraint: '' },
+      ]
+    );
 
     const templateTextRef = useRef<HTMLTextAreaElement | null>(null);
     const answerFormulaRef = useRef<HTMLInputElement | null>(null);
@@ -51,6 +76,7 @@ export const SABlueprint = forwardRef<SABlueprintRef, SABlueprintProps>(
         validationMode,
         tolerance,
         diagramTemplateRaw,
+        solutionStepsTemplate,
       }),
       getFieldRef: (field: string, index?: number) => {
         switch (field) {
@@ -231,6 +257,24 @@ export const SABlueprint = forwardRef<SABlueprintRef, SABlueprintProps>(
             onChange={(event) => setDiagramTemplateRaw(event.target.value)}
             placeholder="Vi du: \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}"
           />
+        </label>
+
+        <label>
+          <p className="muted" style={{ marginBottom: 6 }}>
+            Hướng dẫn giải mẫu (cho AI tạo lời giải)
+          </p>
+          <textarea
+            className="textarea"
+            rows={3}
+            value={solutionStepsTemplate}
+            onChange={(e) => setSolutionStepsTemplate(e.target.value)}
+            placeholder="Ví dụ: Bước 1: Tính nguyên hàm. Bước 2: Thay cận. Bước 3: Tính kết quả = {{a}}/2"
+          />
+          {solutionStepsTemplate && (
+            <div className="preview-box">
+              <MathText text={solutionStepsTemplate} />
+            </div>
+          )}
         </label>
       </>
     );

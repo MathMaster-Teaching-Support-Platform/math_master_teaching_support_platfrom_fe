@@ -231,6 +231,47 @@ export default function TakeAssessment() {
   ).length;
   const totalQuestions = attemptData?.questions.length || 0;
 
+  // Group questions by part for display
+  const questionsByPart = useMemo(() => {
+    if (!attemptData?.questions) return null;
+    
+    // Check if any question has partNumber
+    const hasPartNumbers = attemptData.questions.some(q => q.partNumber !== undefined);
+    if (!hasPartNumbers) return null;
+
+    const grouped = new Map<number, typeof attemptData.questions>();
+    attemptData.questions.forEach(q => {
+      const part = q.partNumber || 1;
+      if (!grouped.has(part)) {
+        grouped.set(part, []);
+      }
+      grouped.get(part)!.push(q);
+    });
+    
+    return grouped;
+  }, [attemptData?.questions]);
+
+  // Get part info for current question
+  const currentPartInfo = useMemo(() => {
+    if (!currentQuestion?.partNumber || !questionsByPart) return null;
+    
+    const partLabels: Record<number, string> = {
+      1: 'Phần I: Trắc nghiệm',
+      2: 'Phần II: Đúng/Sai',
+      3: 'Phần III: Trả lời ngắn',
+    };
+    
+    const partQuestions = questionsByPart.get(currentQuestion.partNumber) || [];
+    const questionIndexInPart = partQuestions.findIndex(q => q.questionId === currentQuestion.questionId);
+    
+    return {
+      partNumber: currentQuestion.partNumber,
+      partLabel: partLabels[currentQuestion.partNumber] || `Phần ${currentQuestion.partNumber}`,
+      questionIndexInPart: questionIndexInPart + 1,
+      totalInPart: partQuestions.length,
+    };
+  }, [currentQuestion, questionsByPart]);
+
   if (startMutation.isPending) {
     return (
       <DashboardLayout
@@ -329,6 +370,26 @@ export default function TakeAssessment() {
           >
             {/* Main content */}
             <div>
+              {/* Part header */}
+              {currentPartInfo && (
+                <div
+                  style={{
+                    padding: '12px 16px',
+                    backgroundColor: '#dbeafe',
+                    border: '2px solid #3b82f6',
+                    borderRadius: 8,
+                    marginBottom: 16,
+                  }}
+                >
+                  <h3 style={{ margin: 0, color: '#1e40af', fontSize: '1.1rem' }}>
+                    {currentPartInfo.partLabel}
+                  </h3>
+                  <p className="muted" style={{ margin: '4px 0 0', fontSize: '0.875rem' }}>
+                    Câu {currentPartInfo.questionIndexInPart} / {currentPartInfo.totalInPart} trong phần này
+                  </p>
+                </div>
+              )}
+
               <QuestionRenderer
                 question={currentQuestion}
                 studentAnswer={answers[currentQuestion.questionId]}

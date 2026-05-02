@@ -51,7 +51,7 @@ const coverGradients = [
 
 const coverAccents = ['#1d4ed8', '#0f766e', '#047857', '#c2410c', '#be185d', '#6d28d9'] as const;
 const PAGE_SIZE = 9;
-type CourseFilterStatus = 'all' | 'published' | 'draft' | 'rejected' | 'archived';
+type CourseFilterStatus = 'all' | 'published' | 'pending_review' | 'draft' | 'rejected' | 'archived';
 const languageOptions = ['Tiếng Việt', 'English'] as const;
 
 // ─── Create Course Modal ───────────────────────────────────────────────────────
@@ -662,10 +662,11 @@ const TeacherCourses: React.FC = () => {
 
   const getNormalizedStatus = (
     course: CourseResponse
-  ): 'published' | 'draft' | 'rejected' | 'archived' => {
+  ): 'published' | 'pending_review' | 'draft' | 'rejected' | 'archived' => {
     if (course.status === 'ARCHIVED') return 'archived';
     if (course.status === 'REJECTED') return 'rejected';
     if (course.published || course.status === 'PUBLISHED') return 'published';
+    if (course.status === 'PENDING_REVIEW') return 'pending_review';
     return 'draft';
   };
 
@@ -701,6 +702,7 @@ const TeacherCourses: React.FC = () => {
       const normalizedStatus = getNormalizedStatus(course);
       let statusMatch = true;
       if (filterStatus === 'published') statusMatch = normalizedStatus === 'published';
+      else if (filterStatus === 'pending_review') statusMatch = normalizedStatus === 'pending_review';
       else if (filterStatus === 'draft') statusMatch = normalizedStatus === 'draft';
       else if (filterStatus === 'rejected') statusMatch = normalizedStatus === 'rejected';
       else if (filterStatus === 'archived') statusMatch = normalizedStatus === 'archived';
@@ -721,6 +723,7 @@ const TeacherCourses: React.FC = () => {
     () => ({
       total: courses.length,
       active: courses.filter((c) => getNormalizedStatus(c) === 'published').length,
+      pendingReview: courses.filter((c) => getNormalizedStatus(c) === 'pending_review').length,
       draft: courses.filter((c) => getNormalizedStatus(c) === 'draft').length,
       rejected: courses.filter((c) => getNormalizedStatus(c) === 'rejected').length,
       archived: courses.filter((c) => getNormalizedStatus(c) === 'archived').length,
@@ -771,6 +774,7 @@ const TeacherCourses: React.FC = () => {
   const filterTabs = [
     { id: 'all' as const, label: `Tất cả (${stats.total})` },
     { id: 'published' as const, label: `Công khai (${stats.active})` },
+    { id: 'pending_review' as const, label: `Chờ duyệt (${stats.pendingReview})` },
     { id: 'draft' as const, label: `Nháp (${stats.draft})` },
     { id: 'rejected' as const, label: `Bị từ chối (${stats.rejected})` },
     { id: 'archived' as const, label: `Đã lưu trữ (${stats.archived})` },
@@ -1057,39 +1061,37 @@ const TeacherCourses: React.FC = () => {
                       >
                         <Settings2 size={14} /> Quản lý
                       </button>
-                      {!course.published && course.status !== 'PENDING_REVIEW' && (
+                      {!course.published &&
+                        course.status !== 'PENDING_REVIEW' &&
+                        course.status !== 'ARCHIVED' && (
+                          <button
+                            className="action-toggle"
+                            onClick={() => handleSubmitForReview(course)}
+                            disabled={submitReviewMutation.isPending}
+                            title="Gửi khóa học để admin phê duyệt"
+                          >
+                            <CheckCircle2 size={14} /> Gửi duyệt
+                          </button>
+                        )}
+                      {/* Published courses cannot be unpublished — backend intentionally blocks it.
+                          Only show the toggle button for non-published courses that are approved (PUBLISHED status). */}
+                      {!course.published && (
                         <button
                           className="action-toggle"
-                          onClick={() => handleSubmitForReview(course)}
-                          disabled={submitReviewMutation.isPending}
-                          title="Gửi khóa học để admin phê duyệt"
+                          onClick={() => handleTogglePublish(course)}
+                          disabled={
+                            publishMutation.isPending ||
+                            course.status !== 'PUBLISHED'
+                          }
+                          title={
+                            course.status !== 'PUBLISHED'
+                              ? 'Khóa học cần được admin duyệt trước khi công khai'
+                              : 'Công khai khóa học'
+                          }
                         >
-                          <CheckCircle2 size={14} /> Gửi duyệt
+                          <Eye size={14} /> Công khai
                         </button>
                       )}
-                      <button
-                        className={`action-toggle${course.published ? ' is-live' : ''}`}
-                        onClick={() => handleTogglePublish(course)}
-                        disabled={
-                          publishMutation.isPending ||
-                          (!course.published && course.status !== 'PUBLISHED')
-                        }
-                        title={
-                          !course.published && course.status !== 'PUBLISHED'
-                            ? 'Khóa học cần được duyệt trước khi công khai'
-                            : undefined
-                        }
-                      >
-                        {course.published ? (
-                          <>
-                            <EyeOff size={14} /> Ẩn
-                          </>
-                        ) : (
-                          <>
-                            <Eye size={14} /> Công khai
-                          </>
-                        )}
-                      </button>
                       <button
                         className="action-danger"
                         onClick={() => handleDelete(course.id)}

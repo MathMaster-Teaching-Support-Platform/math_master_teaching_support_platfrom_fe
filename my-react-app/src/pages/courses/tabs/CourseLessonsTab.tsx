@@ -199,32 +199,32 @@ function CltConfirmDeleteModal({
   isPending?: boolean;
 }) {
   return (
-    <div className="clt-warm-overlay" role="presentation" onClick={onClose}>
+    <div className="clt-modal-layer" role="presentation" onClick={onClose}>
       <div
-        className="clt-warm-dialog clt-warm-dialog--sm"
+        className="clt-modal-card clt-modal-card--sm"
         role="dialog"
         aria-modal="true"
         aria-labelledby="clt-confirm-title"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="clt-warm-dialog__header">
+        <div className="clt-modal-header">
           <div>
             <h3 id="clt-confirm-title">{title}</h3>
           </div>
           <button
             type="button"
-            className="clt-warm-icon-btn"
+            className="clt-icon-btn"
             onClick={onClose}
             disabled={isPending}
           >
             <X size={18} aria-hidden />
           </button>
         </div>
-        <div className="clt-warm-dialog__body">
-          <p className="clt-warm-confirm-text">{message}</p>
-          {extraHint ? <p className="clt-warm-confirm-hint">{extraHint}</p> : null}
+        <div className="clt-modal-body">
+          <p className="clt-muted">{message}</p>
+          {extraHint ? <p className="clt-muted">{extraHint}</p> : null}
         </div>
-        <div className="clt-warm-dialog__footer">
+        <div className="clt-modal-footer">
           <button type="button" className="btn secondary" onClick={onClose} disabled={isPending}>
             Hủy
           </button>
@@ -271,34 +271,34 @@ function CltTextSectionModal({
 }) {
   if (!open) return null;
   return (
-    <div className="clt-warm-overlay" role="presentation" onClick={onClose}>
+    <div className="clt-modal-layer" role="presentation" onClick={onClose}>
       <div
-        className="clt-warm-dialog clt-warm-dialog--sm"
+        className="clt-modal-card clt-modal-card--sm"
         role="dialog"
         aria-modal="true"
         aria-labelledby="clt-text-section-title"
         lang="vi"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="clt-warm-dialog__header">
+        <div className="clt-modal-header">
           <div>
             <h3 id="clt-text-section-title">{title}</h3>
             {description ? <p>{description}</p> : null}
           </div>
           <button
             type="button"
-            className="clt-warm-icon-btn"
+            className="clt-icon-btn"
             onClick={onClose}
             disabled={isPending}
           >
             <X size={18} aria-hidden />
           </button>
         </div>
-        <div className="clt-warm-dialog__body">
-          <label className="clt-warm-form-field">
-            <span className="clt-warm-form-label">{label}</span>
+        <div className="clt-modal-body">
+          <label className="clt-form-field">
+            <span className="clt-form-label">{label}</span>
             <input
-              className="clt-warm-input"
+              className="clt-input"
               value={value}
               onChange={(e) => onChange(e.target.value)}
               placeholder={placeholder}
@@ -307,7 +307,7 @@ function CltTextSectionModal({
             />
           </label>
         </div>
-        <div className="clt-warm-dialog__footer">
+        <div className="clt-modal-footer">
           <button type="button" className="btn secondary" onClick={onClose} disabled={isPending}>
             Hủy
           </button>
@@ -477,23 +477,23 @@ function UploadVideoModal({
   const fileSizeMB = file ? (file.size / 1024 / 1024).toFixed(1) : null;
 
   return (
-    <div className="clt-warm-overlay" role="presentation" onClick={onClose}>
+    <div className="clt-modal-layer" role="presentation" onClick={onClose}>
       <div
-        className="clt-warm-dialog"
+        className="clt-modal-card"
         role="dialog"
         aria-modal="true"
         aria-labelledby="clt-upload-lesson-title"
         lang="vi"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="clt-warm-dialog__header">
+        <div className="clt-modal-header">
           <div>
             <h3 id="clt-upload-lesson-title">Thêm bài học video</h3>
             <p>Chọn bài học (hoặc phần nội dung) và tải lên video giảng dạy.</p>
           </div>
           <button
             type="button"
-            className="clt-warm-icon-btn"
+            className="clt-icon-btn"
             onClick={onClose}
             disabled={uploading}
             aria-label="Đóng"
@@ -502,15 +502,22 @@ function UploadVideoModal({
           </button>
         </div>
 
-        <div className="clt-warm-dialog__body">
+        <div className="clt-modal-body">
           {provider === 'MINISTRY' ? (
             <>
-              <label className="clt-warm-form-field">
-                <span className="clt-warm-form-label">
-                  Chương <span className="clt-warm-req">*</span>
+              <div className="clt-provider-banner ministry">
+                <BookOpen size={20} />
+                <div style={{ flex: 1 }}>
+                  <h4 style={{ margin: '0 0 0.2rem', fontSize: '0.9rem', fontWeight: 800 }}>Chương trình của Bộ GD&ĐT</h4>
+                  <p style={{ margin: 0, fontSize: '0.8rem' }}>Chọn <strong>Chương</strong> và <strong>Bài học</strong> có sẵn theo chuẩn của Bộ Giáo Dục.</p>
+                </div>
+              </div>
+              <label className="clt-form-field">
+                <span className="clt-form-label">
+                  Chương <span className="clt-req">*</span>
                 </span>
                 <select
-                  className="clt-warm-select"
+                  className="clt-select"
                   value={chapterId}
                   onChange={(e) => handleChapterChange(e.target.value)}
                   disabled={loadingChapters || uploading}
@@ -524,12 +531,12 @@ function UploadVideoModal({
                 </select>
               </label>
 
-              <label className="clt-warm-form-field">
-                <span className="clt-warm-form-label">
-                  Bài học <span className="clt-warm-req">*</span>
+              <label className="clt-form-field">
+                <span className="clt-form-label">
+                  Bài học <span className="clt-req">*</span>
                 </span>
                 <select
-                  className="clt-warm-select"
+                  className="clt-select"
                   value={lessonId}
                   onChange={(e) => setLessonId(e.target.value)}
                   disabled={!chapterId || loadingLessons || uploading}
@@ -551,12 +558,19 @@ function UploadVideoModal({
             </>
           ) : (
             <>
-              <label className="clt-warm-form-field">
-                <span className="clt-warm-form-label">
-                  Phần nội dung <span className="clt-warm-req">*</span>
+              <div className="clt-provider-banner custom">
+                <BookOpen size={20} />
+                <div style={{ flex: 1 }}>
+                  <h4 style={{ margin: '0 0 0.2rem', fontSize: '0.9rem', fontWeight: 800 }}>Chương trình mở rộng</h4>
+                  <p style={{ margin: 0, fontSize: '0.8rem' }}>Tạo <strong>Phần</strong> và nhập tên cho <strong>Bài học tự do</strong> của riêng bạn.</p>
+                </div>
+              </div>
+              <label className="clt-form-field">
+                <span className="clt-form-label">
+                  Phần nội dung <span className="clt-req">*</span>
                 </span>
                 <select
-                  className="clt-warm-select"
+                  className="clt-select"
                   value={sectionId}
                   onChange={(e) => setSectionId(e.target.value)}
                   disabled={uploading || loadingSections}
@@ -570,12 +584,12 @@ function UploadVideoModal({
                 </select>
               </label>
 
-              <label className="clt-warm-form-field">
-                <span className="clt-warm-form-label">
-                  Tên bài học <span className="clt-warm-req">*</span>
+              <label className="clt-form-field">
+                <span className="clt-form-label">
+                  Tên bài học <span className="clt-req">*</span>
                 </span>
                 <input
-                  className="clt-warm-input"
+                  className="clt-input"
                   value={customTitle}
                   onChange={(e) => setCustomTitle(e.target.value)}
                   placeholder="Ví dụ: Bài 1 — Giới thiệu"
@@ -584,10 +598,10 @@ function UploadVideoModal({
                 />
               </label>
 
-              <label className="clt-warm-form-field">
-                <span className="clt-warm-form-label">Mô tả ngắn (tuỳ chọn)</span>
+              <label className="clt-form-field">
+                <span className="clt-form-label">Mô tả ngắn (tuỳ chọn)</span>
                 <textarea
-                  className="clt-warm-textarea"
+                  className="clt-textarea"
                   rows={2}
                   value={customDescription}
                   onChange={(e) => setCustomDescription(e.target.value)}
@@ -598,12 +612,12 @@ function UploadVideoModal({
             </>
           )}
 
-          <label className="clt-warm-form-field">
-            <span className="clt-warm-form-label">
-              File video <span className="clt-warm-req">*</span>
+          <label className="clt-form-field">
+            <span className="clt-form-label">
+              File video <span className="clt-req">*</span>
             </span>
             <div
-              className="clt-warm-dropzone"
+              className="clt-dropzone"
               onClick={() => document.getElementById('video-input')?.click()}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
@@ -624,8 +638,8 @@ function UploadVideoModal({
               />
               {file ? (
                 <div>
-                  <div className="clt-warm-dropzone__file">{file.name}</div>
-                  <div className="clt-warm-muted">
+                  <div className="clt-dropzone__file">{file.name}</div>
+                  <div className="clt-muted">
                     {fileSizeMB} MB
                     {durationSeconds
                       ? ` · ${Math.floor(durationSeconds / 60)} phút ${durationSeconds % 60} giây`
@@ -633,7 +647,7 @@ function UploadVideoModal({
                   </div>
                 </div>
               ) : (
-                <div className="clt-warm-muted">
+                <div className="clt-muted">
                   <Video size={32} style={{ marginBottom: 8, opacity: 0.55 }} aria-hidden />
                   <p style={{ margin: 0 }}>Kéo thả hoặc chọn file video</p>
                   <p style={{ fontSize: '0.75rem', marginTop: 6, marginBottom: 0 }}>
@@ -644,10 +658,10 @@ function UploadVideoModal({
             </div>
           </label>
 
-          <label className="clt-warm-form-field">
-            <span className="clt-warm-form-label">Tiêu đề video</span>
+          <label className="clt-form-field">
+            <span className="clt-form-label">Tiêu đề video</span>
             <input
-              className="clt-warm-input"
+              className="clt-input"
               value={videoTitle}
               onChange={(e) => setVideoTitle(e.target.value)}
               placeholder="Tên hiển thị khi học viên xem bài"
@@ -675,24 +689,24 @@ function UploadVideoModal({
                   {progress}%
                 </span>
               </div>
-              <div className="clt-warm-progress">
+              <div className="clt-progress">
                 <div
-                  className="clt-warm-progress__bar"
+                  className="clt-progress__bar"
                   style={{ transform: `scaleX(${progress / 100})` }}
                 />
               </div>
               {chunkInfo ? (
-                <p className="clt-warm-muted" style={{ fontSize: '0.78rem', marginTop: 6 }}>
+                <p className="clt-muted" style={{ fontSize: '0.78rem', marginTop: 6 }}>
                   {chunkInfo}
                 </p>
               ) : null}
             </div>
           )}
 
-          {error ? <p className="clt-warm-err">{error}</p> : null}
+          {error ? <p className="clt-err">{error}</p> : null}
         </div>
 
-        <div className="clt-warm-dialog__footer">
+        <div className="clt-modal-footer">
           <button type="button" className="btn secondary" onClick={onClose} disabled={uploading}>
             Hủy
           </button>
@@ -762,23 +776,23 @@ function EditLessonModal({
   };
 
   return (
-    <div className="clt-warm-overlay" role="presentation" onClick={onClose}>
+    <div className="clt-modal-layer" role="presentation" onClick={onClose}>
       <div
-        className="clt-warm-dialog clt-warm-dialog--sm"
+        className="clt-modal-card clt-modal-card--sm"
         role="dialog"
         aria-modal="true"
         aria-labelledby="clt-edit-lesson-title"
         lang="vi"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="clt-warm-dialog__header">
+        <div className="clt-modal-header">
           <div>
             <h3 id="clt-edit-lesson-title">Chỉnh sửa bài học</h3>
             <p>Bài: {lesson.lessonTitle}</p>
           </div>
           <button
             type="button"
-            className="clt-warm-icon-btn"
+            className="clt-icon-btn"
             onClick={onClose}
             disabled={updating}
             aria-label="Đóng"
@@ -787,11 +801,11 @@ function EditLessonModal({
           </button>
         </div>
 
-        <div className="clt-warm-dialog__body">
-          <label className="clt-warm-form-field">
-            <span className="clt-warm-form-label">Tiêu đề hiển thị</span>
+        <div className="clt-modal-body">
+          <label className="clt-form-field">
+            <span className="clt-form-label">Tiêu đề hiển thị</span>
             <input
-              className="clt-warm-input"
+              className="clt-input"
               value={videoTitle}
               onChange={(e) => setVideoTitle(e.target.value)}
               placeholder="Tên hiển thị trên trình phát"
@@ -799,11 +813,11 @@ function EditLessonModal({
             />
           </label>
 
-          <label className="clt-warm-form-field">
-            <span className="clt-warm-form-label">Thứ tự</span>
+          <label className="clt-form-field">
+            <span className="clt-form-label">Thứ tự</span>
             <input
               type="number"
-              className="clt-warm-input"
+              className="clt-input"
               value={orderIndex}
               onChange={(e) => setOrderIndex(parseInt(e.target.value, 10) || 1)}
               disabled={updating}
@@ -824,13 +838,13 @@ function EditLessonModal({
           </div>
 
           {error ? (
-            <p className="clt-warm-err" style={{ marginTop: 12 }}>
+            <p className="clt-err" style={{ marginTop: 12 }}>
               {error}
             </p>
           ) : null}
         </div>
 
-        <div className="clt-warm-dialog__footer">
+        <div className="clt-modal-footer">
           <button type="button" className="btn secondary" onClick={onClose} disabled={updating}>
             Hủy
           </button>
@@ -862,20 +876,20 @@ function SortableLessonChip({ lesson }: { lesson: CourseLessonResponse }) {
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="data-card" {...attributes} {...listeners}>
-      <div className="row" style={{ gap: 10, alignItems: 'center' }}>
-        <GripVertical size={16} style={{ color: '#94a3b8', cursor: 'grab' }} />
-        <span style={{ minWidth: 28, fontWeight: 700, color: '#2563eb' }}>
-          #{lesson.orderIndex ?? '-'}
-        </span>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: 600 }}>{lesson.lessonTitle ?? 'Untitled lesson'}</div>
-          <div className="muted" style={{ fontSize: '0.8rem' }}>
-            {lesson.videoTitle || 'No video title'}
-          </div>
-        </div>
-        {lesson.isFreePreview && <span className="badge published">Xem trước</span>}
+    <div ref={setNodeRef} style={style} className={`clt-list-card ${isDragging ? 'is-dragging' : ''}`} {...attributes} {...listeners}>
+      <div className="clt-drag-handle">
+        <GripVertical size={18} />
       </div>
+      <span style={{ minWidth: 28, fontWeight: 800, color: '#3b82f6', fontSize: '0.9rem' }}>
+        #{lesson.orderIndex ?? '-'}
+      </span>
+      <div className="clt-lesson-info">
+        <div className="clt-lesson-title">{lesson.lessonTitle ?? 'Untitled lesson'}</div>
+        <div className="clt-lesson-subtitle">
+          {lesson.videoTitle || 'No video title'}
+        </div>
+      </div>
+      {lesson.isFreePreview && <span className="badge published" style={{ fontSize: '0.7rem' }}>Xem trước</span>}
     </div>
   );
 }
@@ -1198,54 +1212,67 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
     const materialsList = parseLessonMaterials(lesson.materials);
 
     return (
-      <div key={lesson.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+      <div key={lesson.id} style={{ marginBottom: isSidebar ? 0 : '0.5rem' }}>
         <div
+          className={isSidebar ? '' : 'clt-list-card'}
           onClick={() => handleLessonSelect(lesson)}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem',
-            padding: isSidebar ? '0.65rem 1rem' : '0.85rem 1.2rem',
-            background: isPlaying ? '#eff6ff' : '#fff',
-            cursor: 'pointer',
-            borderLeft: isPlaying ? '4px solid #1f5eff' : '4px solid transparent',
-            transition: 'all 0.2s ease',
-          }}
+          style={
+            isSidebar
+              ? {
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  padding: '0.65rem 1rem',
+                  background: isPlaying ? '#eff6ff' : '#fff',
+                  cursor: 'pointer',
+                  borderLeft: isPlaying ? '4px solid #1f5eff' : '4px solid transparent',
+                  borderBottom: '1px solid #f1f5f9',
+                  transition: 'all 0.2s ease',
+                }
+              : {
+                  cursor: 'pointer',
+                  borderColor: isPlaying ? '#3b82f6' : undefined,
+                  boxShadow: isPlaying ? '0 4px 12px rgba(59, 130, 246, 0.15)' : undefined,
+                }
+          }
         >
           <div
             style={{
-              width: 30,
-              height: 30,
+              width: 32,
+              height: 32,
               borderRadius: 8,
               flexShrink: 0,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              background: isPlaying ? '#1f5eff' : '#e8eef8',
-              color: isPlaying ? '#fff' : '#60748f',
+              background: isPlaying ? '#3b82f6' : '#f1f5f9',
+              color: isPlaying ? '#fff' : '#64748b',
             }}
           >
-            <Play size={16} />
+            <Play size={16} style={{ marginLeft: 2 }} />
           </div>
 
-          <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="clt-lesson-info">
             <div
-              style={{
-                fontSize: isSidebar ? '0.8rem' : '0.88rem',
-                fontWeight: isPlaying ? 700 : 600,
-                color: isPlaying ? '#1e40af' : 'var(--mod-ink)',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }}
+              className="clt-lesson-title"
+              style={{ color: isPlaying ? '#1e40af' : undefined }}
+              title={lesson.lessonTitle ?? 'Bài học'}
             >
-              {lesson.videoTitle ?? lesson.lessonTitle ?? 'Bài học'}
+              {lesson.lessonTitle ?? 'Bài học'}
             </div>
+            {lesson.videoTitle && lesson.videoTitle !== lesson.lessonTitle && (
+              <div
+                className="clt-lesson-subtitle"
+                title={lesson.videoTitle}
+              >
+                {lesson.videoTitle}
+              </div>
+            )}
             {!isSidebar && (
-              <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 4 }}>
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 6 }}>
                 {lesson.durationSeconds && (
-                  <span className="muted" style={{ fontSize: '0.75rem' }}>
-                    <Clock size={11} style={{ marginRight: 3 }} />
+                  <span className="clt-muted" style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <Clock size={12} />
                     {Math.floor(lesson.durationSeconds / 60)} phút
                   </span>
                 )}
@@ -1257,21 +1284,22 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                       fontWeight: 600,
                       display: 'flex',
                       alignItems: 'center',
-                      gap: 3,
+                      gap: 4,
+                      cursor: 'pointer'
                     }}
                     onClick={(e) => {
                       e.stopPropagation();
                       setShowResources(showResources === lesson.id ? null : lesson.id);
                     }}
                   >
-                    <Paperclip size={11} /> {materialsList.length} tài liệu
+                    <Paperclip size={12} /> {materialsList.length} tài liệu
                   </span>
                 )}
                 <span
                   className={`badge ${lesson.isFreePreview ? 'published' : 'draft'}`}
                   style={{
                     fontSize: '0.65rem',
-                    padding: '1px 6px',
+                    padding: '2px 8px',
                     cursor: !isAdmin ? 'pointer' : 'default',
                     opacity: lesson.isFreePreview ? 1 : 0.6,
                   }}
@@ -1299,28 +1327,26 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
           </div>
 
           {!isSidebar && !isAdmin && (
-            <div className="row" style={{ gap: 8, flexShrink: 0 }}>
+            <div className="clt-actions">
               <button
-                className="btn secondary"
-                style={{ padding: '0.3rem 0.5rem' }}
+                className="clt-action-btn"
                 title="Sửa bài học"
                 onClick={(e) => {
                   e.stopPropagation();
                   setEditingLesson(lesson);
                 }}
               >
-                <Pencil size={12} />
+                <Pencil size={14} />
               </button>
               <button
-                className="btn danger"
-                style={{ padding: '0.3rem 0.5rem' }}
+                className="clt-action-btn danger"
                 title="Xóa bài học"
                 onClick={(e) => {
                   e.stopPropagation();
                   setDeleteTarget({ k: 'lesson', lessonId: lesson.id });
                 }}
               >
-                <Trash2 size={12} />
+                <Trash2 size={14} />
               </button>
             </div>
           )}
@@ -1469,11 +1495,14 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
             <InlinePlayer
               courseId={courseId}
               courseLessonId={playingLessonId}
-              title={
-                lessons.find((l) => l.id === playingLessonId)?.videoTitle ??
-                lessons.find((l) => l.id === playingLessonId)?.lessonTitle ??
-                'Bài học'
-              }
+              title={(() => {
+                const l = lessons.find((x) => x.id === playingLessonId);
+                if (!l) return 'Bài học';
+                if (l.lessonTitle && l.videoTitle && l.lessonTitle !== l.videoTitle) {
+                  return `${l.lessonTitle} - ${l.videoTitle}`;
+                }
+                return l.lessonTitle ?? l.videoTitle ?? 'Bài học';
+              })()}
               onLessonComplete={() => {
                 const currentIndex = lessons.findIndex((l) => l.id === playingLessonId);
                 if (currentIndex !== -1 && currentIndex < lessons.length - 1) {

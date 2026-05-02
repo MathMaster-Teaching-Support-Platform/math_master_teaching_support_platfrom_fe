@@ -42,6 +42,7 @@ export interface AttemptStartResponse {
 export interface AttemptQuestionResponse {
   questionId: string;
   orderIndex: number;
+  partNumber?: number; // Part I=1, Part II=2, Part III=3 (for multi-part assessments)
   questionText: string;
   questionType: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER' | 'ESSAY' | 'CODING';
   options?: Record<string, unknown>; // Changed from string to unknown to match BE
