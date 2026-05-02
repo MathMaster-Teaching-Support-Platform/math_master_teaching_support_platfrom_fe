@@ -484,11 +484,51 @@ export default function TeacherAssessments() {
                     </p>
                   </div>
 
-                  <div className="row" style={{ justifyContent: 'start', flexWrap: 'wrap' }}>
-                    <span className="muted">{assessment.totalQuestions} câu hỏi</span>
-                    <span className="muted">{assessment.totalPoints} điểm</span>
-                    <span className="muted">{assessment.submissionCount} lượt nộp</span>
+                  <div className="row" style={{ justifyContent: 'start', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <span className="badge">{assessment.totalQuestions} câu hỏi</span>
+                    <span className="badge">{assessment.totalPoints} điểm</span>
+                    {assessment.timeLimitMinutes && (
+                      <span className="badge">⏱ {assessment.timeLimitMinutes} phút</span>
+                    )}
+                    {assessment.submissionCount > 0 && (
+                      <span className="badge badge-published">{assessment.submissionCount} lượt nộp</span>
+                    )}
                   </div>
+
+                  {/* Add matrix info row */}
+                  {(assessment.examMatrixName || assessment.examMatrixGradeLevel || assessment.assessmentMode === 'MATRIX_BASED') && (
+                    <div className="row" style={{ justifyContent: 'start', flexWrap: 'wrap', gap: '0.5rem', marginTop: 4 }}>
+                      {assessment.examMatrixName && (
+                        <span className="muted" style={{ fontSize: '0.8rem' }}>
+                          📋 Ma trận: {assessment.examMatrixName}
+                        </span>
+                      )}
+                      {assessment.examMatrixGradeLevel && (
+                        <span className="muted" style={{ fontSize: '0.8rem' }}>
+                          📚 Lớp {assessment.examMatrixGradeLevel}
+                        </span>
+                      )}
+                      {assessment.assessmentMode === 'MATRIX_BASED' && (
+                        <span className="badge draft" style={{ fontSize: '0.7rem' }}>Matrix-based</span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Add date info */}
+                  {(assessment.startDate || assessment.endDate) && (
+                    <div className="row" style={{ justifyContent: 'start', flexWrap: 'wrap', gap: '0.5rem', marginTop: 4 }}>
+                      {assessment.startDate && (
+                        <span className="muted" style={{ fontSize: '0.8rem' }}>
+                          📅 Bắt đầu: {new Date(assessment.startDate).toLocaleDateString('vi-VN')}
+                        </span>
+                      )}
+                      {assessment.endDate && (
+                        <span className="muted" style={{ fontSize: '0.8rem' }}>
+                          ⏰ Hết hạn: {new Date(assessment.endDate).toLocaleDateString('vi-VN')}
+                        </span>
+                      )}
+                    </div>
+                  )}
 
                   <div className="row" style={{ flexWrap: 'wrap' }}>
                     <button

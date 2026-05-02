@@ -130,7 +130,8 @@ export function MatrixStatsTree({ stats }: MatrixStatsTreeProps) {
                                     {questionTypeLabels[type.questionType] || type.questionType}
                                   </span>
                                   <span className="matrix-stats-count">
-                                    {type.totalQuestions} câu
+                                    {type.totalQuestions}
+                                    {type.questionType === 'TRUE_FALSE' ? ' mệnh đề' : ' câu'}
                                   </span>
                                 </button>
 
