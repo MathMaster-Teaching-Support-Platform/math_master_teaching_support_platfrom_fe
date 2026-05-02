@@ -9,6 +9,7 @@ import {
   MessageSquare,
   PlayCircle,
   Star,
+  Sparkles,
   TrendingUp,
   Users,
   Youtube,
@@ -236,31 +237,52 @@ const StudentCourseDetail: React.FC = () => {
                         </Link>
                       </div>
                     )}
-                    <span
-                      className={`course-badge ${enrollment.status === 'ACTIVE' ? 'badge-live' : 'badge-draft'}`}
-                      style={{ marginBottom: '0.75rem', marginRight: '0.5rem' }}
-                    >
-                      {enrollment.status === 'ACTIVE' ? 'Đang học' : 'Đã hủy'}
-                    </span>
-                    {course?.level && (
-                      <span
-                        className="course-badge"
-                        style={{
-                          marginBottom: '0.75rem',
-                          background: levelMap[course.level]?.color ?? '#6366f1',
-                        }}
-                      >
-                        {levelMap[course.level]?.label ?? 'Mọi cấp độ'}
-                      </span>
+                    {course && (
+                      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                        {course.provider === 'MINISTRY' ? (
+                          <span
+                            className="course-badge"
+                            style={{ background: '#eff6ff', color: '#1e40af', border: '1px solid #bfdbfe', display: 'flex', alignItems: 'center', gap: 4 }}
+                          >
+                            <BookOpen size={12} /> Chương trình chuẩn Bộ GD&ĐT
+                          </span>
+                        ) : (
+                          <span
+                            className="course-badge"
+                            style={{ background: '#fefce8', color: '#854d0e', border: '1px solid #fde047', display: 'flex', alignItems: 'center', gap: 4 }}
+                          >
+                            <Sparkles size={12} /> Khóa học mở rộng
+                          </span>
+                        )}
+                        <span
+                          className={`course-badge ${enrollment.status === 'ACTIVE' ? 'badge-live' : 'badge-draft'}`}
+                        >
+                          {enrollment.status === 'ACTIVE' ? 'Đang học' : 'Đã hủy'}
+                        </span>
+                        {course.level && (
+                          <span
+                            className="course-badge"
+                            style={{
+                              background: levelMap[course.level]?.color ?? '#6366f1',
+                            }}
+                          >
+                            {levelMap[course.level]?.label ?? 'Mọi cấp độ'}
+                          </span>
+                        )}
+                      </div>
                     )}
 
                     {course && (
                       <div className="course-header-meta" style={{ marginTop: '0.5rem' }}>
-                        <span className="meta-item">
-                          <BookOpen size={14} />
-                          {course.subjectName} • Khối {course.gradeLevel}
-                        </span>
-                        <span className="meta-separator">•</span>
+                        {course.provider === 'MINISTRY' && (
+                          <>
+                            <span className="meta-item">
+                              <BookOpen size={14} />
+                              {course.subjectName} • Khối {course.gradeLevel}
+                            </span>
+                            <span className="meta-separator">•</span>
+                          </>
+                        )}
                         <span className="meta-item">
                           <Users size={14} />
                           {course.studentsCount} học viên

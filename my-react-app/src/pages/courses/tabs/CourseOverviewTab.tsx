@@ -8,7 +8,6 @@ import {
   Eye,
   FileText,
   GraduationCap,
-  Image,
   Languages,
   Sparkles,
   Star,
@@ -88,11 +87,34 @@ const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({ course }) => {
   ];
 
   const hasDesc = Boolean(course.description);
-  const hasThumb = Boolean(course.thumbnailUrl);
-  const grid2Split = hasDesc && hasThumb;
 
   return (
     <div className="course-overview-tab">
+      
+      {/* Provider Banner */}
+      {course.provider === 'CUSTOM' ? (
+        <div className="course-overview-banner custom">
+          <div className="course-overview-banner__icon">
+            <Sparkles size={24} />
+          </div>
+          <div className="course-overview-banner__content">
+            <h4>Khóa học mở rộng (Tùy chỉnh)</h4>
+            <p>Khóa học này do bạn tự thiết kế cấu trúc bài giảng, không bị ràng buộc bởi khung chương trình cố định.</p>
+          </div>
+        </div>
+      ) : (
+        <div className="course-overview-banner ministry">
+          <div className="course-overview-banner__icon">
+            <BookOpen size={24} />
+          </div>
+          <div className="course-overview-banner__content">
+            <h4>Chương trình chuẩn của Bộ GD&ĐT</h4>
+            <p>Khóa học tuân theo cấu trúc môn học và khối lớp chính thức từ Bộ Giáo Dục và Đào Tạo.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Stats Grid */}
       <div className="stats-grid">
         {statSets.map((stat, index) => (
           <div
@@ -112,43 +134,16 @@ const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({ course }) => {
         ))}
       </div>
 
-      <section className="course-overview-tab__summary" aria-label="Tóm tắt nhanh">
-        <div className="course-overview-tab__summary-pill">
-          <span className="course-overview-tab__summary-label">Video</span>
-          <strong className="course-overview-tab__summary-value">
-            {course.totalVideoHours ?? 0} giờ
-          </strong>
-        </div>
-        <div className="course-overview-tab__summary-pill">
-          <span className="course-overview-tab__summary-label">Tải về</span>
-          <strong className="course-overview-tab__summary-value">{course.resourcesCount ?? 0}</strong>
-        </div>
-        <div className="course-overview-tab__summary-pill course-overview-tab__summary-pill--wide">
-          <span className="course-overview-tab__summary-label">Cập nhật</span>
-          <strong className="course-overview-tab__summary-value course-overview-tab__summary-value--sm">
-            {formatDate(course.updatedAt)}
-          </strong>
-        </div>
-      </section>
-
       <div className="course-overview-tab__config">
         <div className="course-overview-tab__config-head">
           <p className="course-overview-tab__kicker">Hồ sơ {UI_TEXT.COURSE.toLowerCase()}</p>
           <h2 className="course-overview-config-heading">Thông tin cấu hình</h2>
           <p className="course-overview-tab__lede">
-            Chi tiết phân loại, thời lượng, tài nguyên và mốc thời gian.
+            Chi tiết phân loại, thời lượng, tài nguyên và các mốc thời gian quan trọng.
           </p>
         </div>
 
         <div className="course-overview-tab__config-body">
-          <MetaRow icon={Sparkles} label={`Loại ${UI_TEXT.COURSE.toLowerCase()}`}>
-            {course.provider === 'CUSTOM' ? (
-              <span className="course-overview-tab__badge course-overview-tab__badge--custom">Khóa học tùy chỉnh</span>
-            ) : (
-              <span className="course-overview-tab__badge course-overview-tab__badge--ministry">Chương trình Bộ GD</span>
-            )}
-          </MetaRow>
-
           {course.provider === 'MINISTRY' && (
             <>
               <MetaRow icon={GraduationCap} label="Môn học">
@@ -165,7 +160,7 @@ const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({ course }) => {
           </MetaRow>
 
           <MetaRow icon={Languages} label="Ngôn ngữ">
-            {course.language || 'Tiếng Việt'}
+            <strong>{course.language || 'Tiếng Việt'}</strong>
           </MetaRow>
 
           <MetaRow icon={Clock} label="Tổng giờ video">
@@ -176,13 +171,13 @@ const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({ course }) => {
 
           <MetaRow icon={Download} label="Tài nguyên tải về">
             <strong>
-              {course.resourcesCount ?? 0} tài nguyên
+              {course.resourcesCount ?? 0} file đính kèm
             </strong>
           </MetaRow>
 
           <MetaRow icon={FileText} label="Bài đọc (Articles)">
             <strong>
-              {course.articlesCount ?? 0} bài
+              {course.articlesCount ?? 0} bài viết
             </strong>
           </MetaRow>
 
@@ -196,53 +191,15 @@ const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({ course }) => {
         </div>
       </div>
 
-      {(hasDesc || hasThumb) && (
-        <div
-          className={
-            grid2Split
-              ? 'course-overview-tab__grid2 course-overview-tab__grid2--split'
-              : 'course-overview-tab__grid2'
-          }
-        >
-          {hasDesc && (
-            <div className="course-overview-tab__panel">
-              <div className="course-overview-tab__panel-head">
-                <h2 className="course-overview-tab__panel-title">Mô tả</h2>
-                <p className="course-overview-tab__panel-mute">Lời giới thiệu dành cho học viên</p>
-              </div>
-              <div className="course-overview-tab__panel-body">
-                <p className="course-overview-tab__body-serif">{course.description}</p>
-              </div>
-            </div>
-          )}
-
-          {hasThumb && (
-            <div
-              className={
-                hasDesc
-                  ? 'course-overview-tab__panel'
-                  : 'course-overview-tab__panel course-overview-tab__panel--thumb-only'
-              }
-            >
-              <div className="course-overview-tab__panel-head course-overview-tab__panel-head--row">
-                <h2 className="course-overview-tab__panel-title">Ảnh bìa</h2>
-                <span className="course-overview-tab__thumb-hint">
-                  <Image aria-hidden />
-                  Xem trước
-                </span>
-              </div>
-              <div className="course-overview-tab__thumb-pad">
-                <div className="course-overview-tab__img-frame">
-                  <img
-                    src={course.thumbnailUrl ?? ''}
-                    alt={course.title}
-                    className="course-overview-tab__img"
-                    loading="lazy"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
+      {hasDesc && (
+        <div className="course-overview-tab__panel">
+          <div className="course-overview-tab__panel-head">
+            <h2 className="course-overview-tab__panel-title">Mô tả khóa học</h2>
+            <p className="course-overview-tab__panel-mute">Lời giới thiệu hiển thị cho học viên</p>
+          </div>
+          <div className="course-overview-tab__panel-body">
+            <p className="course-overview-tab__body-serif">{course.description}</p>
+          </div>
         </div>
       )}
     </div>
