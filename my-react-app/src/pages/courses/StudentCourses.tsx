@@ -15,6 +15,7 @@ import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CourseCard } from '../../components/course/CourseCard';
 import { InvoiceModal } from '../../components/course/InvoiceModal';
+import { PurchaseConfirmationModal } from '../../components/course/PurchaseConfirmationModal';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { useEnroll, useMyEnrollments, usePublicCourses } from '../../hooks/useCourses';
 import { LessonSlideService } from '../../services/api/lesson-slide.service';
@@ -187,6 +188,9 @@ const StudentCourses: React.FC = () => {
   const [openingEnrollmentId, setOpeningEnrollmentId] = useState<string | null>(null);
   const [showInvoice, setShowInvoice] = useState(false);
   const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
+  // Purchase confirmation modal state
+  const [pendingCourse, setPendingCourse] = useState<CourseResponse | null>(null);
+  const [purchaseError, setPurchaseError] = useState<string | null>(null);
   const [enrolledPage, setEnrolledPage] = useState(1);
   const [browsePage, setBrowsePage] = useState(1);
 
@@ -274,6 +278,17 @@ const StudentCourses: React.FC = () => {
     [enrollments]
   );
 
+  /** Map from courseId → enrollmentId for direct "Vào học" navigation */
+  const enrolledCourseIdMap = useMemo(
+    () =>
+      new Map(
+        enrollments
+          .filter((e) => e.status === 'ACTIVE')
+          .map((e) => [e.courseId, e.id])
+      ),
+    [enrollments]
+  );
+
   const openEnrollmentDetails = (enrollmentId: string) => {
     setOpeningEnrollmentId(enrollmentId);
     navigate(`/student/courses/${enrollmentId}`);
@@ -283,29 +298,39 @@ const StudentCourses: React.FC = () => {
     navigate(`/course/${courseId}`);
   };
 
-  const handleEnroll = (courseId: string) => {
-    // Prevent multiple enrollments
-    if (enrollMutation.isPending || enrollingCourseId) {
-      return;
-    }
-    
-    setEnrollingCourseId(courseId);
-    enrollMutation.mutate(courseId, {
+  /** Open the purchase confirmation modal for a course */
+  const handleOpenPurchaseModal = (courseId: string) => {
+    const course = publicCourses.find((c) => c.id === courseId);
+    if (!course) return;
+    setPurchaseError(null);
+    setPendingCourse(course);
+  };
+
+  /** Called when student confirms inside the modal */
+  const handleConfirmPurchase = () => {
+    if (!pendingCourse) return;
+    setEnrollingCourseId(pendingCourse.id);
+    enrollMutation.mutate(pendingCourse.id, {
       onSuccess: (resp) => {
         const orderData = resp?.result || (resp as any)?.order || (resp?.type === 'order' ? resp : null);
-
         if (orderData && (orderData.orderNumber || orderData.id)) {
           setCompletedOrder(orderData);
           setShowInvoice(true);
         } else {
           const newEnrollmentId =
-            (resp as any)?.enrollmentId || (resp as any)?.result?.enrollmentId || (resp as any)?.result?.id;
+            (resp as any)?.enrollmentId ||
+            (resp as any)?.result?.enrollmentId ||
+            (resp as any)?.result?.id;
           if (newEnrollmentId) {
             navigate(`/student/courses/${newEnrollmentId}`);
           }
         }
-
+        setPendingCourse(null);
         setActiveTab('enrolled');
+      },
+      onError: (err: unknown) => {
+        const msg = err instanceof Error ? err.message : 'Không thể đăng ký khóa học. Vui lòng thử lại.';
+        setPurchaseError(msg);
       },
       onSettled: () => setEnrollingCourseId(null),
     });
@@ -549,9 +574,10 @@ const StudentCourses: React.FC = () => {
                         key={course.id}
                         course={course}
                         index={i}
-                        onEnroll={handleEnroll}
-                        isEnrolling={enrollingCourseId === course.id}
+                        onPurchase={handleOpenPurchaseModal}
+                        isPurchasing={enrollingCourseId === course.id}
                         isEnrolled={enrolledCourseIds.has(course.id)}
+                        enrolledEnrollmentId={enrolledCourseIdMap.get(course.id)}
                         onClick={() => openPublicCourseDetails(course.id)}
                       />
                     ))}
@@ -591,6 +617,15 @@ const StudentCourses: React.FC = () => {
         </section>
       </div>
     </DashboardLayout>
+
+    <PurchaseConfirmationModal
+      course={pendingCourse}
+      isOpen={!!pendingCourse}
+      onConfirm={handleConfirmPurchase}
+      onCancel={() => { setPendingCourse(null); setPurchaseError(null); }}
+      isPurchasing={enrollMutation.isPending}
+      purchaseError={purchaseError}
+    />
 
     <InvoiceModal
       order={completedOrder}

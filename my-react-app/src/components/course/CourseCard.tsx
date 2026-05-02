@@ -1,16 +1,26 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, Star, Users, Loader2 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { BookOpen, ChevronRight, Clock, Eye, Loader2, Star, Users } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import type { CourseResponse, CourseLevel } from '../../types';
-import { getEffectivePrice, hasActiveDiscount, formatPrice, getDiscountPercentage } from '../../utils/pricing';
+import {
+  formatPrice,
+  getDiscountPercentage,
+  getEffectivePrice,
+  hasActiveDiscount,
+} from '../../utils/pricing';
 
 interface CourseCardProps {
   course: CourseResponse;
   index: number;
-  onEnroll?: (courseId: string) => void;
-  isEnrolling?: boolean;
+  /** Called when student clicks the primary purchase/enroll CTA on the card */
+  onPurchase?: (courseId: string) => void;
+  isPurchasing?: boolean;
   isEnrolled?: boolean;
+  /** enrollmentId for the enrolled course — enables direct "Vào học" navigation */
+  enrolledEnrollmentId?: string;
+  /** Number of free-preview lessons (shown in metrics row) */
+  freePreviewCount?: number;
   showEnrollButton?: boolean;
   onClick?: () => void;
 }
@@ -33,37 +43,64 @@ const levelMap: Record<CourseLevel | 'ALL_LEVELS', { label: string; bg: string; 
   ALL_LEVELS: { label: 'Mọi cấp độ', bg: '#e6deef', text: '#5c4a70' },
 };
 
-export const CourseCard: React.FC<CourseCardProps> = ({ 
-  course, 
-  index, 
-  onEnroll, 
-  isEnrolling, 
+// Format remaining days for discount expiry
+const getExpiryLabel = (expiryDate: string | null | undefined): string | null => {
+  if (!expiryDate) return null;
+  const diff = new Date(expiryDate).getTime() - Date.now();
+  const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+  if (days < 0) return null;
+  if (days === 0) return 'Hết hạn hôm nay';
+  if (days === 1) return 'Còn 1 ngày';
+  return `Còn ${days} ngày`;
+};
+
+export const CourseCard: React.FC<CourseCardProps> = ({
+  course,
+  index,
+  onPurchase,
+  isPurchasing,
   isEnrolled,
+  enrolledEnrollmentId,
+  freePreviewCount,
   showEnrollButton = true,
-  onClick
+  onClick,
 }) => {
   const navigate = useNavigate();
 
-  const handleEnrollClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    // Prevent enrollment if already enrolling or enrolled
-    if (isEnrolling || isEnrolled) {
-      return;
-    }
-    if (onEnroll && !isEnrolled) {
-      onEnroll(course.id);
+  const effectivePrice = getEffectivePrice(course);
+  const isFree = effectivePrice === 0;
+  const discountActive = hasActiveDiscount(course);
+  const discountPct = discountActive ? getDiscountPercentage(course) : 0;
+  const expiryLabel = discountActive ? getExpiryLabel(course.discountExpiryDate) : null;
+
+  const primaryLabel = isFree ? 'Đăng ký miễn phí' : 'Mua ngay';
+
+  const handleCardClick = () => {
+    if (onClick) {
+      onClick();
+    } else {
+      navigate(`/course/${course.id}`);
     }
   };
 
-  const getEnrollBtnLabel = () => {
-    if (isEnrolled) return '✓ Đã đăng ký';
-    if (isEnrolling) return (
-      <>
-        <Loader2 size={14} className="animate-spin" style={{ display: 'inline-block', marginRight: '4px' }} />
-        Đang xử lý...
-      </>
-    );
-    return 'Đăng ký học';
+  const handleDetails = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/course/${course.id}`);
+  };
+
+  const handlePurchaseClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isPurchasing || isEnrolled) return;
+    onPurchase?.(course.id);
+  };
+
+  const handleGoToCourse = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (enrolledEnrollmentId) {
+      navigate(`/student/courses/${enrolledEnrollmentId}`);
+    } else {
+      navigate('/student/courses');
+    }
   };
 
   return (
@@ -72,21 +109,18 @@ export const CourseCard: React.FC<CourseCardProps> = ({
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.05 + (index % 10) * 0.05, duration: 0.4 }}
-      onClick={onClick || (() => navigate(`/course/${course.id}`))}
+      onClick={handleCardClick}
       style={{ cursor: 'pointer' }}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          if (onClick) {
-            onClick();
-          } else {
-            navigate(`/course/${course.id}`);
-          }
+          handleCardClick();
         }
       }}
     >
+      {/* ── Cover ── */}
       <div
         className="course-cover"
         style={{
@@ -99,10 +133,10 @@ export const CourseCard: React.FC<CourseCardProps> = ({
         )}
         <div className="cover-overlay" />
         <div className="cover-index">#{String(index + 1).padStart(2, '0')}</div>
-        {/* Level badge pinned top-left inside the cover */}
+
+        {/* Level badge */}
         {course.level && (
           <span
-            className="cover-level-badge"
             style={{
               position: 'absolute',
               top: '0.6rem',
@@ -122,14 +156,16 @@ export const CourseCard: React.FC<CourseCardProps> = ({
             {levelMap[course.level]?.label ?? 'Mọi cấp độ'}
           </span>
         )}
+
+        {/* Enrolled badge */}
         {isEnrolled && (
           <span
             style={{
               position: 'absolute',
               top: '0.6rem',
-              left: course.level ? '6rem' : '0.7rem',
+              right: '0.7rem',
               zIndex: 2,
-              background: 'rgba(34,197,94,0.8)',
+              background: 'rgba(34,197,94,0.85)',
               color: '#fff',
               borderRadius: '999px',
               padding: '2px 8px',
@@ -141,20 +177,56 @@ export const CourseCard: React.FC<CourseCardProps> = ({
             ✓ Đã đăng ký
           </span>
         )}
-        {/* Title overlaid on the image */}
+
+        {/* Discount badge on cover */}
+        {discountActive && discountPct > 0 && !isEnrolled && (
+          <span
+            style={{
+              position: 'absolute',
+              top: '0.6rem',
+              right: '0.7rem',
+              zIndex: 2,
+              background: 'rgba(239,68,68,0.9)',
+              color: '#fff',
+              borderRadius: '999px',
+              padding: '2px 10px',
+              fontSize: '0.7rem',
+              fontWeight: 800,
+              backdropFilter: 'blur(6px)',
+            }}
+          >
+            -{discountPct}%
+          </span>
+        )}
+
         <h3 className="cover-title">{course.title}</h3>
       </div>
+
+      {/* ── Body ── */}
       <div className="course-body">
-        <Link 
-          to={`/student/instructors/${course.teacherId}`} 
-          className="teacher-info-mini-link"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="teacher-info-mini">
-            {course.teacherAvatar && <img src={course.teacherAvatar} alt="" className="mini-avatar" />}
-            <p className="course-desc-teacher">{course.teacherName ?? 'Giáo viên'}</p>
+        {/* Teacher */}
+        {course.teacherName && (
+          <div
+            className="teacher-info-mini"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/student/instructors/${course.teacherId}`);
+            }}
+            style={{ cursor: 'pointer' }}
+            role="link"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') navigate(`/student/instructors/${course.teacherId}`);
+            }}
+          >
+            {course.teacherAvatar && (
+              <img src={course.teacherAvatar} alt="" className="mini-avatar" />
+            )}
+            <p className="course-desc-teacher">{course.teacherName}</p>
           </div>
-        </Link>
+        )}
+
+        {/* Metrics row */}
         <div className="course-metrics">
           <div className="metric">
             <BookOpen size={13} />
@@ -168,17 +240,21 @@ export const CourseCard: React.FC<CourseCardProps> = ({
             <Users size={13} />
             <span>{course.studentsCount}</span>
           </div>
+          {freePreviewCount !== undefined && freePreviewCount > 0 && (
+            <div className="metric" style={{ color: '#059669' }}>
+              <Eye size={13} />
+              <span>{freePreviewCount} miễn phí</span>
+            </div>
+          )}
         </div>
+
+        {/* Pricing */}
         <div className="course-pricing">
-          {hasActiveDiscount(course) ? (
+          {discountActive ? (
             <div className="price-container">
-              <span className="current-price">
-                {formatPrice(getEffectivePrice(course))}
-              </span>
-              {course.originalPrice && course.originalPrice > getEffectivePrice(course) && (
-                <span className="original-price">
-                  {formatPrice(course.originalPrice)}
-                </span>
+              <span className="current-price">{formatPrice(effectivePrice)}</span>
+              {course.originalPrice && course.originalPrice > effectivePrice && (
+                <span className="original-price">{formatPrice(course.originalPrice)}</span>
               )}
             </div>
           ) : course.originalPrice && course.originalPrice > 0 ? (
@@ -186,47 +262,85 @@ export const CourseCard: React.FC<CourseCardProps> = ({
           ) : (
             <span className="current-price price-free">Miễn phí</span>
           )}
-          {hasActiveDiscount(course) && course.originalPrice && course.originalPrice > getEffectivePrice(course) && (
-            <span className="discount-badge">
-              -{getDiscountPercentage(course)}%
+
+          {/* Expiry countdown */}
+          {expiryLabel && (
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 3,
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                color: '#b45309',
+                background: '#fef3c7',
+                border: '1px solid #fde68a',
+                padding: '2px 7px',
+                borderRadius: 6,
+              }}
+            >
+              <Clock size={11} />
+              {expiryLabel}
             </span>
           )}
         </div>
+
+        {/* ── Actions ── */}
         {showEnrollButton && (
           <div className="course-actions" style={{ display: 'flex', gap: '8px' }}>
-            <button
-              className="action-secondary"
-              style={{
-                background: '#E8E6DC',
-                color: '#4D4C48',
-                flex: 1,
-                border: '1px solid #D1CFC5',
-                padding: '0.6rem',
-                borderRadius: '10px',
-                fontWeight: 600,
-                fontSize: '0.85rem',
-                cursor: 'pointer'
-              }}
-              onClick={(e) => { e.stopPropagation(); navigate(`/course/${course.id}`); }}
-            >
-              Xem chi tiết
-            </button>
-            <button
-              className="action-primary"
-              style={{
-                flex: 1,
-                ...(isEnrolled
-                  ? { background: '#ede8dc', color: '#4d4c48', cursor: 'default' }
-                  : {}),
-              }}
-              onClick={handleEnrollClick}
-              disabled={isEnrolling || isEnrolled}
-            >
-              {getEnrollBtnLabel()}
-            </button>
+            {isEnrolled ? (
+              /* Enrolled state: single "Vào học" CTA */
+              <button
+                className="action-primary"
+                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                onClick={handleGoToCourse}
+              >
+                <ChevronRight size={14} />
+                Vào học ngay
+              </button>
+            ) : (
+              <>
+                {/* Secondary: View details */}
+                <button
+                  className="action-secondary"
+                  style={{
+                    background: '#E8E6DC',
+                    color: '#4D4C48',
+                    flex: 1,
+                    border: '1px solid #D1CFC5',
+                    padding: '0.6rem',
+                    borderRadius: '10px',
+                    fontWeight: 600,
+                    fontSize: '0.85rem',
+                    cursor: 'pointer',
+                  }}
+                  onClick={handleDetails}
+                >
+                  Xem chi tiết
+                </button>
+
+                {/* Primary: Buy / Register */}
+                <button
+                  className="action-primary"
+                  style={{ flex: 1 }}
+                  onClick={handlePurchaseClick}
+                  disabled={isPurchasing}
+                >
+                  {isPurchasing ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" style={{ display: 'inline', marginRight: 4 }} />
+                      Đang xử lý...
+                    </>
+                  ) : (
+                    primaryLabel
+                  )}
+                </button>
+              </>
+            )}
           </div>
         )}
       </div>
+
       <style>{`
         .teacher-info-mini {
           display: flex;
@@ -240,15 +354,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({
           border-radius: 50%;
           object-fit: cover;
         }
-        .teacher-info-mini-link {
-          text-decoration: none;
-          color: inherit;
-          display: block;
-          width: fit-content;
-          z-index: 10;
-          position: relative;
-        }
-        .teacher-info-mini-link:hover .course-desc-teacher {
+        .teacher-info-mini:hover .course-desc-teacher {
           color: #c96442;
           text-decoration: underline;
         }
@@ -256,6 +362,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({
           font-size: 0.85rem;
           color: #5e5d59;
           margin: 0;
+          transition: color 0.15s;
         }
         .course-pricing {
           display: flex;
@@ -264,6 +371,8 @@ export const CourseCard: React.FC<CourseCardProps> = ({
           margin: 0.75rem 0;
           padding-top: 0.75rem;
           border-top: 1px solid #e8e6dc;
+          flex-wrap: wrap;
+          gap: 0.4rem;
         }
         .price-container {
           display: flex;
@@ -271,7 +380,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({
           gap: 8px;
         }
         .current-price {
-          font-size: 1.25rem;
+          font-size: 1.15rem;
           font-weight: 700;
           color: #141413;
         }
@@ -283,21 +392,11 @@ export const CourseCard: React.FC<CourseCardProps> = ({
         .price-free {
           color: #4a6a5a;
         }
-        .discount-badge {
-          background: #f3efe4;
-          color: #7a5a4d;
-          padding: 2px 8px;
-          border-radius: 4px;
-          font-size: 0.75rem;
-          font-weight: 700;
-        }
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
         }
-        .animate-spin {
-          animation: spin 1s linear infinite;
-        }
+        .animate-spin { animation: spin 1s linear infinite; }
       `}</style>
     </motion.article>
   );

@@ -119,7 +119,7 @@ export interface EnrollmentResponse {
   courseTitle: string | null;
   studentId: string;
   studentName: string | null;
-  status: 'ACTIVE' | 'DROPPED';
+  status: 'ACTIVE' | 'DROPPED' | 'PENDING';
   enrolledAt: string;
   createdAt: string;
   updatedAt: string;

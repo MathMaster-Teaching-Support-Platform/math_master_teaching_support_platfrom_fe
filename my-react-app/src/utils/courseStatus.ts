@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle2, Eye, EyeOff } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Eye, EyeOff, BookOpen } from 'lucide-react';
 import type { CourseResponse } from '../types/course.types';
 
 export interface StatusBadge {
@@ -20,6 +20,9 @@ export const getCourseStatusBadge = (course: CourseResponse): StatusBadge => {
   if (course.status === 'PUBLISHED' && course.published) {
     return { className: 'badge-live', label: 'Công khai', icon: Eye };
   }
+  if (course.status === 'ARCHIVED') {
+    return { className: 'badge-archived', label: 'Đã lưu trữ', icon: BookOpen };
+  }
   return { className: 'badge-draft', label: 'Nháp', icon: EyeOff };
 };
 
@@ -35,7 +38,7 @@ export const isCourseAvailableForEnrollment = (course: CourseResponse): boolean 
  */
 export const canSubmitForReview = (course: CourseResponse): boolean => {
   return (
-    course.status === 'DRAFT' &&
+    (course.status === 'DRAFT' || course.status === 'REJECTED') &&
     course.lessonsCount > 0 &&
     (!course.discountedPrice || !course.originalPrice || course.discountedPrice < course.originalPrice)
   );

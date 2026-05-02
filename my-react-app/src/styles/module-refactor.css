@@ -1000,6 +1000,14 @@
   }
 }
 
+/* Global utility spin class (used outside module-layout-container, e.g. modals) */
+@keyframes util-spin {
+  to { transform: rotate(360deg); }
+}
+.animate-spin {
+  animation: util-spin 1s linear infinite;
+}
+
 .module-layout-container .page-spinner {
   display: flex;
   flex-direction: column;
