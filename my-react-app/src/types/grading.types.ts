@@ -35,6 +35,8 @@ export interface AnswerGradeResponse {
   feedback?: string;
   isManuallyAdjusted?: boolean;
   gradedAt?: string;
+  explanation?: string;
+  solutionSteps?: string;
   // FE-only fields (not in BE response, will be undefined)
   questionType?: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER' | 'ESSAY' | 'CODING';
   needsManualGrading?: boolean;

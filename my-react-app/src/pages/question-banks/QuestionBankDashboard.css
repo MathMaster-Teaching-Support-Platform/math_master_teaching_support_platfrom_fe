@@ -525,3 +525,53 @@
     background-position: -100% 0;
   }
 }
+
+/* ── Matrix Stats Details ────────────────────────────── */
+.bank-matrix-stats-details {
+  margin-top: 0.75rem;
+  border: 1px solid var(--mod-slate-100);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.bank-matrix-stats-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: #f8faff;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--mod-primary);
+  list-style: none;
+  transition: background 0.15s ease;
+}
+
+.bank-matrix-stats-summary:hover {
+  background: #eff6ff;
+}
+
+.bank-matrix-stats-summary::-webkit-details-marker {
+  display: none;
+}
+
+.bank-matrix-stats-summary .summary-icon {
+  transition: transform 0.2s ease;
+}
+
+.bank-matrix-stats-details[open] .summary-icon {
+  transform: rotate(180deg);
+}
+
+.matrix-stats-loading,
+.matrix-stats-error {
+  padding: 1rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--mod-slate-500);
+}
+
+.matrix-stats-error {
+  color: #dc2626;
+}

@@ -15,12 +15,21 @@ export interface TFBlueprintData {
   stemText: string;
   clauses: TFClauseInput[];
   parameters: ParameterInput[];
+  diagramTemplateRaw: string;
+  solutionStepsTemplate: string;
 }
 
 interface TFBlueprintProps {
   defaultChapterId: string;
   chapters: Array<{ id: string; title?: string; name?: string }>;
   onFocusField?: (field: string, index?: number) => void;
+  initialData?: {
+    stemText?: string;
+    clauses?: TFClauseInput[];
+    parameters?: ParameterInput[];
+    diagramTemplateRaw?: string;
+    solutionStepsTemplate?: string;
+  };
 }
 
 export interface TFBlueprintRef {
@@ -36,43 +45,55 @@ const cognitiveLevelLabels: Record<CognitiveLevel, string> = {
 };
 
 export const TFBlueprint = forwardRef<TFBlueprintRef, TFBlueprintProps>(
-  ({ defaultChapterId, chapters, onFocusField }, ref) => {
-    const [stemText, setStemText] = useState('Cho hàm số $f(x) = {{a}}x^2 + {{b}}x + {{c}}$. Xét các mệnh đề sau:');
-    const [clauses, setClauses] = useState<TFClauseInput[]>([
-      {
-        key: 'A',
-        text: 'Hàm số đạt cực tiểu tại $x = \\frac{-{{b}}}{2 \\cdot {{a}}}$',
-        chapterId: defaultChapterId,
-        cognitiveLevel: CognitiveLevel.NHAN_BIET,
-        truthValue: true,
-      },
-      {
-        key: 'B',
-        text: 'Đồ thị hàm số có trục đối xứng là đường thẳng $x = {{b}}$',
-        chapterId: defaultChapterId,
-        cognitiveLevel: CognitiveLevel.THONG_HIEU,
-        truthValue: false,
-      },
-      {
-        key: 'C',
-        text: '$f(0) = {{c}}$',
-        chapterId: defaultChapterId,
-        cognitiveLevel: CognitiveLevel.VAN_DUNG,
-        truthValue: true,
-      },
-      {
-        key: 'D',
-        text: 'Hàm số đồng biến trên khoảng $(-\\infty; +\\infty)$',
-        chapterId: defaultChapterId,
-        cognitiveLevel: CognitiveLevel.VAN_DUNG_CAO,
-        truthValue: false,
-      },
-    ]);
-    const [parameters, setParameters] = useState<ParameterInput[]>([
-      { name: 'a', type: 'int', min: '1', max: '5', constraint: '' },
-      { name: 'b', type: 'int', min: '-6', max: '6', constraint: '' },
-      { name: 'c', type: 'int', min: '-10', max: '10', constraint: '' },
-    ]);
+  ({ defaultChapterId, chapters, onFocusField, initialData }, ref) => {
+    const [stemText, setStemText] = useState(
+      initialData?.stemText ?? 'Cho hàm số $f(x) = {{a}}x^2 + {{b}}x + {{c}}$. Xét các mệnh đề sau:'
+    );
+    const [clauses, setClauses] = useState<TFClauseInput[]>(
+      initialData?.clauses ?? [
+        {
+          key: 'A',
+          text: 'Hàm số đạt cực tiểu tại $x = \\frac{-{{b}}}{2 \\cdot {{a}}}$',
+          chapterId: defaultChapterId,
+          cognitiveLevel: CognitiveLevel.NHAN_BIET,
+          truthValue: true,
+        },
+        {
+          key: 'B',
+          text: 'Đồ thị hàm số có trục đối xứng là đường thẳng $x = {{b}}$',
+          chapterId: defaultChapterId,
+          cognitiveLevel: CognitiveLevel.THONG_HIEU,
+          truthValue: false,
+        },
+        {
+          key: 'C',
+          text: '$f(0) = {{c}}$',
+          chapterId: defaultChapterId,
+          cognitiveLevel: CognitiveLevel.VAN_DUNG,
+          truthValue: true,
+        },
+        {
+          key: 'D',
+          text: 'Hàm số đồng biến trên khoảng $(-\\infty; +\\infty)$',
+          chapterId: defaultChapterId,
+          cognitiveLevel: CognitiveLevel.VAN_DUNG_CAO,
+          truthValue: false,
+        },
+      ]
+    );
+    const [parameters, setParameters] = useState<ParameterInput[]>(
+      initialData?.parameters ?? [
+        { name: 'a', type: 'int', min: '1', max: '5', constraint: '' },
+        { name: 'b', type: 'int', min: '-6', max: '6', constraint: '' },
+        { name: 'c', type: 'int', min: '-10', max: '10', constraint: '' },
+      ]
+    );
+    const [diagramTemplateRaw, setDiagramTemplateRaw] = useState(
+      initialData?.diagramTemplateRaw ?? ''
+    );
+    const [solutionStepsTemplate, setSolutionStepsTemplate] = useState(
+      initialData?.solutionStepsTemplate ?? ''
+    );
 
     const stemTextRef = useRef<HTMLTextAreaElement | null>(null);
     const clauseTextRefs = useRef<Record<number, HTMLTextAreaElement | null>>({});
@@ -80,12 +101,15 @@ export const TFBlueprint = forwardRef<TFBlueprintRef, TFBlueprintProps>(
     const parameterMinRefs = useRef<Record<number, HTMLInputElement | null>>({});
     const parameterMaxRefs = useRef<Record<number, HTMLInputElement | null>>({});
     const parameterConstraintRefs = useRef<Record<number, HTMLInputElement | null>>({});
+    const diagramTemplateRef = useRef<HTMLTextAreaElement | null>(null);
 
     useImperativeHandle(ref, () => ({
       getData: () => ({
         stemText,
         clauses,
         parameters,
+        diagramTemplateRaw,
+        solutionStepsTemplate,
       }),
       getFieldRef: (field: string, index?: number) => {
         switch (field) {
@@ -101,6 +125,8 @@ export const TFBlueprint = forwardRef<TFBlueprintRef, TFBlueprintProps>(
             return index !== undefined ? parameterMaxRefs.current[index] : null;
           case 'parameterConstraint':
             return index !== undefined ? parameterConstraintRefs.current[index] : null;
+          case 'diagramTemplateRaw':
+            return diagramTemplateRef.current;
           default:
             return null;
         }
@@ -335,6 +361,39 @@ export const TFBlueprint = forwardRef<TFBlueprintRef, TFBlueprintProps>(
             </p>
           </div>
         )}
+
+        <label>
+          <p className="muted" style={{ marginBottom: 6 }}>
+            Sơ đồ / Hình vẽ đính kèm (LaTeX, tùy chọn)
+          </p>
+          <textarea
+            ref={diagramTemplateRef}
+            className="textarea"
+            rows={4}
+            value={diagramTemplateRaw}
+            onFocus={() => onFocusField?.('diagramTemplateRaw')}
+            onChange={(event) => setDiagramTemplateRaw(event.target.value)}
+            placeholder="Ví dụ: \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}"
+          />
+        </label>
+
+        <label>
+          <p className="muted" style={{ marginBottom: 6 }}>
+            Hướng dẫn giải mẫu (cho AI tạo lời giải)
+          </p>
+          <textarea
+            className="textarea"
+            rows={3}
+            value={solutionStepsTemplate}
+            onChange={(e) => setSolutionStepsTemplate(e.target.value)}
+            placeholder="Ví dụ: Bước 1: Xét mệnh đề A... Bước 2: Xét mệnh đề B..."
+          />
+          {solutionStepsTemplate && (
+            <div className="preview-box">
+              <MathText text={solutionStepsTemplate} />
+            </div>
+          )}
+        </label>
       </>
     );
   }

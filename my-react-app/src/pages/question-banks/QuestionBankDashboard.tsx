@@ -2,6 +2,7 @@ import {
   AlertCircle,
   ArrowRight,
   BookOpen,
+  ChevronDown,
   ClipboardList,
   Database,
   Eye,
@@ -20,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { MatrixStatsTree } from '../../components/question-banks/MatrixStatsTree';
 import Pagination from '../../components/common/Pagination';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { useToast } from '../../context/ToastContext';
@@ -36,6 +38,8 @@ import type { QuestionBankRequest, QuestionBankResponse } from '../../types/ques
 import '../courses/TeacherCourses.css';
 import './QuestionBankDashboard.css';
 import { QuestionBankFormModal } from './QuestionBankFormModal';
+import { questionBankService } from '../../services/questionBankService';
+import { useQuery } from '@tanstack/react-query';
 
 type VisibilityFilter = 'ALL' | 'PUBLIC' | 'PRIVATE';
 
@@ -420,14 +424,23 @@ export function QuestionBankDashboard() {
                     </div>
 
                     {bank.cognitiveStats && Object.keys(bank.cognitiveStats).length > 0 && (
-                      <div className="bank-cognitive-stats">
-                        <span className="bank-cognitive-label">📊 Mức độ:</span>
-                        {Object.entries(bank.cognitiveStats).map(([level, count]) => (
-                          <span key={level} className="bank-cognitive-badge">
-                            {cognitiveShortLabel[level] ?? level}: {count}
-                          </span>
-                        ))}
-                      </div>
+                      <>
+                        <div className="bank-cognitive-stats">
+                          <span className="bank-cognitive-label">📊 Mức độ:</span>
+                          {Object.entries(bank.cognitiveStats).map(([level, count]) => (
+                            <span key={level} className="bank-cognitive-badge">
+                              {cognitiveShortLabel[level] ?? level}: {count}
+                            </span>
+                          ))}
+                        </div>
+                        <details className="bank-matrix-stats-details">
+                          <summary className="bank-matrix-stats-summary">
+                            <span>📊 Xem phân bố chi tiết</span>
+                            <ChevronDown size={14} className="summary-icon" />
+                          </summary>
+                          <MatrixStatsLoader bankId={bank.id} />
+                        </details>
+                      </>
                     )}
 
                     <div className="row" style={{ flexWrap: 'wrap', gap: '0.4rem' }}>
@@ -495,4 +508,26 @@ export function QuestionBankDashboard() {
       </div>
     </DashboardLayout>
   );
+}
+
+// Helper component to load matrix stats on demand
+function MatrixStatsLoader({ bankId }: { bankId: string }) {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['questionBank', 'matrixStats', bankId],
+    queryFn: async () => {
+      const response = await questionBankService.getMatrixStats(bankId);
+      return response.result || [];
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  if (isLoading) {
+    return <div className="matrix-stats-loading">Đang tải...</div>;
+  }
+
+  if (isError || !data) {
+    return <div className="matrix-stats-error">Không thể tải thống kê</div>;
+  }
+
+  return <MatrixStatsTree stats={data} />;
 }

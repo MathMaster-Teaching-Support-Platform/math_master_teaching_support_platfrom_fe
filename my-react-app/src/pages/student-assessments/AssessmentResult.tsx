@@ -14,6 +14,7 @@ export default function AssessmentResult() {
   const [showRegradeModal, setShowRegradeModal] = useState(false);
   const [selectedQuestionId, setSelectedQuestionId] = useState<string>('');
   const [regradeReason, setRegradeReason] = useState('');
+  const [showExplanations, setShowExplanations] = useState(false);
 
   const { data, isLoading, isError } = useMyResult(submissionId || '');
   const createRegradeRequestMutation = useCreateRegradeRequest();
@@ -127,6 +128,17 @@ export default function AssessmentResult() {
                 )}
               </div>
             )}
+
+            {/* Toggle button for explanations */}
+            <div style={{ marginTop: 16 }}>
+              <button
+                className={`btn ${showExplanations ? '' : 'secondary'}`}
+                onClick={() => setShowExplanations(!showExplanations)}
+                style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+              >
+                {showExplanations ? '🔽 Ẩn lời giải' : '📖 Xem lời giải'}
+              </button>
+            </div>
           </div>
 
           {/* Answers list */}
@@ -180,6 +192,43 @@ export default function AssessmentResult() {
                       : undefined
                     }
                   />
+
+                  {/* Show explanation and solution steps when toggle is on */}
+                  {showExplanations && (answer.explanation || answer.solutionSteps) && (
+                    <div
+                      style={{
+                        marginTop: 12,
+                        padding: 16,
+                        backgroundColor: '#f0fdf4',
+                        border: '1px solid #bbf7d0',
+                        borderRadius: 8,
+                      }}
+                    >
+                      <p
+                        style={{
+                          fontWeight: 600,
+                          color: '#166534',
+                          marginBottom: 8,
+                          fontSize: '0.9rem',
+                        }}
+                      >
+                        📝 Lời giải
+                      </p>
+                      {answer.explanation && (
+                        <div style={{ marginBottom: 8 }}>
+                          <MathText text={answer.explanation} />
+                        </div>
+                      )}
+                      {answer.solutionSteps && (
+                        <div>
+                          <p className="muted" style={{ fontSize: '0.8rem', marginBottom: 4 }}>
+                            Các bước giải:
+                          </p>
+                          <MathText text={answer.solutionSteps} />
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {answer.feedback && (
                     <div style={{ marginTop: 12, marginBottom: 12 }}>

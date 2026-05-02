@@ -1,7 +1,11 @@
 import { X } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { QuestionEditorSwitch } from '../../components/question';
+import MathText from '../../components/common/MathText';
+import { TagSelector } from '../../components/common/TagSelector';
+import { LatexToolbar } from '../../components/common/LatexToolbar';
 import type { QuestionType, QuestionDifficulty } from '../../types/question';
+import type { QuestionTag } from '../../types/questionTemplate';
 
 interface EnhancedQuestionFormModalProps {
   isOpen: boolean;
@@ -50,8 +54,13 @@ export function EnhancedQuestionFormModal({
     initialData?.difficulty || 'MEDIUM'
   );
   const [points, setPoints] = useState<string>(String(initialData?.points || 1));
-  const [tags, setTags] = useState<string>(initialData?.tags?.join(', ') || '');
+  const [tags, setTags] = useState<QuestionTag[]>(
+    (initialData?.tags as unknown as QuestionTag[] | undefined) || []
+  );
   const [explanation, setExplanation] = useState<string>(initialData?.explanation || '');
+  const [diagramData, setDiagramData] = useState<string>('');
+  
+  const diagramTextareaRef = useRef<HTMLTextAreaElement>(null);
   
   const [editorValue, setEditorValue] = useState<Record<string, unknown>>({
     questionText: initialData?.questionText || '',
@@ -63,13 +72,35 @@ export function EnhancedQuestionFormModal({
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
+  const insertLatexAtCursor = (latex: string) => {
+    const textarea = diagramTextareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = diagramData;
+    const before = text.substring(0, start);
+    const after = text.substring(end);
+    
+    const newText = before + latex + after;
+    setDiagramData(newText);
+    
+    // Set cursor position after inserted text
+    setTimeout(() => {
+      textarea.focus();
+      const newPosition = start + latex.length;
+      textarea.setSelectionRange(newPosition, newPosition);
+    }, 0);
+  };
+
   useEffect(() => {
     if (isOpen && initialData) {
       setQuestionType(initialData.questionType || 'MULTIPLE_CHOICE');
       setDifficulty(initialData.difficulty || 'MEDIUM');
       setPoints(String(initialData.points || 1));
-      setTags(initialData.tags?.join(', ') || '');
+      setTags((initialData.tags as unknown as QuestionTag[] | undefined) || []);
       setExplanation(initialData.explanation || '');
+      setDiagramData('');
       setEditorValue({
         questionText: initialData.questionText || '',
         options: initialData.options || {},
@@ -101,18 +132,14 @@ export function EnhancedQuestionFormModal({
 
     setSaving(true);
     try {
-      const tagList = tags
-        .split(',')
-        .map((t) => t.trim())
-        .filter(Boolean);
-
       await onSubmit({
         ...editorValue,
         questionType,
         difficulty,
         points: pointsNum,
-        tags: tagList,
+        tags: tags,
         explanation: explanation.trim() || undefined,
+        diagramData: diagramData.trim() ? { latex: diagramData.trim() } : undefined,
       });
 
       onClose();
@@ -145,6 +172,7 @@ export function EnhancedQuestionFormModal({
         </div>
 
         <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <>
           {error && (
             <div
               style={{
@@ -193,7 +221,6 @@ export function EnhancedQuestionFormModal({
             </div>
           </div>
 
-          {/* Type-specific Editor */}
           <div
             style={{
               padding: 20,
@@ -209,6 +236,26 @@ export function EnhancedQuestionFormModal({
               disabled={saving}
             />
           </div>
+
+          {/* LaTeX Preview for Question Text */}
+          {editorValue.questionText && String(editorValue.questionText).includes('$') && (
+            <div
+              style={{
+                padding: 16,
+                backgroundColor: '#f0f9ff',
+                border: '1px solid #bae6fd',
+                borderRadius: 8,
+              }}
+            >
+              <p
+                className="muted"
+                style={{ marginBottom: 8, fontSize: '0.8rem', fontWeight: 600 }}
+              >
+                Xem trước LaTeX:
+              </p>
+              <MathText text={String(editorValue.questionText)} />
+            </div>
+          )}
 
           {/* Common Fields */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
@@ -260,23 +307,7 @@ export function EnhancedQuestionFormModal({
           </div>
 
           <div>
-            <label style={{ display: 'block', fontWeight: 600, marginBottom: 8, color: '#374151' }}>
-              Tags (phân cách bằng dấu phẩy)
-            </label>
-            <input
-              type="text"
-              value={tags}
-              onChange={(e) => setTags(e.target.value)}
-              disabled={saving}
-              placeholder="đại-số, lớp-10, khó"
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                border: '2px solid #d1d5db',
-                borderRadius: 8,
-                fontSize: '1rem',
-              }}
-            />
+            <TagSelector selectedTags={tags} onChange={setTags} maxTags={5} />
           </div>
 
           <div>
@@ -299,6 +330,52 @@ export function EnhancedQuestionFormModal({
               }}
             />
           </div>
+
+          <div>
+            <label style={{ display: 'block', fontWeight: 600, marginBottom: 8, color: '#374151' }}>
+              Sơ đồ / Hình vẽ (LaTeX, không bắt buộc)
+            </label>
+            <textarea
+              ref={diagramTextareaRef}
+              value={diagramData}
+              onChange={(e) => setDiagramData(e.target.value)}
+              disabled={saving}
+              placeholder="Nhập LaTeX cho hình vẽ nếu có... Ví dụ: \frac{-b \pm \sqrt{b^2-4ac}}{2a}"
+              rows={3}
+              style={{
+                width: '100%',
+                padding: '10px 12px',
+                border: '2px solid #d1d5db',
+                borderRadius: 8,
+                fontSize: '1rem',
+                resize: 'vertical',
+              }}
+            />
+            
+            {/* LaTeX Toolbar */}
+            <LatexToolbar onInsert={insertLatexAtCursor} disabled={saving} />
+            
+            {diagramData && diagramData.trim() && (
+              <div
+                style={{
+                  marginTop: 8,
+                  padding: 12,
+                  backgroundColor: '#f0f9ff',
+                  border: '1px solid #bae6fd',
+                  borderRadius: 8,
+                }}
+              >
+                <p
+                  className="muted"
+                  style={{ marginBottom: 6, fontSize: '0.8rem', fontWeight: 600 }}
+                >
+                  Xem trước LaTeX:
+                </p>
+                <MathText text={diagramData} />
+              </div>
+            )}
+          </div>
+          </>
         </div>
 
         <div className="modal-footer">
