@@ -1,4 +1,4 @@
-import { Edit2, Filter, MessageSquare, Send, Star } from 'lucide-react';
+import { Edit2, Filter, MessageSquare, Send, Star, X } from 'lucide-react';
 import React, { useState } from 'react';
 import { useCourseReviews, useReplyToReview, useReviewSummary } from '../../../hooks/useCourses';
 import { useToast } from '../../../context/ToastContext';
@@ -86,7 +86,7 @@ const CourseReviewsTab: React.FC<CourseReviewsTabProps> = ({ courseId }) => {
             {[1, 2, 3, 4, 5].map((s) => (
               <Star
                 key={s}
-                size={20}
+                size={22}
                 fill={s <= (summary?.averageRating || 0) ? '#FBBF24' : 'none'}
                 color="#FBBF24"
               />
@@ -95,7 +95,9 @@ const CourseReviewsTab: React.FC<CourseReviewsTabProps> = ({ courseId }) => {
         </div>
 
         <div className="cdt-reviews__stat">
-          <div className="cdt-reviews__value">{summary?.totalReviews || 0}</div>
+          <div className="cdt-reviews__value" style={{ color: '#141413' }}>
+            {summary?.totalReviews || 0}
+          </div>
           <div className="cdt-reviews__label">Tổng đánh giá</div>
         </div>
 
@@ -119,7 +121,7 @@ const CourseReviewsTab: React.FC<CourseReviewsTabProps> = ({ courseId }) => {
       <div>
         <div className="cdt-reviews__toolbar">
           <div className="cdt-reviews__filter">
-            <Filter size={16} aria-hidden />
+            <Filter size={18} aria-hidden />
             <select
               value={filterRating ?? ''}
               onChange={(e) => setFilterRating(e.target.value ? Number(e.target.value) : undefined)}
@@ -131,15 +133,30 @@ const CourseReviewsTab: React.FC<CourseReviewsTabProps> = ({ courseId }) => {
                 </option>
               ))}
             </select>
+            {filterRating && (
+              <button
+                onClick={() => setFilterRating(undefined)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#87867f',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
+                <X size={16} />
+              </button>
+            )}
           </div>
         </div>
 
         {reviews.length === 0 ? (
           <div className="cdt-reviews__empty">
-            <MessageSquare size={48} strokeWidth={1.25} />
+            <MessageSquare size={56} strokeWidth={1} />
             <p>
-              {filterRating 
-                ? `Chưa có đánh giá ${filterRating} sao nào.` 
+              {filterRating
+                ? `Chưa có đánh giá ${filterRating} sao nào.`
                 : `Chưa có đánh giá nào cho ${UI_TEXT.COURSE.toLowerCase()} này.`}
             </p>
           </div>
@@ -158,13 +175,13 @@ const CourseReviewsTab: React.FC<CourseReviewsTabProps> = ({ courseId }) => {
                     <div>
                       <h4 className="cdt-reviews__name">{review.studentName || 'Học viên'}</h4>
                       <div className="cdt-reviews__meta">
-                        <span className="cdt-reviews__stars" style={{ gap: 2 }}>
+                        <span className="cdt-reviews__stars" style={{ gap: 2, marginTop: 0 }}>
                           {[1, 2, 3, 4, 5].map((s) => (
                             <Star
                               key={s}
-                              size={12}
-                              fill={s <= review.rating ? '#FBBF24' : 'none'}
-                              color="#FBBF24"
+                              size={14}
+                              fill={s <= review.rating ? '#FBBF24' : '#e8e6dc'}
+                              color={s <= review.rating ? '#FBBF24' : '#e8e6dc'}
                             />
                           ))}
                         </span>
@@ -176,77 +193,78 @@ const CourseReviewsTab: React.FC<CourseReviewsTabProps> = ({ courseId }) => {
 
                   {review.comment && <p className="cdt-reviews__comment">{review.comment}</p>}
 
-                  <div className="cdt-reviews__reply">
-                    {editingReply[review.id] ? (
-                      <div>
-                        <textarea
-                          className="cdt-reviews__ta"
-                          placeholder="Viết phản hồi của bạn..."
-                          value={replyText[review.id] || ''}
-                          onChange={(e) =>
-                            setReplyText((prev) => ({ ...prev, [review.id]: e.target.value }))
-                          }
-                          autoFocus
-                        />
-                        <div className="cdt-reviews__actions">
-                          <button
-                            type="button"
-                            className="cdt-reviews__btn-ghost"
-                            onClick={() =>
-                              setEditingReply((prev) => ({ ...prev, [review.id]: false }))
-                            }
-                          >
-                            Hủy
-                          </button>
-                          <button
-                            type="button"
-                            className="cdt-reviews__btn-save"
-                            onClick={() => handleReplySubmit(review.id)}
-                            disabled={
-                              (pendingReplyId === review.id && replyMutation.isPending) ||
-                              !replyText[review.id]?.trim()
-                            }
-                          >
-                            {pendingReplyId === review.id && replyMutation.isPending
-                              ? 'Đang gửi...'
-                              : 'Gửi phản hồi'}
-                          </button>
-                        </div>
-                      </div>
-                    ) : review.instructorReply ? (
-                      <div>
-                        <div
-                          style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            marginBottom: '0.35rem',
-                          }}
-                        >
-                          <span className="cdt-reviews__reply-badge">Bạn đã phản hồi</span>
-                          <span style={{ fontSize: '0.75rem', color: '#87867f' }}>
-                            {formatDate(review.repliedAt)}
-                          </span>
-                        </div>
-                        <p className="cdt-reviews__reply-text">{review.instructorReply}</p>
+                  {/* Reply Section */}
+                  {editingReply[review.id] ? (
+                    <div className="cdt-reviews__reply cdt-reviews__editor-wrap">
+                      <textarea
+                        className="cdt-reviews__ta"
+                        placeholder="Viết phản hồi của bạn..."
+                        value={replyText[review.id] || ''}
+                        onChange={(e) =>
+                          setReplyText((prev) => ({ ...prev, [review.id]: e.target.value }))
+                        }
+                        autoFocus
+                      />
+                      <div className="cdt-reviews__actions">
                         <button
                           type="button"
                           className="cdt-reviews__btn-ghost"
-                          onClick={() => startEditReply(review.id, review.instructorReply)}
+                          onClick={() => setEditingReply((prev) => ({ ...prev, [review.id]: false }))}
                         >
-                          <Edit2 size={14} /> Chỉnh sửa
+                          Hủy
+                        </button>
+                        <button
+                          type="button"
+                          className="cdt-reviews__btn-save"
+                          onClick={() => handleReplySubmit(review.id)}
+                          disabled={
+                            (pendingReplyId === review.id && replyMutation.isPending) ||
+                            !replyText[review.id]?.trim()
+                          }
+                        >
+                          <Send size={16} />
+                          {pendingReplyId === review.id && replyMutation.isPending
+                            ? 'Đang gửi...'
+                            : 'Gửi phản hồi'}
                         </button>
                       </div>
-                    ) : (
+                    </div>
+                  ) : review.instructorReply ? (
+                    <div className="cdt-reviews__reply">
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          marginBottom: '0.35rem',
+                        }}
+                      >
+                        <span className="cdt-reviews__reply-badge">Bạn đã phản hồi</span>
+                        <span style={{ fontSize: '0.8rem', color: '#87867f', fontWeight: 500 }}>
+                          {formatDate(review.repliedAt)}
+                        </span>
+                      </div>
+                      <p className="cdt-reviews__reply-text">{review.instructorReply}</p>
+                      <button
+                        type="button"
+                        className="cdt-reviews__btn-ghost"
+                        onClick={() => startEditReply(review.id, review.instructorReply)}
+                        style={{ padding: '0.25rem 0.5rem', marginLeft: '-0.5rem' }}
+                      >
+                        <Edit2 size={14} /> Chỉnh sửa
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{ marginTop: '1rem', marginLeft: '0.5rem' }}>
                       <button
                         type="button"
                         className="cdt-reviews__btn-reply"
                         onClick={() => startEditReply(review.id)}
                       >
-                        <Send size={14} /> Trả lời nhận xét này
+                        <Send size={16} /> Trả lời nhận xét
                       </button>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               );
             })}

@@ -12,6 +12,7 @@ import {
   Trash2,
   Users,
   X,
+  Search,
 } from 'lucide-react';
 import {
   useCourseAssessments,
@@ -23,6 +24,7 @@ import {
 import type { CourseAssessmentResponse, AddAssessmentToCourseRequest, CourseResponse } from '../../../types';
 import '../../../styles/module-refactor.css';
 import './course-detail-tabs.css';
+import './CourseAssessmentsTab.css';
 import { UI_TEXT } from '../../../constants/uiText';
 
 interface CourseAssessmentsTabProps {
@@ -38,6 +40,26 @@ interface FilterState {
   type?: AssessmentType;
   isRequired?: boolean;
 }
+
+const typeLabel: Record<string, string> = {
+  QUIZ: 'Trắc nghiệm (Thường xuyên)',
+  HOMEWORK: 'Bài tập (Thường xuyên)',
+  TEST: 'Kiểm tra (Định kỳ)',
+  EXAM: 'Thi (Cuối kỳ)',
+};
+
+const typeCategory: Record<string, 'formative' | 'summative'> = {
+  QUIZ: 'formative',
+  HOMEWORK: 'formative',
+  TEST: 'summative',
+  EXAM: 'summative',
+};
+
+const statusLabel: Record<string, string> = {
+  DRAFT: 'Nháp',
+  PUBLISHED: 'Đã xuất bản',
+  CLOSED: 'Đã đóng',
+};
 
 // Add Assessment Modal
 function AddAssessmentModal({
@@ -101,40 +123,30 @@ function AddAssessmentModal({
     }
   };
 
-  const statusLabel: Record<string, string> = {
-    DRAFT: 'Nháp',
-    PUBLISHED: 'Đã xuất bản',
-    CLOSED: 'Đã đóng',
-  };
-
-  const typeLabel: Record<string, string> = {
-    QUIZ: 'Trắc nghiệm',
-    TEST: 'Kiểm tra',
-    EXAM: 'Thi',
-    HOMEWORK: 'Bài tập',
-  };
-
   return (
-    <div className="modal-layer" onClick={onClose}>
-      <div className="modal-card" style={{ width: 'min(720px, 100%)' }} onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
+    <div className="cat-modal-layer" onClick={onClose}>
+      <div className="cat-modal-card" onClick={(e) => e.stopPropagation()}>
+        <div className="cat-modal-header">
           <div>
-            <h3>➕ Thêm bài kiểm tra vào {UI_TEXT.COURSE.toLowerCase()}</h3>
-            <p className="muted" style={{ marginTop: 6, fontSize: '0.88rem' }}>
-              Chọn bài kiểm tra đã xuất bản từ danh sách của bạn
+            <h3>Thêm bài kiểm tra vào {UI_TEXT.COURSE.toLowerCase()}</h3>
+            <p className="muted" style={{ margin: 0, fontSize: '0.9rem' }}>
+              Chọn bài kiểm tra đã xuất bản từ ngân hàng của bạn
             </p>
           </div>
-          <button className="icon-btn" onClick={onClose} disabled={addMutation.isPending}>
-            <X size={16} />
+          <button
+            className="btn secondary"
+            style={{ padding: '0.5rem' }}
+            onClick={onClose}
+            disabled={addMutation.isPending}
+          >
+            <X size={18} />
           </button>
         </div>
 
-        <div className="modal-body">
+        <div className="cat-modal-body">
           {/* Search */}
-          <div className="search-box" style={{ width: '100%' }}>
-            <span className="search-box__icon">
-              <FileText size={15} />
-            </span>
+          <div className="cat-search-box">
+            <Search size={18} className="cat-search-icon" />
             <input
               type="text"
               placeholder="Tìm kiếm bài kiểm tra..."
@@ -142,128 +154,145 @@ function AddAssessmentModal({
               onChange={(e) => setSearch(e.target.value)}
             />
             {search && (
-              <button className="search-box__clear" onClick={() => setSearch('')}>
-                <X size={14} />
+              <button
+                style={{
+                  position: 'absolute',
+                  right: '1rem',
+                  background: 'none',
+                  border: 'none',
+                  color: '#87867f',
+                  cursor: 'pointer',
+                }}
+                onClick={() => setSearch('')}
+              >
+                <X size={16} />
               </button>
             )}
           </div>
 
-          <label className="row" style={{ alignItems: 'center', gap: 8, marginTop: 10 }}>
+          <label className="cat-checkbox-wrapper">
             <input
               type="checkbox"
               checked={allowOutOfCourseLessons}
               onChange={(e) => setAllowOutOfCourseLessons(e.target.checked)}
               disabled={provider === 'CUSTOM'}
             />
-            <span style={{ fontSize: '0.86rem', fontWeight: 600 }}>
-              {provider === 'CUSTOM' 
-                ? 'Cho phép chọn tất cả bài kiểm tra (Bắt buộc cho khóa Custom)'
-                : 'Cho phép Final Exam ngoài lesson của course (override)'}
-            </span>
+            <div style={{ flex: 1 }}>
+              <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#141413' }}>
+                {provider === 'CUSTOM'
+                  ? 'Cho phép chọn tất cả bài kiểm tra (Mặc định cho khóa Custom)'
+                  : 'Cho phép bài kiểm tra không thuộc lesson (Override)'}
+              </span>
+              <p className="muted" style={{ fontSize: '0.8rem', margin: '0.2rem 0 0' }}>
+                {provider === 'CUSTOM'
+                  ? 'Vì đây là khóa học tự do, bạn có thể chọn bất kỳ bài kiểm tra PUBLISHED nào của mình.'
+                  : 'Bật tùy chọn này để chọn các bài kiểm tra Cuối kỳ không nằm trong bài học cụ thể.'}
+              </p>
+            </div>
           </label>
-          <p className="muted" style={{ fontSize: '0.8rem', marginTop: 6 }}>
-            {provider === 'CUSTOM'
-              ? 'Vì đây là khóa học tự do, bạn có thể chọn bất kỳ bài kiểm tra PUBLISHED nào của mình.'
-              : 'Tắt: chỉ hiện assessment khớp lesson của course. Bật: cho phép chọn cả assessment không khớp lesson.'}
-          </p>
 
           {error && (
-            <div style={{ padding: '0.75rem', background: '#fee2e2', borderRadius: 8, marginTop: '0.75rem' }}>
-              <div className="row" style={{ gap: 8, color: '#dc2626' }}>
-                <AlertCircle size={16} />
-                <span style={{ fontSize: '0.88rem', fontWeight: 600 }}>{error}</span>
-              </div>
+            <div
+              style={{
+                padding: '0.75rem 1rem',
+                background: '#fee2e2',
+                borderRadius: '12px',
+                marginTop: '1rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                color: '#b91c1c',
+              }}
+            >
+              <AlertCircle size={16} />
+              <span style={{ fontSize: '0.9rem', fontWeight: 700 }}>{error}</span>
             </div>
           )}
 
-          {isLoading && <div className="empty">Đang tải...</div>}
+          {isLoading && <div className="cdt-loading" style={{ marginTop: '2rem' }}>Đang tải...</div>}
 
           {!isLoading && filtered.length === 0 && (
-            <div className="empty" style={{ minHeight: '240px' }}>
-              <FileText size={32} style={{ color: '#94a3b8', marginBottom: 8 }} />
+            <div className="cdt-empty" style={{ minHeight: '240px', marginTop: '1rem' }}>
+              <FileText size={40} style={{ color: '#d4c9bc', marginBottom: '0.5rem' }} />
               <p>
                 {available.length === 0
-                  ? 'Bạn chưa có bài kiểm tra đã xuất bản nào.'
-                  : 'Không tìm thấy bài kiểm tra phù hợp.'}
+                  ? 'Bạn chưa có bài kiểm tra đã xuất bản nào phù hợp.'
+                  : 'Không tìm thấy bài kiểm tra phù hợp với từ khóa.'}
               </p>
             </div>
           )}
 
           {!isLoading && filtered.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', marginTop: '0.75rem' }}>
-              {filtered.map((assessment) => (
-                <div
-                  key={assessment.assessmentId}
-                  className={`assessment-select-card ${selectedId === assessment.assessmentId ? 'selected' : ''}`}
-                  onClick={() => setSelectedId(assessment.assessmentId)}
-                  style={{
-                    border: selectedId === assessment.assessmentId ? '2px solid #2d7be7' : '1px solid #dbe4f0',
-                    borderRadius: 10,
-                    padding: '0.85rem',
-                    cursor: 'pointer',
-                    background: selectedId === assessment.assessmentId ? '#f0f7ff' : '#fff',
-                    transition: 'all 0.15s',
-                  }}
-                >
-                  <div className="row" style={{ justifyContent: 'space-between', marginBottom: 6 }}>
-                    <div className="row" style={{ gap: 8 }}>
-                      <span className="badge published">{statusLabel[assessment.status]}</span>
-                      <span className="muted" style={{ fontSize: '0.82rem' }}>
-                        {typeLabel[assessment.assessmentType]}
-                      </span>
-                      {allowOutOfCourseLessons && selectedId === assessment.assessmentId && (
-                        <span
-                          className="badge"
-                          style={{ background: '#fee2e2', color: '#b91c1c', fontWeight: 700 }}
-                        >
-                          Final Exam Override
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1.25rem' }}>
+              {filtered.map((assessment) => {
+                const category = typeCategory[assessment.assessmentType] || 'formative';
+                return (
+                  <div
+                    key={assessment.assessmentId}
+                    className={`cat-select-card ${selectedId === assessment.assessmentId ? 'selected' : ''}`}
+                    onClick={() => setSelectedId(assessment.assessmentId)}
+                  >
+                    <div className="cat-select-card-head">
+                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        <span className={`cat-badge ${statusLabel[assessment.status] === 'Đã xuất bản' ? 'published' : 'draft'}`}>
+                          {statusLabel[assessment.status]}
                         </span>
+                        <span className={`cat-badge ${category}`}>
+                          {typeLabel[assessment.assessmentType]}
+                        </span>
+                        {allowOutOfCourseLessons && selectedId === assessment.assessmentId && (
+                          <span className="cat-badge warning">
+                            Override
+                          </span>
+                        )}
+                      </div>
+                      {selectedId === assessment.assessmentId && (
+                        <CheckCircle2 size={20} style={{ color: '#c96442' }} />
                       )}
                     </div>
-                    {selectedId === assessment.assessmentId && (
-                      <CheckCircle2 size={18} style={{ color: '#2d7be7' }} />
+                    <h4 style={{ margin: '0 0 0.25rem', fontSize: '1.05rem', fontWeight: 800, color: '#141413' }}>
+                      {assessment.title}
+                    </h4>
+                    {assessment.description && (
+                      <p className="muted" style={{ fontSize: '0.9rem', margin: '0 0 0.5rem' }}>
+                        {assessment.description}
+                      </p>
+                    )}
+                    <div className="row" style={{ gap: '1rem', fontSize: '0.85rem', color: '#64748b', fontWeight: 500 }}>
+                      <span>📝 {assessment.totalQuestions} câu</span>
+                      <span>⭐ {assessment.totalPoints} điểm</span>
+                      {assessment.timeLimitMinutes && <span>⏱️ {assessment.timeLimitMinutes} phút</span>}
+                    </div>
+                    {provider === 'MINISTRY' ? (
+                      <div style={{ marginTop: '0.75rem' }}>
+                        <p className="muted" style={{ fontSize: '0.85rem', margin: 0 }}>
+                          Khớp {assessment.matchedLessonCount} bài học: {assessment.matchedLessonTitles.join(', ')}
+                        </p>
+                        {assessment.matchedLessonCount === 0 && (
+                          <p style={{ fontSize: '0.85rem', marginTop: '0.2rem', color: '#b91c1c', fontWeight: 700 }}>
+                            ⚠ Không khớp lesson nào của {UI_TEXT.COURSE.toLowerCase()}.
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <p style={{ fontSize: '0.85rem', marginTop: '0.75rem', margin: 0, color: '#059669', fontWeight: 700 }}>
+                        ✓ {UI_TEXT.COURSE} tự do (Cho phép chọn bất kỳ bài kiểm tra nào)
+                      </p>
                     )}
                   </div>
-                  <h4 style={{ margin: '0 0 4px', fontSize: '0.95rem', fontWeight: 700 }}>
-                    {assessment.title}
-                  </h4>
-                  {assessment.description && (
-                    <p className="muted" style={{ fontSize: '0.82rem', margin: '0 0 8px' }}>
-                      {assessment.description}
-                    </p>
-                  )}
-                  <div className="row" style={{ gap: 12, fontSize: '0.78rem', color: '#64748b' }}>
-                    <span>📝 {assessment.totalQuestions} câu</span>
-                    <span>⭐ {assessment.totalPoints} điểm</span>
-                    {assessment.timeLimitMinutes && <span>⏱️ {assessment.timeLimitMinutes} phút</span>}
-                  </div>
-                  {provider === 'MINISTRY' ? (
-                    <>
-                      <p className="muted" style={{ fontSize: '0.78rem', marginTop: 8 }}>
-                        Khớp {assessment.matchedLessonCount} bài học: {assessment.matchedLessonTitles.join(', ')}
-                      </p>
-                      {assessment.matchedLessonCount === 0 && (
-                        <p style={{ fontSize: '0.78rem', marginTop: 4, color: '#b91c1c', fontWeight: 600 }}>
-                          Assessment này không khớp lesson nào của course.
-                        </p>
-                      )}
-                    </>
-                  ) : (
-                    <p style={{ fontSize: '0.78rem', marginTop: 8, color: '#059669', fontWeight: 600 }}>
-                      ✓ {UI_TEXT.COURSE} tự do (Cho phép chọn bất kỳ bài kiểm tra nào)
-                    </p>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
           {selectedId && (
-            <div style={{ marginTop: '1.25rem', padding: '1rem', background: '#f8fafc', borderRadius: 10 }}>
-              <h4 style={{ margin: '0 0 0.75rem', fontSize: '0.9rem', fontWeight: 700 }}>Cài đặt</h4>
-              <div className="row" style={{ gap: '1rem' }}>
+            <div style={{ marginTop: '1.5rem', padding: '1.25rem', background: '#fdfaf6', border: '1px solid #f0eee6', borderRadius: '14px' }}>
+              <h4 style={{ margin: '0 0 1rem', fontSize: '1rem', fontWeight: 800, color: '#141413' }}>
+                Cài đặt bài kiểm tra
+              </h4>
+              <div className="row" style={{ gap: '1.5rem' }}>
                 <label style={{ flex: 1 }}>
-                  <p className="muted" style={{ marginBottom: 6, fontSize: '0.82rem' }}>
+                  <p className="muted" style={{ margin: '0 0 0.5rem', fontSize: '0.85rem', fontWeight: 600 }}>
                     Thứ tự hiển thị
                   </p>
                   <input
@@ -272,27 +301,28 @@ function AddAssessmentModal({
                     min={1}
                     value={orderIndex}
                     onChange={(e) => setOrderIndex(Number(e.target.value))}
+                    style={{ width: '100%' }}
                   />
                 </label>
-                <label className="row" style={{ alignItems: 'center', gap: 8, paddingTop: 24 }}>
+                <label className="cat-checkbox-wrapper" style={{ flex: 1, padding: '0.75rem 1rem', marginTop: '1.5rem' }}>
                   <input
                     type="checkbox"
                     checked={isRequired}
                     onChange={(e) => setIsRequired(e.target.checked)}
                   />
-                  <span style={{ fontSize: '0.88rem' }}>Bắt buộc</span>
+                  <span style={{ fontSize: '0.95rem', fontWeight: 700 }}>Là bài bắt buộc</span>
                 </label>
               </div>
             </div>
           )}
         </div>
 
-        <div className="modal-footer">
-          <button className="btn secondary" onClick={onClose} disabled={addMutation.isPending}>
+        <div className="cat-modal-footer">
+          <button className="cat-btn secondary" onClick={onClose} disabled={addMutation.isPending}>
             Hủy
           </button>
           <button
-            className="btn"
+            className="cat-btn primary"
             disabled={!selectedId || addMutation.isPending}
             onClick={() => void handleAdd()}
           >
@@ -308,7 +338,6 @@ function AddAssessmentModal({
 const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, course }) => {
   const navigate = useNavigate();
   const [showAddModal, setShowAddModal] = useState(false);
-  // const [draggedId, setDraggedId] = useState<string | null>(null);
   const [filters, setFilters] = useState<FilterState>({});
 
   const { data: assessmentsData, isLoading, refetch } = useCourseAssessments(courseId, filters);
@@ -355,19 +384,6 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
     void refetch();
   };
 
-  const statusLabel: Record<string, string> = {
-    DRAFT: 'Nháp',
-    PUBLISHED: 'Đã xuất bản',
-    CLOSED: 'Đã đóng',
-  };
-
-  const typeLabel: Record<string, string> = {
-    QUIZ: 'Trắc nghiệm',
-    TEST: 'Kiểm tra',
-    EXAM: 'Thi',
-    HOMEWORK: 'Bài tập',
-  };
-
   const fmtDate = (d?: string | null) => {
     if (!d) return null;
     return new Date(d).toLocaleDateString('vi-VN', {
@@ -378,7 +394,7 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
   };
 
   return (
-    <div className="course-detail-tab assessments-tab">
+    <div className="cat-container">
       {/* Stats */}
       <div className="stats-grid">
         <div className="stat-card stat-blue">
@@ -457,10 +473,10 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
                   }
                 >
                   <option value="">Tất cả loại</option>
-                  <option value="QUIZ">Trắc nghiệm</option>
-                  <option value="TEST">Kiểm tra</option>
-                  <option value="EXAM">Thi</option>
-                  <option value="HOMEWORK">Bài tập</option>
+                  <option value="QUIZ">Trắc nghiệm (Thường xuyên)</option>
+                  <option value="HOMEWORK">Bài tập (Thường xuyên)</option>
+                  <option value="TEST">Kiểm tra (Định kỳ)</option>
+                  <option value="EXAM">Thi (Cuối kỳ)</option>
                 </select>
               </label>
 
@@ -487,7 +503,7 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
           {(filters.status || filters.type || filters.isRequired !== undefined) && (
             <button
               type="button"
-              className="btn secondary cdt-assessment-filters__clear"
+              className="cat-btn secondary"
               style={{ padding: '0.5rem 0.85rem', fontSize: '0.82rem' }}
               onClick={() => setFilters({})}
             >
@@ -497,8 +513,8 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
           )}
         </div>
 
-        <button type="button" className="btn cdt-btn-primary" onClick={() => setShowAddModal(true)}>
-          <Plus size={14} />
+        <button type="button" className="cat-btn primary" onClick={() => setShowAddModal(true)}>
+          <Plus size={16} />
           Thêm bài kiểm tra
         </button>
       </div>
@@ -509,10 +525,10 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
       {/* Empty State */}
       {!isLoading && assessments.length === 0 && (
         <div className="cdt-empty">
-          <FileText size={40} strokeWidth={1.5} style={{ marginBottom: 12 }} />
+          <FileText size={48} strokeWidth={1} style={{ marginBottom: 12, color: '#d4c9bc' }} />
           <p>Chưa có bài kiểm tra nào. Hãy thêm bài kiểm tra đầu tiên!</p>
-          <button type="button" className="btn cdt-btn-primary" style={{ marginTop: 12 }} onClick={() => setShowAddModal(true)}>
-            <Plus size={14} />
+          <button type="button" className="cat-btn primary" style={{ marginTop: '1rem' }} onClick={() => setShowAddModal(true)}>
+            <Plus size={16} />
             Thêm bài kiểm tra
           </button>
         </div>
@@ -520,77 +536,82 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
 
       {/* Assessment List */}
       {!isLoading && assessments.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           {assessments
             .sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
-            .map((assessment) => (
-              <div key={assessment.id} className="data-card">
-                <div className="row" style={{ gap: 12 }}>
-                  <GripVertical size={18} style={{ color: '#94a3b8', flexShrink: 0 }} />
+            .map((assessment) => {
+              const typeCode = assessment.assessmentType ?? 'QUIZ';
+              const category = typeCategory[typeCode] || 'formative';
+
+              return (
+                <div key={assessment.id} className="cat-list-card">
+                  <div className="cat-drag-handle">
+                    <GripVertical size={20} />
+                  </div>
                   <div style={{ flex: 1 }}>
-                    <div className="row" style={{ justifyContent: 'space-between', marginBottom: 8 }}>
+                    <div className="row" style={{ justifyContent: 'space-between', marginBottom: 12 }}>
                       <div className="row" style={{ gap: 8 }}>
-                        <span className={`badge ${assessment.assessmentStatus === 'PUBLISHED' ? 'published' : 'draft'}`}>
+                        <span className={`cat-badge ${assessment.assessmentStatus === 'PUBLISHED' ? 'published' : 'draft'}`}>
                           {statusLabel[assessment.assessmentStatus ?? 'DRAFT']}
                         </span>
-                        <span className="muted" style={{ fontSize: '0.82rem' }}>
-                          {typeLabel[assessment.assessmentType ?? 'QUIZ']}
+                        <span className={`cat-badge ${category}`}>
+                          {typeLabel[typeCode]}
                         </span>
                         {assessment.isRequired && (
-                          <span className="badge" style={{ background: '#fef3c7', color: '#92400e' }}>
+                          <span className="cat-badge required">
                             ⭐ Bắt buộc
                           </span>
                         )}
                         {!assessment.lessonMatched && course.provider === 'MINISTRY' && (
-                          <span className="badge" style={{ background: '#fee2e2', color: '#b91c1c' }}>
+                          <span className="cat-badge warning">
                             ⚠ Không khớp lesson
                           </span>
                         )}
                       </div>
-                      <span className="muted" style={{ fontSize: '0.78rem' }}>
+                      <span className="muted" style={{ fontSize: '0.85rem', fontWeight: 700 }}>
                         #{assessment.orderIndex ?? '—'}
                       </span>
                     </div>
 
-                    <h3 style={{ margin: '0 0 6px', fontSize: '1.05rem', fontWeight: 700 }}>
+                    <h3 style={{ margin: '0 0 8px', fontSize: '1.25rem', fontWeight: 800, color: '#141413' }}>
                       {assessment.assessmentTitle ?? 'Không có tiêu đề'}
                     </h3>
 
                     {assessment.assessmentDescription && (
-                      <p className="muted" style={{ fontSize: '0.88rem', margin: '0 0 10px' }}>
+                      <p className="muted" style={{ fontSize: '0.95rem', margin: '0 0 12px' }}>
                         {assessment.assessmentDescription}
                       </p>
                     )}
 
-                    <div className="row" style={{ gap: 16, fontSize: '0.82rem', color: '#64748b' }}>
+                    <div className="row" style={{ gap: '1.25rem', fontSize: '0.85rem', color: '#64748b', fontWeight: 500, flexWrap: 'wrap' }}>
                       <span>📝 {assessment.totalQuestions ?? 0} câu</span>
                       <span>⭐ {assessment.totalPoints ?? 0} điểm</span>
                       {assessment.timeLimitMinutes && (
                         <span>
-                          <Clock size={12} style={{ marginRight: 3 }} />
+                          <Clock size={14} style={{ marginRight: 4 }} />
                           {assessment.timeLimitMinutes} phút
                         </span>
                       )}
                       {assessment.startDate && <span>📅 {fmtDate(assessment.startDate)}</span>}
                       {assessment.submissionCount !== null && assessment.submissionCount > 0 && (
-                        <span>
-                          <Users size={12} style={{ marginRight: 3 }} />
+                        <span style={{ color: '#059669', fontWeight: 700 }}>
+                          <Users size={14} style={{ marginRight: 4 }} />
                           {assessment.submissionCount} bài nộp
                         </span>
                       )}
                     </div>
 
-                    <div style={{ marginTop: 8 }}>
+                    <div style={{ marginTop: 12 }}>
                       {course.provider === 'CUSTOM' ? (
-                        <p style={{ fontSize: '0.82rem', margin: 0, color: '#059669', fontWeight: 600 }}>
+                        <p style={{ fontSize: '0.85rem', margin: 0, color: '#059669', fontWeight: 700 }}>
                           ✓ Bài kiểm tra tự do ({UI_TEXT.COURSE} Custom)
                         </p>
                       ) : assessment.lessonMatched ? (
-                        <p className="muted" style={{ fontSize: '0.82rem', margin: 0 }}>
+                        <p className="muted" style={{ fontSize: '0.85rem', margin: 0, fontWeight: 500 }}>
                           Khớp lesson: {assessment.matchedLessonTitles.join(', ')}
                         </p>
                       ) : (
-                        <p style={{ fontSize: '0.82rem', margin: 0, color: '#b91c1c', fontWeight: 600 }}>
+                        <p style={{ fontSize: '0.85rem', margin: 0, color: '#b91c1c', fontWeight: 700 }}>
                           Assessment này chưa liên kết với bất kỳ lesson nào của course.
                         </p>
                       )}
@@ -599,52 +620,53 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
                     {assessment.submissionCount && assessment.submissionCount > 0 && (
                       <div
                         style={{
-                          marginTop: 8,
-                          padding: '0.5rem 0.75rem',
+                          marginTop: 12,
+                          padding: '0.75rem 1rem',
                           background: '#fef3c7',
-                          borderRadius: 6,
-                          fontSize: '0.82rem',
+                          borderRadius: '8px',
+                          fontSize: '0.85rem',
                           color: '#92400e',
+                          fontWeight: 600,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
                         }}
                       >
-                        <AlertCircle size={14} style={{ marginRight: 4 }} />
+                        <AlertCircle size={16} />
                         Không thể xóa vì đã có {assessment.submissionCount} bài nộp
                       </div>
                     )}
 
-                    <div className="row" style={{ gap: 8, marginTop: 12 }}>
+                    <div className="row cat-actions" style={{ gap: 12, marginTop: 16 }}>
                       <button
-                        className="btn secondary"
-                        style={{ padding: '0.4rem 0.75rem', fontSize: '0.82rem' }}
+                        className="cat-btn secondary"
                         onClick={() => void handleToggleRequired(assessment)}
                         disabled={updateMutation.isPending}
                       >
                         {assessment.isRequired ? 'Bỏ bắt buộc' : 'Đặt bắt buộc'}
                       </button>
                       <button
-                        className="btn secondary"
-                        style={{ padding: '0.4rem 0.75rem', fontSize: '0.82rem' }}
+                        className="cat-btn secondary"
                         onClick={() => navigate(`/teacher/assessments/${assessment.assessmentId}`)}
                       >
                         Xem chi tiết
                       </button>
                       <button
-                        className="btn danger"
-                        style={{ padding: '0.4rem 0.75rem', fontSize: '0.82rem' }}
+                        className="cat-btn danger"
                         disabled={
                           removeMutation.isPending ||
                           (assessment.submissionCount !== null && assessment.submissionCount > 0)
                         }
                         onClick={() => void handleRemove(assessment)}
                       >
-                        <Trash2 size={13} />
+                        <Trash2 size={16} />
                         Xóa
                       </button>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
         </div>
       )}
 
