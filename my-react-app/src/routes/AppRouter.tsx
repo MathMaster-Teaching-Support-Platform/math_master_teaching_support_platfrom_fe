@@ -18,11 +18,11 @@ import OnboardingFlow from '../pages/auth/OnboardingFlow';
 import Calendar from '../pages/calendar/Calendar';
 import Certificates from '../pages/certificates/Certificates';
 import LiveChat from '../pages/chat/LiveChat';
+import EnrolledCourseWrapper from '../pages/courses/EnrolledCourseWrapper';
 import StudentCourses from '../pages/courses/StudentCourses';
 import TeacherCourseDetail from '../pages/courses/TeacherCourseDetail';
 import TeacherCourses from '../pages/courses/TeacherCourses';
 import UnifiedCourseView from '../pages/courses/UnifiedCourseView';
-import EnrolledCourseWrapper from '../pages/courses/EnrolledCourseWrapper';
 import AdminDashboard from '../pages/dashboard/admin/AdminDashboard';
 import TeacherDashboard from '../pages/dashboard/teacher/TeacherDashboard';
 import TeacherEarningsDashboard from '../pages/dashboard/teacher/TeacherEarningsDashboard';
@@ -56,9 +56,9 @@ import AdminRoadmapTopicsPage from '../pages/admin/AdminRoadmapTopicsPage';
 import AdminSlideTemplates from '../pages/admin/AdminSlideTemplates';
 import AdminTransactions from '../pages/admin/AdminTransactions';
 import AdminWithdrawals from '../pages/admin/AdminWithdrawals';
+import CashFlowDashboard from '../pages/admin/CashFlowDashboard';
 import MarketplaceAnalytics from '../pages/admin/MarketplaceAnalytics';
 import RevenueBreakdown from '../pages/admin/RevenueBreakdown';
-import CashFlowDashboard from '../pages/admin/CashFlowDashboard';
 import ReviewProfiles from '../pages/admin/ReviewProfiles';
 import AssessmentBuilderFlow from '../pages/assessments/AssessmentBuilderFlow';
 import AssessmentDetail from '../pages/assessments/AssessmentDetailRefactored';
@@ -578,6 +578,14 @@ export const router = createBrowserRouter([
   },
   {
     path: '/student/wallet',
+    element: (
+      <PrivateRoute>
+        <StudentWallet />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/admin/wallet',
     element: (
       <PrivateRoute>
         <StudentWallet />

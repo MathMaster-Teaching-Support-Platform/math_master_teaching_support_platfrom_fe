@@ -539,7 +539,6 @@ const AdminCourseReviewsPage: React.FC = () => {
         <section className="module-page teacher-courses-page admin-course-reviews-page">
           <header className="page-header courses-header-row">
             <div className="header-stack">
-              <div className="header-kicker">Admin Console</div>
               <div className="row" style={{ gap: '0.6rem' }}>
                 <h2>Duyệt khóa học</h2>
                 {!pendingQuery.isPending && !historyQuery.isPending && (

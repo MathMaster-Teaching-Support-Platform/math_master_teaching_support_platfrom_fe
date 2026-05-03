@@ -22,8 +22,9 @@ import {
 } from 'lucide-react';
 import React, { useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
-import { mockStudent } from '../../data/mockData';
 import { UI_TEXT } from '../../constants/uiText';
+import { mockAdmin, mockStudent, mockTeacher } from '../../data/mockData';
+import { AuthService } from '../../services/api/auth.service';
 import './HelpCenter.css';
 
 interface FAQItem {
@@ -69,8 +70,7 @@ const HelpCenter: React.FC = () => {
     {
       id: 2,
       question: `Cách đăng ký ${UI_TEXT.COURSE} mới?`,
-      answer:
-        `Để đăng ký ${UI_TEXT.COURSE.toLowerCase()}: 1) Vào trang ${UI_TEXT.COURSE}, 2) Chọn ${UI_TEXT.COURSE} bạn quan tâm, 3) Nhấn "Đăng ký ngay", 4) Chọn gói thanh toán phù hợp, 5) Hoàn tất thanh toán.`,
+      answer: `Để đăng ký ${UI_TEXT.COURSE.toLowerCase()}: 1) Vào trang ${UI_TEXT.COURSE}, 2) Chọn ${UI_TEXT.COURSE} bạn quan tâm, 3) Nhấn "Đăng ký ngay", 4) Chọn gói thanh toán phù hợp, 5) Hoàn tất thanh toán.`,
       category: 'courses',
       helpful: 98,
     },
@@ -93,8 +93,7 @@ const HelpCenter: React.FC = () => {
     {
       id: 5,
       question: 'Thời gian học tập có giới hạn không?',
-      answer:
-        `Sau khi đăng ký ${UI_TEXT.COURSE.toLowerCase()}, bạn có thể truy cập nội dung trong 12 tháng kể từ ngày đăng ký. Các bài tập và tài liệu có thể tải về để sử dụng vĩnh viễn.`,
+      answer: `Sau khi đăng ký ${UI_TEXT.COURSE.toLowerCase()}, bạn có thể truy cập nội dung trong 12 tháng kể từ ngày đăng ký. Các bài tập và tài liệu có thể tải về để sử dụng vĩnh viễn.`,
       category: 'courses',
       helpful: 65,
     },
@@ -109,16 +108,14 @@ const HelpCenter: React.FC = () => {
     {
       id: 7,
       question: 'Chứng chỉ hoàn thành được cấp như thế nào?',
-      answer:
-        `Chứng chỉ sẽ được tự động cấp khi bạn hoàn thành 100% nội dung ${UI_TEXT.COURSE.toLowerCase()} và đạt điểm trung bình ≥ 7.0 trong các bài kiểm tra. Bạn có thể tải xuống PDF hoặc chia sẻ trực tuyến.`,
+      answer: `Chứng chỉ sẽ được tự động cấp khi bạn hoàn thành 100% nội dung ${UI_TEXT.COURSE.toLowerCase()} và đạt điểm trung bình ≥ 7.0 trong các bài kiểm tra. Bạn có thể tải xuống PDF hoặc chia sẻ trực tuyến.`,
       category: 'courses',
       helpful: 92,
     },
     {
       id: 8,
       question: 'Hoàn tiền trong trường hợp nào?',
-      answer:
-        `Bạn có thể yêu cầu hoàn tiền 100% trong vòng 7 ngày đầu nếu chưa hoàn thành quá 20% ${UI_TEXT.COURSE.toLowerCase()}. Sau 7 ngày, chúng tôi không hỗ trợ hoàn tiền nhưng có thể chuyển sang ${UI_TEXT.COURSE.toLowerCase()} khác.`,
+      answer: `Bạn có thể yêu cầu hoàn tiền 100% trong vòng 7 ngày đầu nếu chưa hoàn thành quá 20% ${UI_TEXT.COURSE.toLowerCase()}. Sau 7 ngày, chúng tôi không hỗ trợ hoàn tiền nhưng có thể chuyển sang ${UI_TEXT.COURSE.toLowerCase()} khác.`,
       category: 'payment',
       helpful: 43,
     },
@@ -191,10 +188,15 @@ const HelpCenter: React.FC = () => {
     return matchCategory && matchSearch;
   });
 
+  const currentRole = (AuthService.getUserRole() ?? 'student') as 'teacher' | 'student' | 'admin';
+  let currentUser: { name: string; avatar: string } = mockStudent;
+  if (currentRole === 'teacher') currentUser = mockTeacher;
+  else if (currentRole === 'admin') currentUser = mockAdmin;
+
   return (
     <DashboardLayout
-      role="student"
-      user={{ name: mockStudent.name, avatar: mockStudent.avatar!, role: 'student' }}
+      role={currentRole}
+      user={{ name: currentUser.name, avatar: currentUser.avatar, role: currentRole }}
       notificationCount={5}
     >
       <div className="max-w-5xl mx-auto px-4 py-8 animate-[fadeInUp_0.4s_ease_both]">
