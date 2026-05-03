@@ -22,7 +22,11 @@
   padding: 2rem;
   background: var(--ana-bg);
   min-height: 100vh;
-  font-family: 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
+  font-family:
+    'Be Vietnam Pro',
+    system-ui,
+    -apple-system,
+    sans-serif;
   color: var(--ana-text-main);
 }
 
@@ -326,17 +330,17 @@
   .admin-analytics-page {
     padding: 1rem;
   }
-  
+
   .ana-page-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 1.5rem;
   }
-  
+
   .ana-two-col {
     grid-template-columns: 1fr;
   }
-  
+
   .ana-page-title {
     font-size: 1.75rem;
   }
