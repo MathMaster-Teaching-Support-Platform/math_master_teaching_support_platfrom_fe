@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query';
 import {
   BookMarked,
   BookOpen,
@@ -11,7 +12,6 @@ import {
   Workflow,
   X,
 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
@@ -115,7 +115,14 @@ export default function StudentPublicMindmaps() {
   const mindmapsQuery = useQuery({
     queryKey: [
       'public-mindmaps',
-      { lessonId, name: mindmapKeywordDebounced, page: mindmapPage, size: mindmapSize, sortBy: mindmapSortBy, direction: mindmapDirection },
+      {
+        lessonId,
+        name: mindmapKeywordDebounced,
+        page: mindmapPage,
+        size: mindmapSize,
+        sortBy: mindmapSortBy,
+        direction: mindmapDirection,
+      },
     ],
     queryFn: () =>
       MindmapService.getPublicMindmaps({
@@ -133,7 +140,10 @@ export default function StudentPublicMindmaps() {
   const chapters: ChapterBySubject[] = chaptersQuery.data?.result ?? [];
   const lessons: LessonByChapter[] = lessonsQuery.data?.result ?? [];
   const loadingCatalog =
-    gradesQuery.isFetching || subjectsQuery.isFetching || chaptersQuery.isFetching || lessonsQuery.isFetching;
+    gradesQuery.isFetching ||
+    subjectsQuery.isFetching ||
+    chaptersQuery.isFetching ||
+    lessonsQuery.isFetching;
 
   const selectedLesson = useMemo(
     () => lessons.find((lesson) => lesson.id === lessonId),
@@ -396,7 +406,7 @@ export default function StudentPublicMindmaps() {
               <div className="spm-filter-field">
                 <span className="spm-filter-label">
                   <GraduationCap size={12} />
-                  Khối lớp
+                  Lớp
                 </span>
                 <select
                   className="spm-select"

@@ -187,7 +187,10 @@ const AdminCourseReviewDetail: React.FC = () => {
           {/* Breadcrumb */}
           <CourseBreadcrumb
             homePath="/admin/courses/review"
-            items={[{ label: 'Duyệt khóa học' }, { label: course.title }]}
+            items={[
+              { label: 'Duyệt khóa học', path: '/admin/courses/review' },
+              { label: course.title },
+            ]}
             courseTitle={course.title}
           />
 

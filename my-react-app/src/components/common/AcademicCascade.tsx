@@ -1,6 +1,6 @@
+import { useChaptersBySubject } from '../../hooks/useChapters';
 import { useGrades } from '../../hooks/useGrades';
 import { useSubjectsByGrade } from '../../hooks/useSubjects';
-import { useChaptersBySubject } from '../../hooks/useChapters';
 
 interface AcademicCascadeProps {
   gradeLevel: string;
@@ -42,7 +42,7 @@ export function AcademicCascade({
     <>
       <label>
         <p className="muted" style={{ marginBottom: 6 }}>
-          Khối lớp {required && <span style={{ color: '#ef4444' }}>*</span>}
+          Lớp {required && <span style={{ color: '#ef4444' }}>*</span>}
         </p>
         <select
           className="select"

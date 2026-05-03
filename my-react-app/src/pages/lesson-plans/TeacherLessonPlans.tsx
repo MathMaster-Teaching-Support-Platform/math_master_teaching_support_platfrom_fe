@@ -254,7 +254,7 @@ function CreateLessonPlanModal({
 
                 <div className="form-group">
                   <label className="form-label" htmlFor="lp-grade">
-                    Khối lớp <span className="required">*</span>
+                    Lớp <span className="required">*</span>
                   </label>
                   <select
                     id="lp-grade"

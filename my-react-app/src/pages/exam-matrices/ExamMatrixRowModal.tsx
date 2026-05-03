@@ -2,8 +2,8 @@ import { X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useChaptersBySubject } from '../../hooks/useChapters';
 import { useAddExamMatrixRow } from '../../hooks/useExamMatrix';
-import { useSubjectsByGrade } from '../../hooks/useSubjects';
 import { useGrades } from '../../hooks/useGrades';
+import { useSubjectsByGrade } from '../../hooks/useSubjects';
 import type { ExamMatrixRowRequest } from '../../types/examMatrix';
 
 type Props = {
@@ -14,7 +14,6 @@ type Props = {
   onClose: () => void;
   onSuccess: () => void;
 };
-
 
 export function ExamMatrixRowModal({
   isOpen,
@@ -87,7 +86,7 @@ export function ExamMatrixRowModal({
     const payload: ExamMatrixRowRequest = {
       chapterId,
       questionTypeName: chapterLabel || 'Chủ đề',
-      cells: [],  // Empty cells - will be edited inline in MatrixTable
+      cells: [], // Empty cells - will be edited inline in MatrixTable
     };
 
     try {
@@ -121,7 +120,7 @@ export function ExamMatrixRowModal({
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {/* Grade Selection */}
               <div>
-                <label className="label">Khối lớp</label>
+                <label className="label">Lớp</label>
                 <select
                   className="select"
                   value={gradeLevel}
@@ -152,7 +151,9 @@ export function ExamMatrixRowModal({
                     setSelectedSubjectId(event.target.value);
                     setChapterId('');
                   }}
-                  disabled={subjectsByGradeQuery.isLoading || !gradeLevel || subjectsByGrade.length === 0}
+                  disabled={
+                    subjectsByGradeQuery.isLoading || !gradeLevel || subjectsByGrade.length === 0
+                  }
                   style={{ width: '100%' }}
                 >
                   {!gradeLevel ? (
@@ -163,7 +164,9 @@ export function ExamMatrixRowModal({
                     <>
                       <option value="">Chọn môn học</option>
                       {subjectsByGrade.map((subject) => (
-                        <option key={subject.id} value={subject.id}>{subject.name}</option>
+                        <option key={subject.id} value={subject.id}>
+                          {subject.name}
+                        </option>
                       ))}
                     </>
                   )}
@@ -200,12 +203,15 @@ export function ExamMatrixRowModal({
             </div>
 
             <p className="muted" style={{ marginTop: 16 }}>
-              Sau khi thêm dòng, bạn có thể chỉnh sửa số câu cho từng mức độ nhận thức trực tiếp trong bảng ma trận.
+              Sau khi thêm dòng, bạn có thể chỉnh sửa số câu cho từng mức độ nhận thức trực tiếp
+              trong bảng ma trận.
             </p>
           </div>
 
           <div className="modal-footer">
-            <button type="button" className="btn secondary" onClick={onClose}>Hủy</button>
+            <button type="button" className="btn secondary" onClick={onClose}>
+              Hủy
+            </button>
             <button type="submit" className="btn" disabled={addRowMutation.isPending}>
               {addRowMutation.isPending ? 'Đang thêm dòng...' : 'Thêm dòng'}
             </button>
