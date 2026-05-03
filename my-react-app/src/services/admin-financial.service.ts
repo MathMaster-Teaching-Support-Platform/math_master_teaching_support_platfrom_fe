@@ -89,6 +89,55 @@ export interface SystemHealth {
   gatewayStatus: GatewayStatus;
 }
 
+export interface MonthlyUserStats {
+  month: string;
+  students: number;
+  teachers: number;
+}
+
+export interface MonthlyRevenueStats {
+  month: string;
+  revenue: number;
+  transactions: number;
+}
+
+export interface MonthlyEngagementStats {
+  month: string;
+  enrollments: number;
+  videoViews: number;
+  assessmentsCompleted: number;
+  coursesCompleted: number;
+}
+
+export interface MonthlyTeacherStats {
+  month: string;
+  newTeachers: number;
+  approvedTeachers: number;
+  contentCreated: number;
+}
+
+export interface PlanDistribution {
+  name: string;
+  value: number;
+  revenue: number;
+}
+
+export interface SubjectEngagement {
+  subject: string;
+  enrolled: number;
+  videoViews: number;
+  completed: number;
+}
+
+export interface AdminAnalyticsResponse {
+  userStats: MonthlyUserStats[];
+  revenueStats: MonthlyRevenueStats[];
+  engagementStats: MonthlyEngagementStats[];
+  teacherStats: MonthlyTeacherStats[];
+  planDistribution: PlanDistribution[];
+  subjectEngagement: SubjectEngagement[];
+}
+
 // ==================== API CLIENT ====================
 
 const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
@@ -145,6 +194,14 @@ export const adminFinancialService = {
   getSystemHealth: async (): Promise<SystemHealth> => {
     const response: ApiResponse<SystemHealth> = await fetchWithAuth(
       `/admin/system/health/financial`
+    );
+    return response.result;
+  },
+
+  getFullAnalytics: async (year?: number): Promise<AdminAnalyticsResponse> => {
+    const params = year ? `?year=${year}` : '';
+    const response: ApiResponse<AdminAnalyticsResponse> = await fetchWithAuth(
+      `/admin/dashboard/full-analytics${params}`
     );
     return response.result;
   },

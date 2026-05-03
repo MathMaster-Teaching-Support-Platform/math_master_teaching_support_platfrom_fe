@@ -265,8 +265,7 @@ const AdminFinancialOverview: React.FC = () => {
           <h4>Về Các Chỉ Số</h4>
           <ul>
             <li>
-              <strong>Tổng Doanh Thu:</strong> Tổng tất cả giao dịch thành công (nạp tiền, đăng
-              ký, khóa học)
+              <strong>Tổng Doanh Thu:</strong> Tổng doanh thu từ hoa hồng khoá học và phí đăng ký gói (đã loại trừ nạp ví)
             </li>
             <li>
               <strong>Hoa Hồng Nền Tảng:</strong> 10% từ doanh số bán khóa học
