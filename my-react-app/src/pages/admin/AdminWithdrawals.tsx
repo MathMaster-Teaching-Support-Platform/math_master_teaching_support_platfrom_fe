@@ -21,12 +21,12 @@ import {
   useAdminRejectWithdrawal,
   useAdminWithdrawals,
 } from '../../hooks/useWithdrawals';
-import type { WithdrawalRequestResponse, WithdrawalStatus } from '../../types/wallet.types';
 import '../../styles/module-refactor.css';
+import type { WithdrawalRequestResponse, WithdrawalStatus } from '../../types/wallet.types';
 import '../courses/TeacherCourses.css';
+import './admin-finance-studio.css';
 import './admin-mgmt-shell.css';
 import AdminFinanceStudioShell from './AdminFinanceStudioShell';
-import './admin-finance-studio.css';
 import './AdminWithdrawals.css';
 
 type FilterStatus = 'ALL' | WithdrawalStatus;

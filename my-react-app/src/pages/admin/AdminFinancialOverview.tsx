@@ -100,7 +100,6 @@ const AdminFinancialOverview: React.FC = () => {
     <motion.div initial="hidden" animate="visible" variants={containerVariants}>
       <header className="overview-header">
         <div className="header-stack">
-          <div className="header-kicker">MathMaster Executive</div>
           <h2>Tổng quan tài chính</h2>
           <p className="header-sub">Hệ thống báo cáo hiệu suất và phân tích tăng trưởng nền tảng</p>
         </div>
