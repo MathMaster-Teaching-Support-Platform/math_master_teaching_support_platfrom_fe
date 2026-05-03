@@ -7,30 +7,30 @@
 
 .admin-financial-overview {
   /* ── Design tokens ── */
-  --ov-parchment:       #f5f4ed;
-  --ov-ivory:           #faf9f5;
-  --ov-terracotta:      #c96442;
+  --ov-parchment: #f5f4ed;
+  --ov-ivory: #faf9f5;
+  --ov-terracotta: #c96442;
   --ov-terracotta-soft: rgba(201, 100, 66, 0.08);
-  --ov-terracotta-mid:  rgba(201, 100, 66, 0.13);
-  --ov-near-black:      #141413;
-  --ov-dark-surface:    #30302e;
-  --ov-olive-gray:      #5e5d59;
-  --ov-stone-gray:      #87867f;
-  --ov-border-cream:    #f0eee6;
-  --ov-border-warm:     #e8e6dc;
-  --ov-ring-warm:       #d1cfc5;
-  --ov-ring-deep:       #c2c0b6;
-  --ov-positive:        #065f46;
-  --ov-positive-bg:     rgba(6, 95, 70, 0.08);
-  --ov-negative:        #991b1b;
-  --ov-negative-bg:     rgba(153, 27, 27, 0.08);
-  --ov-shadow-whisper:  rgba(0, 0, 0, 0.03) 0px 4px 24px;
-  --ov-shadow-card:     rgba(0, 0, 0, 0.04) 0px 6px 20px;
+  --ov-terracotta-mid: rgba(201, 100, 66, 0.13);
+  --ov-near-black: #141413;
+  --ov-dark-surface: #30302e;
+  --ov-olive-gray: #5e5d59;
+  --ov-stone-gray: #87867f;
+  --ov-border-cream: #f0eee6;
+  --ov-border-warm: #e8e6dc;
+  --ov-ring-warm: #d1cfc5;
+  --ov-ring-deep: #c2c0b6;
+  --ov-positive: #065f46;
+  --ov-positive-bg: rgba(6, 95, 70, 0.08);
+  --ov-negative: #991b1b;
+  --ov-negative-bg: rgba(153, 27, 27, 0.08);
+  --ov-shadow-whisper: rgba(0, 0, 0, 0.03) 0px 4px 24px;
+  --ov-shadow-card: rgba(0, 0, 0, 0.04) 0px 6px 20px;
   --ov-shadow-elevated: rgba(0, 0, 0, 0.07) 0px 10px 32px;
-  --ov-radius-sm:       12px;
-  --ov-radius-md:       16px;
-  --ov-radius-lg:       20px;
-  --ov-radius-xl:       24px;
+  --ov-radius-sm: 12px;
+  --ov-radius-md: 16px;
+  --ov-radius-lg: 20px;
+  --ov-radius-xl: 24px;
 
   padding: 2rem 2rem 3rem;
   width: 100%;
@@ -42,7 +42,6 @@
   gap: 1.75rem;
   box-sizing: border-box;
 }
-
 
 /* ══════════════════════════════════════════════
    HEADER  — compact, structured card
@@ -56,7 +55,9 @@
   background: var(--ov-ivory);
   border: 1px solid var(--ov-border-cream);
   border-radius: var(--ov-radius-lg);
-  box-shadow: 0 0 0 1px var(--ov-border-warm), var(--ov-shadow-whisper);
+  box-shadow:
+    0 0 0 1px var(--ov-border-warm),
+    var(--ov-shadow-whisper);
 }
 
 .header-stack {
@@ -106,7 +107,9 @@
   border: 1px solid var(--ov-border-warm);
   border-radius: var(--ov-radius-sm);
   color: var(--ov-stone-gray);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .month-selector:focus-within {
@@ -150,7 +153,6 @@
   cursor: not-allowed;
 }
 
-
 /* ══════════════════════════════════════════════
    MAIN DASHBOARD GRID
    ══════════════════════════════════════════════ */
@@ -160,7 +162,6 @@
   grid-template-columns: repeat(12, 1fr);
   gap: 1.5rem;
 }
-
 
 /* ══════════════════════════════════════════════
    FEATURED HERO CARD  (7 columns)
@@ -172,7 +173,9 @@
   padding: 2rem 2.25rem 1.75rem;
   border-radius: var(--ov-radius-xl);
   border: 1px solid var(--ov-border-cream);
-  box-shadow: 0 0 0 1px var(--ov-border-warm), var(--ov-shadow-card);
+  box-shadow:
+    0 0 0 1px var(--ov-border-warm),
+    var(--ov-shadow-card);
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -246,7 +249,6 @@
   color: var(--ov-negative);
 }
 
-
 /* ══════════════════════════════════════════════
    SIDEBAR METRIC CARDS  (5 columns)
    ══════════════════════════════════════════════ */
@@ -263,8 +265,12 @@
   padding: 1.375rem 1.625rem;
   border-radius: var(--ov-radius-md);
   border: 1px solid var(--ov-border-cream);
-  box-shadow: 0 0 0 1px var(--ov-border-cream), var(--ov-shadow-whisper);
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  box-shadow:
+    0 0 0 1px var(--ov-border-cream),
+    var(--ov-shadow-whisper);
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -272,7 +278,9 @@
 
 .metric-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0px 0px 0px 1px var(--ov-ring-warm), var(--ov-shadow-card);
+  box-shadow:
+    0px 0px 0px 1px var(--ov-ring-warm),
+    var(--ov-shadow-card);
 }
 
 .metric-card .metric-icon {
@@ -304,7 +312,6 @@
   margin-top: 0.5rem;
   font-size: 0.75rem;
 }
-
 
 /* ══════════════════════════════════════════════
    SHARED METRIC PRIMITIVES
@@ -340,9 +347,12 @@
   margin-top: 0.625rem;
 }
 
-.metric-trend.positive { color: var(--ov-positive); }
-.metric-trend.negative { color: var(--ov-negative); }
-
+.metric-trend.positive {
+  color: var(--ov-positive);
+}
+.metric-trend.negative {
+  color: var(--ov-negative);
+}
 
 /* ══════════════════════════════════════════════
    SECONDARY STATS STRIP
@@ -383,11 +393,15 @@
 
 .stat-pill:hover {
   border-color: var(--ov-border-warm);
-  box-shadow: 0px 0px 0px 1px var(--ov-ring-warm), rgba(0, 0, 0, 0.04) 0px 4px 14px;
+  box-shadow:
+    0px 0px 0px 1px var(--ov-ring-warm),
+    rgba(0, 0, 0, 0.04) 0px 4px 14px;
   transform: translateY(-1px);
 }
 
-.stat-pill:hover::before { opacity: 1; }
+.stat-pill:hover::before {
+  opacity: 1;
+}
 
 .stat-pill-label {
   font-family: var(--f-body);
@@ -406,7 +420,6 @@
   color: var(--ov-near-black);
   line-height: 1.15;
 }
-
 
 /* ══════════════════════════════════════════════
    QUICK ACTIONS SECTION
@@ -463,7 +476,9 @@
 .action-tile:hover {
   border-color: var(--ov-ring-warm);
   transform: translateY(-2px);
-  box-shadow: 0px 0px 0px 1px var(--ov-ring-warm), var(--ov-shadow-elevated);
+  box-shadow:
+    0px 0px 0px 1px var(--ov-ring-warm),
+    var(--ov-shadow-elevated);
 }
 
 .action-tile:hover::after {
@@ -517,7 +532,6 @@
   margin: 0;
   line-height: 1.55;
 }
-
 
 /* ══════════════════════════════════════════════
    INFO FOOTER
@@ -575,7 +589,6 @@
   line-height: 1.6;
 }
 
-
 /* ══════════════════════════════════════════════
    SKELETON LOADERS
    ══════════════════════════════════════════════ */
@@ -588,9 +601,10 @@
 }
 
 @keyframes ov-shimmer {
-  to { background-position: -200% 0; }
+  to {
+    background-position: -200% 0;
+  }
 }
-
 
 /* ══════════════════════════════════════════════
    ERROR / LOADING STATES
@@ -643,23 +657,40 @@
   padding: 0.55rem 1.25rem;
   cursor: pointer;
   margin-top: 0.5rem;
-  transition: opacity 0.15s ease, transform 0.1s ease;
+  transition:
+    opacity 0.15s ease,
+    transform 0.1s ease;
 }
 
-.retry-button:hover  { opacity: 0.9; }
-.retry-button:active { transform: scale(0.98); }
-
+.retry-button:hover {
+  opacity: 0.9;
+}
+.retry-button:active {
+  transform: scale(0.98);
+}
 
 /* ══════════════════════════════════════════════
    RESPONSIVE BREAKPOINTS
    ══════════════════════════════════════════════ */
 
 @media (max-width: 1200px) {
-  .featured-metric  { grid-column: span 12; min-height: auto; }
-  .sidebar-metrics  { grid-column: span 12; flex-direction: row; }
-  .metric-card      { flex: 1; }
-  .secondary-stats-strip { grid-template-columns: repeat(2, 1fr); }
-  .actions-bento    { grid-template-columns: repeat(2, 1fr); }
+  .featured-metric {
+    grid-column: span 12;
+    min-height: auto;
+  }
+  .sidebar-metrics {
+    grid-column: span 12;
+    flex-direction: row;
+  }
+  .metric-card {
+    flex: 1;
+  }
+  .secondary-stats-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .actions-bento {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 900px) {
@@ -673,13 +704,25 @@
     gap: 1rem;
     padding: 1.125rem 1.25rem;
   }
-  .sidebar-metrics  { flex-direction: column; }
-  .overview-header h2 { font-size: 1.375rem; }
+  .sidebar-metrics {
+    flex-direction: column;
+  }
+  .overview-header h2 {
+    font-size: 1.375rem;
+  }
 }
 
 @media (max-width: 640px) {
-  .secondary-stats-strip { grid-template-columns: 1fr 1fr; }
-  .actions-bento         { grid-template-columns: 1fr; }
-  .featured-metric .metric-value { font-size: 2.375rem; }
-  .info-grid { grid-template-columns: 1fr; }
+  .secondary-stats-strip {
+    grid-template-columns: 1fr 1fr;
+  }
+  .actions-bento {
+    grid-template-columns: 1fr;
+  }
+  .featured-metric .metric-value {
+    font-size: 2.375rem;
+  }
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
 }

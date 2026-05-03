@@ -1,5 +1,18 @@
 import { useQuery } from '@tanstack/react-query';
-import { BarChart2, Banknote, CheckCircle2, Clock, CreditCard, Download, Eye, Loader2, RefreshCw, Search, X, XCircle } from 'lucide-react';
+import {
+  Banknote,
+  BarChart2,
+  CheckCircle2,
+  Clock,
+  CreditCard,
+  Download,
+  Eye,
+  Loader2,
+  RefreshCw,
+  Search,
+  X,
+  XCircle,
+} from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
@@ -230,7 +243,9 @@ const AdminTransactions: React.FC = () => {
         <td className="txn-plan-name">{txn.planName}</td>
         <td className="txn-amount">{formatCurrency(txn.amount)}</td>
         <td>
-          <span className="txn-payment-badge"><CreditCard size={12} /> {txn.paymentMethod}</span>
+          <span className="txn-payment-badge">
+            <CreditCard size={12} /> {txn.paymentMethod}
+          </span>
         </td>
         <td>
           <span className={`txn-status-badge txn-status-badge--${txn.status}`}>
@@ -245,7 +260,15 @@ const AdminTransactions: React.FC = () => {
             disabled={detailLoadingId === txn.id}
             onClick={() => handleOpenDetail(txn.id)}
           >
-            {detailLoadingId === txn.id ? <><Loader2 size={13} className="admin-finance-spin" /> Đang tải...</> : <><Eye size={13} /> Chi tiết</>}
+            {detailLoadingId === txn.id ? (
+              <>
+                <Loader2 size={13} className="admin-finance-spin" /> Đang tải...
+              </>
+            ) : (
+              <>
+                <Eye size={13} /> Chi tiết
+              </>
+            )}
           </button>
         </td>
       </tr>
@@ -433,7 +456,9 @@ const AdminTransactions: React.FC = () => {
           {/* Filters */}
           <div className="txn-filters">
             <div className="txn-search-wrap">
-              <span className="txn-search-icon"><Search className="w-4 h-4" /></span>
+              <span className="txn-search-icon">
+                <Search className="w-4 h-4" />
+              </span>
               <input
                 type="text"
                 className="txn-search-input"
@@ -552,7 +577,12 @@ const AdminTransactions: React.FC = () => {
                   </div>
                   <div className="txn-detail-row">
                     <span className="txn-detail-label">Phương thức</span>
-                    <span className="txn-detail-value" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem' }}><CreditCard size={13} /> {selectedTxn.paymentMethod}</span>
+                    <span
+                      className="txn-detail-value"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem' }}
+                    >
+                      <CreditCard size={13} /> {selectedTxn.paymentMethod}
+                    </span>
                   </div>
                   <div className="txn-detail-row">
                     <span className="txn-detail-label">Trạng thái</span>

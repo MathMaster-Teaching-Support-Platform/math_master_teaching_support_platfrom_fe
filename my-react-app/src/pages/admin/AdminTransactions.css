@@ -1,23 +1,23 @@
 /* ─── Design Tokens ───────────────────────────────────────────────────────── */
 .admin-transactions-page {
-  --txn-parchment:       #f5f4ed;
-  --txn-ivory:           #faf9f5;
-  --txn-terracotta:      #c96442;
+  --txn-parchment: #f5f4ed;
+  --txn-ivory: #faf9f5;
+  --txn-terracotta: #c96442;
   --txn-terracotta-soft: rgba(201, 100, 66, 0.09);
-  --txn-near-black:      #141413;
-  --txn-dark-surface:    #30302e;
-  --txn-olive-gray:      #5e5d59;
-  --txn-stone-gray:      #87867f;
-  --txn-border-cream:    #f0eee6;
-  --txn-border-warm:     #e8e6dc;
-  --txn-ring-warm:       #d1cfc5;
-  --txn-positive:        #065f46;
-  --txn-positive-bg:     rgba(6, 95, 70, 0.08);
-  --txn-warning:         #92400e;
-  --txn-warning-bg:      rgba(146, 64, 14, 0.08);
-  --txn-error:           #b53333;
-  --txn-error-bg:        rgba(181, 51, 51, 0.08);
-  --txn-shadow-card:     rgba(0, 0, 0, 0.04) 0px 4px 16px;
+  --txn-near-black: #141413;
+  --txn-dark-surface: #30302e;
+  --txn-olive-gray: #5e5d59;
+  --txn-stone-gray: #87867f;
+  --txn-border-cream: #f0eee6;
+  --txn-border-warm: #e8e6dc;
+  --txn-ring-warm: #d1cfc5;
+  --txn-positive: #065f46;
+  --txn-positive-bg: rgba(6, 95, 70, 0.08);
+  --txn-warning: #92400e;
+  --txn-warning-bg: rgba(146, 64, 14, 0.08);
+  --txn-error: #b53333;
+  --txn-error-bg: rgba(181, 51, 51, 0.08);
+  --txn-shadow-card: rgba(0, 0, 0, 0.04) 0px 4px 16px;
 
   width: 100%;
   box-sizing: border-box;
@@ -68,10 +68,14 @@
 }
 
 @media (max-width: 1100px) {
-  .txn-stats-grid { grid-template-columns: repeat(3, 1fr); }
+  .txn-stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 @media (max-width: 680px) {
-  .txn-stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .txn-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 .txn-stat-card {
@@ -83,11 +87,15 @@
   align-items: flex-start;
   gap: 1rem;
   box-shadow: 0 0 0 1px var(--txn-border-cream);
-  transition: box-shadow 0.2s, transform 0.2s;
+  transition:
+    box-shadow 0.2s,
+    transform 0.2s;
 }
 
 .txn-stat-card:hover {
-  box-shadow: 0px 0px 0px 1px var(--txn-ring-warm), var(--txn-shadow-card);
+  box-shadow:
+    0px 0px 0px 1px var(--txn-ring-warm),
+    var(--txn-shadow-card);
   transform: translateY(-1px);
 }
 
@@ -96,7 +104,9 @@
 }
 
 @media (max-width: 1100px) {
-  .txn-stat-card--revenue { grid-column: span 1; }
+  .txn-stat-card--revenue {
+    grid-column: span 1;
+  }
 }
 
 .txn-stat-icon {
@@ -177,12 +187,16 @@
   color: var(--txn-near-black);
   background: var(--txn-ivory);
   outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
   box-sizing: border-box;
   box-shadow: 0 0 0 1px var(--txn-border-warm);
 }
 
-.txn-search-input::placeholder { color: var(--txn-stone-gray); }
+.txn-search-input::placeholder {
+  color: var(--txn-stone-gray);
+}
 
 .txn-search-input:focus {
   border-color: #3898ec;
@@ -250,7 +264,9 @@
   background: var(--txn-ivory);
   border-radius: 16px;
   border: 1px solid var(--txn-border-cream);
-  box-shadow: 0 0 0 1px var(--txn-border-warm), var(--txn-shadow-card);
+  box-shadow:
+    0 0 0 1px var(--txn-border-warm),
+    var(--txn-shadow-card);
   overflow: hidden;
 }
 
@@ -286,9 +302,13 @@
   vertical-align: middle;
 }
 
-.txn-table tr:last-child td { border-bottom: none; }
+.txn-table tr:last-child td {
+  border-bottom: none;
+}
 
-.txn-table tbody tr:hover td { background: var(--txn-parchment); }
+.txn-table tbody tr:hover td {
+  background: var(--txn-parchment);
+}
 
 .txn-empty {
   text-align: center;
@@ -519,7 +539,9 @@
   width: 100%;
   max-width: 520px;
   border: 1px solid var(--txn-border-warm);
-  box-shadow: 0 0 0 1px var(--txn-ring-warm), rgba(0, 0, 0, 0.15) 0px 20px 60px;
+  box-shadow:
+    0 0 0 1px var(--txn-ring-warm),
+    rgba(0, 0, 0, 0.15) 0px 20px 60px;
   overflow: hidden;
 }
 
@@ -576,7 +598,9 @@
   border-bottom: 1px solid var(--txn-border-cream);
 }
 
-.txn-detail-row:last-child { border-bottom: none; }
+.txn-detail-row:last-child {
+  border-bottom: none;
+}
 
 .txn-detail-label {
   font-family: 'Be Vietnam Pro', sans-serif;
@@ -620,7 +644,9 @@
   line-height: 1;
 }
 
-.btn:active { transform: scale(0.98); }
+.btn:active {
+  transform: scale(0.98);
+}
 
 .btn-outline {
   background: var(--txn-parchment);

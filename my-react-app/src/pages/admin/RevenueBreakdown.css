@@ -88,7 +88,8 @@
   outline: none;
 }
 
-.export-button, .refresh-button {
+.export-button,
+.refresh-button {
   display: flex;
   align-items: center;
   gap: 0.6rem;
@@ -132,7 +133,9 @@
   padding: 2.75rem 3rem;
   border-radius: 24px;
   border: 1px solid var(--rev-border-cream);
-  box-shadow: 0 0 0 1px var(--rev-border-warm), var(--rev-shadow-whisper);
+  box-shadow:
+    0 0 0 1px var(--rev-border-warm),
+    var(--rev-shadow-whisper);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -214,7 +217,7 @@
   background: white;
   border-radius: 14px;
   color: var(--rev-stone-gray);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .source-info h3 {
@@ -250,7 +253,9 @@
   padding: 2.5rem;
   border-radius: 20px;
   border: 1px solid var(--rev-border-cream);
-  box-shadow: 0 0 0 1px var(--rev-border-warm), var(--rev-shadow-whisper);
+  box-shadow:
+    0 0 0 1px var(--rev-border-warm),
+    var(--rev-shadow-whisper);
 }
 
 .main-chart-card h2 {
@@ -403,14 +408,34 @@
 
 /* Responsive */
 @media (max-width: 1100px) {
-  .revenue-bento-grid { display: flex; flex-direction: column; }
+  .revenue-bento-grid {
+    display: flex;
+    flex-direction: column;
+  }
 }
 
 @media (max-width: 768px) {
-  .revenue-breakdown-page { padding: 1.5rem; gap: 2rem; }
-  .breakdown-header { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
-  .breakdown-header h2 { font-size: 2.25rem; }
-  .card-value-large { font-size: 3rem; }
-  .ledger-header-row { flex-direction: column; align-items: flex-start; gap: 1rem; }
-  .ledger-search input { width: 100%; }
+  .revenue-breakdown-page {
+    padding: 1.5rem;
+    gap: 2rem;
+  }
+  .breakdown-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
+  }
+  .breakdown-header h2 {
+    font-size: 2.25rem;
+  }
+  .card-value-large {
+    font-size: 3rem;
+  }
+  .ledger-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .ledger-search input {
+    width: 100%;
+  }
 }
