@@ -59,6 +59,37 @@ function getTemplatePreviewUrl(template: LessonSlideTemplate): string {
   return AdminSlideTemplateService.getPreviewImageUrl(template.id);
 }
 
+function getTemplatePreviewCandidateUrls(template: LessonSlideTemplate): string[] {
+  const adminUrl = AdminSlideTemplateService.getPreviewImageUrl(template.id);
+  const dataUrl = getTemplatePreviewUrl(template);
+  return adminUrl === dataUrl ? [adminUrl] : [adminUrl, dataUrl];
+}
+
+async function fetchTemplatePreviewBlob(
+  template: LessonSlideTemplate,
+  token: string
+): Promise<Blob> {
+  const urls = getTemplatePreviewCandidateUrls(template);
+  let lastError: Error | null = null;
+
+  for (const url of urls) {
+    try {
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}`, accept: '*/*' },
+      });
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { message?: string };
+        throw new Error(body.message ?? `Lỗi ${res.status}`);
+      }
+      return res.blob();
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error('Không thể tải ảnh preview.');
+    }
+  }
+
+  throw lastError ?? new Error('Không thể tải ảnh preview.');
+}
+
 // ─── sub-components ──────────────────────────────────────────────────────────
 
 interface StatusBadgeProps {
@@ -460,13 +491,7 @@ const TemplateThumbnail: React.FC<TemplateThumbnailProps> = ({ template, onClick
     let objectUrl: string | null = null;
     let cancelled = false;
 
-    fetch(getTemplatePreviewUrl(template), {
-      headers: { Authorization: `Bearer ${token}`, accept: '*/*' },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.blob();
-      })
+    fetchTemplatePreviewBlob(template, token!)
       .then((blob) => {
         if (cancelled) return;
         objectUrl = URL.createObjectURL(blob);
@@ -532,16 +557,7 @@ const PreviewModal: React.FC<PreviewModalProps> = ({ template, onClose }) => {
 
     let objectUrl: string | null = null;
 
-    fetch(getTemplatePreviewUrl(template), {
-      headers: { Authorization: `Bearer ${token}`, accept: '*/*' },
-    })
-      .then(async (res) => {
-        if (!res.ok) {
-          const body = (await res.json().catch(() => ({}))) as { message?: string };
-          throw new Error(body.message ?? `Lỗi ${res.status}`);
-        }
-        return res.blob();
-      })
+    fetchTemplatePreviewBlob(template, token!)
       .then((blob) => {
         objectUrl = URL.createObjectURL(blob);
         setBlobUrl(objectUrl);
