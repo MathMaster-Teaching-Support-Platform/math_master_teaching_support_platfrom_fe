@@ -153,10 +153,10 @@ export const useBatchUpsertMatrixRowCells = () => {
     return useMutation({
         mutationFn: ({ matrixId, request }: { matrixId: string; request: BatchUpsertMatrixRowCellsRequest }) =>
             examMatrixService.batchUpsertExamMatrixRowCells(matrixId, request),
-        onSuccess: (_, vars) => {
-            qc.invalidateQueries({ queryKey: examMatrixKeys.detail(vars.matrixId) });
-            qc.invalidateQueries({ queryKey: examMatrixKeys.table(vars.matrixId) });
-            qc.invalidateQueries({ queryKey: examMatrixKeys.validation(vars.matrixId) });
+        onSuccess: () => {
+            // NOTE: Do NOT invalidate 'table' here — the caller (handleCellChange) calls
+            // refetchTable() explicitly after mutateAsync resolves.
+            // Extra invalidation creates racing refetches that overwrite pending local edits.
             qc.invalidateQueries({ queryKey: examMatrixKeys.mine() });
         },
     });

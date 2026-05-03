@@ -208,7 +208,7 @@
   font-size: 1rem;
   font-weight: 500;
   color: #141413;
-  font-family: 'Anthropic Serif', Georgia, serif;
+  font-family: var(--f-heading);
 }
 
 .mark-all-read {

@@ -21,7 +21,11 @@ export function TrueFalseRenderer({
 }: TrueFalseRendererProps) {
   // Parse current answer: "A,C" → Set{"A","C"}
   const selected = useMemo(() => parseTFAnswer(studentAnswer), [studentAnswer]);
-  const touched = useMemo(() => new Set<string>(), []);
+  
+  // If studentAnswer exists (even empty string ""), all clauses are considered touched.
+  // This is because TF THPT requires answering ALL 4 clauses.
+  // An untouched question has studentAnswer === undefined or null.
+  const allTouched = studentAnswer !== undefined && studentAnswer !== null;
 
   const toggleClause = (key: string, isTrue: boolean) => {
     const next = new Set(selected);
@@ -30,7 +34,6 @@ export function TrueFalseRenderer({
     } else {
       next.delete(key);
     }
-    touched.add(key);
     const formatted = formatTFAnswer(next);
     onAnswerChange(formatted);
   };
@@ -119,8 +122,8 @@ export function TrueFalseRenderer({
             <button
               type="button"
               role="radio"
-              aria-checked={!selected.has(key) && touched.has(key)}
-              className={`tf-btn tf-false ${!selected.has(key) && touched.has(key) ? 'active' : ''}`}
+              aria-checked={!selected.has(key) && allTouched}
+              className={`tf-btn tf-false ${!selected.has(key) && allTouched ? 'active' : ''}`}
               onClick={() => toggleClause(key, false)}
               disabled={disabled}
               style={{
@@ -128,10 +131,10 @@ export function TrueFalseRenderer({
                 minHeight: 44,
                 padding: '8px 16px',
                 border: '2px solid',
-                borderColor: !selected.has(key) && touched.has(key) ? '#dc2626' : '#d1d5db',
+                borderColor: !selected.has(key) && allTouched ? '#dc2626' : '#d1d5db',
                 borderRadius: 6,
-                backgroundColor: !selected.has(key) && touched.has(key) ? '#dc2626' : 'white',
-                color: !selected.has(key) && touched.has(key) ? 'white' : '#374151',
+                backgroundColor: !selected.has(key) && allTouched ? '#dc2626' : 'white',
+                color: !selected.has(key) && allTouched ? 'white' : '#374151',
                 fontWeight: 600,
                 fontSize: '0.875rem',
                 cursor: disabled ? 'not-allowed' : 'pointer',

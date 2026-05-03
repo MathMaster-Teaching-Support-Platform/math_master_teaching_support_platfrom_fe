@@ -452,6 +452,7 @@ export default function AssessmentDetail() {
                     <tr>
                       <th style={{ width: 50 }}>STT</th>
                       <th>Nội dung câu hỏi</th>
+                      <th style={{ width: 80 }}>Loại</th>
                       <th style={{ width: 100 }}>Mức độ</th>
                       <th style={{ width: 160 }}>Điểm</th>
                       {isDraft && <th style={{ width: 80 }}>Xóa</th>}
@@ -472,6 +473,12 @@ export default function AssessmentDetail() {
                             </div>
                           </td>
                           <td>
+                            <span className={`badge ${question.questionType === 'TRUE_FALSE' ? 'published' : 'draft'}`}>
+                              {question.questionType === 'TRUE_FALSE' ? 'TF (4 mệnh đề)' : 
+                               question.questionType === 'SHORT_ANSWER' ? 'TL' : 'TN'}
+                            </span>
+                          </td>
+                          <td>
                             {question.cognitiveLevel ? (
                               <span className="badge draft">{question.cognitiveLevel}</span>
                             ) : (
@@ -480,19 +487,49 @@ export default function AssessmentDetail() {
                           </td>
                           <td>
                             {isDraft ? (
-                              <input
-                                className="input"
-                                type="number"
-                                min={0}
-                                step={0.25}
-                                value={pointsDraft[questionId] ?? String(question.points ?? '')}
-                                onChange={(e) =>
-                                  setPointsDraft((prev) => ({ ...prev, [questionId]: e.target.value }))
-                                }
-                                placeholder="Điểm"
-                              />
+                              <div>
+                                <input
+                                  className="input"
+                                  type="number"
+                                  min={0}
+                                  step={0.25}
+                                  value={pointsDraft[questionId] ?? String(question.points ?? '')}
+                                  onChange={(e) =>
+                                    setPointsDraft((prev) => ({ ...prev, [questionId]: e.target.value }))
+                                  }
+                                  placeholder="Điểm"
+                                />
+                                {/* Show clause breakdown for TF questions */}
+                                {question.questionType === 'TRUE_FALSE' && (pointsDraft[questionId] || question.points) && (
+                                  <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4 }}>
+                                    {(() => {
+                                      const totalPoints = parseFloat(pointsDraft[questionId] || String(question.points || 0));
+                                      const pointPerClause = (totalPoints / 4).toFixed(3);
+                                      return (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                          <span>📋 Mỗi mệnh đề: {pointPerClause} điểm</span>
+                                          <span style={{ fontSize: 10 }}>
+                                            (A: {pointPerClause}, B: {pointPerClause}, C: {pointPerClause}, D: {pointPerClause})
+                                          </span>
+                                        </div>
+                                      );
+                                    })()}
+                                  </div>
+                                )}
+                              </div>
                             ) : (
-                              <span>{question.points ?? 0}</span>
+                              <div>
+                                <span>{question.points ?? 0}</span>
+                                {/* Show clause breakdown for TF questions in published view */}
+                                {question.questionType === 'TRUE_FALSE' && question.points && (
+                                  <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4 }}>
+                                    {(() => {
+                                      const pointPerClause = (question.points / 4).toFixed(3);
+                                      return <span>📋 Mỗi mệnh đề: {pointPerClause} điểm</span>;
+                                    })()}
+                                  </div>
+                                )}
+                              </div>
                             )}
                           </td>
                           {isDraft && (
@@ -532,6 +569,10 @@ export default function AssessmentDetail() {
                   <div className="preview-box">
                     <p className="muted" style={{ fontWeight: 600, marginBottom: 8 }}>
                       Tự động phân điểm theo mức độ nhận thức
+                    </p>
+                    <p style={{ fontSize: 12, color: '#6b7280', marginTop: 4, marginBottom: 8 }}>
+                      💡 Câu hỏi Đúng/Sai (TF) có 4 mệnh đề, điểm sẽ được phân bổ theo trọng số 4× so với câu hỏi thường.<br />
+                      Chấm điểm THPT: 4/4 đúng → 100% điểm, 3/4 đúng → 25% điểm, 0-2/4 đúng → 0 điểm.
                     </p>
                     <div className="row" style={{ flexWrap: 'wrap', justifyContent: 'start', gap: 8 }}>
                       <div>

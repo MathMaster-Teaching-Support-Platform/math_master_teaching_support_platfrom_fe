@@ -227,7 +227,7 @@ export default function TakeAssessment() {
 
   const currentQuestion = attemptData?.questions[currentIndex];
   const answeredCount = Object.keys(answers).filter(
-    (k) => answers[k] !== undefined && answers[k] !== ''
+    (k) => answers[k] !== undefined && answers[k] !== null
   ).length;
   const totalQuestions = attemptData?.questions.length || 0;
 

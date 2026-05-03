@@ -846,3 +846,13 @@
 .matrix-cell-input[type=number] {
   -moz-appearance: textfield;
 }
+
+
+/* ============================================
+   WARNING STYLES (ISSUE-03)
+   ============================================ */
+
+.matrix-td--warning {
+  background-color: #fef2f2 !important;
+  border-color: #fca5a5 !important;
+}

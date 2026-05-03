@@ -6,6 +6,8 @@ interface MCQResultProps {
   options?: Record<string, string>;
 }
 
+import MathText from '../common/MathText';
+
 export function MCQResult({ answer, questionText, options }: MCQResultProps) {
   const isCorrect = answer.pointsEarned === answer.maxPoints;
 
@@ -13,7 +15,7 @@ export function MCQResult({ answer, questionText, options }: MCQResultProps) {
     <div className="mcq-result" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {questionText && (
         <div className="question-text" style={{ fontSize: '1rem', lineHeight: 1.6, marginBottom: 8 }}>
-          {questionText}
+          <MathText text={questionText} />
         </div>
       )}
       
@@ -81,7 +83,7 @@ export function MCQResult({ answer, questionText, options }: MCQResultProps) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {Object.entries(options).map(([key, text]) => (
               <div key={key} style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                <strong>{key}.</strong> {text}
+                <strong>{key}.</strong> <MathText text={String(text)} />
               </div>
             ))}
           </div>

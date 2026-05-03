@@ -139,4 +139,29 @@ export const questionService = {
       method: 'DELETE',
       headers: getAuthHeaders(),
     }).then(handleResponse<void>),
+
+  enhanceQuestionWithAI: (request: {
+    rawQuestionText: string;
+    questionType: string;
+    correctAnswer: string;
+    rawOptions?: Record<string, string>;
+    parameters?: Record<string, unknown>;
+    answerFormula?: string;
+    difficulty?: string;
+    context?: string;
+  }) =>
+    fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTIONS}/enhance`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(request),
+    }).then(handleResponse<{
+      enhancedQuestionText: string;
+      enhancedOptions: Record<string, string>;
+      correctAnswer: string;
+      explanation: string;
+      solutionSteps: string;
+      enhanced: boolean;
+      valid: boolean;
+      validationErrors: string[];
+    }>),
 };
