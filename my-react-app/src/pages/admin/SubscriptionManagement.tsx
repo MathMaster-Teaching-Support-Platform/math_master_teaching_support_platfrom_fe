@@ -1,7 +1,8 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import React, { useCallback, useEffect, useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { useToast } from '../../context/ToastContext';
 import { mockAdmin } from '../../data/mockData';
 import {
   SubscriptionPlanService,
@@ -17,9 +18,9 @@ import {
 } from '../../services/api/subscription-plan.service';
 import '../../styles/module-refactor.css';
 import '../courses/TeacherCourses.css';
+import './admin-finance-studio.css';
 import './admin-mgmt-shell.css';
 import AdminFinanceStudioShell from './AdminFinanceStudioShell';
-import './admin-finance-studio.css';
 import './SubscriptionManagement.css';
 
 const BILLING_CYCLE_OPTIONS: { label: string; value: BillingCycle }[] = [
@@ -47,6 +48,7 @@ const formatCurrency = (amount: number) =>
 
 const SubscriptionManagement: React.FC = () => {
   const queryClient = useQueryClient();
+  const { showToast } = useToast();
 
   // ── Plans state ─────────────────────────────────────────────────────────────
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
@@ -243,11 +245,13 @@ const SubscriptionManagement: React.FC = () => {
     } catch (err: unknown) {
       const e = err as Error & { code?: number };
       if (e.code === 1156) {
-        alert(
-          'Không thể xóa gói này vì vẫn còn người dùng đang sử dụng.\nHãy vô hiệu hóa gói trước (Chỉnh sửa → Status: INACTIVE), sau khi toàn bộ đăng ký hết hạn mới có thể xóa.'
-        );
+        showToast({
+          type: 'error',
+          message:
+            'Không thể xóa gói này vì vẫn còn người dùng đang sử dụng.\nHãy vô hiệu hóa gói trước (Chỉnh sửa → Status: INACTIVE), sau khi toàn bộ đăng ký hết hạn mới có thể xóa.',
+        });
       } else {
-        alert(e.message || 'Xóa thất bại. Vui lòng thử lại.');
+        showToast({ type: 'error', message: e.message || 'Xóa thất bại. Vui lòng thử lại.' });
       }
     } finally {
       setDeletingPlanId(null);
@@ -294,629 +298,642 @@ const SubscriptionManagement: React.FC = () => {
             </button>
           </header>
 
-        {/* Revenue Stats */}
-        <div className="revenue-stats">
-          <div className="stat-card highlight">
-            <div
-              className="stat-icon"
-              style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
-            >
-              💰
-            </div>
-            <div className="stat-content">
-              <div className="stat-value">
-                {statsLoading
-                  ? '...'
-                  : revenueStats
-                    ? formatCurrency(revenueStats.totalRevenue)
-                    : '—'}
+          {/* Revenue Stats */}
+          <div className="revenue-stats">
+            <div className="stat-card highlight">
+              <div
+                className="stat-icon"
+                style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
+              >
+                💰
               </div>
-              <div className="stat-label">Tổng doanh thu</div>
-              {revenueStats && (
-                <div
-                  className={`stat-trend ${revenueStats.totalRevenueTrend >= 0 ? 'positive' : 'negative'}`}
-                >
-                  {revenueStats.totalRevenueTrend >= 0 ? '+' : ''}
-                  {revenueStats.totalRevenueTrend.toFixed(1)}% so với tháng trước
+              <div className="stat-content">
+                <div className="stat-value">
+                  {statsLoading
+                    ? '...'
+                    : revenueStats
+                      ? formatCurrency(revenueStats.totalRevenue)
+                      : '—'}
                 </div>
-              )}
-            </div>
-          </div>
-          <div className="stat-card">
-            <div
-              className="stat-icon"
-              style={{ background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)' }}
-            >
-              👥
-            </div>
-            <div className="stat-content">
-              <div className="stat-value">
-                {statsLoading ? '...' : revenueStats ? revenueStats.totalPaidUsers : '—'}
+                <div className="stat-label">Tổng doanh thu</div>
+                {revenueStats && (
+                  <div
+                    className={`stat-trend ${revenueStats.totalRevenueTrend >= 0 ? 'positive' : 'negative'}`}
+                  >
+                    {revenueStats.totalRevenueTrend >= 0 ? '+' : ''}
+                    {revenueStats.totalRevenueTrend.toFixed(1)}% so với tháng trước
+                  </div>
+                )}
               </div>
-              <div className="stat-label">Người dùng trả phí</div>
-              {revenueStats && (
-                <div
-                  className={`stat-trend ${revenueStats.totalPaidUsersTrend >= 0 ? 'positive' : 'negative'}`}
-                >
-                  {revenueStats.totalPaidUsersTrend >= 0 ? '+' : ''}
-                  {revenueStats.totalPaidUsersTrend.toFixed(1)}% so với tháng trước
+            </div>
+            <div className="stat-card">
+              <div
+                className="stat-icon"
+                style={{ background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)' }}
+              >
+                👥
+              </div>
+              <div className="stat-content">
+                <div className="stat-value">
+                  {statsLoading ? '...' : revenueStats ? revenueStats.totalPaidUsers : '—'}
                 </div>
-              )}
-            </div>
-          </div>
-          <div className="stat-card">
-            <div
-              className="stat-icon"
-              style={{ background: 'linear-gradient(135deg, #ffd89b 0%, #19547b 100%)' }}
-            >
-              📊
-            </div>
-            <div className="stat-content">
-              <div className="stat-value">
-                {statsLoading
-                  ? '...'
-                  : revenueStats
-                    ? formatCurrency(revenueStats.avgRevenuePerUser)
-                    : '—'}
+                <div className="stat-label">Người dùng trả phí</div>
+                {revenueStats && (
+                  <div
+                    className={`stat-trend ${revenueStats.totalPaidUsersTrend >= 0 ? 'positive' : 'negative'}`}
+                  >
+                    {revenueStats.totalPaidUsersTrend >= 0 ? '+' : ''}
+                    {revenueStats.totalPaidUsersTrend.toFixed(1)}% so với tháng trước
+                  </div>
+                )}
               </div>
-              <div className="stat-label">Doanh thu TB/người</div>
             </div>
-          </div>
-          <div className="stat-card">
-            <div
-              className="stat-icon"
-              style={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' }}
-            >
-              📈
-            </div>
-            <div className="stat-content">
-              <div className="stat-value">
-                {statsLoading
-                  ? '...'
-                  : revenueStats
-                    ? `${revenueStats.conversionRate.toFixed(1)}%`
-                    : '—'}
+            <div className="stat-card">
+              <div
+                className="stat-icon"
+                style={{ background: 'linear-gradient(135deg, #ffd89b 0%, #19547b 100%)' }}
+              >
+                📊
               </div>
-              <div className="stat-label">Tỷ lệ chuyển đổi</div>
+              <div className="stat-content">
+                <div className="stat-value">
+                  {statsLoading
+                    ? '...'
+                    : revenueStats
+                      ? formatCurrency(revenueStats.avgRevenuePerUser)
+                      : '—'}
+                </div>
+                <div className="stat-label">Doanh thu TB/người</div>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div
+                className="stat-icon"
+                style={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' }}
+              >
+                📈
+              </div>
+              <div className="stat-content">
+                <div className="stat-value">
+                  {statsLoading
+                    ? '...'
+                    : revenueStats
+                      ? `${revenueStats.conversionRate.toFixed(1)}%`
+                      : '—'}
+                </div>
+                <div className="stat-label">Tỷ lệ chuyển đổi</div>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Subscription Plans */}
-        <div className="plans-section">
-          <h2 className="section-title">Các gói đăng ký</h2>
+          {/* Subscription Plans */}
+          <div className="plans-section">
+            <h2 className="section-title">Các gói đăng ký</h2>
 
-          {plansError && (
-            <div className="error-banner">
-              ⚠️ {plansError} <button onClick={fetchPlans}>Thử lại</button>
+            {plansError && (
+              <div className="error-banner">
+                ⚠️ {plansError} <button onClick={fetchPlans}>Thử lại</button>
+              </div>
+            )}
+
+            {plansLoading ? (
+              <div className="loading-placeholder">Đang tải danh sách gói...</div>
+            ) : plans.length === 0 && !plansError ? (
+              <div className="empty-state">Chưa có gói đăng ký nào. Hãy tạo gói đầu tiên!</div>
+            ) : (
+              <div className="plans-grid">
+                {plans.map((plan) => (
+                  <div key={plan.id} className={`plan-card ${plan.featured ? 'featured' : ''}`}>
+                    {plan.featured && <div className="featured-badge">⭐ Phổ biến nhất</div>}
+
+                    <div className="plan-header">
+                      <h3 className="plan-name">{plan.name}</h3>
+                      <div className="plan-price">
+                        <span className="price-amount">{formatPrice(plan.price)}</span>
+                        {plan.price !== null && (
+                          <span className="price-period">
+                            /{plan.billingCycle === 'YEAR' ? 'năm' : 'tháng'}
+                          </span>
+                        )}
+                      </div>
+                      <p className="plan-description">{plan.description}</p>
+                      <p className="plan-description">Token quota: {plan.tokenQuota}</p>
+                    </div>
+
+                    <div className="plan-features">
+                      <h4 className="features-title">Tính năng:</h4>
+                      <ul className="features-list">
+                        {plan.features.slice(0, 5).map((feature, i) => (
+                          <li key={i}>✅ {feature}</li>
+                        ))}
+                        {plan.features.length > 5 && (
+                          <li className="more-features">
+                            +{plan.features.length - 5} tính năng khác
+                          </li>
+                        )}
+                      </ul>
+                    </div>
+
+                    <div className="plan-actions">
+                      <button className="btn btn-outline" onClick={() => setSelectedPlan(plan)}>
+                        👁️ Chi tiết
+                      </button>
+                      <button className="btn btn-outline" onClick={() => openEditModal(plan)}>
+                        ✏️ Chỉnh sửa
+                      </button>
+                      <button
+                        className="btn btn-outline btn-danger"
+                        onClick={() => handleDeletePlan(plan)}
+                        disabled={deletingPlanId === plan.id}
+                      >
+                        {deletingPlanId === plan.id ? '...' : '🗑️ Xóa'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Recent Subscriptions */}
+          <div className="recent-subscriptions">
+            <h2 className="section-title">Đăng ký gần đây</h2>
+
+            {subsError && (
+              <div className="error-banner">
+                ⚠️ {subsError} <button onClick={() => fetchSubscriptions(subsPage)}>Thử lại</button>
+              </div>
+            )}
+
+            <div className="subscriptions-table-container">
+              <table className="subscriptions-table">
+                <thead>
+                  <tr>
+                    <th>Người dùng</th>
+                    <th>Gói</th>
+                    <th>Ngày đăng ký</th>
+                    <th>Ngày hết hạn</th>
+                    <th>Số tiền</th>
+                    <th>Trạng thái</th>
+                    <th>Hành động</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {subsLoading ? (
+                    <tr>
+                      <td colSpan={7} className="table-loading">
+                        Đang tải...
+                      </td>
+                    </tr>
+                  ) : subscriptions.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="table-empty">
+                        Không có đăng ký nào.
+                      </td>
+                    </tr>
+                  ) : (
+                    subscriptions.map((sub) => (
+                      <tr key={sub.id}>
+                        <td className="user-cell">
+                          <div className="user-avatar">{sub.user.name.charAt(0).toUpperCase()}</div>
+                          <div className="user-info">
+                            <div className="user-name">{sub.user.name}</div>
+                            <div className="user-email">{sub.user.email}</div>
+                          </div>
+                        </td>
+                        <td>
+                          <span className={`plan-badge ${planSlugToBadgeClass(sub.plan.slug)}`}>
+                            {sub.plan.name}
+                          </span>
+                        </td>
+                        <td>{new Date(sub.startDate).toLocaleDateString('vi-VN')}</td>
+                        <td>
+                          {sub.endDate ? new Date(sub.endDate).toLocaleDateString('vi-VN') : '—'}
+                        </td>
+                        <td className="amount-cell">{formatPrice(sub.amount)}</td>
+                        <td>
+                          <span className={`status-badge ${sub.status.toLowerCase()}`}>
+                            {statusLabel(sub.status)}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="action-buttons">
+                            <button
+                              className="action-btn"
+                              title="Tính năng đang phát triển"
+                              disabled
+                            >
+                              🔄
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            {subsTotalPages > 1 && (
+              <div className="pagination">
+                <button
+                  className="btn btn-outline"
+                  disabled={subsPage === 0}
+                  onClick={() => setSubsPage((p) => p - 1)}
+                >
+                  ← Trước
+                </button>
+                <span className="page-info">
+                  Trang {subsPage + 1} / {subsTotalPages}
+                </span>
+                <button
+                  className="btn btn-outline"
+                  disabled={subsPage >= subsTotalPages - 1}
+                  onClick={() => setSubsPage((p) => p + 1)}
+                >
+                  Sau →
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Edit Plan Modal */}
+          {editingPlan && (
+            <div className="modal-overlay" onClick={() => setEditingPlan(null)}>
+              <div className="modal" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                  <h2 className="modal-title">Chỉnh sửa gói: {editingPlan.name}</h2>
+                  <button className="modal-close" onClick={() => setEditingPlan(null)}>
+                    ✕
+                  </button>
+                </div>
+
+                <div className="modal-body">
+                  {editError && <div className="form-error">⚠️ {editError}</div>}
+
+                  <div className="form-group">
+                    <label>Tên gói *</label>
+                    <input
+                      type="text"
+                      value={editForm.name ?? ''}
+                      onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Mô tả</label>
+                    <textarea
+                      rows={3}
+                      value={editForm.description ?? ''}
+                      onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))}
+                    />
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Giá (VNĐ)</label>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <input
+                          type="number"
+                          disabled={editPriceIsContact}
+                          value={editPriceIsContact ? '' : (editForm.price ?? 0)}
+                          onChange={(e) =>
+                            setEditForm((f) => ({ ...f, price: Number(e.target.value) }))
+                          }
+                        />
+                        <label style={{ whiteSpace: 'nowrap', fontWeight: 'normal' }}>
+                          <input
+                            type="checkbox"
+                            checked={editPriceIsContact}
+                            onChange={(e) => setEditPriceIsContact(e.target.checked)}
+                            style={{ marginRight: '4px' }}
+                          />
+                          Liên hệ
+                        </label>
+                      </div>
+                    </div>
+                    <div className="form-group">
+                      <label>Thời hạn</label>
+                      <select
+                        value={editForm.billingCycle ?? 'MONTH'}
+                        onChange={(e) =>
+                          setEditForm((f) => ({
+                            ...f,
+                            billingCycle: e.target.value as BillingCycle,
+                          }))
+                        }
+                      >
+                        {BILLING_CYCLE_OPTIONS.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label>Token quota</label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={editForm.tokenQuota ?? 0}
+                        onChange={(e) =>
+                          setEditForm((f) => ({
+                            ...f,
+                            tokenQuota: Math.max(0, Number(e.target.value || 0)),
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Trạng thái</label>
+                    <select
+                      value={editForm.status ?? 'ACTIVE'}
+                      onChange={(e) =>
+                        setEditForm((f) => ({ ...f, status: e.target.value as PlanStatus }))
+                      }
+                    >
+                      <option value="ACTIVE">✅ ACTIVE — Đang hoạt động</option>
+                      <option value="INACTIVE">⏸️ INACTIVE — Vô hiệu hóa</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Tính năng (mỗi tính năng 1 dòng) *</label>
+                    <textarea
+                      rows={6}
+                      value={editFeaturesText}
+                      onChange={(e) => setEditFeaturesText(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={editForm.featured ?? false}
+                        onChange={(e) => setEditForm((f) => ({ ...f, featured: e.target.checked }))}
+                      />
+                      <span>Đặt làm gói nổi bật</span>
+                    </label>
+                    <label className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={editForm.isPublic ?? true}
+                        onChange={(e) => setEditForm((f) => ({ ...f, isPublic: e.target.checked }))}
+                      />
+                      <span>Hiển thị trên trang chính</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="modal-footer">
+                  <button
+                    className="btn btn-outline"
+                    onClick={() => setEditingPlan(null)}
+                    disabled={editLoading}
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    className="btn btn-primary"
+                    onClick={handleEditSubmit}
+                    disabled={editLoading}
+                  >
+                    {editLoading ? '⏳ Đang lưu...' : '💾 Lưu thay đổi'}
+                  </button>
+                </div>
+              </div>
             </div>
           )}
 
-          {plansLoading ? (
-            <div className="loading-placeholder">Đang tải danh sách gói...</div>
-          ) : plans.length === 0 && !plansError ? (
-            <div className="empty-state">Chưa có gói đăng ký nào. Hãy tạo gói đầu tiên!</div>
-          ) : (
-            <div className="plans-grid">
-              {plans.map((plan) => (
-                <div key={plan.id} className={`plan-card ${plan.featured ? 'featured' : ''}`}>
-                  {plan.featured && <div className="featured-badge">⭐ Phổ biến nhất</div>}
+          {/* Create Plan Modal */}
+          {showCreateModal && (
+            <div
+              className="modal-overlay"
+              onClick={() => {
+                setShowCreateModal(false);
+                setCreateError(null);
+              }}
+            >
+              <div className="modal" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                  <h2 className="modal-title">Tạo gói đăng ký mới</h2>
+                  <button
+                    className="modal-close"
+                    onClick={() => {
+                      setShowCreateModal(false);
+                      setCreateError(null);
+                    }}
+                  >
+                    ✕
+                  </button>
+                </div>
 
-                  <div className="plan-header">
-                    <h3 className="plan-name">{plan.name}</h3>
-                    <div className="plan-price">
-                      <span className="price-amount">{formatPrice(plan.price)}</span>
-                      {plan.price !== null && (
+                <div className="modal-body">
+                  {createError && <div className="form-error">⚠️ {createError}</div>}
+
+                  <div className="form-group">
+                    <label>Tên gói *</label>
+                    <input
+                      type="text"
+                      placeholder="Ví dụ: Premium"
+                      value={createForm.name}
+                      onChange={(e) => setCreateForm((f) => ({ ...f, name: e.target.value }))}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Mô tả</label>
+                    <textarea
+                      rows={3}
+                      placeholder="Mô tả ngắn về gói đăng ký"
+                      value={createForm.description ?? ''}
+                      onChange={(e) =>
+                        setCreateForm((f) => ({ ...f, description: e.target.value }))
+                      }
+                    />
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Giá (VNĐ) *</label>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <input
+                          type="number"
+                          placeholder="0"
+                          disabled={priceIsContact}
+                          value={priceIsContact ? '' : (createForm.price ?? 0)}
+                          onChange={(e) =>
+                            setCreateForm((f) => ({ ...f, price: Number(e.target.value) }))
+                          }
+                        />
+                        <label style={{ whiteSpace: 'nowrap', fontWeight: 'normal' }}>
+                          <input
+                            type="checkbox"
+                            checked={priceIsContact}
+                            onChange={(e) => setPriceIsContact(e.target.checked)}
+                            style={{ marginRight: '4px' }}
+                          />
+                          Liên hệ
+                        </label>
+                      </div>
+                    </div>
+                    <div className="form-group">
+                      <label>Thời hạn *</label>
+                      <select
+                        value={createForm.billingCycle}
+                        onChange={(e) =>
+                          setCreateForm((f) => ({
+                            ...f,
+                            billingCycle: e.target.value as BillingCycle,
+                          }))
+                        }
+                      >
+                        {BILLING_CYCLE_OPTIONS.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label>Token quota *</label>
+                      <input
+                        type="number"
+                        min={0}
+                        placeholder="0"
+                        value={createForm.tokenQuota}
+                        onChange={(e) =>
+                          setCreateForm((f) => ({
+                            ...f,
+                            tokenQuota: Math.max(0, Number(e.target.value || 0)),
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Tính năng (mỗi tính năng 1 dòng) *</label>
+                    <textarea
+                      rows={6}
+                      placeholder="Nhập các tính năng, mỗi dòng 1 tính năng&#10;Ví dụ:&#10;Tạo không giới hạn Giáo Trình&#10;AI trợ giảng 24/7&#10;Thống kê chi tiết"
+                      value={featuresText}
+                      onChange={(e) => setFeaturesText(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={createForm.featured ?? false}
+                        onChange={(e) =>
+                          setCreateForm((f) => ({ ...f, featured: e.target.checked }))
+                        }
+                      />
+                      <span>Đặt làm gói nổi bật</span>
+                    </label>
+                    <label className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={createForm.isPublic ?? true}
+                        onChange={(e) =>
+                          setCreateForm((f) => ({ ...f, isPublic: e.target.checked }))
+                        }
+                      />
+                      <span>Hiển thị trên trang chính</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="modal-footer">
+                  <button
+                    className="btn btn-outline"
+                    onClick={() => {
+                      setShowCreateModal(false);
+                      setCreateError(null);
+                    }}
+                    disabled={createLoading}
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    className="btn btn-primary"
+                    onClick={handleCreateSubmit}
+                    disabled={createLoading}
+                  >
+                    {createLoading ? '⏳ Đang tạo...' : '✅ Tạo gói'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Plan Detail Modal */}
+          {selectedPlan && (
+            <div className="modal-overlay" onClick={() => setSelectedPlan(null)}>
+              <div className="modal large" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                  <h2 className="modal-title">Chi tiết gói: {selectedPlan.name}</h2>
+                  <button className="modal-close" onClick={() => setSelectedPlan(null)}>
+                    ✕
+                  </button>
+                </div>
+
+                <div className="modal-body">
+                  <div className="plan-detail-header">
+                    <div className="detail-price">
+                      <span className="price-amount">{formatPrice(selectedPlan.price)}</span>
+                      {selectedPlan.price !== null && (
                         <span className="price-period">
-                          /{plan.billingCycle === 'YEAR' ? 'năm' : 'tháng'}
+                          /{selectedPlan.billingCycle === 'YEAR' ? 'năm' : 'tháng'}
                         </span>
                       )}
                     </div>
-                    <p className="plan-description">{plan.description}</p>
-                    <p className="plan-description">Token quota: {plan.tokenQuota}</p>
+                    <p>{selectedPlan.description}</p>
+                    <div style={{ marginTop: '8px', fontSize: '0.85rem', color: '#888' }}>
+                      Slug: <code>{selectedPlan.slug}</code> &nbsp;|&nbsp; Trạng thái:{' '}
+                      <strong>{selectedPlan.status}</strong> &nbsp;|&nbsp;
+                      {selectedPlan.featured ? '⭐ Gói nổi bật' : 'Gói thường'} &nbsp;|&nbsp; Token
+                      quota: <strong>{selectedPlan.tokenQuota}</strong>
+                    </div>
                   </div>
 
-                  <div className="plan-features">
-                    <h4 className="features-title">Tính năng:</h4>
-                    <ul className="features-list">
-                      {plan.features.slice(0, 5).map((feature, i) => (
+                  <div className="plan-features-full">
+                    <h4>Danh sách tính năng đầy đủ:</h4>
+                    <ul>
+                      {selectedPlan.features.map((feature, i) => (
                         <li key={i}>✅ {feature}</li>
                       ))}
-                      {plan.features.length > 5 && (
-                        <li className="more-features">
-                          +{plan.features.length - 5} tính năng khác
-                        </li>
-                      )}
                     </ul>
                   </div>
 
-                  <div className="plan-actions">
-                    <button className="btn btn-outline" onClick={() => setSelectedPlan(plan)}>
-                      👁️ Chi tiết
-                    </button>
-                    <button className="btn btn-outline" onClick={() => openEditModal(plan)}>
-                      ✏️ Chỉnh sửa
-                    </button>
-                    <button
-                      className="btn btn-outline btn-danger"
-                      onClick={() => handleDeletePlan(plan)}
-                      disabled={deletingPlanId === plan.id}
-                    >
-                      {deletingPlanId === plan.id ? '...' : '🗑️ Xóa'}
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Recent Subscriptions */}
-        <div className="recent-subscriptions">
-          <h2 className="section-title">Đăng ký gần đây</h2>
-
-          {subsError && (
-            <div className="error-banner">
-              ⚠️ {subsError} <button onClick={() => fetchSubscriptions(subsPage)}>Thử lại</button>
-            </div>
-          )}
-
-          <div className="subscriptions-table-container">
-            <table className="subscriptions-table">
-              <thead>
-                <tr>
-                  <th>Người dùng</th>
-                  <th>Gói</th>
-                  <th>Ngày đăng ký</th>
-                  <th>Ngày hết hạn</th>
-                  <th>Số tiền</th>
-                  <th>Trạng thái</th>
-                  <th>Hành động</th>
-                </tr>
-              </thead>
-              <tbody>
-                {subsLoading ? (
-                  <tr>
-                    <td colSpan={7} className="table-loading">
-                      Đang tải...
-                    </td>
-                  </tr>
-                ) : subscriptions.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="table-empty">
-                      Không có đăng ký nào.
-                    </td>
-                  </tr>
-                ) : (
-                  subscriptions.map((sub) => (
-                    <tr key={sub.id}>
-                      <td className="user-cell">
-                        <div className="user-avatar">{sub.user.name.charAt(0).toUpperCase()}</div>
-                        <div className="user-info">
-                          <div className="user-name">{sub.user.name}</div>
-                          <div className="user-email">{sub.user.email}</div>
-                        </div>
-                      </td>
-                      <td>
-                        <span className={`plan-badge ${planSlugToBadgeClass(sub.plan.slug)}`}>
-                          {sub.plan.name}
-                        </span>
-                      </td>
-                      <td>{new Date(sub.startDate).toLocaleDateString('vi-VN')}</td>
-                      <td>
-                        {sub.endDate ? new Date(sub.endDate).toLocaleDateString('vi-VN') : '—'}
-                      </td>
-                      <td className="amount-cell">{formatPrice(sub.amount)}</td>
-                      <td>
-                        <span className={`status-badge ${sub.status.toLowerCase()}`}>
-                          {statusLabel(sub.status)}
-                        </span>
-                      </td>
-                      <td>
-                        <div className="action-buttons">
-                          <button className="action-btn" title="Tính năng đang phát triển" disabled>
-                            🔄
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          {subsTotalPages > 1 && (
-            <div className="pagination">
-              <button
-                className="btn btn-outline"
-                disabled={subsPage === 0}
-                onClick={() => setSubsPage((p) => p - 1)}
-              >
-                ← Trước
-              </button>
-              <span className="page-info">
-                Trang {subsPage + 1} / {subsTotalPages}
-              </span>
-              <button
-                className="btn btn-outline"
-                disabled={subsPage >= subsTotalPages - 1}
-                onClick={() => setSubsPage((p) => p + 1)}
-              >
-                Sau →
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Edit Plan Modal */}
-        {editingPlan && (
-          <div className="modal-overlay" onClick={() => setEditingPlan(null)}>
-            <div className="modal" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h2 className="modal-title">Chỉnh sửa gói: {editingPlan.name}</h2>
-                <button className="modal-close" onClick={() => setEditingPlan(null)}>
-                  ✕
-                </button>
-              </div>
-
-              <div className="modal-body">
-                {editError && <div className="form-error">⚠️ {editError}</div>}
-
-                <div className="form-group">
-                  <label>Tên gói *</label>
-                  <input
-                    type="text"
-                    value={editForm.name ?? ''}
-                    onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>Mô tả</label>
-                  <textarea
-                    rows={3}
-                    value={editForm.description ?? ''}
-                    onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))}
-                  />
-                </div>
-
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Giá (VNĐ)</label>
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                      <input
-                        type="number"
-                        disabled={editPriceIsContact}
-                        value={editPriceIsContact ? '' : (editForm.price ?? 0)}
-                        onChange={(e) =>
-                          setEditForm((f) => ({ ...f, price: Number(e.target.value) }))
-                        }
-                      />
-                      <label style={{ whiteSpace: 'nowrap', fontWeight: 'normal' }}>
-                        <input
-                          type="checkbox"
-                          checked={editPriceIsContact}
-                          onChange={(e) => setEditPriceIsContact(e.target.checked)}
-                          style={{ marginRight: '4px' }}
-                        />
-                        Liên hệ
-                      </label>
+                  <div className="plan-actions-section">
+                    <h4>Hành động quản lý</h4>
+                    <div className="action-buttons-grid">
+                      <button
+                        className="btn btn-outline btn-danger"
+                        onClick={() => handleDeletePlan(selectedPlan)}
+                        disabled={deletingPlanId === selectedPlan.id}
+                      >
+                        {deletingPlanId === selectedPlan.id ? '⏳ Đang xóa...' : '🗑️ Xóa gói'}
+                      </button>
                     </div>
                   </div>
-                  <div className="form-group">
-                    <label>Thời hạn</label>
-                    <select
-                      value={editForm.billingCycle ?? 'MONTH'}
-                      onChange={(e) =>
-                        setEditForm((f) => ({ ...f, billingCycle: e.target.value as BillingCycle }))
-                      }
-                    >
-                      {BILLING_CYCLE_OPTIONS.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label>Token quota</label>
-                    <input
-                      type="number"
-                      min={0}
-                      value={editForm.tokenQuota ?? 0}
-                      onChange={(e) =>
-                        setEditForm((f) => ({
-                          ...f,
-                          tokenQuota: Math.max(0, Number(e.target.value || 0)),
-                        }))
-                      }
-                    />
-                  </div>
                 </div>
 
-                <div className="form-group">
-                  <label>Trạng thái</label>
-                  <select
-                    value={editForm.status ?? 'ACTIVE'}
-                    onChange={(e) =>
-                      setEditForm((f) => ({ ...f, status: e.target.value as PlanStatus }))
-                    }
-                  >
-                    <option value="ACTIVE">✅ ACTIVE — Đang hoạt động</option>
-                    <option value="INACTIVE">⏸️ INACTIVE — Vô hiệu hóa</option>
-                  </select>
+                <div className="modal-footer">
+                  <button className="btn btn-primary" onClick={() => setSelectedPlan(null)}>
+                    Đóng
+                  </button>
                 </div>
-
-                <div className="form-group">
-                  <label>Tính năng (mỗi tính năng 1 dòng) *</label>
-                  <textarea
-                    rows={6}
-                    value={editFeaturesText}
-                    onChange={(e) => setEditFeaturesText(e.target.value)}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="checkbox-label">
-                    <input
-                      type="checkbox"
-                      checked={editForm.featured ?? false}
-                      onChange={(e) => setEditForm((f) => ({ ...f, featured: e.target.checked }))}
-                    />
-                    <span>Đặt làm gói nổi bật</span>
-                  </label>
-                  <label className="checkbox-label">
-                    <input
-                      type="checkbox"
-                      checked={editForm.isPublic ?? true}
-                      onChange={(e) => setEditForm((f) => ({ ...f, isPublic: e.target.checked }))}
-                    />
-                    <span>Hiển thị trên trang chính</span>
-                  </label>
-                </div>
-              </div>
-
-              <div className="modal-footer">
-                <button
-                  className="btn btn-outline"
-                  onClick={() => setEditingPlan(null)}
-                  disabled={editLoading}
-                >
-                  Hủy
-                </button>
-                <button
-                  className="btn btn-primary"
-                  onClick={handleEditSubmit}
-                  disabled={editLoading}
-                >
-                  {editLoading ? '⏳ Đang lưu...' : '💾 Lưu thay đổi'}
-                </button>
               </div>
             </div>
-          </div>
-        )}
-
-        {/* Create Plan Modal */}
-        {showCreateModal && (
-          <div
-            className="modal-overlay"
-            onClick={() => {
-              setShowCreateModal(false);
-              setCreateError(null);
-            }}
-          >
-            <div className="modal" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h2 className="modal-title">Tạo gói đăng ký mới</h2>
-                <button
-                  className="modal-close"
-                  onClick={() => {
-                    setShowCreateModal(false);
-                    setCreateError(null);
-                  }}
-                >
-                  ✕
-                </button>
-              </div>
-
-              <div className="modal-body">
-                {createError && <div className="form-error">⚠️ {createError}</div>}
-
-                <div className="form-group">
-                  <label>Tên gói *</label>
-                  <input
-                    type="text"
-                    placeholder="Ví dụ: Premium"
-                    value={createForm.name}
-                    onChange={(e) => setCreateForm((f) => ({ ...f, name: e.target.value }))}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>Mô tả</label>
-                  <textarea
-                    rows={3}
-                    placeholder="Mô tả ngắn về gói đăng ký"
-                    value={createForm.description ?? ''}
-                    onChange={(e) => setCreateForm((f) => ({ ...f, description: e.target.value }))}
-                  />
-                </div>
-
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Giá (VNĐ) *</label>
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                      <input
-                        type="number"
-                        placeholder="0"
-                        disabled={priceIsContact}
-                        value={priceIsContact ? '' : (createForm.price ?? 0)}
-                        onChange={(e) =>
-                          setCreateForm((f) => ({ ...f, price: Number(e.target.value) }))
-                        }
-                      />
-                      <label style={{ whiteSpace: 'nowrap', fontWeight: 'normal' }}>
-                        <input
-                          type="checkbox"
-                          checked={priceIsContact}
-                          onChange={(e) => setPriceIsContact(e.target.checked)}
-                          style={{ marginRight: '4px' }}
-                        />
-                        Liên hệ
-                      </label>
-                    </div>
-                  </div>
-                  <div className="form-group">
-                    <label>Thời hạn *</label>
-                    <select
-                      value={createForm.billingCycle}
-                      onChange={(e) =>
-                        setCreateForm((f) => ({
-                          ...f,
-                          billingCycle: e.target.value as BillingCycle,
-                        }))
-                      }
-                    >
-                      {BILLING_CYCLE_OPTIONS.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label>Token quota *</label>
-                    <input
-                      type="number"
-                      min={0}
-                      placeholder="0"
-                      value={createForm.tokenQuota}
-                      onChange={(e) =>
-                        setCreateForm((f) => ({
-                          ...f,
-                          tokenQuota: Math.max(0, Number(e.target.value || 0)),
-                        }))
-                      }
-                    />
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label>Tính năng (mỗi tính năng 1 dòng) *</label>
-                  <textarea
-                    rows={6}
-                    placeholder="Nhập các tính năng, mỗi dòng 1 tính năng&#10;Ví dụ:&#10;Tạo không giới hạn Giáo Trình&#10;AI trợ giảng 24/7&#10;Thống kê chi tiết"
-                    value={featuresText}
-                    onChange={(e) => setFeaturesText(e.target.value)}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="checkbox-label">
-                    <input
-                      type="checkbox"
-                      checked={createForm.featured ?? false}
-                      onChange={(e) => setCreateForm((f) => ({ ...f, featured: e.target.checked }))}
-                    />
-                    <span>Đặt làm gói nổi bật</span>
-                  </label>
-                  <label className="checkbox-label">
-                    <input
-                      type="checkbox"
-                      checked={createForm.isPublic ?? true}
-                      onChange={(e) => setCreateForm((f) => ({ ...f, isPublic: e.target.checked }))}
-                    />
-                    <span>Hiển thị trên trang chính</span>
-                  </label>
-                </div>
-              </div>
-
-              <div className="modal-footer">
-                <button
-                  className="btn btn-outline"
-                  onClick={() => {
-                    setShowCreateModal(false);
-                    setCreateError(null);
-                  }}
-                  disabled={createLoading}
-                >
-                  Hủy
-                </button>
-                <button
-                  className="btn btn-primary"
-                  onClick={handleCreateSubmit}
-                  disabled={createLoading}
-                >
-                  {createLoading ? '⏳ Đang tạo...' : '✅ Tạo gói'}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Plan Detail Modal */}
-        {selectedPlan && (
-          <div className="modal-overlay" onClick={() => setSelectedPlan(null)}>
-            <div className="modal large" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h2 className="modal-title">Chi tiết gói: {selectedPlan.name}</h2>
-                <button className="modal-close" onClick={() => setSelectedPlan(null)}>
-                  ✕
-                </button>
-              </div>
-
-              <div className="modal-body">
-                <div className="plan-detail-header">
-                  <div className="detail-price">
-                    <span className="price-amount">{formatPrice(selectedPlan.price)}</span>
-                    {selectedPlan.price !== null && (
-                      <span className="price-period">
-                        /{selectedPlan.billingCycle === 'YEAR' ? 'năm' : 'tháng'}
-                      </span>
-                    )}
-                  </div>
-                  <p>{selectedPlan.description}</p>
-                  <div style={{ marginTop: '8px', fontSize: '0.85rem', color: '#888' }}>
-                    Slug: <code>{selectedPlan.slug}</code> &nbsp;|&nbsp; Trạng thái:{' '}
-                    <strong>{selectedPlan.status}</strong> &nbsp;|&nbsp;
-                    {selectedPlan.featured ? '⭐ Gói nổi bật' : 'Gói thường'} &nbsp;|&nbsp; Token
-                    quota: <strong>{selectedPlan.tokenQuota}</strong>
-                  </div>
-                </div>
-
-                <div className="plan-features-full">
-                  <h4>Danh sách tính năng đầy đủ:</h4>
-                  <ul>
-                    {selectedPlan.features.map((feature, i) => (
-                      <li key={i}>✅ {feature}</li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="plan-actions-section">
-                  <h4>Hành động quản lý</h4>
-                  <div className="action-buttons-grid">
-                    <button
-                      className="btn btn-outline btn-danger"
-                      onClick={() => handleDeletePlan(selectedPlan)}
-                      disabled={deletingPlanId === selectedPlan.id}
-                    >
-                      {deletingPlanId === selectedPlan.id ? '⏳ Đang xóa...' : '🗑️ Xóa gói'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="modal-footer">
-                <button className="btn btn-primary" onClick={() => setSelectedPlan(null)}>
-                  Đóng
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+          )}
         </div>
       </AdminFinanceStudioShell>
     </DashboardLayout>

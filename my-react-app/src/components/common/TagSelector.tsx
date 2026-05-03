@@ -1,4 +1,5 @@
 import { X } from 'lucide-react';
+import { useToast } from '../../context/ToastContext';
 import { QuestionTag, questionTagLabels } from '../../types/questionTemplate';
 
 interface TagSelectorProps {
@@ -14,6 +15,7 @@ export function TagSelector({
   maxTags = 5,
   required = false,
 }: Readonly<TagSelectorProps>) {
+  const { showToast } = useToast();
   const addTag = (tag: QuestionTag) => {
     if (!selectedTags.includes(tag) && selectedTags.length < maxTags) {
       onChange([...selectedTags, tag]);
@@ -105,7 +107,7 @@ export function TagSelector({
           const selectedTag = e.target.value as QuestionTag;
           if (selectedTag) {
             if (selectedTags.length >= maxTags) {
-              alert(`Bạn chỉ có thể chọn tối đa ${maxTags} tags`);
+              showToast({ type: 'warning', message: `Bạn chỉ có thể chọn tối đa ${maxTags} tags` });
             } else {
               addTag(selectedTag);
             }
@@ -114,7 +116,9 @@ export function TagSelector({
         disabled={selectedTags.length >= maxTags}
       >
         <option value="">
-          {selectedTags.length >= maxTags ? `Đã chọn tối đa ${maxTags} tags` : 'Chọn tag để thêm...'}
+          {selectedTags.length >= maxTags
+            ? `Đã chọn tối đa ${maxTags} tags`
+            : 'Chọn tag để thêm...'}
         </option>
 
         <optgroup label="Đại số">
@@ -215,11 +219,7 @@ export function TagSelector({
         </optgroup>
 
         <optgroup label="Tổ hợp">
-          {[
-            QuestionTag.PERMUTATIONS,
-            QuestionTag.COMBINATIONS,
-            QuestionTag.COUNTING_PRINCIPLES,
-          ]
+          {[QuestionTag.PERMUTATIONS, QuestionTag.COMBINATIONS, QuestionTag.COUNTING_PRINCIPLES]
             .filter((tag) => !selectedTags.includes(tag))
             .map((tag) => (
               <option key={tag} value={tag}>

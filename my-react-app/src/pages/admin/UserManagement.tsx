@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { useToast } from '../../context/ToastContext';
 import { mockAdmin } from '../../data/mockData';
 import {
   userManagementService,
@@ -49,6 +50,7 @@ const getHighestRole = (roles: UserRole[]): UserRole =>
 
 const UserManagement: React.FC = () => {
   const queryClient = useQueryClient();
+  const { showToast } = useToast();
   const [filterRole, setFilterRole] = useState<'all' | 'admin' | 'teacher' | 'student'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -151,16 +153,22 @@ const UserManagement: React.FC = () => {
       await queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       await usersQuery.refetch();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Cập nhật trạng thái thất bại');
+      showToast({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Cập nhật trạng thái thất bại',
+      });
     }
   };
 
   const handleResetPassword = async (userId: string) => {
     try {
       await userManagementService.resetPassword(userId);
-      alert('Mật khẩu mới đã được gửi đến email của người dùng');
+      showToast({ type: 'success', message: 'Mật khẩu mới đã được gửi đến email của người dùng' });
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Đặt lại mật khẩu thất bại');
+      showToast({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Đặt lại mật khẩu thất bại',
+      });
     }
   };
 
@@ -172,7 +180,10 @@ const UserManagement: React.FC = () => {
       await queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       await usersQuery.refetch();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Xóa tài khoản thất bại');
+      showToast({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Xóa tài khoản thất bại',
+      });
     }
   };
 
@@ -183,9 +194,12 @@ const UserManagement: React.FC = () => {
       await userManagementService.sendEmail(selectedUser.id, emailForm);
       setShowEmailModal(false);
       setEmailForm({ subject: '', body: '' });
-      alert('Email đã được gửi thành công');
+      showToast({ type: 'success', message: 'Email đã được gửi thành công' });
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Gửi email thất bại');
+      showToast({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Gửi email thất bại',
+      });
     } finally {
       setEmailLoading(false);
     }
@@ -205,7 +219,10 @@ const UserManagement: React.FC = () => {
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Xuất Excel thất bại');
+      showToast({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Xuất Excel thất bại',
+      });
     }
   };
 
