@@ -142,7 +142,7 @@ const AdminAnalytics: React.FC = () => {
                 },
                 { 
                   label: 'Quiz Attempts', 
-                  value: analytics ? analytics.engagementStats.reduce((a, b) => a + b.assessments, 0).toLocaleString('vi-VN') : '0', 
+                  value: analytics ? analytics.engagementStats.reduce((a, b) => a + b.assessmentsCompleted, 0).toLocaleString('vi-VN') : '0', 
                   icon: Trophy, 
                   color: '#f59e0b' 
                 },
@@ -150,7 +150,7 @@ const AdminAnalytics: React.FC = () => {
                   label: 'Completion Rate', 
                   value: analytics ? (() => {
                     const totalE = analytics.engagementStats.reduce((a, b) => a + b.enrollments, 0);
-                    const totalC = analytics.engagementStats.reduce((a, b) => a + b.completions, 0);
+                    const totalC = analytics.engagementStats.reduce((a, b) => a + b.coursesCompleted, 0);
                     return totalE > 0 ? Math.round((totalC / totalE) * 100) + '%' : '0%';
                   })() : '0%', 
                   icon: CheckCircle2, 
