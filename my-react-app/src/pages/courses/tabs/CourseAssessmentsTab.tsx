@@ -462,7 +462,7 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
   };
 
   return (
-    <div className="cat-container">
+    <div className="cat-container assessments-tab">
       {/* Stats */}
       <div className="stats-grid">
         <div className="stat-card stat-blue">

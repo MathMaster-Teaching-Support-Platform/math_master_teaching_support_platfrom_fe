@@ -1,15 +1,23 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
-import { mockStudent } from '../../data/mockData';
 import { UI_TEXT } from '../../constants/uiText';
+import { mockStudent } from '../../data/mockData';
 import './NotificationCenter.css';
 
 import { useNotificationsContext } from '../../context/NotificationContext';
 
 const NotificationCenter: React.FC = () => {
-  const { notifications, unreadCount, markAsRead, markAllAsRead, hasNextPage, isFetchingNextPage, loadMore } = useNotificationsContext();
-  
+  const {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    hasNextPage,
+    isFetchingNextPage,
+    loadMore,
+  } = useNotificationsContext();
+
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
 
@@ -28,7 +36,8 @@ const NotificationCenter: React.FC = () => {
   const stats = {
     total: notifications.length,
     unread: unreadCount,
-    high: notifications.filter((n) => n.metadata && n.metadata.priority === 'high' && !n.read).length,
+    high: notifications.filter((n) => n.metadata && n.metadata.priority === 'high' && !n.read)
+      .length,
   };
 
   const getNotificationIcon = (type: string) => {
@@ -66,10 +75,10 @@ const NotificationCenter: React.FC = () => {
           </div>
           <div className="header-actions">
             <Link to="/notifications/preferences" className="btn btn-outline">
-              ⚙️ Cài đặt
+              Cài đặt
             </Link>
             <button className="btn btn-outline" onClick={markAllAsRead}>
-              ✅ Đánh dấu đã đọc tất cả
+              Đánh dấu đã đọc tất cả
             </button>
           </div>
         </div>
@@ -166,7 +175,7 @@ const NotificationCenter: React.FC = () => {
               {filteredNotifications.map((notif) => (
                 <div
                   key={notif.id}
-                  className={`notification-item ${notif.read ? 'read' : 'unread'} priority-${(notif.metadata && notif.metadata.priority) ? notif.metadata.priority : 'normal'}`}
+                  className={`notification-item ${notif.read ? 'read' : 'unread'} priority-${notif.metadata && notif.metadata.priority ? notif.metadata.priority : 'normal'}`}
                   onClick={() => markAsRead(notif.id)}
                 >
                   {!notif.read && <div className="unread-indicator"></div>}
@@ -180,7 +189,9 @@ const NotificationCenter: React.FC = () => {
                     </div>
                     <p className="notification-message">{notif.content}</p>
                     <div className="notification-footer">
-                      <span className="notification-time">⏱️ {new Date(notif.createdAt).toLocaleString()}</span>
+                      <span className="notification-time">
+                        ⏱️ {new Date(notif.createdAt).toLocaleString()}
+                      </span>
                       <span className={`notification-type type-${notif.type}`}>
                         {normalizeType(notif.type) === 'assignment'
                           ? '📝 Bài tập'
@@ -209,11 +220,7 @@ const NotificationCenter: React.FC = () => {
         {/* Load More */}
         {filteredNotifications.length > 0 && hasNextPage && (
           <div className="load-more-container">
-            <button 
-              className="btn btn-outline" 
-              onClick={loadMore}
-              disabled={isFetchingNextPage}
-            >
+            <button className="btn btn-outline" onClick={loadMore} disabled={isFetchingNextPage}>
               {isFetchingNextPage ? 'Đang tải...' : 'Xem thêm thông báo'}
             </button>
           </div>

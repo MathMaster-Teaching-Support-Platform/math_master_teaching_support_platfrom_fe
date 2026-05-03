@@ -578,7 +578,7 @@ export function TemplateFormModal({
               {/* ✅ NEW: Grade→Subject→Chapter Cascade Selector */}
               <label>
                 <p className="muted" style={{ marginBottom: 6 }}>
-                  Khối lớp
+                  Lớp
                 </p>
                 <select
                   className="select"

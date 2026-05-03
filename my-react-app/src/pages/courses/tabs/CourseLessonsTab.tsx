@@ -1,5 +1,4 @@
 import type { DragEndEvent } from '@dnd-kit/core';
-import { useQuery } from '@tanstack/react-query';
 import { closestCenter, DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import {
   arrayMove,
@@ -8,6 +7,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useQuery } from '@tanstack/react-query';
 import {
   BookOpen,
   ChevronDown,
@@ -25,6 +25,7 @@ import {
   X,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { UI_TEXT } from '../../../constants/uiText';
 import { useToast } from '../../../context/ToastContext';
 import {
   useAddMaterial,
@@ -38,18 +39,17 @@ import {
   useUpdateCourseLesson,
   useUpdateSection,
 } from '../../../hooks/useCourses';
+import { AuthService } from '../../../services/api/auth.service';
 import { CourseService } from '../../../services/api/course.service';
 import { LessonSlideService } from '../../../services/api/lesson-slide.service';
 import { VideoUploadService } from '../../../services/api/videoUpload.service';
-import { AuthService } from '../../../services/api/auth.service';
 import '../../../styles/module-refactor.css';
+import type { CourseLessonResponse, CourseResponse } from '../../../types';
+import type { ChapterBySubject, LessonByChapter } from '../../../types/lessonSlide.types';
+import { extractChapterNumber, sortCurriculumGroups } from '../../../utils/curriculum';
 import '../StudentCourses.css';
 import './course-detail-tabs.css';
 import './CourseLessonsTab.css';
-import { extractChapterNumber, sortCurriculumGroups } from '../../../utils/curriculum';
-import type { CourseLessonResponse, CourseResponse } from '../../../types';
-import type { ChapterBySubject, LessonByChapter } from '../../../types/lessonSlide.types';
-import { UI_TEXT } from '../../../constants/uiText';
 
 type LessonMaterial = {
   id?: string;
@@ -160,7 +160,7 @@ const InlinePlayer: React.FC<{
           />
         )}
       </div>
-      <div style={{ padding: '1rem', background: '#fff', borderBottom: '1px solid #e2e8f0' }}>
+      <div style={{ padding: '1rem', background: '#faf9f5', borderBottom: '1px solid #f0eee6' }}>
         <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--mod-ink)' }}>
           {title}
         </h3>
@@ -211,12 +211,7 @@ function CltConfirmDeleteModal({
           <div>
             <h3 id="clt-confirm-title">{title}</h3>
           </div>
-          <button
-            type="button"
-            className="clt-icon-btn"
-            onClick={onClose}
-            disabled={isPending}
-          >
+          <button type="button" className="clt-icon-btn" onClick={onClose} disabled={isPending}>
             <X size={18} aria-hidden />
           </button>
         </div>
@@ -285,12 +280,7 @@ function CltTextSectionModal({
             <h3 id="clt-text-section-title">{title}</h3>
             {description ? <p>{description}</p> : null}
           </div>
-          <button
-            type="button"
-            className="clt-icon-btn"
-            onClick={onClose}
-            disabled={isPending}
-          >
+          <button type="button" className="clt-icon-btn" onClick={onClose} disabled={isPending}>
             <X size={18} aria-hidden />
           </button>
         </div>
@@ -508,8 +498,13 @@ function UploadVideoModal({
               <div className="clt-provider-banner ministry">
                 <BookOpen size={20} />
                 <div style={{ flex: 1 }}>
-                  <h4 style={{ margin: '0 0 0.2rem', fontSize: '0.9rem', fontWeight: 800 }}>Chương trình của Bộ GD&ĐT</h4>
-                  <p style={{ margin: 0, fontSize: '0.8rem' }}>Chọn <strong>Chương</strong> và <strong>Bài học</strong> có sẵn theo chuẩn của Bộ Giáo Dục.</p>
+                  <h4 style={{ margin: '0 0 0.2rem', fontSize: '0.9rem', fontWeight: 800 }}>
+                    Chương trình của Bộ GD&ĐT
+                  </h4>
+                  <p style={{ margin: 0, fontSize: '0.8rem' }}>
+                    Chọn <strong>Chương</strong> và <strong>Bài học</strong> có sẵn theo chuẩn của
+                    Bộ Giáo Dục.
+                  </p>
                 </div>
               </div>
               <label className="clt-form-field">
@@ -561,8 +556,13 @@ function UploadVideoModal({
               <div className="clt-provider-banner custom">
                 <BookOpen size={20} />
                 <div style={{ flex: 1 }}>
-                  <h4 style={{ margin: '0 0 0.2rem', fontSize: '0.9rem', fontWeight: 800 }}>Chương trình mở rộng</h4>
-                  <p style={{ margin: 0, fontSize: '0.8rem' }}>Tạo <strong>Phần</strong> và nhập tên cho <strong>Bài học tự do</strong> của riêng bạn.</p>
+                  <h4 style={{ margin: '0 0 0.2rem', fontSize: '0.9rem', fontWeight: 800 }}>
+                    Chương trình mở rộng
+                  </h4>
+                  <p style={{ margin: 0, fontSize: '0.8rem' }}>
+                    Tạo <strong>Phần</strong> và nhập tên cho <strong>Bài học tự do</strong> của
+                    riêng bạn.
+                  </p>
                 </div>
               </div>
               <label className="clt-form-field">
@@ -862,8 +862,6 @@ function EditLessonModal({
   );
 }
 
-
-
 function SortableLessonChip({ lesson }: { lesson: CourseLessonResponse }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: lesson.id,
@@ -876,7 +874,13 @@ function SortableLessonChip({ lesson }: { lesson: CourseLessonResponse }) {
   };
 
   return (
-    <div ref={setNodeRef} style={style} className={`clt-list-card ${isDragging ? 'is-dragging' : ''}`} {...attributes} {...listeners}>
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`clt-list-card ${isDragging ? 'is-dragging' : ''}`}
+      {...attributes}
+      {...listeners}
+    >
       <div className="clt-drag-handle">
         <GripVertical size={18} />
       </div>
@@ -885,11 +889,13 @@ function SortableLessonChip({ lesson }: { lesson: CourseLessonResponse }) {
       </span>
       <div className="clt-lesson-info">
         <div className="clt-lesson-title">{lesson.lessonTitle ?? 'Untitled lesson'}</div>
-        <div className="clt-lesson-subtitle">
-          {lesson.videoTitle || 'No video title'}
-        </div>
+        <div className="clt-lesson-subtitle">{lesson.videoTitle || 'No video title'}</div>
       </div>
-      {lesson.isFreePreview && <span className="badge published" style={{ fontSize: '0.7rem' }}>Xem trước</span>}
+      {lesson.isFreePreview && (
+        <span className="badge published" style={{ fontSize: '0.7rem' }}>
+          Xem trước
+        </span>
+      )}
     </div>
   );
 }
@@ -1003,52 +1009,52 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
     return (sectionsData?.result ?? []).sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
   }, [sectionsData]);
 
-    const curriculumHierarchy = useMemo(() => {
-      const groupsMap: Record<
-        string,
-        {
-          id: string;
-          title: string;
-          lessons: CourseLessonResponse[];
-          type: 'SECTION' | 'CHAPTER' | 'OTHER';
-          firstSeenIndex: number;
-          orderIndex?: number;
-        }
-      > = {};
+  const curriculumHierarchy = useMemo(() => {
+    const groupsMap: Record<
+      string,
+      {
+        id: string;
+        title: string;
+        lessons: CourseLessonResponse[];
+        type: 'SECTION' | 'CHAPTER' | 'OTHER';
+        firstSeenIndex: number;
+        orderIndex?: number;
+      }
+    > = {};
 
-      const sectionOrderMap = new Map(
-        sections.map((section, index) => [section.id, section.orderIndex ?? index + 1] as const)
-      );
+    const sectionOrderMap = new Map(
+      sections.map((section, index) => [section.id, section.orderIndex ?? index + 1] as const)
+    );
 
-      lessons.forEach((lesson, index) => {
-        const section = sections.find((s) => s.id === lesson.sectionId);
-        const groupId = lesson.sectionId || lesson.chapterId || 'no-group';
-        const groupTitle =
-          section?.title ||
-          lesson.chapterTitle ||
-          (lesson.sectionId ? 'Mục chưa đặt tên' : lesson.chapterId ? 'Chương chưa đặt tên' : 'Khác');
-        const groupType = lesson.sectionId ? 'SECTION' : lesson.chapterId ? 'CHAPTER' : 'OTHER';
+    lessons.forEach((lesson, index) => {
+      const section = sections.find((s) => s.id === lesson.sectionId);
+      const groupId = lesson.sectionId || lesson.chapterId || 'no-group';
+      const groupTitle =
+        section?.title ||
+        lesson.chapterTitle ||
+        (lesson.sectionId ? 'Mục chưa đặt tên' : lesson.chapterId ? 'Chương chưa đặt tên' : 'Khác');
+      const groupType = lesson.sectionId ? 'SECTION' : lesson.chapterId ? 'CHAPTER' : 'OTHER';
 
-        if (!groupsMap[groupId]) {
-          groupsMap[groupId] = {
-            id: groupId,
-            title: groupTitle,
-            lessons: [],
-            type: groupType,
-            firstSeenIndex: index,
-            orderIndex: groupType === 'SECTION' ? sectionOrderMap.get(groupId) : undefined,
-          };
-        }
-        groupsMap[groupId].lessons.push(lesson);
-      });
+      if (!groupsMap[groupId]) {
+        groupsMap[groupId] = {
+          id: groupId,
+          title: groupTitle,
+          lessons: [],
+          type: groupType,
+          firstSeenIndex: index,
+          orderIndex: groupType === 'SECTION' ? sectionOrderMap.get(groupId) : undefined,
+        };
+      }
+      groupsMap[groupId].lessons.push(lesson);
+    });
 
-      return Object.values(groupsMap)
-        .sort(sortCurriculumGroups)
-        .map((group) => ({
-          ...group,
-          lessons: [...group.lessons].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0)),
-        }));
-    }, [lessons, sections]);
+    return Object.values(groupsMap)
+      .sort(sortCurriculumGroups)
+      .map((group) => ({
+        ...group,
+        lessons: [...group.lessons].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0)),
+      }));
+  }, [lessons, sections]);
 
   const toggleSection = (sId: string) => {
     setCollapsedSections((prev) => ({ ...prev, [sId]: !prev[sId] }));
@@ -1131,7 +1137,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
         <div
           className="section-header"
           onClick={() => toggleSection(group.id)}
-          style={isSidebar ? { padding: '0.65rem 1rem', background: '#f8fafc' } : {}}
+          style={isSidebar ? { padding: '0.65rem 1rem', background: '#1e1e1b' } : {}}
         >
           <div className="section-title-area">
             <ChevronDown
@@ -1212,7 +1218,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
     const materialsList = parseLessonMaterials(lesson.materials);
 
     return (
-      <div key={lesson.id} style={{ marginBottom: isSidebar ? 0 : '0.5rem' }}>
+      <div key={lesson.id} style={{ marginBottom: 0 }}>
         <div
           className={isSidebar ? '' : 'clt-list-card'}
           onClick={() => handleLessonSelect(lesson)}
@@ -1223,16 +1229,16 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                   alignItems: 'center',
                   gap: '0.75rem',
                   padding: '0.65rem 1rem',
-                  background: isPlaying ? '#eff6ff' : '#fff',
+                  background: isPlaying ? '#2a2a27' : '#141413',
                   cursor: 'pointer',
-                  borderLeft: isPlaying ? '4px solid #1f5eff' : '4px solid transparent',
-                  borderBottom: '1px solid #f1f5f9',
+                  borderLeft: isPlaying ? '4px solid #C96442' : '4px solid transparent',
+                  borderBottom: '1px solid #30302e',
                   transition: 'all 0.2s ease',
                 }
               : {
                   cursor: 'pointer',
-                  borderColor: isPlaying ? '#3b82f6' : undefined,
-                  boxShadow: isPlaying ? '0 4px 12px rgba(59, 130, 246, 0.15)' : undefined,
+                  borderColor: isPlaying ? '#C96442' : undefined,
+                  boxShadow: isPlaying ? '0 4px 12px rgba(201, 100, 66, 0.15)' : undefined,
                 }
           }
         >
@@ -1245,8 +1251,8 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              background: isPlaying ? '#3b82f6' : '#f1f5f9',
-              color: isPlaying ? '#fff' : '#64748b',
+              background: isPlaying ? '#C96442' : isSidebar ? '#30302e' : '#e8e6dc',
+              color: isPlaying ? '#fff' : isSidebar ? '#b0aea5' : '#5e5d59',
             }}
           >
             <Play size={16} style={{ marginLeft: 2 }} />
@@ -1255,23 +1261,23 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
           <div className="clt-lesson-info">
             <div
               className="clt-lesson-title"
-              style={{ color: isPlaying ? '#1e40af' : undefined }}
+              style={{ color: isPlaying ? '#C96442' : isSidebar ? '#faf9f5' : undefined }}
               title={lesson.lessonTitle ?? 'Bài học'}
             >
               {lesson.lessonTitle ?? 'Bài học'}
             </div>
             {lesson.videoTitle && lesson.videoTitle !== lesson.lessonTitle && (
-              <div
-                className="clt-lesson-subtitle"
-                title={lesson.videoTitle}
-              >
+              <div className="clt-lesson-subtitle" title={lesson.videoTitle}>
                 {lesson.videoTitle}
               </div>
             )}
             {!isSidebar && (
               <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 6 }}>
                 {lesson.durationSeconds && (
-                  <span className="clt-muted" style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <span
+                    className="clt-muted"
+                    style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: 4 }}
+                  >
                     <Clock size={12} />
                     {Math.floor(lesson.durationSeconds / 60)} phút
                   </span>
@@ -1285,7 +1291,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                       display: 'flex',
                       alignItems: 'center',
                       gap: 4,
-                      cursor: 'pointer'
+                      cursor: 'pointer',
                     }}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -1515,7 +1521,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
             {/* Resources Tab below video */}
             <div className="data-card" style={{ padding: '1.25rem' }}>
               <h4 style={{ margin: '0 0 1rem', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Paperclip size={18} color="#1f5eff" /> Tài liệu bài học
+                <Paperclip size={18} color="#C96442" /> Tài liệu bài học
               </h4>
               {lessons.find((l) => l.id === playingLessonId)?.materials ? (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
@@ -1561,9 +1567,11 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
           {/* Sidebar Curriculum */}
           <div className="data-card player-sidebar">
             <div
-              style={{ padding: '1rem', borderBottom: '1px solid #e2e8f0', background: '#f8fbff' }}
+              style={{ padding: '1rem', borderBottom: '1px solid #30302e', background: '#141413' }}
             >
-              <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 800 }}>Nội dung khóa học</h4>
+              <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 800, color: '#faf9f5' }}>
+                Nội dung khóa học
+              </h4>
             </div>
             <div style={{ maxHeight: 'calc(100vh - 300px)', overflowY: 'auto' }}>
               {renderCurriculum(true)}
@@ -1674,8 +1682,6 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                   <Layout size={13} style={{ marginRight: 4 }} /> Phân cấp
                 </div>
               </div>
-
-
 
               {renderCurriculum()}
             </div>

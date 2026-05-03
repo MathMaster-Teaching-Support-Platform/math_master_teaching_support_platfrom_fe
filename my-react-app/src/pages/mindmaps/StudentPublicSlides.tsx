@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query';
 import {
   BookMarked,
   BookOpen,
@@ -12,7 +13,6 @@ import {
   Search,
   X,
 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
@@ -94,7 +94,8 @@ export default function StudentPublicSlides() {
   const [slideDirection, setSlideDirection] = useState<SortDirection>(() =>
     getQueryDirection(searchParams.get('slideDir'))
   );
-  const [slidesResult, setSlidesResult] = useState<PageResult<LessonSlideGeneratedFile>>(emptySlidePage());
+  const [slidesResult, setSlidesResult] =
+    useState<PageResult<LessonSlideGeneratedFile>>(emptySlidePage());
   const [downloadingSlideId, setDownloadingSlideId] = useState('');
   const [previewSlideId, setPreviewSlideId] = useState('');
   const [previewSlidePdfUrl, setPreviewSlidePdfUrl] = useState('');
@@ -129,7 +130,14 @@ export default function StudentPublicSlides() {
   const slidesQuery = useQuery({
     queryKey: [
       'public-slides',
-      { lessonId, keyword: slideKeywordDebounced, page: slidePage, size: slideSize, sortBy: slideSortBy, direction: slideDirection },
+      {
+        lessonId,
+        keyword: slideKeywordDebounced,
+        page: slidePage,
+        size: slideSize,
+        sortBy: slideSortBy,
+        direction: slideDirection,
+      },
     ],
     queryFn: () =>
       LessonSlideService.getAllPublicGeneratedFiles({
@@ -148,7 +156,10 @@ export default function StudentPublicSlides() {
   const chapters: ChapterBySubject[] = chaptersQuery.data?.result ?? [];
   const lessons: LessonByChapter[] = lessonsQuery.data?.result ?? [];
   const loadingCatalog =
-    gradesQuery.isFetching || subjectsQuery.isFetching || chaptersQuery.isFetching || lessonsQuery.isFetching;
+    gradesQuery.isFetching ||
+    subjectsQuery.isFetching ||
+    chaptersQuery.isFetching ||
+    lessonsQuery.isFetching;
   const loadingSlides = slidesQuery.isLoading || slidesQuery.isFetching;
 
   const selectedLesson = useMemo(
@@ -223,11 +234,16 @@ export default function StudentPublicSlides() {
 
   useEffect(() => {
     if (slidesQuery.data?.result) {
-      const normalizedContent = (slidesQuery.data.result.content || []).filter((slide) => slide.isPublic);
+      const normalizedContent = (slidesQuery.data.result.content || []).filter(
+        (slide) => slide.isPublic
+      );
       setSlidesResult({
         ...slidesQuery.data.result,
         content: normalizedContent,
-        totalElements: Math.max(slidesQuery.data.result.totalElements ?? 0, normalizedContent.length),
+        totalElements: Math.max(
+          slidesQuery.data.result.totalElements ?? 0,
+          normalizedContent.length
+        ),
       });
     }
   }, [slidesQuery.data]);
@@ -311,7 +327,9 @@ export default function StudentPublicSlides() {
           {/* ── Header ── */}
           <header className="page-header">
             <div className="header-stack">
-              <div className="header-kicker font-[Be_Vietnam_Pro] text-[#87867F]">Student Public Slides</div>
+              <div className="header-kicker font-[Be_Vietnam_Pro] text-[#87867F]">
+                Student Public Slides
+              </div>
               <div className="row" style={{ gap: '0.6rem' }}>
                 <h2
                   className="font-medium text-[#141413]"
@@ -319,9 +337,15 @@ export default function StudentPublicSlides() {
                 >
                   Thư viện slide công khai
                 </h2>
-                {!loadingSlides && <span className="count-chip font-[Be_Vietnam_Pro]">{slidesResult.totalElements}</span>}
+                {!loadingSlides && (
+                  <span className="count-chip font-[Be_Vietnam_Pro]">
+                    {slidesResult.totalElements}
+                  </span>
+                )}
               </div>
-              <p className="header-sub font-[Be_Vietnam_Pro] text-[#5E5D59]">Tìm kiếm và tải slide bài giảng công khai</p>
+              <p className="header-sub font-[Be_Vietnam_Pro] text-[#5E5D59]">
+                Tìm kiếm và tải slide bài giảng công khai
+              </p>
             </div>
           </header>
 
@@ -335,7 +359,7 @@ export default function StudentPublicSlides() {
               <div className="sps-filter-field">
                 <span className="sps-filter-label font-[Be_Vietnam_Pro]">
                   <GraduationCap size={12} />
-                  Khối lớp
+                  Lớp
                 </span>
                 <select
                   className="sps-select font-[Be_Vietnam_Pro] bg-[#FAF9F5] shadow-[0px_0px_0px_1px_#D1CFC5] transition-all duration-150 hover:shadow-[0px_0px_0px_1px_#C2C0B6] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:ring-offset-2"
@@ -667,8 +691,7 @@ export default function StudentPublicSlides() {
                         ))}
                       </div>
                       <div className="ai-slide-iframe-skeleton__hint">
-                        <span className="ai-slide-iframe-skeleton__ring" />
-                        {' '}Đang tải slide...
+                        <span className="ai-slide-iframe-skeleton__ring" /> Đang tải slide...
                       </div>
                     </div>
                   )}

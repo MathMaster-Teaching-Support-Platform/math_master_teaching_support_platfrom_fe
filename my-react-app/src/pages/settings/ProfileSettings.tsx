@@ -1,3 +1,4 @@
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   AlertCircle,
   Calendar,
@@ -18,7 +19,6 @@ import {
   User,
   X,
 } from 'lucide-react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { AuthService } from '../../services/api/auth.service';
@@ -328,7 +328,8 @@ const ProfileSettings: React.FC = () => {
     // Validate email
     const email = accountForm.email.trim();
     if (!email) accountErrs.email = 'Email không được để trống';
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) accountErrs.email = 'Địa chỉ email không hợp lệ!';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+      accountErrs.email = 'Địa chỉ email không hợp lệ!';
     else if (email.length > 50) accountErrs.email = 'Email không được vượt quá 50 ký tự';
 
     // Validate phone
@@ -348,10 +349,13 @@ const ProfileSettings: React.FC = () => {
         fullName: profileForm.fullName.trim(),
         email: accountForm.email.trim(),
         phoneNumber: accountForm.phoneNumber.trim() || undefined,
-        gender: profileForm.gender ? (profileForm.gender as 'MALE' | 'FEMALE' | 'OTHER') : undefined,
+        gender: profileForm.gender
+          ? (profileForm.gender as 'MALE' | 'FEMALE' | 'OTHER')
+          : undefined,
         avatar: profileForm.avatar.trim() || undefined,
         dob: profileForm.dob || undefined,
-        schoolGradeIds: profileForm.schoolGradeIds.length > 0 ? profileForm.schoolGradeIds : undefined,
+        schoolGradeIds:
+          profileForm.schoolGradeIds.length > 0 ? profileForm.schoolGradeIds : undefined,
       };
       console.log('Sending update payload:', payload);
       const updated = await UserService.updateMyInfo(payload);
@@ -761,7 +765,7 @@ const ProfileSettings: React.FC = () => {
                         {/* School Grade Selection */}
                         <div className="ps-field">
                           <label className="ps-field__label" htmlFor="schoolGrades">
-                            Khối lớp
+                            Lớp
                             {userData?.roles.includes('STUDENT') && (
                               <span className="ps-field__required" aria-hidden="true">
                                 *
@@ -785,7 +789,10 @@ const ProfileSettings: React.FC = () => {
 
                                 // For students, only allow 1 selection
                                 if (isStudent && selectedIds.length > 1) {
-                                  setProfileForm((f) => ({ ...f, schoolGradeIds: [selectedIds[selectedIds.length - 1]] }));
+                                  setProfileForm((f) => ({
+                                    ...f,
+                                    schoolGradeIds: [selectedIds[selectedIds.length - 1]],
+                                  }));
                                 } else {
                                   setProfileForm((f) => ({ ...f, schoolGradeIds: selectedIds }));
                                 }

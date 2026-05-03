@@ -1,6 +1,6 @@
 import { X } from 'lucide-react';
-import { UI_TEXT } from '../../constants/uiText';
 import { useEffect, useState } from 'react';
+import { UI_TEXT } from '../../constants/uiText';
 import { useGetExamMatrixById, useGetMyExamMatrices } from '../../hooks/useExamMatrix';
 import type {
   AssessmentMode,
@@ -35,7 +35,13 @@ const defaultForm: AssessmentRequest = {
   showScoreImmediately: true,
 };
 
-export default function AssessmentModal({ isOpen, mode, initialData, onClose, onSubmit }: Readonly<Props>) {
+export default function AssessmentModal({
+  isOpen,
+  mode,
+  initialData,
+  onClose,
+  onSubmit,
+}: Readonly<Props>) {
   const [formData, setFormData] = useState<AssessmentRequest>(defaultForm);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -112,9 +118,13 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
       <div className="modal-card">
         <div className="modal-header">
           <div>
-            <h3>{mode === 'create' ? `Tạo ${UI_TEXT.QUIZ.toLowerCase()}` : `Chỉnh sửa ${UI_TEXT.QUIZ.toLowerCase()}`}</h3>
+            <h3>
+              {mode === 'create'
+                ? `Tạo ${UI_TEXT.QUIZ.toLowerCase()}`
+                : `Chỉnh sửa ${UI_TEXT.QUIZ.toLowerCase()}`}
+            </h3>
             <p className="muted" style={{ marginTop: 4 }}>
-              {isEditingMatrixAssessment 
+              {isEditingMatrixAssessment
                 ? `${UI_TEXT.QUIZ} này được tạo từ ma trận đề. Một số trường không thể chỉnh sửa.`
                 : `Cấu hình ${UI_TEXT.QUIZ.toLowerCase()} theo ma trận đề.`}
             </p>
@@ -128,10 +138,11 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
           <div className="modal-body">
             {error && <p style={{ color: '#be123c', fontSize: 13 }}>{error}</p>}
 
-   
             <div className="form-grid">
               <label>
-                <p className="muted" style={{ marginBottom: 6 }}>Tiêu đề</p>
+                <p className="muted" style={{ marginBottom: 6 }}>
+                  Tiêu đề
+                </p>
                 <input
                   className="input"
                   required
@@ -141,7 +152,9 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
               </label>
 
               <label>
-                <p className="muted" style={{ marginBottom: 6 }}>Loại {UI_TEXT.QUIZ.toLowerCase()}</p>
+                <p className="muted" style={{ marginBottom: 6 }}>
+                  Loại {UI_TEXT.QUIZ.toLowerCase()}
+                </p>
                 {isEditingMatrixAssessment ? (
                   <div className="input-readonly">
                     {formData.assessmentType === 'QUIZ' && 'Trắc nghiệm nhanh'}
@@ -153,7 +166,12 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
                   <select
                     className="select"
                     value={formData.assessmentType}
-                    onChange={(event) => setFormData({ ...formData, assessmentType: event.target.value as AssessmentType })}
+                    onChange={(event) =>
+                      setFormData({
+                        ...formData,
+                        assessmentType: event.target.value as AssessmentType,
+                      })
+                    }
                   >
                     <option value="QUIZ">Trắc nghiệm nhanh</option>
                     <option value="TEST">{UI_TEXT.QUIZ}</option>
@@ -164,16 +182,21 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
               </label>
 
               <label>
-                <p className="muted" style={{ marginBottom: 6 }}>Chế độ tạo đề</p>
+                <p className="muted" style={{ marginBottom: 6 }}>
+                  Chế độ tạo đề
+                </p>
                 {isEditingMatrixAssessment ? (
-                  <div className="input-readonly">
-                    Theo ma trận đề
-                  </div>
+                  <div className="input-readonly">Theo ma trận đề</div>
                 ) : (
                   <select
                     className="select"
                     value={formData.assessmentMode}
-                    onChange={(event) => setFormData({ ...formData, assessmentMode: event.target.value as AssessmentMode })}
+                    onChange={(event) =>
+                      setFormData({
+                        ...formData,
+                        assessmentMode: event.target.value as AssessmentMode,
+                      })
+                    }
                   >
                     <option value="DIRECT">Trực tiếp</option>
                     <option value="MATRIX_BASED">Theo ma trận đề</option>
@@ -182,20 +205,28 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
               </label>
 
               <label>
-                <p className="muted" style={{ marginBottom: 6 }}>Ma trận đề</p>
+                <p className="muted" style={{ marginBottom: 6 }}>
+                  Ma trận đề
+                </p>
                 {isEditingMatrixAssessment ? (
                   <div className="input-readonly">
-                    {matrices.find(m => m.id === formData.examMatrixId)?.name || formData.examMatrixId} (APPROVED)
+                    {matrices.find((m) => m.id === formData.examMatrixId)?.name ||
+                      formData.examMatrixId}{' '}
+                    (APPROVED)
                   </div>
                 ) : (
                   <select
                     className="select"
                     value={formData.examMatrixId}
-                    onChange={(event) => setFormData({ ...formData, examMatrixId: event.target.value })}
+                    onChange={(event) =>
+                      setFormData({ ...formData, examMatrixId: event.target.value })
+                    }
                   >
                     <option value="">Chọn ma trận</option>
                     {matrices.map((matrix) => (
-                      <option key={matrix.id} value={matrix.id}>{matrix.name} ({matrix.status})</option>
+                      <option key={matrix.id} value={matrix.id}>
+                        {matrix.name} ({matrix.status})
+                      </option>
                     ))}
                   </select>
                 )}
@@ -203,7 +234,9 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
             </div>
 
             <label>
-              <p className="muted" style={{ marginBottom: 6 }}>Mô tả</p>
+              <p className="muted" style={{ marginBottom: 6 }}>
+                Mô tả
+              </p>
               <textarea
                 className="textarea"
                 rows={2}
@@ -218,61 +251,75 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
                 <p className="muted" style={{ marginBottom: 8, fontWeight: 600 }}>
                   Phạm vi bài học (tự động từ ma trận)
                 </p>
-                
+
                 {/* Subject & Grade Summary Only */}
                 {(() => {
-                  const subjects = [...new Set(initialData.lessons.map(l => l.subjectName).filter(Boolean))];
-                  const grades = [...new Set(initialData.lessons.map(l => l.gradeLevel).filter(Boolean))].sort((a, b) => (a ?? 0) - (b ?? 0));
-                  
+                  const subjects = [
+                    ...new Set(initialData.lessons.map((l) => l.subjectName).filter(Boolean)),
+                  ];
+                  const grades = [
+                    ...new Set(initialData.lessons.map((l) => l.gradeLevel).filter(Boolean)),
+                  ].sort((a, b) => (a ?? 0) - (b ?? 0));
+
                   return (
-                    <div style={{ 
-                      marginBottom: 12, 
-                      padding: '12px 16px', 
-                      background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)', 
-                      borderRadius: 12, 
-                      border: '1px solid #bae6fd',
-                      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-                    }}>
+                    <div
+                      style={{
+                        marginBottom: 12,
+                        padding: '12px 16px',
+                        background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+                        borderRadius: 12,
+                        border: '1px solid #bae6fd',
+                        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                      }}
+                    >
                       <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', fontSize: 14 }}>
                         {subjects.length > 0 && (
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <span style={{ 
-                              fontWeight: 600, 
-                              color: '#0369a1',
-                              fontSize: 14
-                            }}>
+                            <span
+                              style={{
+                                fontWeight: 600,
+                                color: '#0369a1',
+                                fontSize: 14,
+                              }}
+                            >
                               Môn học:
                             </span>
-                            <span style={{ 
-                              color: '#1e40af', 
-                              fontWeight: 500,
-                              padding: '2px 8px',
-                              background: '#dbeafe',
-                              borderRadius: 6,
-                              fontSize: 13
-                            }}>
+                            <span
+                              style={{
+                                color: '#1e40af',
+                                fontWeight: 500,
+                                padding: '2px 8px',
+                                background: '#dbeafe',
+                                borderRadius: 6,
+                                fontSize: 13,
+                              }}
+                            >
                               {subjects.join(', ')}
                             </span>
                           </div>
                         )}
                         {grades.length > 0 && (
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <span style={{ 
-                              fontWeight: 600, 
-                              color: '#0369a1',
-                              fontSize: 14
-                            }}>
-                              Khối lớp:
+                            <span
+                              style={{
+                                fontWeight: 600,
+                                color: '#0369a1',
+                                fontSize: 14,
+                              }}
+                            >
+                              Lớp:
                             </span>
-                            <span style={{ 
-                              color: '#92400e', 
-                              fontWeight: 500,
-                              padding: '2px 8px',
-                              background: '#fef3c7',
-                              borderRadius: 6,
-                              fontSize: 13
-                            }}>
-                              {grades.map(g => `Lớp ${g}`).join(', ')}
+                            <span
+                              style={{
+                                color: '#92400e',
+                                fontWeight: 500,
+                                padding: '2px 8px',
+                                background: '#fef3c7',
+                                borderRadius: 6,
+                                fontSize: 13,
+                              }}
+                            >
+                              {grades.map((g) => `Lớp ${g}`).join(', ')}
                             </span>
                           </div>
                         )}
@@ -280,54 +327,74 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
                     </div>
                   );
                 })()}
-                
+
                 <p className="muted" style={{ marginBottom: 0, fontSize: 13 }}>
-                  Đề này kiểm tra {initialData.lessons.length} bài học được lấy tự động từ ma trận đề.
+                  Đề này kiểm tra {initialData.lessons.length} bài học được lấy tự động từ ma trận
+                  đề.
                 </p>
               </section>
             )}
 
             <div className="form-grid">
               <label>
-                <p className="muted" style={{ marginBottom: 6 }}>Thời gian làm bài (phút)</p>
+                <p className="muted" style={{ marginBottom: 6 }}>
+                  Thời gian làm bài (phút)
+                </p>
                 <input
                   className="input"
                   type="number"
                   min={1}
                   value={formData.timeLimitMinutes || 1}
-                  onChange={(event) => setFormData({ ...formData, timeLimitMinutes: Number(event.target.value) })}
+                  onChange={(event) =>
+                    setFormData({ ...formData, timeLimitMinutes: Number(event.target.value) })
+                  }
                 />
               </label>
 
               <label>
-                <p className="muted" style={{ marginBottom: 6 }}>Điểm đạt (%)</p>
+                <p className="muted" style={{ marginBottom: 6 }}>
+                  Điểm đạt (%)
+                </p>
                 <input
                   className="input"
                   type="number"
                   min={0}
                   max={100}
                   value={formData.passingScore || 0}
-                  onChange={(event) => setFormData({ ...formData, passingScore: Number(event.target.value) })}
+                  onChange={(event) =>
+                    setFormData({ ...formData, passingScore: Number(event.target.value) })
+                  }
                 />
               </label>
 
               <label>
-                <p className="muted" style={{ marginBottom: 6 }}>Số lần làm tối đa</p>
+                <p className="muted" style={{ marginBottom: 6 }}>
+                  Số lần làm tối đa
+                </p>
                 <input
                   className="input"
                   type="number"
                   min={1}
                   value={formData.maxAttempts || 1}
-                  onChange={(event) => setFormData({ ...formData, maxAttempts: Number(event.target.value) })}
+                  onChange={(event) =>
+                    setFormData({ ...formData, maxAttempts: Number(event.target.value) })
+                  }
                 />
               </label>
 
               <label>
-                <p className="muted" style={{ marginBottom: 6 }}>Chính sách chấm điểm</p>
+                <p className="muted" style={{ marginBottom: 6 }}>
+                  Chính sách chấm điểm
+                </p>
                 <select
                   className="select"
                   value={formData.attemptScoringPolicy || 'BEST'}
-                  onChange={(event) => setFormData({ ...formData, attemptScoringPolicy: event.target.value as AttemptScoringPolicy })}
+                  onChange={(event) =>
+                    setFormData({
+                      ...formData,
+                      attemptScoringPolicy: event.target.value as AttemptScoringPolicy,
+                    })
+                  }
                 >
                   <option value="BEST">Lần tốt nhất</option>
                   <option value="LATEST">Lần gần nhất</option>
@@ -341,7 +408,9 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
                 <input
                   type="checkbox"
                   checked={formData.randomizeQuestions || false}
-                  onChange={(event) => setFormData({ ...formData, randomizeQuestions: event.target.checked })}
+                  onChange={(event) =>
+                    setFormData({ ...formData, randomizeQuestions: event.target.checked })
+                  }
                 />{' '}
                 Trộn thứ tự câu hỏi
               </label>
@@ -350,7 +419,9 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
                 <input
                   type="checkbox"
                   checked={formData.showCorrectAnswers || false}
-                  onChange={(event) => setFormData({ ...formData, showCorrectAnswers: event.target.checked })}
+                  onChange={(event) =>
+                    setFormData({ ...formData, showCorrectAnswers: event.target.checked })
+                  }
                 />{' '}
                 Hiển thị đáp án đúng
               </label>
@@ -359,7 +430,9 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
                 <input
                   type="checkbox"
                   checked={formData.allowMultipleAttempts || false}
-                  onChange={(event) => setFormData({ ...formData, allowMultipleAttempts: event.target.checked })}
+                  onChange={(event) =>
+                    setFormData({ ...formData, allowMultipleAttempts: event.target.checked })
+                  }
                 />{' '}
                 Cho phép làm nhiều lần
               </label>
@@ -368,7 +441,9 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
                 <input
                   type="checkbox"
                   checked={formData.showScoreImmediately || false}
-                  onChange={(event) => setFormData({ ...formData, showScoreImmediately: event.target.checked })}
+                  onChange={(event) =>
+                    setFormData({ ...formData, showScoreImmediately: event.target.checked })
+                  }
                 />{' '}
                 Hiển thị điểm ngay sau khi nộp
               </label>
@@ -376,7 +451,9 @@ export default function AssessmentModal({ isOpen, mode, initialData, onClose, on
           </div>
 
           <div className="modal-footer">
-            <button type="button" className="btn secondary" onClick={onClose}>Hủy</button>
+            <button type="button" className="btn secondary" onClick={onClose}>
+              Hủy
+            </button>
             <button type="submit" className="btn" disabled={saving}>
               {submitLabel}
             </button>
