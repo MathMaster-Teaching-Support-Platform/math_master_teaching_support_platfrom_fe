@@ -4,25 +4,25 @@ import { useToast } from '../context/ToastContext';
 import { CourseService } from '../services/api/course.service';
 import { WalletService } from '../services/api/wallet.service';
 import { orderService } from '../services/order.service';
-import { extractErrorCode, extractErrorMessage, getErrorMessage } from '../utils/errorCodes';
-import { isCourseAvailableForEnrollment } from '../utils/courseStatus';
-import { getEffectivePrice, validatePricing } from '../utils/pricing';
 import type {
   AddAssessmentToCourseRequest,
+  CourseReviewRequest,
   CreateCourseLessonRequest,
   CreateCourseRequest,
+  CreateCustomCourseSectionRequest,
   GetPublicCoursesParams,
+  InstructorReplyRequest,
   PublishCourseRequest,
   RejectCourseRequest,
+  ReorderLessonsRequest,
   UpdateCourseAssessmentRequest,
   UpdateCourseLessonRequest,
-  ReorderLessonsRequest,
   UpdateCourseRequest,
   UpdateCustomCourseSectionRequest,
-  CreateCustomCourseSectionRequest,
-  CourseReviewRequest,
-  InstructorReplyRequest,
 } from '../types';
+import { isCourseAvailableForEnrollment } from '../utils/courseStatus';
+import { extractErrorCode, extractErrorMessage, getErrorMessage } from '../utils/errorCodes';
+import { getEffectivePrice, validatePricing } from '../utils/pricing';
 
 // ─── Query Keys ───────────────────────────────────────────────────────────────
 export const courseKeys = {
@@ -118,35 +118,26 @@ export function useSubmitCourseForReview() {
 
       // Check if course has lessons
       if (course.lessonsCount === 0) {
-        throw Object.assign(
-          new Error(getErrorMessage(1197)),
-          { code: 1197 }
-        );
+        throw Object.assign(new Error(getErrorMessage(1197)), { code: 1197 });
       }
 
       // Check if already pending
       if (course.status === 'PENDING_REVIEW') {
-        throw Object.assign(
-          new Error(getErrorMessage(1198)),
-          { code: 1198 }
-        );
+        throw Object.assign(new Error(getErrorMessage(1198)), { code: 1198 });
       }
 
       // Check if already published
       if (course.status === 'PUBLISHED') {
-        throw Object.assign(
-          new Error(getErrorMessage(1147)),
-          { code: 1147 }
-        );
+        throw Object.assign(new Error(getErrorMessage(1147)), { code: 1147 });
       }
 
       // Validate pricing
-      const pricingError = validatePricing(course.originalPrice ?? undefined, course.discountedPrice ?? undefined);
+      const pricingError = validatePricing(
+        course.originalPrice ?? undefined,
+        course.discountedPrice ?? undefined
+      );
       if (pricingError) {
-        throw Object.assign(
-          new Error(pricingError),
-          { code: 1199 }
-        );
+        throw Object.assign(new Error(pricingError), { code: 1199 });
       }
 
       return CourseService.submitForReview(courseId);
@@ -154,7 +145,7 @@ export function useSubmitCourseForReview() {
     onSuccess: (_data, courseId) => {
       showToast({
         type: 'success',
-        message: 'Đã gửi khóa học để duyệt. Quản trị viên sẽ xem xét trong thời gian sớm nhất.'
+        message: 'Đã gửi khóa học để duyệt. Quản trị viên sẽ xem xét trong thời gian sớm nhất.',
       });
       qc.invalidateQueries({ queryKey: courseKeys.my() });
       qc.invalidateQueries({ queryKey: courseKeys.detail(courseId) });
@@ -194,7 +185,7 @@ export function useApproveCourseReview() {
     onSuccess: () => {
       showToast({
         type: 'success',
-        message: 'Đã duyệt và xuất bản khóa học thành công.'
+        message: 'Đã duyệt và xuất bản khóa học thành công.',
       });
       qc.invalidateQueries({ queryKey: courseKeys.all });
     },
@@ -220,7 +211,7 @@ export function useRejectCourseReview() {
     onSuccess: () => {
       showToast({
         type: 'success',
-        message: 'Đã từ chối khóa học. Giảng viên sẽ nhận được thông báo.'
+        message: 'Đã từ chối khóa học. Giảng viên sẽ nhận được thông báo.',
       });
       qc.invalidateQueries({ queryKey: courseKeys.all });
     },
@@ -339,12 +330,9 @@ export function useEnroll() {
       const course = courseResp.result;
 
       if (!isCourseAvailableForEnrollment(course)) {
-        const errorCode = course.status === 'PENDING_REVIEW' ? 1030 :
-          course.status === 'REJECTED' ? 1037 : 1030;
-        throw Object.assign(
-          new Error(getErrorMessage(errorCode)),
-          { code: errorCode }
-        );
+        const errorCode =
+          course.status === 'PENDING_REVIEW' ? 1030 : course.status === 'REJECTED' ? 1037 : 1030;
+        throw Object.assign(new Error(getErrorMessage(errorCode)), { code: errorCode });
       }
 
       // Step 2: Check wallet balance for paid courses
@@ -356,10 +344,7 @@ export function useEnroll() {
           const wallet = walletResp.result;
 
           if (wallet.balance < finalPrice) {
-            throw Object.assign(
-              new Error(getErrorMessage(1029)),
-              { code: 1029 }
-            );
+            throw Object.assign(new Error(getErrorMessage(1029)), { code: 1029 });
           }
         } catch (walletError) {
           // If wallet check fails, let the backend handle it
@@ -376,7 +361,7 @@ export function useEnroll() {
         result: confirmedOrder,
         type: 'order',
         // Include enrollmentId directly for convenience if available
-        enrollmentId: confirmedOrder.enrollmentId || null
+        enrollmentId: confirmedOrder.enrollmentId || null,
       };
     },
     onSuccess: () => {
@@ -423,12 +408,13 @@ export function useEnroll() {
 
 export function useDropEnrollment() {
   const qc = useQueryClient();
+  const { showToast } = useToast();
   return useMutation({
     mutationFn: (enrollmentId: string) => CourseService.dropEnrollment(enrollmentId),
     onSuccess: () => qc.invalidateQueries({ queryKey: courseKeys.enrollments() }),
     onError: (err: unknown) => {
       const msg = err instanceof Error ? err.message : 'Hủy đăng ký thất bại';
-      globalThis.alert(msg);
+      showToast({ type: 'error', message: msg });
     },
   });
 }

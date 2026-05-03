@@ -1,3 +1,8 @@
+import type { DragEndEvent } from '@dnd-kit/core';
+import { closestCenter, DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { useQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   AlertCircle,
@@ -15,14 +20,12 @@ import {
 } from 'lucide-react';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
-import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
-import type { DragEndEvent } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { API_BASE_URL } from '../../config/api.config';
 import { mockAdmin } from '../../data/mockData';
+import { useBatchSaveTopics } from '../../hooks/useBatchTopics';
+import { useDebounce } from '../../hooks/useDebounce';
 import {
   useAddRoadmapTopic,
   useAdminRoadmapDetail,
@@ -32,20 +35,17 @@ import {
   useUpdateRoadmap,
   useUpdateRoadmapTopic,
 } from '../../hooks/useRoadmaps';
-import { useBatchSaveTopics } from '../../hooks/useBatchTopics';
+import { AuthService } from '../../services/api/auth.service';
 import { CourseService } from '../../services/api/course.service';
-import { useDebounce } from '../../hooks/useDebounce';
+import '../../styles/module-refactor.css';
 import type {
+  ApiResponse,
   AssessmentResponse,
   CourseResponse,
   PaginatedResponse,
-  ApiResponse,
   TopicStatus,
   UpdateRoadmapTopicRequest,
 } from '../../types';
-import { AuthService } from '../../services/api/auth.service';
-import { API_BASE_URL } from '../../config/api.config';
-import '../../styles/module-refactor.css';
 import '../courses/TeacherCourses.css';
 import './admin-roadmap-topics-page.css';
 
@@ -167,14 +167,7 @@ interface SortablePinProps {
   roadH: number;
 }
 
-function SortablePin({
-  topic,
-  index,
-  isActive,
-  onActivate,
-  pathAnchor,
-  roadH,
-}: SortablePinProps) {
+function SortablePin({ topic, index, isActive, onActivate, pathAnchor, roadH }: SortablePinProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: topic.clientId,
   });
@@ -230,7 +223,13 @@ function SortablePin({
 // ── Main component ────────────────────────────────────────────────
 export default function AdminRoadmapTopicsPage() {
   const { roadmapId = '' } = useParams<{ roadmapId: string }>();
-  const { data: roadmapData, isLoading, isError, error, refetch } = useAdminRoadmapDetail(roadmapId);
+  const {
+    data: roadmapData,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useAdminRoadmapDetail(roadmapId);
   const addMutation = useAddRoadmapTopic();
   const updateMutation = useUpdateRoadmapTopic();
   const archiveMutation = useArchiveRoadmapTopic();
@@ -716,7 +715,6 @@ export default function AdminRoadmapTopicsPage() {
 
       <header className="page-header courses-header-row art-page-header--topics">
         <div className="header-stack" style={{ flex: 1, minWidth: 0 }}>
-          <div className="header-kicker">Admin</div>
           <div className="row" style={{ gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap' }}>
             {!isEditingName ? (
               <>
@@ -779,7 +777,9 @@ export default function AdminRoadmapTopicsPage() {
                   disabled={!editedName.trim() || updateRoadmapMutation.isPending}
                   style={{
                     padding: '8px 12px',
-                    background: updateRoadmapMutation.isPending ? '#9ca3af' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                    background: updateRoadmapMutation.isPending
+                      ? '#9ca3af'
+                      : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                     color: 'white',
                     border: 'none',
                     borderRadius: '6px',

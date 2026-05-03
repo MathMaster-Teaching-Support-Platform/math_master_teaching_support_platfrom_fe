@@ -95,7 +95,6 @@ export default function AdminRoadmapEditPage() {
 
           <header className="page-header courses-header-row">
             <div className="header-stack">
-              <div className="header-kicker">Admin</div>
               <div
                 className="row"
                 style={{ gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap' }}
@@ -241,7 +240,10 @@ export default function AdminRoadmapEditPage() {
                       ))}
 
                       {feedbackRows.length === 0 && (
-                        <div className="empty admin-roadmap-mgmt-empty" style={{ padding: '1.25rem' }}>
+                        <div
+                          className="empty admin-roadmap-mgmt-empty"
+                          style={{ padding: '1.25rem' }}
+                        >
                           <MessageSquareQuote size={32} style={{ opacity: 0.35 }} aria-hidden />
                           <p>Chưa có phản hồi nào cho lộ trình này.</p>
                         </div>

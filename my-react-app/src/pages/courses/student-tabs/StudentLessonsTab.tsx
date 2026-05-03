@@ -1,27 +1,20 @@
 import { useQuery } from '@tanstack/react-query';
-import React, { useState, useMemo, useRef } from 'react';
-import {
-  BookOpen,
-  CheckCircle,
-  Clock,
-  Play,
-  Paperclip,
-  FileText,
-  ChevronDown,
-} from 'lucide-react';
+import { BookOpen, CheckCircle, ChevronDown, Clock, FileText, Paperclip, Play } from 'lucide-react';
+import React, { useMemo, useRef, useState } from 'react';
+import { UI_TEXT } from '../../../constants/uiText';
+import { useToast } from '../../../context/ToastContext';
 import {
   useCourseLessons,
   useCourseProgress,
+  useCustomCourseSections,
   useMarkLessonComplete,
   useUpdateProgress,
-  useCustomCourseSections,
 } from '../../../hooks/useCourses';
 import { CourseService } from '../../../services/api/course.service';
 import { VideoUploadService } from '../../../services/api/videoUpload.service';
 import type { CourseLessonResponse } from '../../../types';
-import './StudentLessonsTab.css';
 import { extractChapterNumber, sortCurriculumGroups } from '../../../utils/curriculum';
-import { UI_TEXT } from '../../../constants/uiText';
+import './StudentLessonsTab.css';
 
 interface StudentLessonsTabProps {
   enrollmentId: string;
@@ -104,7 +97,15 @@ const InlinePlayer: React.FC<{
   const error = videoUrlQuery.error instanceof Error ? videoUrlQuery.error.message : '';
 
   return (
-    <div style={{ background: '#000', borderRadius: '18px', overflow: 'hidden', width: '100%', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}>
+    <div
+      style={{
+        background: '#000',
+        borderRadius: '18px',
+        overflow: 'hidden',
+        width: '100%',
+        boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
+      }}
+    >
       <div
         style={{
           aspectRatio: '16/9',
@@ -137,7 +138,9 @@ const InlinePlayer: React.FC<{
           />
         )}
       </div>
-      <div style={{ padding: '1.25rem 1.5rem', background: '#fff', borderBottom: '1px solid #f0eee6' }}>
+      <div
+        style={{ padding: '1.25rem 1.5rem', background: '#fff', borderBottom: '1px solid #f0eee6' }}
+      >
         <h3 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 800, color: '#141413' }}>
           {title}
         </h3>
@@ -151,6 +154,7 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
   courseId,
   enrollmentStatus,
 }) => {
+  const { showToast } = useToast();
   const { data: lessonsData, isLoading: loadingLessons } = useCourseLessons(courseId);
   const { data: sectionsData } = useCustomCourseSections(courseId);
   const { data: progressData } = useCourseProgress(enrollmentId);
@@ -236,7 +240,10 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
         triggerFileDownload(material.url, fallbackName);
         return;
       }
-      window.alert('Tài liệu hiện chưa sẵn sàng để tải. Vui lòng tải lại trang và thử lại.');
+      showToast({
+        type: 'warning',
+        message: 'Tài liệu hiện chưa sẵn sàng để tải. Vui lòng tải lại trang và thử lại.',
+      });
       return;
     }
 
@@ -251,7 +258,7 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
       setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Không thể tải tài liệu.';
-      window.alert(message);
+      showToast({ type: 'error', message });
     }
   };
 
@@ -291,9 +298,7 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
                   ? `Phần ${idx + 1}`
                   : 'Khác'}
             </span>
-            <span className="slt-section-title">
-              {group.title}
-            </span>
+            <span className="slt-section-title">{group.title}</span>
           </div>
           {!isSidebar && (
             <div className="slt-section-meta">
@@ -317,7 +322,13 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
 
     const materialsList = parseLessonMaterials(lesson.materials);
 
-    const statusClass = isCompleted ? 'completed' : isPlaying ? 'playing' : isInProgress ? 'in-progress' : 'default';
+    const statusClass = isCompleted
+      ? 'completed'
+      : isPlaying
+        ? 'playing'
+        : isInProgress
+          ? 'in-progress'
+          : 'default';
 
     return (
       <div key={lesson.id}>
@@ -326,7 +337,13 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
           onClick={() => handleLessonSelect(lesson)}
         >
           <div className="slt-lesson-icon">
-            {isCompleted ? <CheckCircle size={18} /> : isInProgress && !isPlaying ? <Clock size={18} /> : <Play size={18} />}
+            {isCompleted ? (
+              <CheckCircle size={18} />
+            ) : isInProgress && !isPlaying ? (
+              <Clock size={18} />
+            ) : (
+              <Play size={18} />
+            )}
           </div>
 
           <div className="slt-lesson-content">
@@ -334,11 +351,7 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
               <span className="slt-lesson-title" title={lesson.lessonTitle ?? 'Bài học'}>
                 {lesson.lessonTitle ?? 'Bài học'}
               </span>
-              {isCompleted && (
-                <span className="slt-lesson-badge completed">
-                  Hoàn thành
-                </span>
-              )}
+              {isCompleted && <span className="slt-lesson-badge completed">Hoàn thành</span>}
               {isInProgress && !isCompleted && (
                 <span className="slt-lesson-badge progress">
                   Đang học {Math.round(progressPercent)}%
@@ -405,9 +418,7 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
               >
                 <FileText size={16} style={{ color: '#3b82f6', flexShrink: 0 }} />
                 <span className="slt-material-name">{m.name}</span>
-                <span className="slt-material-size">
-                  ({((m.size || 0) / 1024).toFixed(1)} KB)
-                </span>
+                <span className="slt-material-size">({((m.size || 0) / 1024).toFixed(1)} KB)</span>
               </button>
             ))}
           </div>
@@ -427,9 +438,11 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
               courseId={courseId}
               courseLessonId={playingLessonId}
               title={
-                currentLesson.lessonTitle && currentLesson.videoTitle && currentLesson.lessonTitle !== currentLesson.videoTitle
+                currentLesson.lessonTitle &&
+                currentLesson.videoTitle &&
+                currentLesson.lessonTitle !== currentLesson.videoTitle
                   ? `${currentLesson.lessonTitle} - ${currentLesson.videoTitle}`
-                  : currentLesson.lessonTitle ?? currentLesson.videoTitle ?? 'Bài học'
+                  : (currentLesson.lessonTitle ?? currentLesson.videoTitle ?? 'Bài học')
               }
               initialTime={
                 progress?.lessons.find((l) => l.courseLessonId === playingLessonId)
@@ -474,11 +487,27 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
 
             {/* Resources Tab below video */}
             <div className="slt-resources-card">
-              <h4 style={{ margin: '0 0 1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.2rem', color: '#141413' }}>
+              <h4
+                style={{
+                  margin: '0 0 1.25rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  fontSize: '1.2rem',
+                  color: '#141413',
+                }}
+              >
                 <Paperclip size={20} color="#3b82f6" /> Tài liệu đính kèm
               </h4>
-              {currentLesson.materials && parseLessonMaterials(currentLesson.materials).length > 0 ? (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
+              {currentLesson.materials &&
+              parseLessonMaterials(currentLesson.materials).length > 0 ? (
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                    gap: '1rem',
+                  }}
+                >
                   {parseLessonMaterials(currentLesson.materials).map((m: LessonMaterial) => (
                     <button
                       key={m.id}
@@ -492,7 +521,9 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
                   ))}
                 </div>
               ) : (
-                <p style={{ margin: 0, fontSize: '0.95rem', color: '#87867f', fontStyle: 'italic' }}>
+                <p
+                  style={{ margin: 0, fontSize: '0.95rem', color: '#87867f', fontStyle: 'italic' }}
+                >
                   Bài học này chưa có tài liệu đính kèm.
                 </p>
               )}
@@ -515,9 +546,7 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
                 {completedCount}/{totalCount} bài học hoàn thành
               </p>
             </div>
-            <div className="slt-sidebar-content">
-              {renderCurriculum(true)}
-            </div>
+            <div className="slt-sidebar-content">{renderCurriculum(true)}</div>
           </div>
         </div>
       ) : (
@@ -547,13 +576,23 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
           {loadingLessons ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {[1, 2, 3].map((i) => (
-                <div key={i} style={{ height: '80px', background: '#f1f5f9', borderRadius: '12px', animation: 'pulse 2s infinite' }} />
+                <div
+                  key={i}
+                  style={{
+                    height: '80px',
+                    background: '#f1f5f9',
+                    borderRadius: '12px',
+                    animation: 'pulse 2s infinite',
+                  }}
+                />
               ))}
             </div>
           ) : lessons.length === 0 ? (
             <div className="slt-empty">
               <BookOpen size={56} strokeWidth={1} style={{ marginBottom: 8 }} />
-              <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: 500 }}>Chưa có bài học nào trong khóa học này.</p>
+              <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: 500 }}>
+                Chưa có bài học nào trong khóa học này.
+              </p>
             </div>
           ) : (
             <div className="slt-curriculum-card">
@@ -562,9 +601,7 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
                   {UI_TEXT.COURSE_CONTENT}
                 </h4>
               </div>
-              <div>
-                {renderCurriculum()}
-              </div>
+              <div>{renderCurriculum()}</div>
             </div>
           )}
         </>

@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query';
 import {
   AlertTriangle,
   BarChart2,
@@ -29,7 +30,6 @@ import {
   type SystemService,
 } from '../../../services/api/admin-dashboard.service';
 import { TeacherProfileService } from '../../../services/api/teacher-profile.service';
-import { useQuery } from '@tanstack/react-query';
 import './AdminDashboard.css';
 
 function applyApiResult<T>(
@@ -447,7 +447,6 @@ const AdminDashboard: React.FC = () => {
         {/* Header */}
         <div className="courses-header-row admin-dashboard-header">
           <div className="header-stack min-w-0">
-            <span className="header-kicker">ADMIN</span>
             <h1 className="flex items-center gap-2 text-[28px] font-bold tracking-tight text-[#0D0F1A]">
               <LayoutDashboard className="h-6 w-6 text-[#C96442]" />
               <span>Admin Dashboard</span>

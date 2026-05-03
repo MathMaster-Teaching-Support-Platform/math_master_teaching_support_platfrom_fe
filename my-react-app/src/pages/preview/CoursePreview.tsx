@@ -18,6 +18,8 @@ import { CourseIncludesList } from '../../components/course/CourseIncludesList';
 import { CourseLearningPanels } from '../../components/course/CourseLearningPanels';
 import { InvoiceModal } from '../../components/course/InvoiceModal';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { UI_TEXT } from '../../constants/uiText';
+import { useToast } from '../../context/ToastContext';
 import {
   useCourseDetail,
   useCourseLessons,
@@ -29,11 +31,9 @@ import {
 } from '../../hooks/useCourses';
 import { AuthService } from '../../services/api/auth.service';
 import { VideoUploadService } from '../../services/api/videoUpload.service';
-import { getEffectivePrice, formatPrice, hasActiveDiscount } from '../../utils/pricing';
-import { extractChapterNumber, sortCurriculumGroups } from '../../utils/curriculum';
 import type { Order } from '../../types/order.types';
-import { useToast } from '../../context/ToastContext';
-import { UI_TEXT } from '../../constants/uiText';
+import { extractChapterNumber, sortCurriculumGroups } from '../../utils/curriculum';
+import { formatPrice, getEffectivePrice, hasActiveDiscount } from '../../utils/pricing';
 import './CoursePreview.css';
 
 const CoursePreview: React.FC = () => {
@@ -167,7 +167,7 @@ const CoursePreview: React.FC = () => {
       setPreviewLesson(lesson);
     } catch (err) {
       console.error('Failed to load preview:', err);
-      alert('Không thể tải video xem trước. Vui lòng thử lại sau.');
+      showToast({ type: 'error', message: 'Không thể tải video xem trước. Vui lòng thử lại sau.' });
     } finally {
       setLoadingPreview(false);
     }
@@ -218,16 +218,26 @@ const CoursePreview: React.FC = () => {
 
         // Harden the check for the order object
         // useEnroll returns { result: Order, type: 'order', enrollmentId: string }
-        const orderData = resp?.result || (resp as any)?.order || (resp?.type === 'order' ? resp : null);
+        const orderData =
+          resp?.result || (resp as any)?.order || (resp?.type === 'order' ? resp : null);
 
         if (orderData && (orderData.orderNumber || orderData.id)) {
-          console.log('[Preview] Showing invoice for order:', orderData.orderNumber || orderData.id);
+          console.log(
+            '[Preview] Showing invoice for order:',
+            orderData.orderNumber || orderData.id
+          );
           setCompletedOrder(orderData);
           setShowInvoice(true);
         } else {
           // Fallback if the structure is different but we have an enrollment ID
-          console.warn('[Preview] Could not find order in response, falling back to direct navigation:', resp);
-          const newEnrollmentId = (resp as any)?.enrollmentId || (resp as any)?.result?.enrollmentId || (resp as any)?.result?.id;
+          console.warn(
+            '[Preview] Could not find order in response, falling back to direct navigation:',
+            resp
+          );
+          const newEnrollmentId =
+            (resp as any)?.enrollmentId ||
+            (resp as any)?.result?.enrollmentId ||
+            (resp as any)?.result?.id;
           if (newEnrollmentId) {
             navigate(`/student/courses/${newEnrollmentId}`);
           }
@@ -236,12 +246,13 @@ const CoursePreview: React.FC = () => {
       onError: (err: any) => {
         console.error('[Preview] Enroll error:', err);
         const apiError = err.response?.data;
-        const errorMessage = apiError?.message || err.message || 'Có lỗi xảy ra khi đăng ký khóa học.';
+        const errorMessage =
+          apiError?.message || err.message || 'Có lỗi xảy ra khi đăng ký khóa học.';
         showToast({
           type: 'error',
           message: errorMessage,
         });
-      }
+      },
     });
   };
 
@@ -284,9 +295,9 @@ const CoursePreview: React.FC = () => {
               </Link>
 
               <div className="preview-purpose-note" style={{ marginBottom: '1rem' }}>
-                <span style={{ fontWeight: 700 }}>Chế độ xem trước:</span> Bạn đang xem phiên bản giới
-                thiệu công khai của khóa học. Chỉ các bài được đánh dấu xem trước miễn phí mới có thể
-                phát ngay.
+                <span style={{ fontWeight: 700 }}>Chế độ xem trước:</span> Bạn đang xem phiên bản
+                giới thiệu công khai của khóa học. Chỉ các bài được đánh dấu xem trước miễn phí mới
+                có thể phát ngay.
               </div>
 
               <div className="header-grid">
@@ -427,7 +438,9 @@ const CoursePreview: React.FC = () => {
                                 <span className="section-title-text">
                                   {section.type === 'CHAPTER'
                                     ? (() => {
-                                        const num = extractChapterNumber(section.title) ?? extractChapterNumber(section.id);
+                                        const num =
+                                          extractChapterNumber(section.title) ??
+                                          extractChapterNumber(section.id);
                                         return num !== null ? `Chương ${num}: ` : '';
                                       })()
                                     : ''}
@@ -445,11 +458,15 @@ const CoursePreview: React.FC = () => {
                                   <div
                                     key={lesson.id}
                                     className={`lesson-row ${lesson.isFreePreview ? 'clickable-preview' : 'locked-lesson-row'}`}
-                                    onClick={() => lesson.isFreePreview && handlePlayPreview(lesson)}
+                                    onClick={() =>
+                                      lesson.isFreePreview && handlePlayPreview(lesson)
+                                    }
                                   >
                                     <div className="lesson-left">
                                       <PlayCircle size={16} className="play-icon" />
-                                      <span className="lesson-title-text">{lesson.lessonTitle}</span>
+                                      <span className="lesson-title-text">
+                                        {lesson.lessonTitle}
+                                      </span>
                                     </div>
                                     <div className="lesson-right">
                                       {lesson.isFreePreview && (
@@ -521,9 +538,14 @@ const CoursePreview: React.FC = () => {
                   {activeTab === 'reviews' && (
                     <div className="reviews-pane">
                       <h2 className="pane-title">
-                        <Star size={24} fill="#eab308" color="#eab308" style={{ marginRight: '8px' }} />
-                        {summary?.averageRating.toFixed(1)} xếp hạng khóa học • {summary?.totalReviews}{' '}
-                        đánh giá
+                        <Star
+                          size={24}
+                          fill="#eab308"
+                          color="#eab308"
+                          style={{ marginRight: '8px' }}
+                        />
+                        {summary?.averageRating.toFixed(1)} xếp hạng khóa học •{' '}
+                        {summary?.totalReviews} đánh giá
                       </h2>
 
                       <div className="reviews-list-v2">
@@ -533,7 +555,9 @@ const CoursePreview: React.FC = () => {
                               {review.studentAvatar ? (
                                 <img src={review.studentAvatar} alt={review.studentName} />
                               ) : (
-                                <div className="avatar-initials">{review.studentName.charAt(0)}</div>
+                                <div className="avatar-initials">
+                                  {review.studentName.charAt(0)}
+                                </div>
                               )}
                             </div>
                             <div className="review-body-v2">
@@ -588,7 +612,9 @@ const CoursePreview: React.FC = () => {
                     </div>
                   </div>
 
-                  <div style={{ padding: '0.75rem 1.5rem 0', color: '#4b5563', fontSize: '0.88rem' }}>
+                  <div
+                    style={{ padding: '0.75rem 1.5rem 0', color: '#4b5563', fontSize: '0.88rem' }}
+                  >
                     <strong>{previewLessons.length}</strong> bài học thử miễn phí •{' '}
                     <strong>{lockedLessonsCount}</strong> bài học mở sau khi đăng ký
                   </div>
@@ -601,21 +627,23 @@ const CoursePreview: React.FC = () => {
                             ? 'Miễn phí'
                             : getEffectivePrice(course).toLocaleString('vi-VN') + '₫'}
                         </span>
-                        {course.originalPrice && course.originalPrice > getEffectivePrice(course) && (
-                          <span className="price-original">
-                            {course.originalPrice.toLocaleString('vi-VN')}₫
-                          </span>
-                        )}
-                        {course.originalPrice && course.originalPrice > getEffectivePrice(course) && (
-                          <span className="price-discount">
-                            {Math.round(
-                              ((course.originalPrice - getEffectivePrice(course)) /
-                                course.originalPrice) *
-                              100
-                            )}
-                            % off
-                          </span>
-                        )}
+                        {course.originalPrice &&
+                          course.originalPrice > getEffectivePrice(course) && (
+                            <span className="price-original">
+                              {course.originalPrice.toLocaleString('vi-VN')}₫
+                            </span>
+                          )}
+                        {course.originalPrice &&
+                          course.originalPrice > getEffectivePrice(course) && (
+                            <span className="price-discount">
+                              {Math.round(
+                                ((course.originalPrice - getEffectivePrice(course)) /
+                                  course.originalPrice) *
+                                  100
+                              )}
+                              % off
+                            </span>
+                          )}
                       </div>
                     ) : course.originalPrice && course.originalPrice > 0 ? (
                       <span className="price-primary">
@@ -678,7 +706,11 @@ const CoursePreview: React.FC = () => {
                     >
                       <AlertCircle
                         size={16}
-                        style={{ display: 'inline', verticalAlign: 'text-bottom', marginRight: '6px' }}
+                        style={{
+                          display: 'inline',
+                          verticalAlign: 'text-bottom',
+                          marginRight: '6px',
+                        }}
                       />
                       {(enrollMutation.error as any)?.response?.data?.code === 1029 ? (
                         <>
@@ -723,7 +755,9 @@ const CoursePreview: React.FC = () => {
                   </div>
 
                   <div className="sidebar-actions" style={{ display: 'block', textAlign: 'left' }}>
-                    <p style={{ margin: 0, color: '#4b5563', fontSize: '0.86rem', lineHeight: 1.5 }}>
+                    <p
+                      style={{ margin: 0, color: '#4b5563', fontSize: '0.86rem', lineHeight: 1.5 }}
+                    >
                       Đây là trang giới thiệu khóa học. Bài học bị khóa sẽ mở đầy đủ sau khi đăng ký
                       thành công.
                     </p>
@@ -1404,7 +1438,6 @@ const CoursePreview: React.FC = () => {
           }}
         />
       </div>
-
     );
   }
 
@@ -1416,11 +1449,7 @@ const CoursePreview: React.FC = () => {
     );
   }
 
-  return (
-    <>
-      {mainContent}
-    </>
-  );
+  return <>{mainContent}</>;
 };
 
 export default CoursePreview;

@@ -1,5 +1,6 @@
+import { Check, ChevronDown, ChevronUp, RotateCcw, Save, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import { Trash2, RotateCcw, Save, ChevronDown, ChevronUp, Check } from 'lucide-react';
+import { useToast } from '../../context/ToastContext';
 import MathText from '../common/MathText';
 import { EditableField } from './EditableField';
 import { ScoreDisplay } from './ScoreDisplay';
@@ -19,7 +20,11 @@ interface QuestionCardProps {
   };
   index: number;
   isDraft: boolean;
-  onUpdate: (questionId: string, orderIndex: number, pointsOverride: number | null) => Promise<void>;
+  onUpdate: (
+    questionId: string,
+    orderIndex: number,
+    pointsOverride: number | null
+  ) => Promise<void>;
   onDelete: (questionId: string) => Promise<void>;
   onClearOverride: (questionId: string) => Promise<void>;
   isUpdating: boolean;
@@ -37,7 +42,8 @@ export function QuestionCard({
   isDeleting,
 }: QuestionCardProps) {
   const questionId = question.questionId || question.id || '';
-  
+  const { showToast } = useToast();
+
   // Local state for editable fields
   const [orderValue, setOrderValue] = useState(String(question.orderIndex));
   const [pointsValue, setPointsValue] = useState(
@@ -45,58 +51,59 @@ export function QuestionCard({
       ? String(question.pointsOverride)
       : ''
   );
-  
+
   // UI state
   const [isExpanded, setIsExpanded] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  
+
   // Check if there are unsaved changes
   const hasOrderChanged = orderValue !== String(question.orderIndex);
-  const hasPointsChanged = pointsValue !== (
-    question.pointsOverride !== null && question.pointsOverride !== undefined
+  const hasPointsChanged =
+    pointsValue !==
+    (question.pointsOverride !== null && question.pointsOverride !== undefined
       ? String(question.pointsOverride)
-      : ''
-  );
+      : '');
   const isDirty = hasOrderChanged || hasPointsChanged;
-  
+
   // Truncate question text
   const shouldTruncate = question.questionText.length > 150;
-  const displayText = !isExpanded && shouldTruncate
-    ? question.questionText.slice(0, 150) + '...'
-    : question.questionText;
-  
+  const displayText =
+    !isExpanded && shouldTruncate
+      ? question.questionText.slice(0, 150) + '...'
+      : question.questionText;
+
   const handleSave = async () => {
     const newOrder = Number(orderValue);
     const newPoints = pointsValue.trim() === '' ? null : Number(pointsValue);
-    
+
     if (isNaN(newOrder) || newOrder < 1) {
-      alert('Order phải là số nguyên dương');
+      showToast({ type: 'warning', message: 'Order phải là số nguyên dương' });
       return;
     }
-    
+
     if (pointsValue.trim() !== '' && (isNaN(newPoints!) || newPoints! < 0)) {
-      alert('Điểm phải >= 0');
+      showToast({ type: 'warning', message: 'Điểm phải >= 0' });
       return;
     }
-    
+
     await onUpdate(questionId, newOrder, newPoints);
-    
+
     // Show success feedback
     setShowSuccess(true);
     setTimeout(() => setShowSuccess(false), 2000);
   };
-  
+
   const handleClearOverride = async () => {
     await onClearOverride(questionId);
     setPointsValue('');
   };
-  
+
   const handleDelete = async () => {
     if (window.confirm('Bạn có chắc muốn xóa câu hỏi này?')) {
       await onDelete(questionId);
     }
   };
-  
+
   return (
     <div
       className={`question-card ${isDirty ? 'question-card--dirty' : ''} ${
@@ -120,17 +127,14 @@ export function QuestionCard({
           </div>
         )}
       </div>
-      
+
       {/* Question Content */}
       <div className="question-card__content">
         <div className="question-card__text">
           <MathText text={displayText} />
         </div>
         {shouldTruncate && (
-          <button
-            className="question-card__expand-btn"
-            onClick={() => setIsExpanded(!isExpanded)}
-          >
+          <button className="question-card__expand-btn" onClick={() => setIsExpanded(!isExpanded)}>
             {isExpanded ? (
               <>
                 <ChevronUp size={14} />
@@ -145,7 +149,7 @@ export function QuestionCard({
           </button>
         )}
       </div>
-      
+
       {/* Additional Content (when expanded) */}
       {isExpanded && (
         <div className="question-card__details">
@@ -171,14 +175,11 @@ export function QuestionCard({
           ) : null}
         </div>
       )}
-      
+
       {/* Editable Section */}
       <div className="question-card__editable">
-        <ScoreDisplay
-          currentScore={question.points}
-          overrideScore={question.pointsOverride}
-        />
-        
+        <ScoreDisplay currentScore={question.points} overrideScore={question.pointsOverride} />
+
         {isDraft && (
           <div className="question-card__inputs">
             <EditableField
@@ -203,17 +204,13 @@ export function QuestionCard({
           </div>
         )}
       </div>
-      
+
       {/* Actions */}
       {isDraft && (
         <div className="question-card__actions">
           <div className="question-card__actions-left">
             {isDirty && (
-              <button
-                className="btn btn--primary"
-                onClick={handleSave}
-                disabled={isUpdating}
-              >
+              <button className="btn btn--primary" onClick={handleSave} disabled={isUpdating}>
                 {isUpdating ? (
                   'Đang lưu...'
                 ) : (
@@ -231,7 +228,7 @@ export function QuestionCard({
               </span>
             )}
           </div>
-          
+
           <div className="question-card__actions-right">
             {question.pointsOverride !== null && question.pointsOverride !== undefined && (
               <button
@@ -243,11 +240,7 @@ export function QuestionCard({
                 Reset điểm
               </button>
             )}
-            <button
-              className="btn btn--danger"
-              onClick={handleDelete}
-              disabled={isDeleting}
-            >
+            <button className="btn btn--danger" onClick={handleDelete} disabled={isDeleting}>
               <Trash2 size={14} />
               {isDeleting ? 'Đang xóa...' : 'Xóa'}
             </button>

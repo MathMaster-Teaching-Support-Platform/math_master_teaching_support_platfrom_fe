@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import html2canvas from 'html2canvas';
 import MindElixir from 'mind-elixir';
 import 'mind-elixir/style.css';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { useToast } from '../../context/ToastContext';
 import { mockTeacher } from '../../data/mockData';
 import { MindmapService } from '../../services/api/mindmap.service';
 import type { Mindmap, MindmapNode } from '../../types';
@@ -125,6 +126,7 @@ export default function MindmapEditor() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { showToast } = useToast();
   const [searchParams] = useSearchParams();
   const isEmbedPreview = searchParams.get('embedPreview') === '1';
 
@@ -375,7 +377,7 @@ export default function MindmapEditor() {
 
       const nextContent = editForm.content.trim();
       if (!nextContent) {
-        alert('Nội dung node không được để trống');
+        showToast({ type: 'warning', message: 'Nội dung node không được để trống' });
         return;
       }
 
@@ -402,7 +404,10 @@ export default function MindmapEditor() {
       setSelectedNodeId(null);
     } catch (err) {
       if (id) await loadMindmap(id);
-      alert(err instanceof Error ? err.message : 'Failed to update node');
+      showToast({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Không thể cập nhật node',
+      });
     } finally {
       setSaving(false);
     }
@@ -413,7 +418,7 @@ export default function MindmapEditor() {
 
     const content = newNodeForm.content.trim();
     if (!content) {
-      alert('Vui lòng nhập nội dung node mới');
+      showToast({ type: 'warning', message: 'Vui lòng nhập nội dung node mới' });
       return;
     }
 
@@ -461,7 +466,10 @@ export default function MindmapEditor() {
       setMindmapNodes((prev) =>
         uniqueFlatNodes(prev).filter((node) => !node.id.startsWith('temp-'))
       );
-      alert(err instanceof Error ? err.message : 'Failed to create node');
+      showToast({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Không thể tạo node mới',
+      });
     } finally {
       setCreatingNode(false);
     }
@@ -496,7 +504,7 @@ export default function MindmapEditor() {
 
     if (!targetNode) {
       setDeleteConfirm({ open: false, nodeId: null, nodeLabel: '', totalNodes: 0 });
-      alert('Không tìm thấy node để xóa, vui lòng thử lại.');
+      showToast({ type: 'warning', message: 'Không tìm thấy node để xóa, vui lòng thử lại.' });
       return;
     }
 
@@ -514,7 +522,10 @@ export default function MindmapEditor() {
       await queryClient.invalidateQueries({ queryKey: ['mindmaps'] });
     } catch (err) {
       if (id) await loadMindmap(id);
-      alert(err instanceof Error ? err.message : 'Failed to delete node');
+      showToast({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Không thể xóa node',
+      });
     } finally {
       setDeletingNode(false);
     }
@@ -539,7 +550,10 @@ export default function MindmapEditor() {
       await queryClient.invalidateQueries({ queryKey: ['mindmaps'] });
       setMindmap({ ...mindmap, status });
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to update status');
+      showToast({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Failed to update status',
+      });
     }
   };
 
@@ -645,7 +659,10 @@ export default function MindmapEditor() {
       downloadLink.download = fallbackName;
       downloadLink.click();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Không thể xuất ảnh mindmap');
+      showToast({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Không thể xuất ảnh mindmap',
+      });
     } finally {
       setExportingImage(false);
     }

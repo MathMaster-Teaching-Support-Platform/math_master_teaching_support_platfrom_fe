@@ -1,20 +1,22 @@
-import { useState, useMemo } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Save } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import AnswerGradingCard from '../../components/grading/AnswerGradingCard';
+import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { useToast } from '../../context/ToastContext';
 import {
-  useSubmissionForGrading,
-  useCompleteGrading,
   useAddManualAdjustment,
+  useCompleteGrading,
+  useSubmissionForGrading,
   useTriggerAiReview,
 } from '../../hooks/useGrading';
-import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
-import AnswerGradingCard from '../../components/grading/AnswerGradingCard';
-import type { ManualGradeRequest } from '../../types/grading.types';
 import '../../styles/module-refactor.css';
+import type { ManualGradeRequest } from '../../types/grading.types';
 
 export default function GradingDetail() {
   const { submissionId } = useParams<{ submissionId: string }>();
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   const [grades, setGrades] = useState<Record<string, ManualGradeRequest>>({});
   const [manualAdjustment, setManualAdjustment] = useState(0);
@@ -45,7 +47,7 @@ export default function GradingDetail() {
 
     const gradesToSubmit = Object.values(grades);
     if (gradesToSubmit.length === 0) {
-      alert('Vui lòng chấm ít nhất một câu trả lời');
+      showToast({ type: 'warning', message: 'Vui lòng chấm ít nhất một câu trả lời' });
       return;
     }
 
@@ -77,7 +79,11 @@ export default function GradingDetail() {
 
   if (isLoading) {
     return (
-      <DashboardLayout role="teacher" user={{ name: 'Teacher', avatar: '', role: 'teacher' }} notificationCount={0}>
+      <DashboardLayout
+        role="teacher"
+        user={{ name: 'Teacher', avatar: '', role: 'teacher' }}
+        notificationCount={0}
+      >
         <div className="module-layout-container">
           <div className="empty">Đang tải bài nộp...</div>
         </div>
@@ -87,7 +93,11 @@ export default function GradingDetail() {
 
   if (isError || !submission) {
     return (
-      <DashboardLayout role="teacher" user={{ name: 'Teacher', avatar: '', role: 'teacher' }} notificationCount={0}>
+      <DashboardLayout
+        role="teacher"
+        user={{ name: 'Teacher', avatar: '', role: 'teacher' }}
+        notificationCount={0}
+      >
         <div className="module-layout-container">
           <div className="empty">Không thể tải bài nộp</div>
         </div>
@@ -95,10 +105,16 @@ export default function GradingDetail() {
     );
   }
 
-  const pendingAnswers = submission.answers.filter((a) => a.needsManualGrading && a.pointsEarned === undefined);
+  const pendingAnswers = submission.answers.filter(
+    (a) => a.needsManualGrading && a.pointsEarned === undefined
+  );
 
   return (
-    <DashboardLayout role="teacher" user={{ name: 'Teacher', avatar: '', role: 'teacher' }} notificationCount={0}>
+    <DashboardLayout
+      role="teacher"
+      user={{ name: 'Teacher', avatar: '', role: 'teacher' }}
+      notificationCount={0}
+    >
       <div className="module-layout-container">
         <section className="module-page">
           <header className="page-header">
@@ -121,7 +137,9 @@ export default function GradingDetail() {
                   textAlign: 'right',
                 }}
               >
-                <p className="muted" style={{ fontSize: '0.875rem' }}>Tổng điểm</p>
+                <p className="muted" style={{ fontSize: '0.875rem' }}>
+                  Tổng điểm
+                </p>
                 <h2 style={{ marginTop: 4 }}>
                   {totalScore.toFixed(1)} / {submission.maxScore}
                 </h2>
@@ -141,9 +159,7 @@ export default function GradingDetail() {
                 marginBottom: 24,
               }}
             >
-              <p>
-                Còn {pendingAnswers.length} câu trả lời chờ chấm điểm
-              </p>
+              <p>Còn {pendingAnswers.length} câu trả lời chờ chấm điểm</p>
             </div>
           )}
 
@@ -182,7 +198,8 @@ export default function GradingDetail() {
           >
             <h3 style={{ marginBottom: 16 }}>Điều chỉnh điểm thủ công</h3>
             <p className="muted" style={{ marginBottom: 12, fontSize: '0.875rem' }}>
-              Thêm hoặc trừ điểm cho toàn bộ bài làm (ví dụ: thưởng cho trình bày đẹp, trừ vì nộp muộn)
+              Thêm hoặc trừ điểm cho toàn bộ bài làm (ví dụ: thưởng cho trình bày đẹp, trừ vì nộp
+              muộn)
             </p>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 16 }}>
