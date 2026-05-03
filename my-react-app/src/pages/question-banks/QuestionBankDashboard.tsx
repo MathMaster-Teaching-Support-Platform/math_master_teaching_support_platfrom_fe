@@ -62,18 +62,19 @@ const coverGradients = [
 
 const coverAccents = ['#93c5fd', '#86efac', '#c4b5fd', '#fdba74', '#67e8f9', '#f9a8d4'];
 
-const cognitiveShortLabel: Record<string, string> = {
-  NHAN_BIET: 'NB',
-  THONG_HIEU: 'TH',
-  VAN_DUNG: 'VD',
-  VAN_DUNG_CAO: 'VDC',
-  REMEMBER: 'NB',
-  UNDERSTAND: 'TH',
-  APPLY: 'VD',
-  ANALYZE: 'PT',
-  EVALUATE: 'DG',
-  CREATE: 'ST',
-};
+// Unused for now - kept for future use
+// const cognitiveShortLabel: Record<string, string> = {
+//   NHAN_BIET: 'NB',
+//   THONG_HIEU: 'TH',
+//   VAN_DUNG: 'VD',
+//   VAN_DUNG_CAO: 'VDC',
+//   REMEMBER: 'NB',
+//   UNDERSTAND: 'TH',
+//   APPLY: 'VD',
+//   ANALYZE: 'PT',
+//   EVALUATE: 'DG',
+//   CREATE: 'ST',
+// };
 
 export function QuestionBankDashboard() {
   const navigate = useNavigate();
@@ -425,14 +426,7 @@ export function QuestionBankDashboard() {
 
                     {bank.cognitiveStats && Object.keys(bank.cognitiveStats).length > 0 && (
                       <>
-                        <div className="bank-cognitive-stats">
-                          <span className="bank-cognitive-label">📊 Mức độ:</span>
-                          {Object.entries(bank.cognitiveStats).map(([level, count]) => (
-                            <span key={level} className="bank-cognitive-badge">
-                              {cognitiveShortLabel[level] ?? level}: {count}
-                            </span>
-                          ))}
-                        </div>
+
                         <details className="bank-matrix-stats-details">
                           <summary className="bank-matrix-stats-summary">
                             <span>📊 Xem phân bố chi tiết</span>

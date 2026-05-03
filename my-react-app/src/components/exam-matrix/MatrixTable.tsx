@@ -43,6 +43,17 @@ function makeCellId(rowId: string, partNumber: number, level: MatrixLevel): Cell
   return `${rowId}:P${partNumber}:${level}`;
 }
 
+// Stable mapping — defined outside component so it never changes reference
+const LEVEL_TO_BACKEND: Record<MatrixLevel, import('./../../types/examMatrix').MatrixCognitiveLevel> = {
+  NB: 'NHAN_BIET',
+  TH: 'THONG_HIEU',
+  VD: 'VAN_DUNG',
+  VDC: 'VAN_DUNG_CAO',
+};
+function mapLevelToBackend(level: MatrixLevel): import('./../../types/examMatrix').MatrixCognitiveLevel {
+  return LEVEL_TO_BACKEND[level];
+}
+
 function normalizeLevel(level: string): MatrixLevel | null {
   const upper = level.toUpperCase();
   if (upper === 'NB' || upper === 'NHAN_BIET' || upper === 'REMEMBER') return 'NB';
@@ -53,20 +64,13 @@ function normalizeLevel(level: string): MatrixLevel | null {
 }
 
 function getLevelCount(row: ExamMatrixTableRow, level: MatrixLevel, partNumber: number): number {
+  // FIX: Only use row.cells array, filtered by BOTH cognitiveLevel AND partNumber.
+  // The old fallback to countByCognitive was aggregating across ALL parts,
+  // causing Part 2 and Part 3 to show Part 1's data.
   const fromCells = row.cells?.find(
     (cell) => normalizeLevel(cell.cognitiveLevel) === level && cell.partNumber === partNumber
   );
-  if (fromCells) return fromCells.questionCount ?? 0;
-
-  if (partNumber === 1) {
-    const dist = row.countByCognitive;
-    if (!dist) return 0;
-    if (level === 'NB') return dist.NB ?? dist.NHAN_BIET ?? dist.REMEMBER ?? 0;
-    if (level === 'TH') return dist.TH ?? dist.THONG_HIEU ?? dist.UNDERSTAND ?? 0;
-    if (level === 'VD') return dist.VD ?? dist.VAN_DUNG ?? dist.APPLY ?? 0;
-    return dist.VDC ?? dist.VAN_DUNG_CAO ?? dist.ANALYZE ?? 0;
-  }
-  return 0;
+  return fromCells?.questionCount ?? 0;
 }
 
 // Redistribution algorithm (available for future percentage editing feature)
@@ -124,8 +128,12 @@ export function MatrixTable({
   ].slice(0, _numberOfParts || 3);
   const numberOfParts = getNumberOfParts(effectiveParts);
 
-  // Initialize local cells from chapters
+  // Initialize local cells from chapters.
+  // CRITICAL FIX: Skip reinitialization entirely when user has pending edits.
+  // This prevents server data from racing with and overwriting the user's unsaved changes.
   useEffect(() => {
+    if (dirtyCellsRef.current.size > 0) return; // Pending edits — don't overwrite
+
     const newLocalCells = new Map<CellId, number>();
     for (const chapter of chapters) {
       for (const row of chapter.rows) {
@@ -138,24 +146,7 @@ export function MatrixTable({
         }
       }
     }
-    
-    // FIX: Don't overwrite cells that have pending (dirty) changes.
-    // The user's edits should survive server data reinitialization.
-    setLocalCells(prev => {
-      const merged = new Map(newLocalCells);
-      for (const dirtyId of dirtyCellsRef.current) {
-        const userValue = prev.get(dirtyId);
-        if (userValue !== undefined) {
-          merged.set(dirtyId, userValue); // Keep user's pending edit
-        }
-      }
-      return merged;
-    });
-    
-    // Only clear dirty cells if there are no pending changes
-    if (dirtyCellsRef.current.size === 0) {
-      setDirtyCells(new Set());
-    }
+    setLocalCells(newLocalCells);
   }, [chapters, numberOfParts]);
 
   // Get cell value (local or from chapters)
@@ -189,9 +180,12 @@ export function MatrixTable({
     return { columnTotals: colTotals, rowTotals, grandTotal: total };
   }, [chapters, numberOfParts, getCellValue]);
 
-  // Use refs to avoid stale closure in setTimeout
+  // Use refs to avoid stale closure in setTimeout/performSave
   const dirtyCellsRef = useRef<Set<CellId>>(dirtyCells);
   const localCellsRef = useRef<Map<CellId, number>>(localCells);
+  const onCellChangeRef = useRef(onCellChange);
+  const matrixIdRef = useRef(matrixId);
+  const numberOfPartsRef = useRef(numberOfParts);
   
   useEffect(() => { 
     dirtyCellsRef.current = dirtyCells; 
@@ -200,6 +194,18 @@ export function MatrixTable({
   useEffect(() => { 
     localCellsRef.current = localCells; 
   }, [localCells]);
+  
+  useEffect(() => {
+    onCellChangeRef.current = onCellChange;
+  }, [onCellChange]);
+  
+  useEffect(() => {
+    matrixIdRef.current = matrixId;
+  }, [matrixId]);
+  
+  useEffect(() => {
+    numberOfPartsRef.current = numberOfParts;
+  }, [numberOfParts]);
 
   // Debounced save
   const scheduleSave = useCallback(() => {
@@ -212,44 +218,20 @@ export function MatrixTable({
     }, DEBOUNCE_MS);
   }, []); // [] is now SAFE because performSave reads from refs
 
-  // Map short codes to full enum values for backend
-  const mapLevelToBackend = (level: MatrixLevel): import('../../types/examMatrix').MatrixCognitiveLevel => {
-    const mapping: Record<MatrixLevel, import('../../types/examMatrix').MatrixCognitiveLevel> = {
-      'NB': 'NHAN_BIET',
-      'TH': 'THONG_HIEU',
-      'VD': 'VAN_DUNG',
-      'VDC': 'VAN_DUNG_CAO',
-    };
-    return mapping[level];
-  };
+  // mapLevelToBackend is now a stable module-level function (defined above MatrixTable)
 
   const performSave = async () => {
     const currentDirty = dirtyCellsRef.current;
     const currentLocal = localCellsRef.current;
+    const currentOnCellChange = onCellChangeRef.current;
+    const currentMatrixId = matrixIdRef.current;
     
-    if (!onCellChange || !matrixId || currentDirty.size === 0) return;
+    if (!currentOnCellChange || !currentMatrixId || currentDirty.size === 0) return;
 
     setSaving(true);
     setSaveError(null);
 
     try {
-      // Validate: warn if any row has all-zero cells
-      const rowIds = new Set(Array.from(currentDirty).map(id => id.split(':')[0]));
-      for (const rowId of rowIds) {
-        let rowTotal = 0;
-        for (let p = 1; p <= numberOfParts; p++) {
-          for (const level of cognitiveOrder) {
-            const cellId = makeCellId(rowId, p, level);
-            rowTotal += currentLocal.get(cellId) ?? 0;
-          }
-        }
-        if (rowTotal === 0) {
-          setSaveError('Hàng chủ đề không thể có tổng = 0. Vui lòng nhập ít nhất 1 câu hỏi hoặc xóa hàng.');
-          setSaving(false);
-          return;
-        }
-      }
-      
       // Group dirty cells by row
       const rowUpdates = new Map<string, MatrixCellRequest[]>();
       
@@ -278,7 +260,7 @@ export function MatrixTable({
         })),
       };
 
-      await onCellChange(matrixId, request);
+      await currentOnCellChange(currentMatrixId, request);
       setDirtyCells(new Set());
       setSaveError(null);
     } catch (error) {
@@ -302,15 +284,44 @@ export function MatrixTable({
     
     setDirtyCells(prev => new Set(prev).add(cellId));
     
-    // If setting to 0 (delete), save immediately to avoid race condition with useEffect
+    // If setting to 0 (delete), bypass debounce and save directly.
+    // We can't rely on performSave (stale closure + ref timing issues).
+    // Instead, call onCellChange directly with just this one cell.
     if (clampedValue === 0) {
       // Clear any pending debounce
       if (saveTimerRef.current) {
         clearTimeout(saveTimerRef.current);
       }
-      // Save immediately after React commits the state update
-      // Use requestAnimationFrame to ensure refs are updated
-      requestAnimationFrame(() => void performSave());
+      // Direct save: build request from known data (no refs needed)
+      const currentOnCellChange = onCellChangeRef.current;
+      const currentMatrixId = matrixIdRef.current;
+      if (currentOnCellChange && currentMatrixId) {
+        const [, partStr, levelStr] = cellId.split(':');
+        const pn = parseInt(partStr.substring(1), 10);
+        const request: BatchUpsertMatrixRowCellsRequest = {
+          rows: [{
+            rowId,
+            cells: [{
+              partNumber: pn,
+              cognitiveLevel: mapLevelToBackend(levelStr as MatrixLevel),
+              questionCount: 0, // We know the value is 0
+              pointsPerQuestion: 1,
+            }],
+          }],
+        };
+        currentOnCellChange(currentMatrixId, request)
+          .then(() => {
+            setDirtyCells(prev => {
+              const next = new Set(prev);
+              next.delete(cellId);
+              return next;
+            });
+          })
+          .catch((err) => {
+            console.error('Failed to save zero cell:', err);
+            setSaveError(err instanceof Error ? err.message : 'Failed to save');
+          });
+      }
     } else {
       scheduleSave();
     }
@@ -469,10 +480,12 @@ export function MatrixTable({
                     key={row.rowId}
                     className={`matrix-row ${chapterIndex % 2 === 0 ? 'matrix-row--even' : 'matrix-row--odd'}`}
                   >
-                    {chapterIndex === 0 && isFirstRowInChapter && (
+                    {/* FIX: Render grade cell for EACH chapter's first row, not just the first chapter.
+                        This allows matrices with rows from different grades to display correctly. */}
+                    {isFirstRowInChapter && (
                       <td
                         className="matrix-td matrix-td--grade"
-                        rowSpan={chapters.reduce((sum, ch) => sum + ch.rows.length, 0)}
+                        rowSpan={rowCount}
                       >
                         <div className="matrix-grade-cell">{displayGrade}</div>
                       </td>
@@ -523,11 +536,7 @@ export function MatrixTable({
                             ) : (
                               <div className="matrix-cell-value">
                                 {count}
-                                {count > 0 && part.questionType === 'TRUE_FALSE' && (
-                                  <span style={{ fontSize: 9, color: '#6b7280', display: 'block' }}>
-                                    mệnh đề
-                                  </span>
-                                )}
+                              
                               </div>
                             )}
                           </td>
@@ -581,11 +590,6 @@ export function MatrixTable({
                     >
                       <div className="matrix-grand-total-cell">
                         {total}
-                        {part.questionType === 'TRUE_FALSE' && total > 0 && (
-                          <div style={{ fontSize: 9, color: '#6b7280', marginTop: 2 }}>
-                            = {Math.ceil(total / 4)} câu TF
-                          </div>
-                        )}
                       </div>
                     </td>
                   );

@@ -1,4 +1,5 @@
 import type { AssessmentQuestionItem } from '../../types/assessment.types';
+import MathText from '../common/MathText';
 
 interface TrueFalseQuestionProps {
   question: AssessmentQuestionItem;
@@ -25,7 +26,9 @@ export function TrueFalseQuestion({
 
   return (
     <div>
-      <p style={{ marginBottom: 12 }}>{question.questionText}</p>
+      <p style={{ marginBottom: 12 }}>
+        <MathText text={question.questionText} />
+      </p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {Object.entries(question.options || {}).map(([key, text]) => (
           <div
@@ -40,7 +43,12 @@ export function TrueFalseQuestion({
               border: '1px solid #e5e7eb',
             }}
           >
-            <span>{key}) {text}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, flex: 1 }}>
+              <span>{key})</span>
+              <div style={{ flex: 1 }}>
+                <MathText text={String(text)} />
+              </div>
+            </div>
             <div style={{ display: 'flex', gap: 4 }}>
               <button
                 type="button"

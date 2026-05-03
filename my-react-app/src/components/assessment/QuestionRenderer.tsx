@@ -1,4 +1,5 @@
 import type { AssessmentQuestionItem } from '../../types/assessment.types';
+import MathText from '../common/MathText';
 import { ShortAnswerQuestion } from './ShortAnswerQuestion';
 import { TrueFalseQuestion } from './TrueFalseQuestion';
 
@@ -32,7 +33,9 @@ export function QuestionRenderer({
     case 'MULTIPLE_CHOICE':
       return (
         <div>
-          <p>{question.questionText}</p>
+          <p style={{ marginBottom: 12 }}>
+            <MathText text={question.questionText} />
+          </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {Object.entries(optionsAsString).map(([key, text]) => (
               <label key={key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -43,7 +46,7 @@ export function QuestionRenderer({
                   checked={studentAnswer === key}
                   onChange={(e) => onAnswerChange(e.target.value)}
                 />
-                {text}
+                <MathText text={text} />
               </label>
             ))}
           </div>

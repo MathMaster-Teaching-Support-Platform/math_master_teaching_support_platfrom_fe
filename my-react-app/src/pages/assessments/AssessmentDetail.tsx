@@ -487,19 +487,49 @@ export default function AssessmentDetail() {
                           </td>
                           <td>
                             {isDraft ? (
-                              <input
-                                className="input"
-                                type="number"
-                                min={0}
-                                step={0.25}
-                                value={pointsDraft[questionId] ?? String(question.points ?? '')}
-                                onChange={(e) =>
-                                  setPointsDraft((prev) => ({ ...prev, [questionId]: e.target.value }))
-                                }
-                                placeholder="Điểm"
-                              />
+                              <div>
+                                <input
+                                  className="input"
+                                  type="number"
+                                  min={0}
+                                  step={0.25}
+                                  value={pointsDraft[questionId] ?? String(question.points ?? '')}
+                                  onChange={(e) =>
+                                    setPointsDraft((prev) => ({ ...prev, [questionId]: e.target.value }))
+                                  }
+                                  placeholder="Điểm"
+                                />
+                                {/* Show clause breakdown for TF questions */}
+                                {question.questionType === 'TRUE_FALSE' && (pointsDraft[questionId] || question.points) && (
+                                  <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4 }}>
+                                    {(() => {
+                                      const totalPoints = parseFloat(pointsDraft[questionId] || String(question.points || 0));
+                                      const pointPerClause = (totalPoints / 4).toFixed(3);
+                                      return (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                          <span>📋 Mỗi mệnh đề: {pointPerClause} điểm</span>
+                                          <span style={{ fontSize: 10 }}>
+                                            (A: {pointPerClause}, B: {pointPerClause}, C: {pointPerClause}, D: {pointPerClause})
+                                          </span>
+                                        </div>
+                                      );
+                                    })()}
+                                  </div>
+                                )}
+                              </div>
                             ) : (
-                              <span>{question.points ?? 0}</span>
+                              <div>
+                                <span>{question.points ?? 0}</span>
+                                {/* Show clause breakdown for TF questions in published view */}
+                                {question.questionType === 'TRUE_FALSE' && question.points && (
+                                  <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4 }}>
+                                    {(() => {
+                                      const pointPerClause = (question.points / 4).toFixed(3);
+                                      return <span>📋 Mỗi mệnh đề: {pointPerClause} điểm</span>;
+                                    })()}
+                                  </div>
+                                )}
+                              </div>
                             )}
                           </td>
                           {isDraft && (

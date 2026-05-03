@@ -186,11 +186,7 @@ export default function AssessmentResult() {
                   {/* Use new ResultRenderer component */}
                   <ResultRenderer
                     answer={answer}
-                    questionText={answer.questionText}
-                    options={answer.questionType === 'MULTIPLE_CHOICE' || answer.questionType === 'TRUE_FALSE' 
-                      ? (typeof answer.correctAnswer === 'object' ? answer.correctAnswer as Record<string, string> : undefined)
-                      : undefined
-                    }
+                    options={answer.options}
                   />
 
                   {/* Show explanation and solution steps when toggle is on */}
