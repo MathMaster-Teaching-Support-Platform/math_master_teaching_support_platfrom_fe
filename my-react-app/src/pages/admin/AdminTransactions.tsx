@@ -387,20 +387,56 @@ const AdminTransactions: React.FC = () => {
               </button>
             </div>
             <div className="px-6 py-5 flex flex-col">
-              {([
-                ['Mã giao dịch', <span key="id" className="font-mono text-[13px]">{selectedTxn.id}</span>],
-                ['Mã đơn hàng', <span key="orderCode" className="font-mono text-[13px]">{String(selectedTxn.orderCode)}</span>],
-                ['Người dùng', selectedTxn.userName],
-                ['Email', selectedTxn.userEmail],
-                ['Gói đăng ký', selectedTxn.planName],
-                ['Số tiền', <span key="amount" className="text-[#c96442] font-semibold">{formatCurrency(selectedTxn.amount)}</span>],
-                ['Phương thức', <span key="method" className="inline-flex items-center gap-1.5"><CreditCard size={13} />{selectedTxn.paymentMethod}</span>],
-                ['Trạng thái', <span key="status" className={`txn-status-badge txn-status-badge--${selectedTxn.status}`}>{statusLabel(selectedTxn.status)}</span>],
-                ['Thời gian', formatDate(selectedTxn.createdAt)],
-              ] as [string, React.ReactNode][]).map(([label, value]) => (
-                <div key={String(label)} className="flex items-center justify-between gap-4 py-2.5 border-b border-[#f0eee6] last:border-0">
+              {(
+                [
+                  [
+                    'Mã giao dịch',
+                    <span key="id" className="font-mono text-[13px]">
+                      {selectedTxn.id}
+                    </span>,
+                  ],
+                  [
+                    'Mã đơn hàng',
+                    <span key="orderCode" className="font-mono text-[13px]">
+                      {String(selectedTxn.orderCode)}
+                    </span>,
+                  ],
+                  ['Người dùng', selectedTxn.userName],
+                  ['Email', selectedTxn.userEmail],
+                  ['Gói đăng ký', selectedTxn.planName],
+                  [
+                    'Số tiền',
+                    <span key="amount" className="text-[#c96442] font-semibold">
+                      {formatCurrency(selectedTxn.amount)}
+                    </span>,
+                  ],
+                  [
+                    'Phương thức',
+                    <span key="method" className="inline-flex items-center gap-1.5">
+                      <CreditCard size={13} />
+                      {selectedTxn.paymentMethod}
+                    </span>,
+                  ],
+                  [
+                    'Trạng thái',
+                    <span
+                      key="status"
+                      className={`txn-status-badge txn-status-badge--${selectedTxn.status}`}
+                    >
+                      {statusLabel(selectedTxn.status)}
+                    </span>,
+                  ],
+                  ['Thời gian', formatDate(selectedTxn.createdAt)],
+                ] as [string, React.ReactNode][]
+              ).map(([label, value]) => (
+                <div
+                  key={String(label)}
+                  className="flex items-center justify-between gap-4 py-2.5 border-b border-[#f0eee6] last:border-0"
+                >
                   <span className="text-[13px] font-medium text-[#87867f] shrink-0">{label}</span>
-                  <span className="text-[14px] font-semibold text-[#141413] text-right">{value}</span>
+                  <span className="text-[14px] font-semibold text-[#141413] text-right">
+                    {value}
+                  </span>
                 </div>
               ))}
             </div>
@@ -413,182 +449,180 @@ const AdminTransactions: React.FC = () => {
         notificationCount={3}
         contentClassName="dashboard-content--flush-bleed"
       >
-      <AdminFinanceStudioShell>
-        <div className="admin-transactions-page">
-          <header className="page-header courses-header-row">
-            <div className="header-stack">
-              <h2 className="page-title" style={{ margin: 0 }}>
-                Giao dịch
-              </h2>
-              <p className="page-subtitle header-sub">
-                Theo dõi toàn bộ lịch sử thanh toán trên hệ thống
-              </p>
-            </div>
-            <div
-              className="header-actions row"
-              style={{ flexWrap: 'wrap', gap: '0.65rem', alignItems: 'center' }}
-            >
-              <button
-                type="button"
-                className="btn btn-outline"
-                onClick={handleExportCsv}
-                disabled={exportLoading}
+        <AdminFinanceStudioShell>
+          <div className="admin-transactions-page">
+            <header className="page-header courses-header-row">
+              <div className="header-stack">
+                <h2 className="page-title" style={{ margin: 0 }}>
+                  Giao dịch
+                </h2>
+                <p className="page-subtitle header-sub">
+                  Theo dõi toàn bộ lịch sử thanh toán trên hệ thống
+                </p>
+              </div>
+              <div
+                className="header-actions row"
+                style={{ flexWrap: 'wrap', gap: '0.65rem', alignItems: 'center' }}
               >
-                {exportLoading ? (
-                  <>
-                    <Loader2 size={16} className="admin-finance-spin" aria-hidden />
-                    Đang xuất...
-                  </>
-                ) : (
-                  <>
-                    <Download size={16} aria-hidden />
-                    Xuất CSV
-                  </>
-                )}
-              </button>
-              <button type="button" className="btn btn-primary" onClick={handleRefresh}>
-                <RefreshCw size={16} aria-hidden />
-                Làm mới
-              </button>
-            </div>
-          </header>
-
-          {/* Stats Cards */}
-          <div className="txn-stats-grid">
-            <div className="txn-stat-card">
-              <div className="txn-stat-icon">
-                <BarChart2 className="w-5 h-5" />
-              </div>
-              <div className="txn-stat-info">
-                <div className="txn-stat-label">Tổng giao dịch</div>
-                <div className="txn-stat-value">{displayStat(stats.total)}</div>
-              </div>
-            </div>
-            <div className="txn-stat-card">
-              <div className="txn-stat-icon">
-                <CheckCircle2 className="w-5 h-5" />
-              </div>
-              <div className="txn-stat-info">
-                <div className="txn-stat-label">Thành công</div>
-                <div className="txn-stat-value">{displayStat(stats.completed)}</div>
-              </div>
-            </div>
-            <div className="txn-stat-card">
-              <div className="txn-stat-icon">
-                <Clock className="w-5 h-5" />
-              </div>
-              <div className="txn-stat-info">
-                <div className="txn-stat-label">Đang xử lý</div>
-                <div className="txn-stat-value">{displayStat(stats.pending)}</div>
-              </div>
-            </div>
-            <div className="txn-stat-card">
-              <div className="txn-stat-icon">
-                <XCircle className="w-5 h-5" />
-              </div>
-              <div className="txn-stat-info">
-                <div className="txn-stat-label">Thất bại</div>
-                <div className="txn-stat-value">{displayStat(stats.failed)}</div>
-              </div>
-            </div>
-            <div className="txn-stat-card txn-stat-card--revenue">
-              <div className="txn-stat-icon">
-                <Banknote className="w-5 h-5" />
-              </div>
-              <div className="txn-stat-info">
-                <div className="txn-stat-label">Tổng doanh thu (đã thu)</div>
-                <div className="txn-stat-value txn-stat-value--lg">{displayRevenue()}</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Filters */}
-          <div className="txn-filters">
-            <div className="txn-search-wrap">
-              <span className="txn-search-icon">
-                <Search className="w-4 h-4" />
-              </span>
-              <input
-                type="text"
-                className="txn-search-input"
-                placeholder="Tìm theo tên, email, mã đơn, gói..."
-                value={search}
-                onChange={handleSearch}
-              />
-            </div>
-            <div className="txn-status-tabs">
-              {(['all', 'completed', 'pending', 'failed'] as StatusFilter[]).map((s) => (
                 <button
-                  key={s}
-                  className={`txn-tab${statusFilter === s ? ' txn-tab--active' : ''}`}
-                  onClick={() => handleFilterChange(s)}
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={handleExportCsv}
+                  disabled={exportLoading}
                 >
-                  {s === 'all' ? 'Tất cả' : statusLabel(s)}
-                  <span className="txn-tab-count">{s === 'all' ? stats.total : stats[s]}</span>
+                  {exportLoading ? (
+                    <>
+                      <Loader2 size={16} className="admin-finance-spin" aria-hidden />
+                      Đang xuất...
+                    </>
+                  ) : (
+                    <>
+                      <Download size={16} aria-hidden />
+                      Xuất CSV
+                    </>
+                  )}
                 </button>
-              ))}
-            </div>
-          </div>
+                <button type="button" className="btn btn-primary" onClick={handleRefresh}>
+                  <RefreshCw size={16} aria-hidden />
+                  Làm mới
+                </button>
+              </div>
+            </header>
 
-          {/* Table */}
-          <div className="txn-table-card">
-            <div className="txn-table-wrap">
-              <table className="txn-table">
-                <thead>
-                  <tr>
-                    <th>Mã đơn</th>
-                    <th>Người dùng</th>
-                    <th>Gói đăng ký</th>
-                    <th>Số tiền</th>
-                    <th>Phương thức</th>
-                    <th>Trạng thái</th>
-                    <th>Thời gian</th>
-                    <th>Hành động</th>
-                  </tr>
-                </thead>
-                <tbody>{tableRows}</tbody>
-              </table>
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="txn-pagination">
-                <span className="txn-pagination-info">
-                  Hiển thị {pageStart}–{pageEnd} / {totalItems} giao dịch
-                </span>
-                <div className="txn-pagination-btns">
-                  <button
-                    className="txn-page-btn"
-                    disabled={page === 0}
-                    onClick={() => setPage((p) => p - 1)}
-                  >
-                    ‹ Trước
-                  </button>
-                  {Array.from({ length: totalPages }, (_, i) => (
-                    <button
-                      key={i}
-                      className={`txn-page-btn${page === i ? ' txn-page-btn--active' : ''}`}
-                      onClick={() => setPage(i)}
-                    >
-                      {i + 1}
-                    </button>
-                  ))}
-                  <button
-                    className="txn-page-btn"
-                    disabled={page === totalPages - 1}
-                    onClick={() => setPage((p) => Math.min(p + 1, totalPages - 1))}
-                  >
-                    Sau ›
-                  </button>
+            {/* Stats Cards */}
+            <div className="txn-stats-grid">
+              <div className="txn-stat-card">
+                <div className="txn-stat-icon">
+                  <BarChart2 className="w-5 h-5" />
+                </div>
+                <div className="txn-stat-info">
+                  <div className="txn-stat-label">Tổng giao dịch</div>
+                  <div className="txn-stat-value">{displayStat(stats.total)}</div>
                 </div>
               </div>
-            )}
+              <div className="txn-stat-card">
+                <div className="txn-stat-icon">
+                  <CheckCircle2 className="w-5 h-5" />
+                </div>
+                <div className="txn-stat-info">
+                  <div className="txn-stat-label">Thành công</div>
+                  <div className="txn-stat-value">{displayStat(stats.completed)}</div>
+                </div>
+              </div>
+              <div className="txn-stat-card">
+                <div className="txn-stat-icon">
+                  <Clock className="w-5 h-5" />
+                </div>
+                <div className="txn-stat-info">
+                  <div className="txn-stat-label">Đang xử lý</div>
+                  <div className="txn-stat-value">{displayStat(stats.pending)}</div>
+                </div>
+              </div>
+              <div className="txn-stat-card">
+                <div className="txn-stat-icon">
+                  <XCircle className="w-5 h-5" />
+                </div>
+                <div className="txn-stat-info">
+                  <div className="txn-stat-label">Thất bại</div>
+                  <div className="txn-stat-value">{displayStat(stats.failed)}</div>
+                </div>
+              </div>
+              <div className="txn-stat-card txn-stat-card--revenue">
+                <div className="txn-stat-icon">
+                  <Banknote className="w-5 h-5" />
+                </div>
+                <div className="txn-stat-info">
+                  <div className="txn-stat-label">Tổng doanh thu (đã thu)</div>
+                  <div className="txn-stat-value txn-stat-value--lg">{displayRevenue()}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Filters */}
+            <div className="txn-filters">
+              <div className="txn-search-wrap">
+                <span className="txn-search-icon">
+                  <Search className="w-4 h-4" />
+                </span>
+                <input
+                  type="text"
+                  className="txn-search-input"
+                  placeholder="Tìm theo tên, email, mã đơn, gói..."
+                  value={search}
+                  onChange={handleSearch}
+                />
+              </div>
+              <div className="txn-status-tabs">
+                {(['all', 'completed', 'pending', 'failed'] as StatusFilter[]).map((s) => (
+                  <button
+                    key={s}
+                    className={`txn-tab${statusFilter === s ? ' txn-tab--active' : ''}`}
+                    onClick={() => handleFilterChange(s)}
+                  >
+                    {s === 'all' ? 'Tất cả' : statusLabel(s)}
+                    <span className="txn-tab-count">{s === 'all' ? stats.total : stats[s]}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Table */}
+            <div className="txn-table-card">
+              <div className="txn-table-wrap">
+                <table className="txn-table">
+                  <thead>
+                    <tr>
+                      <th>Mã đơn</th>
+                      <th>Người dùng</th>
+                      <th>Gói đăng ký</th>
+                      <th>Số tiền</th>
+                      <th>Phương thức</th>
+                      <th>Trạng thái</th>
+                      <th>Thời gian</th>
+                      <th>Hành động</th>
+                    </tr>
+                  </thead>
+                  <tbody>{tableRows}</tbody>
+                </table>
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="txn-pagination">
+                  <span className="txn-pagination-info">
+                    Hiển thị {pageStart}–{pageEnd} / {totalItems} giao dịch
+                  </span>
+                  <div className="txn-pagination-btns">
+                    <button
+                      className="txn-page-btn"
+                      disabled={page === 0}
+                      onClick={() => setPage((p) => p - 1)}
+                    >
+                      ‹ Trước
+                    </button>
+                    {Array.from({ length: totalPages }, (_, i) => (
+                      <button
+                        key={i}
+                        className={`txn-page-btn${page === i ? ' txn-page-btn--active' : ''}`}
+                        onClick={() => setPage(i)}
+                      >
+                        {i + 1}
+                      </button>
+                    ))}
+                    <button
+                      className="txn-page-btn"
+                      disabled={page === totalPages - 1}
+                      onClick={() => setPage((p) => Math.min(p + 1, totalPages - 1))}
+                    >
+                      Sau ›
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-
-
-        </div>
-      </AdminFinanceStudioShell>
-    </DashboardLayout>
+        </AdminFinanceStudioShell>
+      </DashboardLayout>
     </>
   );
 };
