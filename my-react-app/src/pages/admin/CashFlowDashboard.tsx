@@ -1,4 +1,4 @@
-import { Calendar, Download, Filter, Search, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
+import { Calendar, ChevronRight, Download, Filter, Search, TrendingDown, TrendingUp, Wallet, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import {
   Area,
@@ -30,6 +30,94 @@ import type {
   GroupBy,
 } from '../../types/cash-flow.types';
 import AdminFinanceStudioShell from './AdminFinanceStudioShell';
+
+// ─── DetailModal ──────────────────────────────────────────────────────────
+const DetailModal = ({ entry, onClose }: { entry: CashFlowEntry; onClose: () => void }) => (
+  <div
+    className="fixed inset-0 z-50 flex items-center justify-center bg-black/30"
+    role="presentation"
+    onClick={onClose}
+    onKeyDown={(e) => e.key === 'Escape' && onClose()}
+  >
+    <div
+      role="dialog"
+      aria-modal="true"
+      className="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6"
+      onClick={(e) => e.stopPropagation()}
+      onKeyDown={(e) => e.stopPropagation()}
+    >
+      <div className="flex justify-between items-center mb-5">
+        <h4 className="font-[Playfair_Display] text-[18px] font-medium text-[#141413]">Chi tiết giao dịch</h4>
+        <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
+          <X size={18} />
+        </button>
+      </div>
+      <dl className="space-y-3 text-[14px]">
+        <div className="flex justify-between gap-4">
+          <dt className="text-[#87867F] font-medium shrink-0">Thời gian</dt>
+          <dd className="text-[#141413] text-right">{formatDate(entry.transactionDate)}</dd>
+        </div>
+        <div className="flex justify-between gap-4">
+          <dt className="text-[#87867F] font-medium shrink-0">Danh mục</dt>
+          <dd>
+            <span
+              className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border"
+              style={{
+                backgroundColor: `${entry.category?.color}15`,
+                color: entry.category?.color,
+                borderColor: `${entry.category?.color}30`,
+              }}
+            >
+              {entry.category?.name ?? 'Khác'}
+            </span>
+          </dd>
+        </div>
+        <div className="flex justify-between gap-4">
+          <dt className="text-[#87867F] font-medium shrink-0">Loại</dt>
+          <dd className={`font-semibold ${entry.direction === 'INFLOW' ? 'text-green-600' : 'text-red-600'}`}>
+            {entry.direction === 'INFLOW' ? 'Thu vào' : 'Chi ra'}
+          </dd>
+        </div>
+        <div className="flex justify-between gap-4">
+          <dt className="text-[#87867F] font-medium shrink-0">Số tiền</dt>
+          <dd className={`font-bold tabular-nums ${entry.direction === 'INFLOW' ? 'text-green-600' : 'text-red-600'}`}>
+            {entry.direction === 'INFLOW' ? '+' : '-'}{formatVND(entry.amount)}
+          </dd>
+        </div>
+        {entry.balance != null && (
+          <div className="flex justify-between gap-4">
+            <dt className="text-[#87867F] font-medium shrink-0">Số dư sau</dt>
+            <dd className="font-bold tabular-nums text-[#141413]">{formatVND(entry.balance)}</dd>
+          </div>
+        )}
+        {entry.orderCode && (
+          <div className="flex justify-between gap-4">
+            <dt className="text-[#87867F] font-medium shrink-0">Mã đơn hàng</dt>
+            <dd className="text-[#141413] font-mono">#{entry.orderCode}</dd>
+          </div>
+        )}
+        {entry.userName && (
+          <div className="flex justify-between gap-4">
+            <dt className="text-[#87867F] font-medium shrink-0">Người dùng</dt>
+            <dd className="text-[#141413] text-right">{entry.userName}</dd>
+          </div>
+        )}
+        {entry.userEmail && (
+          <div className="flex justify-between gap-4">
+            <dt className="text-[#87867F] font-medium shrink-0">Email</dt>
+            <dd className="text-[#141413] text-right break-all">{entry.userEmail}</dd>
+          </div>
+        )}
+        {entry.description && (
+          <div className="pt-2 border-t border-gray-100">
+            <dt className="text-[#87867F] font-medium mb-1">Mô tả</dt>
+            <dd className="text-[#141413] leading-relaxed">{entry.description}</dd>
+          </div>
+        )}
+      </dl>
+    </div>
+  </div>
+);
 
 // Simple debounce
 function useDebounce<T>(value: T, delay: number): T {
@@ -67,8 +155,8 @@ const SummaryCard = ({
     <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex flex-col justify-between">
       <div className="flex justify-between items-start">
         <div>
-          <p className="text-sm font-medium text-gray-500 mb-1">{title}</p>
-          <h3 className="text-2xl font-bold text-gray-900">{formatVND(amount)}</h3>
+          <p className="font-[Be_Vietnam_Pro] text-[12px] font-medium uppercase tracking-[0.05em] text-[#87867F] mb-1">{title}</p>
+          <h3 className="font-[Be_Vietnam_Pro] text-[32px] font-bold tabular-nums text-[#141413] leading-[1.1]">{formatVND(amount)}</h3>
         </div>
         <div className={`p-3 rounded-lg ${colorClass}`}>
           <Icon size={24} />
@@ -105,6 +193,7 @@ const CashFlowDashboard: React.FC = () => {
   const [filterType, setFilterType] = useState<CashFlowType | ''>('');
   const [filterCat, setFilterCat] = useState<string>('');
   const [loading, setLoading] = useState(true);
+  const [selectedEntry, setSelectedEntry] = useState<CashFlowEntry | null>(null);
 
   // ─── Fetch data ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -168,12 +257,20 @@ const CashFlowDashboard: React.FC = () => {
   };
 
   return (
+    <>
+    {selectedEntry && <DetailModal entry={selectedEntry} onClose={() => setSelectedEntry(null)} />}
     <DashboardLayout
       role="admin"
       user={{ name: mockAdmin.name, avatar: mockAdmin.avatar, role: 'admin' }}
       contentClassName="dashboard-content--flush-bleed"
     >
       <AdminFinanceStudioShell>
+        {/* ─── Page Title ─── */}
+        <div className="mb-8">
+          <h1 className="font-[Be_Vietnam_Pro] text-[36px] font-bold tracking-[-0.01em] leading-[1.2] text-[#141413]">Quản lý dòng tiền</h1>
+          <p className="font-[Be_Vietnam_Pro] text-[15px] font-normal text-[#87867F] mt-1">Theo dõi thu chi và biến động dòng tiền nền tảng</p>
+        </div>
+
         {/* ─── Header & Filters ─── */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
           <div className="flex items-center gap-3">
@@ -250,7 +347,7 @@ const CashFlowDashboard: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           {/* Trend Area Chart */}
           <div className="lg:col-span-2 bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-800 mb-6">Biến động dòng tiền</h3>
+            <h3 className="font-[Playfair_Display] text-[18px] font-medium text-[#141413] mb-6">Biến động dòng tiền</h3>
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData}>
@@ -312,10 +409,11 @@ const CashFlowDashboard: React.FC = () => {
 
           {/* Category Pie Chart */}
           <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-800 mb-6">Cơ cấu danh mục</h3>
+            <h3 className="font-[Playfair_Display] text-[18px] font-medium text-[#141413] mb-6">Cơ cấu danh mục</h3>
             {summary?.categoryBreakdown.length ? (
-              <div className="h-80 flex flex-col">
-                <ResponsiveContainer width="100%" height="60%">
+              <div className="flex flex-col">
+                <div className="h-48">
+                <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
                       data={summary.categoryBreakdown}
@@ -331,7 +429,8 @@ const CashFlowDashboard: React.FC = () => {
                     <RechartsTooltip formatter={(val) => formatVND(Number(val ?? 0))} />
                   </PieChart>
                 </ResponsiveContainer>
-                <div className="flex-1 overflow-y-auto mt-4 pr-2">
+                </div>
+                <div className="mt-4 space-y-2">
                   {summary.categoryBreakdown.map((cat, i) => (
                     <div key={i} className="flex justify-between items-center mb-3">
                       <div className="flex items-center gap-2">
@@ -365,9 +464,26 @@ const CashFlowDashboard: React.FC = () => {
         {/* ─── Transactions Table ─── */}
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="p-5 border-b border-gray-100 flex flex-col md:flex-row justify-between gap-4">
-            <h3 className="text-lg font-semibold text-gray-800">Chi tiết giao dịch</h3>
+            <h3 className="font-[Playfair_Display] text-[18px] font-medium text-[#141413]">Chi tiết giao dịch</h3>
 
             <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-1.5 border border-gray-200 rounded-lg px-3 py-1.5">
+                <Calendar size={14} className="text-gray-400 shrink-0" />
+                <input
+                  type="date"
+                  className="border-0 text-sm outline-none text-gray-600 bg-transparent"
+                  value={dateRange.from}
+                  onChange={(e) => setDateRange((p) => ({ ...p, from: e.target.value }))}
+                />
+                <span className="text-gray-300 text-xs">→</span>
+                <input
+                  type="date"
+                  className="border-0 text-sm outline-none text-gray-600 bg-transparent"
+                  value={dateRange.to}
+                  onChange={(e) => setDateRange((p) => ({ ...p, to: e.target.value }))}
+                />
+              </div>
+
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
                   <Search size={16} />
@@ -410,69 +526,76 @@ const CashFlowDashboard: React.FC = () => {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-collapse table-fixed">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-100 text-xs uppercase text-gray-500 tracking-wider">
-                  <th className="px-6 py-4 font-medium">Thời gian</th>
-                  <th className="px-6 py-4 font-medium">Danh mục</th>
-                  <th className="px-6 py-4 font-medium text-right">Số tiền</th>
-                  <th className="px-6 py-4 font-medium">Chi tiết</th>
+                  <th className="px-4 py-3 font-medium w-1/6">Thời gian</th>
+                  <th className="px-4 py-3 font-medium w-1/6">Danh mục</th>
+                  <th className="px-4 py-3 font-medium text-right w-1/6">Số tiền</th>
+                  <th className="px-4 py-3 font-medium text-right w-1/6">Số dư</th>
+                  <th className="px-4 py-3 font-medium w-1/6">Người dùng</th>
+                  <th className="px-4 py-3 font-medium w-1/6"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 text-sm">
                 {loading ? (
                   <tr>
-                    <td colSpan={4} className="px-6 py-8 text-center text-gray-400">
+                    <td colSpan={5} className="px-6 py-8 text-center text-gray-400">
                       Đang tải dữ liệu...
                     </td>
                   </tr>
                 ) : transactions.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-6 py-8 text-center text-gray-400">
+                    <td colSpan={5} className="px-6 py-8 text-center text-gray-400">
                       Không tìm thấy giao dịch nào.
                     </td>
                   </tr>
                 ) : (
                   transactions.map((t) => (
                     <tr key={t.id} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="px-6 py-4 text-gray-500 whitespace-nowrap">
+                      <td className="px-4 py-3 text-gray-500 whitespace-nowrap text-[13px]">
                         {formatDate(t.transactionDate)}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-3">
                         <span
-                          className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border"
+                          className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium border"
                           style={{
                             backgroundColor: `${t.category?.color}15`,
                             color: t.category?.color,
                             borderColor: `${t.category?.color}30`,
                           }}
                         >
-                          {t.category?.name || 'Khác'}
+                          {t.category?.name ?? 'Khác'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-right whitespace-nowrap">
+                      <td className="px-4 py-3 text-right whitespace-nowrap">
                         <span
-                          className={`font-semibold ${t.direction === 'INFLOW' ? 'text-green-600' : 'text-red-600'}`}
+                          className={`font-semibold text-[13px] ${t.direction === 'INFLOW' ? 'text-green-600' : 'text-red-600'}`}
                         >
                           {t.direction === 'INFLOW' ? '+' : '-'}
                           {formatVND(t.amount)}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
-                        <div
-                          className="text-gray-900 font-medium truncate max-w-[200px]"
-                          title={t.description || ''}
-                        >
-                          {t.description || (t.orderCode ? `Đơn hàng #${t.orderCode}` : '—')}
-                        </div>
-                        {t.userName && (
-                          <div
-                            className="text-xs text-gray-500 mt-1 truncate max-w-[200px]"
-                            title={t.userEmail || ''}
-                          >
+                      <td className="px-4 py-3 text-right whitespace-nowrap">
+                        <span className="font-semibold text-[13px] text-[#141413]">
+                          {t.balance == null ? '—' : formatVND(t.balance)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        {t.userName ? (
+                          <div className="text-[13px] text-gray-700 truncate max-w-[120px]" title={t.userEmail ?? ''}>
                             {t.userName}
                           </div>
-                        )}
+                        ) : '—'}
+                      </td>
+                      <td className="px-4 py-3">
+                        <button
+                          onClick={() => setSelectedEntry(t)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#F5F4ED] text-[#5E5D59] text-[12px] font-medium hover:bg-[#E8E6DC] hover:text-[#141413] transition-colors duration-150"
+                        >
+                          Xem chi tiết
+                          <ChevronRight size={12} />
+                        </button>
                       </td>
                     </tr>
                   ))
@@ -509,6 +632,7 @@ const CashFlowDashboard: React.FC = () => {
         </div>
       </AdminFinanceStudioShell>
     </DashboardLayout>
+    </>
   );
 };
 
