@@ -1137,7 +1137,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
         <div
           className="section-header"
           onClick={() => toggleSection(group.id)}
-          style={isSidebar ? { padding: '0.65rem 1rem', background: '#1e1e1b' } : {}}
+          style={isSidebar ? { padding: '0.65rem 1rem', background: '#f5f4ed' } : {}}
         >
           <div className="section-title-area">
             <ChevronDown
@@ -1230,11 +1230,11 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.75rem',
-                  padding: '0.65rem 1rem',
-                  background: isPlaying ? '#2a2a27' : '#141413',
+                  padding: '0.75rem 1rem',
+                  background: isPlaying ? '#fdf4f0' : '#ffffff',
                   cursor: 'pointer',
-                  borderLeft: isPlaying ? '4px solid #C96442' : '4px solid transparent',
-                  borderBottom: '1px solid #30302e',
+                  borderLeft: isPlaying ? '3px solid #C96442' : '3px solid transparent',
+                  borderBottom: '1px solid #f0eee6',
                   transition: 'all 0.2s ease',
                 }
               : {
@@ -1253,8 +1253,8 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              background: isPlaying ? '#C96442' : isSidebar ? '#30302e' : '#e8e6dc',
-              color: isPlaying ? '#fff' : isSidebar ? '#b0aea5' : '#5e5d59',
+              background: isPlaying ? '#C96442' : '#e8e6dc',
+              color: isPlaying ? '#fff' : '#5e5d59',
             }}
           >
             <Play size={16} style={{ marginLeft: 2 }} />
@@ -1263,7 +1263,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
           <div className="clt-lesson-info">
             <div
               className="clt-lesson-title"
-              style={{ color: isPlaying ? '#C96442' : isSidebar ? '#faf9f5' : undefined }}
+              style={{ color: isPlaying ? '#C96442' : isSidebar ? '#141413' : undefined }}
               title={lesson.lessonTitle ?? 'Bài học'}
             >
               {lesson.lessonTitle ?? 'Bài học'}
@@ -1569,13 +1569,26 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
           {/* Sidebar Curriculum */}
           <div className="data-card player-sidebar">
             <div
-              style={{ padding: '1rem', borderBottom: '1px solid #30302e', background: '#141413' }}
+              style={{
+                padding: '1.25rem 1.5rem',
+                borderBottom: '1px solid #e8e6dc',
+                background: 'linear-gradient(to right, #fdfaf6, #ffffff)',
+                flexShrink: 0,
+              }}
             >
-              <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 800, color: '#faf9f5' }}>
+              <h4
+                style={{
+                  margin: 0,
+                  fontSize: '1rem',
+                  fontWeight: 800,
+                  color: '#141413',
+                  letterSpacing: '-0.01em',
+                }}
+              >
                 Nội dung khóa học
               </h4>
             </div>
-            <div style={{ maxHeight: 'calc(100vh - 300px)', overflowY: 'auto' }}>
+            <div style={{ maxHeight: 'calc(100vh - 240px)', overflowY: 'auto' }}>
               {renderCurriculum(true)}
             </div>
           </div>
