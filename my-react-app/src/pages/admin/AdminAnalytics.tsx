@@ -386,9 +386,8 @@ const AdminAnalytics: React.FC = () => {
           transition={{ duration: 0.5 }}
         >
           <div className="header-stack">
-            <span className="header-kicker">ADMIN ANALYTICS</span>
             <h1 className="ana-page-title">
-              <span>Thống kê & Phân tích</span>
+              Thống kê & Phân tích
             </h1>
             <p className="ana-page-subtitle">
               Hoạt động nền tảng MathMaster — Năm {currentYear}
