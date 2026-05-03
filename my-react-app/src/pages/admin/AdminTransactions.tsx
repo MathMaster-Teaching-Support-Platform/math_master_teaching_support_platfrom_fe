@@ -1,5 +1,5 @@
-import { Download, Loader2, RefreshCw } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
+import { BarChart2, Banknote, CheckCircle2, Clock, CreditCard, Download, Eye, Loader2, RefreshCw, Search, X, XCircle } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
@@ -7,9 +7,9 @@ import { mockAdmin } from '../../data/mockData';
 import { AuthService } from '../../services/api/auth.service';
 import '../../styles/module-refactor.css';
 import '../courses/TeacherCourses.css';
+import './admin-finance-studio.css';
 import './admin-mgmt-shell.css';
 import AdminFinanceStudioShell from './AdminFinanceStudioShell';
-import './admin-finance-studio.css';
 import './AdminTransactions.css';
 
 interface AdminTransaction {
@@ -165,7 +165,8 @@ const AdminTransactions: React.FC = () => {
   const stats = statsQuery.data ?? DEFAULT_STATS;
   const listLoading = transactionsQuery.isLoading || transactionsQuery.isFetching;
   const statsLoading = statsQuery.isLoading || statsQuery.isFetching;
-  const listError = transactionsQuery.error instanceof Error ? transactionsQuery.error.message : null;
+  const listError =
+    transactionsQuery.error instanceof Error ? transactionsQuery.error.message : null;
 
   useEffect(() => {
     if (totalPages > 0 && page >= totalPages) {
@@ -229,7 +230,7 @@ const AdminTransactions: React.FC = () => {
         <td className="txn-plan-name">{txn.planName}</td>
         <td className="txn-amount">{formatCurrency(txn.amount)}</td>
         <td>
-          <span className="txn-payment-badge">💳 {txn.paymentMethod}</span>
+          <span className="txn-payment-badge"><CreditCard size={12} /> {txn.paymentMethod}</span>
         </td>
         <td>
           <span className={`txn-status-badge txn-status-badge--${txn.status}`}>
@@ -244,7 +245,7 @@ const AdminTransactions: React.FC = () => {
             disabled={detailLoadingId === txn.id}
             onClick={() => handleOpenDetail(txn.id)}
           >
-            {detailLoadingId === txn.id ? '⏳ Đang tải...' : '👁️ Chi tiết'}
+            {detailLoadingId === txn.id ? <><Loader2 size={13} className="admin-finance-spin" /> Đang tải...</> : <><Eye size={13} /> Chi tiết</>}
           </button>
         </td>
       </tr>
@@ -344,7 +345,6 @@ const AdminTransactions: React.FC = () => {
         <div className="admin-transactions-page">
           <header className="page-header courses-header-row">
             <div className="header-stack">
-              <div className="header-kicker">Tài chính</div>
               <h2 className="page-title" style={{ margin: 0 }}>
                 Giao dịch
               </h2>
@@ -381,211 +381,193 @@ const AdminTransactions: React.FC = () => {
             </div>
           </header>
 
-        {/* Stats Cards */}
-        <div className="txn-stats-grid">
-          <div className="txn-stat-card" style={{ borderTopColor: '#667eea' }}>
-            <div
-              className="txn-stat-icon"
-              style={{ background: 'rgba(102,126,234,0.1)', color: '#667eea' }}
-            >
-              📊
-            </div>
-            <div className="txn-stat-info">
-              <div className="txn-stat-label">Tổng giao dịch</div>
-              <div className="txn-stat-value">{displayStat(stats.total)}</div>
-            </div>
-          </div>
-          <div className="txn-stat-card" style={{ borderTopColor: '#43e97b' }}>
-            <div
-              className="txn-stat-icon"
-              style={{ background: 'rgba(67,233,123,0.1)', color: '#43e97b' }}
-            >
-              ✅
-            </div>
-            <div className="txn-stat-info">
-              <div className="txn-stat-label">Thành công</div>
-              <div className="txn-stat-value">{displayStat(stats.completed)}</div>
-            </div>
-          </div>
-          <div className="txn-stat-card" style={{ borderTopColor: '#fbbf24' }}>
-            <div
-              className="txn-stat-icon"
-              style={{ background: 'rgba(251,191,36,0.1)', color: '#fbbf24' }}
-            >
-              ⏳
-            </div>
-            <div className="txn-stat-info">
-              <div className="txn-stat-label">Đang xử lý</div>
-              <div className="txn-stat-value">{displayStat(stats.pending)}</div>
-            </div>
-          </div>
-          <div className="txn-stat-card" style={{ borderTopColor: '#f56565' }}>
-            <div
-              className="txn-stat-icon"
-              style={{ background: 'rgba(245,101,101,0.1)', color: '#f56565' }}
-            >
-              ❌
-            </div>
-            <div className="txn-stat-info">
-              <div className="txn-stat-label">Thất bại</div>
-              <div className="txn-stat-value">{displayStat(stats.failed)}</div>
-            </div>
-          </div>
-          <div
-            className="txn-stat-card txn-stat-card--revenue"
-            style={{ borderTopColor: '#38f9d7' }}
-          >
-            <div
-              className="txn-stat-icon"
-              style={{ background: 'rgba(56,249,215,0.1)', color: '#38f9d7' }}
-            >
-              💰
-            </div>
-            <div className="txn-stat-info">
-              <div className="txn-stat-label">Tổng doanh thu (đã thu)</div>
-              <div className="txn-stat-value txn-stat-value--lg">{displayRevenue()}</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Filters */}
-        <div className="txn-filters">
-          <div className="txn-search-wrap">
-            <span className="txn-search-icon">🔍</span>
-            <input
-              type="text"
-              className="txn-search-input"
-              placeholder="Tìm theo tên, email, mã đơn, gói..."
-              value={search}
-              onChange={handleSearch}
-            />
-          </div>
-          <div className="txn-status-tabs">
-            {(['all', 'completed', 'pending', 'failed'] as StatusFilter[]).map((s) => (
-              <button
-                key={s}
-                className={`txn-tab${statusFilter === s ? ' txn-tab--active' : ''}`}
-                onClick={() => handleFilterChange(s)}
-              >
-                {s === 'all' ? 'Tất cả' : statusLabel(s)}
-                <span className="txn-tab-count">{s === 'all' ? stats.total : stats[s]}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Table */}
-        <div className="txn-table-card">
-          <div className="txn-table-wrap">
-            <table className="txn-table">
-              <thead>
-                <tr>
-                  <th>Mã đơn</th>
-                  <th>Người dùng</th>
-                  <th>Gói đăng ký</th>
-                  <th>Số tiền</th>
-                  <th>Phương thức</th>
-                  <th>Trạng thái</th>
-                  <th>Thời gian</th>
-                  <th>Hành động</th>
-                </tr>
-              </thead>
-              <tbody>{tableRows}</tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="txn-pagination">
-              <span className="txn-pagination-info">
-                Hiển thị {pageStart}–{pageEnd} / {totalItems} giao dịch
-              </span>
-              <div className="txn-pagination-btns">
-                <button
-                  className="txn-page-btn"
-                  disabled={page === 0}
-                  onClick={() => setPage((p) => p - 1)}
-                >
-                  ‹ Trước
-                </button>
-                {Array.from({ length: totalPages }, (_, i) => (
-                  <button
-                    key={i}
-                    className={`txn-page-btn${page === i ? ' txn-page-btn--active' : ''}`}
-                    onClick={() => setPage(i)}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
-                <button
-                  className="txn-page-btn"
-                  disabled={page === totalPages - 1}
-                  onClick={() => setPage((p) => Math.min(p + 1, totalPages - 1))}
-                >
-                  Sau ›
-                </button>
+          {/* Stats Cards */}
+          <div className="txn-stats-grid">
+            <div className="txn-stat-card">
+              <div className="txn-stat-icon">
+                <BarChart2 className="w-5 h-5" />
               </div>
+              <div className="txn-stat-info">
+                <div className="txn-stat-label">Tổng giao dịch</div>
+                <div className="txn-stat-value">{displayStat(stats.total)}</div>
+              </div>
+            </div>
+            <div className="txn-stat-card">
+              <div className="txn-stat-icon">
+                <CheckCircle2 className="w-5 h-5" />
+              </div>
+              <div className="txn-stat-info">
+                <div className="txn-stat-label">Thành công</div>
+                <div className="txn-stat-value">{displayStat(stats.completed)}</div>
+              </div>
+            </div>
+            <div className="txn-stat-card">
+              <div className="txn-stat-icon">
+                <Clock className="w-5 h-5" />
+              </div>
+              <div className="txn-stat-info">
+                <div className="txn-stat-label">Đang xử lý</div>
+                <div className="txn-stat-value">{displayStat(stats.pending)}</div>
+              </div>
+            </div>
+            <div className="txn-stat-card">
+              <div className="txn-stat-icon">
+                <XCircle className="w-5 h-5" />
+              </div>
+              <div className="txn-stat-info">
+                <div className="txn-stat-label">Thất bại</div>
+                <div className="txn-stat-value">{displayStat(stats.failed)}</div>
+              </div>
+            </div>
+            <div className="txn-stat-card txn-stat-card--revenue">
+              <div className="txn-stat-icon">
+                <Banknote className="w-5 h-5" />
+              </div>
+              <div className="txn-stat-info">
+                <div className="txn-stat-label">Tổng doanh thu (đã thu)</div>
+                <div className="txn-stat-value txn-stat-value--lg">{displayRevenue()}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Filters */}
+          <div className="txn-filters">
+            <div className="txn-search-wrap">
+              <span className="txn-search-icon"><Search className="w-4 h-4" /></span>
+              <input
+                type="text"
+                className="txn-search-input"
+                placeholder="Tìm theo tên, email, mã đơn, gói..."
+                value={search}
+                onChange={handleSearch}
+              />
+            </div>
+            <div className="txn-status-tabs">
+              {(['all', 'completed', 'pending', 'failed'] as StatusFilter[]).map((s) => (
+                <button
+                  key={s}
+                  className={`txn-tab${statusFilter === s ? ' txn-tab--active' : ''}`}
+                  onClick={() => handleFilterChange(s)}
+                >
+                  {s === 'all' ? 'Tất cả' : statusLabel(s)}
+                  <span className="txn-tab-count">{s === 'all' ? stats.total : stats[s]}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Table */}
+          <div className="txn-table-card">
+            <div className="txn-table-wrap">
+              <table className="txn-table">
+                <thead>
+                  <tr>
+                    <th>Mã đơn</th>
+                    <th>Người dùng</th>
+                    <th>Gói đăng ký</th>
+                    <th>Số tiền</th>
+                    <th>Phương thức</th>
+                    <th>Trạng thái</th>
+                    <th>Thời gian</th>
+                    <th>Hành động</th>
+                  </tr>
+                </thead>
+                <tbody>{tableRows}</tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="txn-pagination">
+                <span className="txn-pagination-info">
+                  Hiển thị {pageStart}–{pageEnd} / {totalItems} giao dịch
+                </span>
+                <div className="txn-pagination-btns">
+                  <button
+                    className="txn-page-btn"
+                    disabled={page === 0}
+                    onClick={() => setPage((p) => p - 1)}
+                  >
+                    ‹ Trước
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => (
+                    <button
+                      key={i}
+                      className={`txn-page-btn${page === i ? ' txn-page-btn--active' : ''}`}
+                      onClick={() => setPage(i)}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                  <button
+                    className="txn-page-btn"
+                    disabled={page === totalPages - 1}
+                    onClick={() => setPage((p) => Math.min(p + 1, totalPages - 1))}
+                  >
+                    Sau ›
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Detail Modal */}
+          {selectedTxn && (
+            <div className="txn-modal-overlay">
+              <dialog open className="txn-modal">
+                <div className="txn-modal-header">
+                  <h2 className="txn-modal-title">Chi tiết giao dịch</h2>
+                  <button className="txn-modal-close" onClick={() => setSelectedTxn(null)}>
+                    <X size={15} />
+                  </button>
+                </div>
+                <div className="txn-modal-body">
+                  <div className="txn-detail-row">
+                    <span className="txn-detail-label">Mã giao dịch</span>
+                    <span className="txn-detail-value monospace">{selectedTxn.id}</span>
+                  </div>
+                  <div className="txn-detail-row">
+                    <span className="txn-detail-label">Mã đơn hàng</span>
+                    <span className="txn-detail-value monospace">
+                      {String(selectedTxn.orderCode)}
+                    </span>
+                  </div>
+                  <div className="txn-detail-row">
+                    <span className="txn-detail-label">Người dùng</span>
+                    <span className="txn-detail-value">{selectedTxn.userName}</span>
+                  </div>
+                  <div className="txn-detail-row">
+                    <span className="txn-detail-label">Email</span>
+                    <span className="txn-detail-value">{selectedTxn.userEmail}</span>
+                  </div>
+                  <div className="txn-detail-row">
+                    <span className="txn-detail-label">Gói đăng ký</span>
+                    <span className="txn-detail-value">{selectedTxn.planName}</span>
+                  </div>
+                  <div className="txn-detail-row">
+                    <span className="txn-detail-label">Số tiền</span>
+                    <span className="txn-detail-value txn-amount">
+                      {formatCurrency(selectedTxn.amount)}
+                    </span>
+                  </div>
+                  <div className="txn-detail-row">
+                    <span className="txn-detail-label">Phương thức</span>
+                    <span className="txn-detail-value" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem' }}><CreditCard size={13} /> {selectedTxn.paymentMethod}</span>
+                  </div>
+                  <div className="txn-detail-row">
+                    <span className="txn-detail-label">Trạng thái</span>
+                    <span className={`txn-status-badge txn-status-badge--${selectedTxn.status}`}>
+                      {statusLabel(selectedTxn.status)}
+                    </span>
+                  </div>
+                  <div className="txn-detail-row">
+                    <span className="txn-detail-label">Thời gian</span>
+                    <span className="txn-detail-value">{formatDate(selectedTxn.createdAt)}</span>
+                  </div>
+                </div>
+              </dialog>
             </div>
           )}
-        </div>
-
-        {/* Detail Modal */}
-        {selectedTxn && (
-          <div className="txn-modal-overlay">
-            <dialog open className="txn-modal">
-              <div className="txn-modal-header">
-                <h2 className="txn-modal-title">Chi tiết giao dịch</h2>
-                <button className="txn-modal-close" onClick={() => setSelectedTxn(null)}>
-                  ✕
-                </button>
-              </div>
-              <div className="txn-modal-body">
-                <div className="txn-detail-row">
-                  <span className="txn-detail-label">Mã giao dịch</span>
-                  <span className="txn-detail-value monospace">{selectedTxn.id}</span>
-                </div>
-                <div className="txn-detail-row">
-                  <span className="txn-detail-label">Mã đơn hàng</span>
-                  <span className="txn-detail-value monospace">
-                    {String(selectedTxn.orderCode)}
-                  </span>
-                </div>
-                <div className="txn-detail-row">
-                  <span className="txn-detail-label">Người dùng</span>
-                  <span className="txn-detail-value">{selectedTxn.userName}</span>
-                </div>
-                <div className="txn-detail-row">
-                  <span className="txn-detail-label">Email</span>
-                  <span className="txn-detail-value">{selectedTxn.userEmail}</span>
-                </div>
-                <div className="txn-detail-row">
-                  <span className="txn-detail-label">Gói đăng ký</span>
-                  <span className="txn-detail-value">{selectedTxn.planName}</span>
-                </div>
-                <div className="txn-detail-row">
-                  <span className="txn-detail-label">Số tiền</span>
-                  <span className="txn-detail-value txn-amount">
-                    {formatCurrency(selectedTxn.amount)}
-                  </span>
-                </div>
-                <div className="txn-detail-row">
-                  <span className="txn-detail-label">Phương thức</span>
-                  <span className="txn-detail-value">💳 {selectedTxn.paymentMethod}</span>
-                </div>
-                <div className="txn-detail-row">
-                  <span className="txn-detail-label">Trạng thái</span>
-                  <span className={`txn-status-badge txn-status-badge--${selectedTxn.status}`}>
-                    {statusLabel(selectedTxn.status)}
-                  </span>
-                </div>
-                <div className="txn-detail-row">
-                  <span className="txn-detail-label">Thời gian</span>
-                  <span className="txn-detail-value">{formatDate(selectedTxn.createdAt)}</span>
-                </div>
-              </div>
-            </dialog>
-          </div>
-        )}
         </div>
       </AdminFinanceStudioShell>
     </DashboardLayout>

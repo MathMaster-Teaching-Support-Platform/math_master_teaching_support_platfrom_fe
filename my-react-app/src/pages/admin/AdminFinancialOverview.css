@@ -33,14 +33,14 @@
   --ov-radius-xl:       24px;
 
   padding: 2rem 2rem 3rem;
-  max-width: 1440px;
-  margin: 0 auto;
+  width: 100%;
   background-color: var(--ov-parchment);
   min-height: 100vh;
   font-family: var(--f-body);
   display: flex;
   flex-direction: column;
   gap: 1.75rem;
+  box-sizing: border-box;
 }
 
 
