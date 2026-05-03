@@ -20,6 +20,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AuthService } from '../../services/api/auth.service';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockAdmin } from '../../data/mockData';
+import { API_BASE_URL } from '../../config/api.config';
 import {
   AdminSlideTemplateService,
   type AdminSlideTemplateCreatePayload,
@@ -44,6 +45,18 @@ function formatDate(iso?: string): string {
     month: '2-digit',
     day: '2-digit',
   });
+}
+
+function getTemplatePreviewUrl(template: LessonSlideTemplate): string {
+  const previewImage = template.previewImage;
+  if (previewImage && /^https?:\/\//i.test(previewImage)) {
+    return previewImage;
+  }
+  if (previewImage) {
+    const normalizedPath = previewImage.startsWith('/') ? previewImage : `/${previewImage}`;
+    return `${API_BASE_URL}${normalizedPath}`;
+  }
+  return AdminSlideTemplateService.getPreviewImageUrl(template.id);
 }
 
 // ─── sub-components ──────────────────────────────────────────────────────────
@@ -443,7 +456,7 @@ const PreviewModal: React.FC<PreviewModalProps> = ({ template, onClose }) => {
 
     let objectUrl: string | null = null;
 
-    fetch(AdminSlideTemplateService.getPreviewImageUrl(template.id), {
+    fetch(getTemplatePreviewUrl(template), {
       headers: { Authorization: `Bearer ${token}`, accept: '*/*' },
     })
       .then(async (res) => {
@@ -465,7 +478,7 @@ const PreviewModal: React.FC<PreviewModalProps> = ({ template, onClose }) => {
     return () => {
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [hasPreview, template.id, token]);
+  }, [hasPreview, template, token]);
 
   return (
     <div
@@ -1110,7 +1123,7 @@ export default function AdminSlideTemplates() {
                           >
                             {t.previewImage ? (
                               <img
-                                src={AdminSlideTemplateService.getPreviewImageUrl(t.id)}
+                                src={getTemplatePreviewUrl(t)}
                                 alt=""
                                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                 onError={(e) => {
