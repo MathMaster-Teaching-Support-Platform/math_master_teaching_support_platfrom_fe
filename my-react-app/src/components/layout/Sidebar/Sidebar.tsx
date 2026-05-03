@@ -96,7 +96,7 @@ const teacherGroups: MenuGroup[] = [
 
 const studentGroups: MenuGroup[] = [
   {
-    label: null,
+    label: 'Học tập',
     items: [
       { path: '/student/courses', icon: GraduationCap, label: 'Khóa học' },
       { path: '/student/public-slides', icon: Library, label: 'Slide' },
@@ -124,7 +124,7 @@ const studentGroups: MenuGroup[] = [
 
 const adminGroups: MenuGroup[] = [
   {
-    label: null,
+    label: 'Tổng quan',
     items: [{ path: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' }],
   },
   {
@@ -162,33 +162,44 @@ const adminGroups: MenuGroup[] = [
   },
 ];
 
+const getGroupsByRole = (role: SidebarProps['role']): MenuGroup[] => {
+  if (role === 'teacher') return teacherGroups;
+  if (role === 'student') return studentGroups;
+  return adminGroups;
+};
+
 const Sidebar: React.FC<SidebarProps> = ({ role, collapsed, onToggle }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const navRef = useRef<HTMLElement | null>(null);
   const prefetchedPathsRef = useRef<Set<string>>(new Set());
+  const groups = useMemo(() => getGroupsByRole(role), [role]);
   const navScrollStorageKey = useMemo(() => `mm.sidebar.scrollTop.${role}`, [role]);
-  const teacherGroupExpandStorageKey = useMemo(() => 'mm.sidebar.teacher.expandedGroups', []);
+  const groupExpandStorageKey = useMemo(() => `mm.sidebar.expandedGroups.${role}`, [role]);
   const navId = useMemo(() => `sidebar-nav-${role}`, [role]);
   const getGroupKey = (group: MenuGroup, index: number) => group.label ?? `__group_${index}`;
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(() => {
-    const defaults = teacherGroups.reduce<Record<string, boolean>>((acc, group, index) => {
-      const key = group.label ?? `__group_${index}`;
-      acc[key] = true;
+
+  const readExpandedGroups = (inputGroups: MenuGroup[]): Record<string, boolean> => {
+    const defaults = inputGroups.reduce<Record<string, boolean>>((acc, group, index) => {
+      acc[getGroupKey(group, index)] = true;
       return acc;
     }, {});
 
     if (globalThis.window === undefined) return defaults;
 
     try {
-      const raw = globalThis.sessionStorage.getItem('mm.sidebar.teacher.expandedGroups');
+      const raw = globalThis.sessionStorage.getItem(groupExpandStorageKey);
       if (!raw) return defaults;
       const parsed = JSON.parse(raw) as Record<string, boolean>;
       return { ...defaults, ...parsed };
     } catch {
       return defaults;
     }
+  };
+
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(() => {
+    return readExpandedGroups(groups);
   });
 
   useEffect(() => {
@@ -200,9 +211,12 @@ const Sidebar: React.FC<SidebarProps> = ({ role, collapsed, onToggle }) => {
   }, [navScrollStorageKey]);
 
   useEffect(() => {
-    if (role !== 'teacher') return;
-    globalThis.sessionStorage.setItem(teacherGroupExpandStorageKey, JSON.stringify(expandedGroups));
-  }, [expandedGroups, role, teacherGroupExpandStorageKey]);
+    setExpandedGroups(readExpandedGroups(groups));
+  }, [groupExpandStorageKey, groups]);
+
+  useEffect(() => {
+    globalThis.sessionStorage.setItem(groupExpandStorageKey, JSON.stringify(expandedGroups));
+  }, [expandedGroups, groupExpandStorageKey]);
 
   useEffect(() => {
     const nav = navRef.current;
@@ -223,22 +237,14 @@ const Sidebar: React.FC<SidebarProps> = ({ role, collapsed, onToggle }) => {
     navigate('/login');
   };
 
-  let groups: MenuGroup[];
-  if (role === 'teacher') groups = teacherGroups;
-  else if (role === 'student') groups = studentGroups;
-  else groups = adminGroups;
-
   const settingsPath = `/${role}/settings`;
-  let roleLabel = 'Quản trị viên';
-  if (role === 'teacher') roleLabel = 'Giáo viên';
-  else if (role === 'student') roleLabel = 'Học sinh';
 
   const isActive = (path: string) => {
     if (path.endsWith('/dashboard')) return location.pathname === path;
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
   };
 
-  const showTeacherSubmenus = role === 'teacher' && !collapsed;
+  const showSubmenus = !collapsed;
 
   const prefetchByPath = async (path: string) => {
     if (prefetchedPathsRef.current.has(path)) return;
@@ -375,20 +381,15 @@ const Sidebar: React.FC<SidebarProps> = ({ role, collapsed, onToggle }) => {
 
       {/* Nav */}
       <nav ref={navRef} id={navId} className="sidebar-nav" aria-label="Điều hướng chính">
-        {!collapsed && (
-          <p className="sb-group-label sb-role-label" aria-label={`Vai trò: ${roleLabel}`}>
-            {roleLabel}
-          </p>
-        )}
         {groups.map((group, groupIndex) => {
           const groupKey = getGroupKey(group, groupIndex);
-          const isGroupExpanded = showTeacherSubmenus ? (expandedGroups[groupKey] ?? true) : true;
+          const isGroupExpanded = showSubmenus ? (expandedGroups[groupKey] ?? true) : true;
 
           return (
             <div key={groupKey} className="sb-group">
               {group.label &&
                 !collapsed &&
-                (showTeacherSubmenus ? (
+                (showSubmenus ? (
                   <button
                     type="button"
                     className="sb-group-toggle"
@@ -410,9 +411,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role, collapsed, onToggle }) => {
                   <p className="sb-group-label">{group.label}</p>
                 ))}
               <div
-                className={`sb-group-items${
-                  showTeacherSubmenus && !isGroupExpanded ? ' is-hidden' : ''
-                }`}
+                className={`sb-group-items${showSubmenus && !isGroupExpanded ? ' is-hidden' : ''}`}
               >
                 {group.items.map((item) => (
                   <Link
