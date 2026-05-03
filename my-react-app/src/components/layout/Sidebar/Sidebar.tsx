@@ -6,6 +6,7 @@ import {
   BarChart3,
   BookOpen,
   Bot,
+  ChevronDown,
   ChevronLeft,
   ClipboardList,
   CreditCard,
@@ -29,7 +30,7 @@ import {
   Wallet,
   Workflow,
 } from 'lucide-react';
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthService } from '../../../services/api/auth.service';
 import { LessonSlideService } from '../../../services/api/lesson-slide.service';
@@ -58,12 +59,16 @@ interface MenuGroup {
 
 const teacherGroups: MenuGroup[] = [
   {
-    label: 'Nội dung',
+    label: 'Học liệu giảng dạy',
     items: [
       { path: '/teacher/courses', icon: BookOpen, label: 'Khóa học' },
       { path: '/teacher/lesson-plans', icon: ClipboardList, label: 'Giáo Án' },
       { path: '/teacher/materials', icon: FolderKanban, label: 'Tài liệu' },
-      { path: '/teacher/mindmaps', icon: Workflow, label: 'Mindmap' },
+    ],
+  },
+  {
+    label: 'Đề thi và đánh giá',
+    items: [
       { path: '/teacher/exam-matrices', icon: Ruler, label: 'Ma trận đề' },
       { path: '/teacher/question-templates', icon: FileQuestion, label: 'Mẫu câu hỏi' },
       { path: '/teacher/question-banks', icon: Database, label: 'Ngân hàng câu hỏi' },
@@ -73,10 +78,16 @@ const teacherGroups: MenuGroup[] = [
     ],
   },
   {
-    label: 'Công cụ',
+    label: 'Công cụ AI và trực quan',
     items: [
+      { path: '/teacher/mindmaps', icon: Workflow, label: 'Mindmap' },
       { path: '/teacher/ai-assistant', icon: Bot, label: 'AI Trợ lý' },
       { path: '/teacher/ai-slide-generator', icon: Presentation, label: 'AI Slide Gen' },
+    ],
+  },
+  {
+    label: 'Tài chính',
+    items: [
       { path: '/teacher/wallet', icon: Wallet, label: 'Ví của tôi' },
       { path: '/pricing', icon: CreditCard, label: 'Gói đăng ký' },
     ],
@@ -159,6 +170,13 @@ const Sidebar: React.FC<SidebarProps> = ({ role, collapsed, onToggle }) => {
   const prefetchedPathsRef = useRef<Set<string>>(new Set());
   const navScrollStorageKey = useMemo(() => `mm.sidebar.scrollTop.${role}`, [role]);
   const navId = useMemo(() => `sidebar-nav-${role}`, [role]);
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(() => {
+    return teacherGroups.reduce<Record<string, boolean>>((acc, group, index) => {
+      const key = group.label ?? `__group_${index}`;
+      acc[key] = true;
+      return acc;
+    }, {});
+  });
 
   useEffect(() => {
     const nav = navRef.current;
@@ -201,6 +219,8 @@ const Sidebar: React.FC<SidebarProps> = ({ role, collapsed, onToggle }) => {
     if (path.endsWith('/dashboard')) return location.pathname === path;
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
   };
+
+  const showTeacherSubmenus = role === 'teacher' && !collapsed;
 
   const prefetchByPath = async (path: string) => {
     if (prefetchedPathsRef.current.has(path)) return;
@@ -344,29 +364,71 @@ const Sidebar: React.FC<SidebarProps> = ({ role, collapsed, onToggle }) => {
         )}
         {groups.map((group) => (
           <div key={group.label ?? '__root'} className="sb-group">
-            {group.label && !collapsed && <p className="sb-group-label">{group.label}</p>}
-            {group.items.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`sb-item${isActive(item.path) ? ' active' : ''}`}
-                onMouseEnter={() => {
-                  void prefetchByPath(item.path);
-                }}
-                onFocus={() => {
-                  void prefetchByPath(item.path);
-                }}
-                onTouchStart={() => {
-                  void prefetchByPath(item.path);
-                }}
-              >
-                <span className="sb-icon">
-                  <item.icon size={16} strokeWidth={2} />
-                </span>
-                {!collapsed && <span className="sb-label">{item.label}</span>}
-                {collapsed && <span className="sb-tooltip">{item.label}</span>}
-              </Link>
-            ))}
+            {group.label &&
+              !collapsed &&
+              (showTeacherSubmenus ? (
+                <button
+                  type="button"
+                  className="sb-group-toggle"
+                  onClick={() => {
+                    setExpandedGroups((prev) => ({
+                      ...prev,
+                      [group.label!]: !(prev[group.label!] ?? true),
+                    }));
+                  }}
+                  aria-expanded={
+                    (expandedGroups[group.label] ?? true) ||
+                    group.items.some((item) => isActive(item.path))
+                  }
+                >
+                  <span className="sb-group-toggle-label">{group.label}</span>
+                  <ChevronDown
+                    size={14}
+                    className={`sb-group-toggle-icon${
+                      (expandedGroups[group.label] ?? true) ||
+                      group.items.some((item) => isActive(item.path))
+                        ? ' is-open'
+                        : ''
+                    }`}
+                  />
+                </button>
+              ) : (
+                <p className="sb-group-label">{group.label}</p>
+              ))}
+            <div
+              className={`sb-group-items${
+                showTeacherSubmenus &&
+                !(
+                  (expandedGroups[group.label ?? ''] ?? true) ||
+                  group.items.some((item) => isActive(item.path))
+                )
+                  ? ' is-hidden'
+                  : ''
+              }`}
+            >
+              {group.items.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`sb-item${isActive(item.path) ? ' active' : ''}`}
+                  onMouseEnter={() => {
+                    void prefetchByPath(item.path);
+                  }}
+                  onFocus={() => {
+                    void prefetchByPath(item.path);
+                  }}
+                  onTouchStart={() => {
+                    void prefetchByPath(item.path);
+                  }}
+                >
+                  <span className="sb-icon">
+                    <item.icon size={16} strokeWidth={2} />
+                  </span>
+                  {!collapsed && <span className="sb-label">{item.label}</span>}
+                  {collapsed && <span className="sb-tooltip">{item.label}</span>}
+                </Link>
+              ))}
+            </div>
           </div>
         ))}
       </nav>
