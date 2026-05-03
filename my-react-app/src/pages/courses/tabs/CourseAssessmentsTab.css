@@ -29,7 +29,7 @@
   flex-direction: column;
   box-shadow: 0 20px 40px rgba(0,0,0,0.15);
   overflow: hidden;
-  animation: modal-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  animation: modal-pop 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @keyframes modal-pop {

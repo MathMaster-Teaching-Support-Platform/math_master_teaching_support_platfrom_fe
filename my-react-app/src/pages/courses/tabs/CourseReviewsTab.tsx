@@ -109,7 +109,7 @@ const CourseReviewsTab: React.FC<CourseReviewsTabProps> = ({ courseId }) => {
               <div key={star} className="cdt-reviews__dist-row">
                 <span className="cdt-reviews__dist-label">{star}★</span>
                 <div className="cdt-reviews__dist-bar">
-                  <div className="cdt-reviews__dist-fill" style={{ width: `${percent}%` }} />
+                  <div className="cdt-reviews__dist-fill" style={{ transform: `scaleX(${percent / 100})` }} />
                 </div>
                 <span className="cdt-reviews__dist-count">{count}</span>
               </div>
