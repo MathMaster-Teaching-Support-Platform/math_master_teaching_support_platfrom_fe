@@ -1,23 +1,23 @@
 /* --- Design Tokens (DESIGN.md warm palette) -------------------------------- */
 :root {
-  --ana-bg:            #f5f4ed; /* Parchment */
-  --ana-surface:       #faf9f5; /* Ivory */
-  --ana-primary:       #c96442; /* Terracotta */
-  --ana-primary-soft:  rgba(201, 100, 66, 0.08);
-  --ana-secondary:     #d97757; /* Coral */
+  --ana-bg: #f5f4ed; /* Parchment */
+  --ana-surface: #faf9f5; /* Ivory */
+  --ana-primary: #c96442; /* Terracotta */
+  --ana-primary-soft: rgba(201, 100, 66, 0.08);
+  --ana-secondary: #d97757; /* Coral */
   --ana-secondary-soft: rgba(217, 119, 87, 0.08);
-  --ana-success:       #5e5d59; /* Olive Gray */
-  --ana-success-soft:  rgba(94, 93, 89, 0.08);
-  --ana-error:         #b53333; /* Warm Red */
-  --ana-text-main:     #141413; /* Near Black */
-  --ana-text-muted:    #87867f; /* Stone Gray */
-  --ana-border:        #f0eee6; /* Border Cream */
-  --ana-border-warm:   #e8e6dc; /* Border Warm */
-  --ana-ring:          #d1cfc5; /* Ring Warm */
-  --ana-shadow-sm:     rgba(0,0,0,0.05) 0px 4px 24px;
-  --ana-shadow-md:     0px 0px 0px 1px #d1cfc5, rgba(0,0,0,0.05) 0px 4px 24px;
-  --ana-shadow-lg:     0px 0px 0px 1px #c2c0b6, rgba(0,0,0,0.08) 0px 8px 30px;
-  --ana-radius:        1rem;
+  --ana-success: #5e5d59; /* Olive Gray */
+  --ana-success-soft: rgba(94, 93, 89, 0.08);
+  --ana-error: #b53333; /* Warm Red */
+  --ana-text-main: #141413; /* Near Black */
+  --ana-text-muted: #87867f; /* Stone Gray */
+  --ana-border: #f0eee6; /* Border Cream */
+  --ana-border-warm: #e8e6dc; /* Border Warm */
+  --ana-ring: #d1cfc5; /* Ring Warm */
+  --ana-shadow-sm: rgba(0, 0, 0, 0.05) 0px 4px 24px;
+  --ana-shadow-md: 0px 0px 0px 1px #d1cfc5, rgba(0, 0, 0, 0.05) 0px 4px 24px;
+  --ana-shadow-lg: 0px 0px 0px 1px #c2c0b6, rgba(0, 0, 0, 0.08) 0px 8px 30px;
+  --ana-radius: 1rem;
 }
 
 .admin-analytics-page {
@@ -73,7 +73,9 @@
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s ease, transform 0.1s ease;
+  transition:
+    background 0.15s ease,
+    transform 0.1s ease;
 }
 
 .ana-export-btn:hover {
@@ -110,7 +112,9 @@
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
 }
 
 .ana-nav-btn-icon {
@@ -145,7 +149,9 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
   position: relative;
   overflow: hidden;
   box-shadow: var(--ana-shadow-sm);
@@ -311,7 +317,7 @@
   border: 1px solid #30302e;
   padding: 0.875rem 1rem;
   border-radius: 0.75rem;
-  box-shadow: rgba(0,0,0,0.15) 0px 8px 24px;
+  box-shadow: rgba(0, 0, 0, 0.15) 0px 8px 24px;
   color: #faf9f5;
   min-width: 170px;
 }
