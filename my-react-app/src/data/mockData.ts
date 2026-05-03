@@ -17,7 +17,7 @@ export const mockTeacher = {
 export const mockStudent = {
   id: '2',
   name: 'Phạm Đăng Khôi',
-  email: 'tranthibinh@email.com',
+  email: 'nsn15102004@gmail.com',
   role: 'student',
   avatar: 'TB',
   school: 'THPT Lý Thái Tổ',
