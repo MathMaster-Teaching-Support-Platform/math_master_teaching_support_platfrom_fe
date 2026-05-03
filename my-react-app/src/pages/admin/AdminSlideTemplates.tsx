@@ -444,6 +444,82 @@ interface PreviewModalProps {
   onClose: () => void;
 }
 
+interface TemplateThumbnailProps {
+  template: LessonSlideTemplate;
+  onClick: () => void;
+}
+
+const TemplateThumbnail: React.FC<TemplateThumbnailProps> = ({ template, onClick }) => {
+  const token = AuthService.getToken();
+  const hasPreview = Boolean(template.previewImage) && Boolean(token);
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!hasPreview) return;
+
+    let objectUrl: string | null = null;
+    let cancelled = false;
+
+    fetch(getTemplatePreviewUrl(template), {
+      headers: { Authorization: `Bearer ${token}`, accept: '*/*' },
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.blob();
+      })
+      .then((blob) => {
+        if (cancelled) return;
+        objectUrl = URL.createObjectURL(blob);
+        setBlobUrl(objectUrl);
+      })
+      .catch(() => {
+        setBlobUrl(null);
+      });
+
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [hasPreview, template, token]);
+
+  return (
+    <div
+      onClick={onClick}
+      title="Xem ảnh preview"
+      style={{
+        width: 52,
+        height: 38,
+        borderRadius: 6,
+        background: '#f3f4f6',
+        flexShrink: 0,
+        cursor: 'pointer',
+        overflow: 'hidden',
+        border: '1px solid #e5e7eb',
+      }}
+    >
+      {blobUrl ? (
+        <img
+          src={blobUrl}
+          alt={`Preview: ${template.name}`}
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        />
+      ) : (
+        <div
+          style={{
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <FileSliders size={16} color="#9ca3af" />
+        </div>
+      )}
+    </div>
+  );
+};
+
 const PreviewModal: React.FC<PreviewModalProps> = ({ template, onClose }) => {
   const token = AuthService.getToken();
   const hasPreview = Boolean(template.previewImage) && Boolean(token);
@@ -1107,43 +1183,7 @@ export default function AdminSlideTemplates() {
                       <td style={{ padding: '14px 16px' }}>
                         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
                           {/* Preview thumbnail */}
-                          <div
-                            onClick={() => setPreviewTarget(t)}
-                            title="Xem ảnh preview"
-                            style={{
-                              width: 52,
-                              height: 38,
-                              borderRadius: 6,
-                              background: '#f3f4f6',
-                              flexShrink: 0,
-                              cursor: 'pointer',
-                              overflow: 'hidden',
-                              border: '1px solid #e5e7eb',
-                            }}
-                          >
-                            {t.previewImage ? (
-                              <img
-                                src={getTemplatePreviewUrl(t)}
-                                alt=""
-                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                onError={(e) => {
-                                  (e.currentTarget as HTMLImageElement).style.display = 'none';
-                                }}
-                              />
-                            ) : (
-                              <div
-                                style={{
-                                  width: '100%',
-                                  height: '100%',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                }}
-                              >
-                                <FileSliders size={16} color="#9ca3af" />
-                              </div>
-                            )}
-                          </div>
+                          <TemplateThumbnail template={t} onClick={() => setPreviewTarget(t)} />
 
                           <div>
                             <div style={{ fontWeight: 600, fontSize: 14, color: '#111827' }}>
