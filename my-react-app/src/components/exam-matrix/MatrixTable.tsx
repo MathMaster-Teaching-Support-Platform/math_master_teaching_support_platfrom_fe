@@ -138,8 +138,24 @@ export function MatrixTable({
         }
       }
     }
-    setLocalCells(newLocalCells);
-    setDirtyCells(new Set());
+    
+    // FIX: Don't overwrite cells that have pending (dirty) changes.
+    // The user's edits should survive server data reinitialization.
+    setLocalCells(prev => {
+      const merged = new Map(newLocalCells);
+      for (const dirtyId of dirtyCellsRef.current) {
+        const userValue = prev.get(dirtyId);
+        if (userValue !== undefined) {
+          merged.set(dirtyId, userValue); // Keep user's pending edit
+        }
+      }
+      return merged;
+    });
+    
+    // Only clear dirty cells if there are no pending changes
+    if (dirtyCellsRef.current.size === 0) {
+      setDirtyCells(new Set());
+    }
   }, [chapters, numberOfParts]);
 
   // Get cell value (local or from chapters)
@@ -217,6 +233,23 @@ export function MatrixTable({
     setSaveError(null);
 
     try {
+      // Validate: warn if any row has all-zero cells
+      const rowIds = new Set(Array.from(currentDirty).map(id => id.split(':')[0]));
+      for (const rowId of rowIds) {
+        let rowTotal = 0;
+        for (let p = 1; p <= numberOfParts; p++) {
+          for (const level of cognitiveOrder) {
+            const cellId = makeCellId(rowId, p, level);
+            rowTotal += currentLocal.get(cellId) ?? 0;
+          }
+        }
+        if (rowTotal === 0) {
+          setSaveError('Hàng chủ đề không thể có tổng = 0. Vui lòng nhập ít nhất 1 câu hỏi hoặc xóa hàng.');
+          setSaving(false);
+          return;
+        }
+      }
+      
       // Group dirty cells by row
       const rowUpdates = new Map<string, MatrixCellRequest[]>();
       
@@ -268,7 +301,19 @@ export function MatrixTable({
     });
     
     setDirtyCells(prev => new Set(prev).add(cellId));
-    scheduleSave();
+    
+    // If setting to 0 (delete), save immediately to avoid race condition with useEffect
+    if (clampedValue === 0) {
+      // Clear any pending debounce
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+      }
+      // Save immediately after React commits the state update
+      // Use requestAnimationFrame to ensure refs are updated
+      requestAnimationFrame(() => void performSave());
+    } else {
+      scheduleSave();
+    }
   }, [scheduleSave]);
 
   // Start editing a cell
@@ -472,17 +517,29 @@ export function MatrixTable({
                                     cancelEdit();
                                   }
                                 }}
+                                placeholder={part.questionType === 'TRUE_FALSE' ? 'mệnh đề' : ''}
+                                title={part.questionType === 'TRUE_FALSE' ? '4 mệnh đề = 1 câu Đúng/Sai' : ''}
                               />
                             ) : (
-                              <div className="matrix-cell-value">{count}</div>
+                              <div className="matrix-cell-value">
+                                {count}
+                                {count > 0 && part.questionType === 'TRUE_FALSE' && (
+                                  <span style={{ fontSize: 9, color: '#6b7280', display: 'block' }}>
+                                    mệnh đề
+                                  </span>
+                                )}
+                              </div>
                             )}
                           </td>
                         );
                       })
                     )}
 
-                    <td className="matrix-td matrix-td--total-type">
-                      <div className="matrix-total-cell">{rowTotal}</div>
+                    <td className={`matrix-td matrix-td--total-type ${rowTotal === 0 ? 'matrix-td--warning' : ''}`}>
+                      <div className="matrix-total-cell" title={rowTotal === 0 ? 'Tổng = 0, hàng này sẽ không có câu hỏi' : ''}>
+                        {rowTotal}
+                        {rowTotal === 0 && <span style={{ color: '#dc2626', fontSize: 11, display: 'block' }}>⚠️ Trống</span>}
+                      </div>
                     </td>
 
                     <td className="matrix-td matrix-td--total-type">
@@ -516,12 +573,20 @@ export function MatrixTable({
               {effectiveParts.map((part) =>
                 cognitiveOrder.map((level) => {
                   const ck = makeCellKey(part.partNumber, level);
+                  const total = columnTotals[ck] ?? 0;
                   return (
                     <td
                       key={`${part.partNumber}-${level}`}
                       className={`matrix-td matrix-td--level matrix-td--level-${level.toLowerCase()} matrix-td--grand-total`}
                     >
-                      <div className="matrix-grand-total-cell">{columnTotals[ck] ?? 0}</div>
+                      <div className="matrix-grand-total-cell">
+                        {total}
+                        {part.questionType === 'TRUE_FALSE' && total > 0 && (
+                          <div style={{ fontSize: 9, color: '#6b7280', marginTop: 2 }}>
+                            = {Math.ceil(total / 4)} câu TF
+                          </div>
+                        )}
+                      </div>
                     </td>
                   );
                 })

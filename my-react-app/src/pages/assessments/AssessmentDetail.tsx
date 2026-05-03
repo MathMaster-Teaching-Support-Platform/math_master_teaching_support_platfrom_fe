@@ -452,6 +452,7 @@ export default function AssessmentDetail() {
                     <tr>
                       <th style={{ width: 50 }}>STT</th>
                       <th>Nội dung câu hỏi</th>
+                      <th style={{ width: 80 }}>Loại</th>
                       <th style={{ width: 100 }}>Mức độ</th>
                       <th style={{ width: 160 }}>Điểm</th>
                       {isDraft && <th style={{ width: 80 }}>Xóa</th>}
@@ -470,6 +471,12 @@ export default function AssessmentDetail() {
                                 <span key={t} className="badge published" style={{ fontSize: 11 }}>{t}</span>
                               ))}
                             </div>
+                          </td>
+                          <td>
+                            <span className={`badge ${question.questionType === 'TRUE_FALSE' ? 'published' : 'draft'}`}>
+                              {question.questionType === 'TRUE_FALSE' ? 'TF (4 mệnh đề)' : 
+                               question.questionType === 'SHORT_ANSWER' ? 'TL' : 'TN'}
+                            </span>
                           </td>
                           <td>
                             {question.cognitiveLevel ? (
@@ -532,6 +539,10 @@ export default function AssessmentDetail() {
                   <div className="preview-box">
                     <p className="muted" style={{ fontWeight: 600, marginBottom: 8 }}>
                       Tự động phân điểm theo mức độ nhận thức
+                    </p>
+                    <p style={{ fontSize: 12, color: '#6b7280', marginTop: 4, marginBottom: 8 }}>
+                      💡 Câu hỏi Đúng/Sai (TF) có 4 mệnh đề, điểm sẽ được phân bổ theo trọng số 4× so với câu hỏi thường.<br />
+                      Chấm điểm THPT: 4/4 đúng → 100% điểm, 3/4 đúng → 25% điểm, 0-2/4 đúng → 0 điểm.
                     </p>
                     <div className="row" style={{ flexWrap: 'wrap', justifyContent: 'start', gap: 8 }}>
                       <div>
