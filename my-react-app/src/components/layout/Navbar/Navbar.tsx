@@ -42,7 +42,9 @@ const Navbar: React.FC<NavbarProps> = ({ user }) => {
     .slice(-2)
     .toUpperCase();
 
-  const walletRoute = user.role === 'teacher' ? '/teacher/wallet' : '/student/wallet';
+  let walletRoute = '/student/wallet';
+  if (user.role === 'teacher') walletRoute = '/teacher/wallet';
+  else if (user.role === 'admin') walletRoute = '/admin/wallet';
 
   useEffect(() => {
     if (!AuthService.isAuthenticated()) {
