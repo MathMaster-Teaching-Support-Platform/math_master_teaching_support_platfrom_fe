@@ -17,17 +17,17 @@ import {
   X,
 } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { AuthService } from '../../services/api/auth.service';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
-import { mockAdmin } from '../../data/mockData';
 import { API_BASE_URL } from '../../config/api.config';
+import { mockAdmin } from '../../data/mockData';
 import {
   AdminSlideTemplateService,
   type AdminSlideTemplateCreatePayload,
   type AdminSlideTemplateUpdatePayload,
 } from '../../services/api/admin-slide-template.service';
-import type { LessonSlideTemplate } from '../../types/lessonSlide.types';
+import { AuthService } from '../../services/api/auth.service';
 import '../../styles/module-refactor.css';
+import type { LessonSlideTemplate } from '../../types/lessonSlide.types';
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -231,7 +231,15 @@ const TemplateModal: React.FC<TemplateModalProps> = ({ mode, initial, onClose, o
             marginBottom: 20,
           }}
         >
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#141413', fontFamily: "'Be Vietnam Pro', system-ui, sans-serif" }}>
+          <h2
+            style={{
+              margin: 0,
+              fontSize: 18,
+              fontWeight: 700,
+              color: '#141413',
+              fontFamily: "'Be Vietnam Pro', system-ui, sans-serif",
+            }}
+          >
             {isCreate ? 'Thêm Template mới' : 'Chỉnh sửa Template'}
           </h2>
           <button
@@ -616,7 +624,16 @@ const PreviewModal: React.FC<PreviewModalProps> = ({ template, onClose }) => {
             marginBottom: 12,
           }}
         >
-          <span style={{ fontSize: 15, fontWeight: 600, color: '#141413', fontFamily: "'Be Vietnam Pro', system-ui, sans-serif" }}>{template.name}</span>
+          <span
+            style={{
+              fontSize: 15,
+              fontWeight: 600,
+              color: '#141413',
+              fontFamily: "'Be Vietnam Pro', system-ui, sans-serif",
+            }}
+          >
+            {template.name}
+          </span>
           <button
             onClick={onClose}
             style={{
@@ -923,7 +940,9 @@ export default function AdminSlideTemplates() {
         .ast-row:hover { background: #faf9f5; }
       `}</style>
 
-      <div style={{ padding: '28px 28px 40px', fontFamily: "'Be Vietnam Pro', system-ui, sans-serif" }}>
+      <div
+        style={{ padding: '28px 28px 40px', fontFamily: "'Be Vietnam Pro', system-ui, sans-serif" }}
+      >
         {/* Header */}
         <div
           style={{
