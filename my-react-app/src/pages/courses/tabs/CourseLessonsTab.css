@@ -281,7 +281,7 @@
 }
 
 /* Udemy-style adjacent flat rows inside curriculum groups */
-.curriculum-group .lessons-group > div {
+.curriculum-group .lessons-group .lessons-inner > div {
   margin-bottom: 0 !important;
 }
 .curriculum-group .lessons-group .clt-list-card {
@@ -293,7 +293,7 @@
   background: #faf9f5;
   box-shadow: none;
 }
-.curriculum-group .lessons-group > div:last-child .clt-list-card {
+.curriculum-group .lessons-group .lessons-inner > div:last-child .clt-list-card {
   border-bottom: none;
 }
 .curriculum-group .lessons-group .clt-list-card:hover {

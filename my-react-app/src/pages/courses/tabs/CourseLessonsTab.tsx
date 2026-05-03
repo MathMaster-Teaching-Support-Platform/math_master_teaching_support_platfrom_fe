@@ -1197,17 +1197,19 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
           )}
         </div>
         <div className={`lessons-group ${collapsedSections[group.id] ? 'collapsed' : ''}`}>
-          {!isSidebar && !isAdmin && group.lessons.length > 1 && (
-            <div style={{ padding: '1rem 1.25rem 0.5rem' }}>
-              <LessonReorderStrip
-                title="Sắp xếp bài học trong phần"
-                lessons={group.lessons}
-                disabled={reorderMutation.isPending}
-                onReordered={persistReorder}
-              />
-            </div>
-          )}
-          {group.lessons.map((l) => renderLessonItem(l, isSidebar))}
+          <div className="lessons-inner">
+            {!isSidebar && !isAdmin && group.lessons.length > 1 && (
+              <div style={{ padding: '1rem 1.25rem 0.5rem' }}>
+                <LessonReorderStrip
+                  title="Sắp xếp bài học trong phần"
+                  lessons={group.lessons}
+                  disabled={reorderMutation.isPending}
+                  onReordered={persistReorder}
+                />
+              </div>
+            )}
+            {group.lessons.map((l) => renderLessonItem(l, isSidebar))}
+          </div>
         </div>
       </div>
     ));
