@@ -16,6 +16,7 @@ import { useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { CourseBreadcrumb } from '../../components/course/CourseBreadcrumb';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { UI_TEXT } from '../../constants/uiText';
 import { useToast } from '../../context/ToastContext';
 import {
   useApproveCourseReview,
@@ -28,7 +29,6 @@ import '../courses/TeacherCourseDetail.css';
 import '../courses/TeacherCourses.css';
 import '../courses/tabs/CourseOverviewTab.css';
 import '../courses/tabs/course-detail-tabs.css';
-import { UI_TEXT } from '../../constants/uiText';
 
 // Import tab components
 import CourseAssessmentsTab from '../courses/tabs/CourseAssessmentsTab.tsx';
@@ -44,7 +44,7 @@ const CourseDetailLoadingOverlay: React.FC<{ message: string }> = ({ message }) 
   <div className="course-math-loading-overlay" role="dialog" aria-modal="true">
     <div className="course-math-loading-popup" role="status" aria-live="polite">
       <div className="course-math-loader-ring" aria-hidden="true" />
-      <p className="course-math-loading-kicker">Admin Console</p>
+
       <p className="course-math-loading-text">{message}</p>
     </div>
   </div>
