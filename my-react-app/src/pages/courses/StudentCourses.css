@@ -1080,8 +1080,9 @@
   transition: grid-template-rows 0.4s cubic-bezier(0, 1, 0, 1);
 }
 
-.lessons-group > * {
+.lessons-group > .lessons-inner {
   min-height: 0;
+  overflow: hidden;
 }
 
 .lessons-group.collapsed {
