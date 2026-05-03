@@ -14,6 +14,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
+import ReactDOM from 'react-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
 import { mockAdmin } from '../../data/mockData';
@@ -537,67 +538,69 @@ const AdminTransactions: React.FC = () => {
           </div>
 
           {/* Detail Modal */}
-          {selectedTxn && (
-            <div className="txn-modal-overlay">
-              <dialog open className="txn-modal">
-                <div className="txn-modal-header">
-                  <h2 className="txn-modal-title">Chi tiết giao dịch</h2>
-                  <button className="txn-modal-close" onClick={() => setSelectedTxn(null)}>
-                    <X size={15} />
-                  </button>
-                </div>
-                <div className="txn-modal-body">
-                  <div className="txn-detail-row">
-                    <span className="txn-detail-label">Mã giao dịch</span>
-                    <span className="txn-detail-value monospace">{selectedTxn.id}</span>
+          {selectedTxn &&
+            ReactDOM.createPortal(
+              <div className="txn-modal-overlay">
+                <dialog open className="txn-modal">
+                  <div className="txn-modal-header">
+                    <h2 className="txn-modal-title">Chi tiết giao dịch</h2>
+                    <button className="txn-modal-close" onClick={() => setSelectedTxn(null)}>
+                      <X size={15} />
+                    </button>
                   </div>
-                  <div className="txn-detail-row">
-                    <span className="txn-detail-label">Mã đơn hàng</span>
-                    <span className="txn-detail-value monospace">
-                      {String(selectedTxn.orderCode)}
-                    </span>
+                  <div className="txn-modal-body">
+                    <div className="txn-detail-row">
+                      <span className="txn-detail-label">Mã giao dịch</span>
+                      <span className="txn-detail-value monospace">{selectedTxn.id}</span>
+                    </div>
+                    <div className="txn-detail-row">
+                      <span className="txn-detail-label">Mã đơn hàng</span>
+                      <span className="txn-detail-value monospace">
+                        {String(selectedTxn.orderCode)}
+                      </span>
+                    </div>
+                    <div className="txn-detail-row">
+                      <span className="txn-detail-label">Người dùng</span>
+                      <span className="txn-detail-value">{selectedTxn.userName}</span>
+                    </div>
+                    <div className="txn-detail-row">
+                      <span className="txn-detail-label">Email</span>
+                      <span className="txn-detail-value">{selectedTxn.userEmail}</span>
+                    </div>
+                    <div className="txn-detail-row">
+                      <span className="txn-detail-label">Gói đăng ký</span>
+                      <span className="txn-detail-value">{selectedTxn.planName}</span>
+                    </div>
+                    <div className="txn-detail-row">
+                      <span className="txn-detail-label">Số tiền</span>
+                      <span className="txn-detail-value txn-amount">
+                        {formatCurrency(selectedTxn.amount)}
+                      </span>
+                    </div>
+                    <div className="txn-detail-row">
+                      <span className="txn-detail-label">Phương thức</span>
+                      <span
+                        className="txn-detail-value"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem' }}
+                      >
+                        <CreditCard size={13} /> {selectedTxn.paymentMethod}
+                      </span>
+                    </div>
+                    <div className="txn-detail-row">
+                      <span className="txn-detail-label">Trạng thái</span>
+                      <span className={`txn-status-badge txn-status-badge--${selectedTxn.status}`}>
+                        {statusLabel(selectedTxn.status)}
+                      </span>
+                    </div>
+                    <div className="txn-detail-row">
+                      <span className="txn-detail-label">Thời gian</span>
+                      <span className="txn-detail-value">{formatDate(selectedTxn.createdAt)}</span>
+                    </div>
                   </div>
-                  <div className="txn-detail-row">
-                    <span className="txn-detail-label">Người dùng</span>
-                    <span className="txn-detail-value">{selectedTxn.userName}</span>
-                  </div>
-                  <div className="txn-detail-row">
-                    <span className="txn-detail-label">Email</span>
-                    <span className="txn-detail-value">{selectedTxn.userEmail}</span>
-                  </div>
-                  <div className="txn-detail-row">
-                    <span className="txn-detail-label">Gói đăng ký</span>
-                    <span className="txn-detail-value">{selectedTxn.planName}</span>
-                  </div>
-                  <div className="txn-detail-row">
-                    <span className="txn-detail-label">Số tiền</span>
-                    <span className="txn-detail-value txn-amount">
-                      {formatCurrency(selectedTxn.amount)}
-                    </span>
-                  </div>
-                  <div className="txn-detail-row">
-                    <span className="txn-detail-label">Phương thức</span>
-                    <span
-                      className="txn-detail-value"
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem' }}
-                    >
-                      <CreditCard size={13} /> {selectedTxn.paymentMethod}
-                    </span>
-                  </div>
-                  <div className="txn-detail-row">
-                    <span className="txn-detail-label">Trạng thái</span>
-                    <span className={`txn-status-badge txn-status-badge--${selectedTxn.status}`}>
-                      {statusLabel(selectedTxn.status)}
-                    </span>
-                  </div>
-                  <div className="txn-detail-row">
-                    <span className="txn-detail-label">Thời gian</span>
-                    <span className="txn-detail-value">{formatDate(selectedTxn.createdAt)}</span>
-                  </div>
-                </div>
-              </dialog>
-            </div>
-          )}
+                </dialog>
+              </div>,
+              document.body
+            )}
         </div>
       </AdminFinanceStudioShell>
     </DashboardLayout>
