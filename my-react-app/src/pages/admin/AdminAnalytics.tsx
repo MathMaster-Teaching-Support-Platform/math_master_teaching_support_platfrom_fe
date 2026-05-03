@@ -1,3 +1,5 @@
+import { useQuery } from '@tanstack/react-query';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   BookOpen,
   CheckCircle2,
@@ -11,9 +13,7 @@ import {
   Users,
   Zap,
 } from 'lucide-react';
-import React, { useState, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { adminFinancialService } from '../../services/admin-financial.service';
+import React, { useMemo, useState } from 'react';
 import {
   Area,
   AreaChart,
@@ -28,14 +28,12 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { motion, AnimatePresence } from 'framer-motion';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockAdmin } from '../../data/mockData';
+import { adminFinancialService } from '../../services/admin-financial.service';
 import './AdminAnalytics.css';
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
-
-
 
 type Section = 'overview' | 'traffic' | 'revenue' | 'engagement' | 'teachers';
 
@@ -82,7 +80,7 @@ const AdminAnalytics: React.FC = () => {
   // Map backend data to UI constants
   const KPI_CARDS = useMemo(() => {
     if (!analytics) return [];
-    
+
     const totalStudents = analytics.userStats.reduce((a, b) => a + b.students, 0);
     const totalTeachers = analytics.userStats.reduce((a, b) => a + b.teachers, 0);
     const totalUsers = totalStudents + totalTeachers;
@@ -134,37 +132,60 @@ const AdminAnalytics: React.FC = () => {
             {/* KPI Row (Secondary) */}
             <div className="ana-kpi-row">
               {[
-                { 
-                  label: 'Video Views', 
-                  value: analytics ? analytics.engagementStats.reduce((a, b) => a + b.videoViews, 0).toLocaleString('vi-VN') : '0', 
-                  icon: Zap, 
-                  color: '#6366f1' 
+                {
+                  label: 'Video Views',
+                  value: analytics
+                    ? analytics.engagementStats
+                        .reduce((a, b) => a + b.videoViews, 0)
+                        .toLocaleString('vi-VN')
+                    : '0',
+                  icon: Zap,
+                  color: '#6366f1',
                 },
-                { 
-                  label: 'Quiz Attempts', 
-                  value: analytics ? analytics.engagementStats.reduce((a, b) => a + b.assessmentsCompleted, 0).toLocaleString('vi-VN') : '0', 
-                  icon: Trophy, 
-                  color: '#f59e0b' 
+                {
+                  label: 'Quiz Attempts',
+                  value: analytics
+                    ? analytics.engagementStats
+                        .reduce((a, b) => a + b.assessmentsCompleted, 0)
+                        .toLocaleString('vi-VN')
+                    : '0',
+                  icon: Trophy,
+                  color: '#f59e0b',
                 },
-                { 
-                  label: 'Completion Rate', 
-                  value: analytics ? (() => {
-                    const totalE = analytics.engagementStats.reduce((a, b) => a + b.enrollments, 0);
-                    const totalC = analytics.engagementStats.reduce((a, b) => a + b.coursesCompleted, 0);
-                    return totalE > 0 ? Math.round((totalC / totalE) * 100) + '%' : '0%';
-                  })() : '0%', 
-                  icon: CheckCircle2, 
-                  color: '#10b981' 
+                {
+                  label: 'Completion Rate',
+                  value: analytics
+                    ? (() => {
+                        const totalE = analytics.engagementStats.reduce(
+                          (a, b) => a + b.enrollments,
+                          0
+                        );
+                        const totalC = analytics.engagementStats.reduce(
+                          (a, b) => a + b.coursesCompleted,
+                          0
+                        );
+                        return totalE > 0 ? Math.round((totalC / totalE) * 100) + '%' : '0%';
+                      })()
+                    : '0%',
+                  icon: CheckCircle2,
+                  color: '#10b981',
                 },
-                { 
-                  label: 'Approved Teachers', 
-                  value: analytics ? analytics.teacherStats.reduce((a, b) => a + b.approvedTeachers, 0).toLocaleString('vi-VN') : '0', 
-                  icon: GraduationCap, 
-                  color: '#ec4899' 
+                {
+                  label: 'Approved Teachers',
+                  value: analytics
+                    ? analytics.teacherStats
+                        .reduce((a, b) => a + b.approvedTeachers, 0)
+                        .toLocaleString('vi-VN')
+                    : '0',
+                  icon: GraduationCap,
+                  color: '#ec4899',
                 },
               ].map((k, idx) => (
                 <div key={idx} className="ana-inline-kpi">
-                  <div className="ana-inline-kpi-icon" style={{ color: k.color, backgroundColor: `${k.color}10` }}>
+                  <div
+                    className="ana-inline-kpi-icon"
+                    style={{ color: k.color, backgroundColor: `${k.color}10` }}
+                  >
                     <k.icon size={18} />
                   </div>
                   <div>
@@ -187,13 +208,41 @@ const AdminAnalytics: React.FC = () => {
                 <div className="ana-chart-body">
                   <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={analytics?.userStats}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--ana-border)" />
-                      <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill: 'var(--ana-text-muted)', fontSize: 12}} />
-                      <YAxis axisLine={false} tickLine={false} tick={{fill: 'var(--ana-text-muted)', fontSize: 12}} />
-                      <Tooltip content={<ChartTooltip />} cursor={{fill: 'var(--ana-primary-soft)', opacity: 0.4}} />
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        vertical={false}
+                        stroke="var(--ana-border)"
+                      />
+                      <XAxis
+                        dataKey="month"
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: 'var(--ana-text-muted)', fontSize: 12 }}
+                      />
+                      <YAxis
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: 'var(--ana-text-muted)', fontSize: 12 }}
+                      />
+                      <Tooltip
+                        content={<ChartTooltip />}
+                        cursor={{ fill: 'var(--ana-primary-soft)', opacity: 0.4 }}
+                      />
                       <Legend iconType="circle" />
-                      <Bar dataKey="students" name="Học sinh" fill="var(--ana-primary)" radius={[6, 6, 0, 0]} animationDuration={1000} />
-                      <Bar dataKey="teachers" name="Giáo viên" fill="var(--ana-secondary)" radius={[6, 6, 0, 0]} animationDuration={1000} />
+                      <Bar
+                        dataKey="students"
+                        name="Học sinh"
+                        fill="var(--ana-primary)"
+                        radius={[6, 6, 0, 0]}
+                        animationDuration={1000}
+                      />
+                      <Bar
+                        dataKey="teachers"
+                        name="Giáo viên"
+                        fill="var(--ana-secondary)"
+                        radius={[6, 6, 0, 0]}
+                        animationDuration={1000}
+                      />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -211,22 +260,36 @@ const AdminAnalytics: React.FC = () => {
                     <AreaChart data={analytics?.revenueStats}>
                       <defs>
                         <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="var(--ana-success)" stopOpacity={0.4}/>
-                          <stop offset="95%" stopColor="var(--ana-success)" stopOpacity={0}/>
+                          <stop offset="5%" stopColor="var(--ana-success)" stopOpacity={0.4} />
+                          <stop offset="95%" stopColor="var(--ana-success)" stopOpacity={0} />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--ana-border)" />
-                      <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill: 'var(--ana-text-muted)', fontSize: 12}} />
-                      <YAxis axisLine={false} tickLine={false} tick={{fill: 'var(--ana-text-muted)', fontSize: 12}} tickFormatter={fmtCurrency} />
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        vertical={false}
+                        stroke="var(--ana-border)"
+                      />
+                      <XAxis
+                        dataKey="month"
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: 'var(--ana-text-muted)', fontSize: 12 }}
+                      />
+                      <YAxis
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: 'var(--ana-text-muted)', fontSize: 12 }}
+                        tickFormatter={fmtCurrency}
+                      />
                       <Tooltip content={<ChartTooltip formatter={fmtCurrency} />} />
-                      <Area 
-                        type="monotone" 
-                        dataKey="revenue" 
-                        name="Doanh thu" 
-                        stroke="var(--ana-success)" 
-                        strokeWidth={4} 
-                        fillOpacity={1} 
-                        fill="url(#colorRev)" 
+                      <Area
+                        type="monotone"
+                        dataKey="revenue"
+                        name="Doanh thu"
+                        stroke="var(--ana-success)"
+                        strokeWidth={4}
+                        fillOpacity={1}
+                        fill="url(#colorRev)"
                         animationDuration={1500}
                       />
                     </AreaChart>
@@ -241,13 +304,36 @@ const AdminAnalytics: React.FC = () => {
           <div className="ana-section-content">
             <div className="ana-kpi-row">
               {[
-                { label: 'Giao dịch thành công', value: '94.2%', icon: CheckCircle2, color: 'var(--ana-success)' },
-                { label: 'Giá trị đơn TB (AOV)', value: '₫425K', icon: DollarSign, color: 'var(--ana-primary)' },
-                { label: 'Tỷ lệ hoàn tiền', value: '0.8%', icon: RotateCcw, color: 'var(--ana-error)' },
-                { label: 'Giao dịch chờ', value: '12', icon: Clock3, color: 'var(--ana-secondary)' },
+                {
+                  label: 'Giao dịch thành công',
+                  value: '94.2%',
+                  icon: CheckCircle2,
+                  color: 'var(--ana-success)',
+                },
+                {
+                  label: 'Giá trị đơn TB (AOV)',
+                  value: '₫425K',
+                  icon: DollarSign,
+                  color: 'var(--ana-primary)',
+                },
+                {
+                  label: 'Tỷ lệ hoàn tiền',
+                  value: '0.8%',
+                  icon: RotateCcw,
+                  color: 'var(--ana-error)',
+                },
+                {
+                  label: 'Giao dịch chờ',
+                  value: '12',
+                  icon: Clock3,
+                  color: 'var(--ana-secondary)',
+                },
               ].map((k, idx) => (
                 <div key={idx} className="ana-inline-kpi">
-                  <div className="ana-inline-kpi-icon" style={{ color: k.color, backgroundColor: `${k.color}10` }}>
+                  <div
+                    className="ana-inline-kpi-icon"
+                    style={{ color: k.color, backgroundColor: `${k.color}10` }}
+                  >
                     <k.icon size={18} />
                   </div>
                   <div>
@@ -264,12 +350,24 @@ const AdminAnalytics: React.FC = () => {
               <div className="ana-chart-body">
                 <ResponsiveContainer width="100%" height={350}>
                   <LineChart data={analytics?.revenueStats}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--ana-border)" />
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="var(--ana-border)"
+                    />
                     <XAxis dataKey="month" axisLine={false} tickLine={false} />
                     <YAxis axisLine={false} tickLine={false} />
                     <Tooltip content={<ChartTooltip />} />
                     <Legend />
-                    <Line type="monotone" dataKey="transactions" name="Số giao dịch" stroke="var(--ana-primary)" strokeWidth={3} dot={{r: 4}} activeDot={{r: 6}} />
+                    <Line
+                      type="monotone"
+                      dataKey="transactions"
+                      name="Số giao dịch"
+                      stroke="var(--ana-primary)"
+                      strokeWidth={3}
+                      dot={{ r: 4 }}
+                      activeDot={{ r: 6 }}
+                    />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -279,26 +377,51 @@ const AdminAnalytics: React.FC = () => {
       case 'engagement':
         return (
           <div className="ana-section-content">
-             <div className="ana-card">
+            <div className="ana-card">
               <div className="ana-card-header">
                 <h2 className="ana-card-title">Tương tác theo môn học</h2>
               </div>
               <div className="ana-chart-body">
                 <ResponsiveContainer width="100%" height={400}>
-                  <BarChart data={analytics?.subjectEngagement} layout="vertical" margin={{ left: 20, right: 30 }}>
-                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--ana-border)" />
+                  <BarChart
+                    data={analytics?.subjectEngagement}
+                    layout="vertical"
+                    margin={{ left: 20, right: 30 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      horizontal={false}
+                      stroke="var(--ana-border)"
+                    />
                     <XAxis type="number" hide />
-                    <YAxis 
-                      type="category" 
-                      dataKey="subject" 
-                      axisLine={false} 
-                      tickLine={false} 
-                      width={100} 
+                    <YAxis
+                      type="category"
+                      dataKey="subject"
+                      axisLine={false}
+                      tickLine={false}
+                      width={100}
                       tick={{ fill: 'var(--ana-text-muted)', fontSize: 12, fontWeight: 500 }}
                     />
-                    <Tooltip content={<ChartTooltip />} cursor={{ fill: 'var(--ana-primary-soft)', opacity: 0.3 }} />
-                    <Bar dataKey="enrolled" name="Đăng ký" fill="var(--ana-primary)" radius={[0, 6, 6, 0]} barSize={20} animationDuration={1000} />
-                    <Bar dataKey="completed" name="Hoàn thành" fill="var(--ana-success)" radius={[0, 6, 6, 0]} barSize={20} animationDuration={1200} />
+                    <Tooltip
+                      content={<ChartTooltip />}
+                      cursor={{ fill: 'var(--ana-primary-soft)', opacity: 0.3 }}
+                    />
+                    <Bar
+                      dataKey="enrolled"
+                      name="Đăng ký"
+                      fill="var(--ana-primary)"
+                      radius={[0, 6, 6, 0]}
+                      barSize={20}
+                      animationDuration={1000}
+                    />
+                    <Bar
+                      dataKey="completed"
+                      name="Hoàn thành"
+                      fill="var(--ana-success)"
+                      radius={[0, 6, 6, 0]}
+                      barSize={20}
+                      animationDuration={1200}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -317,22 +440,35 @@ const AdminAnalytics: React.FC = () => {
                   <AreaChart data={analytics?.teacherStats}>
                     <defs>
                       <linearGradient id="colorTeachers" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="var(--ana-primary)" stopOpacity={0.4}/>
-                        <stop offset="95%" stopColor="var(--ana-primary)" stopOpacity={0}/>
+                        <stop offset="5%" stopColor="var(--ana-primary)" stopOpacity={0.4} />
+                        <stop offset="95%" stopColor="var(--ana-primary)" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--ana-border)" />
-                    <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: 'var(--ana-text-muted)', fontSize: 12 }} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--ana-text-muted)', fontSize: 12 }} />
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="var(--ana-border)"
+                    />
+                    <XAxis
+                      dataKey="month"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: 'var(--ana-text-muted)', fontSize: 12 }}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: 'var(--ana-text-muted)', fontSize: 12 }}
+                    />
                     <Tooltip content={<ChartTooltip />} />
-                    <Area 
-                      type="monotone" 
-                      dataKey="approvedTeachers" 
-                      name="Giáo viên mới" 
-                      stroke="var(--ana-primary)" 
+                    <Area
+                      type="monotone"
+                      dataKey="approvedTeachers"
+                      name="Giáo viên mới"
+                      stroke="var(--ana-primary)"
                       strokeWidth={3}
                       fillOpacity={1}
-                      fill="url(#colorTeachers)" 
+                      fill="url(#colorTeachers)"
                       animationDuration={1500}
                     />
                   </AreaChart>
@@ -350,9 +486,9 @@ const AdminAnalytics: React.FC = () => {
     return (
       <DashboardLayout role="admin" user={{ name: mockAdmin.name, avatar: 'A', role: 'admin' }}>
         <div className="flex items-center justify-center h-full min-h-[400px]">
-          <motion.div 
+          <motion.div
             animate={{ rotate: 360 }}
-            transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+            transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
             className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full"
           />
         </div>
@@ -379,20 +515,15 @@ const AdminAnalytics: React.FC = () => {
       contentClassName="dashboard-content--flush-bleed"
     >
       <div className="admin-analytics-page">
-        <motion.div 
+        <motion.div
           className="ana-page-header"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
           <div className="header-stack">
-            <span className="header-kicker">ADMIN ANALYTICS</span>
-            <h1 className="ana-page-title">
-              <span>Thống kê & Phân tích</span>
-            </h1>
-            <p className="ana-page-subtitle">
-              Hoạt động nền tảng MathMaster — Năm {currentYear}
-            </p>
+            <h1 className="ana-page-title">Thống kê & Phân tích</h1>
+            <p className="ana-page-subtitle">Hoạt động nền tảng MathMaster — Năm {currentYear}</p>
           </div>
           <button className="ana-export-btn">
             <Download className="ana-export-btn-icon" size={18} />
@@ -400,7 +531,7 @@ const AdminAnalytics: React.FC = () => {
           </button>
         </motion.div>
 
-        <motion.nav 
+        <motion.nav
           className="ana-section-nav"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -418,31 +549,34 @@ const AdminAnalytics: React.FC = () => {
           ))}
         </motion.nav>
 
-        <motion.div 
+        <motion.div
           className="ana-kpi-grid"
           variants={{
             hidden: { opacity: 0 },
             show: {
               opacity: 1,
               transition: {
-                staggerChildren: 0.1
-              }
-            }
+                staggerChildren: 0.1,
+              },
+            },
           }}
           initial="hidden"
           animate="show"
         >
           {KPI_CARDS.map((card, idx) => (
-            <motion.div 
-              key={idx} 
+            <motion.div
+              key={idx}
               className="ana-kpi-card"
               variants={{
                 hidden: { opacity: 0, y: 20 },
-                show: { opacity: 1, y: 0 }
+                show: { opacity: 1, y: 0 },
               }}
             >
               <div className="ana-kpi-header">
-                <div className="ana-kpi-icon-wrapper" style={{ backgroundColor: `${card.color}15`, color: card.color }}>
+                <div
+                  className="ana-kpi-icon-wrapper"
+                  style={{ backgroundColor: `${card.color}15`, color: card.color }}
+                >
                   <card.icon size={20} />
                 </div>
                 {card.positive && <span className="ana-kpi-trend">↑ 12.5%</span>}

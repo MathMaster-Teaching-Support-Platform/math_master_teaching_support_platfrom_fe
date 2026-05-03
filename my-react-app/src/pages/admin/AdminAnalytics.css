@@ -1,28 +1,30 @@
-/* --- Design System Tokens -------------------------------------------------- */
+/* --- Design Tokens (DESIGN.md warm palette) -------------------------------- */
 :root {
-  --ana-bg: #f8fafc;
-  --ana-surface: #ffffff;
-  --ana-primary: #6366f1; /* Indigo */
-  --ana-primary-soft: #eef2ff;
-  --ana-secondary: #f59e0b; /* Amber */
-  --ana-secondary-soft: #fffbeb;
-  --ana-success: #10b981; /* Emerald */
-  --ana-success-soft: #ecfdf5;
-  --ana-error: #ef4444;
-  --ana-text-main: #0f172a;
-  --ana-text-muted: #64748b;
-  --ana-border: #e2e8f0;
-  --ana-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --ana-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --ana-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --ana-bg: #f5f4ed; /* Parchment */
+  --ana-surface: #faf9f5; /* Ivory */
+  --ana-primary: #c96442; /* Terracotta */
+  --ana-primary-soft: rgba(201, 100, 66, 0.08);
+  --ana-secondary: #d97757; /* Coral */
+  --ana-secondary-soft: rgba(217, 119, 87, 0.08);
+  --ana-success: #5e5d59; /* Olive Gray */
+  --ana-success-soft: rgba(94, 93, 89, 0.08);
+  --ana-error: #b53333; /* Warm Red */
+  --ana-text-main: #141413; /* Near Black */
+  --ana-text-muted: #87867f; /* Stone Gray */
+  --ana-border: #f0eee6; /* Border Cream */
+  --ana-border-warm: #e8e6dc; /* Border Warm */
+  --ana-ring: #d1cfc5; /* Ring Warm */
+  --ana-shadow-sm: rgba(0, 0, 0, 0.05) 0px 4px 24px;
+  --ana-shadow-md: 0px 0px 0px 1px #d1cfc5, rgba(0, 0, 0, 0.05) 0px 4px 24px;
+  --ana-shadow-lg: 0px 0px 0px 1px #c2c0b6, rgba(0, 0, 0, 0.08) 0px 8px 30px;
   --ana-radius: 1rem;
 }
 
 .admin-analytics-page {
-  padding: 2rem;
+  padding: 2rem 2.5rem;
   background: var(--ana-bg);
   min-height: 100vh;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
   color: var(--ana-text-main);
 }
 
@@ -30,7 +32,7 @@
 .ana-page-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-end;
   margin-bottom: 2.5rem;
   padding-bottom: 1.5rem;
   border-bottom: 1px solid var(--ana-border);
@@ -39,129 +41,125 @@
 .header-stack {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-}
-
-.header-kicker {
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--ana-primary);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.header-kicker::before {
-  content: '';
-  width: 8px;
-  height: 8px;
-  background: var(--ana-primary);
-  border-radius: 50%;
-  box-shadow: 0 0 8px var(--ana-primary);
+  gap: 0.35rem;
 }
 
 .ana-page-title {
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
   font-size: 2.25rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  color: var(--ana-text-main);
   margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
 }
 
 .ana-page-subtitle {
   color: var(--ana-text-muted);
-  font-size: 1rem;
+  font-size: 0.9375rem;
+  line-height: 1.6;
 }
 
 .ana-export-btn {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.75rem 1.25rem;
+  padding: 0.625rem 1.125rem;
   background: var(--ana-text-main);
-  color: white;
-  border: none;
+  color: #faf9f5;
+  border: 1px solid #30302e;
   border-radius: 0.75rem;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: var(--ana-shadow-md);
+  transition:
+    background 0.15s ease,
+    transform 0.1s ease;
 }
 
 .ana-export-btn:hover {
-  background: #1e293b;
-  transform: translateY(-2px);
-  box-shadow: var(--ana-shadow-lg);
+  background: #30302e;
+}
+
+.ana-export-btn:active {
+  transform: scale(0.98);
 }
 
 /* --- Navigation ------------------------------------------------------------ */
 .ana-section-nav {
   display: flex;
-  gap: 0.5rem;
-  padding: 0.4rem;
-  background: white;
-  border-radius: 1.1rem;
+  gap: 0.25rem;
+  padding: 0.3rem;
+  background: var(--ana-surface);
+  border-radius: 0.875rem;
   border: 1px solid var(--ana-border);
-  margin-bottom: 2.5rem;
+  margin-bottom: 2rem;
   width: fit-content;
-  box-shadow: var(--ana-shadow-sm);
+  box-shadow: 0px 0px 0px 1px var(--ana-border);
 }
 
 .ana-nav-btn {
-  padding: 0.6rem 1.25rem;
-  border-radius: 0.75rem;
-  font-size: 0.9rem;
-  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 0.625rem;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
   color: var(--ana-text-muted);
   border: none;
   background: transparent;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  transition: all 0.2s;
+  gap: 0.4rem;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.ana-nav-btn-icon {
+  width: 1rem;
+  height: 1rem;
 }
 
 .ana-nav-btn:hover {
-  background: var(--ana-bg);
+  background: var(--ana-border-warm);
   color: var(--ana-text-main);
 }
 
 .ana-nav-btn--active {
-  background: var(--ana-primary-soft) !important;
-  color: var(--ana-primary) !important;
+  background: var(--ana-text-main) !important;
+  color: #faf9f5 !important;
+  font-weight: 600 !important;
 }
 
 /* --- KPI Cards ------------------------------------------------------------- */
 .ana-kpi-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 3rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2.5rem;
 }
 
 .ana-kpi-card {
-  background: white;
-  padding: 1.5rem;
+  background: var(--ana-surface);
+  padding: 1.375rem 1.5rem;
   border-radius: var(--ana-radius);
   border: 1px solid var(--ana-border);
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  transition: all 0.3s ease;
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
   position: relative;
   overflow: hidden;
   box-shadow: var(--ana-shadow-sm);
 }
 
 .ana-kpi-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--ana-shadow-lg);
-  border-color: var(--ana-primary);
+  transform: translateY(-2px);
+  box-shadow: var(--ana-shadow-md);
 }
 
 .ana-kpi-header {
@@ -171,40 +169,45 @@
 }
 
 .ana-kpi-icon-wrapper {
-  width: 3rem;
-  height: 3rem;
+  width: 2.75rem;
+  height: 2.75rem;
   border-radius: 0.75rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--ana-primary-soft);
-  color: var(--ana-primary);
+  background: var(--ana-border-warm);
+  color: #5e5d59;
 }
 
 .ana-kpi-trend {
   font-size: 0.75rem;
-  font-weight: 700;
-  padding: 0.25rem 0.5rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
   border-radius: 2rem;
-  background: var(--ana-success-soft);
-  color: var(--ana-success);
+  background: var(--ana-border-warm);
+  color: #5e5d59;
 }
 
 .ana-kpi-info {
   display: flex;
   flex-direction: column;
+  gap: 0.2rem;
 }
 
 .ana-kpi-label {
-  font-size: 0.875rem;
-  font-weight: 600;
+  font-size: 0.75rem;
+  font-weight: 500;
   color: var(--ana-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .ana-kpi-value {
-  font-size: 1.875rem;
-  font-weight: 800;
+  font-size: 2rem;
+  font-weight: 700;
   color: var(--ana-text-main);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
 }
 
 /* --- Inline KPI Row -------------------------------------------------------- */
@@ -212,55 +215,75 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1.75rem;
 }
 
 .ana-inline-kpi {
-  background: white;
-  padding: 1.25rem;
-  border-radius: 1rem;
+  background: var(--ana-surface);
+  padding: 1.125rem 1.25rem;
+  border-radius: 0.875rem;
   border: 1px solid var(--ana-border);
   display: flex;
   align-items: center;
-  gap: 1rem;
-  transition: all 0.2s;
+  gap: 0.875rem;
+  transition: box-shadow 0.15s ease;
+  box-shadow: var(--ana-shadow-sm);
 }
 
 .ana-inline-kpi:hover {
-  background: var(--ana-bg);
-  border-color: var(--ana-primary);
+  box-shadow: var(--ana-shadow-md);
 }
 
 .ana-inline-kpi-icon {
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 0.6rem;
-  background: var(--ana-bg);
+  background: var(--ana-border-warm);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--ana-primary);
+  flex-shrink: 0;
+}
+
+.ana-inline-kpi-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--ana-text-main);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.ana-inline-kpi-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--ana-text-muted);
+  margin-top: 0.1rem;
 }
 
 /* --- Charts & Sections ----------------------------------------------------- */
 .ana-two-col {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
-  gap: 2rem;
-  margin-bottom: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
 }
 
 .ana-card {
-  background: white;
+  background: var(--ana-surface);
   border-radius: var(--ana-radius);
   border: 1px solid var(--ana-border);
   box-shadow: var(--ana-shadow-sm);
   display: flex;
   flex-direction: column;
+  transition: box-shadow 0.2s ease;
+}
+
+.ana-card:hover {
+  box-shadow: var(--ana-shadow-md);
 }
 
 .ana-card-header {
-  padding: 1.5rem;
+  padding: 1.25rem 1.5rem;
   border-bottom: 1px solid var(--ana-border);
   display: flex;
   justify-content: space-between;
@@ -268,14 +291,19 @@
 }
 
 .ana-card-title {
+  font-family: 'Playfair Display', Georgia, serif;
   font-size: 1.125rem;
-  font-weight: 700;
+  font-weight: 500;
+  color: var(--ana-text-main);
   margin: 0;
+  line-height: 1.3;
 }
 
 .ana-card-subtitle {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   color: var(--ana-text-muted);
+  margin-top: 0.2rem;
+  line-height: 1.5;
 }
 
 .ana-chart-body {
@@ -285,40 +313,48 @@
 
 /* --- Custom Tooltip -------------------------------------------------------- */
 .ana-tooltip {
-  background: rgba(15, 23, 42, 0.9);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 1rem;
+  background: #141413;
+  border: 1px solid #30302e;
+  padding: 0.875rem 1rem;
   border-radius: 0.75rem;
-  box-shadow: var(--ana-shadow-lg);
-  color: white;
-  min-width: 180px;
+  box-shadow: rgba(0, 0, 0, 0.15) 0px 8px 24px;
+  color: #faf9f5;
+  min-width: 170px;
 }
 
 .ana-tooltip-label {
-  font-weight: 700;
+  font-weight: 600;
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  margin-bottom: 0.75rem;
-  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 0.6rem;
+  color: #87867f;
 }
 
 .ana-tooltip-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.4rem;
+  gap: 1rem;
+  margin-bottom: 0.35rem;
 }
 
 .ana-tooltip-name {
-  font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.8125rem;
+  color: #b0aea5;
 }
 
 .ana-tooltip-value {
   font-weight: 700;
   font-size: 0.875rem;
+  color: #faf9f5;
+}
+
+/* --- Section content ------------------------------------------------------- */
+.ana-section-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 /* --- Responsive ------------------------------------------------------------ */
@@ -326,18 +362,23 @@
   .admin-analytics-page {
     padding: 1rem;
   }
-  
+
   .ana-page-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 1.5rem;
+    gap: 1.25rem;
   }
-  
+
   .ana-two-col {
     grid-template-columns: 1fr;
   }
-  
+
   .ana-page-title {
-    font-size: 1.75rem;
+    font-size: 1.625rem;
+  }
+
+  .ana-section-nav {
+    width: 100%;
+    overflow-x: auto;
   }
 }
