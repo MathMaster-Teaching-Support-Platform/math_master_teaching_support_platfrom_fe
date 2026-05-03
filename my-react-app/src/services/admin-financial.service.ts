@@ -209,9 +209,6 @@ export const adminFinancialService = {
 
 // ==================== UTILITY FUNCTIONS ====================
 
-/**
- * Format currency in VND
- */
 export const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat('vi-VN', {
     style: 'currency',
@@ -219,26 +216,17 @@ export const formatCurrency = (amount: number): string => {
   }).format(amount);
 };
 
-/**
- * Format trend percentage
- */
 export const formatTrend = (trend: number): string => {
   const sign = trend >= 0 ? '+' : '';
   return `${sign}${trend.toFixed(1)}%`;
 };
 
-/**
- * Get trend color class
- */
 export const getTrendColor = (trend: number): string => {
   if (trend > 0) return 'positive';
   if (trend < 0) return 'negative';
   return 'neutral';
 };
 
-/**
- * Get status color class
- */
 export const getStatusColor = (status: string): string => {
   switch (status) {
     case 'healthy':
@@ -253,9 +241,6 @@ export const getStatusColor = (status: string): string => {
   }
 };
 
-/**
- * Get severity color class
- */
 export const getSeverityColor = (severity: string): string => {
   switch (severity) {
     case 'info':
@@ -269,9 +254,6 @@ export const getSeverityColor = (severity: string): string => {
   }
 };
 
-/**
- * Format large numbers with K, M, B suffixes
- */
 export const formatCompactNumber = (num: number): string => {
   if (num >= 1000000000) {
     return (num / 1000000000).toFixed(1) + 'B';
@@ -285,9 +267,6 @@ export const formatCompactNumber = (num: number): string => {
   return num.toString();
 };
 
-/**
- * Format date for display
- */
 export const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
   return new Intl.DateTimeFormat('vi-VN', {
@@ -297,9 +276,6 @@ export const formatDate = (dateString: string): string => {
   }).format(date);
 };
 
-/**
- * Format time ago
- */
 export const formatTimeAgo = (timestamp: string): string => {
   const now = new Date();
   const past = new Date(timestamp);
@@ -315,16 +291,10 @@ export const formatTimeAgo = (timestamp: string): string => {
   return `${diffDays} ngày trước`;
 };
 
-/**
- * Calculate total revenue from daily data
- */
 export const calculateTotalRevenue = (data: DailyRevenue[]): number => {
   return data.reduce((sum, day) => sum + day.total, 0);
 };
 
-/**
- * Get chart data for revenue breakdown
- */
 export const getRevenueChartData = (data: DailyRevenue[]) => {
   return {
     labels: data.map((d) => formatDate(d.date)),
@@ -354,9 +324,6 @@ export const getRevenueChartData = (data: DailyRevenue[]) => {
   };
 };
 
-/**
- * Export data to CSV
- */
 export const exportToCSV = (data: any[], filename: string) => {
   if (data.length === 0) return;
 
