@@ -1,9 +1,11 @@
-import { X } from 'lucide-react';
+import { X, Sparkles } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { QuestionEditorSwitch } from '../../components/question';
 import MathText from '../../components/common/MathText';
 import { TagSelector } from '../../components/common/TagSelector';
 import { LatexToolbar } from '../../components/common/LatexToolbar';
+import { questionService } from '../../services/questionService';
+import { useToast } from '../../context/ToastContext';
 import type { QuestionType, QuestionDifficulty } from '../../types/question';
 import type { QuestionTag } from '../../types/questionTemplate';
 
@@ -71,6 +73,8 @@ export function EnhancedQuestionFormModal({
 
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [enhancing, setEnhancing] = useState(false);
+  const { showToast } = useToast();
 
   const insertLatexAtCursor = (latex: string) => {
     const textarea = diagramTextareaRef.current;
@@ -109,6 +113,53 @@ export function EnhancedQuestionFormModal({
       });
     }
   }, [isOpen, initialData]);
+
+  const handleAIEnhance = async () => {
+    // Validation
+    if (!editorValue.questionText || String(editorValue.questionText).trim() === '') {
+      showToast({ message: 'Vui lòng nhập nội dung câu hỏi trước khi sử dụng AI', type: 'error' });
+      return;
+    }
+
+    if (!editorValue.correctAnswer || String(editorValue.correctAnswer).trim() === '') {
+      showToast({ message: 'Vui lòng nhập đáp án đúng trước khi sử dụng AI', type: 'error' });
+      return;
+    }
+
+    setEnhancing(true);
+    try {
+      const response = await questionService.enhanceQuestionWithAI({
+        rawQuestionText: String(editorValue.questionText),
+        questionType: questionType,
+        correctAnswer: String(editorValue.correctAnswer),
+        rawOptions: editorValue.options as Record<string, string> | undefined,
+        difficulty: difficulty,
+      });
+
+      const result = response.result;
+      if (result && result.enhanced && result.valid) {
+        // Update form with AI-generated content
+        setExplanation(result.explanation || '');
+        
+        // For TF and SA, also update the question text if enhanced
+        if (questionType === 'TRUE_FALSE' || questionType === 'SHORT_ANSWER') {
+          setEditorValue({
+            ...editorValue,
+            questionText: result.enhancedQuestionText || editorValue.questionText,
+          });
+        }
+        
+        showToast({ message: '✨ AI đã tạo lời giải thích và các bước giải!', type: 'success' });
+      } else {
+        showToast({ message: 'AI không thể tạo lời giải. Vui lòng thử lại.', type: 'warning' });
+      }
+    } catch (err) {
+      console.error('AI enhancement error:', err);
+      showToast({ message: err instanceof Error ? err.message : 'Không thể kết nối với AI', type: 'error' });
+    } finally {
+      setEnhancing(false);
+    }
+  };
 
   const handleSubmit = async () => {
     setError(null);
@@ -236,6 +287,45 @@ export function EnhancedQuestionFormModal({
               disabled={saving}
             />
           </div>
+
+          {/* AI Enhancement Button */}
+          {(questionType === 'TRUE_FALSE' || questionType === 'SHORT_ANSWER' || questionType === 'MULTIPLE_CHOICE') && (
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <button
+                type="button"
+                onClick={handleAIEnhance}
+                disabled={enhancing || saving}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '12px 24px',
+                  backgroundColor: enhancing ? '#d1d5db' : '#8b5cf6',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 8,
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  cursor: enhancing || saving ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.15s',
+                  opacity: enhancing || saving ? 0.6 : 1,
+                }}
+                onMouseEnter={(e) => {
+                  if (!enhancing && !saving) {
+                    e.currentTarget.style.backgroundColor = '#7c3aed';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!enhancing && !saving) {
+                    e.currentTarget.style.backgroundColor = '#8b5cf6';
+                  }
+                }}
+              >
+                <Sparkles size={16} />
+                {enhancing ? 'Đang tạo lời giải...' : '✨ Tạo lời giải bằng AI'}
+              </button>
+            </div>
+          )}
 
           {/* LaTeX Preview for Question Text */}
           {editorValue.questionText && String(editorValue.questionText).includes('$') && (
