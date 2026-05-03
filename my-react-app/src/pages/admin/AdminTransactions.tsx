@@ -14,7 +14,6 @@ import {
   XCircle,
 } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
-import ReactDOM from 'react-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
 import { mockAdmin } from '../../data/mockData';
@@ -359,12 +358,61 @@ const AdminTransactions: React.FC = () => {
   };
 
   return (
-    <DashboardLayout
-      role="admin"
-      user={{ name: mockAdmin.name, avatar: mockAdmin.avatar, role: 'admin' }}
-      notificationCount={3}
-      contentClassName="dashboard-content--flush-bleed"
-    >
+    <>
+      {selectedTxn && (
+        <div
+          role="presentation"
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#141413]/40"
+          style={{ backdropFilter: 'blur(2px)' }}
+          onClick={() => setSelectedTxn(null)}
+          onKeyDown={(e) => e.key === 'Escape' && setSelectedTxn(null)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            className="bg-[#faf9f5] rounded-2xl w-full max-w-[520px] mx-4 overflow-hidden"
+            style={{ boxShadow: '0 0 0 1px #d1cfc5, rgba(0,0,0,0.15) 0px 20px 60px' }}
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-6 py-5 border-b border-[#f0eee6] bg-[#f5f4ed]">
+              <h2 className="font-[Playfair_Display] text-[18px] font-medium text-[#141413] m-0 leading-[1.3]">
+                Chi tiết giao dịch
+              </h2>
+              <button
+                className="w-8 h-8 flex items-center justify-center rounded-lg border border-[#e8e6dc] bg-[#f0eee6] text-[#5e5d59] hover:bg-[#e8e6dc] hover:text-[#141413] transition-all cursor-pointer"
+                onClick={() => setSelectedTxn(null)}
+              >
+                <X size={15} />
+              </button>
+            </div>
+            <div className="px-6 py-5 flex flex-col">
+              {([
+                ['Mã giao dịch', <span key="id" className="font-mono text-[13px]">{selectedTxn.id}</span>],
+                ['Mã đơn hàng', <span key="orderCode" className="font-mono text-[13px]">{String(selectedTxn.orderCode)}</span>],
+                ['Người dùng', selectedTxn.userName],
+                ['Email', selectedTxn.userEmail],
+                ['Gói đăng ký', selectedTxn.planName],
+                ['Số tiền', <span key="amount" className="text-[#c96442] font-semibold">{formatCurrency(selectedTxn.amount)}</span>],
+                ['Phương thức', <span key="method" className="inline-flex items-center gap-1.5"><CreditCard size={13} />{selectedTxn.paymentMethod}</span>],
+                ['Trạng thái', <span key="status" className={`txn-status-badge txn-status-badge--${selectedTxn.status}`}>{statusLabel(selectedTxn.status)}</span>],
+                ['Thời gian', formatDate(selectedTxn.createdAt)],
+              ] as [string, React.ReactNode][]).map(([label, value]) => (
+                <div key={String(label)} className="flex items-center justify-between gap-4 py-2.5 border-b border-[#f0eee6] last:border-0">
+                  <span className="text-[13px] font-medium text-[#87867f] shrink-0">{label}</span>
+                  <span className="text-[14px] font-semibold text-[#141413] text-right">{value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+      <DashboardLayout
+        role="admin"
+        user={{ name: mockAdmin.name, avatar: mockAdmin.avatar, role: 'admin' }}
+        notificationCount={3}
+        contentClassName="dashboard-content--flush-bleed"
+      >
       <AdminFinanceStudioShell>
         <div className="admin-transactions-page">
           <header className="page-header courses-header-row">
@@ -537,73 +585,11 @@ const AdminTransactions: React.FC = () => {
             )}
           </div>
 
-          {/* Detail Modal */}
-          {selectedTxn &&
-            ReactDOM.createPortal(
-              <div className="txn-modal-overlay">
-                <dialog open className="txn-modal">
-                  <div className="txn-modal-header">
-                    <h2 className="txn-modal-title">Chi tiết giao dịch</h2>
-                    <button className="txn-modal-close" onClick={() => setSelectedTxn(null)}>
-                      <X size={15} />
-                    </button>
-                  </div>
-                  <div className="txn-modal-body">
-                    <div className="txn-detail-row">
-                      <span className="txn-detail-label">Mã giao dịch</span>
-                      <span className="txn-detail-value monospace">{selectedTxn.id}</span>
-                    </div>
-                    <div className="txn-detail-row">
-                      <span className="txn-detail-label">Mã đơn hàng</span>
-                      <span className="txn-detail-value monospace">
-                        {String(selectedTxn.orderCode)}
-                      </span>
-                    </div>
-                    <div className="txn-detail-row">
-                      <span className="txn-detail-label">Người dùng</span>
-                      <span className="txn-detail-value">{selectedTxn.userName}</span>
-                    </div>
-                    <div className="txn-detail-row">
-                      <span className="txn-detail-label">Email</span>
-                      <span className="txn-detail-value">{selectedTxn.userEmail}</span>
-                    </div>
-                    <div className="txn-detail-row">
-                      <span className="txn-detail-label">Gói đăng ký</span>
-                      <span className="txn-detail-value">{selectedTxn.planName}</span>
-                    </div>
-                    <div className="txn-detail-row">
-                      <span className="txn-detail-label">Số tiền</span>
-                      <span className="txn-detail-value txn-amount">
-                        {formatCurrency(selectedTxn.amount)}
-                      </span>
-                    </div>
-                    <div className="txn-detail-row">
-                      <span className="txn-detail-label">Phương thức</span>
-                      <span
-                        className="txn-detail-value"
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem' }}
-                      >
-                        <CreditCard size={13} /> {selectedTxn.paymentMethod}
-                      </span>
-                    </div>
-                    <div className="txn-detail-row">
-                      <span className="txn-detail-label">Trạng thái</span>
-                      <span className={`txn-status-badge txn-status-badge--${selectedTxn.status}`}>
-                        {statusLabel(selectedTxn.status)}
-                      </span>
-                    </div>
-                    <div className="txn-detail-row">
-                      <span className="txn-detail-label">Thời gian</span>
-                      <span className="txn-detail-value">{formatDate(selectedTxn.createdAt)}</span>
-                    </div>
-                  </div>
-                </dialog>
-              </div>,
-              document.body
-            )}
+
         </div>
       </AdminFinanceStudioShell>
     </DashboardLayout>
+    </>
   );
 };
 
