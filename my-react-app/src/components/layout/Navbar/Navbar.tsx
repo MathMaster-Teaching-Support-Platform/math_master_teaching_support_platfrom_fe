@@ -20,16 +20,27 @@ interface NavbarProps {
 const Navbar: React.FC<NavbarProps> = ({ user }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [tokenRemaining, setTokenRemaining] = useState<number | null>(null);
+  const [failedAvatarUrl, setFailedAvatarUrl] = useState<string | null>(null);
   const { unreadCount, notifications, markAllAsRead } = useNotificationsContext();
   const notificationsPreview = notifications.slice(0, 3);
   const unreadCountLabel = unreadCount > 99 ? '99+' : String(unreadCount);
 
   const roleLabelByRole: Record<string, string> = {
-    teacher: 'Giao vien',
-    student: 'Hoc sinh',
-    admin: 'Quan tri vien',
+    teacher: 'Giáo viên',
+    student: 'Học sinh',
+    admin: 'Quản trị viên',
   };
-  const roleLabel = roleLabelByRole[user.role] ?? 'Quan tri vien';
+  const roleLabel = roleLabelByRole[user.role] ?? 'Quản trị viên';
+
+  const avatarValue = user.avatar?.trim() || '';
+  const hasAvatarImage = /^https?:\/\//i.test(avatarValue) && failedAvatarUrl !== avatarValue;
+  const fallbackAvatar = user.name
+    .trim()
+    .split(/\s+/)
+    .map((part) => part[0] || '')
+    .join('')
+    .slice(-2)
+    .toUpperCase();
 
   const walletRoute = user.role === 'teacher' ? '/teacher/wallet' : '/student/wallet';
 
@@ -143,7 +154,18 @@ const Navbar: React.FC<NavbarProps> = ({ user }) => {
           </Link>
 
           <div className="navbar-user-badge" aria-label="Thông tin người dùng">
-            <div className="navbar-user-avatar">{user.avatar}</div>
+            <div className="navbar-user-avatar" aria-hidden="true">
+              {hasAvatarImage ? (
+                <img
+                  src={avatarValue}
+                  alt=""
+                  className="navbar-user-avatar-image"
+                  onError={() => setFailedAvatarUrl(avatarValue)}
+                />
+              ) : (
+                fallbackAvatar || 'ND'
+              )}
+            </div>
             <div className="navbar-user-meta">
               <div className="navbar-user-name">{user.name}</div>
               <div className="navbar-user-role">{roleLabel}</div>
@@ -163,9 +185,7 @@ const Navbar: React.FC<NavbarProps> = ({ user }) => {
           <div className="notifications-list">
             {notificationsPreview.map((notif) => (
               <div key={notif.id} className={`notification-item${notif.read ? '' : ' unread'}`}>
-                <div className="notification-icon">
-                  {getNotificationIcon(notif.type)}
-                </div>
+                <div className="notification-icon">{getNotificationIcon(notif.type)}</div>
                 <div className="notification-content">
                   <div className="notification-title">{notif.title}</div>
                   <div className="notification-message">{notif.content}</div>

@@ -62,7 +62,9 @@
   border-color: #d1cfc5;
   color: #8f3f26;
   background: #ffffff;
-  box-shadow: 0 0 0 1px #d1cfc5, 0 4px 20px rgba(20, 20, 19, 0.07);
+  box-shadow:
+    0 0 0 1px #d1cfc5,
+    0 4px 20px rgba(20, 20, 19, 0.07);
 }
 
 .navbar-action-btn:focus-visible,
@@ -123,7 +125,9 @@
   border-color: #d1cfc5;
   background: #ffffff;
   color: #141413;
-  box-shadow: 0 0 0 1px #d1cfc5, 0 4px 14px rgba(20, 20, 19, 0.06);
+  box-shadow:
+    0 0 0 1px #d1cfc5,
+    0 4px 14px rgba(20, 20, 19, 0.06);
 }
 
 .token-chip-label {
@@ -143,6 +147,14 @@
   font-weight: 700;
   font-size: 0.8rem;
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+.navbar-user-avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .navbar-user-meta {
@@ -177,7 +189,9 @@
   background: #faf9f5;
   border: 1px solid #e8e6dc;
   border-radius: 14px;
-  box-shadow: 0 0 0 1px rgba(232, 230, 220, 0.65), 0 20px 44px rgba(20, 20, 19, 0.14);
+  box-shadow:
+    0 0 0 1px rgba(232, 230, 220, 0.65),
+    0 20px 44px rgba(20, 20, 19, 0.14);
   overflow: hidden;
 }
 
