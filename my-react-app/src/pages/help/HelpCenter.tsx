@@ -189,7 +189,7 @@ const HelpCenter: React.FC = () => {
   });
 
   const currentRole = (AuthService.getUserRole() ?? 'student') as 'teacher' | 'student' | 'admin';
-  let currentUser = mockStudent;
+  let currentUser: { name: string; avatar: string } = mockStudent;
   if (currentRole === 'teacher') currentUser = mockTeacher;
   else if (currentRole === 'admin') currentUser = mockAdmin;
 
