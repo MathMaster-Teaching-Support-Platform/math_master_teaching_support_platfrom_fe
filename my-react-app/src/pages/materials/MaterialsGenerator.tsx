@@ -373,7 +373,6 @@ const MaterialsGenerator: React.FC = () => {
           {/* ── Header ── */}
           <header className="page-header courses-header-row">
             <div className="header-stack">
-              <div className="header-kicker"></div>
               <div className="row" style={{ gap: '0.6rem' }}>
                 <h2>Tạo tài liệu với AI</h2>
                 {!loading && <span className="count-chip">{stats.total}</span>}

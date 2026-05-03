@@ -798,7 +798,6 @@ const TeacherCourses: React.FC = () => {
           {/* ── Header ── */}
           <header className="page-header courses-header-row">
             <div className="header-stack">
-              <div className="header-kicker"></div>
               <div className="row" style={{ gap: '0.6rem' }}>
                 <h2>{UI_TEXT.COURSE}</h2>
                 {!isLoading && <span className="count-chip">{courses.length}</span>}
