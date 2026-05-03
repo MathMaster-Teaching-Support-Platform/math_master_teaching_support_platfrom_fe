@@ -1,8 +1,8 @@
 import { AlertCircle, ArrowLeft } from 'lucide-react';
 import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AdminRoadmapEditor } from '../../components/roadmap';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { AdminRoadmapEditor } from '../../components/roadmap';
 import { mockAdmin } from '../../data/mockData';
 import { useCreateRoadmap } from '../../hooks/useRoadmaps';
 import '../../styles/module-refactor.css';
@@ -39,7 +39,6 @@ export default function AdminRoadmapCreatePage() {
 
           <header className="page-header courses-header-row">
             <div className="header-stack">
-              <div className="header-kicker">Admin</div>
               <h2>Tạo lộ trình học</h2>
               <p className="header-sub admin-roadmap-mgmt-header-sub">
                 Nhập tên, môn, mô tả và số ngày dự kiến. Sau khi tạo, bạn có thể bổ sung chủ đề

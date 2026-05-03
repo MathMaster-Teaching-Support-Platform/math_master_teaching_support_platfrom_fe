@@ -108,22 +108,16 @@ export default function AdminRoadmapManagementPage() {
         <section className="module-page teacher-courses-page admin-roadmap-mgmt-page__content">
           <header className="page-header courses-header-row">
             <div className="header-stack">
-              <div className="header-kicker">Admin</div>
               <div className="row" style={{ gap: '0.6rem', alignItems: 'center' }}>
                 <h2>Quản lý lộ trình</h2>
-                {!isLoading && !error && (
-                  <span className="count-chip">{totalElements}</span>
-                )}
+                {!isLoading && !error && <span className="count-chip">{totalElements}</span>}
               </div>
               <p className="header-sub admin-roadmap-mgmt-header-sub">
                 Tìm kiếm, lọc và quản lý lộ trình. Thống kê theo bản ghi trên{' '}
                 <strong>trang phân trang hiện tại</strong>.
               </p>
             </div>
-            <Link
-              to="/admin/roadmaps/create"
-              className="btn btn--feat-indigo"
-            >
+            <Link to="/admin/roadmaps/create" className="btn btn--feat-indigo">
               <Plus size={16} aria-hidden="true" />
               Tạo lộ trình
             </Link>
@@ -201,32 +195,25 @@ export default function AdminRoadmapManagementPage() {
             </label>
 
             <div className="pill-group">
-              {(['', 'GENERATED', 'IN_PROGRESS', 'COMPLETED', 'ARCHIVED'] as const).map(
-                (id) => {
-                  const key = id || 'all';
-                  const n =
-                    id === ''
-                      ? roadmaps.length
-                      : roadmaps.filter((r) => r.status === id).length;
-                  const label =
-                    id === ''
-                      ? `Tất cả (${n})`
-                      : `${STATUS_LABELS[id] ?? id} (${n})`;
-                  return (
-                    <button
-                      key={key}
-                      type="button"
-                      className={`pill-btn${statusFilter === id ? ' active' : ''}`}
-                      onClick={() => {
-                        setStatusFilter(id);
-                        setCurrentPage(0);
-                      }}
-                    >
-                      {label}
-                    </button>
-                  );
-                }
-              )}
+              {(['', 'GENERATED', 'IN_PROGRESS', 'COMPLETED', 'ARCHIVED'] as const).map((id) => {
+                const key = id || 'all';
+                const n =
+                  id === '' ? roadmaps.length : roadmaps.filter((r) => r.status === id).length;
+                const label = id === '' ? `Tất cả (${n})` : `${STATUS_LABELS[id] ?? id} (${n})`;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    className={`pill-btn${statusFilter === id ? ' active' : ''}`}
+                    onClick={() => {
+                      setStatusFilter(id);
+                      setCurrentPage(0);
+                    }}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -382,10 +369,7 @@ export default function AdminRoadmapManagementPage() {
           )}
 
           {deleteRoadmap.error && (
-            <div
-              className="admin-roadmap-mgmt-alert"
-              role="alert"
-            >
+            <div className="admin-roadmap-mgmt-alert" role="alert">
               <AlertCircle size={16} aria-hidden="true" />
               {deleteRoadmap.error.message || 'Không thể lưu trữ lộ trình.'}
             </div>

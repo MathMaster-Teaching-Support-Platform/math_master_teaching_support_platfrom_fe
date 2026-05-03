@@ -604,20 +604,32 @@
 }
 
 /* Nút primary trong modal: terracotta trang (ghi đè .module-layout-container .btn xanh) */
-.module-layout-container.admin-user-mgmt-page .user-management-page .modal .modal-footer .btn.btn-primary {
+.module-layout-container.admin-user-mgmt-page
+  .user-management-page
+  .modal
+  .modal-footer
+  .btn.btn-primary {
   background: var(--brand);
   border-color: var(--brand);
   color: #faf9f5;
   box-shadow: 0 0 0 1px rgba(201, 100, 66, 0.22);
 }
 
-.module-layout-container.admin-user-mgmt-page .user-management-page .modal .modal-footer .btn.btn-primary:hover:not(:disabled) {
+.module-layout-container.admin-user-mgmt-page
+  .user-management-page
+  .modal
+  .modal-footer
+  .btn.btn-primary:hover:not(:disabled) {
   background: var(--brand-hover);
   border-color: var(--brand-hover);
   color: #faf9f5;
 }
 
-.module-layout-container.admin-user-mgmt-page .user-management-page .modal .modal-footer .btn.btn-primary:disabled {
+.module-layout-container.admin-user-mgmt-page
+  .user-management-page
+  .modal
+  .modal-footer
+  .btn.btn-primary:disabled {
   opacity: 0.55;
   cursor: not-allowed;
   transform: none;
@@ -960,4 +972,263 @@
   padding: 2.5rem 1rem;
   color: #60748f;
   font-weight: 600;
+}
+
+/* ─────────────────────────────────────────────
+   User Detail Modal  (modal--user-detail)
+───────────────────────────────────────────── */
+.modal.modal--user-detail {
+  width: 500px;
+  max-width: calc(100vw - 2rem);
+  padding: 0;
+  overflow: hidden;
+  border-radius: 20px;
+  background: #faf9f5;
+  border: 1px solid #e8e6dc;
+  box-shadow:
+    0 0 0 1px #d1cfc5,
+    rgba(0, 0, 0, 0.12) 0px 20px 60px;
+  position: relative;
+}
+
+/* Close button — floating, top-right corner */
+.modal--user-detail .modal-close--floating {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.85rem;
+  z-index: 10;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(4px);
+  color: #4d4c48;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+.modal--user-detail .modal-close--floating:hover {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+/* Hero banner */
+.ud-hero {
+  position: relative;
+  height: 88px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.ud-hero__banner {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #ede9dc 0%, #e0dbd0 50%, #d5cfc2 100%);
+}
+.ud-hero__avatar {
+  position: relative;
+  z-index: 1;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ede9dc, #c9c3b2);
+  border: 3px solid #faf9f5;
+  box-shadow:
+    0 0 0 1px #d1cfc5,
+    0 4px 16px rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transform: translateY(42px);
+  flex-shrink: 0;
+}
+.ud-hero__initial {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 2rem;
+  font-weight: 500;
+  color: #5e5d59;
+  line-height: 1;
+  user-select: none;
+}
+
+/* Identity block */
+.ud-identity {
+  margin-top: 50px;
+  padding: 0 1.5rem 1.25rem;
+  text-align: center;
+  border-bottom: 1px solid #f0eee6;
+}
+.ud-identity__badges {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+}
+.ud-identity__name {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.35rem;
+  font-weight: 500;
+  color: #141413;
+  margin: 0 0 0.25rem;
+  line-height: 1.25;
+}
+.ud-identity__handle {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 0.8rem;
+  color: #87867f;
+  margin-bottom: 0.45rem;
+  letter-spacing: 0.01em;
+}
+.ud-identity__email {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 0.82rem;
+  color: #5e5d59;
+}
+
+/* Stats strip */
+.ud-stats {
+  display: flex;
+  align-items: stretch;
+  padding: 0 1.25rem;
+  margin: 1rem 0;
+  gap: 0;
+}
+.ud-stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.75rem 0.5rem;
+  background: #f5f4ed;
+  border: 1px solid #f0eee6;
+  border-radius: 14px;
+  text-align: center;
+  min-width: 0;
+}
+.ud-stat-divider {
+  width: 10px;
+  flex-shrink: 0;
+}
+.ud-stat__icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: #ede9dc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #5e5d59;
+  flex-shrink: 0;
+  margin-bottom: 0.1rem;
+}
+.ud-stat__label {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #87867f;
+  line-height: 1.3;
+}
+.ud-stat__value {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #141413;
+  line-height: 1.3;
+}
+
+/* Actions section */
+.ud-actions {
+  padding: 0 1.25rem 1rem;
+}
+.ud-actions__label {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #87867f;
+  margin-bottom: 0.6rem;
+}
+.ud-actions__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+.ud-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 10px;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+.ud-action-btn:active {
+  transform: scale(0.97);
+}
+.ud-action-btn--default {
+  background: #f0eee6;
+  color: #3d3d3a;
+  border-color: #e8e6dc;
+  box-shadow: 0 0 0 1px #e8e6dc;
+}
+.ud-action-btn--default:hover {
+  background: #e8e6dc;
+  box-shadow: 0 0 0 1px #d1cfc5;
+}
+.ud-action-btn--warn {
+  background: #fef3ec;
+  color: #8a4a2a;
+  border-color: #f5d9c8;
+  box-shadow: 0 0 0 1px #f5d9c8;
+}
+.ud-action-btn--warn:hover {
+  background: #fde5d4;
+  box-shadow: 0 0 0 1px #f0c4a8;
+}
+.ud-action-btn--success {
+  background: #edf3eb;
+  color: #3a5f3e;
+  border-color: #cde2ca;
+  box-shadow: 0 0 0 1px #cde2ca;
+}
+.ud-action-btn--success:hover {
+  background: #dceeda;
+  box-shadow: 0 0 0 1px #b2d4ae;
+}
+.ud-action-btn--danger {
+  background: #fdf0f0;
+  color: #8e2e2e;
+  border-color: #f5cece;
+  box-shadow: 0 0 0 1px #f5cece;
+}
+.ud-action-btn--danger:hover {
+  background: #fde4e4;
+  box-shadow: 0 0 0 1px #eaabab;
+}
+
+/* Footer override for detail modal */
+.modal.modal--user-detail .modal-footer {
+  padding: 0.9rem 1.25rem;
+  border-top: 1px solid #f0eee6;
+  background: #f5f4ed;
 }
