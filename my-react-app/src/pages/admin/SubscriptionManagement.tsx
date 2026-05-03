@@ -1,5 +1,23 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { Plus } from 'lucide-react';
+import {
+  AlertTriangle,
+  BarChart2,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  DollarSign,
+  Eye,
+  Loader2,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Save,
+  Star,
+  Trash2,
+  TrendingUp,
+  Users,
+  X,
+} from 'lucide-react';
 import React, { useCallback, useEffect, useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { useToast } from '../../context/ToastContext';
@@ -261,11 +279,11 @@ const SubscriptionManagement: React.FC = () => {
   const statusLabel = (status: string) => {
     switch (status) {
       case 'ACTIVE':
-        return '✅ Hoạt động';
+        return 'Hoạt động';
       case 'EXPIRED':
-        return '⏸️ Hết hạn';
+        return 'Hết hạn';
       case 'CANCELLED':
-        return '🚫 Đã hủy';
+        return 'Đã hủy';
       default:
         return status;
     }
@@ -282,7 +300,6 @@ const SubscriptionManagement: React.FC = () => {
         <div className="subscription-management-page">
           <header className="page-header courses-header-row">
             <div className="header-stack">
-              <div className="header-kicker">Tài chính</div>
               <h2 className="page-title" style={{ margin: 0 }}>
                 Gói đăng ký
               </h2>
@@ -301,11 +318,8 @@ const SubscriptionManagement: React.FC = () => {
           {/* Revenue Stats */}
           <div className="revenue-stats">
             <div className="stat-card highlight">
-              <div
-                className="stat-icon"
-                style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
-              >
-                💰
+              <div className="stat-icon">
+                <DollarSign size={20} />
               </div>
               <div className="stat-content">
                 <div className="stat-value">
@@ -327,11 +341,8 @@ const SubscriptionManagement: React.FC = () => {
               </div>
             </div>
             <div className="stat-card">
-              <div
-                className="stat-icon"
-                style={{ background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)' }}
-              >
-                👥
+              <div className="stat-icon">
+                <Users size={20} />
               </div>
               <div className="stat-content">
                 <div className="stat-value">
@@ -349,11 +360,8 @@ const SubscriptionManagement: React.FC = () => {
               </div>
             </div>
             <div className="stat-card">
-              <div
-                className="stat-icon"
-                style={{ background: 'linear-gradient(135deg, #ffd89b 0%, #19547b 100%)' }}
-              >
-                📊
+              <div className="stat-icon">
+                <BarChart2 size={20} />
               </div>
               <div className="stat-content">
                 <div className="stat-value">
@@ -367,11 +375,8 @@ const SubscriptionManagement: React.FC = () => {
               </div>
             </div>
             <div className="stat-card">
-              <div
-                className="stat-icon"
-                style={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' }}
-              >
-                📈
+              <div className="stat-icon">
+                <TrendingUp size={20} />
               </div>
               <div className="stat-content">
                 <div className="stat-value">
@@ -392,7 +397,9 @@ const SubscriptionManagement: React.FC = () => {
 
             {plansError && (
               <div className="error-banner">
-                ⚠️ {plansError} <button onClick={fetchPlans}>Thử lại</button>
+                <AlertTriangle size={14} />
+                {plansError}
+                <button onClick={fetchPlans}>Thử lại</button>
               </div>
             )}
 
@@ -404,7 +411,12 @@ const SubscriptionManagement: React.FC = () => {
               <div className="plans-grid">
                 {plans.map((plan) => (
                   <div key={plan.id} className={`plan-card ${plan.featured ? 'featured' : ''}`}>
-                    {plan.featured && <div className="featured-badge">⭐ Phổ biến nhất</div>}
+                    {plan.featured && (
+                      <div className="featured-badge">
+                        <Star size={11} className="fill-current" />
+                        Phổ biến nhất
+                      </div>
+                    )}
 
                     <div className="plan-header">
                       <h3 className="plan-name">{plan.name}</h3>
@@ -424,7 +436,10 @@ const SubscriptionManagement: React.FC = () => {
                       <h4 className="features-title">Tính năng:</h4>
                       <ul className="features-list">
                         {plan.features.slice(0, 5).map((feature, i) => (
-                          <li key={i}>✅ {feature}</li>
+                          <li key={i}>
+                            <CheckCircle2 size={14} className="feature-icon" />
+                            {feature}
+                          </li>
                         ))}
                         {plan.features.length > 5 && (
                           <li className="more-features">
@@ -436,17 +451,27 @@ const SubscriptionManagement: React.FC = () => {
 
                     <div className="plan-actions">
                       <button className="btn btn-outline" onClick={() => setSelectedPlan(plan)}>
-                        👁️ Chi tiết
+                        <Eye size={14} />
+                        Chi tiết
                       </button>
                       <button className="btn btn-outline" onClick={() => openEditModal(plan)}>
-                        ✏️ Chỉnh sửa
+                        <Pencil size={14} />
+                        Chỉnh sửa
                       </button>
                       <button
                         className="btn btn-outline btn-danger"
                         onClick={() => handleDeletePlan(plan)}
                         disabled={deletingPlanId === plan.id}
                       >
-                        {deletingPlanId === plan.id ? '...' : '🗑️ Xóa'}
+                        {deletingPlanId === plan.id ? (
+                          <>
+                            <Loader2 size={14} className="animate-spin" /> Đang xóa...
+                          </>
+                        ) : (
+                          <>
+                            <Trash2 size={14} /> Xóa
+                          </>
+                        )}
                       </button>
                     </div>
                   </div>
@@ -461,7 +486,9 @@ const SubscriptionManagement: React.FC = () => {
 
             {subsError && (
               <div className="error-banner">
-                ⚠️ {subsError} <button onClick={() => fetchSubscriptions(subsPage)}>Thử lại</button>
+                <AlertTriangle size={14} />
+                {subsError}
+                <button onClick={() => fetchSubscriptions(subsPage)}>Thử lại</button>
               </div>
             )}
 
@@ -523,7 +550,7 @@ const SubscriptionManagement: React.FC = () => {
                               title="Tính năng đang phát triển"
                               disabled
                             >
-                              🔄
+                              <RefreshCw size={13} />
                             </button>
                           </div>
                         </td>
@@ -542,7 +569,8 @@ const SubscriptionManagement: React.FC = () => {
                   disabled={subsPage === 0}
                   onClick={() => setSubsPage((p) => p - 1)}
                 >
-                  ← Trước
+                  <ChevronLeft size={15} />
+                  Trước
                 </button>
                 <span className="page-info">
                   Trang {subsPage + 1} / {subsTotalPages}
@@ -552,7 +580,8 @@ const SubscriptionManagement: React.FC = () => {
                   disabled={subsPage >= subsTotalPages - 1}
                   onClick={() => setSubsPage((p) => p + 1)}
                 >
-                  Sau →
+                  Sau
+                  <ChevronRight size={15} />
                 </button>
               </div>
             )}
@@ -565,12 +594,17 @@ const SubscriptionManagement: React.FC = () => {
                 <div className="modal-header">
                   <h2 className="modal-title">Chỉnh sửa gói: {editingPlan.name}</h2>
                   <button className="modal-close" onClick={() => setEditingPlan(null)}>
-                    ✕
+                    <X size={16} />
                   </button>
                 </div>
 
                 <div className="modal-body">
-                  {editError && <div className="form-error">⚠️ {editError}</div>}
+                  {editError && (
+                    <div className="form-error">
+                      <AlertTriangle size={14} />
+                      {editError}
+                    </div>
+                  )}
 
                   <div className="form-group">
                     <label>Tên gói *</label>
@@ -655,8 +689,8 @@ const SubscriptionManagement: React.FC = () => {
                         setEditForm((f) => ({ ...f, status: e.target.value as PlanStatus }))
                       }
                     >
-                      <option value="ACTIVE">✅ ACTIVE — Đang hoạt động</option>
-                      <option value="INACTIVE">⏸️ INACTIVE — Vô hiệu hóa</option>
+                      <option value="ACTIVE">ACTIVE — Đang hoạt động</option>
+                      <option value="INACTIVE">INACTIVE — Vô hiệu hóa</option>
                     </select>
                   </div>
 
@@ -702,7 +736,15 @@ const SubscriptionManagement: React.FC = () => {
                     onClick={handleEditSubmit}
                     disabled={editLoading}
                   >
-                    {editLoading ? '⏳ Đang lưu...' : '💾 Lưu thay đổi'}
+                    {editLoading ? (
+                      <>
+                        <Loader2 size={14} className="animate-spin" /> Đang lưu...
+                      </>
+                    ) : (
+                      <>
+                        <Save size={14} /> Lưu thay đổi
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
@@ -728,12 +770,17 @@ const SubscriptionManagement: React.FC = () => {
                       setCreateError(null);
                     }}
                   >
-                    ✕
+                    <X size={16} />
                   </button>
                 </div>
 
                 <div className="modal-body">
-                  {createError && <div className="form-error">⚠️ {createError}</div>}
+                  {createError && (
+                    <div className="form-error">
+                      <AlertTriangle size={14} />
+                      {createError}
+                    </div>
+                  )}
 
                   <div className="form-group">
                     <label>Tên gói *</label>
@@ -866,7 +913,15 @@ const SubscriptionManagement: React.FC = () => {
                     onClick={handleCreateSubmit}
                     disabled={createLoading}
                   >
-                    {createLoading ? '⏳ Đang tạo...' : '✅ Tạo gói'}
+                    {createLoading ? (
+                      <>
+                        <Loader2 size={14} className="animate-spin" /> Đang tạo...
+                      </>
+                    ) : (
+                      <>
+                        <Plus size={14} /> Tạo gói
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
@@ -880,7 +935,7 @@ const SubscriptionManagement: React.FC = () => {
                 <div className="modal-header">
                   <h2 className="modal-title">Chi tiết gói: {selectedPlan.name}</h2>
                   <button className="modal-close" onClick={() => setSelectedPlan(null)}>
-                    ✕
+                    <X size={16} />
                   </button>
                 </div>
 
@@ -895,11 +950,41 @@ const SubscriptionManagement: React.FC = () => {
                       )}
                     </div>
                     <p>{selectedPlan.description}</p>
-                    <div style={{ marginTop: '8px', fontSize: '0.85rem', color: '#888' }}>
-                      Slug: <code>{selectedPlan.slug}</code> &nbsp;|&nbsp; Trạng thái:{' '}
-                      <strong>{selectedPlan.status}</strong> &nbsp;|&nbsp;
-                      {selectedPlan.featured ? '⭐ Gói nổi bật' : 'Gói thường'} &nbsp;|&nbsp; Token
-                      quota: <strong>{selectedPlan.tokenQuota}</strong>
+                    <div
+                      style={{
+                        marginTop: '8px',
+                        fontSize: '0.85rem',
+                        color: '#87867f',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.5rem',
+                        flexWrap: 'wrap',
+                      }}
+                    >
+                      <span>
+                        Slug: <code>{selectedPlan.slug}</code>
+                      </span>
+                      <span>|</span>
+                      <span>
+                        Trạng thái: <strong>{selectedPlan.status}</strong>
+                      </span>
+                      <span>|</span>
+                      <span
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+                      >
+                        {selectedPlan.featured ? (
+                          <>
+                            <Star size={12} style={{ color: '#c96442' }} /> Gói nổi bật
+                          </>
+                        ) : (
+                          'Gói thường'
+                        )}
+                      </span>
+                      <span>|</span>
+                      <span>
+                        Token quota: <strong>{selectedPlan.tokenQuota}</strong>
+                      </span>
                     </div>
                   </div>
 
@@ -907,7 +992,10 @@ const SubscriptionManagement: React.FC = () => {
                     <h4>Danh sách tính năng đầy đủ:</h4>
                     <ul>
                       {selectedPlan.features.map((feature, i) => (
-                        <li key={i}>✅ {feature}</li>
+                        <li key={i}>
+                          <CheckCircle2 size={14} className="feature-icon" />
+                          {feature}
+                        </li>
                       ))}
                     </ul>
                   </div>
@@ -920,7 +1008,15 @@ const SubscriptionManagement: React.FC = () => {
                         onClick={() => handleDeletePlan(selectedPlan)}
                         disabled={deletingPlanId === selectedPlan.id}
                       >
-                        {deletingPlanId === selectedPlan.id ? '⏳ Đang xóa...' : '🗑️ Xóa gói'}
+                        {deletingPlanId === selectedPlan.id ? (
+                          <>
+                            <Loader2 size={14} className="animate-spin" /> Đang xóa...
+                          </>
+                        ) : (
+                          <>
+                            <Trash2 size={14} /> Xóa gói
+                          </>
+                        )}
                       </button>
                     </div>
                   </div>

@@ -285,7 +285,7 @@ const UserManagement: React.FC = () => {
             <header className="page-header courses-header-row">
               <div className="header-stack">
                 <h2 style={{ margin: 0 }}>Quản lý người dùng</h2>
-                <p className="header-sub">Tài khoản, vai trò và trạng thái hoạt động</p>
+                <p className="header-sub">Quản lý thông tin tài khoản người dùng</p>
               </div>
               <button
                 type="button"

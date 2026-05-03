@@ -144,7 +144,6 @@ const MarketplaceAnalytics: React.FC = () => {
     <motion.div initial="hidden" animate="visible" variants={containerVariants}>
       <header className="analytics-header">
         <div className="header-stack">
-          <div className="header-kicker">MathMaster Intelligence</div>
           <h2>Báo cáo Thị trường</h2>
           <p className="header-sub">Phân tích xu hướng khóa học và hiệu suất giảng viên dẫn đầu</p>
         </div>

@@ -1,31 +1,32 @@
-import { 
-  RefreshCw, 
-  TrendingUp, 
-  TrendingDown, 
-  Users, 
-  BarChart3, 
-  CreditCard,
-  Package,
-  Info,
-  Calendar
-} from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import {
+  AlertTriangle,
+  BarChart3,
+  Calendar,
+  CreditCard,
+  Info,
+  Package,
+  RefreshCw,
+  TrendingDown,
+  TrendingUp,
+  Users,
+} from 'lucide-react';
+import React, { useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockAdmin } from '../../data/mockData';
+import type { AdminFinancialOverview as OverviewData } from '../../services/admin-financial.service';
 import {
   adminFinancialService,
   formatCurrency,
   formatTrend,
   getTrendColor,
 } from '../../services/admin-financial.service';
-import type { AdminFinancialOverview as OverviewData } from '../../services/admin-financial.service';
 import '../../styles/module-refactor.css';
 import '../courses/TeacherCourses.css';
+import './admin-finance-studio.css';
 import './admin-mgmt-shell.css';
 import AdminFinanceStudioShell from './AdminFinanceStudioShell';
-import './admin-finance-studio.css';
 import './AdminFinancialOverview.css';
 
 const AdminFinancialOverview: React.FC = () => {
@@ -38,7 +39,9 @@ const AdminFinancialOverview: React.FC = () => {
 
   const overview: OverviewData | null = overviewQuery.data ?? null;
   const loading = overviewQuery.isLoading || overviewQuery.isFetching;
-  const error = overviewQuery.error ? (overviewQuery.error as any).message || 'Đã xảy ra lỗi không xác định' : null;
+  const error = overviewQuery.error
+    ? (overviewQuery.error as any).message || 'Đã xảy ra lỗi không xác định'
+    : null;
 
   const handleMonthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedMonth(e.target.value);
@@ -74,7 +77,9 @@ const AdminFinancialOverview: React.FC = () => {
   if (error) {
     return shell(
       <div className="error-container">
-        <div className="error-icon">⚠️</div>
+        <div className="error-icon">
+          <AlertTriangle size={32} />
+        </div>
         <h3>Lỗi tải dữ liệu</h3>
         <p>{error}</p>
         <button type="button" onClick={() => void overviewQuery.refetch()} className="retry-button">
@@ -88,19 +93,18 @@ const AdminFinancialOverview: React.FC = () => {
 
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.08 } }
+    visible: { opacity: 1, transition: { staggerChildren: 0.08 } },
   };
 
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { type: 'spring', stiffness: 100, damping: 15 } }
+    visible: { y: 0, opacity: 1, transition: { type: 'spring', stiffness: 100, damping: 15 } },
   } as const;
 
   return shell(
     <motion.div initial="hidden" animate="visible" variants={containerVariants}>
       <header className="overview-header">
         <div className="header-stack">
-          <div className="header-kicker">MathMaster Executive</div>
           <h2>Tổng quan tài chính</h2>
           <p className="header-sub">Hệ thống báo cáo hiệu suất và phân tích tăng trưởng nền tảng</p>
         </div>
@@ -114,9 +118,9 @@ const AdminFinancialOverview: React.FC = () => {
               className="month-input"
             />
           </div>
-          <button 
-            type="button" 
-            onClick={() => void overviewQuery.refetch()} 
+          <button
+            type="button"
+            onClick={() => void overviewQuery.refetch()}
             className="refresh-button"
             disabled={overviewQuery.isFetching}
           >
@@ -132,7 +136,11 @@ const AdminFinancialOverview: React.FC = () => {
           <div className="metric-label">Tổng doanh thu nền tảng (Gross)</div>
           <p className="metric-value">{formatCurrency(overview!.totalRevenue)}</p>
           <div className={`metric-trend ${getTrendColor(overview!.totalRevenueTrend)}`}>
-            {overview!.totalRevenueTrend >= 0 ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
+            {overview!.totalRevenueTrend >= 0 ? (
+              <TrendingUp size={20} />
+            ) : (
+              <TrendingDown size={20} />
+            )}
             <span>{formatTrend(overview!.totalRevenueTrend)} so với chu kỳ trước</span>
           </div>
         </motion.div>
@@ -140,7 +148,9 @@ const AdminFinancialOverview: React.FC = () => {
         {/* Sidebar Cards */}
         <div className="sidebar-metrics">
           <motion.div className="metric-card" variants={itemVariants}>
-            <div className="metric-icon"><BarChart3 size={24} /></div>
+            <div className="metric-icon">
+              <BarChart3 size={24} />
+            </div>
             <h3 className="metric-label">Hoa hồng hệ thống</h3>
             <p className="metric-value">{formatCurrency(overview!.platformCommission)}</p>
             <div className={`metric-trend ${getTrendColor(overview!.platformCommissionTrend)}`}>
@@ -149,7 +159,9 @@ const AdminFinancialOverview: React.FC = () => {
           </motion.div>
 
           <motion.div className="metric-card" variants={itemVariants}>
-            <div className="metric-icon"><Users size={24} /></div>
+            <div className="metric-icon">
+              <Users size={24} />
+            </div>
             <h3 className="metric-label">Thuê bao trả phí</h3>
             <p className="metric-value">{overview!.activeSubscriptions.toLocaleString()}</p>
             <div className={`metric-trend ${getTrendColor(overview!.activeSubscriptionsTrend)}`}>
@@ -181,10 +193,18 @@ const AdminFinancialOverview: React.FC = () => {
 
       {/* Quick Actions */}
       <div className="quick-actions-section">
-        <motion.h2 className="section-title" variants={itemVariants}>Phân tích & Quản lý chuyên sâu</motion.h2>
+        <motion.h2 className="section-title" variants={itemVariants}>
+          Phân tích & Quản lý chuyên sâu
+        </motion.h2>
         <motion.div className="actions-bento" variants={containerVariants}>
-          <motion.a href="/admin/marketplace-analytics" className="action-tile" variants={itemVariants}>
-            <div className="action-tile-icon"><BarChart3 size={28} /></div>
+          <motion.a
+            href="/admin/marketplace-analytics"
+            className="action-tile"
+            variants={itemVariants}
+          >
+            <div className="action-tile-icon">
+              <BarChart3 size={28} />
+            </div>
             <div className="action-tile-content">
               <h3>Thị trường</h3>
               <p>Phân tích hiệu suất khóa học và giảng viên hàng đầu.</p>
@@ -192,7 +212,9 @@ const AdminFinancialOverview: React.FC = () => {
           </motion.a>
 
           <motion.a href="/admin/transactions" className="action-tile" variants={itemVariants}>
-            <div className="action-tile-icon"><CreditCard size={28} /></div>
+            <div className="action-tile-icon">
+              <CreditCard size={28} />
+            </div>
             <div className="action-tile-content">
               <h3>Giao dịch</h3>
               <p>Quản lý dòng tiền, nạp ví và lịch sử thanh toán.</p>
@@ -200,7 +222,9 @@ const AdminFinancialOverview: React.FC = () => {
           </motion.a>
 
           <motion.a href="/admin/subscriptions" className="action-tile" variants={itemVariants}>
-            <div className="action-tile-icon"><Package size={28} /></div>
+            <div className="action-tile-icon">
+              <Package size={28} />
+            </div>
             <div className="action-tile-content">
               <h3>Thuê bao</h3>
               <p>Quản lý các gói đăng ký và kế hoạch kinh doanh.</p>
@@ -208,7 +232,9 @@ const AdminFinancialOverview: React.FC = () => {
           </motion.a>
 
           <motion.a href="/admin/users" className="action-tile" variants={itemVariants}>
-            <div className="action-tile-icon"><Users size={28} /></div>
+            <div className="action-tile-icon">
+              <Users size={28} />
+            </div>
             <div className="action-tile-content">
               <h3>Thành viên</h3>
               <p>Quản trị hồ sơ và phân quyền người dùng hệ thống.</p>

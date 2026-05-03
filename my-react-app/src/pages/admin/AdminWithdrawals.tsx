@@ -21,12 +21,12 @@ import {
   useAdminRejectWithdrawal,
   useAdminWithdrawals,
 } from '../../hooks/useWithdrawals';
-import type { WithdrawalRequestResponse, WithdrawalStatus } from '../../types/wallet.types';
 import '../../styles/module-refactor.css';
+import type { WithdrawalRequestResponse, WithdrawalStatus } from '../../types/wallet.types';
 import '../courses/TeacherCourses.css';
+import './admin-finance-studio.css';
 import './admin-mgmt-shell.css';
 import AdminFinanceStudioShell from './AdminFinanceStudioShell';
-import './admin-finance-studio.css';
 import './AdminWithdrawals.css';
 
 type FilterStatus = 'ALL' | WithdrawalStatus;
@@ -41,12 +41,12 @@ const STATUS_LABELS: Record<WithdrawalStatus, string> = {
 };
 
 const STATUS_COLORS: Record<WithdrawalStatus, string> = {
-  PENDING_VERIFY: '#f59e0b',
-  PENDING_ADMIN: '#3b82f6',
-  PROCESSING: '#8b5cf6',
-  SUCCESS: '#10b981',
-  REJECTED: '#ef4444',
-  CANCELLED: '#6b7280',
+  PENDING_VERIFY: '#D97757',
+  PENDING_ADMIN: '#C96442',
+  PROCESSING: '#87867F',
+  SUCCESS: '#2D8A6A',
+  REJECTED: '#B53333',
+  CANCELLED: '#B0AEA5',
 };
 
 const formatCurrency = (v: number) =>
@@ -293,7 +293,7 @@ function RejectModal({ request, onClose, onDone }: RejectModalProps) {
     <div className="wad-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="wad-modal wad-modal--sm">
         <div className="wad-modal__header">
-          <div className="wad-modal__title" style={{ color: '#ef4444' }}>
+          <div className="wad-modal__title" style={{ color: '#B53333' }}>
             <XCircle size={18} />
             Từ chối yêu cầu
           </div>
@@ -572,7 +572,7 @@ const AdminWithdrawals: React.FC = () => {
               </div>
             ) : error ? (
               <div className="wad-empty-state">
-                <AlertTriangle size={32} style={{ color: '#ef4444' }} />
+                <AlertTriangle size={32} style={{ color: '#B53333' }} />
                 <p>{error instanceof Error ? error.message : 'Không thể tải dữ liệu.'}</p>
                 <button className="btn-action btn-action--ghost" onClick={() => refetch()}>
                   Thử lại
@@ -580,7 +580,7 @@ const AdminWithdrawals: React.FC = () => {
               </div>
             ) : requests.length === 0 ? (
               <div className="wad-empty-state">
-                <Download size={32} style={{ color: '#d1d5db' }} />
+                <Download size={32} style={{ color: '#C2C0B6' }} />
                 <p>Không có yêu cầu nào.</p>
               </div>
             ) : (
@@ -608,7 +608,7 @@ const AdminWithdrawals: React.FC = () => {
                         </div>
                       </td>
                       <td>
-                        <strong style={{ color: '#4f46e5' }}>{formatCurrency(req.amount)}</strong>
+                        <strong style={{ color: '#C96442' }}>{formatCurrency(req.amount)}</strong>
                       </td>
                       <td>{req.bankName}</td>
                       <td>
