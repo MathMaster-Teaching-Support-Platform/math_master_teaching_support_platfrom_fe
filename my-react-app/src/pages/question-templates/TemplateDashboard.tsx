@@ -54,7 +54,6 @@ import './template-review.css';
 import { TemplateBulkImportModal } from './TemplateBulkImportModal';
 import { TemplateFormModal } from './TemplateFormModal';
 
-import { TemplateTestModal } from './TemplateTestModal';
 import { TemplateMethodPicker } from './TemplateMethodPicker';
 import { RealQuestionForm } from './RealQuestionForm';
 import { BlueprintConfirmModal } from './BlueprintConfirmModal';
@@ -189,7 +188,6 @@ export function TemplateDashboard() {
   const [mode, setMode] = useState<'create' | 'edit'>('create');
   const [formOpen, setFormOpen] = useState(false);
   const [bulkImportOpen, setBulkImportOpen] = useState(false);
-  const [testOpen, setTestOpen] = useState(false);
   const [selected, setSelected] = useState<QuestionTemplateResponse | null>(null);
 
   // New flow state: Method picker + Method-1 form + Confirm + Generate
@@ -579,25 +577,25 @@ export function TemplateDashboard() {
 
                     <div className="row" style={{ flexWrap: 'wrap', gap: '0.4rem' }}>
 
+                      {/*
+                       * Per-template review queue entry. Previously the only way
+                       * to reach the scoped queue was the post-generation deep
+                       * link from TemplateGenerateModal — after a page reload
+                       * teachers had no path back to a specific template's
+                       * UNDER_REVIEW pile and were forced into the global queue.
+                       */}
                       <button
                         className="btn secondary"
-                        onClick={() => {
-                          setSelected(template);
-                          setTestOpen(true);
-                        }}
+                        onClick={() =>
+                          navigate(
+                            `/teacher/question-review?templateId=${encodeURIComponent(template.id)}`
+                          )
+                        }
+                        title="Xem các câu hỏi đang chờ duyệt cho mẫu này"
                       >
-                        <Eye size={14} />
-                        Chạy thử
+                        <Inbox size={14} />
+                        Câu hỏi chờ duyệt
                       </button>
-                      {/* 
-                      <button
-                        className="btn secondary"
-                        onClick={() => openReviewModal(template.id)}
-                      >
-                        <CheckSquare size={14} />
-                        Xét duyệt
-                      </button>
-                      */}
                       <button
                         className="btn secondary"
                         onClick={() => void openEditTemplate(template.id)}
@@ -703,14 +701,6 @@ export function TemplateDashboard() {
               void refetch();
             }}
           />
-
-          {selected && (
-            <TemplateTestModal
-              isOpen={testOpen}
-              onClose={() => setTestOpen(false)}
-              template={selected}
-            />
-          )}
 
           {selected && (
             <TemplateGenerateModal

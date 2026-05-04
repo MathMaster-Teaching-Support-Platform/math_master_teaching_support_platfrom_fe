@@ -112,7 +112,9 @@ export function QuestionReviewQueue() {
               </div>
               <p className="header-sub">
                 {templateId
-                  ? `Lọc theo template ${templateId}`
+                  ? // Prefer the human-readable name returned by the BE; fall back
+                    // to the UUID only if the page is empty or the field is null.
+                    `Lọc theo template: ${items[0]?.templateName ?? templateId}`
                   : 'Tất cả câu hỏi đang chờ duyệt do bạn tạo'}
               </p>
             </div>
@@ -196,14 +198,39 @@ export function QuestionReviewQueue() {
                         onChange={() => toggle(q.id)}
                         style={{ marginTop: 6 }}
                       />
-                      <div style={{ flex: 1 }}>
-                        <div className="row" style={{ gap: 8, alignItems: 'center' }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div
+                          className="row"
+                          style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap' }}
+                        >
                           <span className="badge draft" style={{ fontSize: '0.7rem' }}>
                             {q.questionType}
                           </span>
                           <span className="badge draft" style={{ fontSize: '0.7rem' }}>
                             {q.questionStatus}
                           </span>
+                          {/* Template chip — shows which template this question came
+                              from so teachers can orient themselves in the global
+                              queue. Only render when the BE actually returned a
+                              name; the bare UUID is unhelpful UI. */}
+                          {q.templateName && (
+                            <span
+                              className="badge"
+                              style={{
+                                fontSize: '0.7rem',
+                                background: '#eef2ff',
+                                color: '#4338ca',
+                                border: '1px solid #c7d2fe',
+                                maxWidth: 240,
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                              }}
+                              title={q.templateName}
+                            >
+                              {q.templateName}
+                            </span>
+                          )}
                           <span className="muted" style={{ fontSize: '0.75rem' }}>
                             {new Date(q.createdAt).toLocaleString()}
                           </span>
