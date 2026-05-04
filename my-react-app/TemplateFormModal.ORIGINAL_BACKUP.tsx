@@ -1,18 +1,19 @@
 import { AlertTriangle, HelpCircle, Plus, Trash2, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import MathText from '../../components/common/MathText';
+import { useToast } from '../../context/ToastContext';
 import {
   CognitiveLevel,
-  QuestionType,
   QuestionTag,
   questionTagLabels,
+  QuestionType,
   type QuestionTemplateRequest,
   type QuestionTemplateResponse,
 } from '../../types/questionTemplate';
 // ✅ NEW: Import hooks for Grade→Subject→Chapter cascade
+import { useChaptersBySubject } from '../../hooks/useChapters';
 import { useGrades } from '../../hooks/useGrades';
 import { useSubjectsByGrade } from '../../hooks/useSubjects';
-import { useChaptersBySubject } from '../../hooks/useChapters';
 
 type ParameterInput = {
   name: string;
@@ -138,9 +139,8 @@ function buildOptions(options: OptionInput[]): Record<string, unknown> {
   for (const option of options) {
     if (!option.key.trim() || !option.formula.trim()) continue;
     const formula = option.formula.trim();
-    const wrappedFormula = formula.startsWith('$$') && formula.endsWith('$$')
-      ? formula
-      : `$$${formula}$$`;
+    const wrappedFormula =
+      formula.startsWith('$$') && formula.endsWith('$$') ? formula : `$$${formula}$$`;
     mappedOptions[option.key.trim()] = wrappedFormula;
   }
   return mappedOptions;
@@ -160,6 +160,7 @@ export function TemplateFormModal({
   onClose,
   onSubmit,
 }: Readonly<Props>) {
+  const { showToast } = useToast();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   // ✅ NEW: Academic context state (Template owns chapter)
@@ -577,7 +578,7 @@ export function TemplateFormModal({
               {/* ✅ NEW: Grade→Subject→Chapter Cascade Selector */}
               <label>
                 <p className="muted" style={{ marginBottom: 6 }}>
-                  Khối lớp
+                  Lớp
                 </p>
                 <select
                   className="select"
@@ -705,19 +706,21 @@ export function TemplateFormModal({
                     (Chọn 1-5 tags)
                   </span>
                 </p>
-                
+
                 {/* Selected Tags Display */}
-                <div style={{
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  gap: '8px',
-                  minHeight: '40px',
-                  padding: '8px',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '6px',
-                  background: '#f9fafb',
-                  marginBottom: '8px'
-                }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: '8px',
+                    minHeight: '40px',
+                    padding: '8px',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '6px',
+                    background: '#f9fafb',
+                    marginBottom: '8px',
+                  }}
+                >
                   {tags.map((tag) => (
                     <span
                       key={tag}
@@ -730,7 +733,7 @@ export function TemplateFormModal({
                         color: 'white',
                         borderRadius: '4px',
                         fontSize: '13px',
-                        fontWeight: 500
+                        fontWeight: 500,
                       }}
                     >
                       {questionTagLabels[tag]}
@@ -745,22 +748,24 @@ export function TemplateFormModal({
                           border: 'none',
                           color: 'white',
                           cursor: 'pointer',
-                          opacity: 0.8
+                          opacity: 0.8,
                         }}
                         onClick={() => setTags(tags.filter((t) => t !== tag))}
-                        onMouseOver={(e) => e.currentTarget.style.opacity = '1'}
-                        onMouseOut={(e) => e.currentTarget.style.opacity = '0.8'}
+                        onMouseOver={(e) => (e.currentTarget.style.opacity = '1')}
+                        onMouseOut={(e) => (e.currentTarget.style.opacity = '0.8')}
                       >
                         <X size={14} />
                       </button>
                     </span>
                   ))}
                   {tags.length === 0 && (
-                    <span style={{
-                      color: '#9ca3af',
-                      fontSize: '14px',
-                      fontStyle: 'italic'
-                    }}>
+                    <span
+                      style={{
+                        color: '#9ca3af',
+                        fontSize: '14px',
+                        fontStyle: 'italic',
+                      }}
+                    >
                       Chọn tags từ dropdown bên dưới
                     </span>
                   )}
@@ -776,7 +781,10 @@ export function TemplateFormModal({
                       if (tags.length < 5) {
                         setTags([...tags, selectedTag]);
                       } else {
-                        alert('Bạn chỉ có thể chọn tối đa 5 tags');
+                        showToast({
+                          type: 'warning',
+                          message: 'Bạn chỉ có thể chọn tối đa 5 tags',
+                        });
                       }
                     }
                   }}
@@ -785,7 +793,7 @@ export function TemplateFormModal({
                   <option value="">
                     {tags.length >= 5 ? 'Đã chọn tối đa 5 tags' : 'Chọn tag để thêm...'}
                   </option>
-                  
+
                   <optgroup label="Đại số">
                     {[
                       QuestionTag.LINEAR_EQUATIONS,
@@ -796,14 +804,14 @@ export function TemplateFormModal({
                       QuestionTag.FUNCTIONS,
                       QuestionTag.SEQUENCES_SERIES,
                     ]
-                      .filter(tag => !tags.includes(tag))
-                      .map(tag => (
+                      .filter((tag) => !tags.includes(tag))
+                      .map((tag) => (
                         <option key={tag} value={tag}>
                           {questionTagLabels[tag]}
                         </option>
                       ))}
                   </optgroup>
-                  
+
                   <optgroup label="Hình học">
                     {[
                       QuestionTag.TRIANGLES,
@@ -815,14 +823,14 @@ export function TemplateFormModal({
                       QuestionTag.VECTORS,
                       QuestionTag.AREA_PERIMETER,
                     ]
-                      .filter(tag => !tags.includes(tag))
-                      .map(tag => (
+                      .filter((tag) => !tags.includes(tag))
+                      .map((tag) => (
                         <option key={tag} value={tag}>
                           {questionTagLabels[tag]}
                         </option>
                       ))}
                   </optgroup>
-                  
+
                   <optgroup label="Giải tích">
                     {[
                       QuestionTag.LIMITS,
@@ -831,14 +839,14 @@ export function TemplateFormModal({
                       QuestionTag.DIFFERENTIAL_EQUATIONS,
                       QuestionTag.SERIES_CONVERGENCE,
                     ]
-                      .filter(tag => !tags.includes(tag))
-                      .map(tag => (
+                      .filter((tag) => !tags.includes(tag))
+                      .map((tag) => (
                         <option key={tag} value={tag}>
                           {questionTagLabels[tag]}
                         </option>
                       ))}
                   </optgroup>
-                  
+
                   <optgroup label="Thống kê & Xác suất">
                     {[
                       QuestionTag.DESCRIPTIVE_STATISTICS,
@@ -846,28 +854,28 @@ export function TemplateFormModal({
                       QuestionTag.DISTRIBUTIONS,
                       QuestionTag.HYPOTHESIS_TESTING,
                     ]
-                      .filter(tag => !tags.includes(tag))
-                      .map(tag => (
+                      .filter((tag) => !tags.includes(tag))
+                      .map((tag) => (
                         <option key={tag} value={tag}>
                           {questionTagLabels[tag]}
                         </option>
                       ))}
                   </optgroup>
-                  
+
                   <optgroup label="Lượng giác">
                     {[
                       QuestionTag.TRIGONOMETRIC_FUNCTIONS,
                       QuestionTag.TRIGONOMETRIC_IDENTITIES,
                       QuestionTag.INVERSE_TRIG,
                     ]
-                      .filter(tag => !tags.includes(tag))
-                      .map(tag => (
+                      .filter((tag) => !tags.includes(tag))
+                      .map((tag) => (
                         <option key={tag} value={tag}>
                           {questionTagLabels[tag]}
                         </option>
                       ))}
                   </optgroup>
-                  
+
                   <optgroup label="Số học">
                     {[
                       QuestionTag.PRIME_NUMBERS,
@@ -875,42 +883,38 @@ export function TemplateFormModal({
                       QuestionTag.MODULAR_ARITHMETIC,
                       QuestionTag.GCD_LCM,
                     ]
-                      .filter(tag => !tags.includes(tag))
-                      .map(tag => (
+                      .filter((tag) => !tags.includes(tag))
+                      .map((tag) => (
                         <option key={tag} value={tag}>
                           {questionTagLabels[tag]}
                         </option>
                       ))}
                   </optgroup>
-                  
+
                   <optgroup label="Tổ hợp">
                     {[
                       QuestionTag.PERMUTATIONS,
                       QuestionTag.COMBINATIONS,
                       QuestionTag.COUNTING_PRINCIPLES,
                     ]
-                      .filter(tag => !tags.includes(tag))
-                      .map(tag => (
+                      .filter((tag) => !tags.includes(tag))
+                      .map((tag) => (
                         <option key={tag} value={tag}>
                           {questionTagLabels[tag]}
                         </option>
                       ))}
                   </optgroup>
-                  
+
                   <optgroup label="Logic & Tập hợp">
-                    {[
-                      QuestionTag.SET_THEORY,
-                      QuestionTag.LOGIC,
-                      QuestionTag.PROOF_TECHNIQUES,
-                    ]
-                      .filter(tag => !tags.includes(tag))
-                      .map(tag => (
+                    {[QuestionTag.SET_THEORY, QuestionTag.LOGIC, QuestionTag.PROOF_TECHNIQUES]
+                      .filter((tag) => !tags.includes(tag))
+                      .map((tag) => (
                         <option key={tag} value={tag}>
                           {questionTagLabels[tag]}
                         </option>
                       ))}
                   </optgroup>
-                  
+
                   <optgroup label="Toán ứng dụng">
                     {[
                       QuestionTag.OPTIMIZATION,
@@ -918,22 +922,22 @@ export function TemplateFormModal({
                       QuestionTag.MATRICES,
                       QuestionTag.GRAPH_THEORY,
                     ]
-                      .filter(tag => !tags.includes(tag))
-                      .map(tag => (
+                      .filter((tag) => !tags.includes(tag))
+                      .map((tag) => (
                         <option key={tag} value={tag}>
                           {questionTagLabels[tag]}
                         </option>
                       ))}
                   </optgroup>
-                  
+
                   <optgroup label="Khác">
                     {[
                       QuestionTag.WORD_PROBLEMS,
                       QuestionTag.PROBLEM_SOLVING,
                       QuestionTag.MATHEMATICAL_REASONING,
                     ]
-                      .filter(tag => !tags.includes(tag))
-                      .map(tag => (
+                      .filter((tag) => !tags.includes(tag))
+                      .map((tag) => (
                         <option key={tag} value={tag}>
                           {questionTagLabels[tag]}
                         </option>
@@ -1003,7 +1007,8 @@ export function TemplateFormModal({
                 onChange={(event) => setAnswerFormula(event.target.value)}
               />
               <p className="muted" style={{ marginTop: 6, fontSize: '0.78rem' }}>
-                Dùng <code>{'{{tên_biến}}'}</code> cho tham số (ví dụ: <code>{'(-{{b}})/{{a}})'}</code>). Biến phải khớp với tên đã khai báo ở trước.
+                Dùng <code>{'{{tên_biến}}'}</code> cho tham số (ví dụ:{' '}
+                <code>{'(-{{b}})/{{a}})'}</code>). Biến phải khớp với tên đã khai báo ở trước.
               </p>
               {answerFormula && (
                 <div className="preview-box">
@@ -1228,22 +1233,27 @@ export function TemplateFormModal({
                 <div>
                   <h3 style={{ color: '#1e40af' }}>Cấu hình mệnh đề Đúng/Sai</h3>
                   <p className="muted" style={{ fontSize: '0.8rem', marginBottom: 16 }}>
-                    Câu hỏi TRUE_FALSE có 4 mệnh đề (A, B, C, D). Mỗi mệnh đề có thể thuộc chương và mức độ khác nhau.
+                    Câu hỏi TRUE_FALSE có 4 mệnh đề (A, B, C, D). Mỗi mệnh đề có thể thuộc chương và
+                    mức độ khác nhau.
                   </p>
                 </div>
-                <div style={{ 
-                  padding: '12px 16px', 
-                  backgroundColor: '#fef3c7', 
-                  borderRadius: 8,
-                  marginBottom: 16,
-                  fontSize: '0.875rem'
-                }}>
-                  <strong>Lưu ý:</strong> Template TRUE_FALSE sẽ tạo câu hỏi với 4 mệnh đề. Học sinh chọn Đúng/Sai cho từng mệnh đề. 
-                  Điểm được tính theo quy tắc THPT: 4/4 đúng = 1 điểm, 3/4 đúng = 0.25 điểm.
+                <div
+                  style={{
+                    padding: '12px 16px',
+                    backgroundColor: '#fef3c7',
+                    borderRadius: 8,
+                    marginBottom: 16,
+                    fontSize: '0.875rem',
+                  }}
+                >
+                  <strong>Lưu ý:</strong> Template TRUE_FALSE sẽ tạo câu hỏi với 4 mệnh đề. Học sinh
+                  chọn Đúng/Sai cho từng mệnh đề. Điểm được tính theo quy tắc THPT: 4/4 đúng = 1
+                  điểm, 3/4 đúng = 0.25 điểm.
                 </div>
                 <p className="muted" style={{ fontSize: '0.875rem', fontStyle: 'italic' }}>
-                  💡 Để tạo template TRUE_FALSE, bạn cần định nghĩa cách sinh ra 4 mệnh đề từ các biến số. 
-                  Hiện tại hệ thống chưa hỗ trợ UI chi tiết cho TF template - vui lòng sử dụng MCQ hoặc SA.
+                  💡 Để tạo template TRUE_FALSE, bạn cần định nghĩa cách sinh ra 4 mệnh đề từ các
+                  biến số. Hiện tại hệ thống chưa hỗ trợ UI chi tiết cho TF template - vui lòng sử
+                  dụng MCQ hoặc SA.
                 </p>
               </section>
             )}
@@ -1256,23 +1266,31 @@ export function TemplateFormModal({
                     Câu hỏi SHORT_ANSWER yêu cầu học sinh nhập đáp án dạng text hoặc số.
                   </p>
                 </div>
-                <div style={{ 
-                  padding: '12px 16px', 
-                  backgroundColor: '#dbeafe', 
-                  borderRadius: 8,
-                  marginBottom: 16,
-                  fontSize: '0.875rem'
-                }}>
+                <div
+                  style={{
+                    padding: '12px 16px',
+                    backgroundColor: '#dbeafe',
+                    borderRadius: 8,
+                    marginBottom: 16,
+                    fontSize: '0.875rem',
+                  }}
+                >
                   <strong>Chế độ đánh giá:</strong>
                   <ul style={{ marginTop: 8, marginBottom: 0, paddingLeft: 20 }}>
-                    <li><strong>EXACT:</strong> So sánh chuỗi chính xác (phân biệt hoa/thường)</li>
-                    <li><strong>NUMERIC:</strong> So sánh số với sai số cho phép (ví dụ: ±0.01)</li>
-                    <li><strong>REGEX:</strong> Kiểm tra theo biểu thức chính quy</li>
+                    <li>
+                      <strong>EXACT:</strong> So sánh chuỗi chính xác (phân biệt hoa/thường)
+                    </li>
+                    <li>
+                      <strong>NUMERIC:</strong> So sánh số với sai số cho phép (ví dụ: ±0.01)
+                    </li>
+                    <li>
+                      <strong>REGEX:</strong> Kiểm tra theo biểu thức chính quy
+                    </li>
                   </ul>
                 </div>
                 <p className="muted" style={{ fontSize: '0.875rem', fontStyle: 'italic' }}>
-                  💡 Công thức đáp án (answerFormula) sẽ được dùng làm đáp án đúng. 
-                  Chế độ đánh giá mặc định là EXACT - có thể cấu hình sau khi tạo câu hỏi.
+                  💡 Công thức đáp án (answerFormula) sẽ được dùng làm đáp án đúng. Chế độ đánh giá
+                  mặc định là EXACT - có thể cấu hình sau khi tạo câu hỏi.
                 </p>
               </section>
             )}

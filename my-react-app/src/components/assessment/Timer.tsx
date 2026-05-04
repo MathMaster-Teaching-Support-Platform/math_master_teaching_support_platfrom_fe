@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Clock } from 'lucide-react';
 
 interface TimerProps {
@@ -8,6 +8,12 @@ interface TimerProps {
 
 export default function Timer({ expiresAt, onExpire }: TimerProps) {
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
+  const onExpireRef = useRef(onExpire);
+
+  // Keep the ref updated with the latest callback
+  useEffect(() => {
+    onExpireRef.current = onExpire;
+  }, [onExpire]);
 
   useEffect(() => {
     if (!expiresAt) return;
@@ -17,7 +23,7 @@ export default function Timer({ expiresAt, onExpire }: TimerProps) {
       setTimeRemaining(remaining);
 
       if (remaining === 0) {
-        onExpire();
+        onExpireRef.current();
       }
     };
 
@@ -25,7 +31,7 @@ export default function Timer({ expiresAt, onExpire }: TimerProps) {
     const interval = setInterval(updateTimer, 1000);
 
     return () => clearInterval(interval);
-  }, [expiresAt, onExpire]);
+  }, [expiresAt]);
 
   const minutes = Math.floor(timeRemaining / 60000);
   const seconds = Math.floor((timeRemaining % 60000) / 1000);

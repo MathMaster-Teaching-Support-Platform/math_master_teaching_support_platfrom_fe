@@ -1,8 +1,8 @@
 import { Edit2, Filter, MessageSquare, Send, Star, X } from 'lucide-react';
 import React, { useState } from 'react';
-import { useCourseReviews, useReplyToReview, useReviewSummary } from '../../../hooks/useCourses';
-import { useToast } from '../../../context/ToastContext';
 import { UI_TEXT } from '../../../constants/uiText';
+import { useToast } from '../../../context/ToastContext';
+import { useCourseReviews, useReplyToReview, useReviewSummary } from '../../../hooks/useCourses';
 import './course-detail-tabs.css';
 
 interface CourseReviewsTabProps {
@@ -109,7 +109,10 @@ const CourseReviewsTab: React.FC<CourseReviewsTabProps> = ({ courseId }) => {
               <div key={star} className="cdt-reviews__dist-row">
                 <span className="cdt-reviews__dist-label">{star}★</span>
                 <div className="cdt-reviews__dist-bar">
-                  <div className="cdt-reviews__dist-fill" style={{ width: `${percent}%` }} />
+                  <div
+                    className="cdt-reviews__dist-fill"
+                    style={{ transform: `scaleX(${percent / 100})` }}
+                  />
                 </div>
                 <span className="cdt-reviews__dist-count">{count}</span>
               </div>
@@ -209,7 +212,9 @@ const CourseReviewsTab: React.FC<CourseReviewsTabProps> = ({ courseId }) => {
                         <button
                           type="button"
                           className="cdt-reviews__btn-ghost"
-                          onClick={() => setEditingReply((prev) => ({ ...prev, [review.id]: false }))}
+                          onClick={() =>
+                            setEditingReply((prev) => ({ ...prev, [review.id]: false }))
+                          }
                         >
                           Hủy
                         </button>

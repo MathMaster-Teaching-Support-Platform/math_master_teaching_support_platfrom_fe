@@ -34,6 +34,7 @@ export interface ClauseResult {
   expected: boolean;
   actual: boolean;
   correct: boolean;
+  cognitiveLevel?: string;  // NEW: Cognitive level of this clause (e.g., "NHAN_BIET", "THONG_HIEU")
 }
 
 export interface ScoringDetail {

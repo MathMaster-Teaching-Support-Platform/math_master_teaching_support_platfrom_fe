@@ -587,7 +587,6 @@ export function TemplateDashboard() {
           {/* ── Header ── */}
           <header className="page-header courses-header-row">
             <div className="header-stack">
-              <div className="header-kicker"></div>
               <div className="row" style={{ gap: '0.6rem' }}>
                 <h2>Mẫu câu hỏi</h2>
                 {!isLoading && <span className="count-chip">{templates.length}</span>}
@@ -1321,31 +1320,49 @@ export function TemplateDashboard() {
                   </div>
 
                   {/* Template metadata info */}
-                  {reviewTemplateId && (() => {
-                    const selectedTemplate = templates.find(t => t.id === reviewTemplateId);
-                    if (!selectedTemplate) return null;
-                    return (
-                      <div className="row" style={{ justifyContent: 'start', flexWrap: 'wrap', gap: '0.5rem', marginTop: 8, marginBottom: 8, paddingLeft: 16 }}>
-                        {selectedTemplate.chapterName && (
-                          <span className="muted" style={{ fontSize: '0.85rem' }}>
-                            <BookOpen size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />
-                            {selectedTemplate.chapterName}
-                          </span>
-                        )}
-                        {selectedTemplate.gradeLevel && (
-                          <span className="muted" style={{ fontSize: '0.85rem' }}>
-                            <GraduationCap size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />
-                            Lớp {selectedTemplate.gradeLevel}
-                          </span>
-                        )}
-                        {selectedTemplate.cognitiveLevel && (
-                          <span className="badge" style={{ fontSize: '0.75rem' }}>
-                            {cognitiveLevelLabel[selectedTemplate.cognitiveLevel] || selectedTemplate.cognitiveLevel}
-                          </span>
-                        )}
-                      </div>
-                    );
-                  })()}
+                  {reviewTemplateId &&
+                    (() => {
+                      const selectedTemplate = templates.find((t) => t.id === reviewTemplateId);
+                      if (!selectedTemplate) return null;
+                      return (
+                        <div
+                          className="row"
+                          style={{
+                            justifyContent: 'start',
+                            flexWrap: 'wrap',
+                            gap: '0.5rem',
+                            marginTop: 8,
+                            marginBottom: 8,
+                            paddingLeft: 16,
+                          }}
+                        >
+                          {selectedTemplate.chapterName && (
+                            <span className="muted" style={{ fontSize: '0.85rem' }}>
+                              <BookOpen
+                                size={14}
+                                style={{ verticalAlign: 'middle', marginRight: 4 }}
+                              />
+                              {selectedTemplate.chapterName}
+                            </span>
+                          )}
+                          {selectedTemplate.gradeLevel && (
+                            <span className="muted" style={{ fontSize: '0.85rem' }}>
+                              <GraduationCap
+                                size={14}
+                                style={{ verticalAlign: 'middle', marginRight: 4 }}
+                              />
+                              Lớp {selectedTemplate.gradeLevel}
+                            </span>
+                          )}
+                          {selectedTemplate.cognitiveLevel && (
+                            <span className="badge" style={{ fontSize: '0.75rem' }}>
+                              {cognitiveLevelLabel[selectedTemplate.cognitiveLevel] ||
+                                selectedTemplate.cognitiveLevel}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })()}
 
                   {!reviewTemplateId && (
                     <div className="empty">Hãy chọn một mẫu để bắt đầu xét duyệt.</div>

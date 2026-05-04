@@ -330,7 +330,6 @@ export default function TeacherAssessments() {
         <section className="module-page teacher-courses-page teacher-assessments-page">
           <header className="page-header courses-header-row">
             <div className="header-stack">
-              <div className="header-kicker"></div>
               <div className="row" style={{ gap: '0.6rem' }}>
                 <h2>{UI_TEXT.QUIZ}</h2>
                 {!isLoading && <span className="count-chip">{stats.total}</span>}
@@ -484,20 +483,35 @@ export default function TeacherAssessments() {
                     </p>
                   </div>
 
-                  <div className="row" style={{ justifyContent: 'start', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  <div
+                    className="row"
+                    style={{ justifyContent: 'start', flexWrap: 'wrap', gap: '0.5rem' }}
+                  >
                     <span className="badge">{assessment.totalQuestions} câu hỏi</span>
                     <span className="badge">{assessment.totalPoints} điểm</span>
                     {assessment.timeLimitMinutes && (
                       <span className="badge">⏱ {assessment.timeLimitMinutes} phút</span>
                     )}
                     {assessment.submissionCount > 0 && (
-                      <span className="badge badge-published">{assessment.submissionCount} lượt nộp</span>
+                      <span className="badge badge-published">
+                        {assessment.submissionCount} lượt nộp
+                      </span>
                     )}
                   </div>
 
                   {/* Add matrix info row */}
-                  {(assessment.examMatrixName || assessment.examMatrixGradeLevel || assessment.assessmentMode === 'MATRIX_BASED') && (
-                    <div className="row" style={{ justifyContent: 'start', flexWrap: 'wrap', gap: '0.5rem', marginTop: 4 }}>
+                  {(assessment.examMatrixName ||
+                    assessment.examMatrixGradeLevel ||
+                    assessment.assessmentMode === 'MATRIX_BASED') && (
+                    <div
+                      className="row"
+                      style={{
+                        justifyContent: 'start',
+                        flexWrap: 'wrap',
+                        gap: '0.5rem',
+                        marginTop: 4,
+                      }}
+                    >
                       {assessment.examMatrixName && (
                         <span className="muted" style={{ fontSize: '0.8rem' }}>
                           📋 Ma trận: {assessment.examMatrixName}
@@ -509,14 +523,24 @@ export default function TeacherAssessments() {
                         </span>
                       )}
                       {assessment.assessmentMode === 'MATRIX_BASED' && (
-                        <span className="badge draft" style={{ fontSize: '0.7rem' }}>Matrix-based</span>
+                        <span className="badge draft" style={{ fontSize: '0.7rem' }}>
+                          Matrix-based
+                        </span>
                       )}
                     </div>
                   )}
 
                   {/* Add date info */}
                   {(assessment.startDate || assessment.endDate) && (
-                    <div className="row" style={{ justifyContent: 'start', flexWrap: 'wrap', gap: '0.5rem', marginTop: 4 }}>
+                    <div
+                      className="row"
+                      style={{
+                        justifyContent: 'start',
+                        flexWrap: 'wrap',
+                        gap: '0.5rem',
+                        marginTop: 4,
+                      }}
+                    >
                       {assessment.startDate && (
                         <span className="muted" style={{ fontSize: '0.8rem' }}>
                           📅 Bắt đầu: {new Date(assessment.startDate).toLocaleDateString('vi-VN')}

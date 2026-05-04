@@ -254,7 +254,7 @@ function CreateLessonPlanModal({
 
                 <div className="form-group">
                   <label className="form-label" htmlFor="lp-grade">
-                    Khối lớp <span className="required">*</span>
+                    Lớp <span className="required">*</span>
                   </label>
                   <select
                     id="lp-grade"
@@ -859,7 +859,6 @@ export default function TeacherLessonPlans() {
           {/* ── Header (aligned with Giáo trình) ── */}
           <header className="page-header courses-header-row">
             <div className="header-stack">
-              <div className="header-kicker"></div>
               <div className="row" style={{ gap: '0.6rem' }}>
                 <h2>Giáo án</h2>
                 {!isLoading && <span className="count-chip">{plans.length}</span>}

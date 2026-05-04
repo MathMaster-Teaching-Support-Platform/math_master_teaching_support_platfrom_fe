@@ -416,7 +416,6 @@ export default function TeacherMindmaps() {
           {/* ── Header ── */}
           <header className="page-header courses-header-row">
             <div className="header-stack">
-              <div className="header-kicker"></div>
               <div className="row" style={{ gap: '0.6rem' }}>
                 <h2>Mindmap</h2>
                 {!loading && <span className="count-chip">{mindmaps.length}</span>}

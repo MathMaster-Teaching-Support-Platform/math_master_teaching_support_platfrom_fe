@@ -35,6 +35,7 @@ export interface CashFlowEntry {
   type: string;
   category: CashFlowCategory;
   amount: number;
+  balance?: number;
   currency: string;
   description: string | null;
   userName: string | null;

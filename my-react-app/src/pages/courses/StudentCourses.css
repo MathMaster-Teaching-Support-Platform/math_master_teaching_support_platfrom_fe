@@ -994,7 +994,7 @@
 /* ─── Integrated Player Layout ─────────────────────────────────────────────── */
 .player-container {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
+  grid-template-columns: minmax(0, 1fr) 360px;
   gap: 1.5rem;
   margin-top: 0.5rem;
   align-items: start;
@@ -1026,8 +1026,8 @@
 /* ─── Curriculum Hierarchy ───────────────────────────────────────────────── */
 .section-header {
   padding: 1rem 1.25rem;
-  background: #f8fbff;
-  border-bottom: 1px solid #e2e8f0;
+  background: #faf9f5;
+  border-bottom: 1px solid #f0eee6;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1037,7 +1037,7 @@
 }
 
 .section-header:hover {
-  background: #f1f7ff;
+  background: #f5f4ed;
 }
 
 .section-title-area {
@@ -1049,12 +1049,14 @@
 .section-label {
   font-size: 0.72rem;
   font-weight: 800;
-  color: #64748b;
+  color: #5e5d59;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  background: #e2e8f0;
+  background: #e8e6dc;
   padding: 2px 8px;
   border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
 }
 
 .section-title {
@@ -1065,7 +1067,7 @@
 
 .section-meta {
   font-size: 0.75rem;
-  color: #64748b;
+  color: #87867f;
   display: flex;
   gap: 12px;
   align-items: center;
@@ -1078,8 +1080,9 @@
   transition: grid-template-rows 0.4s cubic-bezier(0, 1, 0, 1);
 }
 
-.lessons-group > * {
+.lessons-group > .lessons-inner {
   min-height: 0;
+  overflow: hidden;
 }
 
 .lessons-group.collapsed {
@@ -1087,5 +1090,64 @@
 }
 
 /* Override opacity from TeacherCourses.css to display student course images clearly */
-.sc-page.module-layout-container .cover-thumb { opacity: 1 !important; }
+.sc-page.module-layout-container .cover-thumb {
+  opacity: 1 !important;
+}
 
+/* ─── Player Sidebar Light Theme ────────────────────────────────────────────── */
+.player-sidebar {
+  background: #ffffff;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.player-sidebar .section-header {
+  background: #f5f4ed;
+  border-bottom-color: #e8e6dc;
+}
+
+.player-sidebar .section-header:hover {
+  background: #ede8e0;
+}
+
+.player-sidebar .section-title-area {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+.player-sidebar .section-title-area .section-label {
+  background: #e8e6dc;
+  color: #5e5d59;
+  flex-shrink: 0;
+}
+
+.player-sidebar .section-title-area .section-title {
+  color: #141413;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.player-sidebar .section-header svg {
+  color: #87867f;
+  flex-shrink: 0;
+}
+
+.player-sidebar .section-meta {
+  color: #87867f;
+  flex-shrink: 0;
+}
+
+.player-sidebar .clt-lesson-subtitle {
+  color: #87867f;
+}
+
+.player-sidebar .clt-lesson-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.88rem;
+}

@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query';
 import {
   AlertCircle,
   ArrowRight,
@@ -21,9 +22,9 @@ import {
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MatrixStatsTree } from '../../components/question-banks/MatrixStatsTree';
 import Pagination from '../../components/common/Pagination';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { MatrixStatsTree } from '../../components/question-banks/MatrixStatsTree';
 import { useToast } from '../../context/ToastContext';
 import { useDebounce } from '../../hooks/useDebounce';
 import {
@@ -33,13 +34,12 @@ import {
   useToggleQuestionBankPublicStatus,
   useUpdateQuestionBank,
 } from '../../hooks/useQuestionBank';
+import { questionBankService } from '../../services/questionBankService';
 import '../../styles/module-refactor.css';
 import type { QuestionBankRequest, QuestionBankResponse } from '../../types/questionBank';
 import '../courses/TeacherCourses.css';
 import './QuestionBankDashboard.css';
 import { QuestionBankFormModal } from './QuestionBankFormModal';
-import { questionBankService } from '../../services/questionBankService';
-import { useQuery } from '@tanstack/react-query';
 
 type VisibilityFilter = 'ALL' | 'PUBLIC' | 'PRIVATE';
 
@@ -62,18 +62,19 @@ const coverGradients = [
 
 const coverAccents = ['#93c5fd', '#86efac', '#c4b5fd', '#fdba74', '#67e8f9', '#f9a8d4'];
 
-const cognitiveShortLabel: Record<string, string> = {
-  NHAN_BIET: 'NB',
-  THONG_HIEU: 'TH',
-  VAN_DUNG: 'VD',
-  VAN_DUNG_CAO: 'VDC',
-  REMEMBER: 'NB',
-  UNDERSTAND: 'TH',
-  APPLY: 'VD',
-  ANALYZE: 'PT',
-  EVALUATE: 'DG',
-  CREATE: 'ST',
-};
+// Unused for now - kept for future use
+// const cognitiveShortLabel: Record<string, string> = {
+//   NHAN_BIET: 'NB',
+//   THONG_HIEU: 'TH',
+//   VAN_DUNG: 'VD',
+//   VAN_DUNG_CAO: 'VDC',
+//   REMEMBER: 'NB',
+//   UNDERSTAND: 'TH',
+//   APPLY: 'VD',
+//   ANALYZE: 'PT',
+//   EVALUATE: 'DG',
+//   CREATE: 'ST',
+// };
 
 export function QuestionBankDashboard() {
   const navigate = useNavigate();
@@ -175,7 +176,6 @@ export function QuestionBankDashboard() {
           {/* ── Header ── */}
           <header className="page-header courses-header-row">
             <div className="header-stack">
-              <div className="header-kicker"></div>
               <div className="row" style={{ gap: '0.6rem' }}>
                 <h2>Ngân hàng câu hỏi</h2>
                 {!isLoading && <span className="count-chip">{totalElements}</span>}
@@ -425,14 +425,6 @@ export function QuestionBankDashboard() {
 
                     {bank.cognitiveStats && Object.keys(bank.cognitiveStats).length > 0 && (
                       <>
-                        <div className="bank-cognitive-stats">
-                          <span className="bank-cognitive-label">📊 Mức độ:</span>
-                          {Object.entries(bank.cognitiveStats).map(([level, count]) => (
-                            <span key={level} className="bank-cognitive-badge">
-                              {cognitiveShortLabel[level] ?? level}: {count}
-                            </span>
-                          ))}
-                        </div>
                         <details className="bank-matrix-stats-details">
                           <summary className="bank-matrix-stats-summary">
                             <span>📊 Xem phân bố chi tiết</span>

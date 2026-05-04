@@ -1,5 +1,3 @@
-import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   AlertCircle,
   CheckCircle2,
@@ -8,24 +6,31 @@ import {
   Filter,
   GripVertical,
   Plus,
+  Search,
   Star,
   Trash2,
   Users,
   X,
-  Search,
 } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { UI_TEXT } from '../../../constants/uiText';
+import { useToast } from '../../../context/ToastContext';
 import {
+  useAddAssessmentToCourse,
+  useAvailableAssessmentsForCourse,
   useCourseAssessments,
   useRemoveAssessmentFromCourse,
   useUpdateCourseAssessment,
-  useAddAssessmentToCourse,
-  useAvailableAssessmentsForCourse,
 } from '../../../hooks/useCourses';
-import type { CourseAssessmentResponse, AddAssessmentToCourseRequest, CourseResponse } from '../../../types';
 import '../../../styles/module-refactor.css';
+import type {
+  AddAssessmentToCourseRequest,
+  CourseAssessmentResponse,
+  CourseResponse,
+} from '../../../types';
 import './course-detail-tabs.css';
 import './CourseAssessmentsTab.css';
-import { UI_TEXT } from '../../../constants/uiText';
 
 interface CourseAssessmentsTabProps {
   courseId: string;
@@ -209,7 +214,11 @@ function AddAssessmentModal({
             </div>
           )}
 
-          {isLoading && <div className="cdt-loading" style={{ marginTop: '2rem' }}>Đang tải...</div>}
+          {isLoading && (
+            <div className="cdt-loading" style={{ marginTop: '2rem' }}>
+              Đang tải...
+            </div>
+          )}
 
           {!isLoading && filtered.length === 0 && (
             <div className="cdt-empty" style={{ minHeight: '240px', marginTop: '1rem' }}>
@@ -223,7 +232,14 @@ function AddAssessmentModal({
           )}
 
           {!isLoading && filtered.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1.25rem' }}>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '1rem',
+                marginTop: '1.25rem',
+              }}
+            >
               {filtered.map((assessment) => {
                 const category = typeCategory[assessment.assessmentType] || 'formative';
                 return (
@@ -234,23 +250,30 @@ function AddAssessmentModal({
                   >
                     <div className="cat-select-card-head">
                       <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                        <span className={`cat-badge ${statusLabel[assessment.status] === 'Đã xuất bản' ? 'published' : 'draft'}`}>
+                        <span
+                          className={`cat-badge ${statusLabel[assessment.status] === 'Đã xuất bản' ? 'published' : 'draft'}`}
+                        >
                           {statusLabel[assessment.status]}
                         </span>
                         <span className={`cat-badge ${category}`}>
                           {typeLabel[assessment.assessmentType]}
                         </span>
                         {allowOutOfCourseLessons && selectedId === assessment.assessmentId && (
-                          <span className="cat-badge warning">
-                            Override
-                          </span>
+                          <span className="cat-badge warning">Override</span>
                         )}
                       </div>
                       {selectedId === assessment.assessmentId && (
                         <CheckCircle2 size={20} style={{ color: '#c96442' }} />
                       )}
                     </div>
-                    <h4 style={{ margin: '0 0 0.25rem', fontSize: '1.05rem', fontWeight: 800, color: '#141413' }}>
+                    <h4
+                      style={{
+                        margin: '0 0 0.25rem',
+                        fontSize: '1.05rem',
+                        fontWeight: 800,
+                        color: '#141413',
+                      }}
+                    >
                       {assessment.title}
                     </h4>
                     {assessment.description && (
@@ -258,24 +281,50 @@ function AddAssessmentModal({
                         {assessment.description}
                       </p>
                     )}
-                    <div className="row" style={{ gap: '1rem', fontSize: '0.85rem', color: '#64748b', fontWeight: 500 }}>
+                    <div
+                      className="row"
+                      style={{
+                        gap: '1rem',
+                        fontSize: '0.85rem',
+                        color: '#64748b',
+                        fontWeight: 500,
+                      }}
+                    >
                       <span>📝 {assessment.totalQuestions} câu</span>
                       <span>⭐ {assessment.totalPoints} điểm</span>
-                      {assessment.timeLimitMinutes && <span>⏱️ {assessment.timeLimitMinutes} phút</span>}
+                      {assessment.timeLimitMinutes && (
+                        <span>⏱️ {assessment.timeLimitMinutes} phút</span>
+                      )}
                     </div>
                     {provider === 'MINISTRY' ? (
                       <div style={{ marginTop: '0.75rem' }}>
                         <p className="muted" style={{ fontSize: '0.85rem', margin: 0 }}>
-                          Khớp {assessment.matchedLessonCount} bài học: {assessment.matchedLessonTitles.join(', ')}
+                          Khớp {assessment.matchedLessonCount} bài học:{' '}
+                          {assessment.matchedLessonTitles.join(', ')}
                         </p>
                         {assessment.matchedLessonCount === 0 && (
-                          <p style={{ fontSize: '0.85rem', marginTop: '0.2rem', color: '#b91c1c', fontWeight: 700 }}>
+                          <p
+                            style={{
+                              fontSize: '0.85rem',
+                              marginTop: '0.2rem',
+                              color: '#b91c1c',
+                              fontWeight: 700,
+                            }}
+                          >
                             ⚠ Không khớp lesson nào của {UI_TEXT.COURSE.toLowerCase()}.
                           </p>
                         )}
                       </div>
                     ) : (
-                      <p style={{ fontSize: '0.85rem', marginTop: '0.75rem', margin: 0, color: '#059669', fontWeight: 700 }}>
+                      <p
+                        style={{
+                          fontSize: '0.85rem',
+                          marginTop: '0.75rem',
+                          margin: 0,
+                          color: '#059669',
+                          fontWeight: 700,
+                        }}
+                      >
                         ✓ {UI_TEXT.COURSE} tự do (Cho phép chọn bất kỳ bài kiểm tra nào)
                       </p>
                     )}
@@ -286,13 +335,26 @@ function AddAssessmentModal({
           )}
 
           {selectedId && (
-            <div style={{ marginTop: '1.5rem', padding: '1.25rem', background: '#fdfaf6', border: '1px solid #f0eee6', borderRadius: '14px' }}>
-              <h4 style={{ margin: '0 0 1rem', fontSize: '1rem', fontWeight: 800, color: '#141413' }}>
+            <div
+              style={{
+                marginTop: '1.5rem',
+                padding: '1.25rem',
+                background: '#fdfaf6',
+                border: '1px solid #f0eee6',
+                borderRadius: '14px',
+              }}
+            >
+              <h4
+                style={{ margin: '0 0 1rem', fontSize: '1rem', fontWeight: 800, color: '#141413' }}
+              >
                 Cài đặt bài kiểm tra
               </h4>
               <div className="row" style={{ gap: '1.5rem' }}>
                 <label style={{ flex: 1 }}>
-                  <p className="muted" style={{ margin: '0 0 0.5rem', fontSize: '0.85rem', fontWeight: 600 }}>
+                  <p
+                    className="muted"
+                    style={{ margin: '0 0 0.5rem', fontSize: '0.85rem', fontWeight: 600 }}
+                  >
                     Thứ tự hiển thị
                   </p>
                   <input
@@ -304,7 +366,10 @@ function AddAssessmentModal({
                     style={{ width: '100%' }}
                   />
                 </label>
-                <label className="cat-checkbox-wrapper" style={{ flex: 1, padding: '0.75rem 1rem', marginTop: '1.5rem' }}>
+                <label
+                  className="cat-checkbox-wrapper"
+                  style={{ flex: 1, padding: '0.75rem 1rem', marginTop: '1.5rem' }}
+                >
                   <input
                     type="checkbox"
                     checked={isRequired}
@@ -337,6 +402,7 @@ function AddAssessmentModal({
 // Main Component
 const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, course }) => {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [showAddModal, setShowAddModal] = useState(false);
   const [filters, setFilters] = useState<FilterState>({});
 
@@ -358,20 +424,22 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
 
   const handleRemove = async (assessment: CourseAssessmentResponse) => {
     if (assessment.submissionCount && assessment.submissionCount > 0) {
-      alert(
-        `Không thể xóa bài kiểm tra này vì đã có ${assessment.submissionCount} bài nộp từ học viên.`
-      );
+      showToast({
+        type: 'warning',
+        message: `Không thể xóa bài kiểm tra này vì đã có ${assessment.submissionCount} bài nộp từ học viên.`,
+      });
       return;
     }
 
-    if (!confirm(`Xóa "${assessment.assessmentTitle}" khỏi ${UI_TEXT.COURSE.toLowerCase()}?`)) return;
+    if (!confirm(`Xóa "${assessment.assessmentTitle}" khỏi ${UI_TEXT.COURSE.toLowerCase()}?`))
+      return;
 
     try {
       await removeMutation.mutateAsync({ courseId, assessmentId: assessment.assessmentId });
       void refetch();
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Không thể xóa bài kiểm tra';
-      alert(message);
+      showToast({ type: 'error', message });
     }
   };
 
@@ -394,7 +462,7 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
   };
 
   return (
-    <div className="cat-container">
+    <div className="cat-container assessments-tab">
       {/* Stats */}
       <div className="stats-grid">
         <div className="stat-card stat-blue">
@@ -441,7 +509,11 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
 
       {/* Filters & Actions */}
       <div className="cdt-toolbar cdt-toolbar--split">
-        <div className="cdt-assessment-filters" role="search" aria-label="Lọc bài kiểm tra theo trạng thái, loại và bắt buộc">
+        <div
+          className="cdt-assessment-filters"
+          role="search"
+          aria-label="Lọc bài kiểm tra theo trạng thái, loại và bắt buộc"
+        >
           <div className="cdt-assessment-filters__bar">
             <div className="cdt-assessment-filters__icon" aria-hidden>
               <Filter size={15} strokeWidth={2.25} />
@@ -453,7 +525,10 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
                   className="cdt-select-inline"
                   value={filters.status || ''}
                   onChange={(e) =>
-                    setFilters({ ...filters, status: (e.target.value || undefined) as AssessmentStatus | undefined })
+                    setFilters({
+                      ...filters,
+                      status: (e.target.value || undefined) as AssessmentStatus | undefined,
+                    })
                   }
                 >
                   <option value="">Tất cả trạng thái</option>
@@ -469,7 +544,10 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
                   className="cdt-select-inline"
                   value={filters.type || ''}
                   onChange={(e) =>
-                    setFilters({ ...filters, type: (e.target.value || undefined) as AssessmentType | undefined })
+                    setFilters({
+                      ...filters,
+                      type: (e.target.value || undefined) as AssessmentType | undefined,
+                    })
                   }
                 >
                   <option value="">Tất cả loại</option>
@@ -527,7 +605,12 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
         <div className="cdt-empty">
           <FileText size={48} strokeWidth={1} style={{ marginBottom: 12, color: '#d4c9bc' }} />
           <p>Chưa có bài kiểm tra nào. Hãy thêm bài kiểm tra đầu tiên!</p>
-          <button type="button" className="cat-btn primary" style={{ marginTop: '1rem' }} onClick={() => setShowAddModal(true)}>
+          <button
+            type="button"
+            className="cat-btn primary"
+            style={{ marginTop: '1rem' }}
+            onClick={() => setShowAddModal(true)}
+          >
             <Plus size={16} />
             Thêm bài kiểm tra
           </button>
@@ -549,23 +632,22 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
                     <GripVertical size={20} />
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div className="row" style={{ justifyContent: 'space-between', marginBottom: 12 }}>
+                    <div
+                      className="row"
+                      style={{ justifyContent: 'space-between', marginBottom: 12 }}
+                    >
                       <div className="row" style={{ gap: 8 }}>
-                        <span className={`cat-badge ${assessment.assessmentStatus === 'PUBLISHED' ? 'published' : 'draft'}`}>
+                        <span
+                          className={`cat-badge ${assessment.assessmentStatus === 'PUBLISHED' ? 'published' : 'draft'}`}
+                        >
                           {statusLabel[assessment.assessmentStatus ?? 'DRAFT']}
                         </span>
-                        <span className={`cat-badge ${category}`}>
-                          {typeLabel[typeCode]}
-                        </span>
+                        <span className={`cat-badge ${category}`}>{typeLabel[typeCode]}</span>
                         {assessment.isRequired && (
-                          <span className="cat-badge required">
-                            ⭐ Bắt buộc
-                          </span>
+                          <span className="cat-badge required">⭐ Bắt buộc</span>
                         )}
                         {!assessment.lessonMatched && course.provider === 'MINISTRY' && (
-                          <span className="cat-badge warning">
-                            ⚠ Không khớp lesson
-                          </span>
+                          <span className="cat-badge warning">⚠ Không khớp lesson</span>
                         )}
                       </div>
                       <span className="muted" style={{ fontSize: '0.85rem', fontWeight: 700 }}>
@@ -573,7 +655,14 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
                       </span>
                     </div>
 
-                    <h3 style={{ margin: '0 0 8px', fontSize: '1.25rem', fontWeight: 800, color: '#141413' }}>
+                    <h3
+                      style={{
+                        margin: '0 0 8px',
+                        fontSize: '1.25rem',
+                        fontWeight: 800,
+                        color: '#141413',
+                      }}
+                    >
                       {assessment.assessmentTitle ?? 'Không có tiêu đề'}
                     </h3>
 
@@ -583,7 +672,16 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
                       </p>
                     )}
 
-                    <div className="row" style={{ gap: '1.25rem', fontSize: '0.85rem', color: '#64748b', fontWeight: 500, flexWrap: 'wrap' }}>
+                    <div
+                      className="row"
+                      style={{
+                        gap: '1.25rem',
+                        fontSize: '0.85rem',
+                        color: '#64748b',
+                        fontWeight: 500,
+                        flexWrap: 'wrap',
+                      }}
+                    >
                       <span>📝 {assessment.totalQuestions ?? 0} câu</span>
                       <span>⭐ {assessment.totalPoints ?? 0} điểm</span>
                       {assessment.timeLimitMinutes && (
@@ -603,15 +701,32 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
 
                     <div style={{ marginTop: 12 }}>
                       {course.provider === 'CUSTOM' ? (
-                        <p style={{ fontSize: '0.85rem', margin: 0, color: '#059669', fontWeight: 700 }}>
+                        <p
+                          style={{
+                            fontSize: '0.85rem',
+                            margin: 0,
+                            color: '#059669',
+                            fontWeight: 700,
+                          }}
+                        >
                           ✓ Bài kiểm tra tự do ({UI_TEXT.COURSE} Custom)
                         </p>
                       ) : assessment.lessonMatched ? (
-                        <p className="muted" style={{ fontSize: '0.85rem', margin: 0, fontWeight: 500 }}>
+                        <p
+                          className="muted"
+                          style={{ fontSize: '0.85rem', margin: 0, fontWeight: 500 }}
+                        >
                           Khớp lesson: {assessment.matchedLessonTitles.join(', ')}
                         </p>
                       ) : (
-                        <p style={{ fontSize: '0.85rem', margin: 0, color: '#b91c1c', fontWeight: 700 }}>
+                        <p
+                          style={{
+                            fontSize: '0.85rem',
+                            margin: 0,
+                            color: '#b91c1c',
+                            fontWeight: 700,
+                          }}
+                        >
                           Assessment này chưa liên kết với bất kỳ lesson nào của course.
                         </p>
                       )}

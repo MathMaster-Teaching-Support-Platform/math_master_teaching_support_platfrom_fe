@@ -113,7 +113,6 @@ export default function AssessmentBuilderFlow() {
         <section className="module-page teacher-courses-page assessment-builder-flow-page">
           <header className="page-header courses-header-row">
             <div className="header-stack">
-              <div className="header-kicker"></div>
               <div className="row" style={{ gap: '0.6rem' }}>
                 <h2>Trình tạo đề thi</h2>
               </div>

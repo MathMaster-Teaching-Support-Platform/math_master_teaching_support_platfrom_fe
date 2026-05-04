@@ -28,14 +28,11 @@ import {
 } from '../../hooks/useExamMatrix';
 import { examMatrixService } from '../../services/examMatrixService';
 import '../../styles/module-refactor.css';
-import {
-  MatrixStatus,
-  type MatrixValidationReport,
-} from '../../types/examMatrix';
+import { MatrixStatus, type MatrixValidationReport } from '../../types/examMatrix';
 import { exportExamMatrixToExcel, exportExamMatrixToPdf } from '../../utils/examMatrixExport';
-import { ExamMatrixRowModal } from './ExamMatrixRowModal';
 import '../courses/TeacherCourses.css';
 import './ExamMatrixDashboard.css';
+import { ExamMatrixRowModal } from './ExamMatrixRowModal';
 
 const matrixStatusLabel: Record<string, string> = {
   DRAFT: 'Nháp',
@@ -210,7 +207,6 @@ export default function ExamMatrixDetailPageRefactored() {
 
           <header className="page-header courses-header-row exam-matrix-detail-page-header">
             <div className="header-stack">
-              <div className="header-kicker"></div>
               <div
                 className="row"
                 style={{ gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap' }}

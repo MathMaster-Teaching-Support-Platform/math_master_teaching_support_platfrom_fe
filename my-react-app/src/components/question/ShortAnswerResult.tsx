@@ -5,6 +5,8 @@ interface ShortAnswerResultProps {
   questionText?: string;
 }
 
+import MathText from '../common/MathText';
+
 export function ShortAnswerResult({ answer, questionText }: ShortAnswerResultProps) {
   const isCorrect = answer.pointsEarned === answer.maxPoints;
 
@@ -12,7 +14,7 @@ export function ShortAnswerResult({ answer, questionText }: ShortAnswerResultPro
     <div className="sa-result" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {questionText && (
         <div className="question-text" style={{ fontSize: '1rem', lineHeight: 1.6, marginBottom: 8 }}>
-          {questionText}
+          <MathText text={questionText} />
         </div>
       )}
 

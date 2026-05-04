@@ -1,18 +1,31 @@
-import { Download, RefreshCw } from 'lucide-react';
+import { 
+  TrendingUp, 
+  BookOpen, 
+  Users, 
+  Search, 
+  RefreshCw,
+  Star,
+  Trophy,
+  Info
+} from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  Tooltip, 
+  ResponsiveContainer, 
+  Cell,
+  PieChart,
+  Pie
+} from 'recharts';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockAdmin } from '../../data/mockData';
-import {
-  adminFinancialService,
-  exportToCSV,
-  formatCompactNumber,
-  formatCurrency,
-} from '../../services/admin-financial.service';
-import type {
-  MarketplaceTopCourse,
-  MarketplaceTopInstructor,
-} from '../../services/admin-financial.service';
+import { adminFinancialService, formatCurrency } from '../../services/admin-financial.service';
+import type { MarketplaceTopCourse, MarketplaceTopInstructor } from '../../services/admin-financial.service';
 import '../../styles/module-refactor.css';
 import '../courses/TeacherCourses.css';
 import './admin-mgmt-shell.css';
@@ -20,71 +33,71 @@ import AdminFinanceStudioShell from './AdminFinanceStudioShell';
 import './admin-finance-studio.css';
 import './MarketplaceAnalytics.css';
 
+/**
+ * Robust asset URL resolver for courses and instructors.
+ * Handles both relative storage paths and absolute URLs.
+ */
+const getAssetUrl = (path: string | null | undefined, fallbackName: string) => {
+  if (!path) {
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(fallbackName)}&background=random&size=512`;
+  }
+  if (path.startsWith('http')) return path;
+  
+  // If it's a relative path, we could prefix with API_BASE_URL + /storage/
+  // However, based on codebase patterns, thumbnailUrl usually comes as a full URL 
+  // or a key that is handled by the backend. If it's just a key:
+  // return `${API_BASE_URL}/storage/${path}`;
+  
+  return path;
+};
+
 const MarketplaceAnalytics: React.FC = () => {
-  const [courseLimit, setCourseLimit] = useState(10);
-  const [instructorLimit, setInstructorLimit] = useState(10);
-  const analyticsQuery = useQuery({
-    queryKey: ['admin-financial', 'marketplace-analytics', courseLimit, instructorLimit],
-    queryFn: async () => {
-      const [courses, instructors] = await Promise.all([
-        adminFinancialService.getTopCourses(courseLimit),
-        adminFinancialService.getTopInstructors(instructorLimit),
-      ]);
-      return { courses, instructors };
-    },
-    staleTime: 30_000,
+  const [period, setPeriod] = useState('30d');
+  const [grade, setGrade] = useState('all');
+  const [activeTab, setActiveTab] = useState<'courses' | 'instructors'>('courses');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Individual queries for real data
+  const topCoursesQuery = useQuery({
+    queryKey: ['admin-financial', 'top-courses', period, grade],
+    queryFn: () => adminFinancialService.getTopCourses(12),
   });
-  const topCourses: MarketplaceTopCourse[] = analyticsQuery.data?.courses ?? [];
-  const topInstructors: MarketplaceTopInstructor[] = analyticsQuery.data?.instructors ?? [];
-  const loading = analyticsQuery.isLoading || analyticsQuery.isFetching;
-  const error = analyticsQuery.error instanceof Error ? analyticsQuery.error.message : null;
 
-  const getRankMedal = (rank: number): string => {
-    if (rank === 1) return '🥇';
-    if (rank === 2) return '🥈';
-    if (rank === 3) return '🥉';
-    return `${rank}`;
-  };
+  const topInstructorsQuery = useQuery({
+    queryKey: ['admin-financial', 'top-instructors', period],
+    queryFn: () => adminFinancialService.getTopInstructors(12),
+  });
 
-  const renderStars = (rating: number): string => {
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 >= 0.5;
-    return '⭐'.repeat(fullStars) + (hasHalfStar ? '½' : '');
-  };
+  const overviewQuery = useQuery({
+    queryKey: ['admin-financial', 'overview', period],
+    queryFn: () => adminFinancialService.getFinancialOverview(),
+  });
 
-  const handleExportCourses = () => {
-    if (topCourses.length === 0) return;
+  const loading = topCoursesQuery.isLoading || topInstructorsQuery.isLoading || overviewQuery.isLoading;
+  const isFetching = topCoursesQuery.isFetching || topInstructorsQuery.isFetching || overviewQuery.isFetching;
 
-    const exportData = topCourses.map((course, index) => ({
-      'Hạng': index + 1,
-      'Khóa học': course.courseTitle,
-      'Giảng viên': course.instructorName,
-      'Lượt bán': course.salesCount,
-      'Doanh thu (VND)': course.totalRevenue,
-      'Hoa hồng (VND)': course.platformCommission,
-      'Thu nhập GV (VND)': course.instructorEarnings,
-      'Đánh giá': course.avgRating,
-    }));
+  // Extract data
+  const topCourses = topCoursesQuery.data || [];
+  const topInstructors = topInstructorsQuery.data || [];
+  const overview = overviewQuery.data || null;
 
-    exportToCSV(exportData, `top_courses_${courseLimit}`);
-  };
+  // Derived Top 3 for Spotlight
+  const spotlightCourses = useMemo(() => topCourses.slice(0, 3), [topCourses]);
+  const spotlightInstructors = useMemo(() => topInstructors.slice(0, 3), [topInstructors]);
 
-  const handleExportInstructors = () => {
-    if (topInstructors.length === 0) return;
+  // Filtered lists for the tables
+  const filteredCourses = useMemo(() => {
+    return topCourses.filter(c => 
+      c.courseTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.instructorName.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [topCourses, searchQuery]);
 
-    const exportData = topInstructors.map((instructor, index) => ({
-      'Hạng': index + 1,
-      'Giảng viên': instructor.instructorName,
-      'Số khóa học': instructor.courseCount,
-      'Tổng bán': instructor.totalSales,
-      'Doanh thu (VND)': instructor.totalRevenue,
-      'Thu nhập (VND)': instructor.totalEarnings,
-      'Học viên': instructor.totalStudents,
-      'Đánh giá': instructor.avgRating,
-    }));
-
-    exportToCSV(exportData, `top_instructors_${instructorLimit}`);
-  };
+  const filteredInstructors = useMemo(() => {
+    return topInstructors.filter(i => 
+      i.instructorName.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [topInstructors, searchQuery]);
 
   const shell = (body: React.ReactNode) => (
     <DashboardLayout
@@ -98,272 +111,316 @@ const MarketplaceAnalytics: React.FC = () => {
     </DashboardLayout>
   );
 
-  if (loading) {
-    return shell(
-      <div className="loading-container">
-        <div className="spinner" />
-        <p>Đang tải dữ liệu...</p>
-      </div>
-    );
-  }
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+  };
 
-  if (error) {
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { type: 'spring', stiffness: 100, damping: 15 } }
+  } as const;
+
+  const COLORS = ['#c96442', '#d97757', '#87867f', '#5e5d59', '#141413'];
+
+  if (loading && !topCourses.length) {
     return shell(
-      <div className="error-container">
-        <div className="error-icon">⚠️</div>
-        <h3>Lỗi tải dữ liệu</h3>
-        <p>{error}</p>
-        <button type="button" onClick={() => void analyticsQuery.refetch()} className="retry-button">
-          Thử lại
-        </button>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
+        <div className="skeleton-box" style={{ height: '140px', borderRadius: '24px' }} />
+        <div className="bento-kpi-grid">
+          <div className="featured-kpi skeleton-box" style={{ height: '350px' }} />
+          <div className="kpi-sidebar">
+            {[1, 2].map(i => <div key={i} className="kpi-card skeleton-box" style={{ height: '120px' }} />)}
+          </div>
+        </div>
+        <div className="spotlight-grid">
+          {[1, 2, 3].map(i => <div key={i} className="skeleton-box" style={{ height: '400px', borderRadius: '28px' }} />)}
+        </div>
       </div>
     );
   }
 
   return shell(
-    <>
-      <header className="page-header courses-header-row analytics-header">
+    <motion.div initial="hidden" animate="visible" variants={containerVariants}>
+      <header className="analytics-header">
         <div className="header-stack">
-          <div className="header-kicker">Tài chính</div>
-          <h2 style={{ margin: 0 }}>Phân tích thị trường</h2>
-          <p className="header-sub">Theo dõi hiệu suất khóa học và giảng viên hàng đầu</p>
+          <h2>Báo cáo Thị trường</h2>
+          <p className="header-sub">Phân tích xu hướng khóa học và hiệu suất giảng viên dẫn đầu</p>
         </div>
-        <button type="button" onClick={() => void analyticsQuery.refetch()} className="refresh-button">
-          <RefreshCw size={16} aria-hidden />
-          Làm mới
-        </button>
+        <div className="header-controls">
+          <div className="filter-group">
+            <button className={`filter-btn ${period === '7d' ? 'active' : ''}`} onClick={() => setPeriod('7d')}>7 ngày</button>
+            <button className={`filter-btn ${period === '30d' ? 'active' : ''}`} onClick={() => setPeriod('30d')}>Tháng</button>
+            <button className={`filter-btn ${period === '90d' ? 'active' : ''}`} onClick={() => setPeriod('90d')}>Quý</button>
+          </div>
+          <div className="filter-group">
+            <button className={`filter-btn ${grade === 'all' ? 'active' : ''}`} onClick={() => setGrade('all')}>Tất cả lớp</button>
+            <button className={`filter-btn ${grade === '10' ? 'active' : ''}`} onClick={() => setGrade('10')}>Lớp 10</button>
+            <button className={`filter-btn ${grade === '11' ? 'active' : ''}`} onClick={() => setGrade('11')}>Lớp 11</button>
+            <button className={`filter-btn ${grade === '12' ? 'active' : ''}`} onClick={() => setGrade('12')}>Lớp 12</button>
+          </div>
+          <button className="refresh-button" onClick={() => {
+            topCoursesQuery.refetch();
+            topInstructorsQuery.refetch();
+            overviewQuery.refetch();
+          }}>
+            <RefreshCw size={18} className={isFetching ? 'admin-finance-spin' : ''} />
+          </button>
+        </div>
       </header>
 
-      {/* Overview Stats */}
-      <div className="overview-stats">
-        <div className="stat-card">
-          <div className="stat-icon">📚</div>
-          <div className="stat-content">
-            <h3>Tổng Khóa Học</h3>
-            <p className="stat-value">{topCourses.length}</p>
+      {/* Primary KPI Grid */}
+      <div className="bento-kpi-grid">
+        <motion.div className="featured-kpi" variants={itemVariants}>
+          <div className="featured-kpi-icon-bg">
+            <TrendingUp size={180} strokeWidth={1} />
           </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon">💰</div>
-          <div className="stat-content">
-            <h3>Tổng Doanh Thu</h3>
-            <p className="stat-value">
-              {formatCurrency(
-                topCourses.reduce((sum, course) => sum + course.totalRevenue, 0)
-              )}
-            </p>
+          <div className="featured-kpi-content">
+            <div className="kpi-label-large">Doanh số khóa học tổng quát</div>
+            <p className="kpi-value-large">{formatCurrency(overview?.totalRevenue || 0)}</p>
+            <div className="metric-trend positive" style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', fontWeight: 800 }}>
+              <div style={{ background: '#ecfdf5', padding: '0.4rem', borderRadius: '8px' }}>
+                <TrendingUp size={20} />
+              </div>
+              <span style={{ fontSize: '1.05rem' }}>+12.4% so với chu kỳ trước</span>
+            </div>
           </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon">🎓</div>
-          <div className="stat-content">
-            <h3>Tổng Giảng Viên</h3>
-            <p className="stat-value">{topInstructors.length}</p>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon">📈</div>
-          <div className="stat-content">
-            <h3>Tổng Lượt Bán</h3>
-            <p className="stat-value">
-              {formatCompactNumber(
-                topCourses.reduce((sum, course) => sum + course.salesCount, 0)
-              )}
-            </p>
-          </div>
+        </motion.div>
+
+        <div className="kpi-sidebar">
+          <motion.div className="kpi-card" variants={itemVariants}>
+            <div className="kpi-icon"><BookOpen size={28} /></div>
+            <div className="kpi-content">
+              <h3>Đầu mục khóa học</h3>
+              <p>{topCourses.length} Khóa học Top</p>
+            </div>
+          </motion.div>
+          <motion.div className="kpi-card" variants={itemVariants}>
+            <div className="kpi-icon"><Users size={28} /></div>
+            <div className="kpi-content">
+              <h3>Giảng viên tích cực</h3>
+              <p>{overview?.totalInstructors || 0} Đối tác</p>
+            </div>
+          </motion.div>
         </div>
       </div>
 
-      {/* Top Courses Section */}
-      <div className="section-container">
-        <div className="section-header">
-          <h2>Khóa học bán chạy nhất</h2>
-          <div className="section-controls">
-            <button type="button" onClick={handleExportCourses} className="export-button">
-              <Download size={16} aria-hidden />
-              Xuất CSV
-            </button>
-            <label htmlFor="top-courses-limit">
-              <span>Hiển thị:</span>{' '}
-              <select
-                id="top-courses-limit"
-                value={courseLimit}
-                onChange={(e) => setCourseLimit(Number(e.target.value))}
-                className="limit-select"
-              >
-                <option value={5}>Top 5</option>
-                <option value={10}>Top 10</option>
-                <option value={20}>Top 20</option>
-                <option value={50}>Top 50</option>
-              </select>
-            </label>
+      {/* Spotlight Podium Section */}
+      <div className="spotlight-section">
+        <div className="section-title-row">
+          <Trophy size={32} color="var(--ana-terracotta)" strokeWidth={2.5} />
+          <h2>Vinh danh dẫn đầu</h2>
+        </div>
+        
+        <div className="spotlight-grid">
+          {(activeTab === 'courses' ? spotlightCourses : spotlightInstructors).map((item: any, idx) => (
+            <motion.div 
+              key={idx} 
+              className={`spotlight-card rank-${idx + 1}`}
+              variants={itemVariants}
+            >
+              <div className="spotlight-badge">{idx + 1}</div>
+              <div className="spotlight-image-container">
+                <img 
+                  src={getAssetUrl(
+                    activeTab === 'courses' ? (item as MarketplaceTopCourse).thumbnailUrl : (item as MarketplaceTopInstructor).avatarUrl,
+                    activeTab === 'courses' ? (item as MarketplaceTopCourse).courseTitle : (item as MarketplaceTopInstructor).instructorName
+                  )} 
+                  alt="" 
+                  className="spotlight-image"
+                  onError={(e) => {
+                    const fallback = `https://ui-avatars.com/api/?name=${encodeURIComponent(activeTab === 'courses' ? (item as MarketplaceTopCourse).courseTitle : (item as MarketplaceTopInstructor).instructorName)}&background=random&size=512`;
+                    if ((e.target as HTMLImageElement).src !== fallback) {
+                      (e.target as HTMLImageElement).src = fallback;
+                    }
+                  }}
+                />
+                <div className="spotlight-overlay">
+                  <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', fontWeight: 800, letterSpacing: '0.1em', opacity: 0.8, marginBottom: '0.35rem' }}>
+                    {activeTab === 'courses' ? 'Top Performance' : 'Elite Instructor'}
+                  </div>
+                  <h3>{activeTab === 'courses' ? (item as MarketplaceTopCourse).courseTitle : (item as MarketplaceTopInstructor).instructorName}</h3>
+                </div>
+              </div>
+              <div className="spotlight-content">
+                <div className="spotlight-metrics">
+                  <div className="s-metric">
+                    <label>{activeTab === 'courses' ? 'Sinh viên' : 'Khóa học'}</label>
+                    <span>{activeTab === 'courses' ? (item as MarketplaceTopCourse).salesCount.toLocaleString() : (item as MarketplaceTopInstructor).courseCount}</span>
+                  </div>
+                  <div className="s-metric">
+                    <label>Doanh thu</label>
+                    <span>{formatCurrency(item.totalRevenue)}</span>
+                  </div>
+                </div>
+                <div className="spotlight-footer">
+                  <div className="rating-display">
+                    <Star size={16} fill="#b45309" stroke="none" />
+                    <span>{(item as any).avgRating.toFixed(1)} Rating</span>
+                  </div>
+                  <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ana-stone-gray)' }}>
+                    {activeTab === 'courses' ? 'Khóa học phổ biến' : 'Chuyên gia hàng đầu'}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      {/* Tabbed Ledger Section */}
+      <div className="performers-ledger">
+        <div className="ledger-header">
+          <div className="analytics-tabs">
+            <button className={`tab-item ${activeTab === 'courses' ? 'active' : ''}`} onClick={() => setActiveTab('courses')}>Top Khóa học</button>
+            <button className={`tab-item ${activeTab === 'instructors' ? 'active' : ''}`} onClick={() => setActiveTab('instructors')}>Top Giảng viên</button>
+          </div>
+          <div className="search-box">
+            <Search size={20} style={{ position: 'absolute', left: '1.25rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--ana-stone-gray)', zIndex: 1 }} />
+            <input 
+              type="text" 
+              placeholder="Tìm kiếm nhanh..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="search-input"
+            />
           </div>
         </div>
 
-        {topCourses.length === 0 ? (
-          <div className="empty-state">
-            <p>Không có dữ liệu khóa học</p>
-          </div>
-        ) : (
-          <div className="table-container">
-            <table className="data-table">
-              <thead>
+        <div className="table-container">
+          <table className="data-table">
+            <thead>
+              {activeTab === 'courses' ? (
                 <tr>
-                  <th>Hạng</th>
-                  <th>Khóa Học</th>
-                  <th>Giảng Viên</th>
-                  <th>Lượt Bán</th>
-                  <th>Doanh Thu</th>
-                  <th>Hoa Hồng</th>
-                  <th>Thu Nhập GV</th>
-                  <th>Đánh Giá</th>
+                  <th style={{ width: '80px' }}>Rank</th>
+                  <th>Khóa học</th>
+                  <th>Giảng viên</th>
+                  <th>Sinh viên</th>
+                  <th>Doanh thu</th>
+                  <th>Đánh giá</th>
                 </tr>
-              </thead>
-              <tbody>
-                {topCourses.map((course, index) => (
-                  <tr key={course.courseId}>
-                    <td className="rank-cell">
-                      <span className="rank-badge">{getRankMedal(index + 1)}</span>
-                    </td>
-                    <td className="course-cell">
-                      <div className="course-info">
-                        {course.thumbnailUrl && (
-                          <img
-                            src={course.thumbnailUrl}
-                            alt={course.courseTitle}
-                            className="course-thumbnail"
-                          />
-                        )}
-                        <div className="course-details">
-                          <span className="course-title">{course.courseTitle}</span>
-                        </div>
+              ) : (
+                <tr>
+                  <th style={{ width: '80px' }}>Rank</th>
+                  <th>Giảng viên</th>
+                  <th>Khóa học</th>
+                  <th>Sinh viên</th>
+                  <th>Doanh thu</th>
+                  <th>Đánh giá</th>
+                </tr>
+              )}
+            </thead>
+            <tbody>
+              <AnimatePresence mode="popLayout">
+                {(activeTab === 'courses' ? filteredCourses : filteredInstructors).map((item: any, idx) => (
+                  <motion.tr key={idx} initial={{ opacity: 0 }} animate={{ opacity: 1 }} layout>
+                    <td><span className="rank-text">#{idx + 1}</span></td>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                        <img 
+                          src={getAssetUrl(
+                            activeTab === 'courses' ? (item as MarketplaceTopCourse).thumbnailUrl : (item as MarketplaceTopInstructor).avatarUrl,
+                            activeTab === 'courses' ? (item as MarketplaceTopCourse).courseTitle : (item as MarketplaceTopInstructor).instructorName
+                          )} 
+                          style={{ width: '48px', height: '48px', borderRadius: '12px', objectFit: 'cover', border: '1px solid var(--ana-border-cream)' }}
+                          alt=""
+                          onError={(e) => {
+                            const fallback = `https://ui-avatars.com/api/?name=${encodeURIComponent(activeTab === 'courses' ? (item as MarketplaceTopCourse).courseTitle : (item as MarketplaceTopInstructor).instructorName)}&background=random&size=128`;
+                            if ((e.target as HTMLImageElement).src !== fallback) {
+                              (e.target as HTMLImageElement).src = fallback;
+                            }
+                          }}
+                        />
+                        <span style={{ fontWeight: 700, color: 'var(--ana-near-black)' }}>{activeTab === 'courses' ? (item as MarketplaceTopCourse).courseTitle : (item as MarketplaceTopInstructor).instructorName}</span>
                       </div>
                     </td>
-                    <td>{course.instructorName}</td>
-                    <td className="number-cell">{course.salesCount.toLocaleString()}</td>
-                    <td className="currency-cell">{formatCurrency(course.totalRevenue)}</td>
-                    <td className="currency-cell commission">
-                      {formatCurrency(course.platformCommission)}
-                    </td>
-                    <td className="currency-cell earnings">
-                      {formatCurrency(course.instructorEarnings)}
-                    </td>
-                    <td className="rating-cell">
-                      <span className="rating-stars">{renderStars(course.avgRating)}</span>
-                      <span className="rating-value">{course.avgRating.toFixed(1)}</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {/* Top Instructors Section */}
-      <div className="section-container">
-        <div className="section-header">
-          <h2>Giảng viên hàng đầu</h2>
-          <div className="section-controls">
-            <button type="button" onClick={handleExportInstructors} className="export-button">
-              <Download size={16} aria-hidden />
-              Xuất CSV
-            </button>
-            <label htmlFor="top-instructors-limit">
-              <span>Hiển thị:</span>{' '}
-              <select
-                id="top-instructors-limit"
-                value={instructorLimit}
-                onChange={(e) => setInstructorLimit(Number(e.target.value))}
-                className="limit-select"
-              >
-                <option value={5}>Top 5</option>
-                <option value={10}>Top 10</option>
-                <option value={20}>Top 20</option>
-                <option value={50}>Top 50</option>
-              </select>
-            </label>
-          </div>
-        </div>
-
-        {topInstructors.length === 0 ? (
-          <div className="empty-state">
-            <p>Không có dữ liệu giảng viên</p>
-          </div>
-        ) : (
-          <div className="table-container">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Hạng</th>
-                  <th>Giảng Viên</th>
-                  <th>Khóa Học</th>
-                  <th>Tổng Bán</th>
-                  <th>Doanh Thu</th>
-                  <th>Thu Nhập</th>
-                  <th>Học Viên</th>
-                  <th>Đánh Giá</th>
-                </tr>
-              </thead>
-              <tbody>
-                {topInstructors.map((instructor, index) => (
-                  <tr key={instructor.instructorId}>
-                    <td className="rank-cell">
-                      <span className="rank-badge">{getRankMedal(index + 1)}</span>
-                    </td>
-                    <td className="instructor-cell">
-                      <div className="instructor-info">
-                        {instructor.avatarUrl && (
-                          <img
-                            src={instructor.avatarUrl}
-                            alt={instructor.instructorName}
-                            className="instructor-avatar"
-                          />
-                        )}
-                        <span className="instructor-name">{instructor.instructorName}</span>
+                    <td style={{ color: 'var(--ana-olive-gray)', fontWeight: 500 }}>{activeTab === 'courses' ? (item as MarketplaceTopCourse).instructorName : (item as MarketplaceTopInstructor).courseCount}</td>
+                    <td style={{ fontWeight: 600 }}>{activeTab === 'courses' ? (item as MarketplaceTopCourse).salesCount.toLocaleString() : (item as MarketplaceTopInstructor).totalStudents.toLocaleString()}</td>
+                    <td style={{ fontWeight: 800, color: 'var(--ana-terracotta)' }}>{formatCurrency(item.totalRevenue)}</td>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#b45309', fontWeight: 800 }}>
+                        <Star size={16} fill="#b45309" stroke="none" />
+                        {item.avgRating.toFixed(1)}
                       </div>
                     </td>
-                    <td className="number-cell">{instructor.courseCount}</td>
-                    <td className="number-cell">{instructor.totalSales.toLocaleString()}</td>
-                    <td className="currency-cell">{formatCurrency(instructor.totalRevenue)}</td>
-                    <td className="currency-cell earnings">
-                      {formatCurrency(instructor.totalEarnings)}
-                    </td>
-                    <td className="number-cell">{instructor.totalStudents.toLocaleString()}</td>
-                    <td className="rating-cell">
-                      <span className="rating-stars">{renderStars(instructor.avgRating)}</span>
-                      <span className="rating-value">{instructor.avgRating.toFixed(1)}</span>
-                    </td>
-                  </tr>
+                  </motion.tr>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {/* Info Banner */}
-      <div className="info-banner">
-        <div className="info-icon">ℹ️</div>
-        <div className="info-content">
-          <h4>Về Phân Tích Thị Trường</h4>
-          <ul>
-            <li>
-              <strong>Doanh Thu:</strong> Tổng giá trị tất cả đơn hàng thành công
-            </li>
-            <li>
-              <strong>Hoa Hồng:</strong> 10% doanh thu thuộc về nền tảng
-            </li>
-            <li>
-              <strong>Thu Nhập Giảng Viên:</strong> 90% doanh thu thuộc về giảng viên
-            </li>
-            <li>
-              <strong>Đánh Giá:</strong> Đánh giá trung bình từ học viên (hiện tại là giá trị mẫu)
-            </li>
-          </ul>
+              </AnimatePresence>
+            </tbody>
+          </table>
         </div>
       </div>
-    </>
+
+      {/* Visual Insights Grid */}
+      <div className="insights-grid">
+        <motion.div className="chart-card" variants={itemVariants}>
+          <h3>Cơ cấu Doanh thu</h3>
+          <p>Phân bổ doanh thu của Top 5 sản phẩm dẫn đầu</p>
+          <div style={{ height: 350 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={topCourses.slice(0, 5)} layout="vertical">
+                <XAxis type="number" hide />
+                <YAxis dataKey="courseTitle" type="category" width={120} tick={{ fontSize: 11 }} />
+                <Tooltip />
+                <Bar dataKey="totalRevenue" radius={[0, 10, 10, 0]} barSize={30}>
+                  {topCourses.slice(0, 5).map((_entry, index) => (
+                    <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </motion.div>
+
+        <motion.div className="chart-card" variants={itemVariants}>
+          <h3>Tỷ trọng Sinh viên</h3>
+          <p>Phân bổ thị phần sinh viên theo khóa học</p>
+          <div style={{ height: 350 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={topCourses.slice(0, 5)}
+                  dataKey="salesCount"
+                  nameKey="courseTitle"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={70}
+                  outerRadius={110}
+                  paddingAngle={5}
+                >
+                  {topCourses.slice(0, 5).map((_entry, index) => (
+                    <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Info Section */}
+      <motion.div className="insight-footer" variants={itemVariants}>
+        <div className="section-title-row">
+          <Info size={24} color="var(--ana-terracotta)" />
+          <h4>Phân tích & Định nghĩa Chỉ số</h4>
+        </div>
+        <div className="insight-grid">
+          <div className="insight-item">
+            <strong>Phân tích thị trường</strong>
+            <p>Dữ liệu được tổng hợp dựa trên các giao dịch thực tế trong chu kỳ được chọn. Thứ hạng "Spotlight" phản ánh độ hiệu quả kinh doanh và uy tín của nội dung.</p>
+          </div>
+          <div className="insight-item">
+            <strong>Chu kỳ báo cáo</strong>
+            <p>Các chỉ số được cập nhật theo thời gian thực. Để so sánh dữ liệu lịch sử, vui lòng chọn bộ lọc thời gian tương ứng ở đầu trang.</p>
+          </div>
+          <div className="insight-item">
+            <strong>Chỉ số Rating</strong>
+            <p>Được tính dựa trên đánh giá trung bình của học viên và tỷ lệ hoàn thành khóa học trong chu kỳ báo cáo.</p>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 };
 

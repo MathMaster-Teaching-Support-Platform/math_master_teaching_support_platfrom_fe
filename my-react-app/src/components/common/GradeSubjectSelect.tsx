@@ -1,5 +1,5 @@
+import { BookOpen, GraduationCap } from 'lucide-react';
 import { useEffect } from 'react';
-import { GraduationCap, BookOpen } from 'lucide-react';
 import { useGrades } from '../../hooks/useGrades';
 import { useSubjectsByGrade } from '../../hooks/useSubjects';
 import type { SubjectResponse } from '../../types/subject.types';
@@ -56,7 +56,7 @@ export default function GradeSubjectSelect({
       <div className="grade-subject-field">
         <label htmlFor="grade-select" className="grade-subject-label">
           <GraduationCap size={16} className="grade-subject-icon" />
-          <span>Khối lớp</span>
+          <span>Lớp</span>
           {required && <span className="grade-subject-required">*</span>}
         </label>
         <select
@@ -118,13 +118,9 @@ export default function GradeSubjectSelect({
           )}
         </select>
         {selectedSubject && (
-          <span className="grade-subject-hint">
-            {subjects.length} môn học có sẵn
-          </span>
+          <span className="grade-subject-hint">{subjects.length} môn học có sẵn</span>
         )}
-        {isSubjectsError && (
-          <span className="grade-subject-loading">Không tải được môn học</span>
-        )}
+        {isSubjectsError && <span className="grade-subject-loading">Không tải được môn học</span>}
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import React from 'react';
+import type { LucideIcon } from 'lucide-react';
 import {
   BookOpen,
   Calendar,
@@ -13,10 +13,10 @@ import {
   Star,
   Users,
 } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
+import React from 'react';
+import { UI_TEXT } from '../../../constants/uiText';
 import type { CourseResponse } from '../../../types';
 import './CourseOverviewTab.css';
-import { UI_TEXT } from '../../../constants/uiText';
 
 interface CourseOverviewTabProps {
   course: CourseResponse;
@@ -90,7 +90,6 @@ const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({ course }) => {
 
   return (
     <div className="course-overview-tab">
-      
       {/* Provider Banner */}
       {course.provider === 'CUSTOM' ? (
         <div className="course-overview-banner custom">
@@ -99,7 +98,10 @@ const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({ course }) => {
           </div>
           <div className="course-overview-banner__content">
             <h4>Khóa học mở rộng (Tùy chỉnh)</h4>
-            <p>Khóa học này do bạn tự thiết kế cấu trúc bài giảng, không bị ràng buộc bởi khung chương trình cố định.</p>
+            <p>
+              Khóa học này do bạn tự thiết kế cấu trúc bài giảng, không bị ràng buộc bởi khung
+              chương trình cố định.
+            </p>
           </div>
         </div>
       ) : (
@@ -109,7 +111,9 @@ const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({ course }) => {
           </div>
           <div className="course-overview-banner__content">
             <h4>Chương trình chuẩn của Bộ GD&ĐT</h4>
-            <p>Khóa học tuân theo cấu trúc môn học và khối lớp chính thức từ Bộ Giáo Dục và Đào Tạo.</p>
+            <p>
+              Khóa học tuân theo cấu trúc môn học và khối lớp chính thức từ Bộ Giáo Dục và Đào Tạo.
+            </p>
           </div>
         </div>
       )}
@@ -149,7 +153,7 @@ const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({ course }) => {
               <MetaRow icon={GraduationCap} label="Môn học">
                 <strong>{course.subjectName || '—'}</strong>
               </MetaRow>
-              <MetaRow icon={BookOpen} label="Khối lớp">
+              <MetaRow icon={BookOpen} label="Lớp">
                 <strong>Khối {course.gradeLevel}</strong>
               </MetaRow>
             </>
@@ -164,21 +168,15 @@ const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({ course }) => {
           </MetaRow>
 
           <MetaRow icon={Clock} label="Tổng giờ video">
-            <strong>
-              {course.totalVideoHours ?? 0} giờ
-            </strong>
+            <strong>{course.totalVideoHours ?? 0} giờ</strong>
           </MetaRow>
 
           <MetaRow icon={Download} label="Tài nguyên tải về">
-            <strong>
-              {course.resourcesCount ?? 0} file đính kèm
-            </strong>
+            <strong>{course.resourcesCount ?? 0} file đính kèm</strong>
           </MetaRow>
 
           <MetaRow icon={FileText} label="Bài đọc (Articles)">
-            <strong>
-              {course.articlesCount ?? 0} bài viết
-            </strong>
+            <strong>{course.articlesCount ?? 0} bài viết</strong>
           </MetaRow>
 
           <MetaRow icon={Calendar} label="Ngày tạo">

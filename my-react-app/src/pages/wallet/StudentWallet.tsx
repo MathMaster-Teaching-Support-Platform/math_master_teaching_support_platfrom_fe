@@ -21,6 +21,7 @@ import { UserService } from '../../services/api/user.service';
 import { WalletService } from '../../services/api/wallet.service';
 import type {
   TransactionStatus,
+  TransactionType,
   WalletSummary,
   WalletTransaction,
   WithdrawalRequestResponse,
@@ -3684,9 +3685,28 @@ const StudentWallet: React.FC = () => {
     TX_STATUS_MAP[(status as TransactionStatus) ?? ''] ?? 'failed';
 
   const normalizeType = (tx: WalletTransaction): 'deposit' | 'payment' => {
-    if (tx.type === 'DEPOSIT') return 'deposit';
-    if (tx.type === 'PAYMENT' || tx.type === 'WITHDRAWAL') return 'payment';
+    const depositTypes = ['DEPOSIT', 'INSTRUCTOR_REVENUE', 'PLATFORM_COMMISSION'];
+    const paymentTypes = ['PAYMENT', 'WITHDRAWAL', 'COURSE_PURCHASE'];
+
+    if (tx.type && (depositTypes as string[]).includes(tx.type)) return 'deposit';
+    if (tx.type && (paymentTypes as string[]).includes(tx.type)) return 'payment';
+
     return tx.amount >= 0 ? 'deposit' : 'payment';
+  };
+
+  const getTransactionTitle = (tx: WalletTransaction): string => {
+    if (tx.description) return tx.description;
+
+    const labels: Partial<Record<TransactionType, string>> = {
+      DEPOSIT: 'Nạp tiền vào ví',
+      WITHDRAWAL: 'Rút tiền khỏi ví',
+      PAYMENT: 'Thanh toán',
+      COURSE_PURCHASE: 'Mua khoá học',
+      INSTRUCTOR_REVENUE: 'Doanh thu giảng dạy',
+      PLATFORM_COMMISSION: 'Chiết khấu nền tảng',
+    };
+
+    return (tx.type ? labels[tx.type] : null) || 'Giao dịch';
   };
 
   const formatDate = (raw?: string | null): { day: string; time: string } => {
@@ -3761,9 +3781,9 @@ const StudentWallet: React.FC = () => {
       statusFilter === 'all'
         ? WalletService.getTransactions({ page: 0, size: API_PAGE_SIZE })
         : WalletService.getTransactionsByStatus(STATUS_TO_API[statusFilter], {
-            page: 0,
-            size: API_PAGE_SIZE,
-          }),
+          page: 0,
+          size: API_PAGE_SIZE,
+        }),
     staleTime: 15_000,
   });
 
@@ -3962,7 +3982,7 @@ const StudentWallet: React.FC = () => {
     const rows = filteredTransactions.map((tx) => [
       tx.createdAt || '',
       getTransactionCode(tx),
-      normalizeType(tx) === 'deposit' ? 'Nạp tiền' : 'Thanh toán',
+      getTransactionTitle(tx),
       tx.amount.toString(),
       normalizeStatus(tx.status),
     ]);
@@ -4276,10 +4296,10 @@ const StudentWallet: React.FC = () => {
                             style={
                               selectedBank === bank.id
                                 ? {
-                                    borderColor: bank.color,
-                                    boxShadow: `0 0 0 2px ${bank.color}30`,
-                                    background: `${bank.color}08`,
-                                  }
+                                  borderColor: bank.color,
+                                  boxShadow: `0 0 0 2px ${bank.color}30`,
+                                  background: `${bank.color}08`,
+                                }
                                 : {}
                             }
                             onClick={() =>
@@ -4677,11 +4697,7 @@ const StudentWallet: React.FC = () => {
                       </div>
 
                       <div className="tx-info">
-                        <div className="tx-title">
-                          {type === 'deposit'
-                            ? 'Nạp tiền vào ví'
-                            : tx.description || 'Thanh toán khoá học'}
-                        </div>
+                        <div className="tx-title">{getTransactionTitle(tx)}</div>
                         <div className="tx-meta">
                           <span className="tx-code">#{getTransactionCode(tx)}</span>
                           <span className="tx-sep">·</span>
@@ -4696,7 +4712,7 @@ const StudentWallet: React.FC = () => {
                           className={`tx-amount ${type === 'deposit' ? 'positive' : 'negative'}`}
                         >
                           {type === 'deposit' ? '+' : '−'}
-                          {formatCurrency(Math.abs(tx.amount))}đ
+                          {formatCurrency(tx.amount)}đ
                         </div>
                         <span className={`tx-status-badge ${status}`}>
                           {status === 'completed'

@@ -1,477 +1,384 @@
-/* --- Page ------------------------------------------------------------------- */
+/* --- Design Tokens (DESIGN.md warm palette) -------------------------------- */
+:root {
+  --ana-bg: #f5f4ed; /* Parchment */
+  --ana-surface: #faf9f5; /* Ivory */
+  --ana-primary: #c96442; /* Terracotta */
+  --ana-primary-soft: rgba(201, 100, 66, 0.08);
+  --ana-secondary: #d97757; /* Coral */
+  --ana-secondary-soft: rgba(217, 119, 87, 0.08);
+  --ana-success: #5e5d59; /* Olive Gray */
+  --ana-success-soft: rgba(94, 93, 89, 0.08);
+  --ana-error: #b53333; /* Warm Red */
+  --ana-text-main: #141413; /* Near Black */
+  --ana-text-muted: #87867f; /* Stone Gray */
+  --ana-border: #f0eee6; /* Border Cream */
+  --ana-border-warm: #e8e6dc; /* Border Warm */
+  --ana-ring: #d1cfc5; /* Ring Warm */
+  --ana-shadow-sm: rgba(0, 0, 0, 0.05) 0px 4px 24px;
+  --ana-shadow-md: 0px 0px 0px 1px #d1cfc5, rgba(0, 0, 0, 0.05) 0px 4px 24px;
+  --ana-shadow-lg: 0px 0px 0px 1px #c2c0b6, rgba(0, 0, 0, 0.08) 0px 8px 30px;
+  --ana-radius: 1rem;
+}
+
 .admin-analytics-page {
-  --ana-bg: #faf9f5;
-  --ana-card: #ffffff;
-  --ana-border: #e8e6dc;
-  --ana-border-strong: #ddd9cd;
-  --ana-text: #0d0f1a;
-  --ana-muted: #5e5d59;
-  --ana-accent: #c96442;
-  padding: 1.5rem 1.75rem;
+  padding: 2rem 2.5rem;
   background: var(--ana-bg);
-  min-height: 100%;
+  min-height: 100vh;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  color: var(--ana-text-main);
 }
 
 /* --- Page Header ----------------------------------------------------------- */
 .ana-page-header {
   display: flex;
-  align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 1.5rem;
-  gap: 1.25rem;
-  flex-wrap: wrap;
-  padding: 0 0 1.2rem;
-  border-bottom: 1px solid #e8e6dc;
+  align-items: flex-end;
+  margin-bottom: 2.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--ana-border);
 }
 
-.module-layout-container.admin-analytics-page .header-stack {
+.header-stack {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
-}
-
-.module-layout-container.admin-analytics-page .header-kicker {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #c96442;
-}
-
-.module-layout-container.admin-analytics-page .header-kicker::before {
-  content: '';
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #c96442;
-  flex-shrink: 0;
+  gap: 0.35rem;
 }
 
 .ana-page-title {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  font-size: 1.75rem;
-  font-weight: 800;
-  color: var(--ana-text);
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  font-size: 2.25rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  color: var(--ana-text-main);
   margin: 0;
-}
-
-.ana-page-title-icon {
-  width: 1.4rem;
-  height: 1.4rem;
-  color: #c96442;
 }
 
 .ana-page-subtitle {
+  color: var(--ana-text-muted);
   font-size: 0.9375rem;
-  color: var(--ana-muted);
-  margin: 0;
-}
-
-.module-layout-container.admin-analytics-page .header-sub {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.module-layout-container.admin-analytics-page .header-sub::before {
-  content: '';
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #c96442;
-  flex-shrink: 0;
+  line-height: 1.6;
 }
 
 .ana-export-btn {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.65rem 1rem;
-  background: #0d0f1a;
-  color: #ffffff;
-  border: 1px solid #0d0f1a;
-  border-radius: 12px;
-  font-size: 0.85rem;
-  font-weight: 700;
+  gap: 0.5rem;
+  padding: 0.625rem 1.125rem;
+  background: var(--ana-text-main);
+  color: #faf9f5;
+  border: 1px solid #30302e;
+  border-radius: 0.75rem;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
   cursor: pointer;
-  white-space: nowrap;
   transition:
-    background 0.2s,
-    transform 0.15s,
-    box-shadow 0.2s;
-}
-
-.ana-export-btn-icon {
-  width: 0.95rem;
-  height: 0.95rem;
+    background 0.15s ease,
+    transform 0.1s ease;
 }
 
 .ana-export-btn:hover {
-  background: #1a1d2e;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
-  transform: translateY(-1px);
+  background: #30302e;
 }
 
 .ana-export-btn:active {
   transform: scale(0.98);
 }
 
-.ana-export-btn:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(201, 100, 66, 0.2);
-}
-
-/* --- Section Nav ------------------------------------------------------------ */
+/* --- Navigation ------------------------------------------------------------ */
 .ana-section-nav {
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
-  background: #ffffff;
+  gap: 0.25rem;
+  padding: 0.3rem;
+  background: var(--ana-surface);
+  border-radius: 0.875rem;
   border: 1px solid var(--ana-border);
-  border-radius: 14px;
-  padding: 0.4rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.ana-section-nav::-webkit-scrollbar {
-  display: none;
+  margin-bottom: 2rem;
+  width: fit-content;
+  box-shadow: 0px 0px 0px 1px var(--ana-border);
 }
 
 .ana-nav-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 0.625rem;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--ana-text-muted);
+  border: none;
+  background: transparent;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.5rem 1.125rem;
-  border: 1px solid transparent;
-  border-radius: 10px;
-  background: transparent;
-  color: var(--ana-muted);
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  white-space: nowrap;
-  flex-shrink: 0;
+  gap: 0.4rem;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
 }
 
 .ana-nav-btn-icon {
-  width: 0.95rem;
-  height: 0.95rem;
-}
-
-.ana-nav-btn:hover {
-  color: var(--ana-text);
-  background: #f5f4ed;
-}
-
-.ana-nav-btn--active {
-  background: #fdf1ec;
-  border-color: #f2dbd2;
-  color: #c96442;
-}
-
-.ana-nav-btn:focus-visible {
-  outline: none;
-  border-color: #c96442;
-  box-shadow: 0 0 0 2px rgba(201, 100, 66, 0.15);
-}
-
-/* --- KPI Grid (Overview 8-card grid) -------------------------------------- */
-.ana-kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
-  margin-bottom: 1.75rem;
-}
-
-@media (max-width: 1100px) {
-  .ana-kpi-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 600px) {
-  .ana-kpi-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.ana-kpi-card {
-  background: var(--ana-card);
-  border-radius: 16px;
-  border: 1px solid var(--ana-border);
-  border-top: 1px solid transparent;
-  padding: 1.05rem 1.1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  transition:
-    box-shadow 0.2s,
-    transform 0.2s;
-}
-
-.ana-kpi-card:hover {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
-  transform: translateY(-2px);
-}
-
-.ana-kpi-icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.ana-kpi-svg {
-  width: 1.05rem;
-  height: 1.05rem;
-}
-
-.ana-kpi-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.ana-kpi-label {
-  font-size: 0.74rem;
-  color: var(--ana-muted);
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  margin-bottom: 0.2rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.ana-kpi-value {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: var(--ana-text);
-  line-height: 1.2;
-}
-
-.ana-kpi-sub {
-  font-size: 0.75rem;
-  font-weight: 600;
-  margin-top: 0.2rem;
-}
-
-.ana-kpi-sub.positive {
-  color: #16a34a;
-}
-.ana-kpi-sub.neutral {
-  color: var(--ana-muted);
-}
-
-/* --- Inline KPI Row (section headers) ------------------------------------- */
-.ana-kpi-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
-  margin-bottom: 1.75rem;
-}
-
-@media (max-width: 1000px) {
-  .ana-kpi-row {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 540px) {
-  .ana-kpi-row {
-    grid-template-columns: 1fr;
-  }
-}
-
-.ana-inline-kpi {
-  background: var(--ana-card);
-  border-radius: 14px;
-  border: 1px solid var(--ana-border);
-  padding: 0.95rem 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  transition:
-    box-shadow 0.2s,
-    transform 0.2s,
-    border-color 0.2s;
-}
-
-.ana-inline-kpi:hover {
-  border-color: color-mix(in oklab, var(--ana-accent) 28%, #ddd9cd);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
-  transform: translateY(-2px);
-}
-
-.ana-inline-kpi-icon {
-  width: 2.2rem;
-  height: 2.2rem;
-  border-radius: 0.75rem;
-  background: color-mix(in oklab, var(--ana-accent) 14%, #ffffff);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.ana-inline-kpi-svg {
   width: 1rem;
   height: 1rem;
 }
 
+.ana-nav-btn:hover {
+  background: var(--ana-border-warm);
+  color: var(--ana-text-main);
+}
+
+.ana-nav-btn--active {
+  background: var(--ana-text-main) !important;
+  color: #faf9f5 !important;
+  font-weight: 600 !important;
+}
+
+/* --- KPI Cards ------------------------------------------------------------- */
+.ana-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2.5rem;
+}
+
+.ana-kpi-card {
+  background: var(--ana-surface);
+  padding: 1.375rem 1.5rem;
+  border-radius: var(--ana-radius);
+  border: 1px solid var(--ana-border);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--ana-shadow-sm);
+}
+
+.ana-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--ana-shadow-md);
+}
+
+.ana-kpi-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.ana-kpi-icon-wrapper {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ana-border-warm);
+  color: #5e5d59;
+}
+
+.ana-kpi-trend {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 2rem;
+  background: var(--ana-border-warm);
+  color: #5e5d59;
+}
+
+.ana-kpi-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.ana-kpi-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--ana-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ana-kpi-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--ana-text-main);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+/* --- Inline KPI Row -------------------------------------------------------- */
+.ana-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+}
+
+.ana-inline-kpi {
+  background: var(--ana-surface);
+  padding: 1.125rem 1.25rem;
+  border-radius: 0.875rem;
+  border: 1px solid var(--ana-border);
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  transition: box-shadow 0.15s ease;
+  box-shadow: var(--ana-shadow-sm);
+}
+
+.ana-inline-kpi:hover {
+  box-shadow: var(--ana-shadow-md);
+}
+
+.ana-inline-kpi-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.6rem;
+  background: var(--ana-border-warm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
 .ana-inline-kpi-value {
-  font-size: 1.28rem;
-  font-weight: 800;
-  color: var(--ana-text);
-  line-height: 1.25;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--ana-text-main);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
 }
 
 .ana-inline-kpi-label {
-  font-size: 0.78rem;
-  color: var(--ana-muted);
+  font-size: 0.75rem;
   font-weight: 500;
-  margin-top: 0.15rem;
+  color: var(--ana-text-muted);
+  margin-top: 0.1rem;
 }
 
-/* --- Card ------------------------------------------------------------------- */
-.ana-card {
-  background: var(--ana-card);
-  border-radius: 16px;
-  border: 1px solid var(--ana-border);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
+/* --- Charts & Sections ----------------------------------------------------- */
+.ana-two-col {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: 1.5rem;
   margin-bottom: 1.5rem;
 }
 
-.ana-card-header {
+.ana-card {
+  background: var(--ana-surface);
+  border-radius: var(--ana-radius);
+  border: 1px solid var(--ana-border);
+  box-shadow: var(--ana-shadow-sm);
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
+  transition: box-shadow 0.2s ease;
+}
+
+.ana-card:hover {
+  box-shadow: var(--ana-shadow-md);
+}
+
+.ana-card-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--ana-border);
+  display: flex;
   justify-content: space-between;
-  padding: 1.375rem 1.5rem 1rem;
-  border-bottom: 1px solid #f1efe7;
-  gap: 1rem;
-  flex-wrap: wrap;
+  align-items: center;
 }
 
 .ana-card-title {
-  font-size: 1.0625rem;
-  font-weight: 700;
-  color: var(--ana-text);
-  margin: 0 0 0.25rem;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: var(--ana-text-main);
+  margin: 0;
+  line-height: 1.3;
 }
 
 .ana-card-subtitle {
   font-size: 0.8125rem;
-  color: var(--ana-muted);
-  margin: 0;
+  color: var(--ana-text-muted);
+  margin-top: 0.2rem;
+  line-height: 1.5;
 }
 
 .ana-chart-body {
-  padding: 1.25rem 1.5rem 1.375rem;
-}
-
-.ana-chart-body--center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* --- Two column grid ------------------------------------------------------- */
-.ana-two-col {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.25rem;
-  margin-bottom: 1.5rem;
-}
-
-@media (max-width: 900px) {
-  .ana-two-col {
-    grid-template-columns: 1fr;
-  }
-}
-
-.ana-two-col .ana-card {
-  margin-bottom: 0;
+  padding: 1.5rem;
+  min-height: 300px;
 }
 
 /* --- Custom Tooltip -------------------------------------------------------- */
 .ana-tooltip {
-  background: #1f1f1d;
-  border-radius: 10px;
-  padding: 0.625rem 0.875rem;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-  font-size: 0.8125rem;
-  color: white;
-  min-width: 140px;
+  background: #141413;
+  border: 1px solid #30302e;
+  padding: 0.875rem 1rem;
+  border-radius: 0.75rem;
+  box-shadow: rgba(0, 0, 0, 0.15) 0px 8px 24px;
+  color: #faf9f5;
+  min-width: 170px;
 }
 
 .ana-tooltip-label {
-  font-weight: 700;
-  margin-bottom: 0.5rem;
-  color: #d6d1c5;
+  font-weight: 600;
   font-size: 0.75rem;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.6rem;
+  color: #87867f;
 }
 
 .ana-tooltip-row {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 0.5rem;
-  margin-top: 0.3rem;
-}
-
-.ana-tooltip-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 2px;
-  flex-shrink: 0;
+  gap: 1rem;
+  margin-bottom: 0.35rem;
 }
 
 .ana-tooltip-name {
-  color: #b9b2a0;
-  flex: 1;
+  font-size: 0.8125rem;
+  color: #b0aea5;
 }
 
 .ana-tooltip-value {
   font-weight: 700;
-  color: white;
+  font-size: 0.875rem;
+  color: #faf9f5;
 }
 
-@media (max-width: 720px) {
+/* --- Section content ------------------------------------------------------- */
+.ana-section-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* --- Responsive ------------------------------------------------------------ */
+@media (max-width: 768px) {
+  .admin-analytics-page {
+    padding: 1rem;
+  }
+
   .ana-page-header {
-    padding-bottom: 1rem;
-    gap: 0.9rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.25rem;
+  }
+
+  .ana-two-col {
+    grid-template-columns: 1fr;
   }
 
   .ana-page-title {
-    font-size: 1.45rem;
+    font-size: 1.625rem;
   }
 
   .ana-section-nav {
-    margin-bottom: 1rem;
-  }
-
-  .ana-nav-btn {
-    padding: 0.45rem 0.8rem;
-  }
-
-  .ana-chart-body {
-    padding: 1rem;
+    width: 100%;
+    overflow-x: auto;
   }
 }

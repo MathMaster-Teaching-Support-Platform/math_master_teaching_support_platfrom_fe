@@ -1,47 +1,76 @@
-import { Download, RefreshCw } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import React, { useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+  BookOpen,
+  Calendar,
+  CreditCard,
+  Download,
+  Package,
+  RefreshCw,
+  Search,
+  TrendingUp,
+} from 'lucide-react';
+import React, { useMemo, useState } from 'react';
 import RevenueBreakdownChart from '../../components/charts/RevenueBreakdownChart';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockAdmin } from '../../data/mockData';
+import type { RevenueBreakdown as RevenueBreakdownData } from '../../services/admin-financial.service';
 import {
   adminFinancialService,
   calculateTotalRevenue,
   exportToCSV,
   formatCurrency,
 } from '../../services/admin-financial.service';
-import type { RevenueBreakdown as RevenueBreakdownData } from '../../services/admin-financial.service';
 import '../../styles/module-refactor.css';
 import '../courses/TeacherCourses.css';
+import './admin-finance-studio.css';
 import './admin-mgmt-shell.css';
 import AdminFinanceStudioShell from './AdminFinanceStudioShell';
-import './admin-finance-studio.css';
 import './RevenueBreakdown.css';
 
 const RevenueBreakdown: React.FC = () => {
   const [period, setPeriod] = useState<string>('30d');
+  const [searchTerm, setSearchTerm] = useState('');
+
   const breakdownQuery = useQuery({
     queryKey: ['admin-financial', 'revenue-breakdown', period],
     queryFn: () => adminFinancialService.getRevenueBreakdown(period),
     staleTime: 30_000,
   });
+
   const breakdown: RevenueBreakdownData | null = breakdownQuery.data ?? null;
   const loading = breakdownQuery.isLoading || breakdownQuery.isFetching;
-  const error = breakdownQuery.error instanceof Error
-    ? breakdownQuery.error.message
+  const error = breakdownQuery.error
+    ? (breakdownQuery.error as any).message || 'Đã xảy ra lỗi không xác định'
     : null;
+
+  const filteredData = useMemo(() => {
+    if (!breakdown) return [];
+    return breakdown.data.filter(
+      (item) =>
+        item.date.includes(searchTerm) ||
+        new Date(item.date).toLocaleDateString('vi-VN').includes(searchTerm)
+    );
+  }, [breakdown, searchTerm]);
+
+  const stats = useMemo(() => {
+    if (!breakdown) return { total: 0, deposits: 0, subscriptions: 0, courses: 0 };
+    const total = calculateTotalRevenue(breakdown.data);
+    const deposits = breakdown.data.reduce((sum, day) => sum + day.deposits, 0);
+    const subscriptions = breakdown.data.reduce((sum, day) => sum + day.subscriptions, 0);
+    const courses = breakdown.data.reduce((sum, day) => sum + day.courseSales, 0);
+    return { total, deposits, subscriptions, courses };
+  }, [breakdown]);
 
   const handleExport = () => {
     if (!breakdown || breakdown.data.length === 0) return;
-
     const exportData = breakdown.data.map((item) => ({
-      'Ngày': item.date,
+      Ngày: item.date,
       'Nạp tiền (VND)': item.deposits,
       'Đăng ký (VND)': item.subscriptions,
       'Khóa học (VND)': item.courseSales,
       'Tổng (VND)': item.total,
     }));
-
     exportToCSV(exportData, `revenue_breakdown_${period}`);
   };
 
@@ -57,11 +86,18 @@ const RevenueBreakdown: React.FC = () => {
     </DashboardLayout>
   );
 
-  if (loading) {
+  if (loading && !breakdown) {
     return shell(
-      <div className="loading-container">
-        <div className="spinner" />
-        <p>Đang tải dữ liệu...</p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
+        <div className="skeleton-box" style={{ height: '140px', borderRadius: '24px' }} />
+        <div className="revenue-bento-grid">
+          <div className="featured-revenue-card skeleton-box" style={{ height: '400px' }} />
+          <div className="sources-sidebar">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="source-mini-card skeleton-box" style={{ height: '110px' }} />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -72,39 +108,40 @@ const RevenueBreakdown: React.FC = () => {
         <div className="error-icon">⚠️</div>
         <h3>Lỗi tải dữ liệu</h3>
         <p>{error}</p>
-        <button type="button" onClick={() => void breakdownQuery.refetch()} className="retry-button">
+        <button
+          type="button"
+          onClick={() => void breakdownQuery.refetch()}
+          className="retry-button"
+        >
           Thử lại
         </button>
       </div>
     );
   }
 
-  if (!breakdown) {
-    return shell(
-      <div className="empty-container">
-        <p>Không có dữ liệu</p>
-      </div>
-    );
-  }
+  if (!breakdown) return null;
 
-  const totalRevenue = calculateTotalRevenue(breakdown.data);
-  const totalDeposits = breakdown.data.reduce((sum, day) => sum + day.deposits, 0);
-  const totalSubscriptions = breakdown.data.reduce((sum, day) => sum + day.subscriptions, 0);
-  const totalCourses = breakdown.data.reduce((sum, day) => sum + day.courseSales, 0);
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { type: 'spring', stiffness: 100, damping: 15 } },
+  } as const;
 
   return shell(
-    <>
-      <header className="page-header courses-header-row breakdown-header">
+    <motion.div initial="hidden" animate="visible" variants={containerVariants}>
+      <header className="breakdown-header">
         <div className="header-stack">
-          <div className="header-kicker">Tài chính</div>
-          <h2 style={{ margin: 0 }}>Phân tích doanh thu</h2>
-          <p className="header-sub">Theo dõi doanh thu theo nguồn và thời gian</p>
+          <h2>Phân tích doanh thu</h2>
+          <p className="header-sub">Báo cáo chi tiết nguồn thu nhập và xu hướng tăng trưởng</p>
         </div>
-        <div className="row" style={{ flexWrap: 'wrap', gap: '0.65rem', alignItems: 'center' }}>
+        <div className="header-actions">
           <div className="period-selector">
-            <label htmlFor="period-select">Khoảng thời gian</label>
+            <Calendar size={18} color="#87867f" />
             <select
-              id="period-select"
               value={period}
               onChange={(e) => setPeriod(e.target.value)}
               className="period-select"
@@ -116,152 +153,185 @@ const RevenueBreakdown: React.FC = () => {
             </select>
           </div>
           <button type="button" onClick={handleExport} className="export-button">
-            <Download size={16} aria-hidden />
-            Xuất CSV
+            <Download size={18} /> Báo cáo CSV
           </button>
-          <button type="button" onClick={() => void breakdownQuery.refetch()} className="refresh-button">
-            <RefreshCw size={16} aria-hidden />
-            Làm mới
+          <button
+            type="button"
+            onClick={() => void breakdownQuery.refetch()}
+            className="refresh-button"
+            disabled={breakdownQuery.isFetching}
+          >
+            <RefreshCw
+              size={18}
+              className={breakdownQuery.isFetching ? 'admin-finance-spin' : ''}
+            />
           </button>
         </div>
       </header>
 
-      {/* Summary Cards */}
-      <div className="summary-cards">
-        <div className="summary-card total">
-          <div className="card-icon">💰</div>
-          <div className="card-content">
-            <h3>Tổng Doanh Thu</h3>
-            <p className="card-value">{formatCurrency(totalRevenue)}</p>
-            <p className="card-label">Tất cả nguồn</p>
+      {/* Top Bento Grid */}
+      <div className="revenue-bento-grid">
+        {/* Featured Card */}
+        <motion.div className="featured-revenue-card" variants={itemVariants}>
+          <div className="card-label-large">Tổng doanh thu chu kỳ</div>
+          <p className="card-value-large">{formatCurrency(stats.total)}</p>
+          <div className="card-trend-large">
+            <TrendingUp size={24} />
+            <span>+8.4% so với giai đoạn trước</span>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="summary-card deposits">
-          <div className="card-icon">💳</div>
-          <div className="card-content">
-            <h3>Nạp Tiền</h3>
-            <p className="card-value">{formatCurrency(totalDeposits)}</p>
-            <p className="card-label">
-              {((totalDeposits / totalRevenue) * 100).toFixed(1)}% tổng doanh thu
-            </p>
-          </div>
-        </div>
+        {/* Sources Sidebar */}
+        <div className="sources-sidebar">
+          <motion.div className="source-mini-card" variants={itemVariants}>
+            <div className="source-icon">
+              <CreditCard size={22} />
+            </div>
+            <div className="source-info">
+              <h3>Nạp tiền ví</h3>
+              <p>{formatCurrency(stats.deposits)}</p>
+              <div className="source-percentage">
+                {((stats.deposits / stats.total) * 100 || 0).toFixed(1)}% tỷ trọng
+              </div>
+            </div>
+          </motion.div>
 
-        <div className="summary-card subscriptions">
-          <div className="card-icon">📦</div>
-          <div className="card-content">
-            <h3>Đăng Ký</h3>
-            <p className="card-value">{formatCurrency(totalSubscriptions)}</p>
-            <p className="card-label">
-              {((totalSubscriptions / totalRevenue) * 100).toFixed(1)}% tổng doanh thu
-            </p>
-          </div>
-        </div>
+          <motion.div className="source-mini-card" variants={itemVariants}>
+            <div className="source-icon">
+              <Package size={22} />
+            </div>
+            <div className="source-info">
+              <h3>Gói đăng ký</h3>
+              <p>{formatCurrency(stats.subscriptions)}</p>
+              <div className="source-percentage">
+                {((stats.subscriptions / stats.total) * 100 || 0).toFixed(1)}% tỷ trọng
+              </div>
+            </div>
+          </motion.div>
 
-        <div className="summary-card courses">
-          <div className="card-icon">📚</div>
-          <div className="card-content">
-            <h3>Khóa Học</h3>
-            <p className="card-value">{formatCurrency(totalCourses)}</p>
-            <p className="card-label">
-              {((totalCourses / totalRevenue) * 100).toFixed(1)}% tổng doanh thu
-            </p>
-          </div>
+          <motion.div className="source-mini-card" variants={itemVariants}>
+            <div className="source-icon">
+              <BookOpen size={22} />
+            </div>
+            <div className="source-info">
+              <h3>Hoa hồng khóa học</h3>
+              <p>{formatCurrency(stats.courses)}</p>
+              <div className="source-percentage">
+                {((stats.courses / stats.total) * 100 || 0).toFixed(1)}% tỷ trọng
+              </div>
+            </div>
+          </motion.div>
         </div>
       </div>
 
       {/* Chart Section */}
-      <div className="chart-section">
-        <div className="section-header">
-          <h2>Biểu Đồ Doanh Thu Theo Thời Gian</h2>
-          <p className="section-subtitle">Doanh thu tích lũy theo nguồn</p>
-        </div>
+      <motion.div className="main-chart-card" variants={itemVariants}>
+        <h2>Xu hướng biến động doanh thu</h2>
+        <p>Phân tích sự đóng góp của các nguồn thu theo thời gian</p>
         <div className="chart-container">
-          <RevenueBreakdownChart data={breakdown.data} period={period} />
+          <RevenueBreakdownChart data={breakdown?.data || []} period={period} />
         </div>
-      </div>
+      </motion.div>
 
-      {/* Data Table */}
-      <div className="table-section">
-        <div className="section-header">
-          <h2>Chi Tiết Doanh Thu Hàng Ngày</h2>
-          <p className="section-subtitle">
-            Hiển thị {breakdown.data.length} ngày gần nhất
-          </p>
-        </div>
-        <div className="table-container">
+      {/* Ledger Section */}
+      <div className="ledger-section">
+        <motion.div className="ledger-header-row" variants={itemVariants}>
+          <div className="header-stack">
+            <h2>Sổ cái chi tiết</h2>
+            <p className="header-sub">Danh sách giao dịch tổng hợp theo ngày</p>
+          </div>
+          <div className="ledger-search">
+            <Search size={18} className="ledger-search-icon" />
+            <input
+              type="text"
+              placeholder="Tìm theo ngày hoặc giá trị..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </motion.div>
+
+        <motion.div className="table-wrapper" variants={itemVariants}>
           <table className="data-table">
             <thead>
               <tr>
-                <th>Ngày</th>
-                <th>Nạp Tiền</th>
-                <th>Đăng Ký</th>
-                <th>Khóa Học</th>
-                <th>Tổng</th>
+                <th>Ngày ghi nhận</th>
+                <th className="currency-cell">Nạp tiền</th>
+                <th className="currency-cell">Gói đăng ký</th>
+                <th className="currency-cell">Hoa hồng khóa học</th>
+                <th className="currency-cell">Tổng doanh thu</th>
               </tr>
             </thead>
             <tbody>
-              {breakdown.data.map((item) => (
-                <tr key={item.date}>
-                  <td className="date-cell">
-                    {new Date(item.date).toLocaleDateString('vi-VN', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                    })}
-                  </td>
-                  <td className="currency-cell deposits">{formatCurrency(item.deposits)}</td>
-                  <td className="currency-cell subscriptions">
-                    {formatCurrency(item.subscriptions)}
-                  </td>
-                  <td className="currency-cell courses">{formatCurrency(item.courseSales)}</td>
-                  <td className="currency-cell total">{formatCurrency(item.total)}</td>
-                </tr>
-              ))}
+              <AnimatePresence mode="popLayout">
+                {filteredData.map((item) => (
+                  <motion.tr
+                    key={item.date}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    layout
+                  >
+                    <td>
+                      <span className="date-cell">
+                        {new Date(item.date).toLocaleDateString('vi-VN', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        })}
+                      </span>
+                    </td>
+                    <td className="currency-cell" style={{ color: '#2563eb' }}>
+                      {formatCurrency(item.deposits)}
+                    </td>
+                    <td className="currency-cell" style={{ color: '#7c3aed' }}>
+                      {formatCurrency(item.subscriptions)}
+                    </td>
+                    <td className="currency-cell" style={{ color: '#059669' }}>
+                      {formatCurrency(item.courseSales)}
+                    </td>
+                    <td className="currency-cell currency-total">{formatCurrency(item.total)}</td>
+                  </motion.tr>
+                ))}
+              </AnimatePresence>
             </tbody>
             <tfoot>
-              <tr className="total-row">
-                <td>
-                  <strong>Tổng cộng</strong>
-                </td>
-                <td className="currency-cell deposits">
-                  <strong>{formatCurrency(totalDeposits)}</strong>
-                </td>
-                <td className="currency-cell subscriptions">
-                  <strong>{formatCurrency(totalSubscriptions)}</strong>
-                </td>
-                <td className="currency-cell courses">
-                  <strong>{formatCurrency(totalCourses)}</strong>
-                </td>
-                <td className="currency-cell total">
-                  <strong>{formatCurrency(totalRevenue)}</strong>
-                </td>
+              <tr className="table-footer-row">
+                <td>Tổng kết giai đoạn</td>
+                <td className="currency-cell">{formatCurrency(stats.deposits)}</td>
+                <td className="currency-cell">{formatCurrency(stats.subscriptions)}</td>
+                <td className="currency-cell">{formatCurrency(stats.courses)}</td>
+                <td className="currency-cell currency-total">{formatCurrency(stats.total)}</td>
               </tr>
             </tfoot>
           </table>
-        </div>
+        </motion.div>
       </div>
 
-      {/* Info Banner */}
-      <div className="info-banner">
-        <div className="info-icon">ℹ️</div>
-        <div className="info-content">
-          <h4>Về Nguồn Doanh Thu</h4>
-          <ul>
-            <li>
-              <strong>Nạp tiền:</strong> Người dùng nạp tiền vào ví
-            </li>
-            <li>
-              <strong>Đăng ký:</strong> Mua gói đăng ký (subscription plans)
-            </li>
-            <li>
-              <strong>Khóa học:</strong> Hoa hồng 10% từ bán khóa học (90% cho giảng viên)
-            </li>
-          </ul>
+      {/* Insight Footer */}
+      <motion.div className="insight-footer" variants={itemVariants}>
+        <div className="insight-grid">
+          <div className="insight-item">
+            <h4>Nạp tiền ví</h4>
+            <p>
+              Dòng tiền thực nạp vào hệ thống để mua khóa học. Đây là chỉ số thanh khoản quan trọng
+              nhất.
+            </p>
+          </div>
+          <div className="insight-item">
+            <h4>Kinh doanh gói</h4>
+            <p>Doanh thu định kỳ từ các gói Membership của cả học viên và giảng viên.</p>
+          </div>
+          <div className="insight-item">
+            <h4>Cơ chế hoa hồng</h4>
+            <p>
+              Phần lợi nhuận trực tiếp của MathMaster (10%) từ các giao dịch mua khóa học thành
+              công.
+            </p>
+          </div>
         </div>
-      </div>
-    </>
+      </motion.div>
+    </motion.div>
   );
 };
 

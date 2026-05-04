@@ -51,7 +51,13 @@ const coverGradients = [
 
 const coverAccents = ['#1d4ed8', '#0f766e', '#047857', '#c2410c', '#be185d', '#6d28d9'] as const;
 const PAGE_SIZE = 9;
-type CourseFilterStatus = 'all' | 'published' | 'pending_review' | 'draft' | 'rejected' | 'archived';
+type CourseFilterStatus =
+  | 'all'
+  | 'published'
+  | 'pending_review'
+  | 'draft'
+  | 'rejected'
+  | 'archived';
 const languageOptions = ['Tiếng Việt', 'English'] as const;
 
 // ─── Create Course Modal ───────────────────────────────────────────────────────
@@ -286,7 +292,7 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
                       <div className="form-row form-row--tight-below">
                         <div className="form-group">
                           <label className="form-label">
-                            Khối lớp <span className="required">*</span>
+                            Lớp <span className="required">*</span>
                           </label>
                           <select
                             className="form-select"
@@ -702,7 +708,8 @@ const TeacherCourses: React.FC = () => {
       const normalizedStatus = getNormalizedStatus(course);
       let statusMatch = true;
       if (filterStatus === 'published') statusMatch = normalizedStatus === 'published';
-      else if (filterStatus === 'pending_review') statusMatch = normalizedStatus === 'pending_review';
+      else if (filterStatus === 'pending_review')
+        statusMatch = normalizedStatus === 'pending_review';
       else if (filterStatus === 'draft') statusMatch = normalizedStatus === 'draft';
       else if (filterStatus === 'rejected') statusMatch = normalizedStatus === 'rejected';
       else if (filterStatus === 'archived') statusMatch = normalizedStatus === 'archived';
@@ -791,7 +798,6 @@ const TeacherCourses: React.FC = () => {
           {/* ── Header ── */}
           <header className="page-header courses-header-row">
             <div className="header-stack">
-              <div className="header-kicker"></div>
               <div className="row" style={{ gap: '0.6rem' }}>
                 <h2>{UI_TEXT.COURSE}</h2>
                 {!isLoading && <span className="count-chip">{courses.length}</span>}
@@ -1079,10 +1085,7 @@ const TeacherCourses: React.FC = () => {
                         <button
                           className="action-toggle"
                           onClick={() => handleTogglePublish(course)}
-                          disabled={
-                            publishMutation.isPending ||
-                            course.status !== 'PUBLISHED'
-                          }
+                          disabled={publishMutation.isPending || course.status !== 'PUBLISHED'}
                           title={
                             course.status !== 'PUBLISHED'
                               ? 'Khóa học cần được admin duyệt trước khi công khai'
