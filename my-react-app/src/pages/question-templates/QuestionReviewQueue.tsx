@@ -1,6 +1,6 @@
-import { Check, RefreshCw, X } from 'lucide-react';
+import { ArrowLeft, Check, RefreshCw, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import MathText from '../../components/common/MathText';
 import Pagination from '../../components/common/Pagination';
@@ -21,6 +21,7 @@ import type { ReviewQuestionResponse } from '../../types/questionTemplate';
 export function QuestionReviewQueue() {
   const [searchParams] = useSearchParams();
   const templateId = searchParams.get('templateId') ?? undefined;
+  const navigate = useNavigate();
   const { showToast } = useToast();
   const [page, setPage] = useState(0);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -106,6 +107,15 @@ export function QuestionReviewQueue() {
         <section className="module-page" style={{ padding: '1.25rem' }}>
           <header className="page-header" style={{ marginBottom: '1rem' }}>
             <div className="header-stack">
+              <button
+                type="button"
+                className="btn secondary btn-sm"
+                onClick={() => navigate('/teacher/question-templates')}
+                style={{ alignSelf: 'flex-start', marginBottom: 8 }}
+              >
+                <ArrowLeft size={14} />
+                Quay lại danh sách mẫu
+              </button>
               <div className="row" style={{ gap: '0.6rem', alignItems: 'baseline' }}>
                 <h2>Hàng đợi duyệt câu hỏi</h2>
                 {!isLoading && <span className="count-chip">{totalElements}</span>}
@@ -114,7 +124,7 @@ export function QuestionReviewQueue() {
                 {templateId
                   ? // Prefer the human-readable name returned by the BE; fall back
                     // to the UUID only if the page is empty or the field is null.
-                    `Lọc theo template: ${items[0]?.templateName ?? templateId}`
+                    `Lọc theo mẫu: ${items[0]?.templateName ?? templateId}`
                   : 'Tất cả câu hỏi đang chờ duyệt do bạn tạo'}
               </p>
             </div>

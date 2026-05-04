@@ -130,7 +130,7 @@ export function RealQuestionForm({ isOpen, onClose, onBlueprintReady }: Readonly
             <h3>Viết câu hỏi thật — AI sẽ tự tạo template</h3>
             <p className="muted" style={{ marginTop: 4 }}>
               Bạn dùng <em>số thật</em>, không cần placeholder. Sau khi lưu, AI sẽ
-              gợi ý các biến số và ràng buộc cho bạn xét duyệt.
+              gợi ý các hệ số và ràng buộc cho bạn xét duyệt.
             </p>
           </div>
           <button className="icon-btn" onClick={onClose}>

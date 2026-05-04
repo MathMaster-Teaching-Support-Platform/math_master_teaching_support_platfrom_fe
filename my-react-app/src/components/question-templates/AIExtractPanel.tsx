@@ -101,7 +101,7 @@ export function AIExtractPanel({
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <Sparkles size={16} color="#7c3aed" />
           <span style={{ fontWeight: 600, fontSize: '0.9rem', color: '#5b21b6' }}>
-            AI Gợi ý biến số từ văn bản
+            AI Gợi ý hệ số từ văn bản
           </span>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
@@ -168,7 +168,7 @@ export function AIExtractPanel({
                   marginBottom: 8,
                 }}
               >
-                🟢 Biến số có thể thay đổi ({result.suggestedParams.length})
+                🟢 Hệ số có thể thay đổi ({result.suggestedParams.length})
               </p>
               {result.suggestedParams.map((param: SuggestedParam, idx: number) => (
                 <div
@@ -263,7 +263,7 @@ export function AIExtractPanel({
                 fontSize: '0.85rem',
               }}
             >
-              AI không tìm thấy biến số nào có thể thay đổi trong văn bản này.
+              AI không tìm thấy hệ số nào có thể thay đổi trong văn bản này.
             </div>
           )}
 

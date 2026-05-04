@@ -185,7 +185,7 @@ export function AIParameterPanel({
       {/* Hint when no parameters defined */}
       {!hasParams && (
         <p style={{ fontSize: '0.8rem', color: '#6b7280', marginTop: 8 }}>
-          {'Khai báo ít nhất một biến số ({{a}}) trước khi dùng AI tạo tham số.'}
+          {'Khai báo ít nhất một hệ số ({{a}}) trước khi dùng AI tạo tham số.'}
         </p>
       )}
 

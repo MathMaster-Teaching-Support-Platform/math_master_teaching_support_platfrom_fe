@@ -37,20 +37,21 @@ import {
   useDeleteQuestionTemplate,
   useGetMyQuestionTemplates,
   usePublishTemplate,
-  useTogglePublicStatus,
-  useUnpublishTemplate,
   useUpdateQuestionTemplate,
 } from '../../hooks/useQuestionTemplate';
 import { questionTemplateService } from '../../services/questionTemplateService';
 import '../../styles/module-refactor.css';
 
 import {
+  questionTagLabels,
   TemplateStatus,
+  type QuestionTag,
   type QuestionTemplateRequest,
   type QuestionTemplateResponse,
 } from '../../types/questionTemplate';
 import '../courses/TeacherCourses.css';
 import './template-review.css';
+import './TemplateCard.css';
 import { TemplateBulkImportModal } from './TemplateBulkImportModal';
 import { TemplateFormModal } from './TemplateFormModal';
 
@@ -99,17 +100,6 @@ const cognitiveLevelLabel: Record<string, string> = {
 };
 
 
-
-const coverGradients = [
-  'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
-  'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)',
-  'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)',
-  'linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)',
-  'linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%)',
-  'linear-gradient(135deg, #ecfeff 0%, #cffafe 100%)',
-] as const;
-
-const coverAccents = ['#1d4ed8', '#047857', '#6d28d9', '#c2410c', '#be185d', '#0f766e'] as const;
 
 function extractDiagramLatexStrings(diagramData: unknown): string[] {
   const values: string[] = [];
@@ -184,7 +174,11 @@ export function TemplateDashboard() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<'ALL' | TemplateStatus>('ALL');
   const [page, setPage] = useState(0);
-  const size = 10;
+  // Page size is now teacher-controllable via the Pagination footer. Defaults
+  // to 9 (clean 3×3 desktop grid). Persists nothing here — the Pagination
+  // component already writes the selection to localStorage so it survives a
+  // reload across pages that consume the same key.
+  const [size, setSize] = useState(9);
   const [mode, setMode] = useState<'create' | 'edit'>('create');
   const [formOpen, setFormOpen] = useState(false);
   const [bulkImportOpen, setBulkImportOpen] = useState(false);
@@ -225,8 +219,8 @@ export function TemplateDashboard() {
   const deleteMutation = useDeleteQuestionTemplate();
   const publishMutation = usePublishTemplate();
   const archiveMutation = useArchiveTemplate();
-  const unpublishMutation = useUnpublishTemplate();
-  const togglePublicMutation = useTogglePublicStatus();
+  // Unpublish + toggle-public mutations were dropped from the card footer to
+  // keep it scannable; the form modal manages those transitions on its own.
 
 
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -498,182 +492,164 @@ export function TemplateDashboard() {
           {/* ── Grid ── */}
           {!isLoading && !isError && templates.length > 0 && (
             <div className={`grid-cards${viewMode === 'list' ? ' list-view' : ''}`}>
-              {templates.map((template, idx) => (
-                <article key={template.id} className="data-card mindmap-card course-card">
-                  <div
-                    className="mindmap-cover"
-                    style={{
-                      background: coverGradients[idx % coverGradients.length],
-                      color: coverAccents[idx % coverAccents.length],
-                    }}
+              {templates.map((template) => {
+                const statusLabelMap: Record<string, string> = {
+                  PUBLISHED: 'Đã xuất bản',
+                  DRAFT: 'Nháp',
+                  ARCHIVED: 'Lưu trữ',
+                };
+                const statusKey = template.status as keyof typeof statusLabelMap;
+                return (
+                  <article
+                    key={template.id}
+                    className="tpl-card"
+                    data-status={template.status}
                   >
-                    <div className="cover-overlay" />
-                    <div className="cover-index">#{String(idx + 1).padStart(2, '0')}</div>
-                    {template.status === TemplateStatus.PUBLISHED && (
-                      <span className="course-badge badge-live">
-                        <Eye size={11} /> Đã xuất bản
+                    <div className="tpl-card-header">
+                      <h3 className="tpl-card-title" title={template.name}>
+                        <MathText text={template.name} />
+                      </h3>
+                      <span className="tpl-card-status" data-status={template.status}>
+                        {template.status === TemplateStatus.PUBLISHED && <Eye size={11} />}
+                        {template.status === TemplateStatus.DRAFT && <EyeOff size={11} />}
+                        {template.status === TemplateStatus.ARCHIVED && <Archive size={11} />}
+                        {statusLabelMap[statusKey] || template.status}
                       </span>
-                    )}
-                    {template.status === TemplateStatus.ARCHIVED && (
-                      <span className="course-badge badge-archived">
-                        <Archive size={11} /> Lưu trữ
-                      </span>
-                    )}
-                    {template.status === TemplateStatus.DRAFT && (
-                      <span className="course-badge badge-draft">
-                        <EyeOff size={11} /> Nháp
-                      </span>
-                    )}
-                    <h3 className="cover-title">
-                      <MathText text={template.name} />
-                    </h3>
-                  </div>
+                    </div>
 
-                  <div className="mindmap-body">
-                    <p className="mindmap-desc">
-                      <MathText text={template.description || 'Không có mô tả'} />
-                    </p>
-
-                    <div className="mindmap-metrics">
-                      <div className="metric">
-                        <FileText size={13} />
-                        <span>
+                    <div className="tpl-card-body">
+                      <div className="tpl-card-meta">
+                        <span className="tpl-meta-chip">
+                          <FileText size={11} />
                           {templateTypeLabel[template.templateType] || template.templateType}
                         </span>
-                      </div>
-                      <div className="metric">
-                        <Network size={13} />
-                        <span>
+                        <span className="tpl-meta-chip">
+                          <Network size={11} />
                           {cognitiveLevelLabel[template.cognitiveLevel] || template.cognitiveLevel}
                         </span>
-                      </div>
-
-                      {template.chapterName && (
-                        <div className="metric">
-                          <BookOpen size={13} />
-                          <span>{template.chapterName}</span>
-                        </div>
-                      )}
-                      {template.gradeLevel && (
-                        <div className="metric">
-                          <GraduationCap size={13} />
-                          <span>Lớp {template.gradeLevel}</span>
-                        </div>
-                      )}
-                      {template.subjectName && (
-                        <div className="metric">
-                          <FileText size={13} />
-                          <span>{template.subjectName}</span>
-                        </div>
-                      )}
-
-                      {template.isPublic && (
-                        <div className="metric metric--ai">
-                          <Eye size={13} />
-                          <span>Công khai</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="row" style={{ flexWrap: 'wrap', gap: '0.4rem' }}>
-
-                      {/*
-                       * Per-template review queue entry. Previously the only way
-                       * to reach the scoped queue was the post-generation deep
-                       * link from TemplateGenerateModal — after a page reload
-                       * teachers had no path back to a specific template's
-                       * UNDER_REVIEW pile and were forced into the global queue.
-                       */}
-                      <button
-                        className="btn secondary"
-                        onClick={() =>
-                          navigate(
-                            `/teacher/question-review?templateId=${encodeURIComponent(template.id)}`
-                          )
-                        }
-                        title="Xem các câu hỏi đang chờ duyệt cho mẫu này"
-                      >
-                        <Inbox size={14} />
-                        Câu hỏi chờ duyệt
-                      </button>
-                      <button
-                        className="btn secondary"
-                        onClick={() => void openEditTemplate(template.id)}
-                        disabled={editingTemplateId === template.id}
-                      >
-                        <Pencil size={14} />
-                        {editingTemplateId === template.id ? 'Đang tải...' : 'Chỉnh sửa'}
-                      </button>
-                      <button
-                        className="btn secondary"
-                        onClick={() => togglePublicMutation.mutate(template.id)}
-                      >
-                        {template.isPublic ? <EyeOff size={14} /> : <Eye size={14} />}
-                        {template.isPublic ? 'Đặt riêng tư' : 'Công khai'}
-                      </button>
-                    </div>
-
-                    <div className="mindmap-footer">
-                      <div className="row" style={{ gap: '0.35rem', flexWrap: 'wrap' }}>
-                        {template.tags.slice(0, 3).map((tag) => (
-                          <span key={tag} className="badge draft" style={{ fontSize: '0.68rem' }}>
-                            {tag}
+                        {template.gradeLevel && (
+                          <span className="tpl-meta-chip">
+                            <GraduationCap size={11} />
+                            Lớp {template.gradeLevel}
                           </span>
-                        ))}
+                        )}
+                        {template.chapterName && (
+                          <span className="tpl-meta-chip" title={template.chapterName}>
+                            <BookOpen size={11} />
+                            {template.chapterName}
+                          </span>
+                        )}
+                        {template.isPublic && (
+                          <span className="tpl-meta-chip tpl-meta-chip--public">
+                            <Eye size={11} />
+                            Công khai
+                          </span>
+                        )}
                       </div>
-                      <div className="mindmap-actions">
-                        {template.status === TemplateStatus.DRAFT && (
-                          <button
-                            type="button"
-                            className="btn btn--feat-emerald"
-                            onClick={() => publishMutation.mutate(template.id)}
-                          >
-                            <FileText size={14} />
-                            Xuất bản
-                          </button>
-                        )}
-                        {template.status === TemplateStatus.PUBLISHED && (
-                          <button
-                            className="btn btn--feat-violet"
-                            onClick={() => {
-                              setSelected(template);
-                              setGenerateOpen(true);
-                            }}
-                          >
-                            <Sparkles size={14} />
-                            Sinh câu hỏi
-                          </button>
-                        )}
+
+                      <p className="tpl-card-desc">
+                        <MathText text={template.description || 'Không có mô tả'} />
+                      </p>
+
+                      {template.tags && template.tags.length > 0 && (
+                        <div className="tpl-card-tags">
+                          {template.tags.slice(0, 4).map((tag) => (
+                            <span
+                              key={tag}
+                              className="tpl-tag-chip"
+                              // Tooltip keeps the raw enum visible for debugging
+                              // while the chip itself shows the Vietnamese label
+                              // students/teachers expect to see.
+                              title={tag}
+                            >
+                              {questionTagLabels[tag as QuestionTag] ?? tag}
+                            </span>
+                          ))}
+                          {template.tags.length > 4 && (
+                            <span className="tpl-tag-chip">+{template.tags.length - 4}</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="tpl-card-footer">
+                      {/* Primary action depends on status — exactly one CTA per state. */}
+                      {template.status === TemplateStatus.DRAFT && (
+                        <button
+                          type="button"
+                          className="btn btn--feat-emerald tpl-card-primary"
+                          onClick={() => publishMutation.mutate(template.id)}
+                        >
+                          <FileText size={13} />
+                          Xuất bản
+                        </button>
+                      )}
+                      {template.status === TemplateStatus.PUBLISHED && (
+                        <button
+                          className="btn btn--feat-violet tpl-card-primary"
+                          onClick={() => {
+                            setSelected(template);
+                            setGenerateOpen(true);
+                          }}
+                        >
+                          <Sparkles size={13} />
+                          Sinh câu hỏi
+                        </button>
+                      )}
+                      {template.status === TemplateStatus.ARCHIVED && (
+                        <button
+                          className="btn secondary tpl-card-primary"
+                          onClick={() => publishMutation.mutate(template.id)}
+                          title="Khôi phục về DRAFT để chỉnh sửa"
+                        >
+                          <FileText size={13} />
+                          Khôi phục
+                        </button>
+                      )}
+
+                      <div className="tpl-card-secondary">
+                        <button
+                          className="btn secondary"
+                          onClick={() =>
+                            navigate(
+                              `/teacher/question-review?templateId=${encodeURIComponent(template.id)}`
+                            )
+                          }
+                          title="Câu hỏi đang chờ duyệt cho mẫu này"
+                        >
+                          <Inbox size={13} />
+                          Chờ duyệt
+                        </button>
+                        <button
+                          className="btn secondary"
+                          onClick={() => void openEditTemplate(template.id)}
+                          disabled={editingTemplateId === template.id}
+                          title="Chỉnh sửa mẫu"
+                        >
+                          <Pencil size={13} />
+                          {editingTemplateId === template.id ? 'Đang tải' : 'Sửa'}
+                        </button>
                         {template.status === TemplateStatus.PUBLISHED && (
                           <button
                             className="btn warn"
                             onClick={() => archiveMutation.mutate(template.id)}
+                            title="Lưu trữ — học sinh không thấy nữa"
                           >
-                            <Archive size={14} />
-                            Lưu trữ
-                          </button>
-                        )}
-                        {template.status === TemplateStatus.PUBLISHED && (
-                          <button
-                            className="btn secondary"
-                            onClick={() => unpublishMutation.mutate(template.id)}
-                          >
-                            <FileText size={14} />
-                            Hủy xuất bản
+                            <Archive size={13} />
                           </button>
                         )}
                         <button
                           className="btn danger-outline"
                           onClick={() => deleteMutation.mutate(template.id)}
+                          title="Xóa mẫu"
                         >
-                          <Trash2 size={14} />
-                          Xóa
+                          <Trash2 size={13} />
                         </button>
                       </div>
                     </div>
-                  </div>
-                </article>
-              ))}
+                  </article>
+                );
+              })}
             </div>
           )}
 
@@ -683,6 +659,13 @@ export function TemplateDashboard() {
             totalElements={totalElements}
             pageSize={size}
             onChange={(p) => setPage(p)}
+            onPageSizeChange={(newSize) => {
+              setSize(newSize);
+              setPage(0); // back to first page when the size changes
+            }}
+            // 9 keeps the 3×3 grid alignment; 18 / 36 are 2× / 4× of that.
+            pageSizeOptions={[9, 18, 36]}
+            showJumpToPage
           />
 
           <TemplateFormModal
