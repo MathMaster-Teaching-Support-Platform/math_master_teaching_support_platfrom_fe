@@ -11,12 +11,10 @@ import {
 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import {
-  Area,
-  AreaChart,
+  Bar,
+  BarChart,
   CartesianGrid,
   Cell,
-  Pie,
-  PieChart,
   Tooltip as RechartsTooltip,
   ResponsiveContainer,
   XAxis,
@@ -89,7 +87,7 @@ const DetailModal = ({ entry, onClose }: { entry: CashFlowEntry; onClose: () => 
           <dd
             className={`font-semibold ${entry.direction === 'INFLOW' ? 'text-green-600' : 'text-red-600'}`}
           >
-            {entry.direction === 'INFLOW' ? 'Thu vào' : 'Chi ra'}
+            {entry.direction === 'INFLOW' ? 'Nạp vào' : 'Rút ra'}
           </dd>
         </div>
         <div className="flex justify-between gap-4">
@@ -294,7 +292,7 @@ const CashFlowDashboard: React.FC = () => {
               Quản lý dòng tiền
             </h1>
             <p className="font-[Be_Vietnam_Pro] text-[15px] font-normal text-[#87867F] mt-1">
-              Theo dõi thu chi và biến động dòng tiền nền tảng
+              Theo dõi nạp rút và biến động dòng tiền nền tảng
             </p>
           </div>
 
@@ -349,13 +347,13 @@ const CashFlowDashboard: React.FC = () => {
           {summary && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <SummaryCard
-                title="Tổng thu (Inflow)"
+                title="Tổng nạp (Inflow)"
                 amount={summary.totalInflow}
                 trend={summary.inflowTrend}
                 icon={TrendingUp}
               />
               <SummaryCard
-                title="Tổng chi (Outflow)"
+                title="Tổng rút (Outflow)"
                 amount={summary.totalOutflow}
                 trend={summary.outflowTrend}
                 icon={TrendingDown}
@@ -379,17 +377,7 @@ const CashFlowDashboard: React.FC = () => {
               </h3>
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={chartData}>
-                    <defs>
-                      <linearGradient id="colorIn" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
-                      </linearGradient>
-                      <linearGradient id="colorOut" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
+                  <BarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
                     <XAxis
                       dataKey="label"
@@ -413,25 +401,21 @@ const CashFlowDashboard: React.FC = () => {
                         boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
                       }}
                     />
-                    <Area
-                      type="monotone"
+                    <Bar
                       dataKey="inflow"
-                      name="Thu vào"
-                      stroke="#22c55e"
-                      strokeWidth={2}
-                      fillOpacity={1}
-                      fill="url(#colorIn)"
+                      name="Nạp vào"
+                      fill="#22c55e"
+                      radius={[4, 4, 0, 0]}
+                      barSize={20}
                     />
-                    <Area
-                      type="monotone"
+                    <Bar
                       dataKey="outflow"
-                      name="Chi ra"
-                      stroke="#ef4444"
-                      strokeWidth={2}
-                      fillOpacity={1}
-                      fill="url(#colorOut)"
+                      name="Rút ra"
+                      fill="#ef4444"
+                      radius={[4, 4, 0, 0]}
+                      barSize={20}
                     />
-                  </AreaChart>
+                  </BarChart>
                 </ResponsiveContainer>
               </div>
             </div>
@@ -443,22 +427,33 @@ const CashFlowDashboard: React.FC = () => {
               </h3>
               {summary?.categoryBreakdown.length ? (
                 <div className="flex flex-col">
-                  <div className="h-48">
+                  <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={summary.categoryBreakdown}
-                          innerRadius={60}
-                          outerRadius={80}
-                          paddingAngle={5}
-                          dataKey="total"
-                        >
+                      <BarChart
+                        data={summary.categoryBreakdown}
+                        layout="vertical"
+                        margin={{ top: 5, right: 30, left: 40, bottom: 5 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f3f4f6" />
+                        <XAxis type="number" hide />
+                        <YAxis
+                          dataKey="categoryName"
+                          type="category"
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fontSize: 12, fill: '#6b7280' }}
+                          width={80}
+                        />
+                        <RechartsTooltip
+                          formatter={(val) => formatVND(Number(val ?? 0))}
+                          contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
+                        />
+                        <Bar dataKey="total" radius={[0, 4, 4, 0]} barSize={24}>
                           {summary.categoryBreakdown.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={entry.color} />
                           ))}
-                        </Pie>
-                        <RechartsTooltip formatter={(val) => formatVND(Number(val ?? 0))} />
-                      </PieChart>
+                        </Bar>
+                      </BarChart>
                     </ResponsiveContainer>
                   </div>
                   <div className="mt-4 space-y-2">
@@ -538,8 +533,8 @@ const CashFlowDashboard: React.FC = () => {
                     onChange={(e) => setFilterType(e.target.value as CashFlowType | '')}
                   >
                     <option value="">Tất cả dòng tiền</option>
-                    <option value="INFLOW">Thu vào</option>
-                    <option value="OUTFLOW">Chi ra</option>
+                    <option value="INFLOW">Nạp vào</option>
+                    <option value="OUTFLOW">Rút ra</option>
                   </select>
                 </div>
 
@@ -604,6 +599,7 @@ const CashFlowDashboard: React.FC = () => {
                         <td className="px-4 py-3 text-right whitespace-nowrap">
                           <span
                             className={`font-semibold text-[13px] ${t.direction === 'INFLOW' ? 'text-green-600' : 'text-red-600'}`}
+                            title={t.direction === 'INFLOW' ? 'Nạp vào' : 'Rút ra'}
                           >
                             {t.direction === 'INFLOW' ? '+' : '-'}
                             {formatVND(t.amount)}
