@@ -35,8 +35,6 @@ import type {
 } from '../../types/academic.types';
 import './admin-academic-structure-page.css';
 
-const LESSON_DIFFICULTY_OPTIONS: LessonDifficulty[] = ['EASY', 'MEDIUM', 'HARD'];
-const LESSON_STATUS_OPTIONS: LessonStatus[] = ['DRAFT', 'PUBLISHED', 'ARCHIVED'];
 type EditorMode = 'program' | 'subject' | 'chapter' | 'lesson';
 
 type NumberInput = number | '';
@@ -744,9 +742,6 @@ export default function AdminAcademicStructurePage() {
         value={gradeForm.description}
         onChange={(event) => setGradeForm((prev) => ({ ...prev, description: event.target.value }))}
       />
-      <p className="aas-helper">
-        Trạng thái được quản lý bằng hành động "Vô hiệu hóa" để tránh trùng lặp thao tác.
-      </p>
       <div className="aas-actions">
         <button type="submit" disabled={saveGradeMutation.isPending}>
           {gradeForm.id ? <Save size={14} /> : <Plus size={14} />}
@@ -849,9 +844,6 @@ export default function AdminAcademicStructurePage() {
           }
         />
       </div>
-      <p className="aas-helper">
-        Trạng thái được quản lý bằng hành động "Vô hiệu hóa" để tránh trùng lặp thao tác.
-      </p>
       <div className="aas-actions">
         <button type="submit" disabled={saveSubjectMutation.isPending || !selectedGradeId}>
           {subjectForm.id ? <Save size={14} /> : <Plus size={14} />}
@@ -1047,36 +1039,6 @@ export default function AdminAcademicStructurePage() {
             }))
           }
         />
-      </div>
-      <div className="aas-inline-2">
-        <select
-          value={lessonForm.difficulty}
-          onChange={(event) =>
-            setLessonForm((prev) => ({
-              ...prev,
-              difficulty: event.target.value as LessonDifficulty,
-            }))
-          }
-        >
-          {LESSON_DIFFICULTY_OPTIONS.map((difficulty) => (
-            <option key={difficulty} value={difficulty}>
-              {difficulty}
-            </option>
-          ))}
-        </select>
-        <select
-          value={lessonForm.status}
-          onChange={(event) =>
-            setLessonForm((prev) => ({ ...prev, status: event.target.value as LessonStatus }))
-          }
-          disabled={!lessonForm.id}
-        >
-          {LESSON_STATUS_OPTIONS.map((status) => (
-            <option key={status} value={status}>
-              {status}
-            </option>
-          ))}
-        </select>
       </div>
       <div className="aas-actions">
         <button type="submit" disabled={saveLessonMutation.isPending || !selectedChapterId}>
