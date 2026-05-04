@@ -129,15 +129,15 @@
   transform: translateY(-2px);
 }
 
-/* Status accent: thicker left stripe in a status-coded colour. */
+/* Status accent: subtle left stripe in a status-coded colour. */
 .module-layout-container .exam-matrix-card--draft {
-  border-left: 4px solid #f59e0b;
+  border-left: 1px solid #f59e0b;
 }
 .module-layout-container .exam-matrix-card--approved {
-  border-left: 4px solid #10b981;
+  border-left: 1px solid #10b981;
 }
 .module-layout-container .exam-matrix-card--locked {
-  border-left: 4px solid #94a3b8;
+  border-left: 1px solid #94a3b8;
 }
 
 /* Sigma watermark — subtle math-themed ornament in the top-right corner. */

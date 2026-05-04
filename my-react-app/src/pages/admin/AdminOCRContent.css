@@ -433,9 +433,8 @@
 
 /* Definition */
 .cnt-item-definition {
-  background: rgba(201, 100, 66, 0.05);
-  border-left: 3px solid var(--cnt-primary);
-  border-radius: 0 var(--cnt-radius-sm) var(--cnt-radius-sm) 0;
+  background: rgba(201, 100, 66, 0.08);
+  border-radius: var(--cnt-radius-sm);
   padding: 1rem 1.25rem;
 }
 

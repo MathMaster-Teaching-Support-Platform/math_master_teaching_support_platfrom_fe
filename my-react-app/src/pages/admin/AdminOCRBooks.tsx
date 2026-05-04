@@ -24,7 +24,7 @@ import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockAdmin } from '../../data/mockData';
 import { OcrService } from '../../services/api/ocr.service';
-import type { OcrBook, OcrBookStatus } from '../../types/ocr.types';
+import type { OcrBook, OcrBookStatus, OcrBookStatusPoll } from '../../types/ocr.types';
 import './AdminOCRBooks.css';
 
 // ─── Status helpers ───────────────────────────────────────────────────────────
@@ -201,7 +201,7 @@ const BookCard: React.FC<{ book: OcrBook; onDeleted: () => void }> = ({ book, on
     enabled: book.status === 'processing' || book.status === 'pending',
     refetchInterval: 4000,
     refetchIntervalInBackground: false,
-    onSuccess: (data) => {
+    onSuccess: (data: OcrBookStatusPoll) => {
       if (data.status !== book.status || data.progress !== book.progress) {
         void queryClient.invalidateQueries({ queryKey: ['ocr-books'] });
       }
@@ -316,7 +316,7 @@ const BookCard: React.FC<{ book: OcrBook; onDeleted: () => void }> = ({ book, on
             <div className="ocr-card-progress-bar">
               <div
                 className="ocr-card-progress-fill"
-                style={{ width: `${book.progress}%` }}
+                style={{ transform: `scaleX(${book.progress / 100})` }}
               />
             </div>
             <div className="ocr-card-progress-text">
@@ -580,7 +580,7 @@ const UploadSection: React.FC<{ onUploaded: () => void }> = ({ onUploaded }) => 
           <div className="ocr-progress-track">
             <div
               className={`ocr-progress-fill${mutation.isPending ? ' ocr-progress-fill--pulse' : ''}`}
-              style={{ width: `${uploadProgress}%` }}
+              style={{ transform: `scaleX(${uploadProgress / 100})` }}
             />
           </div>
         </div>
@@ -590,8 +590,6 @@ const UploadSection: React.FC<{ onUploaded: () => void }> = ({ onUploaded }) => 
 };
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
-
-const GRADE_FILTERS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
 const AdminOCRBooks: React.FC = () => {
   const [gradeFilter, setGradeFilter] = useState(0); // 0 = all
