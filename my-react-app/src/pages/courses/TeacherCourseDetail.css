@@ -91,6 +91,8 @@
   margin-bottom: 0;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
   background: #faf9f5;
   border-radius: 12px 12px 0 0;
   padding: 0.25rem 0.5rem 0 0.5rem;
@@ -114,6 +116,7 @@
   white-space: nowrap;
   position: relative;
   margin-bottom: -2px;
+  scroll-snap-align: start;
 }
 
 .course-tab:hover {

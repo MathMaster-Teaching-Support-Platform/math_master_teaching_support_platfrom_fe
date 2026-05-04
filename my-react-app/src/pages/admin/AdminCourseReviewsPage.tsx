@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import React from 'react';
+import { CourseBreadcrumb } from '../../components/course/CourseBreadcrumb';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { useToast } from '../../context/ToastContext';
 import {
@@ -537,6 +538,12 @@ const AdminCourseReviewsPage: React.FC = () => {
     >
       <div className="module-layout-container">
         <section className="module-page teacher-courses-page admin-course-reviews-page">
+          <CourseBreadcrumb
+            items={[
+              { label: 'Quản trị', path: '/admin/dashboard' },
+              { label: 'Duyệt khóa học' },
+            ]}
+          />
           <header className="page-header courses-header-row">
             <div className="header-stack">
               <div className="row" style={{ gap: '0.6rem' }}>

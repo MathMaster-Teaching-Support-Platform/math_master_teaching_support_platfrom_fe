@@ -47,64 +47,34 @@ import '../../../styles/module-refactor.css';
 import type { CourseLessonResponse, CourseResponse } from '../../../types';
 import type { ChapterBySubject, LessonByChapter } from '../../../types/lessonSlide.types';
 import { extractChapterNumber, sortCurriculumGroups } from '../../../utils/curriculum';
+import {
+  downloadCourseMaterial,
+  formatBytes,
+  inferFileKind,
+  parseLessonMaterials as parseSharedLessonMaterials,
+  type LessonMaterial as SharedLessonMaterial,
+} from '../../../utils/materialDownload';
 import '../StudentCourses.css';
 import './course-detail-tabs.css';
 import './CourseLessonsTab.css';
 
-type LessonMaterial = {
-  id?: string;
-  name?: string;
-  url?: string;
-  size?: number;
-  key?: string;
-};
-
-const toSafeMaterial = (raw: any): LessonMaterial | null => {
-  if (!raw || typeof raw !== 'object') return null;
-
-  const id = typeof raw.id === 'string' && raw.id.trim() ? raw.id.trim() : undefined;
-  const name =
-    (typeof raw.name === 'string' && raw.name.trim() ? raw.name.trim() : undefined) ||
-    (typeof raw.fileName === 'string' && raw.fileName.trim() ? raw.fileName.trim() : undefined);
-  const key = typeof raw.key === 'string' && raw.key.trim() ? raw.key.trim() : undefined;
-
-  const rawUrl = typeof raw.url === 'string' ? raw.url.trim() : '';
-  const hasAbsoluteUrl = /^https?:\/\//i.test(rawUrl);
-  const url = hasAbsoluteUrl ? rawUrl : undefined;
-  const size = typeof raw.size === 'number' && Number.isFinite(raw.size) ? raw.size : undefined;
-
-  if (!id && !url) {
-    return null;
-  }
-
-  return { id, name, key, url, size };
-};
-
-const parseLessonMaterials = (materials?: string | null): LessonMaterial[] => {
-  if (!materials) return [];
-
-  try {
-    const parsed = JSON.parse(materials);
-    if (!Array.isArray(parsed)) return [];
-    return parsed.map(toSafeMaterial).filter((item): item is LessonMaterial => Boolean(item));
-  } catch {
-    return [];
-  }
-};
-
+// Local alias so callers further down the file keep their existing names.
+type LessonMaterial = SharedLessonMaterial;
+const parseLessonMaterials = parseSharedLessonMaterials;
+// Kept as a thin shim for the upload-success path which needs to preview the
+// freshly uploaded blob without going through the material API.
 const triggerBlobDownload = (blob: Blob, filename?: string) => {
   const objectUrl = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = objectUrl;
   link.target = '_blank';
   link.rel = 'noopener noreferrer';
-  if (filename) {
-    link.download = filename;
-  }
+  if (filename) link.download = filename;
   document.body.appendChild(link);
   link.click();
   link.remove();
-  setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+  queueMicrotask(() => URL.revokeObjectURL(objectUrl));
+  setTimeout(() => URL.revokeObjectURL(objectUrl), 30_000);
 };
 
 // Inline Video Player Component
@@ -1099,26 +1069,9 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
     deleteMutation.isPending || removeMaterialMutation.isPending || deleteSectionMutation.isPending;
 
   const handleDownloadMaterial = async (lesson: CourseLessonResponse, material: LessonMaterial) => {
-    if (!material.id) {
-      showToast({
-        type: 'error',
-        message: 'Tài liệu chưa có mã định danh hợp lệ để tải.',
-      });
-      return;
-    }
-
-    try {
-      const { blob, filename } = await CourseService.downloadMaterial(
-        courseId,
-        lesson.id,
-        material.id
-      );
-      triggerBlobDownload(blob, filename || material.name || 'tai-lieu');
-    } catch (e) {
-      showToast({
-        type: 'error',
-        message: e instanceof Error ? e.message : 'Không thể tải tài liệu.',
-      });
+    const result = await downloadCourseMaterial(courseId, lesson.id, material);
+    if (!result.ok) {
+      showToast({ type: 'error', message: result.message });
     }
   };
 
@@ -1395,9 +1348,24 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                     }}
                   >
                     <FileText size={13} style={{ color: '#1f5eff' }} />
-                    <span>{m.name}</span>
-                    <span className="muted" style={{ fontSize: '0.7rem' }}>
-                      ({((m.size || 0) / 1024).toFixed(1)} KB)
+                    <span
+                      style={{
+                        fontSize: '0.65rem',
+                        fontWeight: 700,
+                        color: '#1f5eff',
+                        background: '#dbeafe',
+                        padding: '1px 6px',
+                        borderRadius: 4,
+                        flexShrink: 0,
+                      }}
+                    >
+                      {inferFileKind(m)}
+                    </span>
+                    <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {m.name}
+                    </span>
+                    <span className="muted" style={{ fontSize: '0.7rem', flexShrink: 0 }}>
+                      {formatBytes(m.size)}
                     </span>
                   </button>
                   {!isAdmin && (

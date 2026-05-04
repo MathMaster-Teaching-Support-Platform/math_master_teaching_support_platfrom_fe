@@ -644,28 +644,44 @@ export class CourseService {
     lessonId: string,
     materialId: string
   ): Promise<{ blob: Blob; filename?: string }> {
-    const headers = await this.getAuthHeaders();
-    const res = await fetch(
-      `${API_BASE_URL}${API_ENDPOINTS.COURSE_LESSON_MATERIAL_DOWNLOAD(courseId, lessonId, materialId)}`,
-      { method: 'GET', headers }
+    return this.fetchBinary(
+      `${API_BASE_URL}${API_ENDPOINTS.COURSE_LESSON_MATERIAL_DOWNLOAD(courseId, lessonId, materialId)}`
     );
+  }
 
+  /**
+   * Streams a zip of every material attached to a lesson. Uses the same auth +
+   * error contract as {@link downloadMaterial}.
+   */
+  static async downloadAllMaterials(
+    courseId: string,
+    lessonId: string
+  ): Promise<{ blob: Blob; filename?: string }> {
+    return this.fetchBinary(
+      `${API_BASE_URL}${API_ENDPOINTS.COURSE_LESSON_MATERIAL_DOWNLOAD_ALL(courseId, lessonId)}`
+    );
+  }
+
+  /**
+   * Shared binary fetcher for material download endpoints. Sends the bearer
+   * token, parses {@code Content-Disposition} for the suggested filename, and
+   * preserves the original error payload on the thrown Error so the FE can map
+   * it to a user-friendly message.
+   */
+  private static async fetchBinary(url: string): Promise<{ blob: Blob; filename?: string }> {
+    const headers = await this.getAuthHeaders();
+    const res = await fetch(url, { method: 'GET', headers });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       const message = (err as { message?: string }).message || 'Không thể tải tài liệu.';
       throw Object.assign(new Error(message), { response: { data: err } });
     }
-
     const disposition = res.headers.get('content-disposition') || '';
     const utf8Match = disposition.match(/filename\*=UTF-8''([^;]+)/i);
     const asciiMatch = disposition.match(/filename="?([^";]+)"?/i);
     const rawName = utf8Match?.[1] || asciiMatch?.[1] || '';
     const filename = rawName ? decodeURIComponent(rawName) : undefined;
-
-    return {
-      blob: await res.blob(),
-      filename,
-    };
+    return { blob: await res.blob(), filename };
   }
 
   // ─── Course Reviews ────────────────────────────────────────────────────────

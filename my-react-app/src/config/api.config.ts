@@ -379,6 +379,8 @@ export const API_ENDPOINTS = {
     `/courses/${courseId}/lessons/${lessonId}/materials/${materialId}/download`,
   COURSE_LESSON_MATERIAL_DOWNLOAD_URL: (courseId: string, lessonId: string, materialId: string) =>
     `/courses/${courseId}/lessons/${lessonId}/materials/${materialId}/download-url`,
+  COURSE_LESSON_MATERIAL_DOWNLOAD_ALL: (courseId: string, lessonId: string) =>
+    `/courses/${courseId}/lessons/${lessonId}/materials/download-all`,
 
   // Enrollments
   COURSE_ENROLL: (courseId: string) => `/courses/${courseId}/enroll`,

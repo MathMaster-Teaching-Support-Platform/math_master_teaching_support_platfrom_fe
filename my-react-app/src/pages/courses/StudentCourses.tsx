@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { CourseBreadcrumb } from '../../components/course/CourseBreadcrumb';
 import { CourseCard } from '../../components/course/CourseCard';
 import { InvoiceModal } from '../../components/course/InvoiceModal';
 import { PurchaseConfirmationModal } from '../../components/course/PurchaseConfirmationModal';
@@ -345,6 +346,7 @@ const StudentCourses: React.FC = () => {
     >
       <div className="module-layout-container">
         <section className="module-page teacher-courses-page">
+          <CourseBreadcrumb />
           <motion.div
             key="grid-view"
             initial={{ opacity: 0 }}

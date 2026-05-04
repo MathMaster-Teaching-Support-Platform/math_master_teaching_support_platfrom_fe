@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { CourseBreadcrumb } from '../../components/course/CourseBreadcrumb';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { UI_TEXT } from '../../constants/uiText';
 import { useToast } from '../../context/ToastContext';
@@ -795,6 +796,7 @@ const TeacherCourses: React.FC = () => {
     >
       <div className="module-layout-container">
         <section className="module-page teacher-courses-page teacher-courses-index-page">
+          <CourseBreadcrumb />
           {/* ── Header ── */}
           <header className="page-header courses-header-row">
             <div className="header-stack">

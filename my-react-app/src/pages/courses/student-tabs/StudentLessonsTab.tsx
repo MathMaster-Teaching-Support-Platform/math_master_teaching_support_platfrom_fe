@@ -1,5 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
-import { BookOpen, CheckCircle, ChevronDown, Clock, FileText, Paperclip, Play } from 'lucide-react';
+import {
+  BookOpen,
+  CheckCircle,
+  ChevronDown,
+  Clock,
+  Download,
+  FileText,
+  Paperclip,
+  Play,
+} from 'lucide-react';
 import React, { useMemo, useRef, useState } from 'react';
 import { UI_TEXT } from '../../../constants/uiText';
 import { useToast } from '../../../context/ToastContext';
@@ -10,10 +19,18 @@ import {
   useMarkLessonComplete,
   useUpdateProgress,
 } from '../../../hooks/useCourses';
-import { CourseService } from '../../../services/api/course.service';
+import { useChaptersBySubject } from '../../../hooks/useChapters';
 import { VideoUploadService } from '../../../services/api/videoUpload.service';
 import type { CourseLessonResponse } from '../../../types';
 import { extractChapterNumber, sortCurriculumGroups } from '../../../utils/curriculum';
+import {
+  downloadAllCourseMaterials,
+  downloadCourseMaterial,
+  formatBytes,
+  inferFileKind,
+  parseLessonMaterials,
+  type LessonMaterial,
+} from '../../../utils/materialDownload';
 import './StudentLessonsTab.css';
 
 interface StudentLessonsTabProps {
@@ -21,61 +38,6 @@ interface StudentLessonsTabProps {
   courseId: string;
   enrollmentStatus: string;
 }
-
-type LessonMaterial = {
-  id?: string;
-  name?: string;
-  url?: string;
-  size?: number;
-  key?: string;
-};
-
-const toSafeMaterial = (raw: any): LessonMaterial | null => {
-  if (!raw || typeof raw !== 'object') return null;
-
-  const id = typeof raw.id === 'string' && raw.id.trim() ? raw.id.trim() : undefined;
-  const name =
-    (typeof raw.name === 'string' && raw.name.trim() ? raw.name.trim() : undefined) ||
-    (typeof raw.fileName === 'string' && raw.fileName.trim() ? raw.fileName.trim() : undefined);
-  const key = typeof raw.key === 'string' && raw.key.trim() ? raw.key.trim() : undefined;
-
-  const rawUrl = typeof raw.url === 'string' ? raw.url.trim() : '';
-  const hasAbsoluteUrl = /^https?:\/\//i.test(rawUrl);
-  const url = hasAbsoluteUrl ? rawUrl : undefined;
-
-  const size = typeof raw.size === 'number' && Number.isFinite(raw.size) ? raw.size : undefined;
-
-  if (!id && !url) {
-    return null;
-  }
-
-  return { id, name, key, url, size };
-};
-
-const parseLessonMaterials = (materials?: string | null): LessonMaterial[] => {
-  if (!materials) return [];
-
-  try {
-    const parsed = JSON.parse(materials);
-    if (!Array.isArray(parsed)) return [];
-    return parsed.map(toSafeMaterial).filter((item): item is LessonMaterial => Boolean(item));
-  } catch {
-    return [];
-  }
-};
-
-const triggerFileDownload = (url: string, filename?: string) => {
-  const link = document.createElement('a');
-  link.href = url;
-  link.rel = 'noopener noreferrer';
-  link.target = '_blank';
-  if (filename) {
-    link.download = filename;
-  }
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-};
 
 // Inline Video Player Component
 const InlinePlayer: React.FC<{
@@ -233,32 +195,16 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
   };
 
   const handleDownloadMaterial = async (lesson: CourseLessonResponse, material: LessonMaterial) => {
-    const fallbackName = material.name || 'tai-lieu';
-
-    if (!material.id) {
-      if (material.url) {
-        triggerFileDownload(material.url, fallbackName);
-        return;
-      }
-      showToast({
-        type: 'warning',
-        message: 'Tài liệu hiện chưa sẵn sàng để tải. Vui lòng tải lại trang và thử lại.',
-      });
-      return;
+    const result = await downloadCourseMaterial(courseId, lesson.id, material);
+    if (!result.ok) {
+      showToast({ type: 'error', message: result.message });
     }
+  };
 
-    try {
-      const { blob, filename } = await CourseService.downloadMaterial(
-        courseId,
-        lesson.id,
-        material.id
-      );
-      const objectUrl = URL.createObjectURL(blob);
-      triggerFileDownload(objectUrl, filename || fallbackName);
-      setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
-    } catch (e) {
-      const message = e instanceof Error ? e.message : 'Không thể tải tài liệu.';
-      showToast({ type: 'error', message });
+  const handleDownloadAll = async (lesson: CourseLessonResponse) => {
+    const result = await downloadAllCourseMaterials(courseId, lesson.id);
+    if (!result.ok) {
+      showToast({ type: 'error', message: result.message });
     }
   };
 
@@ -411,14 +357,16 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
           <div className="slt-materials-drawer">
             {materialsList.map((m: LessonMaterial) => (
               <button
-                key={m.id}
+                key={m.id ?? m.url}
                 type="button"
                 className="slt-material-btn"
                 onClick={() => void handleDownloadMaterial(lesson, m)}
+                title={m.name}
               >
                 <FileText size={16} style={{ color: '#3b82f6', flexShrink: 0 }} />
+                <span className="slt-material-kind">{inferFileKind(m)}</span>
                 <span className="slt-material-name">{m.name}</span>
-                <span className="slt-material-size">({((m.size || 0) / 1024).toFixed(1)} KB)</span>
+                <span className="slt-material-size">{formatBytes(m.size)}</span>
               </button>
             ))}
           </div>
@@ -487,46 +435,76 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
 
             {/* Resources Tab below video */}
             <div className="slt-resources-card">
-              <h4
+              <div
                 style={{
-                  margin: '0 0 1.25rem',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.5rem',
-                  fontSize: '1.2rem',
-                  color: '#141413',
+                  justifyContent: 'space-between',
+                  gap: 12,
+                  margin: '0 0 1.25rem',
+                  flexWrap: 'wrap',
                 }}
               >
-                <Paperclip size={20} color="#3b82f6" /> Tài liệu đính kèm
-              </h4>
-              {currentLesson.materials &&
-              parseLessonMaterials(currentLesson.materials).length > 0 ? (
-                <div
+                <h4
                   style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-                    gap: '1rem',
+                    margin: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    fontSize: '1.2rem',
+                    color: '#141413',
                   }}
                 >
-                  {parseLessonMaterials(currentLesson.materials).map((m: LessonMaterial) => (
-                    <button
-                      key={m.id}
-                      type="button"
-                      className="slt-material-btn"
-                      onClick={() => void handleDownloadMaterial(currentLesson, m)}
-                    >
-                      <FileText size={16} style={{ color: '#3b82f6', flexShrink: 0 }} />
-                      <span className="slt-material-name">{m.name}</span>
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <p
-                  style={{ margin: 0, fontSize: '0.95rem', color: '#87867f', fontStyle: 'italic' }}
-                >
-                  Bài học này chưa có tài liệu đính kèm.
-                </p>
-              )}
+                  <Paperclip size={20} color="#3b82f6" /> Tài liệu đính kèm
+                </h4>
+                {parseLessonMaterials(currentLesson.materials).length > 1 && (
+                  <button
+                    type="button"
+                    className="slt-btn-small"
+                    onClick={() => void handleDownloadAll(currentLesson)}
+                  >
+                    <Download size={14} /> Tải tất cả (zip)
+                  </button>
+                )}
+              </div>
+              {(() => {
+                const items = parseLessonMaterials(currentLesson.materials);
+                if (items.length === 0) {
+                  return (
+                    <p style={{ margin: 0, fontSize: '0.95rem', color: '#87867f', fontStyle: 'italic' }}>
+                      Bài học này chưa có tài liệu đính kèm.
+                    </p>
+                  );
+                }
+                return (
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
+                      gap: '0.75rem',
+                    }}
+                  >
+                    {items.map((m: LessonMaterial) => (
+                      <button
+                        key={m.id ?? m.url}
+                        type="button"
+                        className="slt-material-card"
+                        onClick={() => void handleDownloadMaterial(currentLesson, m)}
+                        title={m.name}
+                      >
+                        <span className="slt-material-card-kind">{inferFileKind(m)}</span>
+                        <span className="slt-material-card-name">{m.name}</span>
+                        <span className="slt-material-card-meta">
+                          {formatBytes(m.size)}
+                          {m.uploadedAt
+                            ? ` • ${new Date(m.uploadedAt).toLocaleDateString('vi-VN')}`
+                            : ''}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
 
             <button
