@@ -70,7 +70,7 @@
 
 .aas-tree-shell {
   display: grid;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto auto 1fr;
   min-height: 620px;
 }
 
@@ -177,6 +177,13 @@
   font-weight: 500;
 }
 
+.aas-node-btn.is-draft {
+  border-style: dashed;
+  border-color: #93c5fd;
+  background: #f8fbff;
+  color: #0369a1;
+}
+
 .aas-node-btn span {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -224,6 +231,39 @@
 
 .aas-editor-card {
   padding: 1.25rem;
+}
+
+.aas-draft-preview {
+  padding: 0.75rem 1.25rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.aas-draft-preview__label {
+  font-size: 0.78rem;
+  color: #64748b;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+}
+
+.aas-draft-preview__chip {
+  border: 1px dashed #93c5fd;
+  border-radius: 0.7rem;
+  background: #f8fbff;
+  color: #0369a1;
+  padding: 0.4rem 0.6rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  max-width: 100%;
+}
+
+.aas-draft-preview__chip span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .aas-form {
