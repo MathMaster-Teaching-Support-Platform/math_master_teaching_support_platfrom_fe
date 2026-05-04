@@ -150,7 +150,7 @@ const adminGroups: MenuGroup[] = [
     label: 'Nội dung',
     items: [
       { path: '/admin/courses/review', icon: BookOpen, label: 'Duyệt khóa học' },
-      { path: '/admin/academic-structure', icon: FolderTree, label: 'Cây học thuật' },
+      { path: '/admin/academic-structure', icon: FolderTree, label: 'Cây chương trình' },
       { path: '/admin/roadmaps', icon: Workflow, label: 'Lộ trình' },
       { path: '/admin/slide-templates', icon: Presentation, label: 'Slide Template' },
     ],
