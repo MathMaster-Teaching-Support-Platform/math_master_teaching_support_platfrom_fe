@@ -30,12 +30,11 @@ type ValidationResult = {
   normalizedTags: QuestionTag[];
 };
 
+// Local copy of the unified parameter shape — matches ParametersEditor.
 type ParameterInput = {
   name: string;
-  type: string;
-  min: string;
-  max: string;
-  constraint: string;
+  constraintText: string;
+  sampleValue: string;
 };
 
 type OptionInput = {
@@ -75,18 +74,24 @@ function validateFormInput(input: {
 }
 
 function buildParameters(parameters: ParameterInput[]): Record<string, unknown> {
-  const mappedParameters: Record<string, unknown> = {};
+  // Unified Blueprint shape — matches BE BlueprintParameter / V112 migration.
+  const mapped: Record<string, unknown> = {};
   for (const item of parameters) {
-    if (!item.name.trim()) continue;
-    const normalizedConstraint = item.constraint.trim();
-    mappedParameters[item.name.trim()] = {
-      type: item.type,
-      min: item.type === 'int' ? Number.parseInt(item.min, 10) : Number.parseFloat(item.min),
-      max: item.type === 'int' ? Number.parseInt(item.max, 10) : Number.parseFloat(item.max),
-      ...(normalizedConstraint ? { constraint: normalizedConstraint } : {}),
+    const name = item.name.trim();
+    if (!name) continue;
+    const constraint = item.constraintText.trim();
+    const rawSample = item.sampleValue.trim();
+    let sample: unknown = rawSample;
+    if (rawSample !== '' && !Number.isNaN(Number(rawSample))) {
+      sample = Number(rawSample);
+    }
+    mapped[name] = {
+      constraintText: constraint,
+      sampleValue: sample === '' ? null : sample,
+      occurrences: [],
     };
   }
-  return mappedParameters;
+  return mapped;
 }
 
 function buildOptions(options: OptionInput[]): Record<string, unknown> {
@@ -115,15 +120,25 @@ function extractBlueprintInitialData(
 
   const params: ParameterInput[] = data.parameters
     ? Object.entries(data.parameters).map(([name, val]) => {
-        const v = val as Record<string, unknown>;
+        const v = (val ?? {}) as Record<string, unknown>;
+        // Unified shape preferred; fall back to legacy {type,min,max} for old rows.
+        const constraintText =
+          typeof v.constraintText === 'string'
+            ? v.constraintText
+            : `${v.type ?? 'integer'}${
+                v.min !== undefined ? `, ${v.min} ≤ ${name}` : ''
+              }${v.max !== undefined ? ` ≤ ${v.max}` : ''}`;
+        const sample =
+          v.sampleValue !== undefined ? v.sampleValue : v.min !== undefined ? v.min : '';
         return {
           name,
-          type: String(v.type || 'int'),
-          min: String(v.min ?? ''),
-          max: String(v.max ?? ''),
-          constraint: String(v.constraint || ''),
+          constraintText: String(constraintText),
+          sampleValue: String(sample ?? ''),
         };
       })
+    : [];
+  const globalConstraints: string[] = Array.isArray(data.constraints)
+    ? data.constraints.map(String)
     : [];
 
   const diag = typeof data.diagramTemplate === 'string' ? data.diagramTemplate : '';
@@ -138,6 +153,7 @@ function extractBlueprintInitialData(
     return {
       templateText: templateTextStr,
       parameters: params.length > 0 ? params : undefined,
+      globalConstraints,
       answerFormula: data.answerFormula || '',
       options: options.length > 0 ? options : undefined,
       diagramTemplateRaw: diag,
@@ -167,6 +183,7 @@ function extractBlueprintInitialData(
       stemText: templateTextStr,
       clauses,
       parameters: params.length > 0 ? params : undefined,
+      globalConstraints,
       diagramTemplateRaw: diag,
       solutionStepsTemplate: data.solutionStepsTemplate || '',
     };
@@ -176,6 +193,7 @@ function extractBlueprintInitialData(
     return {
       templateText: templateTextStr,
       parameters: params.length > 0 ? params : undefined,
+      globalConstraints,
       answerFormula: data.answerFormula || '',
       diagramTemplateRaw: diag,
       solutionStepsTemplate: data.solutionStepsTemplate || '',
@@ -340,6 +358,9 @@ export function TemplateFormModal({
             return;
           }
 
+          const cleanedGlobals = (mcqData.globalConstraints ?? [])
+            .map((g) => g.trim())
+            .filter(Boolean);
           payload = {
             name: validation.result.normalizedName,
             description: description.trim() || undefined,
@@ -351,6 +372,7 @@ export function TemplateFormModal({
             parameters: mappedParameters,
             answerFormula: mcqData.answerFormula || '',
             optionsGenerator: Object.keys(mappedOptions).length ? mappedOptions : undefined,
+            constraints: cleanedGlobals.length ? cleanedGlobals : undefined,
             cognitiveLevel,
             tags: validation.result.normalizedTags,
             isPublic,
@@ -380,6 +402,7 @@ export function TemplateFormModal({
           }
 
           const mappedParameters = buildParameters(tfData.parameters);
+          const tfGlobals = (tfData.globalConstraints ?? []).map((g) => g.trim()).filter(Boolean);
 
           payload = {
             name: validation.result.normalizedName,
@@ -392,6 +415,7 @@ export function TemplateFormModal({
             parameters: Object.keys(mappedParameters).length ? mappedParameters : {},
             answerFormula: '',
             optionsGenerator: undefined,
+            constraints: tfGlobals.length ? tfGlobals : undefined,
             statementMutations: {
               clauseTemplates: tfData.clauses.map((c) => ({
                 text: c.text,
@@ -428,6 +452,7 @@ export function TemplateFormModal({
             return;
           }
 
+          const saGlobals = (saData.globalConstraints ?? []).map((g) => g.trim()).filter(Boolean);
           payload = {
             name: validation.result.normalizedName,
             description: description.trim() || undefined,
@@ -439,6 +464,7 @@ export function TemplateFormModal({
             parameters: mappedParameters,
             answerFormula: saData.answerFormula || '',
             optionsGenerator: undefined,
+            constraints: saGlobals.length ? saGlobals : undefined,
             cognitiveLevel,
             tags: validation.result.normalizedTags,
             isPublic,

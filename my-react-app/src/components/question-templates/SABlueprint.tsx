@@ -9,6 +9,7 @@ export type ValidationMode = 'EXACT' | 'NUMERIC' | 'REGEX';
 export interface SABlueprintData {
   templateText: string;
   parameters: ParameterInput[];
+  globalConstraints: string[];
   answerFormula: string;
   validationMode: ValidationMode;
   tolerance: string;
@@ -23,6 +24,7 @@ interface SABlueprintProps {
   initialData?: {
     templateText?: string;
     parameters?: ParameterInput[];
+    globalConstraints?: string[];
     answerFormula?: string;
     validationMode?: ValidationMode;
     tolerance?: string;
@@ -59,8 +61,11 @@ export const SABlueprint = forwardRef<SABlueprintRef, SABlueprintProps>(
     );
     const [parameters, setParameters] = useState<ParameterInput[]>(
       initialData?.parameters ?? [
-        { name: 'a', type: 'int', min: '1', max: '10', constraint: '' },
+        { name: 'a', constraintText: 'số nguyên, 1 ≤ a ≤ 10', sampleValue: '2' },
       ]
+    );
+    const [globalConstraints, setGlobalConstraints] = useState<string[]>(
+      initialData?.globalConstraints ?? []
     );
 
     const templateTextRef = useRef<HTMLTextAreaElement | null>(null);
@@ -68,14 +73,14 @@ export const SABlueprint = forwardRef<SABlueprintRef, SABlueprintProps>(
     const diagramTemplateRef = useRef<HTMLTextAreaElement | null>(null);
     const toleranceRef = useRef<HTMLInputElement | null>(null);
     const parameterNameRefs = useRef<Record<number, HTMLInputElement | null>>({});
-    const parameterMinRefs = useRef<Record<number, HTMLInputElement | null>>({});
-    const parameterMaxRefs = useRef<Record<number, HTMLInputElement | null>>({});
-    const parameterConstraintRefs = useRef<Record<number, HTMLInputElement | null>>({});
+    const parameterConstraintRefs = useRef<Record<number, HTMLTextAreaElement | null>>({});
+    const parameterSampleRefs = useRef<Record<number, HTMLInputElement | null>>({});
 
     useImperativeHandle(ref, () => ({
       getData: () => ({
         templateText,
         parameters,
+        globalConstraints,
         answerFormula,
         validationMode,
         tolerance,
@@ -94,17 +99,14 @@ export const SABlueprint = forwardRef<SABlueprintRef, SABlueprintProps>(
             return toleranceRef.current;
           case 'parameterName':
             return index !== undefined ? parameterNameRefs.current[index] : null;
-          case 'parameterMin':
-            return index !== undefined ? parameterMinRefs.current[index] : null;
-          case 'parameterMax':
-            return index !== undefined ? parameterMaxRefs.current[index] : null;
+          case 'parameterSample':
+            return index !== undefined ? parameterSampleRefs.current[index] : null;
           case 'parameterConstraint':
             return index !== undefined ? parameterConstraintRefs.current[index] : null;
           default:
             return null;
         }
       },
-      // NEW: allows AIExtractPanel to push updated template text
       setTemplateText: (text: string) => setTemplateText(text),
     }));
 
@@ -140,16 +142,17 @@ export const SABlueprint = forwardRef<SABlueprintRef, SABlueprintProps>(
         <ParametersEditor
           parameters={parameters}
           onChange={setParameters}
+          globalConstraints={globalConstraints}
+          onGlobalConstraintsChange={setGlobalConstraints}
           onFocusField={(kind, index) => onFocusField?.(kind, index)}
           mathFieldRefs={{
             nameRefs: parameterNameRefs,
-            minRefs: parameterMinRefs,
-            maxRefs: parameterMaxRefs,
             constraintRefs: parameterConstraintRefs,
+            sampleRefs: parameterSampleRefs,
           }}
         />
 
-        {/* AI Parameter Panel — Feature 2 */}
+        {/* AI Parameter Panel — Feature 2 (legacy refinement helper) */}
         {templateId && (
           <AIParameterPanel
             templateId={templateId}
@@ -162,8 +165,7 @@ export const SABlueprint = forwardRef<SABlueprintRef, SABlueprintProps>(
                 prev.map((p) => {
                   const val = accepted[p.name];
                   if (val === undefined) return p;
-                  const strVal = String(val);
-                  return { ...p, min: strVal, max: strVal };
+                  return { ...p, sampleValue: String(val) };
                 })
               );
             }}

@@ -6,6 +6,8 @@ import {
     type ExtractParametersRequest,
     type GenerateParametersRequest,
     type UpdateParametersRequest,
+    type BlueprintFromRealQuestionRequest,
+    type BulkRejectQuestionsRequest,
     CognitiveLevel,
     QuestionType
 } from '../types/questionTemplate';
@@ -160,24 +162,79 @@ export const useGenerateQuestions = () => {
         mutationFn: ({
             id,
             count,
+            avoidDuplicates,
+            distinctnessHint,
+            // Deprecated fields kept for back-compat with old callers.
             generationMode,
             canonicalQuestionId,
-            avoidDuplicates,
         }: {
             id: string;
             count: number;
-            generationMode?: QuestionGenerationMode;
-            canonicalQuestionId?: string;
             avoidDuplicates?: boolean;
+            distinctnessHint?: string;
+            /** @deprecated ignored by the new generator. */
+            generationMode?: QuestionGenerationMode;
+            /** @deprecated ignored by the new generator. */
+            canonicalQuestionId?: string;
         }) =>
             questionTemplateService.generateQuestions(id, {
                 count,
+                avoidDuplicates,
+                distinctnessHint,
                 generationMode,
                 canonicalQuestionId,
-                avoidDuplicates,
             }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['questions'] });
+            queryClient.invalidateQueries({ queryKey: ['reviewQueue'] });
+        },
+    });
+};
+
+// Method 1 — convert a real-valued question into a Blueprint draft (one AI call)
+export const useBlueprintFromRealQuestion = () => {
+    return useMutation({
+        mutationFn: (request: BlueprintFromRealQuestionRequest) =>
+            questionTemplateService.blueprintFromRealQuestion(request),
+    });
+};
+
+// Review queue
+export const useReviewQueue = (templateId: string | undefined, page = 0, size = 20) => {
+    return useQuery({
+        queryKey: ['reviewQueue', templateId ?? '', page, size],
+        queryFn: () => questionTemplateService.listReviewQueue(templateId, page, size),
+    });
+};
+
+export const useApproveQuestion = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (id: string) => questionTemplateService.approveQuestion(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['reviewQueue'] });
+        },
+    });
+};
+
+export const useBulkApproveQuestions = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (questionIds: string[]) =>
+            questionTemplateService.bulkApproveQuestions(questionIds),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['reviewQueue'] });
+        },
+    });
+};
+
+export const useBulkRejectQuestions = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (request: BulkRejectQuestionsRequest) =>
+            questionTemplateService.bulkRejectQuestions(request),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['reviewQueue'] });
         },
     });
 };

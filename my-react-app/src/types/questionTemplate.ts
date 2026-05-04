@@ -327,9 +327,86 @@ export interface TemplateTestResponse {
 
 export interface GenerateQuestionsRequest {
     count: number;
-    generationMode?: QuestionGenerationMode;
-    canonicalQuestionId?: string;
     avoidDuplicates?: boolean;
+    /** Free-text hint forwarded to the value selector, e.g. "vary signs of b". */
+    distinctnessHint?: string;
+    /** @deprecated retained for API compatibility; ignored by the new generator. */
+    generationMode?: QuestionGenerationMode;
+    /** @deprecated retained for API compatibility; ignored by the new generator. */
+    canonicalQuestionId?: string;
+}
+
+// ── Method 1: Blueprint from a real-valued question ──────────────────────────
+export interface BlueprintFromRealQuestionRequest {
+    questionType: QuestionType;
+    questionText: string;
+    correctAnswer?: string;
+    /** MCQ options, key = "A"|"B"|"C"|"D". */
+    options?: Record<string, string>;
+    /** TF clauses, key = "A"|"B"|"C"|"D" → { text, truthValue }. */
+    clauses?: Record<string, { text: string; truthValue: boolean }>;
+    solutionSteps?: string;
+    diagramLatex?: string;
+    cognitiveLevel: CognitiveLevel;
+    gradeLevel?: string;
+    subjectId?: string;
+    chapterId?: string;
+    questionBankId?: string;
+}
+
+export interface BlueprintParameter {
+    name: string;
+    constraintText: string;
+    sampleValue: number | string | null;
+    occurrences: string[];
+}
+
+export interface BlueprintDiffEntry {
+    field: string;
+    before: string;
+    after: string;
+}
+
+export interface BlueprintTfClauseDraft {
+    key: string;
+    text: string;
+    truthValue: boolean;
+}
+
+export interface BlueprintFromRealQuestionResponse {
+    templateText: string;
+    answerFormula: string;
+    solutionStepsTemplate?: string;
+    diagramTemplate?: string;
+    optionsGenerator?: Record<string, string>;
+    clauseTemplates?: BlueprintTfClauseDraft[];
+    parameters: BlueprintParameter[];
+    globalConstraints: string[];
+    diff: BlueprintDiffEntry[];
+    warnings: string[];
+    confidence: number;
+}
+
+// ── Review queue (post-generation approval flow) ────────────────────────────
+export interface ReviewQuestionResponse {
+    id: string;
+    questionType: QuestionType;
+    questionText: string;
+    options?: Record<string, unknown>;
+    correctAnswer?: string;
+    explanation?: string;
+    solutionSteps?: string;
+    diagramData?: DiagramValue;
+    cognitiveLevel?: CognitiveLevel;
+    questionStatus: 'AI_DRAFT' | 'UNDER_REVIEW' | 'APPROVED' | 'ARCHIVED';
+    templateId?: string;
+    generationMetadata?: Record<string, unknown>;
+    createdAt: string;
+}
+
+export interface BulkRejectQuestionsRequest {
+    questionIds: string[];
+    reason?: string;
 }
 
 export interface GenerateQuestionsFromCanonicalRequest {

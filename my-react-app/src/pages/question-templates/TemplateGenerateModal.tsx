@@ -1,13 +1,16 @@
-import { X } from 'lucide-react';
+import { Sparkles, X } from 'lucide-react';
 import { useState } from 'react';
 import { useGenerateQuestions } from '../../hooks/useQuestionTemplate';
-import { useGetCanonicalQuestionById, useGetMyCanonicalQuestions } from '../../hooks/useCanonicalQuestion';
-import {
-  QuestionGenerationMode,
-  type QuestionTemplateResponse,
-} from '../../types/questionTemplate';
-import MathText from '../../components/common/MathText';
+import type { QuestionTemplateResponse } from '../../types/questionTemplate';
 
+/**
+ * Generation modal for the unified Blueprint flow.
+ *
+ * Drops the legacy PARAMETRIC vs AI_FROM_CANONICAL toggle — every generation
+ * now reads the Blueprint and selects values via the constraint-aware AI
+ * selector. The teacher controls only count, distinctness, and an optional
+ * free-text hint forwarded into the value-selection prompt.
+ */
 type Props = {
   isOpen: boolean;
   onClose: () => void;
@@ -22,19 +25,11 @@ export function TemplateGenerateModal({
   onGenerated,
 }: Readonly<Props>) {
   const [count, setCount] = useState(5);
-  const [generationMode, setGenerationMode] = useState<
-    (typeof QuestionGenerationMode)[keyof typeof QuestionGenerationMode]
-  >(QuestionGenerationMode.PARAMETRIC);
-  const [canonicalQuestionId, setCanonicalQuestionId] = useState(template.canonicalQuestionId || '');
   const [avoidDuplicates, setAvoidDuplicates] = useState(true);
+  const [distinctnessHint, setDistinctnessHint] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const generateMutation = useGenerateQuestions();
-  const canonicalQuery = useGetMyCanonicalQuestions(0, 100, 'createdAt', 'DESC');
-  const canonicalDetailQuery = useGetCanonicalQuestionById(
-    canonicalQuestionId,
-    Boolean(canonicalQuestionId) && generationMode === QuestionGenerationMode.AI_FROM_CANONICAL
-  );
 
   if (!isOpen) return null;
 
@@ -43,12 +38,7 @@ export function TemplateGenerateModal({
     setError(null);
 
     if (!Number.isFinite(count) || count < 1) {
-      setError('Count bat buoc va phai >= 1.');
-      return;
-    }
-
-    if (generationMode === QuestionGenerationMode.AI_FROM_CANONICAL && !canonicalQuestionId) {
-      setError('Vui lòng chọn canonical question khi dùng AI_FROM_CANONICAL.');
+      setError('Số lượng phải ≥ 1.');
       return;
     }
 
@@ -56,17 +46,14 @@ export function TemplateGenerateModal({
       const response = await generateMutation.mutateAsync({
         id: template.id,
         count,
-        generationMode,
         avoidDuplicates,
-        canonicalQuestionId:
-          generationMode === QuestionGenerationMode.AI_FROM_CANONICAL
-            ? canonicalQuestionId
-            : undefined,
+        distinctnessHint: distinctnessHint.trim() || undefined,
       });
 
-      const totalGenerated = response.result?.totalGenerated ?? 0;
-      onGenerated(`Đã sinh ${totalGenerated} câu hỏi từ template.`);
-      onClose();
+      const total = response.result?.totalGenerated ?? 0;
+      const warnings = response.result?.warnings ?? [];
+      const warnSuffix = warnings.length ? ` (cảnh báo: ${warnings.length})` : '';
+      onGenerated(`Đã sinh ${total}/${count} câu hỏi vào hàng đợi duyệt${warnSuffix}.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Không thể sinh câu hỏi từ template.');
     }
@@ -74,11 +61,13 @@ export function TemplateGenerateModal({
 
   return (
     <div className="modal-layer">
-      <div className="modal-card">
+      <div className="modal-card" style={{ width: 'min(560px, 96vw)' }}>
         <div className="modal-header">
           <div>
-            <h3>Generate Questions From Template</h3>
-            <p className="muted" style={{ marginTop: 4 }}>{template.name}</p>
+            <h3>Sinh câu hỏi từ template</h3>
+            <p className="muted" style={{ marginTop: 4 }}>
+              {template.name}
+            </p>
           </div>
           <button className="icon-btn" onClick={onClose}>
             <X size={16} />
@@ -86,86 +75,88 @@ export function TemplateGenerateModal({
         </div>
 
         <form onSubmit={submit}>
-          <div className="modal-body">
-            {error && <div className="empty" style={{ color: '#b91c1c' }}>{error}</div>}
-
-            <label>
-              <p className="muted" style={{ marginBottom: 6 }}>Generation Mode</p>
-              <select
-                className="select"
-                value={generationMode}
-                onChange={(event) =>
-                  setGenerationMode(
-                    event.target.value as (typeof QuestionGenerationMode)[keyof typeof QuestionGenerationMode]
-                  )
-                }
-              >
-                <option value={QuestionGenerationMode.PARAMETRIC}>Parametric</option>
-                <option value={QuestionGenerationMode.AI_FROM_CANONICAL}>AI from Canonical</option>
-              </select>
-            </label>
-
-            <div className="form-grid">
-              <label>
-                <p className="muted" style={{ marginBottom: 6 }}>Count</p>
-                <input
-                  className="input"
-                  type="number"
-                  min={1}
-                  value={count}
-                  onChange={(event) => setCount(Number(event.target.value))}
-                />
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={avoidDuplicates}
-                  onChange={(event) => setAvoidDuplicates(event.target.checked)}
-                />
-                <span className="muted">Bỏ qua các câu trùng lặp</span>
-              </label>
-            </div>
-
-            {generationMode === QuestionGenerationMode.AI_FROM_CANONICAL && (
-              <label>
-                <p className="muted" style={{ marginBottom: 6 }}>Canonical Question</p>
-                <select
-                  className="select"
-                  value={canonicalQuestionId}
-                  onChange={(event) => setCanonicalQuestionId(event.target.value)}
-                >
-                  <option value="">Chọn canonical question</option>
-                  {(canonicalQuery.data?.result?.content || []).map((canonical) => (
-                    <option key={canonical.id} value={canonical.id}>
-                      {canonical.title}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
-
-            {generationMode === QuestionGenerationMode.AI_FROM_CANONICAL && canonicalDetailQuery.data?.result && (
-              <div className="data-card" style={{ minHeight: 0 }}>
-                <h3>Preview canonical question</h3>
-                <p><MathText text={canonicalDetailQuery.data.result.problemText} /></p>
-                <p className="muted" style={{ marginTop: 8 }}>Solution:</p>
-                <div className="preview-box">
-                  <MathText text={canonicalDetailQuery.data.result.solutionSteps} />
-                </div>
+          <div className="modal-body" style={{ display: 'grid', gap: 14 }}>
+            {error && (
+              <div className="empty" style={{ color: '#b91c1c' }}>
+                {error}
               </div>
             )}
+
+            <label>
+              <p className="muted" style={{ marginBottom: 6 }}>
+                Số lượng câu hỏi
+              </p>
+              <input
+                className="input"
+                type="number"
+                min={1}
+                value={count}
+                onChange={(e) => setCount(Number(e.target.value))}
+              />
+            </label>
+
+            <label
+              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}
+            >
+              <input
+                type="checkbox"
+                checked={avoidDuplicates}
+                onChange={(e) => setAvoidDuplicates(e.target.checked)}
+              />
+              <span className="muted">
+                Bỏ qua bộ tham số đã được dùng (tránh trùng lặp)
+              </span>
+            </label>
+
+            <label>
+              <p className="muted" style={{ marginBottom: 6 }}>
+                Gợi ý phân tán (tùy chọn)
+              </p>
+              <input
+                className="input"
+                placeholder="Ví dụ: thay đổi dấu của b, dùng số nguyên tố nhỏ"
+                value={distinctnessHint}
+                onChange={(e) => setDistinctnessHint(e.target.value)}
+              />
+              <p className="muted" style={{ marginTop: 6, fontSize: '0.78rem' }}>
+                Hint này được chuyển thẳng cho AI khi chọn giá trị tham số. Bỏ trống
+                nếu bạn không có yêu cầu cụ thể.
+              </p>
+            </label>
+
+            <div
+              style={{
+                padding: '10px 12px',
+                background: '#eff6ff',
+                borderRadius: 8,
+                border: '1px solid #bfdbfe',
+                fontSize: '0.85rem',
+                color: '#1e3a8a',
+              }}
+            >
+              Câu hỏi được sinh sẽ ở trạng thái <strong>UNDER_REVIEW</strong>. Sau
+              khi sinh xong bạn sẽ được chuyển đến hàng đợi duyệt để phê duyệt
+              từng câu.
+            </div>
           </div>
 
           <div className="modal-footer">
-            <button type="button" className="btn secondary" onClick={onClose}>Đóng</button>
+            <button type="button" className="btn secondary" onClick={onClose}>
+              Đóng
+            </button>
             <button
               type="submit"
               className="btn"
               disabled={generateMutation.isPending}
             >
-              {generateMutation.isPending
-                ? 'Đang sinh...'
-                : 'Sinh câu hỏi'}
+              {generateMutation.isPending ? (
+                'Đang sinh…'
+              ) : (
+                <>
+                  <Sparkles size={14} style={{ marginRight: 6 }} />
+                  Sinh câu hỏi
+                </>
+              )}
             </button>
           </div>
         </form>

@@ -75,6 +75,7 @@ import StudentPublicSlides from '../pages/mindmaps/StudentPublicSlides';
 import { QuestionBankDashboard } from '../pages/question-banks/QuestionBankDashboard';
 import { QuestionBankDetailPage } from '../pages/question-banks/QuestionBankDetailPage';
 import { TemplateDashboard } from '../pages/question-templates/TemplateDashboard';
+import { QuestionReviewQueue } from '../pages/question-templates/QuestionReviewQueue';
 import TeacherQuestionManagementPage from '../pages/questions/TeacherQuestionManagementPage';
 // Student Assessment Routes
 import {
@@ -363,6 +364,14 @@ export const router = createBrowserRouter([
     element: (
       <PrivateRoute>
         <TemplateDashboard />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/teacher/question-review',
+    element: (
+      <PrivateRoute>
+        <QuestionReviewQueue />
       </PrivateRoute>
     ),
   },
