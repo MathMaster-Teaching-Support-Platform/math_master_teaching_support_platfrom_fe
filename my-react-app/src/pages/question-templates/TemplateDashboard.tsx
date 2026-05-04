@@ -30,16 +30,6 @@ import MathText from '../../components/common/MathText';
 import Pagination from '../../components/common/Pagination';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { useToast } from '../../context/ToastContext';
-import {
-  useApproveCanonicalQuestion,
-  useBulkApproveCanonicalQuestions,
-  useCreateCanonicalQuestion,
-  useDeleteCanonicalQuestion,
-  useGetCanonicalQuestionById,
-  useGetMyCanonicalQuestions,
-  useReviewCanonicalQuestions,
-  useUpdateCanonicalQuestion,
-} from '../../hooks/useCanonicalQuestion';
 import { useDebounce } from '../../hooks/useDebounce';
 import {
   useApproveQuestion,
@@ -60,7 +50,6 @@ import {
 } from '../../hooks/useQuestionTemplate';
 import { questionTemplateService } from '../../services/questionTemplateService';
 import '../../styles/module-refactor.css';
-import type { CanonicalQuestionResponse } from '../../types/canonicalQuestion';
 import type { QuestionResponse } from '../../types/question';
 import {
   TemplateStatus,
@@ -68,8 +57,6 @@ import {
   type QuestionTemplateResponse,
 } from '../../types/questionTemplate';
 import '../courses/TeacherCourses.css';
-import { CanonicalGenerateModal } from './CanonicalGenerateModal';
-import { CanonicalQuestionModal } from './CanonicalQuestionModal';
 import './template-review.css';
 import { TemplateBulkImportModal } from './TemplateBulkImportModal';
 import { TemplateFormModal } from './TemplateFormModal';
@@ -208,19 +195,6 @@ export function TemplateDashboard() {
   const [testOpen, setTestOpen] = useState(false);
   const [selected, setSelected] = useState<QuestionTemplateResponse | null>(null);
   const [reviewOpen, setReviewOpen] = useState(false);
-  const [canonicalOpen, setCanonicalOpen] = useState(false);
-  const [canonicalMode, setCanonicalMode] = useState<'create' | 'edit'>('create');
-  const [selectedCanonical, setSelectedCanonical] = useState<CanonicalQuestionResponse | null>(
-    null
-  );
-  const [editingCanonicalId, setEditingCanonicalId] = useState('');
-  const [canonicalReviewOpen, setCanonicalReviewOpen] = useState(false);
-  const [canonicalReviewId, setCanonicalReviewId] = useState('');
-  const [selectedCanonicalQuestionIds, setSelectedCanonicalQuestionIds] = useState<Set<string>>(
-    new Set()
-  );
-  const [canonicalGenerateOpen, setCanonicalGenerateOpen] = useState(false);
-  const [canonicalGenerateId, setCanonicalGenerateId] = useState('');
   const [generateOpen, setGenerateOpen] = useState(false);
   const [generateTemplate, setGenerateTemplate] = useState<QuestionTemplateResponse | null>(null);
   const [reviewTemplateId, setReviewTemplateId] = useState('');
@@ -247,11 +221,6 @@ export function TemplateDashboard() {
     debouncedSearch.trim() || undefined,
     debouncedStatus === 'ALL' ? undefined : debouncedStatus
   );
-  const { data: canonicalData } = useGetMyCanonicalQuestions(0, 20, 'createdAt', 'DESC');
-  const { data: canonicalDetailData } = useGetCanonicalQuestionById(
-    editingCanonicalId,
-    canonicalOpen && canonicalMode === 'edit' && Boolean(editingCanonicalId)
-  );
 
   const createMutation = useCreateQuestionTemplate();
   const updateMutation = useUpdateQuestionTemplate();
@@ -264,20 +233,10 @@ export function TemplateDashboard() {
   const approveQuestionMutation = useApproveQuestion();
   const updateQuestionMutation = useUpdateQuestion();
   const deleteQuestionMutation = useDeleteQuestion();
-  const createCanonicalMutation = useCreateCanonicalQuestion();
-  const updateCanonicalMutation = useUpdateCanonicalQuestion();
-  const deleteCanonicalMutation = useDeleteCanonicalQuestion();
-  const approveCanonicalQuestionMutation = useApproveCanonicalQuestion();
-  const bulkApproveCanonicalMutation = useBulkApproveCanonicalQuestions();
 
   const reviewQuestionsQuery = useReviewQuestions(
     reviewTemplateId,
     reviewOpen && Boolean(reviewTemplateId)
-  );
-  const canonicalReviewQuestionsQuery = useReviewCanonicalQuestions(
-    canonicalReviewId,
-    { page: 0, size: 200, sortBy: 'createdAt', sortDirection: 'DESC' },
-    canonicalReviewOpen && Boolean(canonicalReviewId)
   );
 
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -300,11 +259,6 @@ export function TemplateDashboard() {
     () => reviewQuestionsQuery.data?.result ?? [],
     [reviewQuestionsQuery.data]
   );
-  const canonicalReviewQuestions = useMemo(
-    () => canonicalReviewQuestionsQuery.data?.result?.content ?? [],
-    [canonicalReviewQuestionsQuery.data]
-  );
-  const canonicalQuestions = canonicalData?.result?.content ?? [];
   const activeDiagramLatexCode = extractPrimaryDiagramLatex(activeDiagram);
   const activeDiagramLatexValues = activeDiagram ? extractDiagramLatexStrings(activeDiagram) : [];
 
@@ -315,14 +269,6 @@ export function TemplateDashboard() {
       .map((question) => question.id);
     setSelectedQuestionIds(new Set(defaultSelected));
   }, [reviewOpen, reviewQuestions]);
-
-  useEffect(() => {
-    if (!canonicalReviewOpen) return;
-    const defaultSelected = canonicalReviewQuestions
-      .filter((question) => question.questionStatus !== 'APPROVED')
-      .map((question) => question.id);
-    setSelectedCanonicalQuestionIds(new Set(defaultSelected));
-  }, [canonicalReviewOpen, canonicalReviewQuestions]);
 
   async function saveTemplate(payload: QuestionTemplateRequest) {
     if (mode === 'create') {
@@ -361,75 +307,6 @@ export function TemplateDashboard() {
   function openReviewModal(templateId?: string) {
     setReviewTemplateId(templateId ?? templates[0]?.id ?? '');
     setReviewOpen(true);
-  }
-
-  function openCanonicalCreateModal() {
-    setCanonicalMode('create');
-    setSelectedCanonical(null);
-    setEditingCanonicalId('');
-    setCanonicalOpen(true);
-  }
-
-  function openCanonicalEditModal(canonical: CanonicalQuestionResponse) {
-    setCanonicalMode('edit');
-    setSelectedCanonical(canonical);
-    setEditingCanonicalId(canonical.id);
-    setCanonicalOpen(true);
-  }
-
-  function openCanonicalReviewModal(canonicalId?: string) {
-    setCanonicalReviewId(canonicalId ?? canonicalQuestions[0]?.id ?? '');
-    setCanonicalReviewOpen(true);
-  }
-
-  async function handleDeleteCanonical(canonical: CanonicalQuestionResponse) {
-    if (!globalThis.confirm(`Bạn có chắc muốn xóa canonical "${canonical.title}"?`)) return;
-    try {
-      await deleteCanonicalMutation.mutateAsync(canonical.id);
-      showToast({ type: 'success', message: 'Đã xóa canonical question.' });
-      if (canonicalReviewId === canonical.id) {
-        setCanonicalReviewOpen(false);
-        setCanonicalReviewId('');
-        setSelectedCanonicalQuestionIds(new Set());
-      }
-    } catch (error) {
-      showToast({
-        type: 'error',
-        message: error instanceof Error ? error.message : 'Không thể xóa canonical question.',
-      });
-    }
-  }
-
-  async function handleApproveCanonicalQuestion(questionId: string) {
-    try {
-      await approveCanonicalQuestionMutation.mutateAsync(questionId);
-      showToast({ type: 'success', message: 'Đã duyệt câu hỏi thành công.' });
-      void canonicalReviewQuestionsQuery.refetch();
-    } catch (error) {
-      showToast({
-        type: 'error',
-        message: error instanceof Error ? error.message : 'Không thể duyệt câu hỏi theo canonical.',
-      });
-    }
-  }
-
-  async function handleApproveSelectedCanonicalQuestions() {
-    if (selectedCanonicalQuestionIds.size === 0) return;
-    try {
-      await bulkApproveCanonicalMutation.mutateAsync(Array.from(selectedCanonicalQuestionIds));
-      showToast({
-        type: 'success',
-        message: `Đã phê duyệt ${selectedCanonicalQuestionIds.size} câu hỏi thành công.`,
-      });
-      setSelectedCanonicalQuestionIds(new Set());
-      void canonicalReviewQuestionsQuery.refetch();
-    } catch (error) {
-      showToast({
-        type: 'error',
-        message:
-          error instanceof Error ? error.message : 'Không thể phê duyệt câu hỏi theo canonical.',
-      });
-    }
   }
 
   async function handleApproveSelectedQuestions() {
@@ -491,15 +368,6 @@ export function TemplateDashboard() {
 
   function toggleQuestionSelection(questionId: string, checked: boolean) {
     setSelectedQuestionIds((prev) => {
-      const next = new Set(prev);
-      if (checked) next.add(questionId);
-      else next.delete(questionId);
-      return next;
-    });
-  }
-
-  function toggleCanonicalQuestionSelection(questionId: string, checked: boolean) {
-    setSelectedCanonicalQuestionIds((prev) => {
       const next = new Set(prev);
       if (checked) next.add(questionId);
       else next.delete(questionId);
@@ -604,14 +472,7 @@ export function TemplateDashboard() {
                 <Upload size={14} />
                 Nhập từ Excel
               </button>
-              <button
-                type="button"
-                className="btn secondary btn--tint-violet"
-                onClick={openCanonicalCreateModal}
-              >
-                <Plus size={14} />
-                Thêm bài toán gốc
-              </button>
+
               <button
                 type="button"
                 className="btn btn--feat-violet"
@@ -776,125 +637,6 @@ export function TemplateDashboard() {
                 </div>
               </li>
             </ol>
-
-            <div className="workflow-ai-note">
-              <Network size={14} />
-              <span>
-                <strong>Tùy chọn AI:</strong> Thêm <em>bài toán gốc</em> để AI tự sinh câu hỏi thay
-                vì soạn mẫu thủ công.
-              </span>
-              <button className="btn secondary" onClick={openCanonicalCreateModal}>
-                <Plus size={13} /> Thêm bài toán gốc
-              </button>
-              <button
-                className="btn secondary"
-                onClick={() => {
-                  if (canonicalQuestions.length === 0) {
-                    showToast({ type: 'error', message: 'Chưa có bài toán gốc. Hãy thêm trước.' });
-                    return;
-                  }
-                  setCanonicalGenerateId(canonicalQuestions[0]?.id ?? '');
-                  setCanonicalGenerateOpen(true);
-                }}
-              >
-                <Play size={13} /> Cho AI tạo câu hỏi
-              </button>
-              <button
-                className="btn secondary"
-                onClick={() => {
-                  if (canonicalQuestions.length === 0) {
-                    showToast({ type: 'error', message: 'Chưa có bài toán gốc nào để duyệt.' });
-                    return;
-                  }
-                  openCanonicalReviewModal(canonicalQuestions[0]?.id);
-                }}
-              >
-                <CheckSquare size={13} /> Duyệt câu hỏi AI sinh
-              </button>
-            </div>
-          </section>
-
-          <section className="data-card course-card" style={{ minHeight: 0 }}>
-            <div className="row" style={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
-              <div>
-                <h3>Bài toán gốc gần đây</h3>
-                <p className="muted">AI dùng các bài toán này để sinh câu hỏi tự động cho bạn.</p>
-              </div>
-              <button className="btn secondary" onClick={openCanonicalCreateModal}>
-                <Plus size={14} />
-                Tạo mới
-              </button>
-            </div>
-
-            {canonicalQuestions.length === 0 && (
-              <div className="empty">
-                Bạn chưa có bài toán gốc nào. Hãy thêm bài toán gốc để bắt đầu.
-              </div>
-            )}
-
-            {canonicalQuestions.length > 0 && (
-              <div className="table-wrap" style={{ marginTop: 10 }}>
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th>Tiêu đề</th>
-                      <th style={{ width: 180 }}>Mức độ nhận thức</th>
-                      <th style={{ width: 380 }}>Thao tác</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {canonicalQuestions.map((canonical) => (
-                      <tr key={canonical.id}>
-                        <td>{canonical.title}</td>
-                        <td>
-                          {cognitiveLevelLabel[canonical.cognitiveLevel] ||
-                            canonical.cognitiveLevel}
-                        </td>
-                        <td>
-                          <div
-                            className="row"
-                            style={{ justifyContent: 'start', flexWrap: 'wrap' }}
-                          >
-                            <button
-                              className="btn secondary"
-                              onClick={() => {
-                                setCanonicalGenerateId(canonical.id);
-                                setCanonicalGenerateOpen(true);
-                              }}
-                            >
-                              <Play size={14} />
-                              Tạo câu hỏi
-                            </button>
-                            <button
-                              className="btn secondary"
-                              onClick={() => openCanonicalReviewModal(canonical.id)}
-                            >
-                              <CheckSquare size={14} />
-                              Xét duyệt
-                            </button>
-                            <button
-                              className="btn secondary"
-                              onClick={() => openCanonicalEditModal(canonical)}
-                            >
-                              <Pencil size={14} />
-                              Chỉnh sửa
-                            </button>
-                            <button
-                              className="btn danger"
-                              disabled={deleteCanonicalMutation.isPending}
-                              onClick={() => void handleDeleteCanonical(canonical)}
-                            >
-                              <Trash2 size={14} />
-                              Xóa
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
           </section>
 
           {/* ── Toolbar ── */}
@@ -1235,37 +977,7 @@ export function TemplateDashboard() {
             />
           )}
 
-          <CanonicalGenerateModal
-            isOpen={canonicalGenerateOpen}
-            onClose={() => setCanonicalGenerateOpen(false)}
-            canonicalId={canonicalGenerateId}
-            templates={templates}
-            onGenerated={(message) => showToast({ type: 'success', message })}
-          />
 
-          <CanonicalQuestionModal
-            isOpen={canonicalOpen}
-            onClose={() => {
-              setCanonicalOpen(false);
-              setEditingCanonicalId('');
-            }}
-            mode={canonicalMode}
-            initialData={canonicalDetailData?.result ?? selectedCanonical}
-            submitting={createCanonicalMutation.isPending || updateCanonicalMutation.isPending}
-            onSubmit={async (payload) => {
-              if (canonicalMode === 'edit' && selectedCanonical) {
-                await updateCanonicalMutation.mutateAsync({
-                  id: selectedCanonical.id,
-                  request: payload,
-                });
-                showToast({ type: 'success', message: 'Cập nhật canonical question thành công.' });
-                return;
-              }
-
-              await createCanonicalMutation.mutateAsync(payload);
-              showToast({ type: 'success', message: 'Tạo canonical question thành công.' });
-            }}
-          />
 
           {reviewOpen && (
             <div className="modal-layer">
@@ -1634,232 +1346,7 @@ export function TemplateDashboard() {
             </div>
           )}
 
-          {canonicalReviewOpen && (
-            <div className="modal-layer">
-              <div className="modal-card template-review-modal">
-                <div className="modal-header">
-                  <div>
-                    <h3>Xét duyệt câu hỏi theo Canonical</h3>
-                    <p className="muted" style={{ marginTop: 4 }}>
-                      Chọn canonical để xem danh sách câu đã sinh và phê duyệt nhanh.
-                    </p>
-                  </div>
-                  <button
-                    className="icon-btn"
-                    onClick={() => {
-                      setCanonicalReviewOpen(false);
-                      setSelectedCanonicalQuestionIds(new Set());
-                    }}
-                  >
-                    <X size={14} />
-                  </button>
-                </div>
 
-                <div className="modal-body">
-                  <div className="template-review-modal__toolbar">
-                    <label className="template-review-modal__selector">
-                      <span className="muted">Canonical Question</span>
-                      <select
-                        className="select"
-                        value={canonicalReviewId}
-                        onChange={(event) => {
-                          setCanonicalReviewId(event.target.value);
-                          setSelectedCanonicalQuestionIds(new Set());
-                        }}
-                      >
-                        <option value="">Chọn canonical question</option>
-                        {canonicalQuestions.map((canonical) => (
-                          <option key={canonical.id} value={canonical.id}>
-                            {canonical.title}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-
-                    <button
-                      className="btn secondary"
-                      onClick={() => void canonicalReviewQuestionsQuery.refetch()}
-                      disabled={!canonicalReviewId || canonicalReviewQuestionsQuery.isFetching}
-                    >
-                      <RefreshCw size={14} />
-                      Làm mới danh sách câu
-                    </button>
-                  </div>
-
-                  {!canonicalReviewId && (
-                    <div className="empty">
-                      Hãy chọn một canonical question để bắt đầu xét duyệt.
-                    </div>
-                  )}
-
-                  {canonicalReviewId && canonicalReviewQuestionsQuery.isFetching && (
-                    <div className="empty">Đang tải câu hỏi theo canonical...</div>
-                  )}
-
-                  {canonicalReviewId &&
-                    !canonicalReviewQuestionsQuery.isFetching &&
-                    !canonicalReviewQuestionsQuery.isError &&
-                    canonicalReviewQuestions.length === 0 && (
-                      <div className="empty">Canonical này chưa có câu hỏi để xét duyệt.</div>
-                    )}
-
-                  {canonicalReviewId && canonicalReviewQuestionsQuery.isError && (
-                    <div className="empty">
-                      {canonicalReviewQuestionsQuery.error instanceof Error
-                        ? canonicalReviewQuestionsQuery.error.message
-                        : 'Không thể tải danh sách câu hỏi theo canonical.'}
-                    </div>
-                  )}
-
-                  {canonicalReviewId &&
-                    !canonicalReviewQuestionsQuery.isFetching &&
-                    !canonicalReviewQuestionsQuery.isError &&
-                    canonicalReviewQuestions.length > 0 && (
-                      <div className="table-wrap template-review-modal__list">
-                        <table className="table template-review-table">
-                          <thead>
-                            <tr>
-                              <th style={{ width: 46 }}>
-                                <input
-                                  type="checkbox"
-                                  checked={
-                                    canonicalReviewQuestions.some(
-                                      (question) => question.questionStatus !== 'APPROVED'
-                                    ) &&
-                                    canonicalReviewQuestions
-                                      .filter((question) => question.questionStatus !== 'APPROVED')
-                                      .every((question) =>
-                                        selectedCanonicalQuestionIds.has(question.id)
-                                      )
-                                  }
-                                  onChange={(event) => {
-                                    const isChecked = event.target.checked;
-                                    const next = new Set(selectedCanonicalQuestionIds);
-                                    canonicalReviewQuestions.forEach((question) => {
-                                      if (question.questionStatus === 'APPROVED') return;
-                                      if (isChecked) next.add(question.id);
-                                      else next.delete(question.id);
-                                    });
-                                    setSelectedCanonicalQuestionIds(next);
-                                  }}
-                                />
-                              </th>
-                              <th>Nội dung câu hỏi</th>
-                              <th style={{ width: 120 }}>Trạng thái</th>
-                              <th style={{ width: 140 }}>Đáp án</th>
-                              <th style={{ width: 290 }}>Thao tác</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {canonicalReviewQuestions.map((question) => {
-                              const isApproved = question.questionStatus === 'APPROVED';
-                              return (
-                                <tr key={question.id}>
-                                  <td>
-                                    <input
-                                      type="checkbox"
-                                      checked={selectedCanonicalQuestionIds.has(question.id)}
-                                      disabled={isApproved}
-                                      onChange={(event) =>
-                                        toggleCanonicalQuestionSelection(
-                                          question.id,
-                                          event.target.checked
-                                        )
-                                      }
-                                    />
-                                  </td>
-                                  <td>
-                                    <div className="template-review-question__text">
-                                      <MathText text={question.questionText} />
-                                    </div>
-                                    {question.explanation && (
-                                      <p className="muted template-review-question__explanation">
-                                        Giải thích: <MathText text={question.explanation} />
-                                      </p>
-                                    )}
-                                  </td>
-                                  <td>
-                                    <span
-                                      className={`template-review-question__status ${isApproved ? 'approved' : 'pending'}`}
-                                    >
-                                      {questionStatusLabel[
-                                        question.questionStatus ?? 'UNDER_REVIEW'
-                                      ] ??
-                                        question.questionStatus ??
-                                        'Chờ duyệt'}
-                                    </span>
-                                  </td>
-                                  <td>{question.correctAnswer || '-'}</td>
-                                  <td>
-                                    <div className="row template-review-question__actions">
-                                      <button
-                                        className="btn secondary"
-                                        onClick={() => openEditQuestion(question)}
-                                      >
-                                        <Pencil size={14} />
-                                        Sửa
-                                      </button>
-                                      <button
-                                        type="button"
-                                        className="btn btn--feat-emerald"
-                                        disabled={
-                                          isApproved || approveCanonicalQuestionMutation.isPending
-                                        }
-                                        onClick={() =>
-                                          void handleApproveCanonicalQuestion(question.id)
-                                        }
-                                      >
-                                        <Check size={14} />
-                                        Duyệt
-                                      </button>
-                                      <button
-                                        className="btn danger"
-                                        disabled={deleteQuestionMutation.isPending}
-                                        onClick={() => void handleDeleteQuestion(question.id)}
-                                      >
-                                        <Trash2 size={14} />
-                                        Xóa
-                                      </button>
-                                    </div>
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                </div>
-
-                <div className="modal-footer">
-                  <button
-                    type="button"
-                    className="btn secondary"
-                    onClick={() => {
-                      setCanonicalReviewOpen(false);
-                      setSelectedCanonicalQuestionIds(new Set());
-                    }}
-                  >
-                    Đóng
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn--feat-emerald"
-                    disabled={
-                      selectedCanonicalQuestionIds.size === 0 ||
-                      bulkApproveCanonicalMutation.isPending
-                    }
-                    onClick={() => void handleApproveSelectedCanonicalQuestions()}
-                  >
-                    <CheckSquare size={14} />
-                    {bulkApproveCanonicalMutation.isPending
-                      ? 'Đang phê duyệt...'
-                      : `Phê duyệt đã chọn (${selectedCanonicalQuestionIds.size})`}
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
 
           {editingQuestion && (
             <div className="modal-layer">

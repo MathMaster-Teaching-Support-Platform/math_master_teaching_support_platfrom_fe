@@ -234,39 +234,57 @@ export default function TakeAssessment() {
   // Group questions by part for display
   const questionsByPart = useMemo(() => {
     if (!attemptData?.questions) return null;
+
+    const grouped = new Map<number, typeof attemptData.questions>();
     
     // Check if any question has partNumber
     const hasPartNumbers = attemptData.questions.some(q => q.partNumber !== undefined);
-    if (!hasPartNumbers) return null;
-
-    const grouped = new Map<number, typeof attemptData.questions>();
-    attemptData.questions.forEach(q => {
-      const part = q.partNumber || 1;
-      if (!grouped.has(part)) {
-        grouped.set(part, []);
-      }
-      grouped.get(part)!.push(q);
-    });
+    
+    if (hasPartNumbers) {
+      attemptData.questions.forEach(q => {
+        const part = q.partNumber || 1;
+        if (!grouped.has(part)) grouped.set(part, []);
+        grouped.get(part)!.push(q);
+      });
+    } else {
+      // Fallback based on questionType for legacy assessments
+      attemptData.questions.forEach(q => {
+        let part = 1;
+        if (q.questionType === 'TRUE_FALSE') part = 2;
+        else if (q.questionType === 'SHORT_ANSWER') part = 3;
+        
+        if (!grouped.has(part)) grouped.set(part, []);
+        grouped.get(part)!.push(q);
+      });
+    }
     
     return grouped;
   }, [attemptData?.questions]);
 
   // Get part info for current question
   const currentPartInfo = useMemo(() => {
-    if (!currentQuestion?.partNumber || !questionsByPart) return null;
+    if (!currentQuestion || !questionsByPart) return null;
     
     const partLabels: Record<number, string> = {
-      1: 'Phần I: Trắc nghiệm',
-      2: 'Phần II: Đúng/Sai',
-      3: 'Phần III: Trả lời ngắn',
+      1: 'Phần I: Trắc nghiệm nhiều lựa chọn',
+      2: 'Phần II: Trắc nghiệm Đúng/Sai',
+      3: 'Phần III: Trắc nghiệm trả lời ngắn',
     };
     
-    const partQuestions = questionsByPart.get(currentQuestion.partNumber) || [];
+    // Determine part number (with fallback)
+    let partNum = currentQuestion.partNumber;
+    if (partNum === undefined) {
+      if (currentQuestion.questionType === 'TRUE_FALSE') partNum = 2;
+      else if (currentQuestion.questionType === 'SHORT_ANSWER') partNum = 3;
+      else partNum = 1;
+    }
+    
+    const partQuestions = questionsByPart.get(partNum) || [];
     const questionIndexInPart = partQuestions.findIndex(q => q.questionId === currentQuestion.questionId);
     
     return {
-      partNumber: currentQuestion.partNumber,
-      partLabel: partLabels[currentQuestion.partNumber] || `Phần ${currentQuestion.partNumber}`,
+      partNumber: partNum,
+      partLabel: partLabels[partNum] || `Phần ${partNum}`,
       questionIndexInPart: questionIndexInPart + 1,
       totalInPart: partQuestions.length,
     };

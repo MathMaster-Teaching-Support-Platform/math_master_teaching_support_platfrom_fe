@@ -1,6 +1,6 @@
 import { ArrowLeft, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { UI_TEXT } from '../../constants/uiText';
-import { useCallback, useEffect, useState } from 'react';
+import { Fragment, useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import MathText from '../../components/common/MathText';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
@@ -41,6 +41,12 @@ const scoringPolicyLabel: Record<string, string> = {
   BEST: 'Lần tốt nhất',
   LATEST: 'Lần gần nhất',
   AVERAGE: 'Điểm trung bình',
+};
+
+const partLabels: Record<number, string> = {
+  1: 'Phần I: Trắc nghiệm nhiều lựa chọn',
+  2: 'Phần II: Trắc nghiệm Đúng/Sai',
+  3: 'Phần III: Trắc nghiệm trả lời ngắn',
 };
 
 const COGNITIVE_LEVELS = [
@@ -459,94 +465,119 @@ export default function AssessmentDetail() {
                     </tr>
                   </thead>
                   <tbody>
-                    {questions.map((question) => {
-                      const questionId = getQuestionId(question);
-                      return (
-                        <tr key={questionId}>
-                          <td>{question.orderIndex}</td>
-                          <td>
-                            <MathText text={question.questionText} />
-                            <div className="row" style={{ justifyContent: 'start', flexWrap: 'wrap', marginTop: 4 }}>
-                              {question.tags?.map((t) => (
-                                <span key={t} className="badge published" style={{ fontSize: 11 }}>{t}</span>
-                              ))}
-                            </div>
-                          </td>
-                          <td>
-                            <span className={`badge ${question.questionType === 'TRUE_FALSE' ? 'published' : 'draft'}`}>
-                              {question.questionType === 'TRUE_FALSE' ? 'TF (4 mệnh đề)' : 
-                               question.questionType === 'SHORT_ANSWER' ? 'TL' : 'TN'}
-                            </span>
-                          </td>
-                          <td>
-                            {question.cognitiveLevel ? (
-                              <span className="badge draft">{question.cognitiveLevel}</span>
-                            ) : (
-                              <span className="muted">—</span>
-                            )}
-                          </td>
-                          <td>
-                            {isDraft ? (
-                              <div>
-                                <input
-                                  className="input"
-                                  type="number"
-                                  min={0}
-                                  step={0.25}
-                                  value={pointsDraft[questionId] ?? String(question.points ?? '')}
-                                  onChange={(e) =>
-                                    setPointsDraft((prev) => ({ ...prev, [questionId]: e.target.value }))
-                                  }
-                                  placeholder="Điểm"
-                                />
-                                {/* Show clause breakdown for TF questions */}
-                                {question.questionType === 'TRUE_FALSE' && (pointsDraft[questionId] || question.points) && (
-                                  <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4 }}>
-                                    {(() => {
-                                      const totalPoints = parseFloat(pointsDraft[questionId] || String(question.points || 0));
-                                      const pointPerClause = (totalPoints / 4).toFixed(3);
-                                      return (
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                          <span>📋 Mỗi mệnh đề: {pointPerClause} điểm</span>
-                                          <span style={{ fontSize: 10 }}>
-                                            (A: {pointPerClause}, B: {pointPerClause}, C: {pointPerClause}, D: {pointPerClause})
-                                          </span>
+                    {(() => {
+                      const grouped: Record<number, typeof questions> = {};
+                      questions.forEach((q) => {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        let part = (q as any).partNumber;
+                        if (part === undefined) {
+                          if (q.questionType === 'TRUE_FALSE') part = 2;
+                          else if (q.questionType === 'SHORT_ANSWER') part = 3;
+                          else part = 1;
+                        }
+                        if (!grouped[part]) grouped[part] = [];
+                        grouped[part].push(q);
+                      });
+
+                      return Object.keys(grouped)
+                        .sort()
+                        .map((partKey) => {
+                          const partNum = Number(partKey);
+                          const partQuestions = grouped[partNum];
+                          return (
+                            <Fragment key={partNum}>
+                              <tr style={{ background: '#f8fafc', borderLeft: '4px solid #3b82f6' }}>
+                                <td colSpan={isDraft ? 6 : 5} style={{ fontWeight: 600, color: '#1e40af', padding: '10px 12px' }}>
+                                  {partLabels[partNum] || `Phần ${partNum}`} ({partQuestions.length} câu)
+                                </td>
+                              </tr>
+                              {partQuestions.map((question) => {
+                                const questionId = getQuestionId(question);
+                                return (
+                                  <tr key={questionId}>
+                                    <td>{question.orderIndex}</td>
+                                    <td>
+                                      <MathText text={question.questionText} />
+                                      <div className="row" style={{ justifyContent: 'start', flexWrap: 'wrap', marginTop: 4 }}>
+                                        {question.tags?.map((t) => (
+                                          <span key={t} className="badge published" style={{ fontSize: 11 }}>{t}</span>
+                                        ))}
+                                      </div>
+                                    </td>
+                                    <td>
+                                      <span className={`badge ${question.questionType === 'TRUE_FALSE' ? 'published' : 'draft'}`}>
+                                        {question.questionType === 'TRUE_FALSE' ? 'TF' : 
+                                         question.questionType === 'SHORT_ANSWER' ? 'TL' : 'TN'}
+                                      </span>
+                                    </td>
+                                    <td>
+                                      {question.cognitiveLevel ? (
+                                        <span className="badge draft">{question.cognitiveLevel}</span>
+                                      ) : (
+                                        <span className="muted">—</span>
+                                      )}
+                                    </td>
+                                    <td>
+                                      {isDraft ? (
+                                        <div>
+                                          <input
+                                            className="input"
+                                            type="number"
+                                            min={0}
+                                            step={0.25}
+                                            value={pointsDraft[questionId] ?? String(question.points ?? '')}
+                                            onChange={(e) =>
+                                              setPointsDraft((prev) => ({ ...prev, [questionId]: e.target.value }))
+                                            }
+                                            placeholder="Điểm"
+                                          />
+                                          {question.questionType === 'TRUE_FALSE' && (pointsDraft[questionId] || question.points) && (
+                                            <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4 }}>
+                                              {(() => {
+                                                const totalPoints = parseFloat(pointsDraft[questionId] || String(question.points || 0));
+                                                const pointPerClause = (totalPoints / 4).toFixed(3);
+                                                return (
+                                                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                                    <span>📋 Mỗi mệnh đề: {pointPerClause} điểm</span>
+                                                  </div>
+                                                );
+                                              })()}
+                                            </div>
+                                          )}
                                         </div>
-                                      );
-                                    })()}
-                                  </div>
-                                )}
-                              </div>
-                            ) : (
-                              <div>
-                                <span>{question.points ?? 0}</span>
-                                {/* Show clause breakdown for TF questions in published view */}
-                                {question.questionType === 'TRUE_FALSE' && question.points && (
-                                  <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4 }}>
-                                    {(() => {
-                                      const pointPerClause = (question.points / 4).toFixed(3);
-                                      return <span>📋 Mỗi mệnh đề: {pointPerClause} điểm</span>;
-                                    })()}
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </td>
-                          {isDraft && (
-                            <td>
-                              <button
-                                className="btn danger"
-                                title="Xóa câu hỏi"
-                                onClick={() => void handleRemoveQuestion(questionId)}
-                                disabled={removeQuestionMutation.isPending}
-                              >
-                                <Trash2 size={14} />
-                              </button>
-                            </td>
-                          )}
-                        </tr>
-                      );
-                    })}
+                                      ) : (
+                                        <div>
+                                          <span>{question.points ?? 0}</span>
+                                          {question.questionType === 'TRUE_FALSE' && question.points && (
+                                            <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4 }}>
+                                              {(() => {
+                                                const pointPerClause = (question.points / 4).toFixed(3);
+                                                return <span>📋 Mỗi mệnh đề: {pointPerClause} điểm</span>;
+                                              })()}
+                                            </div>
+                                          )}
+                                        </div>
+                                      )}
+                                    </td>
+                                    {isDraft && (
+                                      <td>
+                                        <button
+                                          className="btn danger"
+                                          title="Xóa câu hỏi"
+                                          onClick={() => void handleRemoveQuestion(questionId)}
+                                          disabled={removeQuestionMutation.isPending}
+                                        >
+                                          <Trash2 size={14} />
+                                        </button>
+                                      </td>
+                                    )}
+                                  </tr>
+                                );
+                              })}
+                            </Fragment>
+                          );
+                        });
+                    })()}
                   </tbody>
                 </table>
               </div>
@@ -571,8 +602,8 @@ export default function AssessmentDetail() {
                       Tự động phân điểm theo mức độ nhận thức
                     </p>
                     <p style={{ fontSize: 12, color: '#6b7280', marginTop: 4, marginBottom: 8 }}>
-                      💡 Câu hỏi Đúng/Sai (TF) có 4 mệnh đề, điểm sẽ được phân bổ theo trọng số 4× so với câu hỏi thường.<br />
-                      Chấm điểm THPT: 4/4 đúng → 100% điểm, 3/4 đúng → 25% điểm, 0-2/4 đúng → 0 điểm.
+                      💡 Câu hỏi Đúng/Sai (TF) có 4 mệnh đề. Điểm sẽ được chia đều cho mỗi mệnh đề.<br />
+                      Quy tắc chấm điểm (Bộ GD&ĐT 2025): Đúng 1/4 mệnh đề = 0 điểm, Đúng 2/4 = 0.25 × Điểm câu, Đúng 3/4 = 0.5 × Điểm câu, Đúng 4/4 = 100% Điểm câu.
                     </p>
                     <div className="row" style={{ flexWrap: 'wrap', justifyContent: 'start', gap: 8 }}>
                       <div>

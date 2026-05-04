@@ -1,4 +1,5 @@
 import type { AssessmentQuestionItem } from '../../types/assessment.types';
+import MathText from '../common/MathText';
 
 interface MCQRendererProps {
   question: AssessmentQuestionItem | {
@@ -27,7 +28,7 @@ export function MCQRenderer({
   return (
     <div className="mcq-question">
       <div className="question-text" style={{ marginBottom: 16 }}>
-        {question.questionText}
+        <MathText text={question.questionText} />
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {Object.entries(optionsAsString).map(([key, text]) => (
@@ -56,7 +57,7 @@ export function MCQRenderer({
               style={{ width: 20, height: 20, cursor: disabled ? 'not-allowed' : 'pointer' }}
             />
             <span style={{ flex: 1, fontSize: '1rem' }}>
-              <strong>{key}.</strong> {text}
+              <strong>{key}.</strong> <MathText text={text} />
             </span>
           </label>
         ))}
