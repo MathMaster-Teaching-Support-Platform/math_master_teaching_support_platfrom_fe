@@ -74,13 +74,13 @@ export default function AdminAcademicStructurePage() {
   const [selectedSubjectId, setSelectedSubjectId] = useState('');
   const [selectedChapterId, setSelectedChapterId] = useState('');
   const [selectedLessonId, setSelectedLessonId] = useState('');
-  const [lessonSearch, setLessonSearch] = useState('');
+  const [globalSearch, setGlobalSearch] = useState('');
   const [editorMode, setEditorMode] = useState<EditorMode>('program');
   const [expandedGradeIds, setExpandedGradeIds] = useState<string[]>([]);
   const [expandedSubjectIds, setExpandedSubjectIds] = useState<string[]>([]);
   const [expandedChapterIds, setExpandedChapterIds] = useState<string[]>([]);
 
-  const debouncedLessonSearch = useDebounce(lessonSearch, 300);
+  const debouncedGlobalSearch = useDebounce(globalSearch, 300);
 
   const [gradeForm, setGradeForm] = useState<{
     id: string;
@@ -170,9 +170,9 @@ export default function AdminAcademicStructurePage() {
   });
 
   const lessonsQuery = useQuery({
-    queryKey: ['admin-academic', 'lessons', selectedChapterId, debouncedLessonSearch],
+    queryKey: ['admin-academic', 'lessons', selectedChapterId, debouncedGlobalSearch],
     queryFn: () =>
-      AcademicStructureService.getLessonsByChapter(selectedChapterId, debouncedLessonSearch),
+      AcademicStructureService.getLessonsByChapter(selectedChapterId, debouncedGlobalSearch),
     enabled: Boolean(selectedChapterId),
   });
 
@@ -526,7 +526,7 @@ export default function AdminAcademicStructurePage() {
     },
     onSuccess: (response) => {
       void queryClient.invalidateQueries({
-        queryKey: ['admin-academic', 'lessons', selectedChapterId, debouncedLessonSearch],
+        queryKey: ['admin-academic', 'lessons', selectedChapterId, debouncedGlobalSearch],
       });
       setSelectedLessonId(response.result.id);
       showToast({
@@ -601,7 +601,7 @@ export default function AdminAcademicStructurePage() {
     mutationFn: (lessonId: string) => AcademicStructureService.deleteLesson(lessonId),
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: ['admin-academic', 'lessons', selectedChapterId, debouncedLessonSearch],
+        queryKey: ['admin-academic', 'lessons', selectedChapterId, debouncedGlobalSearch],
       });
       setSelectedLessonId('');
       showToast({ type: 'success', message: 'Đã vô hiệu hóa bài học' });
@@ -702,6 +702,12 @@ export default function AdminAcademicStructurePage() {
   const getSubjectLabel = (subject: SubjectResponse) => subject.name;
   const getChapterLabel = (chapter: ChapterResponse) => chapter.title;
   const getLessonLabel = (lesson: LessonResponse) => lesson.title;
+
+  const normalizedGlobalSearch = debouncedGlobalSearch.trim().toLowerCase();
+  const isGlobalSearching = normalizedGlobalSearch.length > 0;
+
+  const matchesGlobalSearch = (value: string) =>
+    value.toLowerCase().includes(normalizedGlobalSearch);
 
   const breadcrumbs = [
     selectedGrade ? getGradeLabel(selectedGrade) : 'Chọn chương trình',
@@ -982,15 +988,6 @@ export default function AdminAcademicStructurePage() {
       }}
     >
       <h3 className="aas-form__title">Bài học</h3>
-      <div className="aas-search-wrap">
-        <Search size={15} />
-        <input
-          type="search"
-          placeholder="Tìm bài học trong chương"
-          value={lessonSearch}
-          onChange={(event) => setLessonSearch(event.target.value)}
-        />
-      </div>
       <input
         type="text"
         placeholder="Tên bài học"
@@ -1117,10 +1114,49 @@ export default function AdminAcademicStructurePage() {
                 </h2>
                 <span>{grades.length} chương trình</span>
               </div>
+              <div className="aas-search-wrap">
+                <Search size={15} />
+                <input
+                  type="search"
+                  placeholder="Tìm kiếm tổng thể chương trình, môn học, chương, bài học"
+                  value={globalSearch}
+                  onChange={(event) => setGlobalSearch(event.target.value)}
+                />
+              </div>
               <div className="aas-tree">
                 {grades.map((grade) => {
-                  const gradeOpen = expandedGradeIds.includes(grade.id);
+                  const gradeOpen = expandedGradeIds.includes(grade.id) || isGlobalSearching;
                   const gradeActive = selectedGradeId === grade.id;
+
+                  const gradeMatchedByName = matchesGlobalSearch(getGradeLabel(grade));
+                  const matchedSubjects = gradeActive
+                    ? subjects.filter((subject) => matchesGlobalSearch(getSubjectLabel(subject)))
+                    : [];
+                  const matchedChapters = gradeActive
+                    ? chapters.filter((chapter) => matchesGlobalSearch(getChapterLabel(chapter)))
+                    : [];
+                  const matchedLessons = gradeActive
+                    ? lessons.filter((lesson) => matchesGlobalSearch(getLessonLabel(lesson)))
+                    : [];
+
+                  if (
+                    isGlobalSearching &&
+                    !gradeMatchedByName &&
+                    matchedSubjects.length === 0 &&
+                    matchedChapters.length === 0 &&
+                    matchedLessons.length === 0
+                  ) {
+                    return null;
+                  }
+
+                  const visibleSubjects = !isGlobalSearching
+                    ? subjects
+                    : subjects.filter(
+                        (subject) =>
+                          matchesGlobalSearch(getSubjectLabel(subject)) ||
+                          (subject.id === selectedSubjectId &&
+                            (matchedChapters.length > 0 || matchedLessons.length > 0))
+                      );
 
                   return (
                     <div key={grade.id} className="aas-tree-node lvl-0">
@@ -1143,9 +1179,19 @@ export default function AdminAcademicStructurePage() {
                       {gradeOpen && (
                         <div className="aas-tree-children">
                           {gradeActive &&
-                            subjects.map((subject) => {
-                              const subjectOpen = expandedSubjectIds.includes(subject.id);
+                            visibleSubjects.map((subject) => {
+                              const subjectOpen =
+                                expandedSubjectIds.includes(subject.id) || isGlobalSearching;
                               const subjectActive = selectedSubjectId === subject.id;
+
+                              const visibleChapters = !isGlobalSearching
+                                ? chapters
+                                : chapters.filter(
+                                    (chapter) =>
+                                      matchesGlobalSearch(getChapterLabel(chapter)) ||
+                                      (chapter.id === selectedChapterId &&
+                                        matchedLessons.length > 0)
+                                  );
 
                               return (
                                 <div key={subject.id} className="aas-tree-node lvl-1">
@@ -1172,9 +1218,17 @@ export default function AdminAcademicStructurePage() {
 
                                   {subjectOpen && subjectActive && (
                                     <div className="aas-tree-children">
-                                      {chapters.map((chapter) => {
-                                        const chapterOpen = expandedChapterIds.includes(chapter.id);
+                                      {visibleChapters.map((chapter) => {
+                                        const chapterOpen =
+                                          expandedChapterIds.includes(chapter.id) ||
+                                          isGlobalSearching;
                                         const chapterActive = selectedChapterId === chapter.id;
+
+                                        const visibleLessons = !isGlobalSearching
+                                          ? lessons
+                                          : lessons.filter((lesson) =>
+                                              matchesGlobalSearch(getLessonLabel(lesson))
+                                            );
 
                                         return (
                                           <div key={chapter.id} className="aas-tree-node lvl-2">
@@ -1200,7 +1254,7 @@ export default function AdminAcademicStructurePage() {
 
                                             {chapterOpen && chapterActive && (
                                               <div className="aas-tree-children">
-                                                {lessons.map((lesson) => (
+                                                {visibleLessons.map((lesson) => (
                                                   <div
                                                     key={lesson.id}
                                                     className="aas-tree-node lvl-3"
