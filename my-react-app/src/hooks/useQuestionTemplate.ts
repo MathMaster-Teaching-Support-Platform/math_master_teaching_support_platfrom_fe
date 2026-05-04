@@ -159,16 +159,19 @@ export const useGenerateQuestions = () => {
             count,
             generationMode,
             canonicalQuestionId,
+            avoidDuplicates,
         }: {
             id: string;
             count: number;
             generationMode?: QuestionGenerationMode;
             canonicalQuestionId?: string;
+            avoidDuplicates?: boolean;
         }) =>
             questionTemplateService.generateQuestions(id, {
                 count,
                 generationMode,
                 canonicalQuestionId,
+                avoidDuplicates,
             }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['questions'] });

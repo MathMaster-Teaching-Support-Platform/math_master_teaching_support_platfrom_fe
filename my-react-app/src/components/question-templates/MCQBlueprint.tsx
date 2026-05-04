@@ -2,6 +2,7 @@ import { Plus, Trash2 } from 'lucide-react';
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import MathText from '../common/MathText';
 import { ParametersEditor, type ParameterInput } from '../common/ParametersEditor';
+import { renderTemplateWithSamples } from '../../utils/templatePreview';
 
 type OptionInput = {
   key: string;
@@ -141,14 +142,14 @@ export const MCQBlueprint = forwardRef<MCQBlueprintRef, MCQBlueprintProps>(
             onFocus={() => onFocusField?.('templateText')}
             onChange={(event) => setTemplateText(event.target.value)}
           />
+          {templateText && (
+            <div className="preview-box">
+              <MathText text={renderTemplateWithSamples(templateText, parameters)} />
+            </div>
+          )}
           <p className="muted" style={{ marginTop: 6, fontSize: '0.78rem' }}>
             Dùng {'{{a}}'} để tạo biến động. Bôi đen nội dung cần công thức rồi bấm Insert Math.
           </p>
-          {templateText && (
-            <div className="preview-box">
-              <MathText text={templateText} />
-            </div>
-          )}
         </label>
 
         <ParametersEditor

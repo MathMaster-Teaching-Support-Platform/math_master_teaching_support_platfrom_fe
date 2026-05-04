@@ -8,6 +8,7 @@ import type {
   BatchUpsertMatrixRowCellsRequest,
 } from '../../types/examMatrix';
 import { getPartLabel, getNumberOfParts } from '../../utils/partHelpers';
+import { useGetQuestionBankMatrixStats } from '../../hooks/useQuestionBank';
 import './matrix-table.css';
 
 interface MatrixTableProps {
@@ -22,6 +23,7 @@ interface MatrixTableProps {
   onRemoveRow: (rowId: string) => Promise<void>;
   onCellChange?: (matrixId: string, updates: BatchUpsertMatrixRowCellsRequest) => Promise<void>;
   matrixId?: string;
+  questionBankId?: string;
 }
 
 const cognitiveOrder = ['NB', 'TH', 'VD', 'VDC'] as const;
@@ -107,7 +109,54 @@ export function MatrixTable({
   onRemoveRow,
   onCellChange,
   matrixId,
+  questionBankId,
 }: Readonly<MatrixTableProps>) {
+  const { data: bankStatsResponse } = useGetQuestionBankMatrixStats(questionBankId ?? '', !!questionBankId);
+  const bankStats = bankStatsResponse?.result;
+
+  // Create a lookup map for availability: chapterId -> partNum -> level -> count
+  const availabilityMap = useMemo(() => {
+    if (!bankStats) return new Map<string, Map<number, Map<string, number>>>();
+    
+    const map = new Map<string, Map<number, Map<string, number>>>();
+    
+    bankStats.forEach(gradeStat => {
+      gradeStat.chapters.forEach(chap => {
+        const chapMap = new Map<number, Map<string, number>>();
+        chap.types.forEach(typeStat => {
+          // Map backend types to parts
+          // Assuming: MULTIPLE_CHOICE -> Part 1, TRUE_FALSE -> Part 2, SHORT_ANSWER -> Part 3
+          // Or we can try to match by questionType if parts are provided
+          const typeToPartNum: Record<string, number> = {
+            'MULTIPLE_CHOICE': 1,
+            'TRUE_FALSE': 2,
+            'SHORT_ANSWER': 3
+          };
+          const partNum = typeToPartNum[typeStat.questionType];
+          if (partNum) {
+            const levelMap = new Map<string, number>();
+            Object.entries(typeStat.cognitiveCounts).forEach(([lvl, count]) => {
+              // Normalize level keys if needed (e.g. NHAN_BIET -> NB)
+              const normLvl = lvl === 'NHAN_BIET' ? 'NB' : 
+                               lvl === 'THONG_HIEU' ? 'TH' :
+                               lvl === 'VAN_DUNG' ? 'VD' :
+                               lvl === 'VAN_DUNG_CAO' ? 'VDC' : lvl;
+              levelMap.set(normLvl, count);
+            });
+            chapMap.set(partNum, levelMap);
+          }
+        });
+        map.set(chap.chapterId, chapMap);
+      });
+    });
+    
+    return map;
+  }, [bankStats]);
+
+  const getAvailability = useCallback((chapterId: string, partNum: number, level: string) => {
+    return availabilityMap.get(chapterId)?.get(partNum)?.get(level);
+  }, [availabilityMap]);
+
   const [deletingRowId, setDeletingRowId] = useState<string | null>(null);
   
   // Input mode
@@ -352,22 +401,31 @@ export function MatrixTable({
 
   // Commit edit
   const commitEdit = useCallback((rowId: string, partNumber: number, level: MatrixLevel) => {
+    const cellId = makeCellId(rowId, partNumber, level);
+    
+    // Prevent double-commit (e.g. Enter + Blur)
+    if (editingCell !== cellId) return;
+
     const newValue = parseInt(editValue, 10);
     if (!isNaN(newValue)) {
-      if (inputMode === 'percentage') {
-        const cellId = makeCellId(rowId, partNumber, level);
-        setLocalPercentages(prev => {
-          const next = new Map(prev);
-          next.set(cellId, Math.max(0, newValue));
-          return next;
-        });
-      } else {
-        updateCellValue(rowId, partNumber, level, newValue);
+      const currentValue = getCellValue(rowId, partNumber, level);
+      
+      // Only update if value actually changed
+      if (newValue !== currentValue || inputMode === 'percentage') {
+        if (inputMode === 'percentage') {
+          setLocalPercentages(prev => {
+            const next = new Map(prev);
+            next.set(cellId, Math.max(0, newValue));
+            return next;
+          });
+        } else {
+          updateCellValue(rowId, partNumber, level, newValue);
+        }
       }
     }
     setEditingCell(null);
     setEditValue('');
-  }, [editValue, inputMode, updateCellValue]);
+  }, [editingCell, editValue, getCellValue, inputMode, updateCellValue]);
 
   // Cancel edit
   const cancelEdit = useCallback(() => {
@@ -631,15 +689,20 @@ export function MatrixTable({
                         const isDirty = dirtyCells.has(cellId);
                         
                         const displayValue = inputMode === 'percentage' 
-                          ? (localPercentages.get(cellId) ?? 0) 
-                          : count;
+                           ? (localPercentages.get(cellId) ?? 0) 
+                           : count;
+
+                        const available = getAvailability(row.chapterId || '', part.partNumber, level);
+                        const isOverLimit = available !== undefined && count > available;
 
                         return (
                           <td
                             key={`${part.partNumber}-${level}`}
                             className={`matrix-td matrix-td--level matrix-td--level-${level.toLowerCase()} ${
                               count === 0 && inputMode !== 'percentage' ? 'matrix-td--empty' : ''
-                            } ${isDirty ? 'matrix-td--dirty' : ''} ${canEdit ? 'matrix-td--editable' : ''}`}
+                            } ${isDirty ? 'matrix-td--dirty' : ''} ${canEdit ? 'matrix-td--editable' : ''} ${
+                              isOverLimit ? 'matrix-td--overlimit' : ''
+                            }`}
                             data-part={part.partNumber}
                             onClick={() => !isEditing && startEdit(row.rowId, part.partNumber, level)}
                           >
@@ -665,6 +728,13 @@ export function MatrixTable({
                             ) : (
                               <div className="matrix-cell-value">
                                 {displayValue}{inputMode === 'percentage' ? '%' : ''}
+                                {available !== undefined && (
+                                  <div className={`matrix-cell-availability ${isOverLimit ? 'overlimit' : ''}`} 
+                                       title={`Kho có: ${available} ${part.questionType === 'TRUE_FALSE' ? 'mệnh đề' : 'câu'}`}>
+                                    <span className="availability-label">Kho:</span>
+                                    <span className="availability-count">{available}</span>
+                                  </div>
+                                )}
                               </div>
                             )}
                           </td>

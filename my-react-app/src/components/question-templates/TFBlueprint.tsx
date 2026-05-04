@@ -1,6 +1,7 @@
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import MathText from '../common/MathText';
 import { ParametersEditor, type ParameterInput } from '../common/ParametersEditor';
+import { renderTemplateWithSamples } from '../../utils/templatePreview';
 import { CognitiveLevel } from '../../types/questionTemplate';
 
 export type TFClauseInput = {
@@ -162,7 +163,7 @@ export const TFBlueprint = forwardRef<TFBlueprintRef, TFBlueprintProps>(
           />
           {stemText && (
             <div className="preview-box">
-              <MathText text={stemText} />
+              <MathText text={renderTemplateWithSamples(stemText, parameters)} />
             </div>
           )}
         </label>
@@ -256,7 +257,7 @@ export const TFBlueprint = forwardRef<TFBlueprintRef, TFBlueprintProps>(
                 />
                 {clause.text && (
                   <div className="preview-box">
-                    <MathText text={clause.text} />
+                    <MathText text={renderTemplateWithSamples(clause.text, parameters)} />
                   </div>
                 )}
               </label>

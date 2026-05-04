@@ -360,6 +360,34 @@ export default function AssessmentModal({
             <div className="form-grid">
               <label>
                 <p className="muted" style={{ marginBottom: 6 }}>
+                  Ngày bắt đầu
+                </p>
+                <input
+                  className="input"
+                  type="datetime-local"
+                  value={formData.startDate ? new Date(formData.startDate).toISOString().slice(0, 16) : ''}
+                  onChange={(event) =>
+                    setFormData({ ...formData, startDate: event.target.value })
+                  }
+                />
+              </label>
+
+              <label>
+                <p className="muted" style={{ marginBottom: 6 }}>
+                  Ngày kết thúc
+                </p>
+                <input
+                  className="input"
+                  type="datetime-local"
+                  value={formData.endDate ? new Date(formData.endDate).toISOString().slice(0, 16) : ''}
+                  onChange={(event) =>
+                    setFormData({ ...formData, endDate: event.target.value })
+                  }
+                />
+              </label>
+
+              <label>
+                <p className="muted" style={{ marginBottom: 6 }}>
                   Thời gian làm bài (phút)
                 </p>
                 <input

@@ -134,3 +134,11 @@ export const useUnmapTemplateFromQuestionBank = () => {
     },
   });
 };
+
+export const useGetQuestionBankMatrixStats = (id: string, enabled = true) =>
+  useQuery({
+    queryKey: [...questionBankKeys.detail(id), 'matrix-stats'],
+    queryFn: () => questionBankService.getMatrixStats(id),
+    enabled: !!id && enabled,
+  });
+

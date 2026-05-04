@@ -329,6 +329,7 @@ export interface GenerateQuestionsRequest {
     count: number;
     generationMode?: QuestionGenerationMode;
     canonicalQuestionId?: string;
+    avoidDuplicates?: boolean;
 }
 
 export interface GenerateQuestionsFromCanonicalRequest {

@@ -379,6 +379,7 @@ export default function ExamMatrixDetailPage() {
                   onRemoveRow={removeRow}
                   onCellChange={handleCellChange}
                   matrixId={matrixId}
+                  questionBankId={matrix?.questionBankId}
                 />
               )}
             </>

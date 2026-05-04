@@ -1,6 +1,7 @@
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import MathText from '../common/MathText';
 import { ParametersEditor, type ParameterInput } from '../common/ParametersEditor';
+import { renderTemplateWithSamples } from '../../utils/templatePreview';
 
 export type ValidationMode = 'EXACT' | 'NUMERIC' | 'REGEX';
 
@@ -126,7 +127,7 @@ export const SABlueprint = forwardRef<SABlueprintRef, SABlueprintProps>(
           </p>
           {templateText && (
             <div className="preview-box">
-              <MathText text={templateText} />
+              <MathText text={renderTemplateWithSamples(templateText, parameters)} />
             </div>
           )}
         </label>
@@ -161,7 +162,7 @@ export const SABlueprint = forwardRef<SABlueprintRef, SABlueprintProps>(
           </p>
           {answerFormula && (
             <div className="preview-box">
-              <MathText text={answerFormula} />
+              <MathText text={renderTemplateWithSamples(answerFormula, parameters)} />
             </div>
           )}
         </label>

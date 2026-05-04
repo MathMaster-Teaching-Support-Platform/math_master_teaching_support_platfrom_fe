@@ -186,8 +186,16 @@ function GenerateFromMatrixModal({
             className="btn btn--feat-indigo"
             disabled={!matrixId || isLoading}
             onClick={onConfirm}
+            style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 140, justifyContent: 'center' }}
           >
-            {isLoading ? 'Đang tạo...' : 'Tạo assessment'}
+            {isLoading ? (
+              <>
+                <RefreshCw size={14} className="animate-spin" />
+                Đang tạo...
+              </>
+            ) : (
+              'Tạo assessment'
+            )}
           </button>
         </div>
       </div>
