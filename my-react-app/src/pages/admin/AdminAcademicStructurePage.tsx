@@ -744,22 +744,29 @@ export default function AdminAcademicStructurePage() {
         value={gradeForm.description}
         onChange={(event) => setGradeForm((prev) => ({ ...prev, description: event.target.value }))}
       />
-      <label className="aas-check">
-        <input
-          type="checkbox"
-          checked={gradeForm.active}
-          onChange={(event) => setGradeForm((prev) => ({ ...prev, active: event.target.checked }))}
-        />
-        Đang hoạt động
-      </label>
+      <p className="aas-helper">
+        Trạng thái được quản lý bằng hành động "Vô hiệu hóa" để tránh trùng lặp thao tác.
+      </p>
       <div className="aas-actions">
         <button type="submit" disabled={saveGradeMutation.isPending}>
           {gradeForm.id ? <Save size={14} /> : <Plus size={14} />}
-          {gradeForm.id ? 'Cập nhật' : 'Tạo mới'}
+          {gradeForm.id ? 'Lưu cập nhật' : 'Thêm mới'}
         </button>
-        <button type="button" className="ghost" onClick={resetGradeForm}>
-          Làm mới
-        </button>
+        {gradeForm.id ? (
+          <button type="button" className="ghost" onClick={resetGradeForm}>
+            Tạo chương trình mới
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="ghost"
+            onClick={() =>
+              setGradeForm({ id: '', gradeLevel: '', name: '', description: '', active: true })
+            }
+          >
+            Xóa trắng form
+          </button>
+        )}
         <button
           type="button"
           className="danger"
@@ -842,24 +849,37 @@ export default function AdminAcademicStructurePage() {
           }
         />
       </div>
-      <label className="aas-check">
-        <input
-          type="checkbox"
-          checked={subjectForm.isActive}
-          onChange={(event) =>
-            setSubjectForm((prev) => ({ ...prev, isActive: event.target.checked }))
-          }
-        />
-        Đang hoạt động
-      </label>
+      <p className="aas-helper">
+        Trạng thái được quản lý bằng hành động "Vô hiệu hóa" để tránh trùng lặp thao tác.
+      </p>
       <div className="aas-actions">
         <button type="submit" disabled={saveSubjectMutation.isPending || !selectedGradeId}>
           {subjectForm.id ? <Save size={14} /> : <Plus size={14} />}
-          {subjectForm.id ? 'Cập nhật' : 'Tạo mới'}
+          {subjectForm.id ? 'Lưu cập nhật' : 'Thêm mới'}
         </button>
-        <button type="button" className="ghost" onClick={resetSubjectForm}>
-          Làm mới
-        </button>
+        {subjectForm.id ? (
+          <button type="button" className="ghost" onClick={resetSubjectForm}>
+            Tạo môn học mới
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="ghost"
+            onClick={() =>
+              setSubjectForm({
+                id: '',
+                name: '',
+                description: '',
+                gradeMin: '',
+                gradeMax: '',
+                isActive: true,
+                schoolGradeId: selectedGradeId,
+              })
+            }
+          >
+            Xóa trắng form
+          </button>
+        )}
         <button
           type="button"
           className="danger"
@@ -917,11 +937,29 @@ export default function AdminAcademicStructurePage() {
       <div className="aas-actions">
         <button type="submit" disabled={saveChapterMutation.isPending || !selectedSubjectId}>
           {chapterForm.id ? <Save size={14} /> : <Plus size={14} />}
-          {chapterForm.id ? 'Cập nhật' : 'Tạo mới'}
+          {chapterForm.id ? 'Lưu cập nhật' : 'Thêm mới'}
         </button>
-        <button type="button" className="ghost" onClick={resetChapterForm}>
-          Làm mới
-        </button>
+        {chapterForm.id ? (
+          <button type="button" className="ghost" onClick={resetChapterForm}>
+            Tạo chương mới
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="ghost"
+            onClick={() =>
+              setChapterForm({
+                id: '',
+                title: '',
+                description: '',
+                orderIndex: '',
+                subjectId: selectedSubjectId,
+              })
+            }
+          >
+            Xóa trắng form
+          </button>
+        )}
         <button
           type="button"
           className="danger"
@@ -1043,11 +1081,34 @@ export default function AdminAcademicStructurePage() {
       <div className="aas-actions">
         <button type="submit" disabled={saveLessonMutation.isPending || !selectedChapterId}>
           {lessonForm.id ? <Save size={14} /> : <Plus size={14} />}
-          {lessonForm.id ? 'Cập nhật' : 'Tạo mới'}
+          {lessonForm.id ? 'Lưu cập nhật' : 'Thêm mới'}
         </button>
-        <button type="button" className="ghost" onClick={resetLessonForm}>
-          Làm mới
-        </button>
+        {lessonForm.id ? (
+          <button type="button" className="ghost" onClick={resetLessonForm}>
+            Tạo bài học mới
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="ghost"
+            onClick={() =>
+              setLessonForm({
+                id: '',
+                title: '',
+                learningObjectives: '',
+                lessonContent: '',
+                summary: '',
+                orderIndex: '',
+                durationMinutes: '',
+                difficulty: 'EASY',
+                status: 'DRAFT',
+                chapterId: selectedChapterId,
+              })
+            }
+          >
+            Xóa trắng form
+          </button>
+        )}
         <button
           type="button"
           className="danger"
