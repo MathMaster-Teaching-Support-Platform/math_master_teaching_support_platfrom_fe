@@ -1,5 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { BookOpen, BookText, FolderTree, GraduationCap, Plus, Save, Trash2 } from 'lucide-react';
+import {
+  BookOpen,
+  BookText,
+  ChevronDown,
+  ChevronRight,
+  FolderTree,
+  GraduationCap,
+  Plus,
+  Save,
+  Search,
+  Trash2,
+} from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { useToast } from '../../context/ToastContext';
@@ -26,6 +37,7 @@ import './admin-academic-structure-page.css';
 
 const LESSON_DIFFICULTY_OPTIONS: LessonDifficulty[] = ['EASY', 'MEDIUM', 'HARD'];
 const LESSON_STATUS_OPTIONS: LessonStatus[] = ['DRAFT', 'PUBLISHED', 'ARCHIVED'];
+type EditorMode = 'program' | 'subject' | 'chapter' | 'lesson';
 
 type NumberInput = number | '';
 
@@ -48,6 +60,10 @@ export default function AdminAcademicStructurePage() {
   const [selectedChapterId, setSelectedChapterId] = useState('');
   const [selectedLessonId, setSelectedLessonId] = useState('');
   const [lessonSearch, setLessonSearch] = useState('');
+  const [editorMode, setEditorMode] = useState<EditorMode>('program');
+  const [expandedGradeIds, setExpandedGradeIds] = useState<string[]>([]);
+  const [expandedSubjectIds, setExpandedSubjectIds] = useState<string[]>([]);
+  const [expandedChapterIds, setExpandedChapterIds] = useState<string[]>([]);
 
   const debouncedLessonSearch = useDebounce(lessonSearch, 300);
 
@@ -166,6 +182,22 @@ export default function AdminAcademicStructurePage() {
     () => lessons.find((lesson) => lesson.id === selectedLessonId),
     [lessons, selectedLessonId]
   );
+
+  useEffect(() => {
+    if (selectedLessonId) {
+      setEditorMode('lesson');
+      return;
+    }
+    if (selectedChapterId) {
+      setEditorMode('chapter');
+      return;
+    }
+    if (selectedSubjectId) {
+      setEditorMode('subject');
+      return;
+    }
+    setEditorMode('program');
+  }, [selectedChapterId, selectedLessonId, selectedSubjectId]);
 
   useEffect(() => {
     if (!selectedGradeId) return;
@@ -296,7 +328,7 @@ export default function AdminAcademicStructurePage() {
   const saveGradeMutation = useMutation({
     mutationFn: async () => {
       if (!gradeForm.name.trim()) {
-        throw new Error('Vui lòng nhập tên khối lớp');
+        throw new Error('Vui lòng nhập tên chương trình');
       }
 
       if (gradeForm.id) {
@@ -319,15 +351,16 @@ export default function AdminAcademicStructurePage() {
     onSuccess: (response) => {
       void queryClient.invalidateQueries({ queryKey: ['admin-academic', 'grades'] });
       setSelectedGradeId(response.result.id);
+      setExpandedGradeIds((prev) => Array.from(new Set([...prev, response.result.id])));
       showToast({
         type: 'success',
-        message: gradeForm.id ? 'Đã cập nhật khối lớp' : 'Đã tạo khối lớp mới',
+        message: gradeForm.id ? 'Đã cập nhật chương trình' : 'Đã tạo chương trình mới',
       });
     },
     onError: (error) => {
       showToast({
         type: 'error',
-        message: error instanceof Error ? error.message : 'Không thể lưu khối lớp',
+        message: error instanceof Error ? error.message : 'Không thể lưu chương trình',
       });
     },
   });
@@ -371,6 +404,7 @@ export default function AdminAcademicStructurePage() {
         queryKey: ['admin-academic', 'subjects', selectedGradeId],
       });
       setSelectedSubjectId(response.result.id);
+      setExpandedSubjectIds((prev) => Array.from(new Set([...prev, response.result.id])));
       showToast({
         type: 'success',
         message: subjectForm.id ? 'Đã cập nhật môn học' : 'Đã tạo môn học mới',
@@ -415,6 +449,7 @@ export default function AdminAcademicStructurePage() {
         queryKey: ['admin-academic', 'chapters', selectedSubjectId],
       });
       setSelectedChapterId(response.result.id);
+      setExpandedChapterIds((prev) => Array.from(new Set([...prev, response.result.id])));
       showToast({
         type: 'success',
         message: chapterForm.id ? 'Đã cập nhật chương' : 'Đã tạo chương mới',
@@ -489,12 +524,12 @@ export default function AdminAcademicStructurePage() {
       setSelectedSubjectId('');
       setSelectedChapterId('');
       setSelectedLessonId('');
-      showToast({ type: 'success', message: 'Đã xóa (soft delete) school grade' });
+      showToast({ type: 'success', message: 'Đã xóa (soft delete) chương trình' });
     },
     onError: (error) => {
       showToast({
         type: 'error',
-        message: error instanceof Error ? error.message : 'Không thể xóa school grade',
+        message: error instanceof Error ? error.message : 'Không thể xóa chương trình',
       });
     },
   });
@@ -600,7 +635,7 @@ export default function AdminAcademicStructurePage() {
 
   const handleDeleteGrade = () => {
     if (!selectedGradeId) return;
-    if (!globalThis.confirm('Xác nhận xóa (soft delete) school grade này?')) return;
+    if (!globalThis.confirm('Xác nhận xóa (soft delete) chương trình này?')) return;
     deleteGradeMutation.mutate(selectedGradeId);
   };
 
@@ -622,10 +657,354 @@ export default function AdminAcademicStructurePage() {
     deleteLessonMutation.mutate(selectedLessonId);
   };
 
-  const getGradeLabel = (grade: SchoolGradeResponse) => `${grade.gradeLevel} - ${grade.name}`;
+  const toggleExpanded = (collection: string[], id: string) => {
+    if (collection.includes(id)) {
+      return collection.filter((item) => item !== id);
+    }
+    return [...collection, id];
+  };
+
+  const getGradeLabel = (grade: SchoolGradeResponse) => `Lớp ${grade.gradeLevel} - ${grade.name}`;
   const getSubjectLabel = (subject: SubjectResponse) => subject.name;
   const getChapterLabel = (chapter: ChapterResponse) => chapter.title;
   const getLessonLabel = (lesson: LessonResponse) => lesson.title;
+
+  const breadcrumbs = [
+    selectedGrade ? getGradeLabel(selectedGrade) : 'Chọn chương trình',
+    selectedSubject ? getSubjectLabel(selectedSubject) : 'Chọn môn học',
+    selectedChapter ? getChapterLabel(selectedChapter) : 'Chọn chương',
+    selectedLesson ? getLessonLabel(selectedLesson) : 'Chọn bài học',
+  ];
+
+  const renderProgramEditor = () => (
+    <form
+      className="aas-form"
+      onSubmit={(event) => {
+        event.preventDefault();
+        saveGradeMutation.mutate();
+      }}
+    >
+      <div className="aas-form__title">Chương trình</div>
+      <input
+        type="number"
+        min={1}
+        placeholder="Lớp"
+        value={gradeForm.gradeLevel}
+        onChange={(event) =>
+          setGradeForm((prev) => ({
+            ...prev,
+            gradeLevel: event.target.value === '' ? '' : Number(event.target.value),
+          }))
+        }
+      />
+      <input
+        type="text"
+        placeholder="Tên chương trình"
+        value={gradeForm.name}
+        onChange={(event) => setGradeForm((prev) => ({ ...prev, name: event.target.value }))}
+      />
+      <textarea
+        placeholder="Mô tả"
+        value={gradeForm.description}
+        onChange={(event) => setGradeForm((prev) => ({ ...prev, description: event.target.value }))}
+      />
+      <label className="aas-check">
+        <input
+          type="checkbox"
+          checked={gradeForm.active}
+          onChange={(event) => setGradeForm((prev) => ({ ...prev, active: event.target.checked }))}
+        />
+        Đang hoạt động
+      </label>
+      <div className="aas-actions">
+        <button type="submit" disabled={saveGradeMutation.isPending}>
+          {gradeForm.id ? <Save size={14} /> : <Plus size={14} />}
+          {gradeForm.id ? 'Cập nhật' : 'Tạo mới'}
+        </button>
+        <button type="button" className="ghost" onClick={resetGradeForm}>
+          Làm mới
+        </button>
+        <button
+          type="button"
+          className="danger"
+          onClick={handleDeleteGrade}
+          disabled={!selectedGradeId || deleteGradeMutation.isPending}
+        >
+          <Trash2 size={14} />
+          Xóa
+        </button>
+      </div>
+    </form>
+  );
+
+  const renderSubjectEditor = () => (
+    <form
+      className="aas-form"
+      onSubmit={(event) => {
+        event.preventDefault();
+        saveSubjectMutation.mutate();
+      }}
+    >
+      <div className="aas-form__title">Môn học</div>
+      <select
+        value={subjectForm.schoolGradeId}
+        onChange={(event) =>
+          setSubjectForm((prev) => ({ ...prev, schoolGradeId: event.target.value }))
+        }
+      >
+        <option value="">Chọn chương trình</option>
+        {grades.map((grade) => (
+          <option key={grade.id} value={grade.id}>
+            {getGradeLabel(grade)}
+          </option>
+        ))}
+      </select>
+      <input
+        type="text"
+        placeholder="Tên môn học"
+        value={subjectForm.name}
+        onChange={(event) => setSubjectForm((prev) => ({ ...prev, name: event.target.value }))}
+      />
+      <textarea
+        placeholder="Mô tả"
+        value={subjectForm.description}
+        onChange={(event) =>
+          setSubjectForm((prev) => ({ ...prev, description: event.target.value }))
+        }
+      />
+      <div className="aas-inline-2">
+        <input
+          type="number"
+          placeholder="gradeMin"
+          value={subjectForm.gradeMin}
+          onChange={(event) =>
+            setSubjectForm((prev) => ({
+              ...prev,
+              gradeMin: event.target.value === '' ? '' : Number(event.target.value),
+            }))
+          }
+        />
+        <input
+          type="number"
+          placeholder="gradeMax"
+          value={subjectForm.gradeMax}
+          onChange={(event) =>
+            setSubjectForm((prev) => ({
+              ...prev,
+              gradeMax: event.target.value === '' ? '' : Number(event.target.value),
+            }))
+          }
+        />
+      </div>
+      <label className="aas-check">
+        <input
+          type="checkbox"
+          checked={subjectForm.isActive}
+          onChange={(event) =>
+            setSubjectForm((prev) => ({ ...prev, isActive: event.target.checked }))
+          }
+        />
+        Đang hoạt động
+      </label>
+      <div className="aas-actions">
+        <button type="submit" disabled={saveSubjectMutation.isPending || !selectedGradeId}>
+          {subjectForm.id ? <Save size={14} /> : <Plus size={14} />}
+          {subjectForm.id ? 'Cập nhật' : 'Tạo mới'}
+        </button>
+        <button type="button" className="ghost" onClick={resetSubjectForm}>
+          Làm mới
+        </button>
+        <button
+          type="button"
+          className="danger"
+          onClick={handleDeleteSubject}
+          disabled={!selectedSubjectId || deleteSubjectMutation.isPending}
+        >
+          <Trash2 size={14} />
+          Xóa
+        </button>
+      </div>
+    </form>
+  );
+
+  const renderChapterEditor = () => (
+    <form
+      className="aas-form"
+      onSubmit={(event) => {
+        event.preventDefault();
+        saveChapterMutation.mutate();
+      }}
+    >
+      <div className="aas-form__title">Chương</div>
+      <input
+        type="text"
+        placeholder="Tên chương"
+        value={chapterForm.title}
+        onChange={(event) => setChapterForm((prev) => ({ ...prev, title: event.target.value }))}
+      />
+      <textarea
+        placeholder="Mô tả chương"
+        value={chapterForm.description}
+        onChange={(event) =>
+          setChapterForm((prev) => ({ ...prev, description: event.target.value }))
+        }
+      />
+      <input
+        type="number"
+        placeholder="orderIndex"
+        value={chapterForm.orderIndex}
+        onChange={(event) =>
+          setChapterForm((prev) => ({
+            ...prev,
+            orderIndex: event.target.value === '' ? '' : Number(event.target.value),
+          }))
+        }
+      />
+      <div className="aas-actions">
+        <button type="submit" disabled={saveChapterMutation.isPending || !selectedSubjectId}>
+          {chapterForm.id ? <Save size={14} /> : <Plus size={14} />}
+          {chapterForm.id ? 'Cập nhật' : 'Tạo mới'}
+        </button>
+        <button type="button" className="ghost" onClick={resetChapterForm}>
+          Làm mới
+        </button>
+        <button
+          type="button"
+          className="danger"
+          onClick={handleDeleteChapter}
+          disabled={!selectedChapterId || deleteChapterMutation.isPending}
+        >
+          <Trash2 size={14} />
+          Xóa
+        </button>
+      </div>
+    </form>
+  );
+
+  const renderLessonEditor = () => (
+    <form
+      className="aas-form"
+      onSubmit={(event) => {
+        event.preventDefault();
+        saveLessonMutation.mutate();
+      }}
+    >
+      <div className="aas-form__title">Bài học</div>
+      <div className="aas-search-wrap">
+        <Search size={15} />
+        <input
+          type="search"
+          placeholder="Tìm bài học trong chương"
+          value={lessonSearch}
+          onChange={(event) => setLessonSearch(event.target.value)}
+        />
+      </div>
+      <input
+        type="text"
+        placeholder="Tên bài học"
+        value={lessonForm.title}
+        onChange={(event) => setLessonForm((prev) => ({ ...prev, title: event.target.value }))}
+      />
+      <textarea
+        placeholder="Mục tiêu học tập"
+        value={lessonForm.learningObjectives}
+        onChange={(event) =>
+          setLessonForm((prev) => ({ ...prev, learningObjectives: event.target.value }))
+        }
+      />
+      <textarea
+        placeholder="Nội dung bài học"
+        value={lessonForm.lessonContent}
+        onChange={(event) =>
+          setLessonForm((prev) => ({ ...prev, lessonContent: event.target.value }))
+        }
+      />
+      <textarea
+        placeholder="Tóm tắt"
+        value={lessonForm.summary}
+        onChange={(event) => setLessonForm((prev) => ({ ...prev, summary: event.target.value }))}
+      />
+      <div className="aas-inline-2">
+        <input
+          type="number"
+          placeholder="orderIndex"
+          value={lessonForm.orderIndex}
+          onChange={(event) =>
+            setLessonForm((prev) => ({
+              ...prev,
+              orderIndex: event.target.value === '' ? '' : Number(event.target.value),
+            }))
+          }
+        />
+        <input
+          type="number"
+          placeholder="durationMinutes"
+          value={lessonForm.durationMinutes}
+          onChange={(event) =>
+            setLessonForm((prev) => ({
+              ...prev,
+              durationMinutes: event.target.value === '' ? '' : Number(event.target.value),
+            }))
+          }
+        />
+      </div>
+      <div className="aas-inline-2">
+        <select
+          value={lessonForm.difficulty}
+          onChange={(event) =>
+            setLessonForm((prev) => ({
+              ...prev,
+              difficulty: event.target.value as LessonDifficulty,
+            }))
+          }
+        >
+          {LESSON_DIFFICULTY_OPTIONS.map((difficulty) => (
+            <option key={difficulty} value={difficulty}>
+              {difficulty}
+            </option>
+          ))}
+        </select>
+        <select
+          value={lessonForm.status}
+          onChange={(event) =>
+            setLessonForm((prev) => ({ ...prev, status: event.target.value as LessonStatus }))
+          }
+          disabled={!lessonForm.id}
+        >
+          {LESSON_STATUS_OPTIONS.map((status) => (
+            <option key={status} value={status}>
+              {status}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="aas-actions">
+        <button type="submit" disabled={saveLessonMutation.isPending || !selectedChapterId}>
+          {lessonForm.id ? <Save size={14} /> : <Plus size={14} />}
+          {lessonForm.id ? 'Cập nhật' : 'Tạo mới'}
+        </button>
+        <button type="button" className="ghost" onClick={resetLessonForm}>
+          Làm mới
+        </button>
+        <button
+          type="button"
+          className="danger"
+          onClick={handleDeleteLesson}
+          disabled={!selectedLessonId || deleteLessonMutation.isPending}
+        >
+          <Trash2 size={14} />
+          Xóa
+        </button>
+      </div>
+    </form>
+  );
+
+  const renderEditor = () => {
+    if (editorMode === 'subject') return renderSubjectEditor();
+    if (editorMode === 'chapter') return renderChapterEditor();
+    if (editorMode === 'lesson') return renderLessonEditor();
+    return renderProgramEditor();
+  };
 
   return (
     <DashboardLayout
@@ -640,462 +1019,193 @@ export default function AdminAcademicStructurePage() {
           <header className="aas-header">
             <div>
               <p className="aas-kicker">Admin</p>
-              <h1>Cây học thuật</h1>
-              <p>CRUD School Grade - Subject - Chapter - Lesson theo contract backend mới.</p>
+              <h1>Quản lý chương trình</h1>
+              <p>Cấu trúc phân cấp Chương trình - Môn học - Chương - Bài học.</p>
             </div>
           </header>
 
-          <div className="aas-grid">
-            <article className="aas-card">
-              <div className="aas-card__head">
-                <h2>
-                  <GraduationCap size={18} />
-                  School Grade
-                </h2>
-                <span>{grades.length}</span>
-              </div>
-              <div className="aas-list">
-                {grades.map((grade) => (
-                  <button
-                    key={grade.id}
-                    type="button"
-                    onClick={() => {
-                      setSelectedGradeId(grade.id);
-                      setSelectedSubjectId('');
-                      setSelectedChapterId('');
-                      setSelectedLessonId('');
-                    }}
-                    className={`aas-list__item${selectedGradeId === grade.id ? ' is-active' : ''}`}
-                  >
-                    <strong>{getGradeLabel(grade)}</strong>
-                    <span>{grade.active ? 'active' : 'inactive'}</span>
-                  </button>
-                ))}
-                {!gradesQuery.isLoading && grades.length === 0 && (
-                  <p className="aas-empty">Chưa có school grade</p>
-                )}
-              </div>
-              <form
-                className="aas-form"
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  saveGradeMutation.mutate();
-                }}
-              >
-                <input
-                  type="number"
-                  min={1}
-                  placeholder="Grade level"
-                  value={gradeForm.gradeLevel}
-                  onChange={(event) =>
-                    setGradeForm((prev) => ({
-                      ...prev,
-                      gradeLevel: event.target.value === '' ? '' : Number(event.target.value),
-                    }))
-                  }
-                />
-                <input
-                  type="text"
-                  placeholder="Tên khối"
-                  value={gradeForm.name}
-                  onChange={(event) =>
-                    setGradeForm((prev) => ({ ...prev, name: event.target.value }))
-                  }
-                />
-                <textarea
-                  placeholder="Mô tả"
-                  value={gradeForm.description}
-                  onChange={(event) =>
-                    setGradeForm((prev) => ({ ...prev, description: event.target.value }))
-                  }
-                />
-                <label className="aas-check">
-                  <input
-                    type="checkbox"
-                    checked={gradeForm.active}
-                    onChange={(event) =>
-                      setGradeForm((prev) => ({ ...prev, active: event.target.checked }))
-                    }
-                  />
-                  Active
-                </label>
-                <div className="aas-actions">
-                  <button type="submit" disabled={saveGradeMutation.isPending}>
-                    {gradeForm.id ? <Save size={14} /> : <Plus size={14} />}
-                    {gradeForm.id ? 'Cập nhật' : 'Tạo mới'}
-                  </button>
-                  <button type="button" className="ghost" onClick={resetGradeForm}>
-                    Làm mới
-                  </button>
-                  <button
-                    type="button"
-                    className="danger"
-                    onClick={handleDeleteGrade}
-                    disabled={!selectedGradeId || deleteGradeMutation.isPending}
-                  >
-                    <Trash2 size={14} />
-                    Xóa
-                  </button>
-                </div>
-              </form>
-            </article>
-
-            <article className="aas-card">
-              <div className="aas-card__head">
-                <h2>
-                  <BookOpen size={18} />
-                  Subject
-                </h2>
-                <span>{subjects.length}</span>
-              </div>
-              <div className="aas-list">
-                {subjects.map((subject) => (
-                  <button
-                    key={subject.id}
-                    type="button"
-                    onClick={() => {
-                      setSelectedSubjectId(subject.id);
-                      setSelectedChapterId('');
-                      setSelectedLessonId('');
-                    }}
-                    className={`aas-list__item${selectedSubjectId === subject.id ? ' is-active' : ''}`}
-                  >
-                    <strong>{getSubjectLabel(subject)}</strong>
-                    <span>{subject.isActive === false ? 'inactive' : 'active'}</span>
-                  </button>
-                ))}
-                {!subjectsQuery.isLoading && selectedGradeId && subjects.length === 0 && (
-                  <p className="aas-empty">Khối này chưa có môn học</p>
-                )}
-                {!selectedGradeId && <p className="aas-empty">Chọn school grade trước</p>}
-              </div>
-              <form
-                className="aas-form"
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  saveSubjectMutation.mutate();
-                }}
-              >
-                <select
-                  value={subjectForm.schoolGradeId}
-                  onChange={(event) =>
-                    setSubjectForm((prev) => ({ ...prev, schoolGradeId: event.target.value }))
-                  }
-                >
-                  <option value="">Chọn school grade</option>
-                  {grades.map((grade) => (
-                    <option key={grade.id} value={grade.id}>
-                      {getGradeLabel(grade)}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  type="text"
-                  placeholder="Tên môn học"
-                  value={subjectForm.name}
-                  onChange={(event) =>
-                    setSubjectForm((prev) => ({ ...prev, name: event.target.value }))
-                  }
-                />
-                <textarea
-                  placeholder="Mô tả môn học"
-                  value={subjectForm.description}
-                  onChange={(event) =>
-                    setSubjectForm((prev) => ({ ...prev, description: event.target.value }))
-                  }
-                />
-                <div className="aas-inline-2">
-                  <input
-                    type="number"
-                    placeholder="gradeMin"
-                    value={subjectForm.gradeMin}
-                    onChange={(event) =>
-                      setSubjectForm((prev) => ({
-                        ...prev,
-                        gradeMin: event.target.value === '' ? '' : Number(event.target.value),
-                      }))
-                    }
-                  />
-                  <input
-                    type="number"
-                    placeholder="gradeMax"
-                    value={subjectForm.gradeMax}
-                    onChange={(event) =>
-                      setSubjectForm((prev) => ({
-                        ...prev,
-                        gradeMax: event.target.value === '' ? '' : Number(event.target.value),
-                      }))
-                    }
-                  />
-                </div>
-                <label className="aas-check">
-                  <input
-                    type="checkbox"
-                    checked={subjectForm.isActive}
-                    onChange={(event) =>
-                      setSubjectForm((prev) => ({ ...prev, isActive: event.target.checked }))
-                    }
-                  />
-                  Active
-                </label>
-                <div className="aas-actions">
-                  <button
-                    type="submit"
-                    disabled={saveSubjectMutation.isPending || !selectedGradeId}
-                  >
-                    {subjectForm.id ? <Save size={14} /> : <Plus size={14} />}
-                    {subjectForm.id ? 'Cập nhật' : 'Tạo mới'}
-                  </button>
-                  <button type="button" className="ghost" onClick={resetSubjectForm}>
-                    Làm mới
-                  </button>
-                  <button
-                    type="button"
-                    className="danger"
-                    onClick={handleDeleteSubject}
-                    disabled={!selectedSubjectId || deleteSubjectMutation.isPending}
-                  >
-                    <Trash2 size={14} />
-                    Xóa
-                  </button>
-                </div>
-              </form>
-            </article>
-
-            <article className="aas-card">
-              <div className="aas-card__head">
+          <div className="aas-layout">
+            <article className="aas-tree-shell">
+              <div className="aas-tree-shell__head">
                 <h2>
                   <FolderTree size={18} />
-                  Chapter
+                  Cây chương trình
                 </h2>
-                <span>{chapters.length}</span>
+                <span>{grades.length} chương trình</span>
               </div>
-              <div className="aas-list">
-                {chapters.map((chapter) => (
-                  <button
-                    key={chapter.id}
-                    type="button"
-                    onClick={() => {
-                      setSelectedChapterId(chapter.id);
-                      setSelectedLessonId('');
-                    }}
-                    className={`aas-list__item${selectedChapterId === chapter.id ? ' is-active' : ''}`}
-                  >
-                    <strong>{getChapterLabel(chapter)}</strong>
-                    <span>order {chapter.orderIndex ?? '-'}</span>
-                  </button>
-                ))}
-                {!chaptersQuery.isLoading && selectedSubjectId && chapters.length === 0 && (
-                  <p className="aas-empty">Môn này chưa có chapter</p>
+              <div className="aas-tree">
+                {grades.map((grade) => {
+                  const gradeOpen = expandedGradeIds.includes(grade.id);
+                  const gradeActive = selectedGradeId === grade.id;
+
+                  return (
+                    <div key={grade.id} className="aas-tree-node lvl-0">
+                      <button
+                        type="button"
+                        className={`aas-node-btn${gradeActive ? ' is-active' : ''}`}
+                        onClick={() => {
+                          setExpandedGradeIds((prev) => toggleExpanded(prev, grade.id));
+                          setSelectedGradeId(grade.id);
+                          setSelectedSubjectId('');
+                          setSelectedChapterId('');
+                          setSelectedLessonId('');
+                        }}
+                      >
+                        {gradeOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                        <GraduationCap size={14} />
+                        <span>{getGradeLabel(grade)}</span>
+                      </button>
+
+                      {gradeOpen && (
+                        <div className="aas-tree-children">
+                          {gradeActive &&
+                            subjects.map((subject) => {
+                              const subjectOpen = expandedSubjectIds.includes(subject.id);
+                              const subjectActive = selectedSubjectId === subject.id;
+
+                              return (
+                                <div key={subject.id} className="aas-tree-node lvl-1">
+                                  <button
+                                    type="button"
+                                    className={`aas-node-btn${subjectActive ? ' is-active' : ''}`}
+                                    onClick={() => {
+                                      setExpandedSubjectIds((prev) =>
+                                        toggleExpanded(prev, subject.id)
+                                      );
+                                      setSelectedSubjectId(subject.id);
+                                      setSelectedChapterId('');
+                                      setSelectedLessonId('');
+                                    }}
+                                  >
+                                    {subjectOpen ? (
+                                      <ChevronDown size={14} />
+                                    ) : (
+                                      <ChevronRight size={14} />
+                                    )}
+                                    <BookOpen size={14} />
+                                    <span>{getSubjectLabel(subject)}</span>
+                                  </button>
+
+                                  {subjectOpen && subjectActive && (
+                                    <div className="aas-tree-children">
+                                      {chapters.map((chapter) => {
+                                        const chapterOpen = expandedChapterIds.includes(chapter.id);
+                                        const chapterActive = selectedChapterId === chapter.id;
+
+                                        return (
+                                          <div key={chapter.id} className="aas-tree-node lvl-2">
+                                            <button
+                                              type="button"
+                                              className={`aas-node-btn${chapterActive ? ' is-active' : ''}`}
+                                              onClick={() => {
+                                                setExpandedChapterIds((prev) =>
+                                                  toggleExpanded(prev, chapter.id)
+                                                );
+                                                setSelectedChapterId(chapter.id);
+                                                setSelectedLessonId('');
+                                              }}
+                                            >
+                                              {chapterOpen ? (
+                                                <ChevronDown size={14} />
+                                              ) : (
+                                                <ChevronRight size={14} />
+                                              )}
+                                              <FolderTree size={14} />
+                                              <span>{getChapterLabel(chapter)}</span>
+                                            </button>
+
+                                            {chapterOpen && chapterActive && (
+                                              <div className="aas-tree-children">
+                                                {lessons.map((lesson) => (
+                                                  <div
+                                                    key={lesson.id}
+                                                    className="aas-tree-node lvl-3"
+                                                  >
+                                                    <button
+                                                      type="button"
+                                                      className={`aas-node-btn${selectedLessonId === lesson.id ? ' is-active' : ''}`}
+                                                      onClick={() => setSelectedLessonId(lesson.id)}
+                                                    >
+                                                      <BookText size={14} />
+                                                      <span>{getLessonLabel(lesson)}</span>
+                                                    </button>
+                                                  </div>
+                                                ))}
+                                                {!lessonsQuery.isLoading &&
+                                                  lessons.length === 0 && (
+                                                    <p className="aas-empty">
+                                                      Chương này chưa có bài học
+                                                    </p>
+                                                  )}
+                                              </div>
+                                            )}
+                                          </div>
+                                        );
+                                      })}
+                                      {!chaptersQuery.isLoading && chapters.length === 0 && (
+                                        <p className="aas-empty">Môn này chưa có chương</p>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          {gradeActive && !subjectsQuery.isLoading && subjects.length === 0 && (
+                            <p className="aas-empty">Chương trình này chưa có môn học</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {!gradesQuery.isLoading && grades.length === 0 && (
+                  <p className="aas-empty">Chưa có chương trình nào</p>
                 )}
-                {!selectedSubjectId && <p className="aas-empty">Chọn subject trước</p>}
               </div>
-              <form
-                className="aas-form"
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  saveChapterMutation.mutate();
-                }}
-              >
-                <input
-                  type="text"
-                  placeholder="Tên chapter"
-                  value={chapterForm.title}
-                  onChange={(event) =>
-                    setChapterForm((prev) => ({ ...prev, title: event.target.value }))
-                  }
-                />
-                <textarea
-                  placeholder="Mô tả chapter"
-                  value={chapterForm.description}
-                  onChange={(event) =>
-                    setChapterForm((prev) => ({ ...prev, description: event.target.value }))
-                  }
-                />
-                <input
-                  type="number"
-                  placeholder="orderIndex"
-                  value={chapterForm.orderIndex}
-                  onChange={(event) =>
-                    setChapterForm((prev) => ({
-                      ...prev,
-                      orderIndex: event.target.value === '' ? '' : Number(event.target.value),
-                    }))
-                  }
-                />
-                <div className="aas-actions">
-                  <button
-                    type="submit"
-                    disabled={saveChapterMutation.isPending || !selectedSubjectId}
-                  >
-                    {chapterForm.id ? <Save size={14} /> : <Plus size={14} />}
-                    {chapterForm.id ? 'Cập nhật' : 'Tạo mới'}
-                  </button>
-                  <button type="button" className="ghost" onClick={resetChapterForm}>
-                    Làm mới
-                  </button>
-                  <button
-                    type="button"
-                    className="danger"
-                    onClick={handleDeleteChapter}
-                    disabled={!selectedChapterId || deleteChapterMutation.isPending}
-                  >
-                    <Trash2 size={14} />
-                    Xóa
-                  </button>
-                </div>
-              </form>
             </article>
 
-            <article className="aas-card">
-              <div className="aas-card__head">
-                <h2>
-                  <BookText size={18} />
-                  Lesson
-                </h2>
-                <span>{lessons.length}</span>
+            <article className="aas-editor-shell">
+              <div className="aas-editor-shell__head">
+                <h2>Trình chỉnh sửa</h2>
+                <p>{breadcrumbs.join(' / ')}</p>
               </div>
-              <div className="aas-filter">
-                <input
-                  type="search"
-                  placeholder="Tìm theo tên bài học"
-                  value={lessonSearch}
-                  onChange={(event) => setLessonSearch(event.target.value)}
-                />
+
+              <div className="aas-editor-tabs">
+                <button
+                  type="button"
+                  className={editorMode === 'program' ? 'is-active' : ''}
+                  onClick={() => setEditorMode('program')}
+                >
+                  Chương trình
+                </button>
+                <button
+                  type="button"
+                  className={editorMode === 'subject' ? 'is-active' : ''}
+                  onClick={() => setEditorMode('subject')}
+                  disabled={!selectedGradeId}
+                >
+                  Môn học
+                </button>
+                <button
+                  type="button"
+                  className={editorMode === 'chapter' ? 'is-active' : ''}
+                  onClick={() => setEditorMode('chapter')}
+                  disabled={!selectedSubjectId}
+                >
+                  Chương
+                </button>
+                <button
+                  type="button"
+                  className={editorMode === 'lesson' ? 'is-active' : ''}
+                  onClick={() => setEditorMode('lesson')}
+                  disabled={!selectedChapterId}
+                >
+                  Bài học
+                </button>
               </div>
-              <div className="aas-list">
-                {lessons.map((lesson) => (
-                  <button
-                    key={lesson.id}
-                    type="button"
-                    onClick={() => setSelectedLessonId(lesson.id)}
-                    className={`aas-list__item${selectedLessonId === lesson.id ? ' is-active' : ''}`}
-                  >
-                    <strong>{getLessonLabel(lesson)}</strong>
-                    <span>{lesson.status ?? 'DRAFT'}</span>
-                  </button>
-                ))}
-                {!lessonsQuery.isLoading && selectedChapterId && lessons.length === 0 && (
-                  <p className="aas-empty">Chapter này chưa có lesson</p>
-                )}
-                {!selectedChapterId && <p className="aas-empty">Chọn chapter trước</p>}
-              </div>
-              <form
-                className="aas-form"
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  saveLessonMutation.mutate();
-                }}
-              >
-                <input
-                  type="text"
-                  placeholder="Tên lesson"
-                  value={lessonForm.title}
-                  onChange={(event) =>
-                    setLessonForm((prev) => ({ ...prev, title: event.target.value }))
-                  }
-                />
-                <textarea
-                  placeholder="Learning objectives"
-                  value={lessonForm.learningObjectives}
-                  onChange={(event) =>
-                    setLessonForm((prev) => ({ ...prev, learningObjectives: event.target.value }))
-                  }
-                />
-                <textarea
-                  placeholder="Lesson content"
-                  value={lessonForm.lessonContent}
-                  onChange={(event) =>
-                    setLessonForm((prev) => ({ ...prev, lessonContent: event.target.value }))
-                  }
-                />
-                <textarea
-                  placeholder="Summary"
-                  value={lessonForm.summary}
-                  onChange={(event) =>
-                    setLessonForm((prev) => ({ ...prev, summary: event.target.value }))
-                  }
-                />
-                <div className="aas-inline-2">
-                  <input
-                    type="number"
-                    placeholder="orderIndex"
-                    value={lessonForm.orderIndex}
-                    onChange={(event) =>
-                      setLessonForm((prev) => ({
-                        ...prev,
-                        orderIndex: event.target.value === '' ? '' : Number(event.target.value),
-                      }))
-                    }
-                  />
-                  <input
-                    type="number"
-                    placeholder="durationMinutes"
-                    value={lessonForm.durationMinutes}
-                    onChange={(event) =>
-                      setLessonForm((prev) => ({
-                        ...prev,
-                        durationMinutes:
-                          event.target.value === '' ? '' : Number(event.target.value),
-                      }))
-                    }
-                  />
-                </div>
-                <div className="aas-inline-2">
-                  <select
-                    value={lessonForm.difficulty}
-                    onChange={(event) =>
-                      setLessonForm((prev) => ({
-                        ...prev,
-                        difficulty: event.target.value as LessonDifficulty,
-                      }))
-                    }
-                  >
-                    {LESSON_DIFFICULTY_OPTIONS.map((difficulty) => (
-                      <option key={difficulty} value={difficulty}>
-                        {difficulty}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    value={lessonForm.status}
-                    onChange={(event) =>
-                      setLessonForm((prev) => ({
-                        ...prev,
-                        status: event.target.value as LessonStatus,
-                      }))
-                    }
-                    disabled={!lessonForm.id}
-                  >
-                    {LESSON_STATUS_OPTIONS.map((status) => (
-                      <option key={status} value={status}>
-                        {status}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="aas-actions">
-                  <button
-                    type="submit"
-                    disabled={saveLessonMutation.isPending || !selectedChapterId}
-                  >
-                    {lessonForm.id ? <Save size={14} /> : <Plus size={14} />}
-                    {lessonForm.id ? 'Cập nhật' : 'Tạo mới'}
-                  </button>
-                  <button type="button" className="ghost" onClick={resetLessonForm}>
-                    Làm mới
-                  </button>
-                  <button
-                    type="button"
-                    className="danger"
-                    onClick={handleDeleteLesson}
-                    disabled={!selectedLessonId || deleteLessonMutation.isPending}
-                  >
-                    <Trash2 size={14} />
-                    Xóa
-                  </button>
-                </div>
-              </form>
+
+              <div className="aas-editor-card">{renderEditor()}</div>
             </article>
           </div>
         </section>
