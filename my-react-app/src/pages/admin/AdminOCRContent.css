@@ -1,0 +1,1289 @@
+/* ─── Design Tokens ───────────────────────────────────────────────────────── */
+:root {
+  --cnt-bg: #f5f4ed;
+  --cnt-surface: #faf9f5;
+  --cnt-surface-2: #ffffff;
+  --cnt-primary: #c96442;
+  --cnt-primary-soft: rgba(201, 100, 66, 0.08);
+  --cnt-primary-mid: rgba(201, 100, 66, 0.15);
+  --cnt-text-main: #141413;
+  --cnt-text-body: #5e5d59;
+  --cnt-text-muted: #87867f;
+  --cnt-border: #f0eee6;
+  --cnt-border-warm: #e8e6dc;
+  --cnt-ring: #d1cfc5;
+  --cnt-shadow-sm: rgba(0, 0, 0, 0.04) 0px 4px 20px;
+  --cnt-radius: 12px;
+  --cnt-radius-sm: 8px;
+  --cnt-sidebar-w: 320px;
+}
+
+/* ─── Page wrapper ─────────────────────────────────────────────────────────── */
+.ocr-content-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--cnt-bg);
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  color: var(--cnt-text-main);
+  min-height: 100vh;
+}
+
+/* ─── Top bar (book selector) ─────────────────────────────────────────────── */
+.cnt-topbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 2rem;
+  background: var(--cnt-surface);
+  border-bottom: 1px solid var(--cnt-border);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.cnt-topbar-title {
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--cnt-text-main);
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.cnt-book-select-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 0;
+  max-width: 520px;
+}
+
+.cnt-book-select-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--cnt-text-muted);
+  flex-shrink: 0;
+}
+
+.cnt-book-select {
+  flex: 1;
+  min-width: 0;
+  padding: 0.5rem 0.875rem;
+  border: 1px solid var(--cnt-border-warm);
+  border-radius: var(--cnt-radius-sm);
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  font-size: 0.9375rem;
+  color: var(--cnt-text-main);
+  background: var(--cnt-surface-2);
+  transition: border-color 0.15s, box-shadow 0.15s;
+  cursor: pointer;
+}
+
+.cnt-book-select:focus {
+  outline: none;
+  border-color: var(--cnt-primary);
+  box-shadow: 0 0 0 3px var(--cnt-primary-soft);
+}
+
+/* Back button */
+.cnt-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.875rem;
+  background: transparent;
+  border: 1px solid var(--cnt-border-warm);
+  border-radius: var(--cnt-radius-sm);
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--cnt-text-body);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.cnt-back-btn:hover {
+  background: var(--cnt-border);
+  border-color: var(--cnt-ring);
+}
+
+/* Export buttons */
+.cnt-export-group {
+  display: flex;
+  gap: 0.4rem;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.cnt-export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.75rem;
+  background: var(--cnt-surface-2);
+  border: 1px solid var(--cnt-border-warm);
+  border-radius: var(--cnt-radius-sm);
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--cnt-text-body);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.cnt-export-btn:hover {
+  background: var(--cnt-border);
+  color: var(--cnt-text-main);
+}
+
+/* ─── Book info banner ─────────────────────────────────────────────────────── */
+.cnt-book-banner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.875rem 2rem;
+  background: var(--cnt-primary-soft);
+  border-bottom: 1px solid var(--cnt-primary-mid);
+  flex-shrink: 0;
+}
+
+.cnt-book-banner-grade {
+  padding: 0.2rem 0.7rem;
+  background: var(--cnt-primary);
+  color: #faf9f5;
+  border-radius: 99px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
+.cnt-book-banner-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--cnt-text-main);
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cnt-book-banner-meta {
+  font-size: 0.8125rem;
+  color: var(--cnt-text-muted);
+  flex-shrink: 0;
+}
+
+/* ─── Main split layout ──────────────────────────────────────────────────────── */
+.cnt-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+  height: calc(100vh - 130px);
+}
+
+/* ─── Left sidebar (chapters / lessons) ────────────────────────────────────── */
+.cnt-sidebar {
+  width: var(--cnt-sidebar-w);
+  flex-shrink: 0;
+  background: var(--cnt-surface);
+  border-right: 1px solid var(--cnt-border);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.cnt-sidebar-header {
+  padding: 1rem 1.125rem 0.75rem;
+  border-bottom: 1px solid var(--cnt-border);
+  flex-shrink: 0;
+}
+
+.cnt-sidebar-heading {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--cnt-text-muted);
+  margin: 0;
+}
+
+/* Chapter accordion */
+.cnt-chapter {
+  border-bottom: 1px solid var(--cnt-border);
+}
+
+.cnt-chapter-btn {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 0.625rem 0.75rem 0.875rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--cnt-text-main);
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.cnt-chapter-btn:hover { background: var(--cnt-border); }
+.cnt-chapter-btn--active { background: var(--cnt-primary-soft); color: var(--cnt-primary); }
+
+.cnt-chapter-num {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--cnt-border-warm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  color: var(--cnt-text-muted);
+}
+
+.cnt-chapter-btn--active .cnt-chapter-num {
+  background: var(--cnt-primary);
+  color: #fff;
+}
+
+.cnt-chapter-title {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.35;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.cnt-chapter-chevron {
+  flex-shrink: 0;
+  color: var(--cnt-text-muted);
+  transition: transform 0.2s;
+}
+
+.cnt-chapter-chevron--open { transform: rotate(180deg); }
+
+/* Lesson list */
+.cnt-lessons-list {
+  padding: 0.25rem 0 0.25rem 0;
+  background: var(--cnt-bg);
+}
+
+.cnt-lesson-btn {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.6rem 0.5rem 0.6rem 2.25rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  font-size: 0.8125rem;
+  color: var(--cnt-text-body);
+  text-align: left;
+  line-height: 1.45;
+  transition: background 0.12s, color 0.12s;
+}
+
+.cnt-lesson-btn:hover {
+  background: var(--cnt-border);
+  color: var(--cnt-text-main);
+}
+
+.cnt-lesson-btn--active {
+  background: var(--cnt-primary-soft);
+  color: var(--cnt-primary);
+  font-weight: 600;
+  border-right: 2px solid var(--cnt-primary);
+}
+
+/* Loading inside sidebar */
+.cnt-sidebar-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.125rem;
+  font-size: 0.8125rem;
+  color: var(--cnt-text-muted);
+}
+
+.cnt-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--cnt-border-warm);
+  border-top-color: var(--cnt-primary);
+  border-radius: 50%;
+  animation: cntSpin 0.65s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes cntSpin { to { transform: rotate(360deg); } }
+
+/* ─── Right content panel ─────────────────────────────────────────────────── */
+.cnt-panel {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding: 1.75rem 2rem;
+  background: var(--cnt-bg);
+}
+
+/* Placeholder when no lesson selected */
+.cnt-panel-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 300px;
+  color: var(--cnt-text-muted);
+  gap: 0.75rem;
+  text-align: center;
+}
+
+.cnt-panel-placeholder-icon {
+  color: var(--cnt-border-warm);
+}
+
+.cnt-panel-placeholder-text {
+  font-size: 0.9375rem;
+}
+
+/* Lesson header */
+.cnt-lesson-header {
+  margin-bottom: 2rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--cnt-border);
+}
+
+.cnt-lesson-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.625rem;
+  font-weight: 500;
+  color: var(--cnt-text-main);
+  line-height: 1.3;
+  margin: 0 0 0.4rem 0;
+}
+
+.cnt-lesson-meta {
+  font-size: 0.8125rem;
+  color: var(--cnt-text-muted);
+}
+
+/* Content items */
+.cnt-content-items {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Text */
+.cnt-item-text {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--cnt-text-body);
+}
+
+/* Heading inside content */
+.cnt-item-heading {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: var(--cnt-text-main);
+  margin: 0.5rem 0 0;
+}
+
+/* Formula */
+.cnt-item-formula {
+  background: var(--cnt-surface);
+  border: 1px solid var(--cnt-border);
+  border-radius: var(--cnt-radius-sm);
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+  font-size: 1.0625rem;
+  text-align: center;
+}
+
+.cnt-formula-raw {
+  font-family: 'Courier New', monospace;
+  font-size: 0.9375rem;
+  color: var(--cnt-text-body);
+  background: var(--cnt-bg);
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+}
+
+/* Definition */
+.cnt-item-definition {
+  background: rgba(201, 100, 66, 0.05);
+  border-left: 3px solid var(--cnt-primary);
+  border-radius: 0 var(--cnt-radius-sm) var(--cnt-radius-sm) 0;
+  padding: 1rem 1.25rem;
+}
+
+.cnt-item-box-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--cnt-primary);
+  margin: 0 0 0.5rem 0;
+}
+
+.cnt-item-box-content {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--cnt-text-body);
+  margin: 0;
+}
+
+/* Example */
+.cnt-item-example {
+  background: var(--cnt-surface);
+  border: 1px solid var(--cnt-border);
+  border-top: 2px solid var(--cnt-primary);
+  border-radius: 0 0 var(--cnt-radius-sm) var(--cnt-radius-sm);
+  padding: 1rem 1.25rem;
+}
+
+/* Exercise */
+.cnt-item-exercise {
+  background: var(--cnt-surface-2);
+  border: 1px solid var(--cnt-border-warm);
+  border-radius: var(--cnt-radius-sm);
+  padding: 1rem 1.25rem;
+}
+
+.cnt-item-exercise .cnt-item-box-label {
+  color: #3d6b4f;
+}
+
+/* Note */
+.cnt-item-note {
+  background: #f8f7f0;
+  border: 1px dashed var(--cnt-border-warm);
+  border-radius: var(--cnt-radius-sm);
+  padding: 0.875rem 1.125rem;
+  font-size: 0.875rem;
+  color: var(--cnt-text-muted);
+  font-style: italic;
+  line-height: 1.6;
+}
+
+/* Image */
+.cnt-item-image {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.cnt-item-image img {
+  max-width: 100%;
+  width: auto;
+  height: auto;
+  max-height: 420px;
+  display: block;
+  border-radius: var(--cnt-radius-sm);
+  border: 1px solid var(--cnt-border);
+  object-fit: contain;
+}
+
+.cnt-item-image-caption {
+  font-size: 0.8125rem;
+  color: var(--cnt-text-muted);
+  margin-top: 0.4rem;
+  font-style: italic;
+}
+
+/* Image placeholder */
+.cnt-item-image-placeholder {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  background: var(--cnt-border);
+  border-radius: var(--cnt-radius-sm);
+  font-size: 0.8125rem;
+  color: var(--cnt-text-muted);
+}
+
+/* ─── Empty state ─────────────────────────────────────────────────────────── */
+.cnt-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 3rem;
+  color: var(--cnt-text-muted);
+  text-align: center;
+}
+
+/* ─── No book selected ──────────────────────────────────────────────────────── */
+.cnt-no-book {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  min-height: 60vh;
+  color: var(--cnt-text-muted);
+  text-align: center;
+  padding: 2rem;
+}
+
+.cnt-no-book h2 {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--cnt-text-main);
+  margin: 0;
+}
+
+.cnt-no-book p {
+  font-size: 0.9375rem;
+  margin: 0;
+  max-width: 360px;
+}
+
+/* ─── Search bar ──────────────────────────────────────────────────────────── */
+.cnt-search-wrap {
+  padding: 0.75rem 1.125rem;
+  border-bottom: 1px solid var(--cnt-border);
+  flex-shrink: 0;
+}
+
+.cnt-search-input {
+  width: 100%;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid var(--cnt-border-warm);
+  border-radius: var(--cnt-radius-sm);
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  font-size: 0.8125rem;
+  color: var(--cnt-text-main);
+  background: var(--cnt-bg);
+  box-sizing: border-box;
+}
+
+.cnt-search-input:focus {
+  outline: none;
+  border-color: var(--cnt-primary);
+  box-shadow: 0 0 0 2px var(--cnt-primary-soft);
+}
+
+/* ─── Responsive ────────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  :root { --cnt-sidebar-w: 220px; }
+  .cnt-topbar { padding: 1rem; }
+  .cnt-panel { padding: 1.25rem 1rem; }
+}
+
+/* ─── Styled book dropdown ───────────────────────────────────────────────── */
+.cnt-book-dropdown {
+  position: relative;
+}
+
+.cnt-book-dropdown-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.875rem;
+  background: #fff;
+  border: 1.5px solid var(--cnt-border-warm);
+  border-radius: var(--cnt-radius-sm);
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  font-size: 0.8125rem;
+  color: var(--cnt-text-main);
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  min-width: 220px;
+  max-width: 320px;
+  text-align: left;
+}
+
+.cnt-book-dropdown-btn:hover,
+.cnt-book-dropdown-btn--open {
+  border-color: var(--cnt-primary);
+  box-shadow: 0 0 0 2px var(--cnt-primary-soft);
+}
+
+.cnt-book-dropdown-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cnt-dropdown-chevron {
+  flex-shrink: 0;
+  color: var(--cnt-text-muted);
+  transition: transform 0.18s;
+}
+.cnt-dropdown-chevron--open { transform: rotate(180deg); }
+
+.cnt-book-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 280px;
+  max-width: 380px;
+  background: #fff;
+  border: 1.5px solid var(--cnt-border-warm);
+  border-radius: var(--cnt-radius);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+  z-index: 200;
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 0.375rem 0;
+}
+
+.cnt-dropdown-option {
+  width: 100%;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  font-size: 0.8125rem;
+  color: var(--cnt-text-main);
+  text-align: left;
+  transition: background 0.12s;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.cnt-dropdown-option:hover { background: var(--cnt-bg); }
+.cnt-dropdown-option--active { background: var(--cnt-primary-soft); color: var(--cnt-primary); font-weight: 600; }
+
+.cnt-dropdown-option-grade {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--cnt-primary);
+  background: var(--cnt-primary-soft);
+  border-radius: 4px;
+  padding: 1px 6px;
+  flex-shrink: 0;
+}
+
+.cnt-dropdown-empty {
+  padding: 0.75rem 1rem;
+  font-size: 0.8125rem;
+  color: var(--cnt-text-muted);
+}
+
+/* ─── Chapter row with action buttons ───────────────────────────────────── */
+.cnt-chapter-btn-row {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  border-bottom: none;
+}
+
+.cnt-chapter-btn-row .cnt-chapter-btn {
+  flex: 1;
+  min-width: 0;
+  width: 0; /* force flex shrink past content size */
+}
+
+.cnt-chapter-btn-row--active .cnt-chapter-btn {
+  background: var(--cnt-primary-soft);
+  color: var(--cnt-primary);
+}
+
+.cnt-chapter-btn-row .cnt-item-action {
+  opacity: 1;
+  align-self: center;
+}
+
+.cnt-chapter-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.625rem 0.75rem;
+}
+
+/* ─── Lesson row with action buttons ────────────────────────────────────── */
+.cnt-lesson-row {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  position: relative;
+}
+
+.cnt-lesson-row .cnt-lesson-btn {
+  flex: 1;
+  min-width: 0;
+  width: 0; /* force flex shrink past content size */
+}
+
+.cnt-lesson-row .cnt-item-action {
+  opacity: 1;
+  align-self: center;
+}
+
+.cnt-lesson-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.5rem 0.75rem 0.5rem 2.25rem;
+}
+
+/* ─── Inline action buttons (edit / delete) ─────────────────────────────── */
+.cnt-item-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  flex-shrink: 0;
+  opacity: 0.55;
+  transition: opacity 0.12s, background 0.12s;
+  align-self: center;
+  margin: 0 2px;
+  line-height: 1;
+}
+
+.cnt-item-action:hover {
+  opacity: 1;
+}
+
+.cnt-item-action svg {
+  display: block;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+.cnt-item-action--edit {
+  background: #eef1f8;
+  color: #3d5a8a;
+}
+.cnt-item-action--edit:hover { background: #dce6f5; }
+
+.cnt-item-action--delete {
+  background: rgba(181,51,51,0.08);
+  color: #b53333;
+}
+.cnt-item-action--delete:hover { background: rgba(181,51,51,0.18); }
+
+.cnt-item-action:disabled { opacity: 0.35 !important; cursor: not-allowed; }
+
+/* ─── Inline input + save/cancel ────────────────────────────────────────── */
+.cnt-inline-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.375rem 0.625rem;
+  border: 1.5px solid var(--cnt-primary);
+  border-radius: var(--cnt-radius-sm);
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  font-size: 0.8125rem;
+  color: var(--cnt-text-main);
+  background: #fff;
+  outline: none;
+  box-shadow: 0 0 0 2px var(--cnt-primary-soft);
+}
+
+.cnt-inline-input--lesson {
+  font-size: 0.75rem;
+}
+
+.cnt-inline-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.12s;
+}
+
+.cnt-inline-action--save {
+  background: var(--cnt-primary-soft);
+  color: var(--cnt-primary);
+}
+.cnt-inline-action--save:hover { background: #d0e0f0; }
+
+.cnt-inline-action--cancel {
+  background: rgba(181,51,51,0.08);
+  color: #b53333;
+}
+.cnt-inline-action--cancel:hover { background: rgba(181,51,51,0.18); }
+
+.cnt-inline-action:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.cnt-inline-action svg {
+  display: block;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+/* ─── Edit mode toggle button ─────────────────────────────────────────────── */
+.cnt-edit-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0.3rem 0.75rem;
+  border: 1.5px solid var(--cnt-primary);
+  border-radius: var(--cnt-radius-sm);
+  background: #fff;
+  color: var(--cnt-primary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.14s, color 0.14s;
+}
+.cnt-edit-toggle-btn--active {
+  background: var(--cnt-primary);
+  color: #fff;
+}
+.cnt-edit-toggle-btn svg { display: block; width: 13px; height: 13px; }
+
+/* ─── Add lesson / chapter button ─────────────────────────────────────────── */
+.cnt-add-lesson-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: calc(100% - 16px);
+  margin: 2px 8px;
+  padding: 0.3rem 0.5rem;
+  background: none;
+  border: 1.5px dashed var(--cnt-primary);
+  border-radius: var(--cnt-radius-sm);
+  color: var(--cnt-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 0.12s, background 0.12s;
+}
+.cnt-add-lesson-btn:hover { opacity: 1; background: var(--cnt-primary-soft); }
+.cnt-add-lesson-btn svg { display: block; }
+
+/* ─── History button ──────────────────────────────────────────────────────── */
+.cnt-history-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0.25rem 0.65rem;
+  border: 1.5px solid #c8b8e0;
+  border-radius: var(--cnt-radius-sm);
+  background: none;
+  color: #7f5fa6;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.cnt-history-btn:hover { background: #f3eeff; }
+.cnt-history-btn svg { display: block; }
+
+/* ─── Add content block button ─────────────────────────────────────────────── */
+.cnt-add-content-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0.3rem 0.8rem;
+  border: 1.5px dashed var(--cnt-primary);
+  border-radius: var(--cnt-radius-sm);
+  background: none;
+  color: var(--cnt-primary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.cnt-add-content-btn:hover { background: var(--cnt-primary-soft); }
+.cnt-add-content-btn svg { display: block; }
+
+/* ─── Lesson header with action buttons ──────────────────────────────────── */
+.cnt-lesson-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+.cnt-lesson-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* ─── Content item with edit overlay ─────────────────────────────────────── */
+.cnt-content-item-wrap { position: relative; }
+.cnt-content-item-actions {
+  display: none;
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  gap: 4px;
+  background: rgba(255,255,255,0.9);
+  border-radius: 6px;
+  padding: 2px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+.cnt-content-item-wrap:hover .cnt-content-item-actions { display: flex; }
+.cnt-content-item-wrap--editing {
+  border: 1.5px solid var(--cnt-primary);
+  border-radius: var(--cnt-radius-sm);
+  padding: 0.75rem;
+  background: #fafafa;
+  margin-bottom: 0.75rem;
+}
+
+/* ─── Content Item Editor ─────────────────────────────────────────────────── */
+.cnt-item-editor { display: flex; flex-direction: column; gap: 0.5rem; }
+.cnt-editor-label { font-size: 0.78rem; font-weight: 600; color: var(--cnt-text-muted); }
+.cnt-editor-input {
+  padding: 0.375rem 0.625rem;
+  border: 1.5px solid #d0cec8;
+  border-radius: var(--cnt-radius-sm);
+  font-size: 0.85rem;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.14s;
+}
+.cnt-editor-input:focus { border-color: var(--cnt-primary); }
+.cnt-editor-textarea {
+  padding: 0.5rem 0.625rem;
+  border: 1.5px solid #d0cec8;
+  border-radius: var(--cnt-radius-sm);
+  font-size: 0.85rem;
+  resize: vertical;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.14s;
+}
+.cnt-editor-textarea:focus { border-color: var(--cnt-primary); }
+.cnt-editor-textarea--mono { font-family: 'Courier New', monospace; font-size: 0.82rem; }
+.cnt-editor-select {
+  padding: 0.375rem 0.625rem;
+  border: 1.5px solid #d0cec8;
+  border-radius: var(--cnt-radius-sm);
+  font-size: 0.85rem;
+  outline: none;
+  background: #fff;
+  font-family: inherit;
+}
+.cnt-editor-actions { display: flex; gap: 8px; margin-top: 4px; }
+.cnt-editor-save {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0.35rem 0.85rem;
+  border: none;
+  border-radius: var(--cnt-radius-sm);
+  background: var(--cnt-primary);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+.cnt-editor-save:disabled { opacity: 0.5; cursor: not-allowed; }
+.cnt-editor-cancel {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0.35rem 0.85rem;
+  border: 1.5px solid #d0cec8;
+  border-radius: var(--cnt-radius-sm);
+  background: #fff;
+  color: var(--cnt-text-muted);
+  font-size: 0.82rem;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* ─── Image upload in content editor ─────────────────────────────────────── */
+.cnt-img-upload-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.cnt-img-upload-row .cnt-editor-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.cnt-img-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0.35rem 0.75rem;
+  border: 1.5px solid var(--cnt-border-warm);
+  border-radius: var(--cnt-radius-sm);
+  background: var(--cnt-surface-2);
+  color: var(--cnt-text-body);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: border-color 0.14s, background 0.14s;
+  font-family: inherit;
+}
+.cnt-img-upload-btn:hover:not(:disabled) {
+  border-color: var(--cnt-primary);
+  color: var(--cnt-primary);
+  background: var(--cnt-primary-soft);
+}
+.cnt-img-upload-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.cnt-img-preview {
+  display: block;
+  max-width: 100%;
+  max-height: 200px;
+  object-fit: contain;
+  border-radius: var(--cnt-radius-sm);
+  border: 1px solid var(--cnt-border);
+  background: var(--cnt-bg);
+}
+
+@keyframes cntSpinAnim { to { transform: rotate(360deg); } }
+.cnt-spin { animation: cntSpinAnim 0.7s linear infinite; display: block; }
+
+/* ─── Modal overlay ───────────────────────────────────────────────────────── */
+.cnt-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.38);
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.cnt-modal {
+  background: #fff;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 520px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  overflow: hidden;
+}
+.cnt-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #ece9e0;
+}
+.cnt-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--cnt-text-main);
+}
+.cnt-modal-close {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--cnt-text-muted);
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+}
+.cnt-modal-close:hover { background: #f0ede4; }
+.cnt-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.cnt-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid #ece9e0;
+}
+
+/* ─── History entries ─────────────────────────────────────────────────────── */
+.cnt-history-empty { color: var(--cnt-text-muted); font-size: 0.85rem; text-align: center; padding: 1.5rem 0; }
+.cnt-history-entry {
+  border: 1px solid #ece9e0;
+  border-radius: 10px;
+  padding: 0.875rem 1rem;
+  transition: border-color 0.12s, background 0.12s;
+}
+.cnt-history-entry:hover { background: #faf9f6; border-color: #ddd9ce; }
+.cnt-history-entry--expanded { background: #faf9f6; border-color: #ddd9ce; }
+
+/* Avatar + info layout */
+.cnt-history-meta { display: flex; align-items: flex-start; gap: 10px; }
+.cnt-history-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #c96442 0%, #e0926a 100%);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  letter-spacing: 0;
+}
+.cnt-history-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.cnt-history-info-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.cnt-history-by {
+  font-size: 0.825rem;
+  font-weight: 600;
+  color: var(--cnt-text-main);
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cnt-history-action {
+  font-size: 0.67rem;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+.cnt-history-action--create { background: #e2f7e9; color: #2d7a47; }
+.cnt-history-action--update { background: #e8f0ff; color: #2a50a8; }
+.cnt-history-action--delete { background: #fde8e8; color: #b53333; }
+.cnt-history-entity {
+  font-size: 0.67rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+.cnt-history-entity--chapter { background: #fef3e2; color: #c07c00; }
+.cnt-history-entity--lesson  { background: #ede8ff; color: #5b3ea8; }
+.cnt-history-entity--content { background: #f0f7f0; color: #2d7a47; }
+.cnt-history-at {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.73rem;
+  color: var(--cnt-text-muted);
+}
+.cnt-history-summary { font-size: 0.8rem; color: var(--cnt-text-muted); margin: 2px 0 0; }
+.cnt-history-diff-toggle {
+  font-size: 0.75rem;
+  color: var(--cnt-primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 0 0;
+  text-align: left;
+  margin-top: 2px;
+}
+.cnt-history-diff-toggle:hover { text-decoration: underline; }
+
+/* ─── Diff cards (side-by-side) ───────────────────────────────────────────── */
+.cnt-diff-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+.cnt-diff-side {
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--cnt-border);
+}
+.cnt-diff-side--before { border-color: #f5c6c6; }
+.cnt-diff-side--after  { border-color: #b2dfc3; }
+.cnt-diff-side-header {
+  padding: 4px 10px;
+  font-weight: 700;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.cnt-diff-side--before .cnt-diff-side-header { background: #fff0f0; color: #a33; }
+.cnt-diff-side--after  .cnt-diff-side-header { background: #f0fff4; color: #2d7a47; }
+.cnt-diff-field {
+  display: flex;
+  flex-direction: column;
+  padding: 6px 10px;
+  border-top: 1px solid var(--cnt-border);
+}
+.cnt-diff-side--before .cnt-diff-field { background: #fff8f8; }
+.cnt-diff-side--after  .cnt-diff-field { background: #f7fffa; }
+.cnt-diff-key { font-weight: 700; color: var(--cnt-text-muted); font-size: 0.68rem; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.03em; }
+.cnt-diff-val { color: var(--cnt-text-body); font-size: 0.78rem; line-height: 1.5; word-break: break-word; }
+.cnt-diff-no-change { font-size: 0.8rem; color: var(--cnt-text-muted); text-align: center; padding: 8px 0; margin: 0; }
+
+/* ─── Metadata line ───────────────────────────────────────────────────────── */
+.cnt-meta-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  color: var(--cnt-text-muted);
+  margin-top: 2px;
+}
+.cnt-meta-info--item {
+  display: flex;
+  padding: 1px 4px;
+  margin-top: 4px;
+}
+
+/* ─── History modal wide ─────────────────────────────────────────────────── */
+.cnt-modal--history { max-width: 700px; }

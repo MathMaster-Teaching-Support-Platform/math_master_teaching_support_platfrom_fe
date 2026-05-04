@@ -1,0 +1,894 @@
+/* ─── Design Tokens (DESIGN.md warm palette) ─────────────────────────────── */
+:root {
+  --ocr-bg: #f5f4ed;
+  --ocr-surface: #faf9f5;
+  --ocr-surface-2: #ffffff;
+  --ocr-primary: #c96442;
+  --ocr-primary-soft: rgba(201, 100, 66, 0.08);
+  --ocr-primary-mid: rgba(201, 100, 66, 0.15);
+  --ocr-text-main: #141413;
+  --ocr-text-body: #5e5d59;
+  --ocr-text-muted: #87867f;
+  --ocr-border: #f0eee6;
+  --ocr-border-warm: #e8e6dc;
+  --ocr-ring: #d1cfc5;
+  --ocr-shadow-sm: rgba(0, 0, 0, 0.05) 0px 4px 24px;
+  --ocr-shadow-card: 0px 0px 0px 1px #e8e6dc, rgba(0, 0, 0, 0.04) 0px 4px 20px;
+  --ocr-radius: 12px;
+  --ocr-radius-sm: 8px;
+  --ocr-radius-lg: 16px;
+}
+
+/* ─── Page ─────────────────────────────────────────────────────────────────── */
+.ocr-books-page {
+  padding: 2rem 2.5rem;
+  background: var(--ocr-bg);
+  min-height: 100vh;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  color: var(--ocr-text-main);
+}
+
+/* ─── Page Header ─────────────────────────────────────────────────────────── */
+.ocr-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--ocr-border);
+}
+
+.ocr-header-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.ocr-page-title {
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  font-size: 2.25rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  color: var(--ocr-text-main);
+  margin: 0;
+}
+
+.ocr-page-subtitle {
+  color: var(--ocr-text-muted);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.ocr-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* ─── Buttons ──────────────────────────────────────────────────────────────── */
+.ocr-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.625rem 1.125rem;
+  border-radius: var(--ocr-radius-sm);
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+  border: none;
+  text-decoration: none;
+}
+
+.ocr-btn:active { transform: scale(0.97); }
+
+.ocr-btn-primary {
+  background: var(--ocr-primary);
+  color: #faf9f5;
+  box-shadow: 0 0 0 1px var(--ocr-primary);
+}
+.ocr-btn-primary:hover { background: #b8573a; }
+
+.ocr-btn-ghost {
+  background: var(--ocr-surface-2);
+  color: var(--ocr-text-main);
+  box-shadow: 0 0 0 1px var(--ocr-border-warm);
+}
+.ocr-btn-ghost:hover { background: var(--ocr-border); }
+
+.ocr-btn-danger {
+  background: transparent;
+  color: #b53333;
+  box-shadow: 0 0 0 1px #e8cece;
+}
+.ocr-btn-danger:hover { background: rgba(181, 51, 51, 0.07); }
+
+.ocr-btn-sm {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+/* ─── Upload Card ─────────────────────────────────────────────────────────── */
+.ocr-upload-section {
+  background: var(--ocr-surface);
+  border: 1px solid var(--ocr-border);
+  border-radius: var(--ocr-radius-lg);
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--ocr-shadow-sm);
+}
+
+.ocr-upload-heading {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: var(--ocr-text-main);
+  margin: 0 0 1.25rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ocr-upload-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .ocr-upload-body { grid-template-columns: 1fr; }
+}
+
+/* Drop zone */
+.ocr-dropzone {
+  border: 2px dashed var(--ocr-border-warm);
+  border-radius: var(--ocr-radius);
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  background: var(--ocr-bg);
+  position: relative;
+}
+
+.ocr-dropzone:hover,
+.ocr-dropzone--over {
+  border-color: var(--ocr-primary);
+  background: var(--ocr-primary-soft);
+}
+
+.ocr-dropzone input[type='file'] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.ocr-dropzone-icon {
+  color: var(--ocr-primary);
+  margin-bottom: 0.75rem;
+}
+
+.ocr-dropzone-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--ocr-text-main);
+  margin: 0 0 0.25rem 0;
+}
+
+.ocr-dropzone-hint {
+  font-size: 0.8125rem;
+  color: var(--ocr-text-muted);
+  margin: 0;
+}
+
+.ocr-dropzone-file {
+  margin-top: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--ocr-primary);
+  font-weight: 500;
+}
+
+/* Upload form fields */
+.ocr-upload-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.ocr-field-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ocr-text-muted);
+  margin-bottom: 0.35rem;
+  display: block;
+}
+
+.ocr-field-input,
+.ocr-field-select {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid var(--ocr-border-warm);
+  border-radius: var(--ocr-radius-sm);
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  font-size: 0.9375rem;
+  color: var(--ocr-text-main);
+  background: var(--ocr-surface-2);
+  transition: border-color 0.15s, box-shadow 0.15s;
+  box-sizing: border-box;
+}
+
+.ocr-field-input:focus,
+.ocr-field-select:focus {
+  outline: none;
+  border-color: var(--ocr-primary);
+  box-shadow: 0 0 0 3px var(--ocr-primary-soft);
+}
+
+.ocr-upload-submit {
+  margin-top: 0.5rem;
+}
+
+/* Upload progress */
+.ocr-upload-progress {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--ocr-border);
+}
+
+.ocr-progress-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--ocr-text-body);
+  margin-bottom: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+.ocr-progress-track {
+  height: 6px;
+  background: var(--ocr-border-warm);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.ocr-progress-fill {
+  height: 100%;
+  background: var(--ocr-primary);
+  border-radius: 99px;
+  transition: width 0.4s ease;
+}
+
+.ocr-progress-fill--pulse {
+  animation: ocrPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes ocrPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ─── Filters ─────────────────────────────────────────────────────────────── */
+.ocr-filters {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.ocr-filter-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ocr-text-muted);
+}
+
+.ocr-filter-chip {
+  padding: 0.3rem 0.875rem;
+  border-radius: 99px;
+  border: 1px solid var(--ocr-border-warm);
+  background: var(--ocr-surface-2);
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--ocr-text-body);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.ocr-filter-chip:hover {
+  border-color: var(--ocr-primary);
+  color: var(--ocr-primary);
+}
+
+.ocr-filter-chip--active {
+  background: var(--ocr-primary);
+  border-color: var(--ocr-primary);
+  color: #faf9f5;
+}
+
+/* ─── Books Grid ──────────────────────────────────────────────────────────── */
+.ocr-books-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 1.25rem;
+}
+
+.ocr-empty {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: var(--ocr-text-muted);
+}
+
+.ocr-empty-icon {
+  margin: 0 auto 1rem;
+  color: var(--ocr-border-warm);
+}
+
+.ocr-empty-text {
+  font-size: 0.9375rem;
+}
+
+/* ─── Book Thumbnail ──────────────────────────────────────────────────────── */
+.ocr-book-thumb {
+  position: relative;
+  width: calc(100% + 2.75rem);       /* bleed past card padding */
+  margin: -1.25rem -1.375rem 0;      /* negative of card padding */
+  height: 230px;
+  border-radius: var(--ocr-radius-lg) var(--ocr-radius-lg) 0 0;
+  overflow: hidden;
+  cursor: pointer;
+  flex-shrink: 0;
+  background: #1a1714;
+}
+
+/* Blurred ambient background — same image, fills the dead space */
+.ocr-book-thumb-bg {
+  position: absolute;
+  inset: -8px;                       /* slightly oversize to hide blur fringe */
+  width: calc(100% + 16px);
+  height: calc(100% + 16px);
+  object-fit: cover;
+  filter: blur(18px) brightness(0.45) saturate(1.3);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Main cover — full image visible, no crop */
+.ocr-book-thumb-img {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  z-index: 1;
+  filter: drop-shadow(0 4px 18px rgba(0,0,0,0.5));
+  transition: transform 0.28s ease;
+}
+
+.ocr-book-thumb:hover .ocr-book-thumb-img {
+  transform: scale(1.03);
+}
+
+.ocr-book-thumb-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #2e2b25 0%, #4a3f35 40%, #c96442 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: rgba(255,255,255,0.55);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.ocr-book-thumb-placeholder svg {
+  color: rgba(255,255,255,0.35);
+}
+
+.ocr-book-thumb-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.52);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  opacity: 0;
+  transition: opacity 0.18s;
+}
+
+.ocr-book-thumb:hover .ocr-book-thumb-overlay {
+  opacity: 1;
+}
+
+/* ─── Book Card ───────────────────────────────────────────────────────────── */
+.ocr-book-card {
+  background: var(--ocr-surface);
+  border: 1px solid var(--ocr-border);
+  border-radius: var(--ocr-radius-lg);
+  padding: 1.25rem 1.375rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  box-shadow: var(--ocr-shadow-sm);
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.ocr-book-card:hover {
+  box-shadow: var(--ocr-shadow-card);
+  border-color: var(--ocr-border-warm);
+}
+
+.ocr-book-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.ocr-grade-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.6rem;
+  background: var(--ocr-primary-soft);
+  border: 1px solid var(--ocr-primary-mid);
+  border-radius: 99px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--ocr-primary);
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
+.ocr-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 99px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.ocr-status-badge--pending {
+  background: #f5f5f0;
+  color: var(--ocr-text-muted);
+  border: 1px solid var(--ocr-border-warm);
+}
+
+.ocr-status-badge--processing {
+  background: rgba(201, 100, 66, 0.1);
+  color: var(--ocr-primary);
+  border: 1px solid var(--ocr-primary-mid);
+  animation: ocrStatusPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes ocrStatusPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
+}
+
+.ocr-status-badge--done {
+  background: rgba(94, 93, 89, 0.08);
+  color: #3d6b4f;
+  border: 1px solid rgba(61, 107, 79, 0.2);
+}
+
+.ocr-status-badge--error {
+  background: rgba(181, 51, 51, 0.07);
+  color: #b53333;
+  border: 1px solid rgba(181, 51, 51, 0.2);
+}
+
+.ocr-book-card-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.0625rem;
+  font-weight: 500;
+  color: var(--ocr-text-main);
+  line-height: 1.35;
+  margin: 0;
+}
+
+.ocr-book-publisher {
+  font-size: 0.8125rem;
+  color: var(--ocr-text-muted);
+  margin: 0;
+}
+
+/* Progress inside card */
+.ocr-card-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.ocr-card-progress-bar {
+  height: 5px;
+  background: var(--ocr-border-warm);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.ocr-card-progress-fill {
+  height: 100%;
+  background: var(--ocr-primary);
+  border-radius: 99px;
+  transition: width 0.5s ease;
+}
+
+.ocr-card-progress-text {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--ocr-text-muted);
+}
+
+/* Card stats row */
+.ocr-card-stats {
+  display: flex;
+  gap: 1rem;
+}
+
+.ocr-card-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.ocr-card-stat-value {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--ocr-text-main);
+  font-variant-numeric: tabular-nums;
+}
+
+.ocr-card-stat-label {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ocr-text-muted);
+  font-weight: 500;
+}
+
+/* Error message */
+.ocr-card-error {
+  font-size: 0.8125rem;
+  color: #b53333;
+  background: rgba(181, 51, 51, 0.06);
+  border: 1px solid rgba(181, 51, 51, 0.15);
+  border-radius: var(--ocr-radius-sm);
+  padding: 0.5rem 0.75rem;
+}
+
+/* Card actions */
+.ocr-card-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding-top: 0.25rem;
+  border-top: 1px solid var(--ocr-border);
+}
+
+/* ─── Export buttons row ───────────────────────────────────────────────────── */
+.ocr-export-row {
+  display: flex;
+  gap: 0.4rem;
+}
+
+/* ─── Overlay spinner ─────────────────────────────────────────────────────── */
+.ocr-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5rem;
+  color: var(--ocr-text-muted);
+  gap: 0.75rem;
+  font-size: 0.9375rem;
+}
+
+.ocr-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid var(--ocr-border-warm);
+  border-top-color: var(--ocr-primary);
+  border-radius: 50%;
+  animation: ocrSpin 0.7s linear infinite;
+}
+
+@keyframes ocrSpin { to { transform: rotate(360deg); } }
+
+/* ─── Upload collapse toggle ──────────────────────────────────────────────── */
+.ocr-upload-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ocr-text-body);
+  padding: 0.5rem 0.875rem;
+  border-radius: var(--ocr-radius-sm);
+  transition: background 0.15s;
+}
+.ocr-upload-toggle:hover { background: var(--ocr-border); }
+
+/* ─── Page top-right stats bar ─────────────────────────────────────────────── */
+.ocr-stats-bar {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.ocr-stat-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.875rem;
+  color: var(--ocr-text-body);
+}
+
+.ocr-stat-chip-value {
+  font-weight: 700;
+  color: var(--ocr-text-main);
+}
+
+/* ─── Delete confirm ──────────────────────────────────────────────────────── */
+.ocr-delete-confirm {
+  background: rgba(181, 51, 51, 0.06);
+  border: 1px solid rgba(181, 51, 51, 0.15);
+  border-radius: var(--ocr-radius-sm);
+  padding: 0.625rem 0.875rem;
+  font-size: 0.8125rem;
+  color: #b53333;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.ocr-delete-confirm span { flex: 1; min-width: 0; }
+
+/* ─── Book Card — improved header ────────────────────────────────────────── */
+.ocr-book-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.ocr-book-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.ocr-book-card-badges {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.ocr-book-card-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+/* Icon-only action buttons */
+.ocr-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--ocr-radius-sm);
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+  font-size: 0;
+}
+
+/* Edit button — neutral blue-grey tint */
+.ocr-icon-btn--edit {
+  background: #eef1f8;
+  color: #3d5a8a;
+}
+.ocr-icon-btn--edit:hover {
+  background: #dde5f5;
+  color: #2a4070;
+}
+
+/* Delete button — warm red tint */
+.ocr-icon-btn--danger {
+  background: rgba(181, 51, 51, 0.1);
+  color: #b53333;
+}
+.ocr-icon-btn--danger:hover {
+  background: rgba(181, 51, 51, 0.2);
+  color: #8f1f1f;
+}
+
+/* Book meta row (publisher + year) */
+.ocr-book-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: -0.25rem;
+}
+
+.ocr-book-year {
+  font-size: 0.75rem;
+  color: var(--ocr-text-muted);
+  background: var(--ocr-border);
+  padding: 0.1rem 0.45rem;
+  border-radius: 99px;
+}
+
+/* Card actions divider */
+.ocr-card-divider {
+  height: 1px;
+  background: var(--ocr-border);
+  margin: 0.25rem 0;
+}
+
+/* ─── Delete overlay (inside card) ───────────────────────────────────────── */
+.ocr-delete-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(250, 249, 245, 0.96);
+  border-radius: var(--ocr-radius-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  text-align: center;
+  backdrop-filter: blur(2px);
+  z-index: 10;
+}
+
+.ocr-delete-overlay-msg {
+  font-size: 0.9375rem;
+  color: var(--ocr-text-main);
+  margin: 0;
+}
+
+.ocr-delete-overlay-sub {
+  font-size: 0.8125rem;
+  color: var(--ocr-text-muted);
+  margin: 0 0 0.5rem;
+}
+
+.ocr-delete-overlay-btns {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* ─── Edit Modal ─────────────────────────────────────────────────────────── */
+.ocr-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 20, 19, 0.45);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.ocr-modal {
+  background: var(--ocr-surface-2);
+  border: 1px solid var(--ocr-border-warm);
+  border-radius: var(--ocr-radius-lg);
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.ocr-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--ocr-border);
+}
+
+.ocr-modal-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.0625rem;
+  font-weight: 500;
+  color: var(--ocr-text-main);
+  margin: 0;
+}
+
+.ocr-modal-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: none;
+  border-radius: var(--ocr-radius-sm);
+  color: var(--ocr-text-muted);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.ocr-modal-close:hover { background: var(--ocr-border); }
+
+.ocr-modal-body {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.ocr-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--ocr-border);
+  background: var(--ocr-bg);
+}
+
+.ocr-field-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.ocr-field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.ocr-field-error {
+  font-size: 0.8125rem;
+  color: #b53333;
+  background: rgba(181, 51, 51, 0.06);
+  border-radius: var(--ocr-radius-sm);
+  padding: 0.5rem 0.75rem;
+  margin: 0;
+}
+
+/* Spin utility */
+.spin {
+  animation: ocrSpin 0.7s linear infinite;
+}

@@ -4,6 +4,7 @@ import {
   ArrowDownToLine,
   ArrowLeftRight,
   BarChart3,
+  BookMarked,
   BookOpen,
   Bot,
   ChevronDown,
@@ -23,6 +24,7 @@ import {
   LogOut,
   Presentation,
   Ruler,
+  ScanText,
   Settings,
   ShieldCheck,
   Sparkles,
@@ -160,6 +162,13 @@ const adminGroups: MenuGroup[] = [
     items: [
       { path: '/admin/analytics', icon: LineChart, label: 'Thống kê' },
       { path: '/admin/cash-flow', icon: Wallet, label: 'Dòng tiền' },
+    ],
+  },
+  {
+    label: 'OCR',
+    items: [
+      { path: '/admin/ocr/books', icon: ScanText, label: 'Sách SGK' },
+      { path: '/admin/ocr/content', icon: BookMarked, label: 'Kho nội dung' },
     ],
   },
 ];

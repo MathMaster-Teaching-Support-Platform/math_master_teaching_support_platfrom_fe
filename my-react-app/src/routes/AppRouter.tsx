@@ -52,6 +52,8 @@ import AdminAcademicStructurePage from '../pages/admin/AdminAcademicStructurePag
 import AdminFinancialOverview from '../pages/admin/AdminFinancialOverview';
 import AdminRoadmapCreatePage from '../pages/admin/AdminRoadmapCreatePage';
 import AdminRoadmapEditPage from '../pages/admin/AdminRoadmapEditPage';
+import AdminOCRBooks from '../pages/admin/AdminOCRBooks';
+import AdminOCRContent from '../pages/admin/AdminOCRContent';
 import AdminRoadmapManagementPage from '../pages/admin/AdminRoadmapManagementPage';
 import AdminRoadmapTopicsPage from '../pages/admin/AdminRoadmapTopicsPage';
 import AdminSlideTemplates from '../pages/admin/AdminSlideTemplates';
@@ -761,6 +763,30 @@ export const router = createBrowserRouter([
     element: (
       <PrivateRoute>
         <ProfileSettings />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/admin/ocr/books',
+    element: (
+      <PrivateRoute>
+        <AdminOCRBooks />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/admin/ocr/books/:bookId',
+    element: (
+      <PrivateRoute>
+        <AdminOCRContent />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/admin/ocr/content',
+    element: (
+      <PrivateRoute>
+        <AdminOCRContent />
       </PrivateRoute>
     ),
   },
