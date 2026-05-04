@@ -69,8 +69,6 @@ const parseLessonMaterials = (materials?: string | null): LessonMaterial[] => {
 const triggerFileDownload = (url: string, filename?: string) => {
   const link = document.createElement('a');
   link.href = url;
-  link.rel = 'noopener noreferrer';
-  link.target = '_blank';
   if (filename) {
     link.download = filename;
   }

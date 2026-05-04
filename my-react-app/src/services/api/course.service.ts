@@ -627,9 +627,8 @@ export class CourseService {
 
     const url = String(rawUrl).trim();
     const isAbsoluteHttpUrl = /^https?:\/\//i.test(url);
-    const isStorageKeyPath = /(^|\/)course-materials\//i.test(url);
 
-    if (!isAbsoluteHttpUrl || isStorageKeyPath) {
+    if (!isAbsoluteHttpUrl) {
       throw new Error('URL tải tài liệu không hợp lệ. Vui lòng tải lại dữ liệu bài học.');
     }
 

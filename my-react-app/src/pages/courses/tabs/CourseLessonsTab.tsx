@@ -98,8 +98,6 @@ const triggerBlobDownload = (blob: Blob, filename?: string) => {
   const objectUrl = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = objectUrl;
-  link.target = '_blank';
-  link.rel = 'noopener noreferrer';
   if (filename) {
     link.download = filename;
   }
