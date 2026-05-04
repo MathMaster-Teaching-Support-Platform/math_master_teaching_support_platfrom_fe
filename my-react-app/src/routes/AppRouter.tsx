@@ -595,14 +595,6 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    path: '/admin/wallet',
-    element: (
-      <PrivateRoute>
-        <StudentWallet />
-      </PrivateRoute>
-    ),
-  },
-  {
     path: '/student/settings',
     element: (
       <PrivateRoute>

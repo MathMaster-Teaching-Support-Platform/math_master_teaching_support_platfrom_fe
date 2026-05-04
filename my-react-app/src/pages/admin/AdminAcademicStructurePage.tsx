@@ -56,7 +56,7 @@ function mapDeleteConstraintError(error: unknown): string {
   const message = error.message || '';
 
   if (message.includes('CHAPTER_HAS_LESSONS')) {
-    return 'Không thể xóa chương khi còn bài học';
+    return 'Không thể vô hiệu hóa chương khi còn bài học';
   }
   if (message.includes('SUBJECT_HAS_CHAPTERS')) {
     return 'Không thể vô hiệu hóa môn học khi còn chương';
@@ -552,7 +552,7 @@ export default function AdminAcademicStructurePage() {
       setSelectedSubjectId('');
       setSelectedChapterId('');
       setSelectedLessonId('');
-      showToast({ type: 'success', message: 'Đã xóa (soft delete) chương trình' });
+      showToast({ type: 'success', message: 'Đã vô hiệu hóa chương trình' });
     },
     onError: (error) => {
       showToast({
@@ -571,7 +571,7 @@ export default function AdminAcademicStructurePage() {
       setSelectedSubjectId('');
       setSelectedChapterId('');
       setSelectedLessonId('');
-      showToast({ type: 'success', message: 'Đã xóa (soft delete) subject' });
+      showToast({ type: 'success', message: 'Đã vô hiệu hóa môn học' });
     },
     onError: (error) => {
       showToast({
@@ -589,7 +589,7 @@ export default function AdminAcademicStructurePage() {
       });
       setSelectedChapterId('');
       setSelectedLessonId('');
-      showToast({ type: 'success', message: 'Đã xóa (soft delete) chapter' });
+      showToast({ type: 'success', message: 'Đã vô hiệu hóa chương' });
     },
     onError: (error) => {
       showToast({
@@ -606,12 +606,12 @@ export default function AdminAcademicStructurePage() {
         queryKey: ['admin-academic', 'lessons', selectedChapterId, debouncedLessonSearch],
       });
       setSelectedLessonId('');
-      showToast({ type: 'success', message: 'Đã xóa (soft delete) lesson' });
+      showToast({ type: 'success', message: 'Đã vô hiệu hóa bài học' });
     },
     onError: (error) => {
       showToast({
         type: 'error',
-        message: error instanceof Error ? error.message : 'Không thể xóa lesson',
+        message: error instanceof Error ? error.message : 'Không thể vô hiệu hóa bài học',
       });
     },
   });
@@ -675,13 +675,13 @@ export default function AdminAcademicStructurePage() {
 
   const handleDeleteChapter = () => {
     if (!selectedChapterId) return;
-    if (!globalThis.confirm('Xác nhận xóa mềm chương này?')) return;
+    if (!globalThis.confirm('Xác nhận vô hiệu hóa chương này?')) return;
     deleteChapterMutation.mutate(selectedChapterId);
   };
 
   const handleDeleteLesson = () => {
     if (!selectedLessonId) return;
-    if (!globalThis.confirm('Xác nhận xóa (soft delete) lesson này?')) return;
+    if (!globalThis.confirm('Xác nhận vô hiệu hóa bài học này?')) return;
     deleteLessonMutation.mutate(selectedLessonId);
   };
 
@@ -692,7 +692,15 @@ export default function AdminAcademicStructurePage() {
     return [...collection, id];
   };
 
-  const getGradeLabel = (grade: SchoolGradeResponse) => `Lớp ${grade.gradeLevel} - ${grade.name}`;
+  const getGradeLabel = (grade: SchoolGradeResponse) => {
+    const levelLabel = `Lớp ${grade.gradeLevel}`;
+    const name = grade.name?.trim() ?? '';
+
+    if (!name) return levelLabel;
+    if (name.toLowerCase() === levelLabel.toLowerCase()) return levelLabel;
+
+    return `${levelLabel} - ${name}`;
+  };
   const getSubjectLabel = (subject: SubjectResponse) => subject.name;
   const getChapterLabel = (chapter: ChapterResponse) => chapter.title;
   const getLessonLabel = (lesson: LessonResponse) => lesson.title;
@@ -926,11 +934,11 @@ export default function AdminAcademicStructurePage() {
           }
         >
           <Trash2 size={14} />
-          Xóa mềm
+          Vô hiệu hóa
         </button>
       </div>
       {selectedChapterId && hasLessons && (
-        <p className="aas-helper">Không thể xóa mềm chương vì vẫn còn bài học.</p>
+        <p className="aas-helper">Không thể vô hiệu hóa chương vì vẫn còn bài học.</p>
       )}
     </form>
   );
@@ -1047,7 +1055,7 @@ export default function AdminAcademicStructurePage() {
           disabled={!selectedLessonId || deleteLessonMutation.isPending}
         >
           <Trash2 size={14} />
-          Xóa
+          Vô hiệu hóa
         </button>
       </div>
     </form>
