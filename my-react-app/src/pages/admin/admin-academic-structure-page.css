@@ -298,6 +298,12 @@
   cursor: not-allowed;
 }
 
+.aas-helper {
+  margin: 0;
+  color: #b45309;
+  font-size: 0.78rem;
+}
+
 .aas-empty {
   margin: 0;
   padding: 0.5rem 0.6rem;
