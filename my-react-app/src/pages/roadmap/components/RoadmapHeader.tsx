@@ -7,13 +7,17 @@ interface RoadmapHeaderProps {
   avgProgress: number;
 }
 
-const RoadmapHeader: React.FC<RoadmapHeaderProps> = ({ total, inProgress, completed, avgProgress }) => {
+const RoadmapHeader: React.FC<RoadmapHeaderProps> = ({
+  total,
+  inProgress,
+  completed,
+  avgProgress,
+}) => {
   return (
     <header className="page-header srp__header">
       <div className="header-stack srp__header-text">
-        <div className="header-kicker">Học tập &amp; Phát triển</div>
         <div className="row" style={{ gap: '0.6rem' }}>
-          <h2 className="srp__title">Lộ trình học tập</h2>
+          <h1 className="ana-page-title">Lộ trình học tập</h1>
           {total > 0 && <span className="count-chip">{total}</span>}
         </div>
         <p className="srp__subtitle">Khám phá và theo dõi tiến trình học của bạn</p>
