@@ -329,6 +329,7 @@ export interface GenerateQuestionsRequest {
     count: number;
     generationMode?: QuestionGenerationMode;
     canonicalQuestionId?: string;
+    avoidDuplicates?: boolean;
 }
 
 export interface GenerateQuestionsFromCanonicalRequest {
@@ -376,4 +377,67 @@ export interface ApiResponse<T> {
     code?: number;
     message?: string;
     result?: T;
+}
+
+// ── Feature 1: Extract Parameters ────────────────────────────────────────────
+export interface ExtractParametersRequest {
+  templateText: string;
+  answerFormula?: string;
+  solutionSteps?: string;
+  diagramLatex?: string;
+  options?: Record<string, string>;   // MCQ options if present
+  clauses?: Record<string, string>;   // TF clauses if present
+}
+
+export interface SuggestedParam {
+  originalValue: string;
+  location: string;         // e.g. "2x² (leading coefficient)"
+  suggestedName: string;    // e.g. "a"
+  reason: string;
+  changeable: true;
+}
+
+export interface FixedValue {
+  originalValue: string;
+  location: string;
+  reason: string;
+}
+
+export interface ExtractParametersResponse {
+  suggestedParams: SuggestedParam[];
+  fixedValues: FixedValue[];
+  templateResult: string;   // template text with {{a}} {{b}} {{c}} inserted
+}
+
+// ── Feature 2: Generate Parameters ───────────────────────────────────────────
+export interface GenerateParametersRequest {
+  templateText: string;
+  answerFormula?: string;
+  solutionSteps?: string;
+  diagramLatex?: string;
+  options?: Record<string, string>;
+  clauses?: Record<string, string>;
+  parameters: string[];                          // ["a", "b", "c"]
+  sampleQuestions?: Array<Record<string, unknown>>;
+}
+
+export interface GenerateParametersResponse {
+  parameters: Record<string, number | string>;  // { a: 2, b: -3, c: 1 }
+  constraintText: Record<string, string>;        // plain text per param
+  combinedConstraints: string[];
+  filledTextPreview?: string;
+}
+
+// ── Feature 2b: Update Parameters ────────────────────────────────────────────
+export interface UpdateParametersRequest {
+  currentParameters: Record<string, number | string>;
+  currentConstraintText: Record<string, string>;
+  teacherCommand: string;
+  answerFormula?: string;
+}
+
+// ── Feature 4: Set Clause Points ─────────────────────────────────────────────
+export interface SetClausePointsRequest {
+  totalPoint: number;
+  clausePoints: Record<string, number>;  // { A: 0.25, B: 0.25, C: 0.25, D: 0.25 }
 }

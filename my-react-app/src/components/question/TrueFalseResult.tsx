@@ -165,7 +165,30 @@ export function TrueFalseResult({ answer, questionText, options }: TrueFalseResu
                     </span>
                   </div>
                 </div>
-                {detail?.scoringRule && (
+                {detail?.scoringRule === 'VIET_THPT' && (
+                  <div
+                    style={{
+                      marginTop: 16,
+                      padding: '12px 16px',
+                      backgroundColor: '#f0f9ff',
+                      borderRadius: 8,
+                      border: '1px solid #bae6fd',
+                      fontSize: '0.9rem',
+                      color: '#0369a1',
+                    }}
+                  >
+                    <div style={{ fontWeight: 700, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span>📊</span> Giải thích cách tính điểm (Chuẩn Bộ GD&ĐT):
+                    </div>
+                    <ul style={{ margin: 0, paddingLeft: 20, listStyleType: 'disc', lineHeight: 1.6 }}>
+                      <li>Đúng <strong>4/4</strong> mệnh đề: Nhận <strong>100%</strong> số điểm câu hỏi ({answer.maxPoints}đ)</li>
+                      <li>Đúng <strong>3/4</strong> mệnh đề: Nhận <strong>25%</strong> số điểm câu hỏi ({(answer.maxPoints * 0.25).toFixed(2)}đ)</li>
+                      <li>Đúng <strong>2/4</strong> mệnh đề: Nhận <strong>0.1đ</strong> (nếu có quy định riêng) hoặc <strong>0%</strong> điểm</li>
+                      <li>Đúng <strong>0-1/4</strong> mệnh đề: Nhận <strong>0%</strong> điểm</li>
+                    </ul>
+                  </div>
+                )}
+                {detail?.scoringRule && detail.scoringRule !== 'VIET_THPT' && (
                   <div
                     style={{
                       marginTop: 12,
@@ -176,7 +199,7 @@ export function TrueFalseResult({ answer, questionText, options }: TrueFalseResu
                       color: '#1e40af',
                     }}
                   >
-                    💡 Quy tắc chấm: {detail.scoringRule === 'VIET_THPT' ? '4/4 đúng → 100%, 3/4 đúng → 25%, 0-2/4 đúng → 0%' : detail.scoringRule}
+                    💡 Quy tắc chấm: {detail.scoringRule}
                   </div>
                 )}
               </td>

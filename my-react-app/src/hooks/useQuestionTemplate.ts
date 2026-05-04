@@ -3,6 +3,9 @@ import { questionTemplateService } from '../services/questionTemplateService';
 import {
     type QuestionTemplateRequest,
     type QuestionGenerationMode,
+    type ExtractParametersRequest,
+    type GenerateParametersRequest,
+    type UpdateParametersRequest,
     CognitiveLevel,
     QuestionType
 } from '../types/questionTemplate';
@@ -159,16 +162,19 @@ export const useGenerateQuestions = () => {
             count,
             generationMode,
             canonicalQuestionId,
+            avoidDuplicates,
         }: {
             id: string;
             count: number;
             generationMode?: QuestionGenerationMode;
             canonicalQuestionId?: string;
+            avoidDuplicates?: boolean;
         }) =>
             questionTemplateService.generateQuestions(id, {
                 count,
                 generationMode,
                 canonicalQuestionId,
+                avoidDuplicates,
             }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['questions'] });
@@ -189,5 +195,44 @@ export const useImportTemplateFromFile = () => {
             contextHint?: string;
             questionBankId?: string;
         }) => questionTemplateService.importTemplateFromFile(file, subjectHint, contextHint, questionBankId),
+    });
+};
+
+// Feature 1 — AI suggests {{param}} placeholders from raw text
+export const useExtractParameters = () => {
+    return useMutation({
+        mutationFn: ({
+            templateId,
+            request,
+        }: {
+            templateId: string;
+            request: ExtractParametersRequest;
+        }) => questionTemplateService.extractParameters(templateId, request),
+    });
+};
+
+// Feature 2 — AI generates constraint-aware parameter values
+export const useGenerateParameters = () => {
+    return useMutation({
+        mutationFn: ({
+            templateId,
+            request,
+        }: {
+            templateId: string;
+            request: GenerateParametersRequest;
+        }) => questionTemplateService.generateParameters(templateId, request),
+    });
+};
+
+// Feature 2b — Teacher refines parameters with a natural-language command
+export const useUpdateParameters = () => {
+    return useMutation({
+        mutationFn: ({
+            templateId,
+            request,
+        }: {
+            templateId: string;
+            request: UpdateParametersRequest;
+        }) => questionTemplateService.updateParameters(templateId, request),
     });
 };

@@ -159,6 +159,7 @@ export interface AssessmentResponse {
     examMatrixId?: string;
     examMatrixName?: string;
     examMatrixGradeLevel?: number;
+    questionBankName?: string;
     allowMultipleAttempts?: boolean;
     maxAttempts?: number;
     attemptScoringPolicy?: AttemptScoringPolicy;

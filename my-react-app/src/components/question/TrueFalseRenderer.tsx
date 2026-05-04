@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { parseTFAnswer, formatTFAnswer } from '../../utils/questionHelpers';
 import type { AssessmentQuestionItem } from '../../types/assessment.types';
+import MathText from '../common/MathText';
 
 interface TrueFalseRendererProps {
   question: AssessmentQuestionItem | {
@@ -49,7 +50,7 @@ export function TrueFalseRenderer({
   return (
     <div className="tf-question" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div className="question-text" style={{ marginBottom: 8, fontSize: '1rem', lineHeight: 1.6 }}>
-        {question.questionText}
+        <MathText text={question.questionText} />
       </div>
       {['A', 'B', 'C', 'D'].map(key => (
         <div
@@ -83,7 +84,7 @@ export function TrueFalseRenderer({
               lineHeight: 1.5,
             }}
           >
-            {clauses[key] || ''}
+            <MathText text={clauses[key] || ''} />
           </span>
           <div
             className="tf-toggle-pair"

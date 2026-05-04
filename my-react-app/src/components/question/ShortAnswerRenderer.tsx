@@ -1,5 +1,6 @@
 import { normalizeNumericAnswer } from '../../utils/questionHelpers';
 import type { AssessmentQuestionItem } from '../../types/assessment.types';
+import MathText from '../common/MathText';
 
 interface ShortAnswerRendererProps {
   question: AssessmentQuestionItem | {
@@ -26,7 +27,7 @@ export function ShortAnswerRenderer({
   return (
     <div className="sa-question" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div className="question-text" style={{ marginBottom: 8, fontSize: '1rem', lineHeight: 1.6 }}>
-        {question.questionText}
+        <MathText text={question.questionText} />
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <input

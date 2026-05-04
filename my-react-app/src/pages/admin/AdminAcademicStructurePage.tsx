@@ -712,7 +712,7 @@ export default function AdminAcademicStructurePage() {
         saveGradeMutation.mutate();
       }}
     >
-      <div className="aas-form__title">Chương trình</div>
+      <h3 className="aas-form__title">Chương trình</h3>
       <input
         type="number"
         min={1}
@@ -783,7 +783,7 @@ export default function AdminAcademicStructurePage() {
         saveSubjectMutation.mutate();
       }}
     >
-      <div className="aas-form__title">Môn học</div>
+      <h3 className="aas-form__title">Môn học</h3>
       <select
         value={subjectForm.schoolGradeId}
         onChange={(event) =>
@@ -881,7 +881,7 @@ export default function AdminAcademicStructurePage() {
         saveChapterMutation.mutate();
       }}
     >
-      <div className="aas-form__title">Chương</div>
+      <h3 className="aas-form__title">Chương</h3>
       <input
         type="text"
         placeholder="Tên chương"
@@ -943,7 +943,7 @@ export default function AdminAcademicStructurePage() {
         saveLessonMutation.mutate();
       }}
     >
-      <div className="aas-form__title">Bài học</div>
+      <h3 className="aas-form__title">Bài học</h3>
       <div className="aas-search-wrap">
         <Search size={15} />
         <input
@@ -1072,7 +1072,6 @@ export default function AdminAcademicStructurePage() {
         <section className="module-page teacher-courses-page aas-page__content">
           <header className="aas-header">
             <div>
-              <p className="aas-kicker">Admin</p>
               <h1>Quản lý chương trình</h1>
               <p>Cấu trúc phân cấp Chương trình - Môn học - Chương - Bài học.</p>
             </div>

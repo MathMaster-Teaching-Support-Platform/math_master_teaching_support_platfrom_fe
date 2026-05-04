@@ -2,6 +2,8 @@ import { Plus, Trash2 } from 'lucide-react';
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import MathText from '../common/MathText';
 import { ParametersEditor, type ParameterInput } from '../common/ParametersEditor';
+import { renderTemplateWithSamples } from '../../utils/templatePreview';
+import { AIParameterPanel } from './AIParameterPanel';
 
 type OptionInput = {
   key: string;
@@ -19,6 +21,7 @@ export interface MCQBlueprintData {
 
 interface MCQBlueprintProps {
   defaultChapterId: string;
+  templateId?: string;
   onFocusField?: (field: string, index?: number) => void;
   initialData?: {
     templateText?: string;
@@ -33,10 +36,11 @@ interface MCQBlueprintProps {
 export interface MCQBlueprintRef {
   getData: () => MCQBlueprintData;
   getFieldRef: (field: string, index?: number) => HTMLElement | null;
+  setTemplateText: (text: string) => void;
 }
 
 export const MCQBlueprint = forwardRef<MCQBlueprintRef, MCQBlueprintProps>(
-  ({ onFocusField, initialData }, ref) => {
+  ({ onFocusField, initialData, templateId }, ref) => {
     const [templateText, setTemplateText] = useState(
       initialData?.templateText ?? 'Giải phương trình: {{a}}x + {{b}} = 0'
     );
@@ -107,6 +111,8 @@ export const MCQBlueprint = forwardRef<MCQBlueprintRef, MCQBlueprintProps>(
             return null;
         }
       },
+      // NEW: allows AIExtractPanel to push updated template text into this blueprint
+      setTemplateText: (text: string) => setTemplateText(text),
     }));
 
     const addOption = () => {
@@ -141,14 +147,14 @@ export const MCQBlueprint = forwardRef<MCQBlueprintRef, MCQBlueprintProps>(
             onFocus={() => onFocusField?.('templateText')}
             onChange={(event) => setTemplateText(event.target.value)}
           />
+          {templateText && (
+            <div className="preview-box">
+              <MathText text={renderTemplateWithSamples(templateText, parameters)} />
+            </div>
+          )}
           <p className="muted" style={{ marginTop: 6, fontSize: '0.78rem' }}>
             Dùng {'{{a}}'} để tạo biến động. Bôi đen nội dung cần công thức rồi bấm Insert Math.
           </p>
-          {templateText && (
-            <div className="preview-box">
-              <MathText text={templateText} />
-            </div>
-          )}
         </label>
 
         <ParametersEditor
@@ -162,6 +168,29 @@ export const MCQBlueprint = forwardRef<MCQBlueprintRef, MCQBlueprintProps>(
             constraintRefs: parameterConstraintRefs,
           }}
         />
+
+        {/* AI Parameter Panel — Feature 2 */}
+        {templateId && (
+          <AIParameterPanel
+            templateId={templateId}
+            templateText={templateText}
+            answerFormula={answerFormula}
+            solutionSteps={solutionStepsTemplate}
+            options={Object.fromEntries(options.map((o) => [o.key, o.formula]))}
+            parameters={parameters.map((p) => p.name).filter(Boolean)}
+            onAccept={(accepted) => {
+              // Pre-fill each parameter's min/max with the AI-suggested value
+              setParameters((prev) =>
+                prev.map((p) => {
+                  const val = accepted[p.name];
+                  if (val === undefined) return p;
+                  const strVal = String(val);
+                  return { ...p, min: strVal, max: strVal };
+                })
+              );
+            }}
+          />
+        )}
 
         <label>
           <p className="muted" style={{ marginBottom: 6 }}>

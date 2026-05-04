@@ -72,8 +72,8 @@ export function MatrixStatsTree({ stats }: MatrixStatsTreeProps) {
   return (
     <div className="matrix-stats-tree">
       <div className="matrix-stats-header">
-        <h4>📊 Phân bố chi tiết</h4>
-        <p className="muted">Câu hỏi được nhóm theo lớp, chương, loại và mức độ</p>
+        <h4>📊 Phân bố câu hỏi (Đã duyệt)</h4>
+        <p className="muted">Chỉ thống kê các câu hỏi đã được phê duyệt và sẵn sàng cho ma trận.</p>
       </div>
 
       {stats.map((grade) => {

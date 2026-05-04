@@ -26,6 +26,7 @@ export function TemplateGenerateModal({
     (typeof QuestionGenerationMode)[keyof typeof QuestionGenerationMode]
   >(QuestionGenerationMode.PARAMETRIC);
   const [canonicalQuestionId, setCanonicalQuestionId] = useState(template.canonicalQuestionId || '');
+  const [avoidDuplicates, setAvoidDuplicates] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const generateMutation = useGenerateQuestions();
@@ -56,6 +57,7 @@ export function TemplateGenerateModal({
         id: template.id,
         count,
         generationMode,
+        avoidDuplicates,
         canonicalQuestionId:
           generationMode === QuestionGenerationMode.AI_FROM_CANONICAL
             ? canonicalQuestionId
@@ -113,6 +115,14 @@ export function TemplateGenerateModal({
                   value={count}
                   onChange={(event) => setCount(Number(event.target.value))}
                 />
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={avoidDuplicates}
+                  onChange={(event) => setAvoidDuplicates(event.target.checked)}
+                />
+                <span className="muted">Bỏ qua các câu trùng lặp</span>
               </label>
             </div>
 

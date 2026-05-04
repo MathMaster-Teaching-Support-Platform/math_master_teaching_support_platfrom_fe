@@ -186,8 +186,16 @@ function GenerateFromMatrixModal({
             className="btn btn--feat-indigo"
             disabled={!matrixId || isLoading}
             onClick={onConfirm}
+            style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 140, justifyContent: 'center' }}
           >
-            {isLoading ? 'Đang tạo...' : 'Tạo assessment'}
+            {isLoading ? (
+              <>
+                <RefreshCw size={14} className="animate-spin" />
+                Đang tạo...
+              </>
+            ) : (
+              'Tạo assessment'
+            )}
           </button>
         </div>
       </div>
@@ -502,7 +510,8 @@ export default function TeacherAssessments() {
                   {/* Add matrix info row */}
                   {(assessment.examMatrixName ||
                     assessment.examMatrixGradeLevel ||
-                    assessment.assessmentMode === 'MATRIX_BASED') && (
+                    assessment.assessmentMode === 'MATRIX_BASED' ||
+                    assessment.questionBankName) && (
                     <div
                       className="row"
                       style={{
@@ -515,6 +524,11 @@ export default function TeacherAssessments() {
                       {assessment.examMatrixName && (
                         <span className="muted" style={{ fontSize: '0.8rem' }}>
                           📋 Ma trận: {assessment.examMatrixName}
+                        </span>
+                      )}
+                      {assessment.questionBankName && (
+                        <span className="muted" style={{ fontSize: '0.8rem' }}>
+                          🗄️ Ngân hàng: {assessment.questionBankName}
                         </span>
                       )}
                       {assessment.examMatrixGradeLevel && (

@@ -10,6 +10,13 @@ import type {
   AttemptScoringPolicy,
 } from '../../types';
 
+const assessmentTypeLabel: Record<string, string> = {
+  QUIZ: 'Trắc nghiệm nhanh',
+  TEST: UI_TEXT.QUIZ,
+  EXAM: 'Bài thi',
+  HOMEWORK: 'Bài tập về nhà',
+};
+
 type Props = {
   isOpen: boolean;
   mode: 'create' | 'edit';
@@ -83,7 +90,8 @@ export default function AssessmentModal({
 
   // Determine if fields should be read-only based on matrix mode
   // Use examMatrixId as indicator - more reliable than assessmentMode
-  const isEditingMatrixAssessment = mode === 'edit' && !!formData.examMatrixId;
+  const isEditMode = mode === 'edit';
+  const isEditingMatrixAssessment = isEditMode && !!formData.examMatrixId;
 
   let submitLabel = `Cập nhật ${UI_TEXT.QUIZ.toLowerCase()}`;
   if (saving) submitLabel = 'Đang lưu...';
@@ -95,12 +103,17 @@ export default function AssessmentModal({
     event.preventDefault();
     setError(null);
 
-    if (!formData.examMatrixId) {
+    if (!formData.examMatrixId && formData.assessmentMode === 'MATRIX_BASED') {
       setError('Vui lòng chọn ma trận đề trước.');
       return;
     }
 
-    // Lessons are auto-populated from matrix - no validation needed
+    if (formData.startDate && formData.endDate) {
+      if (new Date(formData.startDate) >= new Date(formData.endDate)) {
+        setError('Thời gian kết thúc phải sau thời gian bắt đầu.');
+        return;
+      }
+    }
 
     setSaving(true);
     try {
@@ -125,8 +138,10 @@ export default function AssessmentModal({
             </h3>
             <p className="muted" style={{ marginTop: 4 }}>
               {isEditingMatrixAssessment
-                ? `${UI_TEXT.QUIZ} này được tạo từ ma trận đề. Một số trường không thể chỉnh sửa.`
-                : `Cấu hình ${UI_TEXT.QUIZ.toLowerCase()} theo ma trận đề.`}
+                ? `${UI_TEXT.QUIZ} này được tạo từ ma trận đề. Các trường cấu trúc cơ bản không thể chỉnh sửa.`
+                : mode === 'edit'
+                  ? `Chỉnh sửa cấu hình ${UI_TEXT.QUIZ.toLowerCase()}.`
+                  : `Cấu hình ${UI_TEXT.QUIZ.toLowerCase()} theo ma trận đề.`}
             </p>
           </div>
           <button className="icon-btn" onClick={onClose}>
@@ -136,10 +151,10 @@ export default function AssessmentModal({
 
         <form onSubmit={submit}>
           <div className="modal-body">
-            {error && <p style={{ color: '#be123c', fontSize: 13 }}>{error}</p>}
+            {error && <p style={{ color: '#be123c', fontSize: 13, marginBottom: 12 }}>{error}</p>}
 
             <div className="form-grid">
-              <label>
+              <label style={{ gridColumn: 'span 2' }}>
                 <p className="muted" style={{ marginBottom: 6 }}>
                   Tiêu đề
                 </p>
@@ -151,87 +166,94 @@ export default function AssessmentModal({
                 />
               </label>
 
-              <label>
-                <p className="muted" style={{ marginBottom: 6 }}>
-                  Loại {UI_TEXT.QUIZ.toLowerCase()}
-                </p>
-                {isEditingMatrixAssessment ? (
-                  <div className="input-readonly">
-                    {formData.assessmentType === 'QUIZ' && 'Trắc nghiệm nhanh'}
-                    {formData.assessmentType === 'TEST' && UI_TEXT.QUIZ}
-                    {formData.assessmentType === 'EXAM' && 'Bài thi'}
-                    {formData.assessmentType === 'HOMEWORK' && 'Bài tập về nhà'}
-                  </div>
-                ) : (
-                  <select
-                    className="select"
-                    value={formData.assessmentType}
-                    onChange={(event) =>
-                      setFormData({
-                        ...formData,
-                        assessmentType: event.target.value as AssessmentType,
-                      })
-                    }
-                  >
-                    <option value="QUIZ">Trắc nghiệm nhanh</option>
-                    <option value="TEST">{UI_TEXT.QUIZ}</option>
-                    <option value="EXAM">Bài thi</option>
-                    <option value="HOMEWORK">Bài tập về nhà</option>
-                  </select>
-                )}
-              </label>
+              {!isEditMode && (
+                <>
+                  <label>
+                    <p className="muted" style={{ marginBottom: 6 }}>
+                      Loại {UI_TEXT.QUIZ.toLowerCase()}
+                    </p>
+                    <select
+                      className="select"
+                      value={formData.assessmentType}
+                      onChange={(event) =>
+                        setFormData({
+                          ...formData,
+                          assessmentType: event.target.value as AssessmentType,
+                        })
+                      }
+                    >
+                      <option value="QUIZ">Trắc nghiệm nhanh</option>
+                      <option value="TEST">{UI_TEXT.QUIZ}</option>
+                      <option value="EXAM">Bài thi</option>
+                      <option value="HOMEWORK">Bài tập về nhà</option>
+                    </select>
+                  </label>
 
-              <label>
-                <p className="muted" style={{ marginBottom: 6 }}>
-                  Chế độ tạo đề
-                </p>
-                {isEditingMatrixAssessment ? (
-                  <div className="input-readonly">Theo ma trận đề</div>
-                ) : (
-                  <select
-                    className="select"
-                    value={formData.assessmentMode}
-                    onChange={(event) =>
-                      setFormData({
-                        ...formData,
-                        assessmentMode: event.target.value as AssessmentMode,
-                      })
-                    }
-                  >
-                    <option value="DIRECT">Trực tiếp</option>
-                    <option value="MATRIX_BASED">Theo ma trận đề</option>
-                  </select>
-                )}
-              </label>
+                  <label>
+                    <p className="muted" style={{ marginBottom: 6 }}>
+                      Chế độ tạo đề
+                    </p>
+                    <select
+                      className="select"
+                      value={formData.assessmentMode}
+                      onChange={(event) =>
+                        setFormData({
+                          ...formData,
+                          assessmentMode: event.target.value as AssessmentMode,
+                        })
+                      }
+                    >
+                      <option value="DIRECT">Trực tiếp</option>
+                      <option value="MATRIX_BASED">Theo ma trận đề</option>
+                    </select>
+                  </label>
 
-              <label>
-                <p className="muted" style={{ marginBottom: 6 }}>
-                  Ma trận đề
-                </p>
-                {isEditingMatrixAssessment ? (
-                  <div className="input-readonly">
-                    {matrices.find((m) => m.id === formData.examMatrixId)?.name ||
-                      formData.examMatrixId}{' '}
-                    (APPROVED)
-                  </div>
-                ) : (
-                  <select
-                    className="select"
-                    value={formData.examMatrixId}
-                    onChange={(event) =>
-                      setFormData({ ...formData, examMatrixId: event.target.value })
-                    }
-                  >
-                    <option value="">Chọn ma trận</option>
-                    {matrices.map((matrix) => (
-                      <option key={matrix.id} value={matrix.id}>
-                        {matrix.name} ({matrix.status})
-                      </option>
-                    ))}
-                  </select>
-                )}
-              </label>
+                  {formData.assessmentMode === 'MATRIX_BASED' && (
+                    <label style={{ gridColumn: 'span 2' }}>
+                      <p className="muted" style={{ marginBottom: 6 }}>
+                        Ma trận đề
+                      </p>
+                      <select
+                        className="select"
+                        value={formData.examMatrixId}
+                        onChange={(event) =>
+                          setFormData({ ...formData, examMatrixId: event.target.value })
+                        }
+                      >
+                        <option value="">Chọn ma trận</option>
+                        {matrices.map((matrix) => (
+                          <option key={matrix.id} value={matrix.id}>
+                            {matrix.name} ({matrix.status})
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
+                </>
+              )}
             </div>
+
+            {isEditMode && (
+              <div
+                className="row"
+                style={{
+                  gap: 12,
+                  marginBottom: 16,
+                  padding: '8px 12px',
+                  background: '#f8fafc',
+                  borderRadius: 8,
+                  fontSize: 13,
+                }}
+              >
+                <span className="badge">{assessmentTypeLabel[formData.assessmentType]}</span>
+                <span className="muted">|</span>
+                <span className="muted">
+                  {formData.assessmentMode === 'MATRIX_BASED'
+                    ? `Ma trận: ${matrices.find((m) => m.id === formData.examMatrixId)?.name || formData.examMatrixId}`
+                    : 'Tạo trực tiếp'}
+                </span>
+              </div>
+            )}
 
             <label>
               <p className="muted" style={{ marginBottom: 6 }}>
@@ -336,6 +358,34 @@ export default function AssessmentModal({
             )}
 
             <div className="form-grid">
+              <label>
+                <p className="muted" style={{ marginBottom: 6 }}>
+                  Ngày bắt đầu
+                </p>
+                <input
+                  className="input"
+                  type="datetime-local"
+                  value={formData.startDate ? new Date(formData.startDate).toISOString().slice(0, 16) : ''}
+                  onChange={(event) =>
+                    setFormData({ ...formData, startDate: event.target.value })
+                  }
+                />
+              </label>
+
+              <label>
+                <p className="muted" style={{ marginBottom: 6 }}>
+                  Ngày kết thúc
+                </p>
+                <input
+                  className="input"
+                  type="datetime-local"
+                  value={formData.endDate ? new Date(formData.endDate).toISOString().slice(0, 16) : ''}
+                  onChange={(event) =>
+                    setFormData({ ...formData, endDate: event.target.value })
+                  }
+                />
+              </label>
+
               <label>
                 <p className="muted" style={{ marginBottom: 6 }}>
                   Thời gian làm bài (phút)

@@ -6,6 +6,7 @@ import type {
   SearchQuestionsParams,
   UpdateQuestionRequest,
 } from '../types/question';
+import type { SetClausePointsRequest } from '../types/questionTemplate';
 
 export const questionKeys = {
   all: ['questions'] as const,
@@ -140,6 +141,23 @@ export const useBatchRemoveQuestionsFromBank = () => {
   return useMutation({
     mutationFn: ({ bankId, questionIds }: { bankId: string; questionIds: string[] }) =>
       questionService.batchRemoveQuestionsFromBank(bankId, { questionIds }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: questionKeys.all });
+    },
+  });
+};
+
+// Feature 4 — Set clause-level overdrive points for a TF question
+export const useSetClausePoints = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      questionId,
+      request,
+    }: {
+      questionId: string;
+      request: SetClausePointsRequest;
+    }) => questionService.setClausePoints(questionId, request),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: questionKeys.all });
     },

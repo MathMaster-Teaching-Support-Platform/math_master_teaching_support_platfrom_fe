@@ -9,6 +9,7 @@ import type {
   SearchQuestionsParams,
   UpdateQuestionRequest,
 } from '../types/question';
+import type { SetClausePointsRequest } from '../types/questionTemplate';
 import type { ApiResponse, PageResponse } from '../types/questionBank';
 
 const getAuthHeaders = (): Record<string, string> => {
@@ -164,4 +165,12 @@ export const questionService = {
       valid: boolean;
       validationErrors: string[];
     }>),
+
+  // Feature 4 — Set clause-level overdrive points for TF questions
+  setClausePoints: (questionId: string, request: SetClausePointsRequest) =>
+    fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTIONS_DETAIL(questionId)}/clauses/points`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(request),
+    }).then(handleResponse<QuestionResponse>),
 };
