@@ -74,13 +74,12 @@ function getLevelCount(row: ExamMatrixTableRow, level: MatrixLevel, partNumber: 
   return fromCells?.questionCount ?? 0;
 }
 
-// Redistribution algorithm (available for future percentage editing feature)
-// Currently not used but will be needed when implementing editable percentage rows/columns
-// @ts-expect-error - Function defined for future use
+// Redistribution algorithm
 function redistribute(cells: number[], newTotal: number): number[] {
   const oldTotal = cells.reduce((a, b) => a + b, 0);
   if (oldTotal === 0) {
     // Distribute evenly
+    if (cells.length === 0) return [];
     const each = Math.floor(newTotal / cells.length);
     const remainder = newTotal - each * cells.length;
     return cells.map((_, i) => each + (i < remainder ? 1 : 0));
@@ -88,8 +87,11 @@ function redistribute(cells: number[], newTotal: number): number[] {
   // Proportional redistribution
   const result = cells.map(c => Math.round((c / oldTotal) * newTotal));
   // Fix rounding error on last cell
-  const diff = newTotal - result.reduce((a, b) => a + b, 0);
-  result[result.length - 1] += diff;
+  if (result.length > 0) {
+    const diff = newTotal - result.reduce((a, b) => a + b, 0);
+    result[result.length - 1] += diff;
+    if (result[result.length - 1] < 0) result[result.length - 1] = 0;
+  }
   return result;
 }
 
@@ -174,7 +176,10 @@ export function MatrixTable({
         for (let p = 1; p <= numberOfParts; p++) {
           for (const level of cognitiveOrder) {
             const ck = makeCellKey(p, level);
-            const count = getCellValue(row.rowId, p, level);
+            const cellId = makeCellId(row.rowId, p, level);
+            const count = inputMode === 'percentage' 
+               ? (localPercentages.get(cellId) ?? 0)
+               : getCellValue(row.rowId, p, level);
             colTotals[ck] = (colTotals[ck] ?? 0) + count;
             rowTotal += count;
             total += count;
@@ -185,7 +190,7 @@ export function MatrixTable({
     }
 
     return { columnTotals: colTotals, rowTotals, grandTotal: total };
-  }, [chapters, numberOfParts, getCellValue]);
+  }, [chapters, numberOfParts, getCellValue, inputMode, localPercentages]);
 
   // Use refs to avoid stale closure in setTimeout/performSave
   const dirtyCellsRef = useRef<Set<CellId>>(dirtyCells);
@@ -411,13 +416,36 @@ export function MatrixTable({
     const newLocal = new Map(localCells);
     const newDirty = new Set(dirtyCells);
     
+    const cellIds: CellId[] = [];
+    const pcts: number[] = [];
     for (const [cellId, pct] of localPercentages.entries()) {
-      const newCount = Math.round((pct / 100) * percentageTotal);
-      const currentCount = newLocal.get(cellId) ?? 0;
-      if (currentCount !== newCount) {
-        newLocal.set(cellId, newCount);
-        newDirty.add(cellId);
+      if (pct > 0) {
+         cellIds.push(cellId);
+         pcts.push(pct);
       }
+    }
+    
+    if (pcts.length > 0) {
+       const distributed = redistribute(pcts, percentageTotal);
+       for (let i = 0; i < cellIds.length; i++) {
+         const cellId = cellIds[i];
+         const newCount = distributed[i];
+         const currentCount = newLocal.get(cellId) ?? 0;
+         if (currentCount !== newCount) {
+            newLocal.set(cellId, newCount);
+            newDirty.add(cellId);
+         }
+       }
+    }
+    
+    for (const [cellId, pct] of localPercentages.entries()) {
+       if (pct <= 0) {
+         const currentCount = newLocal.get(cellId) ?? 0;
+         if (currentCount !== 0) {
+            newLocal.set(cellId, 0);
+            newDirty.add(cellId);
+         }
+       }
     }
     
     setLocalCells(newLocal);
@@ -646,7 +674,7 @@ export function MatrixTable({
 
                     <td className={`matrix-td matrix-td--total-type ${rowTotal === 0 ? 'matrix-td--warning' : ''}`}>
                       <div className="matrix-total-cell" title={rowTotal === 0 ? 'Tổng = 0, hàng này sẽ không có câu hỏi' : ''}>
-                        {rowTotal}
+                        {rowTotal}{inputMode === 'percentage' ? '%' : ''}
                         {rowTotal === 0 && <span style={{ color: '#dc2626', fontSize: 11, display: 'block' }}>⚠️ Trống</span>}
                       </div>
                     </td>
@@ -689,14 +717,14 @@ export function MatrixTable({
                       className={`matrix-td matrix-td--level matrix-td--level-${level.toLowerCase()} matrix-td--grand-total`}
                     >
                       <div className="matrix-grand-total-cell">
-                        {total}
+                        {total}{inputMode === 'percentage' ? '%' : ''}
                       </div>
                     </td>
                   );
                 })
               )}
               <td className="matrix-td matrix-td--total-type matrix-td--grand-total">
-                <div className="matrix-grand-total-cell">{grandTotal}</div>
+                <div className="matrix-grand-total-cell">{grandTotal}{inputMode === 'percentage' ? '%' : ''}</div>
               </td>
               <td className="matrix-td matrix-td--total-type matrix-td--grand-total">
                 <div className="matrix-grand-total-cell">{grandTotal > 0 ? '100%' : '0%'}</div>

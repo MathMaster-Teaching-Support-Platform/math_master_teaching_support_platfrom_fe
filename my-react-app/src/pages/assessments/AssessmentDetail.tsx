@@ -211,16 +211,51 @@ export default function AssessmentDetail() {
       const n = Number(val);
       if (!Number.isNaN(n) && n > 0) dist[key] = n;
     }
-    try {
-      await autoDistributeMutation.mutateAsync({
-        assessmentId: id,
-        totalPoints: total,
-        distribution: Object.keys(dist).length > 0 ? dist : undefined,
+    
+    // Distribute locally and update pointsDraft
+    const newPointsDraft = { ...pointsDraft };
+    
+    if (Object.keys(dist).length === 0) {
+      // Distribute evenly across all questions
+      let totalWeight = 0;
+      questions.forEach(q => {
+        totalWeight += q.questionType === 'TRUE_FALSE' ? 4 : 1;
       });
-      await Promise.all([refetchQuestions(), refetch()]);
-    } catch (e) {
-      setCrudError(e instanceof Error ? e.message : 'Không thể tự động phân điểm.');
+      const pointPerWeight = totalWeight > 0 ? total / totalWeight : 0;
+      
+      questions.forEach(q => {
+        const w = q.questionType === 'TRUE_FALSE' ? 4 : 1;
+        newPointsDraft[getQuestionId(q)] = (pointPerWeight * w).toFixed(2);
+      });
+    } else {
+      // Distribute proportionally by cognitive level
+      const questionsByLevel: Record<string, typeof questions> = {};
+      questions.forEach(q => {
+        const level = q.cognitiveLevel || 'UNKNOWN';
+        if (!questionsByLevel[level]) questionsByLevel[level] = [];
+        questionsByLevel[level].push(q);
+      });
+      
+      for (const [key, percentage] of Object.entries(dist)) {
+        const levelQuestions = questionsByLevel[key] || [];
+        let totalWeight = 0;
+        levelQuestions.forEach(q => {
+          totalWeight += q.questionType === 'TRUE_FALSE' ? 4 : 1;
+        });
+        const levelPoints = total * (percentage / 100);
+        const pointPerWeight = totalWeight > 0 ? levelPoints / totalWeight : 0;
+        
+        levelQuestions.forEach(q => {
+          const w = q.questionType === 'TRUE_FALSE' ? 4 : 1;
+          newPointsDraft[getQuestionId(q)] = (pointPerWeight * w).toFixed(2);
+        });
+      }
     }
+    
+    setPointsDraft(newPointsDraft);
+    // Note: We intentionally don't call the mutation here so the user can review before saving
+    // They must click "Lưu điểm tất cả câu hỏi"
+    window.alert('Đã phân điểm tạm thời! Bạn hãy kiểm tra lại bảng điểm và nhấn "Lưu điểm tất cả câu hỏi" để lưu thay đổi.');
   }
 
   async function generateFromMatrix() {

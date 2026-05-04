@@ -236,41 +236,31 @@ export default function TakeAssessment() {
     if (!attemptData?.questions) return null;
 
     const grouped = new Map<number, typeof attemptData.questions>();
-    
-    // Check if any question has partNumber
-    const hasPartNumbers = attemptData.questions.some(q => q.partNumber !== undefined);
-    
-    if (hasPartNumbers) {
-      attemptData.questions.forEach(q => {
-        const part = q.partNumber || 1;
-        if (!grouped.has(part)) grouped.set(part, []);
-        grouped.get(part)!.push(q);
-      });
-    } else {
-      // Fallback based on questionType for legacy assessments
-      attemptData.questions.forEach(q => {
-        let part = 1;
+
+    attemptData.questions.forEach(q => {
+      let part = q.partNumber;
+      if (part === undefined) {
         if (q.questionType === 'TRUE_FALSE') part = 2;
         else if (q.questionType === 'SHORT_ANSWER') part = 3;
-        
-        if (!grouped.has(part)) grouped.set(part, []);
-        grouped.get(part)!.push(q);
-      });
-    }
-    
+        else part = 1;
+      }
+      if (!grouped.has(part)) grouped.set(part, []);
+      grouped.get(part)!.push(q);
+    });
+
     return grouped;
   }, [attemptData?.questions]);
 
   // Get part info for current question
   const currentPartInfo = useMemo(() => {
     if (!currentQuestion || !questionsByPart) return null;
-    
+
     const partLabels: Record<number, string> = {
       1: 'Phần I: Trắc nghiệm nhiều lựa chọn',
       2: 'Phần II: Trắc nghiệm Đúng/Sai',
       3: 'Phần III: Trắc nghiệm trả lời ngắn',
     };
-    
+
     // Determine part number (with fallback)
     let partNum = currentQuestion.partNumber;
     if (partNum === undefined) {
@@ -278,10 +268,10 @@ export default function TakeAssessment() {
       else if (currentQuestion.questionType === 'SHORT_ANSWER') partNum = 3;
       else partNum = 1;
     }
-    
+
     const partQuestions = questionsByPart.get(partNum) || [];
     const questionIndexInPart = partQuestions.findIndex(q => q.questionId === currentQuestion.questionId);
-    
+
     return {
       partNumber: partNum,
       partLabel: partLabels[partNum] || `Phần ${partNum}`,

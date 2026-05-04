@@ -1,9 +1,8 @@
-import { useQuery } from '@tanstack/react-query';
+
 import {
   AlertCircle,
   ArrowRight,
   BookOpen,
-  ChevronDown,
   ClipboardList,
   Database,
   Eye,
@@ -24,7 +23,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Pagination from '../../components/common/Pagination';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
-import { MatrixStatsTree } from '../../components/question-banks/MatrixStatsTree';
+// import { MatrixStatsTree } from '../../components/question-banks/MatrixStatsTree';
 import { useToast } from '../../context/ToastContext';
 import { useDebounce } from '../../hooks/useDebounce';
 import {
@@ -34,7 +33,7 @@ import {
   useToggleQuestionBankPublicStatus,
   useUpdateQuestionBank,
 } from '../../hooks/useQuestionBank';
-import { questionBankService } from '../../services/questionBankService';
+
 import '../../styles/module-refactor.css';
 import type { QuestionBankRequest, QuestionBankResponse } from '../../types/questionBank';
 import '../courses/TeacherCourses.css';
@@ -423,6 +422,7 @@ export function QuestionBankDashboard() {
                       {/* ❌ REMOVED: Chapter display (QuestionBank no longer has chapter) */}
                     </div>
 
+                    {/* ISSUE-12: MatrixStatsTree hidden temporarily as it adds visual noise
                     {bank.cognitiveStats && Object.keys(bank.cognitiveStats).length > 0 && (
                       <>
                         <details className="bank-matrix-stats-details">
@@ -434,6 +434,7 @@ export function QuestionBankDashboard() {
                         </details>
                       </>
                     )}
+                    */}
 
                     <div className="row" style={{ flexWrap: 'wrap', gap: '0.4rem' }}>
                       <button
@@ -502,6 +503,7 @@ export function QuestionBankDashboard() {
   );
 }
 
+/* ISSUE-12: MatrixStatsLoader hidden temporarily
 // Helper component to load matrix stats on demand
 function MatrixStatsLoader({ bankId }: { bankId: string }) {
   const { data, isLoading, isError } = useQuery({
@@ -523,3 +525,4 @@ function MatrixStatsLoader({ bankId }: { bankId: string }) {
 
   return <MatrixStatsTree stats={data} />;
 }
+*/
