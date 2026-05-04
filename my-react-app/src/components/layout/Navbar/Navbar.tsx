@@ -44,7 +44,7 @@ const Navbar: React.FC<NavbarProps> = ({ user }) => {
 
   let walletRoute = '/student/wallet';
   if (user.role === 'teacher') walletRoute = '/teacher/wallet';
-  else if (user.role === 'admin') walletRoute = '/admin/wallet';
+  const showWalletAction = user.role !== 'admin';
 
   useEffect(() => {
     if (!AuthService.isAuthenticated()) {
@@ -136,9 +136,11 @@ const Navbar: React.FC<NavbarProps> = ({ user }) => {
             {unreadCount > 0 && <span className="notification-badge">{unreadCountLabel}</span>}
           </button>
 
-          <Link to={walletRoute} className="navbar-action-btn wallet-btn" aria-label="Ví của tôi">
-            <Wallet size={18} className="action-icon" />
-          </Link>
+          {showWalletAction && (
+            <Link to={walletRoute} className="navbar-action-btn wallet-btn" aria-label="Ví của tôi">
+              <Wallet size={18} className="action-icon" />
+            </Link>
+          )}
 
           {tokenRemaining !== null && (
             <Link
