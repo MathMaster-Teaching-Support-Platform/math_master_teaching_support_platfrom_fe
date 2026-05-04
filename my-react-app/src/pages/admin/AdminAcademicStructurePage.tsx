@@ -699,9 +699,36 @@ export default function AdminAcademicStructurePage() {
 
     return `${levelLabel} - ${name}`;
   };
+
+  const getGradeTreeLabel = (grade: SchoolGradeResponse) => {
+    if (grade.id !== gradeForm.id) return getGradeLabel(grade);
+
+    const previewGrade: SchoolGradeResponse = {
+      ...grade,
+      gradeLevel: gradeForm.gradeLevel === '' ? grade.gradeLevel : Number(gradeForm.gradeLevel),
+      name: gradeForm.name || grade.name,
+    };
+
+    return getGradeLabel(previewGrade);
+  };
+
   const getSubjectLabel = (subject: SubjectResponse) => subject.name;
+  const getSubjectTreeLabel = (subject: SubjectResponse) => {
+    if (subject.id !== subjectForm.id) return getSubjectLabel(subject);
+    return subjectForm.name.trim() || subject.name;
+  };
+
   const getChapterLabel = (chapter: ChapterResponse) => chapter.title;
+  const getChapterTreeLabel = (chapter: ChapterResponse) => {
+    if (chapter.id !== chapterForm.id) return getChapterLabel(chapter);
+    return chapterForm.title.trim() || chapter.title;
+  };
+
   const getLessonLabel = (lesson: LessonResponse) => lesson.title;
+  const getLessonTreeLabel = (lesson: LessonResponse) => {
+    if (lesson.id !== lessonForm.id) return getLessonLabel(lesson);
+    return lessonForm.title.trim() || lesson.title;
+  };
 
   const normalizedGlobalSearch = debouncedGlobalSearch.trim().toLowerCase();
   const isGlobalSearching = normalizedGlobalSearch.length > 0;
@@ -715,6 +742,43 @@ export default function AdminAcademicStructurePage() {
     selectedChapter ? getChapterLabel(selectedChapter) : 'Chọn chương',
     selectedLesson ? getLessonLabel(selectedLesson) : 'Chọn bài học',
   ];
+
+  const draftPreview = (() => {
+    if (editorMode === 'program' && !gradeForm.id) {
+      const level = gradeForm.gradeLevel === '' ? 'Lớp ?' : `Lớp ${gradeForm.gradeLevel}`;
+      const name = gradeForm.name.trim();
+      return {
+        icon: GraduationCap,
+        label: name ? `${level} - ${name}` : level,
+      };
+    }
+
+    if (editorMode === 'subject' && !subjectForm.id) {
+      const name = subjectForm.name.trim();
+      return {
+        icon: BookOpen,
+        label: name || 'Môn học mới',
+      };
+    }
+
+    if (editorMode === 'chapter' && !chapterForm.id) {
+      const title = chapterForm.title.trim();
+      return {
+        icon: FolderTree,
+        label: title || 'Chương mới',
+      };
+    }
+
+    if (editorMode === 'lesson' && !lessonForm.id) {
+      const title = lessonForm.title.trim();
+      return {
+        icon: BookText,
+        label: title || 'Bài học mới',
+      };
+    }
+
+    return null;
+  })();
 
   const renderProgramEditor = () => (
     <form
@@ -1118,25 +1182,47 @@ export default function AdminAcademicStructurePage() {
                 <Search size={15} />
                 <input
                   type="search"
-                  placeholder="Tìm kiếm tổng thể chương trình, môn học, chương, bài học"
+                  placeholder="Tìm kiếm"
                   value={globalSearch}
                   onChange={(event) => setGlobalSearch(event.target.value)}
                 />
               </div>
               <div className="aas-tree">
+                {editorMode === 'program' && !gradeForm.id && (
+                  <div className="aas-tree-node lvl-0">
+                    <button type="button" className="aas-node-btn is-draft">
+                      <Plus size={14} />
+                      <GraduationCap size={14} />
+                      <span>
+                        {(() => {
+                          const level =
+                            gradeForm.gradeLevel === '' ? 'Lớp ?' : `Lớp ${gradeForm.gradeLevel}`;
+                          const name = gradeForm.name.trim();
+                          return name ? `${level} - ${name}` : level;
+                        })()}
+                      </span>
+                    </button>
+                  </div>
+                )}
+
                 {grades.map((grade) => {
                   const gradeOpen = expandedGradeIds.includes(grade.id) || isGlobalSearching;
                   const gradeActive = selectedGradeId === grade.id;
+                  const gradeLabel = getGradeTreeLabel(grade);
 
-                  const gradeMatchedByName = matchesGlobalSearch(getGradeLabel(grade));
+                  const gradeMatchedByName = matchesGlobalSearch(gradeLabel);
                   const matchedSubjects = gradeActive
-                    ? subjects.filter((subject) => matchesGlobalSearch(getSubjectLabel(subject)))
+                    ? subjects.filter((subject) =>
+                        matchesGlobalSearch(getSubjectTreeLabel(subject))
+                      )
                     : [];
                   const matchedChapters = gradeActive
-                    ? chapters.filter((chapter) => matchesGlobalSearch(getChapterLabel(chapter)))
+                    ? chapters.filter((chapter) =>
+                        matchesGlobalSearch(getChapterTreeLabel(chapter))
+                      )
                     : [];
                   const matchedLessons = gradeActive
-                    ? lessons.filter((lesson) => matchesGlobalSearch(getLessonLabel(lesson)))
+                    ? lessons.filter((lesson) => matchesGlobalSearch(getLessonTreeLabel(lesson)))
                     : [];
 
                   if (
@@ -1153,7 +1239,7 @@ export default function AdminAcademicStructurePage() {
                     ? subjects
                     : subjects.filter(
                         (subject) =>
-                          matchesGlobalSearch(getSubjectLabel(subject)) ||
+                          matchesGlobalSearch(getSubjectTreeLabel(subject)) ||
                           (subject.id === selectedSubjectId &&
                             (matchedChapters.length > 0 || matchedLessons.length > 0))
                       );
@@ -1173,22 +1259,33 @@ export default function AdminAcademicStructurePage() {
                       >
                         {gradeOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                         <GraduationCap size={14} />
-                        <span>{getGradeLabel(grade)}</span>
+                        <span>{gradeLabel}</span>
                       </button>
 
                       {gradeOpen && (
                         <div className="aas-tree-children">
+                          {gradeActive && editorMode === 'subject' && !subjectForm.id && (
+                            <div className="aas-tree-node lvl-1">
+                              <button type="button" className="aas-node-btn is-draft">
+                                <Plus size={14} />
+                                <BookOpen size={14} />
+                                <span>{subjectForm.name.trim() || 'Môn học mới'}</span>
+                              </button>
+                            </div>
+                          )}
+
                           {gradeActive &&
                             visibleSubjects.map((subject) => {
                               const subjectOpen =
                                 expandedSubjectIds.includes(subject.id) || isGlobalSearching;
                               const subjectActive = selectedSubjectId === subject.id;
+                              const subjectLabel = getSubjectTreeLabel(subject);
 
                               const visibleChapters = !isGlobalSearching
                                 ? chapters
                                 : chapters.filter(
                                     (chapter) =>
-                                      matchesGlobalSearch(getChapterLabel(chapter)) ||
+                                      matchesGlobalSearch(getChapterTreeLabel(chapter)) ||
                                       (chapter.id === selectedChapterId &&
                                         matchedLessons.length > 0)
                                   );
@@ -1213,21 +1310,32 @@ export default function AdminAcademicStructurePage() {
                                       <ChevronRight size={14} />
                                     )}
                                     <BookOpen size={14} />
-                                    <span>{getSubjectLabel(subject)}</span>
+                                    <span>{subjectLabel}</span>
                                   </button>
 
                                   {subjectOpen && subjectActive && (
                                     <div className="aas-tree-children">
+                                      {editorMode === 'chapter' && !chapterForm.id && (
+                                        <div className="aas-tree-node lvl-2">
+                                          <button type="button" className="aas-node-btn is-draft">
+                                            <Plus size={14} />
+                                            <FolderTree size={14} />
+                                            <span>{chapterForm.title.trim() || 'Chương mới'}</span>
+                                          </button>
+                                        </div>
+                                      )}
+
                                       {visibleChapters.map((chapter) => {
                                         const chapterOpen =
                                           expandedChapterIds.includes(chapter.id) ||
                                           isGlobalSearching;
                                         const chapterActive = selectedChapterId === chapter.id;
+                                        const chapterLabel = getChapterTreeLabel(chapter);
 
                                         const visibleLessons = !isGlobalSearching
                                           ? lessons
                                           : lessons.filter((lesson) =>
-                                              matchesGlobalSearch(getLessonLabel(lesson))
+                                              matchesGlobalSearch(getLessonTreeLabel(lesson))
                                             );
 
                                         return (
@@ -1249,11 +1357,26 @@ export default function AdminAcademicStructurePage() {
                                                 <ChevronRight size={14} />
                                               )}
                                               <FolderTree size={14} />
-                                              <span>{getChapterLabel(chapter)}</span>
+                                              <span>{chapterLabel}</span>
                                             </button>
 
                                             {chapterOpen && chapterActive && (
                                               <div className="aas-tree-children">
+                                                {editorMode === 'lesson' && !lessonForm.id && (
+                                                  <div className="aas-tree-node lvl-3">
+                                                    <button
+                                                      type="button"
+                                                      className="aas-node-btn is-draft"
+                                                    >
+                                                      <Plus size={14} />
+                                                      <BookText size={14} />
+                                                      <span>
+                                                        {lessonForm.title.trim() || 'Bài học mới'}
+                                                      </span>
+                                                    </button>
+                                                  </div>
+                                                )}
+
                                                 {visibleLessons.map((lesson) => (
                                                   <div
                                                     key={lesson.id}
@@ -1265,7 +1388,7 @@ export default function AdminAcademicStructurePage() {
                                                       onClick={() => setSelectedLessonId(lesson.id)}
                                                     >
                                                       <BookText size={14} />
-                                                      <span>{getLessonLabel(lesson)}</span>
+                                                      <span>{getLessonTreeLabel(lesson)}</span>
                                                     </button>
                                                   </div>
                                                 ))}
@@ -1342,6 +1465,16 @@ export default function AdminAcademicStructurePage() {
                   Bài học
                 </button>
               </div>
+
+              {draftPreview && (
+                <div className="aas-draft-preview" aria-label="Xem trước mục đang tạo">
+                  <span className="aas-draft-preview__label">Xem trước:</span>
+                  <div className="aas-draft-preview__chip">
+                    <draftPreview.icon size={14} />
+                    <span>{draftPreview.label}</span>
+                  </div>
+                </div>
+              )}
 
               <div className="aas-editor-card">{renderEditor()}</div>
             </article>
