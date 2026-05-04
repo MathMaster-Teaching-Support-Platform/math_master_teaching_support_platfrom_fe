@@ -4,12 +4,14 @@ import React, { useMemo, useRef, useState } from 'react';
 import { UI_TEXT } from '../../../constants/uiText';
 import { useToast } from '../../../context/ToastContext';
 import {
+  useCourseDetail,
   useCourseLessons,
   useCourseProgress,
   useCustomCourseSections,
   useMarkLessonComplete,
   useUpdateProgress,
 } from '../../../hooks/useCourses';
+import { useChaptersBySubject } from '../../../hooks/useChapters';
 import { CourseService } from '../../../services/api/course.service';
 import { VideoUploadService } from '../../../services/api/videoUpload.service';
 import type { CourseLessonResponse } from '../../../types';
@@ -155,9 +157,14 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
   enrollmentStatus,
 }) => {
   const { showToast } = useToast();
+  const { data: courseData } = useCourseDetail(courseId);
   const { data: lessonsData, isLoading: loadingLessons } = useCourseLessons(courseId);
   const { data: sectionsData } = useCustomCourseSections(courseId);
   const { data: progressData } = useCourseProgress(enrollmentId);
+  
+  const subjectId = courseData?.result?.subjectId || '';
+  const { data: chaptersData } = useChaptersBySubject(subjectId, !!subjectId);
+
   const markComplete = useMarkLessonComplete();
   const updateProgress = useUpdateProgress();
   const [playingLessonId, setPlayingLessonId] = useState<string | null>(null);
@@ -181,6 +188,7 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
       {
         id: string;
         title: string;
+        description: string | null;
         lessons: CourseLessonResponse[];
         type: 'SECTION' | 'CHAPTER' | 'OTHER';
         firstSeenIndex: number;
@@ -192,23 +200,34 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
       sections.map((section, index) => [section.id, section.orderIndex ?? index + 1] as const)
     );
 
+    const chapters = chaptersData?.result ?? [];
+    const chapterMap = new Map(chapters.map((c) => [c.id, c]));
+
     lessons.forEach((lesson, index) => {
       const section = sections.find((s) => s.id === lesson.sectionId);
       const groupId = lesson.sectionId || lesson.chapterId || 'no-group';
+      
       const groupTitle =
         section?.title ||
         lesson.chapterTitle ||
         (lesson.sectionId ? 'Mục chưa đặt tên' : lesson.chapterId ? 'Chương chưa đặt tên' : 'Khác');
+        
+      const groupDescription = section?.description || (lesson as any).chapterDescription || null;
       const groupType = lesson.sectionId ? 'SECTION' : lesson.chapterId ? 'CHAPTER' : 'OTHER';
 
       if (!groupsMap[groupId]) {
+        const dbChapter = lesson.chapterId ? chapterMap.get(lesson.chapterId) : null;
+        
         groupsMap[groupId] = {
           id: groupId,
           title: groupTitle,
+          description: groupDescription || dbChapter?.description || null,
           lessons: [],
           type: groupType,
           firstSeenIndex: index,
-          orderIndex: groupType === 'SECTION' ? sectionOrderMap.get(groupId) : undefined,
+          orderIndex: groupType === 'SECTION' 
+            ? sectionOrderMap.get(groupId) 
+            : (groupType === 'CHAPTER' ? dbChapter?.orderIndex : undefined),
         };
       }
       groupsMap[groupId].lessons.push(lesson);
@@ -220,7 +239,7 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
         ...group,
         lessons: [...group.lessons].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0)),
       }));
-  }, [lessons, sections]);
+  }, [lessons, sections, chaptersData]);
 
   const progress = progressData?.result;
   const currentLesson = lessons.find((l) => l.id === playingLessonId);
@@ -291,14 +310,28 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
             <span className="slt-section-label">
               {group.type === 'CHAPTER'
                 ? (() => {
-                    const num = extractChapterNumber(group.title) ?? extractChapterNumber(group.id);
-                    return num !== null ? `Chương ${num}` : `Chương ${idx + 1}`;
+                    // Priority: Explicit DB orderIndex, then parsed number, finally course index
+                    const num = group.orderIndex ?? extractChapterNumber(group.title) ?? extractChapterNumber(group.id);
+                    if (num === undefined || num === null) return `Chương ${idx + 1}`;
+                    
+                    // If title already contains "Chương X", don't repeat the label
+                    const hasLabel = new RegExp(`chương\\s*${num}`, 'i').test(group.title);
+                    return hasLabel ? '' : `Chương ${num}`;
                   })()
                 : group.type === 'SECTION'
-                  ? `Phần ${idx + 1}`
-                  : 'Khác'}
+                  ? (() => {
+                      const num = group.orderIndex ?? idx + 1;
+                      const hasLabel = new RegExp(`(mục|phần)\\s*${num}`, 'i').test(group.title);
+                      return hasLabel ? '' : `Mục ${num}`;
+                    })()
+                  : ''}
             </span>
-            <span className="slt-section-title">{group.title}</span>
+            <div className="slt-section-title-wrapper">
+              <span className="slt-section-title">{group.title}</span>
+              {group.description && (
+                <p className="slt-section-description">{group.description}</p>
+              )}
+            </div>
           </div>
           {!isSidebar && (
             <div className="slt-section-meta">

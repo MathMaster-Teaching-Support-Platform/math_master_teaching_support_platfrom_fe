@@ -18,6 +18,10 @@ const romanToNum = (roman: string): number | null => {
 export const extractChapterNumber = (title: string): number | null => {
   if (!title) return null;
 
+  // 0. Quick check: If it's a UUID, ignore it (common for chapter IDs)
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(title);
+  if (isUuid) return null;
+
   // Normalize whitespace (including non-breaking spaces)
   const cleanTitle = title.replace(/[\s\u00A0]+/g, ' ').trim();
 
@@ -26,12 +30,14 @@ export const extractChapterNumber = (title: string): number | null => {
     'chương', 'chuong', 'chapter', 'bài', 'bai', 
     'section', 'module', 'phần', 'phan', 'unit', 'lesson'
   ];
-  const lowerTitle = cleanTitle.toLowerCase();
 
   for (const word of keywords) {
-    const wordIdx = lowerTitle.indexOf(word);
-    if (wordIdx !== -1) {
-      const afterWord = cleanTitle.substring(wordIdx + word.length);
+    // Match the word with boundaries to avoid mid-word matches
+    const regex = new RegExp(`\\b${word}\\b`, 'i');
+    const match = cleanTitle.match(regex);
+    
+    if (match && match.index !== undefined) {
+      const afterWord = cleanTitle.substring(match.index + word.length);
       
       // Try to find an Arabic number after the keyword (allowing for colons, dashes, etc.)
       const arabicMatch = afterWord.match(/^\s*[:\-.\s]*(\d+)/);
