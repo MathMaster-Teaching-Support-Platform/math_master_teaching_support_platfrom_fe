@@ -15,6 +15,10 @@ import {
     type GenerateParametersRequest,
     type GenerateParametersResponse,
     type UpdateParametersRequest,
+    type BlueprintFromRealQuestionRequest,
+    type BlueprintFromRealQuestionResponse,
+    type ReviewQuestionResponse,
+    type BulkRejectQuestionsRequest,
     CognitiveLevel,
     QuestionType
 } from '../types/questionTemplate';
@@ -308,6 +312,92 @@ export const questionTemplateService = {
         return parseResponse<ApiResponse<GenerateParametersResponse>>(
             response,
             'Không thể cập nhật tham số bằng AI'
+        );
+    },
+
+    // Method 1 — single AI call that converts a real-valued question into a Blueprint draft
+    blueprintFromRealQuestion: async (
+        request: BlueprintFromRealQuestionRequest
+    ): Promise<ApiResponse<BlueprintFromRealQuestionResponse>> => {
+        const response = await fetch(
+            `${API_BASE_URL}${API_ENDPOINTS.QUESTION_TEMPLATE_BLUEPRINT_FROM_REAL}`,
+            {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(request),
+            }
+        );
+        return parseResponse<ApiResponse<BlueprintFromRealQuestionResponse>>(
+            response,
+            'AI chưa thể chuyển câu hỏi thành Blueprint. Vui lòng thử lại.'
+        );
+    },
+
+    // Review queue — list UNDER_REVIEW questions for the current teacher
+    listReviewQueue: async (
+        templateId: string | undefined,
+        page = 0,
+        size = 20
+    ): Promise<ApiResponse<PageResponse<ReviewQuestionResponse>>> => {
+        const params = new URLSearchParams({
+            page: String(page),
+            size: String(size),
+        });
+        if (templateId) params.append('templateId', templateId);
+        const response = await fetch(
+            `${API_BASE_URL}${API_ENDPOINTS.QUESTIONS_REVIEW_QUEUE}?${params.toString()}`,
+            { method: 'GET', headers: getAuthHeaders() }
+        );
+        return parseResponse<ApiResponse<PageResponse<ReviewQuestionResponse>>>(
+            response,
+            'Không thể tải danh sách câu hỏi đang chờ duyệt.'
+        );
+    },
+
+    approveQuestion: async (
+        id: string
+    ): Promise<ApiResponse<ReviewQuestionResponse>> => {
+        const response = await fetch(
+            `${API_BASE_URL}${API_ENDPOINTS.QUESTION_APPROVE(id)}`,
+            { method: 'POST', headers: getAuthHeaders() }
+        );
+        return parseResponse<ApiResponse<ReviewQuestionResponse>>(
+            response,
+            'Không thể duyệt câu hỏi.'
+        );
+    },
+
+    bulkApproveQuestions: async (
+        questionIds: string[]
+    ): Promise<ApiResponse<number>> => {
+        const response = await fetch(
+            `${API_BASE_URL}${API_ENDPOINTS.QUESTION_BULK_APPROVE}`,
+            {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ questionIds }),
+            }
+        );
+        return parseResponse<ApiResponse<number>>(
+            response,
+            'Không thể duyệt loạt câu hỏi.'
+        );
+    },
+
+    bulkRejectQuestions: async (
+        request: BulkRejectQuestionsRequest
+    ): Promise<ApiResponse<number>> => {
+        const response = await fetch(
+            `${API_BASE_URL}${API_ENDPOINTS.QUESTION_BULK_REJECT}`,
+            {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(request),
+            }
+        );
+        return parseResponse<ApiResponse<number>>(
+            response,
+            'Không thể từ chối loạt câu hỏi.'
         );
     },
 };

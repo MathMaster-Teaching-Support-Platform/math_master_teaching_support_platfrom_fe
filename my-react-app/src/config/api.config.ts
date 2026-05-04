@@ -330,6 +330,13 @@ export const API_ENDPOINTS = {
   QUESTION_TEMPLATE_BULK_IMPORT_TEMPLATE: '/question-templates/bulk-import/template',
   QUESTION_TEMPLATE_BULK_IMPORT_PREVIEW: '/question-templates/bulk-import/preview',
   QUESTION_TEMPLATE_BULK_IMPORT_SUBMIT: '/question-templates/bulk-import/submit',
+  QUESTION_TEMPLATE_BLUEPRINT_FROM_REAL: '/question-templates/blueprint-from-real-question',
+
+  // Question review queue (UNDER_REVIEW workflow)
+  QUESTIONS_REVIEW_QUEUE: '/questions/review-queue',
+  QUESTION_BULK_APPROVE: '/questions/bulk-approve',
+  QUESTION_BULK_REJECT: '/questions/bulk-reject',
+  QUESTION_APPROVE: (id: string) => `/questions/${id}/approve`,
 
   // Canonical questions
   CANONICAL_QUESTIONS: '/canonical-questions',

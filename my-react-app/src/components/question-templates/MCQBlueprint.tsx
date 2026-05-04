@@ -13,6 +13,7 @@ type OptionInput = {
 export interface MCQBlueprintData {
   templateText: string;
   parameters: ParameterInput[];
+  globalConstraints: string[];
   answerFormula: string;
   options: OptionInput[];
   diagramTemplateRaw: string;
@@ -26,6 +27,7 @@ interface MCQBlueprintProps {
   initialData?: {
     templateText?: string;
     parameters?: ParameterInput[];
+    globalConstraints?: string[];
     answerFormula?: string;
     options?: { key: string; formula: string }[];
     diagramTemplateRaw?: string;
@@ -55,9 +57,12 @@ export const MCQBlueprint = forwardRef<MCQBlueprintRef, MCQBlueprintProps>(
     );
     const [parameters, setParameters] = useState<ParameterInput[]>(
       initialData?.parameters ?? [
-        { name: 'a', type: 'int', min: '1', max: '10', constraint: '' },
-        { name: 'b', type: 'int', min: '-10', max: '10', constraint: '' },
+        { name: 'a', constraintText: 'số nguyên, 1 ≤ a ≤ 10, a ≠ 0', sampleValue: '2' },
+        { name: 'b', constraintText: 'số nguyên, -10 ≤ b ≤ 10', sampleValue: '-3' },
       ]
+    );
+    const [globalConstraints, setGlobalConstraints] = useState<string[]>(
+      initialData?.globalConstraints ?? []
     );
     const [options, setOptions] = useState<OptionInput[]>(
       initialData?.options ?? [
@@ -72,9 +77,8 @@ export const MCQBlueprint = forwardRef<MCQBlueprintRef, MCQBlueprintProps>(
     const answerFormulaRef = useRef<HTMLInputElement | null>(null);
     const diagramTemplateRef = useRef<HTMLTextAreaElement | null>(null);
     const parameterNameRefs = useRef<Record<number, HTMLInputElement | null>>({});
-    const parameterMinRefs = useRef<Record<number, HTMLInputElement | null>>({});
-    const parameterMaxRefs = useRef<Record<number, HTMLInputElement | null>>({});
-    const parameterConstraintRefs = useRef<Record<number, HTMLInputElement | null>>({});
+    const parameterConstraintRefs = useRef<Record<number, HTMLTextAreaElement | null>>({});
+    const parameterSampleRefs = useRef<Record<number, HTMLInputElement | null>>({});
     const optionKeyRefs = useRef<Record<number, HTMLInputElement | null>>({});
     const optionFormulaRefs = useRef<Record<number, HTMLInputElement | null>>({});
 
@@ -82,6 +86,7 @@ export const MCQBlueprint = forwardRef<MCQBlueprintRef, MCQBlueprintProps>(
       getData: () => ({
         templateText,
         parameters,
+        globalConstraints,
         answerFormula,
         options,
         diagramTemplateRaw,
@@ -97,10 +102,8 @@ export const MCQBlueprint = forwardRef<MCQBlueprintRef, MCQBlueprintProps>(
             return diagramTemplateRef.current;
           case 'parameterName':
             return index !== undefined ? parameterNameRefs.current[index] : null;
-          case 'parameterMin':
-            return index !== undefined ? parameterMinRefs.current[index] : null;
-          case 'parameterMax':
-            return index !== undefined ? parameterMaxRefs.current[index] : null;
+          case 'parameterSample':
+            return index !== undefined ? parameterSampleRefs.current[index] : null;
           case 'parameterConstraint':
             return index !== undefined ? parameterConstraintRefs.current[index] : null;
           case 'optionKey':
@@ -111,7 +114,7 @@ export const MCQBlueprint = forwardRef<MCQBlueprintRef, MCQBlueprintProps>(
             return null;
         }
       },
-      // NEW: allows AIExtractPanel to push updated template text into this blueprint
+      // Allows AIExtractPanel to push updated template text into this blueprint
       setTemplateText: (text: string) => setTemplateText(text),
     }));
 
@@ -160,16 +163,17 @@ export const MCQBlueprint = forwardRef<MCQBlueprintRef, MCQBlueprintProps>(
         <ParametersEditor
           parameters={parameters}
           onChange={setParameters}
+          globalConstraints={globalConstraints}
+          onGlobalConstraintsChange={setGlobalConstraints}
           onFocusField={(kind, index) => onFocusField?.(kind, index)}
           mathFieldRefs={{
             nameRefs: parameterNameRefs,
-            minRefs: parameterMinRefs,
-            maxRefs: parameterMaxRefs,
             constraintRefs: parameterConstraintRefs,
+            sampleRefs: parameterSampleRefs,
           }}
         />
 
-        {/* AI Parameter Panel — Feature 2 */}
+        {/* AI Parameter Panel — Feature 2 (legacy refinement helper) */}
         {templateId && (
           <AIParameterPanel
             templateId={templateId}
@@ -179,13 +183,12 @@ export const MCQBlueprint = forwardRef<MCQBlueprintRef, MCQBlueprintProps>(
             options={Object.fromEntries(options.map((o) => [o.key, o.formula]))}
             parameters={parameters.map((p) => p.name).filter(Boolean)}
             onAccept={(accepted) => {
-              // Pre-fill each parameter's min/max with the AI-suggested value
+              // Use the AI-suggested values as the new sampleValue for each parameter.
               setParameters((prev) =>
                 prev.map((p) => {
                   const val = accepted[p.name];
                   if (val === undefined) return p;
-                  const strVal = String(val);
-                  return { ...p, min: strVal, max: strVal };
+                  return { ...p, sampleValue: String(val) };
                 })
               );
             }}

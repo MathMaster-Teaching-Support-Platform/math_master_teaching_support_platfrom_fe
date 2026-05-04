@@ -9,17 +9,20 @@ import {
   FileText,
   GraduationCap,
   Grid2x2,
+  Inbox,
   List,
   Network,
   Pencil,
   Plus,
   RefreshCw,
   Search,
+  Sparkles,
   Trash2,
   Upload,
   X,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import LatexRenderer from '../../components/common/LatexRenderer';
 import MathText from '../../components/common/MathText';
@@ -52,6 +55,14 @@ import { TemplateBulkImportModal } from './TemplateBulkImportModal';
 import { TemplateFormModal } from './TemplateFormModal';
 
 import { TemplateTestModal } from './TemplateTestModal';
+import { TemplateMethodPicker } from './TemplateMethodPicker';
+import { RealQuestionForm } from './RealQuestionForm';
+import { BlueprintConfirmModal } from './BlueprintConfirmModal';
+import { TemplateGenerateModal } from './TemplateGenerateModal';
+import type {
+  BlueprintFromRealQuestionRequest,
+  BlueprintFromRealQuestionResponse,
+} from '../../types/questionTemplate';
 
 const statusFilters: Array<'ALL' | TemplateStatus> = [
   'ALL',
@@ -170,6 +181,7 @@ function extractPrimaryDiagramLatex(diagramData: unknown): string | null {
 export function TemplateDashboard() {
 
   const { showToast } = useToast();
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<'ALL' | TemplateStatus>('ALL');
   const [page, setPage] = useState(0);
@@ -179,6 +191,16 @@ export function TemplateDashboard() {
   const [bulkImportOpen, setBulkImportOpen] = useState(false);
   const [testOpen, setTestOpen] = useState(false);
   const [selected, setSelected] = useState<QuestionTemplateResponse | null>(null);
+
+  // New flow state: Method picker + Method-1 form + Confirm + Generate
+  const [methodPickerOpen, setMethodPickerOpen] = useState(false);
+  const [realFormOpen, setRealFormOpen] = useState(false);
+  const [blueprintRequest, setBlueprintRequest] =
+    useState<BlueprintFromRealQuestionRequest | null>(null);
+  const [blueprintResponse, setBlueprintResponse] =
+    useState<BlueprintFromRealQuestionResponse | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [generateOpen, setGenerateOpen] = useState(false);
 
 
   const [activeDiagram, setActiveDiagram] = useState<unknown>(null);
@@ -287,6 +309,15 @@ export function TemplateDashboard() {
             <div className="row" style={{ flexWrap: 'wrap' }}>
               <button
                 type="button"
+                className="btn secondary"
+                onClick={() => navigate('/teacher/question-review')}
+              >
+                <Inbox size={14} />
+                Hàng đợi duyệt
+              </button>
+
+              <button
+                type="button"
                 className="btn secondary btn--tint-violet"
                 onClick={() => setBulkImportOpen(true)}
               >
@@ -297,11 +328,7 @@ export function TemplateDashboard() {
               <button
                 type="button"
                 className="btn btn--feat-violet"
-                onClick={() => {
-                  setMode('create');
-                  setSelected(null);
-                  setFormOpen(true);
-                }}
+                onClick={() => setMethodPickerOpen(true)}
               >
                 <Plus size={14} />
                 Tạo mẫu mới
@@ -609,6 +636,18 @@ export function TemplateDashboard() {
                         )}
                         {template.status === TemplateStatus.PUBLISHED && (
                           <button
+                            className="btn btn--feat-violet"
+                            onClick={() => {
+                              setSelected(template);
+                              setGenerateOpen(true);
+                            }}
+                          >
+                            <Sparkles size={14} />
+                            Sinh câu hỏi
+                          </button>
+                        )}
+                        {template.status === TemplateStatus.PUBLISHED && (
+                          <button
                             className="btn warn"
                             onClick={() => archiveMutation.mutate(template.id)}
                           >
@@ -672,6 +711,70 @@ export function TemplateDashboard() {
               template={selected}
             />
           )}
+
+          {selected && (
+            <TemplateGenerateModal
+              isOpen={generateOpen}
+              onClose={() => setGenerateOpen(false)}
+              template={selected}
+              onGenerated={(message) => {
+                showToast({ type: 'success', message });
+                setGenerateOpen(false);
+                navigate(
+                  `/teacher/question-review?templateId=${encodeURIComponent(selected.id)}`
+                );
+              }}
+            />
+          )}
+
+          <TemplateMethodPicker
+            isOpen={methodPickerOpen}
+            onClose={() => setMethodPickerOpen(false)}
+            onPickReal={() => {
+              setMethodPickerOpen(false);
+              setRealFormOpen(true);
+            }}
+            onPickManual={() => {
+              setMethodPickerOpen(false);
+              setMode('create');
+              setSelected(null);
+              setFormOpen(true);
+            }}
+          />
+
+          <RealQuestionForm
+            isOpen={realFormOpen}
+            onClose={() => setRealFormOpen(false)}
+            onBlueprintReady={(req, res) => {
+              setBlueprintRequest(req);
+              setBlueprintResponse(res);
+              setRealFormOpen(false);
+              setConfirmOpen(true);
+            }}
+          />
+
+          <BlueprintConfirmModal
+            isOpen={confirmOpen}
+            request={blueprintRequest}
+            blueprint={blueprintResponse}
+            onCancel={() => {
+              setConfirmOpen(false);
+              setBlueprintRequest(null);
+              setBlueprintResponse(null);
+            }}
+            onConfirm={async (payload) => {
+              await createMutation.mutateAsync(payload);
+              showToast({
+                type: 'success',
+                message: 'Đã tạo template từ Blueprint AI.',
+              });
+              setConfirmOpen(false);
+              setBlueprintRequest(null);
+              setBlueprintResponse(null);
+              void refetch();
+            }}
+          />
+
 
 
 

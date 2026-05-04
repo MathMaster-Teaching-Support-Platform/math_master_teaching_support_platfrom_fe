@@ -17,6 +17,7 @@ export interface TFBlueprintData {
   stemText: string;
   clauses: TFClauseInput[];
   parameters: ParameterInput[];
+  globalConstraints: string[];
   diagramTemplateRaw: string;
   solutionStepsTemplate: string;
 }
@@ -30,6 +31,7 @@ interface TFBlueprintProps {
     stemText?: string;
     clauses?: TFClauseInput[];
     parameters?: ParameterInput[];
+    globalConstraints?: string[];
     diagramTemplateRaw?: string;
     solutionStepsTemplate?: string;
   };
@@ -87,10 +89,13 @@ export const TFBlueprint = forwardRef<TFBlueprintRef, TFBlueprintProps>(
     );
     const [parameters, setParameters] = useState<ParameterInput[]>(
       initialData?.parameters ?? [
-        { name: 'a', type: 'int', min: '1', max: '5', constraint: '' },
-        { name: 'b', type: 'int', min: '-6', max: '6', constraint: '' },
-        { name: 'c', type: 'int', min: '-10', max: '10', constraint: '' },
+        { name: 'a', constraintText: 'số nguyên, 1 ≤ a ≤ 5, a ≠ 0', sampleValue: '2' },
+        { name: 'b', constraintText: 'số nguyên, -6 ≤ b ≤ 6', sampleValue: '4' },
+        { name: 'c', constraintText: 'số nguyên, -10 ≤ c ≤ 10', sampleValue: '-3' },
       ]
+    );
+    const [globalConstraints, setGlobalConstraints] = useState<string[]>(
+      initialData?.globalConstraints ?? []
     );
     const [diagramTemplateRaw, setDiagramTemplateRaw] = useState(
       initialData?.diagramTemplateRaw ?? ''
@@ -102,9 +107,8 @@ export const TFBlueprint = forwardRef<TFBlueprintRef, TFBlueprintProps>(
     const stemTextRef = useRef<HTMLTextAreaElement | null>(null);
     const clauseTextRefs = useRef<Record<number, HTMLTextAreaElement | null>>({});
     const parameterNameRefs = useRef<Record<number, HTMLInputElement | null>>({});
-    const parameterMinRefs = useRef<Record<number, HTMLInputElement | null>>({});
-    const parameterMaxRefs = useRef<Record<number, HTMLInputElement | null>>({});
-    const parameterConstraintRefs = useRef<Record<number, HTMLInputElement | null>>({});
+    const parameterConstraintRefs = useRef<Record<number, HTMLTextAreaElement | null>>({});
+    const parameterSampleRefs = useRef<Record<number, HTMLInputElement | null>>({});
     const diagramTemplateRef = useRef<HTMLTextAreaElement | null>(null);
 
     useImperativeHandle(ref, () => ({
@@ -112,6 +116,7 @@ export const TFBlueprint = forwardRef<TFBlueprintRef, TFBlueprintProps>(
         stemText,
         clauses,
         parameters,
+        globalConstraints,
         diagramTemplateRaw,
         solutionStepsTemplate,
       }),
@@ -123,10 +128,8 @@ export const TFBlueprint = forwardRef<TFBlueprintRef, TFBlueprintProps>(
             return index !== undefined ? clauseTextRefs.current[index] : null;
           case 'parameterName':
             return index !== undefined ? parameterNameRefs.current[index] : null;
-          case 'parameterMin':
-            return index !== undefined ? parameterMinRefs.current[index] : null;
-          case 'parameterMax':
-            return index !== undefined ? parameterMaxRefs.current[index] : null;
+          case 'parameterSample':
+            return index !== undefined ? parameterSampleRefs.current[index] : null;
           case 'parameterConstraint':
             return index !== undefined ? parameterConstraintRefs.current[index] : null;
           case 'diagramTemplateRaw':
@@ -135,7 +138,6 @@ export const TFBlueprint = forwardRef<TFBlueprintRef, TFBlueprintProps>(
             return null;
         }
       },
-      // NEW: allows AIExtractPanel to push updated stem text
       setStemText: (text: string) => setStemText(text),
     }));
 
@@ -341,17 +343,18 @@ export const TFBlueprint = forwardRef<TFBlueprintRef, TFBlueprintProps>(
           <ParametersEditor
             parameters={parameters}
             onChange={setParameters}
+            globalConstraints={globalConstraints}
+            onGlobalConstraintsChange={setGlobalConstraints}
             onFocusField={(kind, index) => onFocusField?.(kind, index)}
             mathFieldRefs={{
               nameRefs: parameterNameRefs,
-              minRefs: parameterMinRefs,
-              maxRefs: parameterMaxRefs,
               constraintRefs: parameterConstraintRefs,
+              sampleRefs: parameterSampleRefs,
             }}
           />
         )}
 
-        {/* AI Parameter Panel — Feature 2 */}
+        {/* AI Parameter Panel — Feature 2 (legacy refinement helper) */}
         {templateId && parameters.length > 0 && (
           <AIParameterPanel
             templateId={templateId}
@@ -363,8 +366,7 @@ export const TFBlueprint = forwardRef<TFBlueprintRef, TFBlueprintProps>(
                 prev.map((p) => {
                   const val = accepted[p.name];
                   if (val === undefined) return p;
-                  const strVal = String(val);
-                  return { ...p, min: strVal, max: strVal };
+                  return { ...p, sampleValue: String(val) };
                 })
               );
             }}
@@ -377,7 +379,9 @@ export const TFBlueprint = forwardRef<TFBlueprintRef, TFBlueprintProps>(
               type="button"
               className="btn secondary"
               onClick={() =>
-                setParameters([{ name: '', type: 'int', min: '1', max: '10', constraint: '' }])
+                setParameters([
+                  { name: '', constraintText: 'số nguyên, 1 ≤ x ≤ 10', sampleValue: '' },
+                ])
               }
             >
               + Thêm biến số (tùy chọn)
