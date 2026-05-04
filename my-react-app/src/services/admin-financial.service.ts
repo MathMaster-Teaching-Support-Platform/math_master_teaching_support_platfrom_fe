@@ -76,13 +76,6 @@ export const getRevenueChartData = (data: DailyRevenue[]) => {
     labels: data.map((d) => formatDate(d.date)),
     datasets: [
       {
-        label: 'Nạp tiền',
-        data: data.map((d) => d.deposits),
-        backgroundColor: 'rgba(59, 130, 246, 0.5)',
-        borderColor: 'rgb(59, 130, 246)',
-        borderWidth: 2,
-      },
-      {
         label: 'Đăng ký',
         data: data.map((d) => d.subscriptions),
         backgroundColor: 'rgba(168, 85, 247, 0.5)',

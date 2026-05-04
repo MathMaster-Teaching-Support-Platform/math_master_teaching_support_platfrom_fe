@@ -3,7 +3,6 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
   BookOpen,
   Calendar,
-  CreditCard,
   Download,
   Package,
   RefreshCw,
@@ -54,19 +53,17 @@ const RevenueBreakdown: React.FC = () => {
   }, [breakdown, searchTerm]);
 
   const stats = useMemo(() => {
-    if (!breakdown) return { total: 0, deposits: 0, subscriptions: 0, courses: 0 };
+    if (!breakdown) return { total: 0, subscriptions: 0, courses: 0 };
     const total = calculateTotalRevenue(breakdown.data);
-    const deposits = breakdown.data.reduce((sum, day) => sum + day.deposits, 0);
     const subscriptions = breakdown.data.reduce((sum, day) => sum + day.subscriptions, 0);
     const courses = breakdown.data.reduce((sum, day) => sum + day.courseSales, 0);
-    return { total, deposits, subscriptions, courses };
+    return { total, subscriptions, courses };
   }, [breakdown]);
 
   const handleExport = () => {
     if (!breakdown || breakdown.data.length === 0) return;
     const exportData = breakdown.data.map((item) => ({
       Ngày: item.date,
-      'Nạp tiền (VND)': item.deposits,
       'Đăng ký (VND)': item.subscriptions,
       'Khóa học (VND)': item.courseSales,
       'Tổng (VND)': item.total,
@@ -93,7 +90,7 @@ const RevenueBreakdown: React.FC = () => {
         <div className="revenue-bento-grid">
           <div className="featured-revenue-card skeleton-box" style={{ height: '400px' }} />
           <div className="sources-sidebar">
-            {[1, 2, 3].map((i) => (
+            {[1, 2].map((i) => (
               <div key={i} className="source-mini-card skeleton-box" style={{ height: '110px' }} />
             ))}
           </div>
@@ -183,18 +180,6 @@ const RevenueBreakdown: React.FC = () => {
 
         {/* Sources Sidebar */}
         <div className="sources-sidebar">
-          <motion.div className="source-mini-card" variants={itemVariants}>
-            <div className="source-icon">
-              <CreditCard size={22} />
-            </div>
-            <div className="source-info">
-              <h3>Nạp tiền ví</h3>
-              <p>{formatCurrency(stats.deposits)}</p>
-              <div className="source-percentage">
-                {((stats.deposits / stats.total) * 100 || 0).toFixed(1)}% tỷ trọng
-              </div>
-            </div>
-          </motion.div>
 
           <motion.div className="source-mini-card" variants={itemVariants}>
             <div className="source-icon">
@@ -237,8 +222,8 @@ const RevenueBreakdown: React.FC = () => {
       <div className="ledger-section">
         <motion.div className="ledger-header-row" variants={itemVariants}>
           <div className="header-stack">
-            <h2>Sổ cái chi tiết</h2>
-            <p className="header-sub">Danh sách giao dịch tổng hợp theo ngày</p>
+            <h2>Bảng kê doanh thu</h2>
+            <p className="header-sub">Chi tiết số liệu tổng hợp theo từng ngày</p>
           </div>
           <div className="ledger-search">
             <Search size={18} className="ledger-search-icon" />
@@ -256,7 +241,6 @@ const RevenueBreakdown: React.FC = () => {
             <thead>
               <tr>
                 <th>Ngày ghi nhận</th>
-                <th className="currency-cell">Nạp tiền</th>
                 <th className="currency-cell">Gói đăng ký</th>
                 <th className="currency-cell">Hoa hồng khóa học</th>
                 <th className="currency-cell">Tổng doanh thu</th>
@@ -281,9 +265,6 @@ const RevenueBreakdown: React.FC = () => {
                         })}
                       </span>
                     </td>
-                    <td className="currency-cell" style={{ color: '#2563eb' }}>
-                      {formatCurrency(item.deposits)}
-                    </td>
                     <td className="currency-cell" style={{ color: '#7c3aed' }}>
                       {formatCurrency(item.subscriptions)}
                     </td>
@@ -298,7 +279,6 @@ const RevenueBreakdown: React.FC = () => {
             <tfoot>
               <tr className="table-footer-row">
                 <td>Tổng kết giai đoạn</td>
-                <td className="currency-cell">{formatCurrency(stats.deposits)}</td>
                 <td className="currency-cell">{formatCurrency(stats.subscriptions)}</td>
                 <td className="currency-cell">{formatCurrency(stats.courses)}</td>
                 <td className="currency-cell currency-total">{formatCurrency(stats.total)}</td>
@@ -311,13 +291,6 @@ const RevenueBreakdown: React.FC = () => {
       {/* Insight Footer */}
       <motion.div className="insight-footer" variants={itemVariants}>
         <div className="insight-grid">
-          <div className="insight-item">
-            <h4>Nạp tiền ví</h4>
-            <p>
-              Dòng tiền thực nạp vào hệ thống để mua khóa học. Đây là chỉ số thanh khoản quan trọng
-              nhất.
-            </p>
-          </div>
           <div className="insight-item">
             <h4>Kinh doanh gói</h4>
             <p>Doanh thu định kỳ từ các gói Membership của cả học viên và giảng viên.</p>
