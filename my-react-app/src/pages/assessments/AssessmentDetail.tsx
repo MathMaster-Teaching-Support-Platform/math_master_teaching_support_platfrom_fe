@@ -521,8 +521,8 @@ export default function AssessmentDetail() {
                           const partQuestions = grouped[partNum];
                           return (
                             <Fragment key={partNum}>
-                              <tr style={{ background: '#f8fafc', borderLeft: '4px solid #3b82f6' }}>
-                                <td colSpan={isDraft ? 6 : 5} style={{ fontWeight: 600, color: '#1e40af', padding: '10px 12px' }}>
+                              <tr style={{ background: '#E8E6DC', borderTop: '1px solid #D1CFC5' }}>
+                                <td colSpan={isDraft ? 6 : 5} style={{ fontWeight: 600, color: '#5E5D59', padding: '10px 12px' }}>
                                   {partLabels[partNum] || `Phần ${partNum}`} ({partQuestions.length} câu)
                                 </td>
                               </tr>
