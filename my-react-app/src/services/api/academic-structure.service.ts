@@ -221,13 +221,13 @@ export class AcademicStructureService {
     }
 
     const queryString = query.toString();
-    const endpoint = `${API_BASE_URL}${API_ENDPOINTS.LESSONS_BY_CHAPTER_ADMIN(chapterId)}${queryString ? `?${queryString}` : ''}`;
+    const endpoint = `${API_BASE_URL}${API_ENDPOINTS.CHAPTER_LESSONS(chapterId)}${queryString ? `?${queryString}` : ''}`;
     const response = await fetch(endpoint, {
       method: 'GET',
       headers,
     });
 
-    return this.parseResponse<LessonResponse[]>(response, 'Failed to fetch lessons');
+    return this.parseResponse<LessonResponse[]>(response, 'Failed to fetch lessons by chapter');
   }
 
   static async createLesson(payload: CreateLessonRequest): Promise<ApiResponse<LessonResponse>> {
