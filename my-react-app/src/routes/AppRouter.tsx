@@ -48,6 +48,7 @@ import TeacherProfilePage from '../pages/teacher-profile/TeacherProfilePage';
 import AdminAnalytics from '../pages/admin/AdminAnalytics';
 import AdminCourseReviewDetail from '../pages/admin/AdminCourseReviewDetail';
 import AdminCourseReviewsPage from '../pages/admin/AdminCourseReviewsPage';
+import AdminAcademicStructurePage from '../pages/admin/AdminAcademicStructurePage';
 import AdminFinancialOverview from '../pages/admin/AdminFinancialOverview';
 import AdminRoadmapCreatePage from '../pages/admin/AdminRoadmapCreatePage';
 import AdminRoadmapEditPage from '../pages/admin/AdminRoadmapEditPage';
@@ -631,6 +632,14 @@ export const router = createBrowserRouter([
     element: (
       <PrivateRoute>
         <AdminCourseReviewsPage />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/admin/academic-structure',
+    element: (
+      <PrivateRoute>
+        <AdminAcademicStructurePage />
       </PrivateRoute>
     ),
   },

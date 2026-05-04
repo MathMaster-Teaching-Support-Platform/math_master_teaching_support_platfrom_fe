@@ -143,16 +143,24 @@ export const API_ENDPOINTS = {
   LESSONS: '/lessons',
   LESSON_DETAIL: (lessonId: string) => `/lessons/${lessonId}`,
   CHAPTER_LESSONS: (chapterId: string) => `/chapters/${chapterId}/lessons`,
+  LESSONS_BY_CHAPTER_ADMIN: (chapterId: string) => `/lessons/chapter/${chapterId}`,
 
   // Documents
   DOCUMENTS_SEARCH: '/documents/search',
 
   // Chapters
+  CHAPTERS: '/chapters',
+  CHAPTER_DETAIL: (chapterId: string) => `/chapters/${chapterId}`,
   CHAPTERS_BY_SUBJECT: (subjectId: string) => `/chapters/subject/${subjectId}`,
+  CHAPTERS_BY_CURRICULUM: (curriculumId: string) => `/chapters/curriculum/${curriculumId}`,
 
   // Subjects
   SUBJECTS: '/subjects',
+  SUBJECT_DETAIL: (subjectId: string) => `/subjects/${subjectId}`,
   SUBJECTS_BY_GRADE: (gradeLevel: string) => `/subjects/grade/${gradeLevel}`,
+  SUBJECT_LINK_GRADE: (subjectId: string) => `/subjects/${subjectId}/grades`,
+  SUBJECT_UNLINK_GRADE: (subjectId: string, gradeLevel: number) =>
+    `/subjects/${subjectId}/grades/${gradeLevel}`,
 
   // Roadmaps
   ROADMAPS: '/student/roadmaps',
@@ -193,6 +201,7 @@ export const API_ENDPOINTS = {
 
   // Lesson slide generator flow
   SCHOOL_GRADES: '/school-grades',
+  SCHOOL_GRADE_DETAIL: (schoolGradeId: string) => `/school-grades/${schoolGradeId}`,
   SUBJECTS_BY_SCHOOL_GRADE: (schoolGradeId: string) => `/subjects/school-grade/${schoolGradeId}`,
   LESSONS_BY_CHAPTER: (chapterId: string) => `/lessons/chapters/${chapterId}/lessons`,
   LESSON_SLIDES_TEMPLATES: '/lesson-slides/templates',
