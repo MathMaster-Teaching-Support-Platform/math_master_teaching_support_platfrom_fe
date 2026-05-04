@@ -137,7 +137,7 @@ export const MCQBlueprint = forwardRef<MCQBlueprintRef, MCQBlueprintProps>(
           <p className="muted" style={{ marginBottom: 6 }}>
             Nội dung câu hỏi{' '}
             <span style={{ fontSize: '0.8rem', marginLeft: 8, fontWeight: 400 }}>
-              (Dùng {'{{a}}'}, {'{{b}}'} để chèn biến số. Ví dụ: "Giải: x + {'{{a}}'} = {'{{b}}'}")
+              (Dùng {'{{a}}'}, {'{{b}}'} để chèn hệ số. Ví dụ: "Giải: x + {'{{a}}'} = {'{{b}}'}")
             </span>
           </p>
           <textarea

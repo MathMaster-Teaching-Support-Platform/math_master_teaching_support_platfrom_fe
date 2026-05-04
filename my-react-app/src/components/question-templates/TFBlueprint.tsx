@@ -180,7 +180,7 @@ export const TFBlueprint = forwardRef<TFBlueprintRef, TFBlueprintProps>(
             <h3 style={{ color: '#1e40af' }}>Mệnh đề Đúng/Sai (4 mệnh đề)</h3>
             <p className="muted" style={{ fontSize: '0.8rem', marginBottom: 16 }}>
               Mỗi mệnh đề là một phát biểu toán học mà học sinh đánh giá Đúng hoặc Sai.
-              Dùng biến số <code>{'{{a}}'}</code>, <code>{'{{b}}'}</code> trong mệnh đề
+              Dùng hệ số <code>{'{{a}}'}</code>, <code>{'{{b}}'}</code> trong mệnh đề
               để tạo câu hỏi tự động. Mỗi mệnh đề có thể thuộc chương và mức độ khác nhau.
             </p>
           </div>
@@ -384,10 +384,10 @@ export const TFBlueprint = forwardRef<TFBlueprintRef, TFBlueprintProps>(
                 ])
               }
             >
-              + Thêm biến số (tùy chọn)
+              + Thêm hệ số (tùy chọn)
             </button>
             <p className="muted" style={{ marginTop: 8, fontSize: '0.8rem' }}>
-              Biến số cho phép tạo mệnh đề động với giá trị ngẫu nhiên
+              Hệ số cho phép tạo mệnh đề động với giá trị ngẫu nhiên
             </p>
           </div>
         )}

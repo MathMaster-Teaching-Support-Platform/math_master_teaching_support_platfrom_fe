@@ -362,6 +362,60 @@ export function ExamMatrixDashboard() {
                       </div>
                     )}
 
+                    {/*
+                     * Math-feeling dimension strip: "P parts × R rows · N questions · M points".
+                     * Reads as the matrix's intrinsic shape so teachers can scan a list quickly
+                     * without opening each one. Uses a math/serif font + tabular numerals.
+                     */}
+                    {(matrix.parts?.length || matrix.rowCount || matrix.totalQuestionsTarget || matrix.totalPointsTarget) && (
+                      <div
+                        className="exam-matrix-card__stats"
+                        aria-label="Kích thước ma trận"
+                      >
+                        {(matrix.parts?.length ?? 0) > 0 && (
+                          <span className="exam-matrix-card__stat">
+                            <span className="exam-matrix-card__stat-value">
+                              {matrix.parts?.length}
+                            </span>
+                            <span className="exam-matrix-card__stat-label">phần</span>
+                          </span>
+                        )}
+                        {(matrix.rowCount ?? 0) > 0 && (
+                          <>
+                            <span className="exam-matrix-card__stat-sep">×</span>
+                            <span className="exam-matrix-card__stat">
+                              <span className="exam-matrix-card__stat-value">
+                                {matrix.rowCount}
+                              </span>
+                              <span className="exam-matrix-card__stat-label">dòng</span>
+                            </span>
+                          </>
+                        )}
+                        {(matrix.totalQuestionsTarget ?? 0) > 0 && (
+                          <>
+                            <span className="exam-matrix-card__stat-sep">·</span>
+                            <span className="exam-matrix-card__stat">
+                              <span className="exam-matrix-card__stat-value">
+                                {matrix.totalQuestionsTarget}
+                              </span>
+                              <span className="exam-matrix-card__stat-label">câu</span>
+                            </span>
+                          </>
+                        )}
+                        {(matrix.totalPointsTarget ?? 0) > 0 && (
+                          <>
+                            <span className="exam-matrix-card__stat-sep">·</span>
+                            <span className="exam-matrix-card__stat">
+                              <span className="exam-matrix-card__stat-value">
+                                {matrix.totalPointsTarget}
+                              </span>
+                              <span className="exam-matrix-card__stat-label">điểm</span>
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    )}
+
                     <div className="exam-matrix-card__main-cta">
                       <button
                         type="button"

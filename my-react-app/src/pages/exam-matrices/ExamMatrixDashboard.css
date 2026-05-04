@@ -98,33 +98,100 @@
   gap: 0.6rem;
 }
 
-/* Matrix item cards — calm editorial () */
+/*
+ * Matrix item cards — math-themed treatment.
+ *
+ * The previous "calm editorial" look made the cards feel like generic content
+ * tiles. Teachers asked for something that reads as math at a glance: a faint
+ * graph-paper background, a numeric/serif title, and a stats row showing the
+ * matrix dimensions (parts × rows) the way a math grid would.
+ */
 .module-layout-container .exam-matrix-dashboard-page .data-card.exam-matrix-card {
   min-height: auto;
   padding: 0;
   overflow: hidden;
-  border: 1px solid #e8e6dc;
-  background: #fffefc;
-  box-shadow: 0 2px 10px rgba(20, 20, 18, 0.05);
-  transition:
-    box-shadow 0.2s ease,
-    border-color 0.2s ease;
+  position: relative;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background:
+    linear-gradient(#ffffff, #ffffff) padding-box,
+    /* Faint graph-paper grid behind the card content. */
+    repeating-linear-gradient(0deg, transparent, transparent 23px, #eef2f7 23px, #eef2f7 24px),
+    repeating-linear-gradient(90deg, transparent, transparent 23px, #eef2f7 23px, #eef2f7 24px),
+    #ffffff;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
 .module-layout-container .exam-matrix-dashboard-page .data-card.exam-matrix-card:hover {
-  border-color: #d6cdbf;
-  box-shadow: 0 8px 22px rgba(20, 20, 18, 0.08);
+  border-color: #c7d2fe;
+  box-shadow: 0 12px 28px rgba(67, 56, 202, 0.10);
+  transform: translateY(-2px);
 }
 
-/* Status accent: single left stripe (replaces many button colours) */
+/* Status accent: thicker left stripe in a status-coded colour. */
 .module-layout-container .exam-matrix-card--draft {
-  border-left: 1px solid #b8976a;
+  border-left: 4px solid #f59e0b;
 }
 .module-layout-container .exam-matrix-card--approved {
-  border-left: 1px solid #5d8a6e;
+  border-left: 4px solid #10b981;
 }
 .module-layout-container .exam-matrix-card--locked {
-  border-left: 1px solid #7d7a72;
+  border-left: 4px solid #94a3b8;
+}
+
+/* Sigma watermark — subtle math-themed ornament in the top-right corner. */
+.module-layout-container .exam-matrix-card::before {
+  content: '\03A3'; /* Greek capital Sigma — universal "matrix / sum" symbol */
+  position: absolute;
+  top: -10px;
+  right: 12px;
+  font-family: 'Cambria Math', 'Latin Modern Math', Cambria, 'Times New Roman', serif;
+  font-size: 4.5rem;
+  font-weight: 400;
+  color: #4338ca;
+  opacity: 0.06;
+  pointer-events: none;
+  line-height: 1;
+}
+.module-layout-container .exam-matrix-card--approved::before { color: #10b981; }
+.module-layout-container .exam-matrix-card--locked::before { color: #64748b; }
+
+/* Math-feeling stats row (parts × rows · points · questions). */
+.exam-matrix-card__stats {
+  display: flex;
+  gap: 12px;
+  padding: 0.6rem 1.15rem 0.85rem;
+  flex-wrap: wrap;
+  align-items: baseline;
+}
+
+.exam-matrix-card__stat {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  font-family: 'Cambria Math', 'Latin Modern Math', Cambria, Georgia, serif;
+}
+
+.exam-matrix-card__stat-value {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1e293b;
+  font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: -0.01em;
+}
+
+.exam-matrix-card__stat-label {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #64748b;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  letter-spacing: 0.01em;
+}
+
+.exam-matrix-card__stat-sep {
+  color: #cbd5e1;
+  font-size: 0.95rem;
 }
 
 .module-layout-container .exam-matrix-card__head {
@@ -163,11 +230,13 @@
 
 .module-layout-container .exam-matrix-card__title {
   margin: 0;
-  font-size: 1.05rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  font-size: 1.08rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
   line-height: 1.3;
-  color: #1c1b18;
+  /* Light serif / math-feeling titling without committing to a full webfont. */
+  font-family: 'Cambria Math', Cambria, 'Times New Roman', Georgia, serif;
+  color: #1e293b;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;

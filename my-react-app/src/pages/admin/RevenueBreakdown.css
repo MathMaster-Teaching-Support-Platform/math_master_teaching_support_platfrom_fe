@@ -406,6 +406,20 @@
   line-height: 1.6;
 }
 
+/* Animations */
+@keyframes admin-finance-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.admin-finance-spin {
+  animation: admin-finance-spin 1.2s linear infinite;
+}
+
 /* Responsive */
 @media (max-width: 1100px) {
   .revenue-bento-grid {

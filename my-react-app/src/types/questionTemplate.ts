@@ -400,6 +400,8 @@ export interface ReviewQuestionResponse {
     cognitiveLevel?: CognitiveLevel;
     questionStatus: 'AI_DRAFT' | 'UNDER_REVIEW' | 'APPROVED' | 'ARCHIVED';
     templateId?: string;
+    /** Display name of the template — populated by BE QuestionResponse.templateName. */
+    templateName?: string;
     generationMetadata?: Record<string, unknown>;
     createdAt: string;
 }

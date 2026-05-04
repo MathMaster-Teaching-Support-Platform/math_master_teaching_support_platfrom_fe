@@ -262,10 +262,10 @@ export function BlueprintConfirmModal({
 
           {/* Parameters table */}
           <section className="data-card" style={{ minHeight: 0 }}>
-            <h4 style={{ marginTop: 0, color: '#1e40af' }}>Biến số &amp; ràng buộc</h4>
+            <h4 style={{ marginTop: 0, color: '#1e40af' }}>Hệ số &amp; ràng buộc</h4>
             {params.length === 0 && (
               <p className="muted" style={{ fontSize: '0.85rem' }}>
-                AI không tìm thấy biến số nào. Bạn có thể tiếp tục — Blueprint sẽ
+                AI không tìm thấy hệ số nào. Bạn có thể tiếp tục — Blueprint sẽ
                 tạo ra các câu hỏi giống hệt nhau.
               </p>
             )}
