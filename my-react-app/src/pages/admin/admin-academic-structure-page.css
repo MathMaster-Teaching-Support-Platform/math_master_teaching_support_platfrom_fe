@@ -1,0 +1,230 @@
+.aas-page {
+  position: relative;
+}
+
+.aas-page__bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 15% 15%, rgba(16, 185, 129, 0.14), transparent 42%),
+    radial-gradient(circle at 86% 12%, rgba(244, 114, 182, 0.12), transparent 46%),
+    radial-gradient(circle at 40% 88%, rgba(59, 130, 246, 0.12), transparent 45%);
+}
+
+.aas-page__content {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 1rem;
+}
+
+.aas-header {
+  padding: 1rem 0.2rem 0.3rem;
+}
+
+.aas-kicker {
+  margin: 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #3f3f46;
+  font-weight: 700;
+}
+
+.aas-header h1 {
+  margin: 0.25rem 0 0;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  font-size: clamp(1.35rem, 1.8vw, 1.95rem);
+  color: #18181b;
+}
+
+.aas-header p {
+  margin: 0.35rem 0 0;
+  color: #52525b;
+}
+
+.aas-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(4, minmax(260px, 1fr));
+}
+
+.aas-card {
+  display: grid;
+  grid-template-rows: auto minmax(130px, 220px) auto;
+  gap: 0.7rem;
+  border-radius: 1rem;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), #ffffff);
+  border: 1px solid #e4e4e7;
+  box-shadow: 0 12px 28px rgba(24, 24, 27, 0.08);
+  padding: 0.85rem;
+}
+
+.aas-card__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.aas-card__head h2 {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.98rem;
+}
+
+.aas-card__head span {
+  border-radius: 999px;
+  background: #f1f5f9;
+  border: 1px solid #dbeafe;
+  padding: 0.22rem 0.55rem;
+  font-size: 0.75rem;
+  color: #334155;
+}
+
+.aas-list {
+  display: grid;
+  gap: 0.46rem;
+  overflow: auto;
+  align-content: start;
+  padding-right: 0.2rem;
+}
+
+.aas-list__item {
+  text-align: left;
+  background: #fafafa;
+  border: 1px solid #e4e4e7;
+  color: #27272a;
+  border-radius: 0.68rem;
+  padding: 0.5rem 0.58rem;
+  display: grid;
+  gap: 0.18rem;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.aas-list__item strong {
+  font-size: 0.84rem;
+}
+
+.aas-list__item span {
+  font-size: 0.72rem;
+  color: #71717a;
+}
+
+.aas-list__item:hover {
+  border-color: #a5b4fc;
+  background: #f8f9ff;
+}
+
+.aas-list__item.is-active {
+  border-color: #0ea5e9;
+  background: #ecfeff;
+  box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.14);
+}
+
+.aas-empty {
+  margin: 0;
+  padding: 0.6rem;
+  border: 1px dashed #d4d4d8;
+  border-radius: 0.66rem;
+  color: #71717a;
+  font-size: 0.8rem;
+}
+
+.aas-filter input {
+  width: 100%;
+  border-radius: 0.65rem;
+  border: 1px solid #d4d4d8;
+  padding: 0.45rem 0.6rem;
+}
+
+.aas-form {
+  display: grid;
+  gap: 0.46rem;
+}
+
+.aas-form input,
+.aas-form select,
+.aas-form textarea {
+  width: 100%;
+  border-radius: 0.65rem;
+  border: 1px solid #d4d4d8;
+  padding: 0.44rem 0.58rem;
+  font-size: 0.82rem;
+  background: #ffffff;
+  color: #18181b;
+  box-sizing: border-box;
+}
+
+.aas-form textarea {
+  min-height: 56px;
+  resize: vertical;
+}
+
+.aas-inline-2 {
+  display: grid;
+  gap: 0.45rem;
+  grid-template-columns: 1fr 1fr;
+}
+
+.aas-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  color: #3f3f46;
+}
+
+.aas-check input {
+  width: auto;
+}
+
+.aas-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.aas-actions button {
+  border: 1px solid #0284c7;
+  background: #0284c7;
+  color: #ffffff;
+  border-radius: 0.6rem;
+  padding: 0.42rem 0.58rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.aas-actions button.ghost {
+  border-color: #d4d4d8;
+  color: #27272a;
+  background: #fafafa;
+}
+
+.aas-actions button.danger {
+  border-color: #dc2626;
+  background: #dc2626;
+}
+
+.aas-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 1440px) {
+  .aas-grid {
+    grid-template-columns: repeat(2, minmax(270px, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .aas-grid {
+    grid-template-columns: 1fr;
+  }
+}
