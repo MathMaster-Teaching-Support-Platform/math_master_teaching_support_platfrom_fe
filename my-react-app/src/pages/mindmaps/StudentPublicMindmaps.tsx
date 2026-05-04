@@ -383,9 +383,8 @@ export default function StudentPublicMindmaps() {
           {/* ── Header ── */}
           <header className="page-header">
             <div className="header-stack">
-              <div className="header-kicker">Student Public Mindmaps</div>
               <div className="row" style={{ gap: '0.6rem' }}>
-                <h2>Thư viện mindmap công khai</h2>
+                <h1 className="ana-page-title">Thư viện Mindmaps</h1>
                 {!loadingMindmaps && (
                   <span className="count-chip">{mindmapsResult.totalElements}</span>
                 )}

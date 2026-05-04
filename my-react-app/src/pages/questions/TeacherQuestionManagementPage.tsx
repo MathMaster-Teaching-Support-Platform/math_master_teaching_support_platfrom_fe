@@ -205,7 +205,6 @@ export default function TeacherQuestionManagementPage() {
         <section className="module-page teacher-courses-page teacher-question-management-page">
           <header className="page-header courses-header-row">
             <div className="header-stack">
-              <div className="header-kicker"></div>
               <div className="row" style={{ gap: '0.6rem' }}>
                 <h2>Quản lý câu hỏi của tôi</h2>
                 {!isLoading && <span className="count-chip">{questions.length}</span>}
@@ -424,9 +423,14 @@ export default function TeacherQuestionManagementPage() {
                         <span className="badge">{questionTypeLabel[question.questionType]}</span>
                       </td>
                       <td>
-                        {question.cognitiveLevel
-                          ? <span className="badge">{cognitiveLevelLabel[question.cognitiveLevel] || question.cognitiveLevel}</span>
-                          : '-'}
+                        {question.cognitiveLevel ? (
+                          <span className="badge">
+                            {cognitiveLevelLabel[question.cognitiveLevel] ||
+                              question.cognitiveLevel}
+                          </span>
+                        ) : (
+                          '-'
+                        )}
                       </td>
                       <td>
                         {question.difficulty ? (

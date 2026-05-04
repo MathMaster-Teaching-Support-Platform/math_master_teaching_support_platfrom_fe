@@ -304,8 +304,6 @@ const Pricing: React.FC = () => {
     currentRole === 'teacher' ? 'teacher' : currentRole === 'admin' ? 'admin' : 'student';
   const currentUser =
     layoutRole === 'teacher' ? mockTeacher : layoutRole === 'admin' ? mockAdmin : mockStudent;
-  const pricingHeaderKicker =
-    layoutRole === 'teacher' ? '' : layoutRole === 'admin' ? 'Admin' : 'MathMaster';
   const [subscriptionError, setSubscriptionError] = useState('');
   const [subscriptionSuccess, setSubscriptionSuccess] = useState('');
   const [purchasingPlanId, setPurchasingPlanId] = useState<string | null>(null);
@@ -627,7 +625,6 @@ const Pricing: React.FC = () => {
             <section className="module-page pricing-subscription-page teacher-courses-page teacher-courses-index-page">
               <header className="page-header courses-header-row">
                 <div className="header-stack">
-                  <div className="header-kicker">{pricingHeaderKicker}</div>
                   <div className="row" style={{ gap: '0.6rem' }}>
                     <h2 id="pricing-dashboard-heading">Bảng giá &amp; token</h2>
                     {!loadingSubscriptionData && userPlans.length > 0 && (

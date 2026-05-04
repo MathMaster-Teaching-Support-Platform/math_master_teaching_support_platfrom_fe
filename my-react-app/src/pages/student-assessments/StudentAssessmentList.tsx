@@ -99,9 +99,8 @@ export default function StudentAssessmentList() {
         <section className="module-page">
           <header className="page-header">
             <div className="header-stack">
-              <div className="header-kicker">Student Assessment</div>
               <div className="row" style={{ gap: '0.6rem' }}>
-                <h2>{UI_TEXT.QUIZ} của tôi</h2>
+                <h1 className="ana-page-title">Bài kiểm tra</h1>
                 {!isLoading && !isError && <span className="count-chip">{filtered.length}</span>}
               </div>
               <p className="sal-header-sub">Theo dõi tiến độ và kết quả các {UI_TEXT.QUIZ.toLowerCase()} của bạn</p>

@@ -1,15 +1,42 @@
 /* ════════════════════════════════════════════
-   StudentPublicSlides — scoped under .module-layout-container
+   StudentPublicSlides — Warm Academic palette
+   Overrides module-refactor.css cool-blue defaults
    ════════════════════════════════════════════ */
 
+/* ── Override CSS variables for warm palette ── */
+.module-layout-container {
+  --mod-bg: #f5f4ed;
+  --mod-surface: #faf9f5;
+  --mod-border: #f0eee6;
+  --mod-border-emphasis: #e8e6dc;
+  --mod-text: #141413;
+  --mod-text-muted: #87867f;
+  --mod-text-secondary: #5e5d59;
+  --mod-ink: #141413;
+  --mod-primary: #c96442;
+  --mod-primary-700: #a8532e;
+  --mod-danger: #b53333;
+  --mod-warn: #a36a12;
+  --mod-success: #5e5d59;
+  font-family: 'Be Vietnam Pro', sans-serif;
+}
+
+/* ── Fill gap: remove max-width on module-page ── */
+.module-layout-container .module-page {
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 2rem 2rem 2.5rem;
+}
+
 /* ──────────────────────────────────────────
-   Filter Panel
+   Filter Panel — Warm Academic
    ────────────────────────────────────────── */
 .module-layout-container .sps-filter-panel {
-  background: var(--mod-surface, #fff);
-  border: 1px solid var(--mod-border, #dce3ee);
-  border-radius: 14px;
-  padding: 1rem 1.15rem 1.15rem;
+  background: #faf9f5;
+  border: 1px solid #f0eee6;
+  border-radius: 16px;
+  padding: 1rem 1.25rem 1.25rem;
+  box-shadow: rgba(0, 0, 0, 0.04) 0px 4px 24px;
 }
 
 .module-layout-container .sps-filter-panel__head {
@@ -20,8 +47,9 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--mod-text-muted, #60748f);
+  color: #87867f;
   margin-bottom: 0.85rem;
+  font-family: 'Be Vietnam Pro', sans-serif;
 }
 
 .module-layout-container .sps-filter-field {
@@ -36,8 +64,11 @@
   gap: 0.28rem;
   font-size: 0.72rem;
   font-weight: 600;
-  color: var(--mod-text-muted, #60748f);
+  color: #87867f;
   padding-left: 2px;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 /* ── Filter bar grid ── */
@@ -63,41 +94,42 @@
 .module-layout-container .sps-select {
   display: block;
   width: 100%;
-  padding: 0.48rem 2rem 0.48rem 0.8rem;
+  padding: 0.5rem 2rem 0.5rem 0.85rem;
   font-size: 0.84rem;
-  font-family: inherit;
-  color: var(--mod-text, #1e2a3a);
-  background-color: var(--mod-bg, #f7f9fc);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2360748f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  font-family: 'Be Vietnam Pro', sans-serif;
+  color: #141413;
+  background-color: #faf9f5;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2387867F' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.6rem center;
   appearance: none;
   -webkit-appearance: none;
-  border: 1px solid var(--mod-border, #dce3ee);
-  border-radius: 8px;
+  border: 1px solid #e8e6dc;
+  border-radius: 10px;
   cursor: pointer;
+  box-shadow: 0px 0px 0px 1px #d1cfc5;
   transition:
-    border-color 0.15s,
     box-shadow 0.15s,
-    background-color 0.15s;
+    border-color 0.15s;
 }
 
 .module-layout-container .sps-select:hover:not(:disabled) {
-  border-color: #a5b4c8;
-  background-color: var(--mod-surface, #fff);
+  box-shadow: 0px 0px 0px 1px #c2c0b6;
+  border-color: #d1cfc5;
+  background-color: #faf9f5;
 }
 
 .module-layout-container .sps-select:focus {
   outline: none;
-  border-color: var(--mod-primary, #4f6ef7);
-  box-shadow: 0 0 0 3px rgba(79, 110, 247, 0.12);
-  background-color: var(--mod-surface, #fff);
+  border-color: #3898ec;
+  box-shadow: 0 0 0 3px rgba(56, 152, 236, 0.12);
+  background-color: #faf9f5;
 }
 
 .module-layout-container .sps-select:disabled {
   opacity: 0.48;
   cursor: not-allowed;
-  background-color: var(--mod-bg, #f7f9fc);
+  background-color: #f5f4ed;
 }
 
 .module-layout-container .sps-select--sm {
@@ -106,11 +138,11 @@
   flex-shrink: 0;
 }
 
-/* ── Slide Card Grid (teacher-style) ── */
+/* ── Slide Card Grid (warm academic) ── */
 .module-layout-container .sps-card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 1.1rem;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.25rem;
   padding: 0.1rem 0 0.5rem;
 }
 
@@ -118,20 +150,22 @@
   display: flex;
   flex-direction: column;
   border-radius: 16px;
-  border: 2px solid #e2e8f0;
-  background: #ffffff;
-  box-shadow: 0 2px 10px rgba(30, 58, 138, 0.07);
+  border: 1px solid #f0eee6;
+  background: #faf9f5;
+  box-shadow: rgba(0, 0, 0, 0.05) 0px 4px 24px;
   overflow: hidden;
   transition:
-    border-color 0.18s,
-    box-shadow 0.18s,
-    transform 0.15s;
+    box-shadow 0.2s,
+    transform 0.2s,
+    border-color 0.2s;
 }
 
 .module-layout-container .sps-slide-card:hover {
-  border-color: #93c5fd;
-  box-shadow: 0 6px 22px rgba(37, 99, 235, 0.14);
+  box-shadow:
+    0px 0px 0px 1px #d1cfc5,
+    rgba(0, 0, 0, 0.08) 0px 8px 30px;
   transform: translateY(-2px);
+  border-color: #e8e6dc;
 }
 
 /* Thumbnail */
@@ -140,7 +174,7 @@
   width: 100%;
   aspect-ratio: 16 / 9;
   overflow: hidden;
-  background: linear-gradient(135deg, #1e3a8a 0%, #0ea5e9 100%);
+  background: linear-gradient(135deg, #c96442 0%, #d97757 60%, #e8a882 100%);
 }
 
 .module-layout-container .sps-slide-card__thumb img {
@@ -148,6 +182,11 @@
   height: 100%;
   object-fit: cover;
   display: block;
+  transition: transform 0.3s;
+}
+
+.module-layout-container .sps-slide-card:hover .sps-slide-card__thumb img {
+  transform: scale(1.05);
 }
 
 .module-layout-container .sps-slide-card__thumb-placeholder {
@@ -157,35 +196,39 @@
   align-items: center;
   justify-content: center;
   font-size: 2.4rem;
-  font-weight: 900;
-  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+  font-family: 'Playfair Display', Georgia, serif;
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .module-layout-container .sps-slide-card__badge {
   position: absolute;
   top: 10px;
   left: 10px;
-  padding: 0.18rem 0.55rem;
+  padding: 0.2rem 0.6rem;
   border-radius: 999px;
-  font-size: 0.66rem;
-  font-weight: 800;
+  font-size: 0.65rem;
+  font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  background: #4ade80;
-  color: #14532d;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  background: rgba(250, 249, 245, 0.92);
+  color: #5e5d59;
+  border: 1px solid rgba(209, 207, 197, 0.6);
 }
 
 /* Body */
 .module-layout-container .sps-slide-card__body {
-  padding: 0.75rem 0.9rem 0.5rem;
+  padding: 0.85rem 1rem 0.6rem;
   flex: 1;
 }
 
 .module-layout-container .sps-slide-card__title {
-  margin: 0 0 0.55rem;
-  font-size: 0.97rem;
-  font-weight: 700;
-  color: #0f172a;
+  margin: 0 0 0.6rem;
+  font-size: 1rem;
+  font-weight: 500;
+  font-family: 'Playfair Display', Georgia, serif;
+  color: #141413;
   line-height: 1.35;
   overflow: hidden;
   display: -webkit-box;
@@ -207,26 +250,30 @@
   display: flex;
   gap: 0.45rem;
   font-size: 0.73rem;
-  color: #64748b;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  color: #87867f;
 }
 
 .module-layout-container .sps-slide-card__meta li span:first-child {
-  font-weight: 700;
-  color: #94a3b8;
+  font-weight: 600;
+  color: #b0aea5;
   flex-shrink: 0;
-  width: 6rem;
+  width: 5.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .module-layout-container .sps-slide-card__meta li span:last-child {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  color: #5e5d59;
 }
 
 /* Actions */
 .module-layout-container .sps-slide-card__actions {
-  padding: 0.6rem 0.9rem 0.75rem;
-  border-top: 1px solid #f1f5f9;
+  padding: 0.65rem 1rem 0.8rem;
+  border-top: 1px solid #f0eee6;
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
@@ -238,37 +285,36 @@
   justify-content: center;
   gap: 0.4rem;
   width: 100%;
-  padding: 0.45rem 1rem;
+  padding: 0.5rem 1rem;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 0.82rem;
-  font-weight: 700;
+  font-weight: 600;
+  font-family: 'Be Vietnam Pro', sans-serif;
   cursor: pointer;
-  font-family: inherit;
-  transition:
-    background 0.15s,
-    transform 0.12s;
+  transition: all 0.15s;
 }
 
 .module-layout-container .sps-slide-card__btn.primary {
-  background: #0f172a;
-  color: #ffffff;
+  background: #c96442;
+  color: #faf9f5;
+  box-shadow: 0px 0px 0px 1px #c96442;
 }
 
 .module-layout-container .sps-slide-card__btn.primary:hover:not(:disabled) {
-  background: #1e293b;
-  transform: translateY(-1px);
+  filter: brightness(0.94);
+  box-shadow: 0px 0px 0px 1px #a8532e;
 }
 
 .module-layout-container .sps-slide-card__btn.secondary {
-  background: #f1f5f9;
-  color: #0f172a;
-  border: 1px solid #e2e8f0;
+  background: #e8e6dc;
+  color: #4d4c48;
+  box-shadow: 0px 0px 0px 1px #d1cfc5;
 }
 
 .module-layout-container .sps-slide-card__btn.secondary:hover:not(:disabled) {
-  background: #e2e8f0;
-  transform: translateY(-1px);
+  background: #ddd9cc;
+  box-shadow: 0px 0px 0px 1px #c2c0b6;
 }
 
 .module-layout-container .sps-slide-card__btn:disabled {
@@ -467,21 +513,44 @@
 
 .module-layout-container .sps-page-info {
   font-size: 0.84rem;
-  color: var(--mod-text, #1e2a3a);
+  color: #5e5d59;
+  font-family: 'Be Vietnam Pro', sans-serif;
   white-space: nowrap;
+}
+
+.module-layout-container .sps-page-info strong {
+  color: #141413;
+  font-weight: 700;
+}
+
+/* Pagination warm-sand buttons */
+.module-layout-container .sps-pagination .btn.secondary {
+  background: #e8e6dc;
+  color: #4d4c48;
+  border: 1px solid #d1cfc5;
+  box-shadow: 0px 0px 0px 1px #d1cfc5;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  border-radius: 10px;
+}
+
+.module-layout-container .sps-pagination .btn.secondary:hover:not(:disabled) {
+  background: #ddd9cc;
+  border-color: #c2c0b6;
+  box-shadow: 0px 0px 0px 1px #c2c0b6;
 }
 
 /* ── Header sub ── */
 .module-layout-container .header-sub {
-  font-size: 0.84rem;
-  color: var(--mod-text-muted, #60748f);
+  font-size: 0.875rem;
+  color: #5e5d59;
   margin: 0;
+  font-family: 'Be Vietnam Pro', sans-serif;
 }
 
 .module-layout-container .sps-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.52);
+  background: rgba(20, 20, 19, 0.55);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -492,18 +561,21 @@
 .module-layout-container .sps-modal {
   width: min(1220px, 96vw);
   max-height: 94vh;
-  background: #ffffff;
-  border-radius: 14px;
-  border: 1px solid #dce3ee;
+  background: #faf9f5;
+  border-radius: 16px;
+  border: 1px solid #e8e6dc;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  box-shadow:
+    0px 0px 0px 1px #d1cfc5,
+    rgba(0, 0, 0, 0.12) 0px 24px 48px;
 }
 
 .module-layout-container .sps-modal-header,
 .module-layout-container .sps-modal-footer {
   padding: 0.8rem 1rem;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid #f0eee6;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -512,20 +584,31 @@
 
 .module-layout-container .sps-modal-header h3 {
   margin: 0;
-  font-size: 1rem;
-  color: #0f172a;
+  font-size: 1.1rem;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-weight: 500;
+  color: #141413;
 }
 
 .module-layout-container .sps-modal-close {
-  width: 30px;
-  height: 30px;
-  border: 1px solid #cbd5e1;
+  width: 32px;
+  height: 32px;
+  border: 1px solid #e8e6dc;
   border-radius: 8px;
-  background: #fff;
-  color: #334155;
+  background: #faf9f5;
+  color: #5e5d59;
   font-size: 1.2rem;
   line-height: 1;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.module-layout-container .sps-modal-close:hover {
+  background: #e8e6dc;
+  color: #141413;
 }
 
 .module-layout-container .sps-modal-body {
@@ -536,13 +619,13 @@
 .module-layout-container .sps-modal-iframe {
   width: 100%;
   min-height: 72vh;
-  border: 1px solid #dbeafe;
+  border: 1px solid #e8e6dc;
   border-radius: 12px;
-  background: #fff;
+  background: #faf9f5;
 }
 
 .module-layout-container .sps-modal-footer {
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid #f0eee6;
   border-bottom: 0;
   justify-content: flex-end;
 }
@@ -552,12 +635,9 @@
   margin: 0.6rem auto 1rem;
   min-height: 210px;
   width: min(520px, 95%);
-  border: 1px solid #dbeafe;
+  border: 1px solid #e8e6dc;
   border-radius: 14px;
-  background:
-    radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.13), transparent 38%),
-    radial-gradient(circle at 85% 25%, rgba(14, 165, 233, 0.14), transparent 34%),
-    linear-gradient(180deg, #f8fbff 0%, #f1f5ff 100%);
+  background: linear-gradient(180deg, #faf9f5 0%, #f5f4ed 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -570,8 +650,8 @@
   width: 68px;
   height: 68px;
   border-radius: 999px;
-  border: 3px solid rgba(59, 130, 246, 0.2);
-  border-top-color: #2563eb;
+  border: 3px solid rgba(201, 100, 66, 0.2);
+  border-top-color: #c96442;
   animation: sps-math-spin 1s linear infinite;
 }
 
@@ -584,8 +664,9 @@
 .module-layout-container .sps-math-loader-symbols span {
   position: absolute;
   font-size: 1.15rem;
-  font-weight: 800;
-  color: #1d4ed8;
+  font-weight: 700;
+  font-family: 'Playfair Display', Georgia, serif;
+  color: #c96442;
   opacity: 0;
   animation: sps-math-float 2.8s ease-in-out infinite;
 }
@@ -623,8 +704,10 @@
 
 .module-layout-container .sps-math-loader p {
   margin: 0;
-  color: #1e3a8a;
-  font-weight: 700;
+  color: #5e5d59;
+  font-weight: 600;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 0.9rem;
 }
 
 @keyframes sps-math-spin {
@@ -639,13 +722,135 @@
     opacity: 0;
   }
   35% {
-    opacity: 0.95;
+    opacity: 0.85;
   }
   65% {
-    opacity: 0.95;
+    opacity: 0.85;
   }
   100% {
     transform: translateY(-10px) scale(1.06);
     opacity: 0;
   }
+}
+
+/* ── Toolbar overrides ── */
+.module-layout-container .toolbar {
+  background: #faf9f5;
+  border: 1px solid #f0eee6;
+  border-radius: 16px;
+  padding: 0.65rem 1rem;
+  box-shadow: rgba(0, 0, 0, 0.04) 0px 4px 16px;
+}
+
+/* ── Search box overrides ── */
+.module-layout-container .search-box {
+  background: #faf9f5;
+  border: 1px solid #e8e6dc;
+  border-radius: 12px;
+  box-shadow: 0px 0px 0px 1px #e8e6dc;
+}
+
+.module-layout-container .search-box:focus-within {
+  border-color: #3898ec;
+  box-shadow: 0 0 0 3px rgba(56, 152, 236, 0.12);
+}
+
+.module-layout-container .search-box__icon {
+  background: #e8e6dc;
+  color: #87867f;
+  border: none;
+  border-radius: 8px;
+}
+
+.module-layout-container .search-box input {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  color: #141413;
+  font-weight: 400;
+}
+
+.module-layout-container .search-box input::placeholder {
+  color: #87867f;
+}
+
+.module-layout-container .search-box__clear {
+  background: #e8e6dc;
+  color: #5e5d59;
+  border-radius: 8px;
+  border: none;
+}
+
+.module-layout-container .search-box__clear:hover {
+  background: #d1cfc5;
+  color: #141413;
+}
+
+/* ── Summary bar overrides ── */
+.module-layout-container .summary-item {
+  background: #faf9f5;
+  border: 1px solid #f0eee6;
+  box-shadow: 0px 0px 0px 1px #e8e6dc;
+}
+
+.module-layout-container .summary-item--primary {
+  background: #faf9f5;
+  border-color: #e8e6dc;
+}
+
+.module-layout-container .summary-label {
+  color: #87867f;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 500;
+}
+
+.module-layout-container .summary-value {
+  color: #141413;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 700;
+}
+
+/* ── Empty state override ── */
+.module-layout-container .empty {
+  border: 1px dashed #d1cfc5;
+  border-radius: 16px;
+  background: #faf9f5;
+  color: #87867f;
+  font-family: 'Be Vietnam Pro', sans-serif;
+}
+
+/* ── Skeleton shimmer ── */
+.module-layout-container .skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.25rem;
+}
+
+.module-layout-container .skeleton-card {
+  border-radius: 16px;
+  background: linear-gradient(90deg, #f0eee6 25%, #faf9f5 50%, #f0eee6 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite;
+  min-height: 260px;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ── Count chip ── */
+.module-layout-container .count-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: #e8e6dc;
+  color: #5e5d59;
+  border: 1px solid #d1cfc5;
+  font-family: 'Be Vietnam Pro', sans-serif;
 }

@@ -327,16 +327,8 @@ export default function StudentPublicSlides() {
           {/* ── Header ── */}
           <header className="page-header">
             <div className="header-stack">
-              <div className="header-kicker font-[Be_Vietnam_Pro] text-[#87867F]">
-                Student Public Slides
-              </div>
               <div className="row" style={{ gap: '0.6rem' }}>
-                <h2
-                  className="font-medium text-[#141413]"
-                  style={{ fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 500 }}
-                >
-                  Thư viện slide công khai
-                </h2>
+                <h1 className="ana-page-title">Thư viện Slides</h1>
                 {!loadingSlides && (
                   <span className="count-chip font-[Be_Vietnam_Pro]">
                     {slidesResult.totalElements}
@@ -565,7 +557,7 @@ export default function StudentPublicSlides() {
                           {getGeneratedDisplayName(slide).slice(0, 1).toUpperCase()}
                         </div>
                       )}
-                      <span className="sps-slide-card__badge">PUBLISHED</span>
+                      <span className="sps-slide-card__badge">Công khai</span>
                     </div>
 
                     <div className="sps-slide-card__body">
@@ -621,7 +613,7 @@ export default function StudentPublicSlides() {
                 <span className="sps-page-info">
                   Trang <strong>{slidesResult.number + 1}</strong> /{' '}
                   {Math.max(slidesResult.totalPages, 1)} ·{' '}
-                  <span style={{ color: '#60748f' }}>{slidesResult.totalElements} slide</span>
+                  <span style={{ color: '#87867F' }}>{slidesResult.totalElements} slide</span>
                 </span>
                 <button
                   type="button"
