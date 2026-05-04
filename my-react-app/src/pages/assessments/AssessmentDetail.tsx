@@ -1,9 +1,9 @@
 import { ArrowLeft, Pencil, Plus, Search, Trash2 } from 'lucide-react';
-import { UI_TEXT } from '../../constants/uiText';
 import { Fragment, useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import MathText from '../../components/common/MathText';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { UI_TEXT } from '../../constants/uiText';
 import {
   useAssessment,
   useAssessmentQuestions,
@@ -113,10 +113,28 @@ export default function AssessmentDetail() {
 
   const assessment = data?.result;
   const questions = questionsData?.result ?? [];
-  const searchResults: Array<{ questionId: string; questionText: string; tags?: string[]; cognitiveLevel?: string }> =
-    (searchData?.result as unknown as { content?: Array<{ id?: string; questionId?: string; questionText: string; tags?: string[]; cognitiveLevel?: string }> })?.content?.map(
-      (q) => ({ questionId: q.id ?? q.questionId ?? '', questionText: q.questionText, tags: q.tags, cognitiveLevel: q.cognitiveLevel })
-    ) ?? [];
+  const searchResults: Array<{
+    questionId: string;
+    questionText: string;
+    tags?: string[];
+    cognitiveLevel?: string;
+  }> =
+    (
+      searchData?.result as unknown as {
+        content?: Array<{
+          id?: string;
+          questionId?: string;
+          questionText: string;
+          tags?: string[];
+          cognitiveLevel?: string;
+        }>;
+      }
+    )?.content?.map((q) => ({
+      questionId: q.id ?? q.questionId ?? '',
+      questionText: q.questionText,
+      tags: q.tags,
+      cognitiveLevel: q.cognitiveLevel,
+    })) ?? [];
 
   // Initialise pointsDraft from loaded questions
   useEffect(() => {
@@ -211,51 +229,53 @@ export default function AssessmentDetail() {
       const n = Number(val);
       if (!Number.isNaN(n) && n > 0) dist[key] = n;
     }
-    
+
     // Distribute locally and update pointsDraft
     const newPointsDraft = { ...pointsDraft };
-    
+
     if (Object.keys(dist).length === 0) {
       // Distribute evenly across all questions
       let totalWeight = 0;
-      questions.forEach(q => {
+      questions.forEach((q) => {
         totalWeight += q.questionType === 'TRUE_FALSE' ? 4 : 1;
       });
       const pointPerWeight = totalWeight > 0 ? total / totalWeight : 0;
-      
-      questions.forEach(q => {
+
+      questions.forEach((q) => {
         const w = q.questionType === 'TRUE_FALSE' ? 4 : 1;
         newPointsDraft[getQuestionId(q)] = (pointPerWeight * w).toFixed(2);
       });
     } else {
       // Distribute proportionally by cognitive level
       const questionsByLevel: Record<string, typeof questions> = {};
-      questions.forEach(q => {
+      questions.forEach((q) => {
         const level = q.cognitiveLevel || 'UNKNOWN';
         if (!questionsByLevel[level]) questionsByLevel[level] = [];
         questionsByLevel[level].push(q);
       });
-      
+
       for (const [key, percentage] of Object.entries(dist)) {
         const levelQuestions = questionsByLevel[key] || [];
         let totalWeight = 0;
-        levelQuestions.forEach(q => {
+        levelQuestions.forEach((q) => {
           totalWeight += q.questionType === 'TRUE_FALSE' ? 4 : 1;
         });
         const levelPoints = total * (percentage / 100);
         const pointPerWeight = totalWeight > 0 ? levelPoints / totalWeight : 0;
-        
-        levelQuestions.forEach(q => {
+
+        levelQuestions.forEach((q) => {
           const w = q.questionType === 'TRUE_FALSE' ? 4 : 1;
           newPointsDraft[getQuestionId(q)] = (pointPerWeight * w).toFixed(2);
         });
       }
     }
-    
+
     setPointsDraft(newPointsDraft);
     // Note: We intentionally don't call the mutation here so the user can review before saving
     // They must click "Lưu điểm tất cả câu hỏi"
-    window.alert('Đã phân điểm tạm thời! Bạn hãy kiểm tra lại bảng điểm và nhấn "Lưu điểm tất cả câu hỏi" để lưu thay đổi.');
+    window.alert(
+      'Đã phân điểm tạm thời! Bạn hãy kiểm tra lại bảng điểm và nhấn "Lưu điểm tất cả câu hỏi" để lưu thay đổi.'
+    );
   }
 
   async function generateFromMatrix() {
@@ -272,10 +292,16 @@ export default function AssessmentDetail() {
       });
       await Promise.all([refetchQuestions(), refetch()]);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Không thể generate câu hỏi từ matrix.';
+      const message =
+        error instanceof Error ? error.message : 'Không thể generate câu hỏi từ matrix.';
       const normalized = message.toUpperCase();
-      if (normalized.includes('INSUFFICIENT_QUESTIONS_AVAILABLE') || normalized.includes('INSUFFICIENT QUESTIONS')) {
-        setGenerateError('Không đủ câu hỏi trong ngân hàng theo cấu trúc đề. Vui lòng bổ sung thêm câu hỏi.');
+      if (
+        normalized.includes('INSUFFICIENT_QUESTIONS_AVAILABLE') ||
+        normalized.includes('INSUFFICIENT QUESTIONS')
+      ) {
+        setGenerateError(
+          'Không đủ câu hỏi trong ngân hàng theo cấu trúc đề. Vui lòng bổ sung thêm câu hỏi.'
+        );
         return;
       }
       setGenerateError(message);
@@ -295,7 +321,9 @@ export default function AssessmentDetail() {
       return (
         <section className="module-page">
           <div className="empty">
-            {error instanceof Error ? error.message : `Không thể tải chi tiết ${UI_TEXT.QUIZ.toLowerCase()}`}
+            {error instanceof Error
+              ? error.message
+              : `Không thể tải chi tiết ${UI_TEXT.QUIZ.toLowerCase()}`}
           </div>
         </section>
       );
@@ -339,7 +367,9 @@ export default function AssessmentDetail() {
           <article className="stat-card">
             <p>Trạng thái</p>
             <h3>{assessmentStatusLabel[assessment.status] || assessment.status}</h3>
-            <span>{assessmentTypeLabel[assessment.assessmentType] || assessment.assessmentType}</span>
+            <span>
+              {assessmentTypeLabel[assessment.assessmentType] || assessment.assessmentType}
+            </span>
           </article>
           <article className="stat-card">
             <p>Câu hỏi</p>
@@ -351,7 +381,9 @@ export default function AssessmentDetail() {
             <h3>{assessment.submissionCount}</h3>
             <span>
               Chính sách:{' '}
-              {scoringPolicyLabel[assessment.attemptScoringPolicy || 'BEST'] || assessment.attemptScoringPolicy || 'BEST'}
+              {scoringPolicyLabel[assessment.attemptScoringPolicy || 'BEST'] ||
+                assessment.attemptScoringPolicy ||
+                'BEST'}
             </span>
           </article>
         </div>
@@ -359,20 +391,40 @@ export default function AssessmentDetail() {
         <div className="table-wrap">
           <table className="table">
             <tbody>
-              <tr><th>Bài học</th><td>{assessment.lessonTitles?.join(', ') || 'Không có'}</td></tr>
-              <tr><th>Thời gian làm bài</th><td>{assessment.timeLimitMinutes || 0} phút</td></tr>
-              <tr><th>Điểm đạt</th><td>{assessment.passingScore || 0}%</td></tr>
+              <tr>
+                <th>Bài học</th>
+                <td>{assessment.lessonTitles?.join(', ') || 'Không có'}</td>
+              </tr>
+              <tr>
+                <th>Thời gian làm bài</th>
+                <td>{assessment.timeLimitMinutes || 0} phút</td>
+              </tr>
+              <tr>
+                <th>Điểm đạt</th>
+                <td>{assessment.passingScore || 0}%</td>
+              </tr>
               <tr>
                 <th>Chế độ tạo đề</th>
-                <td>{assessmentModeLabel[assessment.assessmentMode || 'DIRECT'] || assessment.assessmentMode || 'DIRECT'}</td>
+                <td>
+                  {assessmentModeLabel[assessment.assessmentMode || 'DIRECT'] ||
+                    assessment.assessmentMode ||
+                    'DIRECT'}
+                </td>
               </tr>
-              <tr><th>Ma trận đề</th><td>{assessment.examMatrixId || 'Không có'}</td></tr>
+              <tr>
+                <th>Ma trận đề</th>
+                <td>{assessment.examMatrixId || 'Không có'}</td>
+              </tr>
               <tr>
                 <th>Lịch làm bài</th>
                 <td>
-                  {assessment.startDate ? new Date(assessment.startDate).toLocaleString() : 'Chưa đặt lịch'}
+                  {assessment.startDate
+                    ? new Date(assessment.startDate).toLocaleString()
+                    : 'Chưa đặt lịch'}
                   {' - '}
-                  {assessment.endDate ? new Date(assessment.endDate).toLocaleString() : 'Không giới hạn'}
+                  {assessment.endDate
+                    ? new Date(assessment.endDate).toLocaleString()
+                    : 'Không giới hạn'}
                 </td>
               </tr>
             </tbody>
@@ -384,20 +436,30 @@ export default function AssessmentDetail() {
           <div className="row" style={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
             <h3>Câu hỏi trong {UI_TEXT.QUIZ.toLowerCase()}</h3>
             <div className="row" style={{ justifyContent: 'start', flexWrap: 'wrap' }}>
-              {isDraft && assessment.assessmentMode === 'MATRIX_BASED' && assessment.examMatrixId && (
-                <button
-                  className="btn"
-                  onClick={() => void generateFromMatrix()}
-                  disabled={generateMutation.isPending}
-                >
-                  {generateMutation.isPending ? 'Đang generate...' : 'Generate from Matrix'}
-                </button>
-              )}
+              {isDraft &&
+                assessment.assessmentMode === 'MATRIX_BASED' &&
+                assessment.examMatrixId && (
+                  <button
+                    className="btn"
+                    onClick={() => void generateFromMatrix()}
+                    disabled={generateMutation.isPending}
+                  >
+                    {generateMutation.isPending ? 'Đang generate...' : 'Generate from Matrix'}
+                  </button>
+                )}
             </div>
           </div>
 
-          {generateError && <div className="empty" style={{ color: '#b91c1c' }}>{generateError}</div>}
-          {crudError && <div className="empty" style={{ color: '#b91c1c' }}>{crudError}</div>}
+          {generateError && (
+            <div className="empty" style={{ color: '#b91c1c' }}>
+              {generateError}
+            </div>
+          )}
+          {crudError && (
+            <div className="empty" style={{ color: '#b91c1c' }}>
+              {crudError}
+            </div>
+          )}
 
           {/* ── Search & add questions (only for DIRECT assessments in DRAFT) ── */}
           {isDraft && isDirect && (
@@ -406,7 +468,10 @@ export default function AssessmentDetail() {
                 <Search size={14} style={{ marginRight: 4 }} />
                 Tìm kiếm và thêm câu hỏi
               </p>
-              <div className="row" style={{ flexWrap: 'wrap', justifyContent: 'start', marginBottom: 8 }}>
+              <div
+                className="row"
+                style={{ flexWrap: 'wrap', justifyContent: 'start', marginBottom: 8 }}
+              >
                 <input
                   className="input"
                   style={{ minWidth: 280 }}
@@ -418,7 +483,14 @@ export default function AssessmentDetail() {
               </div>
 
               {searchResults.length > 0 && (
-                <div style={{ maxHeight: 260, overflowY: 'auto', border: '1px solid #e5e7eb', borderRadius: 6 }}>
+                <div
+                  style={{
+                    maxHeight: 260,
+                    overflowY: 'auto',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: 6,
+                  }}
+                >
                   {searchResults.map((q) => {
                     const alreadyAdded = questions.some((aq) => getQuestionId(aq) === q.questionId);
                     const checked = selectedIds.has(q.questionId);
@@ -446,12 +518,20 @@ export default function AssessmentDetail() {
                           <MathText text={q.questionText} />
                           <div style={{ marginTop: 4, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                             {q.cognitiveLevel && (
-                              <span className="badge draft" style={{ fontSize: 11 }}>{q.cognitiveLevel}</span>
+                              <span className="badge draft" style={{ fontSize: 11 }}>
+                                {q.cognitiveLevel}
+                              </span>
                             )}
                             {q.tags?.map((t) => (
-                              <span key={t} className="badge published" style={{ fontSize: 11 }}>{t}</span>
+                              <span key={t} className="badge published" style={{ fontSize: 11 }}>
+                                {t}
+                              </span>
                             ))}
-                            {alreadyAdded && <span className="muted" style={{ fontSize: 11 }}>Đã có trong đề</span>}
+                            {alreadyAdded && (
+                              <span className="muted" style={{ fontSize: 11 }}>
+                                Đã có trong đề
+                              </span>
+                            )}
                           </div>
                         </div>
                       </label>
@@ -468,7 +548,9 @@ export default function AssessmentDetail() {
                     disabled={batchAddMutation.isPending}
                   >
                     <Plus size={14} />
-                    {batchAddMutation.isPending ? 'Đang thêm...' : `Thêm ${selectedIds.size} câu hỏi đã chọn`}
+                    {batchAddMutation.isPending
+                      ? 'Đang thêm...'
+                      : `Thêm ${selectedIds.size} câu hỏi đã chọn`}
                   </button>
                 </div>
               )}
@@ -478,7 +560,9 @@ export default function AssessmentDetail() {
           {questionsLoading && <div className="empty">Đang tải danh sách câu hỏi...</div>}
           {questionsError && (
             <div className="empty">
-              {questionsErrorValue instanceof Error ? questionsErrorValue.message : 'Không thể tải câu hỏi.'}
+              {questionsErrorValue instanceof Error
+                ? questionsErrorValue.message
+                : 'Không thể tải câu hỏi.'}
             </div>
           )}
           {!questionsLoading && !questionsError && questions.length === 0 && (
@@ -522,8 +606,16 @@ export default function AssessmentDetail() {
                           return (
                             <Fragment key={partNum}>
                               <tr style={{ background: '#E8E6DC', borderTop: '1px solid #D1CFC5' }}>
-                                <td colSpan={isDraft ? 6 : 5} style={{ fontWeight: 600, color: '#5E5D59', padding: '10px 12px' }}>
-                                  {partLabels[partNum] || `Phần ${partNum}`} ({partQuestions.length} câu)
+                                <td
+                                  colSpan={isDraft ? 6 : 5}
+                                  style={{
+                                    fontWeight: 600,
+                                    color: '#5E5D59',
+                                    padding: '10px 12px',
+                                  }}
+                                >
+                                  {partLabels[partNum] || `Phần ${partNum}`} ({partQuestions.length}{' '}
+                                  câu)
                                 </td>
                               </tr>
                               {partQuestions.map((question) => {
@@ -533,21 +625,41 @@ export default function AssessmentDetail() {
                                     <td>{question.orderIndex}</td>
                                     <td>
                                       <MathText text={question.questionText} />
-                                      <div className="row" style={{ justifyContent: 'start', flexWrap: 'wrap', marginTop: 4 }}>
+                                      <div
+                                        className="row"
+                                        style={{
+                                          justifyContent: 'start',
+                                          flexWrap: 'wrap',
+                                          marginTop: 4,
+                                        }}
+                                      >
                                         {question.tags?.map((t) => (
-                                          <span key={t} className="badge published" style={{ fontSize: 11 }}>{t}</span>
+                                          <span
+                                            key={t}
+                                            className="badge published"
+                                            style={{ fontSize: 11 }}
+                                          >
+                                            {t}
+                                          </span>
                                         ))}
                                       </div>
                                     </td>
                                     <td>
-                                      <span className={`badge ${question.questionType === 'TRUE_FALSE' ? 'published' : 'draft'}`}>
-                                        {question.questionType === 'TRUE_FALSE' ? 'TF' : 
-                                         question.questionType === 'SHORT_ANSWER' ? 'TL' : 'TN'}
+                                      <span
+                                        className={`badge ${question.questionType === 'TRUE_FALSE' ? 'published' : 'draft'}`}
+                                      >
+                                        {question.questionType === 'TRUE_FALSE'
+                                          ? 'TF'
+                                          : question.questionType === 'SHORT_ANSWER'
+                                            ? 'TL'
+                                            : 'TN'}
                                       </span>
                                     </td>
                                     <td>
                                       {question.cognitiveLevel ? (
-                                        <span className="badge draft">{question.cognitiveLevel}</span>
+                                        <span className="badge draft">
+                                          {question.cognitiveLevel}
+                                        </span>
                                       ) : (
                                         <span className="muted">—</span>
                                       )}
@@ -560,37 +672,76 @@ export default function AssessmentDetail() {
                                             type="number"
                                             min={0}
                                             step={0.25}
-                                            value={pointsDraft[questionId] ?? String(question.points ?? '')}
+                                            value={
+                                              pointsDraft[questionId] ??
+                                              String(question.points ?? '')
+                                            }
                                             onChange={(e) =>
-                                              setPointsDraft((prev) => ({ ...prev, [questionId]: e.target.value }))
+                                              setPointsDraft((prev) => ({
+                                                ...prev,
+                                                [questionId]: e.target.value,
+                                              }))
                                             }
                                             placeholder="Điểm"
                                           />
-                                          {question.questionType === 'TRUE_FALSE' && (pointsDraft[questionId] || question.points) && (
-                                            <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4 }}>
-                                              {(() => {
-                                                const totalPoints = parseFloat(pointsDraft[questionId] || String(question.points || 0));
-                                                const pointPerClause = (totalPoints / 4).toFixed(3);
-                                                return (
-                                                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                                    <span>📋 Mỗi mệnh đề: {pointPerClause} điểm</span>
-                                                  </div>
-                                                );
-                                              })()}
-                                            </div>
-                                          )}
+                                          {question.questionType === 'TRUE_FALSE' &&
+                                            (pointsDraft[questionId] || question.points) && (
+                                              <div
+                                                style={{
+                                                  fontSize: 11,
+                                                  color: '#6b7280',
+                                                  marginTop: 4,
+                                                }}
+                                              >
+                                                {(() => {
+                                                  const totalPoints = parseFloat(
+                                                    pointsDraft[questionId] ||
+                                                      String(question.points || 0)
+                                                  );
+                                                  const pointPerClause = (totalPoints / 4).toFixed(
+                                                    3
+                                                  );
+                                                  return (
+                                                    <div
+                                                      style={{
+                                                        display: 'flex',
+                                                        flexDirection: 'column',
+                                                        gap: 2,
+                                                      }}
+                                                    >
+                                                      <span>
+                                                        📋 Mỗi mệnh đề: {pointPerClause} điểm
+                                                      </span>
+                                                    </div>
+                                                  );
+                                                })()}
+                                              </div>
+                                            )}
                                         </div>
                                       ) : (
                                         <div>
                                           <span>{question.points ?? 0}</span>
-                                          {question.questionType === 'TRUE_FALSE' && question.points && (
-                                            <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4 }}>
-                                              {(() => {
-                                                const pointPerClause = (question.points / 4).toFixed(3);
-                                                return <span>📋 Mỗi mệnh đề: {pointPerClause} điểm</span>;
-                                              })()}
-                                            </div>
-                                          )}
+                                          {question.questionType === 'TRUE_FALSE' &&
+                                            question.points && (
+                                              <div
+                                                style={{
+                                                  fontSize: 11,
+                                                  color: '#6b7280',
+                                                  marginTop: 4,
+                                                }}
+                                              >
+                                                {(() => {
+                                                  const pointPerClause = (
+                                                    question.points / 4
+                                                  ).toFixed(3);
+                                                  return (
+                                                    <span>
+                                                      📋 Mỗi mệnh đề: {pointPerClause} điểm
+                                                    </span>
+                                                  );
+                                                })()}
+                                              </div>
+                                            )}
                                         </div>
                                       )}
                                     </td>
@@ -627,7 +778,9 @@ export default function AssessmentDetail() {
                       onClick={() => void handleBatchUpdatePoints()}
                       disabled={batchUpdatePointsMutation.isPending}
                     >
-                      {batchUpdatePointsMutation.isPending ? 'Đang lưu...' : 'Lưu điểm tất cả câu hỏi'}
+                      {batchUpdatePointsMutation.isPending
+                        ? 'Đang lưu...'
+                        : 'Lưu điểm tất cả câu hỏi'}
                     </button>
                   </div>
 
@@ -637,10 +790,15 @@ export default function AssessmentDetail() {
                       Tự động phân điểm theo mức độ nhận thức
                     </p>
                     <p style={{ fontSize: 12, color: '#6b7280', marginTop: 4, marginBottom: 8 }}>
-                      💡 Câu hỏi Đúng/Sai (TF) có 4 mệnh đề. Điểm sẽ được chia đều cho mỗi mệnh đề.<br />
-                      Quy tắc chấm điểm (Bộ GD&ĐT 2025): Đúng 1/4 mệnh đề = 0 điểm, Đúng 2/4 = 0.25 × Điểm câu, Đúng 3/4 = 0.5 × Điểm câu, Đúng 4/4 = 100% Điểm câu.
+                      💡 Câu hỏi Đúng/Sai (TF) có 4 mệnh đề. Điểm sẽ được chia đều cho mỗi mệnh đề.
+                      <br />
+                      Quy tắc chấm điểm (Bộ GD&ĐT 2025): Đúng 1/4 mệnh đề = 0 điểm, Đúng 2/4 = 0.25
+                      × Điểm câu, Đúng 3/4 = 0.5 × Điểm câu, Đúng 4/4 = 100% Điểm câu.
                     </p>
-                    <div className="row" style={{ flexWrap: 'wrap', justifyContent: 'start', gap: 8 }}>
+                    <div
+                      className="row"
+                      style={{ flexWrap: 'wrap', justifyContent: 'start', gap: 8 }}
+                    >
                       <div>
                         <label style={{ fontSize: 12, color: '#6b7280' }}>Tổng điểm</label>
                         <input
@@ -678,7 +836,9 @@ export default function AssessmentDetail() {
                       onClick={() => void handleAutoDistribute()}
                       disabled={autoDistributeMutation.isPending}
                     >
-                      {autoDistributeMutation.isPending ? 'Đang phân điểm...' : 'Áp dụng phân điểm tự động'}
+                      {autoDistributeMutation.isPending
+                        ? 'Đang phân điểm...'
+                        : 'Áp dụng phân điểm tự động'}
                     </button>
                   </div>
                 </div>
