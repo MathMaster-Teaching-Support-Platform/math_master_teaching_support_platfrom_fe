@@ -2,6 +2,7 @@ import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import MathText from '../common/MathText';
 import { ParametersEditor, type ParameterInput } from '../common/ParametersEditor';
 import { renderTemplateWithSamples } from '../../utils/templatePreview';
+import { AIParameterPanel } from './AIParameterPanel';
 
 export type ValidationMode = 'EXACT' | 'NUMERIC' | 'REGEX';
 
@@ -17,6 +18,7 @@ export interface SABlueprintData {
 
 interface SABlueprintProps {
   defaultChapterId: string;
+  templateId?: string;
   onFocusField?: (field: string, index?: number) => void;
   initialData?: {
     templateText?: string;
@@ -32,10 +34,11 @@ interface SABlueprintProps {
 export interface SABlueprintRef {
   getData: () => SABlueprintData;
   getFieldRef: (field: string, index?: number) => HTMLElement | null;
+  setTemplateText: (text: string) => void;
 }
 
 export const SABlueprint = forwardRef<SABlueprintRef, SABlueprintProps>(
-  ({ onFocusField, initialData }, ref) => {
+  ({ onFocusField, initialData, templateId }, ref) => {
     const [templateText, setTemplateText] = useState(
       initialData?.templateText ?? 'Tính ∫₀¹ {{a}}x dx = ?'
     );
@@ -101,6 +104,8 @@ export const SABlueprint = forwardRef<SABlueprintRef, SABlueprintProps>(
             return null;
         }
       },
+      // NEW: allows AIExtractPanel to push updated template text
+      setTemplateText: (text: string) => setTemplateText(text),
     }));
 
     return (
@@ -143,6 +148,27 @@ export const SABlueprint = forwardRef<SABlueprintRef, SABlueprintProps>(
             constraintRefs: parameterConstraintRefs,
           }}
         />
+
+        {/* AI Parameter Panel — Feature 2 */}
+        {templateId && (
+          <AIParameterPanel
+            templateId={templateId}
+            templateText={templateText}
+            answerFormula={answerFormula}
+            solutionSteps={solutionStepsTemplate}
+            parameters={parameters.map((p) => p.name).filter(Boolean)}
+            onAccept={(accepted) => {
+              setParameters((prev) =>
+                prev.map((p) => {
+                  const val = accepted[p.name];
+                  if (val === undefined) return p;
+                  const strVal = String(val);
+                  return { ...p, min: strVal, max: strVal };
+                })
+              );
+            }}
+          />
+        )}
 
         <label>
           <p className="muted" style={{ marginBottom: 6 }}>

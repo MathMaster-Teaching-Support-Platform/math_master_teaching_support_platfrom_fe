@@ -10,6 +10,11 @@ import {
     type GeneratedQuestionsBatchResponse,
     type PageResponse,
     type ApiResponse,
+    type ExtractParametersRequest,
+    type ExtractParametersResponse,
+    type GenerateParametersRequest,
+    type GenerateParametersResponse,
+    type UpdateParametersRequest,
     CognitiveLevel,
     QuestionType
 } from '../types/questionTemplate';
@@ -247,5 +252,62 @@ export const questionTemplateService = {
             body: formData,
         });
         return parseResponse<ApiResponse<TemplateImportResponse>>(response, 'Không thể import template từ file');
+    },
+
+    // Feature 1 — Extract Parameters (AI suggest {{a}}, {{b}} from raw text)
+    extractParameters: async (
+        templateId: string,
+        request: ExtractParametersRequest
+    ): Promise<ApiResponse<ExtractParametersResponse>> => {
+        const response = await fetch(
+            `${API_BASE_URL}/question-templates/${templateId}/extract-parameters`,
+            {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(request),
+            }
+        );
+        return parseResponse<ApiResponse<ExtractParametersResponse>>(
+            response,
+            'Không thể trích xuất tham số từ AI'
+        );
+    },
+
+    // Feature 2 — Generate Parameters (AI creates valid param values)
+    generateParameters: async (
+        templateId: string,
+        request: GenerateParametersRequest
+    ): Promise<ApiResponse<GenerateParametersResponse>> => {
+        const response = await fetch(
+            `${API_BASE_URL}/question-templates/${templateId}/generate-parameters`,
+            {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(request),
+            }
+        );
+        return parseResponse<ApiResponse<GenerateParametersResponse>>(
+            response,
+            'Không thể tạo tham số bằng AI'
+        );
+    },
+
+    // Feature 2b — Update Parameters (refine based on teacher command)
+    updateParameters: async (
+        templateId: string,
+        request: UpdateParametersRequest
+    ): Promise<ApiResponse<GenerateParametersResponse>> => {
+        const response = await fetch(
+            `${API_BASE_URL}/question-templates/${templateId}/update-parameters`,
+            {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(request),
+            }
+        );
+        return parseResponse<ApiResponse<GenerateParametersResponse>>(
+            response,
+            'Không thể cập nhật tham số bằng AI'
+        );
     },
 };

@@ -14,6 +14,7 @@ import { TypeSelector } from '../../components/question-templates/TypeSelector';
 import { MCQBlueprint, type MCQBlueprintRef } from '../../components/question-templates/MCQBlueprint';
 import { TFBlueprint, type TFBlueprintRef } from '../../components/question-templates/TFBlueprint';
 import { SABlueprint, type SABlueprintRef } from '../../components/question-templates/SABlueprint';
+import { AIExtractPanel } from '../../components/question-templates/AIExtractPanel';
 import { useChaptersBySubject } from '../../hooks/useChapters';
 
 type Props = {
@@ -567,6 +568,7 @@ export function TemplateFormModal({
               <MCQBlueprint
                 ref={mcqBlueprintRef}
                 defaultChapterId={selectedChapterId}
+                templateId={initialData?.id}
                 initialData={
                   mode === 'edit'
                     ? extractBlueprintInitialData(initialData, QuestionType.MULTIPLE_CHOICE)
@@ -580,6 +582,7 @@ export function TemplateFormModal({
                 ref={tfBlueprintRef}
                 defaultChapterId={selectedChapterId}
                 chapters={chapters}
+                templateId={initialData?.id}
                 initialData={
                   mode === 'edit'
                     ? extractBlueprintInitialData(initialData, QuestionType.TRUE_FALSE)
@@ -592,11 +595,55 @@ export function TemplateFormModal({
               <SABlueprint
                 ref={saBlueprintRef}
                 defaultChapterId={selectedChapterId}
+                templateId={initialData?.id}
                 initialData={
                   mode === 'edit'
                     ? extractBlueprintInitialData(initialData, QuestionType.SHORT_ANSWER)
                     : undefined
                 }
+              />
+            )}
+
+            {/* AI Extract Panel — Feature 1: only shown in edit mode (template has an id) */}
+            {initialData?.id && (
+              <AIExtractPanel
+                templateId={initialData.id}
+                templateText={
+                  templateType === QuestionType.TRUE_FALSE
+                    ? (tfBlueprintRef.current?.getData().stemText ?? '')
+                    : (mcqBlueprintRef.current?.getData().templateText ??
+                       saBlueprintRef.current?.getData().templateText ?? '')
+                }
+                answerFormula={
+                  templateType === QuestionType.MULTIPLE_CHOICE
+                    ? mcqBlueprintRef.current?.getData().answerFormula
+                    : templateType === QuestionType.SHORT_ANSWER
+                    ? saBlueprintRef.current?.getData().answerFormula
+                    : undefined
+                }
+                clauses={
+                  templateType === QuestionType.TRUE_FALSE
+                    ? Object.fromEntries(
+                        (tfBlueprintRef.current?.getData().clauses ?? []).map((c) => [c.key, c.text])
+                      )
+                    : undefined
+                }
+                options={
+                  templateType === QuestionType.MULTIPLE_CHOICE
+                    ? Object.fromEntries(
+                        (mcqBlueprintRef.current?.getData().options ?? []).map((o) => [o.key, o.formula])
+                      )
+                    : undefined
+                }
+                onApply={(newText) => {
+                  if (templateType === QuestionType.TRUE_FALSE) {
+                    tfBlueprintRef.current?.setStemText(newText);
+                  } else if (templateType === QuestionType.MULTIPLE_CHOICE) {
+                    mcqBlueprintRef.current?.setTemplateText(newText);
+                  } else {
+                    saBlueprintRef.current?.setTemplateText(newText);
+                  }
+                }}
               />
             )}
 

@@ -3,6 +3,7 @@ import MathText from '../common/MathText';
 import { ParametersEditor, type ParameterInput } from '../common/ParametersEditor';
 import { renderTemplateWithSamples } from '../../utils/templatePreview';
 import { CognitiveLevel } from '../../types/questionTemplate';
+import { AIParameterPanel } from './AIParameterPanel';
 
 export type TFClauseInput = {
   key: string;
@@ -23,6 +24,7 @@ export interface TFBlueprintData {
 interface TFBlueprintProps {
   defaultChapterId: string;
   chapters: Array<{ id: string; title?: string; name?: string }>;
+  templateId?: string;
   onFocusField?: (field: string, index?: number) => void;
   initialData?: {
     stemText?: string;
@@ -36,6 +38,7 @@ interface TFBlueprintProps {
 export interface TFBlueprintRef {
   getData: () => TFBlueprintData;
   getFieldRef: (field: string, index?: number) => HTMLElement | null;
+  setStemText: (text: string) => void;
 }
 
 const cognitiveLevelLabels: Record<CognitiveLevel, string> = {
@@ -46,7 +49,7 @@ const cognitiveLevelLabels: Record<CognitiveLevel, string> = {
 };
 
 export const TFBlueprint = forwardRef<TFBlueprintRef, TFBlueprintProps>(
-  ({ defaultChapterId, chapters, onFocusField, initialData }, ref) => {
+  ({ defaultChapterId, chapters, onFocusField, initialData, templateId }, ref) => {
     const [stemText, setStemText] = useState(
       initialData?.stemText ?? 'Cho hàm số $f(x) = {{a}}x^2 + {{b}}x + {{c}}$. Xét các mệnh đề sau:'
     );
@@ -132,6 +135,8 @@ export const TFBlueprint = forwardRef<TFBlueprintRef, TFBlueprintProps>(
             return null;
         }
       },
+      // NEW: allows AIExtractPanel to push updated stem text
+      setStemText: (text: string) => setStemText(text),
     }));
 
     const updateClause = (
@@ -342,6 +347,26 @@ export const TFBlueprint = forwardRef<TFBlueprintRef, TFBlueprintProps>(
               minRefs: parameterMinRefs,
               maxRefs: parameterMaxRefs,
               constraintRefs: parameterConstraintRefs,
+            }}
+          />
+        )}
+
+        {/* AI Parameter Panel — Feature 2 */}
+        {templateId && parameters.length > 0 && (
+          <AIParameterPanel
+            templateId={templateId}
+            templateText={stemText}
+            clauses={Object.fromEntries(clauses.map((c) => [c.key, c.text]))}
+            parameters={parameters.map((p) => p.name).filter(Boolean)}
+            onAccept={(accepted) => {
+              setParameters((prev) =>
+                prev.map((p) => {
+                  const val = accepted[p.name];
+                  if (val === undefined) return p;
+                  const strVal = String(val);
+                  return { ...p, min: strVal, max: strVal };
+                })
+              );
             }}
           />
         )}
