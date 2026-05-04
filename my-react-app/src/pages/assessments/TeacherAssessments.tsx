@@ -502,7 +502,8 @@ export default function TeacherAssessments() {
                   {/* Add matrix info row */}
                   {(assessment.examMatrixName ||
                     assessment.examMatrixGradeLevel ||
-                    assessment.assessmentMode === 'MATRIX_BASED') && (
+                    assessment.assessmentMode === 'MATRIX_BASED' ||
+                    assessment.questionBankName) && (
                     <div
                       className="row"
                       style={{
@@ -515,6 +516,11 @@ export default function TeacherAssessments() {
                       {assessment.examMatrixName && (
                         <span className="muted" style={{ fontSize: '0.8rem' }}>
                           📋 Ma trận: {assessment.examMatrixName}
+                        </span>
+                      )}
+                      {assessment.questionBankName && (
+                        <span className="muted" style={{ fontSize: '0.8rem' }}>
+                          🗄️ Ngân hàng: {assessment.questionBankName}
                         </span>
                       )}
                       {assessment.examMatrixGradeLevel && (

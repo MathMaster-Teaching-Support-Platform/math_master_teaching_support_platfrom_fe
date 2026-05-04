@@ -384,7 +384,7 @@ export function MatrixTable({
   }, [editingCell]);
 
   const handleRemoveRow = async (rowId: string) => {
-    if (!globalThis.confirm('Bạn có chắc muốn xóa dòng này?')) return;
+    if (!window.confirm('Bạn có chắc muốn xóa dòng này? Tất cả thiết lập số lượng câu hỏi cho dòng này sẽ bị xóa và không thể khôi phục.')) return;
     setDeletingRowId(rowId);
     try {
       await onRemoveRow(rowId);
