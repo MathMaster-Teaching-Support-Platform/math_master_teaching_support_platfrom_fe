@@ -347,12 +347,8 @@
 .clt-actions {
   display: flex;
   gap: 0.5rem;
-  opacity: 0.6;
-  transition: opacity 0.2s ease;
-}
-
-.clt-list-card:hover .clt-actions {
   opacity: 1;
+  transition: opacity 0.2s ease;
 }
 
 .clt-action-btn {

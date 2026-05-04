@@ -3681,9 +3681,17 @@ const StudentWallet: React.FC = () => {
     return new Intl.NumberFormat('vi-VN').format(value);
   };
 
-  const formatBalanceAfterTransaction = (value?: number | null) => {
-    if (value == null) return '-';
-    return `${formatCurrency(value)}đ`;
+  const formatBalanceAfterTransaction = (tx: WalletTransaction) => {
+    if (tx.balanceAfterTransaction != null) {
+      return `${formatCurrency(tx.balanceAfterTransaction)}đ`;
+    }
+
+    const fallbackStatuses: TransactionStatus[] = ['PENDING', 'PROCESSING', 'FAILED', 'CANCELLED'];
+    if (wallet?.balance != null && fallbackStatuses.includes(tx.status)) {
+      return `${formatCurrency(wallet.balance)}đ`;
+    }
+
+    return '-';
   };
 
   const normalizeStatus = (status?: string): Exclude<TransactionStatusFilter, 'all'> =>
@@ -4719,9 +4727,7 @@ const StudentWallet: React.FC = () => {
                           {type === 'deposit' ? '+' : '−'}
                           {formatCurrency(tx.amount)}đ
                         </div>
-                        <div className="tx-balance">
-                          Số dư: {formatBalanceAfterTransaction(tx.balanceAfterTransaction)}
-                        </div>
+                        <div className="tx-balance">Số dư: {formatBalanceAfterTransaction(tx)}</div>
                         <span className={`tx-status-badge ${status}`}>
                           {status === 'completed'
                             ? 'Thành công'

@@ -1190,7 +1190,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
               )}
             </div>
           </div>
-          {!isSidebar && !isAdmin && (
+          {!isSidebar && (
             <div className="section-meta">
               <span>{group.lessons.length} bài học</span>
               {group.type === 'SECTION' && (
@@ -1227,7 +1227,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
         </div>
         <div className={`lessons-group ${collapsedSections[group.id] ? 'collapsed' : ''}`}>
           <div className="lessons-inner">
-            {!isSidebar && !isAdmin && group.lessons.length > 1 && (
+            {!isSidebar && group.lessons.length > 1 && (
               <div style={{ padding: '1rem 1.25rem 0.5rem' }}>
                 <LessonReorderStrip
                   title="Sắp xếp bài học trong phần"
@@ -1313,7 +1313,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                     {Math.floor(lesson.durationSeconds / 60)} phút
                   </span>
                 )}
-                {materialsList.length > 0 && (
+                {true && (
                   <span
                     style={{
                       fontSize: '0.75rem',
@@ -1337,7 +1337,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                   style={{
                     fontSize: '0.65rem',
                     padding: '2px 8px',
-                    cursor: !isAdmin ? 'pointer' : 'default',
+                    cursor: 'pointer',
                     opacity: lesson.isFreePreview ? 1 : 0.6,
                   }}
                   onClick={(e) => {
@@ -1363,7 +1363,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
             )}
           </div>
 
-          {!isSidebar && !isAdmin && (
+          {!isSidebar && (
             <div className="clt-actions">
               <button
                 className="clt-action-btn"
@@ -1390,7 +1390,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
         </div>
 
         {/* Materials List */}
-        {!isSidebar && showResources === lesson.id && materialsList.length > 0 && (
+        {!isSidebar && showResources === lesson.id && (
           <div style={{ padding: '0.5rem 1.25rem 1rem 3.5rem', background: '#f8fafc' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {materialsList.map((m: LessonMaterial) => (
@@ -1429,7 +1429,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                       ({((m.size || 0) / 1024).toFixed(1)} KB)
                     </span>
                   </button>
-                  {!isAdmin && (
+                  {true && (
                     <button
                       className="btn-icon"
                       style={{ color: '#ef4444' }}
@@ -1448,7 +1448,12 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                   )}
                 </div>
               ))}
-              {!isAdmin && (
+              {materialsList.length === 0 && (
+                <p className="muted" style={{ fontSize: '0.8rem', fontStyle: 'italic', margin: '0 0 8px' }}>
+                  Chưa có tài liệu đính kèm cho bài học này.
+                </p>
+              )}
+              {true && (
                 <label
                   className="btn secondary"
                   style={{
@@ -1659,7 +1664,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
             </div>
           </div>
 
-          {!isAdmin && (
+          {true && (
             <div className="cdt-toolbar">
               {course.provider === 'CUSTOM' && (
                 <button
@@ -1693,7 +1698,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
             <div className="cdt-empty">
               <Video size={40} strokeWidth={1.5} style={{ marginBottom: 12 }} />
               <p>Chưa có bài học nào.</p>
-              {!isAdmin && (
+              {true && (
                 <button
                   type="button"
                   className="btn cdt-btn-primary"
@@ -1734,7 +1739,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
       )}
 
       {/* Upload Modal */}
-      {showUpload && course && !isAdmin && (
+      {showUpload && course && (
         <UploadVideoModal
           courseId={courseId}
           course={course}
@@ -1744,7 +1749,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
         />
       )}
 
-      {deleteTarget && !isAdmin && (
+      {deleteTarget && (
         <CltConfirmDeleteModal
           title={
             deleteTarget.k === 'lesson'
@@ -1828,7 +1833,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
         />
       )}
 
-      {!isAdmin && (
+      {true && (
         <CltTextSectionModal
           open={addSectionOpen}
           onClose={() => {
@@ -1848,7 +1853,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
         />
       )}
 
-      {renameTarget && !isAdmin && (
+      {renameTarget && (
         <CltTextSectionModal
           open
           onClose={() => {
@@ -1868,7 +1873,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
       )}
 
       {/* Edit Modal */}
-      {editingLesson && !isAdmin && (
+      {editingLesson && (
         <EditLessonModal
           courseId={courseId}
           lesson={editingLesson}
