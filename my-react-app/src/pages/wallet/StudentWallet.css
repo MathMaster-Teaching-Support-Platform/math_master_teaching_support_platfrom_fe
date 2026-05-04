@@ -1137,6 +1137,12 @@
   color: #dc2626;
 }
 
+.tx-balance {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #475569;
+}
+
 /* Status Badge */
 .tx-status-badge {
   display: inline-flex;

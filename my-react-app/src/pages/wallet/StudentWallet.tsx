@@ -3681,6 +3681,11 @@ const StudentWallet: React.FC = () => {
     return new Intl.NumberFormat('vi-VN').format(value);
   };
 
+  const formatBalanceAfterTransaction = (value?: number | null) => {
+    if (value == null) return '-';
+    return `${formatCurrency(value)}đ`;
+  };
+
   const normalizeStatus = (status?: string): Exclude<TransactionStatusFilter, 'all'> =>
     TX_STATUS_MAP[(status as TransactionStatus) ?? ''] ?? 'failed';
 
@@ -3781,9 +3786,9 @@ const StudentWallet: React.FC = () => {
       statusFilter === 'all'
         ? WalletService.getTransactions({ page: 0, size: API_PAGE_SIZE })
         : WalletService.getTransactionsByStatus(STATUS_TO_API[statusFilter], {
-          page: 0,
-          size: API_PAGE_SIZE,
-        }),
+            page: 0,
+            size: API_PAGE_SIZE,
+          }),
     staleTime: 15_000,
   });
 
@@ -4296,10 +4301,10 @@ const StudentWallet: React.FC = () => {
                             style={
                               selectedBank === bank.id
                                 ? {
-                                  borderColor: bank.color,
-                                  boxShadow: `0 0 0 2px ${bank.color}30`,
-                                  background: `${bank.color}08`,
-                                }
+                                    borderColor: bank.color,
+                                    boxShadow: `0 0 0 2px ${bank.color}30`,
+                                    background: `${bank.color}08`,
+                                  }
                                 : {}
                             }
                             onClick={() =>
@@ -4713,6 +4718,9 @@ const StudentWallet: React.FC = () => {
                         >
                           {type === 'deposit' ? '+' : '−'}
                           {formatCurrency(tx.amount)}đ
+                        </div>
+                        <div className="tx-balance">
+                          Số dư: {formatBalanceAfterTransaction(tx.balanceAfterTransaction)}
                         </div>
                         <span className={`tx-status-badge ${status}`}>
                           {status === 'completed'

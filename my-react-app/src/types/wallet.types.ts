@@ -34,6 +34,7 @@ export interface WalletTransaction {
   walletId?: string;
   orderCode?: number; // long — displayed to user, always present for DEPOSIT
   amount: number; // always positive, unit: VND
+  balanceAfterTransaction?: number | null;
   type?: TransactionType;
   status: TransactionStatus;
   description?: string;

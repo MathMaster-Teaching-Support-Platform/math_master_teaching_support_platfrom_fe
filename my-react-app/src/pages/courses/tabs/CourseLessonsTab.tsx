@@ -29,6 +29,7 @@ import { UI_TEXT } from '../../../constants/uiText';
 import { useToast } from '../../../context/ToastContext';
 import {
   useAddMaterial,
+  useCourseDetail,
   useCourseLessons,
   useCreateSection,
   useCustomCourseSections,
@@ -39,6 +40,7 @@ import {
   useUpdateCourseLesson,
   useUpdateSection,
 } from '../../../hooks/useCourses';
+import { useChaptersBySubject } from '../../../hooks/useChapters';
 import { AuthService } from '../../../services/api/auth.service';
 import { CourseService } from '../../../services/api/course.service';
 import { LessonSlideService } from '../../../services/api/lesson-slide.service';
@@ -442,14 +444,14 @@ function UploadVideoModal({
         provider === 'MINISTRY'
           ? { lessonId, videoTitle, orderIndex, isFreePreview, durationSeconds }
           : {
-              sectionId,
-              customTitle,
-              customDescription,
-              videoTitle,
-              orderIndex,
-              isFreePreview,
-              durationSeconds,
-            };
+            sectionId,
+            customTitle,
+            customDescription,
+            videoTitle,
+            orderIndex,
+            isFreePreview,
+            durationSeconds,
+          };
 
       await VideoUploadService.uploadVideo(courseId, file!, extraData, {
         onProgress: (pct) => setProgress(pct),
@@ -612,7 +614,7 @@ function UploadVideoModal({
             </>
           )}
 
-          <label className="clt-form-field">
+          <div className="clt-form-field">
             <span className="clt-form-label">
               File video <span className="clt-req">*</span>
             </span>
@@ -656,7 +658,7 @@ function UploadVideoModal({
                 </div>
               )}
             </div>
-          </label>
+          </div>
 
           <label className="clt-form-field">
             <span className="clt-form-label">Tiêu đề video</span>
@@ -989,8 +991,12 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
   const [deleteTarget, setDeleteTarget] = useState<CltDeleteTarget | null>(null);
   const [renameTarget, setRenameTarget] = useState<null | { id: string; value: string }>(null);
 
+  const { data: courseData } = useCourseDetail(courseId);
   const { data: lessonsData, isLoading, refetch } = useCourseLessons(courseId);
   const { data: sectionsData } = useCustomCourseSections(courseId);
+
+  const subjectId = courseData?.result?.subjectId || '';
+  const { data: chaptersData } = useChaptersBySubject(subjectId, !!subjectId);
   const deleteMutation = useDeleteCourseLesson();
   const updateMutation = useUpdateCourseLesson();
   const reorderMutation = useReorderCourseLessons();
@@ -1015,6 +1021,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
       {
         id: string;
         title: string;
+        description: string | null;
         lessons: CourseLessonResponse[];
         type: 'SECTION' | 'CHAPTER' | 'OTHER';
         firstSeenIndex: number;
@@ -1026,23 +1033,34 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
       sections.map((section, index) => [section.id, section.orderIndex ?? index + 1] as const)
     );
 
+    const chapters = chaptersData?.result ?? [];
+    const chapterMap = new Map(chapters.map((c) => [c.id, c]));
+
     lessons.forEach((lesson, index) => {
       const section = sections.find((s) => s.id === lesson.sectionId);
       const groupId = lesson.sectionId || lesson.chapterId || 'no-group';
+
       const groupTitle =
         section?.title ||
         lesson.chapterTitle ||
         (lesson.sectionId ? 'Mục chưa đặt tên' : lesson.chapterId ? 'Chương chưa đặt tên' : 'Khác');
+
+      const groupDescription = section?.description || (lesson as any).chapterDescription || null;
       const groupType = lesson.sectionId ? 'SECTION' : lesson.chapterId ? 'CHAPTER' : 'OTHER';
 
       if (!groupsMap[groupId]) {
+        const dbChapter = lesson.chapterId ? chapterMap.get(lesson.chapterId) : null;
+
         groupsMap[groupId] = {
           id: groupId,
           title: groupTitle,
+          description: groupDescription || dbChapter?.description || null,
           lessons: [],
           type: groupType,
           firstSeenIndex: index,
-          orderIndex: groupType === 'SECTION' ? sectionOrderMap.get(groupId) : undefined,
+          orderIndex: groupType === 'SECTION'
+            ? sectionOrderMap.get(groupId)
+            : (groupType === 'CHAPTER' ? dbChapter?.orderIndex : undefined),
         };
       }
       groupsMap[groupId].lessons.push(lesson);
@@ -1054,7 +1072,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
         ...group,
         lessons: [...group.lessons].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0)),
       }));
-  }, [lessons, sections]);
+  }, [lessons, sections, chaptersData]);
 
   const toggleSection = (sId: string) => {
     setCollapsedSections((prev) => ({ ...prev, [sId]: !prev[sId] }));
@@ -1150,16 +1168,27 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
             <span className="section-label" style={isSidebar ? { fontSize: '0.65rem' } : {}}>
               {group.type === 'CHAPTER'
                 ? (() => {
-                    const num = extractChapterNumber(group.title) ?? extractChapterNumber(group.id);
-                    return num !== null ? `Chương ${num}` : `Chương ${idx + 1}`;
-                  })()
+                  const num = group.orderIndex ?? extractChapterNumber(group.title) ?? extractChapterNumber(group.id);
+                  if (num === undefined || num === null) return `Chương ${idx + 1}`;
+                  const hasLabel = new RegExp(`chương\\s*${num}`, 'i').test(group.title);
+                  return hasLabel ? '' : `Chương ${num}`;
+                })()
                 : group.type === 'SECTION'
-                  ? `Mục ${idx + 1}`
-                  : 'Khác'}
+                  ? (() => {
+                    const num = group.orderIndex ?? idx + 1;
+                    const hasLabel = new RegExp(`(mục|phần)\\s*${num}`, 'i').test(group.title);
+                    return hasLabel ? '' : `Mục ${num}`;
+                  })()
+                  : ''}
             </span>
-            <span className="section-title" style={isSidebar ? { fontSize: '0.82rem' } : {}}>
-              {group.title}
-            </span>
+            <div className="section-title-wrapper">
+              <span className="section-title" style={isSidebar ? { fontSize: '0.82rem' } : {}}>
+                {group.title}
+              </span>
+              {group.description && (
+                <p className="section-description">{group.description}</p>
+              )}
+            </div>
           </div>
           {!isSidebar && !isAdmin && (
             <div className="section-meta">
@@ -1227,21 +1256,21 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
           style={
             isSidebar
               ? {
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem',
-                  padding: '0.75rem 1rem',
-                  background: isPlaying ? '#fdf4f0' : '#ffffff',
-                  cursor: 'pointer',
-                  borderLeft: isPlaying ? '3px solid #C96442' : '3px solid transparent',
-                  borderBottom: '1px solid #f0eee6',
-                  transition: 'all 0.2s ease',
-                }
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                padding: '0.75rem 1rem',
+                background: isPlaying ? '#fdf4f0' : '#ffffff',
+                cursor: 'pointer',
+                borderLeft: isPlaying ? '3px solid #C96442' : '3px solid transparent',
+                borderBottom: '1px solid #f0eee6',
+                transition: 'all 0.2s ease',
+              }
               : {
-                  cursor: 'pointer',
-                  borderColor: isPlaying ? '#C96442' : undefined,
-                  boxShadow: isPlaying ? '0 4px 12px rgba(201, 100, 66, 0.15)' : undefined,
-                }
+                cursor: 'pointer',
+                borderColor: isPlaying ? '#C96442' : undefined,
+                boxShadow: isPlaying ? '0 4px 12px rgba(201, 100, 66, 0.15)' : undefined,
+              }
           }
         >
           <div
