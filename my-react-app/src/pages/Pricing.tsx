@@ -304,8 +304,6 @@ const Pricing: React.FC = () => {
     currentRole === 'teacher' ? 'teacher' : currentRole === 'admin' ? 'admin' : 'student';
   const currentUser =
     layoutRole === 'teacher' ? mockTeacher : layoutRole === 'admin' ? mockAdmin : mockStudent;
-  const pricingHeaderKicker =
-    layoutRole === 'teacher' ? '' : layoutRole === 'admin' ? 'Admin' : 'MathMaster';
   const [subscriptionError, setSubscriptionError] = useState('');
   const [subscriptionSuccess, setSubscriptionSuccess] = useState('');
   const [purchasingPlanId, setPurchasingPlanId] = useState<string | null>(null);
