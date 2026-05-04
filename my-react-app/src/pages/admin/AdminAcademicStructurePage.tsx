@@ -51,6 +51,23 @@ function parseRequiredNumber(value: NumberInput): number {
   return Number(value);
 }
 
+function mapDeleteConstraintError(error: unknown): string {
+  if (!(error instanceof Error)) return 'Thao tác bị từ chối bởi ràng buộc dữ liệu';
+  const message = error.message || '';
+
+  if (message.includes('CHAPTER_HAS_LESSONS')) {
+    return 'Không thể xóa chương khi còn bài học';
+  }
+  if (message.includes('SUBJECT_HAS_CHAPTERS')) {
+    return 'Không thể vô hiệu hóa môn học khi còn chương';
+  }
+  if (message.includes('SCHOOL_GRADE_HAS_SUBJECTS')) {
+    return 'Không thể vô hiệu hóa chương trình khi còn môn học đang hoạt động';
+  }
+
+  return message;
+}
+
 export default function AdminAcademicStructurePage() {
   const queryClient = useQueryClient();
   const { showToast } = useToast();
@@ -161,10 +178,21 @@ export default function AdminAcademicStructurePage() {
     enabled: Boolean(selectedChapterId),
   });
 
+  const lessonsForDeleteQuery = useQuery({
+    queryKey: ['admin-academic', 'lessons', selectedChapterId, '__all_for_delete__'],
+    queryFn: () => AcademicStructureService.getLessonsByChapter(selectedChapterId),
+    enabled: Boolean(selectedChapterId),
+  });
+
   const grades = gradesQuery.data?.result ?? [];
   const subjects = subjectsQuery.data?.result ?? [];
   const chapters = chaptersQuery.data?.result ?? [];
   const lessons = lessonsQuery.data?.result ?? [];
+  const allChapterLessons = lessonsForDeleteQuery.data?.result ?? [];
+
+  const hasActiveSubjects = subjects.some((subject) => subject.isActive !== false);
+  const hasChapters = chapters.length > 0;
+  const hasLessons = allChapterLessons.length > 0;
 
   const selectedGrade = useMemo(
     () => grades.find((grade) => grade.id === selectedGradeId),
@@ -529,7 +557,7 @@ export default function AdminAcademicStructurePage() {
     onError: (error) => {
       showToast({
         type: 'error',
-        message: error instanceof Error ? error.message : 'Không thể xóa chương trình',
+        message: mapDeleteConstraintError(error),
       });
     },
   });
@@ -548,7 +576,7 @@ export default function AdminAcademicStructurePage() {
     onError: (error) => {
       showToast({
         type: 'error',
-        message: error instanceof Error ? error.message : 'Không thể xóa subject',
+        message: mapDeleteConstraintError(error),
       });
     },
   });
@@ -566,7 +594,7 @@ export default function AdminAcademicStructurePage() {
     onError: (error) => {
       showToast({
         type: 'error',
-        message: error instanceof Error ? error.message : 'Không thể xóa chapter',
+        message: mapDeleteConstraintError(error),
       });
     },
   });
@@ -635,19 +663,19 @@ export default function AdminAcademicStructurePage() {
 
   const handleDeleteGrade = () => {
     if (!selectedGradeId) return;
-    if (!globalThis.confirm('Xác nhận xóa (soft delete) chương trình này?')) return;
+    if (!globalThis.confirm('Xác nhận vô hiệu hóa chương trình này?')) return;
     deleteGradeMutation.mutate(selectedGradeId);
   };
 
   const handleDeleteSubject = () => {
     if (!selectedSubjectId) return;
-    if (!globalThis.confirm('Xác nhận xóa (soft delete) subject này?')) return;
+    if (!globalThis.confirm('Xác nhận vô hiệu hóa môn học này?')) return;
     deleteSubjectMutation.mutate(selectedSubjectId);
   };
 
   const handleDeleteChapter = () => {
     if (!selectedChapterId) return;
-    if (!globalThis.confirm('Xác nhận xóa (soft delete) chapter này?')) return;
+    if (!globalThis.confirm('Xác nhận xóa mềm chương này?')) return;
     deleteChapterMutation.mutate(selectedChapterId);
   };
 
@@ -728,12 +756,22 @@ export default function AdminAcademicStructurePage() {
           type="button"
           className="danger"
           onClick={handleDeleteGrade}
-          disabled={!selectedGradeId || deleteGradeMutation.isPending}
+          disabled={
+            !selectedGradeId ||
+            deleteGradeMutation.isPending ||
+            subjectsQuery.isLoading ||
+            hasActiveSubjects
+          }
         >
           <Trash2 size={14} />
-          Xóa
+          Vô hiệu hóa
         </button>
       </div>
+      {selectedGradeId && hasActiveSubjects && (
+        <p className="aas-helper">
+          Không thể vô hiệu hóa vì chương trình vẫn còn môn học đang hoạt động.
+        </p>
+      )}
     </form>
   );
 
@@ -818,12 +856,20 @@ export default function AdminAcademicStructurePage() {
           type="button"
           className="danger"
           onClick={handleDeleteSubject}
-          disabled={!selectedSubjectId || deleteSubjectMutation.isPending}
+          disabled={
+            !selectedSubjectId ||
+            deleteSubjectMutation.isPending ||
+            chaptersQuery.isLoading ||
+            hasChapters
+          }
         >
           <Trash2 size={14} />
-          Xóa
+          Vô hiệu hóa
         </button>
       </div>
+      {selectedSubjectId && hasChapters && (
+        <p className="aas-helper">Không thể vô hiệu hóa vì môn học vẫn còn chương.</p>
+      )}
     </form>
   );
 
@@ -872,12 +918,20 @@ export default function AdminAcademicStructurePage() {
           type="button"
           className="danger"
           onClick={handleDeleteChapter}
-          disabled={!selectedChapterId || deleteChapterMutation.isPending}
+          disabled={
+            !selectedChapterId ||
+            deleteChapterMutation.isPending ||
+            lessonsForDeleteQuery.isLoading ||
+            hasLessons
+          }
         >
           <Trash2 size={14} />
-          Xóa
+          Xóa mềm
         </button>
       </div>
+      {selectedChapterId && hasLessons && (
+        <p className="aas-helper">Không thể xóa mềm chương vì vẫn còn bài học.</p>
+      )}
     </form>
   );
 
