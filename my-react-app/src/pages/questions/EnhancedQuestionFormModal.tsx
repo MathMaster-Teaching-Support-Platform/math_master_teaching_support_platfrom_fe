@@ -284,7 +284,7 @@ export function EnhancedQuestionFormModal({
         </div>
 
         <div className="modal-body eqfm-layout">
-          <div className="eqfm-form-column">
+          <div className="eqfm-top-controls">
             {error && (
               <div
                 style={{
@@ -339,6 +339,10 @@ export function EnhancedQuestionFormModal({
               </div>
             </div>
 
+            <LatexToolbar onInsert={handleInsertLatex} disabled={saving} />
+          </div>
+
+          <div className="eqfm-row">
             <div
               style={{
                 padding: 20,
@@ -355,6 +359,36 @@ export function EnhancedQuestionFormModal({
               />
             </div>
 
+            <section className="eqfm-preview-card">
+              <p className="eqfm-preview-heading">Xem trước câu hỏi </p>
+              <span className="badge" style={{ marginBottom: 8 }}>
+                {previewTypeLabel}
+              </span>
+              <div className="eqfm-preview-question">
+                <MathText text={previewQuestionText || 'Chưa có nội dung câu hỏi.'} />
+              </div>
+
+              {previewOptionEntries.length > 0 && (
+                <div className="eqfm-preview-meta">
+                  <p className="eqfm-preview-meta__title">Lựa chọn</p>
+                  <ol className="eqfm-preview-options">
+                    {previewOptionEntries.map(([key, value], index) => (
+                      <li key={`preview-option-${key}`}>
+                        <strong>{(key || String.fromCharCode(65 + index)).toUpperCase()}.</strong>{' '}
+                        <MathText text={String(value)} />
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              )}
+
+              <p className="eqfm-preview-answer">
+                <span>Đáp án:</span> {previewCorrectAnswer || 'Chưa có đáp án'}
+              </p>
+            </section>
+          </div>
+
+          <div className="eqfm-row">
             <div>
               <label
                 style={{ display: 'block', fontWeight: 600, marginBottom: 8, color: '#374151' }}
@@ -378,6 +412,24 @@ export function EnhancedQuestionFormModal({
               />
             </div>
 
+            <section className="eqfm-preview-card">
+              <p className="eqfm-preview-heading">Xem trước hình</p>
+              {hasDiagramPreview ? (
+                <QuestionDiagram
+                  source={{
+                    diagramData: diagramData.trim() ? diagramData.trim() : initialData?.diagramData,
+                    diagramUrl: initialData?.diagramUrl,
+                  }}
+                />
+              ) : (
+                <p className="muted" style={{ margin: 0 }}>
+                  Chưa có hình minh họa.
+                </p>
+              )}
+            </section>
+          </div>
+
+          <div className="eqfm-row">
             <div>
               <label
                 style={{ display: 'block', fontWeight: 600, marginBottom: 8, color: '#374151' }}
@@ -401,11 +453,24 @@ export function EnhancedQuestionFormModal({
               />
             </div>
 
-            <LatexToolbar onInsert={handleInsertLatex} disabled={saving} />
+            <section className="eqfm-preview-card">
+              <p className="eqfm-preview-heading">Xem trước giải thích</p>
+              {previewExplanation ? (
+                <div className="eqfm-preview-explanation">
+                  <MathText text={previewExplanation} />
+                </div>
+              ) : (
+                <p className="muted" style={{ margin: 0 }}>
+                  Chưa có nội dung giải thích.
+                </p>
+              )}
+            </section>
+          </div>
 
-            {(questionType === 'TRUE_FALSE' ||
-              questionType === 'SHORT_ANSWER' ||
-              questionType === 'MULTIPLE_CHOICE') && (
+          {(questionType === 'TRUE_FALSE' ||
+            questionType === 'SHORT_ANSWER' ||
+            questionType === 'MULTIPLE_CHOICE') && (
+            <div className="eqfm-top-controls" style={{ paddingTop: 0 }}>
               <div style={{ display: 'flex', justifyContent: 'center' }}>
                 <button
                   type="button"
@@ -441,67 +506,8 @@ export function EnhancedQuestionFormModal({
                   {enhancing ? 'Đang tạo lời giải...' : '✨ Tạo lời giải bằng AI'}
                 </button>
               </div>
-            )}
-          </div>
-
-          <aside className="eqfm-preview-column">
-            <section className="eqfm-preview-card">
-              <p className="eqfm-preview-heading">Xem trước câu hỏi </p>
-              <span className="badge" style={{ marginBottom: 8 }}>
-                {previewTypeLabel}
-              </span>
-              <div className="eqfm-preview-question">
-                <MathText text={previewQuestionText || 'Chưa có nội dung câu hỏi.'} />
-              </div>
-
-              {previewOptionEntries.length > 0 && (
-                <div className="eqfm-preview-meta">
-                  <p className="eqfm-preview-meta__title">Lựa chọn</p>
-                  <ol className="eqfm-preview-options">
-                    {previewOptionEntries.map(([key, value], index) => (
-                      <li key={`preview-option-${key}`}>
-                        <strong>{(key || String.fromCharCode(65 + index)).toUpperCase()}.</strong>{' '}
-                        <MathText text={String(value)} />
-                      </li>
-                    ))}
-                  </ol>
-                </div>
-              )}
-
-              <p className="eqfm-preview-answer">
-                <span>Đáp án:</span> {previewCorrectAnswer || 'Chưa có đáp án'}
-              </p>
-            </section>
-
-            <section className="eqfm-preview-card">
-              <p className="eqfm-preview-heading">Xem trước hình</p>
-              {hasDiagramPreview ? (
-                <QuestionDiagram
-                  source={{
-                    diagramData: diagramData.trim() ? diagramData.trim() : initialData?.diagramData,
-                    diagramUrl: initialData?.diagramUrl,
-                  }}
-                />
-              ) : (
-                <p className="muted" style={{ margin: 0 }}>
-                  Chưa có hình minh họa.
-                </p>
-              )}
-            </section>
-
-            <section className="eqfm-preview-card">
-              <p className="eqfm-preview-heading">Xem trước giải thích</p>
-              {previewExplanation ? (
-                <div className="eqfm-preview-explanation">
-                  <MathText text={previewExplanation} />
-                </div>
-              ) : (
-                <p className="muted" style={{ margin: 0 }}>
-                  Chưa có nội dung giải thích.
-                </p>
-              )}
-            </section>
-          </aside>
+            </div>
+          )}
         </div>
 
         <div className="modal-footer">
