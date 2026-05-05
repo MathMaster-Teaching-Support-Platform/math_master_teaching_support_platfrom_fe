@@ -33,6 +33,7 @@ import {
   useDeleteQuestionTemplate,
   useGetMyQuestionTemplates,
   usePublishTemplate,
+  useUnpublishTemplate,
   useUpdateQuestionTemplate,
 } from '../../hooks/useQuestionTemplate';
 import { questionTemplateService } from '../../services/questionTemplateService';
@@ -213,6 +214,7 @@ export function TemplateDashboard() {
   const updateMutation = useUpdateQuestionTemplate();
   const deleteMutation = useDeleteQuestionTemplate();
   const publishMutation = usePublishTemplate();
+  const unpublishMutation = useUnpublishTemplate();
 
   const templates = useMemo(() => data?.result?.content ?? [], [data]);
   const totalPages = data?.result?.totalPages ?? 0;
@@ -579,6 +581,36 @@ export function TemplateDashboard() {
                           <Pencil size={13} />
                           {editingTemplateId === template.id ? 'Đang tải' : 'Sửa'}
                         </button>
+                        {template.status === TemplateStatus.PUBLISHED && (
+                          <button
+                            className="btn secondary"
+                            disabled={
+                              unpublishMutation.isPending &&
+                              unpublishMutation.variables === template.id
+                            }
+                            onClick={() => {
+                              unpublishMutation.mutate(template.id, {
+                                onSuccess: () =>
+                                  showToast({
+                                    type: 'success',
+                                    message: 'Đã đưa mẫu về trạng thái nháp.',
+                                  }),
+                                onError: (err) =>
+                                  showToast({
+                                    type: 'error',
+                                    message:
+                                      err instanceof Error
+                                        ? err.message
+                                        : 'Không thể hủy xuất bản mẫu.',
+                                  }),
+                              });
+                            }}
+                            title="Hủy xuất bản — đưa mẫu về trạng thái nháp"
+                            aria-label="Hủy xuất bản"
+                          >
+                            <EyeOff size={13} />
+                          </button>
+                        )}
                         <button
                           className="btn danger-outline"
                           onClick={() => deleteMutation.mutate(template.id)}

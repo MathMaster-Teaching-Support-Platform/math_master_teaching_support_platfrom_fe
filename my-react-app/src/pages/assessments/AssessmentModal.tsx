@@ -117,7 +117,22 @@ export default function AssessmentModal({
 
     setSaving(true);
     try {
-      await onSubmit(formData);
+      // BE field types: startDate/endDate are Instant (must be full ISO with TZ),
+      // examMatrixId is UUID (empty string can't deserialize). Convert before send.
+      const toIsoInstant = (value?: string): string | undefined => {
+        if (!value) return undefined;
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return undefined;
+        return date.toISOString();
+      };
+      const payload: AssessmentRequest = {
+        ...formData,
+        startDate: toIsoInstant(formData.startDate),
+        endDate: toIsoInstant(formData.endDate),
+        // For DIRECT-mode assessments examMatrixId is empty; BE rejects "".
+        examMatrixId: formData.examMatrixId || (undefined as unknown as string),
+      };
+      await onSubmit(payload);
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : `Không thể lưu ${UI_TEXT.QUIZ.toLowerCase()}.`);

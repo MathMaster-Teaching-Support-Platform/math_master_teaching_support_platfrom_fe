@@ -87,6 +87,10 @@ export function QuestionBankDetailPage() {
   const navigate = useNavigate();
 
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<
+    'ALL' | 'AI_DRAFT' | 'UNDER_REVIEW' | 'APPROVED' | 'ARCHIVED'
+  >('ALL');
+  const [cognitiveFilter, setCognitiveFilter] = useState<'ALL' | string>('ALL');
   const [questionSearchKeyword, setQuestionSearchKeyword] = useState('');
   const [questionSearchPage, setQuestionSearchPage] = useState(0);
   const [questionSearchSize] = useState(10);
@@ -166,9 +170,11 @@ export function QuestionBankDetailPage() {
     searchedQuestions.length;
 
   const filteredQuestions = useMemo(() => {
-    if (!search.trim()) return questions;
-    const q = search.toLowerCase();
+    const q = search.trim().toLowerCase();
     return questions.filter((item: QuestionResponse) => {
+      if (statusFilter !== 'ALL' && item.questionStatus !== statusFilter) return false;
+      if (cognitiveFilter !== 'ALL' && item.cognitiveLevel !== cognitiveFilter) return false;
+      if (!q) return true;
       const tagMatched = (item.tags ?? []).some((tag) => tag.toLowerCase().includes(q));
       return (
         item.questionText.toLowerCase().includes(q) ||
@@ -176,7 +182,7 @@ export function QuestionBankDetailPage() {
         tagMatched
       );
     });
-  }, [questions, search]);
+  }, [questions, search, statusFilter, cognitiveFilter]);
 
   const allSearchedSelected = useMemo(() => {
     return (
@@ -311,8 +317,11 @@ export function QuestionBankDetailPage() {
                 </div>
               </article>
 
-              <div className="toolbar">
-                <label className="row" style={{ minWidth: 260 }}>
+              <div
+                className="toolbar"
+                style={{ flexWrap: 'wrap', gap: '0.6rem', alignItems: 'center' }}
+              >
+                <label className="row" style={{ minWidth: 260, flex: '1 1 260px' }}>
                   <Search size={15} />
                   <input
                     className="input"
@@ -322,6 +331,51 @@ export function QuestionBankDetailPage() {
                     onChange={(event) => setSearch(event.target.value)}
                   />
                 </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span className="muted" style={{ fontSize: 13 }}>
+                    Trạng thái
+                  </span>
+                  <select
+                    className="select"
+                    value={statusFilter}
+                    onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)}
+                  >
+                    <option value="ALL">Tất cả</option>
+                    <option value="AI_DRAFT">Nháp AI</option>
+                    <option value="UNDER_REVIEW">Chờ duyệt</option>
+                    <option value="APPROVED">Đã duyệt</option>
+                    <option value="ARCHIVED">Lưu trữ</option>
+                  </select>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span className="muted" style={{ fontSize: 13 }}>
+                    Mức độ
+                  </span>
+                  <select
+                    className="select"
+                    value={cognitiveFilter}
+                    onChange={(event) => setCognitiveFilter(event.target.value)}
+                  >
+                    <option value="ALL">Tất cả</option>
+                    <option value="NHAN_BIET">Nhận biết</option>
+                    <option value="THONG_HIEU">Thông hiểu</option>
+                    <option value="VAN_DUNG">Vận dụng</option>
+                    <option value="VAN_DUNG_CAO">Vận dụng cao</option>
+                  </select>
+                </label>
+                {(statusFilter !== 'ALL' || cognitiveFilter !== 'ALL' || search) && (
+                  <button
+                    type="button"
+                    className="btn secondary"
+                    onClick={() => {
+                      setStatusFilter('ALL');
+                      setCognitiveFilter('ALL');
+                      setSearch('');
+                    }}
+                  >
+                    Xóa bộ lọc
+                  </button>
+                )}
                 <button
                   className="btn"
                   onClick={() => {

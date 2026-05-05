@@ -7,8 +7,10 @@ import {
   X,
   XCircle,
 } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import MathText from '../../components/common/MathText';
+import { useChaptersBySubject } from '../../hooks/useChapters';
+import { useSubjects } from '../../hooks/useSubjects';
 import { questionBulkImportService } from '../../services/questionBulkImportService';
 import type { QuestionExcelPreviewResponse, QuestionImportRequest } from '../../types/bulkImport';
 import '../question-templates/template-bulk-import.css';
@@ -78,7 +80,15 @@ export function QuestionBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  const [selectedSubjectId, setSelectedSubjectId] = useState('');
+  const [selectedChapterId, setSelectedChapterId] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const subjectsQuery = useSubjects();
+  const subjects = useMemo(() => subjectsQuery.data?.result ?? [], [subjectsQuery.data]);
+  const chaptersQuery = useChaptersBySubject(selectedSubjectId, !!selectedSubjectId);
+  const chapters = useMemo(() => chaptersQuery.data?.result ?? [], [chaptersQuery.data]);
+  const chapterRequired = !selectedChapterId;
 
   const handleDownloadTemplate = async () => {
     try {
@@ -98,6 +108,10 @@ export function QuestionBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
   };
 
   const handleFileSelect = async (selectedFile: File) => {
+    if (!selectedChapterId) {
+      setError('Vui lòng chọn chương trước khi tải file lên.');
+      return;
+    }
     if (!selectedFile.name.endsWith('.xlsx')) {
       setError('Chỉ hỗ trợ file định dạng .xlsx');
       return;
@@ -155,9 +169,14 @@ export function QuestionBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
   const handleSubmit = async () => {
     if (!previewData) return;
 
+    if (!selectedChapterId) {
+      setError('Vui lòng chọn chương trước khi nhập.');
+      return;
+    }
+
     const validQuestions = previewData.rows
       .filter((row) => row.isValid && row.data)
-      .map((row) => row.data!);
+      .map((row) => ({ ...row.data!, chapterId: selectedChapterId }));
 
     if (validQuestions.length === 0) {
       setError('Không có câu hỏi hợp lệ nào để nhập.');
@@ -186,6 +205,8 @@ export function QuestionBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
     setSuccessMessage(null);
     setError(null);
     setDragActive(false);
+    setSelectedSubjectId('');
+    setSelectedChapterId('');
     onClose();
   };
 
@@ -224,6 +245,83 @@ export function QuestionBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
 
           {step === 'upload' && (
             <div className="bulk-import-upload">
+              {/* Step 0 — Chapter selection (required). Block file upload below until chosen. */}
+              <div
+                className="alert"
+                style={{
+                  background: chapterRequired ? '#fef9c3' : '#ecfdf5',
+                  border: `1px solid ${chapterRequired ? '#fde047' : '#a7f3d0'}`,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 10,
+                  padding: 12,
+                  borderRadius: 10,
+                  marginBottom: 16,
+                }}
+              >
+                <strong>Bước 0: Chọn chương cho các câu hỏi sắp nhập</strong>
+                <p className="muted" style={{ margin: 0, fontSize: 13 }}>
+                  Mọi câu hỏi trong file sẽ được gán vào chương này. Hãy chọn đúng môn → chương
+                  trước khi tải file lên.
+                </p>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                    gap: 10,
+                  }}
+                >
+                  <label>
+                    <p className="muted" style={{ marginBottom: 4, fontSize: 12 }}>
+                      Môn học
+                    </p>
+                    <select
+                      className="select"
+                      value={selectedSubjectId}
+                      onChange={(event) => {
+                        setSelectedSubjectId(event.target.value);
+                        setSelectedChapterId('');
+                      }}
+                      disabled={subjectsQuery.isLoading}
+                    >
+                      <option value="">— Chọn môn —</option>
+                      {subjects.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.name}
+                          {s.gradeLevels && s.gradeLevels.length > 0
+                            ? ` (Lớp ${s.gradeLevels.join(', ')})`
+                            : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    <p className="muted" style={{ marginBottom: 4, fontSize: 12 }}>
+                      Chương <span style={{ color: '#b91c1c' }}>*</span>
+                    </p>
+                    <select
+                      className="select"
+                      value={selectedChapterId}
+                      onChange={(event) => setSelectedChapterId(event.target.value)}
+                      disabled={!selectedSubjectId || chaptersQuery.isLoading}
+                    >
+                      <option value="">
+                        {!selectedSubjectId
+                          ? '— Chọn môn trước —'
+                          : chaptersQuery.isLoading
+                            ? 'Đang tải...'
+                            : '— Chọn chương —'}
+                      </option>
+                      {chapters.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+              </div>
+
               <div className="alert alert-info">
                 <AlertCircle size={16} />
                 <div>
@@ -283,11 +381,19 @@ export function QuestionBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
                 type="button"
                 className={`file-drop-zone ${dragActive ? 'active' : ''} ${loading ? 'loading' : ''}`}
                 aria-label="Chon file Excel de upload"
+                disabled={chapterRequired || loading}
+                style={chapterRequired ? { opacity: 0.55, cursor: 'not-allowed' } : undefined}
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
                 onDragOver={handleDrag}
-                onDrop={handleDrop}
-                onClick={() => fileInputRef.current?.click()}
+                onDrop={chapterRequired ? undefined : handleDrop}
+                onClick={() => {
+                  if (chapterRequired) {
+                    setError('Vui lòng chọn chương trước khi tải file lên.');
+                    return;
+                  }
+                  fileInputRef.current?.click();
+                }}
               >
                 <input
                   ref={fileInputRef}
@@ -300,6 +406,12 @@ export function QuestionBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
                   <>
                     <div className="spinner" />
                     <p>Đang đọc file...</p>
+                  </>
+                ) : chapterRequired ? (
+                  <>
+                    <Upload size={48} />
+                    <p className="drop-zone-text">Chọn chương trước để mở khóa tải file</p>
+                    <p className="drop-zone-hint">Cần có chương để gán câu hỏi đã nhập.</p>
                   </>
                 ) : (
                   <>

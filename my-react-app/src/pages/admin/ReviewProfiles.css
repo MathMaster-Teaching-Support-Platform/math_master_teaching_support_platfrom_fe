@@ -206,6 +206,24 @@
   background: var(--rp-primary-soft);
 }
 
+@keyframes rp-highlight-pulse {
+  0% {
+    background: #e6f0fa;
+    box-shadow: inset 3px 0 0 #3898ec;
+  }
+  60% {
+    background: #eef5fd;
+    box-shadow: inset 3px 0 0 #3898ec;
+  }
+  100% {
+    background: transparent;
+    box-shadow: none;
+  }
+}
+.rp-row--highlight {
+  animation: rp-highlight-pulse 2.5s ease-out forwards;
+}
+
 .rp-row-avatar {
   width: 36px;
   height: 36px;

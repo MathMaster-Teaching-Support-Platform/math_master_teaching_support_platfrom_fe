@@ -21,6 +21,7 @@ import {
   ZoomOut,
 } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { DashboardLayout } from '../../components/layout';
 import { mockAdmin } from '../../data/mockData';
 import { TeacherProfileService } from '../../services/api/teacher-profile.service';
@@ -96,9 +97,13 @@ const RowSkeleton: React.FC<{ count?: number }> = ({ count = 6 }) => (
 
 // ── Main Component ────────────────────────────────────────────────────────────
 const ReviewProfiles: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const focusProfileId = searchParams.get('profileId');
+
   const [currentStatus, setCurrentStatus] = useState<ProfileStatus>('PENDING');
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState('');
+  const [highlightedId, setHighlightedId] = useState<string | null>(null);
 
   const [selectedProfile, setSelectedProfile] = useState<TeacherProfile | null>(null);
   const [reviewAction, setReviewAction] = useState<'APPROVED' | 'REJECTED' | null>(null);
@@ -143,6 +148,18 @@ const ReviewProfiles: React.FC = () => {
   const loading = profilesQuery.isLoading || profilesQuery.isFetching;
   const error = profilesQuery.error instanceof Error ? profilesQuery.error.message : null;
   const pendingCount = pendingCountQuery.data?.result ?? 0;
+
+  // Auto-select profile when arriving from a notification link (?profileId=...)
+  useEffect(() => {
+    if (!focusProfileId || loading || profiles.length === 0) return;
+    const match = profiles.find((p) => p.id === focusProfileId);
+    if (match) {
+      setSelectedProfile(match);
+      setHighlightedId(focusProfileId);
+      const timer = globalThis.setTimeout(() => setHighlightedId(null), 2500);
+      return () => globalThis.clearTimeout(timer);
+    }
+  }, [focusProfileId, loading, profiles]);
 
   const handleStatusChange = (status: ProfileStatus) => {
     if (currentStatus === status) return;
@@ -480,7 +497,7 @@ const ReviewProfiles: React.FC = () => {
                       <button
                         type="button"
                         key={profile.id}
-                        className={`rp-row${selectedProfile?.id === profile.id ? ' rp-row--active' : ''}`}
+                        className={`rp-row${selectedProfile?.id === profile.id ? ' rp-row--active' : ''}${highlightedId === profile.id ? ' rp-row--highlight' : ''}`}
                         onClick={() => handleSelectProfile(profile)}
                       >
                         <div className="rp-row-avatar">{getInitials(profile.fullName)}</div>
