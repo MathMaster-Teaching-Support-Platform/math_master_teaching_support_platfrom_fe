@@ -80,8 +80,8 @@ const teacherGroups: MenuGroup[] = [
     label: 'Công cụ AI và trực quan',
     items: [
       { path: '/teacher/mindmaps', icon: Workflow, label: 'Mindmap' },
-      { path: '/teacher/ai-assistant', icon: Bot, label: 'AI Trợ lý' },
-      { path: '/teacher/ai-slide-generator', icon: Presentation, label: 'AI Slide Gen' },
+      { path: '/teacher/ai-assistant', icon: Bot, label: 'Trợ lý Ảo' },
+      { path: '/teacher/ai-slide-generator', icon: Presentation, label: 'Slide' },
     ],
   },
   {
@@ -114,7 +114,7 @@ const studentGroups: MenuGroup[] = [
   },
   {
     label: 'Công cụ',
-    items: [{ path: '/student/ai-assistant', icon: Bot, label: 'AI Trợ lý' }],
+    items: [{ path: '/student/ai-assistant', icon: Bot, label: 'Trợ Lý Ảo' }],
   },
   {
     label: 'Nâng cấp',

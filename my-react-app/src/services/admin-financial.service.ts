@@ -40,10 +40,33 @@ const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
   return response.json();
 };
 
+const qs = (params: Record<string, string | number | undefined | null>): string => {
+  const p = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) {
+    if (v !== undefined && v !== null && v !== '') p.set(k, String(v));
+  }
+  return p.toString();
+};
+
 export const adminFinancialService = {
-  getRevenueBreakdown: async (period: string = '30d'): Promise<RevenueBreakdown> => {
+  getRevenueBreakdown: async (params?: {
+    period?: string;
+    groupBy?: 'hour' | 'day' | 'month';
+    from?: string;
+    to?: string;
+    page?: number;
+    pageSize?: number;
+  }): Promise<RevenueBreakdown> => {
+    const query = qs({
+      period: params?.period,
+      groupBy: params?.groupBy,
+      from: params?.from,
+      to: params?.to,
+      page: params?.page,
+      pageSize: params?.pageSize,
+    });
     const response: ApiResponse<RevenueBreakdown> = await fetchWithAuth(
-      `/admin/dashboard/revenue-breakdown?period=${period}`
+      `/admin/dashboard/revenue-breakdown${query ? `?${query}` : ''}`
     );
     return response.result;
   },

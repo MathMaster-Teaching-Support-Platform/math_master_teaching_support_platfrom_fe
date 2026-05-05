@@ -505,8 +505,8 @@ const AISlideGenerator: React.FC = () => {
   const wizardSteps = [
     'Chọn bài dạy',
     'Chọn template',
-    'Gen nội dung',
-    'Confirm nội dung',
+    'Tạo nội dung',
+    'Xác nhận nội dung',
     'Tải file PPTX',
   ];
 
@@ -1395,7 +1395,7 @@ const AISlideGenerator: React.FC = () => {
     >
       <div className="ai-slide-page">
         <div className="ai-slide-header">
-          <h1 className="ai-slide-title">AI Slide Generator</h1>
+          <h1 className="ai-slide-title">Tạo Slide</h1>
           <div className="ai-slide-main-tabs" role="tablist" aria-label="Che do AI Slide">
             <button
               type="button"
@@ -1934,7 +1934,7 @@ const AISlideGenerator: React.FC = () => {
                   onClick={() => setActiveWizardStep(3)}
                   disabled={!templateId}
                 >
-                  Tiếp tục: Gen nội dung →
+                  Tiếp tục: Tạo nội dung →
                 </button>
               </div>
             </fieldset>
@@ -1950,7 +1950,7 @@ const AISlideGenerator: React.FC = () => {
 
         {activeMainTab === 'GENERATE' && activeWizardStep === 3 && (
           <section className="ai-slide-card">
-            <h2>Bước 3: Gen nội dung slide bằng AI</h2>
+            <h2>Bước 3: Tạo nội dung slide</h2>
             <div
               className="ai-slide-actions"
               style={{ marginBottom: '1rem', justifyContent: 'flex-start' }}
@@ -2095,7 +2095,7 @@ const AISlideGenerator: React.FC = () => {
               style={{ marginBottom: '1rem', justifyContent: 'flex-start' }}
             >
               <button className="btn btn-outline" onClick={() => setActiveWizardStep(3)}>
-                ← Quay lại Gen nội dung
+                ← Quay lại Tạo nội dung
               </button>
             </div>
 
