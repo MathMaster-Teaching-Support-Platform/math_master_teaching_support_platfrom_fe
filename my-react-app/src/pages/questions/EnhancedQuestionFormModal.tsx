@@ -349,7 +349,7 @@ export function EnhancedQuestionFormModal({
               <label
                 style={{ display: 'block', fontWeight: 600, marginBottom: 8, color: '#374151' }}
               >
-                Sơ đồ / Hình vẽ (LaTeX) <span style={{ color: '#ef4444' }}>*</span>
+                Hình vẽ <span style={{ color: '#ef4444' }}>*</span>
               </label>
               <textarea
                 ref={diagramTextareaRef}
