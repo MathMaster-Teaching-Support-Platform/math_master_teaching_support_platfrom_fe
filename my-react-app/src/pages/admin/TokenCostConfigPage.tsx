@@ -20,7 +20,10 @@ import { useToast } from '../../context/ToastContext';
 import { mockAdmin } from '../../data/mockData';
 import { tokenConfigService } from '../../services/tokenConfig.service';
 
-const featureMeta: Record<string, { icon: React.ReactNode; label: string; description: string; color: string }> = {
+const featureMeta: Record<
+  string,
+  { icon: React.ReactNode; label: string; description: string; color: string }
+> = {
   slide: {
     icon: <Layout className="w-5 h-5" />,
     label: 'Gen Slide',
@@ -57,18 +60,22 @@ const TokenConfigPage: React.FC = () => {
     queryFn: () => tokenConfigService.getAllConfigs(),
   });
 
-  const {
-    data: historyLogs,
-    isLoading: isHistoryLoading,
-  } = useQuery({
+  const { data: historyLogs, isLoading: isHistoryLoading } = useQuery({
     queryKey: ['admin', 'token-config-history'],
     queryFn: () => tokenConfigService.getHistory(),
     enabled: showHistory,
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, costPerUse, isActive }: { id: string; costPerUse?: number; isActive?: boolean }) =>
-      tokenConfigService.updateConfig(id, { costPerUse, isActive }),
+    mutationFn: ({
+      id,
+      costPerUse,
+      isActive,
+    }: {
+      id: string;
+      costPerUse?: number;
+      isActive?: boolean;
+    }) => tokenConfigService.updateConfig(id, { costPerUse, isActive }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'token-config'] });
       queryClient.invalidateQueries({ queryKey: ['admin', 'token-config-history'] });
@@ -95,10 +102,15 @@ const TokenConfigPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <DashboardLayout role="admin" user={{ name: mockAdmin.name, avatar: mockAdmin.avatar, role: 'admin' }}>
+      <DashboardLayout
+        role="admin"
+        user={{ name: mockAdmin.name, avatar: mockAdmin.avatar, role: 'admin' }}
+      >
         <div className="flex flex-col items-center justify-center py-32 space-y-4">
           <div className="w-12 h-12 border-4 border-orange-100 border-t-orange-500 rounded-full animate-spin"></div>
-          <div className="text-[#87867F] font-[Be_Vietnam_Pro] text-[14px]">Đang tải cấu hình...</div>
+          <div className="text-[#87867F] font-[Be_Vietnam_Pro] text-[14px]">
+            Đang tải cấu hình...
+          </div>
         </div>
       </DashboardLayout>
     );
@@ -106,14 +118,20 @@ const TokenConfigPage: React.FC = () => {
 
   if (isError || !configs) {
     return (
-      <DashboardLayout role="admin" user={{ name: mockAdmin.name, avatar: mockAdmin.avatar, role: 'admin' }}>
+      <DashboardLayout
+        role="admin"
+        user={{ name: mockAdmin.name, avatar: mockAdmin.avatar, role: 'admin' }}
+      >
         <div className="flex flex-col items-center justify-center py-32 space-y-4">
           <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center">
             <ShieldAlert className="w-8 h-8" />
           </div>
           <div className="text-red-500 font-[Be_Vietnam_Pro] text-[16px] font-medium text-center">
-            Không thể kết nối với máy chủ.<br />
-            <span className="text-[13px] font-normal opacity-70">Vui lòng kiểm tra lại kết nối Database.</span>
+            Không thể kết nối với máy chủ.
+            <br />
+            <span className="text-[13px] font-normal opacity-70">
+              Vui lòng kiểm tra lại kết nối Database.
+            </span>
           </div>
         </div>
       </DashboardLayout>
@@ -138,12 +156,12 @@ const TokenConfigPage: React.FC = () => {
               Cấu hình Chi phí Token
             </h1>
             <p className="font-[Be_Vietnam_Pro] text-[15px] text-[#87867F] max-w-2xl">
-              Điều chỉnh số lượng token tiêu tốn cho mỗi lần sử dụng các tính năng AI. 
-              Các thay đổi sẽ có hiệu lực ngay lập tức cho toàn bộ người dùng trên hệ thống.
+              Điều chỉnh số lượng token tiêu tốn cho mỗi lần sử dụng các tính năng AI. Các thay đổi
+              sẽ có hiệu lực ngay lập tức cho toàn bộ người dùng trên hệ thống.
             </p>
           </div>
-          
-          <button 
+
+          <button
             onClick={() => setShowHistory(true)}
             className="flex items-center gap-2 px-5 py-2.5 bg-white border border-[#E8E6DC] rounded-xl font-[Be_Vietnam_Pro] text-[14px] font-medium text-[#5E5D59] hover:bg-[#FAF9F6] transition-all shadow-sm"
           >
@@ -158,7 +176,7 @@ const TokenConfigPage: React.FC = () => {
             const meta = featureMeta[config.featureKey] || {
               icon: <Settings />,
               description: 'Tính năng hệ thống đang hoạt động.',
-              color: 'gray'
+              color: 'gray',
             };
             const isEditing = editingId === config.id;
 
@@ -166,38 +184,58 @@ const TokenConfigPage: React.FC = () => {
               <div
                 key={config.id}
                 className={`relative bg-white rounded-3xl border-2 transition-all duration-300 overflow-hidden ${
-                  isEditing ? 'border-orange-400 shadow-xl scale-[1.02] z-10' : 'border-[#E8E6DC] hover:border-orange-200 hover:shadow-lg'
+                  isEditing
+                    ? 'border-orange-400 shadow-xl scale-[1.02] z-10'
+                    : 'border-[#E8E6DC] hover:border-orange-200 hover:shadow-lg'
                 }`}
               >
                 {/* Status Header */}
-                <div className={`px-6 py-4 flex items-center justify-between border-b ${
-                  config.isActive ? 'bg-green-50/50 border-green-100' : 'bg-gray-50/50 border-gray-100'
-                }`}>
+                <div
+                  className={`px-6 py-4 flex items-center justify-between border-b ${
+                    config.isActive
+                      ? 'bg-green-50/50 border-green-100'
+                      : 'bg-gray-50/50 border-gray-100'
+                  }`}
+                >
                   <div className="flex flex-col">
                     <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${config.isActive ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
-                      <span className={`text-[11px] font-bold uppercase tracking-widest ${config.isActive ? 'text-green-700' : 'text-gray-500'}`}>
+                      <div
+                        className={`w-2 h-2 rounded-full ${config.isActive ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}
+                      />
+                      <span
+                        className={`text-[11px] font-bold uppercase tracking-widest ${config.isActive ? 'text-green-700' : 'text-gray-500'}`}
+                      >
                         {config.isActive ? 'Đang hoạt động' : 'Tạm ngắt trừ token'}
                       </span>
                     </div>
                     <span className="text-[10px] text-[#87867F] mt-0.5">
-                      {config.isActive ? 'Token sẽ bị trừ khi sử dụng' : 'Tính năng sẽ miễn phí tạm thời'}
+                      {config.isActive
+                        ? 'Token sẽ bị trừ khi sử dụng'
+                        : 'Tính năng sẽ miễn phí tạm thời'}
                     </span>
                   </div>
-                  
+
                   {/* Status Toggle */}
                   <div className="flex flex-col items-end gap-1">
                     <button
-                      onClick={() => updateMutation.mutate({ id: config.id, isActive: !config.isActive })}
+                      onClick={() =>
+                        updateMutation.mutate({ id: config.id, isActive: !config.isActive })
+                      }
                       disabled={updateMutation.isPending}
                       className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${
                         config.isActive ? 'bg-green-600' : 'bg-gray-300'
                       }`}
-                      title={config.isActive ? "Nhấn để tạm ngắt trừ token" : "Nhấn để kích hoạt trừ token"}
+                      title={
+                        config.isActive
+                          ? 'Nhấn để tạm ngắt trừ token'
+                          : 'Nhấn để kích hoạt trừ token'
+                      }
                     >
-                      <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
-                        config.isActive ? 'translate-x-5' : 'translate-x-1'
-                      }`} />
+                      <span
+                        className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                          config.isActive ? 'translate-x-5' : 'translate-x-1'
+                        }`}
+                      />
                     </button>
                   </div>
                 </div>
@@ -205,10 +243,15 @@ const TokenConfigPage: React.FC = () => {
                 <div className="p-8 space-y-6">
                   {/* Icon & Label */}
                   <div className="flex items-start gap-4">
-                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-inner ${
-                      config.featureKey === 'slide' ? 'bg-blue-500' :
-                      config.featureKey === 'mindmap' ? 'bg-orange-500' : 'bg-green-500'
-                    }`}>
+                    <div
+                      className={`w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-inner ${
+                        config.featureKey === 'slide'
+                          ? 'bg-blue-500'
+                          : config.featureKey === 'mindmap'
+                            ? 'bg-orange-500'
+                            : 'bg-green-500'
+                      }`}
+                    >
                       {meta.icon}
                     </div>
                     <div className="space-y-1">
@@ -222,14 +265,18 @@ const TokenConfigPage: React.FC = () => {
                   </div>
 
                   {/* Cost Display/Edit Area */}
-                  <div className={`rounded-2xl p-6 transition-colors ${isEditing ? 'bg-orange-50' : 'bg-[#FAF9F6]'}`}>
+                  <div
+                    className={`rounded-2xl p-6 transition-colors ${isEditing ? 'bg-orange-50' : 'bg-[#FAF9F6]'}`}
+                  >
                     <div className="flex items-center justify-between">
-                      <span className="text-[13px] font-semibold text-[#87867F]">Chi phí mỗi lần sử dụng</span>
+                      <span className="text-[13px] font-semibold text-[#87867F]">
+                        Chi phí mỗi lần sử dụng
+                      </span>
                       {!isEditing && (
-                        <button 
+                        <button
                           onClick={() => {
                             setEditingId(config.id);
-                            setEditValues(prev => ({ ...prev, [config.id]: config.costPerUse }));
+                            setEditValues((prev) => ({ ...prev, [config.id]: config.costPerUse }));
                           }}
                           className="text-orange-600 hover:text-orange-700 p-1 rounded-md hover:bg-orange-100 transition-all"
                         >
@@ -237,7 +284,7 @@ const TokenConfigPage: React.FC = () => {
                         </button>
                       )}
                     </div>
-                    
+
                     <div className="mt-2 flex items-baseline gap-2">
                       {isEditing ? (
                         <div className="flex items-center gap-3 w-full mt-1">
@@ -246,10 +293,17 @@ const TokenConfigPage: React.FC = () => {
                               type="number"
                               autoFocus
                               value={editValues[config.id] ?? config.costPerUse}
-                              onChange={(e) => setEditValues(prev => ({ ...prev, [config.id]: parseInt(e.target.value) || 0 }))}
+                              onChange={(e) =>
+                                setEditValues((prev) => ({
+                                  ...prev,
+                                  [config.id]: parseInt(e.target.value) || 0,
+                                }))
+                              }
                               className="w-full bg-white border-2 border-orange-200 rounded-xl px-4 py-2.5 font-[Be_Vietnam_Pro] text-[24px] font-bold text-[#141413] outline-none focus:border-orange-500 transition-all"
                             />
-                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[14px] text-[#87867F] font-medium">tokens</span>
+                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[14px] text-[#87867F] font-medium">
+                              tokens
+                            </span>
                           </div>
                           <div className="flex flex-col gap-1">
                             <button
@@ -269,8 +323,12 @@ const TokenConfigPage: React.FC = () => {
                         </div>
                       ) : (
                         <>
-                          <span className="text-[32px] font-bold text-[#141413]">{config.costPerUse}</span>
-                          <span className="text-[14px] font-medium text-[#87867F]">tokens / lượt dùng</span>
+                          <span className="text-[32px] font-bold text-[#141413]">
+                            {config.costPerUse}
+                          </span>
+                          <span className="text-[14px] font-medium text-[#87867F]">
+                            tokens / lượt dùng
+                          </span>
                         </>
                       )}
                     </div>
@@ -303,20 +361,23 @@ const TokenConfigPage: React.FC = () => {
                 <h2 className="text-[20px] font-bold">Lưu ý bảo mật & Hệ thống</h2>
               </div>
               <p className="text-gray-400 text-[14px] max-w-xl leading-relaxed">
-                Tất cả các thay đổi về chi phí sẽ được ghi lại trong nhật ký hệ thống kèm theo định danh của Admin thực hiện. 
-                Hãy đảm bảo bạn đã thông báo cho bộ phận CSKH trước khi có sự thay đổi lớn về giá để tránh gây hiểu lầm cho người dùng.
+                Tất cả các thay đổi về chi phí sẽ được ghi lại trong nhật ký hệ thống kèm theo định
+                danh của Admin thực hiện. Hãy đảm bảo bạn đã thông báo cho bộ phận CSKH trước khi có
+                sự thay đổi lớn về giá để tránh gây hiểu lầm cho người dùng.
               </p>
             </div>
-            
+
             <div className="flex flex-col items-center gap-4 min-w-[200px]">
               <div className="flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full border border-white/20">
                 <CheckCircle2 className="w-4 h-4 text-green-400" />
                 <span className="text-[13px] font-medium">DB Connection: Healthy</span>
               </div>
-              <div className="text-[11px] text-gray-500 uppercase tracking-tighter">Server Time: {new Date().toLocaleTimeString()}</div>
+              <div className="text-[11px] text-gray-500 uppercase tracking-tighter">
+                Server Time: {new Date().toLocaleTimeString()}
+              </div>
             </div>
           </div>
-          
+
           {/* Decorative Background Elements */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
           <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-500/10 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl" />
@@ -325,7 +386,10 @@ const TokenConfigPage: React.FC = () => {
         {/* History Modal */}
         {showHistory && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowHistory(false)} />
+            <div
+              className="absolute inset-0 bg-[#2A291F]/70 backdrop-blur-sm"
+              onClick={() => setShowHistory(false)}
+            />
             <div className="relative bg-white w-full max-w-2xl rounded-[32px] overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300">
               <div className="px-8 py-6 border-b border-[#E8E6DC] flex items-center justify-between bg-[#FAF9F6]">
                 <div className="flex items-center gap-3">
@@ -334,7 +398,7 @@ const TokenConfigPage: React.FC = () => {
                   </div>
                   <h3 className="text-[20px] font-bold text-[#141413]">Nhật ký thay đổi</h3>
                 </div>
-                <button 
+                <button
                   onClick={() => setShowHistory(false)}
                   className="p-2 hover:bg-gray-100 rounded-full transition-all"
                 >
@@ -352,23 +416,35 @@ const TokenConfigPage: React.FC = () => {
                   <div className="space-y-8">
                     {historyLogs.map((log, idx) => {
                       const meta = featureMeta[log.featureKey];
-                      const isStatusChange = log.changeType === 'STATUS_TOGGLE' || log.changeType === 'STATUS_UPDATE';
-                      
+                      const isStatusChange =
+                        log.changeType === 'STATUS_TOGGLE' || log.changeType === 'STATUS_UPDATE';
+
                       // Format values for human readability
                       const formatValue = (val: string) => {
-                        if (val === 'true') return (
-                          <div className="flex items-center gap-1.5">
-                            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                            <span className="text-green-600 font-bold text-[13px] tracking-tight">Hoạt động</span>
-                          </div>
+                        if (val === 'true')
+                          return (
+                            <div className="flex items-center gap-1.5">
+                              <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                              <span className="text-green-600 font-bold text-[13px] tracking-tight">
+                                Hoạt động
+                              </span>
+                            </div>
+                          );
+                        if (val === 'false')
+                          return (
+                            <div className="flex items-center gap-1.5">
+                              <div className="w-1.5 h-1.5 rounded-full bg-gray-400" />
+                              <span className="text-gray-400 font-bold text-[13px] tracking-tight">
+                                Tạm ngắt
+                              </span>
+                            </div>
+                          );
+                        return (
+                          <span className="font-bold text-[15px]">
+                            {val}{' '}
+                            <span className="text-[11px] font-normal text-[#87867F]">tokens</span>
+                          </span>
                         );
-                        if (val === 'false') return (
-                          <div className="flex items-center gap-1.5">
-                            <div className="w-1.5 h-1.5 rounded-full bg-gray-400" />
-                            <span className="text-gray-400 font-bold text-[13px] tracking-tight">Tạm ngắt</span>
-                          </div>
-                        );
-                        return <span className="font-bold text-[15px]">{val} <span className="text-[11px] font-normal text-[#87867F]">tokens</span></span>;
                       };
 
                       return (
@@ -377,12 +453,20 @@ const TokenConfigPage: React.FC = () => {
                           {idx !== historyLogs.length - 1 && (
                             <div className="absolute left-[15px] top-10 bottom-0 w-0.5 bg-gradient-to-b from-[#E8E6DC] to-transparent" />
                           )}
-                          
+
                           {/* Timeline Dot with Icon */}
-                          <div className={`absolute left-0 top-0 w-8 h-8 rounded-xl flex items-center justify-center shadow-sm z-10 transition-transform group-hover:scale-110 ${
-                            isStatusChange ? 'bg-blue-100 text-blue-600' : 'bg-orange-100 text-orange-600'
-                          }`}>
-                            {isStatusChange ? <Activity className="w-4 h-4" /> : <Coins className="w-4 h-4" />}
+                          <div
+                            className={`absolute left-0 top-0 w-8 h-8 rounded-xl flex items-center justify-center shadow-sm z-10 transition-transform group-hover:scale-110 ${
+                              isStatusChange
+                                ? 'bg-blue-100 text-blue-600'
+                                : 'bg-orange-100 text-orange-600'
+                            }`}
+                          >
+                            {isStatusChange ? (
+                              <Activity className="w-4 h-4" />
+                            ) : (
+                              <Coins className="w-4 h-4" />
+                            )}
                           </div>
 
                           <div className="bg-white border border-[#E8E6DC] rounded-2xl p-5 hover:border-orange-200 hover:shadow-md transition-all duration-300">
@@ -392,9 +476,13 @@ const TokenConfigPage: React.FC = () => {
                                   {meta?.label || log.featureKey}
                                 </h4>
                                 <span className="text-[#87867F]">•</span>
-                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                                  isStatusChange ? 'bg-blue-50 text-blue-700' : 'bg-orange-50 text-orange-700'
-                                }`}>
+                                <span
+                                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                                    isStatusChange
+                                      ? 'bg-blue-50 text-blue-700'
+                                      : 'bg-orange-50 text-orange-700'
+                                  }`}
+                                >
                                   {isStatusChange ? 'Thay đổi trạng thái' : 'Điều chỉnh chi phí'}
                                 </span>
                               </div>
@@ -404,37 +492,50 @@ const TokenConfigPage: React.FC = () => {
                                   minute: '2-digit',
                                   day: '2-digit',
                                   month: '2-digit',
-                                  year: 'numeric'
+                                  year: 'numeric',
                                 })}
                               </time>
                             </div>
-                            
-                            <div className={`flex items-center gap-4 py-4 px-6 rounded-2xl border ${
-                              isStatusChange ? 'bg-blue-50/30 border-blue-100' : 'bg-orange-50/30 border-orange-100'
-                            }`}>
+
+                            <div
+                              className={`flex items-center gap-4 py-4 px-6 rounded-2xl border ${
+                                isStatusChange
+                                  ? 'bg-blue-50/30 border-blue-100'
+                                  : 'bg-orange-50/30 border-orange-100'
+                              }`}
+                            >
                               <div className="flex-1 flex items-center justify-center gap-6">
                                 <div className="flex flex-col items-center gap-1">
-                                  <span className="text-[9px] uppercase font-bold text-[#A8A7A0]">Trước</span>
+                                  <span className="text-[9px] uppercase font-bold text-[#A8A7A0]">
+                                    Trước
+                                  </span>
                                   {formatValue(log.oldValue)}
                                 </div>
                                 <div className="flex flex-col items-center justify-center pt-3">
-                                  <div className="h-0.5 w-16 bg-[#E8E6DC] relative">
-                                    <div className="absolute right-0 top-1/2 -translate-y-1/2 border-t-4 border-b-4 border-l-4 border-transparent border-l-[#E8E6DC]" />
+                                  <div className="h-0.5 w-16 bg-[#E8E6DC] relative overflow-hidden">
+                                    <div className="absolute -right-0.5 top-1/2 -translate-y-1/2 w-0 h-0 border-l-3 border-l-[#E8E6DC] border-t-2 border-t-transparent border-b-2 border-b-transparent" />
                                   </div>
                                 </div>
                                 <div className="flex flex-col items-center gap-1">
-                                  <span className="text-[9px] uppercase font-bold text-[#A8A7A0]">Sau</span>
+                                  <span className="text-[9px] uppercase font-bold text-[#A8A7A0]">
+                                    Sau
+                                  </span>
                                   {formatValue(log.newValue)}
                                 </div>
                               </div>
                             </div>
-                            
+
                             <div className="mt-4 flex items-center justify-between text-[11px]">
                               <div className="flex items-center gap-2 text-[#87867F]">
                                 <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center text-[10px] font-bold">
                                   {log.adminName ? log.adminName.charAt(0) : 'A'}
                                 </div>
-                                <span>Thực hiện bởi: <span className="font-medium text-[#5E5D59]">{log.adminName || 'Quản trị viên'}</span></span>
+                                <span>
+                                  Thực hiện bởi:{' '}
+                                  <span className="font-medium text-[#5E5D59]">
+                                    {log.adminName || 'Quản trị viên'}
+                                  </span>
+                                </span>
                               </div>
                             </div>
                           </div>
@@ -445,15 +546,17 @@ const TokenConfigPage: React.FC = () => {
                 ) : (
                   <div className="text-center py-10 space-y-2">
                     <History className="w-12 h-12 text-gray-200 mx-auto" />
-                    <p className="text-[#87867F] text-[14px]">Chưa có lịch sử thay đổi nào được ghi lại.</p>
+                    <p className="text-[#87867F] text-[14px]">
+                      Chưa có lịch sử thay đổi nào được ghi lại.
+                    </p>
                   </div>
                 )}
               </div>
 
               <div className="px-8 py-6 bg-[#FAF9F6] border-t border-[#E8E6DC] flex justify-end">
-                <button 
+                <button
                   onClick={() => setShowHistory(false)}
-                  className="px-6 py-2.5 bg-[#141413] text-white rounded-xl font-bold text-[14px] hover:bg-black transition-all"
+                  className="px-6 py-2.5 bg-[#141413] text-white rounded-xl font-bold text-[14px] hover:bg-[#2A291F] transition-all"
                 >
                   Đóng
                 </button>
