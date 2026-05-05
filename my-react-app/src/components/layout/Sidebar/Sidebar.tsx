@@ -2,7 +2,6 @@ import type { LucideIcon } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   ArrowDownToLine,
-
   BarChart3,
   BookMarked,
   BookOpen,
@@ -12,7 +11,6 @@ import {
   ClipboardList,
   CreditCard,
   Database,
-
   FileCheck2,
   FileQuestion,
   FolderKanban,
@@ -20,7 +18,6 @@ import {
   GraduationCap,
   LayoutDashboard,
   Library,
-
   LogOut,
   Percent,
   Presentation,
@@ -29,7 +26,6 @@ import {
   Settings,
   ShieldCheck,
   Sparkles,
-
   Users,
   Wallet,
   Workflow,
@@ -63,10 +59,9 @@ interface MenuGroup {
 
 const teacherGroups: MenuGroup[] = [
   {
-    label: 'Học liệu giảng dạy',
+    label: 'Tài liệu giảng dạy',
     items: [
       { path: '/teacher/courses', icon: BookOpen, label: 'Khóa học' },
-      { path: '/teacher/lesson-plans', icon: ClipboardList, label: 'Giáo Án' },
       { path: '/teacher/materials', icon: FolderKanban, label: 'Tài liệu' },
     ],
   },
@@ -159,9 +154,7 @@ const adminGroups: MenuGroup[] = [
   },
   {
     label: 'Hệ thống',
-    items: [
-      { path: '/admin/cash-flow', icon: Wallet, label: 'Dòng tiền' },
-    ],
+    items: [{ path: '/admin/cash-flow', icon: Wallet, label: 'Dòng tiền' }],
   },
   {
     label: 'OCR',

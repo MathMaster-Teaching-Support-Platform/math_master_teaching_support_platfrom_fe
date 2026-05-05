@@ -7,7 +7,6 @@ import {
   Eye,
   FileSliders,
   Network,
-  PenTool,
   Presentation,
   Search,
   Sparkles,
@@ -330,20 +329,12 @@ const MaterialsGenerator: React.FC = () => {
       tag: 'Khả dụng',
     },
     {
-      Icon: PenTool,
-      title: 'Hình Vẽ Toán Học',
-      desc: 'Vẽ đồ thị hàm số và hình học không gian chính xác chỉ với mô tả ngôn ngữ tự nhiên.',
-      route: null,
-      accentClass: 'tool-accent-amber',
-      tag: 'Sắp ra mắt',
-    },
-    {
       Icon: FileSliders,
       title: 'Phiếu Bài Tập',
-      desc: 'Tạo đề bài tập in sẵn với các dạng toán đa dạng và lời giải chi tiết.',
-      route: null,
+      desc: 'Quản lí phiếu bài tập trong Assignment và đính kèm tài liệu cho học sinh ngay tại đó.',
+      route: '/teacher/assignments',
       accentClass: 'tool-accent-emerald',
-      tag: 'Sắp ra mắt',
+      tag: 'Khả dụng',
     },
   ];
 
@@ -374,12 +365,10 @@ const MaterialsGenerator: React.FC = () => {
           <header className="page-header courses-header-row">
             <div className="header-stack">
               <div className="row" style={{ gap: '0.6rem' }}>
-                <h2>Tạo tài liệu với AI</h2>
+                <h2>Quản lí tài liệu</h2>
                 {!loading && <span className="count-chip">{stats.total}</span>}
               </div>
-              <p className="header-sub">
-                Sử dụng AI để tạo slide, sơ đồ tư duy, hình vẽ và tài liệu giảng dạy chuyên nghiệp.
-              </p>
+              <p className="header-sub">Tài liệu của tôi.</p>
             </div>
           </header>
 
@@ -418,7 +407,7 @@ const MaterialsGenerator: React.FC = () => {
                   <BookOpen size={20} />
                 </div>
                 <div>
-                  <h3>4</h3>
+                  <h3>{cards.length}</h3>
                   <p>Công cụ AI</p>
                 </div>
               </div>
