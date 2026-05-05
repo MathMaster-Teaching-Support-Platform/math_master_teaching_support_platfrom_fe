@@ -46,28 +46,29 @@ import Profile from '../pages/profile/Profile';
 import TeacherProfilePage from '../pages/teacher-profile/TeacherProfilePage';
 // Admin Teacher Profile Routes
 
+import AdminAcademicStructurePage from '../pages/admin/AdminAcademicStructurePage';
 import AdminCourseReviewDetail from '../pages/admin/AdminCourseReviewDetail';
 import AdminCourseReviewsPage from '../pages/admin/AdminCourseReviewsPage';
-import AdminAcademicStructurePage from '../pages/admin/AdminAcademicStructurePage';
 
-import AdminRoadmapCreatePage from '../pages/admin/AdminRoadmapCreatePage';
-import AdminRoadmapEditPage from '../pages/admin/AdminRoadmapEditPage';
 import AdminOCRBooks from '../pages/admin/AdminOCRBooks';
 import AdminOCRContent from '../pages/admin/AdminOCRContent';
+import AdminRoadmapCreatePage from '../pages/admin/AdminRoadmapCreatePage';
+import AdminRoadmapEditPage from '../pages/admin/AdminRoadmapEditPage';
 import AdminRoadmapManagementPage from '../pages/admin/AdminRoadmapManagementPage';
 import AdminRoadmapTopicsPage from '../pages/admin/AdminRoadmapTopicsPage';
 import AdminSlideTemplates from '../pages/admin/AdminSlideTemplates';
 
-import AdminWithdrawals from '../pages/admin/AdminWithdrawals';
 import AdminCommissionProposals from '../pages/admin/AdminCommissionProposals';
+import AdminSystemConfigPage from '../pages/admin/AdminSystemConfigPage';
+import AdminWithdrawals from '../pages/admin/AdminWithdrawals';
 import CashFlowDashboard from '../pages/admin/CashFlowDashboard';
 
 import RevenueBreakdown from '../pages/admin/RevenueBreakdown';
 import ReviewProfiles from '../pages/admin/ReviewProfiles';
-import TeacherCommissionPage from '../pages/commission/TeacherCommissionPage';
 import AssessmentBuilderFlow from '../pages/assessments/AssessmentBuilderFlow';
 import AssessmentDetail from '../pages/assessments/AssessmentDetailRefactored';
 import TeacherAssessments from '../pages/assessments/TeacherAssessments';
+import TeacherCommissionPage from '../pages/commission/TeacherCommissionPage';
 import { ExamMatrixDashboard } from '../pages/exam-matrices/ExamMatrixDashboard';
 import ExamMatrixDetailPage from '../pages/exam-matrices/ExamMatrixDetailPageRefactored';
 import InstructorPublicProfile from '../pages/instructor/InstructorPublicProfile';
@@ -78,8 +79,8 @@ import StudentPublicMindmaps from '../pages/mindmaps/StudentPublicMindmaps';
 import StudentPublicSlides from '../pages/mindmaps/StudentPublicSlides';
 import { QuestionBankDashboard } from '../pages/question-banks/QuestionBankDashboard';
 import { QuestionBankDetailPage } from '../pages/question-banks/QuestionBankDetailPage';
-import { TemplateDashboard } from '../pages/question-templates/TemplateDashboard';
 import { QuestionReviewQueue } from '../pages/question-templates/QuestionReviewQueue';
+import { TemplateDashboard } from '../pages/question-templates/TemplateDashboard';
 import TeacherQuestionManagementPage from '../pages/questions/TeacherQuestionManagementPage';
 // Student Assessment Routes
 import {
@@ -754,6 +755,14 @@ export const router = createBrowserRouter([
     element: (
       <PrivateRoute>
         <ProfileSettings />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/admin/system-config',
+    element: (
+      <PrivateRoute>
+        <AdminSystemConfigPage />
       </PrivateRoute>
     ),
   },

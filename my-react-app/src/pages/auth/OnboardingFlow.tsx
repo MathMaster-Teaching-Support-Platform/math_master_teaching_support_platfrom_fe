@@ -15,6 +15,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthService } from '../../services/api/auth.service';
 import { TeacherProfileService } from '../../services/api/teacher-profile.service';
+import PrivacyPolicyModal from './PrivacyPolicyModal';
 import './onboarding-flow.css';
 
 type Role = 'TEACHER' | 'STUDENT' | null;
@@ -90,9 +91,15 @@ const OnboardingFlow: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [hoveredRole, setHoveredRole] = useState<'TEACHER' | 'STUDENT' | null>(null);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
-  // Teacher form data
-  const [t1, setT1] = useState({ country: 'Vietnam', email: '' });
+  // Teacher form data — auto-fill email from JWT (set at Google login)
+  const _tokenEmail = (() => {
+    const tok = AuthService.getToken();
+    if (!tok) return '';
+    return AuthService.decodeToken(tok)?.email ?? '';
+  })();
+  const [t1, setT1] = useState({ country: 'Vietnam', email: _tokenEmail });
   const [emailError, setEmailError] = useState('');
 
   const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -365,7 +372,7 @@ const OnboardingFlow: React.FC = () => {
   /* Teacher step 2 */
   const renderTeacherStep2 = () => (
     <div className="ob-step-content fade-in">
-      <h2 className="ob-step-title">Tài liệu xác thực</h2>
+      <h2 className="ob-step-title">Tải lên minh chứng</h2>
       <p className="ob-step-sub">
         Tải lên Thẻ Cán bộ, Công chức, Viên chức (Giáo Viên) có tên bạn và tên trường.
       </p>
@@ -408,7 +415,20 @@ const OnboardingFlow: React.FC = () => {
             checked={t2.agreed}
             onChange={(e) => setT2({ ...t2, agreed: e.target.checked })}
           />
-          <span>Tôi đồng ý với chính sách bảo mật và xác nhận tài liệu là chính xác.</span>
+          <span>
+            Tôi đồng ý với{' '}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                setShowPrivacyModal(true);
+              }}
+              className="text-[#C96442] underline underline-offset-2 hover:text-[#A8532E] transition-colors duration-150 font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:rounded-sm"
+            >
+              chính sách bảo mật
+            </button>{' '}
+            và xác nhận tài liệu là chính xác.
+          </span>
         </label>
       </div>
       <div className="ob-actions">
@@ -737,6 +757,9 @@ const OnboardingFlow: React.FC = () => {
         {/* Content */}
         <div className="ob-card-body">{renderContent()}</div>
       </div>
+
+      {/* Privacy Policy Modal */}
+      {showPrivacyModal && <PrivacyPolicyModal onClose={() => setShowPrivacyModal(false)} />}
     </div>
   );
 };

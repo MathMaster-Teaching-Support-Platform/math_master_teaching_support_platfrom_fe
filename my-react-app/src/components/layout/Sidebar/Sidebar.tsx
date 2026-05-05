@@ -1,8 +1,7 @@
-import type { LucideIcon } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
+import type { LucideIcon } from 'lucide-react';
 import {
   ArrowDownToLine,
-
   BarChart3,
   BookMarked,
   BookOpen,
@@ -12,7 +11,6 @@ import {
   ClipboardList,
   CreditCard,
   Database,
-
   FileCheck2,
   FileQuestion,
   FolderKanban,
@@ -20,7 +18,6 @@ import {
   GraduationCap,
   LayoutDashboard,
   Library,
-
   LogOut,
   Percent,
   Presentation,
@@ -29,7 +26,6 @@ import {
   Settings,
   ShieldCheck,
   Sparkles,
-
   Users,
   Wallet,
   Workflow,
@@ -161,6 +157,7 @@ const adminGroups: MenuGroup[] = [
     label: 'Hệ thống',
     items: [
       { path: '/admin/cash-flow', icon: Wallet, label: 'Dòng tiền' },
+      { path: '/admin/system-config', icon: ShieldCheck, label: 'Cấu hình hệ thống' },
     ],
   },
   {
