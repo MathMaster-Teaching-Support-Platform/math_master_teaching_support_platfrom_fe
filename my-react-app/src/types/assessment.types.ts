@@ -83,7 +83,9 @@ export interface AssessmentQuestionItem {
     correctAnswer?: string;
     explanation?: string;
     solutionSteps?: string;
-    diagramData?: Record<string, unknown>;
+    diagramData?: Record<string, unknown> | string | null;
+    diagramUrl?: string;
+    diagramLatex?: string;
     canonicalQuestionId?: string;
     createdAt?: string;
     difficulty?: 'EASY' | 'MEDIUM' | 'HARD';

@@ -1,5 +1,7 @@
 import type { AssessmentQuestionItem } from '../../types/assessment.types';
 import MathText from '../common/MathText';
+import QuestionDiagram from '../common/QuestionDiagram';
+import { extractOptionText } from '../../utils/optionText';
 import { ShortAnswerQuestion } from './ShortAnswerQuestion';
 import { TrueFalseQuestion } from './TrueFalseQuestion';
 
@@ -9,6 +11,9 @@ interface QuestionRendererProps {
     questionText: string;
     questionType?: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER' | 'ESSAY' | 'CODING';
     options?: Record<string, unknown>;
+    diagramData?: unknown;
+    diagramUrl?: string;
+    diagramLatex?: string;
   };
   studentAnswer?: string;
   onAnswerChange: (answer: string) => void;
@@ -21,11 +26,11 @@ export function QuestionRenderer({
 }: QuestionRendererProps) {
   const questionType = question.questionType || 'MULTIPLE_CHOICE';
   
-  // Convert options to string format
+  // Convert options to string format (handles BE TF clause shape { text, overdrive_point })
   const optionsAsString: Record<string, string> = {};
   if (question.options) {
     Object.entries(question.options).forEach(([key, value]) => {
-      optionsAsString[key] = String(value);
+      optionsAsString[key] = extractOptionText(value);
     });
   }
 
@@ -36,6 +41,7 @@ export function QuestionRenderer({
           <p style={{ marginBottom: 12 }}>
             <MathText text={question.questionText} />
           </p>
+          <QuestionDiagram source={question} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {Object.entries(optionsAsString).map(([key, text]) => (
               <label key={key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

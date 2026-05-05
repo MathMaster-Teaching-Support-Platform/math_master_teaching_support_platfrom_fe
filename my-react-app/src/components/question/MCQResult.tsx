@@ -3,10 +3,11 @@ import type { AnswerGradeResponse } from '../../types/grading.types';
 interface MCQResultProps {
   answer: AnswerGradeResponse;
   questionText?: string;
-  options?: Record<string, string>;
+  options?: Record<string, unknown>;
 }
 
 import MathText from '../common/MathText';
+import { extractOptionText } from '../../utils/optionText';
 
 export function MCQResult({ answer, questionText, options }: MCQResultProps) {
   const isCorrect = answer.pointsEarned === answer.maxPoints;
@@ -83,7 +84,7 @@ export function MCQResult({ answer, questionText, options }: MCQResultProps) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {Object.entries(options).map(([key, text]) => (
               <div key={key} style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                <strong>{key}.</strong> <MathText text={String(text)} />
+                <strong>{key}.</strong> <MathText text={extractOptionText(text)} />
               </div>
             ))}
           </div>

@@ -287,10 +287,11 @@ export function TemplateBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
                   <thead>
                     <tr>
                       <th style={{ width: 60 }}>Dòng</th>
-                      <th style={{ width: 100 }}>Trạng thái</th>
+                      <th style={{ width: 90 }}>Trạng thái</th>
                       <th>Tên mẫu</th>
-                      <th style={{ width: 150 }}>Loại câu hỏi</th>
-                      <th style={{ width: 130 }}>Mức độ</th>
+                      <th style={{ width: 140 }}>Loại</th>
+                      <th style={{ width: 120 }}>Mức độ</th>
+                      <th style={{ width: 240 }}>Chi tiết</th>
                       <th>Lỗi phát hiện</th>
                     </tr>
                   </thead>
@@ -328,6 +329,93 @@ export function TemplateBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
                             ? cognitiveLevelLabel[row.data.cognitiveLevel] ||
                               row.data.cognitiveLevel
                             : '-'}
+                        </td>
+                        <td>
+                          {row.data ? (
+                            <div style={{ fontSize: 12 }}>
+                              {row.data.answerFormula ? (
+                                <div>
+                                  <strong>Đáp án:</strong>{' '}
+                                  <code>{row.data.answerFormula}</code>
+                                </div>
+                              ) : null}
+                              {row.data.optionsGenerator &&
+                              Object.keys(row.data.optionsGenerator).length > 0 ? (
+                                <details>
+                                  <summary
+                                    style={{ cursor: 'pointer', color: '#2563eb' }}
+                                  >
+                                    Đáp án A-D ({Object.keys(row.data.optionsGenerator).length})
+                                  </summary>
+                                  <ul style={{ margin: '4px 0 0', paddingLeft: 16 }}>
+                                    {Object.entries(row.data.optionsGenerator).map(
+                                      ([key, value]) => (
+                                        <li key={key}>
+                                          <strong>{key}.</strong>{' '}
+                                          <code>{String(value)}</code>
+                                        </li>
+                                      ),
+                                    )}
+                                  </ul>
+                                </details>
+                              ) : null}
+                              {row.data.statementMutations?.clauseTemplates ? (
+                                <details>
+                                  <summary
+                                    style={{ cursor: 'pointer', color: '#2563eb' }}
+                                  >
+                                    Mệnh đề (
+                                    {row.data.statementMutations.clauseTemplates.length})
+                                  </summary>
+                                  <ul style={{ margin: '4px 0 0', paddingLeft: 16 }}>
+                                    {row.data.statementMutations.clauseTemplates.map(
+                                      (clause, idx) => {
+                                        const key = String.fromCharCode(65 + idx);
+                                        return (
+                                          <li
+                                            key={`${row.rowNumber}-${key}`}
+                                            style={{
+                                              color: clause.truthValue ? '#15803d' : '#b91c1c',
+                                            }}
+                                          >
+                                            <strong>
+                                              {key} [{clause.truthValue ? 'Đ' : 'S'}]:
+                                            </strong>{' '}
+                                            <MathText text={clause.text} />
+                                          </li>
+                                        );
+                                      },
+                                    )}
+                                  </ul>
+                                </details>
+                              ) : null}
+                              {row.data.diagramTemplate ? (
+                                <details>
+                                  <summary
+                                    style={{ cursor: 'pointer', color: '#2563eb' }}
+                                  >
+                                    Hình LaTeX
+                                  </summary>
+                                  <pre
+                                    style={{
+                                      whiteSpace: 'pre-wrap',
+                                      fontSize: 11,
+                                      maxHeight: 140,
+                                      overflow: 'auto',
+                                      background: '#f8fafc',
+                                      padding: 6,
+                                      borderRadius: 4,
+                                      marginTop: 4,
+                                    }}
+                                  >
+                                    {row.data.diagramTemplate}
+                                  </pre>
+                                </details>
+                              ) : null}
+                            </div>
+                          ) : (
+                            '-'
+                          )}
                         </td>
                         <td>
                           {row.validationErrors && row.validationErrors.length > 0 ? (

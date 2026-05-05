@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { useTestTemplate } from '../../hooks/useQuestionTemplate';
 import type { QuestionTemplateResponse } from '../../types/questionTemplate';
 import MathText from '../../components/common/MathText';
+import QuestionDiagram from '../../components/common/QuestionDiagram';
+import { extractOptionText } from '../../utils/optionText';
 
 type Props = {
   isOpen: boolean;
@@ -86,6 +88,12 @@ export function TemplateTestModal({ isOpen, onClose, template }: Props) {
                 <article key={`${index}-${sample.questionText}`} className="data-card" style={{ minHeight: 0 }}>
                   <p className="muted">Mẫu {index + 1}</p>
                   <p><MathText text={sample.questionText || ''} /></p>
+                  <QuestionDiagram
+                    source={{
+                      diagramData: (sample as { diagramData?: unknown }).diagramData,
+                      diagramUrl: (sample as { diagramUrl?: string }).diagramUrl,
+                    }}
+                  />
 
                   {sample.options && (
                     <div className="table-wrap">
@@ -94,7 +102,7 @@ export function TemplateTestModal({ isOpen, onClose, template }: Props) {
                           {Object.entries(sample.options).map(([key, value]) => (
                             <tr key={key}>
                               <td style={{ width: 70 }}>{key}</td>
-                               <td><MathText text={typeof value === 'string' ? value : String(value)} /></td>
+                               <td><MathText text={extractOptionText(value)} /></td>
                             </tr>
                           ))}
                         </tbody>

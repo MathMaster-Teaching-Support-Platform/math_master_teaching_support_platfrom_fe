@@ -4,6 +4,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import MathText from '../../components/common/MathText';
 import Pagination from '../../components/common/Pagination';
+import QuestionDiagram from '../../components/common/QuestionDiagram';
+import { extractOptionText } from '../../utils/optionText';
 import {
   useApproveQuestion,
   useBulkApproveQuestions,
@@ -248,12 +250,18 @@ export function QuestionReviewQueue() {
                         <div className="preview-box" style={{ marginTop: 8 }}>
                           <MathText text={q.questionText} />
                         </div>
+                        <QuestionDiagram
+                          source={{
+                            diagramData: q.diagramData,
+                            diagramUrl: q.diagramUrl,
+                          }}
+                        />
                         {q.options && Object.keys(q.options).length > 0 && (
                           <div style={{ marginTop: 8 }}>
                             {Object.entries(q.options).map(([key, val]) => (
                               <div key={key} style={{ marginTop: 4 }}>
                                 <strong>{key}.</strong>{' '}
-                                <MathText text={String(val)} />
+                                <MathText text={extractOptionText(val)} />
                               </div>
                             ))}
                           </div>
@@ -261,12 +269,16 @@ export function QuestionReviewQueue() {
                         {q.correctAnswer && (
                           <div style={{ marginTop: 8 }}>
                             <span className="muted">Đáp án đúng:</span>{' '}
-                            <strong>{q.correctAnswer}</strong>
+                            <strong>
+                              <MathText text={q.correctAnswer} />
+                            </strong>
                           </div>
                         )}
                         {q.explanation && (
                           <div className="muted" style={{ marginTop: 8 }}>
-                            <em>{q.explanation}</em>
+                            <em>
+                              <MathText text={q.explanation} />
+                            </em>
                           </div>
                         )}
                       </div>

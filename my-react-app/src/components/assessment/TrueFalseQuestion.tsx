@@ -1,5 +1,7 @@
 import type { AssessmentQuestionItem } from '../../types/assessment.types';
 import MathText from '../common/MathText';
+import QuestionDiagram from '../common/QuestionDiagram';
+import { extractOptionText } from '../../utils/optionText';
 
 interface TrueFalseQuestionProps {
   question: AssessmentQuestionItem;
@@ -29,6 +31,7 @@ export function TrueFalseQuestion({
       <p style={{ marginBottom: 12 }}>
         <MathText text={question.questionText} />
       </p>
+      <QuestionDiagram source={question as { diagramData?: unknown; diagramUrl?: string; diagramLatex?: string }} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {Object.entries(question.options || {}).map(([key, text]) => (
           <div
@@ -46,7 +49,7 @@ export function TrueFalseQuestion({
             <div style={{ display: 'flex', alignItems: 'center', gap: 4, flex: 1 }}>
               <span>{key})</span>
               <div style={{ flex: 1 }}>
-                <MathText text={String(text)} />
+                <MathText text={extractOptionText(text)} />
               </div>
             </div>
             <div style={{ display: 'flex', gap: 4 }}>

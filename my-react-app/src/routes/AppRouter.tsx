@@ -59,10 +59,12 @@ import AdminRoadmapTopicsPage from '../pages/admin/AdminRoadmapTopicsPage';
 import AdminSlideTemplates from '../pages/admin/AdminSlideTemplates';
 
 import AdminWithdrawals from '../pages/admin/AdminWithdrawals';
+import AdminCommissionProposals from '../pages/admin/AdminCommissionProposals';
 import CashFlowDashboard from '../pages/admin/CashFlowDashboard';
 
 import RevenueBreakdown from '../pages/admin/RevenueBreakdown';
 import ReviewProfiles from '../pages/admin/ReviewProfiles';
+import TeacherCommissionPage from '../pages/commission/TeacherCommissionPage';
 import AssessmentBuilderFlow from '../pages/assessments/AssessmentBuilderFlow';
 import AssessmentDetail from '../pages/assessments/AssessmentDetailRefactored';
 import TeacherAssessments from '../pages/assessments/TeacherAssessments';
@@ -466,6 +468,14 @@ export const router = createBrowserRouter([
     ),
   },
   {
+    path: '/teacher/commission',
+    element: (
+      <PrivateRoute>
+        <TeacherCommissionPage />
+      </PrivateRoute>
+    ),
+  },
+  {
     path: '/teacher/*',
     element: (
       <PrivateRoute>
@@ -708,6 +718,15 @@ export const router = createBrowserRouter([
     element: (
       <PrivateRoute>
         <AdminWithdrawals />
+      </PrivateRoute>
+    ),
+  },
+
+  {
+    path: '/admin/commission-proposals',
+    element: (
+      <PrivateRoute>
+        <AdminCommissionProposals />
       </PrivateRoute>
     ),
   },
