@@ -343,6 +343,13 @@
   font-weight: 700;
 }
 
+.module-layout-container .eqfm-preview-explanation {
+  border: 1px solid #e2ebf7;
+  border-radius: 10px;
+  background: #fff;
+  padding: 0.75rem;
+}
+
 @media (max-width: 1024px) {
   .module-layout-container .eqfm-layout {
     grid-template-columns: 1fr;

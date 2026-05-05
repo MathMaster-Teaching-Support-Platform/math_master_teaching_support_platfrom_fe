@@ -84,10 +84,10 @@ export function ShortAnswerEditor({ value, onChange, disabled = false }: ShortAn
         </label>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
           {[
-            { value: 'EXACT', label: 'Chính xác' },
-            { value: 'NUMERIC', label: 'Số' },
-            { value: 'REGEX', label: 'Regex' },
-          ].map(option => (
+            { value: 'EXACT', label: 'chính xác' },
+            { value: 'NUMERIC', label: 'có sai số' },
+            { value: 'REGEX', label: 'công thức toán học' },
+          ].map((option) => (
             <label
               key={option.value}
               style={{
@@ -145,19 +145,6 @@ export function ShortAnswerEditor({ value, onChange, disabled = false }: ShortAn
           </div>
         </div>
       )}
-
-      <div
-        style={{
-          padding: '12px',
-          backgroundColor: '#eff6ff',
-          borderRadius: 8,
-          fontSize: '0.875rem',
-          color: '#1e40af',
-        }}
-      >
-        💡 <strong>Chính xác:</strong> So sánh chuỗi chính xác. <strong>Số:</strong> So sánh số với sai số.{' '}
-        <strong>Regex:</strong> Kiểm tra theo biểu thức chính quy.
-      </div>
     </div>
   );
 }

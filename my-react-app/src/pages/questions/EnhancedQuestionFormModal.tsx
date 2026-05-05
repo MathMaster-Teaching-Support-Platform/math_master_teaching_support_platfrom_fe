@@ -84,6 +84,7 @@ export function EnhancedQuestionFormModal({
 
   const previewQuestionText = String(editorValue.questionText || '').trim();
   const previewCorrectAnswer = String(editorValue.correctAnswer || '').trim();
+  const previewExplanation = explanation.trim();
   const previewTypeLabel = questionTypeLabels[questionType];
   const previewOptions = (editorValue.options as Record<string, unknown>) || {};
   const previewOptionEntries = Object.entries(previewOptions).filter(
@@ -383,7 +384,7 @@ export function EnhancedQuestionFormModal({
               <label
                 style={{ display: 'block', fontWeight: 600, marginBottom: 8, color: '#374151' }}
               >
-                Sơ đồ / Hình vẽ (LaTeX, không bắt buộc)
+                Sơ đồ / Hình vẽ (LaTeX) <span style={{ color: '#ef4444' }}>*</span>
               </label>
               <textarea
                 ref={diagramTextareaRef}
@@ -446,6 +447,19 @@ export function EnhancedQuestionFormModal({
               ) : (
                 <p className="muted" style={{ margin: 0 }}>
                   Chưa có hình minh họa.
+                </p>
+              )}
+            </section>
+
+            <section className="eqfm-preview-card">
+              <p className="eqfm-preview-heading">Xem trước giải thích</p>
+              {previewExplanation ? (
+                <div className="eqfm-preview-explanation">
+                  <MathText text={previewExplanation} />
+                </div>
+              ) : (
+                <p className="muted" style={{ margin: 0 }}>
+                  Chưa có nội dung giải thích.
                 </p>
               )}
             </section>
