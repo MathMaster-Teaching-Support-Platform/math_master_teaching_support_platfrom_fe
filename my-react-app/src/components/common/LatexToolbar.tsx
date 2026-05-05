@@ -16,11 +16,11 @@ const latexSymbols: LatexSymbol[] = [
   { label: 'Phân số', latex: '\\frac{a}{b}', category: 'Cơ bản' },
   { label: 'Căn bậc 2', latex: '\\sqrt{x}', category: 'Cơ bản' },
   { label: 'Căn bậc n', latex: '\\sqrt[n]{x}', category: 'Cơ bản' },
-  
+
   // Superscript & Subscript
   { label: 'Mũ', latex: 'x^{2}', category: 'Cơ bản' },
   { label: 'Chỉ số dưới', latex: 'x_{i}', category: 'Cơ bản' },
-  
+
   // Greek Letters
   { label: 'α (alpha)', latex: '\\alpha', category: 'Chữ Hy Lạp' },
   { label: 'β (beta)', latex: '\\beta', category: 'Chữ Hy Lạp' },
@@ -31,7 +31,7 @@ const latexSymbols: LatexSymbol[] = [
   { label: 'π (pi)', latex: '\\pi', category: 'Chữ Hy Lạp' },
   { label: 'Σ (sigma)', latex: '\\Sigma', category: 'Chữ Hy Lạp' },
   { label: 'ω (omega)', latex: '\\omega', category: 'Chữ Hy Lạp' },
-  
+
   // Operators
   { label: '±', latex: '\\pm', category: 'Toán tử' },
   { label: '∓', latex: '\\mp', category: 'Toán tử' },
@@ -42,7 +42,7 @@ const latexSymbols: LatexSymbol[] = [
   { label: '≥', latex: '\\geq', category: 'Toán tử' },
   { label: '≈', latex: '\\approx', category: 'Toán tử' },
   { label: '∞', latex: '\\infty', category: 'Toán tử' },
-  
+
   // Calculus
   { label: 'Tích phân', latex: '\\int_{a}^{b}', category: 'Giải tích' },
   { label: 'Tổng', latex: '\\sum_{i=1}^{n}', category: 'Giải tích' },
@@ -50,7 +50,7 @@ const latexSymbols: LatexSymbol[] = [
   { label: 'Giới hạn', latex: '\\lim_{x \\to a}', category: 'Giải tích' },
   { label: 'Đạo hàm', latex: '\\frac{d}{dx}', category: 'Giải tích' },
   { label: 'Đạo hàm riêng', latex: '\\frac{\\partial}{\\partial x}', category: 'Giải tích' },
-  
+
   // Trigonometry
   { label: 'sin', latex: '\\sin', category: 'Lượng giác' },
   { label: 'cos', latex: '\\cos', category: 'Lượng giác' },
@@ -58,7 +58,7 @@ const latexSymbols: LatexSymbol[] = [
   { label: 'cot', latex: '\\cot', category: 'Lượng giác' },
   { label: 'arcsin', latex: '\\arcsin', category: 'Lượng giác' },
   { label: 'arccos', latex: '\\arccos', category: 'Lượng giác' },
-  
+
   // Sets & Logic
   { label: '∈', latex: '\\in', category: 'Tập hợp' },
   { label: '∉', latex: '\\notin', category: 'Tập hợp' },
@@ -69,7 +69,7 @@ const latexSymbols: LatexSymbol[] = [
   { label: '∅', latex: '\\emptyset', category: 'Tập hợp' },
   { label: '∀', latex: '\\forall', category: 'Tập hợp' },
   { label: '∃', latex: '\\exists', category: 'Tập hợp' },
-  
+
   // Arrows
   { label: '→', latex: '\\rightarrow', category: 'Mũi tên' },
   { label: '←', latex: '\\leftarrow', category: 'Mũi tên' },
@@ -77,17 +77,29 @@ const latexSymbols: LatexSymbol[] = [
   { label: '⇒', latex: '\\Rightarrow', category: 'Mũi tên' },
   { label: '⇐', latex: '\\Leftarrow', category: 'Mũi tên' },
   { label: '⇔', latex: '\\Leftrightarrow', category: 'Mũi tên' },
-  
+
   // Brackets
   { label: '( )', latex: '\\left( \\right)', category: 'Ngoặc' },
   { label: '[ ]', latex: '\\left[ \\right]', category: 'Ngoặc' },
   { label: '{ }', latex: '\\left\\{ \\right\\}', category: 'Ngoặc' },
   { label: '| |', latex: '\\left| \\right|', category: 'Ngoặc' },
-  
+
   // Matrices
-  { label: 'Ma trận 2×2', latex: '\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}', category: 'Ma trận' },
-  { label: 'Ma trận 3×3', latex: '\\begin{pmatrix} a & b & c \\\\ d & e & f \\\\ g & h & i \\end{pmatrix}', category: 'Ma trận' },
-  { label: 'Định thức', latex: '\\begin{vmatrix} a & b \\\\ c & d \\end{vmatrix}', category: 'Ma trận' },
+  {
+    label: 'Ma trận 2×2',
+    latex: '\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}',
+    category: 'Ma trận',
+  },
+  {
+    label: 'Ma trận 3×3',
+    latex: '\\begin{pmatrix} a & b & c \\\\ d & e & f \\\\ g & h & i \\end{pmatrix}',
+    category: 'Ma trận',
+  },
+  {
+    label: 'Định thức',
+    latex: '\\begin{vmatrix} a & b \\\\ c & d \\end{vmatrix}',
+    category: 'Ma trận',
+  },
 ];
 
 export function LatexToolbar({ onInsert, disabled = false }: Readonly<LatexToolbarProps>) {
@@ -114,7 +126,7 @@ export function LatexToolbar({ onInsert, disabled = false }: Readonly<LatexToolb
           padding: '6px 12px',
         }}
       >
-        📐 Chèn ký hiệu LaTeX
+        Hỗ trợ LaTeX
       </button>
     );
   }
@@ -122,14 +134,11 @@ export function LatexToolbar({ onInsert, disabled = false }: Readonly<LatexToolb
   return (
     <div
       style={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 10,
         border: '2px solid #e5e7eb',
         borderRadius: 8,
         padding: 12,
         backgroundColor: '#f9fafb',
-        marginTop: 8,
+        marginTop: 6,
         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
       }}
     >
@@ -141,9 +150,7 @@ export function LatexToolbar({ onInsert, disabled = false }: Readonly<LatexToolb
           marginBottom: 12,
         }}
       >
-        <p style={{ fontWeight: 600, fontSize: '0.875rem', margin: 0 }}>
-          📐 Chèn ký hiệu LaTeX
-        </p>
+        <p style={{ fontWeight: 600, fontSize: '0.875rem', margin: 0 }}>Hỗ trợ LaTeX</p>
         <button
           type="button"
           className="btn secondary"
@@ -249,8 +256,7 @@ export function LatexToolbar({ onInsert, disabled = false }: Readonly<LatexToolb
           fontSize: '0.75rem',
         }}
       >
-        💡 Mẹo: Nhấp vào ký hiệu để chèn vào vị trí con trỏ. Toolbar sẽ không đóng để bạn có thể
-        chèn nhiều ký hiệu.
+        Nhấp vào ký hiệu để chèn nhanh. Panel không tự đóng để bạn có thể chèn nhiều lần.
       </p>
     </div>
   );

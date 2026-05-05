@@ -4,12 +4,9 @@ import {
   FileText,
   Lock,
   Pencil,
-  Plus,
   RefreshCw,
-  Ruler,
   Search,
   Send,
-  Sparkles,
   Trash2,
   X,
 } from 'lucide-react';
@@ -24,27 +21,20 @@ import {
   useCloseAssessment,
   useCreateAssessment,
   useDeleteAssessment,
-  useGenerateAssessmentFromMatrix,
   useMyAssessments,
   usePublishAssessment,
   useUnpublishAssessment,
   useUpdateAssessment,
 } from '../../hooks/useAssessment';
 import { useDebounce } from '../../hooks/useDebounce';
-import { useGetMyExamMatrices } from '../../hooks/useExamMatrix';
 import '../../styles/module-refactor.css';
 import type { AssessmentRequest, AssessmentResponse, AssessmentStatus } from '../../types';
-import { MatrixStatus } from '../../types/examMatrix';
 import '../courses/TeacherCourses.css';
+import { AssessmentBuilderFlowBody } from './AssessmentBuilderFlow';
 import AssessmentModal from './AssessmentModal';
+import './TeacherAssessments.css';
 
 const statusFilters: Array<'ALL' | AssessmentStatus> = ['ALL', 'DRAFT', 'PUBLISHED', 'CLOSED'];
-
-const statusClass: Record<AssessmentStatus, string> = {
-  DRAFT: 'badge draft',
-  PUBLISHED: 'badge published',
-  CLOSED: 'badge closed',
-};
 
 const statusLabel: Record<'ALL' | AssessmentStatus, string> = {
   ALL: 'Tất cả',
@@ -57,13 +47,6 @@ const cardStatusLabel: Record<AssessmentStatus, string> = {
   DRAFT: 'Nháp',
   PUBLISHED: 'Đã xuất bản',
   CLOSED: 'Đã đóng',
-};
-
-const assessmentTypeLabel: Record<string, string> = {
-  QUIZ: 'Trắc nghiệm nhanh',
-  TEST: 'Bài kiểm tra',
-  EXAM: 'Bài thi',
-  HOMEWORK: 'Bài tập về nhà',
 };
 
 function CloneModal({
@@ -142,7 +125,7 @@ export default function TeacherAssessments() {
   const [mode, setMode] = useState<'create' | 'edit'>('create');
   const [selected, setSelected] = useState<AssessmentResponse | null>(null);
   const [cloneTarget, setCloneTarget] = useState<AssessmentResponse | null>(null);
-  const [selectedMatrixId, setSelectedMatrixId] = useState('');
+  const [view, setView] = useState<'create' | 'manage'>('manage');
 
   const debouncedSearch = useDebounce(search, 300);
 
@@ -166,23 +149,12 @@ export default function TeacherAssessments() {
   const closeMutation = useCloseAssessment();
   const deleteMutation = useDeleteAssessment();
   const cloneMutation = useCloneAssessment();
-  const generateFromMatrixMutation = useGenerateAssessmentFromMatrix();
-  const { data: myMatricesData } = useGetMyExamMatrices();
 
   const { showToast } = useToast();
 
   const assessments = data?.result?.content ?? [];
   const totalPages = data?.result?.totalPages ?? 0;
   const totalElements = data?.result?.totalElements ?? 0;
-  const myMatrices = myMatricesData?.result ?? [];
-  const readyMatrices = useMemo(
-    () =>
-      myMatrices.filter(
-        (m) => m.status === MatrixStatus.APPROVED || m.status === MatrixStatus.LOCKED
-      ),
-    [myMatrices]
-  );
-
   const stats = useMemo(
     () => ({
       total: totalElements,
@@ -235,32 +207,6 @@ export default function TeacherAssessments() {
     }
   }
 
-  async function generateFromMatrix() {
-    if (!selectedMatrixId) return;
-    try {
-      const response = await generateFromMatrixMutation.mutateAsync({
-        examMatrixId: selectedMatrixId,
-      });
-      showToast({
-        type: 'success',
-        message: `Tạo ${UI_TEXT.QUIZ.toLowerCase()} từ ma trận thành công.`,
-      });
-      const generatedAssessmentId = response.result?.id;
-      setSelectedMatrixId('');
-      if (generatedAssessmentId) {
-        navigate(`/teacher/assessments/${generatedAssessmentId}`);
-      }
-    } catch (error) {
-      showToast({
-        type: 'error',
-        message:
-          error instanceof Error
-            ? error.message
-            : `Không thể tạo ${UI_TEXT.QUIZ.toLowerCase()} từ ma trận.`,
-      });
-    }
-  }
-
   return (
     <DashboardLayout
       role="teacher"
@@ -273,119 +219,102 @@ export default function TeacherAssessments() {
           <header className="page-header courses-header-row">
             <div className="header-stack">
               <div className="row" style={{ gap: '0.6rem' }}>
-                <h2>Tạo đề thi</h2>
-                {!isLoading && <span className="count-chip">{stats.total}</span>}
+                <h2>{view === 'create' ? 'Tạo đề' : 'Quản lí đề thi'}</h2>
+                {!isLoading && view === 'manage' && (
+                  <span className="count-chip">{stats.total}</span>
+                )}
               </div>
               <p className="header-sub">
-                Lắp ráp đề mới từ ma trận đã duyệt và quản lý vòng đời các đề đã có.
+                {view === 'create'
+                  ? 'Tạo đề mới từ ma trận đã duyệt hoặc tạo thủ công.'
+                  : 'Quản lý vòng đời các đề đã có.'}
               </p>
+            </div>
+
+            {/* Slide-style toggle: Trình tạo đề ↔ Quản lí đề */}
+            <div
+              role="tablist"
+              aria-label="Chuyển chế độ"
+              style={{
+                display: 'inline-flex',
+                position: 'relative',
+                background: '#f1f5f9',
+                borderRadius: 999,
+                padding: 4,
+                border: '1px solid #e2e8f0',
+                alignSelf: 'center',
+              }}
+            >
+              <span
+                aria-hidden="true"
+                style={{
+                  position: 'absolute',
+                  top: 4,
+                  bottom: 4,
+                  left: view === 'create' ? 4 : '50%',
+                  width: 'calc(50% - 4px)',
+                  background: '#fff',
+                  borderRadius: 999,
+                  boxShadow: '0 1px 3px rgba(15, 23, 42, 0.12)',
+                  transition: 'left 0.22s ease',
+                }}
+              />
+              <button
+                type="button"
+                role="tab"
+                aria-selected={view === 'create'}
+                onClick={() => setView('create')}
+                style={{
+                  position: 'relative',
+                  zIndex: 1,
+                  padding: '6px 18px',
+                  border: 'none',
+                  background: 'transparent',
+                  color: view === 'create' ? '#0f172a' : '#64748b',
+                  fontWeight: 600,
+                  fontSize: '0.85rem',
+                  cursor: 'pointer',
+                }}
+              >
+                Tạo đề
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={view === 'manage'}
+                onClick={() => setView('manage')}
+                style={{
+                  position: 'relative',
+                  zIndex: 1,
+                  padding: '6px 18px',
+                  border: 'none',
+                  background: 'transparent',
+                  color: view === 'manage' ? '#0f172a' : '#64748b',
+                  fontWeight: 600,
+                  fontSize: '0.85rem',
+                  cursor: 'pointer',
+                }}
+              >
+                Quản lí đề
+              </button>
             </div>
           </header>
 
-          {/* Mind-map style: Create on the left, Manage on the right. */}
+          {/* Single-view layout: only one panel visible at a time, controlled by the slide toggle. */}
           <div
             className="create-exam-grid"
             style={{
               display: 'grid',
-              gridTemplateColumns: 'minmax(280px, 360px) 1fr',
+              gridTemplateColumns: '1fr',
               gap: '1.25rem',
               alignItems: 'start',
             }}
           >
-            {/* ── LEFT: Tạo đề ── */}
-            <aside
-              className="data-card"
-              style={{ position: 'sticky', top: '1rem', display: 'grid', gap: '0.85rem' }}
-            >
-              <div>
-                <div
-                  className="row"
-                  style={{ gap: 8, alignItems: 'center', marginBottom: 4 }}
-                >
-                  <Sparkles size={16} />
-                  <h3 style={{ margin: 0 }}>Tạo đề</h3>
-                </div>
-                <p className="muted" style={{ margin: 0 }}>
-                  Chọn ma trận đã duyệt — hệ thống tự sinh đề từ ngân hàng câu hỏi.
-                </p>
-              </div>
+            {/* ── Tạo đề ── */}
+            {view === 'create' && <AssessmentBuilderFlowBody />}
 
-              <label>
-                <p className="muted" style={{ marginBottom: 6 }}>
-                  Ma trận đã duyệt
-                </p>
-                <select
-                  className="select"
-                  value={selectedMatrixId}
-                  onChange={(event) => setSelectedMatrixId(event.target.value)}
-                >
-                  <option value="">Chọn ma trận</option>
-                  {readyMatrices.map((matrix) => (
-                    <option key={matrix.id} value={matrix.id}>
-                      {matrix.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <button
-                type="button"
-                className="btn btn--feat-indigo"
-                disabled={!selectedMatrixId || generateFromMatrixMutation.isPending}
-                onClick={() => void generateFromMatrix()}
-              >
-                {generateFromMatrixMutation.isPending ? (
-                  <>
-                    <RefreshCw size={14} className="animate-spin" />
-                    Đang tạo...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles size={14} />
-                    Sinh từ ma trận
-                  </>
-                )}
-              </button>
-
-              <div
-                style={{
-                  height: 1,
-                  background: 'var(--mod-border, #e5e7eb)',
-                  margin: '4px 0',
-                }}
-              />
-
-              <button
-                type="button"
-                className="btn secondary"
-                onClick={() => {
-                  setMode('create');
-                  setSelected(null);
-                  setOpenForm(true);
-                }}
-              >
-                <Plus size={14} />
-                Tạo thủ công
-              </button>
-
-              <button
-                type="button"
-                className="btn secondary btn--tint-indigo"
-                onClick={() => navigate('/teacher/exam-matrices')}
-              >
-                <Ruler size={14} />
-                Quản lý ma trận
-              </button>
-
-              {readyMatrices.length === 0 && (
-                <p className="muted" style={{ fontSize: '0.8rem' }}>
-                  Chưa có ma trận nào ở trạng thái đã duyệt. Hãy tạo và phê duyệt ma trận
-                  trước.
-                </p>
-              )}
-            </aside>
-
-            {/* ── RIGHT: Quản lí đề ── */}
+            {/* ── Quản lí đề ── */}
+            {view === 'manage' && (
             <div style={{ display: 'grid', gap: '0.9rem' }}>
               <div className="row" style={{ gap: 8, alignItems: 'center' }}>
                 <h3 style={{ margin: 0 }}>Quản lí đề</h3>
@@ -495,233 +424,218 @@ export default function TeacherAssessments() {
 
           {!isLoading && !isError && assessments.length > 0 && (
             <div className="grid-cards">
-              {assessments.map((assessment) => (
-                <article key={assessment.id} className="data-card course-card">
-                  <div className="row">
-                    <span className={statusClass[assessment.status]}>
-                      {cardStatusLabel[assessment.status]}
-                    </span>
-                    <span className="muted">
-                      {assessmentTypeLabel[assessment.assessmentType] || assessment.assessmentType}
-                    </span>
-                  </div>
-
-                  <div>
-                    <h3>{assessment.title}</h3>
-                    <p className="muted" style={{ marginTop: 6 }}>
-                      {assessment.description || 'Không có mô tả'}
-                    </p>
-                  </div>
-
-                  <div
-                    className="row"
-                    style={{ justifyContent: 'start', flexWrap: 'wrap', gap: '0.5rem' }}
-                  >
-                    <span className="badge">{assessment.totalQuestions} câu hỏi</span>
-                    <span className="badge">{assessment.totalPoints} điểm</span>
-                    {assessment.timeLimitMinutes && (
-                      <span className="badge">⏱ {assessment.timeLimitMinutes} phút</span>
-                    )}
-                    {assessment.submissionCount > 0 && (
-                      <span className="badge badge-published">
-                        {assessment.submissionCount} lượt nộp
+              {assessments.map((assessment) => {
+                const showTags =
+                  assessment.assessmentMode === 'MATRIX_BASED' ||
+                  !!assessment.examMatrixGradeLevel ||
+                  !!assessment.examMatrixName;
+                return (
+                  <article key={assessment.id} className="tassess-card">
+                    {/* ── Header: status + primary action ── */}
+                    <header className="tassess-card__header">
+                      <span
+                        className="tassess-card__status"
+                        data-status={assessment.status}
+                      >
+                        {cardStatusLabel[assessment.status]}
                       </span>
-                    )}
-                  </div>
 
-                  {/* Add matrix info row */}
-                  {(assessment.examMatrixName ||
-                    assessment.examMatrixGradeLevel ||
-                    assessment.assessmentMode === 'MATRIX_BASED' ||
-                    assessment.questionBankName) && (
-                    <div
-                      className="row"
-                      style={{
-                        justifyContent: 'start',
-                        flexWrap: 'wrap',
-                        gap: '0.5rem',
-                        marginTop: 4,
-                      }}
-                    >
-                      {assessment.examMatrixName && (
-                        <span className="muted" style={{ fontSize: '0.8rem' }}>
-                          📋 Ma trận: {assessment.examMatrixName}
-                        </span>
+                      {assessment.status === 'DRAFT' && (
+                        <button
+                          type="button"
+                          className="btn btn--feat-emerald tassess-card__primary"
+                          onClick={() =>
+                            publishMutation.mutate(assessment.id, {
+                              onSuccess: () =>
+                                showToast({
+                                  type: 'success',
+                                  message: `Đã xuất bản ${UI_TEXT.QUIZ.toLowerCase()} “${assessment.title}”.`,
+                                }),
+                              onError: (err) =>
+                                showToast({
+                                  type: 'error',
+                                  message:
+                                    err instanceof Error
+                                      ? err.message
+                                      : `Không thể xuất bản ${UI_TEXT.QUIZ.toLowerCase()}.`,
+                                }),
+                            })
+                          }
+                        >
+                          <Send size={13} />
+                          Xuất bản
+                        </button>
                       )}
-                      {assessment.questionBankName && (
-                        <span className="muted" style={{ fontSize: '0.8rem' }}>
-                          🗄️ Ngân hàng: {assessment.questionBankName}
-                        </span>
+
+                      {assessment.status === 'PUBLISHED' && (
+                        <button
+                          type="button"
+                          className="btn warn tassess-card__primary"
+                          onClick={() =>
+                            closeMutation.mutate(assessment.id, {
+                              onSuccess: () =>
+                                showToast({
+                                  type: 'success',
+                                  message: `Đã đóng ${UI_TEXT.QUIZ.toLowerCase()} “${assessment.title}”.`,
+                                }),
+                              onError: (err) =>
+                                showToast({
+                                  type: 'error',
+                                  message:
+                                    err instanceof Error
+                                      ? err.message
+                                      : `Không thể đóng ${UI_TEXT.QUIZ.toLowerCase()}.`,
+                                }),
+                            })
+                          }
+                        >
+                          <Lock size={13} />
+                          Đóng
+                        </button>
                       )}
-                      {assessment.examMatrixGradeLevel && (
-                        <span className="muted" style={{ fontSize: '0.8rem' }}>
-                          📚 Lớp {assessment.examMatrixGradeLevel}
-                        </span>
-                      )}
-                      {assessment.assessmentMode === 'MATRIX_BASED' && (
-                        <span className="badge draft" style={{ fontSize: '0.7rem' }}>
-                          Matrix-based
-                        </span>
+                    </header>
+
+                    {/* ── Body: title, description, meta, tags ── */}
+                    <div className="tassess-card__body">
+                      <h3 className="tassess-card__title">{assessment.title}</h3>
+                      <p className="tassess-card__desc">
+                        {assessment.description ||
+                          (assessment.assessmentMode === 'MATRIX_BASED'
+                            ? 'Tự sinh từ ma trận đề.'
+                            : 'Không có mô tả.')}
+                      </p>
+
+                      <div className="tassess-card__meta">
+                        <span>{assessment.totalQuestions} câu hỏi</span>
+                        <span className="tassess-card__meta-sep">·</span>
+                        <span>{assessment.totalPoints} điểm</span>
+                        {assessment.timeLimitMinutes != null && (
+                          <>
+                            <span className="tassess-card__meta-sep">·</span>
+                            <span>{assessment.timeLimitMinutes} phút</span>
+                          </>
+                        )}
+                        {assessment.submissionCount > 0 && (
+                          <>
+                            <span className="tassess-card__meta-sep">·</span>
+                            <span>{assessment.submissionCount} lượt nộp</span>
+                          </>
+                        )}
+                      </div>
+
+                      {showTags && (
+                        <div className="tassess-card__tags">
+                          {assessment.assessmentMode === 'MATRIX_BASED' && (
+                            <span className="tassess-card__tag">Theo ma trận</span>
+                          )}
+                          {assessment.examMatrixGradeLevel && (
+                            <span className="tassess-card__tag">
+                              Lớp {assessment.examMatrixGradeLevel}
+                            </span>
+                          )}
+                          {assessment.examMatrixName && (
+                            <span
+                              className="tassess-card__tag"
+                              title={assessment.examMatrixName}
+                            >
+                              {assessment.examMatrixName}
+                            </span>
+                          )}
+                        </div>
                       )}
                     </div>
-                  )}
 
-                  {/* Add date info */}
-                  {(assessment.startDate || assessment.endDate) && (
-                    <div
-                      className="row"
-                      style={{
-                        justifyContent: 'start',
-                        flexWrap: 'wrap',
-                        gap: '0.5rem',
-                        marginTop: 4,
-                      }}
-                    >
-                      {assessment.startDate && (
-                        <span className="muted" style={{ fontSize: '0.8rem' }}>
-                          📅 Bắt đầu: {new Date(assessment.startDate).toLocaleDateString('vi-VN')}
-                        </span>
+                    {/* ── Footer: secondary actions ── */}
+                    <footer className="tassess-card__footer">
+                      <div className="tassess-card__actions">
+                        <button
+                          type="button"
+                          className="btn"
+                          onClick={() => navigate(`/teacher/assessments/${assessment.id}`)}
+                        >
+                          <BookOpen size={13} />
+                          Chi tiết
+                        </button>
+                        {assessment.status === 'DRAFT' && (
+                          <button
+                            type="button"
+                            className="btn"
+                            onClick={() => {
+                              setMode('edit');
+                              setSelected(assessment);
+                              setOpenForm(true);
+                            }}
+                          >
+                            <Pencil size={13} />
+                            Chỉnh sửa
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          className="btn"
+                          onClick={() => setCloneTarget(assessment)}
+                        >
+                          <Copy size={13} />
+                          Nhân bản
+                        </button>
+                        {assessment.status === 'PUBLISHED' && (
+                          <button
+                            type="button"
+                            className="btn"
+                            onClick={() =>
+                              unpublishMutation.mutate(assessment.id, {
+                                onSuccess: () =>
+                                  showToast({
+                                    type: 'success',
+                                    message: `Đã hủy xuất bản ${UI_TEXT.QUIZ.toLowerCase()} “${assessment.title}”.`,
+                                  }),
+                                onError: (err) =>
+                                  showToast({
+                                    type: 'error',
+                                    message:
+                                      err instanceof Error
+                                        ? err.message
+                                        : 'Không thể hủy xuất bản.',
+                                  }),
+                              })
+                            }
+                          >
+                            Hủy xuất bản
+                          </button>
+                        )}
+                      </div>
+
+                      {assessment.status === 'DRAFT' && (
+                        <button
+                          type="button"
+                          className="btn tassess-card__delete"
+                          aria-label="Xóa"
+                          title="Xóa"
+                          onClick={() =>
+                            deleteMutation.mutate(assessment.id, {
+                              onSuccess: () =>
+                                showToast({
+                                  type: 'success',
+                                  message: `Đã xóa ${UI_TEXT.QUIZ.toLowerCase()} “${assessment.title}”.`,
+                                }),
+                              onError: (err) =>
+                                showToast({
+                                  type: 'error',
+                                  message:
+                                    err instanceof Error
+                                      ? err.message
+                                      : `Không thể xóa ${UI_TEXT.QUIZ.toLowerCase()}.`,
+                                }),
+                            })
+                          }
+                        >
+                          <Trash2 size={14} />
+                        </button>
                       )}
-                      {assessment.endDate && (
-                        <span className="muted" style={{ fontSize: '0.8rem' }}>
-                          ⏰ Hết hạn: {new Date(assessment.endDate).toLocaleDateString('vi-VN')}
-                        </span>
-                      )}
-                    </div>
-                  )}
-
-                  <div className="row" style={{ flexWrap: 'wrap' }}>
-                    <button
-                      className="btn secondary"
-                      onClick={() => navigate(`/teacher/assessments/${assessment.id}`)}
-                    >
-                      <BookOpen size={14} />
-                      Chi tiết
-                    </button>
-
-                    {assessment.status === 'DRAFT' && (
-                      <button
-                        className="btn secondary"
-                        onClick={() => {
-                          setMode('edit');
-                          setSelected(assessment);
-                          setOpenForm(true);
-                        }}
-                      >
-                        <Pencil size={14} />
-                        Chỉnh sửa
-                      </button>
-                    )}
-
-                    {assessment.status === 'DRAFT' && (
-                      <button
-                        type="button"
-                        className="btn btn--feat-emerald"
-                        onClick={() =>
-                          publishMutation.mutate(assessment.id, {
-                            onSuccess: () =>
-                              showToast({
-                                type: 'success',
-                                message: `Đã xuất bản ${UI_TEXT.QUIZ.toLowerCase()} “${assessment.title}”.`,
-                              }),
-                            onError: (err) =>
-                              showToast({
-                                type: 'error',
-                                message:
-                                  err instanceof Error
-                                    ? err.message
-                                    : `Không thể xuất bản ${UI_TEXT.QUIZ.toLowerCase()}.`,
-                              }),
-                          })
-                        }
-                      >
-                        <Send size={14} />
-                        Xuất bản
-                      </button>
-                    )}
-
-                    {assessment.status === 'PUBLISHED' && (
-                      <button
-                        className="btn warn"
-                        onClick={() =>
-                          unpublishMutation.mutate(assessment.id, {
-                            onSuccess: () =>
-                              showToast({
-                                type: 'success',
-                                message: `Đã hủy xuất bản ${UI_TEXT.QUIZ.toLowerCase()} “${assessment.title}”.`,
-                              }),
-                            onError: (err) =>
-                              showToast({
-                                type: 'error',
-                                message:
-                                  err instanceof Error ? err.message : 'Không thể hủy xuất bản.',
-                              }),
-                          })
-                        }
-                      >
-                        Hủy xuất bản
-                      </button>
-                    )}
-
-                    {assessment.status === 'PUBLISHED' && (
-                      <button
-                        className="btn warn"
-                        onClick={() =>
-                          closeMutation.mutate(assessment.id, {
-                            onSuccess: () =>
-                              showToast({
-                                type: 'success',
-                                message: `Đã đóng ${UI_TEXT.QUIZ.toLowerCase()} “${assessment.title}”.`,
-                              }),
-                            onError: (err) =>
-                              showToast({
-                                type: 'error',
-                                message:
-                                  err instanceof Error
-                                    ? err.message
-                                    : `Không thể đóng ${UI_TEXT.QUIZ.toLowerCase()}.`,
-                              }),
-                          })
-                        }
-                      >
-                        <Lock size={14} />
-                        Đóng
-                      </button>
-                    )}
-
-                    {assessment.status === 'DRAFT' && (
-                      <button
-                        className="btn danger"
-                        onClick={() =>
-                          deleteMutation.mutate(assessment.id, {
-                            onSuccess: () =>
-                              showToast({
-                                type: 'success',
-                                message: `Đã xóa ${UI_TEXT.QUIZ.toLowerCase()} “${assessment.title}”.`,
-                              }),
-                            onError: (err) =>
-                              showToast({
-                                type: 'error',
-                                message:
-                                  err instanceof Error
-                                    ? err.message
-                                    : `Không thể xóa ${UI_TEXT.QUIZ.toLowerCase()}.`,
-                              }),
-                          })
-                        }
-                      >
-                        <Trash2 size={14} />
-                        Xóa
-                      </button>
-                    )}
-
-                    <button className="btn secondary" onClick={() => setCloneTarget(assessment)}>
-                      <Copy size={14} />
-                      Nhân bản
-                    </button>
-                  </div>
-                </article>
-              ))}
+                    </footer>
+                  </article>
+                );
+              })}
             </div>
           )}
 
@@ -733,6 +647,7 @@ export default function TeacherAssessments() {
                 onChange={(p) => setPage(p)}
               />
             </div>
+            )}
           </div>
 
           <AssessmentModal

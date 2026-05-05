@@ -21,7 +21,13 @@ type ToastState = {
   message: string;
 };
 
-export default function AssessmentBuilderFlow() {
+/**
+ * Inner content of the legacy "Trình tạo đề" page — the quicknav, 4-step
+ * process card, generate/publish orchestration grid, and toast. Exposed so
+ * TeacherAssessments can render it inside its toggle view without nesting
+ * another DashboardLayout.
+ */
+export function AssessmentBuilderFlowBody() {
   const navigate = useNavigate();
   const [selectedMatrixId, setSelectedMatrixId] = useState('');
   const [generatedAssessmentId, setGeneratedAssessmentId] = useState('');
@@ -103,23 +109,7 @@ export default function AssessmentBuilderFlow() {
   }
 
   return (
-    <DashboardLayout
-      role="teacher"
-      user={{ name: 'Teacher', avatar: '', role: 'teacher' }}
-      notificationCount={0}
-      contentClassName="dashboard-content--flush-bleed"
-    >
-      <div className="module-layout-container">
-        <section className="module-page teacher-courses-page assessment-builder-flow-page">
-          <header className="page-header courses-header-row">
-            <div className="header-stack">
-              <div className="row" style={{ gap: '0.6rem' }}>
-                <h2>Tạo đề thi</h2>
-              </div>
-              <p className="header-sub">Tạo đề thi đơn giản cho giáo viên.</p>
-            </div>
-          </header>
-
+    <>
           <nav className="abf-quicknav">
             <button
               className="abf-quicknav__item"
@@ -161,10 +151,10 @@ export default function AssessmentBuilderFlow() {
             </button>
           </nav>
 
-          <section className="data-card course-card abf-process-card" style={{ minHeight: 0 }}>
+          <section className="data-card abf-process-card">
             <div className="abf-process-head">
               <h3 className="abf-process-title">Quy trình tạo đề 4 bước</h3>
-              <p className="muted abf-process-subtitle">
+              <p className="abf-process-subtitle">
                 Làm theo thứ tự để lên đề hoàn chỉnh, đúng dữ liệu và đúng quy trình.
               </p>
             </div>
@@ -383,6 +373,33 @@ export default function AssessmentBuilderFlow() {
               {toast.message}
             </div>
           )}
+    </>
+  );
+}
+
+/**
+ * Standalone "Tạo đề thi" page (kept for the legacy /teacher/assessment-builder
+ * route, currently redirected). Wraps the body in DashboardLayout + page header.
+ */
+export default function AssessmentBuilderFlow() {
+  return (
+    <DashboardLayout
+      role="teacher"
+      user={{ name: 'Teacher', avatar: '', role: 'teacher' }}
+      notificationCount={0}
+      contentClassName="dashboard-content--flush-bleed"
+    >
+      <div className="module-layout-container">
+        <section className="module-page teacher-courses-page assessment-builder-flow-page">
+          <header className="page-header courses-header-row">
+            <div className="header-stack">
+              <div className="row" style={{ gap: '0.6rem' }}>
+                <h2>Tạo đề thi</h2>
+              </div>
+              <p className="header-sub">Tạo đề thi đơn giản cho giáo viên.</p>
+            </div>
+          </header>
+          <AssessmentBuilderFlowBody />
         </section>
       </div>
     </DashboardLayout>

@@ -67,8 +67,12 @@ export function EnhancedQuestionFormModal({
   const [points, setPoints] = useState<string>(String(initialData?.points || 1));
   const [explanation, setExplanation] = useState<string>(initialData?.explanation || '');
   const [diagramData, setDiagramData] = useState<string>('');
+  const [latexInsertTarget, setLatexInsertTarget] = useState<
+    'QUESTION' | 'EXPLANATION' | 'DIAGRAM'
+  >('DIAGRAM');
 
   const diagramTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const explanationTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   const [editorValue, setEditorValue] = useState<Record<string, unknown>>({
     questionText: initialData?.questionText || '',
@@ -94,25 +98,49 @@ export function EnhancedQuestionFormModal({
     diagramData.trim() || initialData?.diagramData || initialData?.diagramUrl
   );
 
-  const insertLatexAtCursor = (latex: string) => {
-    const textarea = diagramTextareaRef.current;
-    if (!textarea) return;
+  const insertWithCursor = (
+    currentValue: string,
+    setValue: (value: string) => void,
+    textarea: HTMLTextAreaElement | null,
+    rawLatex: string
+  ) => {
+    const latex = `$$${rawLatex}$$`;
+    if (!textarea) {
+      setValue(`${currentValue}${currentValue ? ' ' : ''}${latex}`);
+      return;
+    }
 
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
-    const text = diagramData;
-    const before = text.substring(0, start);
-    const after = text.substring(end);
+    const before = currentValue.substring(0, start);
+    const after = currentValue.substring(end);
+    const next = before + latex + after;
+    setValue(next);
 
-    const newText = before + latex + after;
-    setDiagramData(newText);
-
-    // Set cursor position after inserted text
     setTimeout(() => {
       textarea.focus();
       const newPosition = start + latex.length;
       textarea.setSelectionRange(newPosition, newPosition);
     }, 0);
+  };
+
+  const handleInsertLatex = (rawLatex: string) => {
+    if (latexInsertTarget === 'DIAGRAM') {
+      insertWithCursor(diagramData, setDiagramData, diagramTextareaRef.current, rawLatex);
+      return;
+    }
+
+    if (latexInsertTarget === 'EXPLANATION') {
+      insertWithCursor(explanation, setExplanation, explanationTextareaRef.current, rawLatex);
+      return;
+    }
+
+    const questionText = String(editorValue.questionText || '');
+    const wrapped = `$$${rawLatex}$$`;
+    setEditorValue({
+      ...editorValue,
+      questionText: `${questionText}${questionText ? ' ' : ''}${wrapped}`,
+    });
   };
 
   useEffect(() => {
@@ -317,6 +345,77 @@ export function EnhancedQuestionFormModal({
               />
             </div>
 
+            <div>
+              <label
+                style={{ display: 'block', fontWeight: 600, marginBottom: 8, color: '#374151' }}
+              >
+                Hình vẽ <span style={{ color: '#ef4444' }}>*</span>
+              </label>
+              <textarea
+                ref={diagramTextareaRef}
+                value={diagramData}
+                onChange={(e) => setDiagramData(e.target.value)}
+                disabled={saving}
+                placeholder="Nhập LaTeX cho hình vẽ nếu có... Ví dụ: \frac{-b \pm \sqrt{b^2-4ac}}{2a}"
+                rows={7}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  border: '2px solid #d1d5db',
+                  borderRadius: 8,
+                  fontSize: '1rem',
+                  resize: 'vertical',
+                }}
+              />
+            </div>
+
+            <div>
+              <label
+                style={{ display: 'block', fontWeight: 600, marginBottom: 8, color: '#374151' }}
+              >
+                Giải thích <span style={{ color: '#ef4444' }}>*</span>
+              </label>
+              <textarea
+                ref={explanationTextareaRef}
+                value={explanation}
+                onChange={(e) => setExplanation(e.target.value)}
+                disabled={saving}
+                placeholder="Nhập lời giải thích cho câu hỏi..."
+                rows={6}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  border: '2px solid #d1d5db',
+                  borderRadius: 8,
+                  fontSize: '1rem',
+                  resize: 'vertical',
+                }}
+              />
+            </div>
+
+            <div className="eqfm-latex-panel">
+              <div className="eqfm-latex-panel__head">
+                <label htmlFor="eqfm-latex-target" className="eqfm-latex-panel__label">
+                  Chèn vào
+                </label>
+                <select
+                  id="eqfm-latex-target"
+                  className="select"
+                  value={latexInsertTarget}
+                  onChange={(e) =>
+                    setLatexInsertTarget(e.target.value as 'QUESTION' | 'EXPLANATION' | 'DIAGRAM')
+                  }
+                  disabled={saving}
+                >
+                  <option value="QUESTION">Câu hỏi</option>
+                  <option value="EXPLANATION">Giải thích</option>
+                  <option value="DIAGRAM">Sơ đồ / Hình vẽ</option>
+                </select>
+              </div>
+              <p className="muted eqfm-latex-panel__hint">Ký hiệu được tự động bọc dạng $$...$$.</p>
+              <LatexToolbar onInsert={handleInsertLatex} disabled={saving} />
+            </div>
+
             {(questionType === 'TRUE_FALSE' ||
               questionType === 'SHORT_ANSWER' ||
               questionType === 'MULTIPLE_CHOICE') && (
@@ -356,54 +455,6 @@ export function EnhancedQuestionFormModal({
                 </button>
               </div>
             )}
-
-            <div>
-              <label
-                style={{ display: 'block', fontWeight: 600, marginBottom: 8, color: '#374151' }}
-              >
-                Giải thích (không bắt buộc)
-              </label>
-              <textarea
-                value={explanation}
-                onChange={(e) => setExplanation(e.target.value)}
-                disabled={saving}
-                placeholder="Nhập lời giải thích cho câu hỏi..."
-                rows={3}
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  border: '2px solid #d1d5db',
-                  borderRadius: 8,
-                  fontSize: '1rem',
-                  resize: 'vertical',
-                }}
-              />
-            </div>
-
-            <div>
-              <label
-                style={{ display: 'block', fontWeight: 600, marginBottom: 8, color: '#374151' }}
-              >
-                Sơ đồ / Hình vẽ (LaTeX) <span style={{ color: '#ef4444' }}>*</span>
-              </label>
-              <textarea
-                ref={diagramTextareaRef}
-                value={diagramData}
-                onChange={(e) => setDiagramData(e.target.value)}
-                disabled={saving}
-                placeholder="Nhập LaTeX cho hình vẽ nếu có... Ví dụ: \frac{-b \pm \sqrt{b^2-4ac}}{2a}"
-                rows={4}
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  border: '2px solid #d1d5db',
-                  borderRadius: 8,
-                  fontSize: '1rem',
-                  resize: 'vertical',
-                }}
-              />
-              <LatexToolbar onInsert={insertLatexAtCursor} disabled={saving} />
-            </div>
           </div>
 
           <aside className="eqfm-preview-column">

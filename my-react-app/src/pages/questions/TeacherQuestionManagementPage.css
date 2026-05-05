@@ -350,6 +350,35 @@
   padding: 0.75rem;
 }
 
+.module-layout-container .eqfm-latex-panel {
+  border: 1px solid #d9e5f5;
+  border-radius: 12px;
+  padding: 0.75rem;
+  background: #fbfdff;
+}
+
+.module-layout-container .eqfm-latex-panel__head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.module-layout-container .eqfm-latex-panel__label {
+  font-weight: 600;
+  color: #334155;
+  white-space: nowrap;
+}
+
+.module-layout-container .eqfm-latex-panel__head .select {
+  flex: 1;
+  min-width: 0;
+}
+
+.module-layout-container .eqfm-latex-panel__hint {
+  margin: 0.45rem 0 0.3rem;
+  font-size: 0.8rem;
+}
+
 @media (max-width: 1024px) {
   .module-layout-container .eqfm-layout {
     grid-template-columns: 1fr;

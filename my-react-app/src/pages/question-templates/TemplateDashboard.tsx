@@ -12,6 +12,7 @@ import {
   Plus,
   RefreshCw,
   Search,
+  Send,
   Sparkles,
   Trash2,
   Upload,
@@ -31,6 +32,7 @@ import {
   useCreateQuestionTemplate,
   useDeleteQuestionTemplate,
   useGetMyQuestionTemplates,
+  usePublishTemplate,
   useUpdateQuestionTemplate,
 } from '../../hooks/useQuestionTemplate';
 import { questionTemplateService } from '../../services/questionTemplateService';
@@ -210,6 +212,7 @@ export function TemplateDashboard() {
   const createMutation = useCreateQuestionTemplate();
   const updateMutation = useUpdateQuestionTemplate();
   const deleteMutation = useDeleteQuestionTemplate();
+  const publishMutation = usePublishTemplate();
 
   const templates = useMemo(() => data?.result?.content ?? [], [data]);
   const totalPages = data?.result?.totalPages ?? 0;
@@ -442,7 +445,7 @@ export function TemplateDashboard() {
 
           {/* ── Grid ── */}
           {!isLoading && !isError && templates.length > 0 && (
-            <div className="grid-cards list-view">
+            <div className="grid-cards">
               {templates.map((template) => {
                 const statusLabelMap: Record<string, string> = {
                   PUBLISHED: 'Sẵn sàng',
@@ -512,16 +515,47 @@ export function TemplateDashboard() {
                     </div>
 
                     <div className="tpl-card-footer">
-                      <button
-                        className="btn btn--feat-violet tpl-card-primary"
-                        onClick={() => {
-                          setSelected(template);
-                          setGenerateOpen(true);
-                        }}
-                      >
-                        <Sparkles size={13} />
-                        Sinh câu hỏi
-                      </button>
+                      {template.status === TemplateStatus.DRAFT ? (
+                        <button
+                          className="btn btn--feat-emerald tpl-card-primary"
+                          disabled={
+                            publishMutation.isPending &&
+                            publishMutation.variables === template.id
+                          }
+                          onClick={() => {
+                            publishMutation.mutate(template.id, {
+                              onSuccess: () =>
+                                showToast({ type: 'success', message: 'Đã xuất bản mẫu.' }),
+                              onError: (err) =>
+                                showToast({
+                                  type: 'error',
+                                  message:
+                                    err instanceof Error
+                                      ? err.message
+                                      : 'Không thể xuất bản mẫu.',
+                                }),
+                            });
+                          }}
+                          title="Xuất bản mẫu để có thể sinh câu hỏi"
+                        >
+                          <Send size={13} />
+                          {publishMutation.isPending &&
+                          publishMutation.variables === template.id
+                            ? 'Đang xuất bản...'
+                            : 'Xuất bản'}
+                        </button>
+                      ) : (
+                        <button
+                          className="btn btn--feat-violet tpl-card-primary"
+                          onClick={() => {
+                            setSelected(template);
+                            setGenerateOpen(true);
+                          }}
+                        >
+                          <Sparkles size={13} />
+                          Sinh câu hỏi
+                        </button>
+                      )}
 
                       <div className="tpl-card-secondary">
                         <button
