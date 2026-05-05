@@ -256,7 +256,7 @@ export function LatexToolbar({ onInsert, disabled = false }: Readonly<LatexToolb
           fontSize: '0.75rem',
         }}
       >
-        Nhấp vào ký hiệu để chèn nhanh. Panel không tự đóng để bạn có thể chèn nhiều lần.
+        Nhấp vào ký hiệu để sao chép mẫu có đủ $...$, sau đó dán bằng Ctrl+V.
       </p>
     </div>
   );

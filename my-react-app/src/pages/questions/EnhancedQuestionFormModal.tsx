@@ -1,5 +1,5 @@
 import { Sparkles } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { QuestionEditorSwitch } from '../../components/question';
 import QuestionDiagram from '../../components/common/QuestionDiagram';
 import MathText from '../../components/common/MathText';
@@ -68,10 +68,6 @@ export function EnhancedQuestionFormModal({
   const [explanation, setExplanation] = useState<string>(initialData?.explanation || '');
   const [diagramData, setDiagramData] = useState<string>('');
 
-  const modalCardRef = useRef<HTMLDivElement>(null);
-  const diagramTextareaRef = useRef<HTMLTextAreaElement>(null);
-  const explanationTextareaRef = useRef<HTMLTextAreaElement>(null);
-
   const [editorValue, setEditorValue] = useState<Record<string, unknown>>({
     questionText: initialData?.questionText || '',
     options: initialData?.options || {},
@@ -96,71 +92,56 @@ export function EnhancedQuestionFormModal({
     diagramData.trim() || initialData?.diagramData || initialData?.diagramUrl
   );
 
-  const insertWithCursor = (
-    currentValue: string,
-    setValue: (value: string) => void,
-    textarea: HTMLTextAreaElement | null,
-    rawLatex: string
-  ) => {
-    const latex = `$$${rawLatex}$$`;
-    if (!textarea) {
-      setValue(`${currentValue}${currentValue ? ' ' : ''}${latex}`);
-      return;
+  const copyFallback = (text: string) => {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+
+    let ok = false;
+    try {
+      ok = document.execCommand('copy');
+    } catch {
+      ok = false;
     }
 
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const before = currentValue.substring(0, start);
-    const after = currentValue.substring(end);
-    const next = before + latex + after;
-    setValue(next);
-
-    setTimeout(() => {
-      textarea.focus();
-      const newPosition = start + latex.length;
-      textarea.setSelectionRange(newPosition, newPosition);
-    }, 0);
+    document.body.removeChild(textarea);
+    return ok;
   };
 
   const handleInsertLatex = (rawLatex: string) => {
-    const wrapped = `$$${rawLatex}$$`;
-    const activeElement = document.activeElement as HTMLElement | null;
+    const wrapped = `$${rawLatex}$`;
 
-    if (!activeElement || !modalCardRef.current?.contains(activeElement)) {
-      showToast({
-        message: 'Hãy đặt con trỏ vào ô cần chèn LaTeX trước.',
-        type: 'warning',
-      });
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard
+        .writeText(wrapped)
+        .then(() => {
+          showToast({
+            message: `Đã sao chép: ${wrapped}. Dán vào vị trí con trỏ bằng Ctrl+V.`,
+            type: 'success',
+          });
+        })
+        .catch(() => {
+          const ok = copyFallback(wrapped);
+          showToast({
+            message: ok
+              ? `Đã sao chép: ${wrapped}. Dán vào vị trí con trỏ bằng Ctrl+V.`
+              : 'Không thể sao chép tự động. Hãy thử lại.',
+            type: ok ? 'success' : 'error',
+          });
+        });
       return;
     }
 
-    if (activeElement === diagramTextareaRef.current) {
-      insertWithCursor(diagramData, setDiagramData, diagramTextareaRef.current, rawLatex);
-      return;
-    }
-
-    if (activeElement === explanationTextareaRef.current) {
-      insertWithCursor(explanation, setExplanation, explanationTextareaRef.current, rawLatex);
-      return;
-    }
-
-    if (activeElement instanceof HTMLTextAreaElement || activeElement instanceof HTMLInputElement) {
-      const element = activeElement;
-      if (element.disabled || element.readOnly) {
-        return;
-      }
-
-      const start = element.selectionStart ?? element.value.length;
-      const end = element.selectionEnd ?? start;
-      element.setRangeText(wrapped, start, end, 'end');
-      element.dispatchEvent(new Event('input', { bubbles: true }));
-      element.focus();
-      return;
-    }
-
+    const ok = copyFallback(wrapped);
     showToast({
-      message: 'Ô hiện tại không hỗ trợ chèn LaTeX. Hãy đặt con trỏ vào ô nhập liệu.',
-      type: 'warning',
+      message: ok
+        ? `Đã sao chép: ${wrapped}. Dán vào vị trí con trỏ bằng Ctrl+V.`
+        : 'Không thể sao chép tự động. Hãy thử lại.',
+      type: ok ? 'success' : 'error',
     });
   };
 
@@ -275,7 +256,6 @@ export function EnhancedQuestionFormModal({
   return (
     <div className="modal-layer">
       <div
-        ref={modalCardRef}
         className="modal-card"
         style={{ width: 'min(1240px, 96vw)', maxHeight: '92vh', overflow: 'auto' }}
       >
@@ -319,10 +299,6 @@ export function EnhancedQuestionFormModal({
                 {error}
               </div>
             )}
-
-            <div className="eqfm-latex-sticky">
-              <LatexToolbar onInsert={handleInsertLatex} disabled={saving} />
-            </div>
 
             <div>
               <label
@@ -386,7 +362,6 @@ export function EnhancedQuestionFormModal({
                 Hình vẽ <span style={{ color: '#ef4444' }}>*</span>
               </label>
               <textarea
-                ref={diagramTextareaRef}
                 value={diagramData}
                 onChange={(e) => setDiagramData(e.target.value)}
                 disabled={saving}
@@ -410,7 +385,6 @@ export function EnhancedQuestionFormModal({
                 Giải thích <span style={{ color: '#ef4444' }}>*</span>
               </label>
               <textarea
-                ref={explanationTextareaRef}
                 value={explanation}
                 onChange={(e) => setExplanation(e.target.value)}
                 disabled={saving}
@@ -426,6 +400,8 @@ export function EnhancedQuestionFormModal({
                 }}
               />
             </div>
+
+            <LatexToolbar onInsert={handleInsertLatex} disabled={saving} />
 
             {(questionType === 'TRUE_FALSE' ||
               questionType === 'SHORT_ANSWER' ||
@@ -470,7 +446,7 @@ export function EnhancedQuestionFormModal({
 
           <aside className="eqfm-preview-column">
             <section className="eqfm-preview-card">
-              <p className="eqfm-preview-heading">Xem trước đề</p>
+              <p className="eqfm-preview-heading">Xem trước câu hỏi </p>
               <span className="badge" style={{ marginBottom: 8 }}>
                 {previewTypeLabel}
               </span>
