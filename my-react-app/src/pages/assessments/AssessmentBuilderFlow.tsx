@@ -116,10 +116,7 @@ export default function AssessmentBuilderFlow() {
               <div className="row" style={{ gap: '0.6rem' }}>
                 <h2>Tạo đề thi</h2>
               </div>
-              <p className="header-sub">
-                Không gian điều phối gọn nhẹ để lắp ráp đề từ tài nguyên đã duyệt, rà soát cuối và
-                xuất bản.
-              </p>
+              <p className="header-sub">Tạo đề thi đơn giản cho giáo viên.</p>
             </div>
           </header>
 
@@ -164,7 +161,7 @@ export default function AssessmentBuilderFlow() {
             </button>
           </nav>
 
-          <section className="data-card course-card" style={{ minHeight: 0 }}>
+          <section className="data-card course-card abf-process-card" style={{ minHeight: 0 }}>
             <div style={{ marginBottom: '0.85rem' }}>
               <h3 style={{ margin: '0 0 0.2rem' }}>Quy trình tạo đề 4 bước</h3>
               <p className="muted" style={{ margin: 0 }}>
