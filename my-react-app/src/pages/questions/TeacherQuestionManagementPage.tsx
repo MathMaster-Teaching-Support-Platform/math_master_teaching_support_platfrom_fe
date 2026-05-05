@@ -239,10 +239,7 @@ export default function TeacherQuestionManagementPage() {
               <ArrowRight size={14} className="tqm-quicknav__arrow" />
             </button>
             <span className="tqm-quicknav__divider" />
-            <button
-              className="tqm-quicknav__item"
-              onClick={() => navigate('/teacher/assessments')}
-            >
+            <button className="tqm-quicknav__item" onClick={() => navigate('/teacher/assessments')}>
               <span className="tqm-quicknav__icon tqm-nav-emerald">
                 <BookOpen size={14} />
               </span>
@@ -359,15 +356,15 @@ export default function TeacherQuestionManagementPage() {
                         )}
                       </td>
                       <td>{formatDate(question.updatedAt)}</td>
-                      <td>
-                        <div className="row" style={{ flexWrap: 'wrap' }}>
+                      <td className="tqm-action-cell">
+                        <div className="tqm-action-row">
                           <button
                             type="button"
                             className="btn secondary btn--tint-blue"
                             onClick={() => openingEditModal(question)}
                           >
                             <Edit3 size={14} />
-                            Sửa
+                            Chỉnh Sửa
                           </button>
                           <button
                             className="btn danger"

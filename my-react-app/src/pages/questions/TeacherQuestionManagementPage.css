@@ -281,7 +281,27 @@
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) minmax(300px, 1fr);
   gap: 1rem;
-  align-items: start;
+  align-items: stretch;
+}
+
+.module-layout-container .eqfm-row + .eqfm-row {
+  border-top: 1px solid #e3ecf8;
+  padding-top: 1rem;
+}
+
+.module-layout-container .eqfm-editor-card {
+  border: 1px solid #d9e5f5;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #fbfdff 0%, #f7faff 100%);
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.module-layout-container .eqfm-textarea-fill {
+  flex: 1;
+  min-height: 220px;
 }
 
 .module-layout-container .eqfm-preview-card {
@@ -289,6 +309,9 @@
   border-radius: 12px;
   padding: 0.85rem;
   background: linear-gradient(180deg, #fbfdff 0%, #f7faff 100%);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .module-layout-container .eqfm-preview-heading {
@@ -376,8 +399,30 @@
   font-size: 0.8rem;
 }
 
+.module-layout-container .tqm-action-cell {
+  text-align: center;
+}
+
+.module-layout-container .tqm-action-row {
+  width: 100%;
+  max-width: 156px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.55rem;
+}
+
+.module-layout-container .tqm-action-row .btn {
+  width: 100%;
+  justify-content: center;
+}
+
 @media (max-width: 1024px) {
   .module-layout-container .eqfm-row {
     grid-template-columns: 1fr;
+  }
+
+  .module-layout-container .eqfm-textarea-fill {
+    min-height: 160px;
   }
 }
