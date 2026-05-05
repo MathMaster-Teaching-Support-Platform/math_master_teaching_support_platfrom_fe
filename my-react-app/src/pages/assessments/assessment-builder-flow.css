@@ -435,23 +435,37 @@
 }
 
 .module-layout-container .abf-process-card {
-  padding: 1.25rem 1.15rem;
+  padding: 1.4rem 1.5rem;
+  min-height: 0;
+  gap: 1rem;
 }
 
 .module-layout-container .abf-process-head {
-  margin-bottom: 0.95rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  text-align: left;
+  margin: 0;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid #eef2f8;
 }
 
 .module-layout-container .abf-process-title {
   margin: 0;
-  font-size: 1.22rem;
-  line-height: 1.25;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
   color: #0f1f33;
 }
 
 .module-layout-container .abf-process-subtitle {
-  margin: 0.3rem 0 0;
-  font-size: 1rem;
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 400;
+  line-height: 1.55;
+  color: #60748f;
+  max-width: 62ch;
 }
 
 .module-layout-container .abf-step__desc {
