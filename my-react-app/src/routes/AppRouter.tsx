@@ -154,7 +154,7 @@ export const router = createBrowserRouter([
   {
     path: '/dashboard',
     element: (
-      <PrivateRoute>
+      <PrivateRoute allowedRoles={['teacher', 'admin']}>
         <RoadmapDashboardPage />
       </PrivateRoute>
     ),

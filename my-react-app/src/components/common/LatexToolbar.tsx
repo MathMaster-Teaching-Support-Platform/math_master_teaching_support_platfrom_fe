@@ -168,6 +168,7 @@ export function LatexToolbar({ onInsert, disabled = false }: Readonly<LatexToolb
           gap: 4,
           marginBottom: 12,
           flexWrap: 'wrap',
+          alignItems: 'stretch',
         }}
       >
         {categories.map((category) => (
@@ -178,6 +179,7 @@ export function LatexToolbar({ onInsert, disabled = false }: Readonly<LatexToolb
             style={{
               padding: '4px 12px',
               fontSize: '0.75rem',
+              minHeight: 30,
               border: '1px solid',
               borderColor: selectedCategory === category ? '#3b82f6' : '#d1d5db',
               borderRadius: 6,
@@ -197,7 +199,7 @@ export function LatexToolbar({ onInsert, disabled = false }: Readonly<LatexToolb
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
           gap: 6,
           maxHeight: 300,
           overflowY: 'auto',
@@ -218,10 +220,12 @@ export function LatexToolbar({ onInsert, disabled = false }: Readonly<LatexToolb
               color: '#374151',
               cursor: disabled ? 'not-allowed' : 'pointer',
               transition: 'all 0.15s',
-              textAlign: 'left',
+              textAlign: 'center',
               display: 'flex',
               flexDirection: 'column',
-              gap: 2,
+              justifyContent: 'center',
+              gap: 3,
+              minHeight: 56,
             }}
             onMouseOver={(e) => {
               if (!disabled) {
@@ -240,6 +244,7 @@ export function LatexToolbar({ onInsert, disabled = false }: Readonly<LatexToolb
                 fontSize: '0.7rem',
                 color: '#6b7280',
                 fontFamily: 'monospace',
+                lineHeight: 1.2,
               }}
             >
               {symbol.latex}
@@ -247,17 +252,6 @@ export function LatexToolbar({ onInsert, disabled = false }: Readonly<LatexToolb
           </button>
         ))}
       </div>
-
-      <p
-        className="muted"
-        style={{
-          marginTop: 12,
-          marginBottom: 0,
-          fontSize: '0.75rem',
-        }}
-      >
-        Nhấp vào ký hiệu để sao chép mẫu có đủ $...$, sau đó dán bằng Ctrl+V.
-      </p>
     </div>
   );
 }

@@ -330,10 +330,12 @@ export default function TeacherQuestionManagementPage() {
                 <thead>
                   <tr>
                     <th>Câu hỏi</th>
-                    <th>Loại</th>
-                    <th>Mức độ</th>
-                    <th>Cập nhật</th>
-                    <th style={{ width: 190 }}>Thao tác</th>
+                    <th className="tqm-col-center">Loại</th>
+                    <th className="tqm-col-center">Mức độ</th>
+                    <th className="tqm-col-center">Cập nhật</th>
+                    <th className="tqm-col-center" style={{ width: 190 }}>
+                      Thao tác
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -342,10 +344,10 @@ export default function TeacherQuestionManagementPage() {
                       <td>
                         <MathText text={question.questionText} />
                       </td>
-                      <td>
+                      <td className="tqm-col-center">
                         <span className="badge">{questionTypeLabel[question.questionType]}</span>
                       </td>
-                      <td>
+                      <td className="tqm-col-center">
                         {question.cognitiveLevel ? (
                           <span className="badge">
                             {cognitiveLevelLabel[question.cognitiveLevel] ||
@@ -355,7 +357,7 @@ export default function TeacherQuestionManagementPage() {
                           '-'
                         )}
                       </td>
-                      <td>{formatDate(question.updatedAt)}</td>
+                      <td className="tqm-col-center">{formatDate(question.updatedAt)}</td>
                       <td className="tqm-action-cell">
                         <div className="tqm-action-row">
                           <button

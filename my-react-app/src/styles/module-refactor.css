@@ -1200,3 +1200,66 @@
   margin: 0;
   line-height: 1.55;
 }
+
+/* ── Expand/collapse panel (used in Chi tiết bài kiểm tra) ────── */
+.module-layout-container .add-question-panel {
+  margin-bottom: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #ffffff;
+  overflow: hidden;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.module-layout-container .add-question-panel[open] {
+  border-color: #c7d2fe;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+}
+
+.module-layout-container .add-question-panel__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+  list-style: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #0f172a;
+  background: #f8fafc;
+  border-bottom: 1px solid transparent;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.module-layout-container .add-question-panel__summary::-webkit-details-marker {
+  display: none;
+}
+
+.module-layout-container .add-question-panel__summary:hover {
+  background: #f1f5f9;
+}
+
+.module-layout-container .add-question-panel[open] .add-question-panel__summary {
+  border-bottom-color: #e5e7eb;
+}
+
+.module-layout-container .add-question-panel__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.module-layout-container .add-question-panel__chevron {
+  color: #64748b;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.module-layout-container .add-question-panel[open] .add-question-panel__chevron {
+  transform: rotate(180deg);
+}
+
+.module-layout-container .add-question-panel__body {
+  padding: 12px 14px 14px;
+}

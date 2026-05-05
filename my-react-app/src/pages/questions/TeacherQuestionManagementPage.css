@@ -403,6 +403,12 @@
   text-align: center;
 }
 
+.module-layout-container .table th.tqm-col-center,
+.module-layout-container .table td.tqm-col-center {
+  text-align: center;
+  vertical-align: middle;
+}
+
 .module-layout-container .tqm-action-row {
   width: 100%;
   max-width: 156px;
