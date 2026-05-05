@@ -40,17 +40,11 @@ import './TeacherQuestionManagementPage.css';
 type FormMode = 'create' | 'edit';
 
 const questionTypeLabel: Record<string, string> = {
-  MULTIPLE_CHOICE: 'Trac nghiem',
-  TRUE_FALSE: 'Dung/Sai',
-  SHORT_ANSWER: 'Tra loi ngan',
-  ESSAY: 'Tu luan',
-  CODING: 'Lap trinh',
-};
-
-const difficultyLabel: Record<string, string> = {
-  EASY: 'De',
-  MEDIUM: 'Trung binh',
-  HARD: 'Kho',
+  MULTIPLE_CHOICE: 'Trắc nghiệm',
+  TRUE_FALSE: 'Đúng/Sai',
+  SHORT_ANSWER: 'Trả lời ngắn',
+  ESSAY: 'Tự luận',
+  CODING: 'Lập trình',
 };
 
 const cognitiveLevelLabel: Record<string, string> = {
@@ -110,15 +104,6 @@ export default function TeacherQuestionManagementPage() {
     data?.result?.totalElements ??
     (data?.result as { page?: { totalElements?: number } } | undefined)?.page?.totalElements ??
     questions.length;
-
-  const stats = useMemo(
-    () => ({
-      easy: questions.filter((q) => q.difficulty === 'EASY').length,
-      medium: questions.filter((q) => q.difficulty === 'MEDIUM').length,
-      hard: questions.filter((q) => q.difficulty === 'HARD').length,
-    }),
-    [questions]
-  );
 
   const openingCreateModal = () => {
     setFormMode('create');
@@ -207,12 +192,9 @@ export default function TeacherQuestionManagementPage() {
             <div className="header-stack">
               <div className="row" style={{ gap: '0.6rem' }}>
                 <h2>Quản lý câu hỏi của tôi</h2>
-                {!isLoading && <span className="count-chip">{questions.length}</span>}
+                {!isLoading && <span className="count-chip">{totalElements}</span>}
               </div>
-              <p className="header-sub">
-                Tạo, chỉnh sửa, xóa và tìm nhanh câu hỏi theo nội dung và tag để tái sử dụng trong
-                đề thi.
-              </p>
+              <p className="header-sub">Tạo, chỉnh sửa, xóa và tìm nhanh câu hỏi</p>
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
               <button className="btn secondary" onClick={() => setBulkImportOpen(true)}>
@@ -225,56 +207,6 @@ export default function TeacherQuestionManagementPage() {
               </button>
             </div>
           </header>
-
-          <div
-            className="stats-grid"
-            style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))' }}
-          >
-            <div className="stat-card stat-blue">
-              <div className="stat-icon-wrap">
-                <Database size={16} />
-              </div>
-              <div>
-                <p className="muted" style={{ margin: 0, fontSize: '0.78rem' }}>
-                  Tổng câu hỏi
-                </p>
-                <h3 style={{ margin: 0, fontSize: '1.5rem' }}>{isLoading ? '—' : totalElements}</h3>
-              </div>
-            </div>
-            <div className="stat-card stat-emerald">
-              <div className="stat-icon-wrap">
-                <BookOpen size={16} />
-              </div>
-              <div>
-                <p className="muted" style={{ margin: 0, fontSize: '0.78rem' }}>
-                  Mức Dễ
-                </p>
-                <h3 style={{ margin: 0, fontSize: '1.5rem' }}>{isLoading ? '—' : stats.easy}</h3>
-              </div>
-            </div>
-            <div className="stat-card stat-amber">
-              <div className="stat-icon-wrap">
-                <FileQuestion size={16} />
-              </div>
-              <div>
-                <p className="muted" style={{ margin: 0, fontSize: '0.78rem' }}>
-                  Trung bình
-                </p>
-                <h3 style={{ margin: 0, fontSize: '1.5rem' }}>{isLoading ? '—' : stats.medium}</h3>
-              </div>
-            </div>
-            <div className="stat-card stat-violet">
-              <div className="stat-icon-wrap">
-                <Sparkles size={16} />
-              </div>
-              <div>
-                <p className="muted" style={{ margin: 0, fontSize: '0.78rem' }}>
-                  Mức Khó
-                </p>
-                <h3 style={{ margin: 0, fontSize: '1.5rem' }}>{isLoading ? '—' : stats.hard}</h3>
-              </div>
-            </div>
-          </div>
 
           <nav className="tqm-quicknav">
             <button
@@ -399,13 +331,10 @@ export default function TeacherQuestionManagementPage() {
                 <thead>
                   <tr>
                     <th>Câu hỏi</th>
-                    <th>Loai</th>
+                    <th>Loại</th>
                     <th>Mức độ</th>
-                    <th>Do kho</th>
-                    <th>Diem</th>
-                    <th>Tag</th>
-                    <th>Cap nhat</th>
-                    <th style={{ width: 190 }}>Thao tac</th>
+                    <th>Cập nhật</th>
+                    <th style={{ width: 190 }}>Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -413,11 +342,6 @@ export default function TeacherQuestionManagementPage() {
                     <tr key={question.id}>
                       <td>
                         <MathText text={question.questionText} />
-                        {question.explanation && (
-                          <p className="muted" style={{ marginTop: 8, marginBottom: 0 }}>
-                            {question.explanation}
-                          </p>
-                        )}
                       </td>
                       <td>
                         <span className="badge">{questionTypeLabel[question.questionType]}</span>
@@ -432,17 +356,6 @@ export default function TeacherQuestionManagementPage() {
                           '-'
                         )}
                       </td>
-                      <td>
-                        {question.difficulty ? (
-                          <span className={`badge badge-${question.difficulty.toLowerCase()}`}>
-                            {difficultyLabel[question.difficulty]}
-                          </span>
-                        ) : (
-                          '-'
-                        )}
-                      </td>
-                      <td>{question.points ?? '-'}</td>
-                      <td>{(question.tags ?? []).join(', ') || '-'}</td>
                       <td>{formatDate(question.updatedAt)}</td>
                       <td>
                         <div className="row" style={{ flexWrap: 'wrap' }}>
@@ -452,7 +365,7 @@ export default function TeacherQuestionManagementPage() {
                             onClick={() => openingEditModal(question)}
                           >
                             <Edit3 size={14} />
-                            Sua
+                            Sửa
                           </button>
                           <button
                             className="btn danger"
@@ -460,7 +373,7 @@ export default function TeacherQuestionManagementPage() {
                             disabled={deleteMutation.isPending}
                           >
                             <Trash2 size={14} />
-                            Xoa
+                            Xóa
                           </button>
                         </div>
                       </td>
