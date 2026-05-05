@@ -269,12 +269,16 @@ export function QuestionReviewQueue() {
                         {q.correctAnswer && (
                           <div style={{ marginTop: 8 }}>
                             <span className="muted">Đáp án đúng:</span>{' '}
-                            <strong>{q.correctAnswer}</strong>
+                            <strong>
+                              <MathText text={q.correctAnswer} />
+                            </strong>
                           </div>
                         )}
                         {q.explanation && (
                           <div className="muted" style={{ marginTop: 8 }}>
-                            <em>{q.explanation}</em>
+                            <em>
+                              <MathText text={q.explanation} />
+                            </em>
                           </div>
                         )}
                       </div>

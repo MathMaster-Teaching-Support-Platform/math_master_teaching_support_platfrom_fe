@@ -1,4 +1,11 @@
 // types/bulkImport.ts
+export interface TfClauseTemplate {
+  text: string;
+  truthValue: boolean;
+  cognitiveLevel?: string;
+  chapterId?: string;
+}
+
 export interface QuestionTemplateRequest {
   name: string;
   description?: string;
@@ -14,8 +21,22 @@ export interface QuestionTemplateRequest {
       max: number;
     }
   >;
-  answerFormula: string;
+  /** Required for MCQ + SHORT_ANSWER. Empty for TRUE_FALSE. */
+  answerFormula?: string;
+  /**
+   * MCQ only: 4 evaluable formulas keyed A/B/C/D. Each is computed with the
+   * sampled parameters at generation time so the question shows consistent
+   * numeric options. One key must match `answerFormula`.
+   */
   optionsGenerator?: Record<string, string>;
+  /** Optional LaTeX/TikZ block with `{{param}}` placeholders. */
+  diagramTemplate?: string;
+  /** Optional step-by-step solution template, supports LaTeX + `{{param}}`. */
+  solutionStepsTemplate?: string;
+  /** TRUE_FALSE only: list of clause templates with truth values. */
+  statementMutations?: {
+    clauseTemplates: TfClauseTemplate[];
+  };
   cognitiveLevel:
     | 'NHAN_BIET'
     | 'THONG_HIEU'
@@ -107,8 +128,19 @@ export interface QuestionImportRequest {
   points?: number;
   correctAnswer?: string;
   explanation?: string;
+  /** Step-by-step solution (LaTeX-supported). */
+  solutionSteps?: string;
+  /** Raw TikZ / PGFPlots block; rendered server-side. */
+  diagramData?: string;
   tags?: string[];
+  /** MCQ: A/B/C/D answer texts. TF: A/B/C/D statements. SHORT_ANSWER: null. */
   options?: Record<string, unknown>;
+  /**
+   * Type-specific metadata persisted as JSONB.
+   * - SHORT_ANSWER: { answerValidationMode: 'EXACT'|'NUMERIC'|'REGEX', answerTolerance: number }
+   * - TRUE_FALSE:   { tfClauses: { A: { truthValue, cognitiveLevel }, ... } }
+   */
+  generationMetadata?: Record<string, unknown>;
   questionBankId?: string;
 }
 

@@ -10,7 +10,7 @@ import {
 import { useRef, useState } from 'react';
 import MathText from '../../components/common/MathText';
 import { questionBulkImportService } from '../../services/questionBulkImportService';
-import type { QuestionExcelPreviewResponse } from '../../types/bulkImport';
+import type { QuestionExcelPreviewResponse, QuestionImportRequest } from '../../types/bulkImport';
 import '../question-templates/template-bulk-import.css';
 
 interface Props {
@@ -42,6 +42,34 @@ const cognitiveLevelLabel: Record<string, string> = {
   CREATE: 'Sáng tạo',
 };
 
+/**
+ * Build a one-line "summary" of the type-specific answer block so teachers can
+ * verify a row at a glance without expanding details.
+ */
+function summarizeAnswer(data: QuestionImportRequest | null): string {
+  if (!data) return '-';
+  switch (data.questionType) {
+    case 'MULTIPLE_CHOICE':
+      return `Đáp án: ${data.correctAnswer ?? '?'}`;
+    case 'TRUE_FALSE': {
+      const correct = data.correctAnswer && data.correctAnswer.length > 0
+        ? data.correctAnswer
+        : '(tự suy ra)';
+      const count = data.options ? Object.keys(data.options).length : 0;
+      return `Mệnh đề đúng: ${correct} · ${count} phát biểu`;
+    }
+    case 'SHORT_ANSWER': {
+      const meta = data.generationMetadata ?? {};
+      const mode = (meta as { answerValidationMode?: string }).answerValidationMode ?? 'EXACT';
+      const tol = (meta as { answerTolerance?: number }).answerTolerance;
+      const tolStr = mode === 'NUMERIC' && tol != null ? ` (±${tol})` : '';
+      return `Đáp án: ${data.correctAnswer ?? '?'} · ${mode}${tolStr}`;
+    }
+    default:
+      return data.correctAnswer ?? '-';
+  }
+}
+
 export function QuestionBulkImportModal({ isOpen, onClose, onSuccess }: Readonly<Props>) {
   const [step, setStep] = useState<Step>('upload');
   const [previewData, setPreviewData] = useState<QuestionExcelPreviewResponse | null>(null);
@@ -50,7 +78,6 @@ export function QuestionBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
-  const [clientWarnings, setClientWarnings] = useState<Map<number, string[]>>(new Map());
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDownloadTemplate = async () => {
@@ -86,33 +113,6 @@ export function QuestionBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
     try {
       const preview = await questionBulkImportService.previewExcel(selectedFile);
       setPreviewData(preview);
-      
-      // Client-side validation for additional warnings
-      const warnings = new Map<number, string[]>();
-      preview.rows.forEach((row) => {
-        if (row.data && row.isValid) {
-          const rowWarnings: string[] = [];
-          
-          // Check for {{}} parameter format recommendation
-          if (row.data.questionText && !row.data.questionText.includes('{{')) {
-            rowWarnings.push('💡 Gợi ý: Sử dụng {{tham_số}} cho câu hỏi động');
-          }
-          
-          // Check if options contain {{}} but question text doesn't
-          if (row.data.options) {
-            const optionsStr = JSON.stringify(row.data.options);
-            if (optionsStr.includes('{{') && !row.data.questionText?.includes('{{')) {
-              rowWarnings.push('⚠️ Đáp án có {{}} nhưng câu hỏi không có');
-            }
-          }
-          
-          if (rowWarnings.length > 0) {
-            warnings.set(row.rowNumber, rowWarnings);
-          }
-        }
-      });
-      
-      setClientWarnings(warnings);
       setStep('preview');
     } catch (err) {
       setError(
@@ -186,7 +186,6 @@ export function QuestionBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
     setSuccessMessage(null);
     setError(null);
     setDragActive(false);
-    setClientWarnings(new Map());
     onClose();
   };
 
@@ -194,7 +193,6 @@ export function QuestionBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
     setStep('upload');
     setPreviewData(null);
     setError(null);
-    setClientWarnings(new Map());
   };
 
   if (!isOpen) return null;
@@ -229,21 +227,38 @@ export function QuestionBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
               <div className="alert alert-info">
                 <AlertCircle size={16} />
                 <div>
-                  <strong>⚠️ QUY TẮC MỚI: Chỉ nhập câu hỏi trắc nghiệm</strong>
+                  <strong>Hỗ trợ 3 loại câu hỏi</strong>
+                  <ul style={{ marginTop: 4, paddingLeft: 18 }}>
+                    <li>
+                      <strong>MULTIPLE_CHOICE</strong> — trắc nghiệm 4 đáp án A/B/C/D, có thể kèm
+                      hình LaTeX (cột <code>diagramData</code>).
+                    </li>
+                    <li>
+                      <strong>TRUE_FALSE</strong> — nhiều phát biểu, mỗi phát biểu A/B/C/D có cờ
+                      đúng/sai (<code>truthA-D</code>); hỗ trợ bảng biến thiên.
+                    </li>
+                    <li>
+                      <strong>SHORT_ANSWER</strong> — đáp án ngắn, chế độ chấm{' '}
+                      <code>EXACT</code>/<code>NUMERIC</code>/<code>REGEX</code>; hỗ trợ đồ thị
+                      hàm số bằng LaTeX.
+                    </li>
+                  </ul>
                   <p style={{ marginTop: 4 }}>
-                    Từ nay, hệ thống chỉ chấp nhận câu hỏi loại <strong>MULTIPLE_CHOICE</strong> với đúng 4 đáp án (A, B, C, D).
-                    Sử dụng định dạng <code>{'{{'}</code>tham_số<code>{'}}'}</code> cho câu hỏi động.
+                    Nội dung LaTeX trong <code>questionText</code>, <code>diagramData</code>,{' '}
+                    <code>explanation</code>, <code>solutionSteps</code> đều được giữ nguyên khi
+                    nhập.
                   </p>
                 </div>
               </div>
-              
+
               <div className="alert alert-info">
                 <AlertCircle size={16} />
                 <div>
                   <strong>Bước 1: Tải file mẫu Excel</strong>
                   <p>
-                    Tải file mẫu về máy, mở bằng Excel và điền thông tin câu hỏi theo đúng cột.
-                    Các cột bắt buộc: questionText, questionType, cognitiveLevel.
+                    File mẫu đã có sẵn 5 ví dụ (Trắc nghiệm chuẩn, Trắc nghiệm hình học,
+                    Đúng/Sai dạng phát biểu, Đúng/Sai dạng bảng biến thiên, Trả lời ngắn với đồ
+                    thị) cùng sheet "Hướng dẫn" mô tả từng cột.
                   </p>
                 </div>
               </div>
@@ -324,10 +339,12 @@ export function QuestionBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
                   <thead>
                     <tr>
                       <th style={{ width: 60 }}>Dòng</th>
-                      <th style={{ width: 100 }}>Trạng thái</th>
-                      <th>Nội dung câu hỏi</th>
+                      <th style={{ width: 90 }}>Trạng thái</th>
                       <th style={{ width: 140 }}>Loại câu hỏi</th>
-                      <th style={{ width: 130 }}>Mức độ nhận thức</th>
+                      <th style={{ width: 130 }}>Mức độ</th>
+                      <th>Nội dung câu hỏi</th>
+                      <th style={{ width: 90 }}>Hình LaTeX</th>
+                      <th>Đáp án / Phát biểu</th>
                       <th>Lỗi phát hiện</th>
                     </tr>
                   </thead>
@@ -349,13 +366,6 @@ export function QuestionBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
                           )}
                         </td>
                         <td>
-                          {row.data?.questionText ? (
-                            <MathText text={row.data.questionText} />
-                          ) : (
-                            <span className="muted">-</span>
-                          )}
-                        </td>
-                        <td>
                           {row.data?.questionType
                             ? (questionTypeLabel[row.data.questionType] ?? row.data.questionType)
                             : '-'}
@@ -367,19 +377,88 @@ export function QuestionBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
                             : '-'}
                         </td>
                         <td>
+                          {row.data?.questionText ? (
+                            <MathText text={row.data.questionText} />
+                          ) : (
+                            <span className="muted">-</span>
+                          )}
+                        </td>
+                        <td>
+                          {row.data?.diagramData ? (
+                            <details>
+                              <summary
+                                style={{ cursor: 'pointer', color: '#2563eb', fontSize: 12 }}
+                              >
+                                Có hình
+                              </summary>
+                              <pre
+                                style={{
+                                  whiteSpace: 'pre-wrap',
+                                  fontSize: 11,
+                                  maxHeight: 160,
+                                  overflow: 'auto',
+                                  background: '#f8fafc',
+                                  padding: 6,
+                                  borderRadius: 4,
+                                  marginTop: 4,
+                                }}
+                              >
+                                {row.data.diagramData}
+                              </pre>
+                            </details>
+                          ) : (
+                            <span className="muted">—</span>
+                          )}
+                        </td>
+                        <td>
+                          {row.data ? (
+                            <div style={{ fontSize: 13 }}>
+                              <div style={{ fontWeight: 600 }}>{summarizeAnswer(row.data)}</div>
+                              {row.data.options &&
+                              Object.keys(row.data.options).length > 0 ? (
+                                <ul
+                                  style={{
+                                    margin: '4px 0 0',
+                                    paddingLeft: 16,
+                                    color: '#475569',
+                                  }}
+                                >
+                                  {Object.entries(row.data.options).map(([key, value]) => {
+                                    const isCorrect =
+                                      row.data?.questionType === 'MULTIPLE_CHOICE'
+                                        ? row.data.correctAnswer === key
+                                        : row.data?.questionType === 'TRUE_FALSE'
+                                          ? (row.data.correctAnswer ?? '')
+                                              .split(',')
+                                              .map((s) => s.trim())
+                                              .includes(key)
+                                          : false;
+                                    return (
+                                      <li
+                                        key={key}
+                                        style={{
+                                          fontWeight: isCorrect ? 600 : 400,
+                                          color: isCorrect ? '#15803d' : undefined,
+                                        }}
+                                      >
+                                        <strong>{key}.</strong>{' '}
+                                        <MathText text={String(value ?? '')} />
+                                      </li>
+                                    );
+                                  })}
+                                </ul>
+                              ) : null}
+                            </div>
+                          ) : (
+                            <span className="muted">-</span>
+                          )}
+                        </td>
+                        <td>
                           {row.validationErrors && row.validationErrors.length > 0 ? (
                             <div className="error-list">
                               {row.validationErrors.map((err) => (
                                 <div key={`${row.rowNumber}-${err}`} className="error-item">
                                   • {err}
-                                </div>
-                              ))}
-                            </div>
-                          ) : clientWarnings.has(row.rowNumber) ? (
-                            <div className="warning-list" style={{ color: '#d97706' }}>
-                              {clientWarnings.get(row.rowNumber)?.map((warning) => (
-                                <div key={`${row.rowNumber}-${warning}`} className="warning-item">
-                                  {warning}
                                 </div>
                               ))}
                             </div>
