@@ -3,6 +3,11 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
   BookOpen,
   Calendar,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
   Download,
   Package,
   RefreshCw,
@@ -130,14 +135,27 @@ const RevenueBreakdown: React.FC = () => {
   const [quickRange, setQuickRange] = useState<RevenueQuickRange>('1m');
   const [groupBy, setGroupBy] = useState<RevenueGroupBy>('day');
   const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+  const [pageSizeOpen, setPageSizeOpen] = useState(false);
 
   const breakdownQuery = useQuery({
-    queryKey: ['admin-financial', 'revenue-breakdown', dateRange.from, dateRange.to, groupBy],
+    queryKey: [
+      'admin-financial',
+      'revenue-breakdown',
+      dateRange.from,
+      dateRange.to,
+      groupBy,
+      page,
+      pageSize,
+    ],
     queryFn: () =>
       adminFinancialService.getRevenueBreakdown({
         from: dateRange.from,
         to: dateRange.to,
         groupBy,
+        page,
+        pageSize,
       }),
     staleTime: 30_000,
   });
@@ -223,6 +241,18 @@ const RevenueBreakdown: React.FC = () => {
     const autoGroupBy = computeAutoGroupBy(dateRange.from, dateRange.to);
     if (groupBy !== autoGroupBy) setGroupBy(autoGroupBy);
   }, [dateRange, quickRange, groupBy]);
+
+  useEffect(() => {
+    setPage(0);
+  }, [dateRange.from, dateRange.to, groupBy, searchTerm]);
+
+  const totalRecords = filteredData.length;
+  const totalPages = totalRecords === 0 ? 0 : Math.ceil(totalRecords / pageSize);
+  const currentPage = totalPages === 0 ? 0 : Math.min(page, totalPages - 1);
+  const pagedData = useMemo(() => {
+    const start = currentPage * pageSize;
+    return filteredData.slice(start, start + pageSize);
+  }, [filteredData, currentPage, pageSize]);
 
   const shell = (body: React.ReactNode) => (
     <DashboardLayout
@@ -437,7 +467,7 @@ const RevenueBreakdown: React.FC = () => {
             </thead>
             <tbody>
               <AnimatePresence mode="popLayout">
-                {filteredData.map((item) => (
+                {pagedData.map((item) => (
                   <motion.tr
                     key={item.key}
                     initial={{ opacity: 0 }}
@@ -470,6 +500,155 @@ const RevenueBreakdown: React.FC = () => {
               </tr>
             </tfoot>
           </table>
+        </motion.div>
+
+        <motion.div className="ledger-footer" variants={itemVariants}>
+          <div
+            className="ledger-footer-left"
+            style={{ fontSize: '0.85rem', color: '#7a786f' }}
+          >
+            Showing {totalRecords === 0 ? 0 : currentPage * pageSize + 1}-
+            {Math.min((currentPage + 1) * pageSize, totalRecords)} of {totalRecords} records
+          </div>
+          <div
+            className="ledger-footer-right"
+            style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}
+          >
+            <div
+              tabIndex={0}
+              onBlur={() => setPageSizeOpen(false)}
+              style={{ position: 'relative' }}
+            >
+              <button
+                type="button"
+                onClick={() => setPageSizeOpen((prev) => !prev)}
+                className="period-select"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.45rem 0.75rem',
+                  borderRadius: '12px',
+                  border: '1px solid #e8e6dc',
+                  background: '#ffffff',
+                  fontSize: '0.85rem',
+                  color: '#4b4942',
+                }}
+              >
+                {pageSize} / page
+                <ChevronDown size={14} />
+              </button>
+              {pageSizeOpen && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    right: 0,
+                    top: 'calc(100% + 6px)',
+                    background: '#ffffff',
+                    border: '1px solid #e8e6dc',
+                    borderRadius: '14px',
+                    boxShadow: '0 10px 25px -10px rgba(0,0,0,0.2)',
+                    overflow: 'hidden',
+                    zIndex: 20,
+                    minWidth: '140px',
+                  }}
+                >
+                  {[10, 25, 50, 100].map((size) => (
+                    <button
+                      key={size}
+                      type="button"
+                      onClick={() => {
+                        setPageSize(size);
+                        setPage(0);
+                        setPageSizeOpen(false);
+                      }}
+                      style={{
+                        display: 'flex',
+                        width: '100%',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '0.55rem 0.85rem',
+                        background: size === pageSize ? '#f5f4ed' : '#ffffff',
+                        color: '#4b4942',
+                        fontSize: '0.85rem',
+                        border: 'none',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {size} / page
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <span style={{ fontSize: '0.85rem', color: '#7a786f' }}>
+              Page {totalPages === 0 ? 0 : currentPage + 1} of {totalPages}
+            </span>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              <button
+                type="button"
+                onClick={() => setPage(0)}
+                disabled={currentPage === 0 || totalPages <= 1}
+                className="period-select"
+                style={{
+                  padding: '0.4rem',
+                  borderRadius: '10px',
+                  border: '1px solid #e8e6dc',
+                  background: '#ffffff',
+                }}
+                aria-label="First page"
+              >
+                <ChevronsLeft size={16} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setPage((prev) => Math.max(0, prev - 1))}
+                disabled={currentPage === 0 || totalPages <= 1}
+                className="period-select"
+                style={{
+                  padding: '0.4rem',
+                  borderRadius: '10px',
+                  border: '1px solid #e8e6dc',
+                  background: '#ffffff',
+                }}
+                aria-label="Previous page"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setPage((prev) => Math.min(totalPages - 1, prev + 1))}
+                disabled={totalPages === 0 || currentPage + 1 >= totalPages}
+                className="period-select"
+                style={{
+                  padding: '0.4rem',
+                  borderRadius: '10px',
+                  border: '1px solid #e8e6dc',
+                  background: '#ffffff',
+                }}
+                aria-label="Next page"
+              >
+                <ChevronRight size={16} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setPage(Math.max(0, totalPages - 1))}
+                disabled={totalPages === 0 || currentPage + 1 >= totalPages}
+                className="period-select"
+                style={{
+                  padding: '0.4rem',
+                  borderRadius: '10px',
+                  border: '1px solid #e8e6dc',
+                  background: '#ffffff',
+                }}
+                aria-label="Last page"
+              >
+                <ChevronsRight size={16} />
+              </button>
+            </div>
+          </div>
         </motion.div>
       </div>
 

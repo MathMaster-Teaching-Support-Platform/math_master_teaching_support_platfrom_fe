@@ -54,12 +54,16 @@ export const adminFinancialService = {
     groupBy?: 'hour' | 'day' | 'month';
     from?: string;
     to?: string;
+    page?: number;
+    pageSize?: number;
   }): Promise<RevenueBreakdown> => {
     const query = qs({
       period: params?.period,
       groupBy: params?.groupBy,
       from: params?.from,
       to: params?.to,
+      page: params?.page,
+      pageSize: params?.pageSize,
     });
     const response: ApiResponse<RevenueBreakdown> = await fetchWithAuth(
       `/admin/dashboard/revenue-breakdown${query ? `?${query}` : ''}`
