@@ -9,14 +9,20 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import type { DailyRevenue } from '../../services/admin-financial.service';
-
-interface RevenueBreakdownChartProps {
-  data: DailyRevenue[];
-  period: string;
+interface RevenueChartPoint {
+  key: string;
+  label: string;
+  subscriptions: number;
+  courseSales: number;
+  total: number;
 }
 
-const RevenueBreakdownChart: React.FC<RevenueBreakdownChartProps> = ({ data, period }) => {
+interface RevenueBreakdownChartProps {
+  data: RevenueChartPoint[];
+  groupBy: 'hour' | 'day' | 'month';
+}
+
+const RevenueBreakdownChart: React.FC<RevenueBreakdownChartProps> = ({ data, groupBy }) => {
   // Format currency for tooltips
   const formatCurrency = (value: number): string => {
     return new Intl.NumberFormat('vi-VN', {
@@ -27,27 +33,43 @@ const RevenueBreakdownChart: React.FC<RevenueBreakdownChartProps> = ({ data, per
     }).format(value);
   };
 
-  // Format date for X-axis
-  const formatDate = (dateString: string): string => {
-    const date = new Date(dateString);
-    const day = date.getDate();
-    const month = date.getMonth() + 1;
-    
-    if (period === '7d') {
-      return `${day}/${month}`;
-    } else if (period === '30d') {
-      return day % 5 === 0 ? `${day}/${month}` : '';
-    } else if (period === '90d') {
-      return day === 1 || day === 15 ? `${day}/${month}` : '';
-    } else {
-      return day === 1 ? `${month}/${date.getFullYear().toString().slice(2)}` : '';
+  const parseKeyDate = (key: string): Date => {
+    if (groupBy === 'month') return new Date(`${key}-01T00:00:00Z`);
+    if (groupBy === 'hour') return new Date(`${key.replace(' ', 'T')}:00Z`);
+    return new Date(`${key}T00:00:00Z`);
+  };
+
+  const formatTooltipLabel = (key: string): string => {
+    const date = parseKeyDate(key);
+    if (groupBy === 'hour') {
+      return new Intl.DateTimeFormat('vi-VN', {
+        hour: '2-digit',
+        minute: '2-digit',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      }).format(date);
     }
+    if (groupBy === 'month') {
+      return new Intl.DateTimeFormat('vi-VN', {
+        month: 'long',
+        year: 'numeric',
+      }).format(date);
+    }
+    return new Intl.DateTimeFormat('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    }).format(date);
   };
 
   interface TooltipPayloadEntry {
-    name: string;
-    value: number;
-    color: string;
+    name?: string;
+    value?: number;
+    color?: string;
+    payload?: {
+      key?: string;
+    };
   }
 
   interface CustomTooltipProps {
@@ -57,14 +79,10 @@ const RevenueBreakdownChart: React.FC<RevenueBreakdownChartProps> = ({ data, per
   }
 
   // Custom tooltip
-  const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
+  const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
     if (active && payload && payload.length) {
-      const date = new Date(label!);
-      const formattedDate = new Intl.DateTimeFormat('vi-VN', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      }).format(date);
+      const labelKey = payload[0]?.payload?.key ?? '';
+      const formattedDate = labelKey ? formatTooltipLabel(labelKey) : '';
 
       return (
         <div style={{
@@ -82,13 +100,13 @@ const RevenueBreakdownChart: React.FC<RevenueBreakdownChartProps> = ({ data, per
             {payload.map((entry: TooltipPayloadEntry, index: number) => (
               <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
                 <span style={{ color: '#5e5d59', fontSize: '0.85rem', fontWeight: 500 }}>{entry.name}:</span>
-                <span style={{ color: entry.color, fontWeight: 700, fontSize: '0.9rem' }}>{formatCurrency(entry.value)}</span>
+                <span style={{ color: entry.color, fontWeight: 700, fontSize: '0.9rem' }}>{formatCurrency(entry.value ?? 0)}</span>
               </div>
             ))}
             <div style={{ marginTop: '0.5rem', paddingTop: '0.75rem', borderTop: '1px solid #e8e6dc', display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ color: '#141413', fontWeight: 700, fontSize: '0.9rem' }}>Tổng:</span>
               <span style={{ color: '#c96442', fontWeight: 800, fontSize: '0.95rem' }}>
-                {formatCurrency(payload.reduce((sum: number, entry: TooltipPayloadEntry) => sum + entry.value, 0))}
+                {formatCurrency(payload.reduce((sum: number, entry: TooltipPayloadEntry) => sum + (entry.value ?? 0), 0))}
               </span>
             </div>
           </div>
@@ -99,9 +117,10 @@ const RevenueBreakdownChart: React.FC<RevenueBreakdownChartProps> = ({ data, per
   };
 
   const chartData = data.map((item) => ({
-    date: item.date,
-    'Gói đăng ký': item.subscriptions,
-    'Hoa hồng khóa học': item.courseSales,
+    key: item.key,
+    label: item.label,
+    subscriptions: item.subscriptions,
+    courseSales: item.courseSales,
   }));
 
   return (
@@ -114,8 +133,7 @@ const RevenueBreakdownChart: React.FC<RevenueBreakdownChartProps> = ({ data, per
         >
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e8e6dc" />
           <XAxis
-            dataKey="date"
-            tickFormatter={formatDate}
+            dataKey="label"
             axisLine={false}
             tickLine={false}
             tick={{ fill: '#87867f', fontSize: 12 }}
@@ -139,14 +157,16 @@ const RevenueBreakdownChart: React.FC<RevenueBreakdownChartProps> = ({ data, per
             wrapperStyle={{ paddingBottom: '30px', fontSize: '12px', fontWeight: 600 }}
           />
           <Bar
-            dataKey="Gói đăng ký"
+            dataKey="subscriptions"
+            name="Gói đăng ký"
             stackId="1"
             fill="#8b5cf6"
             radius={[0, 0, 0, 0]}
             animationDuration={1500}
           />
           <Bar
-            dataKey="Hoa hồng khóa học"
+            dataKey="courseSales"
+            name="Hoa hồng khóa học"
             stackId="1"
             fill="#10b981"
             radius={[4, 4, 0, 0]}
