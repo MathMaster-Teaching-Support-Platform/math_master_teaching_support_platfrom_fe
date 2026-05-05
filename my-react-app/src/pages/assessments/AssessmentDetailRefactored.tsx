@@ -1,4 +1,4 @@
-import { ArrowLeft, Pencil, RefreshCw } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Pencil, Plus, RefreshCw } from 'lucide-react';
 import { UI_TEXT } from '../../constants/uiText';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -498,10 +498,19 @@ export default function AssessmentDetailRefactored() {
           )}
 
           {assessment.status === 'DRAFT' && (
-            <div className="preview-box" style={{ marginBottom: 12 }}>
-              <p className="muted" style={{ marginBottom: 8 }}>
-                Thêm câu hỏi vào assessment
-              </p>
+            <details className="add-question-panel">
+              <summary className="add-question-panel__summary">
+                <span className="add-question-panel__title">
+                  <Plus size={14} />
+                  Thêm câu hỏi vào bài kiểm tra
+                </span>
+                <ChevronDown
+                  size={16}
+                  className="add-question-panel__chevron"
+                  aria-hidden="true"
+                />
+              </summary>
+              <div className="add-question-panel__body">
               <div className="form-grid" style={{ marginBottom: 10 }}>
                 <label>
                   <p className="muted" style={{ marginBottom: 6 }}>Từ khóa</p>
@@ -601,7 +610,8 @@ export default function AssessmentDetailRefactored() {
                   }}
                 />
               )}
-            </div>
+              </div>
+            </details>
           )}
 
           {assessment.generationSummary && (

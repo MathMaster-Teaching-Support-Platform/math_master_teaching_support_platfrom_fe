@@ -1,4 +1,4 @@
-import { ArrowLeft, Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { Fragment, useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import MathText from '../../components/common/MathText';
@@ -463,22 +463,36 @@ export default function AssessmentDetail() {
 
           {/* ── Search & add questions (only for DIRECT assessments in DRAFT) ── */}
           {isDraft && isDirect && (
-            <div className="preview-box" style={{ marginBottom: 16 }}>
-              <p className="muted" style={{ marginBottom: 8, fontWeight: 600 }}>
-                <Search size={14} style={{ marginRight: 4 }} />
-                Tìm kiếm và thêm câu hỏi
-              </p>
+            <details className="add-question-panel">
+              <summary className="add-question-panel__summary">
+                <span className="add-question-panel__title">
+                  <Plus size={14} />
+                  Thêm câu hỏi vào bài kiểm tra
+                </span>
+                <ChevronDown
+                  size={16}
+                  className="add-question-panel__chevron"
+                  aria-hidden="true"
+                />
+              </summary>
+              <div className="add-question-panel__body">
               <div
                 className="row"
                 style={{ flexWrap: 'wrap', justifyContent: 'start', marginBottom: 8 }}
               >
-                <input
-                  className="input"
-                  style={{ minWidth: 280 }}
-                  placeholder="Nhập từ khóa (ít nhất 2 ký tự)..."
-                  value={searchKeyword}
-                  onChange={(e) => setSearchKeyword(e.target.value)}
-                />
+                <div
+                  className="row"
+                  style={{ alignItems: 'center', gap: 6, flex: 1, minWidth: 280 }}
+                >
+                  <Search size={14} style={{ color: '#64748b' }} aria-hidden="true" />
+                  <input
+                    className="input"
+                    style={{ flex: 1 }}
+                    placeholder="Nhập từ khóa (ít nhất 2 ký tự)..."
+                    value={searchKeyword}
+                    onChange={(e) => setSearchKeyword(e.target.value)}
+                  />
+                </div>
                 {searchFetching && <span className="muted">Đang tìm...</span>}
               </div>
 
@@ -554,7 +568,8 @@ export default function AssessmentDetail() {
                   </button>
                 </div>
               )}
-            </div>
+              </div>
+            </details>
           )}
 
           {questionsLoading && <div className="empty">Đang tải danh sách câu hỏi...</div>}
