@@ -342,8 +342,9 @@ export function EnhancedQuestionFormModal({
             <LatexToolbar onInsert={handleInsertLatex} disabled={saving} />
           </div>
 
-          <div className="eqfm-row">
+          <div className="eqfm-row eqfm-row--question">
             <div
+              className="eqfm-editor-card"
               style={{
                 padding: 20,
                 backgroundColor: '#f9fafb',
@@ -388,14 +389,15 @@ export function EnhancedQuestionFormModal({
             </section>
           </div>
 
-          <div className="eqfm-row">
-            <div>
+          <div className="eqfm-row eqfm-row--diagram">
+            <div className="eqfm-editor-card">
               <label
                 style={{ display: 'block', fontWeight: 600, marginBottom: 8, color: '#374151' }}
               >
                 Hình vẽ <span style={{ color: '#ef4444' }}>*</span>
               </label>
               <textarea
+                className="eqfm-textarea-fill"
                 value={diagramData}
                 onChange={(e) => setDiagramData(e.target.value)}
                 disabled={saving}
@@ -429,14 +431,15 @@ export function EnhancedQuestionFormModal({
             </section>
           </div>
 
-          <div className="eqfm-row">
-            <div>
+          <div className="eqfm-row eqfm-row--explanation">
+            <div className="eqfm-editor-card">
               <label
                 style={{ display: 'block', fontWeight: 600, marginBottom: 8, color: '#374151' }}
               >
                 Giải thích <span style={{ color: '#ef4444' }}>*</span>
               </label>
               <textarea
+                className="eqfm-textarea-fill"
                 value={explanation}
                 onChange={(e) => setExplanation(e.target.value)}
                 disabled={saving}
