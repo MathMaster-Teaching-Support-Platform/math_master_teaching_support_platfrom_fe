@@ -220,16 +220,9 @@ export default function AssessmentBuilderFlow() {
 
           <section className="assessment-builder-flow__orchestration-grid">
             <article className="data-card">
-              <h3>Bước 1: Lắp ráp đề nháp từ ma trận</h3>
-              <p className="muted">
-                Chọn ma trận đã duyệt. Hệ thống chỉ chọn câu hỏi từ Question Bank theo rule của ma
-                trận.
-              </p>
+              <h3>Bước 1: Tạo đề thi từ ma trận</h3>
 
               <label>
-                <p className="muted" style={{ marginBottom: 6 }}>
-                  Ma trận đã duyệt
-                </p>
                 <select
                   className="select"
                   value={selectedMatrixId}
@@ -245,11 +238,6 @@ export default function AssessmentBuilderFlow() {
                 </select>
               </label>
 
-              <p className="muted" style={{ marginTop: 8 }}>
-                Generation Mode: BANK_FIRST (cố định). Không dùng AI trong bước tạo{' '}
-                {UI_TEXT.QUIZ.toLowerCase()} từ matrix.
-              </p>
-
               <div className="row" style={{ flexWrap: 'wrap' }}>
                 <button
                   type="button"
@@ -257,7 +245,7 @@ export default function AssessmentBuilderFlow() {
                   onClick={() => void handleGenerate()}
                   disabled={!selectedMatrixId || generateMutation.isPending}
                 >
-                  {generateMutation.isPending ? 'Đang tạo...' : 'Generate from Matrix'}
+                  {generateMutation.isPending ? 'Đang tạo...' : 'Tạo đề thi từ ma trận đã chọn'}
                 </button>
                 <button
                   type="button"
@@ -307,7 +295,7 @@ export default function AssessmentBuilderFlow() {
 
                   {generatedAssessment?.generationSummary && (
                     <div className="data-card" style={{ minHeight: 0 }}>
-                      <h3>Kết quả Generate from Matrix</h3>
+                      <h3>Tạo đề thi từ ma trận đã chọn</h3>
                       <p className="muted">
                         totalQuestionsGenerated:{' '}
                         {generatedAssessment.generationSummary.totalQuestionsGenerated ?? 0}
