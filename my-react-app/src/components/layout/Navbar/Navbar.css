@@ -240,6 +240,13 @@
   border-bottom: 1px solid #f0eee6;
   transition: background-color var(--transition-fast);
   cursor: pointer;
+  text-align: left;
+  width: 100%;
+  background: transparent;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  font-family: inherit;
 }
 
 .notification-item:hover {
