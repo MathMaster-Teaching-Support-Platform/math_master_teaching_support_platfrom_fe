@@ -9,14 +9,13 @@ import {
   Search,
   TrendingUp,
 } from 'lucide-react';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import RevenueBreakdownChart from '../../components/charts/RevenueBreakdownChart';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockAdmin } from '../../data/mockData';
 import type { RevenueBreakdown as RevenueBreakdownData } from '../../services/admin-financial.service';
 import {
   adminFinancialService,
-  calculateTotalRevenue,
   exportToCSV,
   formatCurrency,
 } from '../../services/admin-financial.service';
@@ -27,13 +26,119 @@ import './admin-mgmt-shell.css';
 import AdminFinanceStudioShell from './AdminFinanceStudioShell';
 import './RevenueBreakdown.css';
 
+type RevenueGroupBy = 'hour' | 'day' | 'month';
+type RevenueQuickRange = '1d' | '1w' | '1m' | '1y' | null;
+
+const pad2 = (value: number): string => String(value).padStart(2, '0');
+
+const toDateOnly = (date: Date): string => date.toISOString().split('T')[0];
+
+const parseUtcDate = (dateStr: string): Date => new Date(`${dateStr}T00:00:00Z`);
+
+const inclusiveDayDiff = (from: Date, to: Date): number =>
+  Math.floor((to.getTime() - from.getTime()) / (24 * 60 * 60 * 1000)) + 1;
+
+const formatUtcDayKey = (date: Date): string =>
+  `${date.getUTCFullYear()}-${pad2(date.getUTCMonth() + 1)}-${pad2(date.getUTCDate())}`;
+
+const formatUtcMonthKey = (date: Date): string =>
+  `${date.getUTCFullYear()}-${pad2(date.getUTCMonth() + 1)}`;
+
+const formatUtcHourKey = (date: Date): string =>
+  `${formatUtcDayKey(date)} ${pad2(date.getUTCHours())}:00`;
+
+const formatUtcDayLabel = (date: Date): string =>
+  `${pad2(date.getUTCDate())}/${pad2(date.getUTCMonth() + 1)}`;
+
+const formatUtcMonthLabel = (date: Date): string =>
+  `${pad2(date.getUTCMonth() + 1)}/${date.getUTCFullYear()}`;
+
+const computeAutoGroupBy = (fromStr: string, toStr: string): RevenueGroupBy => {
+  const from = parseUtcDate(fromStr);
+  const to = parseUtcDate(toStr);
+  const days = inclusiveDayDiff(from, to);
+
+  if (days <= 1) return 'hour';
+  if (days <= 31) return 'day';
+  return 'month';
+};
+
+const buildTimeBuckets = (fromStr: string, toStr: string, groupBy: RevenueGroupBy) => {
+  const from = parseUtcDate(fromStr);
+  const to = parseUtcDate(toStr);
+
+  if (groupBy === 'hour') {
+    const base = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate(), 0, 0, 0));
+    return Array.from({ length: 24 }, (_, idx) => {
+      const current = new Date(base);
+      current.setUTCHours(base.getUTCHours() + idx);
+      return {
+        key: formatUtcHourKey(current),
+        label: `${pad2(current.getUTCHours())}:00`,
+      };
+    });
+  }
+
+  if (groupBy === 'month') {
+    const buckets = [] as { key: string; label: string }[];
+    const current = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), 1));
+    const end = new Date(Date.UTC(to.getUTCFullYear(), to.getUTCMonth(), 1));
+
+    while (current.getTime() <= end.getTime()) {
+      buckets.push({
+        key: formatUtcMonthKey(current),
+        label: formatUtcMonthLabel(current),
+      });
+      current.setUTCMonth(current.getUTCMonth() + 1);
+    }
+
+    return buckets;
+  }
+
+  const buckets = [] as { key: string; label: string }[];
+  const current = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate()));
+
+  while (current.getTime() <= to.getTime()) {
+    buckets.push({
+      key: formatUtcDayKey(current),
+      label: formatUtcDayLabel(current),
+    });
+    current.setUTCDate(current.getUTCDate() + 1);
+  }
+
+  return buckets;
+};
+
+const formatLedgerLabel = (key: string, groupBy: RevenueGroupBy): string => {
+  if (groupBy === 'month') return `${key.split('-')[1]}/${key.split('-')[0]}`;
+  if (groupBy === 'hour') {
+    const [datePart, timePart] = key.split(' ');
+    const [year, month, day] = datePart.split('-');
+    return `${timePart} ${day}/${month}/${year}`;
+  }
+  const [year, month, day] = key.split('-');
+  return `${day}/${month}/${year}`;
+};
+
 const RevenueBreakdown: React.FC = () => {
-  const [period, setPeriod] = useState<string>('30d');
+  const [dateRange, setDateRange] = useState<{ from: string; to: string }>(() => {
+    const now = new Date();
+    const to = toDateOnly(now);
+    const from = toDateOnly(new Date(now.getTime() - 29 * 24 * 60 * 60 * 1000));
+    return { from, to };
+  });
+  const [quickRange, setQuickRange] = useState<RevenueQuickRange>('1m');
+  const [groupBy, setGroupBy] = useState<RevenueGroupBy>('day');
   const [searchTerm, setSearchTerm] = useState('');
 
   const breakdownQuery = useQuery({
-    queryKey: ['admin-financial', 'revenue-breakdown', period],
-    queryFn: () => adminFinancialService.getRevenueBreakdown(period),
+    queryKey: ['admin-financial', 'revenue-breakdown', dateRange.from, dateRange.to, groupBy],
+    queryFn: () =>
+      adminFinancialService.getRevenueBreakdown({
+        from: dateRange.from,
+        to: dateRange.to,
+        groupBy,
+      }),
     staleTime: 30_000,
   });
 
@@ -43,33 +148,81 @@ const RevenueBreakdown: React.FC = () => {
     ? (breakdownQuery.error as any).message || 'Đã xảy ra lỗi không xác định'
     : null;
 
+  const buckets = buildTimeBuckets(dateRange.from, dateRange.to, groupBy);
+  const breakdownMap = useMemo(
+    () => new Map((breakdown?.data ?? []).map((item) => [item.date, item])),
+    [breakdown]
+  );
+  const normalizedSeries = useMemo(
+    () =>
+      buckets.map((bucket) => {
+        const item = breakdownMap.get(bucket.key);
+        const subscriptions = Number(item?.subscriptions ?? 0);
+        const courseSales = Number(item?.courseSales ?? 0);
+        const deposits = Number(item?.deposits ?? 0);
+        return {
+          key: bucket.key,
+          label: bucket.label,
+          subscriptions,
+          courseSales,
+          deposits,
+          total: subscriptions + courseSales,
+        };
+      }),
+    [buckets, breakdownMap]
+  );
   const filteredData = useMemo(() => {
-    if (!breakdown) return [];
-    return breakdown.data.filter(
-      (item) =>
-        item.date.includes(searchTerm) ||
-        new Date(item.date).toLocaleDateString('vi-VN').includes(searchTerm)
-    );
-  }, [breakdown, searchTerm]);
+    if (searchTerm.trim() === '') return normalizedSeries;
+    const term = searchTerm.toLowerCase();
+    return normalizedSeries.filter((item) => {
+      const display = formatLedgerLabel(item.key, groupBy).toLowerCase();
+      return item.key.includes(searchTerm) || display.includes(term);
+    });
+  }, [normalizedSeries, searchTerm, groupBy]);
 
   const stats = useMemo(() => {
-    if (!breakdown) return { total: 0, subscriptions: 0, courses: 0 };
-    const total = calculateTotalRevenue(breakdown.data);
-    const subscriptions = breakdown.data.reduce((sum, day) => sum + day.subscriptions, 0);
-    const courses = breakdown.data.reduce((sum, day) => sum + day.courseSales, 0);
+    const total = normalizedSeries.reduce((sum, item) => sum + item.total, 0);
+    const subscriptions = normalizedSeries.reduce((sum, item) => sum + item.subscriptions, 0);
+    const courses = normalizedSeries.reduce((sum, item) => sum + item.courseSales, 0);
     return { total, subscriptions, courses };
-  }, [breakdown]);
+  }, [normalizedSeries]);
 
   const handleExport = () => {
-    if (!breakdown || breakdown.data.length === 0) return;
-    const exportData = breakdown.data.map((item) => ({
-      Ngày: item.date,
+    if (normalizedSeries.length === 0) return;
+    const exportData = normalizedSeries.map((item) => ({
+      'Thời gian': formatLedgerLabel(item.key, groupBy),
       'Đăng ký (VND)': item.subscriptions,
       'Khóa học (VND)': item.courseSales,
       'Tổng (VND)': item.total,
     }));
-    exportToCSV(exportData, `revenue_breakdown_${period}`);
+    exportToCSV(exportData, `revenue_breakdown_${dateRange.from}_${dateRange.to}`);
   };
+
+  const setQuickDateRange = (range: Exclude<RevenueQuickRange, null>) => {
+    const now = new Date();
+    const toUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    const fromUtc = new Date(toUtc);
+
+    if (range === '1w') fromUtc.setUTCDate(fromUtc.getUTCDate() - 6);
+    if (range === '1m') fromUtc.setUTCDate(fromUtc.getUTCDate() - 29);
+    if (range === '1y') {
+      fromUtc.setUTCMonth(fromUtc.getUTCMonth() - 11);
+      fromUtc.setUTCDate(1);
+    }
+
+    const toStr = toDateOnly(toUtc);
+    const fromStr = toDateOnly(fromUtc);
+
+    setDateRange({ from: fromStr, to: toStr });
+    setQuickRange(range);
+    setGroupBy(range === '1d' ? 'hour' : range === '1y' ? 'month' : 'day');
+  };
+
+  useEffect(() => {
+    if (quickRange != null) return;
+    const autoGroupBy = computeAutoGroupBy(dateRange.from, dateRange.to);
+    if (groupBy !== autoGroupBy) setGroupBy(autoGroupBy);
+  }, [dateRange, quickRange, groupBy]);
 
   const shell = (body: React.ReactNode) => (
     <DashboardLayout
@@ -138,16 +291,52 @@ const RevenueBreakdown: React.FC = () => {
         <div className="header-actions">
           <div className="period-selector">
             <Calendar size={18} color="#87867f" />
-            <select
-              value={period}
-              onChange={(e) => setPeriod(e.target.value)}
-              className="period-select"
-            >
-              <option value="7d">7 ngày qua</option>
-              <option value="30d">30 ngày qua</option>
-              <option value="90d">90 ngày qua</option>
-              <option value="1y">1 năm qua</option>
-            </select>
+            <div className="period-select" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <input
+                type="date"
+                value={dateRange.from}
+                onChange={(e) => {
+                  setDateRange((prev) => ({ ...prev, from: e.target.value }));
+                  setQuickRange(null);
+                }}
+                className="period-select"
+              />
+              <span style={{ color: '#87867f' }}>-</span>
+              <input
+                type="date"
+                value={dateRange.to}
+                onChange={(e) => {
+                  setDateRange((prev) => ({ ...prev, to: e.target.value }));
+                  setQuickRange(null);
+                }}
+                className="period-select"
+              />
+            </div>
+          </div>
+          <div className="period-selector">
+            {([
+              { id: '1d', label: '1 ngày' },
+              { id: '1w', label: '1 tuần' },
+              { id: '1m', label: '1 tháng' },
+              { id: '1y', label: '1 năm' },
+            ] as const).map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setQuickDateRange(item.id)}
+                className="period-select"
+                style={{
+                  border: '1px solid #e8e6dc',
+                  background: quickRange === item.id ? '#f3f2eb' : '#ffffff',
+                  padding: '0.4rem 0.65rem',
+                  borderRadius: '10px',
+                  fontSize: '0.85rem',
+                  color: '#4b4942',
+                }}
+              >
+                {item.label}
+              </button>
+            ))}
           </div>
           <button type="button" onClick={handleExport} className="export-button">
             <Download size={18} /> Báo cáo CSV
@@ -214,7 +403,7 @@ const RevenueBreakdown: React.FC = () => {
         <h2>Xu hướng biến động doanh thu</h2>
         <p>Phân tích sự đóng góp của các nguồn thu theo thời gian</p>
         <div className="chart-container">
-          <RevenueBreakdownChart data={breakdown?.data || []} period={period} />
+          <RevenueBreakdownChart data={normalizedSeries} groupBy={groupBy} />
         </div>
       </motion.div>
 
@@ -250,7 +439,7 @@ const RevenueBreakdown: React.FC = () => {
               <AnimatePresence mode="popLayout">
                 {filteredData.map((item) => (
                   <motion.tr
-                    key={item.date}
+                    key={item.key}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -258,11 +447,7 @@ const RevenueBreakdown: React.FC = () => {
                   >
                     <td>
                       <span className="date-cell">
-                        {new Date(item.date).toLocaleDateString('vi-VN', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                        })}
+                        {formatLedgerLabel(item.key, groupBy)}
                       </span>
                     </td>
                     <td className="currency-cell" style={{ color: '#7c3aed' }}>
