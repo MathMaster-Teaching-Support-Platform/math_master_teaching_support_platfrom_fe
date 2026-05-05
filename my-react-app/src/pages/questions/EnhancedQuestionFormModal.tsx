@@ -82,6 +82,17 @@ export function EnhancedQuestionFormModal({
   const [enhancing, setEnhancing] = useState(false);
   const { showToast } = useToast();
 
+  const previewQuestionText = String(editorValue.questionText || '').trim();
+  const previewCorrectAnswer = String(editorValue.correctAnswer || '').trim();
+  const previewTypeLabel = questionTypeLabels[questionType];
+  const previewOptions = (editorValue.options as Record<string, unknown>) || {};
+  const previewOptionEntries = Object.entries(previewOptions).filter(
+    ([, value]) => typeof value === 'string' && value.trim().length > 0
+  );
+  const hasDiagramPreview = Boolean(
+    diagramData.trim() || initialData?.diagramData || initialData?.diagramUrl
+  );
+
   const insertLatexAtCursor = (latex: string) => {
     const textarea = diagramTextareaRef.current;
     if (!textarea) return;
@@ -215,7 +226,7 @@ export function EnhancedQuestionFormModal({
     <div className="modal-layer">
       <div
         className="modal-card"
-        style={{ width: 'min(800px, 95vw)', maxHeight: '90vh', overflow: 'auto' }}
+        style={{ width: 'min(1240px, 96vw)', maxHeight: '92vh', overflow: 'auto' }}
       >
         <div className="modal-header">
           <div>
@@ -233,8 +244,8 @@ export function EnhancedQuestionFormModal({
           </button>
         </div>
 
-        <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          <>
+        <div className="modal-body eqfm-layout">
+          <div className="eqfm-form-column">
             {error && (
               <div
                 style={{
@@ -250,7 +261,6 @@ export function EnhancedQuestionFormModal({
               </div>
             )}
 
-            {/* Question Type Selector */}
             <div>
               <label
                 style={{ display: 'block', fontWeight: 600, marginBottom: 8, color: '#374151' }}
@@ -306,7 +316,6 @@ export function EnhancedQuestionFormModal({
               />
             </div>
 
-            {/* AI Enhancement Button */}
             {(questionType === 'TRUE_FALSE' ||
               questionType === 'SHORT_ANSWER' ||
               questionType === 'MULTIPLE_CHOICE') && (
@@ -347,28 +356,6 @@ export function EnhancedQuestionFormModal({
               </div>
             )}
 
-            {/* LaTeX Preview for Question Text */}
-            {editorValue.questionText && String(editorValue.questionText).includes('$') && (
-              <div
-                style={{
-                  padding: 16,
-                  backgroundColor: '#f0f9ff',
-                  border: '1px solid #bae6fd',
-                  borderRadius: 8,
-                }}
-              >
-                <p
-                  className="muted"
-                  style={{ marginBottom: 8, fontSize: '0.8rem', fontWeight: 600 }}
-                >
-                  Xem trước sơ đồ:
-                </p>
-                <QuestionDiagram
-                  source={{ diagramData: { latex: diagramData.trim() } }}
-                />
-              </div>
-            )}
-
             <div>
               <label
                 style={{ display: 'block', fontWeight: 600, marginBottom: 8, color: '#374151' }}
@@ -404,7 +391,7 @@ export function EnhancedQuestionFormModal({
                 onChange={(e) => setDiagramData(e.target.value)}
                 disabled={saving}
                 placeholder="Nhập LaTeX cho hình vẽ nếu có... Ví dụ: \frac{-b \pm \sqrt{b^2-4ac}}{2a}"
-                rows={3}
+                rows={4}
                 style={{
                   width: '100%',
                   padding: '10px 12px',
@@ -414,31 +401,55 @@ export function EnhancedQuestionFormModal({
                   resize: 'vertical',
                 }}
               />
-
-              {/* LaTeX Toolbar */}
               <LatexToolbar onInsert={insertLatexAtCursor} disabled={saving} />
+            </div>
+          </div>
 
-              {diagramData && diagramData.trim() && (
-                <div
-                  style={{
-                    marginTop: 8,
-                    padding: 12,
-                    backgroundColor: '#f0f9ff',
-                    border: '1px solid #bae6fd',
-                    borderRadius: 8,
-                  }}
-                >
-                  <p
-                    className="muted"
-                    style={{ marginBottom: 6, fontSize: '0.8rem', fontWeight: 600 }}
-                  >
-                    Xem trước LaTeX:
-                  </p>
-                  <MathText text={diagramData} />
+          <aside className="eqfm-preview-column">
+            <section className="eqfm-preview-card">
+              <p className="eqfm-preview-heading">Xem trước đề</p>
+              <span className="badge" style={{ marginBottom: 8 }}>
+                {previewTypeLabel}
+              </span>
+              <div className="eqfm-preview-question">
+                <MathText text={previewQuestionText || 'Chưa có nội dung câu hỏi.'} />
+              </div>
+
+              {previewOptionEntries.length > 0 && (
+                <div className="eqfm-preview-meta">
+                  <p className="eqfm-preview-meta__title">Lựa chọn</p>
+                  <ol className="eqfm-preview-options">
+                    {previewOptionEntries.map(([key, value], index) => (
+                      <li key={`preview-option-${key}`}>
+                        <strong>{(key || String.fromCharCode(65 + index)).toUpperCase()}.</strong>{' '}
+                        <MathText text={String(value)} />
+                      </li>
+                    ))}
+                  </ol>
                 </div>
               )}
-            </div>
-          </>
+
+              <p className="eqfm-preview-answer">
+                <span>Đáp án:</span> {previewCorrectAnswer || 'Chưa có đáp án'}
+              </p>
+            </section>
+
+            <section className="eqfm-preview-card">
+              <p className="eqfm-preview-heading">Xem trước hình</p>
+              {hasDiagramPreview ? (
+                <QuestionDiagram
+                  source={{
+                    diagramData: diagramData.trim() ? diagramData.trim() : initialData?.diagramData,
+                    diagramUrl: initialData?.diagramUrl,
+                  }}
+                />
+              ) : (
+                <p className="muted" style={{ margin: 0 }}>
+                  Chưa có hình minh họa.
+                </p>
+              )}
+            </section>
+          </aside>
         </div>
 
         <div className="modal-footer">
