@@ -583,7 +583,7 @@ const OnboardingFlow: React.FC = () => {
         <strong>24 – 48 giờ</strong>. Trong thời gian đó, bạn hoàn toàn có thể khám phá và sử dụng
         MathMaster.
       </p>
-      <button className="ob-btn ob-btn-primary ob-btn-lg" onClick={() => navigate('/dashboard')}>
+      <button className="ob-btn ob-btn-primary ob-btn-lg" onClick={() => navigate('/submit-teacher-profile')}>
         Bắt đầu khám phá <ArrowRight size={18} />
       </button>
     </div>
