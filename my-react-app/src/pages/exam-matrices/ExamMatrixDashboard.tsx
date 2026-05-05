@@ -165,7 +165,7 @@ export function ExamMatrixDashboard() {
               }}
             >
               <Plus size={16} />
-              Tạo draft ma trận
+              Tạo ma trận
             </button>
           </header>
 
@@ -219,7 +219,7 @@ export function ExamMatrixDashboard() {
                   <span className="exam-matrix-wf-step__num" aria-hidden>
                     1
                   </span>
-                  <p className="exam-matrix-wf-step__title">Tạo draft</p>
+                  <p className="exam-matrix-wf-step__title">Tạo nháp</p>
                 </div>
                 <p className="exam-matrix-wf-step__desc">
                   Đặt tên ma trận, mô tả và mục tiêu câu hỏi.
@@ -264,7 +264,7 @@ export function ExamMatrixDashboard() {
                 onClick={() => navigate('/teacher/assessments')}
               >
                 <BookOpen size={15} />
-                Create Exam
+                Tạo bài kiểm tra
                 <ArrowRight size={14} />
               </button>
             </div>

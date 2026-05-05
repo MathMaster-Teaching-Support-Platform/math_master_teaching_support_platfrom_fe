@@ -1,6 +1,6 @@
 import { Bell, CircleHelp, Wallet } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useNotificationsContext } from '../../../context/NotificationContext';
 import { AuthService } from '../../../services/api/auth.service';
 import {
@@ -21,7 +21,8 @@ const Navbar: React.FC<NavbarProps> = ({ user }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [tokenRemaining, setTokenRemaining] = useState<number | null>(null);
   const [failedAvatarUrl, setFailedAvatarUrl] = useState<string | null>(null);
-  const { unreadCount, notifications, markAllAsRead } = useNotificationsContext();
+  const { unreadCount, notifications, markAllAsRead, markAsRead } = useNotificationsContext();
+  const navigate = useNavigate();
   const notificationsPreview = notifications.slice(0, 3);
   const unreadCountLabel = unreadCount > 99 ? '99+' : String(unreadCount);
 
@@ -188,7 +189,16 @@ const Navbar: React.FC<NavbarProps> = ({ user }) => {
           </div>
           <div className="notifications-list">
             {notificationsPreview.map((notif) => (
-              <div key={notif.id} className={`notification-item${notif.read ? '' : ' unread'}`}>
+              <button
+                key={notif.id}
+                type="button"
+                className={`notification-item${notif.read ? '' : ' unread'}`}
+                onClick={() => {
+                  markAsRead(notif.id);
+                  setShowNotifications(false);
+                  if (notif.actionUrl) navigate(notif.actionUrl);
+                }}
+              >
                 <div className="notification-icon">{getNotificationIcon(notif.type)}</div>
                 <div className="notification-content">
                   <div className="notification-title">{notif.title}</div>
@@ -197,7 +207,7 @@ const Navbar: React.FC<NavbarProps> = ({ user }) => {
                     {new Date(notif.createdAt).toLocaleDateString()}
                   </div>
                 </div>
-              </div>
+              </button>
             ))}
             {notifications.length === 0 && (
               <div className="notification-empty-state">Chưa có thông báo nào</div>

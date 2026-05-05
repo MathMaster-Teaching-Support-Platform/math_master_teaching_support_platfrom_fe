@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import React, { useEffect, useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Upload } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { TeacherProfileService } from '../../services/api/teacher-profile.service';
 import type { TeacherProfile, UpdateTeacherProfileRequest } from '../../types';
 import './TeacherProfile.css';
@@ -19,11 +19,21 @@ interface OcrField {
 function normalizeOcrFieldLabel(rawLabel: string): string | null {
   const normalized = rawLabel.toLowerCase().trim();
 
-  if (normalized === 'họ và tên' || normalized === 'ho va ten' || normalized === 'họ tên' || normalized === 'ho ten') {
+  if (
+    normalized === 'họ và tên' ||
+    normalized === 'ho va ten' ||
+    normalized === 'họ tên' ||
+    normalized === 'ho ten'
+  ) {
     return 'Họ và tên';
   }
 
-  if (normalized === 'chức danh+toán' || normalized === 'chuc danh+toan' || normalized === 'chức danh + chuyên môn' || normalized === 'chuc danh + chuyen mon') {
+  if (
+    normalized === 'chức danh+toán' ||
+    normalized === 'chuc danh+toan' ||
+    normalized === 'chức danh + chuyên môn' ||
+    normalized === 'chuc danh + chuyen mon'
+  ) {
     return 'Chức danh + Chuyên môn';
   }
 
@@ -36,7 +46,8 @@ function normalizeOcrFieldLabel(rawLabel: string): string | null {
 
 function parseOcrFields(comment: string): OcrField[] | null {
   // Parse only known OCR status fields to avoid picking up subtitle fragments
-  const fieldPattern = /(Họ và tên|Họ tên|ho va ten|ho ten|Chức danh\+Toán|chuc danh\+toan|Chức danh \+ Chuyên môn|chuc danh \+ chuyen mon|Tên trường|ten truong)\s*:\s*([vVxX✓✗])(?=\s|,|$)/gi;
+  const fieldPattern =
+    /(Họ và tên|Họ tên|ho va ten|ho ten|Chức danh\+Toán|chuc danh\+toan|Chức danh \+ Chuyên môn|chuc danh \+ chuyen mon|Tên trường|ten truong)\s*:\s*([vVxX✓✗])(?=\s|,|$)/gi;
   const results: OcrField[] = [];
   let match: RegExpExecArray | null;
   while ((match = fieldPattern.exec(comment)) !== null) {
@@ -385,18 +396,18 @@ const MyTeacherProfile: React.FC<MyTeacherProfileProps> = ({ onDelete }) => {
               </div>
               {profile.verificationDocumentKey && (
                 <div className="tp-info-row">
-                  <span className="tp-info-label">Tài liệu XM</span>
+                  <span className="tp-info-label">Tài liệu xác minh</span>
                   <span className="tp-info-value tp-info-value--muted">Đã tải lên</span>
                 </div>
               )}
               {profile.description && (
                 <div className="tp-info-row">
-                  <span className="tp-info-label">Mô tả</span>
+                  <span className="tp-info-label">Chức vụ</span>
                   <span className="tp-info-value">{profile.description}</span>
                 </div>
               )}
               <div className="tp-info-row">
-                <span className="tp-info-label">Ngày nộp</span>
+                <span className="tp-info-label">Thời gian nộp</span>
                 <span className="tp-info-value">
                   {new Date(profile.createdAt).toLocaleString('vi-VN')}
                 </span>

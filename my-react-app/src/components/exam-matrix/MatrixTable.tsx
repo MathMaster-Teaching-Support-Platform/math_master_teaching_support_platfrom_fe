@@ -76,27 +76,6 @@ function getLevelCount(row: ExamMatrixTableRow, level: MatrixLevel, partNumber: 
   return fromCells?.questionCount ?? 0;
 }
 
-// Redistribution algorithm
-function redistribute(cells: number[], newTotal: number): number[] {
-  const oldTotal = cells.reduce((a, b) => a + b, 0);
-  if (oldTotal === 0) {
-    // Distribute evenly
-    if (cells.length === 0) return [];
-    const each = Math.floor(newTotal / cells.length);
-    const remainder = newTotal - each * cells.length;
-    return cells.map((_, i) => each + (i < remainder ? 1 : 0));
-  }
-  // Proportional redistribution
-  const result = cells.map(c => Math.round((c / oldTotal) * newTotal));
-  // Fix rounding error on last cell
-  if (result.length > 0) {
-    const diff = newTotal - result.reduce((a, b) => a + b, 0);
-    result[result.length - 1] += diff;
-    if (result[result.length - 1] < 0) result[result.length - 1] = 0;
-  }
-  return result;
-}
-
 export function MatrixTable({
   chapters,
   gradeLevel,
@@ -104,7 +83,7 @@ export function MatrixTable({
   parts,
   numberOfParts: _numberOfParts,
   matrixTotalPointsTarget: _matrixTotalPointsTarget,
-  matrixTotalQuestionsTarget,
+  matrixTotalQuestionsTarget: _matrixTotalQuestionsTarget,
   canEdit,
   onRemoveRow,
   onCellChange,
@@ -159,10 +138,6 @@ export function MatrixTable({
 
   const [deletingRowId, setDeletingRowId] = useState<string | null>(null);
   
-  // Input mode
-  const [inputMode, setInputMode] = useState<'absolute' | 'percentage'>('absolute');
-  const [localPercentages, setLocalPercentages] = useState<Map<CellId, number>>(new Map());
-  const [percentageTotal, setPercentageTotal] = useState<number>(0);
   
   // Inline editing state
   const [editingCell, setEditingCell] = useState<CellId | null>(null);
@@ -225,10 +200,7 @@ export function MatrixTable({
         for (let p = 1; p <= numberOfParts; p++) {
           for (const level of cognitiveOrder) {
             const ck = makeCellKey(p, level);
-            const cellId = makeCellId(row.rowId, p, level);
-            const count = inputMode === 'percentage' 
-               ? (localPercentages.get(cellId) ?? 0)
-               : getCellValue(row.rowId, p, level);
+            const count = getCellValue(row.rowId, p, level);
             colTotals[ck] = (colTotals[ck] ?? 0) + count;
             rowTotal += count;
             total += count;
@@ -239,7 +211,7 @@ export function MatrixTable({
     }
 
     return { columnTotals: colTotals, rowTotals, grandTotal: total };
-  }, [chapters, numberOfParts, getCellValue, inputMode, localPercentages]);
+  }, [chapters, numberOfParts, getCellValue]);
 
   // Use refs to avoid stale closure in setTimeout/performSave
   const dirtyCellsRef = useRef<Set<CellId>>(dirtyCells);
@@ -392,40 +364,30 @@ export function MatrixTable({
   const startEdit = useCallback((rowId: string, partNumber: number, level: MatrixLevel) => {
     if (!canEdit) return;
     const cellId = makeCellId(rowId, partNumber, level);
-    const currentValue = inputMode === 'percentage' 
-      ? (localPercentages.get(cellId) ?? 0) 
-      : getCellValue(rowId, partNumber, level);
+    const currentValue = getCellValue(rowId, partNumber, level);
     setEditingCell(cellId);
     setEditValue(currentValue.toString());
-  }, [canEdit, getCellValue, inputMode, localPercentages]);
+  }, [canEdit, getCellValue]);
 
   // Commit edit
   const commitEdit = useCallback((rowId: string, partNumber: number, level: MatrixLevel) => {
     const cellId = makeCellId(rowId, partNumber, level);
-    
+
     // Prevent double-commit (e.g. Enter + Blur)
     if (editingCell !== cellId) return;
 
     const newValue = parseInt(editValue, 10);
     if (!isNaN(newValue)) {
       const currentValue = getCellValue(rowId, partNumber, level);
-      
+
       // Only update if value actually changed
-      if (newValue !== currentValue || inputMode === 'percentage') {
-        if (inputMode === 'percentage') {
-          setLocalPercentages(prev => {
-            const next = new Map(prev);
-            next.set(cellId, Math.max(0, newValue));
-            return next;
-          });
-        } else {
-          updateCellValue(rowId, partNumber, level, newValue);
-        }
+      if (newValue !== currentValue) {
+        updateCellValue(rowId, partNumber, level, newValue);
       }
     }
     setEditingCell(null);
     setEditValue('');
-  }, [editingCell, editValue, getCellValue, inputMode, updateCellValue]);
+  }, [editingCell, editValue, getCellValue, updateCellValue]);
 
   // Cancel edit
   const cancelEdit = useCallback(() => {
@@ -449,67 +411,6 @@ export function MatrixTable({
     } finally {
       setDeletingRowId(null);
     }
-  };
-
-  const handleToggleMode = (mode: 'absolute' | 'percentage') => {
-    if (mode === inputMode) return;
-    setInputMode(mode);
-    if (mode === 'percentage') {
-      setPercentageTotal(matrixTotalQuestionsTarget || grandTotal || 100);
-      const newPercentages = new Map<CellId, number>();
-      if (grandTotal > 0) {
-        for (const [cellId, count] of localCells.entries()) {
-          newPercentages.set(cellId, Math.round((count / grandTotal) * 100));
-        }
-      }
-      setLocalPercentages(newPercentages);
-    }
-  };
-
-  const handleApplyPercentages = () => {
-    if (percentageTotal <= 0) {
-      alert('Vui lòng nhập tổng số câu > 0');
-      return;
-    }
-    const newLocal = new Map(localCells);
-    const newDirty = new Set(dirtyCells);
-    
-    const cellIds: CellId[] = [];
-    const pcts: number[] = [];
-    for (const [cellId, pct] of localPercentages.entries()) {
-      if (pct > 0) {
-         cellIds.push(cellId);
-         pcts.push(pct);
-      }
-    }
-    
-    if (pcts.length > 0) {
-       const distributed = redistribute(pcts, percentageTotal);
-       for (let i = 0; i < cellIds.length; i++) {
-         const cellId = cellIds[i];
-         const newCount = distributed[i];
-         const currentCount = newLocal.get(cellId) ?? 0;
-         if (currentCount !== newCount) {
-            newLocal.set(cellId, newCount);
-            newDirty.add(cellId);
-         }
-       }
-    }
-    
-    for (const [cellId, pct] of localPercentages.entries()) {
-       if (pct <= 0) {
-         const currentCount = newLocal.get(cellId) ?? 0;
-         if (currentCount !== 0) {
-            newLocal.set(cellId, 0);
-            newDirty.add(cellId);
-         }
-       }
-    }
-    
-    setLocalCells(newLocal);
-    setDirtyCells(newDirty);
-    setInputMode('absolute');
-    scheduleSave();
   };
 
   if (chapters.length === 0) {
@@ -549,47 +450,6 @@ export function MatrixTable({
       )}
 
       <div className="matrix-scroll-wrapper">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          {canEdit && (
-            <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-              <span style={{ fontWeight: 500, fontSize: 14 }}>Chế độ nhập:</span>
-              <div className="view-toggle" style={{ display: 'flex', background: '#f1f5f9', padding: 4, borderRadius: 8 }}>
-                <button 
-                  style={{ padding: '6px 12px', borderRadius: 6, border: 'none', background: inputMode === 'absolute' ? '#fff' : 'transparent', boxShadow: inputMode === 'absolute' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none', cursor: 'pointer', fontSize: 13, fontWeight: inputMode === 'absolute' ? 600 : 400 }}
-                  onClick={() => handleToggleMode('absolute')}
-                >
-                  Số lượng
-                </button>
-                <button 
-                  style={{ padding: '6px 12px', borderRadius: 6, border: 'none', background: inputMode === 'percentage' ? '#fff' : 'transparent', boxShadow: inputMode === 'percentage' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none', cursor: 'pointer', fontSize: 13, fontWeight: inputMode === 'percentage' ? 600 : 400 }}
-                  onClick={() => handleToggleMode('percentage')}
-                >
-                  Tỉ lệ (%)
-                </button>
-              </div>
-            </div>
-          )}
-          
-          {inputMode === 'percentage' && (
-            <div style={{ display: 'flex', gap: 12, alignItems: 'center', background: '#f8fafc', padding: '6px 12px', borderRadius: 6, border: '1px solid #e2e8f0' }}>
-              <span style={{ fontSize: 13, fontWeight: 500 }}>Tổng số câu dự kiến:</span>
-              <input 
-                type="number" 
-                min="1"
-                style={{ width: 70, padding: '4px 8px', borderRadius: 4, border: '1px solid #cbd5e1', fontSize: 13 }}
-                value={percentageTotal || ''} 
-                onChange={e => setPercentageTotal(parseInt(e.target.value) || 0)} 
-              />
-              <button 
-                style={{ padding: '4px 12px', borderRadius: 4, border: 'none', background: '#10b981', color: 'white', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}
-                onClick={handleApplyPercentages}
-              >
-                <Check size={14} /> Áp dụng
-              </button>
-            </div>
-          )}
-        </div>
-
         <table className="matrix-table">
           {/* Header */}
           <thead className="matrix-header">
@@ -688,10 +548,6 @@ export function MatrixTable({
                         const isEditing = editingCell === cellId;
                         const isDirty = dirtyCells.has(cellId);
                         
-                        const displayValue = inputMode === 'percentage' 
-                           ? (localPercentages.get(cellId) ?? 0) 
-                           : count;
-
                         const available = getAvailability(row.chapterId || '', part.partNumber, level);
                         const isOverLimit = available !== undefined && count > available;
 
@@ -699,7 +555,7 @@ export function MatrixTable({
                           <td
                             key={`${part.partNumber}-${level}`}
                             className={`matrix-td matrix-td--level matrix-td--level-${level.toLowerCase()} ${
-                              count === 0 && inputMode !== 'percentage' ? 'matrix-td--empty' : ''
+                              count === 0 ? 'matrix-td--empty' : ''
                             } ${isDirty ? 'matrix-td--dirty' : ''} ${canEdit ? 'matrix-td--editable' : ''} ${
                               isOverLimit ? 'matrix-td--overlimit' : ''
                             }`}
@@ -727,7 +583,7 @@ export function MatrixTable({
                               />
                             ) : (
                               <div className="matrix-cell-value">
-                                {displayValue}{inputMode === 'percentage' ? '%' : ''}
+                                {count}
                                 {available !== undefined && (
                                   <div className={`matrix-cell-availability ${isOverLimit ? 'overlimit' : ''}`} 
                                        title={`Kho có: ${available} ${part.questionType === 'TRUE_FALSE' ? 'mệnh đề' : 'câu'}`}>
@@ -744,8 +600,7 @@ export function MatrixTable({
 
                     <td className={`matrix-td matrix-td--total-type ${rowTotal === 0 ? 'matrix-td--warning' : ''}`}>
                       <div className="matrix-total-cell" title={rowTotal === 0 ? 'Tổng = 0, hàng này sẽ không có câu hỏi' : ''}>
-                        {rowTotal}{inputMode === 'percentage' ? '%' : ''}
-                        {rowTotal === 0 && <span style={{ color: '#dc2626', fontSize: 11, display: 'block' }}>⚠️ Trống</span>}
+                        {rowTotal}                        {rowTotal === 0 && <span style={{ color: '#dc2626', fontSize: 11, display: 'block' }}>⚠️ Trống</span>}
                       </div>
                     </td>
 
@@ -787,14 +642,13 @@ export function MatrixTable({
                       className={`matrix-td matrix-td--level matrix-td--level-${level.toLowerCase()} matrix-td--grand-total`}
                     >
                       <div className="matrix-grand-total-cell">
-                        {total}{inputMode === 'percentage' ? '%' : ''}
-                      </div>
+                        {total}                      </div>
                     </td>
                   );
                 })
               )}
               <td className="matrix-td matrix-td--total-type matrix-td--grand-total">
-                <div className="matrix-grand-total-cell">{grandTotal}{inputMode === 'percentage' ? '%' : ''}</div>
+                <div className="matrix-grand-total-cell">{grandTotal}</div>
               </td>
               <td className="matrix-td matrix-td--total-type matrix-td--grand-total">
                 <div className="matrix-grand-total-cell">{grandTotal > 0 ? '100%' : '0%'}</div>

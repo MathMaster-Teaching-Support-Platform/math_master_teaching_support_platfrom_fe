@@ -1,8 +1,10 @@
-import { X } from 'lucide-react';
+import { Database, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { MatrixStatsTree } from '../../components/question-banks/MatrixStatsTree';
 import { useChaptersBySubject } from '../../hooks/useChapters';
 import { useAddExamMatrixRow } from '../../hooks/useExamMatrix';
 import { useGrades } from '../../hooks/useGrades';
+import { useGetQuestionBankMatrixStats } from '../../hooks/useQuestionBank';
 import { useSubjectsByGrade } from '../../hooks/useSubjects';
 import type { ExamMatrixRowRequest } from '../../types/examMatrix';
 
@@ -11,6 +13,7 @@ type Props = {
   matrixId: string;
   matrixGradeLevel?: string;
   subjectId?: string;
+  bankId?: string;
   onClose: () => void;
   onSuccess: () => void;
 };
@@ -20,6 +23,7 @@ export function ExamMatrixRowModal({
   matrixId,
   matrixGradeLevel,
   subjectId,
+  bankId,
   onClose,
   onSuccess,
 }: Readonly<Props>) {
@@ -32,10 +36,31 @@ export function ExamMatrixRowModal({
   const { data: gradesData, isLoading: isLoadingGrades } = useGrades(isOpen);
   const subjectsByGradeQuery = useSubjectsByGrade(gradeLevel, isOpen && !!gradeLevel);
   const chapterQuery = useChaptersBySubject(selectedSubjectId, isOpen && !!selectedSubjectId);
+  const bankStatsQuery = useGetQuestionBankMatrixStats(bankId ?? '', isOpen && !!bankId);
 
   const chapters = chapterQuery.data?.result ?? [];
   const subjectsByGrade = subjectsByGradeQuery.data?.result ?? [];
   const grades = gradesData?.result ?? [];
+  const bankStats = useMemo(
+    () => bankStatsQuery.data?.result ?? [],
+    [bankStatsQuery.data]
+  );
+
+  // chapterId -> total approved questions in the bank, for hint badges in the dropdown.
+  const bankCountByChapter = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const grade of bankStats) {
+      for (const chapter of grade.chapters) {
+        map.set(chapter.chapterId, chapter.totalQuestions);
+      }
+    }
+    return map;
+  }, [bankStats]);
+
+  const chosenChapterCount =
+    chapterId && bankCountByChapter.has(chapterId)
+      ? bankCountByChapter.get(chapterId)!
+      : null;
 
   // Sort grades by level
   const sortedGrades = [...grades].sort((a, b) => a.level - b.level);
@@ -98,9 +123,14 @@ export function ExamMatrixRowModal({
     }
   }
 
+  const showBankPanel = !!bankId;
+
   return (
     <div className="modal-layer">
-      <div className="modal-card" style={{ width: 'min(600px, 100%)' }}>
+      <div
+        className="modal-card"
+        style={{ width: showBankPanel ? 'min(960px, 100%)' : 'min(600px, 100%)' }}
+      >
         <div className="modal-header">
           <div>
             <h3>Thêm dòng ma trận</h3>
@@ -114,7 +144,16 @@ export function ExamMatrixRowModal({
         </div>
 
         <form onSubmit={submit}>
-          <div className="modal-body">
+          <div
+            className="modal-body"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: showBankPanel ? 'minmax(0, 1fr) minmax(280px, 380px)' : '1fr',
+              gap: 20,
+              alignItems: 'start',
+            }}
+          >
+            <div style={{ minWidth: 0 }}>
             {error && <p style={{ color: '#be123c', fontSize: 13 }}>{error}</p>}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -191,14 +230,37 @@ export function ExamMatrixRowModal({
                   ) : (
                     <>
                       <option value="">Chọn chủ đề</option>
-                      {chapters.map((chapter) => (
-                        <option key={chapter.id} value={chapter.id}>
-                          {chapter.title || chapter.name || chapter.id}
-                        </option>
-                      ))}
+                      {chapters.map((chapter) => {
+                        const inBank = bankCountByChapter.get(chapter.id);
+                        const suffix =
+                          showBankPanel && inBank !== undefined
+                            ? ` — ${inBank} câu trong kho`
+                            : '';
+                        return (
+                          <option key={chapter.id} value={chapter.id}>
+                            {(chapter.title || chapter.name || chapter.id) + suffix}
+                          </option>
+                        );
+                      })}
                     </>
                   )}
                 </select>
+                {showBankPanel && chapterId && chosenChapterCount === 0 && (
+                  <p
+                    style={{
+                      marginTop: 8,
+                      fontSize: 12,
+                      color: '#92400e',
+                      background: '#fef3c7',
+                      border: '1px solid #fde68a',
+                      borderRadius: 6,
+                      padding: '6px 10px',
+                    }}
+                  >
+                    ⚠️ Chương này hiện chưa có câu hỏi đã duyệt trong ngân hàng. Bạn vẫn có thể
+                    thêm dòng nhưng sẽ cần bổ sung câu hỏi trước khi sinh đề.
+                  </p>
+                )}
               </div>
             </div>
 
@@ -206,6 +268,57 @@ export function ExamMatrixRowModal({
               Sau khi thêm dòng, bạn có thể chỉnh sửa số câu cho từng mức độ nhận thức trực tiếp
               trong bảng ma trận.
             </p>
+            </div>
+
+            {/* Right pane: bank stats tree (Grade → Chapter → Type → Cognitive) */}
+            {showBankPanel && (
+              <aside
+                style={{
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: 12,
+                  padding: 12,
+                  maxHeight: 480,
+                  overflowY: 'auto',
+                  minWidth: 0,
+                }}
+                aria-label="Phân bố câu hỏi trong ngân hàng"
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    marginBottom: 8,
+                    fontSize: 13,
+                    fontWeight: 700,
+                    color: '#0f172a',
+                  }}
+                >
+                  <Database size={14} aria-hidden="true" />
+                  Có gì trong ngân hàng câu hỏi?
+                </div>
+                {bankStatsQuery.isLoading && (
+                  <p className="muted" style={{ fontSize: 12 }}>
+                    Đang tải thống kê...
+                  </p>
+                )}
+                {bankStatsQuery.isError && (
+                  <p style={{ fontSize: 12, color: '#b91c1c' }}>
+                    Không thể tải thống kê ngân hàng.
+                  </p>
+                )}
+                {!bankStatsQuery.isLoading && !bankStatsQuery.isError && (
+                  <MatrixStatsTree stats={bankStats} />
+                )}
+                <p
+                  className="muted"
+                  style={{ fontSize: 11, marginTop: 8, lineHeight: 1.4 }}
+                >
+                  Chỉ tính câu hỏi đã duyệt. Đừng yêu cầu nhiều hơn số có sẵn ở mỗi chương / mức độ.
+                </p>
+              </aside>
+            )}
           </div>
 
           <div className="modal-footer">

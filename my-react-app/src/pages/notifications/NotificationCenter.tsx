@@ -15,7 +15,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { UI_TEXT } from '../../constants/uiText';
 import { useNotificationsContext } from '../../context/NotificationContext';
@@ -34,6 +34,7 @@ const NotificationCenter: React.FC = () => {
 
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
+  const navigate = useNavigate();
 
   // Derive role from auth token so any role gets the correct sidebar
   const rawRole = AuthService.getUserRole();
@@ -269,7 +270,10 @@ const NotificationCenter: React.FC = () => {
                       className={`relative w-full text-left flex items-start gap-4 px-6 py-5 cursor-pointer transition-colors duration-150 ${
                         notif.read ? 'hover:bg-[#F5F4ED]' : 'bg-[#FDFCF8] hover:bg-[#F5F4ED]'
                       } ${isPriorityHigh ? 'border-l-2 border-[#B53333]' : ''}`}
-                      onClick={() => markAsRead(notif.id)}
+                      onClick={() => {
+                        markAsRead(notif.id);
+                        if (notif.actionUrl) navigate(notif.actionUrl);
+                      }}
                     >
                       {!notif.read && (
                         <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-[#C96442] rounded-r-full" />

@@ -142,6 +142,8 @@ export interface QuestionImportRequest {
    */
   generationMetadata?: Record<string, unknown>;
   questionBankId?: string;
+  /** Chapter the question belongs to. Required by BE; injected by the bulk-import UI. */
+  chapterId?: string;
 }
 
 export interface QuestionPreviewRow {
