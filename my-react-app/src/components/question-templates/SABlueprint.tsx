@@ -116,7 +116,7 @@ export const SABlueprint = forwardRef<SABlueprintRef, SABlueprintProps>(
           <p className="muted" style={{ marginBottom: 6 }}>
             Nội dung câu hỏi{' '}
             <span style={{ fontSize: '0.8rem', marginLeft: 8, fontWeight: 400 }}>
-              (Dùng {'{{a}}'}, {'{{b}}'} để chèn biến số)
+              (Dùng {'{{a}}'}, {'{{b}}'} để chèn hệ số)
             </span>
           </p>
           <textarea

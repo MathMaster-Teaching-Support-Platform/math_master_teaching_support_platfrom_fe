@@ -27,13 +27,46 @@
   border-radius: 8px;
 }
 
-/* Table Base */
+/* Table Base — math-themed: tabular numerals, light graph-paper backdrop,
+   tighter grid feel. */
 .matrix-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
   background: white;
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 23px,
+    rgba(99, 102, 241, 0.035) 23px,
+    rgba(99, 102, 241, 0.035) 24px
+  );
   table-layout: fixed;
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: 'tnum' 1, 'lnum' 1;
+}
+
+/* Numeric cells (points / question counts) — right-align with tabular nums so
+   columns line up the way a real math table does. */
+.matrix-cell-value,
+.matrix-cell-input,
+.matrix-cell-availability {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* Grand-total row reads as a Σ footing line. */
+.matrix-row--grand-total {
+  background: linear-gradient(180deg, #fff7ed 0%, #ffedd5 100%) !important;
+  border-top: 2px solid #fb923c !important;
+  font-weight: 700;
+}
+
+/* First-column emphasis — usually the topic/chapter axis. */
+.matrix-row > :first-child,
+.matrix-row--even > :first-child,
+.matrix-row--odd > :first-child {
+  background: rgba(238, 242, 255, 0.45);
+  border-right: 1px solid #c7d2fe;
 }
 
 /* ============================================

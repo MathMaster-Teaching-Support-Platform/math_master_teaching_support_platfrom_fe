@@ -45,20 +45,22 @@ import StudentWallet from '../pages/wallet/StudentWallet';
 import Profile from '../pages/profile/Profile';
 import TeacherProfilePage from '../pages/teacher-profile/TeacherProfilePage';
 // Admin Teacher Profile Routes
-import AdminAnalytics from '../pages/admin/AdminAnalytics';
+
 import AdminCourseReviewDetail from '../pages/admin/AdminCourseReviewDetail';
 import AdminCourseReviewsPage from '../pages/admin/AdminCourseReviewsPage';
 import AdminAcademicStructurePage from '../pages/admin/AdminAcademicStructurePage';
-import AdminFinancialOverview from '../pages/admin/AdminFinancialOverview';
+
 import AdminRoadmapCreatePage from '../pages/admin/AdminRoadmapCreatePage';
 import AdminRoadmapEditPage from '../pages/admin/AdminRoadmapEditPage';
+import AdminOCRBooks from '../pages/admin/AdminOCRBooks';
+import AdminOCRContent from '../pages/admin/AdminOCRContent';
 import AdminRoadmapManagementPage from '../pages/admin/AdminRoadmapManagementPage';
 import AdminRoadmapTopicsPage from '../pages/admin/AdminRoadmapTopicsPage';
 import AdminSlideTemplates from '../pages/admin/AdminSlideTemplates';
-import AdminTransactions from '../pages/admin/AdminTransactions';
+
 import AdminWithdrawals from '../pages/admin/AdminWithdrawals';
 import CashFlowDashboard from '../pages/admin/CashFlowDashboard';
-import MarketplaceAnalytics from '../pages/admin/MarketplaceAnalytics';
+
 import RevenueBreakdown from '../pages/admin/RevenueBreakdown';
 import ReviewProfiles from '../pages/admin/ReviewProfiles';
 import AssessmentBuilderFlow from '../pages/assessments/AssessmentBuilderFlow';
@@ -700,14 +702,7 @@ export const router = createBrowserRouter([
       </PrivateRoute>
     ),
   },
-  {
-    path: '/admin/transactions',
-    element: (
-      <PrivateRoute>
-        <AdminTransactions />
-      </PrivateRoute>
-    ),
-  },
+
   {
     path: '/admin/withdrawals',
     element: (
@@ -716,14 +711,7 @@ export const router = createBrowserRouter([
       </PrivateRoute>
     ),
   },
-  {
-    path: '/admin/financial-overview',
-    element: (
-      <PrivateRoute>
-        <AdminFinancialOverview />
-      </PrivateRoute>
-    ),
-  },
+
   {
     path: '/admin/revenue-breakdown',
     element: (
@@ -732,14 +720,7 @@ export const router = createBrowserRouter([
       </PrivateRoute>
     ),
   },
-  {
-    path: '/admin/marketplace-analytics',
-    element: (
-      <PrivateRoute>
-        <MarketplaceAnalytics />
-      </PrivateRoute>
-    ),
-  },
+
   {
     path: '/admin/cash-flow',
     element: (
@@ -748,19 +729,36 @@ export const router = createBrowserRouter([
       </PrivateRoute>
     ),
   },
-  {
-    path: '/admin/analytics',
-    element: (
-      <PrivateRoute>
-        <AdminAnalytics />
-      </PrivateRoute>
-    ),
-  },
+
   {
     path: '/admin/settings',
     element: (
       <PrivateRoute>
         <ProfileSettings />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/admin/ocr/books',
+    element: (
+      <PrivateRoute>
+        <AdminOCRBooks />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/admin/ocr/books/:bookId',
+    element: (
+      <PrivateRoute>
+        <AdminOCRContent />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/admin/ocr/content',
+    element: (
+      <PrivateRoute>
+        <AdminOCRContent />
       </PrivateRoute>
     ),
   },

@@ -2,8 +2,9 @@ import type { LucideIcon } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   ArrowDownToLine,
-  ArrowLeftRight,
+
   BarChart3,
+  BookMarked,
   BookOpen,
   Bot,
   ChevronDown,
@@ -11,7 +12,7 @@ import {
   ClipboardList,
   CreditCard,
   Database,
-  DollarSign,
+
   FileCheck2,
   FileQuestion,
   FolderKanban,
@@ -19,14 +20,15 @@ import {
   GraduationCap,
   LayoutDashboard,
   Library,
-  LineChart,
+
   LogOut,
   Presentation,
   Ruler,
+  ScanText,
   Settings,
   ShieldCheck,
   Sparkles,
-  TrendingUp,
+
   Users,
   Wallet,
   Workflow,
@@ -138,10 +140,7 @@ const adminGroups: MenuGroup[] = [
   {
     label: 'Tài chính',
     items: [
-      { path: '/admin/financial-overview', icon: DollarSign, label: 'Tổng quan Tài chính' },
       { path: '/admin/revenue-breakdown', icon: BarChart3, label: 'Phân tích Doanh thu' },
-      { path: '/admin/marketplace-analytics', icon: TrendingUp, label: 'Phân tích Thị trường' },
-      { path: '/admin/transactions', icon: ArrowLeftRight, label: 'Giao dịch' },
       { path: '/admin/withdrawals', icon: ArrowDownToLine, label: 'Duyệt Rút tiền' },
       { path: '/admin/subscriptions', icon: CreditCard, label: 'Gói đăng ký' },
     ],
@@ -158,8 +157,14 @@ const adminGroups: MenuGroup[] = [
   {
     label: 'Hệ thống',
     items: [
-      { path: '/admin/analytics', icon: LineChart, label: 'Thống kê' },
       { path: '/admin/cash-flow', icon: Wallet, label: 'Dòng tiền' },
+    ],
+  },
+  {
+    label: 'OCR',
+    items: [
+      { path: '/admin/ocr/books', icon: ScanText, label: 'Sách SGK' },
+      { path: '/admin/ocr/content', icon: BookMarked, label: 'Kho nội dung' },
     ],
   },
 ];

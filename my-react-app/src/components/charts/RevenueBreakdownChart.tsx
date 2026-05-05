@@ -1,7 +1,7 @@
 import React from 'react';
 import {
-  Area,
-  AreaChart,
+  Bar,
+  BarChart,
   CartesianGrid,
   Legend,
   ResponsiveContainer,
@@ -100,32 +100,18 @@ const RevenueBreakdownChart: React.FC<RevenueBreakdownChartProps> = ({ data, per
 
   const chartData = data.map((item) => ({
     date: item.date,
-    'Nạp tiền': item.deposits,
-    'Đăng ký': item.subscriptions,
-    'Khóa học': item.courseSales,
+    'Gói đăng ký': item.subscriptions,
+    'Hoa hồng khóa học': item.courseSales,
   }));
 
   return (
     <div className="revenue-breakdown-chart" style={{ width: '100%', height: 400 }}>
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart
+        <BarChart
           data={chartData}
           margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+          barSize={24}
         >
-          <defs>
-            <linearGradient id="colorDeposits" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-            </linearGradient>
-            <linearGradient id="colorSubscriptions" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
-            </linearGradient>
-            <linearGradient id="colorCourses" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-            </linearGradient>
-          </defs>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e8e6dc" />
           <XAxis
             dataKey="date"
@@ -142,41 +128,31 @@ const RevenueBreakdownChart: React.FC<RevenueBreakdownChartProps> = ({ data, per
             tick={{ fill: '#87867f', fontSize: 12 }}
             dx={-10}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#c96442', strokeWidth: 1, strokeDasharray: '5 5' }} />
+          <Tooltip 
+            content={<CustomTooltip />} 
+            cursor={{ fill: 'rgba(201, 100, 66, 0.05)' }} 
+          />
           <Legend
             verticalAlign="top"
             align="right"
             iconType="circle"
             wrapperStyle={{ paddingBottom: '30px', fontSize: '12px', fontWeight: 600 }}
           />
-          <Area
-            type="monotone"
-            dataKey="Nạp tiền"
+          <Bar
+            dataKey="Gói đăng ký"
             stackId="1"
-            stroke="#3b82f6"
-            strokeWidth={3}
-            fill="url(#colorDeposits)"
+            fill="#8b5cf6"
+            radius={[0, 0, 0, 0]}
             animationDuration={1500}
           />
-          <Area
-            type="monotone"
-            dataKey="Đăng ký"
+          <Bar
+            dataKey="Hoa hồng khóa học"
             stackId="1"
-            stroke="#8b5cf6"
-            strokeWidth={3}
-            fill="url(#colorSubscriptions)"
+            fill="#10b981"
+            radius={[4, 4, 0, 0]}
             animationDuration={1800}
           />
-          <Area
-            type="monotone"
-            dataKey="Khóa học"
-            stackId="1"
-            stroke="#10b981"
-            strokeWidth={3}
-            fill="url(#colorCourses)"
-            animationDuration={2100}
-          />
-        </AreaChart>
+        </BarChart>
       </ResponsiveContainer>
     </div>
   );

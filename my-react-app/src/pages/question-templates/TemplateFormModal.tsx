@@ -353,7 +353,7 @@ export function TemplateFormModal({
           const mappedOptions = buildOptions(mcqData.options);
 
           if (Object.keys(mappedParameters).length === 0) {
-            setSubmitError('Bạn cần khai báo ít nhất một biến số.');
+            setSubmitError('Bạn cần khai báo ít nhất một hệ số.');
             setSaving(false);
             return;
           }
@@ -441,7 +441,7 @@ export function TemplateFormModal({
           const mappedParameters = buildParameters(saData.parameters);
 
           if (Object.keys(mappedParameters).length === 0) {
-            setSubmitError('Bạn cần khai báo ít nhất một biến số.');
+            setSubmitError('Bạn cần khai báo ít nhất một hệ số.');
             setSaving(false);
             return;
           }
@@ -497,7 +497,7 @@ export function TemplateFormModal({
           <div>
             <h3>{mode === 'create' ? 'Tạo mẫu câu hỏi' : 'Chỉnh sửa mẫu câu hỏi'}</h3>
             <p className="muted" style={{ marginTop: 4 }}>
-              Thiết lập biến số để tạo câu hỏi ngẫu nhiên tự động.
+              Thiết lập hệ số để tạo câu hỏi ngẫu nhiên tự động.
             </p>
           </div>
           <div className="row" style={{ gap: 8 }}>
@@ -583,11 +583,6 @@ export function TemplateFormModal({
                 onChange={(event) => setDescription(event.target.value)}
               />
             </label>
-
-            {/* Global LaTeX Toolbar for all blueprints */}
-            <div style={{ marginBottom: 16 }}>
-              <LatexToolbar onInsert={insertLatexAtCursor} disabled={saving} />
-            </div>
 
             {/* ZONE 2: Blueprint Section (swaps based on type) */}
             {templateType === QuestionType.MULTIPLE_CHOICE && (
@@ -687,6 +682,33 @@ export function TemplateFormModal({
                 {submitError}
               </div>
             )}
+
+            {/*
+             * Sticky LaTeX toolbar — pinned to the bottom of the scroll area so
+             * it stays reachable while the teacher edits parameters / options /
+             * clauses further down. Previously it lived inline near the top and
+             * scrolled out of view, forcing teachers to scroll back up to grab
+             * a math symbol.
+             *
+             * NOTE: must live inside `.modal-body` (the scrolling ancestor) for
+             * position:sticky to anchor — placing it between body and footer
+             * would just put it in normal flow.
+             */}
+            <div
+              style={{
+                position: 'sticky',
+                bottom: 0,
+                marginTop: 12,
+                marginInline: 'calc(-1 * var(--modal-body-pad, 1rem))',
+                background: '#ffffff',
+                borderTop: '1px solid #e2e8f0',
+                padding: '0.55rem 1rem',
+                boxShadow: '0 -6px 18px rgba(15, 23, 42, 0.05)',
+                zIndex: 4,
+              }}
+            >
+              <LatexToolbar onInsert={insertLatexAtCursor} disabled={saving} />
+            </div>
           </div>
 
           <div className="modal-footer">
@@ -767,7 +789,7 @@ export function TemplateFormModal({
                 </summary>
                 <div style={{ marginTop: 10, display: 'grid', gap: 10 }}>
                   <div style={{ border: '1px solid #f1f5f9', borderRadius: 10, padding: '0.7rem' }}>
-                    <strong>1. Biến số</strong>
+                    <strong>1. Hệ số</strong>
                     <p className="muted" style={{ margin: '0.35rem 0' }}>
                       Dùng dạng: {'{{a}}'}, {'{{b}}'}, {'{{n}}'}
                     </p>
@@ -879,7 +901,7 @@ export function TemplateFormModal({
                 </div>
                 <ul style={{ marginTop: 8, marginBottom: 0, paddingLeft: 20, fontSize: '0.85rem' }}>
                   <li>Luôn kiểm tra preview trước khi lưu</li>
-                  <li>Biến số phải khớp với tên trong công thức</li>
+                  <li>Hệ số phải khớp với tên trong công thức</li>
                   <li>Công thức LaTeX phải đúng cú pháp</li>
                 </ul>
               </div>
