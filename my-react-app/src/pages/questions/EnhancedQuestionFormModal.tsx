@@ -1,5 +1,5 @@
 import { Sparkles } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { QuestionEditorSwitch } from '../../components/question';
 import QuestionDiagram from '../../components/common/QuestionDiagram';
 import MathText from '../../components/common/MathText';
@@ -68,10 +68,6 @@ export function EnhancedQuestionFormModal({
   const [explanation, setExplanation] = useState<string>(initialData?.explanation || '');
   const [diagramData, setDiagramData] = useState<string>('');
 
-  const modalCardRef = useRef<HTMLDivElement>(null);
-  const diagramTextareaRef = useRef<HTMLTextAreaElement>(null);
-  const explanationTextareaRef = useRef<HTMLTextAreaElement>(null);
-
   const [editorValue, setEditorValue] = useState<Record<string, unknown>>({
     questionText: initialData?.questionText || '',
     options: initialData?.options || {},
@@ -96,71 +92,56 @@ export function EnhancedQuestionFormModal({
     diagramData.trim() || initialData?.diagramData || initialData?.diagramUrl
   );
 
-  const insertWithCursor = (
-    currentValue: string,
-    setValue: (value: string) => void,
-    textarea: HTMLTextAreaElement | null,
-    rawLatex: string
-  ) => {
-    const latex = `$$${rawLatex}$$`;
-    if (!textarea) {
-      setValue(`${currentValue}${currentValue ? ' ' : ''}${latex}`);
-      return;
+  const copyFallback = (text: string) => {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+
+    let ok = false;
+    try {
+      ok = document.execCommand('copy');
+    } catch {
+      ok = false;
     }
 
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const before = currentValue.substring(0, start);
-    const after = currentValue.substring(end);
-    const next = before + latex + after;
-    setValue(next);
-
-    setTimeout(() => {
-      textarea.focus();
-      const newPosition = start + latex.length;
-      textarea.setSelectionRange(newPosition, newPosition);
-    }, 0);
+    document.body.removeChild(textarea);
+    return ok;
   };
 
   const handleInsertLatex = (rawLatex: string) => {
-    const wrapped = `$$${rawLatex}$$`;
-    const activeElement = document.activeElement as HTMLElement | null;
+    const wrapped = `$${rawLatex}$`;
 
-    if (!activeElement || !modalCardRef.current?.contains(activeElement)) {
-      showToast({
-        message: 'Hãy đặt con trỏ vào ô cần chèn LaTeX trước.',
-        type: 'warning',
-      });
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard
+        .writeText(wrapped)
+        .then(() => {
+          showToast({
+            message: `Đã sao chép: ${wrapped}. Dán vào vị trí con trỏ bằng Ctrl+V.`,
+            type: 'success',
+          });
+        })
+        .catch(() => {
+          const ok = copyFallback(wrapped);
+          showToast({
+            message: ok
+              ? `Đã sao chép: ${wrapped}. Dán vào vị trí con trỏ bằng Ctrl+V.`
+              : 'Không thể sao chép tự động. Hãy thử lại.',
+            type: ok ? 'success' : 'error',
+          });
+        });
       return;
     }
 
-    if (activeElement === diagramTextareaRef.current) {
-      insertWithCursor(diagramData, setDiagramData, diagramTextareaRef.current, rawLatex);
-      return;
-    }
-
-    if (activeElement === explanationTextareaRef.current) {
-      insertWithCursor(explanation, setExplanation, explanationTextareaRef.current, rawLatex);
-      return;
-    }
-
-    if (activeElement instanceof HTMLTextAreaElement || activeElement instanceof HTMLInputElement) {
-      const element = activeElement;
-      if (element.disabled || element.readOnly) {
-        return;
-      }
-
-      const start = element.selectionStart ?? element.value.length;
-      const end = element.selectionEnd ?? start;
-      element.setRangeText(wrapped, start, end, 'end');
-      element.dispatchEvent(new Event('input', { bubbles: true }));
-      element.focus();
-      return;
-    }
-
+    const ok = copyFallback(wrapped);
     showToast({
-      message: 'Ô hiện tại không hỗ trợ chèn LaTeX. Hãy đặt con trỏ vào ô nhập liệu.',
-      type: 'warning',
+      message: ok
+        ? `Đã sao chép: ${wrapped}. Dán vào vị trí con trỏ bằng Ctrl+V.`
+        : 'Không thể sao chép tự động. Hãy thử lại.',
+      type: ok ? 'success' : 'error',
     });
   };
 
@@ -275,7 +256,6 @@ export function EnhancedQuestionFormModal({
   return (
     <div className="modal-layer">
       <div
-        ref={modalCardRef}
         className="modal-card"
         style={{ width: 'min(1240px, 96vw)', maxHeight: '92vh', overflow: 'auto' }}
       >
@@ -304,7 +284,7 @@ export function EnhancedQuestionFormModal({
         </div>
 
         <div className="modal-body eqfm-layout">
-          <div className="eqfm-form-column">
+          <div className="eqfm-top-controls">
             {error && (
               <div
                 style={{
@@ -319,10 +299,6 @@ export function EnhancedQuestionFormModal({
                 {error}
               </div>
             )}
-
-            <div className="eqfm-latex-sticky">
-              <LatexToolbar onInsert={handleInsertLatex} disabled={saving} />
-            </div>
 
             <div>
               <label
@@ -363,6 +339,10 @@ export function EnhancedQuestionFormModal({
               </div>
             </div>
 
+            <LatexToolbar onInsert={handleInsertLatex} disabled={saving} />
+          </div>
+
+          <div className="eqfm-row">
             <div
               style={{
                 padding: 20,
@@ -379,6 +359,36 @@ export function EnhancedQuestionFormModal({
               />
             </div>
 
+            <section className="eqfm-preview-card">
+              <p className="eqfm-preview-heading">Xem trước câu hỏi </p>
+              <span className="badge" style={{ marginBottom: 8 }}>
+                {previewTypeLabel}
+              </span>
+              <div className="eqfm-preview-question">
+                <MathText text={previewQuestionText || 'Chưa có nội dung câu hỏi.'} />
+              </div>
+
+              {previewOptionEntries.length > 0 && (
+                <div className="eqfm-preview-meta">
+                  <p className="eqfm-preview-meta__title">Lựa chọn</p>
+                  <ol className="eqfm-preview-options">
+                    {previewOptionEntries.map(([key, value], index) => (
+                      <li key={`preview-option-${key}`}>
+                        <strong>{(key || String.fromCharCode(65 + index)).toUpperCase()}.</strong>{' '}
+                        <MathText text={String(value)} />
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              )}
+
+              <p className="eqfm-preview-answer">
+                <span>Đáp án:</span> {previewCorrectAnswer || 'Chưa có đáp án'}
+              </p>
+            </section>
+          </div>
+
+          <div className="eqfm-row">
             <div>
               <label
                 style={{ display: 'block', fontWeight: 600, marginBottom: 8, color: '#374151' }}
@@ -386,7 +396,6 @@ export function EnhancedQuestionFormModal({
                 Hình vẽ <span style={{ color: '#ef4444' }}>*</span>
               </label>
               <textarea
-                ref={diagramTextareaRef}
                 value={diagramData}
                 onChange={(e) => setDiagramData(e.target.value)}
                 disabled={saving}
@@ -403,6 +412,24 @@ export function EnhancedQuestionFormModal({
               />
             </div>
 
+            <section className="eqfm-preview-card">
+              <p className="eqfm-preview-heading">Xem trước hình</p>
+              {hasDiagramPreview ? (
+                <QuestionDiagram
+                  source={{
+                    diagramData: diagramData.trim() ? diagramData.trim() : initialData?.diagramData,
+                    diagramUrl: initialData?.diagramUrl,
+                  }}
+                />
+              ) : (
+                <p className="muted" style={{ margin: 0 }}>
+                  Chưa có hình minh họa.
+                </p>
+              )}
+            </section>
+          </div>
+
+          <div className="eqfm-row">
             <div>
               <label
                 style={{ display: 'block', fontWeight: 600, marginBottom: 8, color: '#374151' }}
@@ -410,7 +437,6 @@ export function EnhancedQuestionFormModal({
                 Giải thích <span style={{ color: '#ef4444' }}>*</span>
               </label>
               <textarea
-                ref={explanationTextareaRef}
                 value={explanation}
                 onChange={(e) => setExplanation(e.target.value)}
                 disabled={saving}
@@ -427,9 +453,24 @@ export function EnhancedQuestionFormModal({
               />
             </div>
 
-            {(questionType === 'TRUE_FALSE' ||
-              questionType === 'SHORT_ANSWER' ||
-              questionType === 'MULTIPLE_CHOICE') && (
+            <section className="eqfm-preview-card">
+              <p className="eqfm-preview-heading">Xem trước giải thích</p>
+              {previewExplanation ? (
+                <div className="eqfm-preview-explanation">
+                  <MathText text={previewExplanation} />
+                </div>
+              ) : (
+                <p className="muted" style={{ margin: 0 }}>
+                  Chưa có nội dung giải thích.
+                </p>
+              )}
+            </section>
+          </div>
+
+          {(questionType === 'TRUE_FALSE' ||
+            questionType === 'SHORT_ANSWER' ||
+            questionType === 'MULTIPLE_CHOICE') && (
+            <div className="eqfm-top-controls" style={{ paddingTop: 0 }}>
               <div style={{ display: 'flex', justifyContent: 'center' }}>
                 <button
                   type="button"
@@ -465,67 +506,8 @@ export function EnhancedQuestionFormModal({
                   {enhancing ? 'Đang tạo lời giải...' : '✨ Tạo lời giải bằng AI'}
                 </button>
               </div>
-            )}
-          </div>
-
-          <aside className="eqfm-preview-column">
-            <section className="eqfm-preview-card">
-              <p className="eqfm-preview-heading">Xem trước đề</p>
-              <span className="badge" style={{ marginBottom: 8 }}>
-                {previewTypeLabel}
-              </span>
-              <div className="eqfm-preview-question">
-                <MathText text={previewQuestionText || 'Chưa có nội dung câu hỏi.'} />
-              </div>
-
-              {previewOptionEntries.length > 0 && (
-                <div className="eqfm-preview-meta">
-                  <p className="eqfm-preview-meta__title">Lựa chọn</p>
-                  <ol className="eqfm-preview-options">
-                    {previewOptionEntries.map(([key, value], index) => (
-                      <li key={`preview-option-${key}`}>
-                        <strong>{(key || String.fromCharCode(65 + index)).toUpperCase()}.</strong>{' '}
-                        <MathText text={String(value)} />
-                      </li>
-                    ))}
-                  </ol>
-                </div>
-              )}
-
-              <p className="eqfm-preview-answer">
-                <span>Đáp án:</span> {previewCorrectAnswer || 'Chưa có đáp án'}
-              </p>
-            </section>
-
-            <section className="eqfm-preview-card">
-              <p className="eqfm-preview-heading">Xem trước hình</p>
-              {hasDiagramPreview ? (
-                <QuestionDiagram
-                  source={{
-                    diagramData: diagramData.trim() ? diagramData.trim() : initialData?.diagramData,
-                    diagramUrl: initialData?.diagramUrl,
-                  }}
-                />
-              ) : (
-                <p className="muted" style={{ margin: 0 }}>
-                  Chưa có hình minh họa.
-                </p>
-              )}
-            </section>
-
-            <section className="eqfm-preview-card">
-              <p className="eqfm-preview-heading">Xem trước giải thích</p>
-              {previewExplanation ? (
-                <div className="eqfm-preview-explanation">
-                  <MathText text={previewExplanation} />
-                </div>
-              ) : (
-                <p className="muted" style={{ margin: 0 }}>
-                  Chưa có nội dung giải thích.
-                </p>
-              )}
-            </section>
-          </aside>
+            </div>
+          )}
         </div>
 
         <div className="modal-footer">
