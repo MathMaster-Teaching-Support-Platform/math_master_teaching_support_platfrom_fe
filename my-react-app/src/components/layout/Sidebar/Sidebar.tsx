@@ -1,5 +1,5 @@
-import type { LucideIcon } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
+import type { LucideIcon } from 'lucide-react';
 import {
   ArrowDownToLine,
   BarChart3,
@@ -154,7 +154,14 @@ const adminGroups: MenuGroup[] = [
   },
   {
     label: 'Hệ thống',
+<<<<<<< HEAD
     items: [{ path: '/admin/cash-flow', icon: Wallet, label: 'Dòng tiền' }],
+=======
+    items: [
+      { path: '/admin/cash-flow', icon: Wallet, label: 'Dòng tiền' },
+      { path: '/admin/system-config', icon: ShieldCheck, label: 'Cấu hình hệ thống' },
+    ],
+>>>>>>> b5e8848e4b4841cdbdacbd471e5b677ab6038ffd
   },
   {
     label: 'OCR',

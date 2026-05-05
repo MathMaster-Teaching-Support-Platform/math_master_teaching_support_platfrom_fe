@@ -518,4 +518,10 @@ export const API_ENDPOINTS = {
   ADMIN_COMMISSION_PROPOSAL_REVIEW: (id: string) => `/admin/commission/proposals/${id}/review`,
   TEACHER_COMMISSION_PROPOSALS: '/teacher/commission/proposals',
   TEACHER_COMMISSION_ACTIVE: '/teacher/commission/proposals/active',
+
+  // System Config — public read + admin write
+  PUBLIC_CONFIG: (key: string) => `/config/${key}`,
+  ADMIN_SYSTEM_CONFIG: '/admin/system-config',
+  ADMIN_SYSTEM_CONFIG_DETAIL: (key: string) => `/admin/system-config/${key}`,
+  ADMIN_SYSTEM_CONFIG_UPDATE: (key: string) => `/admin/system-config/${key}`,
 };
