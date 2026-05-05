@@ -1,16 +1,11 @@
 import {
   AlertCircle,
-  ArrowRight,
   BookOpen,
-  ClipboardList,
   Database,
   Eye,
   EyeOff,
-  FileText,
-  Globe,
   Grid2x2,
   List,
-  Lock,
   Pencil,
   Plus,
   RefreshCw,
@@ -197,71 +192,6 @@ export function QuestionBankDashboard() {
             </button>
           </header>
 
-          {/* ── Stats ── */}
-          <div className="stats-grid">
-            <div className="stat-card stat-blue">
-              <div className="stat-icon-wrap">
-                <Database size={20} />
-              </div>
-              <div>
-                <h3>{stats.total}</h3>
-                <p>Tổng ngân hàng</p>
-              </div>
-            </div>
-            <div className="stat-card stat-emerald">
-              <div className="stat-icon-wrap">
-                <Globe size={20} />
-              </div>
-              <div>
-                <h3>{stats.public}</h3>
-                <p>Công khai</p>
-              </div>
-            </div>
-            <div className="stat-card stat-violet">
-              <div className="stat-icon-wrap">
-                <Lock size={20} />
-              </div>
-              <div>
-                <h3>{stats.private}</h3>
-                <p>Riêng tư</p>
-              </div>
-            </div>
-          </div>
-
-          {/* ── Quick nav ── */}
-          <div className="qb-quicknav">
-            <div className="qb-quicknav__label">
-              <span>Điều hướng nhanh</span>
-            </div>
-            <button
-              className="qb-quicknav__item"
-              onClick={() => navigate('/teacher/question-templates')}
-            >
-              <div className="qb-quicknav__icon qb-nav-violet">
-                <FileText size={18} />
-              </div>
-              <div className="qb-quicknav__text">
-                <span className="qb-quicknav__title">Mẫu câu hỏi</span>
-                <span className="qb-quicknav__desc">Soạn mẫu, sinh và duyệt câu hỏi</span>
-              </div>
-              <ArrowRight size={16} className="qb-quicknav__arrow" />
-            </button>
-            <div className="qb-quicknav__divider" />
-            <button
-              className="qb-quicknav__item"
-              onClick={() => navigate('/teacher/assessments')}
-            >
-              <div className="qb-quicknav__icon qb-nav-blue">
-                <ClipboardList size={18} />
-              </div>
-              <div className="qb-quicknav__text">
-                <span className="qb-quicknav__title">Tạo đề thi</span>
-                <span className="qb-quicknav__desc">Lắp câu hỏi thành đề kiểm tra</span>
-              </div>
-              <ArrowRight size={16} className="qb-quicknav__arrow" />
-            </button>
-          </div>
-
           {/* ── Toolbar ── */}
           <div className="toolbar">
             <label className="search-box">
@@ -440,15 +370,9 @@ export function QuestionBankDashboard() {
                     >
                       <div className="cover-overlay" />
                       {/* Subtle SVG watermark — large icon at low opacity behind the title. */}
-                      <Database
-                        className="cover-watermark"
-                        size={120}
-                        aria-hidden="true"
-                      />
+                      <Database className="cover-watermark" size={120} aria-hidden="true" />
                       <div className="cover-meta-row">
-                        <span className="cover-index">
-                          #{String(idx + 1).padStart(2, '0')}
-                        </span>
+                        <span className="cover-index">#{String(idx + 1).padStart(2, '0')}</span>
                         <span
                           className={`course-badge ${bank.isPublic ? 'badge-live' : 'badge-draft'}`}
                         >
@@ -472,7 +396,7 @@ export function QuestionBankDashboard() {
                         </div>
                         <div className="metric metric--muted">
                           <span className="metric__label">
-                            GV: {bank.teacherName || 'Không xác định'}
+                            Giáo viên: {bank.teacherName || 'Không xác định'}
                           </span>
                         </div>
                       </div>
