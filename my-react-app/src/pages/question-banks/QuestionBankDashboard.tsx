@@ -317,57 +317,27 @@ export function QuestionBankDashboard() {
 
           {/* ── Cards ── */}
           {!isLoading && !isError && banks.length > 0 && (
-            <div className={`grid-cards bank-card-grid${viewMode === 'list' ? ' list-view' : ''}`}>
-              {banks.map((bank, idx) => {
-                const openDetail = () => navigate(`/teacher/question-banks/${bank.id}`);
-                const overflowItems: OverflowMenuItem[] = [
-                  {
-                    key: 'visibility',
-                    label: bank.isPublic ? 'Đặt riêng tư' : 'Đặt công khai',
-                    icon: bank.isPublic ? <EyeOff size={14} /> : <Eye size={14} />,
-                    onSelect: () => togglePublicMutation.mutate(bank.id),
-                  },
-                  {
-                    key: 'edit',
-                    label: 'Chỉnh sửa',
-                    icon: <Pencil size={14} />,
-                    onSelect: () => {
-                      setMode('edit');
-                      setSelected(bank);
-                      setFormOpen(true);
-                    },
-                  },
-                  {
-                    key: 'delete',
-                    label: 'Xóa',
-                    icon: <Trash2 size={14} />,
-                    danger: true,
-                    onSelect: () => {
-                      void handleDelete(bank);
-                    },
-                  },
-                ];
-                return (
-                  <article
-                    key={bank.id}
-                    className="data-card bank-card"
-                    role="button"
-                    tabIndex={0}
-                    onClick={openDetail}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault();
-                        openDetail();
-                      }
+            <div className={`grid-cards${viewMode === 'list' ? ' list-view' : ''}`}>
+              {banks.map((bank, idx) => (
+                <article key={bank.id} className="data-card bank-card course-card">
+                  <div
+                    className="bank-cover"
+                    style={{
+                      background: coverGradients[idx % coverGradients.length],
+                      color: coverAccents[idx % coverAccents.length],
                     }}
                   >
-                    <div
-                      className="bank-cover"
-                      style={{
-                        background: coverGradients[idx % coverGradients.length],
-                        color: coverAccents[idx % coverAccents.length],
-                      }}
-                    >
+                    <div className="cover-overlay" />
+                    {/* Subtle SVG watermark — large icon at low opacity behind the title. */}
+                    <Database
+                      className="cover-watermark"
+                      size={120}
+                      aria-hidden="true"
+                    />
+                    <div className="cover-index">#{String(idx + 1).padStart(2, '0')}</div>
+                    <span
+                      className={`course-badge ${bank.isPublic ? 'badge-live' : 'badge-draft'}`}
+                    />
                       <div className="cover-overlay" />
                       {/* Subtle SVG watermark — large icon at low opacity behind the title. */}
                       <Database className="cover-watermark" size={120} aria-hidden="true" />
@@ -380,11 +350,35 @@ export function QuestionBankDashboard() {
                           {bank.isPublic ? 'Công khai' : 'Riêng tư'}
                         </span>
                       </div>
-                      <h3 className="cover-title">{bank.name}</h3>
                     </div>
 
-                    <div className="bank-body">
-                      <p className="bank-desc">{bank.description || 'Không có mô tả'}</p>
+                    <div className="row" style={{ flexWrap: 'wrap', gap: '0.4rem' }}>
+                      <button
+                        className="btn secondary"
+                        onClick={() => navigate(`/teacher/question-banks/${bank.id}`)}
+                      >
+                        <BookOpen size={14} />
+                        Chi tiết
+                      </button>
+                      <button
+                        className="btn secondary"
+                        onClick={() => togglePublicMutation.mutate(bank.id)}
+                      >
+                        {bank.isPublic ? <EyeOff size={14} /> : <Eye size={14} />}
+                        {bank.isPublic ? 'Riêng tư' : 'Công khai'}
+                      </button>
+                      <button
+                        className="btn secondary"
+                        onClick={() => {
+                          setMode('edit');
+                          setSelected(bank);
+                          setFormOpen(true);
+                        }}
+                      >
+                        <Pencil size={14} />
+                        Chỉnh sửa
+                      </button>
+                    </div>
 
                       <div className="bank-metrics">
                         <div className="metric">
@@ -402,27 +396,21 @@ export function QuestionBankDashboard() {
                       </div>
 
                       <div className="bank-footer">
+                    <div className="bank-footer">
+                      <div />
+                      <div className="bank-actions">
                         <button
-                          type="button"
-                          className="btn btn--feat-blue bank-card__primary"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            openDetail();
-                          }}
+                          className="btn danger-outline"
+                          onClick={() => void handleDelete(bank)}
                         >
-                          <BookOpen size={14} />
-                          Chi tiết
+                          <Trash2 size={14} />
+                          Xóa
                         </button>
-                        <OverflowMenu
-                          items={overflowItems}
-                          ariaLabel="Thao tác bổ sung"
-                          align="right"
-                        />
                       </div>
                     </div>
-                  </article>
-                );
-              })}
+                  </div>
+                </article>
+              ))}
             </div>
           )}
 

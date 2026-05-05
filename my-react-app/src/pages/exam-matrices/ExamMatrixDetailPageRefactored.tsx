@@ -312,7 +312,7 @@ export default function ExamMatrixDetailPageRefactored() {
                     </h2>
                     <p className="exam-matrix-detail-desc" style={{ marginBottom: 12 }}>
                       {matrix.description || 'Không có mô tả'}
-                    </p>
+                    </p>               
                   </div>
                   <span
                     className={`badge ${matrix.status.toLowerCase()}`}
@@ -513,6 +513,7 @@ export default function ExamMatrixDetailPageRefactored() {
               matrixId={matrixId}
               matrixGradeLevel={matrix?.gradeLevel ?? table?.gradeLevel}
               subjectId={matrix?.subjectId ?? table?.subjectId}
+              bankId={matrix?.questionBankId}
               onClose={() => {
                 setRowModalOpen(false);
               }}

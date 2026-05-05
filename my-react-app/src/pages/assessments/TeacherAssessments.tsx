@@ -220,9 +220,7 @@ export default function TeacherAssessments() {
             <div className="header-stack">
               <div className="row" style={{ gap: '0.6rem' }}>
                 <h2>{view === 'create' ? 'Tạo đề' : 'Quản lí đề thi'}</h2>
-                {!isLoading && view === 'manage' && (
-                  <span className="count-chip">{stats.total}</span>
-                )}
+               
               </div>
               <p className="header-sub">
                 {view === 'create'
@@ -317,8 +315,6 @@ export default function TeacherAssessments() {
             {view === 'manage' && (
             <div style={{ display: 'grid', gap: '0.9rem' }}>
               <div className="row" style={{ gap: 8, alignItems: 'center' }}>
-                <h3 style={{ margin: 0 }}>Quản lí đề</h3>
-                {!isLoading && <span className="count-chip">{stats.total}</span>}
               </div>
 
               {/* Stats */}

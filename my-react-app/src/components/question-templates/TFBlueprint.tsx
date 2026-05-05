@@ -178,43 +178,7 @@ export const TFBlueprint = forwardRef<TFBlueprintRef, TFBlueprintProps>(
         <section className="data-card" style={{ minHeight: 0, border: '1px solid #dbeafe' }}>
   
 
-          {/* Example Banner */}
-          <div style={{
-            padding: '12px 16px',
-            backgroundColor: '#eff6ff',
-            borderRadius: 8,
-            marginBottom: 16,
-            border: '1px solid #bfdbfe',
-            fontSize: '0.85rem',
-          }}>
-            <strong style={{ color: '#1e40af' }}>📝 Ví dụ câu Đúng/Sai hoàn chỉnh:</strong>
-            <div style={{ marginTop: 8, paddingLeft: 12 }}>
-              <p style={{ fontStyle: 'italic', marginBottom: 4 }}>
-                Đề bài: "Cho hàm số f(x) = 2x² + 4x - 3. Xét các mệnh đề sau:"
-              </p>
-              <ul style={{ paddingLeft: 20, margin: '4px 0', lineHeight: 1.6 }}>
-                <li><strong>A)</strong> Hàm số đạt cực tiểu tại x = -1 → <span style={{ color: '#16a34a' }}>Đúng</span></li>
-                <li><strong>B)</strong> Đồ thị có trục đối xứng x = 4 → <span style={{ color: '#dc2626' }}>Sai</span></li>
-                <li><strong>C)</strong> f(0) = -3 → <span style={{ color: '#16a34a' }}>Đúng</span></li>
-                <li><strong>D)</strong> Hàm số đồng biến trên (-∞; +∞) → <span style={{ color: '#dc2626' }}>Sai</span></li>
-              </ul>
-              <p style={{ color: '#6b7280', fontSize: '0.8rem', marginTop: 4 }}>
-                Đáp án: A,C (mệnh đề đúng) → Điểm: 4/4 đúng = 1đ, 3/4 = 0.25đ
-              </p>
-            </div>
-          </div>
-
-          <div
-            style={{
-              padding: '12px 16px',
-              backgroundColor: '#fef3c7',
-              borderRadius: 8,
-              marginBottom: 16,
-              fontSize: '0.875rem',
-            }}
-          >
-            <strong>⚠ Điểm THPT:</strong> 4/4 đúng = 1 điểm, 3/4 đúng = 0.25 điểm, dưới 3/4 = 0 điểm
-          </div>
+        
 
           {clauses.map((clause, index) => {
             const clausePlaceholders: Record<string, string> = {
