@@ -512,4 +512,10 @@ export const API_ENDPOINTS = {
   OCR_BOOK_HISTORY: (bookId: string) => `/v1/crawl-data/books/${bookId}/history`,
   OCR_BOOK_THUMBNAIL: (bookId: string) => `/v1/crawl-data/books/${bookId}/thumbnail`,
   OCR_SEARCH: '/v1/crawl-data/search',
+
+  // Commission Proposals (dynamic revenue split)
+  ADMIN_COMMISSION_PROPOSALS: '/admin/commission/proposals',
+  ADMIN_COMMISSION_PROPOSAL_REVIEW: (id: string) => `/admin/commission/proposals/${id}/review`,
+  TEACHER_COMMISSION_PROPOSALS: '/teacher/commission/proposals',
+  TEACHER_COMMISSION_ACTIVE: '/teacher/commission/proposals/active',
 };

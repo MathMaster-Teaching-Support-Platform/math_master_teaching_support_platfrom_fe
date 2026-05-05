@@ -22,6 +22,7 @@ import {
   Library,
 
   LogOut,
+  Percent,
   Presentation,
   Ruler,
   ScanText,
@@ -92,6 +93,7 @@ const teacherGroups: MenuGroup[] = [
     label: 'Tài chính',
     items: [
       { path: '/teacher/wallet', icon: Wallet, label: 'Ví của tôi' },
+      { path: '/teacher/commission', icon: Percent, label: 'Hoa hồng' },
       { path: '/pricing', icon: CreditCard, label: 'Gói đăng ký' },
     ],
   },
@@ -141,6 +143,7 @@ const adminGroups: MenuGroup[] = [
     label: 'Tài chính',
     items: [
       { path: '/admin/revenue-breakdown', icon: BarChart3, label: 'Phân tích Doanh thu' },
+      { path: '/admin/commission-proposals', icon: Percent, label: 'Duyệt Hoa hồng' },
       { path: '/admin/withdrawals', icon: ArrowDownToLine, label: 'Duyệt Rút tiền' },
       { path: '/admin/subscriptions', icon: CreditCard, label: 'Gói đăng ký' },
     ],
