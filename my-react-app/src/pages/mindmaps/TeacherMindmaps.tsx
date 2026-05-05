@@ -1,7 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import {
   AlertCircle,
-  Archive,
   ArrowRight,
   CheckCircle2,
   Eye,
@@ -111,9 +110,7 @@ export default function TeacherMindmaps() {
   const [showGenerator, setShowGenerator] = useState(false);
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [statusFilter, setStatusFilter] = useState<'DRAFT' | 'PUBLISHED' | 'ARCHIVED' | 'ALL'>(
-    'ALL'
-  );
+  const [statusFilter, setStatusFilter] = useState<'DRAFT' | 'PUBLISHED' | 'ALL'>('ALL');
 
   // Generator form state
   const [generatorForm, setGeneratorForm] = useState({
@@ -155,30 +152,33 @@ export default function TeacherMindmaps() {
   const generatorSteps = ['Chọn bài dạy', 'Cấu hình AI'];
   const visualGeneratorStep = Math.max(1, Math.min(activeGeneratorStep, generatorSteps.length));
 
-  const stats = useMemo(
-    () => ({
-      total: mindmaps.length,
-      published: mindmaps.filter((m) => m.status === 'PUBLISHED').length,
-      draft: mindmaps.filter((m) => m.status === 'DRAFT').length,
-      archived: mindmaps.filter((m) => m.status === 'ARCHIVED').length,
-      aiGenerated: mindmaps.filter((m) => m.aiGenerated).length,
-    }),
+  const visibleMindmaps = useMemo(
+    () => mindmaps.filter((m) => m.status === 'DRAFT' || m.status === 'PUBLISHED'),
     [mindmaps]
   );
 
+  const stats = useMemo(
+    () => ({
+      total: visibleMindmaps.length,
+      published: visibleMindmaps.filter((m) => m.status === 'PUBLISHED').length,
+      draft: visibleMindmaps.filter((m) => m.status === 'DRAFT').length,
+      aiGenerated: visibleMindmaps.filter((m) => m.aiGenerated).length,
+    }),
+    [visibleMindmaps]
+  );
+
   const filteredMindmaps = useMemo(() => {
-    return mindmaps.filter((m) => {
+    return visibleMindmaps.filter((m) => {
       const statusMatch = statusFilter === 'ALL' || m.status === statusFilter;
       const searchMatch = m.title.toLowerCase().includes(search.toLowerCase());
       return statusMatch && searchMatch;
     });
-  }, [mindmaps, statusFilter, search]);
+  }, [visibleMindmaps, statusFilter, search]);
 
   const filterTabs = [
     { id: 'ALL' as const, label: `Tất cả (${stats.total})` },
     { id: 'PUBLISHED' as const, label: `Đã xuất bản (${stats.published})` },
     { id: 'DRAFT' as const, label: `Nháp (${stats.draft})` },
-    { id: 'ARCHIVED' as const, label: `Lưu trữ (${stats.archived})` },
   ];
 
   useEffect(() => {
@@ -421,7 +421,7 @@ export default function TeacherMindmaps() {
                 {!loading && <span className="count-chip">{mindmaps.length}</span>}
               </div>
               <p className="header-sub">
-                {stats.published} đã xuất bản • {stats.aiGenerated} được tạo bởi AI
+                {stats.published} đã xuất bản • {stats.aiGenerated} đượ tạo
               </p>
             </div>
             <button type="button" className="btn btn--feat-violet" onClick={toggleGenerator}>
@@ -461,11 +461,11 @@ export default function TeacherMindmaps() {
             </div>
             <div className="stat-card stat-violet">
               <div className="stat-icon-wrap">
-                <Archive size={20} />
+                <Sparkles size={20} />
               </div>
               <div>
-                <h3>{stats.archived}</h3>
-                <p>Đã lưu trữ</p>
+                <h3>{stats.aiGenerated}</h3>
+                <p>AI tạo</p>
               </div>
             </div>
           </div>
@@ -736,7 +736,7 @@ export default function TeacherMindmaps() {
               <div className="summary-item summary-item--primary">
                 <span className="summary-label">Hiển thị</span>
                 <strong className="summary-value">
-                  {filteredMindmaps.length} / {mindmaps.length}
+                  {filteredMindmaps.length} / {visibleMindmaps.length}
                 </strong>
               </div>
               <div className="summary-item">
@@ -789,11 +789,6 @@ export default function TeacherMindmaps() {
                     {mindmap.status === 'PUBLISHED' && (
                       <span className="course-badge badge-live">
                         <Eye size={11} /> Đã xuất bản
-                      </span>
-                    )}
-                    {mindmap.status === 'ARCHIVED' && (
-                      <span className="course-badge badge-archived">
-                        <Archive size={11} /> Lưu trữ
                       </span>
                     )}
                     {mindmap.status === 'DRAFT' && (

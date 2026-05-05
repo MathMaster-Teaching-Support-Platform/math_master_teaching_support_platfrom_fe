@@ -779,18 +779,15 @@ export default function MindmapEditor() {
               onClick={handleExportImage}
               disabled={exportingImage}
             >
-              {exportingImage ? 'Đang xuất ảnh...' : 'Xuất ảnh PNG'}
+              {exportingImage ? 'Đang xuất ảnh...' : 'Xuất ảnh'}
             </button>
             <select
-              value={mindmap.status}
-              onChange={(e) =>
-                handleUpdateStatus(e.target.value as 'DRAFT' | 'PUBLISHED' | 'ARCHIVED')
-              }
+              value={mindmap.status === 'ARCHIVED' ? 'DRAFT' : mindmap.status}
+              onChange={(e) => handleUpdateStatus(e.target.value as 'DRAFT' | 'PUBLISHED')}
               className="status-select"
             >
               <option value="DRAFT">Nháp</option>
               <option value="PUBLISHED">Xuất bản</option>
-              <option value="ARCHIVED">Lưu trữ</option>
             </select>
           </div>
         </div>
