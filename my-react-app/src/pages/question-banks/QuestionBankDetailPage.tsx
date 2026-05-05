@@ -1,6 +1,15 @@
-
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Eye, EyeOff, Link2, Pencil, RefreshCw, Search, Trash2, Unlink2 } from 'lucide-react';
+import {
+  ArrowLeft,
+  Eye,
+  EyeOff,
+  Link2,
+  Pencil,
+  RefreshCw,
+  Search,
+  Trash2,
+  Unlink2,
+} from 'lucide-react';
 import Pagination from '../../components/common/Pagination';
 import { useNavigate, useParams } from 'react-router-dom';
 import MathText from '../../components/common/MathText';
@@ -20,6 +29,7 @@ import {
 import '../../styles/module-refactor.css';
 import type { QuestionResponse } from '../../types/question';
 import type { QuestionBankRequest } from '../../types/questionBank';
+import './QuestionBankDetailPage.css';
 import { QuestionBankFormModal } from './QuestionBankFormModal';
 
 const questionTypeLabel: Record<string, string> = {
@@ -135,8 +145,7 @@ export function QuestionBankDetailPage() {
   const questions = questionsData?.result?.content ?? [];
   const totalQuestionPages =
     questionsData?.result?.totalPages ??
-    (questionsData?.result as { page?: { totalPages?: number } } | undefined)?.page
-      ?.totalPages ??
+    (questionsData?.result as { page?: { totalPages?: number } } | undefined)?.page?.totalPages ??
     0;
   const totalQuestionElements =
     questionsData?.result?.totalElements ??
@@ -212,7 +221,7 @@ export function QuestionBankDetailPage() {
       await Promise.all([refetch(), refetchQuestions(), refetchSearchQuestions()]);
     } catch (error) {
       setBatchError(
-        error instanceof Error ? error.message : 'Không thể thêm câu hỏi vào question bank.'
+        error instanceof Error ? error.message : 'Không thể thêm câu hỏi vào ngân hàng câu hỏi.'
       );
     }
   }
@@ -235,7 +244,7 @@ export function QuestionBankDetailPage() {
       await Promise.all([refetch(), refetchQuestions(), refetchSearchQuestions()]);
     } catch (error) {
       setBatchError(
-        error instanceof Error ? error.message : 'Không thể gỡ câu hỏi khỏi question bank.'
+        error instanceof Error ? error.message : 'Không thể gỡ câu hỏi khỏi ngân hàng câu hỏi.'
       );
     }
   }
@@ -265,31 +274,37 @@ export function QuestionBankDetailPage() {
 
           {!isLoading && !isError && bank && (
             <>
-              <article className="hero-card">
-                <div className="row" style={{ alignItems: 'start', flexWrap: 'wrap' }}>
-                  <div>
-                    <p className="hero-kicker">Chi tiết ngân hàng câu hỏi</p>
-                    <h2>{bank.name}</h2>
-                    <p>{bank.description || 'Không có mô tả'}</p>
+              <article className="hero-card qbd-hero-card">
+                <div className="qbd-hero-top">
+                  <div className="qbd-hero-main">
+                    <p className="hero-kicker qbd-hero-kicker">Chi tiết ngân hàng câu hỏi</p>
+                    <h2 className="qbd-hero-title">{bank.name}</h2>
+                    <p className="qbd-hero-subtitle">
+                      Ngân hàng có {bank.questionCount ?? 0} câu hỏi.
+                    </p>
+                    {bank.description && (
+                      <p className="qbd-hero-description">
+                        <span>Mô tả:</span> {bank.description}
+                      </p>
+                    )}
                   </div>
-                  <span className={`badge ${bank.isPublic ? 'published' : 'draft'}`}>
+                  <span
+                    className={`badge ${bank.isPublic ? 'published' : 'draft'} qbd-hero-visibility`}
+                  >
                     {bank.isPublic ? 'Công khai' : 'Riêng tư'}
                   </span>
                 </div>
 
-                <div
-                  className="row"
-                  style={{ justifyContent: 'start', flexWrap: 'wrap', marginTop: 8 }}
-                >
-                  <span className="muted">Giáo viên: {bank.teacherName || 'Không xác định'}</span>
-                  <span className="muted">Số câu hỏi: {bank.questionCount ?? 0}</span>
-                  {/* ❌ REMOVED: Chapter display (QuestionBank no longer has chapter) */}
+                <div className="qbd-hero-meta">
+                  <span className="qbd-hero-meta__item">
+                    <strong>Giáo viên:</strong> {bank.teacherName || 'Không xác định'}
+                  </span>
+                  <span className="qbd-hero-meta__item">
+                    <strong>Số câu hỏi:</strong> {bank.questionCount ?? 0}
+                  </span>
                 </div>
 
-                <div
-                  className="toolbar"
-                  style={{ marginTop: 14, border: 0, padding: 0, background: 'transparent' }}
-                >
+                <div className="qbd-hero-actions">
                   <button
                     className="btn secondary"
                     onClick={() => {
@@ -334,10 +349,7 @@ export function QuestionBankDetailPage() {
               <article className="data-card" style={{ marginBottom: 16 }}>
                 <div className="row" style={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
                   <div>
-                    <h3>Tìm câu hỏi và cập nhật theo lô</h3>
-                    <p className="muted">
-                      Dùng search để chọn nhiều câu hỏi rồi thêm/gỡ khỏi question bank hiện tại.
-                    </p>
+                    <h3>Tìm kiếm</h3>
                   </div>
                   <span className="muted">Đã chọn: {selectedQuestionIds.size}</span>
                 </div>
@@ -362,7 +374,7 @@ export function QuestionBankDetailPage() {
                 <div className="row" style={{ flexWrap: 'wrap', marginTop: 12 }}>
                   <button className="btn secondary" onClick={() => void refetchSearchQuestions()}>
                     <RefreshCw size={14} />
-                    Làm mới kết quả search
+                    Làm mới kết quả tìm kiếm
                   </button>
                   <button
                     className="btn"
@@ -372,7 +384,7 @@ export function QuestionBankDetailPage() {
                     <Link2 size={14} />
                     {batchAssignQuestionsMutation.isPending
                       ? 'Đang thêm theo lô...'
-                      : `Thêm vào bank (${selectedQuestionIds.size})`}
+                      : `Thêm vào ngân hàng (${selectedQuestionIds.size})`}
                   </button>
                   <button
                     className="btn danger"
@@ -382,7 +394,7 @@ export function QuestionBankDetailPage() {
                     <Unlink2 size={14} />
                     {batchRemoveQuestionsMutation.isPending
                       ? 'Đang gỡ theo lô...'
-                      : `Gỡ khỏi bank (${selectedQuestionIds.size})`}
+                      : `Gỡ khỏi ngân hàng (${selectedQuestionIds.size})`}
                   </button>
                 </div>
 
@@ -426,7 +438,7 @@ export function QuestionBankDetailPage() {
                             <th>Câu hỏi</th>
                             <th style={{ width: 150 }}>Loại</th>
                             <th style={{ width: 180 }}>Trạng thái</th>
-                            <th style={{ width: 220 }}>Thuộc bank</th>
+                            <th style={{ width: 220 }}>Thuộc ngân hàng</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -459,7 +471,7 @@ export function QuestionBankDetailPage() {
                                 <td>{question.questionStatus || '-'}</td>
                                 <td>
                                   {isInCurrentBank
-                                    ? 'Bank hiện tại'
+                                    ? 'Ngân hàng hiện tại'
                                     : question.questionBankName ||
                                       question.questionBankId ||
                                       'Chưa gán'}
@@ -535,51 +547,63 @@ export function QuestionBankDetailPage() {
                               style={{ justifyContent: 'start', flexWrap: 'wrap', marginTop: 6 }}
                             >
                               {question.questionSourceType === 'AI_GENERATED' && (
-                                <span className="badge draft">AI Generated</span>
+                                <span className="badge draft">AI tạo</span>
                               )}
                               {question.questionSourceType === 'TEMPLATE_GENERATED' && (
-                                <span className="badge approved">Parametric</span>
+                                <span className="badge approved">Biến thể mẫu</span>
                               )}
                               {question.canonicalQuestionId && (
-                                <span className="badge published">From Canonical</span>
+                                <span className="badge published">Từ câu chuẩn</span>
                               )}
                             </div>
                             {question.solutionSteps && (
                               <div className="preview-box" style={{ marginTop: 8 }}>
                                 <p className="muted" style={{ marginBottom: 6 }}>
-                                  Solution Steps
+                                  Các bước giải
                                 </p>
                                 <MathText text={question.solutionSteps} />
                               </div>
                             )}
-                            {question.diagramData && (() => {
-                              const diagramLatex = extractDiagramLatex(question.diagramData);
-                              return diagramLatex ? (
-                                <div className="preview-box" style={{ marginTop: 8 }}>
-                                  <p className="muted" style={{ marginBottom: 6 }}>
-                                    Diagram
-                                  </p>
-                                  <MathText text={`$$${diagramLatex}$$`} />
-                                </div>
-                              ) : (
-                                <div className="preview-box" style={{ marginTop: 8 }}>
-                                  <p className="muted" style={{ marginBottom: 6 }}>
-                                    Diagram
-                                  </p>
-                                  <pre style={{ margin: 0, whiteSpace: 'pre-wrap', fontSize: '0.75rem' }}>
-                                    {JSON.stringify(question.diagramData, null, 2)}
-                                  </pre>
-                                </div>
-                              );
-                            })()}
+                            {question.diagramData &&
+                              (() => {
+                                const diagramLatex = extractDiagramLatex(question.diagramData);
+                                return diagramLatex ? (
+                                  <div className="preview-box" style={{ marginTop: 8 }}>
+                                    <p className="muted" style={{ marginBottom: 6 }}>
+                                      Hình vẽ
+                                    </p>
+                                    <MathText text={`$$${diagramLatex}$$`} />
+                                  </div>
+                                ) : (
+                                  <div className="preview-box" style={{ marginTop: 8 }}>
+                                    <p className="muted" style={{ marginBottom: 6 }}>
+                                      Hình vẽ
+                                    </p>
+                                    <pre
+                                      style={{
+                                        margin: 0,
+                                        whiteSpace: 'pre-wrap',
+                                        fontSize: '0.75rem',
+                                      }}
+                                    >
+                                      {JSON.stringify(question.diagramData, null, 2)}
+                                    </pre>
+                                  </div>
+                                );
+                              })()}
                           </td>
                           <td>
                             {questionTypeLabel[question.questionType] || question.questionType}
                           </td>
                           <td>
-                            {question.cognitiveLevel
-                              ? <span className="badge">{cognitiveLevelLabel[question.cognitiveLevel] || question.cognitiveLevel}</span>
-                              : '-'}
+                            {question.cognitiveLevel ? (
+                              <span className="badge">
+                                {cognitiveLevelLabel[question.cognitiveLevel] ||
+                                  question.cognitiveLevel}
+                              </span>
+                            ) : (
+                              '-'
+                            )}
                           </td>
                           <td>
                             {(question.difficulty && difficultyLabel[question.difficulty]) ||
