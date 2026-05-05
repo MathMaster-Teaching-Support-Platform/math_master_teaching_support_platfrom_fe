@@ -76,9 +76,30 @@ function splitInlineMathParts(value: string): TextPart[] {
  * Component to render text with LaTeX math formulas
  * Supports inline math: $formula$
  * Supports block math: $$formula$$
+ *
+ * Multi-line text (e.g. solution steps separated by \n) is rendered with each
+ * line on its own row so the steps appear as a vertical list, not collapsed
+ * onto a single line by HTML whitespace handling.
  */
 export default function MathText({ text, block = false }: Readonly<MathTextProps>) {
   if (!text) return null;
+
+  // Multi-line: split on newline so each step / paragraph gets its own row.
+  if (!block && text.includes('\n')) {
+    const lines = text.split('\n');
+    return (
+      <span style={{ display: 'inline-block', width: '100%' }}>
+        {lines.map((line, idx) => (
+          <span
+            key={`mt-line-${idx}`}
+            style={{ display: 'block', minHeight: '1em' }}
+          >
+            {line.length > 0 ? <MathText text={line} /> : ' '}
+          </span>
+        ))}
+      </span>
+    );
+  }
 
   const normalizedInput = normalizeInlineMathDelimiters(text);
 

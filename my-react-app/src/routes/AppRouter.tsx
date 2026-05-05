@@ -72,7 +72,6 @@ import TeacherCommissionPage from '../pages/commission/TeacherCommissionPage';
 import { ExamMatrixDashboard } from '../pages/exam-matrices/ExamMatrixDashboard';
 import ExamMatrixDetailPage from '../pages/exam-matrices/ExamMatrixDetailPageRefactored';
 import InstructorPublicProfile from '../pages/instructor/InstructorPublicProfile';
-import TeacherLessonPlans from '../pages/lesson-plans/TeacherLessonPlans';
 import { MindmapEditor, TeacherMindmaps } from '../pages/mindmaps';
 import PublicMindmapViewer from '../pages/mindmaps/PublicMindmapViewer';
 import StudentPublicMindmaps from '../pages/mindmaps/StudentPublicMindmaps';
@@ -297,14 +296,6 @@ export const router = createBrowserRouter([
     element: (
       <PrivateRoute>
         <TeacherCourseDetail />
-      </PrivateRoute>
-    ),
-  },
-  {
-    path: '/teacher/lesson-plans',
-    element: (
-      <PrivateRoute>
-        <TeacherLessonPlans />
       </PrivateRoute>
     ),
   },

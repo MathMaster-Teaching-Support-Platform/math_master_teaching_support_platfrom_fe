@@ -59,10 +59,9 @@ interface MenuGroup {
 
 const teacherGroups: MenuGroup[] = [
   {
-    label: 'Học liệu giảng dạy',
+    label: 'Tài liệu giảng dạy',
     items: [
       { path: '/teacher/courses', icon: BookOpen, label: 'Khóa học' },
-      { path: '/teacher/lesson-plans', icon: ClipboardList, label: 'Giáo Án' },
       { path: '/teacher/materials', icon: FolderKanban, label: 'Tài liệu' },
     ],
   },
