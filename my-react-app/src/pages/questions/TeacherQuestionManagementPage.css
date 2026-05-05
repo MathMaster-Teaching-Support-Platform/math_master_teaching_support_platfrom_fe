@@ -279,6 +279,14 @@
   gap: 1rem;
 }
 
+.module-layout-container .eqfm-latex-sticky {
+  position: sticky;
+  top: 0.35rem;
+  z-index: 5;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 65%, rgba(255, 255, 255, 0));
+  padding-bottom: 0.35rem;
+}
+
 .module-layout-container .eqfm-preview-column {
   position: sticky;
   top: 0;
@@ -382,6 +390,12 @@
 @media (max-width: 1024px) {
   .module-layout-container .eqfm-layout {
     grid-template-columns: 1fr;
+  }
+
+  .module-layout-container .eqfm-latex-sticky {
+    position: static;
+    background: transparent;
+    padding-bottom: 0;
   }
 
   .module-layout-container .eqfm-preview-column {
