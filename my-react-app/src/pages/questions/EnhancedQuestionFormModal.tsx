@@ -1,11 +1,26 @@
 import { X, Sparkles } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { QuestionEditorSwitch } from '../../components/question';
+import QuestionDiagram from '../../components/common/QuestionDiagram';
 import MathText from '../../components/common/MathText';
 import { LatexToolbar } from '../../components/common/LatexToolbar';
 import { questionService } from '../../services/questionService';
 import { useToast } from '../../context/ToastContext';
 import type { QuestionType, QuestionDifficulty } from '../../types/question';
+
+// Pull a single editable LaTeX string out of the shapes BE may return for
+// diagramData. Complex non-string shapes that can't be reduced to one latex
+// field are surfaced as "" — we keep the original object on submit only if the
+// teacher edits the field, otherwise the existing structured value is kept.
+function extractEditableLatex(value: unknown): string {
+  if (!value) return '';
+  if (typeof value === 'string') return value;
+  if (typeof value === 'object') {
+    const latex = (value as { latex?: unknown }).latex;
+    if (typeof latex === 'string') return latex;
+  }
+  return '';
+}
 
 interface EnhancedQuestionFormModalProps {
   isOpen: boolean;
@@ -21,6 +36,8 @@ interface EnhancedQuestionFormModalProps {
     tags?: string[];
     options?: Record<string, string>;
     generationMetadata?: Record<string, unknown>;
+    diagramData?: unknown;
+    diagramUrl?: string;
   };
   onClose: () => void;
   onSubmit: (data: Record<string, unknown>) => Promise<void>;
@@ -92,7 +109,7 @@ export function EnhancedQuestionFormModal({
       setDifficulty(initialData.difficulty || 'MEDIUM');
       setPoints(String(initialData.points || 1));
       setExplanation(initialData.explanation || '');
-      setDiagramData('');
+      setDiagramData(extractEditableLatex(initialData.diagramData));
       setEditorValue({
         questionText: initialData.questionText || '',
         options: initialData.options || {},
@@ -181,7 +198,7 @@ export function EnhancedQuestionFormModal({
         points: pointsNum,
         tags: initialData?.tags || [],
         explanation: explanation.trim() || undefined,
-        diagramData: diagramData.trim() ? { latex: diagramData.trim() } : undefined,
+        diagramData: diagramData.trim() ? diagramData.trim() : undefined,
       });
 
       onClose();
@@ -344,9 +361,11 @@ export function EnhancedQuestionFormModal({
                   className="muted"
                   style={{ marginBottom: 8, fontSize: '0.8rem', fontWeight: 600 }}
                 >
-                  Xem trước LaTeX:
+                  Xem trước sơ đồ:
                 </p>
-                <MathText text={String(editorValue.questionText)} />
+                <QuestionDiagram
+                  source={{ diagramData: { latex: diagramData.trim() } }}
+                />
               </div>
             )}
 

@@ -2,6 +2,7 @@ import type { AssessmentQuestionItem } from '../../types/assessment.types';
 import MathText from '../common/MathText';
 import QuestionDiagram from '../common/QuestionDiagram';
 import { extractOptionText } from '../../utils/optionText';
+import { formatTFAnswer, parseTFAnswer } from '../../utils/questionHelpers';
 
 interface TrueFalseQuestionProps {
   question: AssessmentQuestionItem;
@@ -14,7 +15,7 @@ export function TrueFalseQuestion({
   studentAnswer,
   onAnswerChange,
 }: TrueFalseQuestionProps) {
-  const selectedKeys = new Set(studentAnswer?.split(',') || []);
+  const selectedKeys = parseTFAnswer(studentAnswer);
 
   const toggleClause = (key: string) => {
     const newKeys = new Set(selectedKeys);
@@ -23,7 +24,7 @@ export function TrueFalseQuestion({
     } else {
       newKeys.add(key);
     }
-    onAnswerChange(Array.from(newKeys).join(','));
+    onAnswerChange(formatTFAnswer(newKeys));
   };
 
   return (

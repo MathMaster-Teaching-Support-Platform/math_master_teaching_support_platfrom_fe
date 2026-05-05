@@ -248,7 +248,7 @@ export function QuestionBankDashboard() {
             <div className="qb-quicknav__divider" />
             <button
               className="qb-quicknav__item"
-              onClick={() => navigate('/teacher/assessment-builder')}
+              onClick={() => navigate('/teacher/assessments')}
             >
               <div className="qb-quicknav__icon qb-nav-blue">
                 <ClipboardList size={18} />

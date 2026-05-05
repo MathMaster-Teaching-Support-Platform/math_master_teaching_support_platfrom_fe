@@ -1,10 +1,11 @@
 import { ArrowLeft, Check, RefreshCw, X } from 'lucide-react';
-import { useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import MathText from '../../components/common/MathText';
 import Pagination from '../../components/common/Pagination';
 import QuestionDiagram from '../../components/common/QuestionDiagram';
+import { TrueFalseAnswerSummary } from '../../components/question/TrueFalseAnswerSummary';
 import { extractOptionText } from '../../utils/optionText';
 import {
   useApproveQuestion,
@@ -15,11 +16,9 @@ import {
 import { useToast } from '../../context/ToastContext';
 import type { ReviewQuestionResponse } from '../../types/questionTemplate';
 
-/**
- * Review queue for the unified Blueprint flow. Lists the caller's UNDER_REVIEW
- * questions (and legacy AI_DRAFT rows during the transition window). Supports
- * per-row approve / reject and a bulk action across selected rows.
- */
+// Per-template review screen. Reached only with a `templateId` query param —
+// there is no global pending queue. Without a template the page redirects to
+// the template list so the teacher picks one to review.
 export function QuestionReviewQueue() {
   const [searchParams] = useSearchParams();
   const templateId = searchParams.get('templateId') ?? undefined;
@@ -29,6 +28,7 @@ export function QuestionReviewQueue() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [rejectReason, setRejectReason] = useState('');
 
+  const queueEnabled = !!templateId;
   const { data, isLoading, isError, error, refetch } = useReviewQueue(templateId, page, 20);
   const approveOne = useApproveQuestion();
   const bulkApprove = useBulkApproveQuestions();
@@ -37,6 +37,14 @@ export function QuestionReviewQueue() {
   const items = useMemo(() => data?.result?.content ?? [], [data]);
   const totalPages = data?.result?.totalPages ?? 0;
   const totalElements = data?.result?.totalElements ?? 0;
+
+  useEffect(() => {
+    setSelected(new Set());
+  }, [templateId, page]);
+
+  if (!queueEnabled) {
+    return <Navigate to="/teacher/question-templates" replace />;
+  }
 
   function toggle(id: string) {
     setSelected((prev) => {
@@ -75,7 +83,7 @@ export function QuestionReviewQueue() {
     } catch (e) {
       showToast({
         type: 'error',
-        message: e instanceof Error ? e.message : 'Không thể duyệt loạt câu hỏi.',
+        message: e instanceof Error ? e.message : 'Không thể duyệt các câu hỏi đã chọn.',
       });
     }
   }
@@ -93,7 +101,7 @@ export function QuestionReviewQueue() {
     } catch (e) {
       showToast({
         type: 'error',
-        message: e instanceof Error ? e.message : 'Không thể từ chối loạt câu hỏi.',
+        message: e instanceof Error ? e.message : 'Không thể từ chối các câu hỏi đã chọn.',
       });
     }
   }
@@ -116,19 +124,9 @@ export function QuestionReviewQueue() {
                 style={{ alignSelf: 'flex-start', marginBottom: 8 }}
               >
                 <ArrowLeft size={14} />
-                Quay lại danh sách mẫu
+                Quay lại
               </button>
-              <div className="row" style={{ gap: '0.6rem', alignItems: 'baseline' }}>
-                <h2>Hàng đợi duyệt câu hỏi</h2>
-                {!isLoading && <span className="count-chip">{totalElements}</span>}
-              </div>
-              <p className="header-sub">
-                {templateId
-                  ? // Prefer the human-readable name returned by the BE; fall back
-                    // to the UUID only if the page is empty or the field is null.
-                    `Lọc theo mẫu: ${items[0]?.templateName ?? templateId}`
-                  : 'Tất cả câu hỏi đang chờ duyệt do bạn tạo'}
-              </p>
+              <h2>Duyệt câu hỏi</h2>
             </div>
             <div className="row">
               <button className="btn secondary" onClick={() => void refetch()}>
@@ -141,7 +139,7 @@ export function QuestionReviewQueue() {
           {isLoading && <div className="empty">Đang tải…</div>}
           {isError && (
             <div className="empty" style={{ color: '#b91c1c' }}>
-              Lỗi: {error instanceof Error ? error.message : 'unknown'}
+              Lỗi: {error instanceof Error ? error.message : 'không xác định'}
             </div>
           )}
 
@@ -169,13 +167,13 @@ export function QuestionReviewQueue() {
                 <span className="muted">Đã chọn {selected.size}</span>
                 <input
                   className="input"
-                  placeholder="Lý do từ chối (tùy chọn)"
+                  placeholder="Lý do từ chối (không bắt buộc)"
                   value={rejectReason}
                   onChange={(e) => setRejectReason(e.target.value)}
                   style={{ flex: 1, minWidth: 240 }}
                 />
                 <button
-                  className="btn"
+                  className="btn btn--feat-emerald"
                   disabled={selected.size === 0 || bulkApprove.isPending}
                   onClick={approveSelected}
                 >
@@ -183,7 +181,7 @@ export function QuestionReviewQueue() {
                   Duyệt {selected.size > 0 ? `(${selected.size})` : ''}
                 </button>
                 <button
-                  className="btn danger-outline"
+                  className="btn danger"
                   disabled={selected.size === 0 || bulkReject.isPending}
                   onClick={rejectSelected}
                 >
@@ -193,137 +191,127 @@ export function QuestionReviewQueue() {
               </div>
 
               <div style={{ display: 'grid', gap: 12 }}>
-                {items.map((q: ReviewQuestionResponse) => (
-                  <div
-                    key={q.id}
-                    className="data-card"
-                    style={{
-                      minHeight: 0,
-                      padding: '0.9rem 1rem',
-                      borderColor: selected.has(q.id) ? '#a78bfa' : undefined,
-                    }}
-                  >
-                    <div className="row" style={{ alignItems: 'flex-start', gap: 12 }}>
-                      <input
-                        type="checkbox"
-                        checked={selected.has(q.id)}
-                        onChange={() => toggle(q.id)}
-                        style={{ marginTop: 6 }}
-                      />
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div
-                          className="row"
-                          style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap' }}
-                        >
-                          <span className="badge draft" style={{ fontSize: '0.7rem' }}>
-                            {q.questionType}
-                          </span>
-                          <span className="badge draft" style={{ fontSize: '0.7rem' }}>
-                            {q.questionStatus}
-                          </span>
-                          {/* Template chip — shows which template this question came
-                              from so teachers can orient themselves in the global
-                              queue. Only render when the BE actually returned a
-                              name; the bare UUID is unhelpful UI. */}
-                          {q.templateName && (
-                            <span
-                              className="badge"
-                              style={{
-                                fontSize: '0.7rem',
-                                background: '#eef2ff',
-                                color: '#4338ca',
-                                border: '1px solid #c7d2fe',
-                                maxWidth: 240,
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                              }}
-                              title={q.templateName}
-                            >
-                              {q.templateName}
-                            </span>
-                          )}
-                          <span className="muted" style={{ fontSize: '0.75rem' }}>
-                            {new Date(q.createdAt).toLocaleString()}
-                          </span>
-                        </div>
-                        <div className="preview-box" style={{ marginTop: 8 }}>
-                          <MathText text={q.questionText} />
-                        </div>
-                        <QuestionDiagram
-                          source={{
-                            diagramData: q.diagramData,
-                            diagramUrl: q.diagramUrl,
-                          }}
+                {items.map((q: ReviewQuestionResponse) => {
+                  const isTrueFalse = q.questionType === 'TRUE_FALSE';
+                  return (
+                    <div
+                      key={q.id}
+                      className="data-card"
+                      style={{
+                        minHeight: 0,
+                        padding: '0.9rem 1rem',
+                        borderColor: selected.has(q.id) ? '#a78bfa' : undefined,
+                      }}
+                    >
+                      <div className="row" style={{ alignItems: 'flex-start', gap: 12 }}>
+                        <input
+                          type="checkbox"
+                          checked={selected.has(q.id)}
+                          onChange={() => toggle(q.id)}
+                          style={{ marginTop: 6 }}
                         />
-                        {q.options && Object.keys(q.options).length > 0 && (
-                          <div style={{ marginTop: 8 }}>
-                            {Object.entries(q.options).map(([key, val]) => (
-                              <div key={key} style={{ marginTop: 4 }}>
-                                <strong>{key}.</strong>{' '}
-                                <MathText text={extractOptionText(val)} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div
+                            className="row"
+                            style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap' }}
+                          >
+                            <span className="badge draft" style={{ fontSize: '0.7rem' }}>
+                              {q.questionType}
+                            </span>
+                            <span className="badge draft" style={{ fontSize: '0.7rem' }}>
+                              {q.questionStatus}
+                            </span>
+                            <span className="muted" style={{ fontSize: '0.75rem' }}>
+                              {new Date(q.createdAt).toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="preview-box" style={{ marginTop: 8 }}>
+                            <MathText text={q.questionText} />
+                          </div>
+                          <QuestionDiagram
+                            source={{
+                              diagramData: q.diagramData,
+                              diagramUrl: q.diagramUrl,
+                            }}
+                          />
+                          {!isTrueFalse && q.options && Object.keys(q.options).length > 0 && (
+                            <div style={{ marginTop: 8 }}>
+                              {Object.entries(q.options).map(([key, val]) => (
+                                <div key={key} style={{ marginTop: 4 }}>
+                                  <strong>{key}.</strong>{' '}
+                                  <MathText text={extractOptionText(val)} />
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          {isTrueFalse ? (
+                            <div style={{ marginTop: 10 }}>
+                              <TrueFalseAnswerSummary
+                                answer={q.correctAnswer}
+                                clauses={q.options}
+                              />
+                            </div>
+                          ) : (
+                            q.correctAnswer && (
+                              <div style={{ marginTop: 8 }}>
+                                <span className="muted">Đáp án đúng:</span>{' '}
+                                <strong>
+                                  <MathText text={q.correctAnswer} />
+                                </strong>
                               </div>
-                            ))}
-                          </div>
-                        )}
-                        {q.correctAnswer && (
-                          <div style={{ marginTop: 8 }}>
-                            <span className="muted">Đáp án đúng:</span>{' '}
-                            <strong>
-                              <MathText text={q.correctAnswer} />
-                            </strong>
-                          </div>
-                        )}
-                        {q.explanation && (
-                          <div className="muted" style={{ marginTop: 8 }}>
-                            <em>
-                              <MathText text={q.explanation} />
-                            </em>
-                          </div>
-                        )}
-                      </div>
-                      <div className="row" style={{ flexDirection: 'column', gap: 6 }}>
-                        <button
-                          className="btn"
-                          disabled={approveOne.isPending}
-                          onClick={() => void approve(q.id)}
-                        >
-                          <Check size={14} />
-                          Duyệt
-                        </button>
-                        <button
-                          className="btn danger-outline"
-                          disabled={bulkReject.isPending}
-                          onClick={() =>
-                            void bulkReject
-                              .mutateAsync({
-                                questionIds: [q.id],
-                                reason: rejectReason.trim() || undefined,
-                              })
-                              .then(() =>
-                                showToast({
-                                  type: 'success',
-                                  message: 'Đã từ chối câu hỏi.',
+                            )
+                          )}
+                          {q.explanation && (
+                            <div className="muted" style={{ marginTop: 8 }}>
+                              <em>
+                                <MathText text={q.explanation} />
+                              </em>
+                            </div>
+                          )}
+                        </div>
+                        <div className="row" style={{ flexDirection: 'column', gap: 6 }}>
+                          <button
+                            className="btn btn--feat-emerald"
+                            disabled={approveOne.isPending}
+                            onClick={() => void approve(q.id)}
+                          >
+                            <Check size={14} />
+                            Duyệt
+                          </button>
+                          <button
+                            className="btn danger"
+                            disabled={bulkReject.isPending}
+                            onClick={() =>
+                              void bulkReject
+                                .mutateAsync({
+                                  questionIds: [q.id],
+                                  reason: rejectReason.trim() || undefined,
                                 })
-                              )
-                              .catch((err) =>
-                                showToast({
-                                  type: 'error',
-                                  message:
-                                    err instanceof Error
-                                      ? err.message
-                                      : 'Không thể từ chối câu hỏi.',
-                                })
-                              )
-                          }
-                        >
-                          <X size={14} />
-                          Từ chối
-                        </button>
+                                .then(() =>
+                                  showToast({
+                                    type: 'success',
+                                    message: 'Đã từ chối câu hỏi.',
+                                  })
+                                )
+                                .catch((err) =>
+                                  showToast({
+                                    type: 'error',
+                                    message:
+                                      err instanceof Error
+                                        ? err.message
+                                        : 'Không thể từ chối câu hỏi.',
+                                  })
+                                )
+                            }
+                          >
+                            <X size={14} />
+                            Từ chối
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               <Pagination

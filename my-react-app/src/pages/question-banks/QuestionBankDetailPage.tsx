@@ -47,8 +47,26 @@ const cognitiveLevelLabel: Record<string, string> = {
   ANALYZE: 'VDC',
 };
 
-function extractDiagramLatex(diagramData: Record<string, unknown> | undefined): string | null {
+function extractDiagramLatex(
+  diagramData: Record<string, unknown> | string | undefined
+): string | null {
   if (!diagramData) return null;
+  if (typeof diagramData === 'string') {
+    const trimmed = diagramData.trim();
+    if (!trimmed) return null;
+    // BE may store the field as either raw LaTeX or a JSON-serialized object.
+    if (trimmed.startsWith('{')) {
+      try {
+        const parsed = JSON.parse(trimmed) as Record<string, unknown>;
+        if (typeof parsed.latex === 'string') return parsed.latex;
+        if (typeof parsed.latexCode === 'string') return parsed.latexCode;
+        if (typeof parsed.code === 'string') return parsed.code;
+      } catch {
+        // fall through and treat as raw latex
+      }
+    }
+    return trimmed;
+  }
   if (typeof diagramData.latex === 'string') return diagramData.latex;
   if (typeof diagramData.latexCode === 'string') return diagramData.latexCode;
   if (typeof diagramData.code === 'string') return diagramData.code;

@@ -1,16 +1,12 @@
 import {
   AlertCircle,
-  Archive,
   ArrowRight,
   BookOpen,
   CheckCircle2,
-  Eye,
   EyeOff,
   FileText,
   GraduationCap,
-  Grid2x2,
   Inbox,
-  List,
   Network,
   Pencil,
   Plus,
@@ -32,11 +28,9 @@ import { useToast } from '../../context/ToastContext';
 import { useDebounce } from '../../hooks/useDebounce';
 
 import {
-  useArchiveTemplate,
   useCreateQuestionTemplate,
   useDeleteQuestionTemplate,
   useGetMyQuestionTemplates,
-  usePublishTemplate,
   useUpdateQuestionTemplate,
 } from '../../hooks/useQuestionTemplate';
 import { questionTemplateService } from '../../services/questionTemplateService';
@@ -68,14 +62,13 @@ const statusFilters: Array<'ALL' | TemplateStatus> = [
   'ALL',
   TemplateStatus.DRAFT,
   TemplateStatus.PUBLISHED,
-  TemplateStatus.ARCHIVED,
 ];
 
 const statusLabel: Record<'ALL' | TemplateStatus, string> = {
   ALL: 'Tất cả',
   DRAFT: 'Nháp',
-  PUBLISHED: 'Đã xuất bản',
-  ARCHIVED: 'Lưu trữ',
+  PUBLISHED: 'Sẵn sàng',
+  ARCHIVED: '',
 };
 
 const templateTypeLabel: Record<string, string> = {
@@ -217,13 +210,6 @@ export function TemplateDashboard() {
   const createMutation = useCreateQuestionTemplate();
   const updateMutation = useUpdateQuestionTemplate();
   const deleteMutation = useDeleteQuestionTemplate();
-  const publishMutation = usePublishTemplate();
-  const archiveMutation = useArchiveTemplate();
-  // Unpublish + toggle-public mutations were dropped from the card footer to
-  // keep it scannable; the form modal manages those transitions on its own.
-
-
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   const templates = useMemo(() => data?.result?.content ?? [], [data]);
   const totalPages = data?.result?.totalPages ?? 0;
@@ -234,7 +220,6 @@ export function TemplateDashboard() {
       total: totalElements,
       published: templates.filter((t) => t.status === TemplateStatus.PUBLISHED).length,
       draft: templates.filter((t) => t.status === TemplateStatus.DRAFT).length,
-      archived: templates.filter((t) => t.status === TemplateStatus.ARCHIVED).length,
     }),
     [templates, totalElements]
   );
@@ -301,15 +286,6 @@ export function TemplateDashboard() {
             <div className="row" style={{ flexWrap: 'wrap' }}>
               <button
                 type="button"
-                className="btn secondary"
-                onClick={() => navigate('/teacher/question-review')}
-              >
-                <Inbox size={14} />
-                Hàng đợi duyệt
-              </button>
-
-              <button
-                type="button"
                 className="btn secondary btn--tint-violet"
                 onClick={() => setBulkImportOpen(true)}
               >
@@ -345,7 +321,7 @@ export function TemplateDashboard() {
               </div>
               <div>
                 <h3>{stats.published}</h3>
-                <p>Đã xuất bản</p>
+                <p>Sẵn sàng</p>
               </div>
             </div>
             <div className="stat-card stat-amber">
@@ -355,15 +331,6 @@ export function TemplateDashboard() {
               <div>
                 <h3>{stats.draft}</h3>
                 <p>Bản nháp</p>
-              </div>
-            </div>
-            <div className="stat-card stat-violet">
-              <div className="stat-icon-wrap">
-                <Archive size={20} />
-              </div>
-              <div>
-                <h3>{stats.archived}</h3>
-                <p>Đã lưu trữ</p>
               </div>
             </div>
           </div>
@@ -418,22 +385,6 @@ export function TemplateDashboard() {
                 <RefreshCw size={14} />
                 Làm mới
               </button>
-              <div className="view-toggle">
-                <button
-                  className={viewMode === 'grid' ? 'active' : ''}
-                  onClick={() => setViewMode('grid')}
-                  aria-label="Hiển thị lưới"
-                >
-                  <Grid2x2 size={16} />
-                </button>
-                <button
-                  className={viewMode === 'list' ? 'active' : ''}
-                  onClick={() => setViewMode('list')}
-                  aria-label="Hiển thị danh sách"
-                >
-                  <List size={16} />
-                </button>
-              </div>
             </div>
           </div>
 
@@ -491,12 +442,11 @@ export function TemplateDashboard() {
 
           {/* ── Grid ── */}
           {!isLoading && !isError && templates.length > 0 && (
-            <div className={`grid-cards${viewMode === 'list' ? ' list-view' : ''}`}>
+            <div className="grid-cards list-view">
               {templates.map((template) => {
                 const statusLabelMap: Record<string, string> = {
-                  PUBLISHED: 'Đã xuất bản',
+                  PUBLISHED: 'Sẵn sàng',
                   DRAFT: 'Nháp',
-                  ARCHIVED: 'Lưu trữ',
                 };
                 const statusKey = template.status as keyof typeof statusLabelMap;
                 return (
@@ -510,9 +460,7 @@ export function TemplateDashboard() {
                         <MathText text={template.name} />
                       </h3>
                       <span className="tpl-card-status" data-status={template.status}>
-                        {template.status === TemplateStatus.PUBLISHED && <Eye size={11} />}
                         {template.status === TemplateStatus.DRAFT && <EyeOff size={11} />}
-                        {template.status === TemplateStatus.ARCHIVED && <Archive size={11} />}
                         {statusLabelMap[statusKey] || template.status}
                       </span>
                     </div>
@@ -539,12 +487,6 @@ export function TemplateDashboard() {
                             {template.chapterName}
                           </span>
                         )}
-                        {template.isPublic && (
-                          <span className="tpl-meta-chip tpl-meta-chip--public">
-                            <Eye size={11} />
-                            Công khai
-                          </span>
-                        )}
                       </div>
 
                       <p className="tpl-card-desc">
@@ -557,9 +499,6 @@ export function TemplateDashboard() {
                             <span
                               key={tag}
                               className="tpl-tag-chip"
-                              // Tooltip keeps the raw enum visible for debugging
-                              // while the chip itself shows the Vietnamese label
-                              // students/teachers expect to see.
                               title={tag}
                             >
                               {questionTagLabels[tag as QuestionTag] ?? tag}
@@ -573,39 +512,16 @@ export function TemplateDashboard() {
                     </div>
 
                     <div className="tpl-card-footer">
-                      {/* Primary action depends on status — exactly one CTA per state. */}
-                      {template.status === TemplateStatus.DRAFT && (
-                        <button
-                          type="button"
-                          className="btn btn--feat-emerald tpl-card-primary"
-                          onClick={() => publishMutation.mutate(template.id)}
-                        >
-                          <FileText size={13} />
-                          Xuất bản
-                        </button>
-                      )}
-                      {template.status === TemplateStatus.PUBLISHED && (
-                        <button
-                          className="btn btn--feat-violet tpl-card-primary"
-                          onClick={() => {
-                            setSelected(template);
-                            setGenerateOpen(true);
-                          }}
-                        >
-                          <Sparkles size={13} />
-                          Sinh câu hỏi
-                        </button>
-                      )}
-                      {template.status === TemplateStatus.ARCHIVED && (
-                        <button
-                          className="btn secondary tpl-card-primary"
-                          onClick={() => publishMutation.mutate(template.id)}
-                          title="Khôi phục về DRAFT để chỉnh sửa"
-                        >
-                          <FileText size={13} />
-                          Khôi phục
-                        </button>
-                      )}
+                      <button
+                        className="btn btn--feat-violet tpl-card-primary"
+                        onClick={() => {
+                          setSelected(template);
+                          setGenerateOpen(true);
+                        }}
+                      >
+                        <Sparkles size={13} />
+                        Sinh câu hỏi
+                      </button>
 
                       <div className="tpl-card-secondary">
                         <button
@@ -615,10 +531,10 @@ export function TemplateDashboard() {
                               `/teacher/question-review?templateId=${encodeURIComponent(template.id)}`
                             )
                           }
-                          title="Câu hỏi đang chờ duyệt cho mẫu này"
+                          title="Duyệt câu hỏi của mẫu này"
                         >
                           <Inbox size={13} />
-                          Chờ duyệt
+                          Duyệt câu hỏi
                         </button>
                         <button
                           className="btn secondary"
@@ -629,15 +545,6 @@ export function TemplateDashboard() {
                           <Pencil size={13} />
                           {editingTemplateId === template.id ? 'Đang tải' : 'Sửa'}
                         </button>
-                        {template.status === TemplateStatus.PUBLISHED && (
-                          <button
-                            className="btn warn"
-                            onClick={() => archiveMutation.mutate(template.id)}
-                            title="Lưu trữ — học sinh không thấy nữa"
-                          >
-                            <Archive size={13} />
-                          </button>
-                        )}
                         <button
                           className="btn danger-outline"
                           onClick={() => deleteMutation.mutate(template.id)}

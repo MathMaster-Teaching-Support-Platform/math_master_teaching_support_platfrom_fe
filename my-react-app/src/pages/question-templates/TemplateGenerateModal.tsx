@@ -1,16 +1,8 @@
-import { Sparkles, X } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { useGenerateQuestions } from '../../hooks/useQuestionTemplate';
 import type { QuestionTemplateResponse } from '../../types/questionTemplate';
 
-/**
- * Generation modal for the unified Blueprint flow.
- *
- * Drops the legacy PARAMETRIC vs AI_FROM_CANONICAL toggle — every generation
- * now reads the Blueprint and selects values via the constraint-aware AI
- * selector. The teacher controls only count, distinctness, and an optional
- * free-text hint forwarded into the value-selection prompt.
- */
 type Props = {
   isOpen: boolean;
   onClose: () => void;
@@ -26,7 +18,6 @@ export function TemplateGenerateModal({
 }: Readonly<Props>) {
   const [count, setCount] = useState(5);
   const [avoidDuplicates, setAvoidDuplicates] = useState(true);
-  const [distinctnessHint, setDistinctnessHint] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const generateMutation = useGenerateQuestions();
@@ -38,7 +29,7 @@ export function TemplateGenerateModal({
     setError(null);
 
     if (!Number.isFinite(count) || count < 1) {
-      setError('Số lượng phải ≥ 1.');
+      setError('Số lượng câu hỏi phải ≥ 1.');
       return;
     }
 
@@ -47,15 +38,14 @@ export function TemplateGenerateModal({
         id: template.id,
         count,
         avoidDuplicates,
-        distinctnessHint: distinctnessHint.trim() || undefined,
       });
 
       const total = response.result?.totalGenerated ?? 0;
       const warnings = response.result?.warnings ?? [];
       const warnSuffix = warnings.length ? ` (cảnh báo: ${warnings.length})` : '';
-      onGenerated(`Đã sinh ${total}/${count} câu hỏi vào hàng đợi duyệt${warnSuffix}.`);
+      onGenerated(`Đã tạo ${total}/${count} câu hỏi vào hàng chờ duyệt${warnSuffix}.`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Không thể sinh câu hỏi từ template.');
+      setError(err instanceof Error ? err.message : 'Không thể tạo câu hỏi.');
     }
   }
 
@@ -64,14 +54,11 @@ export function TemplateGenerateModal({
       <div className="modal-card" style={{ width: 'min(560px, 96vw)' }}>
         <div className="modal-header">
           <div>
-            <h3>Sinh câu hỏi từ template</h3>
+            <h3>Sinh câu hỏi từ mẫu</h3>
             <p className="muted" style={{ marginTop: 4 }}>
               {template.name}
             </p>
           </div>
-          <button className="icon-btn" onClick={onClose}>
-            <X size={16} />
-          </button>
         </div>
 
         <form onSubmit={submit}>
@@ -103,25 +90,7 @@ export function TemplateGenerateModal({
                 checked={avoidDuplicates}
                 onChange={(e) => setAvoidDuplicates(e.target.checked)}
               />
-              <span className="muted">
-                Bỏ qua bộ tham số đã được dùng (tránh trùng lặp)
-              </span>
-            </label>
-
-            <label>
-              <p className="muted" style={{ marginBottom: 6 }}>
-                Gợi ý phân tán (tùy chọn)
-              </p>
-              <input
-                className="input"
-                placeholder="Ví dụ: thay đổi dấu của b, dùng số nguyên tố nhỏ"
-                value={distinctnessHint}
-                onChange={(e) => setDistinctnessHint(e.target.value)}
-              />
-              <p className="muted" style={{ marginTop: 6, fontSize: '0.78rem' }}>
-                Hint này được chuyển thẳng cho AI khi chọn giá trị tham số. Bỏ trống
-                nếu bạn không có yêu cầu cụ thể.
-              </p>
+              <span>Tránh trùng biến số đã dùng (giúp đa dạng hơn)</span>
             </label>
 
             <div
@@ -134,15 +103,14 @@ export function TemplateGenerateModal({
                 color: '#1e3a8a',
               }}
             >
-              Câu hỏi được sinh sẽ ở trạng thái <strong>UNDER_REVIEW</strong>. Sau
-              khi sinh xong bạn sẽ được chuyển đến hàng đợi duyệt để phê duyệt
-              từng câu.
+              Câu hỏi sau khi tạo sẽ ở trạng thái <strong>Chờ duyệt</strong>. Bạn cần
+              duyệt lại trước khi sử dụng.
             </div>
           </div>
 
           <div className="modal-footer">
             <button type="button" className="btn secondary" onClick={onClose}>
-              Đóng
+              Huỷ
             </button>
             <button
               type="submit"
@@ -150,11 +118,11 @@ export function TemplateGenerateModal({
               disabled={generateMutation.isPending}
             >
               {generateMutation.isPending ? (
-                'Đang sinh…'
+                'Đang tạo…'
               ) : (
                 <>
                   <Sparkles size={14} style={{ marginRight: 6 }} />
-                  Sinh câu hỏi
+                  Tạo câu hỏi
                 </>
               )}
             </button>
@@ -164,3 +132,5 @@ export function TemplateGenerateModal({
     </div>
   );
 }
+
+export default TemplateGenerateModal;

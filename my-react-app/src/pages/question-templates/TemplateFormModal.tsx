@@ -674,7 +674,7 @@ export function TemplateFormModal({
                 checked={isPublic}
                 onChange={(event) => setIsPublic(event.target.checked)}
               />{' '}
-              Công khai mẫu cho giáo viên khác
+              Xuất bản mẫu cho giáo viên khác
             </label>
 
             {submitError && (

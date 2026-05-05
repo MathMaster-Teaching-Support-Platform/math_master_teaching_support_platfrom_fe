@@ -261,10 +261,10 @@ export function ExamMatrixDashboard() {
               <button
                 type="button"
                 className="btn btn--feat-violet"
-                onClick={() => navigate('/teacher/assessment-builder')}
+                onClick={() => navigate('/teacher/assessments')}
               >
                 <BookOpen size={15} />
-                Tạo đề thi
+                Create Exam
                 <ArrowRight size={14} />
               </button>
             </div>

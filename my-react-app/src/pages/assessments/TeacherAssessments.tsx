@@ -6,6 +6,7 @@ import {
   Pencil,
   Plus,
   RefreshCw,
+  Ruler,
   Search,
   Send,
   Sparkles,
@@ -33,6 +34,7 @@ import { useDebounce } from '../../hooks/useDebounce';
 import { useGetMyExamMatrices } from '../../hooks/useExamMatrix';
 import '../../styles/module-refactor.css';
 import type { AssessmentRequest, AssessmentResponse, AssessmentStatus } from '../../types';
+import { MatrixStatus } from '../../types/examMatrix';
 import '../courses/TeacherCourses.css';
 import AssessmentModal from './AssessmentModal';
 
@@ -130,79 +132,6 @@ function CloneModal({
   );
 }
 
-function GenerateFromMatrixModal({
-  matrixId,
-  setMatrixId,
-  matrices,
-  isLoading,
-  onClose,
-  onConfirm,
-}: {
-  matrixId: string;
-  setMatrixId: (next: string) => void;
-  matrices: Array<{ id: string; name: string; status: string }>;
-  isLoading: boolean;
-  onClose: () => void;
-  onConfirm: () => void;
-}) {
-  return (
-    <div className="modal-layer">
-      <div className="modal-card" style={{ width: 'min(520px, 100%)' }}>
-        <div className="modal-header">
-          <div>
-            <h3>Tạo nhanh từ ma trận đề</h3>
-            <p className="muted" style={{ marginTop: 4 }}>
-              Chọn ma trận từ danh sách của bạn, hệ thống sẽ tự tạo assessment và câu hỏi.
-            </p>
-          </div>
-        </div>
-
-        <div className="modal-body">
-          <label>
-            <p className="muted" style={{ marginBottom: 6 }}>
-              Ma trận đề
-            </p>
-            <select
-              className="select"
-              value={matrixId}
-              onChange={(event) => setMatrixId(event.target.value)}
-            >
-              <option value="">Chọn ma trận</option>
-              {matrices.map((matrix) => (
-                <option key={matrix.id} value={matrix.id}>
-                  {matrix.name} ({matrix.status})
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-
-        <div className="modal-footer">
-          <button type="button" className="btn secondary" onClick={onClose}>
-            Hủy
-          </button>
-          <button
-            type="button"
-            className="btn btn--feat-indigo"
-            disabled={!matrixId || isLoading}
-            onClick={onConfirm}
-            style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 140, justifyContent: 'center' }}
-          >
-            {isLoading ? (
-              <>
-                <RefreshCw size={14} className="animate-spin" />
-                Đang tạo...
-              </>
-            ) : (
-              'Tạo assessment'
-            )}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function TeacherAssessments() {
   const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState<'ALL' | AssessmentStatus>('ALL');
@@ -213,7 +142,6 @@ export default function TeacherAssessments() {
   const [mode, setMode] = useState<'create' | 'edit'>('create');
   const [selected, setSelected] = useState<AssessmentResponse | null>(null);
   const [cloneTarget, setCloneTarget] = useState<AssessmentResponse | null>(null);
-  const [generateModalOpen, setGenerateModalOpen] = useState(false);
   const [selectedMatrixId, setSelectedMatrixId] = useState('');
 
   const debouncedSearch = useDebounce(search, 300);
@@ -247,6 +175,13 @@ export default function TeacherAssessments() {
   const totalPages = data?.result?.totalPages ?? 0;
   const totalElements = data?.result?.totalElements ?? 0;
   const myMatrices = myMatricesData?.result ?? [];
+  const readyMatrices = useMemo(
+    () =>
+      myMatrices.filter(
+        (m) => m.status === MatrixStatus.APPROVED || m.status === MatrixStatus.LOCKED
+      ),
+    [myMatrices]
+  );
 
   const stats = useMemo(
     () => ({
@@ -311,7 +246,6 @@ export default function TeacherAssessments() {
         message: `Tạo ${UI_TEXT.QUIZ.toLowerCase()} từ ma trận thành công.`,
       });
       const generatedAssessmentId = response.result?.id;
-      setGenerateModalOpen(false);
       setSelectedMatrixId('');
       if (generatedAssessmentId) {
         navigate(`/teacher/assessments/${generatedAssessmentId}`);
@@ -339,25 +273,91 @@ export default function TeacherAssessments() {
           <header className="page-header courses-header-row">
             <div className="header-stack">
               <div className="row" style={{ gap: '0.6rem' }}>
-                <h2>{UI_TEXT.QUIZ}</h2>
+                <h2>Tạo đề thi</h2>
                 {!isLoading && <span className="count-chip">{stats.total}</span>}
               </div>
               <p className="header-sub">
-                Tạo, xuất bản và quản lý vòng đời {UI_TEXT.QUIZ.toLowerCase()} cho học sinh.
+                Lắp ráp đề mới từ ma trận đã duyệt và quản lý vòng đời các đề đã có.
               </p>
             </div>
-            <div className="row" style={{ flexWrap: 'wrap' }}>
+          </header>
+
+          {/* Mind-map style: Create on the left, Manage on the right. */}
+          <div
+            className="create-exam-grid"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'minmax(280px, 360px) 1fr',
+              gap: '1.25rem',
+              alignItems: 'start',
+            }}
+          >
+            {/* ── LEFT: Tạo đề ── */}
+            <aside
+              className="data-card"
+              style={{ position: 'sticky', top: '1rem', display: 'grid', gap: '0.85rem' }}
+            >
+              <div>
+                <div
+                  className="row"
+                  style={{ gap: 8, alignItems: 'center', marginBottom: 4 }}
+                >
+                  <Sparkles size={16} />
+                  <h3 style={{ margin: 0 }}>Tạo đề</h3>
+                </div>
+                <p className="muted" style={{ margin: 0 }}>
+                  Chọn ma trận đã duyệt — hệ thống tự sinh đề từ ngân hàng câu hỏi.
+                </p>
+              </div>
+
+              <label>
+                <p className="muted" style={{ marginBottom: 6 }}>
+                  Ma trận đã duyệt
+                </p>
+                <select
+                  className="select"
+                  value={selectedMatrixId}
+                  onChange={(event) => setSelectedMatrixId(event.target.value)}
+                >
+                  <option value="">Chọn ma trận</option>
+                  {readyMatrices.map((matrix) => (
+                    <option key={matrix.id} value={matrix.id}>
+                      {matrix.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
               <button
                 type="button"
-                className="btn secondary btn--tint-indigo"
-                onClick={() => setGenerateModalOpen(true)}
+                className="btn btn--feat-indigo"
+                disabled={!selectedMatrixId || generateFromMatrixMutation.isPending}
+                onClick={() => void generateFromMatrix()}
               >
-                <Sparkles size={14} />
-                Tạo nhanh từ ma trận
+                {generateFromMatrixMutation.isPending ? (
+                  <>
+                    <RefreshCw size={14} className="animate-spin" />
+                    Đang tạo...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={14} />
+                    Sinh từ ma trận
+                  </>
+                )}
               </button>
+
+              <div
+                style={{
+                  height: 1,
+                  background: 'var(--mod-border, #e5e7eb)',
+                  margin: '4px 0',
+                }}
+              />
+
               <button
                 type="button"
-                className="btn btn--feat-violet"
+                className="btn secondary"
                 onClick={() => {
                   setMode('create');
                   setSelected(null);
@@ -365,93 +365,115 @@ export default function TeacherAssessments() {
                 }}
               >
                 <Plus size={14} />
-                Tạo {UI_TEXT.QUIZ.toLowerCase()}
+                Tạo thủ công
               </button>
-            </div>
-          </header>
 
-          {/* Stats */}
-          <div className="stats-grid">
-            <div className="stat-card stat-violet">
-              <div className="stat-icon-wrap">
-                <FileText size={18} />
-              </div>
-              <div>
-                <h3>{stats.total}</h3>
-                <p>Tổng {UI_TEXT.QUIZ.toLowerCase()}</p>
-              </div>
-            </div>
-            <div className="stat-card stat-blue">
-              <div className="stat-icon-wrap">
-                <Pencil size={18} />
-              </div>
-              <div>
-                <h3>{stats.draft}</h3>
-                <p>Nháp</p>
-              </div>
-            </div>
-            <div className="stat-card stat-emerald">
-              <div className="stat-icon-wrap">
-                <Send size={18} />
-              </div>
-              <div>
-                <h3>{stats.published}</h3>
-                <p>Đã xuất bản</p>
-              </div>
-            </div>
-            <div className="stat-card stat-amber">
-              <div className="stat-icon-wrap">
-                <Lock size={18} />
-              </div>
-              <div>
-                <h3>{stats.closed}</h3>
-                <p>Đã đóng</p>
-              </div>
-            </div>
-          </div>
+              <button
+                type="button"
+                className="btn secondary btn--tint-indigo"
+                onClick={() => navigate('/teacher/exam-matrices')}
+              >
+                <Ruler size={14} />
+                Quản lý ma trận
+              </button>
 
-          <div className="toolbar">
-            <label className="search-box" style={{ flex: '1 1 240px' }}>
-              <span className="search-box__icon" aria-hidden="true">
-                <Search size={15} />
-              </span>
-              <input
-                placeholder={`Tìm ${UI_TEXT.QUIZ.toLowerCase()}...`}
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-              />
-              {search && (
-                <button
-                  type="button"
-                  className="search-box__clear"
-                  aria-label="Xóa nội dung tìm kiếm"
-                  onClick={() => setSearch('')}
-                >
-                  <X size={13} />
-                </button>
+              {readyMatrices.length === 0 && (
+                <p className="muted" style={{ fontSize: '0.8rem' }}>
+                  Chưa có ma trận nào ở trạng thái đã duyệt. Hãy tạo và phê duyệt ma trận
+                  trước.
+                </p>
               )}
-            </label>
+            </aside>
 
-            <div className="pill-group">
-              {statusFilters.map((item) => (
-                <button
-                  key={item}
-                  className={`pill-btn ${statusFilter === item ? 'active' : ''}`}
-                  onClick={() => {
-                    setStatusFilter(item);
-                    setPage(0);
-                  }}
-                >
-                  {statusLabel[item]}
+            {/* ── RIGHT: Quản lí đề ── */}
+            <div style={{ display: 'grid', gap: '0.9rem' }}>
+              <div className="row" style={{ gap: 8, alignItems: 'center' }}>
+                <h3 style={{ margin: 0 }}>Quản lí đề</h3>
+                {!isLoading && <span className="count-chip">{stats.total}</span>}
+              </div>
+
+              {/* Stats */}
+              <div className="stats-grid">
+                <div className="stat-card stat-violet">
+                  <div className="stat-icon-wrap">
+                    <FileText size={18} />
+                  </div>
+                  <div>
+                    <h3>{stats.total}</h3>
+                    <p>Tổng đề</p>
+                  </div>
+                </div>
+                <div className="stat-card stat-blue">
+                  <div className="stat-icon-wrap">
+                    <Pencil size={18} />
+                  </div>
+                  <div>
+                    <h3>{stats.draft}</h3>
+                    <p>Nháp</p>
+                  </div>
+                </div>
+                <div className="stat-card stat-emerald">
+                  <div className="stat-icon-wrap">
+                    <Send size={18} />
+                  </div>
+                  <div>
+                    <h3>{stats.published}</h3>
+                    <p>Đã xuất bản</p>
+                  </div>
+                </div>
+                <div className="stat-card stat-amber">
+                  <div className="stat-icon-wrap">
+                    <Lock size={18} />
+                  </div>
+                  <div>
+                    <h3>{stats.closed}</h3>
+                    <p>Đã đóng</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="toolbar">
+                <label className="search-box" style={{ flex: '1 1 240px' }}>
+                  <span className="search-box__icon" aria-hidden="true">
+                    <Search size={15} />
+                  </span>
+                  <input
+                    placeholder="Tìm đề..."
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                  />
+                  {search && (
+                    <button
+                      type="button"
+                      className="search-box__clear"
+                      aria-label="Xóa nội dung tìm kiếm"
+                      onClick={() => setSearch('')}
+                    >
+                      <X size={13} />
+                    </button>
+                  )}
+                </label>
+
+                <div className="pill-group">
+                  {statusFilters.map((item) => (
+                    <button
+                      key={item}
+                      className={`pill-btn ${statusFilter === item ? 'active' : ''}`}
+                      onClick={() => {
+                        setStatusFilter(item);
+                        setPage(0);
+                      }}
+                    >
+                      {statusLabel[item]}
+                    </button>
+                  ))}
+                </div>
+
+                <button className="btn secondary" onClick={() => void refetch()}>
+                  <RefreshCw size={14} />
+                  Làm mới
                 </button>
-              ))}
-            </div>
-
-            <button className="btn secondary" onClick={() => void refetch()}>
-              <RefreshCw size={14} />
-              Làm mới
-            </button>
-          </div>
+              </div>
 
           {isLoading && (
             <div className="skeleton-grid" aria-hidden>
@@ -703,13 +725,15 @@ export default function TeacherAssessments() {
             </div>
           )}
 
-          <Pagination
-            page={page}
-            totalPages={totalPages}
-            totalElements={totalElements}
-            pageSize={size}
-            onChange={(p) => setPage(p)}
-          />
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                totalElements={totalElements}
+                pageSize={size}
+                onChange={(p) => setPage(p)}
+              />
+            </div>
+          </div>
 
           <AssessmentModal
             isOpen={openForm}
@@ -729,25 +753,6 @@ export default function TeacherAssessments() {
             />
           )}
 
-          {generateModalOpen && (
-            <GenerateFromMatrixModal
-              matrixId={selectedMatrixId}
-              setMatrixId={setSelectedMatrixId}
-              matrices={myMatrices.map((matrix) => ({
-                id: matrix.id,
-                name: matrix.name,
-                status: matrix.status,
-              }))}
-              isLoading={generateFromMatrixMutation.isPending}
-              onClose={() => {
-                setGenerateModalOpen(false);
-                setSelectedMatrixId('');
-              }}
-              onConfirm={() => {
-                void generateFromMatrix();
-              }}
-            />
-          )}
         </section>
       </div>
     </DashboardLayout>

@@ -62,10 +62,10 @@ import AdminCommissionProposals from '../pages/admin/AdminCommissionProposals';
 import AdminSystemConfigPage from '../pages/admin/AdminSystemConfigPage';
 import AdminWithdrawals from '../pages/admin/AdminWithdrawals';
 import CashFlowDashboard from '../pages/admin/CashFlowDashboard';
+import TokenCostConfigPage from '../pages/admin/TokenCostConfigPage';
 
 import RevenueBreakdown from '../pages/admin/RevenueBreakdown';
 import ReviewProfiles from '../pages/admin/ReviewProfiles';
-import AssessmentBuilderFlow from '../pages/assessments/AssessmentBuilderFlow';
 import AssessmentDetail from '../pages/assessments/AssessmentDetailRefactored';
 import TeacherAssessments from '../pages/assessments/TeacherAssessments';
 import TeacherCommissionPage from '../pages/commission/TeacherCommissionPage';
@@ -324,12 +324,10 @@ export const router = createBrowserRouter([
     ),
   },
   {
+    // Legacy URL — the standalone "Trình tạo đề" screen has been merged into
+    // the unified Create Exam page at /teacher/assessments.
     path: '/teacher/assessment-builder',
-    element: (
-      <PrivateRoute>
-        <AssessmentBuilderFlow />
-      </PrivateRoute>
-    ),
+    element: <Navigate to="/teacher/assessments" replace />,
   },
   {
     path: '/teacher/assessments/:id',
@@ -754,6 +752,14 @@ export const router = createBrowserRouter([
     element: (
       <PrivateRoute>
         <AdminSystemConfigPage />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/admin/token-config',
+    element: (
+      <PrivateRoute>
+        <TokenCostConfigPage />
       </PrivateRoute>
     ),
   },
