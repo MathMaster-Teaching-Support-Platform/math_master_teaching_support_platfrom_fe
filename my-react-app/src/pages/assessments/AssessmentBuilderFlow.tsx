@@ -114,7 +114,7 @@ export default function AssessmentBuilderFlow() {
           <header className="page-header courses-header-row">
             <div className="header-stack">
               <div className="row" style={{ gap: '0.6rem' }}>
-                <h2>Trình tạo đề thi</h2>
+                <h2>Tạo đề thi</h2>
               </div>
               <p className="header-sub">
                 Không gian điều phối gọn nhẹ để lắp ráp đề từ tài nguyên đã duyệt, rà soát cuối và
@@ -133,9 +133,6 @@ export default function AssessmentBuilderFlow() {
               </span>
               <span className="abf-quicknav__text">
                 <span className="abf-quicknav__title">Ma trận đề</span>
-                <span className="abf-quicknav__desc">
-                  Định nghĩa blueprint và ràng buộc phân bố câu hỏi
-                </span>
               </span>
               <ArrowRight size={14} className="abf-quicknav__arrow" />
             </button>
@@ -149,7 +146,6 @@ export default function AssessmentBuilderFlow() {
               </span>
               <span className="abf-quicknav__text">
                 <span className="abf-quicknav__title">Mẫu câu hỏi</span>
-                <span className="abf-quicknav__desc">Soạn mẫu tái sử dụng và sinh câu hỏi AI</span>
               </span>
               <ArrowRight size={14} className="abf-quicknav__arrow" />
             </button>
@@ -163,7 +159,6 @@ export default function AssessmentBuilderFlow() {
               </span>
               <span className="abf-quicknav__text">
                 <span className="abf-quicknav__title">Ngân hàng câu hỏi</span>
-                <span className="abf-quicknav__desc">Duyệt, phê duyệt và quản lý kho câu hỏi</span>
               </span>
               <ArrowRight size={14} className="abf-quicknav__arrow" />
             </button>
@@ -181,9 +176,6 @@ export default function AssessmentBuilderFlow() {
                 <span className="abf-step__num">1</span>
                 <div className="abf-step__body">
                   <strong className="abf-step__title">Question Template</strong>
-                  <p className="abf-step__desc">
-                    Tạo mẫu câu hỏi, khai báo biến số, công thức đáp án và kiểm tra preview.
-                  </p>
                 </div>
                 <button
                   type="button"
@@ -197,9 +189,6 @@ export default function AssessmentBuilderFlow() {
                 <span className="abf-step__num">2</span>
                 <div className="abf-step__body">
                   <strong className="abf-step__title">Question Bank</strong>
-                  <p className="abf-step__desc">
-                    Sinh câu hỏi từ template, rà soát chất lượng và đưa vào ngân hàng.
-                  </p>
                 </div>
                 <button
                   type="button"
@@ -213,9 +202,6 @@ export default function AssessmentBuilderFlow() {
                 <span className="abf-step__num">3</span>
                 <div className="abf-step__body">
                   <strong className="abf-step__title">Exam Matrix</strong>
-                  <p className="abf-step__desc">
-                    Tạo ma trận đề, phân bố chương/chủ đề, phê duyệt để sẵn sàng tạo đề.
-                  </p>
                 </div>
                 <button
                   type="button"
@@ -229,9 +215,6 @@ export default function AssessmentBuilderFlow() {
                 <span className="abf-step__num abf-step__num--active">4</span>
                 <div className="abf-step__body">
                   <strong className="abf-step__title">{UI_TEXT.QUIZ}</strong>
-                  <p className="abf-step__desc">
-                    Chọn ma trận đã duyệt, Generate đề nháp, rà soát cuối và xuất bản.
-                  </p>
                 </div>
                 <span className="badge draft">Bạn đang ở đây</span>
               </li>

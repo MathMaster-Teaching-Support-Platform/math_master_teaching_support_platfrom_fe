@@ -245,7 +245,7 @@ export default function TeacherQuestionManagementPage() {
                 <BookOpen size={14} />
               </span>
               <span className="tqm-quicknav__text">
-                <span className="tqm-quicknav__title">Trình tạo đề thi</span>
+                <span className="tqm-quicknav__title">Tạo đề thi</span>
                 <span className="tqm-quicknav__desc">Lắp ráp và xuất bản đề thi hoàn chỉnh</span>
               </span>
               <ArrowRight size={14} className="tqm-quicknav__arrow" />

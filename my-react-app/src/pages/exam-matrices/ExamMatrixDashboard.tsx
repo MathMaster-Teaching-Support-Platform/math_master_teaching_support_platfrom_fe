@@ -244,7 +244,7 @@ export function ExamMatrixDashboard() {
                   <p className="exam-matrix-wf-step__title">Phê duyệt &amp; xuất</p>
                 </div>
                 <p className="exam-matrix-wf-step__desc">
-                  Phê duyệt ma trận rồi dùng ở Trình tạo đề.
+                  Phê duyệt ma trận rồi dùng ở Tạo đề thi.
                 </p>
               </div>
             </div>
@@ -264,7 +264,7 @@ export function ExamMatrixDashboard() {
                 onClick={() => navigate('/teacher/assessment-builder')}
               >
                 <BookOpen size={15} />
-                Trình tạo đề
+                Tạo đề thi
                 <ArrowRight size={14} />
               </button>
             </div>
@@ -367,11 +367,11 @@ export function ExamMatrixDashboard() {
                      * Reads as the matrix's intrinsic shape so teachers can scan a list quickly
                      * without opening each one. Uses a math/serif font + tabular numerals.
                      */}
-                    {(matrix.parts?.length || matrix.rowCount || matrix.totalQuestionsTarget || matrix.totalPointsTarget) && (
-                      <div
-                        className="exam-matrix-card__stats"
-                        aria-label="Kích thước ma trận"
-                      >
+                    {(matrix.parts?.length ||
+                      matrix.rowCount ||
+                      matrix.totalQuestionsTarget ||
+                      matrix.totalPointsTarget) && (
+                      <div className="exam-matrix-card__stats" aria-label="Kích thước ma trận">
                         {(matrix.parts?.length ?? 0) > 0 && (
                           <span className="exam-matrix-card__stat">
                             <span className="exam-matrix-card__stat-value">

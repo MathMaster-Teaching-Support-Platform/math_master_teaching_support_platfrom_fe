@@ -1,4 +1,3 @@
-
 import {
   AlertCircle,
   ArrowRight,
@@ -255,7 +254,7 @@ export function QuestionBankDashboard() {
                 <ClipboardList size={18} />
               </div>
               <div className="qb-quicknav__text">
-                <span className="qb-quicknav__title">Trình tạo đề</span>
+                <span className="qb-quicknav__title">Tạo đề thi</span>
                 <span className="qb-quicknav__desc">Lắp câu hỏi thành đề kiểm tra</span>
               </div>
               <ArrowRight size={16} className="qb-quicknav__arrow" />
