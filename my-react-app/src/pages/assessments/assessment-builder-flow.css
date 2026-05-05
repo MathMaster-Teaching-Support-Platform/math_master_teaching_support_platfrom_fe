@@ -216,6 +216,10 @@
   background: #b4223f;
 }
 
+.module-layout-container .assessment-builder-flow-page {
+  padding: 1.1rem clamp(1rem, 2vw, 1.7rem) 1.5rem;
+}
+
 @media (max-width: 768px) {
   .assessment-builder-flow__toast {
     right: 0.7rem;
@@ -264,8 +268,9 @@
 
 .module-layout-container .header-sub {
   margin: 0;
-  font-size: 0.88rem;
+  font-size: 1rem;
   color: #60748f;
+  line-height: 1.5;
 }
 
 /* ── quick-nav bar ── */
@@ -276,14 +281,14 @@
   border-radius: 14px;
   background: #fff;
   overflow: hidden;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.6rem;
 }
 
 .module-layout-container .abf-quicknav__item {
   display: flex;
   align-items: center;
   gap: 0.7rem;
-  padding: 0.85rem 1.1rem;
+  padding: 1rem 1.25rem;
   flex: 1;
   cursor: pointer;
   background: transparent;
@@ -334,7 +339,7 @@
 }
 
 .module-layout-container .abf-quicknav__title {
-  font-size: 0.84rem;
+  font-size: 1rem;
   font-weight: 700;
   color: #142235;
   line-height: 1.3;
@@ -363,7 +368,7 @@
 .module-layout-container .abf-step-list {
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 0.1rem 0.35rem 0.25rem;
   display: grid;
   gap: 0;
   overflow: hidden;
@@ -374,7 +379,7 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 0.85rem;
-  padding: 0.8rem 0.25rem;
+  padding: 1rem 0.55rem;
   border-bottom: 1px solid #f0f4f8;
 }
 
@@ -416,10 +421,14 @@
 }
 
 .module-layout-container .abf-step__title {
-  font-size: 0.87rem;
+  font-size: 1.04rem;
   color: #142235;
   font-weight: 700;
   display: block;
+}
+
+.module-layout-container .abf-process-card {
+  padding: 1.15rem 1rem;
 }
 
 .module-layout-container .abf-step__desc {
