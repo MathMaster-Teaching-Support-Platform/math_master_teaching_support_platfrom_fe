@@ -60,4 +60,4 @@ export interface CashFlowPage<T> {
   size: number;
 }
 
-export type GroupBy = 'day' | 'week' | 'month';
+export type GroupBy = 'hour' | 'day' | 'week' | 'month';

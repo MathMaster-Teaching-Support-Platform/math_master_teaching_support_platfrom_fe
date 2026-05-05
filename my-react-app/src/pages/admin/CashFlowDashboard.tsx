@@ -144,6 +144,104 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
+const pad2 = (value: number): string => String(value).padStart(2, '0');
+
+const toDateOnly = (date: Date): string => date.toISOString().split('T')[0];
+
+const parseUtcDate = (dateStr: string): Date => new Date(`${dateStr}T00:00:00Z`);
+
+const inclusiveDayDiff = (from: Date, to: Date): number =>
+  Math.floor((to.getTime() - from.getTime()) / (24 * 60 * 60 * 1000)) + 1;
+
+const formatUtcDayKey = (date: Date): string =>
+  `${date.getUTCFullYear()}-${pad2(date.getUTCMonth() + 1)}-${pad2(date.getUTCDate())}`;
+
+const formatUtcMonthKey = (date: Date): string =>
+  `${date.getUTCFullYear()}-${pad2(date.getUTCMonth() + 1)}`;
+
+const formatUtcHourKey = (date: Date): string =>
+  `${formatUtcDayKey(date)} ${pad2(date.getUTCHours())}:00`;
+
+const formatUtcDayLabel = (date: Date): string =>
+  `${pad2(date.getUTCDate())}/${pad2(date.getUTCMonth() + 1)}`;
+
+const formatUtcMonthLabel = (date: Date): string =>
+  `${pad2(date.getUTCMonth() + 1)}/${date.getUTCFullYear()}`;
+
+const computeAutoGroupBy = (fromStr: string, toStr: string): GroupBy => {
+  const from = parseUtcDate(fromStr);
+  const to = parseUtcDate(toStr);
+  const days = inclusiveDayDiff(from, to);
+
+  if (days <= 1) return 'hour';
+  if (days <= 31) return 'day';
+  return 'month';
+};
+
+const buildTimeBuckets = (fromStr: string, toStr: string, groupBy: GroupBy) => {
+  const from = parseUtcDate(fromStr);
+  const to = parseUtcDate(toStr);
+
+  if (groupBy === 'hour') {
+    const base = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate(), 0, 0, 0));
+    return Array.from({ length: 24 }, (_, idx) => {
+      const current = new Date(base);
+      current.setUTCHours(base.getUTCHours() + idx);
+      return {
+        key: formatUtcHourKey(current),
+        label: `${pad2(current.getUTCHours())}:00`,
+      };
+    });
+  }
+
+  if (groupBy === 'month') {
+    const buckets = [] as { key: string; label: string }[];
+    const current = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), 1));
+    const end = new Date(Date.UTC(to.getUTCFullYear(), to.getUTCMonth(), 1));
+
+    while (current.getTime() <= end.getTime()) {
+      buckets.push({
+        key: formatUtcMonthKey(current),
+        label: formatUtcMonthLabel(current),
+      });
+      current.setUTCMonth(current.getUTCMonth() + 1);
+    }
+
+    return buckets;
+  }
+
+  if (groupBy === 'week') {
+    const buckets = [] as { key: string; label: string }[];
+    const current = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate()));
+    const day = current.getUTCDay();
+    const diffToMonday = (day + 6) % 7;
+    current.setUTCDate(current.getUTCDate() - diffToMonday);
+
+    while (current.getTime() <= to.getTime()) {
+      buckets.push({
+        key: formatUtcDayKey(current),
+        label: formatUtcDayLabel(current),
+      });
+      current.setUTCDate(current.getUTCDate() + 7);
+    }
+
+    return buckets;
+  }
+
+  const buckets = [] as { key: string; label: string }[];
+  const current = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate()));
+
+  while (current.getTime() <= to.getTime()) {
+    buckets.push({
+      key: formatUtcDayKey(current),
+      label: formatUtcDayLabel(current),
+    });
+    current.setUTCDate(current.getUTCDate() + 1);
+  }
+
+  return buckets;
+};
+
 // ─── SummaryCard ───────────────────────────────────────────────────────────
 const SummaryCard = ({
   title,
@@ -198,6 +296,7 @@ const CashFlowDashboard: React.FC = () => {
     to: new Date().toISOString().split('T')[0],
   });
 
+  const [quickRange, setQuickRange] = useState<'1d' | '1w' | '1m' | '1y' | null>(null);
   const [groupBy, setGroupBy] = useState<GroupBy>('day');
   const [summary, setSummary] = useState<CashFlowSummary | null>(null);
   const [chartData, setChartData] = useState<CashFlowChartPoint[]>([]);
@@ -213,6 +312,46 @@ const CashFlowDashboard: React.FC = () => {
   const [filterCat, setFilterCat] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [selectedEntry, setSelectedEntry] = useState<CashFlowEntry | null>(null);
+
+  const buckets = buildTimeBuckets(dateRange.from, dateRange.to, groupBy);
+  const chartMap = new Map(chartData.map((point) => [point.label, point]));
+  const normalizedSeries = buckets.map((bucket) => {
+    const point = chartMap.get(bucket.key);
+    const inflow = point?.inflow ?? 0;
+    const outflow = point?.outflow ?? 0;
+    return {
+      label: bucket.label,
+      inflow,
+      outflow,
+      net: inflow - outflow,
+    };
+  });
+
+  const chartSeries = normalizedSeries.map((point) => ({
+    ...point,
+    outflow: -Math.abs(point.outflow),
+  }));
+
+  const setQuickDateRange = (range: '1d' | '1w' | '1m' | '1y') => {
+    const now = new Date();
+    const toUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    const fromUtc = new Date(toUtc);
+
+    if (range === '1w') fromUtc.setUTCDate(fromUtc.getUTCDate() - 6);
+    if (range === '1m') fromUtc.setUTCDate(fromUtc.getUTCDate() - 29);
+    if (range === '1y') {
+      fromUtc.setUTCMonth(fromUtc.getUTCMonth() - 11);
+      fromUtc.setUTCDate(1);
+    }
+
+    const toStr = toDateOnly(toUtc);
+    const fromStr = toDateOnly(fromUtc);
+
+    setDateRange({ from: fromStr, to: toStr });
+    setQuickRange(range);
+    setGroupBy(range === '1d' ? 'hour' : range === '1y' ? 'month' : 'day');
+    setPage(0);
+  };
 
   // ─── Fetch data ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -234,6 +373,12 @@ const CashFlowDashboard: React.FC = () => {
     };
     loadOverview();
   }, [dateRange, groupBy]);
+
+  useEffect(() => {
+    if (quickRange != null) return;
+    const autoGroupBy = computeAutoGroupBy(dateRange.from, dateRange.to);
+    if (groupBy !== autoGroupBy) setGroupBy(autoGroupBy);
+  }, [dateRange, quickRange, groupBy]);
 
   useEffect(() => {
     const loadTransactions = async () => {
@@ -307,32 +452,46 @@ const CashFlowDashboard: React.FC = () => {
                   type="date"
                   className="border-0 focus:ring-0 text-sm py-2 px-3 outline-none"
                   value={dateRange.from}
-                  onChange={(e) => setDateRange((p) => ({ ...p, from: e.target.value }))}
+                  onChange={(e) => {
+                    setDateRange((p) => ({ ...p, from: e.target.value }));
+                    setQuickRange(null);
+                    setPage(0);
+                  }}
                 />
                 <span className="text-gray-400">-</span>
                 <input
                   type="date"
                   className="border-0 focus:ring-0 text-sm py-2 px-3 outline-none"
                   value={dateRange.to}
-                  onChange={(e) => setDateRange((p) => ({ ...p, to: e.target.value }))}
+                  onChange={(e) => {
+                    setDateRange((p) => ({ ...p, to: e.target.value }));
+                    setQuickRange(null);
+                    setPage(0);
+                  }}
                 />
               </div>
 
-              <div className="flex bg-gray-100 p-1 rounded-lg">
-                {(['day', 'week', 'month'] as GroupBy[]).map((g) => (
+              <div className="flex bg-white border border-gray-200 rounded-lg overflow-hidden">
+                {([
+                  { id: '1d', label: '1 ngày' },
+                  { id: '1w', label: '1 tuần' },
+                  { id: '1m', label: '1 tháng' },
+                  { id: '1y', label: '1 năm' },
+                ] as const).map((item) => (
                   <button
-                    key={g}
-                    onClick={() => setGroupBy(g)}
-                    className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
-                      groupBy === g
-                        ? 'bg-white text-blue-600 shadow-sm'
-                        : 'text-gray-500 hover:text-gray-700'
+                    key={item.id}
+                    onClick={() => setQuickDateRange(item.id)}
+                    className={`px-3 py-2 text-xs font-medium transition-colors border-r last:border-r-0 border-gray-200 ${
+                      quickRange === item.id
+                        ? 'bg-blue-50 text-blue-600'
+                        : 'text-gray-600 hover:text-gray-800'
                     }`}
                   >
-                    {g === 'day' ? 'Ngày' : g === 'week' ? 'Tuần' : 'Tháng'}
+                    {item.label}
                   </button>
                 ))}
               </div>
+
             </div>
 
             <button
@@ -377,7 +536,7 @@ const CashFlowDashboard: React.FC = () => {
               </h3>
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <BarChart data={chartSeries} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
                     <XAxis
                       dataKey="label"
@@ -501,14 +660,22 @@ const CashFlowDashboard: React.FC = () => {
                     type="date"
                     className="border-0 text-sm outline-none text-gray-600 bg-transparent"
                     value={dateRange.from}
-                    onChange={(e) => setDateRange((p) => ({ ...p, from: e.target.value }))}
+                    onChange={(e) => {
+                      setDateRange((p) => ({ ...p, from: e.target.value }));
+                      setQuickRange(null);
+                      setPage(0);
+                    }}
                   />
                   <span className="text-gray-300 text-xs">→</span>
                   <input
                     type="date"
                     className="border-0 text-sm outline-none text-gray-600 bg-transparent"
                     value={dateRange.to}
-                    onChange={(e) => setDateRange((p) => ({ ...p, to: e.target.value }))}
+                    onChange={(e) => {
+                      setDateRange((p) => ({ ...p, to: e.target.value }));
+                      setQuickRange(null);
+                      setPage(0);
+                    }}
                   />
                 </div>
 
