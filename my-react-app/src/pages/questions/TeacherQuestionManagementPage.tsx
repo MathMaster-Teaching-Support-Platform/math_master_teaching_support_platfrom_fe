@@ -133,6 +133,7 @@ export default function TeacherQuestionManagementPage() {
           explanation: data.explanation ? String(data.explanation) : undefined,
           tags: Array.isArray(data.tags) ? (data.tags as string[]) : [],
           options: data.options as Record<string, unknown> | undefined,
+          diagramData: typeof data.diagramData === 'string' ? data.diagramData : undefined,
         };
         await createMutation.mutateAsync(payload);
       } else if (selectedQuestion) {
@@ -144,6 +145,7 @@ export default function TeacherQuestionManagementPage() {
           explanation: data.explanation ? String(data.explanation) : undefined,
           tags: Array.isArray(data.tags) ? (data.tags as string[]) : [],
           options: data.options as Record<string, unknown> | undefined,
+          diagramData: typeof data.diagramData === 'string' ? data.diagramData : undefined,
         };
         await updateMutation.mutateAsync({ questionId: selectedQuestion.id, request: payload });
       }
@@ -239,14 +241,14 @@ export default function TeacherQuestionManagementPage() {
             <span className="tqm-quicknav__divider" />
             <button
               className="tqm-quicknav__item"
-              onClick={() => navigate('/teacher/assessment-builder')}
+              onClick={() => navigate('/teacher/assessments')}
             >
               <span className="tqm-quicknav__icon tqm-nav-emerald">
                 <BookOpen size={14} />
               </span>
               <span className="tqm-quicknav__text">
                 <span className="tqm-quicknav__title">Tạo đề thi</span>
-                <span className="tqm-quicknav__desc">Lắp ráp và xuất bản đề thi hoàn chỉnh</span>
+                <span className="tqm-quicknav__desc">Chỉnh sửa và xuất bản đề thi hoàn chỉnh</span>
               </span>
               <ArrowRight size={14} className="tqm-quicknav__arrow" />
             </button>
@@ -408,6 +410,8 @@ export default function TeacherQuestionManagementPage() {
                     tags: selectedQuestion.tags,
                     options: selectedQuestion.options as Record<string, string> | undefined,
                     generationMetadata: selectedQuestion.generationMetadata || undefined,
+                    diagramData: selectedQuestion.diagramData,
+                    diagramUrl: selectedQuestion.diagramUrl,
                   }
                 : undefined
             }

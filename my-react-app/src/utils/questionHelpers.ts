@@ -37,6 +37,21 @@ export function parseTFAnswer(answer?: string): Set<string> {
   );
 }
 
+// Positional Đ/S array for a TF answer aligned with the clause keys.
+// "A, C" + ['A','B','C','D'] → [true, false, true, false]
+export function tfAnswerToBooleans(
+  answer: string | undefined | null,
+  keys: string[] = ['A', 'B', 'C', 'D']
+): boolean[] {
+  const truthy = parseTFAnswer(answer ?? undefined);
+  return keys.map(k => truthy.has(k.toUpperCase()));
+}
+
+// [true, false, true, false] → "Đ, S, Đ, S"
+export function tfBooleansToDSString(values: boolean[]): string {
+  return values.map(v => (v ? 'Đ' : 'S')).join(', ');
+}
+
 export function normalizeNumericAnswer(value: string): string {
   // Replace comma with dot for decimal numbers
   return value.replace(',', '.');

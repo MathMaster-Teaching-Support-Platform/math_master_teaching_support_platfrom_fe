@@ -62,7 +62,8 @@ export interface QuestionResponse {
   questionSourceType?: 'MANUAL' | 'TEMPLATE_GENERATED' | 'AI_GENERATED' | 'BANK_IMPORTED';
   canonicalQuestionId?: string;
   solutionSteps?: string;
-  diagramData?: Record<string, unknown>;
+  diagramData?: Record<string, unknown> | string;
+  diagramUrl?: string;
   tags?: string[];
   templateId?: string;
   questionBankId?: string;
@@ -94,7 +95,7 @@ export interface CreateQuestionRequest {
   templateId?: string | null;
   canonicalQuestionId?: string | null;
   solutionSteps?: string;
-  diagramData?: Record<string, unknown>;
+  diagramData?: string;
 }
 
 export interface GetMyQuestionsParams {
@@ -127,6 +128,7 @@ export interface UpdateQuestionRequest {
   cognitiveLevel?: QuestionCognitiveLevel;
   tags?: string[];
   status?: QuestionStatus;
+  diagramData?: string;
 }
 
 export interface BulkApproveRequest {

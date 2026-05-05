@@ -176,14 +176,7 @@ export const TFBlueprint = forwardRef<TFBlueprintRef, TFBlueprintProps>(
         </label>
 
         <section className="data-card" style={{ minHeight: 0, border: '1px solid #dbeafe' }}>
-          <div>
-            <h3 style={{ color: '#1e40af' }}>Mệnh đề Đúng/Sai (4 mệnh đề)</h3>
-            <p className="muted" style={{ fontSize: '0.8rem', marginBottom: 16 }}>
-              Mỗi mệnh đề là một phát biểu toán học mà học sinh đánh giá Đúng hoặc Sai.
-              Dùng hệ số <code>{'{{a}}'}</code>, <code>{'{{b}}'}</code> trong mệnh đề
-              để tạo câu hỏi tự động. Mỗi mệnh đề có thể thuộc chương và mức độ khác nhau.
-            </p>
-          </div>
+  
 
           {/* Example Banner */}
           <div style={{

@@ -73,8 +73,7 @@ const teacherGroups: MenuGroup[] = [
       { path: '/teacher/question-templates', icon: FileQuestion, label: 'Mẫu câu hỏi' },
       { path: '/teacher/question-banks', icon: Database, label: 'Ngân hàng câu hỏi' },
       { path: '/teacher/questions', icon: ClipboardList, label: 'Câu hỏi của tôi' },
-      { path: '/teacher/assessment-builder', icon: Sparkles, label: 'Tạo đề thi' },
-      { path: '/teacher/assessments', icon: FileCheck2, label: 'Kiểm tra' },
+      { path: '/teacher/assessments', icon: Sparkles, label: 'Tạo đề thi' },
     ],
   },
   {
