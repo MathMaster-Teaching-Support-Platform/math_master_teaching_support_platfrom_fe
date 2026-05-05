@@ -62,6 +62,7 @@ import AdminCommissionProposals from '../pages/admin/AdminCommissionProposals';
 import AdminSystemConfigPage from '../pages/admin/AdminSystemConfigPage';
 import AdminWithdrawals from '../pages/admin/AdminWithdrawals';
 import CashFlowDashboard from '../pages/admin/CashFlowDashboard';
+import TokenCostConfigPage from '../pages/admin/TokenCostConfigPage';
 
 import RevenueBreakdown from '../pages/admin/RevenueBreakdown';
 import ReviewProfiles from '../pages/admin/ReviewProfiles';
@@ -754,6 +755,14 @@ export const router = createBrowserRouter([
     element: (
       <PrivateRoute>
         <AdminSystemConfigPage />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/admin/token-config',
+    element: (
+      <PrivateRoute>
+        <TokenCostConfigPage />
       </PrivateRoute>
     ),
   },

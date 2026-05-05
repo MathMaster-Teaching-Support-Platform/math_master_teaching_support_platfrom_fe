@@ -9,6 +9,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ClipboardList,
+  Coins,
   CreditCard,
   Database,
   FileCheck2,
@@ -156,6 +157,7 @@ const adminGroups: MenuGroup[] = [
     label: 'Hệ thống',
     items: [
       { path: '/admin/cash-flow', icon: Wallet, label: 'Dòng tiền' },
+      { path: '/admin/token-config', icon: Coins, label: 'Cấu hình Token' },
       { path: '/admin/system-config', icon: ShieldCheck, label: 'Cấu hình hệ thống' },
     ],
   },
