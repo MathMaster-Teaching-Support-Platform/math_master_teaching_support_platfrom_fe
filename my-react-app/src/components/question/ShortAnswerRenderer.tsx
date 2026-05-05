@@ -1,11 +1,15 @@
 import { normalizeNumericAnswer } from '../../utils/questionHelpers';
 import type { AssessmentQuestionItem } from '../../types/assessment.types';
 import MathText from '../common/MathText';
+import QuestionDiagram from '../common/QuestionDiagram';
 
 interface ShortAnswerRendererProps {
   question: AssessmentQuestionItem | {
     questionId: string;
     questionText: string;
+    diagramData?: unknown;
+    diagramUrl?: string;
+    diagramLatex?: string;
   };
   studentAnswer?: string;
   onAnswerChange: (answer: string) => void;
@@ -29,6 +33,7 @@ export function ShortAnswerRenderer({
       <div className="question-text" style={{ marginBottom: 8, fontSize: '1rem', lineHeight: 1.6 }}>
         <MathText text={question.questionText} />
       </div>
+      <QuestionDiagram source={question} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <input
           type="text"

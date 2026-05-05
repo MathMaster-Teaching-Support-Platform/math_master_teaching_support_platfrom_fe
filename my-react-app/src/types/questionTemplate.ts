@@ -397,6 +397,7 @@ export interface ReviewQuestionResponse {
     explanation?: string;
     solutionSteps?: string;
     diagramData?: DiagramValue;
+    diagramUrl?: string;
     cognitiveLevel?: CognitiveLevel;
     questionStatus: 'AI_DRAFT' | 'UNDER_REVIEW' | 'APPROVED' | 'ARCHIVED';
     templateId?: string;

@@ -2,12 +2,17 @@ import { useMemo } from 'react';
 import { parseTFAnswer, formatTFAnswer } from '../../utils/questionHelpers';
 import type { AssessmentQuestionItem } from '../../types/assessment.types';
 import MathText from '../common/MathText';
+import QuestionDiagram from '../common/QuestionDiagram';
+import { extractOptionText } from '../../utils/optionText';
 
 interface TrueFalseRendererProps {
   question: AssessmentQuestionItem | {
     questionId: string;
     questionText: string;
     options?: Record<string, unknown>;
+    diagramData?: unknown;
+    diagramUrl?: string;
+    diagramLatex?: string;
   };
   studentAnswer?: string;
   onAnswerChange: (answer: string) => void;
@@ -43,7 +48,7 @@ export function TrueFalseRenderer({
   const clauses: Record<string, string> = {};
   if (question.options) {
     Object.entries(question.options).forEach(([key, value]) => {
-      clauses[key] = String(value);
+      clauses[key] = extractOptionText(value);
     });
   }
 
@@ -52,6 +57,7 @@ export function TrueFalseRenderer({
       <div className="question-text" style={{ marginBottom: 8, fontSize: '1rem', lineHeight: 1.6 }}>
         <MathText text={question.questionText} />
       </div>
+      <QuestionDiagram source={question} />
       {['A', 'B', 'C', 'D'].map(key => (
         <div
           key={key}

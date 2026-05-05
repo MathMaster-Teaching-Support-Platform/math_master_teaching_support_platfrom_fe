@@ -1,4 +1,6 @@
 import type { AssessmentQuestionItem } from '../../types/assessment.types';
+import MathText from '../common/MathText';
+import QuestionDiagram from '../common/QuestionDiagram';
 
 interface ShortAnswerQuestionProps {
   question: AssessmentQuestionItem;
@@ -13,7 +15,10 @@ export function ShortAnswerQuestion({
 }: ShortAnswerQuestionProps) {
   return (
     <div>
-      <p style={{ marginBottom: 12 }}>{question.questionText}</p>
+      <p style={{ marginBottom: 12 }}>
+        <MathText text={question.questionText} />
+      </p>
+      <QuestionDiagram source={question as { diagramData?: unknown; diagramUrl?: string; diagramLatex?: string }} />
       <input
         type="text"
         value={studentAnswer || ''}

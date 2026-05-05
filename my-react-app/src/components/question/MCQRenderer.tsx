@@ -1,11 +1,16 @@
 import type { AssessmentQuestionItem } from '../../types/assessment.types';
 import MathText from '../common/MathText';
+import QuestionDiagram from '../common/QuestionDiagram';
+import { extractOptionText } from '../../utils/optionText';
 
 interface MCQRendererProps {
   question: AssessmentQuestionItem | {
     questionId: string;
     questionText: string;
     options?: Record<string, unknown>;
+    diagramData?: unknown;
+    diagramUrl?: string;
+    diagramLatex?: string;
   };
   studentAnswer?: string;
   onAnswerChange: (answer: string) => void;
@@ -21,7 +26,7 @@ export function MCQRenderer({
   const optionsAsString: Record<string, string> = {};
   if (question.options) {
     Object.entries(question.options).forEach(([key, value]) => {
-      optionsAsString[key] = String(value);
+      optionsAsString[key] = extractOptionText(value);
     });
   }
 
@@ -30,6 +35,7 @@ export function MCQRenderer({
       <div className="question-text" style={{ marginBottom: 16 }}>
         <MathText text={question.questionText} />
       </div>
+      <QuestionDiagram source={question} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {Object.entries(optionsAsString).map(([key, text]) => (
           <label
