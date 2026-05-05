@@ -1,6 +1,10 @@
 import {
   Calendar,
+  ChevronDown,
+  ChevronLeft,
   ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
   Download,
   Filter,
   Search,
@@ -305,13 +309,16 @@ const CashFlowDashboard: React.FC = () => {
   // Transactions table state
   const [transactions, setTransactions] = useState<CashFlowEntry[]>([]);
   const [totalElements, setTotalElements] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 500);
   const [filterType, setFilterType] = useState<CashFlowType | ''>('');
   const [filterCat, setFilterCat] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [selectedEntry, setSelectedEntry] = useState<CashFlowEntry | null>(null);
+  const [pageSizeOpen, setPageSizeOpen] = useState(false);
 
   const buckets = buildTimeBuckets(dateRange.from, dateRange.to, groupBy);
   const chartMap = new Map(chartData.map((point) => [point.label, point]));
@@ -388,13 +395,14 @@ const CashFlowDashboard: React.FC = () => {
           from: dateRange.from,
           to: dateRange.to,
           page,
-          size: 10,
+          size: pageSize,
           search: debouncedSearch,
           type: filterType,
           categoryId: filterCat,
         });
         setTransactions(res.content);
         setTotalElements(res.totalElements);
+        setTotalPages(res.totalPages);
       } catch (err) {
         console.error('Failed to load txs', err);
       } finally {
@@ -402,7 +410,11 @@ const CashFlowDashboard: React.FC = () => {
       }
     };
     loadTransactions();
-  }, [dateRange, page, debouncedSearch, filterType, filterCat]);
+  }, [dateRange, page, pageSize, debouncedSearch, filterType, filterCat]);
+
+  useEffect(() => {
+    setPage(0);
+  }, [dateRange.from, dateRange.to, debouncedSearch, filterType, filterCat]);
 
   // ─── Handlers ──────────────────────────────────────────────────────────
   const handleExport = async () => {
@@ -806,27 +818,112 @@ const CashFlowDashboard: React.FC = () => {
             </div>
 
             {/* Pagination */}
-            {totalElements > 0 && (
-              <div className="p-4 border-t border-gray-100 flex justify-between items-center bg-gray-50">
-                <span className="text-sm text-gray-500">
-                  Hiển thị {page * 10 + 1}-{Math.min((page + 1) * 10, totalElements)} trên tổng{' '}
-                  {totalElements}
-                </span>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setPage((p) => Math.max(0, p - 1))}
-                    disabled={page === 0}
-                    className="px-3 py-1 bg-white border border-gray-200 rounded text-sm disabled:opacity-50 hover:bg-gray-50"
+            {(totalElements > 0 || totalPages > 0) && (
+              <div className="p-4 border-t border-gray-100 flex flex-col md:flex-row md:items-center md:justify-between gap-3 bg-gray-50">
+                <div className="text-sm text-gray-500">
+                  Showing {totalElements === 0 ? 0 : page * pageSize + 1}-
+                  {Math.min((page + 1) * pageSize, totalElements)} of {totalElements} records
+                </div>
+                <div className="flex items-center gap-3 flex-wrap justify-end">
+                  <div
+                    tabIndex={0}
+                    onBlur={() => setPageSizeOpen(false)}
+                    style={{ position: 'relative' }}
                   >
-                    Trang trước
-                  </button>
-                  <button
-                    onClick={() => setPage((p) => p + 1)}
-                    disabled={(page + 1) * 10 >= totalElements}
-                    className="px-3 py-1 bg-white border border-gray-200 rounded text-sm disabled:opacity-50 hover:bg-gray-50"
-                  >
-                    Trang sau
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => setPageSizeOpen((prev) => !prev)}
+                      className="px-3 py-1.5 border border-gray-200 rounded-lg bg-white text-sm text-gray-700 inline-flex items-center gap-2"
+                    >
+                      {pageSize} / page
+                      <ChevronDown size={14} />
+                    </button>
+                    {pageSizeOpen && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          right: 0,
+                          top: 'calc(100% + 6px)',
+                          background: '#ffffff',
+                          border: '1px solid #e8e6dc',
+                          borderRadius: '12px',
+                          boxShadow: '0 10px 25px -10px rgba(0,0,0,0.2)',
+                          overflow: 'hidden',
+                          zIndex: 20,
+                          minWidth: '140px',
+                        }}
+                      >
+                        {[10, 25, 50, 100].map((size) => (
+                          <button
+                            key={size}
+                            type="button"
+                            onClick={() => {
+                              setPageSize(size);
+                              setPage(0);
+                              setPageSizeOpen(false);
+                            }}
+                            style={{
+                              display: 'flex',
+                              width: '100%',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              padding: '0.55rem 0.85rem',
+                              background: size === pageSize ? '#f5f4ed' : '#ffffff',
+                              color: '#4b4942',
+                              fontSize: '0.85rem',
+                              border: 'none',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            {size} / page
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <span className="text-sm text-gray-500">
+                    Page {totalPages === 0 ? 0 : page + 1} of {totalPages}
+                  </span>
+
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setPage(0)}
+                      disabled={page === 0 || totalPages <= 1}
+                      className="p-2 border border-gray-200 rounded-lg bg-white disabled:opacity-50 hover:bg-gray-50"
+                      aria-label="First page"
+                    >
+                      <ChevronsLeft size={16} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPage((p) => Math.max(0, p - 1))}
+                      disabled={page === 0 || totalPages <= 1}
+                      className="p-2 border border-gray-200 rounded-lg bg-white disabled:opacity-50 hover:bg-gray-50"
+                      aria-label="Previous page"
+                    >
+                      <ChevronLeft size={16} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                      disabled={totalPages === 0 || page + 1 >= totalPages}
+                      className="p-2 border border-gray-200 rounded-lg bg-white disabled:opacity-50 hover:bg-gray-50"
+                      aria-label="Next page"
+                    >
+                      <ChevronRight size={16} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPage(Math.max(0, totalPages - 1))}
+                      disabled={totalPages === 0 || page + 1 >= totalPages}
+                      className="p-2 border border-gray-200 rounded-lg bg-white disabled:opacity-50 hover:bg-gray-50"
+                      aria-label="Last page"
+                    >
+                      <ChevronsRight size={16} />
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

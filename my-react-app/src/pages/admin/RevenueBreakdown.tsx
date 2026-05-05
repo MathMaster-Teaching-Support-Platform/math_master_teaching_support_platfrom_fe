@@ -522,17 +522,13 @@ const RevenueBreakdown: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setPageSizeOpen((prev) => !prev)}
-                className="period-select"
+                className="px-3 py-1.5 border border-gray-200 rounded-lg bg-white text-sm text-gray-700 inline-flex items-center gap-2"
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '0.5rem',
                   padding: '0.45rem 0.75rem',
-                  borderRadius: '12px',
-                  border: '1px solid #e8e6dc',
-                  background: '#ffffff',
-                  fontSize: '0.85rem',
-                  color: '#4b4942',
+                  borderRadius: '10px',
                 }}
               >
                 {pageSize} / page
@@ -546,7 +542,7 @@ const RevenueBreakdown: React.FC = () => {
                     top: 'calc(100% + 6px)',
                     background: '#ffffff',
                     border: '1px solid #e8e6dc',
-                    borderRadius: '14px',
+                    borderRadius: '12px',
                     boxShadow: '0 10px 25px -10px rgba(0,0,0,0.2)',
                     overflow: 'hidden',
                     zIndex: 20,
@@ -591,12 +587,10 @@ const RevenueBreakdown: React.FC = () => {
                 type="button"
                 onClick={() => setPage(0)}
                 disabled={currentPage === 0 || totalPages <= 1}
-                className="period-select"
+                className="p-2 border border-gray-200 rounded-lg bg-white disabled:opacity-50 hover:bg-gray-50"
                 style={{
                   padding: '0.4rem',
                   borderRadius: '10px',
-                  border: '1px solid #e8e6dc',
-                  background: '#ffffff',
                 }}
                 aria-label="First page"
               >
@@ -606,12 +600,10 @@ const RevenueBreakdown: React.FC = () => {
                 type="button"
                 onClick={() => setPage((prev) => Math.max(0, prev - 1))}
                 disabled={currentPage === 0 || totalPages <= 1}
-                className="period-select"
+                className="p-2 border border-gray-200 rounded-lg bg-white disabled:opacity-50 hover:bg-gray-50"
                 style={{
                   padding: '0.4rem',
                   borderRadius: '10px',
-                  border: '1px solid #e8e6dc',
-                  background: '#ffffff',
                 }}
                 aria-label="Previous page"
               >
@@ -621,12 +613,10 @@ const RevenueBreakdown: React.FC = () => {
                 type="button"
                 onClick={() => setPage((prev) => Math.min(totalPages - 1, prev + 1))}
                 disabled={totalPages === 0 || currentPage + 1 >= totalPages}
-                className="period-select"
+                className="p-2 border border-gray-200 rounded-lg bg-white disabled:opacity-50 hover:bg-gray-50"
                 style={{
                   padding: '0.4rem',
                   borderRadius: '10px',
-                  border: '1px solid #e8e6dc',
-                  background: '#ffffff',
                 }}
                 aria-label="Next page"
               >
@@ -636,12 +626,10 @@ const RevenueBreakdown: React.FC = () => {
                 type="button"
                 onClick={() => setPage(Math.max(0, totalPages - 1))}
                 disabled={totalPages === 0 || currentPage + 1 >= totalPages}
-                className="period-select"
+                className="p-2 border border-gray-200 rounded-lg bg-white disabled:opacity-50 hover:bg-gray-50"
                 style={{
                   padding: '0.4rem',
                   borderRadius: '10px',
-                  border: '1px solid #e8e6dc',
-                  background: '#ffffff',
                 }}
                 aria-label="Last page"
               >
