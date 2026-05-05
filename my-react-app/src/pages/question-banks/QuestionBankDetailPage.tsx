@@ -4,11 +4,11 @@ import {
   Eye,
   EyeOff,
   Link2,
+  Plus,
   Pencil,
   RefreshCw,
   Search,
   Trash2,
-  Unlink2,
 } from 'lucide-react';
 import Pagination from '../../components/common/Pagination';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -16,7 +16,6 @@ import MathText from '../../components/common/MathText';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import {
   useBatchAssignQuestionsToBank,
-  useBatchRemoveQuestionsFromBank,
   useGetQuestionsByBank,
   useSearchQuestions,
 } from '../../hooks/useQuestion';
@@ -97,6 +96,7 @@ export function QuestionBankDetailPage() {
   const [questionPage, setQuestionPage] = useState(0);
   const [pageSize, setPageSize] = useState(20);
   const [formOpen, setFormOpen] = useState(false);
+  const [addQuestionModalOpen, setAddQuestionModalOpen] = useState(false);
 
   const { data, isLoading, isError, error, refetch } = useGetQuestionBankById(
     bankId ?? '',
@@ -125,9 +125,11 @@ export function QuestionBankDetailPage() {
   );
 
   useEffect(() => {
+    if (!addQuestionModalOpen) return;
     if (!bankId) return;
     void refetchSearchQuestions();
   }, [
+    addQuestionModalOpen,
     bankId,
     questionSearchPage,
     questionSearchSize,
@@ -138,7 +140,6 @@ export function QuestionBankDetailPage() {
   const updateMutation = useUpdateQuestionBank();
   const deleteMutation = useDeleteQuestionBank();
   const batchAssignQuestionsMutation = useBatchAssignQuestionsToBank();
-  const batchRemoveQuestionsMutation = useBatchRemoveQuestionsFromBank();
   const togglePublicMutation = useToggleQuestionBankPublicStatus();
 
   const bank = data?.result;
@@ -184,8 +185,7 @@ export function QuestionBankDetailPage() {
     );
   }, [searchedQuestions, selectedQuestionIds]);
 
-  const hasPendingBatchAction =
-    batchAssignQuestionsMutation.isPending || batchRemoveQuestionsMutation.isPending;
+  const hasPendingBatchAction = batchAssignQuestionsMutation.isPending;
 
   async function handleSave(payload: QuestionBankRequest) {
     if (!bankId) return;
@@ -218,33 +218,11 @@ export function QuestionBankDetailPage() {
       const updatedCount = response.result ?? uniqueQuestionIds.length;
       setBatchMessage(`Đã cập nhật ${updatedCount} câu hỏi.`);
       setSelectedQuestionIds(new Set());
+      setAddQuestionModalOpen(false);
       await Promise.all([refetch(), refetchQuestions(), refetchSearchQuestions()]);
     } catch (error) {
       setBatchError(
         error instanceof Error ? error.message : 'Không thể thêm câu hỏi vào ngân hàng câu hỏi.'
-      );
-    }
-  }
-
-  async function handleBatchRemoveQuestions() {
-    if (!bankId || selectedQuestionIds.size === 0) return;
-    setBatchError(null);
-    setBatchMessage(null);
-
-    const uniqueQuestionIds = Array.from(new Set(selectedQuestionIds));
-
-    try {
-      const response = await batchRemoveQuestionsMutation.mutateAsync({
-        bankId,
-        questionIds: uniqueQuestionIds,
-      });
-      const updatedCount = response.result ?? 0;
-      setBatchMessage(`Đã cập nhật ${updatedCount} câu hỏi.`);
-      setSelectedQuestionIds(new Set());
-      await Promise.all([refetch(), refetchQuestions(), refetchSearchQuestions()]);
-    } catch (error) {
-      setBatchError(
-        error instanceof Error ? error.message : 'Không thể gỡ câu hỏi khỏi ngân hàng câu hỏi.'
       );
     }
   }
@@ -344,173 +322,32 @@ export function QuestionBankDetailPage() {
                     onChange={(event) => setSearch(event.target.value)}
                   />
                 </label>
+                <button
+                  className="btn"
+                  onClick={() => {
+                    setBatchError(null);
+                    setBatchMessage(null);
+                    setQuestionSearchKeyword('');
+                    setQuestionSearchPage(0);
+                    setSelectedQuestionIds(new Set());
+                    setAddQuestionModalOpen(true);
+                  }}
+                >
+                  <Plus size={14} />
+                  Thêm câu hỏi vào ngân hàng
+                </button>
               </div>
 
-              <article className="data-card" style={{ marginBottom: 16 }}>
-                <div className="row" style={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
-                  <div>
-                    <h3>Tìm kiếm</h3>
-                  </div>
-                  <span className="muted">Đã chọn: {selectedQuestionIds.size}</span>
+              {batchMessage && (
+                <div className="empty" style={{ marginBottom: 12, color: '#166534' }}>
+                  {batchMessage}
                 </div>
-
-                <div className="form-grid" style={{ marginTop: 12 }}>
-                  <label style={{ gridColumn: '1 / -1' }}>
-                    <p className="muted" style={{ marginBottom: 6 }}>
-                      Từ khóa
-                    </p>
-                    <input
-                      className="input"
-                      placeholder="Ví dụ: hàm số, phương trình, giới hạn..."
-                      value={questionSearchKeyword}
-                      onChange={(event) => {
-                        setQuestionSearchKeyword(event.target.value);
-                        setQuestionSearchPage(0);
-                      }}
-                    />
-                  </label>
+              )}
+              {batchError && (
+                <div className="empty" style={{ marginBottom: 12, color: '#b91c1c' }}>
+                  {batchError}
                 </div>
-
-                <div className="row" style={{ flexWrap: 'wrap', marginTop: 12 }}>
-                  <button className="btn secondary" onClick={() => void refetchSearchQuestions()}>
-                    <RefreshCw size={14} />
-                    Làm mới kết quả tìm kiếm
-                  </button>
-                  <button
-                    className="btn"
-                    onClick={() => void handleBatchAssignQuestions()}
-                    disabled={selectedQuestionIds.size === 0 || hasPendingBatchAction}
-                  >
-                    <Link2 size={14} />
-                    {batchAssignQuestionsMutation.isPending
-                      ? 'Đang thêm theo lô...'
-                      : `Thêm vào ngân hàng (${selectedQuestionIds.size})`}
-                  </button>
-                  <button
-                    className="btn danger"
-                    onClick={() => void handleBatchRemoveQuestions()}
-                    disabled={selectedQuestionIds.size === 0 || hasPendingBatchAction}
-                  >
-                    <Unlink2 size={14} />
-                    {batchRemoveQuestionsMutation.isPending
-                      ? 'Đang gỡ theo lô...'
-                      : `Gỡ khỏi ngân hàng (${selectedQuestionIds.size})`}
-                  </button>
-                </div>
-
-                {searchQuestionsLoading && (
-                  <div className="empty" style={{ marginTop: 12 }}>
-                    Đang tìm câu hỏi...
-                  </div>
-                )}
-
-                {searchQuestionsError && (
-                  <div className="empty" style={{ marginTop: 12 }}>
-                    {searchQuestionsErrorValue instanceof Error
-                      ? searchQuestionsErrorValue.message
-                      : 'Không thể tìm câu hỏi'}
-                  </div>
-                )}
-
-                {!searchQuestionsLoading &&
-                  !searchQuestionsError &&
-                  searchedQuestions.length > 0 && (
-                    <div className="table-wrap" style={{ marginTop: 12 }}>
-                      <table className="table">
-                        <thead>
-                          <tr>
-                            <th style={{ width: 50 }}>
-                              <input
-                                type="checkbox"
-                                checked={allSearchedSelected}
-                                onChange={(event) => {
-                                  const checked = event.target.checked;
-                                  if (!checked) {
-                                    setSelectedQuestionIds(new Set());
-                                    return;
-                                  }
-                                  setSelectedQuestionIds(
-                                    new Set(searchedQuestions.map((question) => question.id))
-                                  );
-                                }}
-                              />
-                            </th>
-                            <th>Câu hỏi</th>
-                            <th style={{ width: 150 }}>Loại</th>
-                            <th style={{ width: 180 }}>Trạng thái</th>
-                            <th style={{ width: 220 }}>Thuộc ngân hàng</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {searchedQuestions.map((question) => {
-                            const isInCurrentBank = question.questionBankId === bankId;
-                            return (
-                              <tr key={question.id}>
-                                <td>
-                                  <input
-                                    type="checkbox"
-                                    checked={selectedQuestionIds.has(question.id)}
-                                    onChange={(event) => {
-                                      const checked = event.target.checked;
-                                      setSelectedQuestionIds((prev) => {
-                                        const next = new Set(prev);
-                                        if (checked) next.add(question.id);
-                                        else next.delete(question.id);
-                                        return next;
-                                      });
-                                    }}
-                                  />
-                                </td>
-                                <td>
-                                  <MathText text={question.questionText} />
-                                </td>
-                                <td>
-                                  {questionTypeLabel[question.questionType] ||
-                                    question.questionType}
-                                </td>
-                                <td>{question.questionStatus || '-'}</td>
-                                <td>
-                                  {isInCurrentBank
-                                    ? 'Ngân hàng hiện tại'
-                                    : question.questionBankName ||
-                                      question.questionBankId ||
-                                      'Chưa gán'}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-
-                {!searchQuestionsLoading &&
-                  !searchQuestionsError &&
-                  searchedQuestions.length === 0 && (
-                    <div className="empty" style={{ marginTop: 12 }}>
-                      Không tìm thấy câu hỏi phù hợp.
-                    </div>
-                  )}
-
-                <Pagination
-                  page={questionSearchPage}
-                  totalPages={totalSearchQuestionPages}
-                  totalElements={totalSearchQuestionElements}
-                  pageSize={questionSearchSize}
-                  onChange={setQuestionSearchPage}
-                />
-
-                {batchMessage && (
-                  <div className="empty" style={{ marginTop: 12, color: '#166534' }}>
-                    {batchMessage}
-                  </div>
-                )}
-                {batchError && (
-                  <div className="empty" style={{ marginTop: 12, color: '#b91c1c' }}>
-                    {batchError}
-                  </div>
-                )}
-              </article>
+              )}
 
               {questionsLoading && <div className="empty">Đang tải danh sách câu hỏi...</div>}
               {questionsError && (
@@ -639,6 +476,184 @@ export function QuestionBankDetailPage() {
                 onClose={() => setFormOpen(false)}
                 onSubmit={handleSave}
               />
+
+              {addQuestionModalOpen && (
+                <div
+                  className="qbd-modal-backdrop"
+                  onClick={() => {
+                    setAddQuestionModalOpen(false);
+                    setSelectedQuestionIds(new Set());
+                  }}
+                >
+                  <article
+                    className="data-card qbd-modal"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <div className="qbd-modal__header">
+                      <div>
+                        <h3>Thêm câu hỏi vào ngân hàng</h3>
+                        <p className="muted">
+                          Chọn một hoặc nhiều câu hỏi để thêm vào ngân hàng hiện tại.
+                        </p>
+                      </div>
+                      <span className="muted">Đã chọn: {selectedQuestionIds.size}</span>
+                    </div>
+
+                    <div className="form-grid" style={{ marginTop: 12 }}>
+                      <label style={{ gridColumn: '1 / -1' }}>
+                        <p className="muted" style={{ marginBottom: 6 }}>
+                          Từ khóa
+                        </p>
+                        <input
+                          className="input"
+                          placeholder="Ví dụ: hàm số, phương trình, giới hạn..."
+                          value={questionSearchKeyword}
+                          onChange={(event) => {
+                            setQuestionSearchKeyword(event.target.value);
+                            setQuestionSearchPage(0);
+                          }}
+                        />
+                      </label>
+                    </div>
+
+                    <div className="row" style={{ flexWrap: 'wrap', marginTop: 12 }}>
+                      <button
+                        className="btn secondary"
+                        onClick={() => void refetchSearchQuestions()}
+                      >
+                        <RefreshCw size={14} />
+                        Làm mới kết quả tìm kiếm
+                      </button>
+                      <button
+                        className="btn"
+                        onClick={() => void handleBatchAssignQuestions()}
+                        disabled={selectedQuestionIds.size === 0 || hasPendingBatchAction}
+                      >
+                        <Link2 size={14} />
+                        {batchAssignQuestionsMutation.isPending
+                          ? 'Đang thêm theo lô...'
+                          : `Thêm vào ngân hàng (${selectedQuestionIds.size})`}
+                      </button>
+                    </div>
+
+                    {searchQuestionsLoading && (
+                      <div className="empty" style={{ marginTop: 12 }}>
+                        Đang tìm câu hỏi...
+                      </div>
+                    )}
+
+                    {searchQuestionsError && (
+                      <div className="empty" style={{ marginTop: 12 }}>
+                        {searchQuestionsErrorValue instanceof Error
+                          ? searchQuestionsErrorValue.message
+                          : 'Không thể tìm câu hỏi'}
+                      </div>
+                    )}
+
+                    {!searchQuestionsLoading &&
+                      !searchQuestionsError &&
+                      searchedQuestions.length > 0 && (
+                        <div className="table-wrap" style={{ marginTop: 12 }}>
+                          <table className="table">
+                            <thead>
+                              <tr>
+                                <th style={{ width: 50 }}>
+                                  <input
+                                    type="checkbox"
+                                    checked={allSearchedSelected}
+                                    onChange={(event) => {
+                                      const checked = event.target.checked;
+                                      if (!checked) {
+                                        setSelectedQuestionIds(new Set());
+                                        return;
+                                      }
+                                      const selectableIds = searchedQuestions
+                                        .filter((question) => question.questionBankId !== bankId)
+                                        .map((question) => question.id);
+                                      setSelectedQuestionIds(new Set(selectableIds));
+                                    }}
+                                  />
+                                </th>
+                                <th>Câu hỏi</th>
+                                <th style={{ width: 150 }}>Loại</th>
+                                <th style={{ width: 180 }}>Trạng thái</th>
+                                <th style={{ width: 220 }}>Thuộc ngân hàng</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {searchedQuestions.map((question) => {
+                                const isInCurrentBank = question.questionBankId === bankId;
+                                return (
+                                  <tr key={question.id}>
+                                    <td>
+                                      <input
+                                        type="checkbox"
+                                        disabled={isInCurrentBank}
+                                        checked={selectedQuestionIds.has(question.id)}
+                                        onChange={(event) => {
+                                          const checked = event.target.checked;
+                                          setSelectedQuestionIds((prev) => {
+                                            const next = new Set(prev);
+                                            if (checked) next.add(question.id);
+                                            else next.delete(question.id);
+                                            return next;
+                                          });
+                                        }}
+                                      />
+                                    </td>
+                                    <td>
+                                      <MathText text={question.questionText} />
+                                    </td>
+                                    <td>
+                                      {questionTypeLabel[question.questionType] ||
+                                        question.questionType}
+                                    </td>
+                                    <td>{question.questionStatus || '-'}</td>
+                                    <td>
+                                      {isInCurrentBank
+                                        ? 'Ngân hàng hiện tại'
+                                        : question.questionBankName ||
+                                          question.questionBankId ||
+                                          'Chưa gán'}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+
+                    {!searchQuestionsLoading &&
+                      !searchQuestionsError &&
+                      searchedQuestions.length === 0 && (
+                        <div className="empty" style={{ marginTop: 12 }}>
+                          Không tìm thấy câu hỏi phù hợp.
+                        </div>
+                      )}
+
+                    <Pagination
+                      page={questionSearchPage}
+                      totalPages={totalSearchQuestionPages}
+                      totalElements={totalSearchQuestionElements}
+                      pageSize={questionSearchSize}
+                      onChange={setQuestionSearchPage}
+                    />
+
+                    <div className="qbd-modal__footer">
+                      <button
+                        className="btn secondary"
+                        onClick={() => {
+                          setAddQuestionModalOpen(false);
+                          setSelectedQuestionIds(new Set());
+                        }}
+                      >
+                        Đóng
+                      </button>
+                    </div>
+                  </article>
+                </div>
+              )}
             </>
           )}
         </section>
