@@ -1,4 +1,4 @@
-import { X, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { QuestionEditorSwitch } from '../../components/question';
 import QuestionDiagram from '../../components/common/QuestionDiagram';
@@ -67,10 +67,8 @@ export function EnhancedQuestionFormModal({
   const [points, setPoints] = useState<string>(String(initialData?.points || 1));
   const [explanation, setExplanation] = useState<string>(initialData?.explanation || '');
   const [diagramData, setDiagramData] = useState<string>('');
-  const [latexInsertTarget, setLatexInsertTarget] = useState<
-    'QUESTION' | 'EXPLANATION' | 'DIAGRAM'
-  >('DIAGRAM');
 
+  const modalCardRef = useRef<HTMLDivElement>(null);
   const diagramTextareaRef = useRef<HTMLTextAreaElement>(null);
   const explanationTextareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -125,21 +123,44 @@ export function EnhancedQuestionFormModal({
   };
 
   const handleInsertLatex = (rawLatex: string) => {
-    if (latexInsertTarget === 'DIAGRAM') {
+    const wrapped = `$$${rawLatex}$$`;
+    const activeElement = document.activeElement as HTMLElement | null;
+
+    if (!activeElement || !modalCardRef.current?.contains(activeElement)) {
+      showToast({
+        message: 'Hãy đặt con trỏ vào ô cần chèn LaTeX trước.',
+        type: 'warning',
+      });
+      return;
+    }
+
+    if (activeElement === diagramTextareaRef.current) {
       insertWithCursor(diagramData, setDiagramData, diagramTextareaRef.current, rawLatex);
       return;
     }
 
-    if (latexInsertTarget === 'EXPLANATION') {
+    if (activeElement === explanationTextareaRef.current) {
       insertWithCursor(explanation, setExplanation, explanationTextareaRef.current, rawLatex);
       return;
     }
 
-    const questionText = String(editorValue.questionText || '');
-    const wrapped = `$$${rawLatex}$$`;
-    setEditorValue({
-      ...editorValue,
-      questionText: `${questionText}${questionText ? ' ' : ''}${wrapped}`,
+    if (activeElement instanceof HTMLTextAreaElement || activeElement instanceof HTMLInputElement) {
+      const element = activeElement;
+      if (element.disabled || element.readOnly) {
+        return;
+      }
+
+      const start = element.selectionStart ?? element.value.length;
+      const end = element.selectionEnd ?? start;
+      element.setRangeText(wrapped, start, end, 'end');
+      element.dispatchEvent(new Event('input', { bubbles: true }));
+      element.focus();
+      return;
+    }
+
+    showToast({
+      message: 'Ô hiện tại không hỗ trợ chèn LaTeX. Hãy đặt con trỏ vào ô nhập liệu.',
+      type: 'warning',
     });
   };
 
@@ -254,6 +275,7 @@ export function EnhancedQuestionFormModal({
   return (
     <div className="modal-layer">
       <div
+        ref={modalCardRef}
         className="modal-card"
         style={{ width: 'min(1240px, 96vw)', maxHeight: '92vh', overflow: 'auto' }}
       >
@@ -268,8 +290,16 @@ export function EnhancedQuestionFormModal({
                 : 'Cập nhật thông tin câu hỏi'}
             </p>
           </div>
-          <button className="icon-btn" onClick={onClose} aria-label="Đóng">
-            <X size={16} />
+          <button
+            type="button"
+            className="icon-btn"
+            onClick={onClose}
+            aria-label="Đóng"
+            title="Đóng"
+          >
+            <span aria-hidden="true" style={{ fontSize: 20, lineHeight: 1 }}>
+              ×
+            </span>
           </button>
         </div>
 
@@ -289,6 +319,10 @@ export function EnhancedQuestionFormModal({
                 {error}
               </div>
             )}
+
+            <div className="eqfm-latex-sticky">
+              <LatexToolbar onInsert={handleInsertLatex} disabled={saving} />
+            </div>
 
             <div>
               <label
@@ -391,29 +425,6 @@ export function EnhancedQuestionFormModal({
                   resize: 'vertical',
                 }}
               />
-            </div>
-
-            <div className="eqfm-latex-panel">
-              <div className="eqfm-latex-panel__head">
-                <label htmlFor="eqfm-latex-target" className="eqfm-latex-panel__label">
-                  Chèn vào
-                </label>
-                <select
-                  id="eqfm-latex-target"
-                  className="select"
-                  value={latexInsertTarget}
-                  onChange={(e) =>
-                    setLatexInsertTarget(e.target.value as 'QUESTION' | 'EXPLANATION' | 'DIAGRAM')
-                  }
-                  disabled={saving}
-                >
-                  <option value="QUESTION">Câu hỏi</option>
-                  <option value="EXPLANATION">Giải thích</option>
-                  <option value="DIAGRAM">Sơ đồ / Hình vẽ</option>
-                </select>
-              </div>
-              <p className="muted eqfm-latex-panel__hint">Ký hiệu được tự động bọc dạng $$...$$.</p>
-              <LatexToolbar onInsert={handleInsertLatex} disabled={saving} />
             </div>
 
             {(questionType === 'TRUE_FALSE' ||
