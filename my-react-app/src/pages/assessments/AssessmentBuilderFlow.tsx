@@ -162,9 +162,9 @@ export default function AssessmentBuilderFlow() {
           </nav>
 
           <section className="data-card course-card abf-process-card" style={{ minHeight: 0 }}>
-            <div style={{ marginBottom: '0.85rem' }}>
-              <h3 style={{ margin: '0 0 0.2rem' }}>Quy trình tạo đề 4 bước</h3>
-              <p className="muted" style={{ margin: 0 }}>
+            <div className="abf-process-head">
+              <h3 className="abf-process-title">Quy trình tạo đề 4 bước</h3>
+              <p className="muted abf-process-subtitle">
                 Làm theo thứ tự để lên đề hoàn chỉnh, đúng dữ liệu và đúng quy trình.
               </p>
             </div>
@@ -172,7 +172,7 @@ export default function AssessmentBuilderFlow() {
               <li className="abf-step">
                 <span className="abf-step__num">1</span>
                 <div className="abf-step__body">
-                  <strong className="abf-step__title">Question Template</strong>
+                  <strong className="abf-step__title">Mẫu câu hỏi</strong>
                 </div>
                 <button
                   type="button"
@@ -185,7 +185,7 @@ export default function AssessmentBuilderFlow() {
               <li className="abf-step">
                 <span className="abf-step__num">2</span>
                 <div className="abf-step__body">
-                  <strong className="abf-step__title">Question Bank</strong>
+                  <strong className="abf-step__title">Ngân hàng câu hỏi</strong>
                 </div>
                 <button
                   type="button"
@@ -198,7 +198,7 @@ export default function AssessmentBuilderFlow() {
               <li className="abf-step">
                 <span className="abf-step__num">3</span>
                 <div className="abf-step__body">
-                  <strong className="abf-step__title">Exam Matrix</strong>
+                  <strong className="abf-step__title">Ma trận đề</strong>
                 </div>
                 <button
                   type="button"
@@ -208,7 +208,7 @@ export default function AssessmentBuilderFlow() {
                   Mở <ArrowRight size={13} />
                 </button>
               </li>
-              <li className="abf-step">
+              <li className="abf-step abf-step--active">
                 <span className="abf-step__num abf-step__num--active">4</span>
                 <div className="abf-step__body">
                   <strong className="abf-step__title">{UI_TEXT.QUIZ}</strong>
@@ -220,16 +220,9 @@ export default function AssessmentBuilderFlow() {
 
           <section className="assessment-builder-flow__orchestration-grid">
             <article className="data-card">
-              <h3>Bước 1: Lắp ráp đề nháp từ ma trận</h3>
-              <p className="muted">
-                Chọn ma trận đã duyệt. Hệ thống chỉ chọn câu hỏi từ Question Bank theo rule của ma
-                trận.
-              </p>
+              <h3>Bước 1: Tạo đề thi từ ma trận</h3>
 
               <label>
-                <p className="muted" style={{ marginBottom: 6 }}>
-                  Ma trận đã duyệt
-                </p>
                 <select
                   className="select"
                   value={selectedMatrixId}
@@ -245,11 +238,6 @@ export default function AssessmentBuilderFlow() {
                 </select>
               </label>
 
-              <p className="muted" style={{ marginTop: 8 }}>
-                Generation Mode: BANK_FIRST (cố định). Không dùng AI trong bước tạo{' '}
-                {UI_TEXT.QUIZ.toLowerCase()} từ matrix.
-              </p>
-
               <div className="row" style={{ flexWrap: 'wrap' }}>
                 <button
                   type="button"
@@ -257,7 +245,7 @@ export default function AssessmentBuilderFlow() {
                   onClick={() => void handleGenerate()}
                   disabled={!selectedMatrixId || generateMutation.isPending}
                 >
-                  {generateMutation.isPending ? 'Đang tạo...' : 'Generate from Matrix'}
+                  {generateMutation.isPending ? 'Đang tạo...' : 'Tạo đề thi từ ma trận đã chọn'}
                 </button>
                 <button
                   type="button"
@@ -307,7 +295,7 @@ export default function AssessmentBuilderFlow() {
 
                   {generatedAssessment?.generationSummary && (
                     <div className="data-card" style={{ minHeight: 0 }}>
-                      <h3>Kết quả Generate from Matrix</h3>
+                      <h3>Tạo đề thi từ ma trận đã chọn</h3>
                       <p className="muted">
                         totalQuestionsGenerated:{' '}
                         {generatedAssessment.generationSummary.totalQuestionsGenerated ?? 0}

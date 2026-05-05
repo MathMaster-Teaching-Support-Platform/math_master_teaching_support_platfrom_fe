@@ -368,24 +368,31 @@
 .module-layout-container .abf-step-list {
   list-style: none;
   margin: 0;
-  padding: 0.1rem 0.35rem 0.25rem;
+  padding: 0;
   display: grid;
-  gap: 0;
+  gap: 0.6rem;
   overflow: hidden;
 }
 
 .module-layout-container .abf-step {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 0.85rem;
-  padding: 1rem 0.55rem;
-  border-bottom: 1px solid #f0f4f8;
+  gap: 0.9rem;
+  padding: 0.95rem 1rem;
+  border: 1px solid #e7edf7;
+  border-radius: 12px;
+  background: #fbfdff;
+  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.02);
 }
 
 .module-layout-container .abf-step:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
+  margin-bottom: 0;
+}
+
+.module-layout-container .abf-step--active {
+  border-color: #c9d8ff;
+  background: linear-gradient(180deg, #f7f9ff 0%, #f2f6ff 100%);
 }
 
 .module-layout-container .abf-step__num {
@@ -416,19 +423,35 @@
 
 .module-layout-container .abf-step > .btn,
 .module-layout-container .abf-step > .badge {
-  margin-left: auto;
+  justify-self: end;
   flex-shrink: 0;
 }
 
 .module-layout-container .abf-step__title {
-  font-size: 1.04rem;
+  font-size: 1rem;
   color: #142235;
   font-weight: 700;
   display: block;
 }
 
 .module-layout-container .abf-process-card {
-  padding: 1.15rem 1rem;
+  padding: 1.25rem 1.15rem;
+}
+
+.module-layout-container .abf-process-head {
+  margin-bottom: 0.95rem;
+}
+
+.module-layout-container .abf-process-title {
+  margin: 0;
+  font-size: 1.22rem;
+  line-height: 1.25;
+  color: #0f1f33;
+}
+
+.module-layout-container .abf-process-subtitle {
+  margin: 0.3rem 0 0;
+  font-size: 1rem;
 }
 
 .module-layout-container .abf-step__desc {
@@ -446,6 +469,16 @@
   .module-layout-container .abf-quicknav__divider {
     width: auto;
     height: 1px;
+  }
+
+  .module-layout-container .abf-step {
+    grid-template-columns: auto 1fr;
+  }
+
+  .module-layout-container .abf-step > .btn,
+  .module-layout-container .abf-step > .badge {
+    grid-column: 1 / -1;
+    justify-self: start;
   }
 }
 
