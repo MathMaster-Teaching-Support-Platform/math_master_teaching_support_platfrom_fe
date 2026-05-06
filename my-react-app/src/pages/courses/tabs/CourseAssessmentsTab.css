@@ -95,8 +95,8 @@
 
 .cat-search-box input:focus {
   outline: none;
-  border-color: #c96442;
-  box-shadow: 0 0 0 4px rgba(201, 100, 66, 0.1);
+  border-color: #94a3b8;
+  box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.22);
   background: #ffffff;
 }
 
@@ -123,8 +123,9 @@
 }
 
 .cat-select-card.selected {
-  border-color: #c96442;
-  background: #fdfaf6;
+  border-color: #a5b4fc;
+  background: #f8fafc;
+  box-shadow: 0 0 0 1px rgba(165, 180, 252, 0.35);
 }
 
 /* Teacher Assessment List */
@@ -179,19 +180,24 @@
   transition: all 0.2s ease;
 }
 
+/* Primary — muted slate (no harsh orange) */
 .cat-btn.primary {
-  background: linear-gradient(135deg, #c96442 0%, #b45435 100%);
-  color: #ffffff;
-  box-shadow: 0 4px 12px rgba(201, 100, 66, 0.3);
+  background: #64748b;
+  color: #f8fafc;
+  border: 1px solid #64748b;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
 }
 
 .cat-btn.primary:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 6px 15px rgba(201, 100, 66, 0.4);
+  background: #475569;
+  border-color: #475569;
+  box-shadow: 0 4px 14px rgba(71, 85, 105, 0.22);
 }
 
 .cat-btn.primary:disabled {
   background: #e8e6dc;
+  border-color: #e8e6dc;
   color: #87867f;
   box-shadow: none;
   cursor: not-allowed;
@@ -199,13 +205,14 @@
 
 .cat-btn.secondary {
   background: #ffffff;
-  color: #c96442;
-  border: 2px solid #e8c4b5;
+  color: #475569;
+  border: 1.5px solid #e2e8f0;
 }
 
 .cat-btn.secondary:hover:not(:disabled) {
-  background: #fdf4f0;
-  border-color: #c96442;
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #334155;
 }
 
 .cat-btn.secondary:disabled {

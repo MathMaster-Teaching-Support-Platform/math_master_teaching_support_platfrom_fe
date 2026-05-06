@@ -135,6 +135,10 @@ const adminGroups: MenuGroup[] = [
     ],
   },
   {
+    label: 'Công cụ AI',
+    items: [{ path: '/admin/ai-assistant', icon: Bot, label: 'Trợ lý Ảo' }],
+  },
+  {
     label: 'Tài chính',
     items: [
       { path: '/admin/revenue-breakdown', icon: BarChart3, label: 'Phân tích Doanh thu' },

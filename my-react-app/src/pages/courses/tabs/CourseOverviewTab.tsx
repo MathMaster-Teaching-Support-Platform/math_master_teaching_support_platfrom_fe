@@ -1,11 +1,12 @@
 import type { LucideIcon } from 'lucide-react';
 import {
+  AlertCircle,
   BookOpen,
   Calendar,
-  CheckCircle2,
   Clock,
   Download,
   Eye,
+  EyeOff,
   FileText,
   GraduationCap,
   Languages,
@@ -51,6 +52,43 @@ const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({ course }) => {
     });
   };
 
+  const statusStat = (() => {
+    const s = course.status;
+    if (s === 'PENDING_REVIEW') {
+      return {
+        Icon: Clock,
+        value: 'Chờ duyệt',
+        sub: 'Đang chờ admin phê duyệt',
+      };
+    }
+    if (s === 'REJECTED') {
+      return {
+        Icon: AlertCircle,
+        value: 'Từ chối',
+        sub: 'Chưa được công khai',
+      };
+    }
+    if (s === 'PUBLISHED') {
+      return {
+        Icon: Eye,
+        value: 'Công khai',
+        sub: 'Học viên có thể đăng ký',
+      };
+    }
+    if (s === 'DRAFT') {
+      return {
+        Icon: EyeOff,
+        value: 'Nháp',
+        sub: 'Chưa xuất bản',
+      };
+    }
+    return {
+      Icon: course.published ? Eye : EyeOff,
+      value: course.published ? 'Công khai' : 'Nháp',
+      sub: course.published ? 'Hiển thị cho học viên' : 'Chưa công khai',
+    };
+  })();
+
   const statSets = [
     {
       key: 'lessons',
@@ -58,7 +96,7 @@ const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({ course }) => {
       Icon: BookOpen,
       label: 'Bài học',
       value: course.lessonsCount.toLocaleString('vi-VN'),
-      sub: `trong ${UI_TEXT.COURSE.toLowerCase()}`,
+      sub: `Trong ${UI_TEXT.COURSE.toLowerCase()}`,
     },
     {
       key: 'students',
@@ -66,7 +104,7 @@ const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({ course }) => {
       Icon: Users,
       label: 'Học viên',
       value: course.studentsCount.toLocaleString('vi-VN'),
-      sub: 'đã ghi danh',
+      sub: 'Đã ghi danh',
     },
     {
       key: 'rating',
@@ -74,15 +112,15 @@ const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({ course }) => {
       Icon: Star,
       label: 'Đánh giá',
       value: Number(course.rating).toFixed(1),
-      sub: 'trên 5.0',
+      sub: 'Điểm TB / 5',
     },
     {
       key: 'status',
       cardClass: 'stat-violet' as const,
-      Icon: course.published ? Eye : CheckCircle2,
+      Icon: statusStat.Icon,
       label: 'Trạng thái',
-      value: course.published ? 'Công khai' : 'Nháp',
-      sub: course.published ? 'hiển thị cho học viên' : 'chỉ bạn thấy',
+      value: statusStat.value,
+      sub: statusStat.sub,
     },
   ];
 

@@ -292,6 +292,16 @@
   border-bottom: 1px solid #f0eee6;
   background: #faf9f5;
   box-shadow: none;
+  align-items: flex-start;
+}
+
+.curriculum-group .lessons-group .clt-list-card > div:first-child {
+  margin-top: 0.2rem;
+}
+
+.clt-sidebar-lesson-row > div:first-child {
+  margin-top: 0.2rem;
+  flex-shrink: 0;
 }
 .curriculum-group .lessons-group .lessons-inner > div:last-child .clt-list-card {
   border-bottom: none;
@@ -331,17 +341,18 @@
   font-weight: 700;
   color: #0f172a;
   margin-bottom: 0.2rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  display: block;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .clt-lesson-subtitle {
   font-size: 0.8rem;
   color: #87867f;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .clt-actions {
@@ -375,47 +386,188 @@
   color: #ef4444;
 }
 
-/* Section Title & Description Styles */
-.section-title-area {
+/* Section Title & Description — curriculum (badge + title one baseline row) */
+.clt-section-title-area.section-title-area {
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
+  align-items: flex-start;
+  gap: 0.65rem;
   flex: 1;
-}
-
-.section-label {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: #c96442;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  white-space: nowrap;
-}
-
-.section-title-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
   min-width: 0;
 }
 
-.section-title {
+.clt-section-chevron {
+  flex-shrink: 0;
+  color: #87867f;
+  margin-top: 0.28rem;
+}
+
+.clt-section-heading-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.clt-section-heading-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  column-gap: 0.65rem;
+  row-gap: 0.35rem;
+  min-width: 0;
+}
+
+.clt-section-heading-row--solo {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* Badge: soft slate/indigo — not harsh orange */
+.clt-chapter-label.section-label {
+  margin-top: 0.14rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  background: #eef2ff;
+  border: 1px solid #e0e7ff;
+  padding: 0.28rem 0.55rem;
+  border-radius: 8px;
+  line-height: 1.2;
+  align-self: start;
+}
+
+.clt-chapter-title-text.section-title {
   font-size: 1.05rem;
   font-weight: 800;
   color: #141413;
-  line-height: 1.3;
+  line-height: 1.4;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
-.section-description {
+.clt-section-description.section-description {
   font-size: 0.88rem;
   color: #87867f;
   margin: 0;
   font-weight: 500;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Player sidebar — same hierarchy, tighter type */
+.player-sidebar .clt-section-chevron {
+  margin-top: 0.15rem;
+}
+
+.player-sidebar .clt-chapter-label.section-label {
+  font-size: 0.62rem;
+  padding: 0.22rem 0.45rem;
+  margin-top: 0;
+}
+
+.player-sidebar .clt-chapter-title-text.section-title {
+  font-size: 0.85rem;
+  min-width: 0;
   line-height: 1.4;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.player-sidebar .clt-section-heading-row {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+}
+
+/* Curriculum card shell — avoid clipping long Vietnamese titles (admin / narrow panels) */
+.clt-course-content-shell.data-card,
+.module-layout-container .data-card.clt-course-content-shell {
+  gap: 0;
+  padding: 0;
+  min-height: 0 !important;
+  height: auto !important;
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+}
+
+.module-layout-container .clt-course-content-shell.data-card:hover {
+  transform: none;
+  box-shadow: 0 4px 14px rgba(21, 44, 74, 0.06);
+}
+
+.clt-course-content-head {
+  padding: 1rem 1.2rem;
+  border-bottom: 1px solid #e8e6dc;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.65rem 0.85rem;
+}
+
+.clt-course-content-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #141413;
+  line-height: 1.35;
+  min-width: 0;
+  flex: 1 1 12rem;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Nội dung khóa học — “Phân cấp” chip (replaces orange pill-btn) */
+.clt-hierarchy-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.38rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #475569;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+/* Chapter row: meta không ép title co về 0 */
+.curriculum-group .section-header {
+  flex-wrap: wrap;
+  align-items: flex-start;
+  row-gap: 0.6rem;
+}
+
+.curriculum-group .section-header .section-title-area {
+  flex: 1 1 min(100%, 18rem);
+}
+
+.curriculum-group .section-header .section-meta {
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* Primary CTAs on Lessons tab — muted slate instead of terracotta */
+.lessons-tab .cdt-toolbar .btn.cdt-btn-primary,
+.lessons-tab .cdt-empty .btn.cdt-btn-primary {
+  background: #64748b !important;
+  color: #f8fafc !important;
+  border-color: #64748b !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06) !important;
+}
+
+.lessons-tab .cdt-toolbar .btn.cdt-btn-primary:hover:not(:disabled),
+.lessons-tab .cdt-empty .btn.cdt-btn-primary:hover:not(:disabled) {
+  background: #475569 !important;
+  border-color: #475569 !important;
+  filter: none !important;
 }
 
 /* Buttons */

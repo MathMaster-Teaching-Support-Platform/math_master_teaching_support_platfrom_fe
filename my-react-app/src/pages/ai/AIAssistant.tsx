@@ -1,10 +1,12 @@
 import 'katex/dist/katex.min.css';
 import {
   Archive,
-  ChevronRight,
+  Bot,
   Menu,
+  MessageSquarePlus,
   Pencil,
   Plus,
+  Send,
   Sparkles,
   SquarePen,
   Trash2,
@@ -74,11 +76,9 @@ function renderInline(text: string): React.ReactNode[] {
     }
     last = m.index + m[0].length;
   }
-
   if (last < text.length) {
     parts.push(<React.Fragment key={`t${idx++}`}>{text.slice(last)}</React.Fragment>);
   }
-
   return parts.length > 0 ? parts : [<React.Fragment key="all">{text}</React.Fragment>];
 }
 
@@ -89,13 +89,8 @@ function processLines(lines: string[], keyPrefix: string): React.ReactNode[] {
 
   while (i < lines.length) {
     const line = lines[i];
+    if (!line.trim()) { i++; continue; }
 
-    if (!line.trim()) {
-      i++;
-      continue;
-    }
-
-    // Headers
     const headerMatch = line.match(/^(#{1,3})\s+(.+)$/);
     if (headerMatch) {
       const level = headerMatch[1].length as 1 | 2 | 3;
@@ -105,49 +100,41 @@ function processLines(lines: string[], keyPrefix: string): React.ReactNode[] {
           {renderInline(headerMatch[2])}
         </Tag>,
       );
-      i++;
-      continue;
+      i++; continue;
     }
 
-    // Unordered list
     if (/^[-*+]\s/.test(line)) {
       const items: string[] = [];
-      const startI = i;
+      const s = i;
       while (i < lines.length && /^[-*+]\s/.test(lines[i])) {
         items.push(lines[i].replace(/^[-*+]\s+/, ''));
         i++;
       }
       nodes.push(
-        <ul key={`${keyPrefix}-ul${startI}`} className="md-ul">
-          {items.map((item, j) => (
-            <li key={j}>{renderInline(item)}</li>
-          ))}
+        <ul key={`${keyPrefix}-ul${s}`} className="md-ul">
+          {items.map((item, j) => <li key={j}>{renderInline(item)}</li>)}
         </ul>,
       );
       continue;
     }
 
-    // Ordered list
     if (/^\d+\.\s/.test(line)) {
       const items: string[] = [];
-      const startI = i;
+      const s = i;
       while (i < lines.length && /^\d+\.\s/.test(lines[i])) {
         items.push(lines[i].replace(/^\d+\.\s+/, ''));
         i++;
       }
       nodes.push(
-        <ol key={`${keyPrefix}-ol${startI}`} className="md-ol">
-          {items.map((item, j) => (
-            <li key={j}>{renderInline(item)}</li>
-          ))}
+        <ol key={`${keyPrefix}-ol${s}`} className="md-ol">
+          {items.map((item, j) => <li key={j}>{renderInline(item)}</li>)}
         </ol>,
       );
       continue;
     }
 
-    // Paragraph — collect consecutive non-empty, non-block lines
     const paraLines: string[] = [];
-    const startI = i;
+    const s = i;
     while (
       i < lines.length &&
       lines[i].trim() &&
@@ -156,10 +143,9 @@ function processLines(lines: string[], keyPrefix: string): React.ReactNode[] {
       paraLines.push(lines[i]);
       i++;
     }
-
     if (paraLines.length > 0) {
       nodes.push(
-        <p key={`${keyPrefix}-p${startI}`} className="md-para">
+        <p key={`${keyPrefix}-p${s}`} className="md-para">
           {paraLines.map((pl, j) => (
             <React.Fragment key={j}>
               {j > 0 && <br />}
@@ -170,34 +156,24 @@ function processLines(lines: string[], keyPrefix: string): React.ReactNode[] {
       );
     }
   }
-
   return nodes;
 }
 
-// ── Main message content renderer (markdown + math + code blocks) ─────────────
+// ── Message content renderer (markdown + math + code blocks) ─────────────────
 const ChatMessageContent: React.FC<{ content: string }> = ({ content }) => {
   if (!content) return null;
-
   const blocks: React.ReactNode[] = [];
-  const topRe =
-    /```([\w]*)\n?([\s\S]*?)```|\\\[([\s\S]+?)\\\]|\$\$([\s\S]+?)\$\$/g;
+  const topRe = /```([\w]*)\n?([\s\S]*?)```|\\\[([\s\S]+?)\\\]|\$\$([\s\S]+?)\$\$/g;
   let last = 0;
   let m: RegExpExecArray | null;
   let bk = 0;
 
   while ((m = topRe.exec(content)) !== null) {
     if (m.index > last) {
-      const lineNodes = processLines(content.slice(last, m.index).split('\n'), `b${bk}`);
-      if (lineNodes.length > 0) {
-        blocks.push(
-          <div key={`tb${bk}`} className="md-text-block">
-            {lineNodes}
-          </div>,
-        );
-      }
+      const ln = processLines(content.slice(last, m.index).split('\n'), `b${bk}`);
+      if (ln.length) blocks.push(<div key={`tb${bk}`} className="md-text-block">{ln}</div>);
       bk++;
     }
-
     if (m[0].startsWith('```')) {
       blocks.push(
         <pre key={`cb${bk++}`} className="md-code-block">
@@ -206,32 +182,19 @@ const ChatMessageContent: React.FC<{ content: string }> = ({ content }) => {
         </pre>,
       );
     } else {
-      const mathVal = (m[3] ?? m[4] ?? '').trim();
+      const v = (m[3] ?? m[4] ?? '').trim();
       blocks.push(
         <div key={`mb${bk++}`} className="math-block-wrap">
-          <BlockMath
-            math={mathVal}
-            renderError={() => (
-              <code className="math-error">{`$$${mathVal}$$`}</code>
-            )}
-          />
+          <BlockMath math={v} renderError={() => <code className="math-error">{`$$${v}$$`}</code>} />
         </div>,
       );
     }
     last = m.index + m[0].length;
   }
-
   if (last < content.length) {
-    const lineNodes = processLines(content.slice(last).split('\n'), `b${bk}`);
-    if (lineNodes.length > 0) {
-      blocks.push(
-        <div key={`tb${bk}`} className="md-text-block">
-          {lineNodes}
-        </div>,
-      );
-    }
+    const ln = processLines(content.slice(last).split('\n'), `b${bk}`);
+    if (ln.length) blocks.push(<div key={`tb${bk}`} className="md-text-block">{ln}</div>);
   }
-
   return <div className="chat-content-rich">{blocks}</div>;
 };
 
@@ -242,6 +205,7 @@ const AIAssistant: React.FC = () => {
   const layoutRole: 'teacher' | 'student' | 'admin' =
     currentRole === 'teacher' ? 'teacher' : currentRole === 'admin' ? 'admin' : 'student';
   const currentUser = currentRole === 'teacher' ? mockTeacher : mockStudent;
+
   const [selectedSessionId, setSelectedSessionId] = useState<string>('');
   const [input, setInput] = useState('');
   const [pendingPrompt, setPendingPrompt] = useState('');
@@ -252,25 +216,21 @@ const AIAssistant: React.FC = () => {
   const [tokenModal, setTokenModal] = useState<{ type: 'no-plan' | 'no-token' } | null>(null);
   const hasBootstrappedSession = useRef(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const sessionQueryParams = useMemo(() => ({ page: 0, size: 20 }), []);
   const messageQueryParams = useMemo(() => ({ page: 0, size: 50 }), []);
 
-  const {
-    data: sessionsData,
-    isLoading: sessionsLoading,
-    error: sessionsError,
-  } = useChatSessions(sessionQueryParams);
-
+  const { data: sessionsData, isLoading: sessionsLoading, error: sessionsError } =
+    useChatSessions(sessionQueryParams);
   const sessions = useMemo(() => sessionsData?.result.content ?? [], [sessionsData]);
 
   const { data: messagesData, error: messagesError } = useChatSessionMessages(
-    selectedSessionId,
-    messageQueryParams,
+    selectedSessionId, messageQueryParams,
   );
-
   const { data: sessionDetailData } = useChatSessionDetail(selectedSessionId);
   const { data: memoryData } = useChatSessionMemory(selectedSessionId);
+
   const createSessionMutation = useCreateChatSession();
   const sendMessageMutation = useSendChatMessage();
   const renameSessionMutation = useRenameChatSession();
@@ -285,10 +245,16 @@ const AIAssistant: React.FC = () => {
   const isSending = sendMessageMutation.isPending;
 
   useEffect(() => {
-    if (!isEditingTitle) {
-      setEditingTitle(selectedSession?.title ?? '');
-    }
+    if (!isEditingTitle) setEditingTitle(selectedSession?.title ?? '');
   }, [isEditingTitle, selectedSession?.title]);
+
+  // Auto-resize textarea
+  useEffect(() => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    ta.style.height = 'auto';
+    ta.style.height = `${Math.min(ta.scrollHeight, 140)}px`;
+  }, [input]);
 
   const displayMessages: ChatMessageResponse[] =
     pendingPrompt && selectedSessionId
@@ -313,19 +279,14 @@ const AIAssistant: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [displayMessages.length, isSending]);
 
-  const getErrorMessage = (error: unknown, fallback: string): string => {
-    if (error instanceof Error && error.message.trim().length > 0) {
-      return error.message;
-    }
-    return fallback;
-  };
+  const getErrorMessage = (error: unknown, fallback: string): string =>
+    error instanceof Error && error.message.trim().length > 0 ? error.message : fallback;
 
   const handleNewChat = async () => {
     try {
       setLocalError('');
       const response = await createSessionMutation.mutateAsync({
-        title: 'New Chat',
-        model: 'gemini-2.5-flash',
+        title: 'New Chat', model: 'gemini-2.5-flash',
       });
       setSelectedSessionId(response.result.id);
       setIsEditingTitle(false);
@@ -345,43 +306,27 @@ const AIAssistant: React.FC = () => {
   const handleSend = async () => {
     const prompt = input.trim();
     if (!prompt) return;
-
     try {
       setLocalError('');
-
       let sessionId = selectedSessionId;
       if (!sessionId) {
-        const sessionResponse = await createSessionMutation.mutateAsync({
-          title: 'New Chat',
-          model: 'gemini-2.5-flash',
-        });
-        sessionId = sessionResponse.result.id;
+        const r = await createSessionMutation.mutateAsync({ title: 'New Chat', model: 'gemini-2.5-flash' });
+        sessionId = r.result.id;
         setSelectedSessionId(sessionId);
       }
-
       setPendingPrompt(prompt);
       setInput('');
-
       await sendMessageMutation.mutateAsync({
         sessionId,
-        payload: {
-          prompt,
-          temperature: 0.4,
-          maxOutputTokens: 800,
-        },
+        payload: { prompt, temperature: 0.4, maxOutputTokens: 800 },
       });
       notifySubscriptionUpdated();
     } catch (error) {
       const apiError = error as Error & { code?: number };
-      if (apiError.code === 1164) {
-        setLocalError('Bạn chưa có gói active. Vui lòng mua gói để tiếp tục sử dụng AI.');
-        setTokenModal({ type: 'no-plan' });
-      } else if (apiError.code === 1165) {
-        setLocalError('Token của gói đã hết. Vui lòng mua thêm gói hoặc nạp tiền.');
-        setTokenModal({ type: 'no-token' });
-      } else if (apiError.code === 1166) {
-        setLocalError('Bạn không đủ token để thanh toán dịch vụ, vui lòng mua gói.');
-        setTokenModal({ type: 'no-plan' });
+      const isTokenError = apiError.code === 1164 || apiError.code === 1165 || apiError.code === 1166;
+      if (isTokenError && layoutRole !== 'admin') {
+        if (apiError.code === 1165) { setLocalError('Token của gói đã hết.'); setTokenModal({ type: 'no-token' }); }
+        else { setLocalError('Bạn chưa có gói active.'); setTokenModal({ type: 'no-plan' }); }
       } else {
         setLocalError(getErrorMessage(error, 'Không thể gửi prompt.'));
       }
@@ -394,16 +339,10 @@ const AIAssistant: React.FC = () => {
   const handleRenameSession = async () => {
     if (!selectedSessionId) return;
     const nextTitle = editingTitle.trim();
-    if (!nextTitle) {
-      setLocalError('Tiêu đề session không được để trống.');
-      return;
-    }
+    if (!nextTitle) { setLocalError('Tiêu đề không được để trống.'); return; }
     try {
       setLocalError('');
-      await renameSessionMutation.mutateAsync({
-        sessionId: selectedSessionId,
-        payload: { title: nextTitle },
-      });
+      await renameSessionMutation.mutateAsync({ sessionId: selectedSessionId, payload: { title: nextTitle } });
       setIsEditingTitle(false);
     } catch (error) {
       setLocalError(getErrorMessage(error, 'Không thể đổi tên session.'));
@@ -425,10 +364,9 @@ const AIAssistant: React.FC = () => {
     if (!window.confirm('Bạn có chắc muốn xóa session này không?')) return;
     try {
       setLocalError('');
-      const removedSessionId = selectedSessionId;
-      await deleteSessionMutation.mutateAsync(removedSessionId);
-      const nextSession = sessions.find((s) => s.id !== removedSessionId);
-      setSelectedSessionId(nextSession?.id ?? '');
+      const removedId = selectedSessionId;
+      await deleteSessionMutation.mutateAsync(removedId);
+      setSelectedSessionId(sessions.find((s) => s.id !== removedId)?.id ?? '');
     } catch (error) {
       setLocalError(getErrorMessage(error, 'Không thể xóa session.'));
     }
@@ -438,16 +376,15 @@ const AIAssistant: React.FC = () => {
     'Giải phương trình bậc 2',
     'Tạo đề kiểm tra 15 phút',
     'Vẽ đồ thị hàm số y = x²',
-    'Giải thích định lý Pythagoras',
-    'Tạo bài tập về đạo hàm',
+    'Định lý Pythagoras',
+    'Bài tập đạo hàm',
     'Tích phân từng phần',
   ];
 
   const formatDateTime = (value?: string) => {
     if (!value) return '--';
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return '--';
-    return date.toLocaleString('vi-VN');
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? '--' : d.toLocaleString('vi-VN');
   };
 
   const combinedError =
@@ -461,307 +398,258 @@ const AIAssistant: React.FC = () => {
       role={layoutRole}
       user={{ name: currentUser.name, avatar: currentUser.avatar!, role: layoutRole }}
       notificationCount={5}
+      contentClassName="dashboard-content--flush-bleed"
     >
-      <div className={`gemini-chat-page ${isSessionPanelOpen ? '' : 'session-collapsed'}`}>
-        {/* ── Main area ── */}
-        <section className="gemini-main">
-          <header className="main-header">
-            {isEditingTitle ? (
-              <div className="title-edit-row">
-                <input
-                  value={editingTitle}
-                  onChange={(e) => setEditingTitle(e.target.value)}
-                  maxLength={200}
-                  placeholder="Nhập tiêu đề session"
-                />
-                <button
-                  type="button"
-                  className="header-btn primary"
-                  onClick={() => void handleRenameSession()}
-                >
-                  Lưu
-                </button>
-                <button
-                  type="button"
-                  className="header-btn ghost"
-                  onClick={() => {
-                    setIsEditingTitle(false);
-                    setEditingTitle(selectedSession?.title ?? '');
-                  }}
-                >
-                  Hủy
-                </button>
-              </div>
-            ) : (
-              <div className="session-heading">
-                <div className="session-heading-icon" aria-hidden="true">
-                  <Sparkles size={15} />
-                </div>
-                <h1>{selectedSession?.title ?? 'Cuộc trò chuyện mới'}</h1>
-              </div>
-            )}
-
-            <div className="header-actions">
-              <button
-                type="button"
-                className="header-btn ghost"
-                onClick={() => setIsEditingTitle((prev) => !prev)}
-                disabled={!selectedSessionId || renameSessionMutation.isPending}
-                title="Đổi tên"
-              >
-                <Pencil size={15} />
-                <span>Rename</span>
-              </button>
-              <button
-                type="button"
-                className="header-btn ghost"
-                onClick={() => void handleArchiveSession()}
-                disabled={!selectedSessionId || isArchived || archiveSessionMutation.isPending}
-                title="Lưu trữ"
-              >
-                <Archive size={15} />
-                <span>Archive</span>
-              </button>
-              <button
-                type="button"
-                className="header-btn danger"
-                onClick={() => void handleDeleteSession()}
-                disabled={!selectedSessionId || deleteSessionMutation.isPending}
-                title="Xóa"
-              >
-                <Trash2 size={15} />
-                <span>Delete</span>
-              </button>
+      {/* ── Outer page shell (TeacherMindmaps style) ── */}
+      <div className="ai-page-shell">
+        {/* ── Page header ── */}
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#E8E6DC] flex items-center justify-center text-[#5E5D59] flex-shrink-0">
+              <Bot className="w-5 h-5" />
             </div>
-          </header>
-
-          <div className="message-stream">
-            {combinedError && <div className="error-banner">{combinedError}</div>}
-
-            {!hasConversationStarted && (
-              <div className="empty-state-welcome">
-                <div className="welcome-icon">
-                  <Sparkles size={32} />
-                </div>
-                <h2>Trợ lý Toán học AI</h2>
-                <p>
-                  Hỏi bất kỳ câu hỏi toán học nào — giải phương trình, chứng minh, tạo đề
-                  kiểm tra...
-                </p>
+            <div>
+              <div className="flex items-center gap-2.5">
+                <h1 className="font-[Playfair_Display] text-[22px] font-medium text-[#141413]">
+                  Trợ lý AI Toán học
+                </h1>
+                {sessions.length > 0 && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#E8E6DC] font-[Be_Vietnam_Pro] text-[12px] font-semibold text-[#5E5D59]">
+                    {sessions.length}
+                  </span>
+                )}
               </div>
-            )}
-
-            {displayMessages.map((message) => {
-              const isUser = message.role === 'USER';
-              return (
-                <article
-                  key={message.id}
-                  className={`chat-row ${isUser ? 'chat-user' : 'chat-assistant'}`}
-                >
-                  <div className={`chat-avatar ${isUser ? 'user-avatar' : 'ai-avatar'}`}>
-                    {isUser ? (currentUser.name?.[0] ?? 'U') : <Sparkles size={16} />}
-                  </div>
-                  <div className="chat-body">
-                    <ChatMessageContent content={message.content} />
-                    <time>{formatDateTime(message.createdAt)}</time>
-                  </div>
-                </article>
-              );
-            })}
-
-            {isSending && (
-              <article className="chat-row chat-assistant">
-                <div className="chat-avatar ai-avatar">
-                  <Sparkles size={16} />
-                </div>
-                <div className="chat-body typing">
-                  <span />
-                  <span />
-                  <span />
-                </div>
-              </article>
-            )}
-            <div ref={messagesEndRef} />
+              <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-0.5">
+                Giải bài, chứng minh, tạo đề thi — hỗ trợ bởi Gemini AI
+              </p>
+            </div>
           </div>
+          <button
+            type="button"
+            onClick={() => void handleNewChat()}
+            disabled={createSessionMutation.isPending}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#141413] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:brightness-95 active:scale-[0.98] transition-all duration-150 disabled:opacity-50"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Chat mới
+          </button>
+        </div>
 
-          <footer className="composer-wrap">
-            {!hasConversationStarted && (
-              <div className="quick-chips" role="list">
-                {quickPrompts.map((prompt) => (
+        {/* ── Chat panel ── */}
+        <div className={`gemini-chat-page ${isSessionPanelOpen ? '' : 'session-collapsed'}`}>
+
+          {/* ── Main chat area ── */}
+          <section className="gemini-main">
+            {/* Session title bar */}
+            <header className="main-header">
+              {isEditingTitle ? (
+                <div className="title-edit-row">
+                  <input
+                    value={editingTitle}
+                    onChange={(e) => setEditingTitle(e.target.value)}
+                    maxLength={200}
+                    placeholder="Nhập tiêu đề session"
+                  />
+                  <button type="button" className="header-btn primary" onClick={() => void handleRenameSession()}>
+                    Lưu
+                  </button>
+                  <button type="button" className="header-btn ghost" onClick={() => { setIsEditingTitle(false); setEditingTitle(selectedSession?.title ?? ''); }}>
+                    Hủy
+                  </button>
+                </div>
+              ) : (
+                <div className="session-heading">
+                  <MessageSquarePlus size={15} className="session-heading-icon-raw" />
+                  <span className="session-heading-title">{selectedSession?.title ?? 'Cuộc trò chuyện mới'}</span>
+                </div>
+              )}
+
+              <div className="header-actions">
+                <button type="button" className="header-btn ghost" onClick={() => setIsEditingTitle((p) => !p)} disabled={!selectedSessionId || renameSessionMutation.isPending} title="Đổi tên">
+                  <Pencil size={14} /><span>Rename</span>
+                </button>
+                <button type="button" className="header-btn ghost" onClick={() => void handleArchiveSession()} disabled={!selectedSessionId || isArchived || archiveSessionMutation.isPending} title="Lưu trữ">
+                  <Archive size={14} /><span>Archive</span>
+                </button>
+                <button type="button" className="header-btn danger" onClick={() => void handleDeleteSession()} disabled={!selectedSessionId || deleteSessionMutation.isPending} title="Xóa">
+                  <Trash2 size={14} /><span>Delete</span>
+                </button>
+              </div>
+            </header>
+
+            {/* Message stream */}
+            <div className="message-stream">
+              {combinedError && <div className="error-banner">{combinedError}</div>}
+
+              {!hasConversationStarted && (
+                <div className="empty-state-welcome">
+                  <div className="welcome-icon">
+                    <Sparkles size={28} />
+                  </div>
+                  <h2>Trợ lý AI Toán học</h2>
+                  <p>Hỏi bất kỳ câu hỏi — giải phương trình, chứng minh, tạo đề kiểm tra...</p>
+                </div>
+              )}
+
+              {displayMessages.map((message) => {
+                const isUser = message.role === 'USER';
+                return (
+                  <article key={message.id} className={`chat-row ${isUser ? 'chat-user' : 'chat-assistant'}`}>
+                    <div className={`chat-avatar ${isUser ? 'user-avatar' : 'ai-avatar'}`}>
+                      {isUser ? (currentUser.name?.[0] ?? 'U') : <Sparkles size={15} />}
+                    </div>
+                    <div className="chat-body">
+                      <ChatMessageContent content={message.content} />
+                      <time>{formatDateTime(message.createdAt)}</time>
+                    </div>
+                  </article>
+                );
+              })}
+
+              {isSending && (
+                <article className="chat-row chat-assistant">
+                  <div className="chat-avatar ai-avatar"><Sparkles size={15} /></div>
+                  <div className="chat-body typing"><span /><span /><span /></div>
+                </article>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* Composer */}
+            <footer className="composer-wrap">
+              {!hasConversationStarted && (
+                <div className="quick-chips" role="list">
+                  {quickPrompts.map((p) => (
+                    <button type="button" key={p} className="chip" onClick={() => setInput(p)}>{p}</button>
+                  ))}
+                </div>
+              )}
+
+              <div className={`composer-box ${hasConversationStarted ? 'compact' : ''}`}>
+                <textarea
+                  ref={textareaRef}
+                  placeholder="Hỏi AI trợ lý toán học..."
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void handleSend(); }
+                  }}
+                  disabled={isSending || isArchived}
+                />
+                <div className="composer-actions">
                   <button
                     type="button"
-                    key={prompt}
-                    className="chip"
-                    onClick={() => setInput(prompt)}
+                    className="send-btn"
+                    onClick={() => void handleSend()}
+                    disabled={isSending || isArchived || !input.trim()}
+                    title="Gửi (Enter)"
+                    aria-label="Gửi"
                   >
-                    {prompt}
+                    <Send size={16} strokeWidth={2.2} />
+                  </button>
+                </div>
+              </div>
+            </footer>
+          </section>
+
+          {/* ── Session sidebar ── */}
+          <aside className={`gemini-sidebar right ${isSessionPanelOpen ? '' : 'collapsed'}`}>
+            <button
+              type="button"
+              className="sidebar-toggle-btn sidebar-icon-btn"
+              onClick={() => setIsSessionPanelOpen((p) => !p)}
+              title={isSessionPanelOpen ? 'Thu gọn' : 'Mở sessions'}
+            >
+              <Menu size={18} strokeWidth={2.2} />
+            </button>
+
+            <div className={`session-panel-expanded ${isSessionPanelOpen ? 'is-visible' : 'is-hidden'}`}>
+              <button type="button" className="new-session-btn" onClick={() => void handleNewChat()} disabled={createSessionMutation.isPending}>
+                <Plus size={15} />
+                <span>Cuộc trò chuyện mới</span>
+              </button>
+
+              <div className="session-list-title">Lịch sử</div>
+              <div className="session-list">
+                {sessionsLoading && <div className="session-muted">Đang tải...</div>}
+                {!sessionsLoading && sessions.length === 0 && (
+                  <div className="session-muted">Chưa có cuộc trò chuyện nào.</div>
+                )}
+                {sessions.map((session) => (
+                  <button
+                    type="button"
+                    key={session.id}
+                    className={`session-item ${session.id === selectedSessionId ? 'active' : ''}`}
+                    onClick={() => setSelectedSessionId(session.id)}
+                  >
+                    <span className="session-title">{session.title}</span>
+                    <span className="session-subtitle">{session.status} · {formatDateTime(session.lastMessageAt)}</span>
                   </button>
                 ))}
               </div>
-            )}
 
-            <div className={`composer-box ${hasConversationStarted ? 'compact' : ''}`}>
-              <textarea
-                placeholder="Hỏi AI trợ lý toán học..."
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    void handleSend();
-                  }
-                }}
-                disabled={isSending || isArchived}
-              />
-              <div className="composer-actions">
-                <button
-                  type="button"
-                  className="send-btn"
-                  onClick={() => void handleSend()}
-                  disabled={isSending || isArchived || !input.trim()}
-                  title="Gửi (Enter)"
-                  aria-label="Gửi"
-                >
-                  <ChevronRight size={18} strokeWidth={2.5} />
-                </button>
+              <div className="session-footer">
+                <div className="session-footer-item">
+                  <span className="session-footer-label">Memory</span>
+                  <span className="session-footer-value">{memory?.currentWords ?? 0} / {memory?.wordLimit ?? 1000} words</span>
+                </div>
               </div>
             </div>
-          </footer>
-        </section>
 
-        {/* ── Session sidebar ── */}
-        <aside className={`gemini-sidebar right ${isSessionPanelOpen ? '' : 'collapsed'}`}>
-          <button
-            type="button"
-            className="sidebar-toggle-btn sidebar-icon-btn"
-            onClick={() => setIsSessionPanelOpen((prev) => !prev)}
-            title={isSessionPanelOpen ? 'Thu gọn panel session' : 'Mở panel session'}
-            aria-label={isSessionPanelOpen ? 'Thu gọn panel session' : 'Mở panel session'}
-          >
-            <Menu size={19} strokeWidth={2.25} />
-          </button>
-
-          <div
-            className={`session-panel-expanded ${isSessionPanelOpen ? 'is-visible' : 'is-hidden'}`}
-          >
-            <button
-              type="button"
-              className="new-session-btn"
-              onClick={() => void handleNewChat()}
-              disabled={createSessionMutation.isPending}
-            >
-              <Plus size={16} />
-              <span>Cuộc trò chuyện mới</span>
-            </button>
-
-            <div className="session-list-title">Cuộc trò chuyện</div>
-            <div className="session-list">
-              {sessionsLoading && <div className="session-muted">Đang tải sessions...</div>}
-              {!sessionsLoading && sessions.length === 0 && (
-                <div className="session-muted">Chưa có cuộc trò chuyện nào.</div>
-              )}
-              {sessions.map((session) => (
-                <button
-                  type="button"
-                  key={session.id}
-                  className={`session-item ${session.id === selectedSessionId ? 'active' : ''}`}
-                  onClick={() => setSelectedSessionId(session.id)}
-                >
-                  <span className="session-title">{session.title}</span>
-                  <span className="session-subtitle">
-                    {session.status} · {formatDateTime(session.lastMessageAt)}
-                  </span>
-                </button>
-              ))}
+            <div className={`collapsed-actions ${isSessionPanelOpen ? 'is-hidden' : 'is-visible'}`}>
+              <button
+                type="button"
+                className="new-session-btn collapsed sidebar-icon-btn"
+                onClick={() => void handleNewChat()}
+                disabled={createSessionMutation.isPending}
+                title="Chat mới"
+              >
+                <SquarePen size={18} strokeWidth={2} />
+              </button>
             </div>
-
-            <div className="session-footer">
-              <div className="session-footer-item">
-                <span className="session-footer-label">Memory limit</span>
-                <span className="session-footer-value">{memory?.wordLimit ?? 1000} words</span>
-              </div>
-              <div className="session-footer-item">
-                <span className="session-footer-label">Used</span>
-                <span className="session-footer-value">{memory?.currentWords ?? 0} words</span>
-              </div>
-            </div>
-          </div>
-
-          <div className={`collapsed-actions ${isSessionPanelOpen ? 'is-hidden' : 'is-visible'}`}>
-            <button
-              type="button"
-              className="new-session-btn collapsed sidebar-icon-btn"
-              onClick={() => void handleNewChat()}
-              disabled={createSessionMutation.isPending}
-              title="Tạo cuộc trò chuyện mới"
-              aria-label="Tạo cuộc trò chuyện mới"
-            >
-              <SquarePen size={19} strokeWidth={2.1} />
-            </button>
-          </div>
-        </aside>
+          </aside>
+        </div>
       </div>
 
-      {/* ── Token / Plan alert modal ── */}
+      {/* ── Token modal ── */}
       {tokenModal && (
-        <div
-          className="ai-token-modal-overlay"
-          onClick={() => setTokenModal(null)}
-          role="dialog"
-          aria-modal="true"
-        >
+        <div className="ai-token-modal-overlay" onClick={() => setTokenModal(null)} role="dialog" aria-modal="true">
           <div className="ai-token-modal" onClick={(e) => e.stopPropagation()}>
             <span className="ai-token-sym s1" aria-hidden="true">π</span>
             <span className="ai-token-sym s2" aria-hidden="true">Σ</span>
             <span className="ai-token-sym s3" aria-hidden="true">∞</span>
             <span className="ai-token-sym s4" aria-hidden="true">Δ</span>
-
             <div className="ai-token-modal__char-wrap">
               <div className="ai-token-modal__speech" />
-              <div className="ai-token-modal__char">
-                {tokenModal.type === 'no-plan' ? '🎓' : '🧮'}
-              </div>
+              <div className="ai-token-modal__char">{tokenModal.type === 'no-plan' ? '🎓' : '🧮'}</div>
               <div className="ai-token-modal__battery">
                 <span className="ai-token-battery__bar" />
                 <span className="ai-token-battery__bar empty" />
                 <span className="ai-token-battery__label">[%]</span>
               </div>
             </div>
-
             <h2 className="ai-token-modal__title">
-              {tokenModal.type === 'no-plan'
-                ? 'Chưa có gói đăng ký!'
-                : "Hết 'điện' rồi bạn ơi! (0 tokens)"}
+              {tokenModal.type === 'no-plan' ? 'Chưa có gói đăng ký!' : "Hết 'điện' rồi! (0 tokens)"}
             </h2>
-
             <p className="ai-token-modal__desc">
               {tokenModal.type === 'no-plan'
-                ? 'Bạn cần kích hoạt gói đăng ký để dùng AI Trợ lý. Mua gói ngay để giải toán không giới hạn!'
-                : 'Phép tính này cần thêm một chút nhiên liệu để hoàn thành. Hãy nạp thêm token để tiếp tục cuộc hành trình toán học nhé!'}
+                ? 'Bạn cần kích hoạt gói đăng ký để dùng AI. Mua gói ngay để giải toán không giới hạn!'
+                : 'Hãy nạp thêm token để tiếp tục cuộc hành trình toán học nhé!'}
             </p>
-
             <div className="ai-token-modal__actions">
               <button
                 type="button"
                 className="ai-token-modal__btn primary"
-                onClick={() => {
-                  setTokenModal(null);
-                  navigate(tokenModal.type === 'no-plan' ? '/pricing' : `/${layoutRole}/wallet`);
-                }}
+                onClick={() => { setTokenModal(null); navigate(tokenModal.type === 'no-plan' ? '/pricing' : `/${layoutRole}/wallet`); }}
               >
                 <span className="ai-token-btn__hot">HOT</span>
                 <span className="ai-token-btn__icon">+</span>
                 {tokenModal.type === 'no-plan' ? 'Mua gói ngay' : 'Nạp thêm ngay'}
               </button>
-              <button
-                type="button"
-                className="ai-token-modal__btn ghost"
-                onClick={() => setTokenModal(null)}
-              >
+              <button type="button" className="ai-token-modal__btn ghost" onClick={() => setTokenModal(null)}>
                 Để sau
               </button>
             </div>
-
             <p className="ai-token-modal__footer">HỆ SINH THÁI MATHLAB</p>
           </div>
         </div>
