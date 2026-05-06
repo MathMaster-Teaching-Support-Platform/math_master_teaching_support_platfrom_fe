@@ -12,7 +12,6 @@ import {
   KeyRound,
   Loader2,
   Mail,
-  Plus,
   Search,
   Settings,
   ShieldCheck,
@@ -495,15 +494,7 @@ const UserManagement: React.FC = () => {
               )}
 
               {!showSkeleton && !error && (
-                <div className="rounded-2xl border border-[#E8E6DC] bg-white shadow-[rgba(0,0,0,0.04)_0px_4px_24px] overflow-hidden admin-mgmt-table-shell relative">
-                  {isFetching && (
-                    <div
-                      className="absolute inset-0 bg-white/50 backdrop-blur-[1px] z-[1] flex items-center justify-center pointer-events-none"
-                      aria-hidden
-                    >
-                      <Loader2 className="w-7 h-7 text-[#C96442] animate-spin opacity-90" />
-                    </div>
-                  )}
+                <div className="rounded-2xl border border-[#E8E6DC] bg-white shadow-[rgba(0,0,0,0.04)_0px_4px_24px] overflow-hidden admin-mgmt-table-shell">
                   <div className="overflow-x-auto">
                     <table className="users-table">
                       <thead>
