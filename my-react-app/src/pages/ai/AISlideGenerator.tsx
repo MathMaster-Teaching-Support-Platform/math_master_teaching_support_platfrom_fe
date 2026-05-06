@@ -124,16 +124,8 @@ const OUTPUT_FORMAT_LABELS: Record<LessonSlideOutputFormat, string> = {
   HYBRID: 'Hybrid',
 };
 
-const EQUATION_MODE_LABELS: Record<LessonSlideEquationMode, string> = {
-  OMML: 'OMML (Office Equation)',
-  IMAGE: 'Image (render cong thuc thanh anh)',
-  PLAIN_TEXT: 'Plain Text',
-};
-
 const getOutputFormatLabel = (format: LessonSlideOutputFormat): string =>
   OUTPUT_FORMAT_LABELS[format];
-
-const getEquationModeLabel = (mode: LessonSlideEquationMode): string => EQUATION_MODE_LABELS[mode];
 
 const formatFileSize = (sizeInBytes: number): string => {
   if (!Number.isFinite(sizeInBytes) || sizeInBytes < 0) return '--';
@@ -156,6 +148,28 @@ const getGeneratedDisplayName = (file: LessonSlideGeneratedFile): string => {
   if (preferredName) return preferredName;
   const fallbackName = (file.fileName || '').trim();
   return fallbackName.replace(/\.[^/.]+$/, '') || 'generated-slide';
+};
+
+const getSchoolGradeLabel = (grade: SchoolGrade): string => {
+  const rawLevel = `${grade.gradeLevel ?? ''}`.trim();
+  const rawName = `${grade.name ?? ''}`.trim();
+
+  const levelLabel =
+    rawLevel.length === 0 ? '' : /^(lop|lớp)\s+/i.test(rawLevel) ? rawLevel : `Lớp ${rawLevel}`;
+
+  if (!levelLabel) return rawName || 'Chưa đặt tên lớp';
+  if (!rawName) return levelLabel;
+
+  const normalize = (value: string) =>
+    value
+      .trim()
+      .toLowerCase()
+      .replace(/^(lop|lớp)\s+/i, '');
+  if (normalize(levelLabel) === normalize(rawName)) {
+    return levelLabel;
+  }
+
+  return `${levelLabel} - ${rawName}`;
 };
 
 const parseMathSegments = (text: string): MathSegment[] => {
@@ -507,7 +521,7 @@ const AISlideGenerator: React.FC = () => {
     'Chọn template',
     'Tạo nội dung',
     'Xác nhận nội dung',
-    'Tải file PPTX',
+    'Tải Slide',
   ];
 
   const clearGeneratedData = () => {
@@ -1134,7 +1148,7 @@ const AISlideGenerator: React.FC = () => {
 
     const trimmedPrompt = additionalPrompt.trim();
     if (!trimmedPrompt) {
-      setError('Additional Prompt là bắt buộc. Vui lòng nhập mô tả để AI tạo nội dung.');
+      setError('Mô tả là bắt buộc. Vui lòng nhập mô tả để AI tạo nội dung.');
       return;
     }
 
@@ -1164,19 +1178,19 @@ const AISlideGenerator: React.FC = () => {
       setPreparedPptxBlob(null);
       setPreparedPptxFilename('lesson-slides.pptx');
       notifySubscriptionUpdated();
-      setSuccess('Đã tạo nội dung slide bằng AI. Vui lòng kiểm tra và confirm nội dung.');
+      setSuccess('Đã tạo nội dung slide bằng AI. Vui lòng kiểm tra và xác nhận nội dung.');
       setActiveWizardStep(4);
       await loadGeneratedFiles(response.result.lessonId);
     } catch (err) {
       const apiError = err as Error & { code?: number };
       if (apiError.code === 1164) {
-        setError('Ban chua co goi active. Vui long mua goi truoc khi dung AI Slide.');
-        if (window.confirm('Ban chua co goi active. Mo trang mua goi ngay?')) {
+        setError('Bạn chưa có gói active. Vui lòng mua gói trước khi dùng AI Slide.');
+        if (window.confirm('Bạn chưa có gói active. Mở trang mua gói ngay?')) {
           navigate('/pricing');
         }
       } else if (apiError.code === 1165) {
-        setError('Token khong du (Slide can 3 token/lan). Vui long mua goi hoac nap them vi.');
-        if (window.confirm('Token khong du. Mo trang vi de nap tien?')) {
+        setError('Token không đủ (Slide cần 3 token/lần). Vui lòng mua gói hoặc nạp thêm ví.');
+        if (window.confirm('Token không đủ. Mở trang ví để nạp tiền?')) {
           navigate('/teacher/wallet');
         }
       } else {
@@ -1356,14 +1370,10 @@ const AISlideGenerator: React.FC = () => {
         }
       }
 
-      setSuccess(
-        outputFormatForPptx === 'LATEX'
-          ? 'PPTX đã sẵn sàng! Đã xuất theo chế độ LATEX.'
-          : `PPTX đã sẵn sàng! Chế độ công thức: ${getEquationModeLabel(equationMode)}.`
-      );
+      setSuccess(outputFormatForPptx === 'LATEX' ? 'Slide đã sẵn sàng!' : `Slide đã sẵn sàng!.`);
       setActiveWizardStep(5);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Không thể tạo PPTX');
+      setError(err instanceof Error ? err.message : 'Không thể tạo Slide');
     } finally {
       setGeneratingPptx(false);
     }
@@ -1383,7 +1393,7 @@ const AISlideGenerator: React.FC = () => {
     link.click();
     link.remove();
     window.URL.revokeObjectURL(blobUrl);
-    setSuccess('Đã tải file PPTX về máy thành công.');
+    setSuccess('Đã tải Slide về máy thành công.');
     void loadGeneratedFiles(lessonId || undefined);
   };
 
@@ -1404,7 +1414,7 @@ const AISlideGenerator: React.FC = () => {
               className={`ai-slide-main-tab ${activeMainTab === 'GENERATE' ? 'active' : ''}`}
               onClick={() => setActiveMainTab('GENERATE')}
             >
-              Generate Slide
+              Tạo Slide Mới
             </button>
             <button
               type="button"
@@ -1456,7 +1466,7 @@ const AISlideGenerator: React.FC = () => {
                   <option value="">-- Chọn lớp --</option>
                   {schoolGrades.map((grade) => (
                     <option key={grade.id} value={grade.id}>
-                      Lớp {grade.gradeLevel} - {grade.name}
+                      {getSchoolGradeLabel(grade)}
                     </option>
                   ))}
                 </select>
@@ -2039,7 +2049,7 @@ const AISlideGenerator: React.FC = () => {
               </div>
 
               <label className="ai-slide-full-width">
-                <span>Additional Prompt</span>
+                <span>Thêm mô tả</span>
                 <textarea
                   rows={3}
                   placeholder="Ví dụ: Giải Phương Trình Bậc 2"
@@ -2058,7 +2068,6 @@ const AISlideGenerator: React.FC = () => {
                 >
                   <option value="PLAIN_TEXT">Text</option>
                   <option value="LATEX">Latex</option>
-                  <option value="HYBRID">Hybrid</option>
                 </select>
               </label>
 
@@ -2089,7 +2098,7 @@ const AISlideGenerator: React.FC = () => {
 
         {activeMainTab === 'GENERATE' && activeWizardStep === 4 && generated && (
           <section className="ai-slide-card">
-            <h2>Bước 4: Confirm và chỉnh sửa nội dung</h2>
+            <h2>Bước 4: Xác nhận và chỉnh sửa nội dung</h2>
             <div
               className="ai-slide-actions"
               style={{ marginBottom: '1rem', justifyContent: 'flex-start' }}
@@ -2188,9 +2197,9 @@ const AISlideGenerator: React.FC = () => {
                 disabled={generatingPptx || !editableSlides.length}
               >
                 {generatingPptx ? (
-                  <LoadingSpinner label="Đang tạo PPTX..." />
+                  <LoadingSpinner label="Đang tạo Slide..." />
                 ) : (
-                  'Confirm nội dung và tạo PPTX'
+                  'Xác nhận nội dung và tạo Slide'
                 )}
               </button>
             </div>
@@ -2202,13 +2211,13 @@ const AISlideGenerator: React.FC = () => {
 
         {activeMainTab === 'GENERATE' && activeWizardStep === 5 && (
           <section className="ai-slide-card">
-            <h2>Bước 5: Tải file PPTX</h2>
+            <h2>Bước 5: Tải Slide</h2>
             <div
               className="ai-slide-actions"
               style={{ marginBottom: '1rem', justifyContent: 'flex-start' }}
             >
               <button className="btn btn-outline" onClick={() => setActiveWizardStep(4)}>
-                ← Quay lại Confirm nội dung
+                ← Quay lại xác nhận nội dung
               </button>
             </div>
 
@@ -2222,7 +2231,7 @@ const AISlideGenerator: React.FC = () => {
                 onClick={handleDownloadPreparedPptx}
                 disabled={!preparedPptxBlob}
               >
-                Tải PPTX về máy
+                Tải Slide về máy
               </button>
             </div>
 
@@ -2253,8 +2262,8 @@ const AISlideGenerator: React.FC = () => {
 
               <div className="ai-slide-generating-steps" aria-hidden="true">
                 <span>Đang phân tích bài học</span>
-                <span>Đang dựng dàn ý theo</span>
-                <span>Đang tối ưu biểu thức toán học</span>
+                <span>Đang dựng dàn ý</span>
+                <span>Đang tối ưu</span>
                 <span>Đang hoàn tất nội dung</span>
               </div>
             </div>
