@@ -76,9 +76,7 @@ function toFriendlyVerificationText(text: string) {
 
 function formatOcrSummary(summary: string): string {
   return toFriendlyVerificationText(
-    summary
-      .replace(/^[✅❌✗✓⚠️×✕]+\s*(XÁC MINH [^:]+:\s*)?/i, '')
-      .trim()
+    summary.replace(/^[✅❌✗✓⚠️×✕]+\s*(XÁC MINH [^:]+:\s*)?/i, '').trim()
   );
 }
 
@@ -96,7 +94,11 @@ const AdminCommentDisplay: React.FC<{ comment: string }> = ({ comment }) => {
   const fieldLineRe = /((?:[^\n.!?]+:\s*[✓✗],?\s*)+)$/;
   const fieldMatch = text.match(fieldLineRe);
   const bodyText = fieldMatch
-    ? text.slice(0, text.length - fieldMatch[0].length).trim().replace(/\.$/, '').trim()
+    ? text
+        .slice(0, text.length - fieldMatch[0].length)
+        .trim()
+        .replace(/\.$/, '')
+        .trim()
     : text;
   const fields = fieldMatch
     ? fieldMatch[1]
@@ -222,7 +224,6 @@ const ReviewProfiles: React.FC = () => {
 
   const profiles = profilesQuery.data?.result.content ?? [];
   const totalPages = profilesQuery.data?.result.totalPages ?? 0;
-  const totalElements = profilesQuery.data?.result.totalElements ?? 0;
   const loading = profilesQuery.isLoading || profilesQuery.isFetching;
   const error = profilesQuery.error instanceof Error ? profilesQuery.error.message : null;
   const pendingCount = pendingCountQuery.data?.result ?? 0;
@@ -875,9 +876,7 @@ const ReviewProfiles: React.FC = () => {
                                           <span className="rpd-ocr-field-label">Ghi chú:</span>
                                           <span>
                                             {toFriendlyVerificationText(
-                                              field.notes
-                                                .replace(/^[✅❌✗✓⚠️×✕]+\s*/, '')
-                                                .trim()
+                                              field.notes.replace(/^[✅❌✗✓⚠️×✕]+\s*/, '').trim()
                                             )}
                                           </span>
                                         </div>

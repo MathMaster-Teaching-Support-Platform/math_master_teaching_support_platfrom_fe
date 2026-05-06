@@ -17,10 +17,7 @@ import { useToast } from '../../context/ToastContext';
 import { mockAdmin } from '../../data/mockData';
 import { tokenConfigService } from '../../services/tokenConfig.service';
 
-const featureMeta: Record<
-  string,
-  { icon: React.ReactNode; label: string; description: string }
-> = {
+const featureMeta: Record<string, { icon: React.ReactNode; label: string; description: string }> = {
   slide: {
     icon: <Layout className="w-4 h-4" />,
     label: 'Gen Slide',
@@ -258,9 +255,7 @@ const TokenConfigPage: React.FC = () => {
                     {/* Cost area */}
                     <div
                       className={`rounded-xl p-4 transition-colors ${
-                        isEditing
-                          ? 'bg-amber-50 border border-amber-100'
-                          : 'bg-[#F5F4ED]'
+                        isEditing ? 'bg-amber-50 border border-amber-100' : 'bg-[#F5F4ED]'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-2">
@@ -354,8 +349,8 @@ const TokenConfigPage: React.FC = () => {
                 </p>
                 <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#5E5D59] leading-relaxed">
                   Mọi thay đổi về chi phí được ghi lại trong nhật ký hệ thống kèm định danh admin.
-                  Vui lòng thông báo đến bộ phận CSKH trước khi có sự thay đổi lớn để tránh gây
-                  hiểu lầm cho người dùng.
+                  Vui lòng thông báo đến bộ phận CSKH trước khi có sự thay đổi lớn để tránh gây hiểu
+                  lầm cho người dùng.
                 </p>
               </div>
             </div>
@@ -400,7 +395,7 @@ const TokenConfigPage: React.FC = () => {
                 </div>
               ) : historyLogs && historyLogs.length > 0 ? (
                 <div className="space-y-3">
-                  {historyLogs.map((log, idx) => {
+                  {historyLogs.map((log, _idx) => {
                     const meta = featureMeta[log.featureKey];
                     const isStatusChange =
                       log.changeType === 'STATUS_TOGGLE' || log.changeType === 'STATUS_UPDATE';
