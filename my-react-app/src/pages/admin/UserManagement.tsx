@@ -1,9 +1,12 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  AlertCircle,
+  ArrowRight,
   BookOpen,
   Calendar,
   CheckCircle2,
   Clock,
+  Download,
   Eye,
   GraduationCap,
   KeyRound,
@@ -93,6 +96,7 @@ const UserManagement: React.FC = () => {
         status: 'all',
       }),
     staleTime: 30_000,
+    placeholderData: keepPreviousData,
   });
 
   const users = usersQuery.data?.users ?? [];
@@ -103,8 +107,10 @@ const UserManagement: React.FC = () => {
     totalItems: 0,
     totalPages: 1,
   };
-  const loading = usersQuery.isLoading || usersQuery.isFetching;
+  const isFetching = usersQuery.isFetching;
   const error = usersQuery.error instanceof Error ? usersQuery.error.message : null;
+  /** Chỉ khi chưa có cache (lần đầu hoặc sau invalidate), tránh nhấp nháy khi đổi trang nhờ keepPreviousData */
+  const showSkeleton = usersQuery.isLoading && usersQuery.data === undefined;
 
   useEffect(() => {
     setPage(0);
@@ -282,253 +288,358 @@ const UserManagement: React.FC = () => {
         <div className="admin-mgmt-shell__bg" aria-hidden="true" />
         <section className="module-page teacher-courses-page admin-mgmt-shell__content admin-user-mgmt-page__inner">
           <div className="user-management-page">
-            <header className="page-header courses-header-row">
-              <div className="header-stack">
-                <h2 style={{ margin: 0 }}>Quản lý người dùng</h2>
-                <p className="header-sub">Quản lý thông tin tài khoản người dùng</p>
+            <div className="px-4 py-6 sm:px-6 lg:px-8 lg:py-8 space-y-6">
+              {/* Header — TeacherMindmaps pattern */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-xl bg-[#E8E6DC] flex items-center justify-center text-[#5E5D59] shrink-0">
+                    <Users className="w-5 h-5" strokeWidth={2} aria-hidden />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2.5">
+                      <h1 className="font-[Playfair_Display] text-[22px] font-medium text-[#141413] m-0 leading-tight">
+                        Quản lý người dùng
+                      </h1>
+                      {!showSkeleton && !error && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#E8E6DC] font-[Be_Vietnam_Pro] text-[12px] font-semibold text-[#5E5D59]">
+                          {pagination.totalItems}
+                        </span>
+                      )}
+                    </div>
+                    <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-0.5 m-0">
+                      {stats.active} đang hoạt động • {stats.teachers} giáo viên • {stats.students} học
+                      sinh
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(true)}
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#C96442] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:brightness-95 active:scale-[0.98] transition-all duration-150 shrink-0"
+                >
+                  Thêm người dùng <ArrowRight className="w-3.5 h-3.5" aria-hidden />
+                </button>
               </div>
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={() => setShowCreateModal(true)}
-              >
-                <Plus size={16} aria-hidden />
-                Thêm người dùng
-              </button>
-            </header>
 
-            <div className="stats-grid">
-              <div className="stat-card stat-blue">
-                <div className="stat-icon-wrap">
-                  <Users size={20} aria-hidden />
-                </div>
-                <div>
-                  <h3>{loading ? '…' : stats.total}</h3>
-                  <p>Tổng người dùng</p>
-                </div>
-              </div>
-              <div className="stat-card stat-violet">
-                <div className="stat-icon-wrap">
-                  <Settings size={20} aria-hidden />
-                </div>
-                <div>
-                  <h3>{loading ? '…' : stats.admins}</h3>
-                  <p>Admin</p>
-                </div>
-              </div>
-              <div className="stat-card stat-emerald">
-                <div className="stat-icon-wrap">
-                  <BookOpen size={20} aria-hidden />
-                </div>
-                <div>
-                  <h3>{loading ? '…' : stats.teachers}</h3>
-                  <p>Giáo viên</p>
-                </div>
-              </div>
-              <div className="stat-card stat-amber">
-                <div className="stat-icon-wrap">
-                  <GraduationCap size={20} aria-hidden />
-                </div>
-                <div>
-                  <h3>{loading ? '…' : stats.students}</h3>
-                  <p>Học sinh</p>
-                </div>
-              </div>
-              <div className="stat-card stat-emerald">
-                <div className="stat-icon-wrap">
-                  <CheckCircle2 size={20} aria-hidden />
-                </div>
-                <div>
-                  <h3>{loading ? '…' : stats.active}</h3>
-                  <p>Đang hoạt động</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="toolbar admin-mgmt-toolbar">
-              <div className="pill-group">
+              {/* Stats — same tile grid as /teacher/mindmaps */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3">
                 {(
                   [
-                    { id: 'all' as const, label: `Tất cả (${stats.total})` },
-                    { id: 'admin' as const, label: `Admin (${stats.admins})` },
-                    { id: 'teacher' as const, label: `Giáo viên (${stats.teachers})` },
-                    { id: 'student' as const, label: `Học sinh (${stats.students})` },
+                    {
+                      label: 'Tổng người dùng',
+                      value: showSkeleton ? '…' : stats.total,
+                      Icon: Users,
+                      bg: 'bg-[#EEF2FF]',
+                      color: 'text-[#4F7EF7]',
+                    },
+                    {
+                      label: 'Admin',
+                      value: showSkeleton ? '…' : stats.admins,
+                      Icon: Settings,
+                      bg: 'bg-[#F5F3FF]',
+                      color: 'text-[#9B6FE0]',
+                    },
+                    {
+                      label: 'Giáo viên',
+                      value: showSkeleton ? '…' : stats.teachers,
+                      Icon: BookOpen,
+                      bg: 'bg-[#ECFDF5]',
+                      color: 'text-[#2EAD7A]',
+                    },
+                    {
+                      label: 'Học sinh',
+                      value: showSkeleton ? '…' : stats.students,
+                      Icon: GraduationCap,
+                      bg: 'bg-[#FFF7ED]',
+                      color: 'text-[#E07B39]',
+                    },
+                    {
+                      label: 'Đang hoạt động',
+                      value: showSkeleton ? '…' : stats.active,
+                      Icon: CheckCircle2,
+                      bg: 'bg-[#F5F4ED]',
+                      color: 'text-[#8B7355]',
+                    },
                   ] as const
-                ).map(({ id, label }) => (
-                  <button
-                    key={id}
-                    type="button"
-                    className={`pill-btn${filterRole === id ? ' active' : ''}`}
-                    onClick={() => setFilterRole(id)}
+                ).map(({ label, value, Icon, bg, color }) => (
+                  <div
+                    key={label}
+                    className="bg-white rounded-2xl border border-[#E8E6DC] p-4 flex items-center gap-3 shadow-[rgba(0,0,0,0.04)_0px_4px_24px] hover:shadow-[0px_0px_0px_1px_#D1CFC5,rgba(0,0,0,0.06)_0px_8px_28px] hover:-translate-y-0.5 transition-all duration-200"
                   >
-                    {label}
-                  </button>
+                    <div className={`w-9 h-9 rounded-xl ${bg} flex items-center justify-center shrink-0`}>
+                      <Icon className={`w-4 h-4 ${color}`} strokeWidth={2} aria-hidden />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-[Playfair_Display] text-[22px] font-medium text-[#141413] leading-none truncate">
+                        {value}
+                      </p>
+                      <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mt-0.5 leading-snug">
+                        {label}
+                      </p>
+                    </div>
+                  </div>
                 ))}
               </div>
-              <label className="search-box">
-                <span className="search-box__icon" aria-hidden="true">
-                  <Search size={15} />
-                </span>
-                <input
-                  type="search"
-                  placeholder="Tìm theo tên, email, username..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  aria-label="Tìm người dùng"
-                />
-                {searchTerm ? (
+
+              {/* Toolbar — segmented control + search (TeacherMindmaps) */}
+              <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+                <div className="flex flex-wrap items-center gap-2 order-2 xl:order-1">
+                  <div className="flex flex-wrap items-center gap-1 p-1 bg-[#F5F4ED] rounded-xl">
+                    {(
+                      [
+                        { id: 'all' as const, label: `Tất cả (${stats.total})` },
+                        { id: 'admin' as const, label: `Admin (${stats.admins})` },
+                        { id: 'teacher' as const, label: `Giáo viên (${stats.teachers})` },
+                        { id: 'student' as const, label: `Học sinh (${stats.students})` },
+                      ] as const
+                    ).map(({ id, label }) => (
+                      <button
+                        key={id}
+                        type="button"
+                        className={`px-3 py-1.5 rounded-lg font-[Be_Vietnam_Pro] text-[12px] font-medium transition-all duration-150 whitespace-nowrap ${
+                          filterRole === id
+                            ? 'bg-white text-[#141413] shadow-sm'
+                            : 'text-[#87867F] hover:text-[#5E5D59]'
+                        }`}
+                        onClick={() => setFilterRole(id)}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
                   <button
                     type="button"
-                    className="search-box__clear"
-                    aria-label="Xóa tìm kiếm"
-                    onClick={() => setSearchTerm('')}
+                    onClick={handleExportExcel}
+                    className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[12px] font-semibold text-[#5E5D59] hover:bg-[#FAF9F5] transition-colors shadow-[rgba(0,0,0,0.03)_0px_2px_8px]"
                   >
-                    <X size={14} />
+                    <Download className="w-4 h-4 shrink-0" strokeWidth={2} aria-hidden />
+                    Xuất Excel
                   </button>
-                ) : null}
-                {loading ? (
-                  <span className="admin-user-mgmt-search-pending" aria-hidden="true">
-                    <Loader2 size={16} className="admin-user-mgmt-spin" />
-                  </span>
-                ) : null}
-              </label>
-              <button type="button" className="btn secondary" onClick={handleExportExcel}>
-                Xuất Excel
-              </button>
-            </div>
-
-            {/* Users Table */}
-            <div className="users-table-container admin-mgmt-table-shell">
-              {loading && (
-                <div className="table-loading table-loading--studio">
-                  <Loader2 className="admin-user-mgmt-spin" size={22} aria-hidden />
-                  <span>Đang tải…</span>
                 </div>
-              )}
-              {error && <div className="table-error">{error}</div>}
-              {!loading && !error && (
-                <table className="users-table">
-                  <thead>
-                    <tr>
-                      <th>Người dùng</th>
-                      <th>Vai trò</th>
-                      <th>Email</th>
-                      <th>Ngày tham gia</th>
-                      <th>Đăng nhập gần đây</th>
-                      <th>Trạng thái</th>
-                      <th>Hành động</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {users.map((user) => (
-                      <tr key={user.id}>
-                        <td className="user-cell">
-                          <div className="user-avatar">
-                            {user.avatar ? (
-                              <img
-                                src={user.avatar}
-                                alt={user.fullName}
-                                style={{
-                                  width: '100%',
-                                  height: '100%',
-                                  borderRadius: '50%',
-                                  objectFit: 'cover',
-                                }}
-                              />
-                            ) : (
-                              (user.fullName ?? '?').charAt(0).toUpperCase()
-                            )}
-                          </div>
-                          <div className="user-info">
-                            <div className="user-name">{user.fullName}</div>
-                            <div className="user-handle">@{user.userName}</div>
-                          </div>
-                        </td>
-                        <td>
-                          <span className={`role-badge ${getRoleBadgeClass(user.roles)}`}>
-                            {getRoleLabel(user.roles)}
-                          </span>
-                        </td>
-                        <td className="email-cell">{user.email}</td>
-                        <td>{new Date(user.createdDate).toLocaleDateString('vi-VN')}</td>
-                        <td>
-                          {user.lastLogin
-                            ? new Date(user.lastLogin).toLocaleString('vi-VN', {
-                                day: '2-digit',
-                                month: '2-digit',
-                                hour: '2-digit',
-                                minute: '2-digit',
-                              })
-                            : '\u2014'}
-                        </td>
-                        <td>
-                          <span className={`status-badge ${user.status.toLowerCase()}`}>
-                            {getStatusLabel(user.status)}
-                          </span>
-                        </td>
-                        <td>
-                          <div className="action-buttons">
-                            <button
-                              className="action-btn view"
-                              title="Xem chi tiết"
-                              onClick={() => setSelectedUser(user)}
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
-                            <button
-                              className="action-btn delete"
-                              title="Xóa"
-                              onClick={() => handleDeleteUser(user.id)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                    {users.length === 0 && (
-                      <tr>
-                        <td colSpan={7} className="empty-users-row">
-                          Không có người dùng nào
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              )}
-            </div>
 
-            {/* Pagination */}
-            {pagination.totalPages > 1 && (
-              <div className="pagination">
-                <button
-                  className="pagination-btn"
-                  disabled={pagination.page === 0}
-                  onClick={() => handlePageChange(pagination.page - 1)}
-                >
-                  Trước
-                </button>
-                <div className="pagination-pages">
-                  {Array.from({ length: Math.min(pagination.totalPages, 10) }, (_, i) => (
+                <label className="relative flex w-full xl:max-w-md items-center gap-3 bg-white border border-[#E8E6DC] rounded-xl px-4 py-2.5 focus-within:border-[#3898EC] focus-within:shadow-[0_0_0_3px_rgba(56,152,236,0.12)] transition-all duration-150 shadow-[rgba(0,0,0,0.03)_0px_2px_12px] order-1 xl:order-2">
+                  <Search
+                    className="text-[#87867F] w-4 h-4 shrink-0"
+                    strokeWidth={2}
+                    aria-hidden
+                  />
+                  <input
+                    type="search"
+                    className="flex-1 font-[Be_Vietnam_Pro] text-[14px] text-[#141413] placeholder:text-[#87867F] bg-transparent outline-none min-w-0"
+                    placeholder="Tìm theo tên, email, username..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    aria-label="Tìm người dùng"
+                  />
+                  {searchTerm ? (
                     <button
-                      key={i}
-                      className={`pagination-page ${pagination.page === i ? 'active' : ''}`}
-                      onClick={() => handlePageChange(i)}
+                      type="button"
+                      aria-label="Xóa tìm kiếm"
+                      onClick={() => setSearchTerm('')}
+                      className="text-[#87867F] hover:text-[#141413] transition-colors shrink-0"
                     >
-                      {i + 1}
+                      <X className="w-4 h-4" strokeWidth={2} />
                     </button>
-                  ))}
-                  {pagination.totalPages > 10 && <span>...</span>}
-                </div>
-                <button
-                  className="pagination-btn"
-                  disabled={pagination.page >= pagination.totalPages - 1}
-                  onClick={() => handlePageChange(pagination.page + 1)}
-                >
-                  Sau
-                </button>
+                  ) : null}
+                  {isFetching ? (
+                    <span
+                      className={`absolute top-1/2 -translate-y-1/2 text-[#87867F] pointer-events-none flex items-center ${searchTerm ? 'right-10' : 'right-3'}`}
+                      aria-hidden
+                    >
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    </span>
+                  ) : null}
+                </label>
               </div>
-            )}
+
+              {/* Summary bar */}
+              {!showSkeleton && !error && users.length > 0 && (
+                <div className="flex flex-wrap items-center gap-4 px-4 py-3 rounded-xl bg-[#FAF9F5] border border-[#E8E6DC]">
+                  <span className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] uppercase tracking-wide">
+                    Hiển thị
+                  </span>
+                  <strong className="font-[Be_Vietnam_Pro] text-[13px] font-semibold text-[#141413]">
+                    {users.length} / {pagination.totalItems}
+                  </strong>
+                  <div className="w-px h-4 bg-[#E8E6DC] hidden sm:block" aria-hidden />
+                  <span className="flex items-center gap-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#4F7EF7] inline-block" aria-hidden />
+                    Trang{' '}
+                    <strong className="text-[#141413] font-semibold">
+                      {pagination.page + 1} / {Math.max(1, pagination.totalPages)}
+                    </strong>
+                  </span>
+                </div>
+              )}
+
+              {showSkeleton && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {[1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      className="bg-[#FAF9F5] rounded-2xl border border-[#F0EEE6] h-52 animate-pulse"
+                    />
+                  ))}
+                </div>
+              )}
+
+              {error && (
+                <div className="flex flex-col items-center justify-center py-14 px-4 rounded-2xl border border-[#F0EEE6] bg-[#FAF9F5]">
+                  <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center text-red-400 mb-3">
+                    <AlertCircle className="w-6 h-6" strokeWidth={2} aria-hidden />
+                  </div>
+                  <p className="font-[Be_Vietnam_Pro] text-[14px] text-[#B53333] text-center m-0">
+                    {error}
+                  </p>
+                </div>
+              )}
+
+              {!showSkeleton && !error && (
+                <div className="rounded-2xl border border-[#E8E6DC] bg-white shadow-[rgba(0,0,0,0.04)_0px_4px_24px] overflow-hidden admin-mgmt-table-shell relative">
+                  {isFetching && (
+                    <div
+                      className="absolute inset-0 bg-white/50 backdrop-blur-[1px] z-[1] flex items-center justify-center pointer-events-none"
+                      aria-hidden
+                    >
+                      <Loader2 className="w-7 h-7 text-[#C96442] animate-spin opacity-90" />
+                    </div>
+                  )}
+                  <div className="overflow-x-auto">
+                    <table className="users-table">
+                      <thead>
+                        <tr>
+                          <th>Người dùng</th>
+                          <th>Vai trò</th>
+                          <th>Email</th>
+                          <th>Ngày tham gia</th>
+                          <th>Đăng nhập gần đây</th>
+                          <th>Trạng thái</th>
+                          <th>Hành động</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {users.map((user) => (
+                          <tr key={user.id}>
+                            <td className="user-cell">
+                              <div className="user-avatar">
+                                {user.avatar ? (
+                                  <img
+                                    src={user.avatar}
+                                    alt={user.fullName}
+                                    style={{
+                                      width: '100%',
+                                      height: '100%',
+                                      borderRadius: '50%',
+                                      objectFit: 'cover',
+                                    }}
+                                  />
+                                ) : (
+                                  (user.fullName ?? '?').charAt(0).toUpperCase()
+                                )}
+                              </div>
+                              <div className="user-info">
+                                <div className="user-name">{user.fullName}</div>
+                                <div className="user-handle">@{user.userName}</div>
+                              </div>
+                            </td>
+                            <td>
+                              <span className={`role-badge ${getRoleBadgeClass(user.roles)}`}>
+                                {getRoleLabel(user.roles)}
+                              </span>
+                            </td>
+                            <td className="email-cell">{user.email}</td>
+                            <td>{new Date(user.createdDate).toLocaleDateString('vi-VN')}</td>
+                            <td>
+                              {user.lastLogin
+                                ? new Date(user.lastLogin).toLocaleString('vi-VN', {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })
+                                : '\u2014'}
+                            </td>
+                            <td>
+                              <span className={`status-badge ${user.status.toLowerCase()}`}>
+                                {getStatusLabel(user.status)}
+                              </span>
+                            </td>
+                            <td>
+                              <div className="action-buttons">
+                                <button
+                                  className="action-btn view"
+                                  title="Xem chi tiết"
+                                  onClick={() => setSelectedUser(user)}
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </button>
+                                <button
+                                  className="action-btn delete"
+                                  title="Xóa"
+                                  onClick={() => handleDeleteUser(user.id)}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                        {users.length === 0 && (
+                          <tr>
+                            <td colSpan={7} className="empty-users-row">
+                              Không có người dùng nào
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Pagination */}
+              {!showSkeleton && !error && pagination.totalPages > 1 && (
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <button
+                    type="button"
+                    className="min-h-9 px-3 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-semibold text-[#5E5D59] hover:bg-[#FAF9F5] disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                    disabled={pagination.page === 0}
+                    onClick={() => handlePageChange(pagination.page - 1)}
+                  >
+                    Trước
+                  </button>
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: Math.min(pagination.totalPages, 10) }, (_, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        className={`min-w-9 min-h-9 rounded-xl border font-[Be_Vietnam_Pro] text-[13px] font-semibold transition-colors ${
+                          pagination.page === i
+                            ? 'bg-[#141413] border-[#141413] text-[#FAF9F5]'
+                            : 'border-[#E8E6DC] bg-white text-[#5E5D59] hover:bg-[#FAF9F5]'
+                        }`}
+                        onClick={() => handlePageChange(i)}
+                      >
+                        {i + 1}
+                      </button>
+                    ))}
+                    {pagination.totalPages > 10 && (
+                      <span className="px-1 font-[Be_Vietnam_Pro] text-[13px] text-[#87867F]">
+                        …
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    className="min-h-9 px-3 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-semibold text-[#5E5D59] hover:bg-[#FAF9F5] disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                    disabled={pagination.page >= pagination.totalPages - 1}
+                    onClick={() => handlePageChange(pagination.page + 1)}
+                  >
+                    Sau
+                  </button>
+                </div>
+              )}
+            </div>
 
             {/* Create User Modal */}
             {showCreateModal && (
