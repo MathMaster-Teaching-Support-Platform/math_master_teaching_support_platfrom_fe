@@ -1,7 +1,7 @@
 import { ChevronRight, Home } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
-import { AuthService } from '../../services/api/auth.service';
 import { UI_TEXT } from '../../constants/uiText';
+import { AuthService } from '../../services/api/auth.service';
 import './CourseBreadcrumb.css';
 
 interface BreadcrumbItem {
@@ -15,7 +15,11 @@ interface CourseBreadcrumbProps {
   homePath?: string;
 }
 
-export const CourseBreadcrumb: React.FC<CourseBreadcrumbProps> = ({ items, courseTitle, homePath }) => {
+export const CourseBreadcrumb: React.FC<CourseBreadcrumbProps> = ({
+  items,
+  courseTitle,
+  homePath,
+}) => {
   const location = useLocation();
 
   // Auto-generate breadcrumbs if not provided

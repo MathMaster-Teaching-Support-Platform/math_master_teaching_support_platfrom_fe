@@ -406,9 +406,7 @@ const MaterialsGenerator: React.FC = () => {
                     <div className="font-[Be_Vietnam_Pro] text-[13px] font-semibold text-[#141413]">
                       {value}
                     </div>
-                    <div className="font-[Be_Vietnam_Pro] text-[11px] text-[#87867F]">
-                      {label}
-                    </div>
+                    <div className="font-[Be_Vietnam_Pro] text-[11px] text-[#87867F]">{label}</div>
                   </div>
                 </div>
               ))}
@@ -514,9 +512,7 @@ const MaterialsGenerator: React.FC = () => {
               <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center text-red-400">
                 <AlertCircle className="w-6 h-6" />
               </div>
-              <p className="font-[Be_Vietnam_Pro] text-[14px] text-[#B53333]">
-                {error}
-              </p>
+              <p className="font-[Be_Vietnam_Pro] text-[14px] text-[#B53333]">{error}</p>
             </div>
           )}
 
@@ -687,11 +683,7 @@ const MaterialsGenerator: React.FC = () => {
                   </div>
                 </div>
               ) : previewSlidePdfUrl ? (
-                <iframe
-                  src={previewSlidePdfUrl}
-                  title="Slide preview"
-                  className="w-full h-full"
-                />
+                <iframe src={previewSlidePdfUrl} title="Slide preview" className="w-full h-full" />
               ) : (
                 <div className="flex items-center justify-center h-full">
                   <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F]">
