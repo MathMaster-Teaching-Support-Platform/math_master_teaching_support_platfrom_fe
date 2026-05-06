@@ -612,8 +612,9 @@
   gap: 0.25rem;
   font-size: 0.71rem;
   font-weight: 600;
-  padding: 0.18rem 0.5rem;
+  padding: 0.25rem 0.6rem;
   border-radius: 4px;
+  white-space: nowrap;
 }
 
 .rpd-admin-note-field--pass {
