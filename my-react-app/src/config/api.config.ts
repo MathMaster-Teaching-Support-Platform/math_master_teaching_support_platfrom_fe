@@ -53,6 +53,7 @@ export const API_ENDPOINTS = {
   ASSESSMENTS_SEARCH: '/assessments/search',
   ASSESSMENTS_DETAIL: (id: string) => `/assessments/${id}`,
   ASSESSMENTS_PREVIEW: (id: string) => `/assessments/${id}/preview`,
+  ASSESSMENTS_PREVIEW_SUBMIT: (id: string) => `/assessments/${id}/preview-submit`,
   ASSESSMENTS_PUBLISH_SUMMARY: (id: string) => `/assessments/${id}/publish-summary`,
   ASSESSMENTS_PUBLISH: (id: string) => `/assessments/${id}/publish`,
   ASSESSMENTS_UNPUBLISH: (id: string) => `/assessments/${id}/unpublish`,

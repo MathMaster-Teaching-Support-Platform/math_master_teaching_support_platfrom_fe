@@ -289,7 +289,9 @@ export default function AssessmentDetailRefactored() {
     }
   }
 
-  async function generateFromMatrix() {
+  // Reserved for future matrix re-generation feature
+  // @ts-ignore - Function reserved for future use
+  async function _generateFromMatrix() {
     if (!assessment?.id || !assessment.examMatrixId) return;
     setGenerateError(null);
 
@@ -362,10 +364,13 @@ export default function AssessmentDetailRefactored() {
               <p>{assessment.description || 'Không có mô tả'}</p>
             </div>
             {assessment.status === 'DRAFT' && (
-              <button className="btn secondary" onClick={() => setOpenEdit(true)}>
-                <Pencil size={14} />
-                Chỉnh sửa thông tin
-              </button>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                
+                <button className="btn secondary" onClick={() => setOpenEdit(true)}>
+                  <Pencil size={14} />
+                  Chỉnh sửa thông tin
+                </button>
+              </div>
             )}
           </div>
         </article>
@@ -456,17 +461,7 @@ export default function AssessmentDetailRefactored() {
                   </button>
                 </>
               )}
-              {assessment.status === 'DRAFT' &&
-                assessment.assessmentMode === 'MATRIX_BASED' &&
-                assessment.examMatrixId && (
-                  <button
-                    className="btn"
-                    onClick={() => void generateFromMatrix()}
-                    disabled={generateMutation.isPending}
-                  >
-                    {generateMutation.isPending ? 'Đang generate...' : 'Generate from Matrix'}
-                  </button>
-                )}
+     
             </div>
           </div>
 
