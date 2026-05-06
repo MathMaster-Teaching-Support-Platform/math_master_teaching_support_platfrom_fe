@@ -230,6 +230,9 @@ export const ERROR_MESSAGES: Record<number, string> = {
   1037: 'Khóa học đã bị từ chối.',
   1038: 'Không tìm thấy video cho bài học này.',
 
+  // Subscription errors
+  1166: 'Bạn không đủ token để thanh toán dịch vụ, vui lòng mua gói.',
+
   // Generic errors
   9999: 'Đã xảy ra lỗi không xác định. Vui lòng thử lại sau.',
 };
