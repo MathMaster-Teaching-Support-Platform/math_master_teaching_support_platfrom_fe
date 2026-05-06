@@ -53,8 +53,9 @@ import { getEffectivePrice, hasActiveDiscount } from '../../utils/pricing';
 import './StudentCourses.css';
 import './TeacherCourseDetail.css';
 
-/** Full-bleed shell: avoid `.module-page` max-width (1220px) + horizontal centering from module-refactor.css */
-const UNIFIED_COURSE_PAGE_WRAP = 'w-full min-w-0 max-w-none px-0 py-6 sm:py-8 pb-10';
+/** Uses full main column width but keeps modest gutters — không chạm sát mép trái/phải */
+const UNIFIED_COURSE_PAGE_WRAP =
+  'w-full min-w-0 max-w-none px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-10 box-border';
 /** Keep `module-layout-container` for scoped `.btn` / CSS vars in module-refactor.css — without `.module-page` there is no 1220px cap */
 const MODULE_FULL_BLEED = 'module-layout-container w-full min-w-0 max-w-none';
 

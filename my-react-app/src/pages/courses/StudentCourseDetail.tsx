@@ -192,7 +192,7 @@ const StudentCourseDetail: React.FC = () => {
       user={{ name: 'Học sinh', avatar: '', role: 'student' }}
       contentClassName="dashboard-content--flush-bleed"
     >
-      <div className="w-full min-w-0 max-w-none px-0 py-8 pb-12">
+      <div className="w-full min-w-0 max-w-none px-4 sm:px-6 lg:px-8 py-8 pb-12 box-border">
         <div className="w-full min-w-0 max-w-none space-y-6">
           <div className="w-full border-b border-[#E8E6DC]/80 bg-[#FAF9F5]/80 px-4 py-3">
             <CourseBreadcrumb
