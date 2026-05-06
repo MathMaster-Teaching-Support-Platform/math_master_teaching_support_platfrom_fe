@@ -217,13 +217,19 @@ export function ExamMatrixFormModal({
                 disabled={saving}
               />
 
-              {/* ✅ NEW: Question Bank Selector - OPTIONAL */}
+              {/* Default-bank hint (optional). Matrix is a pure blueprint —
+                  the actual bank used for question generation is picked on
+                  the "Tạo đề thi" screen. Setting one here only pre-fills the
+                  picker as a convenience. */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
                 <label
                   htmlFor="emf-bank"
                   style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--mod-ink)' }}
                 >
-                  Ngân hàng câu hỏi
+                  Ngân hàng câu hỏi mặc định{' '}
+                  <span style={{ color: 'var(--mod-muted, #64748b)', fontWeight: 500 }}>
+                    (tùy chọn)
+                  </span>
                 </label>
                 <select
                   id="emf-bank"
@@ -232,7 +238,7 @@ export function ExamMatrixFormModal({
                   onChange={(e) => setFormData({ ...formData, questionBankId: e.target.value || undefined })}
                   disabled={isLoadingBanks}
                 >
-                  <option value="">Không chọn ngân hàng</option>
+                  <option value="">— Không gợi ý ngân hàng nào —</option>
                   {banks.map((bank: QuestionBankResponse) => (
                     <option key={bank.id} value={bank.id}>
                       {bank.name} ({bank.questionCount ?? 0} câu)
@@ -246,7 +252,8 @@ export function ExamMatrixFormModal({
                     margin: '0.3rem 0 0 0',
                   }}
                 >
-                  Tùy chọn: Liên kết ma trận với một ngân hàng câu hỏi cụ thể
+                  Ma trận chỉ là blueprint. Ngân hàng dùng để sinh đề được chọn ở bước
+                  "Tạo đề thi". Trường này chỉ pre-fill picker đó cho thuận tiện.
                 </p>
               </div>
 

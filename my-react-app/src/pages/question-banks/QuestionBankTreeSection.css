@@ -1,0 +1,329 @@
+/* QuestionBankTreeSection — Lớp / Chương / 4 buckets matrix view.
+ * Compact one-row-per-chapter design with intensity-coded cells. */
+
+.qb-scope .qbts {
+  background: var(--qb-surface);
+  border: 1px solid var(--qb-border);
+  border-radius: var(--qb-radius-lg);
+  box-shadow: var(--qb-shadow-sm);
+  padding: 1rem 1.1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.qb-scope .qbts__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.qb-scope .qbts__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--qb-text-primary);
+  letter-spacing: -0.005em;
+}
+
+.qb-scope .qbts__subtitle {
+  margin: 0.2rem 0 0;
+  font-size: 0.85rem;
+  color: var(--qb-text-muted);
+}
+
+/* ─── Legend ───────────────────────────────────────────── */
+.qb-scope .qbts__legend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.4rem 0.55rem;
+  background: var(--qb-surface-soft);
+  border: 1px solid var(--qb-border);
+  border-radius: var(--qb-radius-md);
+}
+
+.qb-scope .qbts__legend-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--qb-text-secondary);
+  margin-right: 0.2rem;
+}
+
+/* ─── Loading skeleton ─────────────────────────────────── */
+.qb-scope .qbts__loading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.qb-scope .qbts__loading-row {
+  height: 84px;
+  width: 100%;
+}
+
+/* ─── Chapters list ────────────────────────────────────── */
+.qb-scope .qbts__chapters {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.qb-scope .qbts-chapter {
+  background: var(--qb-surface);
+  border: 1px solid var(--qb-border);
+  border-radius: var(--qb-radius-md);
+  overflow: hidden;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.qb-scope .qbts-chapter:hover {
+  border-color: var(--qb-border-strong);
+  box-shadow: var(--qb-shadow-sm);
+}
+
+.qb-scope .qbts-chapter__row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.8rem;
+  background: var(--qb-surface-soft);
+  border-bottom: 1px solid var(--qb-border);
+}
+
+.qb-scope .qbts-chapter__toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  color: var(--qb-text-primary);
+}
+
+.qb-scope .qbts-chapter__index {
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--qb-primary-strong);
+  background: var(--qb-primary-soft);
+  padding: 0.18rem 0.45rem;
+  border-radius: var(--qb-radius-sm);
+  border: 1px solid var(--qb-primary-border);
+  white-space: nowrap;
+}
+
+.qb-scope .qbts-chapter__title {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--qb-text-primary);
+  flex: 1;
+  min-width: 0;
+}
+
+.qb-scope .qbts-chapter__total {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  font-size: 0.78rem;
+  color: var(--qb-text-muted);
+  white-space: nowrap;
+}
+
+.qb-scope .qbts-chapter__total strong {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--qb-text-primary);
+  line-height: 1;
+}
+
+/* ─── Matrix row (the core of the redesign) ────────────── */
+.qb-scope .qbts-matrix {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--qb-border);
+}
+
+@media (max-width: 720px) {
+  .qb-scope .qbts-matrix {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.qb-scope .qbts-cell {
+  background: var(--qb-surface);
+  padding: 0.7rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  position: relative;
+  transition: background 0.16s ease;
+}
+
+.qb-scope .qbts-cell__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+
+.qb-scope .qbts-cell__count {
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--qb-text-primary);
+}
+
+/* Intensity tint based on level + count */
+.qb-scope .qbts-cell--nb.qbts-cell--low { background: color-mix(in srgb, var(--qb-cog-nb-soft) 80%, var(--qb-surface)); }
+.qb-scope .qbts-cell--nb.qbts-cell--med { background: var(--qb-cog-nb-soft); }
+.qb-scope .qbts-cell--nb.qbts-cell--high { background: color-mix(in srgb, var(--qb-cog-nb-soft) 70%, var(--qb-cog-nb) 8%); }
+
+.qb-scope .qbts-cell--th.qbts-cell--low { background: color-mix(in srgb, var(--qb-cog-th-soft) 80%, var(--qb-surface)); }
+.qb-scope .qbts-cell--th.qbts-cell--med { background: var(--qb-cog-th-soft); }
+.qb-scope .qbts-cell--th.qbts-cell--high { background: color-mix(in srgb, var(--qb-cog-th-soft) 70%, var(--qb-cog-th) 8%); }
+
+.qb-scope .qbts-cell--vd.qbts-cell--low { background: color-mix(in srgb, var(--qb-cog-vd-soft) 80%, var(--qb-surface)); }
+.qb-scope .qbts-cell--vd.qbts-cell--med { background: var(--qb-cog-vd-soft); }
+.qb-scope .qbts-cell--vd.qbts-cell--high { background: color-mix(in srgb, var(--qb-cog-vd-soft) 70%, var(--qb-cog-vd) 8%); }
+
+.qb-scope .qbts-cell--vdc.qbts-cell--low { background: color-mix(in srgb, var(--qb-cog-vdc-soft) 80%, var(--qb-surface)); }
+.qb-scope .qbts-cell--vdc.qbts-cell--med { background: var(--qb-cog-vdc-soft); }
+.qb-scope .qbts-cell--vdc.qbts-cell--high { background: color-mix(in srgb, var(--qb-cog-vdc-soft) 70%, var(--qb-cog-vdc) 8%); }
+
+.qb-scope .qbts-cell--empty {
+  background: var(--qb-surface);
+}
+
+.qb-scope .qbts-cell--empty .qbts-cell__count {
+  color: var(--qb-text-muted);
+}
+
+.qb-scope .qbts-cell__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: auto;
+}
+
+.qb-scope .qbts-cell__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.3rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-family: inherit;
+  border-radius: var(--qb-radius-sm);
+  border: 1px solid var(--qb-border-strong);
+  background: var(--qb-surface);
+  color: var(--qb-text-secondary);
+  cursor: pointer;
+  transition: background 0.14s ease, border-color 0.14s ease, color 0.14s ease;
+  white-space: nowrap;
+}
+
+.qb-scope .qbts-cell__btn:hover {
+  background: var(--qb-surface-soft);
+  color: var(--qb-text-primary);
+  border-color: var(--qb-text-muted);
+}
+
+.qb-scope .qbts-cell__btn--primary {
+  background: var(--qb-primary);
+  color: #fff;
+  border-color: var(--qb-primary);
+}
+
+.qb-scope .qbts-cell__btn--primary:hover {
+  background: var(--qb-primary-strong);
+  border-color: var(--qb-primary-strong);
+  color: #fff;
+}
+
+/* ─── Preview block (when chapter expanded) ────────────── */
+.qb-scope .qbts-chapter__preview {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.6rem;
+  padding: 0.75rem 0.8rem;
+  background: var(--qb-surface-soft);
+  border-top: 1px solid var(--qb-border);
+}
+
+@media (max-width: 720px) {
+  .qb-scope .qbts-chapter__preview {
+    grid-template-columns: 1fr;
+  }
+}
+
+.qb-scope .qbts-preview-block {
+  background: var(--qb-surface);
+  border: 1px solid var(--qb-border);
+  border-radius: var(--qb-radius-sm);
+  padding: 0.55rem 0.65rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.qb-scope .qbts-preview-block__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+
+.qb-scope .qbts-preview-block__count {
+  font-size: 0.74rem;
+  color: var(--qb-text-muted);
+}
+
+.qb-scope .qbts-preview-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.82rem;
+  color: var(--qb-text-secondary);
+  line-height: 1.45;
+}
+
+.qb-scope .qbts-preview-item {
+  padding: 0.32rem 0.5rem;
+  background: var(--qb-surface-soft);
+  border-radius: var(--qb-radius-sm);
+  word-break: break-word;
+}
+
+.qb-scope .qbts-preview-item--more {
+  background: transparent;
+  font-style: italic;
+  color: var(--qb-text-muted);
+}
+
+.qb-scope .qbts-preview-type {
+  display: inline-block;
+  margin-right: 0.4rem;
+  padding: 0.08rem 0.4rem;
+  background: var(--qb-primary-soft);
+  color: var(--qb-primary-strong);
+  border: 1px solid var(--qb-primary-border);
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  vertical-align: middle;
+}

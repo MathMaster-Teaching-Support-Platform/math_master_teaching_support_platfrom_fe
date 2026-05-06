@@ -8,7 +8,6 @@ import type {
     PointsOverrideRequest,
     AssessmentSummary,
     GetMyAssessmentsParams,
-    CloneAssessmentRequest,
     AddQuestionToAssessmentRequest,
     GenerateAssessmentFromMatrixRequest,
     GenerateQuestionsForAssessmentRequest,
@@ -48,7 +47,7 @@ export class AssessmentService {
         return response.json();
     }
 
-    /** PUT /assessments/{id} */
+    /** PUT /assessments/{id} — full update, kept for backward compat. */
     static async updateAssessment(
         id: string,
         data: AssessmentRequest
@@ -62,6 +61,30 @@ export class AssessmentService {
         if (!response.ok) {
             const error = await response.json();
             throw new Error(error.message || 'Failed to update assessment');
+        }
+        return response.json();
+    }
+
+    /**
+     * PATCH /assessments/{id} — partial update.
+     *
+     * Send only the fields that changed; omitted fields are left untouched on
+     * the BE. Use this for inline-edit flows like updating just timeLimitMinutes
+     * or maxAttempts without re-submitting the whole settings object.
+     */
+    static async patchAssessment(
+        id: string,
+        data: Partial<AssessmentRequest>
+    ): Promise<ApiResponse<AssessmentResponse>> {
+        const headers = await this.getHeaders();
+        const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ASSESSMENTS_DETAIL(id)}`, {
+            method: 'PATCH',
+            headers,
+            body: JSON.stringify(data),
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to patch assessment');
         }
         return response.json();
     }
@@ -263,25 +286,6 @@ export class AssessmentService {
         return response.json();
     }
 
-    // ─── CLONE ────────────────────────────────────────────────────────────────
-
-    /** POST /assessments/{id}/clone */
-    static async cloneAssessment(
-        id: string,
-        data: CloneAssessmentRequest
-    ): Promise<ApiResponse<AssessmentResponse>> {
-        const headers = await this.getHeaders();
-        const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ASSESSMENTS_CLONE(id)}`, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify(data),
-        });
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Failed to clone assessment');
-        }
-        return response.json();
-    }
 
     /** POST /assessments/generate-from-matrix */
     static async generateAssessmentFromMatrix(
@@ -299,6 +303,26 @@ export class AssessmentService {
         if (!response.ok) {
             const error = await response.json();
             throw new Error(error.message || 'Failed to generate assessment from matrix');
+        }
+        return response.json();
+    }
+
+    /** POST /assessments/validate-bank-coverage — pre-flight gap report. */
+    static async validateBankCoverage(
+        data: import('../../types').ValidateBankCoverageRequest
+    ): Promise<ApiResponse<import('../../types').BankCoverageResponse>> {
+        const headers = await this.getHeaders();
+        const response = await fetch(
+            `${API_BASE_URL}${API_ENDPOINTS.ASSESSMENTS_VALIDATE_BANK_COVERAGE}`,
+            {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(data),
+            }
+        );
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to validate bank coverage');
         }
         return response.json();
     }

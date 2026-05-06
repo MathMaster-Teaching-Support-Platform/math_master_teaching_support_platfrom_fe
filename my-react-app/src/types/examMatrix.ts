@@ -35,6 +35,30 @@ export interface BuildExamMatrixRequest extends ExamMatrixRequest {
     parts?: ExamMatrixPartConfig[];  // FE-1: NEW - Configurable parts
 }
 
+/**
+ * Happy-case builder payload: one bank + per-chapter NB/TH/VD/VDC counts.
+ * Server expands this into the full row/cell structure internally.
+ */
+export interface BuildSimpleExamMatrixRequest {
+    name: string;
+    description?: string;
+    questionBankId: string;
+    /** Lớp (1–12), must match the bank's grade if the bank is grade-anchored. */
+    gradeLevel: number;
+    pointsPerQuestion?: number;
+    isReusable?: boolean;
+    chapters: SimpleMatrixChapterCounts[];
+}
+
+export interface SimpleMatrixChapterCounts {
+    chapterId: string;
+    nb?: number;
+    th?: number;
+    vd?: number;
+    vdc?: number;
+    pointsPerQuestion?: number;
+}
+
 export type MatrixCognitiveLevel =
     | 'NB'
     | 'TH'
@@ -212,6 +236,12 @@ export type PercentageCognitiveLevel =
 
 export interface GenerateAssessmentByPercentageRequest {
     examMatrixId: string;
+    /**
+     * Question bank chosen at generation time. The matrix is a pure blueprint
+     * and no longer carries a binding bank; callers pick the bank here. When
+     * omitted the BE falls back to the matrix's stored default bank (legacy).
+     */
+    questionBankId?: string;
     totalQuestions: number;
     cognitiveLevelPercentages: Record<PercentageCognitiveLevel, number>;
     assessmentTitle?: string;

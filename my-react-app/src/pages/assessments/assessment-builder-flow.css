@@ -521,3 +521,189 @@
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(14, 165, 233, 0.1);
 }
+
+/* ── PR-2: Bank picker layout in step 1 ── */
+.module-layout-container .abf-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 0.75rem;
+}
+
+.module-layout-container .abf-field__label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--mod-slate-700, #24364b);
+}
+
+/* ── Multi-bank picker + coverage (Step 4 demo flow) ── */
+.module-layout-container .abf-bank-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.5rem;
+}
+
+.module-layout-container .abf-bank-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.5rem 0.25rem 0.6rem;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.module-layout-container .abf-bank-chip button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+  border-radius: 999px;
+}
+
+.module-layout-container .abf-bank-chip button:hover {
+  background: rgba(29, 78, 216, 0.18);
+}
+
+.module-layout-container .abf-bank-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  max-height: 280px;
+  overflow-y: auto;
+  border: 1px solid var(--mod-slate-200, #d6e0ee);
+  border-radius: 10px;
+  padding: 0.4rem;
+  background: #fcfdff;
+}
+
+.module-layout-container .abf-bank-option {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.45rem 0.55rem;
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid #e5e9f2;
+  cursor: pointer;
+  transition: background 0.14s ease, border-color 0.14s ease;
+}
+
+.module-layout-container .abf-bank-option:hover {
+  background: #f8fafd;
+}
+
+.module-layout-container .abf-bank-option--checked {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.module-layout-container .abf-bank-option input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  accent-color: #2563eb;
+  cursor: pointer;
+}
+
+.module-layout-container .abf-bank-option__main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.module-layout-container .abf-bank-option__title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--mod-ink, #142235);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.module-layout-container .abf-bank-option__meta {
+  font-size: 0.74rem;
+  color: var(--mod-slate-500, #60748f);
+}
+
+/* ── Coverage panel ───────────────────────────────────── */
+.module-layout-container .abf-coverage {
+  margin-top: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.module-layout-container .abf-coverage__head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.module-layout-container .abf-coverage__ok {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.18rem 0.55rem;
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.module-layout-container .abf-coverage__warn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.18rem 0.55rem;
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.module-layout-container .abf-gap-list {
+  list-style: none;
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.module-layout-container .abf-gap-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  font-size: 0.86rem;
+  color: #7f1d1d;
+}
+
+.module-layout-container .abf-gap-item svg {
+  color: #b91c1c;
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+}
+
+.module-layout-container .abf-gap-item strong {
+  color: #7f1d1d;
+}

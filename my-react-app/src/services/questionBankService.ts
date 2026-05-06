@@ -7,6 +7,7 @@ import type {
   QuestionBankRequest,
   QuestionBankResponse,
   QuestionBankTemplatesResponse,
+  QuestionBankTreeResponse,
   SearchQuestionBanksParams,
 } from '../types/questionBank';
 
@@ -140,4 +141,10 @@ export const questionBankService = {
     fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTION_BANK_DETAIL(bankId)}/matrix-stats`, {
       headers: getAuthHeaders(),
     }).then(handleResponse<QuestionBankMatrixStatsResponse[]>),
+
+  /** Happy-case tree view: Lớp → Chương → 4 cognitive buckets. */
+  getBankTree: (bankId: string) =>
+    fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTION_BANK_TREE(bankId)}`, {
+      headers: getAuthHeaders(),
+    }).then(handleResponse<QuestionBankTreeResponse>),
 };

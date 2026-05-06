@@ -14,9 +14,11 @@ import {
   useRemoveQuestion,
   useSearchQuestions,
   useUpdateAssessment,
+  usePatchAssessment,
 } from '../../hooks/useAssessment';
 import '../../styles/module-refactor.css';
 import type { AssessmentRequest } from '../../types';
+import './AssessmentDetail.css';
 import AssessmentModal from './AssessmentModal';
 
 const assessmentStatusLabel: Record<string, string> = {
@@ -105,6 +107,7 @@ export default function AssessmentDetail() {
   });
 
   const updateMutation = useUpdateAssessment();
+  const patchMutation = usePatchAssessment();
   const removeQuestionMutation = useRemoveQuestion();
   const batchAddMutation = useBatchAddQuestions();
   const batchUpdatePointsMutation = useBatchUpdatePoints();
@@ -151,9 +154,17 @@ export default function AssessmentDetail() {
     });
   }, [questions]);
 
-  async function save(payload: AssessmentRequest) {
+  async function save(payload: AssessmentRequest | Partial<AssessmentRequest>) {
     if (!id) return;
-    await updateMutation.mutateAsync({ id, data: payload });
+    // Edit modal computes a diff and sends a partial payload — that lets the
+    // teacher patch a single field (e.g. just timeLimitMinutes) without
+    // re-submitting every other setting. Empty diff => modal already closed.
+    const isPartial = !('title' in payload) || !('assessmentType' in payload);
+    if (isPartial) {
+      await patchMutation.mutateAsync({ id, data: payload });
+    } else {
+      await updateMutation.mutateAsync({ id, data: payload as AssessmentRequest });
+    }
     setOpenEdit(false);
     await refetch();
   }
@@ -340,95 +351,186 @@ export default function AssessmentDetail() {
     const isDraft = assessment.status === 'DRAFT';
     const isDirect = assessment.assessmentMode !== 'MATRIX_BASED' || !assessment.examMatrixId;
 
+    const statusBadgeClass =
+      assessment.status === 'PUBLISHED'
+        ? 'ad-badge ad-badge--published'
+        : assessment.status === 'CLOSED'
+          ? 'ad-badge ad-badge--closed'
+          : 'ad-badge ad-badge--draft';
+
     return (
       <section className="module-page">
-        <button className="btn secondary" onClick={() => navigate('/teacher/assessments')}>
+        <button
+          type="button"
+          className="ad-back"
+          onClick={() => navigate('/teacher/assessments')}
+        >
           <ArrowLeft size={14} />
-          Quay lại danh sách {UI_TEXT.QUIZ.toLowerCase()}
+          Quay lại danh sách
         </button>
 
-        <article className="hero-card">
-          <div className="row" style={{ alignItems: 'start', flexWrap: 'wrap' }}>
-            <div>
-              <p className="hero-kicker">Chi tiết {UI_TEXT.QUIZ.toLowerCase()}</p>
-              <h2>{assessment.title}</h2>
-              <p>{assessment.description || 'Không có mô tả'}</p>
-            </div>
-            {isDraft && (
-              <button className="btn secondary" onClick={() => setOpenEdit(true)}>
-                <Pencil size={14} />
-                Chỉnh sửa thông tin
-              </button>
-            )}
-          </div>
-        </article>
-
-        <div className="stats-grid">
-          <article className="stat-card">
-            <p>Trạng thái</p>
-            <h3>{assessmentStatusLabel[assessment.status] || assessment.status}</h3>
-            <span>
-              {assessmentTypeLabel[assessment.assessmentType] || assessment.assessmentType}
-            </span>
-          </article>
-          <article className="stat-card">
-            <p>Câu hỏi</p>
-            <h3>{assessment.totalQuestions}</h3>
-            <span>Tổng điểm: {assessment.totalPoints}</span>
-          </article>
-          <article className="stat-card">
-            <p>Lượt nộp</p>
-            <h3>{assessment.submissionCount}</h3>
-            <span>
-              Chính sách:{' '}
-              {scoringPolicyLabel[assessment.attemptScoringPolicy || 'BEST'] ||
-                assessment.attemptScoringPolicy ||
-                'BEST'}
-            </span>
-          </article>
-        </div>
-
-        <div className="table-wrap">
-          <table className="table">
-            <tbody>
-              <tr>
-                <th>Bài học</th>
-                <td>{assessment.lessonTitles?.join(', ') || 'Không có'}</td>
-              </tr>
-              <tr>
-                <th>Thời gian làm bài</th>
-                <td>{assessment.timeLimitMinutes || 0} phút</td>
-              </tr>
-              <tr>
-                <th>Điểm đạt</th>
-                <td>{assessment.passingScore || 0}%</td>
-              </tr>
-              <tr>
-                <th>Chế độ tạo đề</th>
-                <td>
+        <article className="ad-hero">
+          <div className="ad-hero__head">
+            <div className="ad-hero__title-block">
+              <div className="ad-hero__title-row">
+                <h1 className="ad-hero__title">{assessment.title}</h1>
+                <span className={statusBadgeClass}>
+                  {assessmentStatusLabel[assessment.status] || assessment.status}
+                </span>
+              </div>
+              {assessment.description && (
+                <p className="ad-hero__desc">{assessment.description}</p>
+              )}
+              <div className="ad-hero__meta">
+                <span className="ad-hero__meta-chip">
+                  {assessmentTypeLabel[assessment.assessmentType] || assessment.assessmentType}
+                </span>
+                <span className="ad-hero__meta-chip">
                   {assessmentModeLabel[assessment.assessmentMode || 'DIRECT'] ||
                     assessment.assessmentMode ||
                     'DIRECT'}
-                </td>
-              </tr>
-              <tr>
-                <th>Ma trận đề</th>
-                <td>{assessment.examMatrixId || 'Không có'}</td>
-              </tr>
-              <tr>
-                <th>Lịch làm bài</th>
-                <td>
-                  {assessment.startDate
-                    ? new Date(assessment.startDate).toLocaleString()
-                    : 'Chưa đặt lịch'}
-                  {' - '}
-                  {assessment.endDate
-                    ? new Date(assessment.endDate).toLocaleString()
+                </span>
+                {assessment.examMatrixName && (
+                  <span className="ad-hero__meta-chip">
+                    Ma trận: {assessment.examMatrixName}
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="ad-hero__actions">
+              <button
+                type="button"
+                className="btn secondary"
+                onClick={() => setOpenEdit(true)}
+              >
+                <Pencil size={14} />
+                Chỉnh sửa
+              </button>
+            </div>
+          </div>
+
+          <div className="ad-hero__metrics">
+            <div className="ad-metric">
+              <span className="ad-metric__label">Câu hỏi</span>
+              <span className="ad-metric__value">{assessment.totalQuestions ?? 0}</span>
+            </div>
+            <div className="ad-metric">
+              <span className="ad-metric__label">Tổng điểm</span>
+              <span className="ad-metric__value">{assessment.totalPoints ?? 0}</span>
+            </div>
+            <div className="ad-metric">
+              <span className="ad-metric__label">Lượt nộp</span>
+              <span className="ad-metric__value">{assessment.submissionCount ?? 0}</span>
+            </div>
+            <div className="ad-metric">
+              <span className="ad-metric__label">Thời gian</span>
+              <span className="ad-metric__value">
+                {assessment.timeLimitMinutes != null
+                  ? `${assessment.timeLimitMinutes}'`
+                  : '∞'}
+              </span>
+            </div>
+          </div>
+        </article>
+
+        {/* Settings — grouped clearly so teachers can scan time / config / status
+            without diving into the edit modal. Inline labels mirror the
+            modal's field semantics. */}
+        <div className="ad-settings-grid">
+          <article className="data-card ad-settings-card">
+            <header className="ad-settings-card__head">
+              <h3>Thời gian</h3>
+            </header>
+            <dl className="ad-settings-list">
+              <div className="ad-settings-row">
+                <dt>Thời gian làm bài</dt>
+                <dd>
+                  {assessment.timeLimitMinutes != null
+                    ? `${assessment.timeLimitMinutes} phút`
                     : 'Không giới hạn'}
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                </dd>
+              </div>
+              <div className="ad-settings-row">
+                <dt>Số lần làm tối đa</dt>
+                <dd>
+                  {Boolean(assessment.allowMultipleAttempts) ? (
+                    <>
+                      {assessment.maxAttempts ?? '∞'} lần
+                      <span className="ad-settings-row__hint"> · cho phép nhiều lần</span>
+                    </>
+                  ) : (
+                    '1 lần'
+                  )}
+                </dd>
+              </div>
+              <div className="ad-settings-row">
+                <dt>Cách chấm khi nhiều lần</dt>
+                <dd>
+                  {scoringPolicyLabel[assessment.attemptScoringPolicy || 'BEST'] ||
+                    assessment.attemptScoringPolicy ||
+                    'BEST'}
+                </dd>
+              </div>
+            </dl>
+          </article>
+
+          <article className="data-card ad-settings-card">
+            <header className="ad-settings-card__head">
+              <h3>Hiển thị cho học sinh</h3>
+            </header>
+            <dl className="ad-settings-list">
+              <div className="ad-settings-row">
+                <dt>Trộn câu hỏi</dt>
+                <dd>{assessment.randomizeQuestions ? 'Có' : 'Không'}</dd>
+              </div>
+              <div className="ad-settings-row">
+                <dt>Hiện đáp án sau khi nộp</dt>
+                <dd>{assessment.showCorrectAnswers ? 'Có' : 'Không'}</dd>
+              </div>
+              <div className="ad-settings-row">
+                <dt>Hiện điểm ngay sau khi nộp</dt>
+                <dd>{assessment.showScoreImmediately ? 'Có' : 'Không'}</dd>
+              </div>
+            </dl>
+          </article>
+
+          <article className="data-card ad-settings-card">
+            <header className="ad-settings-card__head">
+              <h3>Trạng thái & ma trận</h3>
+            </header>
+            <dl className="ad-settings-list">
+              <div className="ad-settings-row">
+                <dt>Trạng thái</dt>
+                <dd>
+                  <span className={`badge ${assessment.status === 'PUBLISHED' ? 'published' : 'draft'}`}>
+                    {assessmentStatusLabel[assessment.status] || assessment.status}
+                  </span>
+                </dd>
+              </div>
+              <div className="ad-settings-row">
+                <dt>Chế độ tạo đề</dt>
+                <dd>
+                  {assessmentModeLabel[assessment.assessmentMode || 'DIRECT'] ||
+                    assessment.assessmentMode ||
+                    'DIRECT'}
+                </dd>
+              </div>
+              <div className="ad-settings-row">
+                <dt>Ma trận đề</dt>
+                <dd>
+                  {assessment.examMatrixName ?? assessment.examMatrixId ?? 'Không liên kết'}
+                </dd>
+              </div>
+              <div className="ad-settings-row">
+                <dt>Bài học liên quan</dt>
+                <dd>
+                  {assessment.lessonTitles && assessment.lessonTitles.length > 0
+                    ? assessment.lessonTitles.join(', ')
+                    : 'Không có'}
+                </dd>
+              </div>
+            </dl>
+          </article>
         </div>
 
         {/* ── Question management ── */}
@@ -680,85 +782,62 @@ export default function AssessmentDetail() {
                                       )}
                                     </td>
                                     <td>
-                                      {isDraft ? (
-                                        <div>
-                                          <input
-                                            className="input"
-                                            type="number"
-                                            min={0}
-                                            step={0.25}
-                                            value={
-                                              pointsDraft[questionId] ??
-                                              String(question.points ?? '')
-                                            }
-                                            onChange={(e) =>
-                                              setPointsDraft((prev) => ({
-                                                ...prev,
-                                                [questionId]: e.target.value,
-                                              }))
-                                            }
-                                            placeholder="Điểm"
-                                          />
-                                          {question.questionType === 'TRUE_FALSE' &&
-                                            (pointsDraft[questionId] || question.points) && (
-                                              <div
-                                                style={{
-                                                  fontSize: 11,
-                                                  color: '#6b7280',
-                                                  marginTop: 4,
-                                                }}
-                                              >
-                                                {(() => {
-                                                  const totalPoints = parseFloat(
-                                                    pointsDraft[questionId] ||
-                                                      String(question.points || 0)
-                                                  );
-                                                  const pointPerClause = (totalPoints / 4).toFixed(
-                                                    3
-                                                  );
-                                                  return (
-                                                    <div
-                                                      style={{
-                                                        display: 'flex',
-                                                        flexDirection: 'column',
-                                                        gap: 2,
-                                                      }}
-                                                    >
-                                                      <span>
-                                                        📋 Mỗi mệnh đề: {pointPerClause} điểm
-                                                      </span>
-                                                    </div>
-                                                  );
-                                                })()}
-                                              </div>
-                                            )}
-                                        </div>
-                                      ) : (
-                                        <div>
-                                          <span>{question.points ?? 0}</span>
-                                          {question.questionType === 'TRUE_FALSE' &&
-                                            question.points && (
-                                              <div
-                                                style={{
-                                                  fontSize: 11,
-                                                  color: '#6b7280',
-                                                  marginTop: 4,
-                                                }}
-                                              >
-                                                {(() => {
-                                                  const pointPerClause = (
-                                                    question.points / 4
-                                                  ).toFixed(3);
-                                                  return (
+                                      {/* Per-question points stay editable in every status — the
+                                          BE accepts updates regardless of DRAFT/PUBLISHED so
+                                          teachers can rebalance scoring after the fact without
+                                          cloning the assessment. */}
+                                      <div>
+                                        <input
+                                          className="input"
+                                          type="number"
+                                          min={0}
+                                          step={0.25}
+                                          value={
+                                            pointsDraft[questionId] ??
+                                            String(question.points ?? '')
+                                          }
+                                          onChange={(e) =>
+                                            setPointsDraft((prev) => ({
+                                              ...prev,
+                                              [questionId]: e.target.value,
+                                            }))
+                                          }
+                                          placeholder="Điểm"
+                                        />
+                                        {question.questionType === 'TRUE_FALSE' &&
+                                          (pointsDraft[questionId] || question.points) && (
+                                            <div
+                                              style={{
+                                                fontSize: 11,
+                                                color: '#6b7280',
+                                                marginTop: 4,
+                                              }}
+                                            >
+                                              {(() => {
+                                                const totalPoints = parseFloat(
+                                                  pointsDraft[questionId] ||
+                                                    String(question.points || 0)
+                                                );
+                                                const pointPerClause = (
+                                                  totalPoints / 4
+                                                ).toFixed(3);
+                                                return (
+                                                  <div
+                                                    style={{
+                                                      display: 'flex',
+                                                      flexDirection: 'column',
+                                                      gap: 2,
+                                                    }}
+                                                  >
                                                     <span>
                                                       📋 Mỗi mệnh đề: {pointPerClause} điểm
                                                     </span>
-                                                  );
-                                                })()}
-                                              </div>
-                                            )}
-                                        </div>
-                                      )}
+                                                  </div>
+                                                );
+                                              })()}
+                                            </div>
+                                          )}
+                                      </div>
                                     </td>
                                     {isDraft && (
                                       <td>
@@ -783,9 +862,10 @@ export default function AssessmentDetail() {
                 </table>
               </div>
 
-              {/* ── Batch actions ── */}
-              {isDraft && (
-                <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {/* ── Batch actions ──
+                  Points editing is unrestricted — drop the DRAFT-only gate so
+                  teachers can rebalance scoring after publishing too. */}
+              <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 16 }}>
                   {/* Batch save points */}
                   <div>
                     <button
@@ -857,7 +937,6 @@ export default function AssessmentDetail() {
                     </button>
                   </div>
                 </div>
-              )}
             </>
           )}
         </article>

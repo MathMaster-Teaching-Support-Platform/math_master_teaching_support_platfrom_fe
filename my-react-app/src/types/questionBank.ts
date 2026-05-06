@@ -4,7 +4,10 @@ export interface QuestionBankRequest {
   name: string;
   description?: string;
   isPublic?: boolean;
-  // ❌ REMOVED: chapterId (QuestionBank is now a simple container with NO academic context)
+  /** Happy-case: anchor the bank to one school grade (lớp). */
+  schoolGradeId?: string;
+  /** Optional: scope to a single subject within the grade. */
+  subjectId?: string;
 }
 
 export interface QuestionBankResponse {
@@ -14,11 +17,56 @@ export interface QuestionBankResponse {
   name: string;
   description?: string;
   isPublic: boolean;
-  // ❌ REMOVED: chapterId, chapterTitle (QuestionBank is now a simple container)
   questionCount: number;
   cognitiveStats?: Record<string, number>;
+  schoolGradeId?: string;
+  gradeLevel?: number;
+  schoolGradeName?: string;
+  subjectId?: string;
+  subjectName?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+// ── Bank tree (happy-case view) ───────────────────────────────────────────
+
+export type CognitiveLevelVi =
+  | 'NHAN_BIET'
+  | 'THONG_HIEU'
+  | 'VAN_DUNG'
+  | 'VAN_DUNG_CAO';
+
+export interface QuestionBankTreeQuestionSummary {
+  id: string;
+  questionText: string;
+  questionType?: string;
+  questionStatus?: string;
+}
+
+export interface QuestionBankTreeCognitiveBucket {
+  level: CognitiveLevelVi;
+  count: number;
+  questions: QuestionBankTreeQuestionSummary[];
+}
+
+export interface QuestionBankTreeChapterNode {
+  chapterId: string;
+  title: string;
+  orderIndex?: number;
+  totalQuestions: number;
+  /** Always contains the four Vietnamese cognitive levels keyed by name. */
+  buckets: Record<CognitiveLevelVi, QuestionBankTreeCognitiveBucket>;
+}
+
+export interface QuestionBankTreeResponse {
+  bankId: string;
+  bankName: string;
+  schoolGradeId?: string;
+  gradeLevel?: number;
+  schoolGradeName?: string;
+  subjectId?: string;
+  subjectName?: string;
+  chapters: QuestionBankTreeChapterNode[];
 }
 
 export interface QuestionBankTemplateMappingRequest {

@@ -38,6 +38,7 @@ import {
 import '../courses/TeacherCourses.css';
 import './ExamMatrixDashboard.css';
 import { ExamMatrixFormModal } from './ExamMatrixFormModal';
+import { SimpleExamMatrixModal } from './SimpleExamMatrixModal';
 
 const filters: Array<'ALL' | MatrixStatus> = [
   'ALL',
@@ -74,6 +75,7 @@ export function ExamMatrixDashboard() {
   const [page, setPage] = useState(0);
   const size = 10;
   const [formOpen, setFormOpen] = useState(false);
+  const [simpleFormOpen, setSimpleFormOpen] = useState(false);
   const [mode, setMode] = useState<'create' | 'edit'>('create');
   const [selected, setSelected] = useState<ExamMatrixResponse | null>(null);
 
@@ -155,18 +157,29 @@ export function ExamMatrixDashboard() {
                 {stats.approved} đã phê duyệt • {stats.locked} đã khóa
               </p>
             </div>
-            <button
-              type="button"
-              className="btn btn--feat-indigo"
-              onClick={() => {
-                setMode('create');
-                setSelected(null);
-                setFormOpen(true);
-              }}
-            >
-              <Plus size={16} />
-              Tạo ma trận
-            </button>
+            <div className="row" style={{ gap: 8 }}>
+              <button
+                type="button"
+                className="btn"
+                onClick={() => setSimpleFormOpen(true)}
+                title="Bảng chương × NB/TH/VD/VDC, gọn nhanh nhất"
+              >
+                <Plus size={16} />
+                Tạo nhanh
+              </button>
+              <button
+                type="button"
+                className="btn btn--feat-indigo"
+                onClick={() => {
+                  setMode('create');
+                  setSelected(null);
+                  setFormOpen(true);
+                }}
+              >
+                <Plus size={16} />
+                Tạo ma trận
+              </button>
+            </div>
           </header>
 
           {/* ── Stats ── */}
@@ -565,6 +578,18 @@ export function ExamMatrixDashboard() {
             initialData={selected}
             onClose={() => setFormOpen(false)}
             onSubmit={handleSave}
+          />
+
+          <SimpleExamMatrixModal
+            isOpen={simpleFormOpen}
+            onClose={() => setSimpleFormOpen(false)}
+            onCreated={(matrix) => {
+              showToast({ type: 'success', message: 'Tạo ma trận thành công.' });
+              void refetch();
+              if (matrix?.matrixId) {
+                navigate(`/teacher/exam-matrices/${matrix.matrixId}`);
+              }
+            }}
           />
         </section>
       </div>

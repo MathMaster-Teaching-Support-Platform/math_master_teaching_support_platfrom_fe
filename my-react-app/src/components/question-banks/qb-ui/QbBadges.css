@@ -1,0 +1,157 @@
+/* ─── Badge atom ────────────────────────────────────────── */
+.qb-scope .qb-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.22rem 0.6rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  border-radius: var(--qb-radius-pill);
+  border: 1px solid transparent;
+  white-space: nowrap;
+  line-height: 1.3;
+}
+
+.qb-scope .qb-badge--sm {
+  padding: 0.1rem 0.45rem;
+  font-size: 0.68rem;
+}
+
+.qb-scope .qb-badge--neutral {
+  background: var(--qb-neutral-soft);
+  color: var(--qb-text-secondary);
+  border-color: var(--qb-neutral-border);
+}
+
+.qb-scope .qb-badge--info {
+  background: var(--qb-primary-soft);
+  color: var(--qb-primary-strong);
+  border-color: var(--qb-primary-border);
+}
+
+.qb-scope .qb-badge--success {
+  background: var(--qb-success-soft);
+  color: var(--qb-success);
+  border-color: var(--qb-success-border);
+}
+
+.qb-scope .qb-badge--warn {
+  background: var(--qb-warn-soft);
+  color: var(--qb-warn);
+  border-color: var(--qb-warn-border);
+}
+
+.qb-scope .qb-badge--danger {
+  background: var(--qb-danger-soft);
+  color: var(--qb-danger);
+  border-color: var(--qb-danger-border);
+}
+
+/* ─── Cognitive level badge ─────────────────────────────── */
+.qb-scope .qb-badge--cog {
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.qb-scope .qb-cog--nb {
+  background: var(--qb-cog-nb-soft);
+  color: var(--qb-cog-nb);
+  border-color: var(--qb-cog-nb-border);
+}
+
+.qb-scope .qb-cog--th {
+  background: var(--qb-cog-th-soft);
+  color: var(--qb-cog-th);
+  border-color: var(--qb-cog-th-border);
+}
+
+.qb-scope .qb-cog--vd {
+  background: var(--qb-cog-vd-soft);
+  color: var(--qb-cog-vd);
+  border-color: var(--qb-cog-vd-border);
+}
+
+.qb-scope .qb-cog--vdc {
+  background: var(--qb-cog-vdc-soft);
+  color: var(--qb-cog-vdc);
+  border-color: var(--qb-cog-vdc-border);
+}
+
+/* When used as a distribution segment / dot, only background applies */
+.qb-scope .qb-cog-dist__seg.qb-cog--nb,
+.qb-scope .qb-cog-dist__dot.qb-cog--nb {
+  background: var(--qb-cog-nb);
+}
+
+.qb-scope .qb-cog-dist__seg.qb-cog--th,
+.qb-scope .qb-cog-dist__dot.qb-cog--th {
+  background: var(--qb-cog-th);
+}
+
+.qb-scope .qb-cog-dist__seg.qb-cog--vd,
+.qb-scope .qb-cog-dist__dot.qb-cog--vd {
+  background: var(--qb-cog-vd);
+}
+
+.qb-scope .qb-cog-dist__seg.qb-cog--vdc,
+.qb-scope .qb-cog-dist__dot.qb-cog--vdc {
+  background: var(--qb-cog-vdc);
+}
+
+/* ─── Cognitive distribution bar ───────────────────────── */
+.qb-scope .qb-cog-dist {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.qb-scope .qb-cog-dist--empty {
+  color: var(--qb-text-muted);
+  font-size: 0.78rem;
+  font-style: italic;
+}
+
+.qb-scope .qb-cog-dist__bar {
+  display: flex;
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--qb-neutral-soft);
+  border: 1px solid var(--qb-border);
+}
+
+.qb-scope .qb-cog-dist__seg {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.qb-scope .qb-cog-dist__seg + .qb-cog-dist__seg {
+  border-left: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.qb-scope .qb-cog-dist__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  font-size: 0.72rem;
+  color: var(--qb-text-secondary);
+}
+
+.qb-scope .qb-cog-dist__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.qb-scope .qb-cog-dist__legend-item strong {
+  color: var(--qb-text-primary);
+  font-weight: 700;
+}
+
+.qb-scope .qb-cog-dist__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+}

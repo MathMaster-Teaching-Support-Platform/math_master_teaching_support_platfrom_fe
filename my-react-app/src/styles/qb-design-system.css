@@ -1,0 +1,364 @@
+/* ─────────────────────────────────────────────────────────────
+ * MathMaster — Question Bank Design System
+ * Scoped under .qb-scope so it does not leak into other modules.
+ * ─────────────────────────────────────────────────────────────
+ */
+
+.qb-scope {
+  /* Surfaces */
+  --qb-bg: #f6f8fc;
+  --qb-surface: #ffffff;
+  --qb-surface-soft: #f8fafd;
+  --qb-surface-sunken: #f1f4fa;
+  --qb-overlay: rgba(15, 23, 42, 0.45);
+
+  /* Borders */
+  --qb-border: #e5e9f2;
+  --qb-border-strong: #cbd3e1;
+
+  /* Text */
+  --qb-text-primary: #0f172a;
+  --qb-text-secondary: #475569;
+  --qb-text-muted: #64748b;
+  --qb-text-inverse: #ffffff;
+
+  /* Brand */
+  --qb-primary: #2563eb;
+  --qb-primary-strong: #1d4ed8;
+  --qb-primary-soft: #eff6ff;
+  --qb-primary-border: #bfdbfe;
+
+  /* Semantic */
+  --qb-success: #047857;
+  --qb-success-soft: #ecfdf5;
+  --qb-success-border: #a7f3d0;
+  --qb-warn: #b45309;
+  --qb-warn-soft: #fffbeb;
+  --qb-warn-border: #fde68a;
+  --qb-danger: #dc2626;
+  --qb-danger-soft: #fef2f2;
+  --qb-danger-border: #fecaca;
+  --qb-neutral: #475569;
+  --qb-neutral-soft: #f1f5f9;
+  --qb-neutral-border: #e2e8f0;
+
+  /* Cognitive levels — cool → warm gradient */
+  --qb-cog-nb: #0891b2;
+  --qb-cog-nb-soft: #ecfeff;
+  --qb-cog-nb-border: #a5f3fc;
+  --qb-cog-th: #2563eb;
+  --qb-cog-th-soft: #eff6ff;
+  --qb-cog-th-border: #bfdbfe;
+  --qb-cog-vd: #7c3aed;
+  --qb-cog-vd-soft: #f5f3ff;
+  --qb-cog-vd-border: #ddd6fe;
+  --qb-cog-vdc: #db2777;
+  --qb-cog-vdc-soft: #fdf2f8;
+  --qb-cog-vdc-border: #fbcfe8;
+
+  /* Radius */
+  --qb-radius-sm: 6px;
+  --qb-radius-md: 10px;
+  --qb-radius-lg: 14px;
+  --qb-radius-xl: 18px;
+  --qb-radius-pill: 9999px;
+
+  /* Shadows */
+  --qb-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --qb-shadow-md: 0 4px 14px rgba(15, 23, 42, 0.07);
+  --qb-shadow-lg: 0 14px 32px rgba(15, 23, 42, 0.12);
+  --qb-ring-focus: 0 0 0 3px rgba(37, 99, 235, 0.18);
+
+  /* Spacing scale */
+  --qb-space-1: 0.25rem;
+  --qb-space-2: 0.5rem;
+  --qb-space-3: 0.75rem;
+  --qb-space-4: 1rem;
+  --qb-space-5: 1.25rem;
+  --qb-space-6: 1.5rem;
+  --qb-space-8: 2rem;
+}
+
+/* Force Be Vietnam Pro for Vietnamese diacritic correctness, overriding the
+ * Segoe UI declared on .module-layout-container. */
+.qb-scope,
+.qb-scope * {
+  font-family: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+.qb-scope {
+  color: var(--qb-text-primary);
+}
+
+.qb-scope *:focus-visible {
+  outline: none;
+  box-shadow: var(--qb-ring-focus);
+  border-radius: var(--qb-radius-sm);
+}
+
+/* ─── Card ─────────────────────────────────────────────── */
+.qb-card {
+  background: var(--qb-surface);
+  border: 1px solid var(--qb-border);
+  border-radius: var(--qb-radius-lg);
+  box-shadow: var(--qb-shadow-sm);
+  transition:
+    box-shadow 0.18s ease,
+    transform 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.qb-card--hoverable {
+  cursor: pointer;
+}
+
+.qb-card--hoverable:hover {
+  box-shadow: var(--qb-shadow-md);
+  border-color: var(--qb-border-strong);
+  transform: translateY(-2px);
+}
+
+/* ─── Button ───────────────────────────────────────────── */
+.qb-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.95rem;
+  border: 1px solid transparent;
+  border-radius: var(--qb-radius-md);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  cursor: pointer;
+  transition:
+    background-color 0.16s ease,
+    border-color 0.16s ease,
+    color 0.16s ease,
+    box-shadow 0.16s ease,
+    transform 0.16s ease;
+  white-space: nowrap;
+  font-family: inherit;
+  line-height: 1.2;
+}
+
+.qb-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.qb-btn--primary {
+  background: var(--qb-primary);
+  border-color: var(--qb-primary);
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.18);
+}
+
+.qb-btn--primary:hover:not(:disabled) {
+  background: var(--qb-primary-strong);
+  border-color: var(--qb-primary-strong);
+  transform: translateY(-1px);
+}
+
+.qb-btn--secondary {
+  background: var(--qb-surface);
+  border-color: var(--qb-border-strong);
+  color: var(--qb-text-primary);
+}
+
+.qb-btn--secondary:hover:not(:disabled) {
+  background: var(--qb-surface-soft);
+  border-color: var(--qb-text-muted);
+}
+
+.qb-btn--ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--qb-text-secondary);
+}
+
+.qb-btn--ghost:hover:not(:disabled) {
+  background: var(--qb-neutral-soft);
+  color: var(--qb-text-primary);
+}
+
+.qb-btn--success {
+  background: var(--qb-success);
+  border-color: var(--qb-success);
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(4, 120, 87, 0.18);
+}
+
+.qb-btn--success:hover:not(:disabled) {
+  filter: brightness(0.94);
+  transform: translateY(-1px);
+}
+
+.qb-btn--danger {
+  background: var(--qb-danger);
+  border-color: var(--qb-danger);
+  color: #fff;
+}
+
+.qb-btn--danger:hover:not(:disabled) {
+  filter: brightness(0.94);
+}
+
+.qb-btn--danger-outline {
+  background: var(--qb-danger-soft);
+  border-color: var(--qb-danger-border);
+  color: var(--qb-danger);
+}
+
+.qb-btn--danger-outline:hover:not(:disabled) {
+  background: #fee2e2;
+}
+
+.qb-btn--icon {
+  padding: 0.5rem;
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
+.qb-btn--sm {
+  padding: 0.35rem 0.7rem;
+  font-size: 0.8rem;
+}
+
+.qb-btn--lg {
+  padding: 0.7rem 1.2rem;
+  font-size: 0.95rem;
+}
+
+.qb-btn--block {
+  width: 100%;
+}
+
+/* ─── Input ────────────────────────────────────────────── */
+.qb-input,
+.qb-select,
+.qb-textarea {
+  width: 100%;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid var(--qb-border-strong);
+  border-radius: var(--qb-radius-md);
+  background: var(--qb-surface);
+  color: var(--qb-text-primary);
+  font-size: 0.9rem;
+  font-family: inherit;
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.qb-textarea {
+  resize: vertical;
+  min-height: 96px;
+}
+
+.qb-input:focus,
+.qb-select:focus,
+.qb-textarea:focus {
+  outline: none;
+  border-color: var(--qb-primary);
+  box-shadow: var(--qb-ring-focus);
+}
+
+.qb-input::placeholder,
+.qb-textarea::placeholder {
+  color: var(--qb-text-muted);
+}
+
+/* ─── Skeleton ─────────────────────────────────────────── */
+@keyframes qb-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+.qb-skeleton {
+  background: linear-gradient(90deg, #eef2f7 25%, #e2e8f0 50%, #eef2f7 75%);
+  background-size: 400% 100%;
+  animation: qb-shimmer 1.4s ease infinite;
+  border-radius: var(--qb-radius-md);
+  display: block;
+}
+
+/* ─── Label / form field ───────────────────────────────── */
+.qb-field-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--qb-text-secondary);
+  margin-bottom: 0.35rem;
+}
+
+/* ─── Utility ──────────────────────────────────────────── */
+.qb-row {
+  display: flex;
+  align-items: center;
+  gap: var(--qb-space-2);
+}
+
+.qb-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--qb-space-3);
+}
+
+.qb-grow {
+  flex: 1;
+  min-width: 0;
+}
+
+.qb-spacer {
+  flex: 1;
+}
+
+.qb-text-muted {
+  color: var(--qb-text-muted);
+  font-size: 0.85rem;
+}
+
+.qb-text-mono {
+  font-family: 'JetBrains Mono', 'Source Code Pro', ui-monospace, monospace;
+  font-size: 0.85rem;
+}
+
+.qb-divider {
+  height: 1px;
+  background: var(--qb-border);
+  border: 0;
+  margin: 0;
+}
+
+.qb-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.qb-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.qb-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .qb-hide-md {
+    display: none !important;
+  }
+}

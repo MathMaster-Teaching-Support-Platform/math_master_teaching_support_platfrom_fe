@@ -7,7 +7,6 @@ import type {
   AssessmentRequest,
   AssessmentResponse,
   AssessmentSummary,
-  CloneAssessmentRequest,
   GenerateAssessmentFromMatrixRequest,
   GenerateQuestionsForAssessmentRequest,
   GetMyAssessmentsParams,
@@ -155,12 +154,29 @@ export function useCreateAssessment() {
   });
 }
 
-/** Update an existing DRAFT assessment */
+/** Update an existing DRAFT assessment (full PUT). */
 export function useUpdateAssessment() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: AssessmentRequest }) =>
       AssessmentService.updateAssessment(id, data),
+    onSuccess: (_data, { id }) => {
+      queryClient.invalidateQueries({ queryKey: assessmentKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: assessmentKeys.detail(id) });
+    },
+  });
+}
+
+/**
+ * Patch an existing assessment with only the changed fields. Use this for
+ * inline-edit flows (timeLimitMinutes, maxAttempts, …) so callers don't have
+ * to round-trip the full settings payload.
+ */
+export function usePatchAssessment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<AssessmentRequest> }) =>
+      AssessmentService.patchAssessment(id, data),
     onSuccess: (_data, { id }) => {
       queryClient.invalidateQueries({ queryKey: assessmentKeys.lists() });
       queryClient.invalidateQueries({ queryKey: assessmentKeys.detail(id) });
@@ -221,18 +237,6 @@ export function useDeleteAssessment() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => AssessmentService.deleteAssessment(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: assessmentKeys.lists() });
-    },
-  });
-}
-
-/** Clone an existing assessment into a new DRAFT */
-export function useCloneAssessment() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: CloneAssessmentRequest }) =>
-      AssessmentService.cloneAssessment(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: assessmentKeys.lists() });
     },

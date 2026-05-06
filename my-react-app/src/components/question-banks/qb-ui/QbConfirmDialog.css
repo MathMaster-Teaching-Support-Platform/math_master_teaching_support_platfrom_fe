@@ -1,0 +1,97 @@
+.qb-confirm {
+  display: flex;
+  gap: 0.85rem;
+  align-items: flex-start;
+  font-family: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+.qb-confirm__icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.qb-confirm__icon--primary {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.qb-confirm__icon--danger {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.qb-confirm__body { flex: 1; min-width: 0; }
+
+.qb-confirm__title {
+  margin: 0 0 0.3rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.qb-confirm__msg {
+  font-size: 0.88rem;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.qb-confirm__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+/* Buttons inside confirm — fall back to plain styles since the dialog body
+ * lives outside .qb-scope via createPortal-equivalent rendering. */
+.qb-confirm__actions .qb-btn {
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.55rem 1rem;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: background 0.14s ease, border-color 0.14s ease, transform 0.14s ease;
+}
+
+.qb-confirm__actions .qb-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.qb-confirm__actions .qb-btn--primary {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+
+.qb-confirm__actions .qb-btn--primary:hover:not(:disabled) { background: #1d4ed8; }
+
+.qb-confirm__actions .qb-btn--danger {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: #fff;
+}
+
+.qb-confirm__actions .qb-btn--danger:hover:not(:disabled) { background: #b91c1c; }
+
+.qb-confirm__actions .qb-btn--secondary {
+  background: #fff;
+  border-color: #cbd3e1;
+  color: #0f172a;
+}
+
+.qb-confirm__actions .qb-btn--secondary:hover:not(:disabled) {
+  background: #f8fafd;
+  border-color: #94a3b8;
+}

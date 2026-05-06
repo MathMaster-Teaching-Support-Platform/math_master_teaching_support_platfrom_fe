@@ -53,6 +53,8 @@ export const useSearchQuestions = (
   params: {
     keyword?: string;
     tag?: string;
+    chapterId?: string;
+    cognitiveLevel?: string;
     page?: number;
     size?: number;
   },
@@ -61,6 +63,8 @@ export const useSearchQuestions = (
   const normalizedParams: SearchQuestionsParams = {
     keyword: params.keyword,
     tag: params.tag,
+    chapterId: params.chapterId,
+    cognitiveLevel: params.cognitiveLevel,
     page: params.page ?? 0,
     size: params.size ?? 20,
   };

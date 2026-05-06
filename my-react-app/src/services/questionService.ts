@@ -88,6 +88,14 @@ export const questionService = {
       query.set('tags', params.tag.trim());
     }
 
+    if (params.chapterId) {
+      query.set('chapterId', params.chapterId);
+    }
+
+    if (params.cognitiveLevel) {
+      query.set('cognitiveLevel', params.cognitiveLevel);
+    }
+
     return fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTIONS_SEARCH}?${query.toString()}`, {
       method: 'GET',
       headers: getAuthHeaders(),

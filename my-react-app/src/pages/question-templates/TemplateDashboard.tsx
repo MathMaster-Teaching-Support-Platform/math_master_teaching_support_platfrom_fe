@@ -19,7 +19,8 @@ import {
   X,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { questionBankService } from '../../services/questionBankService';
 
 import LatexRenderer from '../../components/common/LatexRenderer';
 import MathText from '../../components/common/MathText';
@@ -167,6 +168,42 @@ export function TemplateDashboard() {
 
   const { showToast } = useToast();
   const navigate = useNavigate();
+
+  // Bucket-targeting context: when navigated from a question-bank tree bucket
+  // (?bankId=&chapterId=&cognitiveLevel=), surface a banner so the teacher
+  // sees where generated questions are meant to land. The actual generate
+  // dialog still asks for these values; pre-filling it is a future step.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const targetBankId = searchParams.get('bankId') || undefined;
+  const targetChapterId = searchParams.get('chapterId') || undefined;
+  const targetCognitiveLevel = searchParams.get('cognitiveLevel') || undefined;
+  const hasTargetContext = !!(targetBankId && targetChapterId && targetCognitiveLevel);
+  const [targetBankName, setTargetBankName] = useState<string | null>(null);
+  const [targetGradeName, setTargetGradeName] = useState<string | null>(null);
+  useEffect(() => {
+    if (!targetBankId) {
+      setTargetBankName(null);
+      setTargetGradeName(null);
+      return;
+    }
+    let cancelled = false;
+    questionBankService
+      .getQuestionBankById(targetBankId)
+      .then((res) => {
+        if (cancelled) return;
+        setTargetBankName(res.result?.name ?? null);
+        setTargetGradeName(res.result?.schoolGradeName ?? null);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setTargetBankName(null);
+        setTargetGradeName(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [targetBankId]);
+
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<'ALL' | TemplateStatus>('ALL');
   const [page, setPage] = useState(0);
@@ -277,6 +314,45 @@ export function TemplateDashboard() {
     >
       <div className="module-layout-container">
         <section className="module-page teacher-courses-page template-dashboard-page">
+          {hasTargetContext && (
+            <div
+              className="empty"
+              style={{
+                marginBottom: 12,
+                background: '#eef2ff',
+                color: '#1e3a8a',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: 12,
+              }}
+            >
+              <span>
+                Đang chọn mẫu để bổ sung câu cho{' '}
+                <strong>{targetBankName ?? '(ngân hàng)'}</strong>
+                {targetGradeName ? ` · ${targetGradeName}` : ''}
+                {' · '}
+                <strong>{cognitiveLevelLabel[targetCognitiveLevel!] ?? targetCognitiveLevel}</strong>
+                . Khi sinh câu hỏi từ mẫu, hãy chọn đúng ngân hàng, chương và mức độ này
+                để câu sinh ra rơi vào đúng bucket.
+              </span>
+              <button
+                type="button"
+                className="btn secondary"
+                style={{ padding: '4px 8px', fontSize: 12 }}
+                onClick={() => {
+                  const next = new URLSearchParams(searchParams);
+                  next.delete('bankId');
+                  next.delete('chapterId');
+                  next.delete('cognitiveLevel');
+                  setSearchParams(next, { replace: true });
+                }}
+              >
+                Bỏ ngữ cảnh
+              </button>
+            </div>
+          )}
+
           {/* ── Header ── */}
           <header className="page-header courses-header-row">
             <div className="header-stack">

@@ -407,10 +407,6 @@ export default function AssessmentDetailRefactored() {
                 <td>{assessment.timeLimitMinutes || 0} phút</td>
               </tr>
               <tr>
-                <th>Điểm đạt</th>
-                <td>{assessment.passingScore || 0}%</td>
-              </tr>
-              <tr>
                 <th>Chế độ tạo đề</th>
                 <td>
                   {assessmentModeLabel[assessment.assessmentMode || 'DIRECT'] ||
@@ -420,19 +416,7 @@ export default function AssessmentDetailRefactored() {
               </tr>
               <tr>
                 <th>Ma trận đề</th>
-                <td>{assessment.examMatrixId || 'Không có'}</td>
-              </tr>
-              <tr>
-                <th>Lịch làm bài</th>
-                <td>
-                  {assessment.startDate
-                    ? new Date(assessment.startDate).toLocaleString()
-                    : 'Chưa đặt lịch'}{' '}
-                  -{' '}
-                  {assessment.endDate
-                    ? new Date(assessment.endDate).toLocaleString()
-                    : 'Không giới hạn'}
-                </td>
+                <td>{assessment.examMatrixName ?? assessment.examMatrixId ?? 'Không có'}</td>
               </tr>
             </tbody>
           </table>

@@ -1,5 +1,4 @@
 import {
-  AlertCircle,
   ArrowRight,
   BookOpen,
   Database,
@@ -8,16 +7,25 @@ import {
   FileSpreadsheet,
   Plus,
   RefreshCw,
-  Search,
   Sparkles,
   Trash2,
-  X,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MathText from '../../components/common/MathText';
 import Pagination from '../../components/common/Pagination';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import {
+  QbCognitiveBadge,
+  QbConfirmDialog,
+  QbEmptyState,
+  QbErrorState,
+  QbPageHeader,
+  QbQuestionStatusBadge,
+  QbSearchInput,
+  QbSkeletonList,
+  QbToolbar,
+} from '../../components/question-banks/qb-ui';
 import { useToast } from '../../context/ToastContext';
 import { useDebounce } from '../../hooks/useDebounce';
 import {
@@ -26,66 +34,67 @@ import {
   useGetMyQuestions,
   useUpdateQuestion,
 } from '../../hooks/useQuestion';
-import '../../styles/module-refactor.css';
+import '../../styles/qb-design-system.css';
 import type {
   CreateQuestionRequest,
   QuestionResponse,
   UpdateQuestionRequest,
 } from '../../types/question';
-import '../courses/TeacherCourses.css';
 import { EnhancedQuestionFormModal } from './EnhancedQuestionFormModal';
 import { QuestionBulkImportModal } from './QuestionBulkImportModal';
 import './TeacherQuestionManagementPage.css';
 
 type FormMode = 'create' | 'edit';
 
-const questionTypeLabel: Record<string, string> = {
+const QUESTION_TYPE_LABEL: Record<string, string> = {
   MULTIPLE_CHOICE: 'Trắc nghiệm',
+  MCQ: 'Trắc nghiệm',
   TRUE_FALSE: 'Đúng/Sai',
   SHORT_ANSWER: 'Trả lời ngắn',
+  FILL_BLANK: 'Điền khuyết',
   ESSAY: 'Tự luận',
   CODING: 'Lập trình',
 };
 
-const cognitiveLevelLabel: Record<string, string> = {
-  NHAN_BIET: 'Nhận biết',
-  THONG_HIEU: 'Thông hiểu',
-  VAN_DUNG: 'Vận dụng',
-  VAN_DUNG_CAO: 'Vận dụng cao',
-};
+const PAGE_SIZE_OPTIONS = [10, 20, 30, 50];
 
 function formatDate(value?: string): string {
-  if (!value) return '-';
+  if (!value) return '—';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString('vi-VN');
+  return date.toLocaleDateString('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
 }
 
 export default function TeacherQuestionManagementPage() {
   const navigate = useNavigate();
   const [searchName, setSearchName] = useState('');
   const [page, setPage] = useState(0);
-  const size = 10;
+  const [pageSize, setPageSize] = useState(10);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [bulkImportOpen, setBulkImportOpen] = useState(false);
   const [formMode, setFormMode] = useState<FormMode>('create');
   const [selectedQuestion, setSelectedQuestion] = useState<QuestionResponse | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<QuestionResponse | null>(null);
 
   const debouncedSearchName = useDebounce(searchName, 300);
 
   useEffect(() => {
     setPage(0);
-  }, [debouncedSearchName]);
+  }, [debouncedSearchName, pageSize]);
 
   const queryParams = useMemo(
     () => ({
       page,
-      size,
+      size: pageSize,
       sortBy: 'createdAt',
       sortDirection: 'DESC' as const,
       searchName: debouncedSearchName.trim() || undefined,
     }),
-    [page, debouncedSearchName, size]
+    [page, debouncedSearchName, pageSize]
   );
 
   const { showToast } = useToast();
@@ -152,34 +161,37 @@ export default function TeacherQuestionManagementPage() {
 
       showToast({
         type: 'success',
-        message: formMode === 'create' ? 'Tạo câu hỏi thành công.' : 'Cập nhật câu hỏi thành công.',
+        message:
+          formMode === 'create' ? 'Tạo câu hỏi thành công.' : 'Cập nhật câu hỏi thành công.',
       });
       closeModal();
       await refetch();
     } catch (error_) {
       showToast({
         type: 'error',
-        message: error_ instanceof Error ? error_.message : 'Khong the luu câu hỏi.',
+        message: error_ instanceof Error ? error_.message : 'Không thể lưu câu hỏi.',
       });
       throw error_;
     }
   }
 
-  async function handleDeleteQuestion(question: QuestionResponse) {
-    const isConfirmed = globalThis.confirm('Ban co chac chan muon xoa câu hỏi nay?');
-    if (!isConfirmed) return;
-
+  async function handleConfirmDelete() {
+    if (!pendingDelete) return;
     try {
-      await deleteMutation.mutateAsync(question.id);
+      await deleteMutation.mutateAsync(pendingDelete.id);
       showToast({ type: 'success', message: 'Đã xóa câu hỏi thành công.' });
+      setPendingDelete(null);
       await refetch();
     } catch (error_) {
       showToast({
         type: 'error',
         message: error_ instanceof Error ? error_.message : 'Không thể xóa câu hỏi.',
       });
+      setPendingDelete(null);
     }
   }
+
+  const hasFilter = !!searchName;
 
   return (
     <DashboardLayout
@@ -188,245 +200,235 @@ export default function TeacherQuestionManagementPage() {
       notificationCount={0}
       contentClassName="dashboard-content--flush-bleed"
     >
-      <div className="module-layout-container">
-        <section className="module-page teacher-courses-page teacher-question-management-page">
-          <header className="page-header courses-header-row">
-            <div className="header-stack">
-              <div className="row" style={{ gap: '0.6rem' }}>
-                <h2>Quản lý câu hỏi của tôi</h2>
-                {!isLoading && <span className="count-chip">{totalElements}</span>}
-              </div>
-              <p className="header-sub">Tạo, chỉnh sửa, xóa và tìm nhanh câu hỏi</p>
-            </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button className="btn secondary" onClick={() => setBulkImportOpen(true)}>
-                <FileSpreadsheet size={14} />
+      <div className="qb-scope qb-page tqm-page">
+        <QbPageHeader
+          title="Câu hỏi của tôi"
+          subtitle="Tạo, chỉnh sửa, tìm kiếm và quản lý nhanh tất cả câu hỏi bạn đã soạn."
+          count={totalElements}
+          countLabel={`${totalElements} câu hỏi`}
+          actions={
+            <>
+              <button
+                type="button"
+                className="qb-btn qb-btn--secondary"
+                onClick={() => setBulkImportOpen(true)}
+              >
+                <FileSpreadsheet size={15} />
                 Nhập từ Excel
               </button>
-              <button type="button" className="btn btn--feat-blue" onClick={openingCreateModal}>
-                <Plus size={14} />
+              <button type="button" className="qb-btn qb-btn--primary" onClick={openingCreateModal}>
+                <Plus size={15} />
                 Tạo câu hỏi
               </button>
-            </div>
-          </header>
+            </>
+          }
+        />
 
-          <nav className="tqm-quicknav">
-            <button
-              className="tqm-quicknav__item"
-              onClick={() => navigate('/teacher/question-banks')}
-            >
-              <span className="tqm-quicknav__icon tqm-nav-blue">
-                <Database size={14} />
-              </span>
-              <span className="tqm-quicknav__text">
-                <span className="tqm-quicknav__title">Ngân hàng câu hỏi</span>
-                <span className="tqm-quicknav__desc">Quản lý kho câu hỏi dùng chung</span>
-              </span>
-              <ArrowRight size={14} className="tqm-quicknav__arrow" />
-            </button>
-            <span className="tqm-quicknav__divider" />
-            <button
-              className="tqm-quicknav__item"
-              onClick={() => navigate('/teacher/question-templates')}
-            >
-              <span className="tqm-quicknav__icon tqm-nav-violet">
-                <Sparkles size={14} />
-              </span>
-              <span className="tqm-quicknav__text">
-                <span className="tqm-quicknav__title">Mẫu câu hỏi</span>
-                <span className="tqm-quicknav__desc">Soạn mẫu và sinh câu hỏi với AI</span>
-              </span>
-              <ArrowRight size={14} className="tqm-quicknav__arrow" />
-            </button>
-            <span className="tqm-quicknav__divider" />
-            <button className="tqm-quicknav__item" onClick={() => navigate('/teacher/assessments')}>
-              <span className="tqm-quicknav__icon tqm-nav-emerald">
-                <BookOpen size={14} />
-              </span>
-              <span className="tqm-quicknav__text">
-                <span className="tqm-quicknav__title">Tạo đề thi</span>
-                <span className="tqm-quicknav__desc">Chỉnh sửa và xuất bản đề thi hoàn chỉnh</span>
-              </span>
-              <ArrowRight size={14} className="tqm-quicknav__arrow" />
-            </button>
-          </nav>
+        <nav className="tqm-quicknav" aria-label="Liên kết nhanh">
+          <button
+            type="button"
+            className="tqm-quicknav__item"
+            onClick={() => navigate('/teacher/question-banks')}
+          >
+            <span className="tqm-quicknav__icon tqm-quicknav__icon--blue">
+              <Database size={15} />
+            </span>
+            <span className="tqm-quicknav__text">
+              <span className="tqm-quicknav__title">Ngân hàng câu hỏi</span>
+              <span className="tqm-quicknav__desc">Quản lý kho câu hỏi dùng cho ma trận đề</span>
+            </span>
+            <ArrowRight size={14} className="tqm-quicknav__arrow" />
+          </button>
+          <button
+            type="button"
+            className="tqm-quicknav__item"
+            onClick={() => navigate('/teacher/question-templates')}
+          >
+            <span className="tqm-quicknav__icon tqm-quicknav__icon--violet">
+              <Sparkles size={15} />
+            </span>
+            <span className="tqm-quicknav__text">
+              <span className="tqm-quicknav__title">Mẫu câu hỏi</span>
+              <span className="tqm-quicknav__desc">Soạn mẫu và sinh câu hỏi với AI</span>
+            </span>
+            <ArrowRight size={14} className="tqm-quicknav__arrow" />
+          </button>
+          <button
+            type="button"
+            className="tqm-quicknav__item"
+            onClick={() => navigate('/teacher/assessments')}
+          >
+            <span className="tqm-quicknav__icon tqm-quicknav__icon--emerald">
+              <BookOpen size={15} />
+            </span>
+            <span className="tqm-quicknav__text">
+              <span className="tqm-quicknav__title">Tạo đề thi</span>
+              <span className="tqm-quicknav__desc">Chỉnh sửa và xuất bản đề thi hoàn chỉnh</span>
+            </span>
+            <ArrowRight size={14} className="tqm-quicknav__arrow" />
+          </button>
+        </nav>
 
-          <div className="toolbar">
-            <label className="search-box" style={{ flex: '1 1 240px' }}>
-              <span className="search-box__icon" aria-hidden="true">
-                <Search size={15} />
-              </span>
-              <input
-                placeholder="Tìm theo nội dung câu hỏi"
-                value={searchName}
-                onChange={(event) => {
-                  setSearchName(event.target.value);
-                }}
-              />
-              {searchName && (
+        <QbToolbar
+          actions={
+            <button
+              type="button"
+              className="qb-btn qb-btn--secondary"
+              onClick={() => void refetch()}
+              disabled={isLoading}
+            >
+              <RefreshCw size={14} />
+              <span className="qb-hide-md">Làm mới</span>
+            </button>
+          }
+        >
+          <QbSearchInput
+            value={searchName}
+            onChange={setSearchName}
+            placeholder="Tìm theo nội dung câu hỏi..."
+          />
+        </QbToolbar>
+
+        {isLoading && <QbSkeletonList count={5} />}
+
+        {isError && (
+          <QbErrorState
+            message={error instanceof Error ? error.message : undefined}
+            onRetry={() => void refetch()}
+          />
+        )}
+
+        {!isLoading && !isError && questions.length === 0 && (
+          <QbEmptyState
+            icon={<FileQuestion size={28} />}
+            title={hasFilter ? 'Không có câu hỏi phù hợp' : 'Chưa có câu hỏi nào'}
+            description={
+              hasFilter
+                ? 'Thử bỏ từ khóa tìm kiếm hoặc tạo câu hỏi mới.'
+                : 'Bắt đầu bằng cách tạo câu hỏi mới hoặc nhập từ tệp Excel.'
+            }
+            action={
+              hasFilter ? (
                 <button
                   type="button"
-                  className="search-box__clear"
-                  aria-label="Xóa nội dung tìm kiếm"
-                  onClick={() => {
-                    setSearchName('');
-                  }}
-                >
-                  <X size={13} />
-                </button>
-              )}
-            </label>
-
-            <button className="btn secondary" onClick={() => void refetch()}>
-              <RefreshCw size={14} />
-              Làm mới
-            </button>
-          </div>
-
-          {isLoading && (
-            <div className="skeleton-table-row">
-              {['s1', 's2', 's3', 's4', 's5'].map((k) => (
-                <div key={k} className="skeleton-row" />
-              ))}
-            </div>
-          )}
-          {isError && (
-            <div className="empty">
-              <AlertCircle size={32} style={{ color: '#ef4444', marginBottom: 8 }} />
-              <p style={{ margin: 0 }}>
-                {error instanceof Error ? error.message : 'Không thể tải danh sách câu hỏi.'}
-              </p>
-              <button
-                className="btn secondary"
-                style={{ marginTop: 10 }}
-                onClick={() => void refetch()}
-              >
-                <RefreshCw size={14} /> Thử lại
-              </button>
-            </div>
-          )}
-
-          {!isLoading && !isError && questions.length === 0 && (
-            <div className="empty">
-              <FileQuestion size={32} style={{ color: '#94a3b8', marginBottom: 8 }} />
-              <p style={{ margin: 0 }}>Không tìm thấy câu hỏi phù hợp.</p>
-              {searchName && (
-                <button
-                  className="btn secondary"
-                  style={{ marginTop: 10 }}
-                  onClick={() => {
-                    setSearchName('');
-                  }}
+                  className="qb-btn qb-btn--secondary"
+                  onClick={() => setSearchName('')}
                 >
                   Xóa bộ lọc
                 </button>
-              )}
-            </div>
-          )}
+              ) : (
+                <button
+                  type="button"
+                  className="qb-btn qb-btn--primary"
+                  onClick={openingCreateModal}
+                >
+                  <Plus size={15} />
+                  Tạo câu hỏi
+                </button>
+              )
+            }
+          />
+        )}
 
-          {!isLoading && !isError && questions.length > 0 && (
-            <div className="table-wrap">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Câu hỏi</th>
-                    <th className="tqm-col-center">Loại</th>
-                    <th className="tqm-col-center">Mức độ</th>
-                    <th className="tqm-col-center">Cập nhật</th>
-                    <th className="tqm-col-center" style={{ width: 190 }}>
-                      Thao tác
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {questions.map((question) => (
-                    <tr key={question.id}>
-                      <td>
-                        <MathText text={question.questionText} />
-                      </td>
-                      <td className="tqm-col-center">
-                        <span className="badge">{questionTypeLabel[question.questionType]}</span>
-                      </td>
-                      <td className="tqm-col-center">
-                        {question.cognitiveLevel ? (
-                          <span className="badge">
-                            {cognitiveLevelLabel[question.cognitiveLevel] ||
-                              question.cognitiveLevel}
-                          </span>
-                        ) : (
-                          '-'
-                        )}
-                      </td>
-                      <td className="tqm-col-center">{formatDate(question.updatedAt)}</td>
-                      <td className="tqm-action-cell">
-                        <div className="tqm-action-row">
-                          <button
-                            type="button"
-                            className="btn secondary btn--tint-blue"
-                            onClick={() => openingEditModal(question)}
-                          >
-                            <Edit3 size={14} />
-                            Chỉnh Sửa
-                          </button>
-                          <button
-                            className="btn danger"
-                            onClick={() => void handleDeleteQuestion(question)}
-                            disabled={deleteMutation.isPending}
-                          >
-                            <Trash2 size={14} />
-                            Xóa
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+        {!isLoading && !isError && questions.length > 0 && (
+          <div className="tqm-list">
+            {questions.map((question) => (
+              <article key={question.id} className="tqm-row qb-card">
+                <div className="tqm-row__main">
+                  <div className="tqm-row__text">
+                    <MathText text={question.questionText} />
+                  </div>
+                  <div className="tqm-row__meta">
+                    <span className="tqm-row__chip">
+                      {QUESTION_TYPE_LABEL[question.questionType] ?? question.questionType}
+                    </span>
+                    <QbCognitiveBadge level={question.cognitiveLevel} variant="long" />
+                    <QbQuestionStatusBadge status={question.questionStatus} />
+                    <span className="tqm-row__chip tqm-row__chip--muted">
+                      Cập nhật {formatDate(question.updatedAt)}
+                    </span>
+                  </div>
+                </div>
+                <div className="tqm-row__actions">
+                  <button
+                    type="button"
+                    className="qb-btn qb-btn--secondary qb-btn--sm"
+                    onClick={() => openingEditModal(question)}
+                  >
+                    <Edit3 size={13} />
+                    Chỉnh sửa
+                  </button>
+                  <button
+                    type="button"
+                    className="qb-btn qb-btn--danger-outline qb-btn--sm"
+                    onClick={() => setPendingDelete(question)}
+                    disabled={deleteMutation.isPending}
+                  >
+                    <Trash2 size={13} />
+                    Xóa
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
 
+        {totalPages > 0 && (
           <Pagination
             page={page}
             totalPages={totalPages}
             totalElements={totalElements}
-            pageSize={size}
+            pageSize={pageSize}
             onChange={(p) => setPage(p)}
+            onPageSizeChange={(size) => setPageSize(size)}
+            pageSizeOptions={PAGE_SIZE_OPTIONS}
           />
+        )}
 
-          <EnhancedQuestionFormModal
-            isOpen={isModalOpen}
-            mode={formMode}
-            initialData={
-              selectedQuestion
-                ? {
-                    questionId: selectedQuestion.id,
-                    questionText: selectedQuestion.questionText,
-                    questionType: selectedQuestion.questionType,
-                    difficulty: selectedQuestion.difficulty,
-                    points: selectedQuestion.points,
-                    correctAnswer: selectedQuestion.correctAnswer,
-                    explanation: selectedQuestion.explanation,
-                    tags: selectedQuestion.tags,
-                    options: selectedQuestion.options as Record<string, string> | undefined,
-                    generationMetadata: selectedQuestion.generationMetadata || undefined,
-                    diagramData: selectedQuestion.diagramData,
-                    diagramUrl: selectedQuestion.diagramUrl,
-                  }
-                : undefined
-            }
-            onClose={closeModal}
-            onSubmit={(data) => handleSubmitForm(data)}
-          />
+        <EnhancedQuestionFormModal
+          isOpen={isModalOpen}
+          mode={formMode}
+          initialData={
+            selectedQuestion
+              ? {
+                  questionId: selectedQuestion.id,
+                  questionText: selectedQuestion.questionText,
+                  questionType: selectedQuestion.questionType,
+                  difficulty: selectedQuestion.difficulty,
+                  points: selectedQuestion.points,
+                  correctAnswer: selectedQuestion.correctAnswer,
+                  explanation: selectedQuestion.explanation,
+                  tags: selectedQuestion.tags,
+                  options: selectedQuestion.options as Record<string, string> | undefined,
+                  generationMetadata: selectedQuestion.generationMetadata || undefined,
+                  diagramData: selectedQuestion.diagramData,
+                  diagramUrl: selectedQuestion.diagramUrl,
+                }
+              : undefined
+          }
+          onClose={closeModal}
+          onSubmit={(data) => handleSubmitForm(data)}
+        />
 
-          <QuestionBulkImportModal
-            isOpen={bulkImportOpen}
-            onClose={() => setBulkImportOpen(false)}
-            onSuccess={() => {
-              setBulkImportOpen(false);
-              void refetch();
-            }}
-          />
-        </section>
+        <QuestionBulkImportModal
+          isOpen={bulkImportOpen}
+          onClose={() => setBulkImportOpen(false)}
+          onSuccess={() => {
+            setBulkImportOpen(false);
+            void refetch();
+          }}
+        />
+
+        <QbConfirmDialog
+          isOpen={pendingDelete !== null}
+          tone="danger"
+          title="Xóa câu hỏi này?"
+          message="Hành động này sẽ xóa câu hỏi khỏi danh sách của bạn. Câu hỏi đã liên kết với các bài kiểm tra sẽ không bị ảnh hưởng."
+          confirmLabel="Xóa câu hỏi"
+          busy={deleteMutation.isPending}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setPendingDelete(null)}
+        />
       </div>
     </DashboardLayout>
   );

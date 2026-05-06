@@ -1,0 +1,220 @@
+/* BankCoverageTree — render selected banks as expandable chapter+cognitive trees,
+ * with red gap badges sourced from POST /assessments/validate-bank-coverage. */
+
+.bct {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-family: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+.bct--empty {
+  padding: 1rem;
+  border: 1px dashed #cbd3e1;
+  border-radius: 10px;
+  background: #f8fafd;
+  color: #64748b;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+/* ─── Bank row ───────────────────────────────────────── */
+.bct-bank {
+  background: #ffffff;
+  border: 1px solid #e5e9f2;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.bct-bank__head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.6rem 0.85rem;
+  border: 0;
+  background: #f8fafd;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  color: #0f172a;
+}
+
+.bct-bank__head:hover {
+  background: #eff6ff;
+}
+
+.bct-bank__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.bct-bank__title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bct-bank__meta {
+  font-size: 0.78rem;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.bct-bank__body {
+  padding: 0.6rem 0.85rem 0.85rem;
+}
+
+.bct-bank__loading {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #64748b;
+  font-style: italic;
+}
+
+/* ─── Chapter list ───────────────────────────────────── */
+.bct-chapter-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.bct-chapter {
+  background: #fcfdff;
+  border: 1px solid #e5e9f2;
+  border-radius: 8px;
+  padding: 0.5rem 0.6rem;
+}
+
+.bct-chapter__head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.bct-chapter__index {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #1d4ed8;
+  background: #eff6ff;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  border: 1px solid #bfdbfe;
+  white-space: nowrap;
+}
+
+.bct-chapter__title {
+  font-size: 0.86rem;
+  font-weight: 600;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bct-chapter__total {
+  font-size: 0.76rem;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+/* ─── Cognitive cell ─────────────────────────────────── */
+.bct-cog-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.4rem;
+}
+
+@media (max-width: 720px) {
+  .bct-cog-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.bct-cog {
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid;
+  font-size: 0.78rem;
+}
+
+.bct-cog__label {
+  font-weight: 600;
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+}
+
+.bct-cog__count {
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.bct-cog__gap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.2rem;
+  padding: 0.15rem 0.35rem;
+  border-radius: 4px;
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.bct-cog--gap {
+  border-color: #fca5a5 !important;
+  box-shadow: 0 0 0 1px #fca5a5 inset;
+}
+
+/* Cognitive accent backgrounds (soft tints) */
+.bct-cog--nb {
+  background: #ecfeff;
+  color: #0e7490;
+  border-color: #a5f3fc;
+}
+
+.bct-cog--th {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+
+.bct-cog--vd {
+  background: #f5f3ff;
+  color: #6d28d9;
+  border-color: #ddd6fe;
+}
+
+.bct-cog--vdc {
+  background: #fdf2f8;
+  color: #be185d;
+  border-color: #fbcfe8;
+}

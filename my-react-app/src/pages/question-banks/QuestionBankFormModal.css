@@ -1,0 +1,241 @@
+/* QuestionBankFormModal — Add/Edit bank
+ * Renders inside <QbModal> which lives under .qb-scope, so qb-input / qb-btn
+ * tokens cascade. These styles only handle the form-specific layout. */
+
+.qb-scope .qb-bank-form,
+.qb-bank-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  font-family: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color: #0f172a;
+}
+
+.qb-bank-form__section {
+  border: 1px solid #e5e9f2;
+  border-radius: 12px;
+  padding: 0.85rem 1rem 0.95rem;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  background: #fcfdff;
+}
+
+.qb-bank-form__section--share {
+  background: #f8fafd;
+}
+
+.qb-bank-form__legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0 0.4rem;
+  margin-left: -0.4rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #475569;
+}
+
+.qb-bank-form__legend svg {
+  color: #7c3aed;
+}
+
+.qb-bank-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.qb-bank-form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+}
+
+@media (max-width: 640px) {
+  .qb-bank-form__row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.qb-bank-form__required {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.qb-bank-form__optional {
+  color: #94a3b8;
+  font-weight: 500;
+  font-size: 0.78rem;
+}
+
+.qb-bank-form__lock {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin-left: 0.3rem;
+  padding: 0.08rem 0.4rem;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Help row under each field (left=hint/error, right=counter) */
+.qb-bank-form__help {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.76rem;
+  margin-top: 0.05rem;
+}
+
+.qb-bank-form__hint {
+  margin: 0.15rem 0 0;
+  font-size: 0.76rem;
+}
+
+.qb-bank-form__counter {
+  color: #94a3b8;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.qb-bank-form__counter--warn {
+  color: #b45309;
+}
+
+.qb-bank-form__error {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.qb-bank-form__error--block {
+  margin: 0.2rem 0 0;
+  font-size: 0.78rem;
+}
+
+/* Invalid state for inputs / selects */
+.qb-scope .qb-input--invalid,
+.qb-input--invalid {
+  border-color: #fca5a5 !important;
+  background: #fff5f5;
+}
+
+.qb-scope .qb-input--invalid:focus,
+.qb-input--invalid:focus {
+  border-color: #dc2626 !important;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.16) !important;
+}
+
+/* ─── Share toggle ─────────────────────────────────────── */
+.qb-bank-form__share {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.65rem 0.75rem;
+  background: #ffffff;
+  border: 1px solid #e5e9f2;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.qb-bank-form__share:hover {
+  border-color: #cbd3e1;
+  background: #fcfdff;
+}
+
+.qb-bank-form__share input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #2563eb;
+}
+
+.qb-bank-form__share-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.qb-bank-form__share input[type='checkbox']:checked ~ .qb-bank-form__share-icon {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.qb-bank-form__share-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  font-size: 0.86rem;
+  color: #0f172a;
+  min-width: 0;
+}
+
+.qb-bank-form__share-text strong {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.qb-bank-form__share-text .qb-text-muted {
+  font-size: 0.76rem;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Standalone (no parent qb-scope) safety: ensure form atoms render correctly
+ * when QbModal is opened from any page. The form is always a descendant of
+ * qb-scope today, but we keep these as fallbacks so a future caller without
+ * the scope still gets readable styling. */
+.qb-bank-form .qb-input,
+.qb-bank-form .qb-select,
+.qb-bank-form .qb-textarea {
+  width: 100%;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid #cbd3e1;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 0.9rem;
+  font-family: inherit;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.qb-bank-form .qb-textarea {
+  resize: vertical;
+  min-height: 84px;
+}
+
+.qb-bank-form .qb-input:focus,
+.qb-bank-form .qb-select:focus,
+.qb-bank-form .qb-textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+}
+
+.qb-bank-form .qb-input:disabled,
+.qb-bank-form .qb-select:disabled,
+.qb-bank-form .qb-textarea:disabled {
+  background: #f8fafd;
+  color: #64748b;
+  cursor: not-allowed;
+}

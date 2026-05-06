@@ -1,0 +1,251 @@
+/* AssessmentDetail.tsx — page-level polish.
+ * Hero block (title + description + meta + metrics + actions) replaces the
+ * previous hero-card + 3 separate stat-cards. Settings stay in the 3-card
+ * group below. */
+
+.module-layout-container .ad-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--mod-slate-500, #60748f);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.85rem;
+  transition: background 0.14s ease, color 0.14s ease;
+  align-self: flex-start;
+}
+
+.module-layout-container .ad-back:hover {
+  background: var(--mod-slate-50, #f3f7fd);
+  color: var(--mod-ink, #142235);
+}
+
+/* ─── Hero card ──────────────────────────────────────── */
+.module-layout-container .ad-hero {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafd 100%);
+  border: 1px solid var(--mod-slate-100, #e8eef8);
+  border-radius: 16px;
+  padding: 1.25rem 1.35rem 1.1rem;
+  box-shadow: 0 4px 14px rgba(21, 44, 74, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.module-layout-container .ad-hero__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.module-layout-container .ad-hero__title-block {
+  flex: 1;
+  min-width: 0;
+}
+
+.module-layout-container .ad-hero__title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+
+.module-layout-container .ad-hero__title {
+  margin: 0;
+  font-size: 1.55rem;
+  line-height: 1.2;
+  font-weight: 800;
+  color: var(--mod-ink, #142235);
+  letter-spacing: -0.01em;
+}
+
+.module-layout-container .ad-hero__desc {
+  margin: 0.35rem 0 0;
+  color: var(--mod-slate-500, #60748f);
+  font-size: 0.93rem;
+  line-height: 1.5;
+}
+
+.module-layout-container .ad-hero__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.65rem;
+}
+
+.module-layout-container .ad-hero__meta-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.22rem 0.6rem;
+  background: #ffffff;
+  color: var(--mod-slate-700, #24364b);
+  border: 1px solid var(--mod-slate-100, #e8eef8);
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.module-layout-container .ad-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* ─── Status badge (custom palette per status) ───────── */
+.module-layout-container .ad-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.22rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  border: 1px solid;
+  white-space: nowrap;
+}
+
+.module-layout-container .ad-badge--draft {
+  background: #fffbeb;
+  color: #b45309;
+  border-color: #fde68a;
+}
+
+.module-layout-container .ad-badge--published {
+  background: #ecfdf5;
+  color: #047857;
+  border-color: #a7f3d0;
+}
+
+.module-layout-container .ad-badge--closed {
+  background: #f1f5f9;
+  color: #475569;
+  border-color: #cbd5e1;
+}
+
+/* ─── Metrics row inside hero ────────────────────────── */
+.module-layout-container .ad-hero__metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.45rem;
+  border-top: 1px dashed var(--mod-slate-100, #e8eef8);
+  padding-top: 0.85rem;
+}
+
+.module-layout-container .ad-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  padding: 0.1rem 0.4rem;
+  border-left: 2px solid var(--mod-slate-100, #e8eef8);
+}
+
+.module-layout-container .ad-metric:first-child {
+  border-left: 0;
+  padding-left: 0;
+}
+
+.module-layout-container .ad-metric__label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--mod-slate-500, #60748f);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.module-layout-container .ad-metric__value {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--mod-ink, #142235);
+  line-height: 1.1;
+  letter-spacing: -0.005em;
+}
+
+/* ─── Settings 3-card group (existing, refined) ──────── */
+.module-layout-container .ad-settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 0.85rem;
+  margin-top: 1rem;
+}
+
+.module-layout-container .ad-settings-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1rem 1.1rem 1.05rem;
+}
+
+.module-layout-container .ad-settings-card__head h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--mod-ink, #142235);
+  margin: 0;
+  letter-spacing: -0.005em;
+}
+
+.module-layout-container .ad-settings-list {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.module-layout-container .ad-settings-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.85rem;
+  padding: 0.45rem 0;
+  border-bottom: 1px dashed var(--mod-slate-100, #e8eef8);
+}
+
+.module-layout-container .ad-settings-row:last-child {
+  border-bottom: 0;
+}
+
+.module-layout-container .ad-settings-row dt {
+  font-size: 0.82rem;
+  color: var(--mod-slate-500, #60748f);
+  font-weight: 600;
+  margin: 0;
+}
+
+.module-layout-container .ad-settings-row dd {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--mod-ink, #142235);
+  font-weight: 600;
+  text-align: right;
+}
+
+.module-layout-container .ad-settings-row__hint {
+  color: var(--mod-slate-500, #60748f);
+  font-weight: 500;
+  font-size: 0.78rem;
+}
+
+@media (max-width: 640px) {
+  .module-layout-container .ad-hero__title {
+    font-size: 1.3rem;
+  }
+  .module-layout-container .ad-hero__head {
+    flex-direction: column;
+  }
+  .module-layout-container .ad-hero__actions {
+    width: 100%;
+  }
+  .module-layout-container .ad-hero__actions > * {
+    flex: 1;
+    justify-content: center;
+  }
+}

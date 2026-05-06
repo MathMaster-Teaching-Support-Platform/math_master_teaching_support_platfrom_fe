@@ -1,0 +1,99 @@
+.qb-scope .qb-page-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.qb-scope .qb-page-header__back {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.32rem 0.6rem;
+  border-radius: var(--qb-radius-md);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--qb-text-secondary);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-family: inherit;
+  transition: background 0.16s ease, color 0.16s ease;
+}
+
+.qb-scope .qb-page-header__back:hover {
+  background: var(--qb-neutral-soft);
+  color: var(--qb-text-primary);
+}
+
+.qb-scope .qb-page-header__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.qb-scope .qb-page-header__main {
+  flex: 1;
+  min-width: 0;
+}
+
+.qb-scope .qb-page-header__title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.qb-scope .qb-page-header__title {
+  margin: 0;
+  font-size: 1.55rem;
+  line-height: 1.2;
+  font-weight: 800;
+  color: var(--qb-text-primary);
+  letter-spacing: -0.01em;
+}
+
+.qb-scope .qb-page-header__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 24px;
+  padding: 0 0.55rem;
+  border-radius: var(--qb-radius-pill);
+  background: var(--qb-primary-soft);
+  color: var(--qb-primary-strong);
+  font-size: 0.78rem;
+  font-weight: 700;
+  border: 1px solid var(--qb-primary-border);
+}
+
+.qb-scope .qb-page-header__subtitle {
+  margin: 0.25rem 0 0;
+  font-size: 0.92rem;
+  color: var(--qb-text-secondary);
+  line-height: 1.45;
+}
+
+.qb-scope .qb-page-header__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+@media (max-width: 640px) {
+  .qb-scope .qb-page-header__title {
+    font-size: 1.35rem;
+  }
+
+  .qb-scope .qb-page-header__actions {
+    width: 100%;
+  }
+
+  .qb-scope .qb-page-header__actions > * {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}
