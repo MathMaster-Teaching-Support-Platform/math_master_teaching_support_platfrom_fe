@@ -9,8 +9,6 @@ import {
   EyeOff,
   FileText,
   GraduationCap,
-  Grid2x2,
-  List,
   Network,
   Search,
   Sparkles,
@@ -374,7 +372,8 @@ export default function TeacherMindmaps() {
         setGeneratorError('Bạn không đủ token để thanh toán dịch vụ, vui lòng mua gói.');
         showConfirm({
           title: 'Không đủ token',
-          message: 'Bạn không đủ token để thanh toán dịch vụ. Vui lòng mua gói để tiếp tục sử dụng AI Mindmap.',
+          message:
+            'Bạn không đủ token để thanh toán dịch vụ. Vui lòng mua gói để tiếp tục sử dụng AI Mindmap.',
           confirmLabel: 'Mua gói ngay',
           cancelLabel: 'Để sau',
           variant: 'warning',
@@ -833,24 +832,26 @@ export default function TeacherMindmaps() {
                     <button
                       onClick={() => setViewMode('grid')}
                       aria-label="Hiển thị lưới"
-                      className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-150 ${
+                      className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-150 ${
                         viewMode === 'grid'
-                          ? 'bg-white shadow-sm text-[#141413]'
-                          : 'text-[#87867F] hover:text-[#5E5D59]'
+                          ? 'bg-white shadow-md text-[#141413]'
+                          : 'bg-[#E8E6DC] border-2 border-[#D1CFC5] text-[#141413] hover:bg-[#DDD9CC]'
                       }`}
+                      title="Lưới"
                     >
-                      <Grid2x2 className="w-4 h-4" />
+                      ⊞
                     </button>
                     <button
                       onClick={() => setViewMode('list')}
                       aria-label="Hiển thị danh sách"
-                      className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-150 ${
+                      className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-150 ${
                         viewMode === 'list'
-                          ? 'bg-white shadow-sm text-[#141413]'
-                          : 'text-[#87867F] hover:text-[#5E5D59]'
+                          ? 'bg-white shadow-md text-[#141413]'
+                          : 'bg-[#E8E6DC] border-2 border-[#D1CFC5] text-[#141413] hover:bg-[#DDD9CC]'
                       }`}
+                      title="Danh sách"
                     >
-                      <List className="w-4 h-4" />
+                      ≡
                     </button>
                   </div>
                 )}

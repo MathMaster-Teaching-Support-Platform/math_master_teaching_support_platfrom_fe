@@ -397,7 +397,7 @@ export default function AdminAcademicStructurePage() {
         throw new Error('Vui lòng nhập tên môn học');
       }
       if (!subjectForm.schoolGradeId) {
-        throw new Error('Vui lòng chọn school grade cho môn học');
+        throw new Error('Vui lòng chọn lớp cho môn học');
       }
       if (
         subjectForm.gradeMin !== '' &&

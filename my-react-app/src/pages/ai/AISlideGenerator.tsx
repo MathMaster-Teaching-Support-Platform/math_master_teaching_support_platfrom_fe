@@ -1447,7 +1447,7 @@ const AISlideGenerator: React.FC = () => {
 
             <div className="ai-slide-step-list">
               <label>
-                <span>Chọn Lớp (School Grade)</span>
+                <span>Chọn Lớp</span>
                 <select
                   value={schoolGradeId}
                   onChange={(e) => void handleSchoolGradeChange(e.target.value)}

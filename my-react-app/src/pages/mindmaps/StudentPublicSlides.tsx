@@ -9,7 +9,6 @@ import {
   FileText,
   Filter,
   GraduationCap,
-  LoaderCircle,
   Search,
   X,
 } from 'lucide-react';
@@ -17,8 +16,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { API_BASE_URL } from '../../config/api.config';
+import { mockStudent } from '../../data/mockData';
 import { LessonSlideService } from '../../services/api/lesson-slide.service';
-import '../../styles/module-refactor.css';
 import type {
   ChapterBySubject,
   LessonByChapter,
@@ -27,8 +26,6 @@ import type {
   SchoolGrade,
   SubjectByGrade,
 } from '../../types/lessonSlide.types';
-import './StudentPublicMindmaps.css';
-import './StudentPublicSlides.css';
 
 const DEFAULT_PAGE_SIZE = 9;
 type SortDirection = 'ASC' | 'DESC';
@@ -320,41 +317,55 @@ export default function StudentPublicSlides() {
     }
   };
 
+  const selectCls =
+    'w-full border border-[#E8E6DC] rounded-lg px-3 py-2 font-[Be_Vietnam_Pro] text-[13px] text-[#141413] outline-none focus:border-[#C96442] focus:ring-1 focus:ring-[#C96442] bg-white transition-colors disabled:bg-[#F5F4ED] disabled:text-[#87867F]';
+
   return (
-    <DashboardLayout user={{ name: 'Người dùng', avatar: 'ND', role: 'student' }} role="student">
-      <div className="module-layout-container flex-1 bg-[#F5F4ED] font-[Be_Vietnam_Pro] text-[#141413]">
-        <section className="module-page bg-[#F5F4ED] font-[Be_Vietnam_Pro]">
-          {/* ── Header ── */}
-          <header className="page-header">
-            <div className="header-stack">
-              <div className="row" style={{ gap: '0.6rem' }}>
-                <h1 className="ana-page-title">Thư viện Slides</h1>
+    <DashboardLayout
+      user={mockStudent}
+      role="student"
+      contentClassName="dashboard-content--flush-bleed"
+    >
+      <div className="px-6 py-8 lg:px-8">
+        <div className="space-y-6">
+          {/* ── Page header ── */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#E8E6DC] flex items-center justify-center text-[#5E5D59]">
+              <FileText className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2.5">
+                <h1 className="font-[Playfair_Display] text-[22px] font-medium text-[#141413]">
+                  Thư viện Slides
+                </h1>
                 {!loadingSlides && (
-                  <span className="count-chip font-[Be_Vietnam_Pro]">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#E8E6DC] font-[Be_Vietnam_Pro] text-[12px] font-semibold text-[#5E5D59]">
                     {slidesResult.totalElements}
                   </span>
                 )}
               </div>
-              <p className="header-sub font-[Be_Vietnam_Pro] text-[#5E5D59]">
+              <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-0.5">
                 Tìm kiếm và tải slide bài giảng công khai
               </p>
             </div>
-          </header>
+          </div>
 
           {/* ── Filter panel ── */}
-          <div className="sps-filter-panel bg-[#FAF9F5] shadow-[0px_0px_0px_1px_#D1CFC5]">
-            <div className="sps-filter-panel__head">
-              <Filter size={13} />
-              <span className="font-[Be_Vietnam_Pro]">Bộ lọc tìm kiếm</span>
+          <div className="bg-white rounded-2xl border border-[#E8E6DC] p-5 space-y-4">
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-[#87867F]" />
+              <h2 className="font-[Be_Vietnam_Pro] text-[13px] font-semibold text-[#5E5D59] uppercase tracking-wide">
+                Bộ lọc tìm kiếm
+              </h2>
             </div>
-            <div className="sps-filter-bar">
-              <div className="sps-filter-field">
-                <span className="sps-filter-label font-[Be_Vietnam_Pro]">
-                  <GraduationCap size={12} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div>
+                <label className="flex items-center gap-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mb-1.5">
+                  <GraduationCap className="w-3.5 h-3.5" />
                   Lớp
-                </span>
+                </label>
                 <select
-                  className="sps-select font-[Be_Vietnam_Pro] bg-[#FAF9F5] shadow-[0px_0px_0px_1px_#D1CFC5] transition-all duration-150 hover:shadow-[0px_0px_0px_1px_#C2C0B6] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:ring-offset-2"
+                  className={selectCls}
                   value={gradeId}
                   onChange={(e) => handleGradeChange(e.target.value)}
                   disabled={loadingCatalog}
@@ -368,13 +379,13 @@ export default function StudentPublicSlides() {
                 </select>
               </div>
 
-              <div className="sps-filter-field">
-                <span className="sps-filter-label font-[Be_Vietnam_Pro]">
-                  <BookOpen size={12} />
+              <div>
+                <label className="flex items-center gap-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mb-1.5">
+                  <BookOpen className="w-3.5 h-3.5" />
                   Môn học
-                </span>
+                </label>
                 <select
-                  className="sps-select font-[Be_Vietnam_Pro] bg-[#FAF9F5] shadow-[0px_0px_0px_1px_#D1CFC5] transition-all duration-150 hover:shadow-[0px_0px_0px_1px_#C2C0B6] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:ring-offset-2"
+                  className={selectCls}
                   value={subjectId}
                   onChange={(e) => handleSubjectChange(e.target.value)}
                   disabled={!gradeId || loadingCatalog}
@@ -388,13 +399,13 @@ export default function StudentPublicSlides() {
                 </select>
               </div>
 
-              <div className="sps-filter-field">
-                <span className="sps-filter-label font-[Be_Vietnam_Pro]">
-                  <BookMarked size={12} />
+              <div>
+                <label className="flex items-center gap-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mb-1.5">
+                  <BookMarked className="w-3.5 h-3.5" />
                   Chương
-                </span>
+                </label>
                 <select
-                  className="sps-select font-[Be_Vietnam_Pro] bg-[#FAF9F5] shadow-[0px_0px_0px_1px_#D1CFC5] transition-all duration-150 hover:shadow-[0px_0px_0px_1px_#C2C0B6] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:ring-offset-2"
+                  className={selectCls}
                   value={chapterId}
                   onChange={(e) => handleChapterChange(e.target.value)}
                   disabled={!subjectId || loadingCatalog}
@@ -408,13 +419,13 @@ export default function StudentPublicSlides() {
                 </select>
               </div>
 
-              <div className="sps-filter-field">
-                <span className="sps-filter-label font-[Be_Vietnam_Pro]">
-                  <FileText size={12} />
+              <div>
+                <label className="flex items-center gap-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mb-1.5">
+                  <FileText className="w-3.5 h-3.5" />
                   Bài học
-                </span>
+                </label>
                 <select
-                  className="sps-select font-[Be_Vietnam_Pro] bg-[#FAF9F5] shadow-[0px_0px_0px_1px_#D1CFC5] transition-all duration-150 hover:shadow-[0px_0px_0px_1px_#C2C0B6] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:ring-offset-2"
+                  className={selectCls}
                   value={lessonId}
                   onChange={(e) => handleLessonChange(e.target.value)}
                   disabled={!chapterId || loadingCatalog}
@@ -431,13 +442,11 @@ export default function StudentPublicSlides() {
           </div>
 
           {/* ── Toolbar ── */}
-          <div className="toolbar font-[Be_Vietnam_Pro]">
-            <label className="search-box">
-              <span className="search-box__icon" aria-hidden="true">
-                <Search size={15} />
-              </span>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <label className="flex-1 w-full flex items-center gap-3 bg-[#FAF9F5] border border-[#E8E6DC] rounded-xl shadow-[0px_0px_0px_1px_#E8E6DC] px-4 py-2.5 focus-within:border-[#3898EC] focus-within:shadow-[0_0_0_3px_rgba(56,152,236,0.12)] transition-all duration-150">
+              <Search className="text-[#87867F] w-4 h-4 flex-shrink-0" />
               <input
-                className="font-[Be_Vietnam_Pro] focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:ring-offset-2"
+                className="flex-1 font-[Be_Vietnam_Pro] text-[14px] text-[#141413] placeholder:text-[#87867F] bg-transparent outline-none"
                 placeholder="Tìm theo tên file slide..."
                 value={slideKeyword}
                 onChange={(e) => {
@@ -448,21 +457,21 @@ export default function StudentPublicSlides() {
               {slideKeyword && (
                 <button
                   type="button"
-                  className="search-box__clear transition-all duration-150 hover:text-[#C96442] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:ring-offset-2"
                   aria-label="Xóa tìm kiếm"
                   onClick={() => {
                     setSlideKeyword('');
                     setSlidePage(0);
                   }}
+                  className="text-[#87867F] hover:text-[#141413] transition-colors"
                 >
-                  <X size={14} />
+                  <X className="w-4 h-4" />
                 </button>
               )}
             </label>
 
-            <div className="pill-group">
+            <div className="flex items-center gap-2 flex-shrink-0">
               <select
-                className="sps-select sps-select--sm font-[Be_Vietnam_Pro] bg-[#FAF9F5] shadow-[0px_0px_0px_1px_#D1CFC5] transition-all duration-150 hover:shadow-[0px_0px_0px_1px_#C2C0B6] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:ring-offset-2"
+                className="border border-[#E8E6DC] rounded-lg px-3 py-2 font-[Be_Vietnam_Pro] text-[13px] text-[#5E5D59] outline-none focus:border-[#C96442] focus:ring-1 focus:ring-[#C96442] bg-white transition-colors"
                 value={slideSortBy}
                 onChange={(e) => {
                   setSlideSortBy(e.target.value);
@@ -473,7 +482,7 @@ export default function StudentPublicSlides() {
                 <option value="updatedAt">Cập nhật</option>
               </select>
               <select
-                className="sps-select sps-select--sm font-[Be_Vietnam_Pro] bg-[#FAF9F5] shadow-[0px_0px_0px_1px_#D1CFC5] transition-all duration-150 hover:shadow-[0px_0px_0px_1px_#C2C0B6] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:ring-offset-2"
+                className="border border-[#E8E6DC] rounded-lg px-3 py-2 font-[Be_Vietnam_Pro] text-[13px] text-[#5E5D59] outline-none focus:border-[#C96442] focus:ring-1 focus:ring-[#C96442] bg-white transition-colors"
                 value={slideDirection}
                 onChange={(e) => {
                   setSlideDirection(e.target.value as SortDirection);
@@ -484,7 +493,7 @@ export default function StudentPublicSlides() {
                 <option value="ASC">Cũ nhất</option>
               </select>
               <select
-                className="sps-select sps-select--sm font-[Be_Vietnam_Pro] bg-[#FAF9F5] shadow-[0px_0px_0px_1px_#D1CFC5] transition-all duration-150 hover:shadow-[0px_0px_0px_1px_#C2C0B6] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:ring-offset-2"
+                className="border border-[#E8E6DC] rounded-lg px-3 py-2 font-[Be_Vietnam_Pro] text-[13px] text-[#5E5D59] outline-none focus:border-[#C96442] focus:ring-1 focus:ring-[#C96442] bg-white transition-colors"
                 value={slideSize}
                 onChange={(e) => {
                   setSlideSize(Number(e.target.value));
@@ -498,126 +507,150 @@ export default function StudentPublicSlides() {
             </div>
           </div>
 
-          {/* ── Active filter chip ── */}
+          {/* ── Active lesson chip ── */}
           {selectedLesson && (
-            <div className="assessment-summary-bar">
-              <div className="summary-item summary-item--primary">
-                <span className="summary-label">Bài học</span>
-                <strong className="summary-value">{selectedLesson.title}</strong>
+            <div className="flex items-center gap-4 px-4 py-3 rounded-xl bg-[#FAF9F5] border border-[#E8E6DC]">
+              <div className="flex items-center gap-2">
+                <span className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] uppercase tracking-wide">
+                  Bài học
+                </span>
+                <strong className="font-[Be_Vietnam_Pro] text-[13px] font-semibold text-[#141413]">
+                  {selectedLesson.title}
+                </strong>
               </div>
-              <div className="summary-item">
-                <span className="summary-label">Kết quả</span>
-                <strong className="summary-value">{slidesResult.totalElements} slide</strong>
+              <div className="w-px h-4 bg-[#E8E6DC]" />
+              <div className="flex items-center gap-2">
+                <span className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] uppercase tracking-wide">
+                  Kết quả
+                </span>
+                <strong className="font-[Be_Vietnam_Pro] text-[13px] font-semibold text-[#141413]">
+                  {slidesResult.totalElements} slide
+                </strong>
               </div>
             </div>
           )}
 
           {/* ── Loading skeleton ── */}
           {loadingSlides && (
-            <div className="skeleton-grid">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="skeleton-card" />
+                <div
+                  key={i}
+                  className="bg-[#FAF9F5] rounded-2xl border border-[#F0EEE6] h-52 animate-pulse"
+                />
               ))}
             </div>
           )}
 
           {/* ── Error ── */}
           {slidesError && !loadingSlides && (
-            <div className="empty">
-              <p style={{ color: 'var(--mod-danger)' }}>{slidesError}</p>
+            <div className="flex items-center justify-center py-12">
+              <p className="font-[Be_Vietnam_Pro] text-[14px] text-[#B53333]">{slidesError}</p>
             </div>
           )}
 
           {/* ── Empty ── */}
           {!loadingSlides && !slidesError && slidesResult.content.length === 0 && (
-            <div className="empty">
-              <FileText size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
-              <p>Không có slide công khai phù hợp bộ lọc hiện tại.</p>
+            <div className="flex flex-col items-center justify-center py-16 gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-[#E8E6DC] flex items-center justify-center text-[#B0AEA5]">
+                <FileText className="w-6 h-6" />
+              </div>
+              <p className="font-[Be_Vietnam_Pro] text-[14px] text-[#87867F]">
+                Không có slide công khai phù hợp bộ lọc hiện tại.
+              </p>
             </div>
           )}
 
           {/* ── Grid ── */}
           {!loadingSlides && slidesResult.content.length > 0 && (
             <>
-              <div className="sps-card-grid">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {slidesResult.content.map((slide) => (
-                  <div
+                  <article
                     key={slide.id}
-                    className="sps-slide-card bg-[#FAF9F5] shadow-[0px_0px_0px_1px_#D1CFC5] transition-all duration-200 hover:shadow-[0px_0px_0px_1px_#C2C0B6] hover:-translate-y-0.5"
+                    className="bg-[#FAF9F5] rounded-2xl border border-[#F0EEE6] shadow-[rgba(0,0,0,0.05)_0px_4px_24px] overflow-hidden group hover:shadow-[0px_0px_0px_1px_#D1CFC5,rgba(0,0,0,0.08)_0px_8px_30px] hover:-translate-y-0.5 transition-all duration-200"
                   >
-                    <div className="sps-slide-card__thumb">
+                    <div className="h-[140px] bg-gradient-to-br from-[#E8E6DC] to-[#D1CFC5] relative flex items-center justify-center overflow-hidden">
                       {resolveThumbnailUrl(slide.thumbnail) ? (
                         <img
                           src={resolveThumbnailUrl(slide.thumbnail) || ''}
                           alt={getGeneratedDisplayName(slide)}
                           loading="lazy"
+                          className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="sps-slide-card__thumb-placeholder">
-                          {getGeneratedDisplayName(slide).slice(0, 1).toUpperCase()}
+                        <div className="text-[#87867F] group-hover:scale-110 transition-transform duration-300">
+                          <FileText size={42} strokeWidth={1.3} />
                         </div>
                       )}
-                      <span className="sps-slide-card__badge">Công khai</span>
+                      <span className="absolute top-3 right-3 bg-[#FAF9F5]/90 rounded-lg px-2 py-1 font-[Be_Vietnam_Pro] text-[11px] font-semibold text-[#141413]">
+                        Công khai
+                      </span>
                     </div>
 
-                    <div className="sps-slide-card__body">
-                      <p className="sps-slide-card__title" title={getGeneratedDisplayName(slide)}>
+                    <div className="p-4 flex flex-col gap-2">
+                      <h3
+                        className="font-[Playfair_Display] text-[17px] font-medium text-[#141413] line-clamp-2 leading-[1.3]"
+                        title={getGeneratedDisplayName(slide)}
+                      >
                         {getGeneratedDisplayName(slide)}
-                      </p>
-                      <ul className="sps-slide-card__meta">
-                        <li>
-                          <span>DUNG LƯỢNG</span>
-                          <span>{formatFileSize(slide.fileSizeBytes)}</span>
-                        </li>
-                        <li>
-                          <span>NGÀY TẠO</span>
-                          <span>{new Date(slide.createdAt).toLocaleDateString('vi-VN')}</span>
-                        </li>
-                      </ul>
-                    </div>
+                      </h3>
 
-                    <div className="sps-slide-card__actions">
-                      <button
-                        type="button"
-                        className="sps-slide-card__btn secondary font-[Be_Vietnam_Pro] transition-all duration-150 hover:shadow-[0px_0px_0px_1px_#C2C0B6] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:ring-offset-2"
-                        onClick={() => void handlePreviewSlide(slide.id)}
-                        disabled={loadingPreviewSlideId === slide.id}
-                      >
-                        <Eye size={14} />
-                        {loadingPreviewSlideId === slide.id ? 'Đang tải...' : 'Xem'}
-                      </button>
-                      <button
-                        type="button"
-                        className="sps-slide-card__btn primary font-[Be_Vietnam_Pro] bg-[#C96442] text-[#FAF9F5] shadow-[0px_0px_0px_1px_#C96442] transition-all duration-150 hover:brightness-95 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:ring-offset-2"
-                        onClick={() => void handleDownloadSlide(slide.id)}
-                        disabled={downloadingSlideId === slide.id || !slide.isPublic}
-                      >
-                        <Download size={14} />
-                        {downloadingSlideId === slide.id ? 'Đang tải...' : 'Tải xuống'}
-                      </button>
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className="flex items-center gap-1 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">
+                          <FileText className="w-3.5 h-3.5" />
+                          {formatFileSize(slide.fileSizeBytes)}
+                        </span>
+                        <span className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">
+                          {new Date(slide.createdAt).toLocaleDateString('vi-VN')}
+                        </span>
+                      </div>
+
+                      <div className="flex gap-2 mt-2">
+                        <button
+                          type="button"
+                          className="flex-1 border border-[#E8E6DC] bg-white text-[#5E5D59] rounded-xl py-2.5 font-[Be_Vietnam_Pro] text-[13px] font-medium flex items-center justify-center gap-2 hover:bg-[#F5F4ED] active:scale-[0.98] transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                          onClick={() => void handlePreviewSlide(slide.id)}
+                          disabled={loadingPreviewSlideId === slide.id}
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          {loadingPreviewSlideId === slide.id ? 'Đang tải...' : 'Xem'}
+                        </button>
+                        <button
+                          type="button"
+                          className="flex-1 bg-[#141413] text-[#FAF9F5] rounded-xl py-2.5 font-[Be_Vietnam_Pro] text-[13px] font-semibold flex items-center justify-center gap-2 hover:bg-[#30302E] active:scale-[0.98] transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                          onClick={() => void handleDownloadSlide(slide.id)}
+                          disabled={downloadingSlideId === slide.id || !slide.isPublic}
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          {downloadingSlideId === slide.id ? 'Đang tải...' : 'Tải xuống'}
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  </article>
                 ))}
               </div>
 
               {/* ── Pagination ── */}
-              <div className="sps-pagination">
+              <div className="flex items-center justify-between pt-2">
                 <button
                   type="button"
-                  className="btn secondary font-[Be_Vietnam_Pro] bg-[#E8E6DC] text-[#4D4C48] shadow-[0px_0px_0px_1px_#D1CFC5] transition-all duration-150 hover:shadow-[0px_0px_0px_1px_#C2C0B6] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:ring-offset-2"
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   onClick={() => setSlidePage((prev) => Math.max(prev - 1, 0))}
                   disabled={slidesResult.first}
                 >
-                  <ChevronLeft size={15} /> Trước
+                  <ChevronLeft className="w-4 h-4" /> Trước
                 </button>
-                <span className="sps-page-info">
-                  Trang <strong>{slidesResult.number + 1}</strong> /{' '}
+
+                <span className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F]">
+                  Trang <strong className="text-[#141413]">{slidesResult.number + 1}</strong> /{' '}
                   {Math.max(slidesResult.totalPages, 1)} ·{' '}
-                  <span style={{ color: '#87867F' }}>{slidesResult.totalElements} slide</span>
+                  <span>{slidesResult.totalElements} slide</span>
                 </span>
+
                 <button
                   type="button"
-                  className="btn secondary font-[Be_Vietnam_Pro] bg-[#E8E6DC] text-[#4D4C48] shadow-[0px_0px_0px_1px_#D1CFC5] transition-all duration-150 hover:shadow-[0px_0px_0px_1px_#C2C0B6] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:ring-offset-2"
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   onClick={() =>
                     setSlidePage((prev) =>
                       slidesResult.totalPages > 0
@@ -627,75 +660,110 @@ export default function StudentPublicSlides() {
                   }
                   disabled={slidesResult.last || slidesResult.totalPages === 0}
                 >
-                  Sau <ChevronRight size={15} />
+                  Sau <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
             </>
           )}
-        </section>
+        </div>
       </div>
 
+      {/* ── Preview modal ── */}
       {previewSlideId && (
-        <div className="ai-slide-modal-overlay" onClick={closePreview}>
+        <div
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={closePreview}
+        >
           <div
-            className="ai-slide-modal"
+            className="bg-[#FAF9F5] rounded-2xl shadow-[rgba(0,0,0,0.25)_0px_24px_64px] w-full max-w-5xl max-h-[92vh] flex flex-col overflow-hidden"
             role="dialog"
             aria-modal="true"
             aria-label="Xem thử slide"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="ai-slide-modal-header">
-              <h3
-                className="font-medium text-[#141413]"
-                style={{ fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 500 }}
-              >
-                Xem thử slide
-              </h3>
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#F0EEE6] bg-white">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-[#E8E6DC] flex items-center justify-center text-[#5E5D59] flex-shrink-0">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-[Playfair_Display] text-[20px] font-medium text-[#141413] line-clamp-1 leading-[1.2]">
+                    Xem thử slide
+                  </h3>
+                  <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mt-0.5">
+                    Bản xem trước PDF
+                  </p>
+                </div>
+              </div>
               <button
                 type="button"
-                className="ai-slide-modal-close transition-all duration-150 hover:text-[#C96442] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#3898EC] focus-visible:ring-offset-2"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-[#87867F] hover:bg-[#F0EEE6] hover:text-[#141413] transition-colors flex-shrink-0 ml-4"
                 onClick={closePreview}
-                aria-label="Đóng xem trước"
+                aria-label="Đóng"
               >
-                <X size={16} />
+                <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="ai-slide-modal-body">
+
+            {/* Content */}
+            <div className="flex-1 relative overflow-hidden bg-[#F5F4ED] min-h-[500px]">
               {loadingPreviewSlideId === previewSlideId && (
-                <div className="ai-slide-math-loader" role="status" aria-live="polite">
-                  <div className="ai-slide-math-loader-ring" aria-hidden="true" />
-                  <div className="ai-slide-math-loader-symbols" aria-hidden="true">
-                    <LoaderCircle className="h-4 w-4 animate-spin text-[#C96442]" />
-                  </div>
-                  <p>Đang dựng slide toán học...</p>
+                <div
+                  className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-[#F5F4ED] z-10"
+                  role="status"
+                  aria-live="polite"
+                >
+                  <div className="w-10 h-10 rounded-full border-2 border-[#E8E6DC] border-t-[#C96442] animate-spin" />
+                  <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] animate-pulse">
+                    Đang dựng slide toán học...
+                  </p>
                 </div>
               )}
               {!loadingPreviewSlideId && previewSlidePdfUrl && (
-                <div className="ai-slide-office-viewer-wrap">
+                <>
                   {!previewIframeLoaded && (
-                    <div className="ai-slide-iframe-skeleton" aria-hidden="true">
-                      <div className="ai-slide-iframe-skeleton__bar ai-slide-iframe-skeleton__bar--title" />
-                      <div className="ai-slide-iframe-skeleton__slides">
-                        {[0, 1, 2, 3, 4, 5].map((i) => (
-                          <div key={i} className="ai-slide-iframe-skeleton__slide">
-                            <div className="ai-slide-iframe-skeleton__slide-inner" />
-                          </div>
-                        ))}
-                      </div>
-                      <div className="ai-slide-iframe-skeleton__hint">
-                        <span className="ai-slide-iframe-skeleton__ring" /> Đang tải slide...
-                      </div>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-[#F5F4ED] z-10">
+                      <div className="w-10 h-10 rounded-full border-2 border-[#E8E6DC] border-t-[#C96442] animate-spin" />
+                      <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] animate-pulse">
+                        Đang tải slide...
+                      </p>
                     </div>
                   )}
                   <iframe
-                    className={`ai-slide-office-viewer-frame${previewIframeLoaded ? ' ai-slide-office-viewer-frame--loaded' : ''}`}
+                    className={`w-full h-full min-h-[500px] border-0 transition-opacity duration-300 ${previewIframeLoaded ? 'opacity-100' : 'opacity-0'}`}
                     src={previewSlidePdfUrl}
                     title="Slide preview"
                     loading="eager"
                     onLoad={() => setPreviewIframeLoaded(true)}
                   />
-                </div>
+                </>
               )}
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-[#F0EEE6] bg-white">
+              <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#B0AEA5] hidden sm:block">
+                File PPTX sẽ được tải về thiết bị của bạn
+              </p>
+              <div className="flex items-center gap-2 ml-auto">
+                <button
+                  type="button"
+                  className="px-4 py-2 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors"
+                  onClick={closePreview}
+                >
+                  Đóng
+                </button>
+                <button
+                  type="button"
+                  className="flex items-center gap-2 px-5 py-2 rounded-xl bg-[#D4795A] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:brightness-95 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all duration-150"
+                  disabled={!previewSlideId || downloadingSlideId === previewSlideId}
+                  onClick={() => void handleDownloadSlide(previewSlideId)}
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  {downloadingSlideId === previewSlideId ? 'Đang tải...' : 'Tải PPTX'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
