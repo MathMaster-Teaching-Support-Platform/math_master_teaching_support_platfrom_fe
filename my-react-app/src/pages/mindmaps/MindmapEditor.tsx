@@ -36,18 +36,36 @@ const MINDMAP_THEME = {
 };
 
 const BRANCH_COLORS = [
-  '#7AA5FA', '#55C49A', '#E8975E', '#B38EE8',
-  '#64C0D5', '#DE9F8A', '#7BB887', '#D696C4',
+  '#7AA5FA',
+  '#55C49A',
+  '#E8975E',
+  '#B38EE8',
+  '#64C0D5',
+  '#DE9F8A',
+  '#7BB887',
+  '#D696C4',
 ] as const;
 
 const LEAF_BG = [
-  '#EEF3FF', '#E0F7EF', '#FDF1E5', '#F3EDFB',
-  '#E4F6FA', '#FCF0EA', '#E8F5EC', '#FAF0F8',
+  '#EEF3FF',
+  '#E0F7EF',
+  '#FDF1E5',
+  '#F3EDFB',
+  '#E4F6FA',
+  '#FCF0EA',
+  '#E8F5EC',
+  '#FAF0F8',
 ] as const;
 
 const LEAF_FG = [
-  '#1E3A8A', '#064E3B', '#7C2D12', '#3B0764',
-  '#0C4A6E', '#431407', '#14532D', '#500724',
+  '#1E3A8A',
+  '#064E3B',
+  '#7C2D12',
+  '#3B0764',
+  '#0C4A6E',
+  '#431407',
+  '#14532D',
+  '#500724',
 ] as const;
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -277,7 +295,11 @@ export default function MindmapEditor() {
         return MindElixir.new(mindmap?.title || 'Mindmap mới') as MindElixirData;
       }
 
-      const buildNode = (node: MindmapNode, depth: number, branchIdx: number): MindElixirNodeData => {
+      const buildNode = (
+        node: MindmapNode,
+        depth: number,
+        branchIdx: number
+      ): MindElixirNodeData => {
         let style: { color: string; background: string };
         let branchColor: string | undefined;
 
@@ -1062,7 +1084,9 @@ export default function MindmapEditor() {
                         type="text"
                         className="w-full border border-[#E8E6DC] rounded-xl px-3 py-2 font-[Be_Vietnam_Pro] text-[13px] text-[#141413] bg-white outline-none focus:border-[#C96442] focus:ring-1 focus:ring-[#C96442]/20 transition-colors placeholder:text-[#B0AEA5]"
                         value={newNodeForm.content}
-                        onChange={(e) => setNewNodeForm({ ...newNodeForm, content: e.target.value })}
+                        onChange={(e) =>
+                          setNewNodeForm({ ...newNodeForm, content: e.target.value })
+                        }
                         placeholder="Nhập nội dung node con..."
                       />
                     </div>
@@ -1079,7 +1103,9 @@ export default function MindmapEditor() {
                           type="color"
                           className="w-full h-[38px] border border-[#E8E6DC] rounded-xl cursor-pointer bg-white p-0.5 transition-colors"
                           value={newNodeForm.color}
-                          onChange={(e) => setNewNodeForm({ ...newNodeForm, color: e.target.value })}
+                          onChange={(e) =>
+                            setNewNodeForm({ ...newNodeForm, color: e.target.value })
+                          }
                         />
                       </div>
                       <div>
@@ -1143,7 +1169,10 @@ export default function MindmapEditor() {
 
         {/* ── Delete confirm modal ───────────────────────────────── */}
         {deleteConfirm.open && (
-          <div className="delete-modal-backdrop absolute inset-0 bg-[#141413]/50 backdrop-blur-[2px] grid place-items-center z-30 p-4" onClick={closeDeleteConfirm}>
+          <div
+            className="delete-modal-backdrop absolute inset-0 bg-[#141413]/50 backdrop-blur-[2px] grid place-items-center z-30 p-4"
+            onClick={closeDeleteConfirm}
+          >
             <div
               className="w-full max-w-[400px] bg-[#FAF9F5] rounded-2xl border border-[#F0EEE6] shadow-[rgba(0,0,0,0.20)_0px_20px_60px,0px_0px_0px_1px_#D1CFC5] p-6 flex flex-col gap-4"
               role="dialog"
@@ -1162,7 +1191,8 @@ export default function MindmapEditor() {
               </div>
               <div className="space-y-2">
                 <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#5E5D59] leading-[1.6]">
-                  Bạn sắp xóa node <strong className="text-[#141413]">{deleteConfirm.nodeLabel}</strong>.
+                  Bạn sắp xóa node{' '}
+                  <strong className="text-[#141413]">{deleteConfirm.nodeLabel}</strong>.
                 </p>
                 <div className="px-3 py-2.5 rounded-xl bg-red-50 border border-red-200 font-[Be_Vietnam_Pro] text-[12px] text-red-700 leading-[1.5]">
                   Tổng số node sẽ bị xóa: <strong>{deleteConfirm.totalNodes}</strong>

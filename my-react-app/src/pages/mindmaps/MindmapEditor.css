@@ -156,7 +156,7 @@
 .flow-container {
   flex: 1;
   position: relative;
-  background: linear-gradient(135deg, #F5F4ED 0%, #EAE8DF 100%);
+  background: linear-gradient(135deg, #f5f4ed 0%, #eae8df 100%);
 }
 
 .interaction-hint {
