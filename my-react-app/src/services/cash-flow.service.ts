@@ -1,6 +1,4 @@
 import { API_BASE_URL } from '../config/api.config';
-import { AuthService } from './api/auth.service';
-import { translateApiError } from '../utils/errorCodes';
 import type {
   CashFlowCategory,
   CashFlowChartPoint,
@@ -10,6 +8,8 @@ import type {
   CashFlowType,
   GroupBy,
 } from '../types/cash-flow.types';
+import { translateApiError } from '../utils/errorCodes';
+import { AuthService } from './api/auth.service';
 
 // ─── Auth helper ─────────────────────────────────────────────────────────────
 

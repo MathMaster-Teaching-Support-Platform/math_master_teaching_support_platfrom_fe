@@ -1,7 +1,7 @@
 import { API_BASE_URL } from '../../config/api.config';
+import type { ApiResponse } from '../../types';
 import { translateApiError } from '../../utils/errorCodes';
 import { AuthService } from './auth.service';
-import type { ApiResponse } from '../../types';
 
 export interface CurriculumItem {
   id: string;
@@ -23,7 +23,9 @@ export class CurriculumService {
     const res = await fetch(`${API_BASE_URL}/curriculums/all`, { method: 'GET', headers });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(translateApiError((err as { message?: string }).message || 'Failed to fetch curricula'));
+      throw new Error(
+        translateApiError((err as { message?: string }).message || 'Failed to fetch curricula')
+      );
     }
     return res.json();
   }

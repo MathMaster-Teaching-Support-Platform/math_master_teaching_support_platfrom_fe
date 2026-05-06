@@ -7,7 +7,7 @@
 const BACKEND_MESSAGE_MAP: Record<string, string> = {
   // Auth
   'Authentication required': 'Bạn chưa đăng nhập. Vui lòng đăng nhập lại.',
-  'Unauthorized': 'Bạn không có quyền thực hiện thao tác này.',
+  Unauthorized: 'Bạn không có quyền thực hiện thao tác này.',
   'Access denied': 'Truy cập bị từ chối.',
   'Token expired': 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
 
@@ -29,7 +29,8 @@ const BACKEND_MESSAGE_MAP: Record<string, string> = {
   'Failed to start OCR verification': 'Không thể khởi động xác minh tự động.',
   'Failed to get job status': 'Không thể lấy trạng thái xác minh.',
   'Failed to get job result': 'Không thể lấy kết quả xác minh.',
-  'OCR job polling timeout - exceeded maximum attempts': 'Xác minh tự động quá thời gian chờ. Vui lòng thử lại.',
+  'OCR job polling timeout - exceeded maximum attempts':
+    'Xác minh tự động quá thời gian chờ. Vui lòng thử lại.',
   'OCR verification failed': 'Xác minh tự động thất bại.',
   'OCR verification was cancelled': 'Xác minh tự động đã bị hủy.',
 
@@ -206,7 +207,7 @@ const BACKEND_MESSAGE_MAP: Record<string, string> = {
 export const ERROR_MESSAGES: Record<number, string> = {
   // Wallet & Payment errors
   1029: 'Số dư ví không đủ để thanh toán. Vui lòng nạp thêm tiền.',
-  
+
   // Course errors (synchronized with backend)
   1145: 'Không tìm thấy khóa học.',
   1147: 'Khóa học đã được xuất bản rồi.',
@@ -228,7 +229,7 @@ export const ERROR_MESSAGES: Record<number, string> = {
   1036: 'Khóa học đã được xuất bản rồi.',
   1037: 'Khóa học đã bị từ chối.',
   1038: 'Không tìm thấy video cho bài học này.',
-  
+
   // Generic errors
   9999: 'Đã xảy ra lỗi không xác định. Vui lòng thử lại sau.',
 };
@@ -240,7 +241,7 @@ export const getErrorMessage = (code: number | undefined, defaultMessage?: strin
   if (!code) {
     return defaultMessage || 'Đã xảy ra lỗi. Vui lòng thử lại sau.';
   }
-  
+
   return ERROR_MESSAGES[code] || defaultMessage || 'Đã xảy ra lỗi. Vui lòng thử lại sau.';
 };
 
@@ -249,12 +250,12 @@ export const getErrorMessage = (code: number | undefined, defaultMessage?: strin
  */
 export const extractErrorCode = (error: unknown): number | undefined => {
   if (!error) return undefined;
-  
+
   // Check direct code property
   if (typeof error === 'object' && 'code' in error) {
     return (error as any).code;
   }
-  
+
   // Check response.data.code (Axios error format)
   if (typeof error === 'object' && 'response' in error) {
     const response = (error as any).response;
@@ -262,7 +263,7 @@ export const extractErrorCode = (error: unknown): number | undefined => {
       return response.data.code;
     }
   }
-  
+
   return undefined;
 };
 
@@ -271,12 +272,12 @@ export const extractErrorCode = (error: unknown): number | undefined => {
  */
 export const extractErrorMessage = (error: unknown): string => {
   if (!error) return 'Đã xảy ra lỗi không xác định.';
-  
+
   // Check if it's an Error instance
   if (error instanceof Error) {
     return error.message;
   }
-  
+
   // Check response.data.message (Axios error format)
   if (typeof error === 'object' && 'response' in error) {
     const response = (error as any).response;
@@ -284,12 +285,12 @@ export const extractErrorMessage = (error: unknown): string => {
       return response.data.message;
     }
   }
-  
+
   // Check direct message property
   if (typeof error === 'object' && 'message' in error) {
     return (error as any).message;
   }
-  
+
   return 'Đã xảy ra lỗi không xác định.';
 };
 

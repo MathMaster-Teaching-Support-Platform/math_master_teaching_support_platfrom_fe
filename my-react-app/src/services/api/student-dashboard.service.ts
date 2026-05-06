@@ -1,6 +1,6 @@
 import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
-import { translateApiError } from '../../utils/errorCodes';
 import type { ApiResponse } from '../../types/auth.types';
+import { translateApiError } from '../../utils/errorCodes';
 import { AuthService } from './auth.service';
 
 export interface StudentDashboardSummary {

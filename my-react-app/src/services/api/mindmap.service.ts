@@ -1,17 +1,17 @@
 import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
-import { AuthService } from './auth.service';
-import { translateApiError } from '../../utils/errorCodes';
 import type {
+  ApiResponse,
+  Mindmap,
   MindmapGenerateRequest,
   MindmapGenerateResponse,
-  Mindmap,
   MindmapNode,
-  MindmapUpdateRequest,
-  MindmapNodeUpdateRequest,
   MindmapNodeCreateRequest,
-  ApiResponse,
+  MindmapNodeUpdateRequest,
+  MindmapUpdateRequest,
   PaginatedResponse,
 } from '../../types';
+import { translateApiError } from '../../utils/errorCodes';
+import { AuthService } from './auth.service';
 
 interface DownloadMindmapResult {
   blob: Blob;
@@ -21,7 +21,10 @@ interface DownloadMindmapResult {
 export class MindmapService {
   private static async throwApiError(response: Response, fallback: string): Promise<never> {
     const payload = await response.json().catch(() => ({}));
-    const msg = (payload as { message?: string }).message || (payload as { error?: string }).error || fallback;
+    const msg =
+      (payload as { message?: string }).message ||
+      (payload as { error?: string }).error ||
+      fallback;
     const error = new Error(translateApiError(msg)) as Error & { code?: number };
     if (typeof (payload as { code?: unknown }).code === 'number') {
       error.code = (payload as { code: number }).code;

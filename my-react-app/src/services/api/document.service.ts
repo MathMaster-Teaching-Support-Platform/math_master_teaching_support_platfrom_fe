@@ -1,6 +1,6 @@
 import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
-import { translateApiError } from '../../utils/errorCodes';
 import type { SearchDocumentsApiResponse } from '../../types';
+import { translateApiError } from '../../utils/errorCodes';
 import { AuthService } from './auth.service';
 
 export class DocumentService {
@@ -32,7 +32,9 @@ export class DocumentService {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
-      throw new Error(translateApiError((error as { message?: string }).message || 'Failed to search documents'));
+      throw new Error(
+        translateApiError((error as { message?: string }).message || 'Failed to search documents')
+      );
     }
 
     return response.json();

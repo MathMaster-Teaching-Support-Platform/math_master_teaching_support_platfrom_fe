@@ -1,5 +1,4 @@
 import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
-import { translateApiError } from '../../utils/errorCodes';
 import type {
   ChatApiError,
   ChatApiResponse,
@@ -14,6 +13,7 @@ import type {
   RenameChatSessionRequest,
   SendChatMessageRequest,
 } from '../../types';
+import { translateApiError } from '../../utils/errorCodes';
 import { AuthService } from './auth.service';
 
 export class ChatSessionService {

@@ -1,5 +1,4 @@
 import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
-import { translateApiError } from '../../utils/errorCodes';
 import type {
   ApiResponse,
   ForgotPasswordRequest,
@@ -11,6 +10,7 @@ import type {
   RoleSelectionRequest,
 } from '../../types/auth.types';
 import { ApiError } from '../../types/auth.types';
+import { translateApiError } from '../../utils/errorCodes';
 
 export class AuthService {
   private static async extractErrorMessage(response: Response, fallback: string): Promise<string> {

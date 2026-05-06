@@ -1,25 +1,25 @@
 import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
-import { AuthService } from './auth.service';
-import { translateApiError } from '../../utils/errorCodes';
 import type { LessonResponse } from '../../types/lesson.types';
 import type {
   ApiEnvelope,
   ChapterBySubject,
   GeneratedFileListResult,
   GeneratePptxRequest,
-  RenderSlidePreviewRequest,
-  RenderSlidePreviewResult,
   GenerateSlideContentRequest,
   GenerateSlideContentResult,
-  PageResult,
+  LessonByChapter,
   LessonSlideGeneratedFile,
   LessonSlidePublicationStatus,
-  LessonByChapter,
   LessonSlideTemplate,
+  PageResult,
   PublicGeneratedSlidesQuery,
+  RenderSlidePreviewRequest,
+  RenderSlidePreviewResult,
   SchoolGrade,
   SubjectByGrade,
 } from '../../types/lessonSlide.types';
+import { translateApiError } from '../../utils/errorCodes';
+import { AuthService } from './auth.service';
 
 interface DownloadPptxResult {
   blob: Blob;

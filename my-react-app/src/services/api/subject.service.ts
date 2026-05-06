@@ -1,6 +1,6 @@
 import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
-import { translateApiError } from '../../utils/errorCodes';
 import type { SubjectsApiResponse } from '../../types';
+import { translateApiError } from '../../utils/errorCodes';
 import { AuthService } from './auth.service';
 
 export class SubjectService {
@@ -54,10 +54,13 @@ export class SubjectService {
     }
 
     const headers = await this.getHeaders();
-    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.SUBJECTS_BY_GRADE(normalizedGradeLevel)}`, {
-      method: 'GET',
-      headers,
-    });
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.SUBJECTS_BY_GRADE(normalizedGradeLevel)}`,
+      {
+        method: 'GET',
+        headers,
+      }
+    );
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
