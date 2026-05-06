@@ -160,7 +160,7 @@ function AddAssessmentModal({
                   <div className="row" style={{ gap: 12, fontSize: '0.78rem', color: '#64748b' }}>
                     <span>📝 {a.totalQuestions || 0} câu</span>
                     {a.timeLimitMinutes && <span>⏱️ {a.timeLimitMinutes} phút</span>}
-                    {a.examMatrixGradeLevel && <span>🎓 Khối {a.examMatrixGradeLevel}</span>}
+                    {a.examMatrixGradeLevel && <span>🎓 Lớp {a.examMatrixGradeLevel}</span>}
                   </div>
                 </div>
               ))}
@@ -530,7 +530,7 @@ export default function TeacherCourseLessons() {
               </button>
               <h2>📚 {course?.title ?? '...'}</h2>
               <p>
-                {course?.subjectName} • Khối {course?.gradeLevel}
+                {course?.subjectName} • Lớp {course?.gradeLevel}
               </p>
             </div>
             <button

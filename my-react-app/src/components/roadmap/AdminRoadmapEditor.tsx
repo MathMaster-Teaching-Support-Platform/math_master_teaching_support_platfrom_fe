@@ -216,7 +216,7 @@ export default function AdminRoadmapEditor({
             {activeSubjects.map((subject) => (
               <option key={subject.id} value={subject.id}>
                 {subject.name}
-                {subject.primaryGradeLevel ? ` — Khối ${subject.primaryGradeLevel}` : ''}
+                {subject.primaryGradeLevel ? ` — Lớp ${subject.primaryGradeLevel}` : ''}
               </option>
             ))}
           </select>
@@ -231,7 +231,7 @@ export default function AdminRoadmapEditor({
 
         {mode === 'edit' && initialRoadmap && (
           <label className="admin-roadmap-editor__field">
-            <span>Khối hiện tại (chỉ đọc)</span>
+            <span>Lớp hiện tại (chỉ đọc)</span>
             <input value={initialRoadmap.gradeLevel} readOnly />
           </label>
         )}

@@ -244,7 +244,7 @@ const AdminCourseReviewDetail: React.FC = () => {
                 <div className="course-header-meta">
                   <span className="meta-item">
                     <GraduationCap size={14} />
-                    {course.subjectName} • Khối {course.gradeLevel}
+                    {course.subjectName} • Lớp {course.gradeLevel}
                   </span>
                   <span className="meta-separator">•</span>
                   <span className="meta-item">

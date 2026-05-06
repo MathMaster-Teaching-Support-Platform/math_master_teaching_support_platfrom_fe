@@ -413,7 +413,7 @@ export default function StudentPublicMindmaps() {
                   onChange={(e) => handleGradeChange(e.target.value)}
                   disabled={loadingCatalog}
                 >
-                  <option value="">Tất cả khối lớp</option>
+                  <option value="">Tất cả lớp</option>
                   {schoolGrades.map((grade) => (
                     <option key={grade.id} value={grade.id}>
                       {grade.name}
@@ -433,7 +433,7 @@ export default function StudentPublicMindmaps() {
                   onChange={(e) => handleSubjectChange(e.target.value)}
                   disabled={!gradeId || loadingCatalog}
                 >
-                  <option value="">{gradeId ? 'Tất cả môn học' : 'Chọn khối trước'}</option>
+                  <option value="">{gradeId ? 'Tất cả môn học' : 'Chọn lớp trước'}</option>
                   {subjects.map((subject) => (
                     <option key={subject.id} value={subject.id}>
                       {subject.name}

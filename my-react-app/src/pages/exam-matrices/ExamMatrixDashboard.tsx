@@ -365,9 +365,9 @@ export function ExamMatrixDashboard() {
                     </div>
 
                     {(matrix.gradeLevel || matrix.subjectName) && (
-                      <div className="exam-matrix-card__chips" aria-label="Môn / khối">
+                      <div className="exam-matrix-card__chips" aria-label="Môn / lớp">
                         {matrix.gradeLevel && (
-                          <span className="exam-matrix-card__chip">Khối {matrix.gradeLevel}</span>
+                          <span className="exam-matrix-card__chip">Lớp {matrix.gradeLevel}</span>
                         )}
                         {matrix.subjectName && (
                           <span className="exam-matrix-card__chip">{matrix.subjectName}</span>

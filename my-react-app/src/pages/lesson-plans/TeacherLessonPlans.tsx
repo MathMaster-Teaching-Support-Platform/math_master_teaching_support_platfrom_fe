@@ -249,7 +249,7 @@ function CreateLessonPlanModal({
               <div className="wizard-step-content">
                 <div className="form-section-header">
                   <h3>Chọn bài học</h3>
-                  <p>Chọn khối, môn, chương và bài học tương ứng với tiết cần soạn giáo án.</p>
+                  <p>Chọn lớp, môn, chương và bài học tương ứng với tiết cần soạn giáo án.</p>
                 </div>
 
                 <div className="form-group">
@@ -263,10 +263,10 @@ function CreateLessonPlanModal({
                     onChange={(e) => handleGradeChange(e.target.value)}
                     disabled={loadingGrades}
                   >
-                    <option value="">{loadingGrades ? 'Đang tải...' : '-- Chọn khối --'}</option>
+                    <option value="">{loadingGrades ? 'Đang tải...' : '-- Chọn lớp --'}</option>
                     {grades.map((g) => (
                       <option key={g.id} value={g.id}>
-                        Khối {g.gradeLevel} – {g.name}
+                        Lớp {g.gradeLevel} – {g.name}
                       </option>
                     ))}
                   </select>

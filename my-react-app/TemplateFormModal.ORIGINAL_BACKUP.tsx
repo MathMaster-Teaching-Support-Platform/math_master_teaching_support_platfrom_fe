@@ -591,7 +591,7 @@ export function TemplateFormModal({
                   }}
                   disabled={isLoadingGrades}
                 >
-                  <option value="">Chọn khối lớp</option>
+                  <option value="">Chọn lớp</option>
                   {sortedGrades.map((grade) => (
                     <option key={grade.id} value={String(grade.level)}>
                       {grade.name || `Lớp ${grade.level}`}
@@ -614,11 +614,11 @@ export function TemplateFormModal({
                   disabled={isLoadingSubjects || !gradeLevel}
                 >
                   {!gradeLevel ? (
-                    <option value="">Chọn khối lớp trước</option>
+                    <option value="">Chọn lớp trước</option>
                   ) : isLoadingSubjects ? (
                     <option value="">Đang tải môn học...</option>
                   ) : subjects.length === 0 ? (
-                    <option value="">Không có môn học cho khối này</option>
+                    <option value="">Không có môn học cho lớp này</option>
                   ) : (
                     <>
                       <option value="">Chọn môn học</option>

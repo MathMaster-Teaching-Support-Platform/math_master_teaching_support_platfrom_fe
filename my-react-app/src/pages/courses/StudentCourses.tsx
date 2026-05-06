@@ -1,5 +1,5 @@
-import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
 import {
   ArrowLeft,
   ArrowRight,
@@ -17,15 +17,15 @@ import { CourseCard } from '../../components/course/CourseCard';
 import { InvoiceModal } from '../../components/course/InvoiceModal';
 import { PurchaseConfirmationModal } from '../../components/course/PurchaseConfirmationModal';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { UI_TEXT } from '../../constants/uiText';
 import { useEnroll, useMyEnrollments, usePublicCourses } from '../../hooks/useCourses';
 import { LessonSlideService } from '../../services/api/lesson-slide.service';
 import '../../styles/module-refactor.css';
 import type { CourseResponse, EnrollmentResponse } from '../../types';
-import type { Order } from '../../types/order.types';
 import type { SchoolGrade, SubjectByGrade } from '../../types/lessonSlide.types';
+import type { Order } from '../../types/order.types';
 import './StudentCourses.css';
 import './TeacherCourses.css';
-import { UI_TEXT } from '../../constants/uiText';
 
 // ─── Cover design tokens (shared with TeacherCourses) ────────────────────────
 const coverGradients = [
@@ -115,7 +115,8 @@ const EnrollmentCard: React.FC<{
             top: '0.6rem',
             left: '0.7rem',
             zIndex: 2,
-            background: enrollment.status === 'ACTIVE' ? 'rgba(34,197,94,0.75)' : 'rgba(100,116,139,0.75)',
+            background:
+              enrollment.status === 'ACTIVE' ? 'rgba(34,197,94,0.75)' : 'rgba(100,116,139,0.75)',
             color: '#fff',
             borderRadius: '999px',
             padding: '2px 8px',
@@ -280,12 +281,7 @@ const StudentCourses: React.FC = () => {
 
   /** Map from courseId → enrollmentId for direct "Vào học" navigation */
   const enrolledCourseIdMap = useMemo(
-    () =>
-      new Map(
-        enrollments
-          .filter((e) => e.status === 'ACTIVE')
-          .map((e) => [e.courseId, e.id])
-      ),
+    () => new Map(enrollments.filter((e) => e.status === 'ACTIVE').map((e) => [e.courseId, e.id])),
     [enrollments]
   );
 
@@ -312,7 +308,8 @@ const StudentCourses: React.FC = () => {
     setEnrollingCourseId(pendingCourse.id);
     enrollMutation.mutate(pendingCourse.id, {
       onSuccess: (resp) => {
-        const orderData = resp?.result || (resp as any)?.order || (resp?.type === 'order' ? resp : null);
+        const orderData =
+          resp?.result || (resp as any)?.order || (resp?.type === 'order' ? resp : null);
         if (orderData && (orderData.orderNumber || orderData.id)) {
           setCompletedOrder(orderData);
           setShowInvoice(true);
@@ -329,7 +326,8 @@ const StudentCourses: React.FC = () => {
         setActiveTab('enrolled');
       },
       onError: (err: unknown) => {
-        const msg = err instanceof Error ? err.message : 'Không thể đăng ký khóa học. Vui lòng thử lại.';
+        const msg =
+          err instanceof Error ? err.message : 'Không thể đăng ký khóa học. Vui lòng thử lại.';
         setPurchaseError(msg);
       },
       onSettled: () => setEnrollingCourseId(null),
@@ -338,307 +336,316 @@ const StudentCourses: React.FC = () => {
 
   return (
     <>
-    <DashboardLayout
-      role="student"
-      contentClassName="dashboard-content--flush-bleed"
-      user={{ name: 'Học sinh', avatar: '', role: 'student' }}
-    >
-      <div className="module-layout-container">
-        <section className="module-page teacher-courses-page">
-          <motion.div
-            key="grid-view"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.25 }}
-          >
-            {/* ── Header ── */}
-            <header className="page-header courses-header-row">
-              <div className="header-stack">
-                <div className="row" style={{ gap: '0.6rem' }}>
-                  <h2>{UI_TEXT.MY_COURSES}</h2>
-                  {!loadingEnrollments && <span className="count-chip">{enrollments.length}</span>}
+      <DashboardLayout
+        role="student"
+        contentClassName="dashboard-content--flush-bleed"
+        user={{ name: 'Học sinh', avatar: '', role: 'student' }}
+      >
+        <div className="module-layout-container">
+          <section className="module-page teacher-courses-page">
+            <motion.div
+              key="grid-view"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+            >
+              {/* ── Header ── */}
+              <header className="page-header courses-header-row">
+                <div className="header-stack">
+                  <div className="row" style={{ gap: '0.6rem' }}>
+                    <h2>{UI_TEXT.MY_COURSES}</h2>
+                    {!loadingEnrollments && (
+                      <span className="count-chip">{enrollments.length}</span>
+                    )}
+                  </div>
+                  <p className="header-sub">
+                    {stats.active} đang học • {stats.total} đã đăng ký
+                  </p>
                 </div>
-                <p className="header-sub">
-                  {stats.active} đang học • {stats.total} đã đăng ký
-                </p>
-              </div>
-            </header>
+              </header>
 
-            {/* ── Stats ── */}
-            <div className="stats-grid">
-              <div className="stat-card stat-blue">
-                <div className="stat-icon-wrap">
-                  <BookOpen size={20} />
+              {/* ── Stats ── */}
+              <div className="stats-grid">
+                <div className="stat-card stat-blue">
+                  <div className="stat-icon-wrap">
+                    <BookOpen size={20} />
+                  </div>
+                  <div>
+                    <h3>{stats.active}</h3>
+                    <p>Đang học</p>
+                  </div>
                 </div>
-                <div>
-                  <h3>{stats.active}</h3>
-                  <p>Đang học</p>
+                <div className="stat-card stat-emerald">
+                  <div className="stat-icon-wrap">
+                    <TrendingUp size={20} />
+                  </div>
+                  <div>
+                    <h3>{stats.total}</h3>
+                    <p>Tổng đăng ký</p>
+                  </div>
+                </div>
+                <div className="stat-card stat-amber">
+                  <div className="stat-icon-wrap">
+                    <Award size={20} />
+                  </div>
+                  <div>
+                    <h3>{stats.browse}</h3>
+                    <p>Khóa học mới</p>
+                  </div>
                 </div>
               </div>
-              <div className="stat-card stat-emerald">
-                <div className="stat-icon-wrap">
-                  <TrendingUp size={20} />
-                </div>
-                <div>
-                  <h3>{stats.total}</h3>
-                  <p>Tổng đăng ký</p>
-                </div>
-              </div>
-              <div className="stat-card stat-amber">
-                <div className="stat-icon-wrap">
-                  <Award size={20} />
-                </div>
-                <div>
-                  <h3>{stats.browse}</h3>
-                  <p>Khóa học mới</p>
-                </div>
-              </div>
-            </div>
 
-            {/* ── Toolbar ── */}
-            <div className="toolbar">
-              <label className="search-box">
-                <span className="search-box__icon" aria-hidden="true">
-                  <Search size={15} />
-                </span>
-                <input
-                  placeholder={`Tìm kiếm ${UI_TEXT.COURSE.toLowerCase()}...`}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  aria-label={`Tìm kiếm ${UI_TEXT.COURSE.toLowerCase()}`}
-                />
-                {searchQuery && (
+              {/* ── Toolbar ── */}
+              <div className="toolbar">
+                <label className="search-box">
+                  <span className="search-box__icon" aria-hidden="true">
+                    <Search size={15} />
+                  </span>
+                  <input
+                    placeholder={`Tìm kiếm ${UI_TEXT.COURSE.toLowerCase()}...`}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    aria-label={`Tìm kiếm ${UI_TEXT.COURSE.toLowerCase()}`}
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      className="search-box__clear"
+                      aria-label="Xóa tìm kiếm"
+                      onClick={() => setSearchQuery('')}
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                </label>
+                <div className="pill-group">
+                  <button
+                    className={`pill-btn${activeTab === 'enrolled' ? ' active' : ''}`}
+                    onClick={() => {
+                      setActiveTab('enrolled');
+                      setEnrolledPage(1);
+                    }}
+                  >
+                    <BookOpen size={13} strokeWidth={2} /> Đã đăng ký ({stats.active})
+                  </button>
+                  <button
+                    className={`pill-btn${activeTab === 'browse' ? ' active' : ''}`}
+                    onClick={() => {
+                      setActiveTab('browse');
+                      setBrowsePage(1);
+                    }}
+                  >
+                    <Search size={13} strokeWidth={2} /> Khám phá
+                  </button>
+                </div>
+              </div>
+
+              {/* ── Browse filter toolbar ── */}
+              {activeTab === 'browse' && (
+                <div className="toolbar" style={{ gap: '0.5rem' }}>
+                  <select
+                    className="grade-filter-select"
+                    value={filterGradeId}
+                    onChange={(e) => {
+                      setBrowsePage(1);
+                      handleFilterGradeChange(e.target.value);
+                    }}
+                  >
+                    <option value="">Tất cả lớp</option>
+                    {grades.map((g) => (
+                      <option key={g.id} value={g.id}>
+                        Lớp {g.gradeLevel} – {g.name}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    className="grade-filter-select"
+                    value={filterSubjectId}
+                    onChange={(e) => {
+                      setFilterSubjectId(e.target.value);
+                      setBrowsePage(1);
+                    }}
+                    disabled={!filterGradeId}
+                  >
+                    <option value="">Tất cả môn học</option>
+                    {subjects.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* ── Summary bar ── */}
+              {activeTab === 'enrolled' && !loadingEnrollments && enrollments.length > 0 && (
+                <div className="assessment-summary-bar">
+                  <div className="summary-item summary-item--primary">
+                    <span className="summary-label">Hiển thị</span>
+                    <strong className="summary-value">
+                      {paginatedEnrollments.length} / {filteredEnrollments.length}
+                    </strong>
+                  </div>
+                  <div className="summary-item">
+                    <span className="summary-dot summary-dot--progress" />
+                    <span className="summary-label">Đang học</span>
+                    <strong className="summary-value">{stats.active}</strong>
+                  </div>
+                </div>
+              )}
+
+              {/* ── Loading skeletons ── */}
+              {(activeTab === 'enrolled' ? loadingEnrollments : loadingPublic) && (
+                <div className="rounded-xl border border-[#E8E6DC] bg-[#F5F4ED] p-4">
+                  <div className="mb-2 flex items-center gap-2 text-[14px] text-[#5E5D59]">
+                    <LoaderCircle className="h-4 w-4 animate-spin text-[#C96442]" />
+                    {activeTab === 'enrolled'
+                      ? 'Đang tải khóa học đã đăng ký...'
+                      : 'Đang tải danh sách khóa học...'}
+                  </div>
+                  <div className="h-1.5 overflow-hidden rounded-full bg-[#E8E6DC]">
+                    <motion.div
+                      className="h-full rounded-full bg-[#C96442]"
+                      initial={{ width: '0%' }}
+                      animate={{ width: '100%' }}
+                      transition={{ duration: 1.2, ease: 'easeInOut' }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* ── Enrolled grid ── */}
+              {activeTab === 'enrolled' && !loadingEnrollments && (
+                <>
+                  {filteredEnrollments.length > 0 ? (
+                    <div className="grid-cards">
+                      {paginatedEnrollments.map((enrollment, i) => (
+                        <EnrollmentCard
+                          key={enrollment.id}
+                          enrollment={enrollment}
+                          index={i}
+                          isOpening={openingEnrollmentId === enrollment.id}
+                          onOpen={openEnrollmentDetails}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="empty">
+                      <BookOpen size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
+                      <p>
+                        {searchQuery
+                          ? `Không tìm thấy kết quả cho "${searchQuery}"`
+                          : 'Bạn chưa đăng ký khóa học nào'}
+                      </p>
+                    </div>
+                  )}
+                </>
+              )}
+              {activeTab === 'enrolled' &&
+                !loadingEnrollments &&
+                filteredEnrollments.length > PAGE_SIZE && (
+                  <div className="courses-pagination">
+                    <button
+                      type="button"
+                      className="pagination-btn"
+                      onClick={() => setEnrolledPage((p) => Math.max(1, p - 1))}
+                      disabled={safeEnrolledPage === 1}
+                    >
+                      <ArrowLeft size={14} /> Trước
+                    </button>
+                    <span className="pagination-info">
+                      Trang <strong>{safeEnrolledPage}</strong> / {enrolledTotalPages}
+                    </span>
+                    <button
+                      type="button"
+                      className="pagination-btn"
+                      onClick={() => setEnrolledPage((p) => Math.min(enrolledTotalPages, p + 1))}
+                      disabled={safeEnrolledPage === enrolledTotalPages}
+                    >
+                      Sau <ArrowRight size={14} />
+                    </button>
+                  </div>
+                )}
+
+              {/* ── Browse grid ── */}
+              {activeTab === 'browse' && !loadingPublic && (
+                <>
+                  {publicCourses.length > 0 ? (
+                    <div className="grid-cards">
+                      {publicCourses.map((course, i) => (
+                        <CourseCard
+                          key={course.id}
+                          course={course}
+                          index={i}
+                          onPurchase={handleOpenPurchaseModal}
+                          isPurchasing={enrollingCourseId === course.id}
+                          isEnrolled={enrolledCourseIds.has(course.id)}
+                          enrolledEnrollmentId={enrolledCourseIdMap.get(course.id)}
+                          onClick={() => openPublicCourseDetails(course.id)}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="empty">
+                      <Search size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
+                      <p>Không tìm thấy khóa học nào</p>
+                    </div>
+                  )}
+                </>
+              )}
+              {activeTab === 'browse' && !loadingPublic && publicCourses.length > PAGE_SIZE && (
+                <div className="courses-pagination">
                   <button
                     type="button"
-                    className="search-box__clear"
-                    aria-label="Xóa tìm kiếm"
-                    onClick={() => setSearchQuery('')}
+                    className="pagination-btn"
+                    onClick={() => setBrowsePage((p) => Math.max(1, p - 1))}
+                    disabled={safeBrowsePage === 1}
                   >
-                    <X size={14} />
+                    <ArrowLeft size={14} /> Trước
                   </button>
-                )}
-              </label>
-              <div className="pill-group">
-                <button
-                  className={`pill-btn${activeTab === 'enrolled' ? ' active' : ''}`}
-                  onClick={() => {
-                    setActiveTab('enrolled');
-                    setEnrolledPage(1);
-                  }}
-                >
-                  <BookOpen size={13} strokeWidth={2} /> Đã đăng ký ({stats.active})
-                </button>
-                <button
-                  className={`pill-btn${activeTab === 'browse' ? ' active' : ''}`}
-                  onClick={() => {
-                    setActiveTab('browse');
-                    setBrowsePage(1);
-                  }}
-                >
-                  <Search size={13} strokeWidth={2} /> Khám phá
-                </button>
-              </div>
-            </div>
-
-            {/* ── Browse filter toolbar ── */}
-            {activeTab === 'browse' && (
-              <div className="toolbar" style={{ gap: '0.5rem' }}>
-                <select
-                  className="grade-filter-select"
-                  value={filterGradeId}
-                  onChange={(e) => {
-                    setBrowsePage(1);
-                    handleFilterGradeChange(e.target.value);
-                  }}
-                >
-                  <option value="">Tất cả khối lớp</option>
-                  {grades.map((g) => (
-                    <option key={g.id} value={g.id}>
-                      Khối {g.gradeLevel} – {g.name}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  className="grade-filter-select"
-                  value={filterSubjectId}
-                  onChange={(e) => {
-                    setFilterSubjectId(e.target.value);
-                    setBrowsePage(1);
-                  }}
-                  disabled={!filterGradeId}
-                >
-                  <option value="">Tất cả môn học</option>
-                  {subjects.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {/* ── Summary bar ── */}
-            {activeTab === 'enrolled' && !loadingEnrollments && enrollments.length > 0 && (
-              <div className="assessment-summary-bar">
-                <div className="summary-item summary-item--primary">
-                  <span className="summary-label">Hiển thị</span>
-                  <strong className="summary-value">
-                    {paginatedEnrollments.length} / {filteredEnrollments.length}
-                  </strong>
+                  <span className="pagination-info">
+                    Trang <strong>{safeBrowsePage}</strong> / {browseTotalPages}
+                  </span>
+                  <button
+                    type="button"
+                    className="pagination-btn"
+                    onClick={() => setBrowsePage((p) => Math.min(browseTotalPages, p + 1))}
+                    disabled={safeBrowsePage === browseTotalPages}
+                  >
+                    Sau <ArrowRight size={14} />
+                  </button>
                 </div>
-                <div className="summary-item">
-                  <span className="summary-dot summary-dot--progress" />
-                  <span className="summary-label">Đang học</span>
-                  <strong className="summary-value">{stats.active}</strong>
-                </div>
-              </div>
-            )}
+              )}
+            </motion.div>
+          </section>
+        </div>
+      </DashboardLayout>
 
-            {/* ── Loading skeletons ── */}
-            {(activeTab === 'enrolled' ? loadingEnrollments : loadingPublic) && (
-              <div className="rounded-xl border border-[#E8E6DC] bg-[#F5F4ED] p-4">
-                <div className="mb-2 flex items-center gap-2 text-[14px] text-[#5E5D59]">
-                  <LoaderCircle className="h-4 w-4 animate-spin text-[#C96442]" />
-                  {activeTab === 'enrolled' ? 'Đang tải khóa học đã đăng ký...' : 'Đang tải danh sách khóa học...'}
-                </div>
-                <div className="h-1.5 overflow-hidden rounded-full bg-[#E8E6DC]">
-                  <motion.div
-                    className="h-full rounded-full bg-[#C96442]"
-                    initial={{ width: '0%' }}
-                    animate={{ width: '100%' }}
-                    transition={{ duration: 1.2, ease: 'easeInOut' }}
-                  />
-                </div>
-              </div>
-            )}
+      <PurchaseConfirmationModal
+        course={pendingCourse}
+        isOpen={!!pendingCourse}
+        onConfirm={handleConfirmPurchase}
+        onCancel={() => {
+          setPendingCourse(null);
+          setPurchaseError(null);
+        }}
+        isPurchasing={enrollMutation.isPending}
+        purchaseError={purchaseError}
+      />
 
-            {/* ── Enrolled grid ── */}
-            {activeTab === 'enrolled' && !loadingEnrollments && (
-              <>
-                {filteredEnrollments.length > 0 ? (
-                  <div className="grid-cards">
-                    {paginatedEnrollments.map((enrollment, i) => (
-                      <EnrollmentCard
-                        key={enrollment.id}
-                        enrollment={enrollment}
-                        index={i}
-                        isOpening={openingEnrollmentId === enrollment.id}
-                        onOpen={openEnrollmentDetails}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="empty">
-                    <BookOpen size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
-                    <p>
-                      {searchQuery
-                        ? `Không tìm thấy kết quả cho "${searchQuery}"`
-                        : 'Bạn chưa đăng ký khóa học nào'}
-                    </p>
-                  </div>
-                )}
-              </>
-            )}
-            {activeTab === 'enrolled' && !loadingEnrollments && filteredEnrollments.length > PAGE_SIZE && (
-              <div className="courses-pagination">
-                <button
-                  type="button"
-                  className="pagination-btn"
-                  onClick={() => setEnrolledPage((p) => Math.max(1, p - 1))}
-                  disabled={safeEnrolledPage === 1}
-                >
-                  <ArrowLeft size={14} /> Trước
-                </button>
-                <span className="pagination-info">
-                  Trang <strong>{safeEnrolledPage}</strong> / {enrolledTotalPages}
-                </span>
-                <button
-                  type="button"
-                  className="pagination-btn"
-                  onClick={() => setEnrolledPage((p) => Math.min(enrolledTotalPages, p + 1))}
-                  disabled={safeEnrolledPage === enrolledTotalPages}
-                >
-                  Sau <ArrowRight size={14} />
-                </button>
-              </div>
-            )}
-
-            {/* ── Browse grid ── */}
-            {activeTab === 'browse' && !loadingPublic && (
-              <>
-                {publicCourses.length > 0 ? (
-                  <div className="grid-cards">
-                    {publicCourses.map((course, i) => (
-                      <CourseCard
-                        key={course.id}
-                        course={course}
-                        index={i}
-                        onPurchase={handleOpenPurchaseModal}
-                        isPurchasing={enrollingCourseId === course.id}
-                        isEnrolled={enrolledCourseIds.has(course.id)}
-                        enrolledEnrollmentId={enrolledCourseIdMap.get(course.id)}
-                        onClick={() => openPublicCourseDetails(course.id)}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="empty">
-                    <Search size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
-                    <p>Không tìm thấy khóa học nào</p>
-                  </div>
-                )}
-              </>
-            )}
-            {activeTab === 'browse' && !loadingPublic && publicCourses.length > PAGE_SIZE && (
-              <div className="courses-pagination">
-                <button
-                  type="button"
-                  className="pagination-btn"
-                  onClick={() => setBrowsePage((p) => Math.max(1, p - 1))}
-                  disabled={safeBrowsePage === 1}
-                >
-                  <ArrowLeft size={14} /> Trước
-                </button>
-                <span className="pagination-info">
-                  Trang <strong>{safeBrowsePage}</strong> / {browseTotalPages}
-                </span>
-                <button
-                  type="button"
-                  className="pagination-btn"
-                  onClick={() => setBrowsePage((p) => Math.min(browseTotalPages, p + 1))}
-                  disabled={safeBrowsePage === browseTotalPages}
-                >
-                  Sau <ArrowRight size={14} />
-                </button>
-              </div>
-            )}
-          </motion.div>
-        </section>
-      </div>
-    </DashboardLayout>
-
-    <PurchaseConfirmationModal
-      course={pendingCourse}
-      isOpen={!!pendingCourse}
-      onConfirm={handleConfirmPurchase}
-      onCancel={() => { setPendingCourse(null); setPurchaseError(null); }}
-      isPurchasing={enrollMutation.isPending}
-      purchaseError={purchaseError}
-    />
-
-    <InvoiceModal
-      order={completedOrder}
-      isOpen={showInvoice}
-      onClose={() => setShowInvoice(false)}
-      onGoToCourse={() => {
-        if (completedOrder?.enrollmentId) {
-          navigate(`/student/courses/${completedOrder.enrollmentId}`);
-        } else {
-          navigate('/student/courses');
-        }
-      }}
-    />
+      <InvoiceModal
+        order={completedOrder}
+        isOpen={showInvoice}
+        onClose={() => setShowInvoice(false)}
+        onGoToCourse={() => {
+          if (completedOrder?.enrollmentId) {
+            navigate(`/student/courses/${completedOrder.enrollmentId}`);
+          } else {
+            navigate('/student/courses');
+          }
+        }}
+      />
     </>
   );
 };

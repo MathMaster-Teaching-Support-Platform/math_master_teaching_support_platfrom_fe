@@ -71,7 +71,7 @@ export default function GradeSubjectSelect({
           }}
           disabled={disabled || isLoadingGrades}
         >
-          <option value="">Chọn khối lớp</option>
+          <option value="">Chọn lớp</option>
           {sortedGrades.map((grade) => (
             <option key={grade.id} value={String(grade.level)}>
               {grade.name || `Lớp ${grade.level}`}
@@ -79,7 +79,7 @@ export default function GradeSubjectSelect({
           ))}
         </select>
         {isLoadingGrades && <span className="grade-subject-loading">Đang tải...</span>}
-        {isGradesError && <span className="grade-subject-loading">Không tải được khối lớp</span>}
+        {isGradesError && <span className="grade-subject-loading">Không tải được lớp</span>}
       </div>
 
       {/* Subject Select */}
@@ -101,11 +101,11 @@ export default function GradeSubjectSelect({
           disabled={disabled || isLoadingSubjects || !gradeLevel}
         >
           {!gradeLevel ? (
-            <option value="">Chọn khối lớp trước</option>
+            <option value="">Chọn lớp trước</option>
           ) : isLoadingSubjects ? (
             <option value="">Đang tải môn học...</option>
           ) : subjects.length === 0 ? (
-            <option value="">Không có môn học cho khối này</option>
+            <option value="">Không có môn học cho lớp này</option>
           ) : (
             <>
               <option value="">Chọn môn học</option>

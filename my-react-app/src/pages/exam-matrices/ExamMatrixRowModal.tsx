@@ -41,10 +41,7 @@ export function ExamMatrixRowModal({
   const chapters = chapterQuery.data?.result ?? [];
   const subjectsByGrade = subjectsByGradeQuery.data?.result ?? [];
   const grades = gradesData?.result ?? [];
-  const bankStats = useMemo(
-    () => bankStatsQuery.data?.result ?? [],
-    [bankStatsQuery.data]
-  );
+  const bankStats = useMemo(() => bankStatsQuery.data?.result ?? [], [bankStatsQuery.data]);
 
   // chapterId -> total approved questions in the bank, for hint badges in the dropdown.
   const bankCountByChapter = useMemo(() => {
@@ -58,9 +55,7 @@ export function ExamMatrixRowModal({
   }, [bankStats]);
 
   const chosenChapterCount =
-    chapterId && bankCountByChapter.has(chapterId)
-      ? bankCountByChapter.get(chapterId)!
-      : null;
+    chapterId && bankCountByChapter.has(chapterId) ? bankCountByChapter.get(chapterId)! : null;
 
   // Sort grades by level
   const sortedGrades = [...grades].sort((a, b) => a.level - b.level);
@@ -154,120 +149,120 @@ export function ExamMatrixRowModal({
             }}
           >
             <div style={{ minWidth: 0 }}>
-            {error && <p style={{ color: '#be123c', fontSize: 13 }}>{error}</p>}
+              {error && <p style={{ color: '#be123c', fontSize: 13 }}>{error}</p>}
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {/* Grade Selection */}
-              <div>
-                <label className="label">Lớp</label>
-                <select
-                  className="select"
-                  value={gradeLevel}
-                  onChange={(event) => {
-                    setGradeLevel(event.target.value);
-                    setSelectedSubjectId('');
-                    setChapterId('');
-                  }}
-                  disabled={isLoadingGrades}
-                  style={{ width: '100%' }}
-                >
-                  <option value="">Chọn khối lớp</option>
-                  {sortedGrades.map((grade) => (
-                    <option key={grade.id} value={String(grade.level)}>
-                      {grade.name || `Lớp ${grade.level}`}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Subject Selection */}
-              <div>
-                <label className="label">Môn học</label>
-                <select
-                  className="select"
-                  value={selectedSubjectId}
-                  onChange={(event) => {
-                    setSelectedSubjectId(event.target.value);
-                    setChapterId('');
-                  }}
-                  disabled={
-                    subjectsByGradeQuery.isLoading || !gradeLevel || subjectsByGrade.length === 0
-                  }
-                  style={{ width: '100%' }}
-                >
-                  {!gradeLevel ? (
-                    <option value="">Chọn khối lớp trước</option>
-                  ) : subjectsByGrade.length === 0 ? (
-                    <option value="">Không có môn học</option>
-                  ) : (
-                    <>
-                      <option value="">Chọn môn học</option>
-                      {subjectsByGrade.map((subject) => (
-                        <option key={subject.id} value={subject.id}>
-                          {subject.name}
-                        </option>
-                      ))}
-                    </>
-                  )}
-                </select>
-              </div>
-
-              {/* Chapter Selection */}
-              <div>
-                <label className="label">Chủ đề *</label>
-                <select
-                  className="select"
-                  value={chapterId}
-                  onChange={(event) => setChapterId(event.target.value)}
-                  required
-                  disabled={chapterQuery.isLoading || !selectedSubjectId}
-                  style={{ width: '100%' }}
-                >
-                  {!selectedSubjectId ? (
-                    <option value="">Chọn môn học trước</option>
-                  ) : chapters.length === 0 ? (
-                    <option value="">Không có chủ đề</option>
-                  ) : (
-                    <>
-                      <option value="">Chọn chủ đề</option>
-                      {chapters.map((chapter) => {
-                        const inBank = bankCountByChapter.get(chapter.id);
-                        const suffix =
-                          showBankPanel && inBank !== undefined
-                            ? ` — ${inBank} câu trong kho`
-                            : '';
-                        return (
-                          <option key={chapter.id} value={chapter.id}>
-                            {(chapter.title || chapter.name || chapter.id) + suffix}
-                          </option>
-                        );
-                      })}
-                    </>
-                  )}
-                </select>
-                {showBankPanel && chapterId && chosenChapterCount === 0 && (
-                  <p
-                    style={{
-                      marginTop: 8,
-                      fontSize: 12,
-                      color: '#92400e',
-                      background: '#fef3c7',
-                      border: '1px solid #fde68a',
-                      borderRadius: 6,
-                      padding: '6px 10px',
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {/* Grade Selection */}
+                <div>
+                  <label className="label">Lớp</label>
+                  <select
+                    className="select"
+                    value={gradeLevel}
+                    onChange={(event) => {
+                      setGradeLevel(event.target.value);
+                      setSelectedSubjectId('');
+                      setChapterId('');
                     }}
+                    disabled={isLoadingGrades}
+                    style={{ width: '100%' }}
                   >
-                    ⚠️ Chương này hiện chưa có câu hỏi đã duyệt trong ngân hàng. Bạn vẫn có thể
-                    thêm dòng nhưng sẽ cần bổ sung câu hỏi trước khi sinh đề.
-                  </p>
-                )}
-              </div>
-            </div>
+                    <option value="">Chọn lớp</option>
+                    {sortedGrades.map((grade) => (
+                      <option key={grade.id} value={String(grade.level)}>
+                        {grade.name || `Lớp ${grade.level}`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-            <p className="muted" style={{ marginTop: 16 }}>
-              Sau khi thêm dòng, bạn có thể chỉnh sửa số câu cho từng mức độ nhận thức trực tiếp
-              trong bảng ma trận.
-            </p>
+                {/* Subject Selection */}
+                <div>
+                  <label className="label">Môn học</label>
+                  <select
+                    className="select"
+                    value={selectedSubjectId}
+                    onChange={(event) => {
+                      setSelectedSubjectId(event.target.value);
+                      setChapterId('');
+                    }}
+                    disabled={
+                      subjectsByGradeQuery.isLoading || !gradeLevel || subjectsByGrade.length === 0
+                    }
+                    style={{ width: '100%' }}
+                  >
+                    {!gradeLevel ? (
+                      <option value="">Chọn lớp trước</option>
+                    ) : subjectsByGrade.length === 0 ? (
+                      <option value="">Không có môn học</option>
+                    ) : (
+                      <>
+                        <option value="">Chọn môn học</option>
+                        {subjectsByGrade.map((subject) => (
+                          <option key={subject.id} value={subject.id}>
+                            {subject.name}
+                          </option>
+                        ))}
+                      </>
+                    )}
+                  </select>
+                </div>
+
+                {/* Chapter Selection */}
+                <div>
+                  <label className="label">Chủ đề *</label>
+                  <select
+                    className="select"
+                    value={chapterId}
+                    onChange={(event) => setChapterId(event.target.value)}
+                    required
+                    disabled={chapterQuery.isLoading || !selectedSubjectId}
+                    style={{ width: '100%' }}
+                  >
+                    {!selectedSubjectId ? (
+                      <option value="">Chọn môn học trước</option>
+                    ) : chapters.length === 0 ? (
+                      <option value="">Không có chủ đề</option>
+                    ) : (
+                      <>
+                        <option value="">Chọn chủ đề</option>
+                        {chapters.map((chapter) => {
+                          const inBank = bankCountByChapter.get(chapter.id);
+                          const suffix =
+                            showBankPanel && inBank !== undefined
+                              ? ` — ${inBank} câu trong kho`
+                              : '';
+                          return (
+                            <option key={chapter.id} value={chapter.id}>
+                              {(chapter.title || chapter.name || chapter.id) + suffix}
+                            </option>
+                          );
+                        })}
+                      </>
+                    )}
+                  </select>
+                  {showBankPanel && chapterId && chosenChapterCount === 0 && (
+                    <p
+                      style={{
+                        marginTop: 8,
+                        fontSize: 12,
+                        color: '#92400e',
+                        background: '#fef3c7',
+                        border: '1px solid #fde68a',
+                        borderRadius: 6,
+                        padding: '6px 10px',
+                      }}
+                    >
+                      ⚠️ Chương này hiện chưa có câu hỏi đã duyệt trong ngân hàng. Bạn vẫn có thể
+                      thêm dòng nhưng sẽ cần bổ sung câu hỏi trước khi sinh đề.
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <p className="muted" style={{ marginTop: 16 }}>
+                Sau khi thêm dòng, bạn có thể chỉnh sửa số câu cho từng mức độ nhận thức trực tiếp
+                trong bảng ma trận.
+              </p>
             </div>
 
             {/* Right pane: bank stats tree (Grade → Chapter → Type → Cognitive) */}
@@ -311,10 +306,7 @@ export function ExamMatrixRowModal({
                 {!bankStatsQuery.isLoading && !bankStatsQuery.isError && (
                   <MatrixStatsTree stats={bankStats} />
                 )}
-                <p
-                  className="muted"
-                  style={{ fontSize: 11, marginTop: 8, lineHeight: 1.4 }}
-                >
+                <p className="muted" style={{ fontSize: 11, marginTop: 8, lineHeight: 1.4 }}>
                   Chỉ tính câu hỏi đã duyệt. Đừng yêu cầu nhiều hơn số có sẵn ở mỗi chương / mức độ.
                 </p>
               </aside>

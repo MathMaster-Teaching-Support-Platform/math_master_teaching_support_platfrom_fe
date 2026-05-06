@@ -85,7 +85,9 @@ const EditBookModal: React.FC<{
       className="ocr-modal-backdrop"
       aria-hidden="true"
       onClick={onClose}
-      onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') onClose();
+      }}
     >
       <motion.div
         className="ocr-modal"
@@ -96,11 +98,15 @@ const EditBookModal: React.FC<{
       >
         <div className="ocr-modal-header">
           <h3 className="ocr-modal-title">Chỉnh sửa thông tin sách</h3>
-          <button className="ocr-modal-close" onClick={onClose}><X size={16} /></button>
+          <button className="ocr-modal-close" onClick={onClose}>
+            <X size={16} />
+          </button>
         </div>
         <div className="ocr-modal-body">
           <div className="ocr-field-group">
-            <label className="ocr-field-label" htmlFor="edit-title">Tên sách *</label>
+            <label className="ocr-field-label" htmlFor="edit-title">
+              Tên sách *
+            </label>
             <input
               id="edit-title"
               className="ocr-field-input"
@@ -111,7 +117,9 @@ const EditBookModal: React.FC<{
           </div>
           <div className="ocr-field-row">
             <div className="ocr-field-group">
-              <label className="ocr-field-label" htmlFor="edit-grade">Khối lớp *</label>
+              <label className="ocr-field-label" htmlFor="edit-grade">
+                Lớp *
+              </label>
               <select
                 id="edit-grade"
                 className="ocr-field-select"
@@ -119,12 +127,16 @@ const EditBookModal: React.FC<{
                 onChange={(e) => setGrade(Number(e.target.value))}
               >
                 {Array.from({ length: 12 }, (_, i) => i + 1).map((g) => (
-                  <option key={g} value={g}>Lớp {g}</option>
+                  <option key={g} value={g}>
+                    Lớp {g}
+                  </option>
                 ))}
               </select>
             </div>
             <div className="ocr-field-group">
-              <label className="ocr-field-label" htmlFor="edit-year">Năm học</label>
+              <label className="ocr-field-label" htmlFor="edit-year">
+                Năm học
+              </label>
               <input
                 id="edit-year"
                 className="ocr-field-input"
@@ -135,7 +147,9 @@ const EditBookModal: React.FC<{
             </div>
           </div>
           <div className="ocr-field-group">
-            <label className="ocr-field-label" htmlFor="edit-publisher">NXB / Bộ sách</label>
+            <label className="ocr-field-label" htmlFor="edit-publisher">
+              NXB / Bộ sách
+            </label>
             <input
               id="edit-publisher"
               className="ocr-field-input"
@@ -223,7 +237,11 @@ const BookCard: React.FC<{ book: OcrBook; onDeleted: () => void }> = ({ book, on
     <>
       <AnimatePresence>
         {showEdit && (
-          <EditBookModal book={book} onClose={() => setShowEdit(false)} onSaved={() => setShowEdit(false)} />
+          <EditBookModal
+            book={book}
+            onClose={() => setShowEdit(false)}
+            onSaved={() => setShowEdit(false)}
+          />
         )}
       </AnimatePresence>
 
@@ -274,7 +292,10 @@ const BookCard: React.FC<{ book: OcrBook; onDeleted: () => void }> = ({ book, on
             {thumbMutation.isPending ? (
               <Loader2 size={20} className="spin-icon" />
             ) : (
-              <><Camera size={16} /><span>Đổi ảnh bìa</span></>
+              <>
+                <Camera size={16} />
+                <span>Đổi ảnh bìa</span>
+              </>
             )}
           </div>
         </div>
@@ -402,7 +423,9 @@ const BookCard: React.FC<{ book: OcrBook; onDeleted: () => void }> = ({ book, on
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <p className="ocr-delete-overlay-msg">Xóa sách "<strong>{book.title}</strong>"?</p>
+              <p className="ocr-delete-overlay-msg">
+                Xóa sách "<strong>{book.title}</strong>"?
+              </p>
               <p className="ocr-delete-overlay-sub">Hành động này không thể hoàn tác.</p>
               <div className="ocr-delete-overlay-btns">
                 <button
@@ -416,7 +439,11 @@ const BookCard: React.FC<{ book: OcrBook; onDeleted: () => void }> = ({ book, on
                   onClick={() => deleteMutation.mutate()}
                   disabled={deleteMutation.isPending}
                 >
-                  {deleteMutation.isPending ? <Loader2 size={12} className="spin" /> : <Trash2 size={12} />}
+                  {deleteMutation.isPending ? (
+                    <Loader2 size={12} className="spin" />
+                  ) : (
+                    <Trash2 size={12} />
+                  )}
                   Xóa
                 </button>
               </div>
@@ -484,7 +511,10 @@ const UploadSection: React.FC<{ onUploaded: () => void }> = ({ onUploaded }) => 
         {/* Drop zone */}
         <div
           className={`ocr-dropzone${isDragging ? ' ocr-dropzone--over' : ''}`}
-          onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setIsDragging(true);
+          }}
           onDragLeave={() => setIsDragging(false)}
           onDrop={handleDrop}
           onClick={() => fileRef.current?.click()}
@@ -500,9 +530,7 @@ const UploadSection: React.FC<{ onUploaded: () => void }> = ({ onUploaded }) => 
             }}
           />
           <UploadCloud size={36} className="ocr-dropzone-icon" />
-          <p className="ocr-dropzone-title">
-            {file ? file.name : 'Kéo file PDF vào đây'}
-          </p>
+          <p className="ocr-dropzone-title">{file ? file.name : 'Kéo file PDF vào đây'}</p>
           <p className="ocr-dropzone-hint">
             {file
               ? `${(file.size / 1024 / 1024).toFixed(1)} MB`
@@ -528,14 +556,16 @@ const UploadSection: React.FC<{ onUploaded: () => void }> = ({ onUploaded }) => 
             />
           </div>
           <div>
-            <label className="ocr-field-label">Khối lớp *</label>
+            <label className="ocr-field-label">Lớp *</label>
             <select
               className="ocr-field-select"
               value={grade}
               onChange={(e) => setGrade(Number(e.target.value))}
             >
               {Array.from({ length: 12 }, (_, i) => i + 1).map((g) => (
-                <option key={g} value={g}>Lớp {g}</option>
+                <option key={g} value={g}>
+                  Lớp {g}
+                </option>
               ))}
             </select>
           </div>
@@ -562,9 +592,13 @@ const UploadSection: React.FC<{ onUploaded: () => void }> = ({ onUploaded }) => 
             onClick={() => mutation.mutate()}
           >
             {mutation.isPending ? (
-              <><Loader2 size={15} /> Đang upload…</>
+              <>
+                <Loader2 size={15} /> Đang upload…
+              </>
             ) : (
-              <><ScanText size={15} /> Bắt đầu OCR</>
+              <>
+                <ScanText size={15} /> Bắt đầu OCR
+              </>
             )}
           </button>
         </div>
@@ -625,14 +659,12 @@ const AdminOCRBooks: React.FC = () => {
           <div className="ocr-header-stack">
             <h1 className="ocr-page-title">Thư viện Sách OCR</h1>
             <p className="ocr-page-subtitle">
-              Upload PDF sách giáo khoa — Gemini Vision OCR tự động trích xuất nội dung, LaTeX, hình vẽ
+              Upload PDF sách giáo khoa — Gemini Vision OCR tự động trích xuất nội dung, LaTeX, hình
+              vẽ
             </p>
           </div>
           <div className="ocr-header-actions">
-            <button
-              className="ocr-btn ocr-btn-ghost"
-              onClick={() => setShowUpload((v) => !v)}
-            >
+            <button className="ocr-btn ocr-btn-ghost" onClick={() => setShowUpload((v) => !v)}>
               {showUpload ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
               {showUpload ? 'Ẩn upload' : 'Upload sách mới'}
             </button>

@@ -219,7 +219,7 @@ export default function TeacherMindmaps() {
       const response = await LessonSlideService.getSchoolGrades(true);
       setSchoolGrades(response.result || []);
     } catch (err) {
-      setGeneratorError(err instanceof Error ? err.message : 'Không thể tải danh sách khối lớp');
+      setGeneratorError(err instanceof Error ? err.message : 'Không thể tải danh sách lớp');
     } finally {
       setLoadingGrades(false);
     }
@@ -320,7 +320,7 @@ export default function TeacherMindmaps() {
     e.preventDefault();
 
     if (!lessonId) {
-      setGeneratorError('Vui lòng chọn đầy đủ Khối, Môn, Chương và Bài học trước khi tạo mindmap.');
+      setGeneratorError('Vui lòng chọn đầy đủ Lớp, Môn, Chương và Bài học trước khi tạo mindmap.');
       setActiveGeneratorStep(1);
       return;
     }
@@ -507,16 +507,16 @@ export default function TeacherMindmaps() {
                   <div className="generator-step-block">
                     <h4 className="generator-step-title">Bước 1: Chọn dữ liệu bài dạy</h4>
                     <div className="form-group">
-                      <label>Khối (School Grade)</label>
+                      <label>Lớp (School Grade)</label>
                       <select
                         value={schoolGradeId}
                         onChange={(e) => void handleSchoolGradeChange(e.target.value)}
                         disabled={loadingGrades}
                       >
-                        <option value="">-- Chọn khối --</option>
+                        <option value="">-- Chọn lớp --</option>
                         {schoolGrades.map((grade) => (
                           <option key={grade.id} value={grade.id}>
-                            Khối {grade.gradeLevel} - {grade.name}
+                            Lớp {grade.gradeLevel} - {grade.name}
                           </option>
                         ))}
                       </select>

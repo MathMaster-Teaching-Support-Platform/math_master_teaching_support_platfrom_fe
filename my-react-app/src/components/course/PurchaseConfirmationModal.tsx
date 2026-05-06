@@ -1,4 +1,3 @@
-import React, { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   AlertCircle,
@@ -11,9 +10,10 @@ import {
   Wallet,
   X,
 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import { WalletService } from '../../services/api/wallet.service';
-import { getEffectivePrice, hasActiveDiscount, getDiscountPercentage } from '../../utils/pricing';
 import type { CourseResponse } from '../../types/course.types';
+import { getDiscountPercentage, getEffectivePrice, hasActiveDiscount } from '../../utils/pricing';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -73,7 +73,8 @@ export const PurchaseConfirmationModal: React.FC<PurchaseConfirmationModalProps>
 
   const postBalance = walletBalance !== null ? walletBalance - effectivePrice : null;
   const hasEnoughBalance = walletBalance !== null && walletBalance >= effectivePrice;
-  const shortage = walletBalance !== null && !isFree ? Math.max(0, effectivePrice - walletBalance) : 0;
+  const shortage =
+    walletBalance !== null && !isFree ? Math.max(0, effectivePrice - walletBalance) : 0;
 
   const canConfirm = !isPurchasing && (isFree || hasEnoughBalance);
 
@@ -243,7 +244,7 @@ export const PurchaseConfirmationModal: React.FC<PurchaseConfirmationModalProps>
                   )}
                   <p style={{ margin: '0.15rem 0 0', fontSize: '0.78rem', color: '#94a3b8' }}>
                     {course.lessonsCount ?? 0} bài học • {course.subjectName ?? ''}{' '}
-                    {course.gradeLevel ? `• Khối ${course.gradeLevel}` : ''}
+                    {course.gradeLevel ? `• Lớp ${course.gradeLevel}` : ''}
                   </p>
                 </div>
               </div>
@@ -328,11 +329,7 @@ export const PurchaseConfirmationModal: React.FC<PurchaseConfirmationModalProps>
                 <div
                   style={{
                     border: `1px solid ${
-                      walletError
-                        ? '#fca5a5'
-                        : shortage > 0
-                        ? '#fde68a'
-                        : '#bbf7d0'
+                      walletError ? '#fca5a5' : shortage > 0 ? '#fde68a' : '#bbf7d0'
                     }`,
                     borderRadius: 12,
                     overflow: 'hidden',
@@ -342,11 +339,7 @@ export const PurchaseConfirmationModal: React.FC<PurchaseConfirmationModalProps>
                   <div
                     style={{
                       padding: '0.6rem 1rem',
-                      background: walletError
-                        ? '#fff1f2'
-                        : shortage > 0
-                        ? '#fffbeb'
-                        : '#f0fdf4',
+                      background: walletError ? '#fff1f2' : shortage > 0 ? '#fffbeb' : '#f0fdf4',
                       borderBottom: `1px solid ${
                         walletError ? '#fca5a5' : shortage > 0 ? '#fde68a' : '#bbf7d0'
                       }`,
@@ -453,9 +446,7 @@ export const PurchaseConfirmationModal: React.FC<PurchaseConfirmationModalProps>
                               <AlertCircle size={14} />
                               <span>
                                 Thiếu{' '}
-                                <strong style={{ color: '#dc2626' }}>
-                                  {fmtBalance(shortage)}
-                                </strong>
+                                <strong style={{ color: '#dc2626' }}>{fmtBalance(shortage)}</strong>
                               </span>
                             </div>
                             <a
@@ -559,10 +550,9 @@ export const PurchaseConfirmationModal: React.FC<PurchaseConfirmationModalProps>
                   padding: '0.75rem',
                   borderRadius: 12,
                   border: 'none',
-                  background:
-                    !canConfirm
-                      ? '#94a3b8'
-                      : isFree
+                  background: !canConfirm
+                    ? '#94a3b8'
+                    : isFree
                       ? 'linear-gradient(135deg,#059669,#10b981)'
                       : 'linear-gradient(135deg,#1d4ed8,#3b82f6)',
                   color: '#ffffff',

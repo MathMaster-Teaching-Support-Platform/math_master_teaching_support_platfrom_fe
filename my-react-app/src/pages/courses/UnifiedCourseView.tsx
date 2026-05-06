@@ -1,9 +1,9 @@
 /**
  * UnifiedCourseView - Single course interface for all users
- * 
+ *
  * This component replaces both CoursePreview and StudentCourseDetail
  * to provide a consistent UI regardless of enrollment status.
- * 
+ *
  * Features:
  * - Same layout for enrolled and non-enrolled users
  * - Permission-based content access (locked/unlocked)
@@ -12,45 +12,45 @@
  * - Progress tracking for enrolled users
  */
 
-import React, { useMemo } from 'react';
-import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
+  AlertCircle,
   ArrowLeft,
   BookOpen,
   FileText,
+  Globe,
+  LoaderCircle,
+  Lock,
   Star,
   TrendingUp,
-  Lock,
   Users,
-  Globe,
-  AlertCircle,
-  LoaderCircle,
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import React, { useMemo } from 'react';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { CourseBreadcrumb } from '../../components/course/CourseBreadcrumb';
 import { CourseIncludesList } from '../../components/course/CourseIncludesList';
 import { CourseLearningPanels } from '../../components/course/CourseLearningPanels';
+import { InvoiceModal } from '../../components/course/InvoiceModal';
+import { PurchaseConfirmationModal } from '../../components/course/PurchaseConfirmationModal';
+import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { UI_TEXT } from '../../constants/uiText';
 import {
   useCourseDetail,
   useCourseLessons,
   useCourseProgress,
-  useMyEnrollments,
   useEnroll,
+  useMyEnrollments,
   useTeacherProfile,
 } from '../../hooks/useCourses';
 import { AuthService } from '../../services/api/auth.service';
-import { getEffectivePrice, hasActiveDiscount } from '../../utils/pricing';
-import { InvoiceModal } from '../../components/course/InvoiceModal';
-import { PurchaseConfirmationModal } from '../../components/course/PurchaseConfirmationModal';
-import type { Order } from '../../types/order.types';
 import '../../styles/module-refactor.css';
+import type { Order } from '../../types/order.types';
+import { getEffectivePrice, hasActiveDiscount } from '../../utils/pricing';
 import './StudentCourses.css';
-import { UI_TEXT } from '../../constants/uiText';
 
 // Import existing tab components
-import StudentLessonsTab from './student-tabs/StudentLessonsTab';
 import StudentAssessmentsTab from './student-tabs/StudentAssessmentsTab';
+import StudentLessonsTab from './student-tabs/StudentLessonsTab';
 import StudentProgressTab from './student-tabs/StudentProgressTab';
 import StudentReviewsTab from './student-tabs/StudentReviewsTab';
 
@@ -123,7 +123,9 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
   const progress = progressData?.result;
   const teacherProfile = teacherProfileData?.result;
 
-  const decodedToken = AuthService.getToken() ? AuthService.decodeToken(AuthService.getToken()!) : null;
+  const decodedToken = AuthService.getToken()
+    ? AuthService.decodeToken(AuthService.getToken()!)
+    : null;
   const isOwnerTeacher =
     userRole === 'teacher' &&
     !!course &&
@@ -144,10 +146,7 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
   const hasFullAccess = isEnrolled || canViewUnpublishedCourse;
 
   // Calculate free preview stats
-  const freePreviewLessons = useMemo(
-    () => lessons.filter((l) => l.isFreePreview),
-    [lessons]
-  );
+  const freePreviewLessons = useMemo(() => lessons.filter((l) => l.isFreePreview), [lessons]);
   const lockedLessonsCount = useMemo(
     () => lessons.length - freePreviewLessons.length,
     [lessons.length, freePreviewLessons.length]
@@ -174,7 +173,8 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
     if (enrollMutation.isPending) return;
     enrollMutation.mutate(courseId!, {
       onSuccess: (resp) => {
-        const orderData = resp?.result || (resp as any)?.order || (resp?.type === 'order' ? resp : null);
+        const orderData =
+          resp?.result || (resp as any)?.order || (resp?.type === 'order' ? resp : null);
         if (orderData && (orderData.orderNumber || orderData.id)) {
           setCompletedOrder(orderData);
           setShowInvoice(true);
@@ -192,16 +192,16 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
         setShowPurchaseModal(false);
       },
       onError: (err) => {
-        const msg = err instanceof Error ? err.message : 'Không thể đăng ký khóa học. Vui lòng thử lại.';
+        const msg =
+          err instanceof Error ? err.message : 'Không thể đăng ký khóa học. Vui lòng thử lại.';
         setPurchaseError(msg);
       },
     });
   };
 
   // Determine the role for DashboardLayout
-  const dashboardRole = (userRole === 'admin' || userRole === 'teacher' || userRole === 'student') 
-    ? userRole 
-    : 'student';
+  const dashboardRole =
+    userRole === 'admin' || userRole === 'teacher' || userRole === 'student' ? userRole : 'student';
 
   let mainContent;
 
@@ -396,10 +396,15 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
                     )}
 
                     {/* Badges */}
-                    <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
-                      {isEnrolled && (
-                        <span className="course-badge badge-live">✓ Đã đăng ký</span>
-                      )}
+                    <div
+                      style={{
+                        display: 'flex',
+                        gap: '0.5rem',
+                        marginBottom: '0.75rem',
+                        flexWrap: 'wrap',
+                      }}
+                    >
+                      {isEnrolled && <span className="course-badge badge-live">✓ Đã đăng ký</span>}
                       {course.level && (
                         <span
                           className="course-badge"
@@ -416,7 +421,7 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
                     <div className="course-header-meta" style={{ marginTop: '0.5rem' }}>
                       <span className="meta-item">
                         <BookOpen size={14} />
-                        {course.subjectName} • Khối {course.gradeLevel}
+                        {course.subjectName} • Lớp {course.gradeLevel}
                       </span>
                       <span className="meta-separator">•</span>
                       <span className="meta-item">
@@ -504,15 +509,24 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
                     border: '2px solid #3b82f6',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                  <div
+                    style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}
+                  >
                     <Lock size={32} color="#1e40af" />
                     <div style={{ flex: 1, minWidth: 200 }}>
-                      <h3 style={{ margin: '0 0 0.5rem', fontSize: '1.1rem', fontWeight: 700, color: '#1e40af' }}>
+                      <h3
+                        style={{
+                          margin: '0 0 0.5rem',
+                          fontSize: '1.1rem',
+                          fontWeight: 700,
+                          color: '#1e40af',
+                        }}
+                      >
                         Đăng ký để mở khóa toàn bộ {UI_TEXT.COURSE.toLowerCase()}
                       </h3>
                       <p style={{ margin: 0, fontSize: '0.9rem', color: '#475569' }}>
-                        ✓ {freePreviewLessons.length} bài học thử miễn phí •{' '}
-                        {lockedLessonsCount} bài học mở sau khi đăng ký
+                        ✓ {freePreviewLessons.length} bài học thử miễn phí • {lockedLessonsCount}{' '}
+                        bài học mở sau khi đăng ký
                       </p>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -524,11 +538,18 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
                                 ? 'Miễn phí'
                                 : getEffectivePrice(course).toLocaleString('vi-VN') + '₫'}
                             </div>
-                            {course.originalPrice && course.originalPrice > getEffectivePrice(course) && (
-                              <div style={{ fontSize: '0.9rem', color: '#94a3b8', textDecoration: 'line-through' }}>
-                                {course.originalPrice.toLocaleString('vi-VN')}₫
-                              </div>
-                            )}
+                            {course.originalPrice &&
+                              course.originalPrice > getEffectivePrice(course) && (
+                                <div
+                                  style={{
+                                    fontSize: '0.9rem',
+                                    color: '#94a3b8',
+                                    textDecoration: 'line-through',
+                                  }}
+                                >
+                                  {course.originalPrice.toLocaleString('vi-VN')}₫
+                                </div>
+                              )}
                           </>
                         ) : (
                           <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1e40af' }}>
@@ -557,7 +578,7 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
                 </div>
               )}
 
-               <div className="course-tabs">
+              <div className="course-tabs">
                 {currentTabs.map((tab) => (
                   <button
                     key={tab.id}
@@ -613,16 +634,19 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
                 )}
                 {activeTab === 'reviews' && <StudentReviewsTab courseId={courseId!} />}
               </div>
-          </motion.div>
-        </AnimatePresence>
-      </section>
-    </div>
+            </motion.div>
+          </AnimatePresence>
+        </section>
+      </div>
     );
   }
 
   return (
     <>
-      <DashboardLayout role={dashboardRole} user={{ name: 'User', avatar: '', role: dashboardRole }}>
+      <DashboardLayout
+        role={dashboardRole}
+        user={{ name: 'User', avatar: '', role: dashboardRole }}
+      >
         {mainContent}
       </DashboardLayout>
 
@@ -632,7 +656,10 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
           course={course}
           isOpen={showPurchaseModal}
           onConfirm={handleConfirmPurchase}
-          onCancel={() => { setShowPurchaseModal(false); setPurchaseError(null); }}
+          onCancel={() => {
+            setShowPurchaseModal(false);
+            setPurchaseError(null);
+          }}
           isPurchasing={enrollMutation.isPending}
           purchaseError={purchaseError}
         />
