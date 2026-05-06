@@ -1,7 +1,15 @@
 import { CheckCircle2, Sparkles } from 'lucide-react';
 import type React from 'react';
-import type { SubscriptionPlan } from '../services/api/subscription-plan.service';
 import { formatPrice } from '../services/api/subscription-plan.service';
+
+export type PlanCardData = {
+  name: string;
+  description: string;
+  price: number | null;
+  billingCycle: string;
+  tokenQuota: number;
+  features: string[];
+};
 
 const COVER_GRADIENTS = [
   'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
@@ -34,7 +42,7 @@ const billingPeriod = (cycle: string) => {
 };
 
 type SubscriptionPlanCardProps = {
-  plan: SubscriptionPlan;
+  plan: PlanCardData;
   featured: boolean;
   isCurrent?: boolean;
   index: number;

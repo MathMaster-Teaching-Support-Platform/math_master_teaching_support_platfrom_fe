@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Plus } from 'lucide-react';
+import { CreditCard, Layers, Plus, Tag, X, Zap } from 'lucide-react';
 import React, { useEffect, useId, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { SubscriptionPlanCard } from '../components/SubscriptionPlanCard';
@@ -622,182 +622,191 @@ const Pricing: React.FC = () => {
           notificationCount={5}
           contentClassName="dashboard-content--flush-bleed"
         >
-          <div className="module-layout-container pricing-module-page-wrap">
-            <section className="module-page pricing-subscription-page teacher-courses-page teacher-courses-index-page">
-              <header className="page-header courses-header-row">
-                <div className="header-stack">
-                  <div className="row" style={{ gap: '0.6rem' }}>
-                    <h2 id="pricing-dashboard-heading">Bảng giá &amp; token</h2>
-                    {!loadingSubscriptionData && userPlans.length > 0 && (
-                      <span className="count-chip">{userPlans.length}</span>
-                    )}
+          <div className="px-6 py-8 lg:px-8">
+            <div className="space-y-6">
+
+              {/* ── Page header ── */}
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#E8E6DC] flex items-center justify-center text-[#5E5D59]">
+                    <Tag className="w-5 h-5" />
                   </div>
-                  <p className="header-sub">
-                    {wallet
-                      ? `${formatPrice(wallet.balance)} trong ví${
-                          activeSubscription
-                            ? ` · ${activeSubscription.tokenRemaining}/${activeSubscription.tokenQuota} token`
-                            : ''
-                        }`
-                      : 'Mua gói bằng số dư ví, theo dõi hạn mức token theo gói đang hoạt động'}
-                  </p>
+                  <div>
+                    <div className="flex items-center gap-2.5">
+                      <h1 className="font-[Playfair_Display] text-[22px] font-medium text-[#141413]">
+                        Bảng giá &amp; token
+                      </h1>
+                      {!loadingSubscriptionData && userPlans.length > 0 && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#E8E6DC] font-[Be_Vietnam_Pro] text-[12px] font-semibold text-[#5E5D59]">
+                          {userPlans.length}
+                        </span>
+                      )}
+                    </div>
+                    <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-0.5">
+                      {wallet
+                        ? `${formatPrice(wallet.balance)} trong ví${
+                            activeSubscription
+                              ? ` · ${activeSubscription.tokenRemaining}/${activeSubscription.tokenQuota} token`
+                              : ''
+                          }`
+                        : 'Mua gói bằng số dư ví, theo dõi hạn mức token theo gói đang hoạt động'}
+                    </p>
+                  </div>
                 </div>
                 <button
                   type="button"
-                  className="btn"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#C96442] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:brightness-95 active:scale-[0.98] transition-all duration-150"
                   onClick={() => navigate(`/${layoutRole}/wallet`)}
                 >
                   <Plus size={16} strokeWidth={2.5} />
                   Nạp tiền
                 </button>
-              </header>
-
-              <div className="stats-grid stats-grid--pricing-two">
-                <div className="stat-card stat-blue">
-                  <div className="stat-icon-wrap">
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <rect x="1" y="4" width="22" height="16" rx="2" />
-                      <line x1="1" y1="10" x2="23" y2="10" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3>{wallet ? formatPrice(wallet.balance) : '—'}</h3>
-                    <p>Số dư ví</p>
-                  </div>
-                </div>
-                <div className="stat-card stat-emerald">
-                  <div className="stat-icon-wrap">
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <circle cx="12" cy="12" r="10" />
-                      <path d="M12 8v4l2 2" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3>
-                      {activeSubscription
-                        ? `${activeSubscription.tokenRemaining} / ${activeSubscription.tokenQuota}`
-                        : '—'}
-                    </h3>
-                    <p>Token còn lại</p>
-                  </div>
-                </div>
               </div>
 
-              {activeSubscription && tokenPercent !== null && (
-                <div className="pricing-m-token-block">
-                  <div className="pricing-m-token-meta">
-                    <span>Tiến độ token (kỳ hiện tại)</span>
-                    <strong>{tokenPercent}%</strong>
-                  </div>
-                  <div className="pricing-m-token-bar" aria-hidden>
+              {/* ── Stats ── */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                {(
+                  [
+                    {
+                      label: 'Số dư ví',
+                      value: wallet ? formatPrice(wallet.balance) : '—',
+                      Icon: CreditCard,
+                      bg: 'bg-[#EEF2FF]',
+                      color: 'text-[#4F7EF7]',
+                    },
+                    {
+                      label: 'Token còn lại',
+                      value: activeSubscription
+                        ? String(activeSubscription.tokenRemaining)
+                        : '—',
+                      Icon: Zap,
+                      bg: 'bg-[#ECFDF5]',
+                      color: 'text-[#2EAD7A]',
+                    },
+                    {
+                      label: 'Tổng token / kỳ',
+                      value: activeSubscription
+                        ? String(activeSubscription.tokenQuota)
+                        : '—',
+                      Icon: Layers,
+                      bg: 'bg-[#F5F3FF]',
+                      color: 'text-[#9B6FE0]',
+                    },
+                    {
+                      label: 'Gói đang dùng',
+                      value: activeSubscription ? activeSubscription.planName : '—',
+                      Icon: Tag,
+                      bg: 'bg-[#FFF7ED]',
+                      color: 'text-[#E07B39]',
+                    },
+                  ] as const
+                ).map(({ label, value, Icon, bg, color }) => (
+                  <div
+                    key={label}
+                    className="bg-white rounded-2xl border border-[#E8E6DC] p-4 flex items-center gap-3"
+                  >
                     <div
-                      className="pricing-m-token-bar__fill"
+                      className={`w-9 h-9 rounded-xl ${bg} flex items-center justify-center flex-shrink-0`}
+                    >
+                      <Icon className={`w-4 h-4 ${color}`} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-[Playfair_Display] text-[20px] font-medium text-[#141413] leading-none truncate">
+                        {value}
+                      </p>
+                      <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mt-0.5">
+                        {label}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* ── Token progress ── */}
+              {activeSubscription && tokenPercent !== null && (
+                <div className="bg-white rounded-2xl border border-[#E8E6DC] p-4">
+                  <div className="flex items-center justify-between mb-2.5">
+                    <span className="font-[Be_Vietnam_Pro] text-[13px] text-[#5E5D59]">
+                      Tiến độ token (kỳ hiện tại)
+                    </span>
+                    <strong className="font-[Be_Vietnam_Pro] text-[13px] font-semibold text-[#141413]">
+                      {tokenPercent}%
+                    </strong>
+                  </div>
+                  <div className="h-2 rounded-full bg-[#F0EEE6] overflow-hidden" aria-hidden="true">
+                    <div
+                      className="h-full rounded-full bg-[#C96442] transition-all duration-300"
                       style={{ width: `${tokenPercent}%` }}
                     />
                   </div>
                 </div>
               )}
 
-              {/* Status messages + plans */}
+              {/* ── Alerts ── */}
               {subscriptionError && (
-                <div className="pricing-alert pricing-alert--error" role="alert">
+                <div
+                  className="flex items-start gap-3 px-4 py-3 rounded-xl bg-red-50 border border-red-100"
+                  role="alert"
+                >
                   <svg
-                    width="16"
-                    height="16"
+                    className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    aria-hidden
+                    aria-hidden="true"
                   >
                     <circle cx="12" cy="12" r="10" />
                     <line x1="12" y1="8" x2="12" y2="12" />
                     <line x1="12" y1="16" x2="12.01" y2="16" />
                   </svg>
-                  <span className="pricing-alert__text">{subscriptionError}</span>
+                  <span className="font-[Be_Vietnam_Pro] text-[13px] text-red-700 flex-1">
+                    {subscriptionError}
+                  </span>
                   <button
                     type="button"
-                    className="pricing-alert-dismiss"
+                    className="text-red-400 hover:text-red-600 transition-colors flex-shrink-0"
                     onClick={() => setSubscriptionError('')}
                     aria-label="Đóng thông báo lỗi"
                   >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden
-                    >
-                      <line x1="18" y1="6" x2="6" y2="18" />
-                      <line x1="6" y1="6" x2="18" y2="18" />
-                    </svg>
+                    <X size={16} />
                   </button>
                 </div>
               )}
               {subscriptionSuccess && (
-                <div className="pricing-alert pricing-alert--success" role="status">
+                <div
+                  className="flex items-start gap-3 px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-100"
+                  role="status"
+                >
                   <svg
-                    width="16"
-                    height="16"
+                    className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    aria-hidden
+                    aria-hidden="true"
                   >
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
-                  <span className="pricing-alert__text">{subscriptionSuccess}</span>
+                  <span className="font-[Be_Vietnam_Pro] text-[13px] text-emerald-700 flex-1">
+                    {subscriptionSuccess}
+                  </span>
                   <button
                     type="button"
-                    className="pricing-alert-dismiss"
+                    className="text-emerald-400 hover:text-emerald-600 transition-colors flex-shrink-0"
                     onClick={() => setSubscriptionSuccess('')}
                     aria-label="Đóng thông báo thành công"
                   >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden
-                    >
-                      <line x1="18" y1="6" x2="6" y2="18" />
-                      <line x1="6" y1="6" x2="18" y2="18" />
-                    </svg>
+                    <X size={16} />
                   </button>
                 </div>
               )}
 
+              {/* ── Plan cards ── */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 items-start">
                 {loadingSubscriptionData ? (
                   <>
@@ -809,9 +818,7 @@ const Pricing: React.FC = () => {
                     ))}
                   </>
                 ) : userPlans.length === 0 ? (
-                  <div
-                    className="col-span-full flex flex-col items-center justify-center py-16 gap-3"
-                  >
+                  <div className="col-span-full flex flex-col items-center justify-center py-16 gap-3">
                     <p className="font-[Be_Vietnam_Pro] text-[14px] text-[#87867F]">
                       Chưa có gói để hiển thị.
                     </p>
@@ -837,7 +844,7 @@ const Pricing: React.FC = () => {
                       const walletBalance = wallet?.balance ?? 0;
                       const isInsufficientBalance = price > 0 && walletBalance < price;
                       const isCurrentPlan = activeSubscription?.planId === plan.id;
-                      const spotlight = Boolean(plan.featured) || getPlanTier(plan.name) === 'pro';
+                      const spotlight = Boolean(plan.featured);
 
                       const btnCls = spotlight
                         ? 'w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#C96442] text-white font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:brightness-95 active:scale-[0.98] transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed'
@@ -879,7 +886,8 @@ const Pricing: React.FC = () => {
                     })
                 )}
               </div>
-            </section>
+
+            </div>
           </div>
         </DashboardLayout>
         {walletModal}
