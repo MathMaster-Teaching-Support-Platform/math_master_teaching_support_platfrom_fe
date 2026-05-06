@@ -10,6 +10,7 @@ import type {
   RoleSelectionRequest,
 } from '../../types/auth.types';
 import { ApiError } from '../../types/auth.types';
+import { translateApiError } from '../../utils/errorCodes';
 
 export class AuthService {
   private static async extractErrorMessage(response: Response, fallback: string): Promise<string> {
@@ -213,7 +214,7 @@ export class AuthService {
    */
   static async selectRole(data: RoleSelectionRequest): Promise<ApiResponse<LoginResponse>> {
     const token = this.getToken();
-    if (!token) throw new Error('Authentication required');
+    if (!token) throw new Error('Bạn chưa đăng nhập. Vui lòng đăng nhập lại.');
 
     const response = await fetch(`${API_BASE_URL}/auth/select-role`, {
       method: 'POST',
@@ -227,7 +228,7 @@ export class AuthService {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Role selection failed');
+      throw new Error(translateApiError(error.message || 'Role selection failed'));
     }
 
     return response.json();

@@ -112,7 +112,7 @@
 /* ── Body: split layout ── */
 .rp-body {
   display: grid;
-  grid-template-columns: 1fr 360px;
+  grid-template-columns: 420px 1fr;
   gap: 1rem;
   align-items: start;
 }
@@ -208,12 +208,12 @@
 
 @keyframes rp-highlight-pulse {
   0% {
-    background: #e6f0fa;
-    box-shadow: inset 3px 0 0 #3898ec;
+    background: rgba(201, 100, 66, 0.12);
+    box-shadow: inset 3px 0 0 #c96442;
   }
   60% {
-    background: #eef5fd;
-    box-shadow: inset 3px 0 0 #3898ec;
+    background: rgba(201, 100, 66, 0.06);
+    box-shadow: inset 3px 0 0 #c96442;
   }
   100% {
     background: transparent;
@@ -275,7 +275,7 @@
 }
 
 .rp-skel {
-  background: #f0eef8;
+  background: #eeede7;
   border-radius: 4px;
   animation: rp-pulse 1.4s ease-in-out infinite;
 }
@@ -575,13 +575,56 @@
 .rpd-admin-note {
   font-size: 0.83rem;
   color: var(--rp-text-2);
-  line-height: 1.65;
+  line-height: 1.55;
   background: #fef9ec;
   border: 1px solid #fde68a;
   box-shadow: inset 2px 0 0 #f59e0b;
   border-radius: 8px;
   padding: 0.75rem;
   margin: 0;
+}
+
+.rpd-admin-note-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.rpd-admin-note-line {
+  font-size: 0.83rem;
+  color: var(--rp-text-2);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.rpd-admin-note-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.6rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid #fde68a;
+}
+
+.rpd-admin-note-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.71rem;
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.rpd-admin-note-field--pass {
+  background: rgba(5, 150, 105, 0.15);
+  color: #065f46;
+}
+
+.rpd-admin-note-field--fail {
+  background: rgba(220, 38, 38, 0.12);
+  color: #991b1b;
 }
 
 /* Verification image section */
@@ -656,7 +699,8 @@
 
 .rpd-image-card img {
   width: 100%;
-  height: 112px;
+  height: auto;
+  aspect-ratio: 4 / 3;
   object-fit: cover;
   border-radius: 8px;
 }
@@ -978,8 +1022,8 @@
   width: 100%;
   padding: 0.75rem 1rem;
   margin-top: 0.75rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #141413;
+  background: #141413;
+  color: #fff;
   border: none;
   border-radius: var(--rp-radius);
   font-size: 0.875rem;
@@ -990,11 +1034,13 @@
   justify-content: center;
   gap: 0.5rem;
   transition: all 0.2s ease;
+  font-family: var(--rp-f-body);
 }
 
 .rpd-ocr-btn:hover:not(:disabled) {
+  background: #2a2a28;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 12px rgba(20, 20, 19, 0.2);
 }
 
 .rpd-ocr-btn:disabled {
@@ -1017,10 +1063,10 @@
 
 .rpd-ocr-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  background: #141413;
   width: 100%;
   transform-origin: left;
-  transition: transform 0.3s ease;
+  transition: width 0.3s ease;
 }
 
 .rpd-ocr-progress-text {
@@ -1088,6 +1134,15 @@
   letter-spacing: 0.5px;
 }
 
+.rpd-ocr-fields-title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--rp-text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 0.5rem;
+}
+
 .rpd-ocr-field {
   padding: 0.75rem;
   background: white;
@@ -1111,13 +1166,41 @@
   font-weight: 600;
   font-size: 0.8rem;
   color: var(--rp-text-2);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.rpd-ocr-field-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--rp-border);
+  color: var(--rp-text-2);
+  font-size: 0.68rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.rpd-ocr-field--critical .rpd-ocr-field-num {
+  background: #fee2e2;
+  color: #991b1b;
 }
 
 .rpd-ocr-field-status {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 600;
-  padding: 0.25rem 0.5rem;
+  padding: 0.2rem 0.45rem;
   border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .rpd-ocr-field-status--match {
@@ -1264,6 +1347,7 @@
 }
 
 .module-layout-container.admin-review-profiles-page .rp-body {
+  grid-template-columns: 420px 1fr;
   gap: 0;
   border-radius: 14px;
   border: 1px solid #e8e6dc;

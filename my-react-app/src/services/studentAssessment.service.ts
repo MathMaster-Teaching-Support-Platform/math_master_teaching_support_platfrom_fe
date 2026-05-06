@@ -1,5 +1,6 @@
 import { API_BASE_URL } from '../config/api.config';
 import { AuthService } from './api/auth.service';
+import { translateApiError } from '../utils/errorCodes';
 import type {
   StudentAssessmentResponse,
   AttemptStartResponse,
@@ -123,7 +124,7 @@ export class StudentAssessmentService {
 
   private static async getHeaders() {
     const token = AuthService.getToken();
-    if (!token) throw new Error('Authentication required');
+    if (!token) throw new Error('Bạn chưa đăng nhập. Vui lòng đăng nhập lại.');
     return {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
@@ -155,7 +156,7 @@ export class StudentAssessmentService {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Failed to fetch assessments');
+      throw new Error(translateApiError(error.message, error.code));
     }
 
     return response.json();
@@ -187,7 +188,7 @@ export class StudentAssessmentService {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Failed to fetch course assessments');
+      throw new Error(translateApiError(error.message, error.code));
     }
 
     return response.json();
@@ -205,7 +206,7 @@ export class StudentAssessmentService {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Failed to fetch assessment details');
+      throw new Error(translateApiError(error.message, error.code));
     }
 
     return response.json();
@@ -224,7 +225,7 @@ export class StudentAssessmentService {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Failed to start assessment');
+      throw new Error(translateApiError(error.message, error.code));
     }
 
     const payload = (await response.json()) as ApiResponse<AttemptStartResponse>;
@@ -244,7 +245,7 @@ export class StudentAssessmentService {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Failed to update answer');
+      throw new Error(translateApiError(error.message, error.code));
     }
 
     return response.json();
@@ -263,7 +264,7 @@ export class StudentAssessmentService {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Failed to update flag');
+      throw new Error(translateApiError(error.message, error.code));
     }
 
     return response.json();
@@ -280,7 +281,7 @@ export class StudentAssessmentService {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Failed to submit assessment');
+      throw new Error(translateApiError(error.message, error.code));
     }
 
     return response.json();
@@ -298,7 +299,7 @@ export class StudentAssessmentService {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Failed to get draft snapshot');
+      throw new Error(translateApiError(error.message, error.code));
     }
 
     return response.json();
@@ -314,7 +315,7 @@ export class StudentAssessmentService {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Failed to save and exit');
+      throw new Error(translateApiError(error.message, error.code));
     }
 
     return response.json();

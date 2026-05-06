@@ -1,6 +1,7 @@
 // services/questionBulkImportService.ts
 import { API_BASE_URL } from '../config/api.config';
 import { AuthService } from './api/auth.service';
+import { translateApiError } from '../utils/errorCodes';
 import type {
   QuestionExcelPreviewResponse,
   QuestionBatchImportResponse,
@@ -15,7 +16,7 @@ class QuestionBulkImportService {
   async downloadTemplate(): Promise<Blob> {
     const token = AuthService.getToken();
     if (!token) {
-      throw new Error('Authentication required');
+      throw new Error('Bạn chưa đăng nhập. Vui lòng đăng nhập lại.');
     }
 
     const response = await fetch(`${API_BASE_URL}/questions/bulk-import/template`, {
@@ -25,7 +26,7 @@ class QuestionBulkImportService {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to download template');
+      throw new Error('Không thể tải file mẫu.');
     }
 
     return await response.blob();
@@ -37,7 +38,7 @@ class QuestionBulkImportService {
   async previewExcel(file: File): Promise<QuestionExcelPreviewResponse> {
     const token = AuthService.getToken();
     if (!token) {
-      throw new Error('Authentication required');
+      throw new Error('Bạn chưa đăng nhập. Vui lòng đăng nhập lại.');
     }
 
     const formData = new FormData();
@@ -54,8 +55,8 @@ class QuestionBulkImportService {
     if (!response.ok) {
       const error = await response
         .json()
-        .catch(() => ({ message: 'Failed to preview Excel file' }));
-      throw new Error(error.message || 'Failed to preview Excel file');
+        .catch(() => ({ message: 'Không thể xem trước file Excel.' }));
+      throw new Error(translateApiError(error.message, error.code));
     }
 
     const data: ApiResponse<QuestionExcelPreviewResponse> = await response.json();
@@ -68,7 +69,7 @@ class QuestionBulkImportService {
   async submitBatch(questions: QuestionImportRequest[]): Promise<QuestionBatchImportResponse> {
     const token = AuthService.getToken();
     if (!token) {
-      throw new Error('Authentication required');
+      throw new Error('Bạn chưa đăng nhập. Vui lòng đăng nhập lại.');
     }
 
     const response = await fetch(`${API_BASE_URL}/questions/bulk-import/submit`, {
@@ -81,8 +82,8 @@ class QuestionBulkImportService {
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Failed to import questions' }));
-      throw new Error(error.message || 'Failed to import questions');
+      const error = await response.json().catch(() => ({ message: 'Không thể nhập câu hỏi.' }));
+      throw new Error(translateApiError(error.message, error.code));
     }
 
     const data: ApiResponse<QuestionBatchImportResponse> = await response.json();

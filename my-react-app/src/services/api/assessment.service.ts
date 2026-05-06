@@ -1,5 +1,6 @@
 import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
 import { AuthService } from './auth.service';
+import { translateApiError } from '../../utils/errorCodes';
 import type {
     AssessmentQuestionItem,
     AssessmentRequest,
@@ -23,7 +24,7 @@ import type { QuestionResponse } from '../../types/question';
 export class AssessmentService {
     private static async getHeaders() {
         const token = AuthService.getToken();
-        if (!token) throw new Error('Authentication required');
+        if (!token) throw new Error('Bạn chưa đăng nhập. Vui lòng đăng nhập lại.');
         return {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
@@ -43,7 +44,7 @@ export class AssessmentService {
         });
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.message || 'Failed to create assessment');
+            throw new Error(translateApiError(error.message, error.code));
         }
         return response.json();
     }
@@ -61,7 +62,7 @@ export class AssessmentService {
         });
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.message || 'Failed to update assessment');
+            throw new Error(translateApiError(error.message, error.code));
         }
         return response.json();
     }
@@ -85,7 +86,7 @@ export class AssessmentService {
         });
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.message || 'Failed to patch assessment');
+            throw new Error(translateApiError(error.message, error.code));
         }
         return response.json();
     }
@@ -102,7 +103,7 @@ export class AssessmentService {
         );
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.message || 'Failed to set points override');
+            throw new Error(translateApiError(error.message, error.code));
         }
         return response.json();
     }
@@ -118,7 +119,7 @@ export class AssessmentService {
         });
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.message || 'Failed to fetch assessment');
+            throw new Error(translateApiError(error.message, error.code));
         }
         return response.json();
     }
@@ -132,7 +133,7 @@ export class AssessmentService {
         });
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.message || 'Failed to fetch assessment preview');
+            throw new Error(translateApiError(error.message, error.code));
         }
         return response.json();
     }
@@ -159,7 +160,7 @@ export class AssessmentService {
         );
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.message || 'Failed to grade preview submission');
+            throw new Error(translateApiError(error.message, error.code));
         }
         return response.json();
     }
@@ -173,7 +174,7 @@ export class AssessmentService {
         );
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.message || 'Failed to fetch publish summary');
+            throw new Error(translateApiError(error.message, error.code));
         }
         return response.json();
     }
@@ -197,7 +198,7 @@ export class AssessmentService {
         const response = await fetch(url, { method: 'GET', headers });
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.message || 'Failed to fetch assessments');
+            throw new Error(translateApiError(error.message, error.code));
         }
         return response.json();
     }
@@ -220,7 +221,7 @@ export class AssessmentService {
 
         if (!response.ok) {
             const error = await response.json().catch(() => ({}));
-            throw new Error((error as { message?: string }).message || 'Failed to search assessments');
+            throw new Error(translateApiError((error as { message?: string }).message, (error as { message?: string; code?: number }).code));
         }
 
         return response.json();
@@ -237,7 +238,7 @@ export class AssessmentService {
         });
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.message || 'Failed to check edit permission');
+            throw new Error(translateApiError(error.message, error.code));
         }
         return response.json();
     }
@@ -251,7 +252,7 @@ export class AssessmentService {
         });
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.message || 'Failed to check delete permission');
+            throw new Error(translateApiError(error.message, error.code));
         }
         return response.json();
     }
@@ -265,7 +266,7 @@ export class AssessmentService {
         });
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.message || 'Failed to check publish permission');
+            throw new Error(translateApiError(error.message, error.code));
         }
         return response.json();
     }
@@ -281,7 +282,7 @@ export class AssessmentService {
         });
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.message || 'Failed to publish assessment');
+            throw new Error(translateApiError(error.message, error.code));
         }
         return response.json();
     }
@@ -295,7 +296,7 @@ export class AssessmentService {
         });
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.message || 'Failed to unpublish assessment');
+            throw new Error(translateApiError(error.message, error.code));
         }
         return response.json();
     }
@@ -309,7 +310,7 @@ export class AssessmentService {
         });
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.message || 'Failed to close assessment');
+            throw new Error(translateApiError(error.message, error.code));
         }
         return response.json();
     }
@@ -330,7 +331,7 @@ export class AssessmentService {
         );
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.message || 'Failed to generate assessment from matrix');
+            throw new Error(translateApiError(error.message, error.code));
         }
         return response.json();
     }
@@ -350,7 +351,7 @@ export class AssessmentService {
         );
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.message || 'Failed to validate bank coverage');
+            throw new Error(translateApiError(error.message, error.code));
         }
         return response.json();
     }
@@ -371,7 +372,7 @@ export class AssessmentService {
         );
         if (!response.ok) {
             const error = await response.json().catch(() => ({}));
-            throw new Error((error as { message?: string }).message || 'Failed to generate questions from matrix');
+            throw new Error(translateApiError((error as { message?: string }).message, (error as { message?: string; code?: number }).code));
         }
         return response.json();
     }
@@ -387,7 +388,7 @@ export class AssessmentService {
         );
         if (!response.ok) {
             const error = await response.json().catch(() => ({}));
-            throw new Error((error as { message?: string }).message || 'Failed to fetch assessment questions');
+            throw new Error(translateApiError((error as { message?: string }).message, (error as { message?: string; code?: number }).code));
         }
         return response.json();
     }
@@ -403,7 +404,7 @@ export class AssessmentService {
         });
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.message || 'Failed to delete assessment');
+            throw new Error(translateApiError(error.message, error.code));
         }
         return response.json();
     }
@@ -422,7 +423,7 @@ export class AssessmentService {
         );
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.message || 'Failed to add question to assessment');
+            throw new Error(translateApiError(error.message, error.code));
         }
         return response.json();
     }
@@ -439,7 +440,7 @@ export class AssessmentService {
         );
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.message || 'Failed to remove question from assessment');
+            throw new Error(translateApiError(error.message, error.code));
         }
         return response.json();
     }
@@ -496,7 +497,7 @@ export class AssessmentService {
 
         if (!response.ok) {
             const error = await response.json().catch(() => ({}));
-            throw new Error((error as { message?: string }).message || 'Compatibility check failed');
+            throw new Error(translateApiError((error as { message?: string }).message, (error as { message?: string; code?: number }).code));
         }
 
         const body = (await response.json()) as
@@ -539,7 +540,7 @@ export class AssessmentService {
         );
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.message || 'Failed to get assessments by lesson');
+            throw new Error(translateApiError(error.message, error.code));
         }
         return response.json();
     }
@@ -553,7 +554,7 @@ export class AssessmentService {
         );
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.message || 'Failed to link assessment to lesson');
+            throw new Error(translateApiError(error.message, error.code));
         }
         return response.json();
     }
@@ -567,7 +568,7 @@ export class AssessmentService {
         );
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.message || 'Failed to unlink assessment from lesson');
+            throw new Error(translateApiError(error.message, error.code));
         }
         return response.json();
     }
@@ -595,7 +596,7 @@ export class AssessmentService {
         );
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.message || 'Failed to search questions');
+            throw new Error(translateApiError(error.message, error.code));
         }
         return response.json();
     }
@@ -623,7 +624,7 @@ export class AssessmentService {
         );
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.message || 'Failed to fetch available questions');
+            throw new Error(translateApiError(error.message, error.code));
         }
         return response.json();
     }
@@ -640,7 +641,7 @@ export class AssessmentService {
         );
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.message || 'Failed to batch add questions');
+            throw new Error(translateApiError(error.message, error.code));
         }
         return response.json();
     }
@@ -657,7 +658,7 @@ export class AssessmentService {
         );
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.message || 'Failed to batch update points');
+            throw new Error(translateApiError(error.message, error.code));
         }
         return response.json();
     }
@@ -674,7 +675,7 @@ export class AssessmentService {
         );
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.message || 'Failed to auto distribute points');
+            throw new Error(translateApiError(error.message, error.code));
         }
         return response.json();
     }
@@ -691,7 +692,7 @@ export class AssessmentService {
         );
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.message || 'Failed to distribute points');
+            throw new Error(translateApiError(error.message, error.code));
         }
         return response.json();
     }

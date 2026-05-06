@@ -18,12 +18,13 @@ import type {
   UpdateSubjectRequest,
 } from '../../types/academic.types';
 import type { ApiResponse } from '../../types/auth.types';
+import { translateApiError } from '../../utils/errorCodes';
 import { AuthService } from './auth.service';
 
 export class AcademicStructureService {
   private static async getHeaders() {
     const token = AuthService.getToken();
-    if (!token) throw new Error('Authentication required');
+    if (!token) throw new Error('Bạn chưa đăng nhập. Vui lòng đăng nhập lại.');
 
     return {
       Authorization: `Bearer ${token}`,
@@ -35,12 +36,12 @@ export class AcademicStructureService {
   private static parseApiError(payload: unknown, fallback: string): Error {
     const p = payload as { message?: string; code?: number };
     if (typeof p?.message === 'string' && p.message.trim().length > 0) {
-      return new Error(p.message);
+      return new Error(translateApiError(p.message));
     }
     if (typeof p?.code === 'number' && p.code !== 1000) {
-      return new Error(`${fallback} (code: ${p.code})`);
+      return new Error(translateApiError(fallback));
     }
-    return new Error(fallback);
+    return new Error(translateApiError(fallback));
   }
 
   private static async parseResponse<T>(

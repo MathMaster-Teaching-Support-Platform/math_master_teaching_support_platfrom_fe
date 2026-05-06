@@ -64,8 +64,88 @@ function getSubmitLabel(submitting: boolean, action: 'APPROVED' | 'REJECTED' | n
 }
 
 function toFriendlyVerificationText(text: string) {
-  return text.replace(/\bOCR\b/gi, 'hệ thống').replace(/xác minh hệ thống/gi, 'xác minh tự động');
+  return text
+    .replace(/\bOCR\b/gi, 'hệ thống')
+    .replace(/xác minh hệ thống/gi, 'xác minh tự động')
+    .replace(/\bMatch \(containment\)/gi, 'Khớp một phần')
+    .replace(/\bMatch\b/gi, 'Khớp')
+    .replace(/\bMismatch\b/gi, 'Không khớp')
+    .replace(/\bNot found\b/gi, 'Không tìm thấy')
+    .replace(/\bcontainment\b/gi, 'chứa một phần');
 }
+
+function formatOcrSummary(summary: string): string {
+  return toFriendlyVerificationText(
+    summary.replace(/^[✅❌✗✓⚠️×✕]+\s*(XÁC MINH [^:]+:\s*)?/i, '').trim()
+  );
+}
+
+const OCR_FIELD_LABELS = [
+  'Họ và tên',
+  'Chức danh + Chuyên môn Toán',
+  'Tên trường / Cơ sở giáo dục',
+];
+
+// ── AdminCommentDisplay ───────────────────────────────────────────────────────
+const AdminCommentDisplay: React.FC<{ comment: string }> = ({ comment }) => {
+  const text = toFriendlyVerificationText(comment);
+
+  // Extract trailing field comparison: "Họ tên: ✓, Chức danh+Toán: ✗, Tên trường: ✓"
+  const fieldLineRe = /((?:[^\n.!?]+:\s*[✓✗],?\s*)+)$/;
+  const fieldMatch = text.match(fieldLineRe);
+  const bodyText = fieldMatch
+    ? text
+        .slice(0, text.length - fieldMatch[0].length)
+        .trim()
+        .replace(/\.$/, '')
+        .trim()
+    : text;
+  const fields = fieldMatch
+    ? fieldMatch[1]
+        .split(',')
+        .map((f) => {
+          const ci = f.trim().lastIndexOf(':');
+          if (ci < 0) return null;
+          return { label: f.slice(0, ci).trim(), passed: f.slice(ci + 1).includes('✓') };
+        })
+        .filter((f): f is { label: string; passed: boolean } => !!f?.label)
+    : [];
+
+  // Split body into sentences at symbol boundaries
+  const sentences = bodyText
+    .split(/(?=[✗✓✅❌×✕])/)
+    .map((s) => s.replace(/^[✗✓✅❌×✕]\s*/, '').trim())
+    .filter(Boolean);
+
+  if (sentences.length <= 1 && fields.length === 0) {
+    return <p className="rpd-admin-note">{text}</p>;
+  }
+
+  return (
+    <div className="rpd-admin-note">
+      <div className="rpd-admin-note-lines">
+        {sentences.map((s, i) => (
+          <p key={i} className="rpd-admin-note-line">
+            {s}
+          </p>
+        ))}
+      </div>
+      {fields.length > 0 && (
+        <div className="rpd-admin-note-fields">
+          {fields.map((f, i) => (
+            <span
+              key={i}
+              className={`rpd-admin-note-field ${f.passed ? 'rpd-admin-note-field--pass' : 'rpd-admin-note-field--fail'}`}
+            >
+              {f.passed ? <CheckCircle2 size={10} /> : <XCircle size={10} />}
+              {f.label}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 // ── StatusBadge ───────────────────────────────────────────────────────────────
 const StatusBadge: React.FC<{ status: ProfileStatus }> = ({ status }) => {
@@ -144,7 +224,6 @@ const ReviewProfiles: React.FC = () => {
 
   const profiles = profilesQuery.data?.result.content ?? [];
   const totalPages = profilesQuery.data?.result.totalPages ?? 0;
-  const totalElements = profilesQuery.data?.result.totalElements ?? 0;
   const loading = profilesQuery.isLoading || profilesQuery.isFetching;
   const error = profilesQuery.error instanceof Error ? profilesQuery.error.message : null;
   const pendingCount = pendingCountQuery.data?.result ?? 0;
@@ -410,14 +489,21 @@ const ReviewProfiles: React.FC = () => {
         <section className="module-page teacher-courses-page admin-mgmt-shell__content admin-review-profiles-page__inner">
           <div className="rp">
             {/* ── Header ── */}
-            <header className="page-header courses-header-row rp-page-header">
-              <div className="header-stack">
-                <h2 style={{ margin: 0 }}>Duyệt hồ sơ giáo viên</h2>
-                <p className="header-sub">
-                  {pendingCount > 0
-                    ? `${pendingCount} hồ sơ đang chờ xem xét`
-                    : 'Không có hồ sơ nào đang chờ'}
-                </p>
+            <header className="courses-header-row rp-page-header">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#E8E6DC] flex items-center justify-center text-[#5E5D59] flex-shrink-0">
+                  <UserCheck size={20} />
+                </div>
+                <div>
+                  <h1 className="font-[Playfair_Display] text-[22px] font-medium text-[#141413] m-0 leading-tight">
+                    Duyệt hồ sơ giáo viên
+                  </h1>
+                  <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-0.5 mb-0">
+                    {pendingCount > 0
+                      ? `${pendingCount} hồ sơ đang chờ xem xét`
+                      : 'Không có hồ sơ nào đang chờ'}
+                  </p>
+                </div>
               </div>
             </header>
 
@@ -480,7 +566,9 @@ const ReviewProfiles: React.FC = () => {
 
                 {!loading && (
                   <p className="rp-list-count">
-                    {filteredProfiles.length} / {totalElements} hồ sơ
+                    {search
+                      ? `${filteredProfiles.length} / ${profiles.length} hồ sơ`
+                      : `${profiles.length} hồ sơ`}
                   </p>
                 )}
 
@@ -643,7 +731,7 @@ const ReviewProfiles: React.FC = () => {
                       {selectedProfile.adminComment && (
                         <section className="rpd-section">
                           <h3 className="rpd-section-title">Ghi chú quản trị</h3>
-                          <p className="rpd-admin-note">{selectedProfile.adminComment}</p>
+                          <AdminCommentDisplay comment={selectedProfile.adminComment} />
                         </section>
                       )}
 
@@ -740,17 +828,17 @@ const ReviewProfiles: React.FC = () => {
                                   <XCircle size={14} />
                                 )}
                                 <span>
-                                  {ocrResult.isMatch ? 'Đạt yêu cầu' : 'Không đạt'} (
-                                  {ocrResult.matchScore.toFixed(0)}%)
+                                  {ocrResult.isMatch ? 'Đạt yêu cầu' : 'Không đạt'} —{' '}
+                                  {ocrResult.matchScore.toFixed(0)}%
                                 </span>
                               </div>
 
                               <p className="rpd-ocr-summary">
-                                {toFriendlyVerificationText(ocrResult.summary)}
+                                {formatOcrSummary(ocrResult.summary)}
                               </p>
 
                               <div className="rpd-ocr-fields">
-                                <h4>🔴 3 Trường bắt buộc phải có:</h4>
+                                <p className="rpd-ocr-fields-title">3 trường bắt buộc kiểm tra</p>
                                 {ocrResult.fieldComparisons.map((field, idx) => (
                                   <div
                                     key={idx}
@@ -758,33 +846,39 @@ const ReviewProfiles: React.FC = () => {
                                   >
                                     <div className="rpd-ocr-field-header">
                                       <span className="rpd-ocr-field-name">
-                                        {idx === 0 && '1️⃣ Họ và tên'}
-                                        {idx === 1 && '2️⃣ Chức danh + Chuyên môn Toán'}
-                                        {idx === 2 && '3️⃣ Tên trường/Cơ sở giáo dục'}
+                                        <span className="rpd-ocr-field-num">{idx + 1}</span>
+                                        {OCR_FIELD_LABELS[idx] ?? `Trường ${idx + 1}`}
                                       </span>
                                       <span
                                         className={`rpd-ocr-field-status ${field.matches ? 'rpd-ocr-field-status--match' : 'rpd-ocr-field-status--mismatch'}`}
                                       >
-                                        {field.matches ? '✅ ĐẠT' : '❌ KHÔNG ĐẠT'}
+                                        {field.matches ? (
+                                          <CheckCircle2 size={11} />
+                                        ) : (
+                                          <XCircle size={11} />
+                                        )}
+                                        {field.matches ? 'Đạt' : 'Không đạt'}
                                       </span>
                                     </div>
                                     <div className="rpd-ocr-field-values">
                                       <div>
                                         <span className="rpd-ocr-field-label">Yêu cầu:</span>
-                                        <span>{field.profileValue || 'N/A'}</span>
+                                        <span>{field.profileValue || '—'}</span>
                                       </div>
                                       <div>
-                                        <span className="rpd-ocr-field-label">
-                                          Hệ thống đọc được:
-                                        </span>
+                                        <span className="rpd-ocr-field-label">Đọc được:</span>
                                         <span className={field.ocrValue ? '' : 'rpd-ocr-missing'}>
-                                          {field.ocrValue || '⚠️ Không đọc được'}
+                                          {field.ocrValue || 'Không đọc được'}
                                         </span>
                                       </div>
                                       {field.notes && (
                                         <div className="rpd-ocr-field-notes">
                                           <span className="rpd-ocr-field-label">Ghi chú:</span>
-                                          <span>{field.notes}</span>
+                                          <span>
+                                            {toFriendlyVerificationText(
+                                              field.notes.replace(/^[✅❌✗✓⚠️×✕]+\s*/, '').trim()
+                                            )}
+                                          </span>
                                         </div>
                                       )}
                                     </div>

@@ -1,6 +1,7 @@
 import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
 import type { ApiResponse } from '../../types/auth.types';
 import { AuthService } from './auth.service';
+import { translateApiError } from '../../utils/errorCodes';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -89,7 +90,7 @@ export interface SystemStatus {
 
 function authHeaders(): Record<string, string> {
   const token = AuthService.getToken();
-  if (!token) throw new Error('Authentication required');
+  if (!token) throw new Error('Bạn chưa đăng nhập. Vui lòng đăng nhập lại.');
   return {
     Authorization: `Bearer ${token}`,
     accept: '*/*',
@@ -99,7 +100,7 @@ function authHeaders(): Record<string, string> {
 async function parseResponse<T>(res: Response): Promise<ApiResponse<T>> {
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || `HTTP ${res.status}`);
+    throw new Error(translateApiError(err.message, err.code));
   }
   return res.json();
 }
@@ -120,7 +121,7 @@ export const AdminDashboardService = {
       method: 'GET',
       headers: authHeaders(),
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) throw new Error(`Lỗi máy chủ (${res.status}). Vui lòng thử lại sau.`);
     // This endpoint returns plain { unreadCount: number } — NOT wrapped in ApiResponse
     const data: { unreadCount: number } = await res.json();
     return data.unreadCount;

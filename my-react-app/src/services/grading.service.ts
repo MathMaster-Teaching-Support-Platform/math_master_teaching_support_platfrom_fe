@@ -1,5 +1,6 @@
 import { API_BASE_URL } from '../config/api.config';
 import { AuthService } from './api/auth.service';
+import { translateApiError } from '../utils/errorCodes';
 import type {
   GradingSubmissionResponse,
   CompleteGradingRequest,
@@ -15,7 +16,7 @@ import type { ApiResponse, PaginatedResponse } from '../types';
 export class GradingService {
   private static async getHeaders() {
     const token = AuthService.getToken();
-    if (!token) throw new Error('Authentication required');
+    if (!token) throw new Error('Bạn chưa đăng nhập. Vui lòng đăng nhập lại.');
     return {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
@@ -41,7 +42,7 @@ export class GradingService {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Failed to fetch grading queue');
+      throw new Error(translateApiError(error.message, error.code));
     }
 
     return response.json();
@@ -65,7 +66,7 @@ export class GradingService {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Failed to fetch grading queue');
+      throw new Error(translateApiError(error.message, error.code));
     }
 
     return response.json();
@@ -83,7 +84,7 @@ export class GradingService {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Failed to fetch submission');
+      throw new Error(translateApiError(error.message, error.code));
     }
 
     return response.json();
@@ -102,7 +103,7 @@ export class GradingService {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Failed to complete grading');
+      throw new Error(translateApiError(error.message, error.code));
     }
 
     return response.json();
@@ -119,7 +120,7 @@ export class GradingService {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Failed to override grade');
+      throw new Error(translateApiError(error.message, error.code));
     }
 
     return response.json();
@@ -138,7 +139,7 @@ export class GradingService {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Failed to add manual adjustment');
+      throw new Error(translateApiError(error.message, error.code));
     }
 
     return response.json();
@@ -156,7 +157,7 @@ export class GradingService {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Failed to fetch analytics');
+      throw new Error(translateApiError(error.message, error.code));
     }
 
     return response.json();
@@ -171,7 +172,7 @@ export class GradingService {
     );
 
     if (!response.ok) {
-      throw new Error('Failed to export grades');
+      throw new Error('Không thể xuất bảng điểm.');
     }
 
     return response.blob();
@@ -187,7 +188,7 @@ export class GradingService {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Failed to release grades');
+      throw new Error(translateApiError(error.message, error.code));
     }
 
     return response.json();
@@ -203,7 +204,7 @@ export class GradingService {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Failed to release grades');
+      throw new Error(translateApiError(error.message, error.code));
     }
 
     return response.json();
@@ -222,7 +223,7 @@ export class GradingService {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Failed to create regrade request');
+      throw new Error(translateApiError(error.message, error.code));
     }
 
     return response.json();
@@ -241,7 +242,7 @@ export class GradingService {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Failed to respond to regrade request');
+      throw new Error(translateApiError(error.message, error.code));
     }
 
     return response.json();
@@ -265,7 +266,7 @@ export class GradingService {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Failed to fetch regrade requests');
+      throw new Error(translateApiError(error.message, error.code));
     }
 
     return response.json();
@@ -289,7 +290,7 @@ export class GradingService {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Failed to fetch regrade requests');
+      throw new Error(translateApiError(error.message, error.code));
     }
 
     return response.json();
@@ -310,7 +311,7 @@ export class GradingService {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Failed to invalidate submission');
+      throw new Error(translateApiError(error.message, error.code));
     }
 
     return response.json();
@@ -328,7 +329,7 @@ export class GradingService {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Failed to fetch result');
+      throw new Error(translateApiError(error.message, error.code));
     }
 
     return response.json();
@@ -344,7 +345,7 @@ export class GradingService {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Failed to trigger AI review');
+      throw new Error(translateApiError(error.message, error.code));
     }
 
     return response.json();
@@ -360,7 +361,7 @@ export class GradingService {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Failed to fetch pending count');
+      throw new Error(translateApiError(error.message, error.code));
     }
 
     return response.json();
