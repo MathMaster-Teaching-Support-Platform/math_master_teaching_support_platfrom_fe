@@ -443,10 +443,9 @@ export default function TeacherMindmaps() {
             <button
               type="button"
               onClick={toggleGenerator}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#141413] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:bg-[#30302E] active:scale-[0.98] transition-all duration-150"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#C96442] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:brightness-95 active:scale-[0.98] transition-all duration-150"
             >
-              <Sparkles className="w-4 h-4" />
-              Tạo Mindmap AI
+              Bắt đầu ngay <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
 
@@ -559,7 +558,7 @@ export default function TeacherMindmaps() {
                     <p className="font-[Be_Vietnam_Pro] text-[12px] font-semibold text-[#5E5D59] uppercase tracking-wide">
                       Bước 1: Chọn dữ liệu bài dạy
                     </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4">
                       <div>
                         <label className="flex items-center gap-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mb-1.5">
                           <GraduationCap className="w-3.5 h-3.5" /> Lớp
@@ -779,6 +778,7 @@ export default function TeacherMindmaps() {
             </div>
           )}
 
+          {!showGenerator && (<>
           {/* ── Toolbar ── */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
             <label className="flex-1 w-full flex items-center gap-3 bg-[#FAF9F5] border border-[#E8E6DC] rounded-xl px-4 py-2.5 focus-within:border-[#3898EC] focus-within:shadow-[0_0_0_3px_rgba(56,152,236,0.12)] transition-all duration-150">
@@ -817,6 +817,7 @@ export default function TeacherMindmaps() {
               ))}
             </div>
 
+            {mindmaps.length > 0 && (
             <div className="flex items-center gap-1 p-1 bg-[#F5F4ED] rounded-xl flex-shrink-0">
               <button
                 onClick={() => setViewMode('grid')}
@@ -841,6 +842,7 @@ export default function TeacherMindmaps() {
                 <List className="w-4 h-4" />
               </button>
             </div>
+            )}
           </div>
 
           {/* ── Summary bar ── */}
@@ -1067,6 +1069,7 @@ export default function TeacherMindmaps() {
               </button>
             </div>
           )}
+          </>)}
         </div>
       </div>
 
