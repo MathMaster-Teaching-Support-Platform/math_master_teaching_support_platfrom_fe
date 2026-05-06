@@ -298,10 +298,12 @@ export function TemplateFormModal({
       setSubmitError(null);
       setName(initialData.name || '');
       setDescription(initialData.description || '');
-      // Note: gradeLevel and subjectId are not stored in backend, only chapterId
-      // User will need to select grade/subject manually if they want to change chapter
-      setGradeLevel('');
-      setSelectedSubjectId('');
+      // Hydrate the academic cascade from the BE response. Without seeding
+      // gradeLevel + subjectId here the cascade renders empty in edit mode and
+      // the user can't see (or change) the template's chapter context — that
+      // was the bug behind "updating chapter & grade doesn't stick".
+      setGradeLevel(initialData.gradeLevel || '');
+      setSelectedSubjectId(initialData.subjectId || '');
       setSelectedChapterId(initialData.chapterId || '');
       setTemplateType(initialData.templateType || QuestionType.MULTIPLE_CHOICE);
       setCognitiveLevel(initialData.cognitiveLevel || CognitiveLevel.THONG_HIEU);

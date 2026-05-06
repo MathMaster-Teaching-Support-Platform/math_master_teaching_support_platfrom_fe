@@ -1,0 +1,170 @@
+.qb-scope .qb-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1.25rem;
+  border: 1px dashed var(--qb-border-strong);
+  border-radius: var(--qb-radius-lg);
+  background: var(--qb-surface-soft);
+  text-align: center;
+  gap: 0.4rem;
+}
+
+.qb-scope .qb-empty--error {
+  background: var(--qb-danger-soft);
+  border-color: var(--qb-danger-border);
+}
+
+.qb-scope .qb-empty__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  background: var(--qb-surface);
+  color: var(--qb-text-muted);
+  margin-bottom: 0.4rem;
+  border: 1px solid var(--qb-border);
+}
+
+.qb-scope .qb-empty--error .qb-empty__icon {
+  color: var(--qb-danger);
+  border-color: var(--qb-danger-border);
+}
+
+.qb-scope .qb-empty__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--qb-text-primary);
+}
+
+.qb-scope .qb-empty__desc {
+  margin: 0;
+  color: var(--qb-text-secondary);
+  font-size: 0.88rem;
+  max-width: 36rem;
+  line-height: 1.5;
+}
+
+.qb-scope .qb-empty__action {
+  margin-top: 0.85rem;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* ─── Inline notice ────────────────────────────────────── */
+.qb-scope .qb-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--qb-radius-md);
+  border: 1px solid;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.qb-scope .qb-notice__icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  margin-top: 0.1rem;
+}
+
+.qb-scope .qb-notice__body {
+  flex: 1;
+}
+
+.qb-scope .qb-notice__close {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: inherit;
+  opacity: 0.7;
+  padding: 0 0.25rem;
+}
+
+.qb-scope .qb-notice__close:hover {
+  opacity: 1;
+}
+
+.qb-scope .qb-notice--info {
+  background: var(--qb-primary-soft);
+  border-color: var(--qb-primary-border);
+  color: var(--qb-primary-strong);
+}
+
+.qb-scope .qb-notice--success {
+  background: var(--qb-success-soft);
+  border-color: var(--qb-success-border);
+  color: var(--qb-success);
+}
+
+.qb-scope .qb-notice--warn {
+  background: var(--qb-warn-soft);
+  border-color: var(--qb-warn-border);
+  color: var(--qb-warn);
+}
+
+.qb-scope .qb-notice--danger {
+  background: var(--qb-danger-soft);
+  border-color: var(--qb-danger-border);
+  color: var(--qb-danger);
+}
+
+/* ─── Skeleton: card ───────────────────────────────────── */
+.qb-scope .qb-skeleton-card {
+  background: var(--qb-surface);
+  border: 1px solid var(--qb-border);
+  border-radius: var(--qb-radius-lg);
+  overflow: hidden;
+}
+
+.qb-scope .qb-skeleton--cover {
+  height: 64px;
+  border-radius: 0;
+}
+
+.qb-scope .qb-skeleton-card__body {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.qb-scope .qb-skeleton--line {
+  height: 14px;
+  width: 100%;
+}
+
+.qb-scope .qb-skeleton--line-w-70 {
+  width: 70%;
+}
+
+.qb-scope .qb-skeleton--line-w-40 {
+  width: 40%;
+}
+
+.qb-scope .qb-skeleton--bar {
+  height: 8px;
+  width: 100%;
+}
+
+/* ─── Skeleton: list rows ──────────────────────────────── */
+.qb-scope .qb-skeleton-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.qb-scope .qb-skeleton--row {
+  height: 56px;
+  width: 100%;
+}

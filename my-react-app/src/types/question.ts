@@ -68,6 +68,9 @@ export interface QuestionResponse {
   templateId?: string;
   questionBankId?: string;
   questionBankName?: string;
+  /** Chapter (chương) the question belongs to. Used for bank-tree bucket grouping. */
+  chapterId?: string;
+  lessonId?: string;
   // ✅ NEW: Generation metadata for TF clause tracking and SA validation
   generationMetadata?: {
     tfClauses?: TFClausesMetadata;  // For TRUE_FALSE: tracks chapter/level per clause
@@ -110,6 +113,13 @@ export interface GetMyQuestionsParams {
 export interface SearchQuestionsParams {
   keyword?: string;
   tag?: string;
+  /** Narrow to a single chapter (server-side filter via /questions/search). */
+  chapterId?: string;
+  /**
+   * One of NHAN_BIET / THONG_HIEU / VAN_DUNG / VAN_DUNG_CAO.
+   * Bloom-style English levels are folded onto the matching bucket server-side.
+   */
+  cognitiveLevel?: string;
   page?: number;
   size?: number;
 }

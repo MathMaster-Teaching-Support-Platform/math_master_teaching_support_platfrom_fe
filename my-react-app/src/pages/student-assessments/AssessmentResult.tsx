@@ -189,8 +189,7 @@ export default function AssessmentResult() {
                     options={answer.options}
                   />
 
-                  {/* Show explanation and solution steps when toggle is on */}
-                  {showExplanations && (answer.explanation || answer.solutionSteps) && (
+                  {showExplanations && answer.explanation && (
                     <div
                       style={{
                         marginTop: 12,
@@ -208,21 +207,9 @@ export default function AssessmentResult() {
                           fontSize: '0.9rem',
                         }}
                       >
-                        📝 Lời giải
+                        Lời giải
                       </p>
-                      {answer.explanation && (
-                        <div style={{ marginBottom: 8 }}>
-                          <MathText text={answer.explanation} />
-                        </div>
-                      )}
-                      {answer.solutionSteps && (
-                        <div>
-                          <p className="muted" style={{ fontSize: '0.8rem', marginBottom: 4 }}>
-                            Các bước giải:
-                          </p>
-                          <MathText text={answer.solutionSteps} />
-                        </div>
-                      )}
+                      <MathText text={answer.explanation} />
                     </div>
                   )}
 

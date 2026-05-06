@@ -22,7 +22,13 @@ type Props = {
   mode: 'create' | 'edit';
   initialData?: AssessmentResponse | null;
   onClose: () => void;
-  onSubmit: (data: AssessmentRequest) => Promise<void>;
+  /**
+   * Create mode receives the full {@link AssessmentRequest}. Edit mode
+   * receives only the fields the teacher actually changed so the parent can
+   * dispatch a PATCH instead of a full PUT — that lets a teacher patch one
+   * setting (e.g. timeLimitMinutes) without re-submitting the whole object.
+   */
+  onSubmit: (data: AssessmentRequest | Partial<AssessmentRequest>) => Promise<void>;
 };
 
 const defaultForm: AssessmentRequest = {
@@ -33,7 +39,6 @@ const defaultForm: AssessmentRequest = {
   examMatrixId: '',
   assessmentMode: 'MATRIX_BASED',
   timeLimitMinutes: 45,
-  passingScore: 50,
   randomizeQuestions: false,
   showCorrectAnswers: false,
   allowMultipleAttempts: false,
@@ -68,9 +73,6 @@ export default function AssessmentModal({
         examMatrixId: initialData.examMatrixId || '',
         assessmentMode: initialData.assessmentMode || 'MATRIX_BASED',
         timeLimitMinutes: initialData.timeLimitMinutes,
-        passingScore: initialData.passingScore,
-        startDate: initialData.startDate,
-        endDate: initialData.endDate,
         randomizeQuestions: initialData.randomizeQuestions,
         showCorrectAnswers: initialData.showCorrectAnswers,
         allowMultipleAttempts: initialData.allowMultipleAttempts,
@@ -108,31 +110,51 @@ export default function AssessmentModal({
       return;
     }
 
-    if (formData.startDate && formData.endDate) {
-      if (new Date(formData.startDate) >= new Date(formData.endDate)) {
-        setError('Thời gian kết thúc phải sau thời gian bắt đầu.');
-        return;
-      }
-    }
-
     setSaving(true);
     try {
-      // BE field types: startDate/endDate are Instant (must be full ISO with TZ),
-      // examMatrixId is UUID (empty string can't deserialize). Convert before send.
-      const toIsoInstant = (value?: string): string | undefined => {
-        if (!value) return undefined;
-        const date = new Date(value);
-        if (Number.isNaN(date.getTime())) return undefined;
-        return date.toISOString();
-      };
-      const payload: AssessmentRequest = {
+      const fullPayload: AssessmentRequest = {
         ...formData,
-        startDate: toIsoInstant(formData.startDate),
-        endDate: toIsoInstant(formData.endDate),
         // For DIRECT-mode assessments examMatrixId is empty; BE rejects "".
         examMatrixId: formData.examMatrixId || (undefined as unknown as string),
       };
-      await onSubmit(payload);
+
+      if (mode === 'edit' && initialData) {
+        // Compute a partial payload containing only the fields the teacher
+        // actually changed so the parent can dispatch a PATCH. Compares
+        // primitive values directly; nested objects (none today) would need
+        // deep-equal handling.
+        const initialNormalised: Record<string, unknown> = {
+          title: initialData.title,
+          description: initialData.description ?? '',
+          assessmentType: initialData.assessmentType,
+          examMatrixId: initialData.examMatrixId || undefined,
+          assessmentMode: initialData.assessmentMode,
+          timeLimitMinutes: initialData.timeLimitMinutes,
+          randomizeQuestions: initialData.randomizeQuestions,
+          showCorrectAnswers: initialData.showCorrectAnswers,
+          allowMultipleAttempts: initialData.allowMultipleAttempts,
+          maxAttempts: initialData.maxAttempts,
+          attemptScoringPolicy: initialData.attemptScoringPolicy,
+          showScoreImmediately: initialData.showScoreImmediately,
+        };
+        const diff: Partial<AssessmentRequest> = {};
+        const fullAsRecord = fullPayload as unknown as Record<string, unknown>;
+        for (const key of Object.keys(fullPayload) as (keyof AssessmentRequest)[]) {
+          const next = fullAsRecord[key];
+          const prev = initialNormalised[key];
+          if (next !== prev) {
+            (diff as Record<string, unknown>)[key] = next;
+          }
+        }
+        if (Object.keys(diff).length === 0) {
+          // Nothing changed — no-op submit.
+          onClose();
+          return;
+        }
+        await onSubmit(diff);
+      } else {
+        await onSubmit(fullPayload);
+      }
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : `Không thể lưu ${UI_TEXT.QUIZ.toLowerCase()}.`);
@@ -375,34 +397,6 @@ export default function AssessmentModal({
             <div className="form-grid">
               <label>
                 <p className="muted" style={{ marginBottom: 6 }}>
-                  Ngày bắt đầu
-                </p>
-                <input
-                  className="input"
-                  type="datetime-local"
-                  value={formData.startDate ? new Date(formData.startDate).toISOString().slice(0, 16) : ''}
-                  onChange={(event) =>
-                    setFormData({ ...formData, startDate: event.target.value })
-                  }
-                />
-              </label>
-
-              <label>
-                <p className="muted" style={{ marginBottom: 6 }}>
-                  Ngày kết thúc
-                </p>
-                <input
-                  className="input"
-                  type="datetime-local"
-                  value={formData.endDate ? new Date(formData.endDate).toISOString().slice(0, 16) : ''}
-                  onChange={(event) =>
-                    setFormData({ ...formData, endDate: event.target.value })
-                  }
-                />
-              </label>
-
-              <label>
-                <p className="muted" style={{ marginBottom: 6 }}>
                   Thời gian làm bài (phút)
                 </p>
                 <input
@@ -412,22 +406,6 @@ export default function AssessmentModal({
                   value={formData.timeLimitMinutes || 1}
                   onChange={(event) =>
                     setFormData({ ...formData, timeLimitMinutes: Number(event.target.value) })
-                  }
-                />
-              </label>
-
-              <label>
-                <p className="muted" style={{ marginBottom: 6 }}>
-                  Điểm đạt (%)
-                </p>
-                <input
-                  className="input"
-                  type="number"
-                  min={0}
-                  max={100}
-                  value={formData.passingScore || 0}
-                  onChange={(event) =>
-                    setFormData({ ...formData, passingScore: Number(event.target.value) })
                   }
                 />
               </label>

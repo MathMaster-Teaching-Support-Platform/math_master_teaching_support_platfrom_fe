@@ -13,7 +13,7 @@ import {
   useGenerateQuestionsForAssessment,
   useRemoveQuestion,
   useSetPointsOverride,
-  useUpdateAssessment,
+  usePatchAssessment,
   useUpdateAssessmentQuestionWorkaround,
 } from '../../hooks/useAssessment';
 import MathText from '../../components/common/MathText';
@@ -103,7 +103,7 @@ export default function AssessmentDetailRefactored() {
   } = useAssessmentQuestions(id ?? '', {
     enabled: !!id,
   });
-  const updateMutation = useUpdateAssessment();
+  const patchMutation = usePatchAssessment();
   const addQuestionMutation = useAddQuestion();
   const removeQuestionMutation = useRemoveQuestion();
   const updateAssessmentQuestionMutation = useUpdateAssessmentQuestionWorkaround();
@@ -155,9 +155,9 @@ export default function AssessmentDetailRefactored() {
     setAutoTotalPoints(String(assessment.totalPoints ?? 0));
   }, [assessment?.id, assessment?.totalPoints]);
 
-  async function save(payload: AssessmentRequest) {
+  async function save(payload: AssessmentRequest | Partial<AssessmentRequest>) {
     if (!id) return;
-    await updateMutation.mutateAsync({ id, data: payload });
+    await patchMutation.mutateAsync({ id, data: payload });
     setOpenEdit(false);
     await refetch();
   }
@@ -407,10 +407,6 @@ export default function AssessmentDetailRefactored() {
                 <td>{assessment.timeLimitMinutes || 0} phút</td>
               </tr>
               <tr>
-                <th>Điểm đạt</th>
-                <td>{assessment.passingScore || 0}%</td>
-              </tr>
-              <tr>
                 <th>Chế độ tạo đề</th>
                 <td>
                   {assessmentModeLabel[assessment.assessmentMode || 'DIRECT'] ||
@@ -420,19 +416,7 @@ export default function AssessmentDetailRefactored() {
               </tr>
               <tr>
                 <th>Ma trận đề</th>
-                <td>{assessment.examMatrixId || 'Không có'}</td>
-              </tr>
-              <tr>
-                <th>Lịch làm bài</th>
-                <td>
-                  {assessment.startDate
-                    ? new Date(assessment.startDate).toLocaleString()
-                    : 'Chưa đặt lịch'}{' '}
-                  -{' '}
-                  {assessment.endDate
-                    ? new Date(assessment.endDate).toLocaleString()
-                    : 'Không giới hạn'}
-                </td>
+                <td>{assessment.examMatrixName ?? assessment.examMatrixId ?? 'Không có'}</td>
               </tr>
             </tbody>
           </table>

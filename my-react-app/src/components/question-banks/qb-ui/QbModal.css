@@ -1,0 +1,114 @@
+.qb-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(2px);
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  z-index: 1050;
+  animation: qb-modal-fade-in 0.16s ease;
+  font-family: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+@keyframes qb-modal-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes qb-modal-pop-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.qb-modal {
+  width: 100%;
+  max-height: calc(100vh - 2rem);
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border-radius: 18px;
+  border: 1px solid #e5e9f2;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.22);
+  overflow: hidden;
+  animation: qb-modal-pop-in 0.2s cubic-bezier(0.2, 0.7, 0.4, 1);
+  color: #0f172a;
+}
+
+.qb-modal--sm { max-width: 420px; }
+.qb-modal--md { max-width: 640px; }
+.qb-modal--lg { max-width: 880px; }
+.qb-modal--xl { max-width: 1080px; }
+
+.qb-modal__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1.1rem 1.25rem 0.85rem;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.qb-modal__header-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.qb-modal__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.005em;
+}
+
+.qb-modal__desc {
+  margin: 0.3rem 0 0;
+  font-size: 0.86rem;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.qb-modal__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 8px;
+  background: #f1f5f9;
+  color: #64748b;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.14s ease, color 0.14s ease;
+}
+
+.qb-modal__close:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.qb-modal__body {
+  padding: 1.1rem 1.25rem;
+  overflow: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.qb-modal__footer {
+  padding: 0.85rem 1.25rem;
+  border-top: 1px solid #eef2f7;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  background: #f8fafd;
+}
+
+@media (max-width: 640px) {
+  .qb-modal-backdrop { padding: 0.5rem; }
+  .qb-modal { max-height: calc(100vh - 1rem); border-radius: 14px; }
+  .qb-modal__header,
+  .qb-modal__body,
+  .qb-modal__footer { padding-left: 1rem; padding-right: 1rem; }
+}

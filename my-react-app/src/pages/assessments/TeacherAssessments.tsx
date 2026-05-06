@@ -1,6 +1,5 @@
 import {
   BookOpen,
-  Copy,
   FileText,
   Lock,
   Pencil,
@@ -17,14 +16,13 @@ import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLa
 import { UI_TEXT } from '../../constants/uiText';
 import { useToast } from '../../context/ToastContext';
 import {
-  useCloneAssessment,
   useCloseAssessment,
   useCreateAssessment,
   useDeleteAssessment,
   useMyAssessments,
+  usePatchAssessment,
   usePublishAssessment,
   useUnpublishAssessment,
-  useUpdateAssessment,
 } from '../../hooks/useAssessment';
 import { useDebounce } from '../../hooks/useDebounce';
 import '../../styles/module-refactor.css';
@@ -49,72 +47,6 @@ const cardStatusLabel: Record<AssessmentStatus, string> = {
   CLOSED: 'Đã đóng',
 };
 
-function CloneModal({
-  assessment,
-  isLoading,
-  onClose,
-  onConfirm,
-}: {
-  assessment: AssessmentResponse;
-  isLoading: boolean;
-  onClose: () => void;
-  onConfirm: (newTitle: string, cloneQuestions: boolean) => void;
-}) {
-  const [newTitle, setNewTitle] = useState(`[Bản sao] ${assessment.title}`);
-  const [cloneQuestions, setCloneQuestions] = useState(true);
-
-  return (
-    <div className="modal-layer">
-      <div className="modal-card" style={{ width: 'min(520px, 100%)' }}>
-        <div className="modal-header">
-          <div>
-            <h3>Nhân bản {UI_TEXT.QUIZ.toLowerCase()}</h3>
-            <p className="muted" style={{ marginTop: 4 }}>
-              Tạo một bản nháp mới từ {UI_TEXT.QUIZ.toLowerCase()} này.
-            </p>
-          </div>
-        </div>
-
-        <div className="modal-body">
-          <label>
-            <p className="muted" style={{ marginBottom: 6 }}>
-              Tiêu đề mới
-            </p>
-            <input
-              className="input"
-              value={newTitle}
-              onChange={(event) => setNewTitle(event.target.value)}
-            />
-          </label>
-
-          <label className="row" style={{ justifyContent: 'start' }}>
-            <input
-              type="checkbox"
-              checked={cloneQuestions}
-              onChange={(event) => setCloneQuestions(event.target.checked)}
-            />
-            Nhân bản danh sách câu hỏi đính kèm
-          </label>
-        </div>
-
-        <div className="modal-footer">
-          <button type="button" className="btn secondary" onClick={onClose}>
-            Hủy
-          </button>
-          <button
-            type="button"
-            className="btn btn--feat-violet"
-            disabled={!newTitle.trim() || isLoading}
-            onClick={() => onConfirm(newTitle, cloneQuestions)}
-          >
-            {isLoading ? 'Đang nhân bản...' : 'Nhân bản'}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function TeacherAssessments() {
   const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState<'ALL' | AssessmentStatus>('ALL');
@@ -124,7 +56,6 @@ export default function TeacherAssessments() {
   const [openForm, setOpenForm] = useState(false);
   const [mode, setMode] = useState<'create' | 'edit'>('create');
   const [selected, setSelected] = useState<AssessmentResponse | null>(null);
-  const [cloneTarget, setCloneTarget] = useState<AssessmentResponse | null>(null);
   const [view, setView] = useState<'create' | 'manage'>('manage');
 
   const debouncedSearch = useDebounce(search, 300);
@@ -143,12 +74,11 @@ export default function TeacherAssessments() {
   });
 
   const createMutation = useCreateAssessment();
-  const updateMutation = useUpdateAssessment();
+  const patchMutation = usePatchAssessment();
   const publishMutation = usePublishAssessment();
   const unpublishMutation = useUnpublishAssessment();
   const closeMutation = useCloseAssessment();
   const deleteMutation = useDeleteAssessment();
-  const cloneMutation = useCloneAssessment();
 
   const { showToast } = useToast();
 
@@ -165,44 +95,23 @@ export default function TeacherAssessments() {
     [assessments, totalElements]
   );
 
-  async function saveAssessment(payload: AssessmentRequest) {
+  async function saveAssessment(payload: AssessmentRequest | Partial<AssessmentRequest>) {
     try {
       if (mode === 'create') {
-        await createMutation.mutateAsync(payload);
+        // Create flow: AssessmentModal always emits a full payload here.
+        await createMutation.mutateAsync(payload as AssessmentRequest);
         showToast({ type: 'success', message: `Tạo ${UI_TEXT.QUIZ.toLowerCase()} thành công.` });
         return;
       }
       if (!selected) return;
-      await updateMutation.mutateAsync({ id: selected.id, data: payload });
+      // Edit flow: AssessmentModal emits a Partial diff; route to PATCH.
+      await patchMutation.mutateAsync({ id: selected.id, data: payload });
       showToast({ type: 'success', message: `Cập nhật ${UI_TEXT.QUIZ.toLowerCase()} thành công.` });
     } catch (error) {
       showToast({
         type: 'error',
         message:
           error instanceof Error ? error.message : `Không thể lưu ${UI_TEXT.QUIZ.toLowerCase()}.`,
-      });
-    }
-  }
-
-  async function cloneAssessment(newTitle: string, cloneQuestions: boolean) {
-    if (!cloneTarget) return;
-    try {
-      await cloneMutation.mutateAsync({
-        id: cloneTarget.id,
-        data: { newTitle, cloneQuestions },
-      });
-      showToast({
-        type: 'success',
-        message: `Đã nhân bản ${UI_TEXT.QUIZ.toLowerCase()} thành “${newTitle}”.`,
-      });
-      setCloneTarget(null);
-    } catch (error) {
-      showToast({
-        type: 'error',
-        message:
-          error instanceof Error
-            ? error.message
-            : `Không thể nhân bản ${UI_TEXT.QUIZ.toLowerCase()}.`,
       });
     }
   }
@@ -566,14 +475,6 @@ export default function TeacherAssessments() {
                             Chỉnh sửa
                           </button>
                         )}
-                        <button
-                          type="button"
-                          className="btn"
-                          onClick={() => setCloneTarget(assessment)}
-                        >
-                          <Copy size={13} />
-                          Nhân bản
-                        </button>
                         {assessment.status === 'PUBLISHED' && (
                           <button
                             type="button"
@@ -653,17 +554,6 @@ export default function TeacherAssessments() {
             onClose={() => setOpenForm(false)}
             onSubmit={saveAssessment}
           />
-          {cloneTarget && (
-            <CloneModal
-              assessment={cloneTarget}
-              isLoading={cloneMutation.isPending}
-              onClose={() => setCloneTarget(null)}
-              onConfirm={(title, cloneQuestions) => {
-                void cloneAssessment(title, cloneQuestions);
-              }}
-            />
-          )}
-
         </section>
       </div>
     </DashboardLayout>

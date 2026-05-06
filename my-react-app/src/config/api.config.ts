@@ -62,9 +62,9 @@ export const API_ENDPOINTS = {
   ASSESSMENTS_CAN_DELETE: (id: string) => `/assessments/${id}/can-delete`,
   ASSESSMENTS_CAN_PUBLISH: (id: string) => `/assessments/${id}/can-publish`,
   ASSESSMENTS_CLOSE: (id: string) => `/assessments/${id}/close`,
-  ASSESSMENTS_CLONE: (id: string) => `/assessments/${id}/clone`,
   ASSESSMENTS_GENERATE_FROM_MATRIX: '/assessments/generate-from-matrix',
   ASSESSMENTS_GENERATE_BY_PERCENTAGE: '/assessments/generate-by-percentage',
+  ASSESSMENTS_VALIDATE_BANK_COVERAGE: '/assessments/validate-bank-coverage',
   ASSESSMENTS_GENERATE: (assessmentId: string) => `/assessments/${assessmentId}/generate`,
   ASSESSMENTS_QUESTIONS: (assessmentId: string) => `/assessments/${assessmentId}/questions`,
   ASSESSMENTS_AVAILABLE_QUESTIONS: (assessmentId: string) =>
@@ -87,6 +87,7 @@ export const API_ENDPOINTS = {
   EXAM_MATRIX_DETAIL: (matrixId: string) => `/exam-matrices/${matrixId}`,
   EXAM_MATRIX_BY_ASSESSMENT: (assessmentId: string) => `/exam-matrices/assessment/${assessmentId}`,
   EXAM_MATRIX_BUILD: '/exam-matrices/build',
+  EXAM_MATRIX_BUILD_SIMPLE: '/exam-matrices/build-simple',
   EXAM_MATRIX_TABLE: (matrixId: string) => `/exam-matrices/${matrixId}/table`,
   EXAM_MATRIX_ROWS: (matrixId: string) => `/exam-matrices/${matrixId}/rows`,
   EXAM_MATRIX_ROW_DETAIL: (matrixId: string, rowId: string) =>
@@ -110,6 +111,7 @@ export const API_ENDPOINTS = {
   QUESTION_BANK_TOGGLE_PUBLIC: (id: string) => `/question-banks/${id}/toggle-public`,
   QUESTION_BANK_CAN_EDIT: (id: string) => `/question-banks/${id}/can-edit`,
   QUESTION_BANK_CAN_DELETE: (id: string) => `/question-banks/${id}/can-delete`,
+  QUESTION_BANK_TREE: (id: string) => `/question-banks/${id}/tree`,
 
   // Questions
   QUESTIONS: '/questions',

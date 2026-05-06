@@ -3,6 +3,7 @@ import { AuthService } from './api/auth.service';
 import type {
     BatchUpsertMatrixRowCellsRequest,
     BuildExamMatrixRequest,
+    BuildSimpleExamMatrixRequest,
     ExamMatrixRequest,
     ExamMatrixResponse,
     ExamMatrixApiResponse,
@@ -38,6 +39,14 @@ export const examMatrixService = {
             headers: getAuthHeaders(),
             body: JSON.stringify(request),
         }).then(handleResponse<ExamMatrixResponse>),
+
+    /** Happy-case: one bank + chapters + per-chapter NB/TH/VD/VDC counts. */
+    buildSimpleExamMatrix: (request: BuildSimpleExamMatrixRequest) =>
+        fetch(`${API_BASE_URL}${API_ENDPOINTS.EXAM_MATRIX_BUILD_SIMPLE}`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(request),
+        }).then(handleResponse<ExamMatrixTableResponse>),
 
     createExamMatrix: (request: ExamMatrixRequest) =>
         fetch(`${API_BASE_URL}${API_ENDPOINTS.EXAM_MATRICES}`, {

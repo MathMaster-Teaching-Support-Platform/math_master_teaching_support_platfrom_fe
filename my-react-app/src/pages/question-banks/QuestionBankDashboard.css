@@ -1,587 +1,245 @@
-/* ═══════════════════════════════════════════════════
-   Question Bank Dashboard — page-specific overrides
-   Base styles from module-refactor.css
-   ═══════════════════════════════════════════════════ */
+/* Question Bank Dashboard
+ * Page-level styles. Atoms (qb-btn, qb-card, qb-toolbar, ...) live in
+ * src/styles/qb-design-system.css and src/components/question-banks/qb-ui/.
+ */
 
-/* ── Header extras ───────────────────────────────────── */
-.module-layout-container .qb-header-row {
-  align-items: flex-start;
-  padding-bottom: 1.25rem;
-  border-bottom: 1.5px solid var(--mod-slate-100);
-}
-
-.module-layout-container .header-stack {
+.qb-scope.qb-page {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 1.5rem 1.5rem 3rem;
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
-}
-
-.module-layout-container .header-kicker {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--mod-primary);
-}
-
-.module-layout-container .header-kicker::before {
-  content: '';
-  display: inline-block;
-  width: 3px;
-  height: 14px;
-  border-radius: 99px;
-  background: var(--mod-primary);
-  flex-shrink: 0;
-}
-
-.module-layout-container .header-sub {
-  margin: 0;
-  font-size: 0.875rem;
-  color: var(--mod-slate-500);
-  padding-top: 0.15rem;
-}
-
-/* ── Count chip ──────────────────────────────────────── */
-.module-layout-container .count-chip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--mod-slate-100);
-  color: var(--mod-slate-700);
-  border-radius: 9999px;
-  font-size: 0.82rem;
-  font-weight: 700;
-  padding: 0.1rem 0.55rem;
-}
-
-/* ── Stat card colour variants ──────────────────────── */
-.module-layout-container .stat-card {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-  transition:
-    transform 0.16s ease,
-    box-shadow 0.16s ease;
-}
-
-.module-layout-container .stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 24px rgba(21, 44, 74, 0.1);
-}
-
-.module-layout-container .stat-icon-wrap {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.module-layout-container .stat-card.stat-blue {
-  background: #eff6ff;
-  border-color: #bfdbfe;
-}
-.module-layout-container .stat-card.stat-emerald {
-  background: #ecfdf5;
-  border-color: #a7f3d0;
-}
-.module-layout-container .stat-card.stat-violet {
-  background: #f5f3ff;
-  border-color: #ddd6fe;
-}
-
-.module-layout-container .stat-card.stat-blue:hover,
-.module-layout-container .stat-card.stat-emerald:hover,
-.module-layout-container .stat-card.stat-violet:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.09);
-}
-
-.module-layout-container .stat-card.stat-blue h3 {
-  color: #1e40af;
-}
-.module-layout-container .stat-card.stat-emerald h3 {
-  color: #065f46;
-}
-.module-layout-container .stat-card.stat-violet h3 {
-  color: #6d28d9;
-}
-
-.module-layout-container .stat-card.stat-blue h3,
-.module-layout-container .stat-card.stat-emerald h3,
-.module-layout-container .stat-card.stat-violet h3 {
-  font-size: 1.65rem;
-  font-weight: 800;
-  line-height: 1;
-  margin: 0;
-}
-
-.module-layout-container .stat-card.stat-blue p,
-.module-layout-container .stat-card.stat-emerald p,
-.module-layout-container .stat-card.stat-violet p {
-  margin: 0.2rem 0 0;
-  font-size: 0.74rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--mod-slate-500);
-}
-
-.module-layout-container .stat-blue .stat-icon-wrap {
-  background: #eff6ff;
-  color: #1d4ed8;
-}
-.module-layout-container .stat-emerald .stat-icon-wrap {
-  background: #ecfdf5;
-  color: #047857;
-}
-.module-layout-container .stat-violet .stat-icon-wrap {
-  background: #f5f3ff;
-  color: #6d28d9;
-}
-
-/* ── View toggle ─────────────────────────────────────── */
-.module-layout-container .view-toggle {
-  display: flex;
-  gap: 0.25rem;
-  background: #f1f5fd;
-  border: 1.5px solid var(--mod-slate-200);
-  border-radius: 12px;
-  padding: 0.22rem;
-}
-
-.module-layout-container .view-toggle button {
-  width: 34px;
-  height: 34px;
-  border: 1.5px solid transparent;
-  background: transparent;
-  color: var(--mod-slate-400);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-family: inherit;
-  border-radius: 9px;
-  transition: all 0.15s;
-}
-
-.module-layout-container .view-toggle button:hover:not(.active) {
-  background: #e2eaff;
-  color: var(--mod-primary);
-}
-
-.module-layout-container .view-toggle button.active {
-  background: #fff;
-  color: var(--mod-primary);
-  border-color: #c5d6ff;
-  box-shadow: 0 1px 4px rgba(31, 94, 255, 0.14);
-}
-
-/* ── Badge variants ──────────────────────────────────── */
-.module-layout-container .course-badge {
-  position: relative;
-  z-index: 1;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  border-radius: 999px;
-  padding: 0.22rem 0.6rem;
-  font-size: 0.69rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  width: fit-content;
-  margin-bottom: 0.5rem;
-}
-
-.module-layout-container .badge-live {
-  background: rgba(255, 255, 255, 0.72);
-  color: #166534;
-  border: 1px solid rgba(22, 101, 52, 0.16);
-}
-
-.module-layout-container .badge-draft {
-  background: rgba(255, 255, 255, 0.72);
-  color: #92400e;
-  border: 1px solid rgba(146, 64, 14, 0.16);
-}
-
-.module-layout-container .badge-archived {
-  background: rgba(255, 255, 255, 0.72);
-  color: #475569;
-  border: 1px solid rgba(71, 85, 105, 0.16);
-}
-
-/* ── Bank card (mindmap-card pattern) ────────────────── */
-.module-layout-container .data-card.bank-card {
-  padding: 0;
-  min-height: auto;
-  gap: 0;
-  overflow: hidden;
-}
-
-.module-layout-container .bank-cover {
-  position: relative;
-  padding: 1.3rem 1.25rem 1.15rem;
-  min-height: 136px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  overflow: hidden;
-}
-
-.module-layout-container .bank-cover .cover-overlay {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at top right, rgba(255, 255, 255, 0.7), transparent 36%),
-    linear-gradient(to top, rgba(255, 255, 255, 0.12) 0%, transparent 70%);
-}
-
-/* Subtle SVG watermark — sits behind the title at low opacity. */
-.module-layout-container .bank-cover .cover-watermark {
-  position: absolute;
-  right: -16px;
-  bottom: -22px;
-  z-index: 0;
-  color: rgba(255, 255, 255, 0.18);
-  pointer-events: none;
-}
-
-.module-layout-container .bank-cover .cover-index {
-  position: absolute;
-  top: 0.9rem;
-  right: 1rem;
-  z-index: 1;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  color: rgba(15, 23, 42, 0.38);
-}
-
-.module-layout-container .bank-cover .cover-title {
-  position: relative;
-  z-index: 1;
-  margin: 0;
-  font-size: 1.05rem;
-  font-weight: 800;
-  color: var(--mod-ink);
-  line-height: 1.25;
-}
-
-.module-layout-container .bank-body {
-  padding: 1rem 1.15rem 1.15rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
-  flex: 1;
-}
-
-.module-layout-container .bank-desc {
-  margin: 0;
-  color: var(--mod-slate-500);
-  font-size: 0.84rem;
-  line-height: 1.6;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.module-layout-container .bank-metrics {
-  display: flex;
-  gap: 0.42rem;
-  flex-wrap: wrap;
-}
-
-.module-layout-container .bank-metrics .metric {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  font-size: 0.76rem;
-  color: var(--mod-slate-500);
-  font-weight: 600;
-  padding: 0.36rem 0.58rem;
-  background: var(--mod-slate-50);
-  border: 1px solid var(--mod-slate-100);
-  border-radius: 999px;
-}
-
-.module-layout-container .bank-metrics .metric svg {
-  color: var(--mod-slate-300);
-  flex-shrink: 0;
-}
-
-.module-layout-container .bank-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  margin-top: auto;
-  padding-top: 0.85rem;
-  border-top: 1px solid var(--mod-slate-100);
-  flex-wrap: wrap;
-}
-
-.module-layout-container .bank-actions {
-  display: flex;
-  gap: 0.45rem;
-  flex-wrap: wrap;
-}
-
-/* ── Danger outline button ───────────────────────────── */
-.module-layout-container .btn.danger-outline {
-  background: #fff1f2;
-  color: #be123c;
-  border: 1.5px solid #fecdd3;
-}
-
-.module-layout-container .btn.danger-outline:hover:not(:disabled) {
-  background: #ffe4e6;
-  border-color: #fda4af;
-}
-
-/* ── List / grid view ────────────────────────────────── */
-.module-layout-container .grid-cards.list-view .data-card.bank-card {
-  display: grid;
-  grid-template-columns: 200px 1fr;
-}
-
-.module-layout-container .grid-cards.list-view .bank-cover {
-  min-height: 160px;
-}
-
-/* ── Quick-nav bar ───────────────────────────────────── */
-.module-layout-container .qb-quicknav {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  background: #fff;
-  border: 1px solid var(--mod-slate-100);
-  border-radius: 14px;
-  box-shadow: 0 4px 14px rgba(21, 44, 74, 0.06);
-  overflow: hidden;
-  padding: 0.5rem 0.75rem;
-}
-
-.module-layout-container .qb-quicknav__label {
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--mod-slate-400);
-  white-space: nowrap;
-  padding: 0 0.75rem 0 0.25rem;
-  border-right: 1.5px solid var(--mod-slate-100);
-  margin-right: 0.25rem;
-  flex-shrink: 0;
-}
-
-.module-layout-container .qb-quicknav__item {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-  padding: 0.6rem 0.85rem;
-  border-radius: 10px;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  font-family: inherit;
-  text-align: left;
-  transition: background 0.15s ease;
-  flex: 1;
-  min-width: 0;
-}
-
-.module-layout-container .qb-quicknav__item:hover {
-  background: #f8faff;
-}
-
-.module-layout-container .qb-quicknav__item:hover .qb-quicknav__arrow {
-  transform: translateX(3px);
-  color: var(--mod-primary);
-}
-
-.module-layout-container .qb-quicknav__icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 9px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.module-layout-container .qb-nav-violet {
-  background: #f5f3ff;
-  color: #6d28d9;
-}
-
-.module-layout-container .qb-nav-blue {
-  background: #eff6ff;
-  color: #1d4ed8;
-}
-
-.module-layout-container .qb-quicknav__text {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  min-width: 0;
-  flex: 1;
-}
-
-.module-layout-container .qb-quicknav__title {
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: var(--mod-ink);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.module-layout-container .qb-quicknav__desc {
-  font-size: 0.76rem;
-  color: var(--mod-slate-500);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* ── Cognitive stats row ─────────────────────────────── */
-.bank-cognitive-stats {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.3rem;
-  margin-top: 0.45rem;
-  font-size: 0.75rem;
-}
-
-.bank-cognitive-label {
-  color: var(--mod-slate-500);
-  font-weight: 600;
-  margin-right: 0.15rem;
-}
-
-.bank-cognitive-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.1rem 0.4rem;
-  border-radius: 4px;
-  background: var(--mod-slate-100);
-  color: var(--mod-slate-700);
-  font-size: 0.7rem;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.module-layout-container .qb-quicknav__arrow {
-  color: var(--mod-slate-300);
-  flex-shrink: 0;
-  transition:
-    transform 0.15s ease,
-    color 0.15s ease;
-}
-
-.module-layout-container .qb-quicknav__divider {
-  width: 1.5px;
-  height: 36px;
-  background: var(--mod-slate-100);
-  flex-shrink: 0;
-}
-
-@media (max-width: 600px) {
-  .module-layout-container .qb-quicknav {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .module-layout-container .qb-quicknav__label {
-    border-right: none;
-    border-bottom: 1.5px solid var(--mod-slate-100);
-    padding: 0.4rem 0.5rem;
-    margin-right: 0;
-    margin-bottom: 0.25rem;
-  }
-  .module-layout-container .qb-quicknav__divider {
-    width: 100%;
-    height: 1.5px;
-  }
-}
-
-/* ── Quick-nav bar ───────────────────────────────────── */
-.module-layout-container .skeleton-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1.1rem;
+  background: transparent;
 }
 
-.module-layout-container .skeleton-card {
-  height: 300px;
-  border-radius: 14px;
-  background: linear-gradient(90deg, #f1f5f9 25%, #e8edf5 50%, #f1f5f9 75%);
-  background-size: 400% 100%;
-  animation: qb-skeleton-shimmer 1.4s ease infinite;
-}
-
-@keyframes qb-skeleton-shimmer {
-  0% {
-    background-position: 100% 0;
-  }
-  100% {
-    background-position: -100% 0;
+@media (max-width: 640px) {
+  .qb-scope.qb-page {
+    padding: 1rem 0.85rem 2rem;
   }
 }
 
-/* ── Matrix Stats Details ────────────────────────────── */
-.bank-matrix-stats-details {
-  margin-top: 0.75rem;
-  border: 1px solid var(--mod-slate-100);
-  border-radius: 8px;
+/* ─── Bank grid ────────────────────────────────────────── */
+.qb-scope .qb-bank-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.qb-scope .qb-bank-grid--list {
+  grid-template-columns: 1fr;
+}
+
+/* ─── Bank card ────────────────────────────────────────── */
+.qb-scope .qb-bank-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem 1.1rem 1.05rem;
+  background: var(--qb-surface);
+  position: relative;
   overflow: hidden;
 }
 
-.bank-matrix-stats-summary {
+.qb-scope .qb-bank-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--qb-cog-nb) 0%, var(--qb-cog-th) 33%, var(--qb-cog-vd) 66%, var(--qb-cog-vdc) 100%);
+  opacity: 0.85;
+}
+
+.qb-scope .qb-bank-card__head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  padding: 0.75rem 1rem;
-  background: #f8faff;
+  gap: 0.6rem;
+  padding-top: 0.2rem;
+}
+
+.qb-scope .qb-bank-card__title-btn {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  background: transparent;
+  border: 0;
+  padding: 0;
   cursor: pointer;
-  font-size: 0.85rem;
+  text-align: left;
+  font-family: inherit;
+  flex: 1;
+  min-width: 0;
+  color: inherit;
+  transition: color 0.14s ease;
+}
+
+.qb-scope .qb-bank-card__title-btn:hover .qb-bank-card__title {
+  color: var(--qb-primary-strong);
+}
+
+.qb-scope .qb-bank-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--qb-radius-sm);
+  background: var(--qb-primary-soft);
+  color: var(--qb-primary-strong);
+  flex-shrink: 0;
+  border: 1px solid var(--qb-primary-border);
+}
+
+.qb-scope .qb-bank-card__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--qb-text-primary);
+  letter-spacing: -0.005em;
+  flex: 1;
+  min-width: 0;
+}
+
+.qb-scope .qb-bank-card__desc {
+  margin: 0;
+  color: var(--qb-text-secondary);
+  font-size: 0.86rem;
+  line-height: 1.55;
+  min-height: 2.7em;
+}
+
+.qb-scope .qb-bank-card__stat {
+  background: var(--qb-surface-soft);
+  border: 1px solid var(--qb-border);
+  border-radius: var(--qb-radius-md);
+  padding: 0.55rem 0.7rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.qb-scope .qb-bank-card__stat-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.qb-scope .qb-bank-card__stat-head .qb-text-muted {
+  font-size: 0.75rem;
   font-weight: 600;
-  color: var(--mod-primary);
-  list-style: none;
-  transition: background 0.15s ease;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
-.bank-matrix-stats-summary:hover {
-  background: #eff6ff;
+.qb-scope .qb-bank-card__count {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--qb-text-primary);
+  line-height: 1;
 }
 
-.bank-matrix-stats-summary::-webkit-details-marker {
+/* ─── Meta row ─────────────────────────────────────────── */
+.qb-scope .qb-bank-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: -0.1rem;
+}
+
+.qb-scope .qb-bank-card__meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.55rem;
+  background: var(--qb-neutral-soft);
+  border: 1px solid var(--qb-border);
+  border-radius: var(--qb-radius-pill);
+  font-size: 0.75rem;
+  color: var(--qb-text-secondary);
+  font-weight: 500;
+}
+
+.qb-scope .qb-bank-card__meta-item svg {
+  color: var(--qb-text-muted);
+  flex-shrink: 0;
+}
+
+/* ─── Actions ─────────────────────────────────────────── */
+.qb-scope .qb-bank-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--qb-border);
+}
+
+.qb-scope .qb-bank-card__delete {
+  margin-left: auto;
+}
+
+/* ─── List view layout ─────────────────────────────────── */
+.qb-scope .qb-bank-grid--list .qb-bank-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(220px, 0.8fr) auto;
+  gap: 1rem;
+  align-items: center;
+}
+
+.qb-scope .qb-bank-grid--list .qb-bank-card::before {
+  inset: 0 auto 0 0;
+  width: 3px;
+  height: auto;
+  background: linear-gradient(180deg, var(--qb-cog-nb) 0%, var(--qb-cog-th) 33%, var(--qb-cog-vd) 66%, var(--qb-cog-vdc) 100%);
+}
+
+.qb-scope .qb-bank-grid--list .qb-bank-card__head {
+  flex-direction: column;
+  align-items: flex-start;
+  padding-top: 0;
+}
+
+.qb-scope .qb-bank-grid--list .qb-bank-card__desc {
   display: none;
 }
 
-.bank-matrix-stats-summary .summary-icon {
-  transition: transform 0.2s ease;
+.qb-scope .qb-bank-grid--list .qb-bank-card__stat {
+  margin: 0;
 }
 
-.bank-matrix-stats-details[open] .summary-icon {
-  transform: rotate(180deg);
+.qb-scope .qb-bank-grid--list .qb-bank-card__meta {
+  grid-column: 1 / 2;
+  margin-top: 0;
 }
 
-.matrix-stats-loading,
-.matrix-stats-error {
-  padding: 1rem;
-  text-align: center;
-  font-size: 0.875rem;
-  color: var(--mod-slate-500);
+.qb-scope .qb-bank-grid--list .qb-bank-card__actions {
+  border-top: 0;
+  padding-top: 0;
+  margin-top: 0;
 }
 
-.matrix-stats-error {
-  color: #dc2626;
+@media (max-width: 900px) {
+  .qb-scope .qb-bank-grid--list .qb-bank-card {
+    grid-template-columns: 1fr;
+  }
+
+  .qb-scope .qb-bank-grid--list .qb-bank-card__head {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .qb-scope .qb-bank-grid--list .qb-bank-card__desc {
+    display: -webkit-box;
+  }
+
+  .qb-scope .qb-bank-grid--list .qb-bank-card__actions {
+    border-top: 1px solid var(--qb-border);
+    padding-top: 0.6rem;
+  }
 }

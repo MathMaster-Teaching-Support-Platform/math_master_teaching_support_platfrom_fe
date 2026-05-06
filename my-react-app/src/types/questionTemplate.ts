@@ -202,11 +202,12 @@ export interface QuestionTemplateResponse {
     creatorName: string;
     name: string;
     description?: string;
-    gradeLevel?: string;      // ✅ NEW: Template owns academic context
-    subjectId?: string;       // ✅ NEW: Template owns academic context
-    subjectName?: string;     // ✅ NEW: For display
-    chapterId?: string;       // ✅ NEW: Template owns academic context (CRITICAL)
-    chapterName?: string;     // ✅ NEW: For display
+    gradeLevel?: string;      // Template's academic context (e.g. "10")
+    subjectId?: string;       // Subject of the chapter; needed to seed the FE cascade
+    subjectName?: string;     // Display only
+    chapterId?: string;       // Direct chapter anchor
+    chapterName?: string;     // Display only
+    lessonId?: string;        // Optional lesson anchor (preserves Excel-import value)
     templateType: QuestionType;
     templateVariant?: string;
     templateText: Record<string, unknown>;

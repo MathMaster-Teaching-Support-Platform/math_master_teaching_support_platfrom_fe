@@ -37,11 +37,6 @@ export interface PointsOverrideRequest {
     pointsOverride?: number | null;
 }
 
-export interface CloneAssessmentRequest {
-    newTitle?: string;
-    cloneQuestions?: boolean;
-}
-
 export interface AddQuestionToAssessmentRequest {
     /** @NotNull */
     questionId: string;
@@ -52,14 +47,50 @@ export interface AddQuestionToAssessmentRequest {
 
 export interface GenerateAssessmentFromMatrixRequest {
     examMatrixId: string;
+    /**
+     * Legacy single-bank field, kept for backward compatibility. New code should
+     * use {@link questionBankIds} which supports multi-bank source pools.
+     */
+    questionBankId?: string;
+    /**
+     * Multi-bank source pool. Questions are randomly drawn from the union of
+     * all listed banks for each cell of the matrix. When omitted the BE falls
+     * back to the legacy single-bank field, then to the matrix's stored
+     * default bank.
+     */
+    questionBankIds?: string[];
     reuseApprovedQuestions?: boolean;
     selectionStrategy?: AssessmentSelectionStrategy;
 }
 
 export interface GenerateQuestionsForAssessmentRequest {
     examMatrixId: string;
+    /** See {@link GenerateAssessmentFromMatrixRequest.questionBankId}. */
+    questionBankId?: string;
+    /** See {@link GenerateAssessmentFromMatrixRequest.questionBankIds}. */
+    questionBankIds?: string[];
     reuseApprovedQuestions?: boolean;
     selectionStrategy?: AssessmentSelectionStrategy;
+}
+
+/** Pre-flight bank-coverage check payload (POST /assessments/validate-bank-coverage). */
+export interface ValidateBankCoverageRequest {
+    examMatrixId: string;
+    questionBankIds: string[];
+}
+
+export interface BankCoverageCell {
+    chapterId?: string;
+    chapterTitle?: string;
+    cognitiveLevel?: string;
+    questionType?: string;
+    required: number;
+    available: number;
+}
+
+export interface BankCoverageResponse {
+    ok: boolean;
+    cells: BankCoverageCell[];
 }
 
 export interface AssessmentGenerationSummary {
