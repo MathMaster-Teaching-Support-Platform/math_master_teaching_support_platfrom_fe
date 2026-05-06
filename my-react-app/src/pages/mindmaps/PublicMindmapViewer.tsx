@@ -384,7 +384,8 @@ export default function PublicMindmapViewer() {
       toolBar: false,
       contextMenu: false,
       keypress: false,
-      theme: MINDMAP_THEME,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      theme: MINDMAP_THEME as any,
     }) as unknown as MindElixirInstance;
 
     instance.init(mindData);

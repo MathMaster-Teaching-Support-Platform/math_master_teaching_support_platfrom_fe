@@ -97,31 +97,6 @@ interface MindElixirInstance {
 type InteractionMode = 'DRAG' | 'EDIT';
 type NodePanelMode = 'EDIT' | 'ADD';
 
-const ICON_SYMBOLS: Record<string, string> = {
-  lightbulb: '💡',
-  bookmark: '🔖',
-  'check-circle': '✅',
-  'info-circle': 'ℹ️',
-  book: '📚',
-  target: '🎯',
-  star: '⭐',
-  flag: '🚩',
-  heart: '❤️',
-  link: '🔗',
-  sparkles: '✨',
-  fire: '🔥',
-  rocket: '🚀',
-  trophy: '🏆',
-  medal: '🏅',
-  brain: '🧠',
-  bulb: '💡',
-  pencil: '✏️',
-  chart: '📊',
-  dna: '🧬',
-};
-
-const getIconSymbol = (icon: string): string => ICON_SYMBOLS[icon] || '📌';
-
 const flattenNodes = (nodes: MindmapNode[]): MindmapNode[] => {
   const result: MindmapNode[] = [];
   nodes.forEach((node) => {
