@@ -17,7 +17,6 @@ import { BlockMath, InlineMath } from 'react-katex';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockStudent, mockTeacher } from '../../data/mockData';
-import { AuthService } from '../../services/api/auth.service';
 import {
   useArchiveChatSession,
   useChatSessionDetail,
@@ -29,6 +28,7 @@ import {
   useRenameChatSession,
   useSendChatMessage,
 } from '../../hooks/useChatSessions';
+import { AuthService } from '../../services/api/auth.service';
 import { notifySubscriptionUpdated } from '../../services/api/subscription-plan.service';
 import type { ChatMessageResponse } from '../../types';
 import './AIAssistant.css';
@@ -36,8 +36,7 @@ import './AIAssistant.css';
 // ── Inline markdown + math renderer ──────────────────────────────────────────
 function renderInline(text: string): React.ReactNode[] {
   if (!text) return [];
-  const re =
-    /\*\*([^*\n]+?)\*\*|\*([^*\n]+?)\*|`([^`\n]+?)`|\\\(([^)]+?)\\\)|\$([^$\n]+?)\$/g;
+  const re = /\*\*([^*\n]+?)\*\*|\*([^*\n]+?)\*|`([^`\n]+?)`|\\\(([^)]+?)\\\)|\$([^$\n]+?)\$/g;
   const parts: React.ReactNode[] = [];
   let last = 0;
   let m: RegExpExecArray | null;
@@ -56,23 +55,25 @@ function renderInline(text: string): React.ReactNode[] {
       parts.push(
         <code key={k} className="md-code-inline">
           {m[3]}
-        </code>,
+        </code>
       );
     } else if (m[4] !== undefined) {
+      const math4 = m[4];
       parts.push(
         <InlineMath
           key={k}
-          math={m[4]}
-          renderError={() => <code className="math-error">{`\\(${m[4]}\\)`}</code>}
-        />,
+          math={math4}
+          renderError={() => <code className="math-error">{`\\(${math4}\\)`}</code>}
+        />
       );
     } else if (m[5] !== undefined) {
+      const math5 = m[5];
       parts.push(
         <InlineMath
           key={k}
-          math={m[5]}
-          renderError={() => <code className="math-error">{`$${m[5]}$`}</code>}
-        />,
+          math={math5}
+          renderError={() => <code className="math-error">{`$${math5}$`}</code>}
+        />
       );
     }
     last = m.index + m[0].length;
@@ -90,7 +91,10 @@ function processLines(lines: string[], keyPrefix: string): React.ReactNode[] {
 
   while (i < lines.length) {
     const line = lines[i];
-    if (!line.trim()) { i++; continue; }
+    if (!line.trim()) {
+      i++;
+      continue;
+    }
 
     const headerMatch = line.match(/^(#{1,3})\s+(.+)$/);
     if (headerMatch) {
@@ -99,9 +103,10 @@ function processLines(lines: string[], keyPrefix: string): React.ReactNode[] {
       nodes.push(
         <Tag key={`${keyPrefix}-h${i}`} className={`md-heading md-h${level}`}>
           {renderInline(headerMatch[2])}
-        </Tag>,
+        </Tag>
       );
-      i++; continue;
+      i++;
+      continue;
     }
 
     if (/^[-*+]\s/.test(line)) {
@@ -113,8 +118,10 @@ function processLines(lines: string[], keyPrefix: string): React.ReactNode[] {
       }
       nodes.push(
         <ul key={`${keyPrefix}-ul${s}`} className="md-ul">
-          {items.map((item, j) => <li key={j}>{renderInline(item)}</li>)}
-        </ul>,
+          {items.map((item, j) => (
+            <li key={j}>{renderInline(item)}</li>
+          ))}
+        </ul>
       );
       continue;
     }
@@ -128,19 +135,17 @@ function processLines(lines: string[], keyPrefix: string): React.ReactNode[] {
       }
       nodes.push(
         <ol key={`${keyPrefix}-ol${s}`} className="md-ol">
-          {items.map((item, j) => <li key={j}>{renderInline(item)}</li>)}
-        </ol>,
+          {items.map((item, j) => (
+            <li key={j}>{renderInline(item)}</li>
+          ))}
+        </ol>
       );
       continue;
     }
 
     const paraLines: string[] = [];
     const s = i;
-    while (
-      i < lines.length &&
-      lines[i].trim() &&
-      !/^(#{1,3}\s|[-*+]\s|\d+\.\s)/.test(lines[i])
-    ) {
+    while (i < lines.length && lines[i].trim() && !/^(#{1,3}\s|[-*+]\s|\d+\.\s)/.test(lines[i])) {
       paraLines.push(lines[i]);
       i++;
     }
@@ -153,7 +158,7 @@ function processLines(lines: string[], keyPrefix: string): React.ReactNode[] {
               {renderInline(pl)}
             </React.Fragment>
           ))}
-        </p>,
+        </p>
       );
     }
   }
@@ -172,7 +177,12 @@ const ChatMessageContent: React.FC<{ content: string }> = ({ content }) => {
   while ((m = topRe.exec(content)) !== null) {
     if (m.index > last) {
       const ln = processLines(content.slice(last, m.index).split('\n'), `b${bk}`);
-      if (ln.length) blocks.push(<div key={`tb${bk}`} className="md-text-block">{ln}</div>);
+      if (ln.length)
+        blocks.push(
+          <div key={`tb${bk}`} className="md-text-block">
+            {ln}
+          </div>
+        );
       bk++;
     }
     if (m[0].startsWith('```')) {
@@ -180,29 +190,45 @@ const ChatMessageContent: React.FC<{ content: string }> = ({ content }) => {
         <pre key={`cb${bk++}`} className="md-code-block">
           {m[1] && <span className="md-code-lang">{m[1]}</span>}
           <code>{(m[2] ?? '').trim()}</code>
-        </pre>,
+        </pre>
       );
     } else {
       const v = (m[3] ?? m[4] ?? '').trim();
       blocks.push(
         <div key={`mb${bk++}`} className="math-block-wrap">
-          <BlockMath math={v} renderError={() => <code className="math-error">{`$$${v}$$`}</code>} />
-        </div>,
+          <BlockMath
+            math={v}
+            renderError={() => <code className="math-error">{`$$${v}$$`}</code>}
+          />
+        </div>
       );
     }
     last = m.index + m[0].length;
   }
   if (last < content.length) {
     const ln = processLines(content.slice(last).split('\n'), `b${bk}`);
-    if (ln.length) blocks.push(<div key={`tb${bk}`} className="md-text-block">{ln}</div>);
+    if (ln.length)
+      blocks.push(
+        <div key={`tb${bk}`} className="md-text-block">
+          {ln}
+        </div>
+      );
   }
   return <div className="chat-content-rich">{blocks}</div>;
 };
 
 // ── Confirm modal ─────────────────────────────────────────────────────────────
-type ConfirmConfig = { title: string; message: string; confirmLabel: string; onConfirm: () => void };
+type ConfirmConfig = {
+  title: string;
+  message: string;
+  confirmLabel: string;
+  onConfirm: () => void;
+};
 
-function ConfirmModal({ config, onClose }: Readonly<{ config: ConfirmConfig; onClose: () => void }>) {
+function ConfirmModal({
+  config,
+  onClose,
+}: Readonly<{ config: ConfirmConfig; onClose: () => void }>) {
   return (
     <div
       className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
@@ -218,7 +244,9 @@ function ConfirmModal({ config, onClose }: Readonly<{ config: ConfirmConfig; onC
           <AlertCircle className="w-7 h-7" />
         </div>
         <div className="text-center">
-          <h3 className="font-[Playfair_Display] text-[18px] font-medium text-[#141413]">{config.title}</h3>
+          <h3 className="font-[Playfair_Display] text-[18px] font-medium text-[#141413]">
+            {config.title}
+          </h3>
           <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-2">{config.message}</p>
         </div>
         <div className="flex gap-2">
@@ -230,7 +258,10 @@ function ConfirmModal({ config, onClose }: Readonly<{ config: ConfirmConfig; onC
           </button>
           <button
             className="flex-1 px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-[Be_Vietnam_Pro] text-[13px] font-semibold transition-colors"
-            onClick={() => { config.onConfirm(); onClose(); }}
+            onClick={() => {
+              config.onConfirm();
+              onClose();
+            }}
           >
             {config.confirmLabel}
           </button>
@@ -264,12 +295,16 @@ const AIAssistant: React.FC = () => {
   const sessionQueryParams = useMemo(() => ({ page: 0, size: 20 }), []);
   const messageQueryParams = useMemo(() => ({ page: 0, size: 50 }), []);
 
-  const { data: sessionsData, isLoading: sessionsLoading, error: sessionsError } =
-    useChatSessions(sessionQueryParams);
+  const {
+    data: sessionsData,
+    isLoading: sessionsLoading,
+    error: sessionsError,
+  } = useChatSessions(sessionQueryParams);
   const sessions = useMemo(() => sessionsData?.result.content ?? [], [sessionsData]);
 
   const { data: messagesData, error: messagesError } = useChatSessionMessages(
-    selectedSessionId, messageQueryParams,
+    selectedSessionId,
+    messageQueryParams
   );
   const { data: sessionDetailData } = useChatSessionDetail(selectedSessionId);
   const { data: memoryData } = useChatSessionMemory(selectedSessionId);
@@ -329,7 +364,8 @@ const AIAssistant: React.FC = () => {
     try {
       setLocalError('');
       const response = await createSessionMutation.mutateAsync({
-        title: 'New Chat', model: 'gemini-2.5-flash',
+        title: 'New Chat',
+        model: 'gemini-2.5-flash',
       });
       setSelectedSessionId(response.result.id);
       setIsEditingTitle(false);
@@ -353,7 +389,10 @@ const AIAssistant: React.FC = () => {
       setLocalError('');
       let sessionId = selectedSessionId;
       if (!sessionId) {
-        const r = await createSessionMutation.mutateAsync({ title: 'New Chat', model: 'gemini-2.5-flash' });
+        const r = await createSessionMutation.mutateAsync({
+          title: 'New Chat',
+          model: 'gemini-2.5-flash',
+        });
         sessionId = r.result.id;
         setSelectedSessionId(sessionId);
       }
@@ -366,10 +405,16 @@ const AIAssistant: React.FC = () => {
       notifySubscriptionUpdated();
     } catch (error) {
       const apiError = error as Error & { code?: number };
-      const isTokenError = apiError.code === 1164 || apiError.code === 1165 || apiError.code === 1166;
+      const isTokenError =
+        apiError.code === 1164 || apiError.code === 1165 || apiError.code === 1166;
       if (isTokenError && layoutRole !== 'admin') {
-        if (apiError.code === 1165) { setLocalError('Token của gói đã hết.'); setTokenModal({ type: 'no-token' }); }
-        else { setLocalError('Bạn chưa có gói active.'); setTokenModal({ type: 'no-plan' }); }
+        if (apiError.code === 1165) {
+          setLocalError('Token của gói đã hết.');
+          setTokenModal({ type: 'no-token' });
+        } else {
+          setLocalError('Bạn chưa có gói active.');
+          setTokenModal({ type: 'no-plan' });
+        }
       } else {
         setLocalError(getErrorMessage(error, 'Không thể gửi prompt.'));
       }
@@ -382,10 +427,16 @@ const AIAssistant: React.FC = () => {
   const handleRenameSession = async () => {
     if (!selectedSessionId) return;
     const nextTitle = editingTitle.trim();
-    if (!nextTitle) { setLocalError('Tiêu đề không được để trống.'); return; }
+    if (!nextTitle) {
+      setLocalError('Tiêu đề không được để trống.');
+      return;
+    }
     try {
       setLocalError('');
-      await renameSessionMutation.mutateAsync({ sessionId: selectedSessionId, payload: { title: nextTitle } });
+      await renameSessionMutation.mutateAsync({
+        sessionId: selectedSessionId,
+        payload: { title: nextTitle },
+      });
       setIsEditingTitle(false);
     } catch (error) {
       setLocalError(getErrorMessage(error, 'Không thể đổi tên session.'));
@@ -486,7 +537,6 @@ const AIAssistant: React.FC = () => {
 
         {/* ── Chat panel ── */}
         <div className={`gemini-chat-page ${isSessionPanelOpen ? '' : 'session-collapsed'}`}>
-
           {/* ── Main chat area ── */}
           <section className="gemini-main">
             {/* Session title bar */}
@@ -499,29 +549,63 @@ const AIAssistant: React.FC = () => {
                     maxLength={200}
                     placeholder="Nhập tiêu đề session"
                   />
-                  <button type="button" className="header-btn primary" onClick={() => void handleRenameSession()}>
+                  <button
+                    type="button"
+                    className="header-btn primary"
+                    onClick={() => void handleRenameSession()}
+                  >
                     Lưu
                   </button>
-                  <button type="button" className="header-btn ghost" onClick={() => { setIsEditingTitle(false); setEditingTitle(selectedSession?.title ?? ''); }}>
+                  <button
+                    type="button"
+                    className="header-btn ghost"
+                    onClick={() => {
+                      setIsEditingTitle(false);
+                      setEditingTitle(selectedSession?.title ?? '');
+                    }}
+                  >
                     Hủy
                   </button>
                 </div>
               ) : (
                 <div className="session-heading">
                   <MessageSquarePlus size={15} className="session-heading-icon-raw" />
-                  <span className="session-heading-title">{selectedSession?.title ?? 'Cuộc trò chuyện mới'}</span>
+                  <span className="session-heading-title">
+                    {selectedSession?.title ?? 'Cuộc trò chuyện mới'}
+                  </span>
                 </div>
               )}
 
               <div className="header-actions">
-                <button type="button" className="header-btn ghost" onClick={() => setIsEditingTitle((p) => !p)} disabled={!selectedSessionId || renameSessionMutation.isPending} title="Đổi tên">
-                  <Pencil size={14} /><span>Rename</span>
+                <button
+                  type="button"
+                  className="header-btn ghost"
+                  onClick={() => setIsEditingTitle((p) => !p)}
+                  disabled={!selectedSessionId || renameSessionMutation.isPending}
+                  title="Đổi tên"
+                >
+                  <Pencil size={14} />
+                  <span>Rename</span>
                 </button>
-                <button type="button" className="header-btn ghost" onClick={() => void handleArchiveSession()} disabled={!selectedSessionId || isArchived || archiveSessionMutation.isPending} title="Lưu trữ">
-                  <Archive size={14} /><span>Archive</span>
+                <button
+                  type="button"
+                  className="header-btn ghost"
+                  onClick={() => void handleArchiveSession()}
+                  disabled={!selectedSessionId || isArchived || archiveSessionMutation.isPending}
+                  title="Lưu trữ"
+                >
+                  <Archive size={14} />
+                  <span>Archive</span>
                 </button>
-                <button type="button" className="header-btn danger" onClick={() => void handleDeleteSession()} disabled={!selectedSessionId || deleteSessionMutation.isPending} title="Xóa">
-                  <Trash2 size={14} /><span>Delete</span>
+                <button
+                  type="button"
+                  className="header-btn danger"
+                  onClick={() => void handleDeleteSession()}
+                  disabled={!selectedSessionId || deleteSessionMutation.isPending}
+                  title="Xóa"
+                >
+                  <Trash2 size={14} />
+                  <span>Delete</span>
                 </button>
               </div>
             </header>
@@ -543,7 +627,10 @@ const AIAssistant: React.FC = () => {
               {displayMessages.map((message) => {
                 const isUser = message.role === 'USER';
                 return (
-                  <article key={message.id} className={`chat-row ${isUser ? 'chat-user' : 'chat-assistant'}`}>
+                  <article
+                    key={message.id}
+                    className={`chat-row ${isUser ? 'chat-user' : 'chat-assistant'}`}
+                  >
                     <div className={`chat-avatar ${isUser ? 'user-avatar' : 'ai-avatar'}`}>
                       {isUser ? (currentUser.name?.[0] ?? 'U') : <Sparkles size={15} />}
                     </div>
@@ -557,8 +644,14 @@ const AIAssistant: React.FC = () => {
 
               {isSending && (
                 <article className="chat-row chat-assistant">
-                  <div className="chat-avatar ai-avatar"><Sparkles size={15} /></div>
-                  <div className="chat-body typing"><span /><span /><span /></div>
+                  <div className="chat-avatar ai-avatar">
+                    <Sparkles size={15} />
+                  </div>
+                  <div className="chat-body typing">
+                    <span />
+                    <span />
+                    <span />
+                  </div>
                 </article>
               )}
               <div ref={messagesEndRef} />
@@ -569,7 +662,9 @@ const AIAssistant: React.FC = () => {
               {!hasConversationStarted && (
                 <div className="quick-chips" role="list">
                   {quickPrompts.map((p) => (
-                    <button type="button" key={p} className="chip" onClick={() => setInput(p)}>{p}</button>
+                    <button type="button" key={p} className="chip" onClick={() => setInput(p)}>
+                      {p}
+                    </button>
                   ))}
                 </div>
               )}
@@ -581,7 +676,10 @@ const AIAssistant: React.FC = () => {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void handleSend(); }
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      void handleSend();
+                    }
                   }}
                   disabled={isSending || isArchived}
                 />
@@ -612,8 +710,15 @@ const AIAssistant: React.FC = () => {
               <Menu size={18} strokeWidth={2.2} />
             </button>
 
-            <div className={`session-panel-expanded ${isSessionPanelOpen ? 'is-visible' : 'is-hidden'}`}>
-              <button type="button" className="new-session-btn" onClick={() => void handleNewChat()} disabled={createSessionMutation.isPending}>
+            <div
+              className={`session-panel-expanded ${isSessionPanelOpen ? 'is-visible' : 'is-hidden'}`}
+            >
+              <button
+                type="button"
+                className="new-session-btn"
+                onClick={() => void handleNewChat()}
+                disabled={createSessionMutation.isPending}
+              >
                 <Plus size={15} />
                 <span>Cuộc trò chuyện mới</span>
               </button>
@@ -632,7 +737,9 @@ const AIAssistant: React.FC = () => {
                     onClick={() => setSelectedSessionId(session.id)}
                   >
                     <span className="session-title">{session.title}</span>
-                    <span className="session-subtitle">{session.status} · {formatDateTime(session.lastMessageAt)}</span>
+                    <span className="session-subtitle">
+                      {session.status} · {formatDateTime(session.lastMessageAt)}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -640,7 +747,9 @@ const AIAssistant: React.FC = () => {
               <div className="session-footer">
                 <div className="session-footer-item">
                   <span className="session-footer-label">Memory</span>
-                  <span className="session-footer-value">{memory?.currentWords ?? 0} / {memory?.wordLimit ?? 1000} words</span>
+                  <span className="session-footer-value">
+                    {memory?.currentWords ?? 0} / {memory?.wordLimit ?? 1000} words
+                  </span>
                 </div>
               </div>
             </div>
@@ -665,15 +774,30 @@ const AIAssistant: React.FC = () => {
 
       {/* ── Token modal ── */}
       {tokenModal && (
-        <div className="ai-token-modal-overlay" onClick={() => setTokenModal(null)} role="dialog" aria-modal="true">
+        <div
+          className="ai-token-modal-overlay"
+          onClick={() => setTokenModal(null)}
+          role="dialog"
+          aria-modal="true"
+        >
           <div className="ai-token-modal" onClick={(e) => e.stopPropagation()}>
-            <span className="ai-token-sym s1" aria-hidden="true">π</span>
-            <span className="ai-token-sym s2" aria-hidden="true">Σ</span>
-            <span className="ai-token-sym s3" aria-hidden="true">∞</span>
-            <span className="ai-token-sym s4" aria-hidden="true">Δ</span>
+            <span className="ai-token-sym s1" aria-hidden="true">
+              π
+            </span>
+            <span className="ai-token-sym s2" aria-hidden="true">
+              Σ
+            </span>
+            <span className="ai-token-sym s3" aria-hidden="true">
+              ∞
+            </span>
+            <span className="ai-token-sym s4" aria-hidden="true">
+              Δ
+            </span>
             <div className="ai-token-modal__char-wrap">
               <div className="ai-token-modal__speech" />
-              <div className="ai-token-modal__char">{tokenModal.type === 'no-plan' ? '🎓' : '🧮'}</div>
+              <div className="ai-token-modal__char">
+                {tokenModal.type === 'no-plan' ? '🎓' : '🧮'}
+              </div>
               <div className="ai-token-modal__battery">
                 <span className="ai-token-battery__bar" />
                 <span className="ai-token-battery__bar empty" />
@@ -681,7 +805,9 @@ const AIAssistant: React.FC = () => {
               </div>
             </div>
             <h2 className="ai-token-modal__title">
-              {tokenModal.type === 'no-plan' ? 'Chưa có gói đăng ký!' : "Hết 'điện' rồi! (0 tokens)"}
+              {tokenModal.type === 'no-plan'
+                ? 'Chưa có gói đăng ký!'
+                : "Hết 'điện' rồi! (0 tokens)"}
             </h2>
             <p className="ai-token-modal__desc">
               {tokenModal.type === 'no-plan'
@@ -692,13 +818,20 @@ const AIAssistant: React.FC = () => {
               <button
                 type="button"
                 className="ai-token-modal__btn primary"
-                onClick={() => { setTokenModal(null); navigate(tokenModal.type === 'no-plan' ? '/pricing' : `/${layoutRole}/wallet`); }}
+                onClick={() => {
+                  setTokenModal(null);
+                  navigate(tokenModal.type === 'no-plan' ? '/pricing' : `/${layoutRole}/wallet`);
+                }}
               >
                 <span className="ai-token-btn__hot">HOT</span>
                 <span className="ai-token-btn__icon">+</span>
                 {tokenModal.type === 'no-plan' ? 'Mua gói ngay' : 'Nạp thêm ngay'}
               </button>
-              <button type="button" className="ai-token-modal__btn ghost" onClick={() => setTokenModal(null)}>
+              <button
+                type="button"
+                className="ai-token-modal__btn ghost"
+                onClick={() => setTokenModal(null)}
+              >
                 Để sau
               </button>
             </div>
