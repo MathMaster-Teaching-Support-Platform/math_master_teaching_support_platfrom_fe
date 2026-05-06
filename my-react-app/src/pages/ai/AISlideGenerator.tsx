@@ -526,8 +526,6 @@ const AISlideGenerator: React.FC = () => {
 
   const canConfigureAi = Boolean(lessonId);
   const canChooseTemplate = canConfigureAi;
-  const loadingAnyCatalog =
-    loadingGrades || loadingSubjects || loadingChapters || loadingLessons || loadingTemplates;
   const visualWizardStep = Math.min(activeWizardStep, 5);
   const wizardSteps = [
     'Chọn bài dạy',
