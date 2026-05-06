@@ -3,12 +3,15 @@ import {
   ArrowDownLeft,
   ArrowUpRight,
   ChevronLeft,
+  ChevronDown,
   ChevronRight,
   Download,
   FileText,
+  ListFilter,
   Lock,
   Search,
   TrendingUp,
+  Wallet,
   X,
   Zap,
 } from 'lucide-react';
@@ -3868,6 +3871,33 @@ const StudentWallet: React.FC = () => {
   const displayStart = filteredTransactions.length === 0 ? 0 : (safePage - 1) * PAGE_SIZE + 1;
   const displayEnd = Math.min(safePage * PAGE_SIZE, filteredTransactions.length);
 
+  const txnTotalCount = filteredTransactions.length;
+  const transactionsFooterSummary =
+    transactionsLoading && txnTotalCount === 0
+      ? 'Đang tải…'
+      : txnTotalCount === 0
+        ? '0 / 0 giao dịch'
+        : `${displayStart}–${displayEnd} / ${txnTotalCount} giao dịch`;
+
+  const orderTotalElements = ordersData?.totalElements ?? 0;
+  const orderPageSize = ordersData?.size ?? 10;
+  const orderPageNumber = ordersData?.number ?? orderPage;
+  const ordersDisplayStart =
+    orderTotalElements === 0 ? 0 : orderPageNumber * orderPageSize + 1;
+  const ordersDisplayEnd =
+    orderTotalElements === 0
+      ? 0
+      : Math.min((orderPageNumber + 1) * orderPageSize, orderTotalElements);
+
+  const ordersFooterSummary =
+    isOrdersLoading && ordersData === undefined
+      ? 'Đang tải…'
+      : ordersData === undefined && !isOrdersLoading
+        ? 'Không có dữ liệu'
+        : orderTotalElements === 0
+          ? '0 / 0 hóa đơn'
+          : `${ordersDisplayStart}–${ordersDisplayEnd} / ${orderTotalElements} hóa đơn`;
+
   // Use BE-provided all-time total (wallet.totalDeposited) — no client-side calculation
   const totalDeposit = wallet?.totalDeposited ?? 0;
 
@@ -4019,28 +4049,48 @@ const StudentWallet: React.FC = () => {
         role={layoutRole}
         user={{ name: currentUser.name, avatar: currentUser.avatar!, role: layoutRole }}
         notificationCount={5}
+        contentClassName="dashboard-content--flush-bleed"
       >
-        <div className="wallet-page">
-          {/* Header */}
-          <header className="wallet-header">
-            <div>
-              <h1>Ví của tôi</h1>
-              <p>Quản lý số dư và theo dõi lịch sử giao dịch</p>
+        <div className="w-full max-w-none px-4 sm:px-5 lg:px-6 xl:px-8 py-8">
+          <div className="space-y-6 w-full min-w-0 wallet-page">
+          {/* Header — aligned with TeacherMindmaps */}
+          <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-[#E8E6DC] flex items-center justify-center text-[#5E5D59] flex-shrink-0">
+                <Wallet className="w-5 h-5" aria-hidden />
+              </div>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <h1 className="font-[Playfair_Display] text-[22px] font-medium text-[#141413]">
+                    Ví của tôi
+                  </h1>
+                  {!walletLoading && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#E8E6DC] font-[Be_Vietnam_Pro] text-[12px] font-semibold text-[#5E5D59]">
+                      {wallet?.transactionCount ?? transactions.length} giao dịch
+                    </span>
+                  )}
+                </div>
+                <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-0.5">
+                  Quản lý số dư và theo dõi lịch sử giao dịch
+                </p>
+              </div>
             </div>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <div className="flex flex-wrap items-center gap-2">
               <button
-                className="btn-report"
-                style={{
-                  background: 'linear-gradient(135deg,#6366f1,#818cf8)',
-                  color: '#fff',
-                  borderColor: 'transparent',
-                }}
+                type="button"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#6B8E9E] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:bg-[#547E91] active:scale-[0.98] transition-colors duration-150 shadow-sm"
                 onClick={() => setShowWithdrawModal(true)}
               >
-                <FileText size={15} /> Rút tiền
+                <FileText className="w-3.5 h-3.5" aria-hidden />
+                Rút tiền
               </button>
-              <button className="btn-report" onClick={exportCsv}>
-                <Download size={15} /> Xuất báo cáo
+              <button
+                type="button"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors"
+                onClick={exportCsv}
+              >
+                <Download className="w-3.5 h-3.5" aria-hidden />
+                Xuất báo cáo
               </button>
             </div>
           </header>
@@ -4056,28 +4106,52 @@ const StudentWallet: React.FC = () => {
             </div>
           )}
 
-          {/* Stat Strip */}
-          <div className="wallet-stat-strip">
-            <div className="wallet-stat-item">
-              <span className="wallet-stat-label">Số dư hiện tại</span>
-              <span className="wallet-stat-value wallet-stat-value--primary">
-                {walletLoading ? '—' : `${formatCurrency(wallet?.balance ?? 0)} ₫`}
-              </span>
-            </div>
-            <div className="wallet-stat-divider" />
-            <div className="wallet-stat-item">
-              <span className="wallet-stat-label">Tổng đã nạp</span>
-              <span className="wallet-stat-value wallet-stat-value--green">
-                {walletLoading ? '—' : `${formatCurrency(totalDeposit)} ₫`}
-              </span>
-            </div>
-            <div className="wallet-stat-divider" />
-            <div className="wallet-stat-item">
-              <span className="wallet-stat-label">Số giao dịch</span>
-              <span className="wallet-stat-value">
-                {walletLoading ? '—' : (wallet?.transactionCount ?? transactions.length)}
-              </span>
-            </div>
+          {/* KPI strip — TeacherMindmaps stats pattern */}
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+            {(
+              [
+                {
+                  label: 'Số dư hiện tại',
+                  value: walletLoading ? '—' : `${formatCurrency(wallet?.balance ?? 0)} ₫`,
+                  Icon: Wallet,
+                  bg: 'bg-[#EEF2FF]',
+                  color: 'text-[#4F7EF7]',
+                },
+                {
+                  label: 'Tổng đã nạp',
+                  value: walletLoading ? '—' : `${formatCurrency(totalDeposit)} ₫`,
+                  Icon: TrendingUp,
+                  bg: 'bg-[#ECFDF5]',
+                  color: 'text-[#2EAD7A]',
+                },
+                {
+                  label: 'Số giao dịch',
+                  value: walletLoading
+                    ? '—'
+                    : String(wallet?.transactionCount ?? transactions.length),
+                  Icon: FileText,
+                  bg: 'bg-[#F1F6F9]',
+                  color: 'text-[#547E91]',
+                },
+              ] as const
+            ).map(({ label, value, Icon, bg, color }) => (
+              <div
+                key={label}
+                className="bg-white rounded-2xl border border-[#E8E6DC] p-4 flex items-center gap-3 min-w-0"
+              >
+                <div
+                  className={`w-9 h-9 rounded-xl ${bg} flex items-center justify-center flex-shrink-0`}
+                >
+                  <Icon className={`w-4 h-4 ${color}`} aria-hidden />
+                </div>
+                <div className="min-w-0">
+                  <p className="font-[Playfair_Display] text-[20px] sm:text-[22px] font-medium text-[#141413] leading-none truncate">
+                    {value}
+                  </p>
+                  <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mt-0.5">{label}</p>
+                </div>
+              </div>
+            ))}
           </div>
 
           {/* Overview Grid */}
@@ -4610,62 +4684,102 @@ const StudentWallet: React.FC = () => {
           {/* Transaction Ledger */}
           <section className="transactions-panel">
             <div className="transactions-head">
-              <div>
-                <div className="wallet-tabs-header">
-                  <div className="wallet-tabs">
+              <div className="flex w-full min-w-0 flex-col gap-3">
+                <div className="flex w-full min-w-0 flex-col gap-3 lg:flex-row lg:items-center lg:justify-between lg:gap-4">
+                  <div className="flex w-fit max-w-full flex-shrink-0 flex-wrap items-center gap-1 rounded-xl bg-[#F5F4ED] p-1">
                     <button
-                      className={`wallet-tab ${activeTab === 'transactions' ? 'active' : ''}`}
+                      type="button"
+                      className={`rounded-lg px-3 py-1.5 font-[Be_Vietnam_Pro] text-[12px] font-medium transition-all duration-150 whitespace-nowrap ${
+                        activeTab === 'transactions'
+                          ? 'bg-white text-[#141413] shadow-sm'
+                          : 'text-[#87867F] hover:text-[#5E5D59]'
+                      }`}
                       onClick={() => setActiveTab('transactions')}
                     >
                       Lịch sử giao dịch
                     </button>
                     <button
-                      className={`wallet-tab ${activeTab === 'orders' ? 'active' : ''}`}
+                      type="button"
+                      className={`rounded-lg px-3 py-1.5 font-[Be_Vietnam_Pro] text-[12px] font-medium transition-all duration-150 whitespace-nowrap ${
+                        activeTab === 'orders'
+                          ? 'bg-white text-[#141413] shadow-sm'
+                          : 'text-[#87867F] hover:text-[#5E5D59]'
+                      }`}
                       onClick={() => setActiveTab('orders')}
                     >
                       Lịch sử mua hàng
                     </button>
                     <button
-                      className={`wallet-tab ${activeTab === 'withdrawals' ? 'active' : ''}`}
+                      type="button"
+                      className={`rounded-lg px-3 py-1.5 font-[Be_Vietnam_Pro] text-[12px] font-medium transition-all duration-150 whitespace-nowrap ${
+                        activeTab === 'withdrawals'
+                          ? 'bg-white text-[#141413] shadow-sm'
+                          : 'text-[#87867F] hover:text-[#5E5D59]'
+                      }`}
                       onClick={() => setActiveTab('withdrawals')}
                     >
                       Yêu cầu rút tiền
                     </button>
                   </div>
+
                   {activeTab === 'transactions' && (
-                    <p>
-                      Tổng nạp thành công: <strong>{formatCurrency(totalDeposit)} VND</strong>
-                    </p>
+                    <div className="flex w-full min-w-0 flex-col gap-2 sm:flex-row sm:items-stretch lg:flex-1 lg:justify-end lg:min-w-0">
+                      <label className="flex h-10 min-h-[40px] w-full min-w-0 flex-1 items-center gap-2.5 rounded-xl border border-[#E8E6DC] bg-white px-3.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-[box-shadow,border-color] duration-150 focus-within:border-[#3898EC] focus-within:shadow-[0_0_0_3px_rgba(56,152,236,0.12)] sm:flex-1 lg:max-w-[17.5rem] lg:flex-initial">
+                        <Search
+                          className="h-4 w-4 shrink-0 text-[#87867F]"
+                          aria-hidden
+                        />
+                        <input
+                          type="search"
+                          autoComplete="off"
+                          placeholder="Tìm theo mã giao dịch..."
+                          value={searchTerm}
+                          className="min-h-0 min-w-0 flex-1 bg-transparent font-[Be_Vietnam_Pro] text-[13px] text-[#141413] outline-none placeholder:text-[#B0AEA5]"
+                          onChange={(e) => {
+                            setSearchTerm(e.target.value);
+                            setPage(1);
+                          }}
+                        />
+                      </label>
+                      <div className="relative flex h-10 min-h-[40px] w-full shrink-0 items-center sm:w-[min(100%,11.25rem)] lg:w-44">
+                        <ListFilter
+                          className="pointer-events-none absolute left-3 z-[1] h-4 w-4 text-[#87867F]"
+                          aria-hidden
+                        />
+                        <select
+                          value={statusFilter}
+                          aria-label="Lọc theo trạng thái giao dịch"
+                          className="h-full w-full cursor-pointer appearance-none rounded-xl border border-[#E8E6DC] bg-white py-2 pr-9 pl-9 font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#141413] shadow-[0_1px_2px_rgba(0,0,0,0.04)] outline-none transition-[box-shadow,border-color] duration-150 focus:border-[#6B8E9E] focus:shadow-[0_0_0_3px_rgba(91,130,145,0.14)]"
+                          onChange={(e) =>
+                            setStatusFilter(e.target.value as TransactionStatusFilter)
+                          }
+                        >
+                          <option value="all">Tất cả trạng thái</option>
+                          <option value="completed">Thành công</option>
+                          <option value="pending">Đang chờ</option>
+                          <option value="failed">Thanh toán lỗi</option>
+                          <option value="cancelled">Đã hủy</option>
+                        </select>
+                        <ChevronDown
+                          className="pointer-events-none absolute right-2.5 top-1/2 z-[1] h-4 w-4 -translate-y-1/2 text-[#87867F]"
+                          aria-hidden
+                        />
+                      </div>
+                    </div>
                   )}
                 </div>
-              </div>
 
-              {activeTab === 'transactions' && (
-                <div className="transactions-controls">
-                  <div className="search-box">
-                    <Search size={15} />
-                    <input
-                      type="text"
-                      placeholder="Tìm theo mã giao dịch..."
-                      value={searchTerm}
-                      onChange={(e) => {
-                        setSearchTerm(e.target.value);
-                        setPage(1);
-                      }}
-                    />
+                {activeTab === 'transactions' && (
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-[#F0EEE6] bg-white px-3 py-2 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+                    <p className="m-0 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">
+                      Tổng nạp thành công:{' '}
+                      <strong className="font-semibold text-[#2EAD7A]">
+                        {formatCurrency(totalDeposit)} VND
+                      </strong>
+                    </p>
                   </div>
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value as TransactionStatusFilter)}
-                  >
-                    <option value="all">Tất cả trạng thái</option>
-                    <option value="completed">Thành công</option>
-                    <option value="pending">Đang chờ</option>
-                    <option value="failed">Thanh toán lỗi</option>
-                    <option value="cancelled">Đã hủy</option>
-                  </select>
-                </div>
-              )}
+                )}
+              </div>
             </div>
 
             {/* List Body */}
@@ -4817,29 +4931,34 @@ const StudentWallet: React.FC = () => {
               {/* ── Withdrawal History Tab ── */}
               {activeTab === 'withdrawals' && (
                 <div className="wd-filter-bar">
-                  <span className="wd-filter-label">Lọc:</span>
-                  {(
-                    [
-                      'ALL',
-                      'PENDING_VERIFY',
-                      'PENDING_ADMIN',
-                      'PROCESSING',
-                      'SUCCESS',
-                      'REJECTED',
-                      'CANCELLED',
-                    ] as const
-                  ).map((s) => (
-                    <button
-                      key={s}
-                      className={`wd-filter-chip${withdrawalStatusFilter === s ? ' active' : ''}`}
-                      onClick={() => {
-                        setWithdrawalStatusFilter(s);
-                        setWithdrawalPage(0);
-                      }}
-                    >
-                      {s === 'ALL' ? 'Tất cả' : WITHDRAWAL_STATUS_LABELS[s as WithdrawalStatus]}
-                    </button>
-                  ))}
+                  <span className="wd-filter-label">Trạng thái</span>
+                  <div className="wd-filter-segments" role="tablist" aria-label="Lọc yêu cầu rút tiền">
+                    {(
+                      [
+                        'ALL',
+                        'PENDING_VERIFY',
+                        'PENDING_ADMIN',
+                        'PROCESSING',
+                        'SUCCESS',
+                        'REJECTED',
+                        'CANCELLED',
+                      ] as const
+                    ).map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        role="tab"
+                        aria-selected={withdrawalStatusFilter === s}
+                        className={`wd-filter-chip${withdrawalStatusFilter === s ? ' active' : ''}`}
+                        onClick={() => {
+                          setWithdrawalStatusFilter(s);
+                          setWithdrawalPage(0);
+                        }}
+                      >
+                        {s === 'ALL' ? 'Tất cả' : WITHDRAWAL_STATUS_LABELS[s as WithdrawalStatus]}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -4954,9 +5073,7 @@ const StudentWallet: React.FC = () => {
                 </>
               ) : activeTab === 'transactions' ? (
                 <>
-                  <span>
-                    Hiển thị {displayStart}–{displayEnd} / {filteredTransactions.length} giao dịch
-                  </span>
+                  <span>{transactionsFooterSummary}</span>
 
                   <div className="pagination">
                     <button
@@ -4986,14 +5103,7 @@ const StudentWallet: React.FC = () => {
                 </>
               ) : (
                 <>
-                  <span>
-                    Hiển thị {ordersData?.number! * ordersData?.size! + 1}–
-                    {Math.min(
-                      (ordersData?.number! + 1) * ordersData?.size!,
-                      ordersData?.totalElements!
-                    )}{' '}
-                    / {ordersData?.totalElements} hóa đơn
-                  </span>
+                  <span>{ordersFooterSummary}</span>
 
                   <div className="pagination">
                     <button
@@ -5030,6 +5140,7 @@ const StudentWallet: React.FC = () => {
               )}
             </footer>
           </section>
+          </div>
         </div>
       </DashboardLayout>
 
