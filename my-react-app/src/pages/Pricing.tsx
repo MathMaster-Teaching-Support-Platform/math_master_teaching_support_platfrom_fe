@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import React, { useEffect, useId, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { SubscriptionPlanCard } from '../components/SubscriptionPlanCard';
 import Footer from '../components/Footer';
 import DashboardLayout from '../components/layout/DashboardLayout/DashboardLayout';
 import { UI_TEXT } from '../constants/uiText';
@@ -797,25 +798,26 @@ const Pricing: React.FC = () => {
                 </div>
               )}
 
-              <div className="grid-cards pricing-m-plan-grid">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 items-start">
                 {loadingSubscriptionData ? (
-                  <div className="pricing-skeleton-mesh" style={{ gridColumn: '1 / -1' }}>
-                    <div className="skeleton-grid">
-                      <div className="skeleton-card" />
-                      <div className="skeleton-card" />
-                      <div className="skeleton-card" />
-                    </div>
-                  </div>
+                  <>
+                    {[1, 2, 3].map((i) => (
+                      <div
+                        key={i}
+                        className="bg-[#FAF9F5] rounded-2xl border border-[#F0EEE6] h-72 animate-pulse"
+                      />
+                    ))}
+                  </>
                 ) : userPlans.length === 0 ? (
-                  <div className="empty pricing-m-empty" style={{ gridColumn: '1 / -1' }}>
-                    <p>Chưa có gói để hiển thị.</p>
-                    <p style={{ color: 'var(--mod-slate-500)', fontSize: '0.9rem' }}>
-                      Không tìm thấy gói đăng ký từ máy chủ. Bạn có thể thử tải lại.
+                  <div
+                    className="col-span-full flex flex-col items-center justify-center py-16 gap-3"
+                  >
+                    <p className="font-[Be_Vietnam_Pro] text-[14px] text-[#87867F]">
+                      Chưa có gói để hiển thị.
                     </p>
                     <button
                       type="button"
-                      className="btn"
-                      style={{ marginTop: '0.75rem' }}
+                      className="mt-1 px-4 py-2.5 rounded-xl bg-[#141413] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:bg-[#30302E] transition-colors"
                       onClick={() => {
                         void Promise.all([
                           userPlansQuery.refetch(),
@@ -835,21 +837,23 @@ const Pricing: React.FC = () => {
                       const walletBalance = wallet?.balance ?? 0;
                       const isInsufficientBalance = price > 0 && walletBalance < price;
                       const isCurrentPlan = activeSubscription?.planId === plan.id;
-                      const tier = getPlanTier(plan.name);
                       const spotlight = Boolean(plan.featured) || getPlanTier(plan.name) === 'pro';
-                      const ctaPrimary = spotlight;
+
+                      const btnCls = spotlight
+                        ? 'w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#C96442] text-white font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:brightness-95 active:scale-[0.98] transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed'
+                        : 'w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#141413] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:bg-[#30302E] active:scale-[0.98] transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed';
 
                       const btn = (
                         <button
                           type="button"
-                          className={ctaPrimary ? 'action-primary' : 'action-toggle'}
+                          className={btnCls}
                           onClick={() => void handlePurchase(plan)}
                           disabled={!!purchasingPlanId || isCurrentPlan || !price}
                           title={isInsufficientBalance ? 'Số dư ví không đủ' : undefined}
                         >
                           {purchasingPlanId === plan.id ? (
                             <>
-                              <span className="pricing-btn-spinner" />
+                              <span className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
                               Đang mua...
                             </>
                           ) : isCurrentPlan ? (
@@ -863,25 +867,13 @@ const Pricing: React.FC = () => {
                       );
 
                       return (
-                        <ModulePlanCard
+                        <SubscriptionPlanCard
                           key={plan.id}
-                          listIndex={idx}
-                          displayIndex={idx}
-                          tier={tier}
-                          name={plan.name}
-                          description={plan.description || 'Gói đăng ký cho người dùng'}
-                          priceBlock={
-                            <div className="pricing-m-price-block">
-                              <span className="pricing-m-price">{formatPrice(plan.price)}</span>
-                              <span className="pricing-m-period">
-                                /{plan.billingCycle.toLowerCase()}
-                              </span>
-                            </div>
-                          }
-                          tokenLine={`${plan.tokenQuota.toLocaleString()} token / kỳ`}
+                          plan={plan}
                           featured={spotlight}
                           isCurrent={isCurrentPlan}
-                          cta={btn}
+                          index={idx}
+                          actions={btn}
                         />
                       );
                     })

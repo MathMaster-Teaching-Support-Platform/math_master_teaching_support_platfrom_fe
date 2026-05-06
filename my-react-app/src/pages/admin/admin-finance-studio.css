@@ -13,9 +13,9 @@
   min-height: 0;
 }
 
-/* Headers (overview / breakdown / analytics) — ivory card on parchment */
+/* Headers (overview / analytics) — ivory card on parchment.
+   Revenue breakdown header is styled in RevenueBreakdown.css */
 .module-layout-container.admin-mgmt-shell.admin-finance-studio .overview-header,
-.module-layout-container.admin-mgmt-shell.admin-finance-studio .breakdown-header,
 .module-layout-container.admin-mgmt-shell.admin-finance-studio .analytics-header {
   background: #faf9f5;
   border: 1px solid #e8e6dc;

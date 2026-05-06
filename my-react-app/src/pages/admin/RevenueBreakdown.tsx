@@ -1,18 +1,19 @@
 import { useQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
+  AlertCircle,
+  BarChart3,
   BookOpen,
-  Calendar,
-  ChevronDown,
+  CalendarRange,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
   Download,
+  Layers,
   Package,
   RefreshCw,
   Search,
-  TrendingUp,
 } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import RevenueBreakdownChart from '../../components/charts/RevenueBreakdownChart';
@@ -137,8 +138,6 @@ const RevenueBreakdown: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
-  const [pageSizeOpen, setPageSizeOpen] = useState(false);
-
   const breakdownQuery = useQuery({
     queryKey: [
       'admin-financial',
@@ -268,16 +267,17 @@ const RevenueBreakdown: React.FC = () => {
 
   if (loading && !breakdown) {
     return shell(
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
-        <div className="skeleton-box" style={{ height: '140px', borderRadius: '24px' }} />
+      <div className="rb-loading-stack">
+        <div className="rb-skeleton rb-skeleton--header" />
         <div className="revenue-bento-grid">
-          <div className="featured-revenue-card skeleton-box" style={{ height: '400px' }} />
+          <div className="featured-revenue-card rb-skeleton rb-skeleton--featured" />
           <div className="sources-sidebar">
             {[1, 2].map((i) => (
-              <div key={i} className="source-mini-card skeleton-box" style={{ height: '110px' }} />
+              <div key={i} className="source-mini-card rb-skeleton rb-skeleton--source" />
             ))}
           </div>
         </div>
+        <div className="main-chart-card rb-skeleton rb-skeleton--chart" />
       </div>
     );
   }
@@ -285,7 +285,9 @@ const RevenueBreakdown: React.FC = () => {
   if (error) {
     return shell(
       <div className="error-container">
-        <div className="error-icon">⚠️</div>
+        <div className="rb-error-icon">
+          <AlertCircle size={28} aria-hidden />
+        </div>
         <h3>Lỗi tải dữ liệu</h3>
         <p>{error}</p>
         <button
@@ -301,6 +303,12 @@ const RevenueBreakdown: React.FC = () => {
 
   if (!breakdown) return null;
 
+  const groupByVi: Record<RevenueGroupBy, string> = {
+    hour: 'Theo giờ',
+    day: 'Theo ngày',
+    month: 'Theo tháng',
+  };
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
@@ -312,76 +320,93 @@ const RevenueBreakdown: React.FC = () => {
   } as const;
 
   return shell(
-    <motion.div initial="hidden" animate="visible" variants={containerVariants}>
+    <motion.div
+      className="rb-motion-root"
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+    >
       <header className="breakdown-header">
-        <div className="header-stack">
-          <h2>Phân tích doanh thu</h2>
-          <p className="header-sub">Báo cáo chi tiết nguồn thu nhập và xu hướng tăng trưởng</p>
-        </div>
-        <div className="header-actions">
-          <div className="period-selector">
-            <Calendar size={18} color="#87867f" />
-            <div className="period-select" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <input
-                type="date"
-                value={dateRange.from}
-                onChange={(e) => {
-                  setDateRange((prev) => ({ ...prev, from: e.target.value }));
-                  setQuickRange(null);
-                }}
-                className="period-select"
-              />
-              <span style={{ color: '#87867f' }}>-</span>
-              <input
-                type="date"
-                value={dateRange.to}
-                onChange={(e) => {
-                  setDateRange((prev) => ({ ...prev, to: e.target.value }));
-                  setQuickRange(null);
-                }}
-                className="period-select"
-              />
+        <div className="breakdown-header__intro">
+          <div className="breakdown-header__title-row">
+            <div className="breakdown-header__icon" aria-hidden>
+              <BarChart3 size={22} strokeWidth={2} />
+            </div>
+            <div className="header-stack">
+              <h2 className="breakdown-header__heading">Phân tích doanh thu</h2>
+              <p className="header-sub">
+                Nguồn thu theo gói đăng ký và hoa hồng khóa học — đối chiếu biểu đồ và bảng kê
+              </p>
             </div>
           </div>
-          <div className="period-selector">
-            {([
-              { id: '1d', label: '1 ngày' },
-              { id: '1w', label: '1 tuần' },
-              { id: '1m', label: '1 tháng' },
-              { id: '1y', label: '1 năm' },
-            ] as const).map((item) => (
+        </div>
+
+        <div className="breakdown-header__toolbar">
+          <div className="rb-date-strip">
+            <CalendarRange size={17} className="rb-date-strip__icon" aria-hidden />
+            <input
+              type="date"
+              value={dateRange.from}
+              onChange={(e) => {
+                setDateRange((prev) => ({ ...prev, from: e.target.value }));
+                setQuickRange(null);
+              }}
+              className="rb-date-input"
+              aria-label="Từ ngày"
+            />
+            <span className="rb-date-sep">→</span>
+            <input
+              type="date"
+              value={dateRange.to}
+              onChange={(e) => {
+                setDateRange((prev) => ({ ...prev, to: e.target.value }));
+                setQuickRange(null);
+              }}
+              className="rb-date-input"
+              aria-label="Đến ngày"
+            />
+          </div>
+
+          <fieldset className="rb-quick-range" aria-label="Khoảng thời gian nhanh">
+            {(
+              [
+                { id: '1d' as const, label: '1 ngày' },
+                { id: '1w' as const, label: '1 tuần' },
+                { id: '1m' as const, label: '1 tháng' },
+                { id: '1y' as const, label: '1 năm' },
+              ] as const
+            ).map((item) => (
               <button
                 key={item.id}
                 type="button"
                 onClick={() => setQuickDateRange(item.id)}
-                className="period-select"
-                style={{
-                  border: '1px solid #e8e6dc',
-                  background: quickRange === item.id ? '#f3f2eb' : '#ffffff',
-                  padding: '0.4rem 0.65rem',
-                  borderRadius: '10px',
-                  fontSize: '0.85rem',
-                  color: '#4b4942',
-                }}
+                className={`rb-quick-pill ${quickRange === item.id ? 'rb-quick-pill--active' : ''}`}
               >
                 {item.label}
               </button>
             ))}
+          </fieldset>
+
+          <div className="breakdown-header__actions">
+            <button type="button" onClick={handleExport} className="rb-btn rb-btn--outline">
+              <Download size={17} strokeWidth={2} /> Xuất CSV
+            </button>
+            <button
+              type="button"
+              onClick={() => void breakdownQuery.refetch()}
+              className="rb-btn rb-btn--primary"
+              disabled={breakdownQuery.isFetching}
+              title="Làm mới"
+              aria-busy={breakdownQuery.isFetching}
+            >
+              <RefreshCw
+                size={17}
+                strokeWidth={2}
+                className={breakdownQuery.isFetching ? 'admin-finance-spin' : ''}
+              />
+              Làm mới
+            </button>
           </div>
-          <button type="button" onClick={handleExport} className="export-button">
-            <Download size={18} /> Báo cáo CSV
-          </button>
-          <button
-            type="button"
-            onClick={() => void breakdownQuery.refetch()}
-            className="refresh-button"
-            disabled={breakdownQuery.isFetching}
-          >
-            <RefreshCw
-              size={18}
-              className={breakdownQuery.isFetching ? 'admin-finance-spin' : ''}
-            />
-          </button>
         </div>
       </header>
 
@@ -389,18 +414,24 @@ const RevenueBreakdown: React.FC = () => {
       <div className="revenue-bento-grid">
         {/* Featured Card */}
         <motion.div className="featured-revenue-card" variants={itemVariants}>
-          <div className="card-label-large">Tổng doanh thu chu kỳ</div>
+          <div className="featured-revenue-card__mesh" aria-hidden />
+          <div className="card-label-large">Tổng doanh thu trong khoảng đã chọn</div>
           <p className="card-value-large">{formatCurrency(stats.total)}</p>
-          <div className="card-trend-large">
-            <TrendingUp size={24} />
-            <span>+8.4% so với giai đoạn trước</span>
+          <div className="card-meta-row">
+            <span className="card-meta-pill">
+              <Layers size={14} aria-hidden />
+              {groupByVi[groupBy]}
+            </span>
+            <span className="card-meta-muted">
+              {dateRange.from} → {dateRange.to}
+            </span>
           </div>
         </motion.div>
 
         {/* Sources Sidebar */}
         <div className="sources-sidebar">
 
-          <motion.div className="source-mini-card" variants={itemVariants}>
+          <motion.div className="source-mini-card source-mini-card--subs" variants={itemVariants}>
             <div className="source-icon">
               <Package size={22} />
             </div>
@@ -408,12 +439,14 @@ const RevenueBreakdown: React.FC = () => {
               <h3>Gói đăng ký</h3>
               <p>{formatCurrency(stats.subscriptions)}</p>
               <div className="source-percentage">
-                {((stats.subscriptions / stats.total) * 100 || 0).toFixed(1)}% tỷ trọng
+                {stats.total > 0
+                  ? `${((stats.subscriptions / stats.total) * 100).toFixed(1)}% tỷ trọng`
+                  : '—'}
               </div>
             </div>
           </motion.div>
 
-          <motion.div className="source-mini-card" variants={itemVariants}>
+          <motion.div className="source-mini-card source-mini-card--courses" variants={itemVariants}>
             <div className="source-icon">
               <BookOpen size={22} />
             </div>
@@ -421,7 +454,9 @@ const RevenueBreakdown: React.FC = () => {
               <h3>Hoa hồng khóa học</h3>
               <p>{formatCurrency(stats.courses)}</p>
               <div className="source-percentage">
-                {((stats.courses / stats.total) * 100 || 0).toFixed(1)}% tỷ trọng
+                {stats.total > 0
+                  ? `${((stats.courses / stats.total) * 100).toFixed(1)}% tỷ trọng`
+                  : '—'}
               </div>
             </div>
           </motion.div>
@@ -430,8 +465,10 @@ const RevenueBreakdown: React.FC = () => {
 
       {/* Chart Section */}
       <motion.div className="main-chart-card" variants={itemVariants}>
-        <h2>Xu hướng biến động doanh thu</h2>
-        <p>Phân tích sự đóng góp của các nguồn thu theo thời gian</p>
+        <div className="main-chart-card__head">
+          <h2>Biểu đồ theo thời gian</h2>
+          <p>Xếp chồng hai nguồn: gói đăng ký (tím) và hoa hồng khóa học (lục)</p>
+        </div>
         <div className="chart-container">
           <RevenueBreakdownChart data={normalizedSeries} groupBy={groupBy} />
         </div>
@@ -442,17 +479,17 @@ const RevenueBreakdown: React.FC = () => {
         <motion.div className="ledger-header-row" variants={itemVariants}>
           <div className="header-stack">
             <h2>Bảng kê doanh thu</h2>
-            <p className="header-sub">Chi tiết số liệu tổng hợp theo từng ngày</p>
+            <p className="header-sub">Chi tiết theo mốc thời gian ({groupByVi[groupBy].toLowerCase()})</p>
           </div>
-          <div className="ledger-search">
-            <Search size={18} className="ledger-search-icon" />
+          <label className="ledger-search">
+            <Search size={17} className="ledger-search-icon" aria-hidden />
             <input
-              type="text"
+              type="search"
               placeholder="Tìm theo ngày hoặc giá trị..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-          </div>
+          </label>
         </motion.div>
 
         <motion.div className="table-wrapper" variants={itemVariants}>
@@ -480,10 +517,10 @@ const RevenueBreakdown: React.FC = () => {
                         {formatLedgerLabel(item.key, groupBy)}
                       </span>
                     </td>
-                    <td className="currency-cell" style={{ color: '#7c3aed' }}>
+                    <td className="currency-cell rb-currency-sub">
                       {formatCurrency(item.subscriptions)}
                     </td>
-                    <td className="currency-cell" style={{ color: '#059669' }}>
+                    <td className="currency-cell rb-currency-course">
                       {formatCurrency(item.courseSales)}
                     </td>
                     <td className="currency-cell currency-total">{formatCurrency(item.total)}</td>
@@ -503,96 +540,45 @@ const RevenueBreakdown: React.FC = () => {
         </motion.div>
 
         <motion.div className="ledger-footer" variants={itemVariants}>
-          <div
-            className="ledger-footer-left"
-            style={{ fontSize: '0.85rem', color: '#7a786f' }}
-          >
-            Showing {totalRecords === 0 ? 0 : currentPage * pageSize + 1}-
-            {Math.min((currentPage + 1) * pageSize, totalRecords)} of {totalRecords} records
+          <div className="ledger-footer-left">
+            Hiển thị{' '}
+            <strong>
+              {totalRecords === 0 ? 0 : currentPage * pageSize + 1}–
+              {Math.min((currentPage + 1) * pageSize, totalRecords)}
+            </strong>{' '}
+            / {totalRecords} dòng
           </div>
-          <div
-            className="ledger-footer-right"
-            style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}
-          >
-            <div
-              tabIndex={0}
-              onBlur={() => setPageSizeOpen(false)}
-              style={{ position: 'relative' }}
-            >
-              <button
-                type="button"
-                onClick={() => setPageSizeOpen((prev) => !prev)}
-                className="px-3 py-1.5 border border-gray-200 rounded-lg bg-white text-sm text-gray-700 inline-flex items-center gap-2"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '0.45rem 0.75rem',
-                  borderRadius: '10px',
+          <div className="ledger-footer-right">
+            <label className="rb-page-size-label">
+              <span className="rb-page-size-label__text">Số dòng</span>
+              <select
+                className="rb-page-size-select"
+                value={pageSize}
+                aria-label="Số dòng mỗi trang"
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setPage(0);
                 }}
               >
-                {pageSize} / page
-                <ChevronDown size={14} />
-              </button>
-              {pageSizeOpen && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    right: 0,
-                    top: 'calc(100% + 6px)',
-                    background: '#ffffff',
-                    border: '1px solid #e8e6dc',
-                    borderRadius: '12px',
-                    boxShadow: '0 10px 25px -10px rgba(0,0,0,0.2)',
-                    overflow: 'hidden',
-                    zIndex: 20,
-                    minWidth: '140px',
-                  }}
-                >
-                  {[10, 25, 50, 100].map((size) => (
-                    <button
-                      key={size}
-                      type="button"
-                      onClick={() => {
-                        setPageSize(size);
-                        setPage(0);
-                        setPageSizeOpen(false);
-                      }}
-                      style={{
-                        display: 'flex',
-                        width: '100%',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '0.55rem 0.85rem',
-                        background: size === pageSize ? '#f5f4ed' : '#ffffff',
-                        color: '#4b4942',
-                        fontSize: '0.85rem',
-                        border: 'none',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      {size} / page
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+                {[10, 25, 50, 100].map((size) => (
+                  <option key={size} value={size}>
+                    {size} / trang
+                  </option>
+                ))}
+              </select>
+            </label>
 
-            <span style={{ fontSize: '0.85rem', color: '#7a786f' }}>
-              Page {totalPages === 0 ? 0 : currentPage + 1} of {totalPages}
+            <span className="ledger-page-indicator">
+              Trang {totalPages === 0 ? 0 : currentPage + 1} / {totalPages}
             </span>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+            <div className="rb-pager">
               <button
                 type="button"
                 onClick={() => setPage(0)}
                 disabled={currentPage === 0 || totalPages <= 1}
-                className="p-2 border border-gray-200 rounded-lg bg-white disabled:opacity-50 hover:bg-gray-50"
-                style={{
-                  padding: '0.4rem',
-                  borderRadius: '10px',
-                }}
-                aria-label="First page"
+                className="rb-pager-btn"
+                aria-label="Trang đầu"
               >
                 <ChevronsLeft size={16} />
               </button>
@@ -600,12 +586,8 @@ const RevenueBreakdown: React.FC = () => {
                 type="button"
                 onClick={() => setPage((prev) => Math.max(0, prev - 1))}
                 disabled={currentPage === 0 || totalPages <= 1}
-                className="p-2 border border-gray-200 rounded-lg bg-white disabled:opacity-50 hover:bg-gray-50"
-                style={{
-                  padding: '0.4rem',
-                  borderRadius: '10px',
-                }}
-                aria-label="Previous page"
+                className="rb-pager-btn"
+                aria-label="Trang trước"
               >
                 <ChevronLeft size={16} />
               </button>
@@ -613,12 +595,8 @@ const RevenueBreakdown: React.FC = () => {
                 type="button"
                 onClick={() => setPage((prev) => Math.min(totalPages - 1, prev + 1))}
                 disabled={totalPages === 0 || currentPage + 1 >= totalPages}
-                className="p-2 border border-gray-200 rounded-lg bg-white disabled:opacity-50 hover:bg-gray-50"
-                style={{
-                  padding: '0.4rem',
-                  borderRadius: '10px',
-                }}
-                aria-label="Next page"
+                className="rb-pager-btn"
+                aria-label="Trang sau"
               >
                 <ChevronRight size={16} />
               </button>
@@ -626,12 +604,8 @@ const RevenueBreakdown: React.FC = () => {
                 type="button"
                 onClick={() => setPage(Math.max(0, totalPages - 1))}
                 disabled={totalPages === 0 || currentPage + 1 >= totalPages}
-                className="p-2 border border-gray-200 rounded-lg bg-white disabled:opacity-50 hover:bg-gray-50"
-                style={{
-                  padding: '0.4rem',
-                  borderRadius: '10px',
-                }}
-                aria-label="Last page"
+                className="rb-pager-btn"
+                aria-label="Trang cuối"
               >
                 <ChevronsRight size={16} />
               </button>
@@ -643,15 +617,14 @@ const RevenueBreakdown: React.FC = () => {
       {/* Insight Footer */}
       <motion.div className="insight-footer" variants={itemVariants}>
         <div className="insight-grid">
-          <div className="insight-item">
-            <h4>Kinh doanh gói</h4>
-            <p>Doanh thu định kỳ từ các gói Membership của cả học viên và giảng viên.</p>
+          <div className="insight-item insight-item--subs">
+            <h4>Gói đăng ký</h4>
+            <p>Doanh thu định kỳ từ các gói Membership (học viên và giảng viên).</p>
           </div>
-          <div className="insight-item">
-            <h4>Cơ chế hoa hồng</h4>
+          <div className="insight-item insight-item--courses">
+            <h4>Hoa hồng khóa học</h4>
             <p>
-              Phần lợi nhuận trực tiếp của MathMaster (10%) từ các giao dịch mua khóa học thành
-              công.
+              Phần doanh thu nền tảng từ các giao dịch mua khóa học (theo tỷ lệ đã cấu hình).
             </p>
           </div>
         </div>

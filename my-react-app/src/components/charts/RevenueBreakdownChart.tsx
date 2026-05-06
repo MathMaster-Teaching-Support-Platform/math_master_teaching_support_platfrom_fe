@@ -154,13 +154,19 @@ const RevenueBreakdownChart: React.FC<RevenueBreakdownChartProps> = ({ data, gro
             verticalAlign="top"
             align="right"
             iconType="circle"
-            wrapperStyle={{ paddingBottom: '30px', fontSize: '12px', fontWeight: 600 }}
+            wrapperStyle={{
+              paddingBottom: '28px',
+              fontSize: '12px',
+              fontWeight: 600,
+              color: '#5e5d59',
+              fontFamily: "'Be Vietnam Pro', system-ui, sans-serif",
+            }}
           />
           <Bar
             dataKey="subscriptions"
             name="Gói đăng ký"
             stackId="1"
-            fill="#8b5cf6"
+            fill="#9b6fe0"
             radius={[0, 0, 0, 0]}
             animationDuration={1500}
           />
@@ -168,8 +174,8 @@ const RevenueBreakdownChart: React.FC<RevenueBreakdownChartProps> = ({ data, gro
             dataKey="courseSales"
             name="Hoa hồng khóa học"
             stackId="1"
-            fill="#10b981"
-            radius={[4, 4, 0, 0]}
+            fill="#2ead7a"
+            radius={[6, 6, 0, 0]}
             animationDuration={1800}
           />
         </BarChart>
