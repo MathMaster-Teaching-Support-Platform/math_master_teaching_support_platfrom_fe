@@ -20,9 +20,9 @@ import {
   useCreateAssessment,
   useDeleteAssessment,
   useMyAssessments,
+  usePatchAssessment,
   usePublishAssessment,
   useUnpublishAssessment,
-  useUpdateAssessment,
 } from '../../hooks/useAssessment';
 import { useDebounce } from '../../hooks/useDebounce';
 import '../../styles/module-refactor.css';
@@ -74,7 +74,7 @@ export default function TeacherAssessments() {
   });
 
   const createMutation = useCreateAssessment();
-  const updateMutation = useUpdateAssessment();
+  const patchMutation = usePatchAssessment();
   const publishMutation = usePublishAssessment();
   const unpublishMutation = useUnpublishAssessment();
   const closeMutation = useCloseAssessment();
@@ -95,15 +95,17 @@ export default function TeacherAssessments() {
     [assessments, totalElements]
   );
 
-  async function saveAssessment(payload: AssessmentRequest) {
+  async function saveAssessment(payload: AssessmentRequest | Partial<AssessmentRequest>) {
     try {
       if (mode === 'create') {
-        await createMutation.mutateAsync(payload);
+        // Create flow: AssessmentModal always emits a full payload here.
+        await createMutation.mutateAsync(payload as AssessmentRequest);
         showToast({ type: 'success', message: `Tạo ${UI_TEXT.QUIZ.toLowerCase()} thành công.` });
         return;
       }
       if (!selected) return;
-      await updateMutation.mutateAsync({ id: selected.id, data: payload });
+      // Edit flow: AssessmentModal emits a Partial diff; route to PATCH.
+      await patchMutation.mutateAsync({ id: selected.id, data: payload });
       showToast({ type: 'success', message: `Cập nhật ${UI_TEXT.QUIZ.toLowerCase()} thành công.` });
     } catch (error) {
       showToast({

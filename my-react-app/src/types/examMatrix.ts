@@ -42,7 +42,8 @@ export interface BuildExamMatrixRequest extends ExamMatrixRequest {
 export interface BuildSimpleExamMatrixRequest {
     name: string;
     description?: string;
-    questionBankId: string;
+    /** Optional pre-fill hint for the "Tạo đề thi" bank picker. */
+    questionBankId?: string;
     /** Lớp (1–12), must match the bank's grade if the bank is grade-anchored. */
     gradeLevel: number;
     pointsPerQuestion?: number;

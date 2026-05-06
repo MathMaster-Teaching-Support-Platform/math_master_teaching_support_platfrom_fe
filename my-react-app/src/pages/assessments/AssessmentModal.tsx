@@ -138,8 +138,9 @@ export default function AssessmentModal({
           showScoreImmediately: initialData.showScoreImmediately,
         };
         const diff: Partial<AssessmentRequest> = {};
+        const fullAsRecord = fullPayload as unknown as Record<string, unknown>;
         for (const key of Object.keys(fullPayload) as (keyof AssessmentRequest)[]) {
-          const next = (fullPayload as Record<string, unknown>)[key];
+          const next = fullAsRecord[key];
           const prev = initialNormalised[key];
           if (next !== prev) {
             (diff as Record<string, unknown>)[key] = next;

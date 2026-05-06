@@ -13,7 +13,7 @@ import {
   useGenerateQuestionsForAssessment,
   useRemoveQuestion,
   useSetPointsOverride,
-  useUpdateAssessment,
+  usePatchAssessment,
   useUpdateAssessmentQuestionWorkaround,
 } from '../../hooks/useAssessment';
 import MathText from '../../components/common/MathText';
@@ -103,7 +103,7 @@ export default function AssessmentDetailRefactored() {
   } = useAssessmentQuestions(id ?? '', {
     enabled: !!id,
   });
-  const updateMutation = useUpdateAssessment();
+  const patchMutation = usePatchAssessment();
   const addQuestionMutation = useAddQuestion();
   const removeQuestionMutation = useRemoveQuestion();
   const updateAssessmentQuestionMutation = useUpdateAssessmentQuestionWorkaround();
@@ -155,9 +155,9 @@ export default function AssessmentDetailRefactored() {
     setAutoTotalPoints(String(assessment.totalPoints ?? 0));
   }, [assessment?.id, assessment?.totalPoints]);
 
-  async function save(payload: AssessmentRequest) {
+  async function save(payload: AssessmentRequest | Partial<AssessmentRequest>) {
     if (!id) return;
-    await updateMutation.mutateAsync({ id, data: payload });
+    await patchMutation.mutateAsync({ id, data: payload });
     setOpenEdit(false);
     await refetch();
   }
