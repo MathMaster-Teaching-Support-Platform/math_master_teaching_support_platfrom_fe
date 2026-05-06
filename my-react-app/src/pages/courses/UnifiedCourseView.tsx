@@ -13,19 +13,22 @@
  */
 
 import { AnimatePresence, motion } from 'framer-motion';
+import type { LucideIcon } from 'lucide-react';
 import {
   AlertCircle,
   ArrowLeft,
   BookOpen,
+  ClipboardCheck,
   FileText,
   Globe,
+  ListVideo,
   LoaderCircle,
   Lock,
   Star,
   TrendingUp,
   Users,
 } from 'lucide-react';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { CourseBreadcrumb } from '../../components/course/CourseBreadcrumb';
 import { CourseIncludesList } from '../../components/course/CourseIncludesList';
@@ -42,11 +45,18 @@ import {
   useMyEnrollments,
   useTeacherProfile,
 } from '../../hooks/useCourses';
+import { useMyAssessmentsByCourse } from '../../hooks/useStudentAssessment';
 import { AuthService } from '../../services/api/auth.service';
 import '../../styles/module-refactor.css';
 import type { Order } from '../../types/order.types';
 import { getEffectivePrice, hasActiveDiscount } from '../../utils/pricing';
 import './StudentCourses.css';
+import './TeacherCourseDetail.css';
+
+/** Full-bleed shell: avoid `.module-page` max-width (1220px) + horizontal centering from module-refactor.css */
+const UNIFIED_COURSE_PAGE_WRAP = 'w-full min-w-0 max-w-none px-0 py-6 sm:py-8 pb-10';
+/** Keep `module-layout-container` for scoped `.btn` / CSS vars in module-refactor.css — without `.module-page` there is no 1220px cap */
+const MODULE_FULL_BLEED = 'module-layout-container w-full min-w-0 max-w-none';
 
 // Import existing tab components
 import StudentAssessmentsTab from './student-tabs/StudentAssessmentsTab';
@@ -54,7 +64,17 @@ import StudentLessonsTab from './student-tabs/StudentLessonsTab';
 import StudentProgressTab from './student-tabs/StudentProgressTab';
 import StudentReviewsTab from './student-tabs/StudentReviewsTab';
 
-type TabType = 'lessons' | 'overview' | 'assessments' | 'reviews' | 'progress';
+const STUDENT_COURSE_TAB_IDS = [
+  'lessons',
+  'overview',
+  'assessments',
+  'progress',
+  'reviews',
+] as const;
+type TabType = (typeof STUDENT_COURSE_TAB_IDS)[number];
+
+const secondaryOutlineBtn =
+  'inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors shadow-sm';
 
 interface UnifiedCourseViewProps {
   courseId?: string;
@@ -81,7 +101,12 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
   }>();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab = (searchParams.get('tab') as TabType) || 'lessons';
+
+  const tabParam = searchParams.get('tab');
+  const activeTab: TabType =
+    tabParam && STUDENT_COURSE_TAB_IDS.includes(tabParam as TabType)
+      ? (tabParam as TabType)
+      : 'lessons';
 
   // Determine courseId and enrollmentId from props or params
   const enrollmentId = propEnrollmentId || paramEnrollmentId;
@@ -145,6 +170,12 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
   const isEnrolled = !!enrollment && enrollment.status === 'ACTIVE';
   const hasFullAccess = isEnrolled || canViewUnpublishedCourse;
 
+  const { data: assessmentsMeta } = useMyAssessmentsByCourse(
+    courseId ?? '',
+    { page: 0, size: 1, sortBy: 'dueDate', sortDir: 'ASC' },
+    { enabled: Boolean(courseId && hasFullAccess) }
+  );
+
   // Calculate free preview stats
   const freePreviewLessons = useMemo(() => lessons.filter((l) => l.isFreePreview), [lessons]);
   const lockedLessonsCount = useMemo(
@@ -158,6 +189,13 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
   const handleTabChange = (tab: TabType) => {
     setSearchParams({ tab });
   };
+
+  useEffect(() => {
+    const t = searchParams.get('tab');
+    if (t && !STUDENT_COURSE_TAB_IDS.includes(t as TabType)) {
+      setSearchParams({ tab: 'lessons' }, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const handleEnroll = () => {
     if (!isAuthenticated) {
@@ -208,88 +246,134 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
   // Loading state
   if (loadingCourse) {
     mainContent = (
-      <div className="module-layout-container">
-        <section className="module-page teacher-courses-page">
-          <div className="rounded-xl border border-[#E8E6DC] bg-[#F5F4ED] p-5">
-            <div className="mb-2 flex items-center justify-center gap-2 text-[14px] text-[#5E5D59]">
-              <LoaderCircle className="h-5 w-5 animate-spin text-[#C96442]" />
-              <p className="m-0">Đang tải {UI_TEXT.COURSE.toLowerCase()}...</p>
+      <div className={MODULE_FULL_BLEED}>
+        <div className={UNIFIED_COURSE_PAGE_WRAP}>
+          <section className="w-full min-w-0 teacher-courses-page">
+            <div className="rounded-xl border border-[#E8E6DC] bg-[#F5F4ED] p-5">
+              <div className="mb-2 flex items-center justify-center gap-2 text-[14px] text-[#5E5D59]">
+                <LoaderCircle className="h-5 w-5 animate-spin text-[#C96442]" />
+                <p className="m-0">Đang tải {UI_TEXT.COURSE.toLowerCase()}...</p>
+              </div>
+              <div className="mx-auto h-1.5 max-w-md overflow-hidden rounded-full bg-[#E8E6DC]">
+                <motion.div
+                  className="h-full rounded-full bg-[#C96442]"
+                  initial={{ width: '0%' }}
+                  animate={{ width: '100%' }}
+                  transition={{ duration: 1.2, ease: 'easeInOut' }}
+                />
+              </div>
             </div>
-            <div className="mx-auto h-1.5 max-w-md overflow-hidden rounded-full bg-[#E8E6DC]">
-              <motion.div
-                className="h-full rounded-full bg-[#C96442]"
-                initial={{ width: '0%' }}
-                animate={{ width: '100%' }}
-                transition={{ duration: 1.2, ease: 'easeInOut' }}
-              />
-            </div>
-          </div>
-        </section>
+          </section>
+        </div>
       </div>
     );
   } else if (isAccessDeniedError) {
     mainContent = (
-      <div className="module-layout-container">
-        <section className="module-page teacher-courses-page">
-          <div className="empty">
-            <AlertCircle size={32} style={{ marginBottom: 8, color: '#B53333' }} />
-            <p>Bạn không có quyền xem {UI_TEXT.COURSE.toLowerCase()} này.</p>
-            <button className="btn secondary" onClick={() => navigate('/student/courses')}>
-              <ArrowLeft size={14} />
-              Quay lại danh sách
-            </button>
-          </div>
-        </section>
+      <div className={MODULE_FULL_BLEED}>
+        <div className={UNIFIED_COURSE_PAGE_WRAP}>
+          <section className="w-full min-w-0 teacher-courses-page">
+            <div className="empty">
+              <AlertCircle size={32} style={{ marginBottom: 8, color: '#B53333' }} />
+              <p>Bạn không có quyền xem {UI_TEXT.COURSE.toLowerCase()} này.</p>
+              <button className="btn secondary" onClick={() => navigate('/student/courses')}>
+                <ArrowLeft size={14} />
+                Quay lại danh sách
+              </button>
+            </div>
+          </section>
+        </div>
       </div>
     );
   } else if (!course) {
     mainContent = (
-      <div className="module-layout-container">
-        <section className="module-page">
-          <div className="empty">
-            <AlertCircle size={32} style={{ marginBottom: 8, color: '#94a3b8' }} />
-            <p>Không tìm thấy {UI_TEXT.COURSE.toLowerCase()}</p>
-            <button className="btn secondary" onClick={() => navigate('/student/courses')}>
-              <ArrowLeft size={14} />
-              Quay lại danh sách
-            </button>
-          </div>
-        </section>
+      <div className={MODULE_FULL_BLEED}>
+        <div className={UNIFIED_COURSE_PAGE_WRAP}>
+          <section className="w-full min-w-0">
+            <div className="empty">
+              <AlertCircle size={32} style={{ marginBottom: 8, color: '#94a3b8' }} />
+              <p>Không tìm thấy {UI_TEXT.COURSE.toLowerCase()}</p>
+              <button className="btn secondary" onClick={() => navigate('/student/courses')}>
+                <ArrowLeft size={14} />
+                Quay lại danh sách
+              </button>
+            </div>
+          </section>
+        </div>
       </div>
     );
   } else if (!isCoursePublic && !hasFullAccess) {
     mainContent = (
-      <div className="module-layout-container">
-        <section className="module-page teacher-courses-page">
-          <div className="empty">
-            <AlertCircle size={32} style={{ marginBottom: 8, color: '#B53333' }} />
-            <p>{UI_TEXT.COURSE} này chưa được công khai hoặc đang chờ duyệt.</p>
-            <button className="btn secondary" onClick={() => navigate('/student/courses')}>
-              <ArrowLeft size={14} />
-              Quay lại danh sách
-            </button>
-          </div>
-        </section>
+      <div className={MODULE_FULL_BLEED}>
+        <div className={UNIFIED_COURSE_PAGE_WRAP}>
+          <section className="w-full min-w-0 teacher-courses-page">
+            <div className="empty">
+              <AlertCircle size={32} style={{ marginBottom: 8, color: '#B53333' }} />
+              <p>{UI_TEXT.COURSE} này chưa được công khai hoặc đang chờ duyệt.</p>
+              <button className="btn secondary" onClick={() => navigate('/student/courses')}>
+                <ArrowLeft size={14} />
+                Quay lại danh sách
+              </button>
+            </div>
+          </section>
+        </div>
       </div>
     );
   } else {
-    // Determine tabs based on access level
-    const currentTabs = [
-      { id: 'lessons' as const, label: 'Bài học', icon: BookOpen },
-      { id: 'overview' as const, label: 'Tổng quan', icon: FileText },
-      ...(hasFullAccess
-        ? [
-            { id: 'assessments' as const, label: UI_TEXT.QUIZ, icon: FileText },
-            { id: 'progress' as const, label: 'Tiến độ', icon: TrendingUp },
-          ]
-        : []),
-      { id: 'reviews' as const, label: 'Đánh giá', icon: Star },
+    const assessmentsTotal = assessmentsMeta?.result?.totalElements ?? 0;
+
+    const studentCourseTabs: Array<{
+      id: TabType;
+      label: string;
+      icon: LucideIcon;
+      locked: boolean;
+      badge?: React.ReactNode;
+    }> = [
+      {
+        id: 'lessons',
+        label: 'Bài học',
+        icon: ListVideo,
+        locked: false,
+        badge: course.lessonsCount,
+      },
+      {
+        id: 'overview',
+        label: 'Tổng quan',
+        icon: BookOpen,
+        locked: false,
+      },
+      {
+        id: 'assessments',
+        label: UI_TEXT.QUIZ,
+        icon: ClipboardCheck,
+        locked: !hasFullAccess,
+        badge: hasFullAccess ? assessmentsTotal : undefined,
+      },
+      {
+        id: 'progress',
+        label: 'Tiến độ',
+        icon: TrendingUp,
+        locked: !hasFullAccess,
+        badge:
+          hasFullAccess && progress
+            ? `${Math.round(progress.completionRate)}%`
+            : hasFullAccess
+              ? '0%'
+              : undefined,
+      },
+      {
+        id: 'reviews',
+        label: 'Đánh giá',
+        icon: Star,
+        locked: false,
+        badge: course.ratingCount,
+      },
     ];
 
     mainContent = (
-      <div className="module-layout-container">
-        <section className="module-page">
-          <AnimatePresence mode="wait">
+      <div className={MODULE_FULL_BLEED}>
+        <div className={UNIFIED_COURSE_PAGE_WRAP}>
+          <section className="w-full min-w-0">
+            <AnimatePresence mode="wait">
             <motion.div
               key="unified-course-view"
               initial={{ opacity: 0, y: 20 }}
@@ -299,10 +383,9 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
             >
               <CourseBreadcrumb courseTitle={course.title} />
 
-              {/* Back Button */}
               <button
-                className="btn secondary btn-sm"
-                style={{ marginBottom: '1rem' }}
+                type="button"
+                className={`${secondaryOutlineBtn} mb-4`}
                 onClick={() => navigate('/student/courses')}
               >
                 <ArrowLeft size={16} strokeWidth={2} />
@@ -454,42 +537,22 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
 
                     {/* Progress Bar - Only for enrolled users */}
                     {isEnrolled && progress && (
-                      <div style={{ marginTop: '0.75rem' }}>
-                        <div
-                          style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            fontSize: '0.84rem',
-                            color: '#60748f',
-                            marginBottom: '0.4rem',
-                          }}
-                        >
+                      <div className="mt-3 rounded-xl border border-[#E8E6DC] bg-[#FAF9F5] px-4 py-3">
+                        <div className="flex justify-between font-[Be_Vietnam_Pro] text-[13px] text-[#5E5D59] mb-2">
                           <span>Tiến độ của bạn</span>
-                          <strong style={{ color: '#1f5eff' }}>
+                          <strong className="text-[#C96442] tabular-nums">
                             {progress.completionRate.toFixed(1)}%
                           </strong>
                         </div>
-                        <div
-                          style={{
-                            height: 6,
-                            background: '#e8eef8',
-                            borderRadius: 999,
-                            overflow: 'hidden',
-                          }}
-                        >
+                        <div className="h-2 rounded-full bg-[#E8E6DC] overflow-hidden">
                           <div
+                            className="h-full rounded-full bg-gradient-to-r from-[#C96442] to-[#E07B39] transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] origin-left"
                             style={{
-                              transform: `scaleX(${progress.completionRate / 100})`,
-                              transformOrigin: 'left',
-                              width: '100%',
-                              height: '100%',
-                              background: 'linear-gradient(90deg, #1f5eff, #60a5fa)',
-                              borderRadius: 999,
-                              transition: 'transform 0.7s cubic-bezier(0.22, 1, 0.36, 1)',
+                              transform: `scaleX(${Math.min(1, Math.max(0, progress.completionRate / 100))})`,
                             }}
                           />
                         </div>
-                        <p style={{ fontSize: '0.8rem', color: '#6b7280', marginTop: '0.35rem' }}>
+                        <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mt-2 m-0">
                           {progress.completedLessons}/{progress.totalLessons} bài học hoàn thành
                         </p>
                       </div>
@@ -578,65 +641,144 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
                 </div>
               )}
 
-              <div className="course-tabs">
-                {currentTabs.map((tab) => (
-                  <button
-                    key={tab.id}
-                    className={`course-tab ${activeTab === tab.id ? 'active' : ''}`}
-                    onClick={() => handleTabChange(tab.id)}
-                  >
-                    <tab.icon size={16} />
-                    <span>{tab.label}</span>
-                  </button>
-                ))}
-              </div>
+              <div className="rounded-2xl border border-[#E8E6DC] bg-white overflow-hidden shadow-[0_2px_24px_rgba(20,20,19,0.06)]">
+                <div
+                  className="flex flex-wrap gap-1 p-2 bg-[#F5F4ED] border-b border-[#E8E6DC]"
+                  role="tablist"
+                  aria-label="Nội dung khóa học"
+                >
+                  {studentCourseTabs.map((tab) => {
+                    const active = activeTab === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        role="tab"
+                        aria-selected={active}
+                        className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl font-[Be_Vietnam_Pro] text-[12px] font-medium transition-all duration-150 ${
+                          active
+                            ? 'bg-white text-[#141413] shadow-sm ring-1 ring-black/[0.04]'
+                            : 'text-[#87867F] hover:text-[#5E5D59] hover:bg-white/60'
+                        } ${tab.locked && !active ? 'opacity-85' : ''}`}
+                        onClick={() => handleTabChange(tab.id)}
+                      >
+                        <tab.icon size={15} strokeWidth={2} className="shrink-0 opacity-90" />
+                        <span>{tab.label}</span>
+                        {tab.locked ? (
+                          <span
+                            className={`min-w-[1.25rem] h-5 px-1 inline-flex items-center justify-center rounded-full ${
+                              active ? 'bg-[#87867F]/25 text-[#141413]' : 'bg-[#E8E6DC] text-[#5E5D59]'
+                            }`}
+                            title="Cần đăng ký"
+                          >
+                            <Lock size={11} strokeWidth={2.5} aria-hidden />
+                          </span>
+                        ) : tab.badge !== undefined && tab.badge !== null && tab.badge !== '' ? (
+                          <span
+                            className={`min-h-5 min-w-[1.25rem] px-1.5 inline-flex items-center justify-center rounded-full text-[10px] font-bold leading-none ${
+                              active ? 'bg-[#C96442] text-white' : 'bg-[#E8E6DC] text-[#5E5D59]'
+                            }`}
+                          >
+                            {tab.badge}
+                          </span>
+                        ) : null}
+                      </button>
+                    );
+                  })}
+                </div>
 
-              {/* Tab Content */}
-              <div className="course-tab-content">
-                {activeTab === 'lessons' && (
-                  <StudentLessonsTab
-                    enrollmentId={enrollmentId || ''}
-                    courseId={courseId!}
-                    enrollmentStatus={enrollment?.status || 'INACTIVE'}
-                  />
-                )}
-                {activeTab === 'overview' && (
-                  <div className="overview-tab">
-                    <CourseLearningPanels
-                      whatYouWillLearn={course.whatYouWillLearn}
-                      requirements={course.requirements}
-                      targetAudience={course.targetAudience}
-                    />
-                    {course.description && (
-                      <div className="data-card" style={{ padding: '1.5rem', marginTop: '1.5rem' }}>
-                        <h3 style={{ margin: '0 0 1rem', fontSize: '1.2rem', fontWeight: 700 }}>
-                          Mô tả {UI_TEXT.COURSE.toLowerCase()}
-                        </h3>
-                        <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.7, color: '#475569' }}>
-                          {course.description}
+                <div
+                  className="p-5 md:p-7 bg-[#F5F4ED]/90 min-h-[200px] min-w-0"
+                  data-student-course-tab-panel
+                >
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={activeTab}
+                      role="tabpanel"
+                      className="min-w-0 w-full overflow-x-auto"
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      transition={{ duration: 0.18 }}
+                    >
+                      {activeTab === 'lessons' && (
+                        <StudentLessonsTab
+                          enrollmentId={enrollmentId || ''}
+                          courseId={courseId!}
+                          enrollmentStatus={enrollment?.status || 'INACTIVE'}
+                        />
+                      )}
+                      {activeTab === 'overview' && (
+                        <div className="overview-tab space-y-5">
+                          <CourseLearningPanels
+                            whatYouWillLearn={course.whatYouWillLearn}
+                            requirements={course.requirements}
+                            targetAudience={course.targetAudience}
+                          />
+                          {course.description ? (
+                            <div className="rounded-2xl border border-[#E8E6DC] bg-white p-5 md:p-6 shadow-sm">
+                              <h3 className="font-[Playfair_Display] text-[17px] font-medium text-[#141413] m-0 mb-3">
+                                Mô tả {UI_TEXT.COURSE.toLowerCase()}
+                              </h3>
+                              <div className="font-[Be_Vietnam_Pro] text-[14px] whitespace-pre-wrap leading-relaxed text-[#5E5D59]">
+                                {course.description}
+                              </div>
+                            </div>
+                          ) : null}
+                          <CourseIncludesList
+                            totalVideoHours={course.totalVideoHours}
+                            articlesCount={course.articlesCount}
+                            resourcesCount={course.resourcesCount}
+                          />
                         </div>
-                      </div>
-                    )}
-                    <div style={{ marginTop: '1.5rem' }}>
-                      <CourseIncludesList
-                        totalVideoHours={course.totalVideoHours}
-                        articlesCount={course.articlesCount}
-                        resourcesCount={course.resourcesCount}
-                      />
-                    </div>
-                  </div>
-                )}
-                {activeTab === 'assessments' && hasFullAccess && (
-                  <StudentAssessmentsTab courseId={courseId!} />
-                )}
-                {activeTab === 'progress' && hasFullAccess && enrollmentId && (
-                  <StudentProgressTab enrollmentId={enrollmentId} enrollment={enrollment!} />
-                )}
-                {activeTab === 'reviews' && <StudentReviewsTab courseId={courseId!} />}
+                      )}
+                      {activeTab === 'assessments' &&
+                        (hasFullAccess ? (
+                          <StudentAssessmentsTab courseId={courseId!} />
+                        ) : (
+                          <div className="rounded-2xl border border-[#E8E6DC] bg-white p-8 md:p-10 text-center max-w-lg mx-auto shadow-sm">
+                            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F5F4ED] text-[#87867F] mb-4">
+                              <Lock className="h-7 w-7" strokeWidth={2} />
+                            </div>
+                            <h3 className="font-[Playfair_Display] text-lg font-medium text-[#141413] mb-2">
+                              Bài kiểm tra đã khóa
+                            </h3>
+                            <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mb-6 leading-relaxed">
+                              Đăng ký khóa học để làm bài kiểm tra và nhận xét từ giảng viên.
+                            </p>
+                            <button type="button" className={secondaryOutlineBtn} onClick={handleEnroll}>
+                              Đăng ký để mở khóa
+                            </button>
+                          </div>
+                        ))}
+                      {activeTab === 'progress' &&
+                        (hasFullAccess && enrollmentId && enrollment ? (
+                          <StudentProgressTab enrollmentId={enrollmentId} enrollment={enrollment} />
+                        ) : (
+                          <div className="rounded-2xl border border-[#E8E6DC] bg-white p-8 md:p-10 text-center max-w-lg mx-auto shadow-sm">
+                            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F5F4ED] text-[#87867F] mb-4">
+                              <Lock className="h-7 w-7" strokeWidth={2} />
+                            </div>
+                            <h3 className="font-[Playfair_Display] text-lg font-medium text-[#141413] mb-2">
+                              Theo dõi tiến độ
+                            </h3>
+                            <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mb-6 leading-relaxed">
+                              Sau khi đăng ký, bạn xem được tiến độ từng bài và tỷ lệ hoàn thành khóa học.
+                            </p>
+                            <button type="button" className={secondaryOutlineBtn} onClick={handleEnroll}>
+                              Đăng ký để mở khóa
+                            </button>
+                          </div>
+                        ))}
+                      {activeTab === 'reviews' && <StudentReviewsTab courseId={courseId!} />}
+                    </motion.div>
+                  </AnimatePresence>
+                </div>
               </div>
             </motion.div>
           </AnimatePresence>
-        </section>
+          </section>
+        </div>
       </div>
     );
   }
@@ -646,6 +788,7 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
       <DashboardLayout
         role={dashboardRole}
         user={{ name: 'User', avatar: '', role: dashboardRole }}
+        contentClassName="dashboard-content--flush-bleed"
       >
         {mainContent}
       </DashboardLayout>

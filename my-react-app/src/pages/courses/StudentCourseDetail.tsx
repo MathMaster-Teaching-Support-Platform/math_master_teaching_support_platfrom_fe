@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
   ArrowLeft,
   BookOpen,
+  CheckCircle2,
   Facebook,
   FileText,
   Globe,
@@ -10,10 +11,10 @@ import {
   PlayCircle,
   Sparkles,
   Star,
-  TrendingUp,
   Users,
   Youtube,
 } from 'lucide-react';
+import { useEffect } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { CourseBreadcrumb } from '../../components/course/CourseBreadcrumb';
 import { CourseIncludesList } from '../../components/course/CourseIncludesList';
@@ -24,20 +25,33 @@ import { UI_TEXT } from '../../constants/uiText';
 import {
   useCourseDetail,
   useCourseProgress,
+  useCourseStudents,
   useInstructorCourses,
   useMyEnrollments,
   useRelatedCourses,
   useTeacherProfile,
 } from '../../hooks/useCourses';
+import { useMyAssessmentsByCourse } from '../../hooks/useStudentAssessment';
 import '../../styles/module-refactor.css';
 import './StudentCourses.css';
+import './tabs/CourseOverviewTab.css';
+import './tabs/course-detail-tabs.css';
+import CourseOverviewTab from './tabs/CourseOverviewTab.tsx';
+import CourseStudentsTab from './tabs/CourseStudentsTab.tsx';
 // Import tab components
 import StudentAssessmentsTab from './student-tabs/StudentAssessmentsTab';
 import StudentLessonsTab from './student-tabs/StudentLessonsTab';
 import StudentProgressTab from './student-tabs/StudentProgressTab';
 import StudentReviewsTab from './student-tabs/StudentReviewsTab';
 
-type TabType = 'lessons' | 'assessments' | 'progress' | 'reviews';
+type TabType = 'overview' | 'lessons' | 'assessments' | 'students' | 'reviews';
+
+const VALID_TABS = new Set<TabType>(['overview', 'lessons', 'assessments', 'students', 'reviews']);
+
+function normalizeStudentCourseTab(raw: string | null): TabType {
+  if (!raw || raw === 'progress') return 'overview';
+  return VALID_TABS.has(raw as TabType) ? (raw as TabType) : 'overview';
+}
 
 const coverGradients = [
   'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
@@ -62,18 +76,35 @@ const StudentCourseDetail: React.FC = () => {
   const { enrollmentId } = useParams<{ enrollmentId: string }>();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab = (searchParams.get('tab') as TabType) || 'lessons';
 
   const { data: enrollmentsData } = useMyEnrollments();
   const enrollments = enrollmentsData?.result ?? [];
   const enrollment = enrollments.find((e) => e.id === enrollmentId);
   const enrollmentIndex = enrollments.findIndex((e) => e.id === enrollmentId);
 
-  const { data: courseData } = useCourseDetail(enrollment?.courseId ?? '');
-  const { data: progressData } = useCourseProgress(enrollmentId!);
+  const courseIdForQueries = enrollment?.courseId ?? '';
+
+  const { data: courseData } = useCourseDetail(courseIdForQueries);
+  const { data: progressData } = useCourseProgress(enrollmentId ?? '');
+  const { data: assessmentsMeta } = useMyAssessmentsByCourse(
+    courseIdForQueries,
+    { page: 0, size: 1, sortBy: 'dueDate', sortDir: 'ASC' },
+    { enabled: !!courseIdForQueries }
+  );
+  const { data: studentsData } = useCourseStudents(courseIdForQueries);
 
   const course = courseData?.result;
   const progress = progressData?.result;
+
+  const activeTab = normalizeStudentCourseTab(searchParams.get('tab'));
+
+  useEffect(() => {
+    const raw = searchParams.get('tab');
+    if (!raw) return;
+    if (raw === 'progress' || !VALID_TABS.has(raw as TabType)) {
+      setSearchParams({ tab: 'overview' }, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const { data: teacherProfileData } = useTeacherProfile(course?.teacherId ?? '');
   const { data: relatedCoursesData, isLoading: loadingRelated } = useRelatedCourses(
@@ -90,6 +121,40 @@ const StudentCourseDetail: React.FC = () => {
   const handleTabChange = (tab: TabType) => {
     setSearchParams({ tab });
   };
+
+  const assessmentsTotal = assessmentsMeta?.result?.totalElements ?? 0;
+  const studentsTotal =
+    studentsData?.result?.totalElements ?? course?.studentsCount ?? 0;
+  const lessonsCountBadge = course?.lessonsCount ?? 0;
+  const reviewsCountBadge = course?.ratingCount ?? 0;
+
+  const tabsConfig = [
+    { id: 'overview' as const, label: 'Tổng quan', icon: BookOpen },
+    {
+      id: 'lessons' as const,
+      label: 'Bài học',
+      icon: FileText,
+      count: lessonsCountBadge,
+    },
+    {
+      id: 'assessments' as const,
+      label: UI_TEXT.QUIZ,
+      icon: CheckCircle2,
+      count: assessmentsTotal,
+    },
+    {
+      id: 'students' as const,
+      label: 'Học viên',
+      icon: Users,
+      count: studentsTotal,
+    },
+    {
+      id: 'reviews' as const,
+      label: 'Đánh giá',
+      icon: Star,
+      count: reviewsCountBadge,
+    },
+  ];
 
   if (!enrollment) {
     return (
@@ -119,13 +184,6 @@ const StudentCourseDetail: React.FC = () => {
     );
   }
 
-  const tabs = [
-    { id: 'lessons' as const, label: 'Bài học', icon: BookOpen },
-    { id: 'assessments' as const, label: UI_TEXT.QUIZ, icon: FileText },
-    { id: 'reviews' as const, label: 'Đánh giá', icon: Star },
-    { id: 'progress' as const, label: 'Tiến độ', icon: TrendingUp },
-  ];
-
   const coverIdx = enrollmentIndex >= 0 ? enrollmentIndex : 0;
 
   return (
@@ -134,9 +192,9 @@ const StudentCourseDetail: React.FC = () => {
       user={{ name: 'Học sinh', avatar: '', role: 'student' }}
       contentClassName="dashboard-content--flush-bleed"
     >
-      <div className="w-full min-w-0 px-4 py-8 sm:px-6 lg:px-8 pb-12">
+      <div className="w-full min-w-0 max-w-none px-0 py-8 pb-12">
         <div className="w-full min-w-0 max-w-none space-y-6">
-          <div className="rounded-xl bg-[#FAF9F5]/80 border border-[#E8E6DC]/80 px-4 py-3">
+          <div className="w-full border-b border-[#E8E6DC]/80 bg-[#FAF9F5]/80 px-4 py-3">
             <CourseBreadcrumb
               homePath="/student/courses"
               items={[{ label: enrollment.courseTitle ?? UI_TEXT.COURSE }]}
@@ -300,7 +358,7 @@ const StudentCourseDetail: React.FC = () => {
               role="tablist"
               aria-label="Nội dung khóa học"
             >
-              {tabs.map((tab) => {
+              {tabsConfig.map((tab) => {
                 const active = activeTab === tab.id;
                 return (
                   <button
@@ -317,6 +375,15 @@ const StudentCourseDetail: React.FC = () => {
                   >
                     <tab.icon size={15} strokeWidth={2} />
                     <span>{tab.label}</span>
+                    {tab.count !== undefined && (
+                      <span
+                        className={`min-w-[1.25rem] h-5 px-1.5 inline-flex items-center justify-center rounded-full text-[10px] font-bold ${
+                          active ? 'bg-[#C96442] text-white' : 'bg-[#E8E6DC] text-[#5E5D59]'
+                        }`}
+                      >
+                        {tab.count}
+                      </span>
+                    )}
                   </button>
                 );
               })}
@@ -327,12 +394,27 @@ const StudentCourseDetail: React.FC = () => {
                 <motion.div
                   key={activeTab}
                   role="tabpanel"
+                  data-student-course-tab-panel
                   className="min-w-0 w-full overflow-x-auto"
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -4 }}
                   transition={{ duration: 0.18 }}
                 >
+                  {activeTab === 'overview' && (
+                    <div className="space-y-5 min-w-0">
+                      {!course ? (
+                        <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] py-6 text-center rounded-xl border border-dashed border-[#E8E6DC] bg-white/60">
+                          Đang tải thông tin khóa học...
+                        </p>
+                      ) : (
+                        <>
+                          <StudentProgressTab enrollmentId={enrollmentId!} enrollment={enrollment} />
+                          <CourseOverviewTab course={course} />
+                        </>
+                      )}
+                    </div>
+                  )}
                   {activeTab === 'lessons' && (
                     <StudentLessonsTab
                       enrollmentId={enrollmentId!}
@@ -343,8 +425,8 @@ const StudentCourseDetail: React.FC = () => {
                   {activeTab === 'assessments' && (
                     <StudentAssessmentsTab courseId={enrollment.courseId} />
                   )}
-                  {activeTab === 'progress' && (
-                    <StudentProgressTab enrollmentId={enrollmentId!} enrollment={enrollment} />
+                  {activeTab === 'students' && (
+                    <CourseStudentsTab courseId={enrollment.courseId} />
                   )}
                   {activeTab === 'reviews' && <StudentReviewsTab courseId={enrollment.courseId} />}
                 </motion.div>

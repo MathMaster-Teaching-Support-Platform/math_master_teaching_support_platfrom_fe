@@ -1,8 +1,16 @@
 import { useMemo } from 'react';
-import { Award, BookOpen, Calendar, CheckCircle, Clock, TrendingUp } from 'lucide-react';
+import {
+  Award,
+  BookOpen,
+  Calendar,
+  CheckCircle,
+  Clock,
+  Sparkles,
+  TrendingUp,
+} from 'lucide-react';
 import { useCourseProgress, useCourseLessons, useCustomCourseSections } from '../../../hooks/useCourses';
 import type { EnrollmentResponse } from '../../../types';
-import '../../../styles/module-refactor.css';
+import './StudentProgressTab.css';
 
 interface StudentProgressTabProps {
   enrollmentId: string;
@@ -45,7 +53,9 @@ const StudentProgressTab: React.FC<StudentProgressTabProps> = ({ enrollmentId, e
       return a.id.localeCompare(b.id);
     });
 
-    return orderedGroups.flatMap((group) => [...group.lessons].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0)));
+    return orderedGroups.flatMap((group) =>
+      [...group.lessons].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
+    );
   }, [lessons, sections]);
 
   const stats = useMemo(() => {
@@ -57,8 +67,7 @@ const StudentProgressTab: React.FC<StudentProgressTabProps> = ({ enrollmentId, e
       .sort((a, b) => new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime())
       .slice(0, 5);
 
-    // Calculate estimated time remaining
-    const avgLessonDuration = 30; // minutes (estimate)
+    const avgLessonDuration = 30;
     const remainingLessons = progress.totalLessons - progress.completedLessons;
     const estimatedMinutes = remainingLessons * avgLessonDuration;
     const estimatedHours = Math.floor(estimatedMinutes / 60);
@@ -71,9 +80,11 @@ const StudentProgressTab: React.FC<StudentProgressTabProps> = ({ enrollmentId, e
       remainingLessons,
       recentlyCompleted,
       estimatedTime:
-        estimatedHours > 0
-          ? `${estimatedHours} giờ ${estimatedMins} phút`
-          : `${estimatedMins} phút`,
+        remainingLessons <= 0
+          ? '—'
+          : estimatedHours > 0
+            ? `${estimatedHours} giờ ${estimatedMins} phút`
+            : `${estimatedMins} phút`,
     };
   }, [progress]);
 
@@ -87,322 +98,150 @@ const StudentProgressTab: React.FC<StudentProgressTabProps> = ({ enrollmentId, e
     });
   };
 
-  const getNextLesson = () => {
+  const nextLesson = useMemo(() => {
     if (!progress) return null;
     const incompleteLessons = curriculumLessons.filter(
       (lesson) => !progress.lessons.find((l) => l.courseLessonId === lesson.id && l.isCompleted)
     );
-    return incompleteLessons[0];
-  };
+    return incompleteLessons[0] ?? null;
+  }, [progress, curriculumLessons]);
 
-  const nextLesson = getNextLesson();
+  const barPct = stats ? Math.min(100, Math.max(0, stats.completionRate)) : 0;
 
   return (
-    <div className="progress-tab">
-      {/* Loading */}
-      {isLoading && <div className="empty">Đang tải thông tin tiến độ...</div>}
+    <div className="spt-root">
+      {isLoading ? (
+        <div className="spt-empty">Đang tải thông tin tiến độ...</div>
+      ) : null}
 
-      {/* Content */}
-      {!isLoading && stats && (
+      {!isLoading && !stats ? (
+        <div className="spt-empty">Chưa có dữ liệu tiến độ cho khóa học này.</div>
+      ) : null}
+
+      {!isLoading && stats ? (
         <>
-          {/* Overall Progress Card */}
-          <div className="data-card" style={{ marginBottom: '1.5rem' }}>
-            <h3 style={{ margin: '0 0 1rem', fontSize: '1.1rem', fontWeight: 700 }}>
-              Tiến độ tổng quan
+          <section className="spt-card" aria-labelledby="spt-progress-heading">
+            <h3 id="spt-progress-heading" className="spt-card-title">
+              Tiến độ học tập
             </h3>
 
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: '1.5rem',
-              }}
-            >
-              <div
-                style={{
-                  position: 'relative',
-                  width: 180,
-                  height: 180,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                {/* Progress Circle */}
-                <svg width="180" height="180" style={{ transform: 'rotate(-90deg)' }}>
-                  <circle
-                    cx="90"
-                    cy="90"
-                    r="75"
-                    fill="none"
-                    stroke="#e8eef8"
-                    strokeWidth="12"
-                  />
-                  <circle
-                    cx="90"
-                    cy="90"
-                    r="75"
-                    fill="none"
-                    stroke="url(#progressGradient)"
-                    strokeWidth="12"
-                    strokeDasharray={`${(stats.completionRate / 100) * 471} 471`}
-                    strokeLinecap="round"
-                    style={{ transition: 'stroke-dasharray 1s ease' }}
-                  />
-                  <defs>
-                    <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="#1f5eff" />
-                      <stop offset="100%" stopColor="#60a5fa" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-
-                {/* Percentage Text */}
-                <div
-                  style={{
-                    position: 'absolute',
-                    textAlign: 'center',
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: '2.5rem',
-                      fontWeight: 800,
-                      color: '#1f5eff',
-                      lineHeight: 1,
-                    }}
-                  >
-                    {stats.completionRate.toFixed(0)}%
-                  </div>
-                  <div style={{ fontSize: '0.85rem', color: '#64748b', marginTop: 4 }}>
-                    Hoàn thành
-                  </div>
-                </div>
+            <div className="spt-progress-head">
+              <div className="spt-pct-wrap">
+                <span className="spt-pct">{stats.completionRate.toFixed(0)}%</span>
+                <span className="spt-pct-label">hoàn thành</span>
               </div>
+              <span className="spt-fraction">
+                {stats.completedLessons}/{stats.totalLessons} bài
+              </span>
             </div>
 
-            <div style={{ display: 'grid', gap: '1rem' }}>
-              <div className="info-row">
-                <span className="info-label">
-                  <CheckCircle size={16} />
+            <div
+              className="spt-bar-track"
+              role="progressbar"
+              aria-valuenow={Math.round(barPct)}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            >
+              <div className="spt-bar-fill" style={{ width: `${barPct}%` }} />
+            </div>
+
+            <div className="spt-rows">
+              <div className="spt-row">
+                <span className="spt-row-label">
+                  <CheckCircle size={15} strokeWidth={2} aria-hidden />
                   Đã hoàn thành
                 </span>
-                <span className="info-value">
+                <span className="spt-row-value">
                   {stats.completedLessons}/{stats.totalLessons} bài học
                 </span>
               </div>
-
-              <div className="info-row">
-                <span className="info-label">
-                  <BookOpen size={16} />
+              <div className="spt-row">
+                <span className="spt-row-label">
+                  <BookOpen size={15} strokeWidth={2} aria-hidden />
                   Còn lại
                 </span>
-                <span className="info-value">{stats.remainingLessons} bài học</span>
+                <span className="spt-row-value">{stats.remainingLessons} bài học</span>
               </div>
-
-              <div className="info-row">
-                <span className="info-label">
-                  <Clock size={16} />
+              <div className="spt-row">
+                <span className="spt-row-label">
+                  <Clock size={15} strokeWidth={2} aria-hidden />
                   Thời gian ước tính
                 </span>
-                <span className="info-value">{stats.estimatedTime}</span>
+                <span className="spt-row-value">{stats.estimatedTime}</span>
               </div>
-
-              <div className="info-row">
-                <span className="info-label">
-                  <Calendar size={16} />
+              <div className="spt-row">
+                <span className="spt-row-label">
+                  <Calendar size={15} strokeWidth={2} aria-hidden />
                   Ngày đăng ký
                 </span>
-                <span className="info-value">{formatDate(enrollment.enrolledAt)}</span>
+                <span className="spt-row-value">{formatDate(enrollment.enrolledAt)}</span>
               </div>
             </div>
-          </div>
+          </section>
 
-          {/* Stats Grid */}
-          <div className="stats-grid" style={{ marginBottom: '1.5rem' }}>
-            <div className="stat-card stat-blue">
-              <div className="stat-icon-wrap">
-                <TrendingUp size={20} />
-              </div>
-              <div>
-                <h3>{stats.completionRate.toFixed(1)}%</h3>
-                <p>Tiến độ</p>
-              </div>
-            </div>
-            <div className="stat-card stat-emerald">
-              <div className="stat-icon-wrap">
-                <CheckCircle size={20} />
-              </div>
-              <div>
-                <h3>{stats.completedLessons}</h3>
-                <p>Đã hoàn thành</p>
-              </div>
-            </div>
-            <div className="stat-card stat-amber">
-              <div className="stat-icon-wrap">
-                <BookOpen size={20} />
-              </div>
-              <div>
-                <h3>{stats.remainingLessons}</h3>
-                <p>Còn lại</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Next Lesson Recommendation */}
-          {nextLesson && (
-            <div
-              className="data-card"
-              style={{
-                marginBottom: '1.5rem',
-                background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
-                border: '2px solid #3b82f6',
-              }}
-            >
-              <div className="row" style={{ gap: 8, marginBottom: 8 }}>
-                <TrendingUp size={18} style={{ color: '#1e40af' }} />
-                <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#1e40af' }}>
+          {nextLesson ? (
+            <section className="spt-next" aria-labelledby="spt-next-heading">
+              <div className="spt-next-head">
+                <TrendingUp size={16} strokeWidth={2} aria-hidden />
+                <h4 id="spt-next-heading" className="spt-next-title">
                   Bài học tiếp theo
                 </h4>
               </div>
-              <p style={{ margin: '0 0 8px', fontSize: '1.05rem', fontWeight: 600 }}>
+              <p className="spt-next-lesson">
                 {nextLesson.videoTitle ?? nextLesson.lessonTitle ?? 'Bài học'}
               </p>
-              {nextLesson.durationSeconds && (
-                <p className="muted" style={{ fontSize: '0.85rem', margin: 0 }}>
-                  ⏱ Thời lượng: {Math.round(nextLesson.durationSeconds / 60)} phút
+              {nextLesson.durationSeconds ? (
+                <p className="spt-next-meta">
+                  <Clock size={13} strokeWidth={2} aria-hidden />
+                  Khoảng {Math.round(nextLesson.durationSeconds / 60)} phút
                 </p>
-              )}
-            </div>
-          )}
+              ) : null}
+            </section>
+          ) : null}
 
-          {/* Recently Completed */}
-          {stats.recentlyCompleted.length > 0 && (
-            <div className="data-card">
-              <h4 style={{ margin: '0 0 1rem', fontSize: '1rem', fontWeight: 700 }}>
-                <Award size={16} style={{ marginRight: 6 }} />
+          {stats.recentlyCompleted.length > 0 ? (
+            <section className="spt-card">
+              <h4 className="spt-recent-title">
+                <Award size={17} strokeWidth={2} aria-hidden />
                 Hoàn thành gần đây
               </h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <ul className="spt-recent-list">
                 {stats.recentlyCompleted.map((lesson) => {
                   const lessonDetail = lessons.find((l) => l.id === lesson.courseLessonId);
+                  const title =
+                    lessonDetail?.videoTitle ??
+                    lessonDetail?.lessonTitle ??
+                    lesson.videoTitle ??
+                    'Bài học';
                   return (
-                    <div
-                      key={lesson.courseLessonId}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.75rem',
-                        padding: '0.75rem',
-                        background: '#f0fdf4',
-                        borderRadius: 8,
-                        border: '1px solid #dcfce7',
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: 32,
-                          height: 32,
-                          borderRadius: 8,
-                          background: '#dcfce7',
-                          color: '#15803d',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          flexShrink: 0,
-                        }}
-                      >
-                        <CheckCircle size={16} strokeWidth={2.5} />
+                    <li key={lesson.courseLessonId} className="spt-recent-item">
+                      <div className="spt-recent-icon" aria-hidden>
+                        <CheckCircle size={14} strokeWidth={2.5} />
                       </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div
-                          style={{
-                            fontSize: '0.9rem',
-                            fontWeight: 600,
-                            color: '#0f172a',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                          }}
-                        >
-                          {lessonDetail?.videoTitle ??
-                            lessonDetail?.lessonTitle ??
-                            lesson.videoTitle ??
-                            'Bài học'}
-                        </div>
-                        {lesson.completedAt && (
-                          <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: 2 }}>
-                            {formatDate(lesson.completedAt)}
-                          </div>
-                        )}
+                      <div className="spt-recent-text">
+                        <div className="spt-recent-name">{title}</div>
+                        {lesson.completedAt ? (
+                          <div className="spt-recent-date">{formatDate(lesson.completedAt)}</div>
+                        ) : null}
                       </div>
-                    </div>
+                    </li>
                   );
                 })}
+              </ul>
+            </section>
+          ) : null}
+
+          {stats.totalLessons > 0 && stats.completedLessons >= stats.totalLessons ? (
+            <section className="spt-complete">
+              <div className="spt-complete-icon" aria-hidden>
+                <Sparkles size={22} strokeWidth={2} />
               </div>
-            </div>
-          )}
-
-          {/* Completion Message */}
-          {stats.completionRate === 100 && (
-            <div
-              className="data-card"
-              style={{
-                marginTop: '1.5rem',
-                background: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)',
-                border: '2px solid #10b981',
-                textAlign: 'center',
-              }}
-            >
-              <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>🎉</div>
-              <h3 style={{ margin: '0 0 0.5rem', fontSize: '1.3rem', fontWeight: 800, color: '#065f46' }}>
-                Chúc mừng!
-              </h3>
-              <p style={{ margin: 0, color: '#047857', fontSize: '0.95rem' }}>
-                Bạn đã hoàn thành tất cả bài học trong khóa học này!
-              </p>
-            </div>
-          )}
+              <h3>Chúc mừng!</h3>
+              <p>Bạn đã hoàn thành tất cả bài học trong khóa học này.</p>
+            </section>
+          ) : null}
         </>
-      )}
-
-      <style>{`
-        .info-row {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 0.75rem 0;
-          border-bottom: 1px solid #f1f5f9;
-        }
-
-        .info-row:last-child {
-          border-bottom: none;
-        }
-
-        .info-label {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          font-size: 0.9rem;
-          color: #64748b;
-          font-weight: 500;
-        }
-
-        .info-value {
-          font-size: 0.95rem;
-          color: #0f172a;
-          font-weight: 600;
-        }
-
-        @media (max-width: 640px) {
-          .info-row {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 0.35rem;
-          }
-        }
-      `}</style>
+      ) : null}
     </div>
   );
 };
