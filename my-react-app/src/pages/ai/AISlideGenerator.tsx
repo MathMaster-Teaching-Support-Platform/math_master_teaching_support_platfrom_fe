@@ -1,5 +1,25 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import 'katex/dist/katex.min.css';
+import {
+  AlertCircle,
+  BookOpen,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  Eye,
+  FileStack,
+  Globe,
+  Layers,
+  Lock,
+  Pencil,
+  RefreshCw,
+  Search,
+  Sparkles,
+  Trash2,
+  Upload,
+  X,
+} from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BlockMath, InlineMath } from 'react-katex';
 import { useNavigate } from 'react-router-dom';
@@ -25,8 +45,15 @@ import type {
 import './AISlideGenerator.css';
 
 const LoadingSpinner: React.FC<{ label: string }> = ({ label }) => (
-  <span className="ai-slide-loading-inline" role="status" aria-live="polite">
-    <span className="ai-slide-spinner" aria-hidden="true" />
+  <span
+    className="inline-flex items-center gap-2 font-[Be_Vietnam_Pro] text-[13px] text-[#87867F]"
+    role="status"
+    aria-live="polite"
+  >
+    <span
+      className="w-3.5 h-3.5 rounded-full border-2 border-[#E8E6DC] border-t-[#7C6FAB] animate-spin flex-shrink-0"
+      aria-hidden="true"
+    />
     {label}
   </span>
 );
@@ -124,8 +151,16 @@ const OUTPUT_FORMAT_LABELS: Record<LessonSlideOutputFormat, string> = {
   HYBRID: 'Hybrid',
 };
 
+const EQUATION_MODE_LABELS: Record<LessonSlideEquationMode, string> = {
+  OMML: 'OMML (Office Equation)',
+  IMAGE: 'Image (render cong thuc thanh anh)',
+  PLAIN_TEXT: 'Plain Text',
+};
+
 const getOutputFormatLabel = (format: LessonSlideOutputFormat): string =>
   OUTPUT_FORMAT_LABELS[format];
+
+const getEquationModeLabel = (mode: LessonSlideEquationMode): string => EQUATION_MODE_LABELS[mode];
 
 const formatFileSize = (sizeInBytes: number): string => {
   if (!Number.isFinite(sizeInBytes) || sizeInBytes < 0) return '--';
@@ -148,28 +183,6 @@ const getGeneratedDisplayName = (file: LessonSlideGeneratedFile): string => {
   if (preferredName) return preferredName;
   const fallbackName = (file.fileName || '').trim();
   return fallbackName.replace(/\.[^/.]+$/, '') || 'generated-slide';
-};
-
-const getSchoolGradeLabel = (grade: SchoolGrade): string => {
-  const rawLevel = `${grade.gradeLevel ?? ''}`.trim();
-  const rawName = `${grade.name ?? ''}`.trim();
-
-  const levelLabel =
-    rawLevel.length === 0 ? '' : /^(lop|lớp)\s+/i.test(rawLevel) ? rawLevel : `Lớp ${rawLevel}`;
-
-  if (!levelLabel) return rawName || 'Chưa đặt tên lớp';
-  if (!rawName) return levelLabel;
-
-  const normalize = (value: string) =>
-    value
-      .trim()
-      .toLowerCase()
-      .replace(/^(lop|lớp)\s+/i, '');
-  if (normalize(levelLabel) === normalize(rawName)) {
-    return levelLabel;
-  }
-
-  return `${levelLabel} - ${rawName}`;
 };
 
 const parseMathSegments = (text: string): MathSegment[] => {
@@ -513,15 +526,13 @@ const AISlideGenerator: React.FC = () => {
 
   const canConfigureAi = Boolean(lessonId);
   const canChooseTemplate = canConfigureAi;
-  const loadingAnyCatalog =
-    loadingGrades || loadingSubjects || loadingChapters || loadingLessons || loadingTemplates;
   const visualWizardStep = Math.min(activeWizardStep, 5);
   const wizardSteps = [
     'Chọn bài dạy',
     'Chọn template',
     'Tạo nội dung',
     'Xác nhận nội dung',
-    'Tải Slide',
+    'Tải file PPTX',
   ];
 
   const clearGeneratedData = () => {
@@ -1148,7 +1159,7 @@ const AISlideGenerator: React.FC = () => {
 
     const trimmedPrompt = additionalPrompt.trim();
     if (!trimmedPrompt) {
-      setError('Mô tả là bắt buộc. Vui lòng nhập mô tả để AI tạo nội dung.');
+      setError('Additional Prompt là bắt buộc. Vui lòng nhập mô tả để AI tạo nội dung.');
       return;
     }
 
@@ -1178,19 +1189,19 @@ const AISlideGenerator: React.FC = () => {
       setPreparedPptxBlob(null);
       setPreparedPptxFilename('lesson-slides.pptx');
       notifySubscriptionUpdated();
-      setSuccess('Đã tạo nội dung slide bằng AI. Vui lòng kiểm tra và xác nhận nội dung.');
+      setSuccess('Đã tạo nội dung slide bằng AI. Vui lòng kiểm tra và confirm nội dung.');
       setActiveWizardStep(4);
       await loadGeneratedFiles(response.result.lessonId);
     } catch (err) {
       const apiError = err as Error & { code?: number };
       if (apiError.code === 1164) {
-        setError('Bạn chưa có gói active. Vui lòng mua gói trước khi dùng AI Slide.');
-        if (window.confirm('Bạn chưa có gói active. Mở trang mua gói ngay?')) {
+        setError('Ban chua co goi active. Vui long mua goi truoc khi dung AI Slide.');
+        if (window.confirm('Ban chua co goi active. Mo trang mua goi ngay?')) {
           navigate('/pricing');
         }
       } else if (apiError.code === 1165) {
-        setError('Token không đủ (Slide cần 3 token/lần). Vui lòng mua gói hoặc nạp thêm ví.');
-        if (window.confirm('Token không đủ. Mở trang ví để nạp tiền?')) {
+        setError('Token khong du (Slide can 3 token/lan). Vui long mua goi hoac nap them vi.');
+        if (window.confirm('Token khong du. Mo trang vi de nap tien?')) {
           navigate('/teacher/wallet');
         }
       } else {
@@ -1370,10 +1381,14 @@ const AISlideGenerator: React.FC = () => {
         }
       }
 
-      setSuccess(outputFormatForPptx === 'LATEX' ? 'Slide đã sẵn sàng!' : `Slide đã sẵn sàng!.`);
+      setSuccess(
+        outputFormatForPptx === 'LATEX'
+          ? 'PPTX đã sẵn sàng! Đã xuất theo chế độ LATEX.'
+          : `PPTX đã sẵn sàng! Chế độ công thức: ${getEquationModeLabel(equationMode)}.`
+      );
       setActiveWizardStep(5);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Không thể tạo Slide');
+      setError(err instanceof Error ? err.message : 'Không thể tạo PPTX');
     } finally {
       setGeneratingPptx(false);
     }
@@ -1393,7 +1408,7 @@ const AISlideGenerator: React.FC = () => {
     link.click();
     link.remove();
     window.URL.revokeObjectURL(blobUrl);
-    setSuccess('Đã tải Slide về máy thành công.');
+    setSuccess('Đã tải file PPTX về máy thành công.');
     void loadGeneratedFiles(lessonId || undefined);
   };
 
@@ -1402,479 +1417,344 @@ const AISlideGenerator: React.FC = () => {
       role="teacher"
       user={{ name: mockTeacher.name, avatar: mockTeacher.avatar!, role: 'teacher' }}
       notificationCount={5}
+      contentClassName="dashboard-content--flush-bleed"
     >
-      <div className="ai-slide-page">
-        <div className="ai-slide-header">
-          <h1 className="ai-slide-title">Tạo Slide</h1>
-          <div className="ai-slide-main-tabs" role="tablist" aria-label="Che do AI Slide">
+      <div className="px-6 py-8 lg:px-8">
+        <div className="space-y-6">
+          {/* â”€â”€ Page header â”€â”€ */}
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#E8E6DC] flex items-center justify-center text-[#5E5D59]">
+                <Layers className="w-5 h-5" />
+              </div>
+              <div>
+                <h1 className="font-[Playfair_Display] text-[22px] font-medium text-[#141413]">
+                  Slide
+                </h1>
+                <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-0.5">
+                  {generatedFiles.length > 0
+                    ? `${generatedFiles.length} file đã tạo`
+                    : 'Tạo bài giảng với AI hỗ trợ'}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* â”€â”€ Main tabs â”€â”€ */}
+          <div
+            className="flex items-center gap-1 p-1 bg-[#F0EEE6] rounded-xl w-fit"
+            role="tablist"
+            aria-label="Chế độ AI Slide"
+          >
             <button
               type="button"
               role="tab"
               aria-selected={activeMainTab === 'GENERATE'}
-              className={`ai-slide-main-tab ${activeMainTab === 'GENERATE' ? 'active' : ''}`}
+              className={
+                activeMainTab === 'GENERATE'
+                  ? 'bg-[#141413] text-[#FAF9F5] rounded-lg px-3.5 py-1.5 font-[Be_Vietnam_Pro] text-[13px] font-semibold'
+                  : 'bg-transparent text-[#5E5D59] rounded-lg px-3.5 py-1.5 font-[Be_Vietnam_Pro] text-[13px] font-medium hover:bg-[#E8E6DC] hover:text-[#141413] transition-colors duration-150'
+              }
               onClick={() => setActiveMainTab('GENERATE')}
             >
-              Tạo Slide Mới
+              Tạo slide
             </button>
             <button
               type="button"
               role="tab"
               aria-selected={activeMainTab === 'MANAGE'}
-              className={`ai-slide-main-tab ${activeMainTab === 'MANAGE' ? 'active' : ''}`}
+              className={
+                activeMainTab === 'MANAGE'
+                  ? 'bg-[#141413] text-[#FAF9F5] rounded-lg px-3.5 py-1.5 font-[Be_Vietnam_Pro] text-[13px] font-semibold'
+                  : 'bg-transparent text-[#5E5D59] rounded-lg px-3.5 py-1.5 font-[Be_Vietnam_Pro] text-[13px] font-medium hover:bg-[#E8E6DC] hover:text-[#141413] transition-colors duration-150'
+              }
               onClick={() => setActiveMainTab('MANAGE')}
             >
-              Quản lý Slide
+              Thư viện slide
             </button>
           </div>
 
+          {/* â”€â”€ Stepper â”€â”€ */}
           {activeMainTab === 'GENERATE' && (
-            <ol className="ai-slide-stepper" aria-label="Tiến trình tạo slide">
+            <ol className="flex items-center gap-0" aria-label="Tiến trình tạo slide">
               {wizardSteps.map((stepLabel, index) => {
                 const stepNumber = index + 1;
                 const isDone = visualWizardStep > stepNumber;
                 const isActive = visualWizardStep === stepNumber;
 
                 return (
-                  <li
-                    key={stepLabel}
-                    className={`ai-slide-step-item ${isDone ? 'done' : ''} ${isActive ? 'active' : ''}`}
-                    aria-current={isActive ? 'step' : undefined}
-                  >
-                    <span className="ai-slide-step-dot" aria-hidden="true">
-                      {stepNumber}
-                    </span>
-                    <span className="ai-slide-step-text">{stepLabel}</span>
-                  </li>
+                  <React.Fragment key={stepLabel}>
+                    <li
+                      className="flex items-center gap-2"
+                      aria-current={isActive ? 'step' : undefined}
+                    >
+                      <div
+                        className={`w-6 h-6 rounded-full flex items-center justify-center font-[Be_Vietnam_Pro] text-[11px] font-bold flex-shrink-0 ${
+                          isDone
+                            ? 'bg-[#5E5D59] text-[#FAF9F5]'
+                            : isActive
+                              ? 'bg-[#7C6FAB] text-[#FAF9F5]'
+                              : 'bg-[#E8E6DC] text-[#87867F]'
+                        }`}
+                      >
+                        {isDone ? <CheckCircle2 className="w-3.5 h-3.5" /> : stepNumber}
+                      </div>
+                      <span
+                        className={`font-[Be_Vietnam_Pro] text-[12px] hidden sm:block ${
+                          isActive
+                            ? 'text-[#141413] font-semibold'
+                            : isDone
+                              ? 'text-[#5E5D59]'
+                              : 'text-[#87867F]'
+                        }`}
+                      >
+                        {stepLabel}
+                      </span>
+                    </li>
+                    {index < wizardSteps.length - 1 && (
+                      <div
+                        className="flex-1 h-px bg-[#E8E6DC] mx-2 min-w-[12px]"
+                        aria-hidden="true"
+                      />
+                    )}
+                  </React.Fragment>
                 );
               })}
             </ol>
           )}
-        </div>
 
-        {activeMainTab === 'GENERATE' && activeWizardStep === 1 && (
-          <section className="ai-slide-card">
-            <h2>Bước 1: Chọn dữ liệu bài dạy</h2>
-
-            <div className="ai-slide-step-list">
-              <label>
-                <span>Chọn Lớp</span>
-                <select
-                  value={schoolGradeId}
-                  onChange={(e) => void handleSchoolGradeChange(e.target.value)}
-                  disabled={loadingGrades}
-                >
-                  <option value="">-- Chọn lớp --</option>
-                  {schoolGrades.map((grade) => (
-                    <option key={grade.id} value={grade.id}>
-                      {getSchoolGradeLabel(grade)}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              {!schoolGradeId && (
-                <p className="ai-slide-info">Vui lòng chọn lớp để mở bước tiếp theo.</p>
-              )}
-
-              {showSubjectStep && (
-                <label>
-                  <span>Chọn Môn học (Subject)</span>
-                  <select
-                    value={subjectId}
-                    onChange={(e) => void handleSubjectChange(e.target.value)}
-                    disabled={loadingSubjects}
-                  >
-                    <option value="">-- Chọn môn học --</option>
-                    {subjects.map((subject) => (
-                      <option key={subject.id} value={subject.id}>
-                        {subject.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              )}
-
-              {showSubjectStep && !loadingSubjects && subjects.length === 0 && (
-                <p className="ai-slide-info">Lớp này chưa có môn học.</p>
-              )}
-
-              {showChapterStep && (
-                <label>
-                  <span>Chọn Chương (Chapter)</span>
-                  <select
-                    value={chapterId}
-                    onChange={(e) => void handleChapterChange(e.target.value)}
-                    disabled={loadingChapters}
-                  >
-                    <option value="">-- Chọn chương --</option>
-                    {chapters.map((chapter) => (
-                      <option key={chapter.id} value={chapter.id}>
-                        {chapter.orderIndex}. {chapter.title}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              )}
-
-              {showChapterStep && !loadingChapters && chapters.length === 0 && (
-                <p className="ai-slide-info">Môn học này chưa có chương.</p>
-              )}
-
-              {showLessonStep && (
-                <label>
-                  <span>Chọn Bài học (Lesson)</span>
-                  <select
-                    value={lessonId}
-                    onChange={(e) => {
-                      const nextLessonId = e.target.value;
-                      setLessonId(nextLessonId);
-                      clearGeneratedData();
-                      setSuccess('');
-                      setError('');
-
-                      if (nextLessonId) {
-                        void loadGeneratedFiles(nextLessonId);
-                      } else {
-                        setSelectedGeneratedLesson(null);
-                        void loadGeneratedFiles();
-                      }
-                    }}
-                    disabled={loadingLessons}
-                  >
-                    <option value="">-- Chọn bài học --</option>
-                    {lessons.map((lesson) => (
-                      <option key={lesson.id} value={lesson.id}>
-                        {lesson.orderIndex}. {lesson.title}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              )}
-
-              {showLessonStep && !loadingLessons && lessons.length === 0 && (
-                <p className="ai-slide-info">Chương này chưa có bài học.</p>
-              )}
-
-              <div
-                className="ai-slide-actions"
-                style={{ marginTop: '1.5rem', justifyContent: 'flex-end' }}
-              >
-                <button
-                  className="btn btn-primary"
-                  disabled={!canConfigureAi}
-                  onClick={() => setActiveWizardStep(2)}
-                >
-                  Tiếp tục: Chọn template →
-                </button>
-              </div>
+          {/* â”€â”€ Global status messages â”€â”€ */}
+          {error && (
+            <div className="flex items-start gap-3 px-4 py-3 bg-red-50 border border-red-100 rounded-xl">
+              <AlertCircle className="w-4 h-4 text-[#B53333] mt-0.5 flex-shrink-0" />
+              <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#B53333]">{error}</p>
             </div>
-          </section>
-        )}
+          )}
+          {success && (
+            <div className="flex items-start gap-3 px-4 py-3 bg-[#ECFDF5] border border-green-100 rounded-xl">
+              <CheckCircle2 className="w-4 h-4 text-[#2EAD7A] mt-0.5 flex-shrink-0" />
+              <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#2EAD7A]">{success}</p>
+            </div>
+          )}
 
-        {activeMainTab === 'MANAGE' && (
-          <section className="ai-slide-card">
-            <div className="ai-slide-management-card">
-              <div className="ai-slide-management-header">
-                <h3>Thư Viện Slide</h3>
-              </div>
-
-              <div className="ai-slide-management-toolbar">
-                <label className="ai-slide-management-search">
-                  <span>Tìm Kiếm</span>
-                  <input
-                    type="text"
-                    value={generatedSearch}
-                    placeholder="Ví dụ: Xác suất hoặc Hình học ..."
-                    onChange={(e) => setGeneratedSearch(e.target.value)}
-                  />
-                </label>
-
-                <label className="ai-slide-management-sort">
-                  <span>Sắp xếp</span>
-                  <select
-                    value={generatedSort}
-                    onChange={(e) =>
-                      setGeneratedSort(
-                        e.target.value as
-                          | 'NEWEST'
-                          | 'OLDEST'
-                          | 'NAME_ASC'
-                          | 'NAME_DESC'
-                          | 'SIZE_DESC'
-                          | 'SIZE_ASC'
-                          | 'PUBLIC_FIRST'
-                      )
-                    }
-                  >
-                    <option value="NEWEST">Mới nhất</option>
-                    <option value="OLDEST">Cũ nhất</option>
-                    <option value="NAME_ASC">Tên A-Z</option>
-                    <option value="NAME_DESC">Tên Z-A</option>
-                    <option value="SIZE_DESC">Size lớn trước</option>
-                    <option value="SIZE_ASC">Size nhỏ trước</option>
-                    <option value="PUBLIC_FIRST">Public trước</option>
-                  </select>
-                </label>
-
-                <label className="ai-slide-management-sort">
-                  <span>Số lượng mỗi trang</span>
-                  <select
-                    value={generatedPageSize}
-                    onChange={(e) => setGeneratedPageSize(Number(e.target.value))}
-                  >
-                    <option value={12}>12 / trang</option>
-                    <option value={24}>24 / trang</option>
-                    <option value={48}>48 / trang</option>
-                  </select>
-                </label>
-              </div>
-
-              <div className="ai-slide-status-tabs" role="group" aria-label="Loc file generated">
-                <button
-                  type="button"
-                  className={`ai-slide-status-tab ${generatedVisibilityFilter === 'ALL' ? 'active' : ''}`}
-                  onClick={() => setGeneratedVisibilityFilter('ALL')}
-                  disabled={loadingGeneratedFiles}
-                >
-                  Tất cả
-                </button>
-                <button
-                  type="button"
-                  className={`ai-slide-status-tab ${generatedVisibilityFilter === 'PUBLIC' ? 'active' : ''}`}
-                  onClick={() => setGeneratedVisibilityFilter('PUBLIC')}
-                  disabled={loadingGeneratedFiles}
-                >
-                  Public
-                </button>
-                <button
-                  type="button"
-                  className={`ai-slide-status-tab ${generatedVisibilityFilter === 'PRIVATE' ? 'active' : ''}`}
-                  onClick={() => setGeneratedVisibilityFilter('PRIVATE')}
-                  disabled={loadingGeneratedFiles}
-                >
-                  Private
-                </button>
-              </div>
-              <div className="ai-slide-management-list-panel">
-                {loadingGeneratedFiles && (
-                  <p className="ai-slide-info">Đang tải danh sách file generated...</p>
-                )}
-
-                {!loadingGeneratedFiles && managedGeneratedFiles.length === 0 && (
-                  <p className="ai-slide-info">
-                    Khong co file nao phu hop bo loc. Thu doi tu khoa tim kiem hoac tao file moi.
+          {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+              STEP 1 â€” Chọn bài dạy
+          â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+          {activeMainTab === 'GENERATE' && activeWizardStep === 1 && (
+            <div className="bg-[#FAF9F5] rounded-2xl border border-[#F0EEE6] shadow-[rgba(0,0,0,0.05)_0px_4px_24px] overflow-hidden">
+              <div className="px-6 py-4 border-b border-[#F0EEE6] flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-[#E8E6DC] flex items-center justify-center text-[#5E5D59]">
+                  <BookOpen className="w-4 h-4" />
+                </div>
+                <div>
+                  <h2 className="font-[Playfair_Display] text-[20px] font-medium text-[#141413]">
+                    Chọn bài dạy
+                  </h2>
+                  <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">
+                    Chọn lớp, môn, chương và bài học
                   </p>
-                )}
-
-                {!loadingGeneratedFiles && managedGeneratedFiles.length > 0 && (
-                  <div className="ai-slide-card-grid">
-                    {pagedManagedGeneratedFiles.map((file) => (
-                      <div
-                        key={file.id}
-                        className={`ai-slide-file-card ${selectedGeneratedFileId === file.id ? 'active' : ''}`}
-                        onClick={() => {
-                          setSelectedGeneratedFileId(file.id);
-                          setSuccess('');
-                          setError('');
-                        }}
-                      >
-                        <div className="ai-slide-file-card-thumb">
-                          {generatedThumbnailUrls[file.id] ? (
-                            <img
-                              src={generatedThumbnailUrls[file.id]}
-                              alt={getGeneratedDisplayName(file)}
-                            />
-                          ) : (
-                            <div className="ai-slide-file-card-thumb-placeholder">
-                              {getGeneratedDisplayName(file).slice(0, 1).toUpperCase()}
-                            </div>
-                          )}
-                          <span
-                            className={`ai-slide-file-card-badge ${file.isPublic ? 'published' : 'draft'}`}
-                          >
-                            {file.isPublic ? 'PUBLISHED' : 'DRAFT'}
-                          </span>
-                        </div>
-
-                        <div className="ai-slide-file-card-body">
-                          <p
-                            className="ai-slide-file-card-title"
-                            title={getGeneratedDisplayName(file)}
-                          >
-                            {getGeneratedDisplayName(file)}
-                          </p>
-                          <ul className="ai-slide-file-card-meta">
-                            <li>
-                              <span>FILE</span>
-                              <span title={file.fileName}>
-                                {file.fileName || 'generated-slide.pptx'}
-                              </span>
-                            </li>
-                            <li>
-                              <span>BÀI DẠY</span>
-                              <span>{lessonTitleById[file.lessonId] || '...'}</span>
-                            </li>
-                            <li>
-                              <span>NGÀY TẠO</span>
-                              <span>{formatDateTime(file.createdAt)}</span>
-                            </li>
-                            <li>
-                              <span>DUNG LƯỢNG</span>
-                              <span>{formatFileSize(file.fileSizeBytes)}</span>
-                            </li>
-                          </ul>
-                        </div>
-
-                        <div className="ai-slide-file-card-actions">
-                          <button
-                            type="button"
-                            className="ai-slide-file-card-btn primary"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleOpenGeneratedPreview(file.id);
-                            }}
-                          >
-                            <svg
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                            >
-                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                              <circle cx="12" cy="12" r="3" />
-                            </svg>
-                            Xem
-                          </button>
-                          <button
-                            type="button"
-                            className="ai-slide-file-card-btn icon"
-                            title="Tải xuống"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              void handleDownloadGeneratedFile(file.id);
-                            }}
-                            disabled={downloadingGeneratedFileId === file.id}
-                          >
-                            <svg
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                            >
-                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                              <polyline points="7 10 12 15 17 10" />
-                              <line x1="12" y1="15" x2="12" y2="3" />
-                            </svg>
-                          </button>
-                          <button
-                            type="button"
-                            className="ai-slide-file-card-btn icon"
-                            title="Chỉnh sửa"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openMetadataModal(file);
-                            }}
-                          >
-                            <svg
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                            >
-                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                            </svg>
-                          </button>
-                          <button
-                            type="button"
-                            className="ai-slide-file-card-btn icon danger"
-                            title="Xóa"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleRequestDeleteGeneratedFile(file.id);
-                            }}
-                            disabled={deletingGeneratedFileId === file.id}
-                          >
-                            <svg
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                            >
-                              <polyline points="3 6 5 6 21 6" />
-                              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                              <path d="M10 11v6" />
-                              <path d="M14 11v6" />
-                              <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {!loadingGeneratedFiles && managedGeneratedFiles.length > 0 && (
-                  <div
-                    className="ai-slide-pagination"
-                    role="navigation"
-                    aria-label="Phan trang file"
+                </div>
+              </div>
+              <div className="p-6 space-y-4">
+                {/* Grade */}
+                <div>
+                  <label className="font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#141413] block mb-1.5">
+                    Lớp
+                  </label>
+                  <select
+                    value={schoolGradeId}
+                    onChange={(e) => void handleSchoolGradeChange(e.target.value)}
+                    disabled={loadingGrades}
+                    className="w-full border border-[#E8E6DC] rounded-xl px-3 py-2.5 font-[Be_Vietnam_Pro] text-[13px] text-[#141413] outline-none focus:border-[#3898EC] focus:ring-2 focus:ring-[#3898EC]/20 bg-white transition-all duration-150 disabled:bg-[#F5F4ED] disabled:text-[#87867F]"
                   >
-                    <button
-                      type="button"
-                      className="ai-slide-pagination-btn"
-                      onClick={() => setGeneratedPage((prev) => Math.max(1, prev - 1))}
-                      disabled={generatedPage <= 1}
+                    <option value="">-- Chọn lớp --</option>
+                    {schoolGrades.map((grade) => (
+                      <option key={grade.id} value={grade.id}>
+                        {grade.name}
+                      </option>
+                    ))}
+                  </select>
+                  {loadingGrades && (
+                    <div className="mt-1.5">
+                      <LoadingSpinner label="Đang tải danh sách lớp..." />
+                    </div>
+                  )}
+                </div>
+
+                {/* Subject */}
+                {showSubjectStep && (
+                  <div>
+                    <label className="font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#141413] block mb-1.5">
+                      Môn học
+                    </label>
+                    <select
+                      value={subjectId}
+                      onChange={(e) => void handleSubjectChange(e.target.value)}
+                      disabled={loadingSubjects}
+                      className="w-full border border-[#E8E6DC] rounded-xl px-3 py-2.5 font-[Be_Vietnam_Pro] text-[13px] text-[#141413] outline-none focus:border-[#3898EC] focus:ring-2 focus:ring-[#3898EC]/20 bg-white transition-all duration-150 disabled:bg-[#F5F4ED] disabled:text-[#87867F]"
                     >
-                      ← Trước
-                    </button>
-                    <span className="ai-slide-pagination-meta">
-                      Trang {generatedPage}/{totalManagedGeneratedPages} •{' '}
-                      {managedGeneratedFiles.length} file • {generatedPageSize} / trang
-                    </span>
-                    <button
-                      type="button"
-                      className="ai-slide-pagination-btn"
-                      onClick={() =>
-                        setGeneratedPage((prev) => Math.min(totalManagedGeneratedPages, prev + 1))
-                      }
-                      disabled={generatedPage >= totalManagedGeneratedPages}
-                    >
-                      Sau →
-                    </button>
+                      <option value="">-- Chọn môn học --</option>
+                      {subjects.map((subject) => (
+                        <option key={subject.id} value={subject.id}>
+                          {subject.name}
+                        </option>
+                      ))}
+                    </select>
+                    {loadingSubjects && (
+                      <div className="mt-1.5">
+                        <LoadingSpinner label="Đang tải môn học..." />
+                      </div>
+                    )}
+                    {!loadingSubjects && subjects.length === 0 && (
+                      <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mt-1.5">
+                        Lớp này chưa có môn học.
+                      </p>
+                    )}
                   </div>
                 )}
+
+                {/* Chapter */}
+                {showChapterStep && (
+                  <div>
+                    <label className="font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#141413] block mb-1.5">
+                      Chương
+                    </label>
+                    <select
+                      value={chapterId}
+                      onChange={(e) => void handleChapterChange(e.target.value)}
+                      disabled={loadingChapters}
+                      className="w-full border border-[#E8E6DC] rounded-xl px-3 py-2.5 font-[Be_Vietnam_Pro] text-[13px] text-[#141413] outline-none focus:border-[#3898EC] focus:ring-2 focus:ring-[#3898EC]/20 bg-white transition-all duration-150 disabled:bg-[#F5F4ED] disabled:text-[#87867F]"
+                    >
+                      <option value="">-- Chọn chương --</option>
+                      {chapters.map((chapter) => (
+                        <option key={chapter.id} value={chapter.id}>
+                          {chapter.orderIndex}. {chapter.title}
+                        </option>
+                      ))}
+                    </select>
+                    {loadingChapters && (
+                      <div className="mt-1.5">
+                        <LoadingSpinner label="Đang tải chương..." />
+                      </div>
+                    )}
+                    {!loadingChapters && chapters.length === 0 && (
+                      <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mt-1.5">
+                        Môn học này chưa có chương.
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Lesson */}
+                {showLessonStep && (
+                  <div>
+                    <label className="font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#141413] block mb-1.5">
+                      Bài học
+                    </label>
+                    <select
+                      value={lessonId}
+                      onChange={(e) => {
+                        const nextLessonId = e.target.value;
+                        setLessonId(nextLessonId);
+                        clearGeneratedData();
+                        setSuccess('');
+                        setError('');
+                        if (nextLessonId) {
+                          void loadGeneratedFiles(nextLessonId);
+                        } else {
+                          setSelectedGeneratedLesson(null);
+                          void loadGeneratedFiles();
+                        }
+                      }}
+                      disabled={loadingLessons}
+                      className="w-full border border-[#E8E6DC] rounded-xl px-3 py-2.5 font-[Be_Vietnam_Pro] text-[13px] text-[#141413] outline-none focus:border-[#3898EC] focus:ring-2 focus:ring-[#3898EC]/20 bg-white transition-all duration-150 disabled:bg-[#F5F4ED] disabled:text-[#87867F]"
+                    >
+                      <option value="">-- Chọn bài học --</option>
+                      {lessons.map((lesson) => (
+                        <option key={lesson.id} value={lesson.id}>
+                          {lesson.orderIndex}. {lesson.title}
+                        </option>
+                      ))}
+                    </select>
+                    {loadingLessons && (
+                      <div className="mt-1.5">
+                        <LoadingSpinner label="Đang tải bài học..." />
+                      </div>
+                    )}
+                    {!loadingLessons && lessons.length === 0 && (
+                      <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mt-1.5">
+                        Chương này chưa có bài học.
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Selected summary */}
+                {selectedLesson && (
+                  <div className="flex items-center gap-2 px-3 py-2 bg-[#F0EEE6] rounded-xl">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#7C6FAB] flex-shrink-0" />
+                    <span className="font-[Be_Vietnam_Pro] text-[13px] text-[#5E5D59]">
+                      Bài học đã chọn:{' '}
+                      <strong className="text-[#141413]">{selectedLesson.title}</strong>
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex justify-end pt-2">
+                  <button
+                    disabled={!canConfigureAi}
+                    onClick={() => setActiveWizardStep(2)}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#7C6FAB] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:brightness-95 active:scale-[0.98] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    Tiếp tục: Chọn template <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+              STEP 2 â€” Chọn template
+          â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+          {activeMainTab === 'GENERATE' && activeWizardStep === 2 && (
+            <div className="bg-[#FAF9F5] rounded-2xl border border-[#F0EEE6] shadow-[rgba(0,0,0,0.05)_0px_4px_24px] overflow-hidden">
+              <div className="px-6 py-4 border-b border-[#F0EEE6] flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-[#E8E6DC] flex items-center justify-center text-[#5E5D59]">
+                    <Layers className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h2 className="font-[Playfair_Display] text-[20px] font-medium text-[#141413]">
+                      Chọn template
+                    </h2>
+                    <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">
+                      Chọn bố cục slide cho bài giảng
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveWizardStep(1)}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#E8E6DC] text-[#4D4C48] font-[Be_Vietnam_Pro] text-[13px] font-medium hover:bg-[#D1CFC5] active:scale-[0.98] transition-all duration-150"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" /> Quay lại
+                </button>
               </div>
 
-              {error && <p className="ai-slide-error">{error}</p>}
-              {success && <p className="ai-slide-success">{success}</p>}
-            </div>
-          </section>
-        )}
-
-        {activeMainTab === 'GENERATE' && activeWizardStep === 2 && (
-          <section className="ai-slide-card">
-            <h2>Bước 2: Chọn template slide</h2>
-            <div
-              className="ai-slide-actions"
-              style={{ marginBottom: '1rem', justifyContent: 'flex-start' }}
-            >
-              <button className="btn btn-outline" onClick={() => setActiveWizardStep(1)}>
-                ← Quay lại Bài dạy
-              </button>
-            </div>
-
-            <fieldset className="ai-slide-fieldset" disabled={!canChooseTemplate}>
-              <div className="ai-slide-grid ai-slide-config-grid">
-                <label>
-                  <span>Template slide</span>
+              <fieldset className="p-6 space-y-5" disabled={!canChooseTemplate}>
+                {/* Template select */}
+                <div>
+                  <label className="font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#141413] block mb-1.5">
+                    Template slide
+                  </label>
                   <select
                     value={templateId}
                     onChange={(e) => setTemplateId(e.target.value)}
                     disabled={loadingTemplates || templates.length === 0}
+                    className="w-full border border-[#E8E6DC] rounded-xl px-3 py-2.5 font-[Be_Vietnam_Pro] text-[13px] text-[#141413] outline-none focus:border-[#3898EC] focus:ring-2 focus:ring-[#3898EC]/20 bg-white transition-all duration-150 disabled:bg-[#F5F4ED] disabled:text-[#87867F]"
                   >
                     <option value="">
-                      {loadingTemplates ? 'Dang tai template...' : '-- Chon template --'}
+                      {loadingTemplates ? 'Đang tải template...' : '-- Chọn template --'}
                     </option>
                     {templates.map((template) => (
                       <option key={template.id} value={template.id}>
@@ -1882,542 +1762,969 @@ const AISlideGenerator: React.FC = () => {
                       </option>
                     ))}
                   </select>
-                </label>
-              </div>
+                  {loadingTemplates && (
+                    <div className="mt-1.5">
+                      <LoadingSpinner label="Đang tải template..." />
+                    </div>
+                  )}
+                  {!loadingTemplates && templates.length === 0 && (
+                    <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mt-1.5">
+                      Chưa có template nào.
+                    </p>
+                  )}
+                </div>
 
-              {!loadingTemplates && templates.length === 0 && (
-                <p className="ai-slide-info">Chua co template nao dang active.</p>
-              )}
+                {/* Template gallery */}
+                {!loadingTemplates && templates.length > 0 && (
+                  <div
+                    className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"
+                    role="listbox"
+                    aria-label="Template previews"
+                  >
+                    {templates.map((template) => {
+                      const previewUrl = templatePreviewBlobUrls[template.id];
+                      const selected = template.id === templateId;
 
-              {!loadingTemplates && templates.length > 0 && (
-                <div
-                  className="ai-slide-template-gallery"
-                  role="listbox"
-                  aria-label="Template previews"
-                >
-                  {templates.map((template) => {
-                    const previewUrl = templatePreviewBlobUrls[template.id];
-                    const selected = template.id === templateId;
-
-                    return (
-                      <button
-                        key={template.id}
-                        type="button"
-                        className={`ai-slide-template-card ${selected ? 'active' : ''}`}
-                        onClick={() => setTemplateId(template.id)}
-                        aria-selected={selected}
-                      >
-                        <div className="ai-slide-template-thumb">
-                          {previewUrl ? (
-                            <img
-                              src={previewUrl}
-                              alt={`Template preview: ${template.name}`}
-                              loading="lazy"
-                            />
-                          ) : (
-                            <div className="ai-slide-template-placeholder">
-                              {loadingTemplatePreviews
-                                ? 'Đang tải preview...'
-                                : 'Preview unavailable'}
+                      return (
+                        <button
+                          key={template.id}
+                          type="button"
+                          className={`group rounded-xl border-2 overflow-hidden text-left transition-all duration-200 ${
+                            selected
+                              ? 'border-[#7C6FAB] shadow-[0px_0px_0px_1px_#7C6FAB]'
+                              : 'border-[#E8E6DC] hover:border-[#D1CFC5] hover:shadow-[rgba(0,0,0,0.05)_0px_4px_16px]'
+                          }`}
+                          onClick={() => setTemplateId(template.id)}
+                          aria-selected={selected}
+                        >
+                          <div className="h-[100px] bg-[#E8E6DC] overflow-hidden">
+                            {previewUrl ? (
+                              <img
+                                src={previewUrl}
+                                alt={`Template: ${template.name}`}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                loading="lazy"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                {loadingTemplatePreviews ? (
+                                  <LoadingSpinner label="" />
+                                ) : (
+                                  <Layers className="w-6 h-6 text-[#87867F]" />
+                                )}
+                              </div>
+                            )}
+                          </div>
+                          <div className="px-3 py-2 bg-white">
+                            <p className="font-[Be_Vietnam_Pro] text-[12px] font-semibold text-[#141413] truncate">
+                              {template.name}
+                            </p>
+                            {template.description && (
+                              <p className="font-[Be_Vietnam_Pro] text-[11px] text-[#87867F] truncate mt-0.5">
+                                {template.description}
+                              </p>
+                            )}
+                          </div>
+                          {selected && (
+                            <div className="flex items-center gap-1 px-3 py-1.5 bg-[#7C6FAB]/10">
+                              <CheckCircle2 className="w-3 h-3 text-[#7C6FAB]" />
+                              <span className="font-[Be_Vietnam_Pro] text-[11px] font-semibold text-[#7C6FAB]">
+                                Đã chọn
+                              </span>
                             </div>
                           )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {selectedLesson && selectedTemplate && (
+                  <div className="flex items-center gap-2 px-3 py-2 bg-[#F0EEE6] rounded-xl">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#7C6FAB] flex-shrink-0" />
+                    <span className="font-[Be_Vietnam_Pro] text-[13px] text-[#5E5D59]">
+                      <strong className="text-[#141413]">{selectedLesson.title}</strong>{' '}
+                      &nbsp;·&nbsp;{' '}
+                      <strong className="text-[#141413]">{selectedTemplate.name}</strong>
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => setActiveWizardStep(3)}
+                    disabled={!templateId}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#7C6FAB] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:brightness-95 active:scale-[0.98] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    Tiếp tục: Tạo nội dung <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </fieldset>
+            </div>
+          )}
+
+          {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+              STEP 3 â€” Tạo nội dung AI
+          â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+          {activeMainTab === 'GENERATE' && activeWizardStep === 3 && (
+            <div className="bg-[#FAF9F5] rounded-2xl border border-[#F0EEE6] shadow-[rgba(0,0,0,0.05)_0px_4px_24px] overflow-hidden">
+              <div className="px-6 py-4 border-b border-[#F0EEE6] flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-[#E8E6DC] flex items-center justify-center text-[#5E5D59]">
+                    <Sparkles className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h2 className="font-[Playfair_Display] text-[20px] font-medium text-[#141413]">
+                      Tạo nội dung
+                    </h2>
+                    <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">
+                      Cấu hình AI để tạo nội dung slide
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveWizardStep(2)}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#E8E6DC] text-[#4D4C48] font-[Be_Vietnam_Pro] text-[13px] font-medium hover:bg-[#D1CFC5] active:scale-[0.98] transition-all duration-150"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" /> Quay lại
+                </button>
+              </div>
+
+              <fieldset className="p-6 space-y-4" disabled={!canConfigureAi}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Slide count */}
+                  <div>
+                    <label className="font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#141413] block mb-1.5">
+                      Số lượng slide <span className="text-[#87867F] font-normal">(5–15)</span>
+                    </label>
+                    <input
+                      type="number"
+                      min={5}
+                      max={15}
+                      value={slideCount}
+                      onChange={(e) => {
+                        const nextValue = Number(e.target.value || 5);
+                        const clamped = Math.max(5, Math.min(15, nextValue));
+                        setSlideCount(clamped);
+                      }}
+                      className="w-full border border-[#E8E6DC] rounded-xl px-3 py-2.5 font-[Be_Vietnam_Pro] text-[13px] text-[#141413] outline-none focus:border-[#3898EC] focus:ring-2 focus:ring-[#3898EC]/20 bg-white transition-all duration-150"
+                    />
+                  </div>
+
+                  {/* Output format */}
+                  <div>
+                    <label className="font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#141413] block mb-1.5">
+                      Định dạng đầu ra
+                    </label>
+                    <select
+                      value={outputFormat}
+                      onChange={(e) => setOutputFormat(e.target.value as LessonSlideOutputFormat)}
+                      className="w-full border border-[#E8E6DC] rounded-xl px-3 py-2.5 font-[Be_Vietnam_Pro] text-[13px] text-[#141413] outline-none focus:border-[#3898EC] focus:ring-2 focus:ring-[#3898EC]/20 bg-white transition-all duration-150"
+                    >
+                      <option value="PLAIN_TEXT">Text</option>
+                      <option value="LATEX">Latex</option>
+                      <option value="HYBRID">Hybrid</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Slide name */}
+                <div>
+                  <label className="font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#141413] block mb-1.5">
+                    Tên slide
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="VD: Cấp Số Cộng - Lớp 11"
+                    value={newSlideName}
+                    onChange={(e) => setNewSlideName(e.target.value)}
+                    className="w-full border border-[#E8E6DC] rounded-xl px-3 py-2.5 font-[Be_Vietnam_Pro] text-[13px] text-[#141413] placeholder:text-[#87867F] outline-none focus:border-[#3898EC] focus:ring-2 focus:ring-[#3898EC]/20 bg-white transition-all duration-150"
+                  />
+                </div>
+
+                {/* Thumbnail upload */}
+                <div>
+                  <p className="font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#141413] mb-1.5">
+                    Ảnh thumbnail
+                  </p>
+                  <label className="block cursor-pointer">
+                    <div
+                      className={`border-2 border-dashed rounded-xl overflow-hidden transition-colors ${newSlideThumbnailPreview ? 'border-[#E8E6DC]' : 'border-[#E8E6DC] hover:border-[#7C6FAB]/50'}`}
+                    >
+                      {newSlideThumbnailPreview ? (
+                        <img
+                          src={newSlideThumbnailPreview}
+                          alt="Thumbnail preview"
+                          className="w-full h-[120px] object-cover"
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center gap-2 py-8 bg-[#F5F4ED]">
+                          <Upload className="w-5 h-5 text-[#87867F]" />
+                          <span className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F]">
+                            Chọn ảnh thumbnail
+                          </span>
+                          <span className="font-[Be_Vietnam_Pro] text-[11px] text-[#B0AEA5]">
+                            PNG, JPG, WEBP
+                          </span>
                         </div>
-                        <div className="ai-slide-template-meta">
-                          <strong>{template.name}</strong>
-                          <span>{template.description || template.originalFileName}</span>
-                        </div>
+                      )}
+                    </div>
+                    <input
+                      type="file"
+                      accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0] || null;
+                        setNewSlideThumbnailFile(file);
+                        if (newSlideThumbnailPreview)
+                          window.URL.revokeObjectURL(newSlideThumbnailPreview);
+                        setNewSlideThumbnailPreview(file ? window.URL.createObjectURL(file) : null);
+                      }}
+                    />
+                  </label>
+                  {newSlideThumbnailFile && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNewSlideThumbnailFile(null);
+                        if (newSlideThumbnailPreview)
+                          window.URL.revokeObjectURL(newSlideThumbnailPreview);
+                        setNewSlideThumbnailPreview(null);
+                      }}
+                      className="mt-1.5 flex items-center gap-1 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] hover:text-[#B53333] transition-colors"
+                    >
+                      <X className="w-3 h-3" /> Xóa ảnh
+                    </button>
+                  )}
+                </div>
+
+                {/* Prompt */}
+                <div>
+                  <label className="font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#141413] block mb-1.5">
+                    Mô tả yêu cầu AI <span className="text-[#B53333]">*</span>
+                  </label>
+                  <textarea
+                    rows={3}
+                    placeholder="VD: Tập trung vào các ví dụ thực tế và bài tập..."
+                    value={additionalPrompt}
+                    onChange={(e) => setAdditionalPrompt(e.target.value)}
+                    required
+                    className="w-full border border-[#E8E6DC] rounded-xl px-3 py-2.5 font-[Be_Vietnam_Pro] text-[13px] text-[#141413] placeholder:text-[#87867F] outline-none focus:border-[#3898EC] focus:ring-2 focus:ring-[#3898EC]/20 bg-white transition-all duration-150 resize-none"
+                  />
+                  <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mt-1">Bắt buộc.</p>
+                </div>
+
+                {selectedLesson && selectedTemplate && (
+                  <div className="flex items-center gap-2 px-3 py-2 bg-[#F0EEE6] rounded-xl">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#7C6FAB] flex-shrink-0" />
+                    <span className="font-[Be_Vietnam_Pro] text-[13px] text-[#5E5D59]">
+                      <strong className="text-[#141413]">{selectedLesson.title}</strong>{' '}
+                      &nbsp;·&nbsp;{' '}
+                      <strong className="text-[#141413]">{selectedTemplate.name}</strong>
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => void handleGenerateContent()}
+                    disabled={generatingContent || !templateId}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#7C6FAB] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:brightness-95 active:scale-[0.98] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {generatingContent ? (
+                      <LoadingSpinner label="Đang tạo nội dung..." />
+                    ) : (
+                      <>
+                        <Sparkles className="w-3.5 h-3.5" /> Tạo nội dung AI
+                      </>
+                    )}
+                  </button>
+                </div>
+              </fieldset>
+            </div>
+          )}
+
+          {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+              STEP 4 — Confirm & chỉnh sửa
+          â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+          {activeMainTab === 'GENERATE' && activeWizardStep === 4 && generated && (
+            <div className="bg-[#FAF9F5] rounded-2xl border border-[#F0EEE6] shadow-[rgba(0,0,0,0.05)_0px_4px_24px] overflow-hidden">
+              <div className="px-6 py-4 border-b border-[#F0EEE6] flex items-center justify-between flex-wrap gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-[#E8E6DC] flex items-center justify-center text-[#5E5D59]">
+                    <CheckCircle2 className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h2 className="font-[Playfair_Display] text-[20px] font-medium text-[#141413]">
+                      Kiểm tra nội dung
+                    </h2>
+                    <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">
+                      {generated.lessonTitle} &nbsp;·&nbsp; {generated.slideCount} slide
+                      &nbsp;·&nbsp; {getOutputFormatLabel(resolvedOutputFormat)}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveWizardStep(3)}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#E8E6DC] text-[#4D4C48] font-[Be_Vietnam_Pro] text-[13px] font-medium hover:bg-[#D1CFC5] active:scale-[0.98] transition-all duration-150"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" /> Quay lại
+                </button>
+              </div>
+
+              <div className="p-6 space-y-5">
+                {currentPreviewSlide && (
+                  <>
+                    {/* Slide navigation */}
+                    <div className="flex items-center justify-between gap-3">
+                      <button
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#E8E6DC] text-[#4D4C48] font-[Be_Vietnam_Pro] text-[13px] font-medium hover:bg-[#D1CFC5] active:scale-[0.98] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+                        onClick={() => setActivePreviewIndex((prev) => Math.max(0, prev - 1))}
+                        disabled={activePreviewIndex === 0}
+                      >
+                        <ChevronLeft className="w-3.5 h-3.5" /> Trước
                       </button>
-                    );
-                  })}
+                      <span className="font-[Be_Vietnam_Pro] text-[13px] text-[#5E5D59]">
+                        Slide <strong className="text-[#141413]">{activePreviewIndex + 1}</strong> /{' '}
+                        {editableSlides.length}
+                      </span>
+                      <button
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#E8E6DC] text-[#4D4C48] font-[Be_Vietnam_Pro] text-[13px] font-medium hover:bg-[#D1CFC5] active:scale-[0.98] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+                        onClick={() =>
+                          setActivePreviewIndex((prev) =>
+                            Math.min(editableSlides.length - 1, prev + 1)
+                          )
+                        }
+                        disabled={activePreviewIndex === editableSlides.length - 1}
+                      >
+                        Sau <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    {/* Preview canvas */}
+                    <article className="relative bg-white border border-[#E8E6DC] rounded-2xl p-6 min-h-[180px] shadow-[rgba(0,0,0,0.03)_0px_2px_12px]">
+                      <div
+                        className="font-[Playfair_Display] text-[20px] font-medium text-[#141413] leading-[1.3] mb-3"
+                        role="heading"
+                        aria-level={3}
+                      >
+                        {renderSlideText(
+                          currentPreviewSlide.heading || 'Chưa có tiêu đề',
+                          resolvedOutputFormat,
+                          `heading-${currentPreviewSlide.slideNumber}`
+                        )}
+                      </div>
+                      <div className="font-[Be_Vietnam_Pro] text-[14px] text-[#5E5D59] leading-[1.6] whitespace-pre-wrap">
+                        {renderSlideText(
+                          currentPreviewSlide.content || 'Chưa có nội dung',
+                          resolvedOutputFormat,
+                          `content-${currentPreviewSlide.slideNumber}`
+                        )}
+                      </div>
+                      {renderingPreviewSlideNumber === currentPreviewSlide.slideNumber && (
+                        <div className="absolute bottom-3 right-3">
+                          <LoadingSpinner label="Đang render..." />
+                        </div>
+                      )}
+                      <div className="absolute top-3 right-3">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#F0EEE6] font-[Be_Vietnam_Pro] text-[10px] font-semibold text-[#87867F] uppercase tracking-[0.5px]">
+                          {currentPreviewSlide.slideType}
+                        </span>
+                      </div>
+                    </article>
+
+                    {/* Edit panel */}
+                    <div className="bg-white border border-[#E8E6DC] rounded-2xl p-5 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-[Be_Vietnam_Pro] text-[13px] font-semibold text-[#141413]">
+                          Chỉnh sửa slide {currentPreviewSlide.slideNumber}
+                        </h3>
+                        <span className="font-[Be_Vietnam_Pro] text-[11px] text-[#87867F] uppercase tracking-[0.5px]">
+                          {currentPreviewSlide.slideType}
+                        </span>
+                      </div>
+                      <div>
+                        <label className="font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#141413] block mb-1.5">
+                          Tiêu đề
+                        </label>
+                        <input
+                          type="text"
+                          value={currentPreviewSlide.heading}
+                          onChange={(e) =>
+                            handleSlideChange(activePreviewIndex, 'heading', e.target.value)
+                          }
+                          className="w-full border border-[#E8E6DC] rounded-xl px-3 py-2.5 font-[Be_Vietnam_Pro] text-[13px] text-[#141413] outline-none focus:border-[#3898EC] focus:ring-2 focus:ring-[#3898EC]/20 bg-white transition-all duration-150"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#141413] block mb-1.5">
+                          Nội dung
+                        </label>
+                        <textarea
+                          rows={6}
+                          value={currentPreviewSlide.content}
+                          onChange={(e) =>
+                            handleSlideChange(activePreviewIndex, 'content', e.target.value)
+                          }
+                          className="w-full border border-[#E8E6DC] rounded-xl px-3 py-2.5 font-[Be_Vietnam_Pro] text-[13px] text-[#141413] outline-none focus:border-[#3898EC] focus:ring-2 focus:ring-[#3898EC]/20 bg-white transition-all duration-150 resize-none"
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => void handlePreparePptx()}
+                    disabled={generatingPptx || !editableSlides.length}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#7C6FAB] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:brightness-95 active:scale-[0.98] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {generatingPptx ? (
+                      <LoadingSpinner label="Đang tạo PPTX..." />
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Xác nhận & tạo PPTX
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+              STEP 5 — Tải PPTX
+          â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+          {activeMainTab === 'GENERATE' && activeWizardStep === 5 && (
+            <div className="bg-[#FAF9F5] rounded-2xl border border-[#F0EEE6] shadow-[rgba(0,0,0,0.05)_0px_4px_24px] overflow-hidden">
+              <div className="px-6 py-4 border-b border-[#F0EEE6] flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-[#E8E6DC] flex items-center justify-center text-[#5E5D59]">
+                    <Download className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h2 className="font-[Playfair_Display] text-[20px] font-medium text-[#141413]">
+                      Tải file PPTX
+                    </h2>
+                    <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">
+                      File đã sẵn sàng để tải về
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveWizardStep(4)}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#E8E6DC] text-[#4D4C48] font-[Be_Vietnam_Pro] text-[13px] font-medium hover:bg-[#D1CFC5] active:scale-[0.98] transition-all duration-150"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" /> Quay lại
+                </button>
+              </div>
+
+              <div className="p-6">
+                <div className="flex items-center gap-4 p-5 bg-[#F0EEE6] rounded-xl mb-5">
+                  <div className="w-12 h-12 rounded-xl bg-[#E8E6DC] flex items-center justify-center flex-shrink-0">
+                    <FileStack className="w-5 h-5 text-[#5E5D59]" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-[Be_Vietnam_Pro] text-[14px] font-semibold text-[#141413] truncate">
+                      {preparedPptxFilename}
+                    </p>
+                    <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mt-0.5">
+                      Đã sẵn sàng tải về
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleDownloadPreparedPptx}
+                  disabled={!preparedPptxBlob}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#7C6FAB] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:brightness-95 active:scale-[0.98] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <Download className="w-3.5 h-3.5" /> Tải PPTX về máy
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+              MANAGE TAB — Thư viện slide
+          â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+          {activeMainTab === 'MANAGE' && (
+            <div className="space-y-4">
+              {/* Toolbar */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                {/* Search */}
+                <div className="flex-1 flex items-center gap-2 bg-[#FAF9F5] border border-[#E8E6DC] rounded-xl px-4 py-2.5 focus-within:border-[#3898EC] focus-within:shadow-[0_0_0_3px_rgba(56,152,236,0.12)] transition-all duration-150 min-w-0">
+                  <Search className="w-4 h-4 text-[#87867F] flex-shrink-0" />
+                  <input
+                    type="text"
+                    value={generatedSearch}
+                    placeholder="Tìm kiếm slide..."
+                    onChange={(e) => setGeneratedSearch(e.target.value)}
+                    className="flex-1 font-[Be_Vietnam_Pro] text-[14px] text-[#141413] placeholder:text-[#87867F] bg-transparent outline-none min-w-0"
+                  />
+                </div>
+
+                {/* Sort */}
+                <select
+                  value={generatedSort}
+                  onChange={(e) => setGeneratedSort(e.target.value as typeof generatedSort)}
+                  className="border border-[#E8E6DC] rounded-xl px-3 py-2.5 font-[Be_Vietnam_Pro] text-[13px] text-[#141413] outline-none focus:border-[#3898EC] focus:ring-2 focus:ring-[#3898EC]/20 bg-white transition-all duration-150"
+                >
+                  <option value="NEWEST">Mới nhất</option>
+                  <option value="OLDEST">Cũ nhất</option>
+                  <option value="NAME_ASC">Tên A-Z</option>
+                  <option value="NAME_DESC">Tên Z-A</option>
+                  <option value="SIZE_DESC">Dung lượng lớn</option>
+                  <option value="SIZE_ASC">Dung lượng nhỏ</option>
+                  <option value="PUBLIC_FIRST">Công khai trước</option>
+                </select>
+
+                {/* Page size */}
+                <select
+                  value={generatedPageSize}
+                  onChange={(e) => setGeneratedPageSize(Number(e.target.value))}
+                  className="border border-[#E8E6DC] rounded-xl px-3 py-2.5 font-[Be_Vietnam_Pro] text-[13px] text-[#141413] outline-none focus:border-[#3898EC] focus:ring-2 focus:ring-[#3898EC]/20 bg-white transition-all duration-150"
+                >
+                  <option value={12}>12 / trang</option>
+                  <option value={24}>24 / trang</option>
+                  <option value={48}>48 / trang</option>
+                </select>
+              </div>
+
+              {/* Visibility filter tabs */}
+              <div
+                className="flex items-center gap-1 p-1 bg-[#F0EEE6] rounded-xl w-fit"
+                role="group"
+                aria-label="Lọc file"
+              >
+                {[
+                  { key: 'ALL' as const, label: 'Tất cả' },
+                  { key: 'PUBLIC' as const, label: 'Công khai' },
+                  { key: 'PRIVATE' as const, label: 'Chỉ mình tôi' },
+                ].map(({ key, label }) => (
+                  <button
+                    key={key}
+                    type="button"
+                    disabled={loadingGeneratedFiles}
+                    onClick={() => setGeneratedVisibilityFilter(key)}
+                    className={
+                      generatedVisibilityFilter === key
+                        ? 'bg-[#141413] text-[#FAF9F5] rounded-lg px-3.5 py-1.5 font-[Be_Vietnam_Pro] text-[13px] font-semibold'
+                        : 'bg-transparent text-[#5E5D59] rounded-lg px-3.5 py-1.5 font-[Be_Vietnam_Pro] text-[13px] font-medium hover:bg-[#E8E6DC] hover:text-[#141413] transition-colors duration-150 disabled:opacity-50'
+                    }
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Loading skeleton */}
+              {loadingGeneratedFiles && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {[1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      className="bg-[#FAF9F5] rounded-2xl border border-[#F0EEE6] h-52 animate-pulse"
+                    />
+                  ))}
                 </div>
               )}
 
-              {selectedTemplate && (
-                <p className="ai-slide-info">
-                  Template da chon: {selectedTemplate.name} ({selectedTemplate.originalFileName})
-                </p>
+              {/* Empty state */}
+              {!loadingGeneratedFiles && managedGeneratedFiles.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-16 gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-[#E8E6DC] flex items-center justify-center">
+                    <FileStack className="w-5 h-5 text-[#87867F]" />
+                  </div>
+                  <p className="font-[Be_Vietnam_Pro] text-[14px] text-[#87867F]">
+                    Không có file nào phù hợp
+                  </p>
+                  <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#B0AEA5]">
+                    Thử đổi từ khóa tìm kiếm hoặc tạo file mới
+                  </p>
+                </div>
               )}
 
-              <div className="ai-slide-actions">
-                <button
-                  className="btn btn-primary"
-                  onClick={() => setActiveWizardStep(3)}
-                  disabled={!templateId}
-                >
-                  Tiếp tục: Tạo nội dung →
-                </button>
-              </div>
-            </fieldset>
+              {/* File grid */}
+              {!loadingGeneratedFiles && managedGeneratedFiles.length > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {pagedManagedGeneratedFiles.map((file) => (
+                    <div
+                      key={file.id}
+                      className={`bg-[#FAF9F5] rounded-2xl border overflow-hidden group cursor-pointer transition-all duration-200 ${
+                        selectedGeneratedFileId === file.id
+                          ? 'border-[#7C6FAB] shadow-[0px_0px_0px_1px_#7C6FAB]'
+                          : 'border-[#F0EEE6] shadow-[rgba(0,0,0,0.05)_0px_4px_24px] hover:shadow-[0px_0px_0px_1px_#D1CFC5,rgba(0,0,0,0.08)_0px_8px_30px] hover:-translate-y-0.5'
+                      }`}
+                      onClick={() => {
+                        setSelectedGeneratedFileId(file.id);
+                        setSuccess('');
+                        setError('');
+                      }}
+                    >
+                      {/* Thumbnail */}
+                      <div className="h-[120px] bg-[#E8E6DC] relative overflow-hidden">
+                        {generatedThumbnailUrls[file.id] ? (
+                          <img
+                            src={generatedThumbnailUrls[file.id]}
+                            alt={getGeneratedDisplayName(file)}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <span className="font-[Playfair_Display] text-[32px] font-medium text-[#B0AEA5]">
+                              {getGeneratedDisplayName(file).slice(0, 1).toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                        <div className="absolute top-2.5 right-2.5">
+                          <span
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-[Be_Vietnam_Pro] text-[10px] font-semibold ${
+                              file.isPublic
+                                ? 'bg-[#ECFDF5] text-[#2EAD7A]'
+                                : 'bg-[#FAF9F5]/90 text-[#87867F]'
+                            }`}
+                          >
+                            {file.isPublic ? (
+                              <Globe className="w-2.5 h-2.5" />
+                            ) : (
+                              <Lock className="w-2.5 h-2.5" />
+                            )}
+                            {file.isPublic ? 'Công khai' : 'Riêng tư'}
+                          </span>
+                        </div>
+                      </div>
 
-            {loadingAnyCatalog && <LoadingSpinner label="Đang tải dữ liệu danh mục..." />}
-            {selectedLesson && (
-              <p className="ai-slide-info">Bài học đã chọn: {selectedLesson.title}</p>
-            )}
-            {error && <p className="ai-slide-error">{error}</p>}
-            {success && <p className="ai-slide-success">{success}</p>}
-          </section>
-        )}
+                      {/* Body */}
+                      <div className="p-4">
+                        <p
+                          className="font-[Be_Vietnam_Pro] text-[14px] font-semibold text-[#141413] truncate mb-2"
+                          title={getGeneratedDisplayName(file)}
+                        >
+                          {getGeneratedDisplayName(file)}
+                        </p>
+                        <dl className="space-y-1">
+                          <div className="flex items-center justify-between">
+                            <dt className="font-[Be_Vietnam_Pro] text-[11px] text-[#87867F] uppercase tracking-[0.5px]">
+                              Bài dạy
+                            </dt>
+                            <dd className="font-[Be_Vietnam_Pro] text-[12px] text-[#5E5D59] truncate max-w-[60%] text-right">
+                              {lessonTitleById[file.lessonId] || '...'}
+                            </dd>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <dt className="font-[Be_Vietnam_Pro] text-[11px] text-[#87867F] uppercase tracking-[0.5px]">
+                              Ngày tạo
+                            </dt>
+                            <dd className="font-[Be_Vietnam_Pro] text-[12px] text-[#5E5D59]">
+                              {formatDateTime(file.createdAt)}
+                            </dd>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <dt className="font-[Be_Vietnam_Pro] text-[11px] text-[#87867F] uppercase tracking-[0.5px]">
+                              Dung lượng
+                            </dt>
+                            <dd className="font-[Be_Vietnam_Pro] text-[12px] text-[#5E5D59]">
+                              {formatFileSize(file.fileSizeBytes)}
+                            </dd>
+                          </div>
+                        </dl>
+                      </div>
 
-        {activeMainTab === 'GENERATE' && activeWizardStep === 3 && (
-          <section className="ai-slide-card">
-            <h2>Bước 3: Tạo nội dung slide</h2>
-            <div
-              className="ai-slide-actions"
-              style={{ marginBottom: '1rem', justifyContent: 'flex-start' }}
-            >
-              <button className="btn btn-outline" onClick={() => setActiveWizardStep(2)}>
-                ← Quay lại Template
-              </button>
-            </div>
-
-            <fieldset className="ai-slide-fieldset" disabled={!canConfigureAi}>
-              <div className="ai-slide-grid ai-slide-config-grid">
-                <label>
-                  <span>Số lượng slide</span>
-                  <input
-                    type="number"
-                    min={5}
-                    max={15}
-                    value={slideCount}
-                    onChange={(e) => {
-                      const nextValue = Number(e.target.value || 5);
-                      const clamped = Math.max(5, Math.min(15, nextValue));
-                      setSlideCount(clamped);
-                    }}
-                  />
-                  <small className="ai-slide-format-hint">Cho phép từ 5 đến 15 slide.</small>
-                </label>
-              </div>
-
-              <label className="ai-slide-full-width">
-                <span>Tên slide</span>
-                <input
-                  type="text"
-                  placeholder="VD: Cấp Số Cộng - Lớp 11"
-                  value={newSlideName}
-                  onChange={(e) => setNewSlideName(e.target.value)}
-                />
-              </label>
-
-              <div className="ai-slide-full-width">
-                <span className="ai-slide-field-label">Ảnh thumbnail</span>
-                <label className="ai-slide-thumb-upload">
-                  {newSlideThumbnailPreview ? (
-                    <img
-                      src={newSlideThumbnailPreview}
-                      alt="preview"
-                      className="ai-slide-thumb-upload-preview"
-                    />
-                  ) : (
-                    <div className="ai-slide-thumb-upload-placeholder">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                        <polyline points="17 8 12 3 7 8" />
-                        <line x1="12" y1="3" x2="12" y2="15" />
-                      </svg>
-                      <span>Chọn ảnh thumbnail</span>
-                      <small>PNG, JPG, WEBP</small>
+                      {/* Actions */}
+                      <div className="flex items-center gap-1.5 px-4 pb-4">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenGeneratedPreview(file.id);
+                          }}
+                          className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-[#141413] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[12px] font-semibold hover:bg-[#30302E] active:scale-[0.98] transition-all duration-150"
+                        >
+                          <Eye className="w-3.5 h-3.5" /> Xem
+                        </button>
+                        <button
+                          type="button"
+                          title="Tải xuống"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            void handleDownloadGeneratedFile(file.id);
+                          }}
+                          disabled={downloadingGeneratedFileId === file.id}
+                          className="w-9 h-9 rounded-xl bg-[#E8E6DC] text-[#5E5D59] flex items-center justify-center hover:bg-[#D1CFC5] active:scale-[0.98] transition-all duration-150 disabled:opacity-50"
+                        >
+                          {downloadingGeneratedFileId === file.id ? (
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Download className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          title="Chỉnh sửa"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openMetadataModal(file);
+                          }}
+                          className="w-9 h-9 rounded-xl bg-[#E8E6DC] text-[#5E5D59] flex items-center justify-center hover:bg-[#D1CFC5] active:scale-[0.98] transition-all duration-150"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          title="Xóa"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRequestDeleteGeneratedFile(file.id);
+                          }}
+                          disabled={deletingGeneratedFileId === file.id}
+                          className="w-9 h-9 rounded-xl bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100 active:scale-[0.98] transition-all duration-150 disabled:opacity-50"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
-                  )}
-                  <input
-                    type="file"
-                    accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
-                    style={{ display: 'none' }}
-                    onChange={(e) => {
-                      const file = e.target.files?.[0] || null;
-                      setNewSlideThumbnailFile(file);
-                      if (newSlideThumbnailPreview)
-                        window.URL.revokeObjectURL(newSlideThumbnailPreview);
-                      setNewSlideThumbnailPreview(file ? window.URL.createObjectURL(file) : null);
-                    }}
-                  />
-                </label>
-                {newSlideThumbnailFile && (
+                  ))}
+                </div>
+              )}
+
+              {/* Pagination */}
+              {!loadingGeneratedFiles && managedGeneratedFiles.length > 0 && (
+                <div
+                  className="flex items-center justify-between gap-3 pt-2"
+                  role="navigation"
+                  aria-label="Phân trang"
+                >
                   <button
                     type="button"
-                    className="ai-slide-thumb-remove"
-                    onClick={() => {
-                      setNewSlideThumbnailFile(null);
-                      if (newSlideThumbnailPreview)
-                        window.URL.revokeObjectURL(newSlideThumbnailPreview);
-                      setNewSlideThumbnailPreview(null);
-                    }}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#E8E6DC] text-[#4D4C48] font-[Be_Vietnam_Pro] text-[13px] font-medium hover:bg-[#D1CFC5] active:scale-[0.98] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+                    onClick={() => setGeneratedPage((prev) => Math.max(1, prev - 1))}
+                    disabled={generatedPage <= 1}
                   >
-                    ✕ Xóa ảnh
+                    <ChevronLeft className="w-3.5 h-3.5" /> Trước
                   </button>
-                )}
-              </div>
-
-              <label className="ai-slide-full-width">
-                <span>Thêm mô tả</span>
-                <textarea
-                  rows={3}
-                  placeholder="Ví dụ: Giải Phương Trình Bậc 2"
-                  value={additionalPrompt}
-                  onChange={(e) => setAdditionalPrompt(e.target.value)}
-                  required
-                />
-                <small className="ai-slide-format-hint">Trường bắt buộc.</small>
-              </label>
-
-              <label className="ai-slide-full-width">
-                <span>Định dạng đầu ra</span>
-                <select
-                  value={outputFormat}
-                  onChange={(e) => setOutputFormat(e.target.value as LessonSlideOutputFormat)}
-                >
-                  <option value="PLAIN_TEXT">Text</option>
-                  <option value="LATEX">Latex</option>
-                </select>
-              </label>
-
-              <div className="ai-slide-actions">
-                <button
-                  className="btn btn-primary"
-                  onClick={() => void handleGenerateContent()}
-                  disabled={generatingContent || !templateId}
-                >
-                  {generatingContent ? (
-                    <LoadingSpinner label="Đang tạo nội dung..." />
-                  ) : (
-                    'Tạo nội dung AI'
-                  )}
-                </button>
-              </div>
-            </fieldset>
-
-            {selectedLesson && selectedTemplate && (
-              <p className="ai-slide-info">
-                Bài học: {selectedLesson.title} | Template: {selectedTemplate.name}
-              </p>
-            )}
-            {error && <p className="ai-slide-error">{error}</p>}
-            {success && <p className="ai-slide-success">{success}</p>}
-          </section>
-        )}
-
-        {activeMainTab === 'GENERATE' && activeWizardStep === 4 && generated && (
-          <section className="ai-slide-card">
-            <h2>Bước 4: Xác nhận và chỉnh sửa nội dung</h2>
-            <div
-              className="ai-slide-actions"
-              style={{ marginBottom: '1rem', justifyContent: 'flex-start' }}
-            >
-              <button className="btn btn-outline" onClick={() => setActiveWizardStep(3)}>
-                ← Quay lại Tạo nội dung
-              </button>
-            </div>
-
-            <p className="ai-slide-info">
-              Lesson: <strong>{generated.lessonTitle}</strong> | Số slide:{' '}
-              <strong>{generated.slideCount}</strong> | Output format:{' '}
-              <strong>{getOutputFormatLabel(resolvedOutputFormat)}</strong>
-            </p>
-
-            {currentPreviewSlide && (
-              <div className="ai-slide-preview-wrap">
-                <div className="ai-slide-preview-toolbar">
-                  <button
-                    className="btn btn-outline"
-                    onClick={() => setActivePreviewIndex((prev) => Math.max(0, prev - 1))}
-                    disabled={activePreviewIndex === 0}
-                  >
-                    Slide trước
-                  </button>
-                  <span>
-                    Slide {activePreviewIndex + 1}/{editableSlides.length}
+                  <span className="font-[Be_Vietnam_Pro] text-[13px] text-[#5E5D59]">
+                    Trang <strong className="text-[#141413]">{generatedPage}</strong> /{' '}
+                    {totalManagedGeneratedPages} &nbsp;·&nbsp; {managedGeneratedFiles.length} file
                   </span>
                   <button
-                    className="btn btn-outline"
+                    type="button"
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#E8E6DC] text-[#4D4C48] font-[Be_Vietnam_Pro] text-[13px] font-medium hover:bg-[#D1CFC5] active:scale-[0.98] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
                     onClick={() =>
-                      setActivePreviewIndex((prev) => Math.min(editableSlides.length - 1, prev + 1))
+                      setGeneratedPage((prev) => Math.min(totalManagedGeneratedPages, prev + 1))
                     }
-                    disabled={activePreviewIndex === editableSlides.length - 1}
+                    disabled={generatedPage >= totalManagedGeneratedPages}
                   >
-                    Slide sau
+                    Sau <ChevronRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
-
-                <article className="ai-slide-preview-canvas">
-                  <div className="ai-slide-preview-heading" role="heading" aria-level={3}>
-                    {renderSlideText(
-                      currentPreviewSlide.heading || 'Chưa có tiêu đề',
-                      resolvedOutputFormat,
-                      `heading-${currentPreviewSlide.slideNumber}`
-                    )}
-                  </div>
-                  <div className="ai-slide-preview-content">
-                    {renderSlideText(
-                      currentPreviewSlide.content || 'Chưa có nội dung',
-                      resolvedOutputFormat,
-                      `content-${currentPreviewSlide.slideNumber}`
-                    )}
-                  </div>
-                  {renderingPreviewSlideNumber === currentPreviewSlide.slideNumber && (
-                    <span className="ai-slide-preview-loading">Đang render lại preview...</span>
-                  )}
-                  <span className="ai-slide-preview-tag">{currentPreviewSlide.slideType}</span>
-                </article>
-
-                <div className="ai-slide-item">
-                  <div className="ai-slide-item-header">
-                    <strong>Chỉnh sửa Slide {currentPreviewSlide.slideNumber}</strong>
-                    <span>{currentPreviewSlide.slideType}</span>
-                  </div>
-
-                  <label>
-                    <span>Heading</span>
-                    <input
-                      type="text"
-                      value={currentPreviewSlide.heading}
-                      onChange={(e) =>
-                        handleSlideChange(activePreviewIndex, 'heading', e.target.value)
-                      }
-                    />
-                  </label>
-
-                  <label>
-                    <span>Content</span>
-                    <textarea
-                      rows={6}
-                      value={currentPreviewSlide.content}
-                      onChange={(e) =>
-                        handleSlideChange(activePreviewIndex, 'content', e.target.value)
-                      }
-                    />
-                  </label>
-                </div>
-              </div>
-            )}
-
-            <div className="ai-slide-actions" style={{ marginTop: '1.25rem' }}>
-              <button
-                className="btn btn-primary"
-                onClick={() => void handlePreparePptx()}
-                disabled={generatingPptx || !editableSlides.length}
-              >
-                {generatingPptx ? (
-                  <LoadingSpinner label="Đang tạo Slide..." />
-                ) : (
-                  'Xác nhận nội dung và tạo Slide'
-                )}
-              </button>
+              )}
             </div>
+          )}
+        </div>
+      </div>
 
-            {error && <p className="ai-slide-error">{error}</p>}
-            {success && <p className="ai-slide-success">{success}</p>}
-          </section>
-        )}
-
-        {activeMainTab === 'GENERATE' && activeWizardStep === 5 && (
-          <section className="ai-slide-card">
-            <h2>Bước 5: Tải Slide</h2>
-            <div
-              className="ai-slide-actions"
-              style={{ marginBottom: '1rem', justifyContent: 'flex-start' }}
-            >
-              <button className="btn btn-outline" onClick={() => setActiveWizardStep(4)}>
-                ← Quay lại xác nhận nội dung
-              </button>
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          GENERATING OVERLAY
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      {generatingContent && (
+        <div
+          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Đang tạo nội dung AI"
+        >
+          <div className="bg-[#FAF9F5] rounded-2xl shadow-[rgba(0,0,0,0.20)_0px_20px_60px] w-full max-w-sm p-8 flex flex-col items-center gap-5">
+            <div className="w-14 h-14 rounded-2xl bg-[#E8E6DC] flex items-center justify-center">
+              <Sparkles className="w-6 h-6 text-[#7C6FAB]" />
             </div>
-
-            <p className="ai-slide-info">
-              File đã sẵn sàng: <strong>{preparedPptxFilename}</strong>
-            </p>
-
-            <div className="ai-slide-actions">
-              <button
-                className="btn btn-primary"
-                onClick={handleDownloadPreparedPptx}
-                disabled={!preparedPptxBlob}
-              >
-                Tải Slide về máy
-              </button>
+            <div className="text-center">
+              <h3 className="font-[Playfair_Display] text-[20px] font-medium text-[#141413]">
+                AI đang tạo nội dung
+              </h3>
+              <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-2">
+                Vui lòng đợi trong giây lát...
+              </p>
             </div>
-
-            {error && <p className="ai-slide-error">{error}</p>}
-            {success && <p className="ai-slide-success">{success}</p>}
-          </section>
-        )}
-
-        {generatingContent && (
-          <div
-            className="ai-slide-generating-overlay"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Đang tạo nội dung AI"
-          >
-            <div className="ai-slide-generating-popup">
-              <div className="ai-slide-math-loader" role="status" aria-live="polite">
-                <div className="ai-slide-math-loader-ring" aria-hidden="true" />
-                <div className="ai-slide-math-loader-symbols" aria-hidden="true">
-                  <span>x²</span>
-                  <span>∫</span>
-                  <span>π</span>
-                  <span>√</span>
-                  <span>Δ</span>
-                </div>
-                <p>AI đang tạo nội dung slide...</p>
-              </div>
-
-              <div className="ai-slide-generating-steps" aria-hidden="true">
-                <span>Đang phân tích bài học</span>
-                <span>Đang dựng dàn ý</span>
-                <span>Đang tối ưu</span>
-                <span>Đang hoàn tất nội dung</span>
-              </div>
+            <div className="w-full h-1.5 bg-[#E8E6DC] rounded-full overflow-hidden">
+              <div
+                className="h-full bg-[#7C6FAB] rounded-full animate-[indeterminate_1.5s_ease_infinite]"
+                style={{ width: '60%' }}
+              />
+            </div>
+            <div className="flex flex-col items-center gap-1" aria-hidden="true">
+              {[
+                'Phân tích bài học',
+                'Dựng dàn ý',
+                'Tối ưu biểu thức toán',
+                'Hoàn tất nội dung',
+              ].map((step) => (
+                <span key={step} className="font-[Be_Vietnam_Pro] text-[12px] text-[#B0AEA5]">
+                  {step}
+                </span>
+              ))}
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {isGeneratedPreviewOpen && (
-          <div className="ai-slide-modal-overlay" onClick={() => setIsGeneratedPreviewOpen(false)}>
-            <div
-              className="ai-slide-modal"
-              role="dialog"
-              aria-modal="true"
-              aria-label="Xem trước slide"
-              onClick={(event) => event.stopPropagation()}
-            >
-              <div className="ai-slide-modal-header">
-                <h3>Xem trước slide trước khi tải</h3>
-                <button
-                  type="button"
-                  className="ai-slide-modal-close"
-                  onClick={() => setIsGeneratedPreviewOpen(false)}
-                  aria-label="Đóng xem trước"
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          PREVIEW MODAL
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      {isGeneratedPreviewOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setIsGeneratedPreviewOpen(false)}
+        >
+          <div
+            className="bg-[#FAF9F5] rounded-2xl shadow-[rgba(0,0,0,0.20)_0px_20px_60px] w-full max-w-4xl flex flex-col max-h-[90vh]"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Xem trước slide"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#F0EEE6] flex-shrink-0">
+              <h3 className="font-[Playfair_Display] text-[20px] font-medium text-[#141413]">
+                Xem trước slide
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsGeneratedPreviewOpen(false)}
+                aria-label="Đóng xem trước"
+                className="w-8 h-8 rounded-lg bg-[#E8E6DC] flex items-center justify-center text-[#5E5D59] hover:bg-[#D1CFC5] transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal body */}
+            <div className="flex-1 overflow-y-auto p-6 min-h-0">
+              {(loadingSelectedGeneratedLesson || loadingGeneratedPreviewPdf) && (
+                <div className="flex flex-col items-center justify-center py-12 gap-4">
+                  <div className="w-10 h-10 rounded-full border-2 border-[#E8E6DC] border-t-[#7C6FAB] animate-spin" />
+                  <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F]">
+                    Đang tải preview...
+                  </p>
+                </div>
+              )}
+
+              {!loadingGeneratedPreviewPdf && generatedPreviewPdfUrl && (
+                <div
+                  className="relative rounded-xl overflow-hidden bg-[#E8E6DC]"
+                  style={{ minHeight: 400 }}
                 >
-                  ×
-                </button>
-              </div>
-
-              <div className="ai-slide-modal-body">
-                {(loadingSelectedGeneratedLesson || loadingGeneratedPreviewPdf) && (
-                  <div className="ai-slide-math-loader" role="status" aria-live="polite">
-                    <div className="ai-slide-math-loader-ring" aria-hidden="true" />
-                    <div className="ai-slide-math-loader-symbols" aria-hidden="true">
-                      <span>x²</span>
-                      <span>∫</span>
-                      <span>π</span>
-                      <span>√</span>
-                      <span>Δ</span>
-                    </div>
-                    <p>Đang dựng preview PDF...</p>
-                  </div>
-                )}
-
-                {!loadingGeneratedPreviewPdf && generatedPreviewPdfUrl && (
-                  <div className="ai-slide-office-viewer-wrap">
-                    {!previewIframeLoaded && (
-                      <div className="ai-slide-iframe-skeleton" aria-hidden="true">
-                        <div className="ai-slide-iframe-skeleton__bar ai-slide-iframe-skeleton__bar--title" />
-                        <div className="ai-slide-iframe-skeleton__slides">
-                          {[0, 1, 2, 3, 4, 5].map((i) => (
-                            <div key={i} className="ai-slide-iframe-skeleton__slide">
-                              <div className="ai-slide-iframe-skeleton__slide-inner" />
-                            </div>
-                          ))}
-                        </div>
-                        <div className="ai-slide-iframe-skeleton__hint">
-                          <span className="ai-slide-iframe-skeleton__ring" />
-                          Đang tải slide...
-                        </div>
-                      </div>
-                    )}
-                    <iframe
-                      className={`ai-slide-office-viewer-frame${previewIframeLoaded ? ' ai-slide-office-viewer-frame--loaded' : ''}`}
-                      src={generatedPreviewPdfUrl}
-                      title="Preview PDF"
-                      loading="eager"
-                      onLoad={() => setPreviewIframeLoaded(true)}
-                    />
-                  </div>
-                )}
-
-                {!loadingSelectedGeneratedLesson &&
-                  !generatedPreviewPdfUrl &&
-                  currentGeneratedPreviewSlide && (
-                    <div className="ai-slide-preview-wrap ai-slide-modal-preview-wrap">
-                      <div className="ai-slide-preview-toolbar">
-                        <button
-                          className="btn btn-outline"
-                          onClick={() => setGeneratedPreviewIndex((prev) => Math.max(0, prev - 1))}
-                          disabled={generatedPreviewIndex === 0}
-                        >
-                          Slide trước
-                        </button>
-                        <span>
-                          Slide {generatedPreviewIndex + 1}/{generatedPreviewSlides.length}
-                        </span>
-                        <button
-                          className="btn btn-outline"
-                          onClick={() =>
-                            setGeneratedPreviewIndex((prev) =>
-                              Math.min(generatedPreviewSlides.length - 1, prev + 1)
-                            )
-                          }
-                          disabled={generatedPreviewIndex === generatedPreviewSlides.length - 1}
-                        >
-                          Slide sau
-                        </button>
-                      </div>
-
-                      <article className="ai-slide-preview-canvas">
-                        <div className="ai-slide-preview-heading" role="heading" aria-level={4}>
-                          {renderSlideText(
-                            currentGeneratedPreviewSlide.heading || 'Chưa có tiêu đề',
-                            resolvedOutputFormat,
-                            `manage-heading-${currentGeneratedPreviewSlide.slideNumber}`
-                          )}
-                        </div>
-                        <div className="ai-slide-preview-content">
-                          {renderSlideText(
-                            currentGeneratedPreviewSlide.content || 'Chưa có nội dung',
-                            resolvedOutputFormat,
-                            `manage-content-${currentGeneratedPreviewSlide.slideNumber}`
-                          )}
-                        </div>
-                        <span className="ai-slide-preview-tag">
-                          {currentGeneratedPreviewSlide.slideType}
-                        </span>
-                      </article>
+                  {!previewIframeLoaded && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-full border-2 border-[#E8E6DC] border-t-[#7C6FAB] animate-spin" />
                     </div>
                   )}
-              </div>
+                  <iframe
+                    className={`w-full transition-opacity duration-300 ${previewIframeLoaded ? 'opacity-100' : 'opacity-0'}`}
+                    style={{ height: 500 }}
+                    src={generatedPreviewPdfUrl}
+                    title="Preview PDF"
+                    loading="eager"
+                    onLoad={() => setPreviewIframeLoaded(true)}
+                  />
+                </div>
+              )}
 
-              <div className="ai-slide-modal-footer">
+              {!loadingSelectedGeneratedLesson &&
+                !generatedPreviewPdfUrl &&
+                currentGeneratedPreviewSlide && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <button
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#E8E6DC] text-[#4D4C48] font-[Be_Vietnam_Pro] text-[13px] font-medium hover:bg-[#D1CFC5] active:scale-[0.98] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+                        onClick={() => setGeneratedPreviewIndex((prev) => Math.max(0, prev - 1))}
+                        disabled={generatedPreviewIndex === 0}
+                      >
+                        <ChevronLeft className="w-3.5 h-3.5" /> Trước
+                      </button>
+                      <span className="font-[Be_Vietnam_Pro] text-[13px] text-[#5E5D59]">
+                        Slide{' '}
+                        <strong className="text-[#141413]">{generatedPreviewIndex + 1}</strong> /{' '}
+                        {generatedPreviewSlides.length}
+                      </span>
+                      <button
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#E8E6DC] text-[#4D4C48] font-[Be_Vietnam_Pro] text-[13px] font-medium hover:bg-[#D1CFC5] active:scale-[0.98] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+                        onClick={() =>
+                          setGeneratedPreviewIndex((prev) =>
+                            Math.min(generatedPreviewSlides.length - 1, prev + 1)
+                          )
+                        }
+                        disabled={generatedPreviewIndex === generatedPreviewSlides.length - 1}
+                      >
+                        Sau <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <article className="bg-white border border-[#E8E6DC] rounded-2xl p-6 min-h-[160px]">
+                      <div
+                        className="font-[Playfair_Display] text-[20px] font-medium text-[#141413] mb-3"
+                        role="heading"
+                        aria-level={4}
+                      >
+                        {renderSlideText(
+                          currentGeneratedPreviewSlide.heading || 'Chưa có tiêu đề',
+                          resolvedOutputFormat,
+                          `manage-heading-${currentGeneratedPreviewSlide.slideNumber}`
+                        )}
+                      </div>
+                      <div className="font-[Be_Vietnam_Pro] text-[14px] text-[#5E5D59] leading-[1.6] whitespace-pre-wrap">
+                        {renderSlideText(
+                          currentGeneratedPreviewSlide.content || 'Chưa có nội dung',
+                          resolvedOutputFormat,
+                          `manage-content-${currentGeneratedPreviewSlide.slideNumber}`
+                        )}
+                      </div>
+                      <div className="mt-3 pt-3 border-t border-[#F0EEE6]">
+                        <span className="font-[Be_Vietnam_Pro] text-[10px] font-semibold text-[#87867F] uppercase tracking-[0.5px]">
+                          {currentGeneratedPreviewSlide.slideType}
+                        </span>
+                      </div>
+                    </article>
+                  </div>
+                )}
+            </div>
+
+            {/* Modal footer */}
+            <div className="flex items-center justify-between gap-2 px-6 py-4 border-t border-[#F0EEE6] flex-shrink-0 flex-wrap">
+              <button
+                type="button"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#E8E6DC] text-[#4D4C48] font-[Be_Vietnam_Pro] text-[13px] font-medium hover:bg-[#D1CFC5] active:scale-[0.98] transition-all duration-150"
+                onClick={() => setIsGeneratedPreviewOpen(false)}
+              >
+                Đóng
+              </button>
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  className="btn btn-outline"
-                  onClick={() => setIsGeneratedPreviewOpen(false)}
-                >
-                  Đóng
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-outline"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#E8E6DC] text-[#4D4C48] font-[Be_Vietnam_Pro] text-[13px] font-medium hover:bg-[#D1CFC5] active:scale-[0.98] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
                   disabled={
                     !selectedGeneratedFile ||
                     loadingGeneratedPreviewPdf ||
                     openingGeneratedPreviewPdfTab
                   }
                   onClick={() => void handleOpenGeneratedPreviewInNewTab()}
-                  title="Mở preview PDF trên tab mới"
                 >
                   {openingGeneratedPreviewPdfTab ? 'Đang mở...' : 'Mở tab mới'}
                 </button>
                 <button
                   type="button"
-                  className="btn btn-primary"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#7C6FAB] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:brightness-95 active:scale-[0.98] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
                   disabled={
                     !selectedGeneratedFile ||
-                    downloadingGeneratedFileId === selectedGeneratedFile.id
+                    downloadingGeneratedFileId === selectedGeneratedFile?.id
                   }
                   onClick={() =>
                     selectedGeneratedFile &&
                     void handleDownloadGeneratedFile(selectedGeneratedFile.id)
                   }
                 >
+                  <Download className="w-3.5 h-3.5" />
                   {selectedGeneratedFile && downloadingGeneratedFileId === selectedGeneratedFile.id
                     ? 'Đang tải...'
                     : 'Tải file này'}
@@ -2425,196 +2732,215 @@ const AISlideGenerator: React.FC = () => {
               </div>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {isMetadataModalOpen && editingMetadataFile && (
-          <div className="ai-slide-modal-overlay" onClick={closeMetadataModal}>
-            <div
-              className="ai-slide-modal ai-slide-metadata-modal"
-              role="dialog"
-              aria-modal="true"
-              aria-label="Chỉnh sửa slide"
-              onClick={(event) => event.stopPropagation()}
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          METADATA EDIT MODAL
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      {isMetadataModalOpen && editingMetadataFile && (
+        <div
+          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={closeMetadataModal}
+        >
+          <div
+            className="bg-[#FAF9F5] rounded-2xl shadow-[rgba(0,0,0,0.20)_0px_20px_60px] w-full max-w-md flex flex-col max-h-[90vh]"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Chỉnh sửa slide"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#F0EEE6] flex-shrink-0">
+              <h3 className="font-[Playfair_Display] text-[20px] font-medium text-[#141413]">
+                Chỉnh sửa slide
+              </h3>
+              <button
+                type="button"
+                onClick={closeMetadataModal}
+                aria-label="Đóng"
+                className="w-8 h-8 rounded-lg bg-[#E8E6DC] flex items-center justify-center text-[#5E5D59] hover:bg-[#D1CFC5] transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form
+              id="slide-edit-form"
+              className="flex-1 overflow-y-auto p-6 space-y-4"
+              onSubmit={(e) => void handleUpdateMetadata(e)}
             >
-              <div className="ai-slide-modal-header">
-                <h3>Chỉnh sửa slide</h3>
-                <button
-                  type="button"
-                  className="ai-slide-modal-close"
-                  onClick={closeMetadataModal}
-                  aria-label="Đóng"
-                >
-                  ×
-                </button>
+              {/* Current thumbnail preview */}
+              <div className="h-[100px] rounded-xl overflow-hidden bg-[#E8E6DC]">
+                {generatedThumbnailUrls[editingMetadataFile.id] ? (
+                  <img
+                    src={generatedThumbnailUrls[editingMetadataFile.id]}
+                    alt={getGeneratedDisplayName(editingMetadataFile)}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <span className="font-[Playfair_Display] text-[32px] font-medium text-[#B0AEA5]">
+                      {getGeneratedDisplayName(editingMetadataFile).slice(0, 1).toUpperCase()}
+                    </span>
+                  </div>
+                )}
               </div>
 
-              <form
-                id="slide-edit-form"
-                className="ai-slide-metadata-form"
-                onSubmit={(e) => void handleUpdateMetadata(e)}
-              >
-                <div className="ai-slide-metadata-preview">
-                  {generatedThumbnailUrls[editingMetadataFile.id] ? (
-                    <img
-                      src={generatedThumbnailUrls[editingMetadataFile.id]}
-                      alt={getGeneratedDisplayName(editingMetadataFile)}
-                      className="ai-slide-meta-thumb-img"
-                    />
-                  ) : (
-                    <div className="ai-slide-meta-thumb-placeholder">
-                      {getGeneratedDisplayName(editingMetadataFile).slice(0, 1).toUpperCase()}
-                    </div>
-                  )}
-                </div>
-
-                <label>
-                  <span>Tên hiển thị</span>
-                  <input
-                    type="text"
-                    value={metadataName}
-                    onChange={(e) => setMetadataName(e.target.value)}
-                    placeholder="Nhập tên hiển thị mới"
-                  />
+              {/* Name */}
+              <div>
+                <label className="font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#141413] block mb-1.5">
+                  Tên hiển thị
                 </label>
+                <input
+                  type="text"
+                  value={metadataName}
+                  onChange={(e) => setMetadataName(e.target.value)}
+                  placeholder="Nhập tên hiển thị mới"
+                  className="w-full border border-[#E8E6DC] rounded-xl px-3 py-2.5 font-[Be_Vietnam_Pro] text-[13px] text-[#141413] placeholder:text-[#87867F] outline-none focus:border-[#3898EC] focus:ring-2 focus:ring-[#3898EC]/20 bg-white transition-all duration-150"
+                />
+              </div>
 
-                <label>
-                  <span>Trạng thái</span>
-                  <select
-                    value={metadataIsPublic ? 'public' : 'draft'}
-                    onChange={(e) => setMetadataIsPublic(e.target.value === 'public')}
+              {/* Status */}
+              <div>
+                <label className="font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#141413] block mb-1.5">
+                  Trạng thái
+                </label>
+                <select
+                  value={metadataIsPublic ? 'public' : 'draft'}
+                  onChange={(e) => setMetadataIsPublic(e.target.value === 'public')}
+                  className="w-full border border-[#E8E6DC] rounded-xl px-3 py-2.5 font-[Be_Vietnam_Pro] text-[13px] text-[#141413] outline-none focus:border-[#3898EC] focus:ring-2 focus:ring-[#3898EC]/20 bg-white transition-all duration-150"
+                >
+                  <option value="draft">Chỉ mình tôi</option>
+                  <option value="public">Công khai</option>
+                </select>
+              </div>
+
+              {/* Thumbnail upload */}
+              <div>
+                <p className="font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#141413] mb-1.5">
+                  Ảnh thumbnail mới
+                </p>
+                <label className="block cursor-pointer">
+                  <div
+                    className={`border-2 border-dashed rounded-xl overflow-hidden transition-colors ${metadataThumbnailFile ? 'border-[#E8E6DC]' : 'border-[#E8E6DC] hover:border-[#7C6FAB]/50'}`}
                   >
-                    <option value="draft">Nháp</option>
-                    <option value="public">Công khai</option>
-                  </select>
-                </label>
-
-                <div>
-                  <span className="ai-slide-field-label">Ảnh thumbnail mới</span>
-                  <label className="ai-slide-thumb-upload">
                     {metadataThumbnailFile ? (
                       <img
                         src={window.URL.createObjectURL(metadataThumbnailFile)}
                         alt="preview"
-                        className="ai-slide-thumb-upload-preview"
+                        className="w-full h-[80px] object-cover"
                       />
                     ) : (
-                      <div className="ai-slide-thumb-upload-placeholder">
-                        <svg
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                        >
-                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                          <polyline points="17 8 12 3 7 8" />
-                          <line x1="12" y1="3" x2="12" y2="15" />
-                        </svg>
-                        <span>Chọn ảnh mới</span>
-                        <small>PNG, JPG, WEBP</small>
+                      <div className="flex flex-col items-center justify-center gap-2 py-5 bg-[#F5F4ED]">
+                        <Upload className="w-4 h-4 text-[#87867F]" />
+                        <span className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">
+                          Chọn ảnh mới
+                        </span>
+                        <span className="font-[Be_Vietnam_Pro] text-[11px] text-[#B0AEA5]">
+                          PNG, JPG, WEBP
+                        </span>
                       </div>
                     )}
-                    <input
-                      type="file"
-                      accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
-                      style={{ display: 'none' }}
-                      onChange={(e) => setMetadataThumbnailFile(e.target.files?.[0] || null)}
-                    />
-                  </label>
-                  {metadataThumbnailFile && (
-                    <button
-                      type="button"
-                      className="ai-slide-thumb-remove"
-                      onClick={() => setMetadataThumbnailFile(null)}
-                    >
-                      ✕ Xóa ảnh mới
-                    </button>
-                  )}
-                </div>
-              </form>
-
-              <div className="ai-slide-modal-footer">
-                <button type="button" className="btn btn-outline" onClick={closeMetadataModal}>
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  form="slide-edit-form"
-                  className="btn btn-primary"
-                  disabled={updatingMetadata}
-                >
-                  {updatingMetadata ? 'Đang lưu...' : 'Lưu'}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {deletingGeneratedFile && (
-          <div className="ai-slide-modal-overlay" onClick={closeDeleteGeneratedModal}>
-            <div
-              className="ai-slide-modal ai-slide-delete-modal"
-              role="dialog"
-              aria-modal="true"
-              aria-label="Xác nhận xóa slide"
-              onClick={(event) => event.stopPropagation()}
-            >
-              <div className="ai-slide-modal-header">
-                <h3>Xác nhận xóa slide</h3>
-                <button
-                  type="button"
-                  className="ai-slide-modal-close"
-                  onClick={closeDeleteGeneratedModal}
-                  aria-label="Đóng"
-                  disabled={Boolean(deletingGeneratedFileId)}
-                >
-                  ×
-                </button>
-              </div>
-
-              <div className="ai-slide-modal-body ai-slide-delete-modal-body">
-                {deletingGeneratedFileId ? (
-                  <div className="ai-slide-math-loader" role="status" aria-live="polite">
-                    <div className="ai-slide-math-loader-ring" aria-hidden="true" />
-                    <div className="ai-slide-math-loader-symbols" aria-hidden="true">
-                      <span>x²</span>
-                      <span>∫</span>
-                      <span>π</span>
-                      <span>√</span>
-                      <span>Δ</span>
-                    </div>
-                    <p>Đang xóa slide...</p>
                   </div>
-                ) : (
-                  <p className="ai-slide-info ai-slide-delete-message">
-                    Bạn có chắc muốn xóa{' '}
-                    <strong>{getGeneratedDisplayName(deletingGeneratedFile)}</strong>?<br />
-                    File sẽ bị ẩn khỏi danh sách ngay sau khi xác nhận.
-                  </p>
+                  <input
+                    type="file"
+                    accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
+                    className="hidden"
+                    onChange={(e) => setMetadataThumbnailFile(e.target.files?.[0] || null)}
+                  />
+                </label>
+                {metadataThumbnailFile && (
+                  <button
+                    type="button"
+                    onClick={() => setMetadataThumbnailFile(null)}
+                    className="mt-1 flex items-center gap-1 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] hover:text-[#B53333] transition-colors"
+                  >
+                    <X className="w-3 h-3" /> Xóa ảnh mới
+                  </button>
                 )}
               </div>
+            </form>
 
-              <div className="ai-slide-modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-outline"
-                  onClick={closeDeleteGeneratedModal}
-                  disabled={Boolean(deletingGeneratedFileId)}
-                >
-                  Hủy
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={() => void handleDeleteGeneratedFile()}
-                  disabled={Boolean(deletingGeneratedFileId)}
-                >
-                  {deletingGeneratedFileId ? 'Đang xóa...' : 'Xác nhận xóa'}
-                </button>
-              </div>
+            <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-[#F0EEE6] flex-shrink-0">
+              <button
+                type="button"
+                onClick={closeMetadataModal}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#E8E6DC] text-[#4D4C48] font-[Be_Vietnam_Pro] text-[13px] font-medium hover:bg-[#D1CFC5] active:scale-[0.98] transition-all duration-150"
+              >
+                Hủy
+              </button>
+              <button
+                type="submit"
+                form="slide-edit-form"
+                disabled={updatingMetadata}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#7C6FAB] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:brightness-95 active:scale-[0.98] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {updatingMetadata ? <LoadingSpinner label="Đang lưu..." /> : 'Lưu thay đổi'}
+              </button>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          DELETE CONFIRM MODAL
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      {deletingGeneratedFile && (
+        <div
+          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={closeDeleteGeneratedModal}
+        >
+          <div
+            className="bg-[#FAF9F5] rounded-2xl shadow-[rgba(0,0,0,0.20)_0px_20px_60px] w-full max-w-sm p-6 flex flex-col gap-4"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Xác nhận xóa slide"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center mx-auto">
+              <AlertCircle className="w-7 h-7" />
+            </div>
+            <div className="text-center">
+              <h3 className="font-[Playfair_Display] text-[18px] font-medium text-[#141413]">
+                Xóa slide
+              </h3>
+              {deletingGeneratedFileId ? (
+                <div className="flex items-center justify-center gap-2 mt-2">
+                  <LoadingSpinner label="Đang xóa..." />
+                </div>
+              ) : (
+                <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-2">
+                  Bạn có chắc muốn xóa{' '}
+                  <strong className="text-[#141413]">
+                    {getGeneratedDisplayName(deletingGeneratedFile)}
+                  </strong>
+                  ?
+                  <br />
+                  File sẽ bị xóa vĩnh viễn.
+                </p>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                className="flex-1 px-4 py-2.5 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors active:scale-[0.98]"
+                onClick={closeDeleteGeneratedModal}
+                disabled={Boolean(deletingGeneratedFileId)}
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                className="flex-1 px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-[Be_Vietnam_Pro] text-[13px] font-semibold transition-colors active:scale-[0.98] disabled:opacity-40"
+                onClick={() => void handleDeleteGeneratedFile()}
+                disabled={Boolean(deletingGeneratedFileId)}
+              >
+                {deletingGeneratedFileId ? 'Đang xóa...' : 'Xóa'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 };

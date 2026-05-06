@@ -12,7 +12,6 @@ import UserManagement from '../pages/admin/UserManagement';
 import AIAssistant from '../pages/ai/AIAssistant';
 import AISlideGenerator from '../pages/ai/AISlideGenerator';
 import TeacherAnalytics from '../pages/analytics/TeacherAnalytics';
-import TeacherAssignments from '../pages/assignments/TeacherAssignments';
 import { ConfirmEmail, ForgotPassword, Login, Register, ResetPassword } from '../pages/auth';
 import OnboardingFlow from '../pages/auth/OnboardingFlow';
 import Calendar from '../pages/calendar/Calendar';
@@ -24,7 +23,6 @@ import TeacherCourseDetail from '../pages/courses/TeacherCourseDetail';
 import TeacherCourses from '../pages/courses/TeacherCourses';
 import UnifiedCourseView from '../pages/courses/UnifiedCourseView';
 import AdminDashboard from '../pages/dashboard/admin/AdminDashboard';
-import TeacherDashboard from '../pages/dashboard/teacher/TeacherDashboard';
 import TeacherEarningsDashboard from '../pages/dashboard/teacher/TeacherEarningsDashboard';
 import Forum from '../pages/forum/Forum';
 import HelpCenter from '../pages/help/HelpCenter';
@@ -269,14 +267,6 @@ export const router = createBrowserRouter([
   },
   // Teacher Routes
   {
-    path: '/teacher/dashboard',
-    element: (
-      <PrivateRoute>
-        <TeacherDashboard />
-      </PrivateRoute>
-    ),
-  },
-  {
     path: '/teacher/earnings',
     element: (
       <PrivateRoute>
@@ -308,14 +298,7 @@ export const router = createBrowserRouter([
       </PrivateRoute>
     ),
   },
-  {
-    path: '/teacher/assignments',
-    element: (
-      <PrivateRoute>
-        <TeacherAssignments />
-      </PrivateRoute>
-    ),
-  },
+
   {
     path: '/teacher/assessments',
     element: (
@@ -477,8 +460,8 @@ export const router = createBrowserRouter([
   {
     path: '/teacher/*',
     element: (
-      <PrivateRoute>
-        <TeacherDashboard />
+      <PrivateRoute allowedRoles={['teacher', 'admin']}>
+        <NotFound />
       </PrivateRoute>
     ),
   },

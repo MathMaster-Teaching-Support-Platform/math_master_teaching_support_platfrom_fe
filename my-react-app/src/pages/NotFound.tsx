@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { AuthService } from '../services/api/auth.service';
 import './NotFound.css';
 
 const MATH_SYMBOLS = [
@@ -24,6 +25,7 @@ const MATH_SYMBOLS = [
 const NotFound: React.FC = () => {
   const navigate = useNavigate();
   const countRef = useRef<HTMLSpanElement>(null);
+  const homeUrl = AuthService.isAuthenticated() ? AuthService.getDashboardUrl() : '/';
 
   /* Counting animation for 404 */
   useEffect(() => {
@@ -66,7 +68,7 @@ const NotFound: React.FC = () => {
 
       {/* Header */}
       <header className="nf-header">
-        <Link to="/" className="nf-logo">
+        <Link to={homeUrl} className="nf-logo">
           <span className="nf-logo-icon">∑π</span>
           <span className="nf-logo-text">MathMaster</span>
         </Link>
@@ -137,7 +139,7 @@ const NotFound: React.FC = () => {
             </svg>
             Quay lại
           </button>
-          <Link to="/" className="nf-btn nf-btn-primary">
+          <Link to={homeUrl} className="nf-btn nf-btn-primary">
             <svg
               width="16"
               height="16"
