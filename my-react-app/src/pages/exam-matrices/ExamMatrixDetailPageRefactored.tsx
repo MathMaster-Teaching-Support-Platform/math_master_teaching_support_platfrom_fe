@@ -312,7 +312,7 @@ export default function ExamMatrixDetailPageRefactored() {
                     </h2>
                     <p className="exam-matrix-detail-desc" style={{ marginBottom: 12 }}>
                       {matrix.description || 'Không có mô tả'}
-                    </p>               
+                    </p>
                   </div>
                   <span
                     className={`badge ${matrix.status.toLowerCase()}`}
@@ -343,7 +343,7 @@ export default function ExamMatrixDetailPageRefactored() {
                     className="btn secondary btn--tint-emerald"
                     onClick={() => handleExportExcel()}
                     disabled={!!exportBusy}
-                    title="Xuất bảng ma trận ra file .xlsx (dữ liệu đã lưu)"
+                    title="Công khaig ma trận ra file .xlsx (dữ liệu đã lưu)"
                   >
                     <FileSpreadsheet size={14} />
                     {exportBusy === 'excel' ? 'Đang xuất...' : 'Xuất Excel'}
@@ -353,7 +353,7 @@ export default function ExamMatrixDetailPageRefactored() {
                     className="btn secondary btn--tint-indigo"
                     onClick={() => void handleExportPdf()}
                     disabled={!!exportBusy}
-                    title="Xuất bảng ma trận ra PDF (ảnh bảng, hỗ trợ tiếng Việt)"
+                    title="Công khaig ma trận ra PDF (ảnh bảng, hỗ trợ tiếng Việt)"
                   >
                     <FileDown size={14} />
                     {exportBusy === 'pdf' ? 'Đang xuất...' : 'Xuất PDF'}

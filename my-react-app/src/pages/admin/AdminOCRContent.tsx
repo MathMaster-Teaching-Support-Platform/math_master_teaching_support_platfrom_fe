@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
+import 'katex/dist/katex.min.css';
 import {
   ArrowLeft,
   BookOpen,
@@ -24,7 +25,6 @@ import {
 } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { BlockMath, InlineMath } from 'react-katex';
-import 'katex/dist/katex.min.css';
 import { Link, useParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { mockAdmin } from '../../data/mockData';
@@ -61,9 +61,18 @@ function formatRelativeTime(iso?: string): string {
 
 // Fields that are system metadata — excluded from diff view
 const SYSTEM_FIELDS = new Set([
-  'id', '_id', 'updated_at', 'updated_by', 'created_at',
-  'book_id', 'chapter_id', 'lesson_id', 'order',
-  'lesson_index', 'chapter_index', 'roman_index',
+  'id',
+  '_id',
+  'updated_at',
+  'updated_by',
+  'created_at',
+  'book_id',
+  'chapter_id',
+  'lesson_id',
+  'order',
+  'lesson_index',
+  'chapter_index',
+  'roman_index',
 ]);
 
 const FIELD_LABELS: Record<string, string> = {
@@ -75,7 +84,7 @@ const FIELD_LABELS: Record<string, string> = {
   image_url: 'URL ảnh',
   type: 'Loại',
   exercise_type: 'Loại bài tập',
-  publisher: 'Nhà xuất bản',
+  publisher: 'Nhà công khai',
   grade: 'Lớp',
 };
 
@@ -128,7 +137,6 @@ function buildStaticUrl(path: string): string {
 // ─── Content Item Renderer ────────────────────────────────────────────────────
 
 const ContentItemView: React.FC<{ item: OcrContentItem }> = ({ item }) => {
-
   switch (item.type) {
     case 'text':
       return <p className="cnt-item-text">{renderMixedContent(item.content)}</p>;
@@ -301,7 +309,9 @@ const ChapterItem: React.FC<{
 
   const handleDeleteChapter = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (globalThis.confirm(`Xóa chương "${chapter.title}"? Tất cả bài học trong chương sẽ bị xóa.`)) {
+    if (
+      globalThis.confirm(`Xóa chương "${chapter.title}"? Tất cả bài học trong chương sẽ bị xóa.`)
+    ) {
       deleteChapterMut.mutate();
     }
   };
@@ -351,46 +361,43 @@ const ChapterItem: React.FC<{
         </div>
       ) : (
         <>
-        <div className={`cnt-chapter-btn-row${hasActive ? ' cnt-chapter-btn-row--active' : ''}`}>
-          <button
-            className="cnt-chapter-btn"
-            onClick={() => setOpen((v) => !v)}
-          >
-            <span className="cnt-chapter-num">
-              {chapter.roman_index || String(chapter.chapter_index)}
-            </span>
-            <span className="cnt-chapter-title">{chapter.title}</span>
-            <ChevronDown
-              size={13}
-              className={`cnt-chapter-chevron${open ? ' cnt-chapter-chevron--open' : ''}`}
-            />
-          </button>
-          {editMode && (
-            <>
-              <button
-                className="cnt-item-action cnt-item-action--edit"
-                title="Đổi tên chương"
-                onClick={startEditChapter}
-              >
-                <Pencil size={14} />
-              </button>
-              <button
-                className="cnt-item-action cnt-item-action--delete"
-                title="Xóa chương"
-                disabled={deleteChapterMut.isPending}
-                onClick={handleDeleteChapter}
-              >
-                <Trash2 size={14} />
-              </button>
-            </>
-          )}
-        </div>
-        {chapter.updated_by && (
-          <div className="cnt-meta-info">
-            <Clock size={10} />
-            {chapter.updated_by} · {formatRelativeTime(chapter.updated_at)}
+          <div className={`cnt-chapter-btn-row${hasActive ? ' cnt-chapter-btn-row--active' : ''}`}>
+            <button className="cnt-chapter-btn" onClick={() => setOpen((v) => !v)}>
+              <span className="cnt-chapter-num">
+                {chapter.roman_index || String(chapter.chapter_index)}
+              </span>
+              <span className="cnt-chapter-title">{chapter.title}</span>
+              <ChevronDown
+                size={13}
+                className={`cnt-chapter-chevron${open ? ' cnt-chapter-chevron--open' : ''}`}
+              />
+            </button>
+            {editMode && (
+              <>
+                <button
+                  className="cnt-item-action cnt-item-action--edit"
+                  title="Đổi tên chương"
+                  onClick={startEditChapter}
+                >
+                  <Pencil size={14} />
+                </button>
+                <button
+                  className="cnt-item-action cnt-item-action--delete"
+                  title="Xóa chương"
+                  disabled={deleteChapterMut.isPending}
+                  onClick={handleDeleteChapter}
+                >
+                  <Trash2 size={14} />
+                </button>
+              </>
+            )}
           </div>
-        )}
+          {chapter.updated_by && (
+            <div className="cnt-meta-info">
+              <Clock size={10} />
+              {chapter.updated_by} · {formatRelativeTime(chapter.updated_at)}
+            </div>
+          )}
         </>
       )}
 
@@ -412,10 +419,7 @@ const ChapterItem: React.FC<{
               )}
               {lessons.map((lesson) =>
                 editingLessonId === lesson.id ? (
-                  <div
-                    key={lesson.id}
-                    className="cnt-lesson-edit-row"
-                  >
+                  <div key={lesson.id} className="cnt-lesson-edit-row">
                     <input
                       className="cnt-inline-input cnt-inline-input--lesson"
                       value={lessonTitle}
@@ -484,8 +488,8 @@ const ChapterItem: React.FC<{
               {!isFetching && lessons.length === 0 && (
                 <div className="cnt-sidebar-loading">Không có bài học</div>
               )}
-              {editMode && (
-                addingLesson ? (
+              {editMode &&
+                (addingLesson ? (
                   <div className="cnt-lesson-edit-row">
                     <input
                       className="cnt-inline-input cnt-inline-input--lesson"
@@ -498,7 +502,10 @@ const ChapterItem: React.FC<{
                           const t = newLessonTitle.trim();
                           if (t) createLessonMut.mutate({ chapter_id: chapter.id, title: t });
                         }
-                        if (e.key === 'Escape') { setAddingLesson(false); setNewLessonTitle(''); }
+                        if (e.key === 'Escape') {
+                          setAddingLesson(false);
+                          setNewLessonTitle('');
+                        }
                       }}
                     />
                     <button
@@ -513,7 +520,10 @@ const ChapterItem: React.FC<{
                     </button>
                     <button
                       className="cnt-inline-action cnt-inline-action--cancel"
-                      onClick={() => { setAddingLesson(false); setNewLessonTitle(''); }}
+                      onClick={() => {
+                        setAddingLesson(false);
+                        setNewLessonTitle('');
+                      }}
                     >
                       <X size={11} />
                     </button>
@@ -521,13 +531,15 @@ const ChapterItem: React.FC<{
                 ) : (
                   <button
                     className="cnt-add-lesson-btn"
-                    onClick={() => { setOpen(true); setAddingLesson(true); }}
+                    onClick={() => {
+                      setOpen(true);
+                      setAddingLesson(true);
+                    }}
                   >
                     <Plus size={11} />
                     Thêm bài
                   </button>
-                )
-              )}
+                ))}
             </div>
           </motion.div>
         )}
@@ -544,7 +556,10 @@ const HISTORY_ACTION_LABEL: Record<string, string> = {
   delete: 'Xóa',
 };
 
-const DiffView: React.FC<{ before?: Record<string, unknown>; after?: Record<string, unknown> }> = ({ before, after }) => {
+const DiffView: React.FC<{ before?: Record<string, unknown>; after?: Record<string, unknown> }> = ({
+  before,
+  after,
+}) => {
   const allKeys = Array.from(new Set([...Object.keys(before ?? {}), ...Object.keys(after ?? {})]));
   const changed = allKeys
     .filter((k) => !SYSTEM_FIELDS.has(k))
@@ -588,12 +603,17 @@ const HistoryModal: React.FC<{
             <History size={16} />
             Lịch sử · {title}
           </div>
-          <button className="cnt-modal-close" onClick={onClose}><X size={16} /></button>
+          <button className="cnt-modal-close" onClick={onClose}>
+            <X size={16} />
+          </button>
         </div>
         <div className="cnt-modal-body">
           {entries.length === 0 && <p className="cnt-history-empty">Chưa có lịch sử thay đổi</p>}
           {entries.map((e) => (
-            <div key={e.id} className={`cnt-history-entry${expanded === e.id ? ' cnt-history-entry--expanded' : ''}`}>
+            <div
+              key={e.id}
+              className={`cnt-history-entry${expanded === e.id ? ' cnt-history-entry--expanded' : ''}`}
+            >
               <div className="cnt-history-meta">
                 <div className="cnt-history-avatar">{getInitial(e.changed_by)}</div>
                 <div className="cnt-history-info">
@@ -738,11 +758,7 @@ const ContentItemEditor: React.FC<{
             />
           </div>
           {imageUrl && (
-            <img
-              src={buildStaticUrl(imageUrl)}
-              alt="preview"
-              className="cnt-img-preview"
-            />
+            <img src={buildStaticUrl(imageUrl)} alt="preview" className="cnt-img-preview" />
           )}
           <input
             className="cnt-editor-input"
@@ -815,8 +831,12 @@ const AddContentModal: React.FC<{
     <div className="cnt-modal-overlay" onClick={onClose}>
       <div className="cnt-modal" onClick={(e) => e.stopPropagation()}>
         <div className="cnt-modal-header">
-          <div className="cnt-modal-title"><Plus size={15} /> Thêm nội dung</div>
-          <button className="cnt-modal-close" onClick={onClose}><X size={16} /></button>
+          <div className="cnt-modal-title">
+            <Plus size={15} /> Thêm nội dung
+          </div>
+          <button className="cnt-modal-close" onClick={onClose}>
+            <X size={16} />
+          </button>
         </div>
         <div className="cnt-modal-body">
           <label className="cnt-editor-label">Loại nội dung</label>
@@ -826,7 +846,9 @@ const AddContentModal: React.FC<{
             onChange={(e) => setType(e.target.value as OcrContentItemType)}
           >
             {CONTENT_TYPES.map((t) => (
-              <option key={t.value} value={t.value}>{t.label}</option>
+              <option key={t.value} value={t.value}>
+                {t.label}
+              </option>
             ))}
           </select>
 
@@ -886,11 +908,7 @@ const AddContentModal: React.FC<{
                 />
               </div>
               {imageUrl && (
-                <img
-                  src={buildStaticUrl(imageUrl)}
-                  alt="preview"
-                  className="cnt-img-preview"
-                />
+                <img src={buildStaticUrl(imageUrl)} alt="preview" className="cnt-img-preview" />
               )}
               <input
                 className="cnt-editor-input"
@@ -902,7 +920,9 @@ const AddContentModal: React.FC<{
           )}
         </div>
         <div className="cnt-modal-footer">
-          <button className="cnt-editor-cancel" onClick={onClose}>Hủy</button>
+          <button className="cnt-editor-cancel" onClick={onClose}>
+            Hủy
+          </button>
           <button className="cnt-editor-save" onClick={handleSave} disabled={isPending}>
             <Check size={13} /> Thêm
           </button>
@@ -1002,14 +1022,9 @@ const ContentPanel: React.FC<{
           )}
         </div>
         <div className="cnt-lesson-header-actions">
-          {lesson.page_start && (
-            <p className="cnt-lesson-meta">Trang {lesson.page_start}</p>
-          )}
+          {lesson.page_start && <p className="cnt-lesson-meta">Trang {lesson.page_start}</p>}
           {editMode && (
-            <button
-              className="cnt-add-content-btn"
-              onClick={() => setShowAddModal(true)}
-            >
+            <button className="cnt-add-content-btn" onClick={() => setShowAddModal(true)}>
               <Plus size={13} />
               Thêm block
             </button>
@@ -1111,7 +1126,8 @@ const AdminOCRContent: React.FC = () => {
     staleTime: 30_000,
   });
 
-  const allBooks: OcrBook[] = booksData?.books ?? (Array.isArray(booksData) ? (booksData as OcrBook[]) : []);
+  const allBooks: OcrBook[] =
+    booksData?.books ?? (Array.isArray(booksData) ? (booksData as OcrBook[]) : []);
   const doneBooks = allBooks.filter((b) => b.status === 'done');
 
   // Selected book info
@@ -1126,9 +1142,7 @@ const AdminOCRContent: React.FC = () => {
   });
 
   const filteredChapters = chapterSearch
-    ? chapters.filter((c) =>
-        c.title.toLowerCase().includes(chapterSearch.toLowerCase())
-      )
+    ? chapters.filter((c) => c.title.toLowerCase().includes(chapterSearch.toLowerCase()))
     : chapters;
 
   const [showBookHistory, setShowBookHistory] = useState(false);
@@ -1179,7 +1193,10 @@ const AdminOCRContent: React.FC = () => {
                 onClick={() => setBookDropOpen((v) => !v)}
               >
                 <span className="cnt-book-dropdown-label">{bookLabel}</span>
-                <ChevronDown size={13} className={`cnt-dropdown-chevron${bookDropOpen ? ' cnt-dropdown-chevron--open' : ''}`} />
+                <ChevronDown
+                  size={13}
+                  className={`cnt-dropdown-chevron${bookDropOpen ? ' cnt-dropdown-chevron--open' : ''}`}
+                />
               </button>
               {bookDropOpen && (
                 <div className="cnt-book-dropdown-menu">
@@ -1213,9 +1230,13 @@ const AdminOCRContent: React.FC = () => {
                 title={editMode ? 'Thoát chế độ chỉnh sửa' : 'Chỉnh sửa nội dung'}
               >
                 {editMode ? (
-                  <><Save size={13} /> Lưu</>
+                  <>
+                    <Save size={13} /> Lưu
+                  </>
                 ) : (
-                  <><Pencil size={13} /> Chỉnh sửa</>
+                  <>
+                    <Pencil size={13} /> Chỉnh sửa
+                  </>
                 )}
               </button>
               <button
@@ -1274,7 +1295,10 @@ const AdminOCRContent: React.FC = () => {
             <h2>Chọn sách để xem nội dung</h2>
             <p>
               Chọn sách giáo khoa đã OCR xong từ danh sách trên, hoặc{' '}
-              <Link to="/admin/ocr/books" style={{ color: 'var(--cnt-primary)', textDecoration: 'none', fontWeight: 600 }}>
+              <Link
+                to="/admin/ocr/books"
+                style={{ color: 'var(--cnt-primary)', textDecoration: 'none', fontWeight: 600 }}
+              >
                 upload sách mới
               </Link>
             </p>
@@ -1314,7 +1338,9 @@ const AdminOCRContent: React.FC = () => {
               {!chaptersLoading && filteredChapters.length === 0 && (
                 <div className="cnt-sidebar-loading">Không tìm thấy chương</div>
               )}
-              {!chaptersLoading && filteredChapters.length > 0 && filteredChapters.map((chapter) => (
+              {!chaptersLoading &&
+                filteredChapters.length > 0 &&
+                filteredChapters.map((chapter) => (
                   <ChapterItem
                     key={chapter.id}
                     chapter={chapter}
@@ -1323,9 +1349,9 @@ const AdminOCRContent: React.FC = () => {
                     selectedLessonId={selectedLesson?.id ?? null}
                     onSelectLesson={setSelectedLesson}
                   />
-              ))}
-              {editMode && (
-                addingChapter ? (
+                ))}
+              {editMode &&
+                (addingChapter ? (
                   <div className="cnt-lesson-edit-row" style={{ padding: '4px 8px' }}>
                     <input
                       className="cnt-inline-input"
@@ -1338,7 +1364,10 @@ const AdminOCRContent: React.FC = () => {
                           const t = newChapterTitle.trim();
                           if (t) createChapterMut.mutate({ book_id: selectedBookId, title: t });
                         }
-                        if (e.key === 'Escape') { setAddingChapter(false); setNewChapterTitle(''); }
+                        if (e.key === 'Escape') {
+                          setAddingChapter(false);
+                          setNewChapterTitle('');
+                        }
                       }}
                     />
                     <button
@@ -1353,7 +1382,10 @@ const AdminOCRContent: React.FC = () => {
                     </button>
                     <button
                       className="cnt-inline-action cnt-inline-action--cancel"
-                      onClick={() => { setAddingChapter(false); setNewChapterTitle(''); }}
+                      onClick={() => {
+                        setAddingChapter(false);
+                        setNewChapterTitle('');
+                      }}
                     >
                       <X size={11} />
                     </button>
@@ -1367,8 +1399,7 @@ const AdminOCRContent: React.FC = () => {
                     <Plus size={11} />
                     Thêm chương
                   </button>
-                )
-              )}
+                ))}
             </aside>
 
             {/* Right content panel */}

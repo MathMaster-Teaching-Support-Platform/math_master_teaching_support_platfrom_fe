@@ -9,8 +9,9 @@ import {
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { MatrixTable } from '../../components/exam-matrix/MatrixTable';
+import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { useToast } from '../../context/ToastContext';
 import {
   useApproveMatrix,
   useBatchUpsertMatrixRowCells,
@@ -20,13 +21,9 @@ import {
   useRemoveExamMatrixRow,
   useResetMatrix,
 } from '../../hooks/useExamMatrix';
-import { useToast } from '../../context/ToastContext';
 import { examMatrixService } from '../../services/examMatrixService';
 import '../../styles/module-refactor.css';
-import {
-  MatrixStatus,
-  type MatrixValidationReport,
-} from '../../types/examMatrix';
+import { MatrixStatus, type MatrixValidationReport } from '../../types/examMatrix';
 import { ExamMatrixRowModal } from './ExamMatrixRowModal';
 
 const matrixStatusLabel: Record<string, string> = {
@@ -101,20 +98,20 @@ export default function ExamMatrixDetailPage() {
 
   async function handleApprove() {
     if (!matrix?.id || !matrix?.name) return;
-    
+
     const matrixName = matrix.name; // Capture name before mutation
-    
+
     try {
       await approveMutation.mutateAsync(matrix.id);
-      showToast({ 
-        type: 'success', 
-        message: `Đã phê duyệt ma trận "${matrixName}" thành công!` 
+      showToast({
+        type: 'success',
+        message: `Đã phê duyệt ma trận "${matrixName}" thành công!`,
       });
       await refetch();
     } catch (error) {
-      showToast({ 
-        type: 'error', 
-        message: error instanceof Error ? error.message : 'Không thể phê duyệt ma trận.' 
+      showToast({
+        type: 'error',
+        message: error instanceof Error ? error.message : 'Không thể phê duyệt ma trận.',
       });
     }
   }
@@ -126,7 +123,10 @@ export default function ExamMatrixDetailPage() {
     await refetch();
   }
 
-  async function handleCellChange(matrixId: string, updates: import('../../types/examMatrix').BatchUpsertMatrixRowCellsRequest) {
+  async function handleCellChange(
+    matrixId: string,
+    updates: import('../../types/examMatrix').BatchUpsertMatrixRowCellsRequest
+  ) {
     await batchUpsertCellsMutation.mutateAsync({ matrixId, request: updates });
     // Refetch table data to get updated values
     await refetchTable();
@@ -193,7 +193,7 @@ export default function ExamMatrixDetailPage() {
                     <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
                       <div>
                         <span className="muted" style={{ fontSize: 12 }}>
-                          Khối
+                          Lớp
                         </span>
                         <p style={{ fontWeight: 600, marginTop: 4 }}>
                           {matrix.gradeLevel || table?.gradeLevel || 'N/A'}

@@ -4,6 +4,7 @@ import {
   BookOpen,
   ChevronLeft,
   ChevronRight,
+  Download,
   Filter,
   GraduationCap,
   Network,
@@ -18,7 +19,6 @@ import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLa
 import { mockStudent } from '../../data/mockData';
 import { LessonSlideService } from '../../services/api/lesson-slide.service';
 import { MindmapService } from '../../services/api/mindmap.service';
-import '../../styles/module-refactor.css';
 import type { Mindmap, PaginatedResponse } from '../../types';
 import type {
   ChapterBySubject,
@@ -26,8 +26,6 @@ import type {
   SchoolGrade,
   SubjectByGrade,
 } from '../../types/lessonSlide.types';
-import './StudentPublicMindmaps.css';
-import './StudentPublicMindmapsNew.css';
 
 const DEFAULT_PAGE_SIZE = 9;
 type SortDirection = 'ASC' | 'DESC';
@@ -377,43 +375,56 @@ export default function StudentPublicMindmaps() {
   ]);
 
   return (
-    <DashboardLayout user={mockStudent} role="student">
-      <div className="module-layout-container">
-        <section className="module-page">
-          {/* ── Header ── */}
-          <header className="page-header">
-            <div className="header-stack">
-              <div className="row" style={{ gap: '0.6rem' }}>
-                <h1 className="ana-page-title">Thư viện Mindmaps</h1>
+    <DashboardLayout
+      user={mockStudent}
+      role="student"
+      contentClassName="dashboard-content--flush-bleed"
+    >
+      <div className="px-6 py-8 lg:px-8">
+        <div className="space-y-6">
+          {/* ── Page header ── */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#E8E6DC] flex items-center justify-center text-[#5E5D59]">
+              <Workflow className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2.5">
+                <h1 className="font-[Playfair_Display] text-[22px] font-medium text-[#141413]">
+                  Thư viện Mindmaps
+                </h1>
                 {!loadingMindmaps && (
-                  <span className="count-chip">{mindmapsResult.totalElements}</span>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#E8E6DC] font-[Be_Vietnam_Pro] text-[12px] font-semibold text-[#5E5D59]">
+                    {mindmapsResult.totalElements}
+                  </span>
                 )}
               </div>
-              <p className="spm-header-sub">
+              <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-0.5">
                 Khám phá sơ đồ tư duy từ giáo viên trên toàn hệ thống
               </p>
             </div>
-          </header>
+          </div>
 
           {/* ── Filter panel ── */}
-          <div className="spm-filter-panel">
-            <div className="spm-filter-panel__head">
-              <Filter size={13} />
-              <span>Bộ lọc tìm kiếm</span>
+          <div className="bg-white rounded-2xl border border-[#E8E6DC] p-5 space-y-4">
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-[#87867F]" />
+              <h2 className="font-[Be_Vietnam_Pro] text-[13px] font-semibold text-[#5E5D59] uppercase tracking-wide">
+                Bộ lọc tìm kiếm
+              </h2>
             </div>
-            <div className="spm-filter-bar">
-              <div className="spm-filter-field">
-                <span className="spm-filter-label">
-                  <GraduationCap size={12} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div>
+                <label className="flex items-center gap-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mb-1.5">
+                  <GraduationCap className="w-3.5 h-3.5" />
                   Lớp
-                </span>
+                </label>
                 <select
-                  className="spm-select"
+                  className="w-full border border-[#E8E6DC] rounded-lg px-3 py-2 font-[Be_Vietnam_Pro] text-[13px] text-[#141413] outline-none focus:border-[#C96442] focus:ring-1 focus:ring-[#C96442] bg-white transition-colors disabled:bg-[#F5F4ED] disabled:text-[#87867F]"
                   value={gradeId}
                   onChange={(e) => handleGradeChange(e.target.value)}
                   disabled={loadingCatalog}
                 >
-                  <option value="">Tất cả khối lớp</option>
+                  <option value="">Tất cả lớp</option>
                   {schoolGrades.map((grade) => (
                     <option key={grade.id} value={grade.id}>
                       {grade.name}
@@ -422,18 +433,18 @@ export default function StudentPublicMindmaps() {
                 </select>
               </div>
 
-              <div className="spm-filter-field">
-                <span className="spm-filter-label">
-                  <BookOpen size={12} />
+              <div>
+                <label className="flex items-center gap-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mb-1.5">
+                  <BookOpen className="w-3.5 h-3.5" />
                   Môn học
-                </span>
+                </label>
                 <select
-                  className="spm-select"
+                  className="w-full border border-[#E8E6DC] rounded-lg px-3 py-2 font-[Be_Vietnam_Pro] text-[13px] text-[#141413] outline-none focus:border-[#C96442] focus:ring-1 focus:ring-[#C96442] bg-white transition-colors disabled:bg-[#F5F4ED] disabled:text-[#87867F]"
                   value={subjectId}
                   onChange={(e) => handleSubjectChange(e.target.value)}
                   disabled={!gradeId || loadingCatalog}
                 >
-                  <option value="">{gradeId ? 'Tất cả môn học' : 'Chọn khối trước'}</option>
+                  <option value="">{gradeId ? 'Tất cả môn học' : 'Chọn lớp trước'}</option>
                   {subjects.map((subject) => (
                     <option key={subject.id} value={subject.id}>
                       {subject.name}
@@ -442,13 +453,13 @@ export default function StudentPublicMindmaps() {
                 </select>
               </div>
 
-              <div className="spm-filter-field">
-                <span className="spm-filter-label">
-                  <BookMarked size={12} />
+              <div>
+                <label className="flex items-center gap-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mb-1.5">
+                  <BookMarked className="w-3.5 h-3.5" />
                   Chương
-                </span>
+                </label>
                 <select
-                  className="spm-select"
+                  className="w-full border border-[#E8E6DC] rounded-lg px-3 py-2 font-[Be_Vietnam_Pro] text-[13px] text-[#141413] outline-none focus:border-[#C96442] focus:ring-1 focus:ring-[#C96442] bg-white transition-colors disabled:bg-[#F5F4ED] disabled:text-[#87867F]"
                   value={chapterId}
                   onChange={(e) => handleChapterChange(e.target.value)}
                   disabled={!subjectId || loadingCatalog}
@@ -462,13 +473,13 @@ export default function StudentPublicMindmaps() {
                 </select>
               </div>
 
-              <div className="spm-filter-field">
-                <span className="spm-filter-label">
-                  <Network size={12} />
+              <div>
+                <label className="flex items-center gap-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mb-1.5">
+                  <Network className="w-3.5 h-3.5" />
                   Bài học
-                </span>
+                </label>
                 <select
-                  className="spm-select"
+                  className="w-full border border-[#E8E6DC] rounded-lg px-3 py-2 font-[Be_Vietnam_Pro] text-[13px] text-[#141413] outline-none focus:border-[#C96442] focus:ring-1 focus:ring-[#C96442] bg-white transition-colors disabled:bg-[#F5F4ED] disabled:text-[#87867F]"
                   value={lessonId}
                   onChange={(e) => handleLessonChange(e.target.value)}
                   disabled={!chapterId || loadingCatalog}
@@ -485,12 +496,11 @@ export default function StudentPublicMindmaps() {
           </div>
 
           {/* ── Toolbar ── */}
-          <div className="toolbar">
-            <label className="search-box">
-              <span className="search-box__icon" aria-hidden="true">
-                <Search size={15} />
-              </span>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <label className="flex-1 w-full flex items-center gap-3 bg-[#FAF9F5] border border-[#E8E6DC] rounded-xl shadow-[0px_0px_0px_1px_#E8E6DC] px-4 py-2.5 focus-within:border-[#3898EC] focus-within:shadow-[0_0_0_3px_rgba(56,152,236,0.12)] transition-all duration-150">
+              <Search className="text-[#87867F] w-4 h-4 flex-shrink-0" />
               <input
+                className="flex-1 font-[Be_Vietnam_Pro] text-[14px] text-[#141413] placeholder:text-[#87867F] bg-transparent outline-none"
                 placeholder="Tìm theo tiêu đề hoặc mô tả mindmap..."
                 value={mindmapKeyword}
                 onChange={(e) => {
@@ -501,21 +511,21 @@ export default function StudentPublicMindmaps() {
               {mindmapKeyword && (
                 <button
                   type="button"
-                  className="search-box__clear"
                   aria-label="Xóa tìm kiếm"
                   onClick={() => {
                     setMindmapKeyword('');
                     setMindmapPage(0);
                   }}
+                  className="text-[#87867F] hover:text-[#141413] transition-colors"
                 >
-                  <X size={14} />
+                  <X className="w-4 h-4" />
                 </button>
               )}
             </label>
 
-            <div className="pill-group">
+            <div className="flex items-center gap-2 flex-shrink-0">
               <select
-                className="spm-select spm-select--sm"
+                className="border border-[#E8E6DC] rounded-lg px-3 py-2 font-[Be_Vietnam_Pro] text-[13px] text-[#5E5D59] outline-none focus:border-[#C96442] focus:ring-1 focus:ring-[#C96442] bg-white transition-colors"
                 value={mindmapSortBy}
                 onChange={(e) => {
                   setMindmapSortBy(e.target.value);
@@ -526,7 +536,7 @@ export default function StudentPublicMindmaps() {
                 <option value="updatedAt">Cập nhật</option>
               </select>
               <select
-                className="spm-select spm-select--sm"
+                className="border border-[#E8E6DC] rounded-lg px-3 py-2 font-[Be_Vietnam_Pro] text-[13px] text-[#5E5D59] outline-none focus:border-[#C96442] focus:ring-1 focus:ring-[#C96442] bg-white transition-colors"
                 value={mindmapDirection}
                 onChange={(e) => {
                   setMindmapDirection(e.target.value as SortDirection);
@@ -537,7 +547,7 @@ export default function StudentPublicMindmaps() {
                 <option value="ASC">Cũ nhất</option>
               </select>
               <select
-                className="spm-select spm-select--sm"
+                className="border border-[#E8E6DC] rounded-lg px-3 py-2 font-[Be_Vietnam_Pro] text-[13px] text-[#5E5D59] outline-none focus:border-[#C96442] focus:ring-1 focus:ring-[#C96442] bg-white transition-colors"
                 value={mindmapSize}
                 onChange={(e) => {
                   setMindmapSize(Number(e.target.value));
@@ -553,102 +563,129 @@ export default function StudentPublicMindmaps() {
 
           {/* ── Active lesson chip ── */}
           {selectedLesson && (
-            <div className="assessment-summary-bar">
-              <div className="summary-item summary-item--primary">
-                <span className="summary-label">Bài học</span>
-                <strong className="summary-value">{selectedLesson.title}</strong>
+            <div className="flex items-center gap-4 px-4 py-3 rounded-xl bg-[#FAF9F5] border border-[#E8E6DC]">
+              <div className="flex items-center gap-2">
+                <span className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] uppercase tracking-wide">
+                  Bài học
+                </span>
+                <strong className="font-[Be_Vietnam_Pro] text-[13px] font-semibold text-[#141413]">
+                  {selectedLesson.title}
+                </strong>
               </div>
-              <div className="summary-item">
-                <span className="summary-label">Kết quả</span>
-                <strong className="summary-value">{mindmapsResult.totalElements} mindmap</strong>
+              <div className="w-px h-4 bg-[#E8E6DC]" />
+              <div className="flex items-center gap-2">
+                <span className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] uppercase tracking-wide">
+                  Kết quả
+                </span>
+                <strong className="font-[Be_Vietnam_Pro] text-[13px] font-semibold text-[#141413]">
+                  {mindmapsResult.totalElements} mindmap
+                </strong>
               </div>
             </div>
           )}
 
           {/* ── Loading skeleton ── */}
           {loadingMindmaps && (
-            <div className="skeleton-grid">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="skeleton-card" />
+                <div
+                  key={i}
+                  className="bg-[#FAF9F5] rounded-2xl border border-[#F0EEE6] h-52 animate-pulse"
+                />
               ))}
             </div>
           )}
 
           {/* ── Error ── */}
           {mindmapsError && !loadingMindmaps && (
-            <div className="empty">
-              <p style={{ color: 'var(--mod-danger)' }}>{mindmapsError}</p>
+            <div className="flex items-center justify-center py-12">
+              <p className="font-[Be_Vietnam_Pro] text-[14px] text-[#B53333]">{mindmapsError}</p>
             </div>
           )}
 
           {/* ── Empty ── */}
           {!loadingMindmaps && !mindmapsError && mindmapsResult.content.length === 0 && (
-            <div className="empty">
-              <Workflow size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
-              <p>Không có mindmap công khai phù hợp bộ lọc hiện tại.</p>
+            <div className="flex flex-col items-center justify-center py-16 gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-[#E8E6DC] flex items-center justify-center text-[#B0AEA5]">
+                <Workflow className="w-6 h-6" />
+              </div>
+              <p className="font-[Be_Vietnam_Pro] text-[14px] text-[#87867F]">
+                Không có mindmap công khai phù hợp bộ lọc hiện tại.
+              </p>
             </div>
           )}
 
           {/* ── Grid ── */}
           {!loadingMindmaps && mindmapsResult.content.length > 0 && (
             <>
-              <div className="grid-cards">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {mindmapsResult.content.map((mindmap) => (
-                  <article key={mindmap.id} className="data-card spm-card">
-                    <div className="spm-cover">
-                      <div className="spm-cover__overlay" />
-                      <span className="spm-cover__badge">Mindmap</span>
-                      <div className="spm-cover__icon">
+                  <article
+                    key={mindmap.id}
+                    className="bg-[#FAF9F5] rounded-2xl border border-[#F0EEE6] shadow-[rgba(0,0,0,0.05)_0px_4px_24px] overflow-hidden group cursor-pointer hover:shadow-[0px_0px_0px_1px_#D1CFC5,rgba(0,0,0,0.08)_0px_8px_30px] hover:-translate-y-0.5 transition-all duration-200"
+                  >
+                    <div className="h-[140px] bg-gradient-to-br from-[#E8E6DC] to-[#D1CFC5] relative flex items-center justify-center overflow-hidden">
+                      <span className="absolute top-3 right-3 bg-[#FAF9F5]/90 rounded-lg px-2 py-1 font-[Be_Vietnam_Pro] text-[11px] font-semibold text-[#141413]">
+                        Mindmap
+                      </span>
+                      <div className="text-[#87867F] group-hover:scale-110 transition-transform duration-300">
                         <Workflow size={42} strokeWidth={1.3} />
                       </div>
                     </div>
-                    <div className="spm-card-body">
-                      <h3 className="spm-card__title">{mindmap.title}</h3>
-                      <p className="spm-card__desc">{mindmap.description || 'Không có mô tả.'}</p>
-                      <div className="spm-card-metrics">
-                        <span className="metric">
-                          <Network size={11} />
+
+                    <div className="p-4 flex flex-col gap-2">
+                      <h3 className="font-[Playfair_Display] text-[17px] font-medium text-[#141413] line-clamp-2 leading-[1.3]">
+                        {mindmap.title}
+                      </h3>
+                      <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] leading-[1.5] line-clamp-2">
+                        {mindmap.description || 'Không có mô tả.'}
+                      </p>
+
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className="flex items-center gap-1 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">
+                          <Network className="w-3.5 h-3.5" />
                           {mindmap.nodeCount} nút
                         </span>
-                        <span className="metric">
-                          <User size={11} />
+                        <span className="flex items-center gap-1 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">
+                          <User className="w-3.5 h-3.5" />
                           {mindmap.teacherName || 'Giáo viên'}
                         </span>
                       </div>
-                      <div className="spm-card-actions">
-                        <button
-                          type="button"
-                          className="spm-btn-view"
-                          onClick={() => void handleOpenMindmapPreview(mindmap)}
-                          disabled={previewingMindmapId === mindmap.id}
-                        >
-                          <Workflow size={14} />
-                          {previewingMindmapId === mindmap.id ? 'Đang tải...' : 'Xem mindmap'}
-                        </button>
-                      </div>
+
+                      <button
+                        type="button"
+                        className="mt-2 w-full bg-[#141413] text-[#FAF9F5] rounded-xl py-2.5 font-[Be_Vietnam_Pro] text-[13px] font-semibold flex items-center justify-center gap-2 hover:bg-[#30302E] active:scale-[0.98] transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                        onClick={() => void handleOpenMindmapPreview(mindmap)}
+                        disabled={previewingMindmapId === mindmap.id}
+                      >
+                        <Workflow className="w-3.5 h-3.5" />
+                        {previewingMindmapId === mindmap.id ? 'Đang tải...' : 'Xem mindmap'}
+                      </button>
                     </div>
                   </article>
                 ))}
               </div>
 
               {/* ── Pagination ── */}
-              <div className="spm-pagination">
+              <div className="flex items-center justify-between pt-2">
                 <button
                   type="button"
-                  className="btn secondary"
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   onClick={() => setMindmapPage((prev) => Math.max(prev - 1, 0))}
                   disabled={mindmapsResult.number <= 0}
                 >
-                  <ChevronLeft size={15} /> Trước
+                  <ChevronLeft className="w-4 h-4" /> Trước
                 </button>
-                <span className="spm-page-info">
-                  Trang <strong>{mindmapsResult.number + 1}</strong> /{' '}
+
+                <span className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F]">
+                  Trang <strong className="text-[#141413]">{mindmapsResult.number + 1}</strong> /{' '}
                   {Math.max(mindmapsResult.totalPages, 1)} ·{' '}
-                  <span style={{ color: '#60748f' }}>{mindmapsResult.totalElements} mindmap</span>
+                  <span>{mindmapsResult.totalElements} mindmap</span>
                 </span>
+
                 <button
                   type="button"
-                  className="btn secondary"
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   onClick={() =>
                     setMindmapPage((prev) =>
                       mindmapsResult.totalPages > 0
@@ -661,86 +698,121 @@ export default function StudentPublicMindmaps() {
                     mindmapsResult.number >= mindmapsResult.totalPages - 1
                   }
                 >
-                  Sau <ChevronRight size={15} />
+                  Sau <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
             </>
           )}
+        </div>
+      </div>
 
-          {isPreviewOpen && (
-            <div className="spm-modal-overlay" onClick={handleCloseMindmapPreview}>
-              <div
-                className="spm-modal"
-                role="dialog"
-                aria-modal="true"
-                aria-label="Xem trước mindmap PNG"
-                onClick={(event) => event.stopPropagation()}
-              >
-                <div className="spm-modal-header">
-                  <h3>{selectedPreviewMindmap?.title || 'Xem trước mindmap'}</h3>
-                  <button
-                    type="button"
-                    className="spm-modal-close"
-                    onClick={handleCloseMindmapPreview}
-                  >
-                    ×
-                  </button>
+      {/* ── Preview modal ── */}
+      {isPreviewOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={handleCloseMindmapPreview}
+        >
+          <div
+            className="bg-[#FAF9F5] rounded-2xl shadow-[rgba(0,0,0,0.25)_0px_24px_64px] w-full max-w-5xl max-h-[92vh] flex flex-col overflow-hidden"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Xem trước mindmap"
+            onClick={(event) => event.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#F0EEE6] bg-white">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-[#E8E6DC] flex items-center justify-center text-[#5E5D59] flex-shrink-0">
+                  <Workflow className="w-5 h-5" />
                 </div>
-
-                <div className="spm-modal-body">
-                  {previewFrameLoading && (
-                    <div className="spm-math-loader" role="status" aria-live="polite">
-                      <div className="spm-math-loader-ring" aria-hidden="true" />
-                      <div className="spm-math-loader-symbols" aria-hidden="true">
-                        <span>∑</span>
-                        <span>π</span>
-                        <span>√</span>
-                        <span>∞</span>
-                        <span>Δ</span>
-                      </div>
-                      <p>Đang dựng mindmap...</p>
-                    </div>
-                  )}
-
-                  {selectedPreviewMindmap && (
-                    <iframe
-                      ref={previewIframeRef}
-                      className="spm-modal-iframe"
-                      src={`/mindmaps/public/${selectedPreviewMindmap.id}?embedPreview=1`}
-                      title={selectedPreviewMindmap.title || 'Mindmap preview'}
-                    />
-                  )}
-                </div>
-
-                <div className="spm-modal-footer">
-                  <button
-                    type="button"
-                    className="btn"
-                    disabled={
-                      !selectedPreviewMindmap ||
-                      previewFrameLoading ||
-                      downloadingPreviewMindmapId === selectedPreviewMindmap.id
-                    }
-                    onClick={() => void handleDownloadPreviewMindmap()}
-                  >
-                    {selectedPreviewMindmap &&
-                    downloadingPreviewMindmapId === selectedPreviewMindmap.id
-                      ? 'Đang tải...'
-                      : 'Tải ảnh PNG'}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn secondary"
-                    onClick={handleCloseMindmapPreview}
-                  >
-                    Đóng
-                  </button>
+                <div className="min-w-0">
+                  <h3 className="font-[Playfair_Display] text-[20px] font-medium text-[#141413] line-clamp-1 leading-[1.2]">
+                    {selectedPreviewMindmap?.title || 'Xem trước mindmap'}
+                  </h3>
+                  <div className="flex items-center gap-3 mt-0.5">
+                    {selectedPreviewMindmap?.nodeCount != null && (
+                      <span className="flex items-center gap-1 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">
+                        <Network className="w-3 h-3" />
+                        {selectedPreviewMindmap.nodeCount} nút
+                      </span>
+                    )}
+                    {selectedPreviewMindmap?.teacherName && (
+                      <span className="flex items-center gap-1 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">
+                        <User className="w-3 h-3" />
+                        {selectedPreviewMindmap.teacherName}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
+              <button
+                type="button"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-[#87867F] hover:bg-[#F0EEE6] hover:text-[#141413] transition-colors flex-shrink-0 ml-4"
+                onClick={handleCloseMindmapPreview}
+                aria-label="Đóng"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
-          )}
-        </section>
-      </div>
+
+            {/* Content */}
+            <div className="flex-1 relative overflow-hidden bg-[#F5F4ED] min-h-[500px]">
+              {previewFrameLoading && (
+                <div
+                  className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-[#F5F4ED] z-10"
+                  role="status"
+                  aria-live="polite"
+                >
+                  <div className="w-10 h-10 rounded-full border-2 border-[#E8E6DC] border-t-[#C96442] animate-spin" />
+                  <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] animate-pulse">
+                    Đang dựng mindmap...
+                  </p>
+                </div>
+              )}
+              {selectedPreviewMindmap && (
+                <iframe
+                  ref={previewIframeRef}
+                  className="w-full h-full min-h-[500px] border-0"
+                  src={`/mindmaps/public/${selectedPreviewMindmap.id}?embedPreview=1`}
+                  title={selectedPreviewMindmap.title || 'Mindmap preview'}
+                />
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-[#F0EEE6] bg-white">
+              <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#B0AEA5] hidden sm:block">
+                Ảnh PNG sẽ được tải về thiết bị của bạn
+              </p>
+              <div className="flex items-center gap-2 ml-auto">
+                <button
+                  type="button"
+                  className="px-4 py-2 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors"
+                  onClick={handleCloseMindmapPreview}
+                >
+                  Đóng
+                </button>
+                <button
+                  type="button"
+                  className="flex items-center gap-2 px-5 py-2 rounded-xl bg-[#D4795A] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:brightness-95 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all duration-150"
+                  disabled={
+                    !selectedPreviewMindmap ||
+                    previewFrameLoading ||
+                    downloadingPreviewMindmapId === selectedPreviewMindmap.id
+                  }
+                  onClick={() => void handleDownloadPreviewMindmap()}
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  {selectedPreviewMindmap &&
+                  downloadingPreviewMindmapId === selectedPreviewMindmap.id
+                    ? 'Đang tải...'
+                    : 'Tải ảnh PNG'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }

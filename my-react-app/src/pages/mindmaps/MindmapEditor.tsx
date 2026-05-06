@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import html2canvas from 'html2canvas';
-import MindElixir from 'mind-elixir';
+import { ArrowLeft, Download, Move, Pencil, Plus, Save, Trash2 } from 'lucide-react';
+import MindElixir, { THEME as MindElixirLightTheme } from 'mind-elixir';
 import 'mind-elixir/style.css';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -11,10 +12,68 @@ import { MindmapService } from '../../services/api/mindmap.service';
 import type { Mindmap, MindmapNode } from '../../types';
 import './MindmapEditor.css';
 
+// ── Visual theme (mirrors PublicMindmapViewer) ─────────────────────────────
+const MINDMAP_THEME = {
+  ...MindElixirLightTheme,
+  background: '#F0EEE6',
+  color: '#141413',
+  cssVar: {
+    ...((MindElixirLightTheme as { cssVar?: Record<string, string> }).cssVar ?? {}),
+    '--bgcolor': '#F0EEE6',
+    '--main-bgcolor': '#ffffff',
+    '--main-color': 'transparent',
+    '--color': '#444',
+    '--root-radius': '16px',
+    '--main-radius': '100px',
+    '--root-border-color': 'rgba(0,0,0,0)',
+    '--selected': 'rgba(79,126,247,0.18)',
+    '--node-gap-x': '32px',
+    '--node-gap-y': '8px',
+    '--main-gap-x': '80px',
+    '--main-gap-y': '30px',
+    '--topic-padding': '5px 18px',
+  },
+};
+
+const BRANCH_COLORS = [
+  '#7AA5FA',
+  '#55C49A',
+  '#E8975E',
+  '#B38EE8',
+  '#64C0D5',
+  '#DE9F8A',
+  '#7BB887',
+  '#D696C4',
+] as const;
+
+const LEAF_BG = [
+  '#EEF3FF',
+  '#E0F7EF',
+  '#FDF1E5',
+  '#F3EDFB',
+  '#E4F6FA',
+  '#FCF0EA',
+  '#E8F5EC',
+  '#FAF0F8',
+] as const;
+
+const LEAF_FG = [
+  '#1E3A8A',
+  '#064E3B',
+  '#7C2D12',
+  '#3B0764',
+  '#0C4A6E',
+  '#431407',
+  '#14532D',
+  '#500724',
+] as const;
+// ─────────────────────────────────────────────────────────────────────────────
+
 interface MindElixirNodeData {
   id: string;
   topic: string;
   expanded?: boolean;
+  branchColor?: string;
   style?: {
     color?: string;
     background?: string;
@@ -37,31 +96,6 @@ interface MindElixirInstance {
 
 type InteractionMode = 'DRAG' | 'EDIT';
 type NodePanelMode = 'EDIT' | 'ADD';
-
-const ICON_SYMBOLS: Record<string, string> = {
-  lightbulb: '💡',
-  bookmark: '🔖',
-  'check-circle': '✅',
-  'info-circle': 'ℹ️',
-  book: '📚',
-  target: '🎯',
-  star: '⭐',
-  flag: '🚩',
-  heart: '❤️',
-  link: '🔗',
-  sparkles: '✨',
-  fire: '🔥',
-  rocket: '🚀',
-  trophy: '🏆',
-  medal: '🏅',
-  brain: '🧠',
-  bulb: '💡',
-  pencil: '✏️',
-  chart: '📊',
-  dna: '🧬',
-};
-
-const getIconSymbol = (icon: string): string => ICON_SYMBOLS[icon] || '📌';
 
 const flattenNodes = (nodes: MindmapNode[]): MindmapNode[] => {
   const result: MindmapNode[] = [];
@@ -236,19 +270,39 @@ export default function MindmapEditor() {
         return MindElixir.new(mindmap?.title || 'Mindmap mới') as MindElixirData;
       }
 
-      const buildNode = (node: MindmapNode): MindElixirNodeData => ({
-        id: node.id,
-        topic: `${getIconSymbol(node.icon)} ${node.content}`,
-        expanded: true,
-        style: {
-          color: '#ffffff',
-          background: node.color,
-        },
-        children: (childrenMap.get(node.id) || []).map(buildNode),
-      });
+      const buildNode = (
+        node: MindmapNode,
+        depth: number,
+        branchIdx: number
+      ): MindElixirNodeData => {
+        let style: { color: string; background: string };
+        let branchColor: string | undefined;
+
+        if (depth === 0) {
+          style = { color: '#FAF9F5', background: '#1C1C1A' };
+        } else if (depth === 1) {
+          const i = branchIdx % BRANCH_COLORS.length;
+          style = { color: '#ffffff', background: BRANCH_COLORS[i] };
+          branchColor = BRANCH_COLORS[i];
+        } else {
+          const i = branchIdx % LEAF_BG.length;
+          style = { color: LEAF_FG[i], background: LEAF_BG[i] };
+        }
+
+        return {
+          id: node.id,
+          topic: node.content,
+          expanded: true,
+          branchColor,
+          style,
+          children: (childrenMap.get(node.id) || []).map((child, childIdx) =>
+            buildNode(child, depth + 1, depth === 0 ? childIdx : branchIdx)
+          ),
+        };
+      };
 
       return {
-        nodeData: buildNode(rootNode),
+        nodeData: buildNode(rootNode, 0, 0),
       };
     },
     [mindmap?.title]
@@ -298,6 +352,8 @@ export default function MindmapEditor() {
         toolBar: !isEmbedPreview,
         keypress: !isEmbedPreview,
         locale: 'en',
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        theme: MINDMAP_THEME as any,
       });
 
       mind.init(data);
@@ -746,229 +802,390 @@ export default function MindmapEditor() {
       notificationCount={5}
     >
       <div className="mindmap-editor-page">
-        <div className="editor-header">
-          <div className="header-left">
-            <button className="btn-back" onClick={() => navigate('/teacher/mindmaps')}>
-              ← Quay lại
+        {/* ── Header ─────────────────────────────────────────────── */}
+        <div className="bg-[#FAF9F5] border-b border-[#E8E6DC] px-5 py-3 flex items-center justify-between gap-4 flex-wrap flex-shrink-0">
+          {/* Left: back + title */}
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <button
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] active:scale-[0.98] transition-all duration-150 flex-shrink-0"
+              onClick={() => navigate('/teacher/mindmaps')}
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              Quay lại
             </button>
-            <div>
-              <h1>{mindmap.title}</h1>
-              <p>{mindmap.description}</p>
+            <div className="min-w-0">
+              <h1 className="font-[Playfair_Display] text-[17px] font-medium text-[#141413] leading-tight truncate">
+                {mindmap.title}
+              </h1>
+              {mindmap.description && (
+                <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mt-0.5 truncate">
+                  {mindmap.description}
+                </p>
+              )}
             </div>
           </div>
-          <div className="header-actions">
-            <div className="interaction-toggle" role="group" aria-label="Chế độ thao tác">
+
+          {/* Right: actions */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Mode toggle */}
+            <div
+              className="flex items-center gap-0.5 p-0.5 bg-[#F5F4ED] rounded-xl border border-[#E8E6DC]"
+              role="group"
+              aria-label="Chế độ thao tác"
+            >
               <button
                 type="button"
-                className={`interaction-btn ${interactionMode === 'DRAG' ? 'active' : ''}`}
                 onClick={() => setInteractionMode('DRAG')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-[Be_Vietnam_Pro] text-[12px] font-semibold transition-all duration-150 ${
+                  interactionMode === 'DRAG'
+                    ? 'bg-white text-[#141413] shadow-[rgba(0,0,0,0.06)_0px_2px_8px]'
+                    : 'text-[#87867F] hover:text-[#5E5D59]'
+                }`}
               >
+                <Move className="w-3.5 h-3.5" />
                 Kéo thả
               </button>
               <button
                 type="button"
-                className={`interaction-btn ${interactionMode === 'EDIT' ? 'active' : ''}`}
                 onClick={() => setInteractionMode('EDIT')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-[Be_Vietnam_Pro] text-[12px] font-semibold transition-all duration-150 ${
+                  interactionMode === 'EDIT'
+                    ? 'bg-white text-[#141413] shadow-[rgba(0,0,0,0.06)_0px_2px_8px]'
+                    : 'text-[#87867F] hover:text-[#5E5D59]'
+                }`}
               >
+                <Pencil className="w-3.5 h-3.5" />
                 Chỉnh sửa
               </button>
             </div>
+
+            {/* Export button */}
             <button
               type="button"
-              className="btn-export-image"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150"
               onClick={handleExportImage}
               disabled={exportingImage}
             >
-              {exportingImage ? 'Đang xuất ảnh...' : 'Xuất ảnh'}
+              <Download className="w-3.5 h-3.5" />
+              {exportingImage ? 'Đang xuất...' : 'Xuất ảnh'}
             </button>
+
+            {/* Status select */}
             <select
               value={mindmap.status === 'ARCHIVED' ? 'DRAFT' : mindmap.status}
               onChange={(e) => handleUpdateStatus(e.target.value as 'DRAFT' | 'PUBLISHED')}
-              className="status-select"
+              className="border border-[#E8E6DC] rounded-xl px-3 py-2 font-[Be_Vietnam_Pro] text-[13px] font-semibold text-[#141413] bg-white outline-none focus:border-[#3898EC] focus:ring-2 focus:ring-[#3898EC]/20 cursor-pointer transition-all duration-150"
             >
-              <option value="DRAFT">Nháp</option>
-              <option value="PUBLISHED">Xuất bản</option>
+              <option value="DRAFT">Bản nháp</option>
+              <option value="PUBLISHED">Công khai</option>
             </select>
           </div>
         </div>
 
+        {/* ── Canvas area ────────────────────────────────────────── */}
         <div className="editor-content">
           <div className="flow-container">
-            <div className="interaction-hint">
+            {/* Mode hint chip */}
+            <div className="absolute top-3 left-3 z-[3] bg-[#141413]/70 text-[#FAF9F5] px-3 py-1.5 rounded-lg font-[Be_Vietnam_Pro] text-[11px] pointer-events-none max-w-[90%]">
               {interactionMode === 'DRAG'
-                ? 'Chế độ kéo thả: kéo node để thay đổi cấu trúc mindmap.'
-                : 'Chế độ chỉnh sửa: bấm node để mở panel chỉnh sửa.'}
+                ? 'Chế độ kéo thả — kéo node để thay đổi cấu trúc mindmap.'
+                : 'Chế độ chỉnh sửa — bấm node để mở bảng chỉnh sửa.'}
             </div>
             <div ref={mindContainerRef} className="mind-elixir-host" />
           </div>
 
+          {/* ── Edit panel ───────────────────────────────────────── */}
           {interactionMode === 'EDIT' && selectedNodeId && (
-            <div className="edit-panel" ref={editPanelRef}>
-              <h3>{nodePanelMode === 'EDIT' ? 'Chỉnh sửa Node' : 'Thêm node con'}</h3>
-              <div className="panel-tabs" role="tablist" aria-label="Node actions">
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={nodePanelMode === 'EDIT'}
-                  className={`panel-tab ${nodePanelMode === 'EDIT' ? 'active' : ''}`}
-                  onClick={() => setNodePanelMode('EDIT')}
+            <div
+              ref={editPanelRef}
+              className="absolute top-4 right-4 w-[296px] bg-[#FAF9F5] rounded-2xl border border-[#E8E6DC] shadow-[rgba(0,0,0,0.12)_0px_8px_32px,0px_0px_0px_1px_#D1CFC5] z-10 max-h-[calc(100vh-200px)] overflow-y-auto"
+              style={{ animation: 'panelSlideIn 0.25s cubic-bezier(0.22,1,0.36,1) both' }}
+            >
+              {/* Panel header with tabs */}
+              <div className="px-4 pt-4 pb-3 border-b border-[#F0EEE6] flex items-center justify-between gap-2">
+                <h3 className="font-[Playfair_Display] text-[15px] font-medium text-[#141413] leading-tight">
+                  {nodePanelMode === 'EDIT' ? 'Chỉnh sửa node' : 'Thêm node con'}
+                </h3>
+                <div
+                  className="flex items-center gap-0.5 p-0.5 bg-[#F0EEE6] rounded-lg"
+                  role="tablist"
+                  aria-label="Node actions"
                 >
-                  Chỉnh sửa
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={nodePanelMode === 'ADD'}
-                  className={`panel-tab ${nodePanelMode === 'ADD' ? 'active' : ''}`}
-                  onClick={() => setNodePanelMode('ADD')}
-                >
-                  Thêm node
-                </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={nodePanelMode === 'EDIT'}
+                    onClick={() => setNodePanelMode('EDIT')}
+                    className={`px-2.5 py-1 rounded-md font-[Be_Vietnam_Pro] text-[11px] font-semibold transition-all duration-150 ${
+                      nodePanelMode === 'EDIT'
+                        ? 'bg-white text-[#141413] shadow-sm'
+                        : 'text-[#87867F] hover:text-[#5E5D59]'
+                    }`}
+                  >
+                    Sửa
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={nodePanelMode === 'ADD'}
+                    onClick={() => setNodePanelMode('ADD')}
+                    className={`px-2.5 py-1 rounded-md font-[Be_Vietnam_Pro] text-[11px] font-semibold transition-all duration-150 ${
+                      nodePanelMode === 'ADD'
+                        ? 'bg-white text-[#141413] shadow-sm'
+                        : 'text-[#87867F] hover:text-[#5E5D59]'
+                    }`}
+                  >
+                    Thêm
+                  </button>
+                </div>
               </div>
 
-              {nodePanelMode === 'EDIT' ? (
-                <>
-                  <div className="form-group">
-                    <label>Nội dung</label>
-                    <input
-                      type="text"
-                      value={editForm.content}
-                      onChange={(e) => setEditForm({ ...editForm, content: e.target.value })}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Màu sắc</label>
-                    <input
-                      type="color"
-                      value={editForm.color}
-                      onChange={(e) => setEditForm({ ...editForm, color: e.target.value })}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Icon</label>
-                    <select
-                      value={editForm.icon}
-                      onChange={(e) => setEditForm({ ...editForm, icon: e.target.value })}
-                    >
-                      <option value="lightbulb">💡 Lightbulb</option>
-                      <option value="brain">🧠 Brain</option>
-                      <option value="bookmark">🔖 Bookmark</option>
-                      <option value="check-circle">✅ Check</option>
-                      <option value="info-circle">ℹ️ Info</option>
-                      <option value="book">📚 Book</option>
-                      <option value="target">🎯 Target</option>
-                      <option value="star">⭐ Star</option>
-                      <option value="sparkles">✨ Sparkles</option>
-                      <option value="fire">🔥 Fire</option>
-                      <option value="rocket">🚀 Rocket</option>
-                      <option value="trophy">🏆 Trophy</option>
-                      <option value="medal">🏅 Medal</option>
-                      <option value="pencil">✏️ Pencil</option>
-                      <option value="chart">📊 Chart</option>
-                      <option value="flag">🚩 Flag</option>
-                      <option value="heart">❤️ Heart</option>
-                      <option value="link">🔗 Link</option>
-                    </select>
-                  </div>
-                  <div className="panel-actions">
-                    <button onClick={() => setSelectedNodeId(null)} className="btn-cancel">
-                      Hủy
-                    </button>
-                    <button onClick={handleRequestDeleteNode} className="btn-delete">
-                      Xóa
-                    </button>
-                    <button onClick={handleSaveNode} disabled={saving} className="btn-save">
-                      {saving ? 'Đang lưu...' : 'Lưu'}
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div className="add-node-block tab-mode">
-                  <div className="form-group">
-                    <label>Nội dung node mới</label>
-                    <input
-                      type="text"
-                      value={newNodeForm.content}
-                      onChange={(e) => setNewNodeForm({ ...newNodeForm, content: e.target.value })}
-                      placeholder="Nhập nội dung node con..."
-                    />
-                  </div>
-                  <div className="form-group row-inline">
+              <div className="p-4 space-y-3">
+                {nodePanelMode === 'EDIT' ? (
+                  <>
+                    {/* Content */}
                     <div>
-                      <label>Màu</label>
+                      <label
+                        htmlFor="edit-content"
+                        className="block font-[Be_Vietnam_Pro] text-[11px] font-medium text-[#87867F] uppercase tracking-[0.4px] mb-1.5"
+                      >
+                        Nội dung
+                      </label>
                       <input
-                        type="color"
-                        value={newNodeForm.color}
-                        onChange={(e) => setNewNodeForm({ ...newNodeForm, color: e.target.value })}
+                        id="edit-content"
+                        type="text"
+                        className="w-full border border-[#E8E6DC] rounded-xl px-3 py-2 font-[Be_Vietnam_Pro] text-[13px] text-[#141413] bg-white outline-none focus:border-[#C96442] focus:ring-1 focus:ring-[#C96442]/20 transition-colors"
+                        value={editForm.content}
+                        onChange={(e) => setEditForm({ ...editForm, content: e.target.value })}
                       />
                     </div>
-                    <div>
-                      <label>Icon</label>
-                      <select
-                        value={newNodeForm.icon}
-                        onChange={(e) => setNewNodeForm({ ...newNodeForm, icon: e.target.value })}
-                      >
-                        <option value="lightbulb">💡 Lightbulb</option>
-                        <option value="brain">🧠 Brain</option>
-                        <option value="bookmark">🔖 Bookmark</option>
-                        <option value="check-circle">✅ Check</option>
-                        <option value="info-circle">ℹ️ Info</option>
-                        <option value="book">📚 Book</option>
-                        <option value="target">🎯 Target</option>
-                        <option value="star">⭐ Star</option>
-                        <option value="sparkles">✨ Sparkles</option>
-                        <option value="fire">🔥 Fire</option>
-                        <option value="rocket">🚀 Rocket</option>
-                        <option value="trophy">🏆 Trophy</option>
-                        <option value="medal">🏅 Medal</option>
-                        <option value="pencil">✏️ Pencil</option>
-                        <option value="chart">📊 Chart</option>
-                        <option value="flag">🚩 Flag</option>
-                        <option value="heart">❤️ Heart</option>
-                        <option value="link">🔗 Link</option>
-                      </select>
+                    {/* Color + Icon row */}
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div>
+                        <label
+                          htmlFor="edit-color"
+                          className="block font-[Be_Vietnam_Pro] text-[11px] font-medium text-[#87867F] uppercase tracking-[0.4px] mb-1.5"
+                        >
+                          Màu sắc
+                        </label>
+                        <input
+                          id="edit-color"
+                          type="color"
+                          className="w-full h-[38px] border border-[#E8E6DC] rounded-xl cursor-pointer bg-white p-0.5 transition-colors"
+                          value={editForm.color}
+                          onChange={(e) => setEditForm({ ...editForm, color: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="edit-icon"
+                          className="block font-[Be_Vietnam_Pro] text-[11px] font-medium text-[#87867F] uppercase tracking-[0.4px] mb-1.5"
+                        >
+                          Icon
+                        </label>
+                        <select
+                          id="edit-icon"
+                          className="w-full border border-[#E8E6DC] rounded-xl px-2 py-2 font-[Be_Vietnam_Pro] text-[12px] text-[#141413] bg-white outline-none focus:border-[#C96442] focus:ring-1 focus:ring-[#C96442]/20 transition-colors"
+                          value={editForm.icon}
+                          onChange={(e) => setEditForm({ ...editForm, icon: e.target.value })}
+                        >
+                          <option value="lightbulb">💡 Ý tưởng</option>
+                          <option value="brain">🧠 Não bộ</option>
+                          <option value="bookmark">🔖 Đánh dấu</option>
+                          <option value="check-circle">✅ Hoàn thành</option>
+                          <option value="info-circle">ℹ️ Thông tin</option>
+                          <option value="book">📚 Sách</option>
+                          <option value="target">🎯 Mục tiêu</option>
+                          <option value="star">⭐ Nổi bật</option>
+                          <option value="sparkles">✨ Sáng tạo</option>
+                          <option value="fire">🔥 Quan trọng</option>
+                          <option value="rocket">🚀 Tiến lên</option>
+                          <option value="trophy">🏆 Thành tích</option>
+                          <option value="medal">🏅 Giải thưởng</option>
+                          <option value="pencil">✏️ Ghi chú</option>
+                          <option value="chart">📊 Biểu đồ</option>
+                          <option value="flag">🚩 Đánh dấu</option>
+                          <option value="heart">❤️ Yêu thích</option>
+                          <option value="link">🔗 Liên kết</option>
+                        </select>
+                      </div>
                     </div>
-                  </div>
-                  <div className="panel-actions">
-                    <button onClick={() => setSelectedNodeId(null)} className="btn-cancel">
-                      Hủy
-                    </button>
-                    <button
-                      type="button"
-                      className="btn-add-child"
-                      onClick={handleCreateChildNode}
-                      disabled={creatingNode}
-                    >
-                      {creatingNode ? 'Đang thêm node...' : 'Thêm node con'}
-                    </button>
-                  </div>
-                </div>
-              )}
+                    {/* Actions */}
+                    <div className="flex gap-2 pt-1">
+                      <button
+                        type="button"
+                        className="flex-1 px-3 py-2 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[12px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] active:scale-[0.98] transition-all duration-150"
+                        onClick={() => setSelectedNodeId(null)}
+                      >
+                        Hủy
+                      </button>
+                      <button
+                        type="button"
+                        className="flex items-center justify-center px-3 py-2 rounded-xl border border-red-200 bg-red-50 font-[Be_Vietnam_Pro] text-[12px] font-medium text-red-600 hover:bg-red-100 active:scale-[0.98] transition-all duration-150"
+                        onClick={handleRequestDeleteNode}
+                        aria-label="Xóa node"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-[#C96442] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[12px] font-semibold hover:brightness-95 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] transition-all duration-150"
+                        onClick={handleSaveNode}
+                        disabled={saving}
+                      >
+                        {saving ? (
+                          'Đang lưu...'
+                        ) : (
+                          <>
+                            <Save className="w-3.5 h-3.5" />
+                            Lưu
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {/* Add node form */}
+                    <div>
+                      <label
+                        htmlFor="new-content"
+                        className="block font-[Be_Vietnam_Pro] text-[11px] font-medium text-[#87867F] uppercase tracking-[0.4px] mb-1.5"
+                      >
+                        Nội dung node mới
+                      </label>
+                      <input
+                        id="new-content"
+                        type="text"
+                        className="w-full border border-[#E8E6DC] rounded-xl px-3 py-2 font-[Be_Vietnam_Pro] text-[13px] text-[#141413] bg-white outline-none focus:border-[#C96442] focus:ring-1 focus:ring-[#C96442]/20 transition-colors placeholder:text-[#B0AEA5]"
+                        value={newNodeForm.content}
+                        onChange={(e) =>
+                          setNewNodeForm({ ...newNodeForm, content: e.target.value })
+                        }
+                        placeholder="Nhập nội dung node con..."
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div>
+                        <label
+                          htmlFor="new-color"
+                          className="block font-[Be_Vietnam_Pro] text-[11px] font-medium text-[#87867F] uppercase tracking-[0.4px] mb-1.5"
+                        >
+                          Màu
+                        </label>
+                        <input
+                          id="new-color"
+                          type="color"
+                          className="w-full h-[38px] border border-[#E8E6DC] rounded-xl cursor-pointer bg-white p-0.5 transition-colors"
+                          value={newNodeForm.color}
+                          onChange={(e) =>
+                            setNewNodeForm({ ...newNodeForm, color: e.target.value })
+                          }
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="new-icon"
+                          className="block font-[Be_Vietnam_Pro] text-[11px] font-medium text-[#87867F] uppercase tracking-[0.4px] mb-1.5"
+                        >
+                          Icon
+                        </label>
+                        <select
+                          id="new-icon"
+                          className="w-full border border-[#E8E6DC] rounded-xl px-2 py-2 font-[Be_Vietnam_Pro] text-[12px] text-[#141413] bg-white outline-none focus:border-[#C96442] focus:ring-1 focus:ring-[#C96442]/20 transition-colors"
+                          value={newNodeForm.icon}
+                          onChange={(e) => setNewNodeForm({ ...newNodeForm, icon: e.target.value })}
+                        >
+                          <option value="lightbulb">💡 Ý tưởng</option>
+                          <option value="brain">🧠 Não bộ</option>
+                          <option value="bookmark">🔖 Đánh dấu</option>
+                          <option value="check-circle">✅ Hoàn thành</option>
+                          <option value="info-circle">ℹ️ Thông tin</option>
+                          <option value="book">📚 Sách</option>
+                          <option value="target">🎯 Mục tiêu</option>
+                          <option value="star">⭐ Nổi bật</option>
+                          <option value="sparkles">✨ Sáng tạo</option>
+                          <option value="fire">🔥 Quan trọng</option>
+                          <option value="rocket">🚀 Tiến lên</option>
+                          <option value="trophy">🏆 Thành tích</option>
+                          <option value="medal">🏅 Giải thưởng</option>
+                          <option value="pencil">✏️ Ghi chú</option>
+                          <option value="chart">📊 Biểu đồ</option>
+                          <option value="flag">🚩 Đánh dấu</option>
+                          <option value="heart">❤️ Yêu thích</option>
+                          <option value="link">🔗 Liên kết</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 pt-1">
+                      <button
+                        type="button"
+                        className="flex-1 px-3 py-2 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[12px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] active:scale-[0.98] transition-all duration-150"
+                        onClick={() => setSelectedNodeId(null)}
+                      >
+                        Hủy
+                      </button>
+                      <button
+                        type="button"
+                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-[#141413] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[12px] font-semibold hover:bg-[#30302E] disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] transition-all duration-150"
+                        onClick={handleCreateChildNode}
+                        disabled={creatingNode}
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        {creatingNode ? 'Đang thêm...' : 'Thêm node con'}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           )}
         </div>
 
+        {/* ── Delete confirm modal ───────────────────────────────── */}
         {deleteConfirm.open && (
-          <div className="delete-modal-backdrop" onClick={closeDeleteConfirm}>
+          <div
+            className="delete-modal-backdrop absolute inset-0 bg-[#141413]/50 backdrop-blur-[2px] grid place-items-center z-30 p-4"
+            onClick={closeDeleteConfirm}
+          >
             <div
-              className="delete-modal"
+              className="w-full max-w-[400px] bg-[#FAF9F5] rounded-2xl border border-[#F0EEE6] shadow-[rgba(0,0,0,0.20)_0px_20px_60px,0px_0px_0px_1px_#D1CFC5] p-6 flex flex-col gap-4"
               role="dialog"
               aria-modal="true"
               aria-label="Xác nhận xóa node"
               onClick={(event) => event.stopPropagation()}
+              style={{ animation: 'deleteModalIn 0.18s ease both' }}
             >
-              <h4>Xác nhận xóa node</h4>
-              <p>
-                Bạn sắp xóa node <strong>{deleteConfirm.nodeLabel}</strong>.
-              </p>
-              <p className="delete-modal-impact">
-                Tổng số node sẽ bị xóa: <strong>{deleteConfirm.totalNodes}</strong>
-              </p>
-              <div className="delete-modal-actions">
-                <button className="btn-cancel" onClick={closeDeleteConfirm} disabled={deletingNode}>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-red-50 border border-red-200 flex items-center justify-center text-red-500 flex-shrink-0">
+                  <Trash2 className="w-4 h-4" />
+                </div>
+                <h4 className="font-[Playfair_Display] text-[17px] font-medium text-[#141413] leading-tight">
+                  Xác nhận xóa node
+                </h4>
+              </div>
+              <div className="space-y-2">
+                <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#5E5D59] leading-[1.6]">
+                  Bạn sắp xóa node{' '}
+                  <strong className="text-[#141413]">{deleteConfirm.nodeLabel}</strong>.
+                </p>
+                <div className="px-3 py-2.5 rounded-xl bg-red-50 border border-red-200 font-[Be_Vietnam_Pro] text-[12px] text-red-700 leading-[1.5]">
+                  Tổng số node sẽ bị xóa: <strong>{deleteConfirm.totalNodes}</strong>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  className="flex-1 px-4 py-2.5 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] disabled:opacity-50 active:scale-[0.98] transition-all duration-150"
+                  onClick={closeDeleteConfirm}
+                  disabled={deletingNode}
+                >
                   Hủy
                 </button>
-                <button className="btn-delete" onClick={handleDeleteNode} disabled={deletingNode}>
+                <button
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-red-600 text-white font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] transition-all duration-150"
+                  onClick={handleDeleteNode}
+                  disabled={deletingNode}
+                >
                   {deletingNode ? 'Đang xóa...' : 'Xác nhận xóa'}
                 </button>
               </div>

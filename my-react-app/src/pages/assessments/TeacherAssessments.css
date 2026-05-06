@@ -1,7 +1,7 @@
 /*
  * Assessment list card — refactor for clarity:
  *   ┌──────────────────────────────────────────────┐
- *   │ [NHÁP]                       [✓ Xuất bản]    │  header (status + primary)
+ *   │ [NHÁP]                       [✓ Công khai]    │  header (status + primary)
  *   │ Title                                        │
  *   │ Description                                  │
  *   │ 2 câu hỏi · 2 điểm · 45 phút                 │  meta line
@@ -23,7 +23,10 @@
   flex-direction: column;
   gap: 0.75rem;
   min-height: 0;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
 }
 
 .module-layout-container .tassess-card:hover {

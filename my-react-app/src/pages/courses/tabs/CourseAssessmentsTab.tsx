@@ -62,7 +62,7 @@ const typeCategory: Record<string, 'formative' | 'summative'> = {
 
 const statusLabel: Record<string, string> = {
   DRAFT: 'Nháp',
-  PUBLISHED: 'Đã xuất bản',
+  PUBLISHED: 'Đã công khai',
   CLOSED: 'Đã đóng',
 };
 
@@ -135,7 +135,7 @@ function AddAssessmentModal({
           <div>
             <h3>Thêm bài kiểm tra vào {UI_TEXT.COURSE.toLowerCase()}</h3>
             <p className="muted" style={{ margin: 0, fontSize: '0.9rem' }}>
-              Chọn bài kiểm tra đã xuất bản từ ngân hàng của bạn
+              Chọn bài kiểm tra đã công khai từ ngân hàng của bạn
             </p>
           </div>
           <button
@@ -225,7 +225,7 @@ function AddAssessmentModal({
               <FileText size={40} style={{ color: '#d4c9bc', marginBottom: '0.5rem' }} />
               <p>
                 {available.length === 0
-                  ? 'Bạn chưa có bài kiểm tra đã xuất bản nào phù hợp.'
+                  ? 'Bạn chưa có bài kiểm tra đã công khai nào phù hợp.'
                   : 'Không tìm thấy bài kiểm tra phù hợp với từ khóa.'}
               </p>
             </div>
@@ -251,7 +251,7 @@ function AddAssessmentModal({
                     <div className="cat-select-card-head">
                       <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                         <span
-                          className={`cat-badge ${statusLabel[assessment.status] === 'Đã xuất bản' ? 'published' : 'draft'}`}
+                          className={`cat-badge ${statusLabel[assessment.status] === 'Đã công khai' ? 'published' : 'draft'}`}
                         >
                           {statusLabel[assessment.status]}
                         </span>
@@ -491,7 +491,7 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
           </div>
           <div className="stat-card__text">
             <h3>{stats.published}</h3>
-            <p>Đã xuất bản</p>
+            <p>Đã công khai</p>
             <span className="stat-card__sub">sẵn sàng cho học viên</span>
           </div>
         </div>
@@ -533,7 +533,7 @@ const CourseAssessmentsTab: React.FC<CourseAssessmentsTabProps> = ({ courseId, c
                 >
                   <option value="">Tất cả trạng thái</option>
                   <option value="DRAFT">Nháp</option>
-                  <option value="PUBLISHED">Đã xuất bản</option>
+                  <option value="PUBLISHED">Đã công khai</option>
                   <option value="CLOSED">Đã đóng</option>
                 </select>
               </label>

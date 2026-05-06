@@ -237,6 +237,9 @@ const AIAssistant: React.FC = () => {
       } else if (apiError.code === 1165) {
         setLocalError('Token của gói đã hết. Vui lòng mua thêm gói hoặc nạp tiền.');
         setTokenModal({ type: 'no-token' });
+      } else if (apiError.code === 1166) {
+        setLocalError('Bạn không đủ token để thanh toán dịch vụ, vui lòng mua gói.');
+        setTokenModal({ type: 'no-plan' });
       } else {
         setLocalError(getErrorMessage(error, 'Không thể gửi prompt.'));
       }

@@ -111,9 +111,7 @@ const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({ course }) => {
           </div>
           <div className="course-overview-banner__content">
             <h4>Chương trình chuẩn của Bộ GD&ĐT</h4>
-            <p>
-              Khóa học tuân theo cấu trúc môn học và khối lớp chính thức từ Bộ Giáo Dục và Đào Tạo.
-            </p>
+            <p>Khóa học tuân theo cấu trúc môn học và lớp chính thức từ Bộ Giáo Dục và Đào Tạo.</p>
           </div>
         </div>
       )}
@@ -154,7 +152,7 @@ const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({ course }) => {
                 <strong>{course.subjectName || '—'}</strong>
               </MetaRow>
               <MetaRow icon={BookOpen} label="Lớp">
-                <strong>Khối {course.gradeLevel}</strong>
+                <strong>Lớp {course.gradeLevel}</strong>
               </MetaRow>
             </>
           )}

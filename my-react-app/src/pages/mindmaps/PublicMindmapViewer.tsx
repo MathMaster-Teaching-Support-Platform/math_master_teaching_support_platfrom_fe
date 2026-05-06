@@ -1,16 +1,73 @@
+import html2canvas from 'html2canvas';
+import MindElixir, { THEME as MindElixirLightTheme } from 'mind-elixir';
+import 'mind-elixir/style.css';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import html2canvas from 'html2canvas';
-import MindElixir from 'mind-elixir';
-import 'mind-elixir/style.css';
 import { MindmapService } from '../../services/api/mindmap.service';
 import type { Mindmap, MindmapNode } from '../../types';
 import './PublicMindmapViewer.css';
+
+const MINDMAP_THEME = {
+  ...MindElixirLightTheme,
+  background: '#F0EEE6',
+  color: '#141413',
+  cssVar: {
+    ...((MindElixirLightTheme as { cssVar?: Record<string, string> }).cssVar ?? {}),
+    '--bgcolor': '#F0EEE6',
+    '--main-bgcolor': '#ffffff',
+    '--main-color': 'transparent', // removes grey border on L1 nodes
+    '--color': '#444',
+    '--root-radius': '16px',
+    '--main-radius': '100px', // pill shape for L1
+    '--root-border-color': 'rgba(0,0,0,0)',
+    '--selected': 'rgba(79,126,247,0.18)',
+    '--node-gap-x': '32px',
+    '--node-gap-y': '8px',
+    '--main-gap-x': '80px',
+    '--main-gap-y': '30px',
+    '--topic-padding': '5px 18px',
+  },
+};
+
+// Depth-based color system: root → branch (rich) → leaf (light tinted)
+const BRANCH_COLORS = [
+  '#7AA5FA', // indigo-blue
+  '#55C49A', // emerald
+  '#E8975E', // burnt orange (brand)
+  '#B38EE8', // violet
+  '#64C0D5', // teal
+  '#DE9F8A', // terracotta
+  '#7BB887', // forest green
+  '#D696C4', // mauve
+] as const;
+
+const LEAF_BG = [
+  '#EEF3FF', // indigo-blue light
+  '#E0F7EF', // emerald light
+  '#FDF1E5', // orange light
+  '#F3EDFB', // violet light
+  '#E4F6FA', // teal light
+  '#FCF0EA', // terracotta light
+  '#E8F5EC', // forest light
+  '#FAF0F8', // mauve light
+] as const;
+
+const LEAF_FG = [
+  '#1E3A8A', // indigo-blue dark
+  '#064E3B', // emerald dark
+  '#7C2D12', // orange dark
+  '#3B0764', // violet dark
+  '#0C4A6E', // teal dark
+  '#431407', // terracotta dark
+  '#14532D', // forest dark
+  '#500724', // mauve dark
+] as const;
 
 interface MindElixirNodeData {
   id: string;
   topic: string;
   expanded?: boolean;
+  branchColor?: string;
   style?: {
     color?: string;
     background?: string;
@@ -32,31 +89,6 @@ interface ExportRequestMessage {
   requestId?: string;
   mindmapId?: string;
 }
-
-const ICON_SYMBOLS: Record<string, string> = {
-  lightbulb: '💡',
-  bookmark: '🔖',
-  'check-circle': '✅',
-  'info-circle': 'ℹ️',
-  book: '📚',
-  target: '🎯',
-  star: '⭐',
-  flag: '🚩',
-  heart: '❤️',
-  link: '🔗',
-  sparkles: '✨',
-  fire: '🔥',
-  rocket: '🚀',
-  trophy: '🏆',
-  medal: '🏅',
-  brain: '🧠',
-  bulb: '💡',
-  pencil: '✏️',
-  chart: '📊',
-  dna: '🧬',
-};
-
-const getIconSymbol = (icon: string): string => ICON_SYMBOLS[icon] || '📌';
 
 const flattenNodes = (nodes: MindmapNode[]): MindmapNode[] => {
   const result: MindmapNode[] = [];
@@ -302,19 +334,36 @@ export default function PublicMindmapViewer() {
       return null;
     }
 
-    const buildNode = (node: MindmapNode): MindElixirNodeData => ({
-      id: node.id,
-      topic: `${getIconSymbol(node.icon)} ${node.content}`,
-      expanded: true,
-      style: {
-        color: '#ffffff',
-        background: node.color,
-      },
-      children: (childrenMap.get(node.id) || []).map(buildNode),
-    });
+    const buildNode = (node: MindmapNode, depth: number, branchIdx: number): MindElixirNodeData => {
+      let style: { color: string; background: string };
+      let branchColor: string | undefined;
+
+      if (depth === 0) {
+        style = { color: '#FAF9F5', background: '#1C1C1A' };
+      } else if (depth === 1) {
+        const i = branchIdx % BRANCH_COLORS.length;
+        style = { color: '#ffffff', background: BRANCH_COLORS[i] };
+        // branchColor tells Mind Elixir to paint the connecting lines this color
+        branchColor = BRANCH_COLORS[i];
+      } else {
+        const i = branchIdx % LEAF_BG.length;
+        style = { color: LEAF_FG[i], background: LEAF_BG[i] };
+      }
+
+      return {
+        id: node.id,
+        topic: node.content,
+        expanded: true,
+        branchColor,
+        style,
+        children: (childrenMap.get(node.id) || []).map((child, childIdx) =>
+          buildNode(child, depth + 1, depth === 0 ? childIdx : branchIdx)
+        ),
+      };
+    };
 
     return {
-      nodeData: buildNode(rootNode),
+      nodeData: buildNode(rootNode, 0, 0),
     };
   }, [mindmapNodes]);
 
@@ -335,6 +384,8 @@ export default function PublicMindmapViewer() {
       toolBar: false,
       contextMenu: false,
       keypress: false,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      theme: MINDMAP_THEME as any,
     }) as unknown as MindElixirInstance;
 
     instance.init(mindData);

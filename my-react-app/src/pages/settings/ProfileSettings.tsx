@@ -322,7 +322,7 @@ const ProfileSettings: React.FC = () => {
     // Validate school grades: Students can only select 1 grade
     const isStudent = userData?.roles.includes('STUDENT');
     if (isStudent && profileForm.schoolGradeIds.length > 1) {
-      errs.schoolGradeIds = 'Học sinh chỉ được chọn 1 khối lớp';
+      errs.schoolGradeIds = 'Học sinh chỉ được chọn 1 lớp';
     }
 
     // Validate email
@@ -802,7 +802,7 @@ const ProfileSettings: React.FC = () => {
                               disabled={schoolGradesQuery.isLoading}
                             >
                               {!userData?.roles.includes('TEACHER') && (
-                                <option value="">Chọn khối lớp</option>
+                                <option value="">Chọn lớp</option>
                               )}
                               {schoolGradesQuery.data?.result?.map((grade) => (
                                 <option key={grade.id} value={grade.id}>
@@ -819,10 +819,10 @@ const ProfileSettings: React.FC = () => {
                           )}
                           <p className="ps-field__hint">
                             {userData?.roles.includes('STUDENT')
-                              ? 'Chọn khối lớp bạn đang học'
+                              ? 'Chọn lớp bạn đang học'
                               : userData?.roles.includes('TEACHER')
-                                ? 'Giữ Ctrl/Cmd để chọn nhiều khối lớp bạn dạy'
-                                : 'Chọn khối lớp của bạn'}
+                                ? 'Giữ Ctrl/Cmd để chọn nhiều lớp bạn dạy'
+                                : 'Chọn lớp của bạn'}
                           </p>
                         </div>
 

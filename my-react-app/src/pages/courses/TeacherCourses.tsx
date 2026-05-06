@@ -271,7 +271,7 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
                           <GraduationCap size={22} />
                         </div>
                         <h4>Chương trình chuẩn</h4>
-                        <p>Bám sát khung Bộ GD. Yêu cầu chọn khối/môn.</p>
+                        <p>Bám sát khung Bộ GD. Yêu cầu chọn lớp/môn.</p>
                       </button>
                       <button
                         type="button"
@@ -300,10 +300,10 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
                             onChange={(e) => void handleGradeChange(e.target.value)}
                             required
                           >
-                            <option value="">-- Chọn khối lớp --</option>
+                            <option value="">-- Chọn lớp --</option>
                             {grades.map((g) => (
                               <option key={g.id} value={g.id}>
-                                Khối {g.gradeLevel} – {g.name}
+                                Lớp {g.gradeLevel} – {g.name}
                               </option>
                             ))}
                           </select>
@@ -459,7 +459,7 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
                         className="form-input form-textarea"
                         value={form.targetAudience || ''}
                         onChange={(e) => setForm({ ...form, targetAudience: e.target.value })}
-                        placeholder="Dành cho học sinh khối 12..."
+                        placeholder="Dành cho học sinh lớp 12..."
                         rows={2}
                       />
                     </div>

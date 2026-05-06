@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import 'katex/dist/katex.min.css';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BlockMath, InlineMath } from 'react-katex';
 import { useNavigate } from 'react-router-dom';
@@ -21,7 +22,6 @@ import type {
   SchoolGrade,
   SubjectByGrade,
 } from '../../types/lessonSlide.types';
-import 'katex/dist/katex.min.css';
 import './AISlideGenerator.css';
 
 const LoadingSpinner: React.FC<{ label: string }> = ({ label }) => (
@@ -1123,7 +1123,7 @@ const AISlideGenerator: React.FC = () => {
     setSuccess('');
 
     if (!schoolGradeId || !subjectId || !chapterId || !lessonId) {
-      setError('Vui lòng chọn đầy đủ Khối, Môn, Chương và Bài học trước khi tạo nội dung.');
+      setError('Vui lòng chọn đầy đủ Lớp, Môn, Chương và Bài học trước khi tạo nội dung.');
       return;
     }
 
@@ -1447,23 +1447,23 @@ const AISlideGenerator: React.FC = () => {
 
             <div className="ai-slide-step-list">
               <label>
-                <span>Chọn Khối (School Grade)</span>
+                <span>Chọn Lớp (School Grade)</span>
                 <select
                   value={schoolGradeId}
                   onChange={(e) => void handleSchoolGradeChange(e.target.value)}
                   disabled={loadingGrades}
                 >
-                  <option value="">-- Chọn khối --</option>
+                  <option value="">-- Chọn lớp --</option>
                   {schoolGrades.map((grade) => (
                     <option key={grade.id} value={grade.id}>
-                      Khối {grade.gradeLevel} - {grade.name}
+                      Lớp {grade.gradeLevel} - {grade.name}
                     </option>
                   ))}
                 </select>
               </label>
 
               {!schoolGradeId && (
-                <p className="ai-slide-info">Vui lòng chọn khối để mở bước tiếp theo.</p>
+                <p className="ai-slide-info">Vui lòng chọn lớp để mở bước tiếp theo.</p>
               )}
 
               {showSubjectStep && (
@@ -1485,7 +1485,7 @@ const AISlideGenerator: React.FC = () => {
               )}
 
               {showSubjectStep && !loadingSubjects && subjects.length === 0 && (
-                <p className="ai-slide-info">Khối này chưa có môn học.</p>
+                <p className="ai-slide-info">Lớp này chưa có môn học.</p>
               )}
 
               {showChapterStep && (

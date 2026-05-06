@@ -143,14 +143,14 @@ const Navbar: React.FC<NavbarProps> = ({ user }) => {
             </Link>
           )}
 
-          {tokenRemaining !== null && (
+          {showWalletAction && (
             <Link
               to="/pricing"
               className="token-chip"
-              aria-label={`Token subscription còn lại ${tokenRemaining}`}
+              aria-label={`Token subscription còn lại ${tokenRemaining ?? 0}`}
             >
               <span className="token-chip-label">Token</span>
-              <strong>{tokenRemaining}</strong>
+              <strong>{tokenRemaining ?? 0}</strong>
             </Link>
           )}
 

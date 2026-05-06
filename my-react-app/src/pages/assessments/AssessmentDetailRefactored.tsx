@@ -1,32 +1,32 @@
 import { ArrowLeft, ChevronDown, Pencil, Plus, RefreshCw } from 'lucide-react';
-import { UI_TEXT } from '../../constants/uiText';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { QuestionCard } from '../../components/assessment';
+import '../../components/assessment/question-card.css';
+import MathText from '../../components/common/MathText';
+import Pagination from '../../components/common/Pagination';
+import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { UI_TEXT } from '../../constants/uiText';
+import { useToast } from '../../context/ToastContext';
 import {
   useAddQuestion,
   useAssessment,
-  useAvailableAssessmentQuestions,
   useAssessmentQuestions,
+  useAvailableAssessmentQuestions,
   useDistributeQuestionPoints,
   useGenerateQuestionsForAssessment,
+  usePatchAssessment,
   useRemoveQuestion,
   useSetPointsOverride,
-  usePatchAssessment,
   useUpdateAssessmentQuestionWorkaround,
 } from '../../hooks/useAssessment';
-import MathText from '../../components/common/MathText';
-import Pagination from '../../components/common/Pagination';
-import { useToast } from '../../context/ToastContext';
 import '../../styles/module-refactor.css';
-import '../../components/assessment/question-card.css';
 import type { AssessmentRequest } from '../../types';
 import AssessmentModal from './AssessmentModal';
 
 const assessmentStatusLabel: Record<string, string> = {
   DRAFT: 'Nháp',
-  PUBLISHED: 'Đã xuất bản',
+  PUBLISHED: 'Đã công khai',
   CLOSED: 'Đã đóng',
 };
 
@@ -282,8 +282,7 @@ export default function AssessmentDetailRefactored() {
       await Promise.all([refetchQuestions(), refetch()]);
       showToast({ type: 'success', message: 'Đã phân bổ điểm thành công' });
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Không thể phân bổ điểm tự động.';
+      const message = error instanceof Error ? error.message : 'Không thể phân bổ điểm tự động.';
       setQuestionCrudError(message);
       showToast({ type: 'error', message });
     }
@@ -335,7 +334,9 @@ export default function AssessmentDetailRefactored() {
       return (
         <section className="module-page">
           <div className="empty">
-            {error instanceof Error ? error.message : `Không thể tải chi tiết ${UI_TEXT.QUIZ.toLowerCase()}`}
+            {error instanceof Error
+              ? error.message
+              : `Không thể tải chi tiết ${UI_TEXT.QUIZ.toLowerCase()}`}
           </div>
         </section>
       );
@@ -365,7 +366,6 @@ export default function AssessmentDetailRefactored() {
             </div>
             {assessment.status === 'DRAFT' && (
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                
                 <button className="btn secondary" onClick={() => setOpenEdit(true)}>
                   <Pencil size={14} />
                   Chỉnh sửa thông tin
@@ -461,7 +461,6 @@ export default function AssessmentDetailRefactored() {
                   </button>
                 </>
               )}
-     
             </div>
           </div>
 
@@ -483,112 +482,131 @@ export default function AssessmentDetailRefactored() {
                   <Plus size={14} />
                   Thêm câu hỏi vào bài kiểm tra
                 </span>
-                <ChevronDown
-                  size={16}
-                  className="add-question-panel__chevron"
-                  aria-hidden="true"
-                />
+                <ChevronDown size={16} className="add-question-panel__chevron" aria-hidden="true" />
               </summary>
               <div className="add-question-panel__body">
-              <div className="form-grid" style={{ marginBottom: 10 }}>
-                <label>
-                  <p className="muted" style={{ marginBottom: 6 }}>Từ khóa</p>
-                  <input
-                    className="input"
-                    placeholder="Tìm theo nội dung câu hỏi..."
-                    value={searchKeyword}
-                    onChange={(event) => setSearchKeyword(event.target.value)}
-                  />
-                </label>
-                <label>
-                  <p className="muted" style={{ marginBottom: 6 }}>Thẻ (tag)</p>
-                  <input
-                    className="input"
-                    placeholder="Ví dụ: đại số, hình học..."
-                    value={searchTag}
-                    onChange={(event) => setSearchTag(event.target.value)}
-                  />
-                </label>
-              </div>
-              <div className="row" style={{ flexWrap: 'wrap', justifyContent: 'start', marginBottom: 8 }}>
-                <input
-                  className="input"
-                  style={{ width: 160 }}
-                  type="number"
-                  min={0}
-                  step={0.25}
-                  placeholder="Điểm cho câu hỏi"
-                  value={addPoints}
-                  onChange={(event) => setAddPoints(event.target.value)}
-                />
-                <button
-                  className="btn"
-                  onClick={() => void handleBatchAddFromSearch()}
-                  disabled={addQuestionMutation.isPending || selectedToAdd.size === 0}
+                <div className="form-grid" style={{ marginBottom: 10 }}>
+                  <label>
+                    <p className="muted" style={{ marginBottom: 6 }}>
+                      Từ khóa
+                    </p>
+                    <input
+                      className="input"
+                      placeholder="Tìm theo nội dung câu hỏi..."
+                      value={searchKeyword}
+                      onChange={(event) => setSearchKeyword(event.target.value)}
+                    />
+                  </label>
+                  <label>
+                    <p className="muted" style={{ marginBottom: 6 }}>
+                      Thẻ (tag)
+                    </p>
+                    <input
+                      className="input"
+                      placeholder="Ví dụ: đại số, hình học..."
+                      value={searchTag}
+                      onChange={(event) => setSearchTag(event.target.value)}
+                    />
+                  </label>
+                </div>
+                <div
+                  className="row"
+                  style={{ flexWrap: 'wrap', justifyContent: 'start', marginBottom: 8 }}
                 >
-                  {addQuestionMutation.isPending ? 'Đang thêm...' : `Thêm vào bài (${selectedToAdd.size})`}
-                </button>
-                <button className="btn secondary" onClick={() => void refetchSearch()}>
-                  <RefreshCw size={14} />
-                  Làm mới
-                </button>
-              </div>
-              {searchLoading && <div className="empty">Đang tìm câu hỏi...</div>}
-              {searchError && <div className="empty" style={{ color: '#b91c1c' }}>Không thể tìm câu hỏi</div>}
-              {!searchLoading && !searchError && searchedQuestions.length > 0 && (
-                <div className="table-wrap">
-                  <table className="table">
-                    <thead>
-                      <tr>
-                        <th style={{ width: 40 }}>
-                          <input
-                            type="checkbox"
-                            checked={searchedQuestions.length > 0 && searchedQuestions.every((q) => selectedToAdd.has(q.id))}
-                            onChange={(event) => handleSelectAllSearch(event.target.checked, searchedQuestions.map((q) => q.id))}
-                          />
-                        </th>
-                        <th>Câu hỏi</th>
-                        <th style={{ width: 150 }}>Loại</th>
-                        <th style={{ width: 150 }}>Trạng thái</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {searchedQuestions.map((question) => (
-                        <tr key={question.id}>
-                          <td>
+                  <input
+                    className="input"
+                    style={{ width: 160 }}
+                    type="number"
+                    min={0}
+                    step={0.25}
+                    placeholder="Điểm cho câu hỏi"
+                    value={addPoints}
+                    onChange={(event) => setAddPoints(event.target.value)}
+                  />
+                  <button
+                    className="btn"
+                    onClick={() => void handleBatchAddFromSearch()}
+                    disabled={addQuestionMutation.isPending || selectedToAdd.size === 0}
+                  >
+                    {addQuestionMutation.isPending
+                      ? 'Đang thêm...'
+                      : `Thêm vào bài (${selectedToAdd.size})`}
+                  </button>
+                  <button className="btn secondary" onClick={() => void refetchSearch()}>
+                    <RefreshCw size={14} />
+                    Làm mới
+                  </button>
+                </div>
+                {searchLoading && <div className="empty">Đang tìm câu hỏi...</div>}
+                {searchError && (
+                  <div className="empty" style={{ color: '#b91c1c' }}>
+                    Không thể tìm câu hỏi
+                  </div>
+                )}
+                {!searchLoading && !searchError && searchedQuestions.length > 0 && (
+                  <div className="table-wrap">
+                    <table className="table">
+                      <thead>
+                        <tr>
+                          <th style={{ width: 40 }}>
                             <input
                               type="checkbox"
-                              checked={selectedToAdd.has(question.id)}
-                              onChange={(event) => handleToggleSearchQuestion(event.target.checked, question.id)}
+                              checked={
+                                searchedQuestions.length > 0 &&
+                                searchedQuestions.every((q) => selectedToAdd.has(q.id))
+                              }
+                              onChange={(event) =>
+                                handleSelectAllSearch(
+                                  event.target.checked,
+                                  searchedQuestions.map((q) => q.id)
+                                )
+                              }
                             />
-                          </td>
-                          <td>
-                            <MathText text={question.questionText} />
-                          </td>
-                          <td>{question.questionType}</td>
-                          <td>{question.questionStatus || '-'}</td>
+                          </th>
+                          <th>Câu hỏi</th>
+                          <th style={{ width: 150 }}>Loại</th>
+                          <th style={{ width: 150 }}>Trạng thái</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-              {!searchLoading && !searchError && searchedQuestions.length === 0 && (
-                <div className="empty">Không tìm thấy câu hỏi. Nhập từ khóa để tìm kiếm.</div>
-              )}
-              {totalSearchElements > 0 && (
-                <Pagination
-                  page={searchPage}
-                  totalPages={totalSearchPages}
-                  totalElements={totalSearchElements}
-                  pageSize={searchPageSize}
-                  onChange={setSearchPage}
-                  onPageSizeChange={(newSize) => {
-                    setSearchPageSize(newSize);
-                    setSearchPage(0);
-                  }}
-                />
-              )}
+                      </thead>
+                      <tbody>
+                        {searchedQuestions.map((question) => (
+                          <tr key={question.id}>
+                            <td>
+                              <input
+                                type="checkbox"
+                                checked={selectedToAdd.has(question.id)}
+                                onChange={(event) =>
+                                  handleToggleSearchQuestion(event.target.checked, question.id)
+                                }
+                              />
+                            </td>
+                            <td>
+                              <MathText text={question.questionText} />
+                            </td>
+                            <td>{question.questionType}</td>
+                            <td>{question.questionStatus || '-'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+                {!searchLoading && !searchError && searchedQuestions.length === 0 && (
+                  <div className="empty">Không tìm thấy câu hỏi. Nhập từ khóa để tìm kiếm.</div>
+                )}
+                {totalSearchElements > 0 && (
+                  <Pagination
+                    page={searchPage}
+                    totalPages={totalSearchPages}
+                    totalElements={totalSearchElements}
+                    pageSize={searchPageSize}
+                    onChange={setSearchPage}
+                    onPageSizeChange={(newSize) => {
+                      setSearchPageSize(newSize);
+                      setSearchPage(0);
+                    }}
+                  />
+                )}
               </div>
             </details>
           )}
@@ -611,7 +629,7 @@ export default function AssessmentDetailRefactored() {
           {questionsLoading && (
             <div className="question-list__loading">Đang tải danh sách câu hỏi...</div>
           )}
-          
+
           {questionsError && (
             <div className="question-list__empty" style={{ color: '#dc2626' }}>
               {questionsErrorValue instanceof Error
@@ -619,7 +637,7 @@ export default function AssessmentDetailRefactored() {
                 : `Không thể tải câu hỏi trong ${UI_TEXT.QUIZ.toLowerCase()}.`}
             </div>
           )}
-          
+
           {!questionsLoading && !questionsError && questions.length === 0 && (
             <div className="question-list__empty">{UI_TEXT.QUIZ} chưa có câu hỏi.</div>
           )}

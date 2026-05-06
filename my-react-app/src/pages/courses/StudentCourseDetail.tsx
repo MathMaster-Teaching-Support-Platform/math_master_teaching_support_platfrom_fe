@@ -8,8 +8,8 @@ import {
   Linkedin,
   MessageSquare,
   PlayCircle,
-  Star,
   Sparkles,
+  Star,
   TrendingUp,
   Users,
   Youtube,
@@ -20,6 +20,7 @@ import { CourseIncludesList } from '../../components/course/CourseIncludesList';
 import { CourseLearningPanels } from '../../components/course/CourseLearningPanels';
 import CourseRecommendationRow from '../../components/course/CourseRecommendationRow';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { UI_TEXT } from '../../constants/uiText';
 import {
   useCourseDetail,
   useCourseProgress,
@@ -30,7 +31,6 @@ import {
 } from '../../hooks/useCourses';
 import '../../styles/module-refactor.css';
 import './StudentCourses.css';
-import { UI_TEXT } from '../../constants/uiText';
 // Import tab components
 import StudentAssessmentsTab from './student-tabs/StudentAssessmentsTab';
 import StudentLessonsTab from './student-tabs/StudentLessonsTab';
@@ -238,18 +238,40 @@ const StudentCourseDetail: React.FC = () => {
                       </div>
                     )}
                     {course && (
-                      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          gap: '0.5rem',
+                          marginBottom: '0.75rem',
+                          flexWrap: 'wrap',
+                          alignItems: 'center',
+                        }}
+                      >
                         {course.provider === 'MINISTRY' ? (
                           <span
                             className="course-badge"
-                            style={{ background: '#eff6ff', color: '#1e40af', border: '1px solid #bfdbfe', display: 'flex', alignItems: 'center', gap: 4 }}
+                            style={{
+                              background: '#eff6ff',
+                              color: '#1e40af',
+                              border: '1px solid #bfdbfe',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 4,
+                            }}
                           >
                             <BookOpen size={12} /> Chương trình chuẩn Bộ GD&ĐT
                           </span>
                         ) : (
                           <span
                             className="course-badge"
-                            style={{ background: '#fefce8', color: '#854d0e', border: '1px solid #fde047', display: 'flex', alignItems: 'center', gap: 4 }}
+                            style={{
+                              background: '#fefce8',
+                              color: '#854d0e',
+                              border: '1px solid #fde047',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 4,
+                            }}
                           >
                             <Sparkles size={12} /> Khóa học mở rộng
                           </span>
@@ -278,7 +300,7 @@ const StudentCourseDetail: React.FC = () => {
                           <>
                             <span className="meta-item">
                               <BookOpen size={14} />
-                              {course.subjectName} • Khối {course.gradeLevel}
+                              {course.subjectName} • Lớp {course.gradeLevel}
                             </span>
                             <span className="meta-separator">•</span>
                           </>

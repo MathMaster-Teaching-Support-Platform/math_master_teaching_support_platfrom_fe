@@ -185,7 +185,7 @@ export function useApproveCourseReview() {
     onSuccess: () => {
       showToast({
         type: 'success',
-        message: 'Đã duyệt và xuất bản khóa học thành công.',
+        message: 'Đã duyệt và công khai khóa học thành công.',
       });
       qc.invalidateQueries({ queryKey: courseKeys.all });
     },

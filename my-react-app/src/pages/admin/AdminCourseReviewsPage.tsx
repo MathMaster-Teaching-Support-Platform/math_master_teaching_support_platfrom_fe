@@ -1,3 +1,4 @@
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   AlertCircle,
   ArrowLeft,
@@ -11,7 +12,6 @@ import {
   History,
   XCircle,
 } from 'lucide-react';
-import { AnimatePresence, motion } from 'framer-motion';
 import React from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { useToast } from '../../context/ToastContext';
@@ -87,7 +87,7 @@ function PendingTab({
   const onApprove = (courseId: string) => {
     approveMutation.mutate(courseId, {
       onSuccess: () => {
-        showToast({ type: 'success', message: 'Đã duyệt và xuất bản khóa học.' });
+        showToast({ type: 'success', message: 'Đã duyệt và công khai khóa học.' });
         refetch();
       },
       onError: (err: unknown) => {
@@ -237,7 +237,12 @@ function PendingTab({
               aria-label="Đóng"
               onClick={() => setRejectCourseId(null)}
             />
-            <div className="course-review-modal" role="dialog" aria-modal="true" aria-labelledby="course-review-reject-title">
+            <div
+              className="course-review-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="course-review-reject-title"
+            >
               <h2 id="course-review-reject-title">Từ chối khóa học</h2>
               <p>Nhập lý do để giáo viên chỉnh sửa và gửi lại.</p>
               <textarea
@@ -451,7 +456,9 @@ function CourseRow({
           </span>
         </td>
       )}
-      <td className="course-review-meta-date">{new Date(course.updatedAt ?? course.createdAt).toLocaleDateString('vi-VN')}</td>
+      <td className="course-review-meta-date">
+        {new Date(course.updatedAt ?? course.createdAt).toLocaleDateString('vi-VN')}
+      </td>
       <td>{actions}</td>
     </tr>
   );
@@ -566,8 +573,12 @@ const AdminCourseReviewsPage: React.FC = () => {
                 <CheckCircle2 size={20} />
               </div>
               <div>
-                <h3>{statPublished.isPending && !statPublished.data ? '…' : pickTotalElements(statPublished.data)}</h3>
-                <p>Đã xuất bản</p>
+                <h3>
+                  {statPublished.isPending && !statPublished.data
+                    ? '…'
+                    : pickTotalElements(statPublished.data)}
+                </h3>
+                <p>Đã công khai</p>
               </div>
             </div>
             <div className="stat-card stat-amber">
@@ -575,7 +586,9 @@ const AdminCourseReviewsPage: React.FC = () => {
                 <FileText size={20} />
               </div>
               <div>
-                <h3>{statDraft.isPending && !statDraft.data ? '…' : pickTotalElements(statDraft.data)}</h3>
+                <h3>
+                  {statDraft.isPending && !statDraft.data ? '…' : pickTotalElements(statDraft.data)}
+                </h3>
                 <p>Bản nháp (lịch sử)</p>
               </div>
             </div>
@@ -584,7 +597,9 @@ const AdminCourseReviewsPage: React.FC = () => {
                 <GraduationCap size={20} />
               </div>
               <div>
-                <h3>{statAll.isPending && !statAll.data ? '…' : pickTotalElements(statAll.data)}</h3>
+                <h3>
+                  {statAll.isPending && !statAll.data ? '…' : pickTotalElements(statAll.data)}
+                </h3>
                 <p>Tổng lịch sử</p>
               </div>
             </div>

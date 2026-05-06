@@ -1,21 +1,24 @@
 import { HelpCircle, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { AcademicCascade } from '../../components/common/AcademicCascade';
+import { LatexToolbar } from '../../components/common/LatexToolbar';
+import { TagSelector } from '../../components/common/TagSelector';
+import { AIExtractPanel } from '../../components/question-templates/AIExtractPanel';
+import {
+  MCQBlueprint,
+  type MCQBlueprintRef,
+} from '../../components/question-templates/MCQBlueprint';
+import { SABlueprint, type SABlueprintRef } from '../../components/question-templates/SABlueprint';
+import { TFBlueprint, type TFBlueprintRef } from '../../components/question-templates/TFBlueprint';
+import { TypeSelector } from '../../components/question-templates/TypeSelector';
+import { useChaptersBySubject } from '../../hooks/useChapters';
 import {
   CognitiveLevel,
-  QuestionType,
   QuestionTag,
+  QuestionType,
   type QuestionTemplateRequest,
   type QuestionTemplateResponse,
 } from '../../types/questionTemplate';
-import { AcademicCascade } from '../../components/common/AcademicCascade';
-import { TagSelector } from '../../components/common/TagSelector';
-import { LatexToolbar } from '../../components/common/LatexToolbar';
-import { TypeSelector } from '../../components/question-templates/TypeSelector';
-import { MCQBlueprint, type MCQBlueprintRef } from '../../components/question-templates/MCQBlueprint';
-import { TFBlueprint, type TFBlueprintRef } from '../../components/question-templates/TFBlueprint';
-import { SABlueprint, type SABlueprintRef } from '../../components/question-templates/SABlueprint';
-import { AIExtractPanel } from '../../components/question-templates/AIExtractPanel';
-import { useChaptersBySubject } from '../../hooks/useChapters';
 
 type Props = {
   isOpen: boolean;
@@ -49,10 +52,10 @@ const cognitiveLevelLabels: Record<CognitiveLevel, string> = {
   VAN_DUNG_CAO: '4. Vận dụng cao',
 };
 
-function validateFormInput(input: {
-  name: string;
-  tags: QuestionTag[];
-}): { error?: string; result?: ValidationResult } {
+function validateFormInput(input: { name: string; tags: QuestionTag[] }): {
+  error?: string;
+  result?: ValidationResult;
+} {
   const normalizedName = input.name.trim();
   if (!normalizedName) return { error: 'Tên mẫu là bắt buộc.' };
   if (normalizedName.length > 255) return { error: 'Tên mẫu không được vượt quá 255 ký tự.' };
@@ -99,9 +102,8 @@ function buildOptions(options: OptionInput[]): Record<string, unknown> {
   for (const option of options) {
     if (!option.key.trim() || !option.formula.trim()) continue;
     const formula = option.formula.trim();
-    const wrappedFormula = formula.startsWith('$') && formula.endsWith('$')
-      ? formula
-      : `$${formula}$`;
+    const wrappedFormula =
+      formula.startsWith('$') && formula.endsWith('$') ? formula : `$${formula}$`;
     mappedOptions[option.key.trim()] = wrappedFormula;
   }
   return mappedOptions;
@@ -222,15 +224,14 @@ export function TemplateFormModal({
   const [saving, setSaving] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
-  const [lastFocusedInput, setLastFocusedInput] = useState<HTMLInputElement | HTMLTextAreaElement | null>(null);
+  const [lastFocusedInput, setLastFocusedInput] = useState<
+    HTMLInputElement | HTMLTextAreaElement | null
+  >(null);
 
   // Global focus tracking for LatexToolbar
   useEffect(() => {
     const handleFocusIn = (e: FocusEvent) => {
-      if (
-        e.target instanceof HTMLInputElement ||
-        e.target instanceof HTMLTextAreaElement
-      ) {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
         setLastFocusedInput(e.target);
       }
     };
@@ -251,14 +252,20 @@ export function TemplateFormModal({
     const after = text.substring(end);
 
     const newText = before + latex + after;
-    
-    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
-    const nativeTextAreaValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')?.set;
-    
+
+    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+      window.HTMLInputElement.prototype,
+      'value'
+    )?.set;
+    const nativeTextAreaValueSetter = Object.getOwnPropertyDescriptor(
+      window.HTMLTextAreaElement.prototype,
+      'value'
+    )?.set;
+
     if (lastFocusedInput instanceof HTMLTextAreaElement && nativeTextAreaValueSetter) {
-        nativeTextAreaValueSetter.call(lastFocusedInput, newText);
+      nativeTextAreaValueSetter.call(lastFocusedInput, newText);
     } else if (lastFocusedInput instanceof HTMLInputElement && nativeInputValueSetter) {
-        nativeInputValueSetter.call(lastFocusedInput, newText);
+      nativeInputValueSetter.call(lastFocusedInput, newText);
     }
 
     lastFocusedInput.dispatchEvent(new Event('input', { bubbles: true }));
@@ -565,12 +572,7 @@ export function TemplateFormModal({
                 </label>
               )}
 
-              <TagSelector
-                selectedTags={tags}
-                onChange={setTags}
-                maxTags={5}
-                required
-              />
+              <TagSelector selectedTags={tags} onChange={setTags} maxTags={5} required />
             </div>
 
             <label>
@@ -635,26 +637,33 @@ export function TemplateFormModal({
                   templateType === QuestionType.TRUE_FALSE
                     ? (tfBlueprintRef.current?.getData().stemText ?? '')
                     : (mcqBlueprintRef.current?.getData().templateText ??
-                       saBlueprintRef.current?.getData().templateText ?? '')
+                      saBlueprintRef.current?.getData().templateText ??
+                      '')
                 }
                 answerFormula={
                   templateType === QuestionType.MULTIPLE_CHOICE
                     ? mcqBlueprintRef.current?.getData().answerFormula
                     : templateType === QuestionType.SHORT_ANSWER
-                    ? saBlueprintRef.current?.getData().answerFormula
-                    : undefined
+                      ? saBlueprintRef.current?.getData().answerFormula
+                      : undefined
                 }
                 clauses={
                   templateType === QuestionType.TRUE_FALSE
                     ? Object.fromEntries(
-                        (tfBlueprintRef.current?.getData().clauses ?? []).map((c) => [c.key, c.text])
+                        (tfBlueprintRef.current?.getData().clauses ?? []).map((c) => [
+                          c.key,
+                          c.text,
+                        ])
                       )
                     : undefined
                 }
                 options={
                   templateType === QuestionType.MULTIPLE_CHOICE
                     ? Object.fromEntries(
-                        (mcqBlueprintRef.current?.getData().options ?? []).map((o) => [o.key, o.formula])
+                        (mcqBlueprintRef.current?.getData().options ?? []).map((o) => [
+                          o.key,
+                          o.formula,
+                        ])
                       )
                     : undefined
                 }
@@ -676,7 +685,7 @@ export function TemplateFormModal({
                 checked={isPublic}
                 onChange={(event) => setIsPublic(event.target.checked)}
               />{' '}
-              Xuất bản mẫu cho giáo viên khác
+              Công khai mẫu cho giáo viên khác
             </label>
 
             {submitError && (

@@ -34,7 +34,10 @@ export function getLevelCount(row: ExamMatrixTableRow, level: MatrixLevel): numb
   return Number(dist.VDC ?? dist.VAN_DUNG_CAO ?? dist.ANALYZE ?? 0);
 }
 
-function grandLevelCount(dist: MatrixCognitiveDistribution | undefined, level: MatrixLevel): number {
+function grandLevelCount(
+  dist: MatrixCognitiveDistribution | undefined,
+  level: MatrixLevel
+): number {
   if (!dist) return 0;
   if (level === 'NB') return Number(dist.NB ?? dist.NHAN_BIET ?? dist.REMEMBER ?? 0);
   if (level === 'TH') return Number(dist.TH ?? dist.THONG_HIEU ?? dist.UNDERSTAND ?? 0);
@@ -70,7 +73,7 @@ export function exportExamMatrixToExcel({ matrix, table }: MatrixExportPayload):
 
   rows.push([`Ma trận đề: ${matrix.name}`]);
   rows.push([
-    `Khối: ${matrix.gradeLevel || table.gradeLevel || ''}`,
+    `Lớp: ${matrix.gradeLevel || table.gradeLevel || ''}`,
     `Môn: ${matrix.subjectName || table.subjectName || ''}`,
     `Trạng thái: ${matrix.status}`,
     `Tổng điểm mục tiêu: ${matrix.totalPointsTarget ?? ''}`,
@@ -212,7 +215,7 @@ function buildExportTableHtml(
   return `
 <div style="font-family:'Segoe UI',system-ui,sans-serif;padding:20px;color:#142235;width:1120px;background:#fff;box-sizing:border-box">
   <h1 style="font-size:20px;margin:0 0 6px;font-weight:800">${name}</h1>
-  <p style="margin:0 0 4px;font-size:12px;color:#60748f">Khối: ${grade} · Môn: ${subject} · Trạng thái: ${status}</p>
+  <p style="margin:0 0 4px;font-size:12px;color:#60748f">Lớp: ${grade} · Môn: ${subject} · Trạng thái: ${status}</p>
   ${desc ? `<p style="margin:8px 0 14px;font-size:11px;color:#24364b;line-height:1.45">${desc}</p>` : '<p style="margin:0 0 14px"></p>'}
   <table style="border-collapse:collapse;width:100%;font-size:11px">
     <thead>
