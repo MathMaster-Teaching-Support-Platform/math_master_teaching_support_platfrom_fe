@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
 import html2canvas from 'html2canvas';
 import MindElixir, { THEME as MindElixirLightTheme } from 'mind-elixir';
 import 'mind-elixir/style.css';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { MindmapService } from '../../services/api/mindmap.service';
 import type { Mindmap, MindmapNode } from '../../types';
 import './PublicMindmapViewer.css';
@@ -15,10 +15,10 @@ const MINDMAP_THEME = {
     ...((MindElixirLightTheme as { cssVar?: Record<string, string> }).cssVar ?? {}),
     '--bgcolor': '#F0EEE6',
     '--main-bgcolor': '#ffffff',
-    '--main-color': 'transparent',   // removes grey border on L1 nodes
+    '--main-color': 'transparent', // removes grey border on L1 nodes
     '--color': '#444',
     '--root-radius': '16px',
-    '--main-radius': '100px',        // pill shape for L1
+    '--main-radius': '100px', // pill shape for L1
     '--root-border-color': 'rgba(0,0,0,0)',
     '--selected': 'rgba(79,126,247,0.18)',
     '--node-gap-x': '32px',
@@ -31,25 +31,25 @@ const MINDMAP_THEME = {
 
 // Depth-based color system: root → branch (rich) → leaf (light tinted)
 const BRANCH_COLORS = [
-  '#4F7EF7', // indigo-blue
-  '#2EAD7A', // emerald
-  '#E07B39', // burnt orange  (brand)
-  '#9B6FE0', // violet
-  '#3DAAC5', // teal
-  '#D4826A', // terracotta
-  '#5B9E6D', // forest green
-  '#C97AB2', // mauve
+  '#7AA5FA', // indigo-blue
+  '#55C49A', // emerald
+  '#E8975E', // burnt orange (brand)
+  '#B38EE8', // violet
+  '#64C0D5', // teal
+  '#DE9F8A', // terracotta
+  '#7BB887', // forest green
+  '#D696C4', // mauve
 ] as const;
 
 const LEAF_BG = [
-  '#E8EFFE', // indigo-blue light
-  '#D5F2E8', // emerald light
-  '#FCEADE', // orange light
-  '#EDE5FB', // violet light
-  '#D8F1F7', // teal light
-  '#FAE9E3', // terracotta light
-  '#DDF0E4', // forest light
-  '#F6E8F3', // mauve light
+  '#EEF3FF', // indigo-blue light
+  '#E0F7EF', // emerald light
+  '#FDF1E5', // orange light
+  '#F3EDFB', // violet light
+  '#E4F6FA', // teal light
+  '#FCF0EA', // terracotta light
+  '#E8F5EC', // forest light
+  '#FAF0F8', // mauve light
 ] as const;
 
 const LEAF_FG = [
@@ -334,11 +334,7 @@ export default function PublicMindmapViewer() {
       return null;
     }
 
-    const buildNode = (
-      node: MindmapNode,
-      depth: number,
-      branchIdx: number
-    ): MindElixirNodeData => {
+    const buildNode = (node: MindmapNode, depth: number, branchIdx: number): MindElixirNodeData => {
       let style: { color: string; background: string };
       let branchColor: string | undefined;
 

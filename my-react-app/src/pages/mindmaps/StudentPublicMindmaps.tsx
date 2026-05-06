@@ -794,7 +794,7 @@ export default function StudentPublicMindmaps() {
                 </button>
                 <button
                   type="button"
-                  className="flex items-center gap-2 px-5 py-2 rounded-xl bg-[#C96442] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:brightness-95 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all duration-150"
+                  className="flex items-center gap-2 px-5 py-2 rounded-xl bg-[#D4795A] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:brightness-95 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all duration-150"
                   disabled={
                     !selectedPreviewMindmap ||
                     previewFrameLoading ||
