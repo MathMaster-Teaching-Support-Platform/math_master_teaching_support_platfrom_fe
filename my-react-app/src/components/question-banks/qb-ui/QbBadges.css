@@ -124,7 +124,10 @@
 
 .qb-scope .qb-cog-dist__seg {
   height: 100%;
-  transition: width 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    opacity 0.3s ease;
+  transform-origin: left;
 }
 
 .qb-scope .qb-cog-dist__seg + .qb-cog-dist__seg {
