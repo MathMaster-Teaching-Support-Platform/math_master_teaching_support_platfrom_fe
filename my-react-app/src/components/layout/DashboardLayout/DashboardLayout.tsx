@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { AuthService } from '../../../services/api/auth.service';
 import { UserService } from '../../../services/api/user.service';
+import FloatingChat from '../../FloatingChat';
 import Navbar from '../Navbar/Navbar';
 import Sidebar from '../Sidebar/Sidebar';
 import './DashboardLayout.css';
@@ -121,6 +122,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         <Navbar user={resolvedUser} />
         <main className={['dashboard-content', contentClassName].filter(Boolean).join(' ')}>{children}</main>
       </div>
+      <FloatingChat />
     </div>
   );
 };

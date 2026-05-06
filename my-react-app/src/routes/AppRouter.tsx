@@ -732,6 +732,14 @@ export const router = createBrowserRouter([
   },
 
   {
+    path: '/admin/ai-assistant',
+    element: (
+      <PrivateRoute>
+        <AIAssistant />
+      </PrivateRoute>
+    ),
+  },
+  {
     path: '/admin/settings',
     element: (
       <PrivateRoute>
