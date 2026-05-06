@@ -283,6 +283,14 @@ export const router = createBrowserRouter([
     ),
   },
   {
+    path: '/teacher/courses/:courseId/review',
+    element: (
+      <PrivateRoute>
+        <TeacherCourseDetail />
+      </PrivateRoute>
+    ),
+  },
+  {
     path: '/teacher/courses/:courseId',
     element: (
       <PrivateRoute>

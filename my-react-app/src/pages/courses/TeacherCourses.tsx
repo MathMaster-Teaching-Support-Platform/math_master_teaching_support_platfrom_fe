@@ -60,6 +60,13 @@ type CourseFilterStatus =
   | 'archived';
 const languageOptions = ['Tiếng Việt', 'English'] as const;
 
+const tcSelectCls =
+  'w-full sm:w-auto border border-[#E8E6DC] rounded-lg px-3 py-2 font-[Be_Vietnam_Pro] text-[13px] text-[#141413] outline-none focus:border-[#C96442] focus:ring-1 focus:ring-[#C96442] bg-white transition-colors min-h-[42px] flex-shrink-0';
+const tcSecondaryBtn =
+  'inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[12px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors disabled:opacity-45 disabled:pointer-events-none';
+const tcPrimaryBtn =
+  'inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#C96442] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:brightness-95 active:scale-[0.98] transition-all duration-150';
+
 // ─── Create Course Modal ───────────────────────────────────────────────────────
 interface CreateModalProps {
   onClose: () => void;
@@ -793,188 +800,242 @@ const TeacherCourses: React.FC = () => {
       user={{ name: 'Giáo viên', avatar: '', role: 'teacher' }}
       contentClassName="dashboard-content--flush-bleed"
     >
-      <div className="module-layout-container">
-        <section className="module-page teacher-courses-page teacher-courses-index-page">
-          {/* ── Header ── */}
-          <header className="page-header courses-header-row">
-            <div className="header-stack">
-              <div className="row" style={{ gap: '0.6rem' }}>
-                <h2>{UI_TEXT.COURSE}</h2>
-                {!isLoading && <span className="count-chip">{courses.length}</span>}
+      <div className="px-6 py-8 lg:px-8 w-full min-w-0">
+        <div className="module-layout-container">
+          <section className="module-page teacher-courses-page teacher-courses-index-page space-y-6 min-w-0">
+            {/* ── Header ── */}
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-[#E8E6DC] flex items-center justify-center text-[#5E5D59] flex-shrink-0">
+                  <BookOpen className="w-5 h-5" aria-hidden />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <h1 className="font-[Playfair_Display] text-[22px] font-medium text-[#141413]">
+                      {UI_TEXT.COURSE}
+                    </h1>
+                    {!isLoading && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#E8E6DC] font-[Be_Vietnam_Pro] text-[12px] font-semibold text-[#5E5D59]">
+                        {courses.length}
+                      </span>
+                    )}
+                  </div>
+                  <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-0.5">
+                    {stats.active} đang hoạt động • {stats.students} học viên
+                  </p>
+                </div>
               </div>
-              <p className="header-sub">
-                {stats.active} đang hoạt động • {stats.students} học viên
-              </p>
+              <button type="button" className={tcPrimaryBtn} onClick={() => setShowCreateModal(true)}>
+                <Plus className="w-4 h-4" />
+                Tạo {UI_TEXT.COURSE.toLowerCase()}
+              </button>
             </div>
-            <button className="btn" onClick={() => setShowCreateModal(true)}>
-              <Plus size={16} />
-              Tạo {UI_TEXT.COURSE.toLowerCase()}
-            </button>
-          </header>
 
-          {/* ── Stats ── */}
-          <div className="stats-grid">
-            <div className="stat-card stat-blue">
-              <div className="stat-icon-wrap">
-                <BookOpen size={20} />
-              </div>
-              <div>
-                <h3>{stats.total}</h3>
-                <p>{UI_TEXT.TOTAL_COURSES}</p>
-              </div>
-            </div>
-            <div className="stat-card stat-emerald">
-              <div className="stat-icon-wrap">
-                <CheckCircle2 size={20} />
-              </div>
-              <div>
-                <h3>{stats.active}</h3>
-                <p>Đang hoạt động</p>
-              </div>
-            </div>
-            <div className="stat-card stat-amber">
-              <div className="stat-icon-wrap">
-                <FileText size={20} />
-              </div>
-              <div>
-                <h3>{stats.draft}</h3>
-                <p>Bản nháp</p>
-              </div>
-            </div>
-            <div className="stat-card stat-violet">
-              <div className="stat-icon-wrap">
-                <GraduationCap size={20} />
-              </div>
-              <div>
-                <h3>{stats.students}</h3>
-                <p>Học viên</p>
-              </div>
-            </div>
-          </div>
-
-          {/* ── Toolbar ── */}
-          <div className="toolbar">
-            <label className="search-box">
-              <span className="search-box__icon" aria-hidden="true">
-                <Search size={15} />
-              </span>
-              <input
-                placeholder={`Tìm kiếm ${UI_TEXT.COURSE.toLowerCase()}...`}
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setCurrentPage(1);
-                }}
-              />
-              {search && (
-                <button
-                  type="button"
-                  className="search-box__clear"
-                  aria-label="Xóa nội dung tìm kiếm"
-                  onClick={() => setSearch('')}
+            {/* ── Stats ── */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              {(
+                [
+                  {
+                    label: UI_TEXT.TOTAL_COURSES,
+                    value: stats.total,
+                    Icon: BookOpen,
+                    bg: 'bg-[#EEF2FF]',
+                    color: 'text-[#4F7EF7]',
+                  },
+                  {
+                    label: 'Đang hoạt động',
+                    value: stats.active,
+                    Icon: CheckCircle2,
+                    bg: 'bg-[#ECFDF5]',
+                    color: 'text-[#2EAD7A]',
+                  },
+                  {
+                    label: 'Bản nháp',
+                    value: stats.draft,
+                    Icon: FileText,
+                    bg: 'bg-[#FFF7ED]',
+                    color: 'text-[#E07B39]',
+                  },
+                  {
+                    label: 'Học viên',
+                    value: stats.students,
+                    Icon: Users,
+                    bg: 'bg-[#F5F3FF]',
+                    color: 'text-[#9B6FE0]',
+                  },
+                ] as const
+              ).map(({ label, value, Icon, bg, color }) => (
+                <div
+                  key={label}
+                  className="bg-white rounded-2xl border border-[#E8E6DC] p-4 flex items-center gap-3"
                 >
-                  <X size={14} />
-                </button>
-              )}
-            </label>
-
-            <select
-              className="grade-filter-select"
-              value={filterGrade}
-              onChange={(e) => {
-                setFilterGrade(e.target.value);
-                setCurrentPage(1);
-              }}
-              aria-label="Lọc theo lớp"
-            >
-              <option value="all">Tất cả lớp</option>
-              {gradeOptions.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
+                  <div
+                    className={`w-9 h-9 rounded-xl ${bg} flex items-center justify-center flex-shrink-0`}
+                  >
+                    <Icon className={`w-4 h-4 ${color}`} aria-hidden />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-[Playfair_Display] text-[22px] font-medium text-[#141413] leading-none tabular-nums">
+                      {value}
+                    </p>
+                    <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mt-0.5 truncate">
+                      {label}
+                    </p>
+                  </div>
+                </div>
               ))}
-            </select>
+            </div>
 
-            <div className="pill-group">
-              {filterTabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  className={`pill-btn${filterStatus === tab.id ? ' active' : ''}`}
-                  onClick={() => {
-                    setFilterStatus(tab.id);
+            {/* ── Toolbar ── */}
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col lg:flex-row lg:items-start gap-3">
+                <label className="flex-1 min-w-0 flex items-center gap-3 bg-[#FAF9F5] border border-[#E8E6DC] rounded-xl px-4 py-2.5 focus-within:border-[#3898EC] focus-within:shadow-[0_0_0_3px_rgba(56,152,236,0.12)] transition-all duration-150">
+                  <Search className="text-[#87867F] w-4 h-4 flex-shrink-0" aria-hidden />
+                  <input
+                    className="flex-1 min-w-0 font-[Be_Vietnam_Pro] text-[14px] text-[#141413] placeholder:text-[#87867F] bg-transparent outline-none"
+                    placeholder={`Tìm kiếm ${UI_TEXT.COURSE.toLowerCase()}...`}
+                    value={search}
+                    onChange={(e) => {
+                      setSearch(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                  />
+                  {search && (
+                    <button
+                      type="button"
+                      aria-label="Xóa nội dung tìm kiếm"
+                      onClick={() => setSearch('')}
+                      className="text-[#87867F] hover:text-[#141413] transition-colors flex-shrink-0"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </label>
+
+                <select
+                  className={tcSelectCls}
+                  value={filterGrade}
+                  onChange={(e) => {
+                    setFilterGrade(e.target.value);
                     setCurrentPage(1);
                   }}
+                  aria-label="Lọc theo lớp"
                 >
-                  {tab.label}
-                </button>
-              ))}
+                  <option value="all">Tất cả lớp</option>
+                  {gradeOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-wrap">
+                <div className="flex flex-wrap items-center gap-1 p-1 bg-[#F5F4ED] rounded-xl flex-1 min-w-0">
+                  {filterTabs.map((tab) => (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => {
+                        setFilterStatus(tab.id);
+                        setCurrentPage(1);
+                      }}
+                      className={`px-3 py-1.5 rounded-lg font-[Be_Vietnam_Pro] text-[12px] font-medium transition-all duration-150 whitespace-nowrap ${
+                        filterStatus === tab.id
+                          ? 'bg-white text-[#141413] shadow-sm'
+                          : 'text-[#87867F] hover:text-[#5E5D59]'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+
+                {courses.length > 0 && (
+                  <div className="flex items-center gap-1 p-1 bg-[#F5F4ED] rounded-xl flex-shrink-0 sm:ml-auto">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setViewMode('grid');
+                        setCurrentPage(1);
+                      }}
+                      aria-label="Hiển thị lưới"
+                      title="Lưới"
+                      className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-150 ${
+                        viewMode === 'grid'
+                          ? 'bg-white shadow-md text-[#141413]'
+                          : 'bg-[#E8E6DC] border-2 border-[#D1CFC5] text-[#141413] hover:bg-[#DDD9CC]'
+                      }`}
+                    >
+                      <Grid2x2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setViewMode('list');
+                        setCurrentPage(1);
+                      }}
+                      aria-label="Hiển thị danh sách"
+                      title="Danh sách"
+                      className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-150 ${
+                        viewMode === 'list'
+                          ? 'bg-white shadow-md text-[#141413]'
+                          : 'bg-[#E8E6DC] border-2 border-[#D1CFC5] text-[#141413] hover:bg-[#DDD9CC]'
+                      }`}
+                    >
+                      <List className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
-            <div className="view-toggle" style={{ marginLeft: 'auto' }}>
-              <button
-                className={viewMode === 'grid' ? 'active' : ''}
-                onClick={() => {
-                  setViewMode('grid');
-                  setCurrentPage(1);
-                }}
-                aria-label="Hiển thị lưới"
-              >
-                <Grid2x2 size={16} />
-              </button>
-              <button
-                className={viewMode === 'list' ? 'active' : ''}
-                onClick={() => {
-                  setViewMode('list');
-                  setCurrentPage(1);
-                }}
-                aria-label="Hiển thị danh sách"
-              >
-                <List size={16} />
-              </button>
-            </div>
-          </div>
-
-          {/* ── Summary bar ── */}
-          {!isLoading && !error && courses.length > 0 && (
-            <div className="assessment-summary-bar">
-              <div className="summary-item summary-item--primary">
-                <span className="summary-label">Hiển thị</span>
-                <strong className="summary-value">
+            {/* ── Summary bar ── */}
+            {!isLoading && !error && courses.length > 0 && (
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 rounded-xl bg-[#FAF9F5] border border-[#E8E6DC]">
+                <span className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] uppercase tracking-wide">
+                  Hiển thị
+                </span>
+                <strong className="font-[Be_Vietnam_Pro] text-[13px] font-semibold text-[#141413] tabular-nums">
                   {paginatedCourses.length} / {filteredCourses.length}
                 </strong>
+                <div className="w-px h-4 bg-[#E8E6DC] hidden sm:block" aria-hidden />
+                <span className="flex items-center gap-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
+                  Công khai{' '}
+                  <strong className="text-[#141413] font-semibold tabular-nums">{stats.active}</strong>
+                </span>
+                <span className="flex items-center gap-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" />
+                  Nháp{' '}
+                  <strong className="text-[#141413] font-semibold tabular-nums">{stats.draft}</strong>
+                </span>
               </div>
-              <div className="summary-item">
-                <span className="summary-dot summary-dot--progress" />
-                <span className="summary-label">Công khai</span>
-                <strong className="summary-value">{stats.active}</strong>
-              </div>
-              <div className="summary-item">
-                <span className="summary-dot summary-dot--upcoming" />
-                <span className="summary-label">Nháp</span>
-                <strong className="summary-value">{stats.draft}</strong>
-              </div>
-            </div>
-          )}
+            )}
 
-          {/* ── Loading ── */}
-          {isLoading && (
-            <div className="skeleton-grid">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="skeleton-card" />
-              ))}
-            </div>
-          )}
+            {/* ── Loading ── */}
+            {isLoading && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" aria-busy="true">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div
+                    key={i}
+                    className="bg-[#FAF9F5] rounded-2xl border border-[#F0EEE6] h-52 animate-pulse"
+                  />
+                ))}
+              </div>
+            )}
 
-          {/* ── Error ── */}
-          {error && (
-            <div className="empty">
-              <AlertCircle
-                size={28}
-                style={{ opacity: 0.5, marginBottom: 8, color: 'var(--mod-danger)' }}
-              />
-              <p>Không thể tải {UI_TEXT.COURSE.toLowerCase()}. Vui lòng thử lại.</p>
-            </div>
-          )}
+            {/* ── Error ── */}
+            {error && (
+              <div className="flex flex-col items-center justify-center py-16 gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center text-red-400">
+                  <AlertCircle className="w-6 h-6" aria-hidden />
+                </div>
+                <p className="font-[Be_Vietnam_Pro] text-[14px] text-[#B53333] text-center max-w-md px-4">
+                  Không thể tải {UI_TEXT.COURSE.toLowerCase()}. Vui lòng thử lại.
+                </p>
+              </div>
+            )}
 
           {/* ── Grid ── */}
           {!isLoading && !error && filteredCourses.length > 0 && (
@@ -1063,7 +1124,7 @@ const TeacherCourses: React.FC = () => {
                     <div className="course-actions">
                       <button
                         className="action-primary"
-                        onClick={() => navigate(`/teacher/courses/${course.id}`)}
+                        onClick={() => navigate(`/teacher/courses/${course.id}/review`)}
                       >
                         <Settings2 size={14} /> Quản lý
                       </button>
@@ -1111,36 +1172,38 @@ const TeacherCourses: React.FC = () => {
           )}
 
           {!isLoading && !error && filteredCourses.length > PAGE_SIZE && (
-            <div className="courses-pagination">
+            <div className="flex items-center justify-center gap-3 pt-1 flex-wrap">
               <button
                 type="button"
-                className="pagination-btn"
+                className={tcSecondaryBtn}
                 onClick={() => setCurrentPage((p) => Math.max(1, Math.min(totalPages, p) - 1))}
                 disabled={safeCurrentPage === 1}
               >
-                <ArrowLeft size={14} /> Trước
+                <ArrowLeft className="w-3.5 h-3.5" /> Trước
               </button>
-              <span className="pagination-info">
-                Trang <strong>{safeCurrentPage}</strong> / {totalPages}
+              <span className="font-[Be_Vietnam_Pro] text-[13px] text-[#5E5D59] tabular-nums">
+                Trang <strong className="text-[#141413]">{safeCurrentPage}</strong> / {totalPages}
               </span>
               <button
                 type="button"
-                className="pagination-btn"
+                className={tcSecondaryBtn}
                 onClick={() =>
                   setCurrentPage((p) => Math.min(totalPages, Math.min(totalPages, p) + 1))
                 }
                 disabled={safeCurrentPage === totalPages}
               >
-                Sau <ArrowRight size={14} />
+                Sau <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
           )}
 
           {/* ── Empty: filtered ── */}
           {!isLoading && !error && filteredCourses.length === 0 && courses.length > 0 && (
-            <div className="empty">
-              <Search size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
-              <p>
+            <div className="flex flex-col items-center justify-center py-16 gap-2 px-4">
+              <div className="w-12 h-12 rounded-2xl bg-[#F5F4ED] flex items-center justify-center text-[#87867F]">
+                <Search className="w-6 h-6 opacity-60" aria-hidden />
+              </div>
+              <p className="font-[Be_Vietnam_Pro] text-[14px] text-[#87867F] text-center max-w-md">
                 Không tìm thấy {UI_TEXT.COURSE.toLowerCase()}
                 {search ? ` khớp với "${search}"` : ' với bộ lọc này'}.
               </p>
@@ -1149,14 +1212,16 @@ const TeacherCourses: React.FC = () => {
 
           {/* ── Empty: no courses ── */}
           {!isLoading && !error && courses.length === 0 && (
-            <div className="empty">
-              <BookOpen size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
-              <p>
+            <div className="flex flex-col items-center justify-center py-16 gap-3 px-4">
+              <div className="w-12 h-12 rounded-2xl bg-[#F5F4ED] flex items-center justify-center text-[#87867F]">
+                <BookOpen className="w-6 h-6 opacity-60" aria-hidden />
+              </div>
+              <p className="font-[Be_Vietnam_Pro] text-[14px] text-[#87867F] text-center max-w-md">
                 Bạn chưa có {UI_TEXT.COURSE.toLowerCase()} nào. Hãy tạo{' '}
                 {UI_TEXT.COURSE.toLowerCase()} để bắt đầu giảng dạy.
               </p>
-              <button className="btn" onClick={() => setShowCreateModal(true)}>
-                <Plus size={16} /> Tạo {UI_TEXT.COURSE.toLowerCase()} đầu tiên
+              <button type="button" className={tcPrimaryBtn} onClick={() => setShowCreateModal(true)}>
+                <Plus className="w-4 h-4" /> Tạo {UI_TEXT.COURSE.toLowerCase()} đầu tiên
               </button>
             </div>
           )}
@@ -1169,6 +1234,7 @@ const TeacherCourses: React.FC = () => {
             isLoading={createMutation.isPending}
           />
         )}
+        </div>
       </div>
     </DashboardLayout>
   );

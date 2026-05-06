@@ -6,7 +6,7 @@ import {
   MessageSquarePlus,
   Pencil,
   Plus,
-  Send,
+  ArrowUp,
   Sparkles,
   SquarePen,
   Trash2,
@@ -545,7 +545,7 @@ const AIAssistant: React.FC = () => {
                     title="Gửi (Enter)"
                     aria-label="Gửi"
                   >
-                    <Send size={16} strokeWidth={2.2} />
+                    <ArrowUp size={18} strokeWidth={2.5} />
                   </button>
                 </div>
               </div>

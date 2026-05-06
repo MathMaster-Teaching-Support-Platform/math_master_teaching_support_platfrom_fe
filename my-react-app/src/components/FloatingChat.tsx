@@ -1,5 +1,5 @@
 import 'katex/dist/katex.min.css';
-import { MessageCircle, Minus, Send, Sparkles, X } from 'lucide-react';
+import { ArrowUp, MessageCircle, Minus, Sparkles, X } from 'lucide-react';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
@@ -204,7 +204,7 @@ const FloatingChat: React.FC = () => {
               disabled={isSending || !input.trim()}
               aria-label="Gửi"
             >
-              <Send size={15} />
+              <ArrowUp size={16} strokeWidth={2.5} />
             </button>
           </div>
         </div>

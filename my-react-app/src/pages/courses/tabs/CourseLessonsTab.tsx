@@ -978,6 +978,8 @@ function LessonReorderStrip({
 const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course }) => {
   const { showToast } = useToast();
   const isAdmin = useMemo(() => AuthService.getUserRole() === 'admin', []);
+  /** Admin duyệt khóa học: chỉ xem / xem video — không chỉnh sửa (đồng bộ UX với /admin/courses/.../review). */
+  const readOnly = isAdmin;
   const [playingLessonId, setPlayingLessonId] = useState<string | null>(null);
   const [showResources, setShowResources] = useState<string | null>(null);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
@@ -1205,7 +1207,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
           {!isSidebar && (
             <div className="section-meta">
               <span>{group.lessons.length} bài học</span>
-              {group.type === 'SECTION' && (
+              {group.type === 'SECTION' && !readOnly && (
                 <div className="row" style={{ gap: '0.5rem', marginLeft: '1rem' }}>
                   <button
                     className="btn secondary"
@@ -1234,7 +1236,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
         </div>
         <div className={`lessons-group ${collapsedSections[group.id] ? 'collapsed' : ''}`}>
           <div className="lessons-inner">
-            {!isSidebar && group.lessons.length > 1 && (
+            {!isSidebar && !readOnly && group.lessons.length > 1 && (
               <div style={{ padding: '1rem 1.25rem 0.5rem' }}>
                 <LessonReorderStrip
                   title="Sắp xếp bài học trong phần"
@@ -1321,25 +1323,23 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                     {Math.floor(lesson.durationSeconds / 60)} phút
                   </span>
                 )}
-                {true && (
-                  <span
-                    style={{
-                      fontSize: '0.75rem',
-                      color: '#6366f1',
-                      fontWeight: 600,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 4,
-                      cursor: 'pointer',
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowResources(showResources === lesson.id ? null : lesson.id);
-                    }}
-                  >
-                    <Paperclip size={12} /> {materialsList.length} tài liệu
-                  </span>
-                )}
+                <span
+                  style={{
+                    fontSize: '0.75rem',
+                    color: '#6366f1',
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    cursor: 'pointer',
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowResources(showResources === lesson.id ? null : lesson.id);
+                  }}
+                >
+                  <Paperclip size={12} /> {materialsList.length} tài liệu
+                </span>
                 <span
                   className={`badge ${lesson.isFreePreview ? 'published' : 'draft'}`}
                   style={{
@@ -1349,7 +1349,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                     opacity: lesson.isFreePreview ? 1 : 0.6,
                   }}
                   onClick={(e) => {
-                    if (isAdmin) return;
+                    if (readOnly) return;
                     e.stopPropagation();
                     updateMutation.mutate({
                       courseId,
@@ -1358,7 +1358,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                     });
                   }}
                   title={
-                    isAdmin
+                    readOnly
                       ? undefined
                       : lesson.isFreePreview
                         ? 'Click để khóa bài học'
@@ -1371,7 +1371,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
             )}
           </div>
 
-          {!isSidebar && (
+          {!isSidebar && !readOnly && (
             <div className="clt-actions">
               <button
                 className="clt-action-btn"
@@ -1437,7 +1437,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                       ({((m.size || 0) / 1024).toFixed(1)} KB)
                     </span>
                   </button>
-                  {true && (
+                  {!readOnly && (
                     <button
                       className="btn-icon"
                       style={{ color: '#ef4444' }}
@@ -1461,7 +1461,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                   Chưa có tài liệu đính kèm cho bài học này.
                 </p>
               )}
-              {true && (
+              {!readOnly && (
                 <label
                   className="btn secondary"
                   style={{
@@ -1538,8 +1538,9 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
   return (
     <div className="course-detail-tab lessons-tab">
       {playingLessonId && lessons.find((l) => l.id === playingLessonId) ? (
-        /* Integrated Player Layout */
-        <div className="player-container">
+        /* Integrated Player Layout — white shell aligned with admin course review panels */
+        <div className="rounded-2xl border border-[#E8E6DC] bg-white shadow-[0_1px_3px_rgba(20,20,19,0.06)] p-3 md:p-5">
+          <div className="player-container">
           {/* Main Player Area */}
           <div className="player-main">
             <InlinePlayer
@@ -1634,10 +1635,11 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
               {renderCurriculum(true)}
             </div>
           </div>
+          </div>
         </div>
       ) : (
         /* Regular Dashboard List Layout */
-        <>
+        <div className="rounded-2xl border border-[#E8E6DC] bg-white shadow-[0_1px_3px_rgba(20,20,19,0.06)] p-4 md:p-6 space-y-5">
           {/* Stats */}
           <div className="stats-grid">
             <div className="stat-card stat-blue">
@@ -1672,7 +1674,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
             </div>
           </div>
 
-          {true && (
+          {!readOnly && (
             <div className="cdt-toolbar">
               {course.provider === 'CUSTOM' && (
                 <button
@@ -1706,7 +1708,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
             <div className="cdt-empty">
               <Video size={40} strokeWidth={1.5} style={{ marginBottom: 12 }} />
               <p>Chưa có bài học nào.</p>
-              {true && (
+              {!readOnly && (
                 <button
                   type="button"
                   className="btn cdt-btn-primary"
@@ -1733,7 +1735,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
               {renderCurriculum()}
             </div>
           )}
-        </>
+        </div>
       )}
 
       {/* Upload Modal */}
@@ -1831,7 +1833,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
         />
       )}
 
-      {true && (
+      {!readOnly && (
         <CltTextSectionModal
           open={addSectionOpen}
           onClose={() => {
