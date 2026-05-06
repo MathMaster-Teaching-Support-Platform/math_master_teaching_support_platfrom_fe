@@ -10,6 +10,7 @@ import {
   RefreshCw,
   Search,
   Upload,
+  Wallet,
   X,
   XCircle,
 } from 'lucide-react';
@@ -502,26 +503,35 @@ const AdminWithdrawals: React.FC = () => {
       role="admin"
       user={{ name: currentUser.name, avatar: currentUser.avatar!, role: 'admin' }}
       notificationCount={0}
+      contentClassName="dashboard-content--flush-bleed"
     >
       <AdminFinanceStudioShell>
         <div className="wad-page">
-          {/* Header */}
-          <header className="page-header">
-            <div>
-              <h1 className="page-title">Quản lý Rút tiền</h1>
-              <p className="page-subtitle">Xét duyệt và xử lý các yêu cầu rút tiền thủ công</p>
+          {/* Header — aligned with /admin/commission-proposals & mindmaps */}
+          <header className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div className="flex items-start gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-[#E8E6DC] flex items-center justify-center text-[#5E5D59] shrink-0">
+                <Wallet className="w-5 h-5" aria-hidden />
+              </div>
+              <div>
+                <h1 className="font-[Playfair_Display] text-[22px] font-medium text-[#141413] m-0">
+                  Quản lý Rút tiền
+                </h1>
+                <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-0.5 mb-0">
+                  Xét duyệt và xử lý các yêu cầu rút tiền thủ công
+                </p>
+              </div>
             </div>
-            <div className="header-actions">
-              <button
-                className="btn-action btn-action--ghost"
-                onClick={() => refetch()}
-                disabled={isFetching}
-                title="Làm mới"
-              >
-                <RefreshCw size={15} className={isFetching ? 'spin-icon' : ''} />
-                Làm mới
-              </button>
-            </div>
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors disabled:opacity-50 shrink-0 self-start sm:self-auto"
+              onClick={() => refetch()}
+              disabled={isFetching}
+              title="Làm mới"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin' : ''}`} aria-hidden />
+              Làm mới
+            </button>
           </header>
 
           {/* Success toast */}
@@ -532,13 +542,13 @@ const AdminWithdrawals: React.FC = () => {
             </div>
           )}
 
-          {/* Filters */}
-          <div className="wad-toolbar">
-            <div className="wad-search-wrap">
-              <Search size={15} className="wad-search-icon" />
+          {/* Search + filters — mindmaps-style */}
+          <div className="flex flex-col lg:flex-row gap-3 w-full">
+            <label className="flex-1 min-w-[220px] flex items-center gap-3 bg-[#FAF9F5] border border-[#E8E6DC] rounded-xl px-4 py-2.5 focus-within:border-[#3898EC] focus-within:shadow-[0_0_0_3px_rgba(56,152,236,0.12)] transition-all duration-150">
+              <Search className="text-[#87867F] w-4 h-4 shrink-0" aria-hidden />
               <input
-                className="wad-search"
-                type="text"
+                className="flex-1 min-w-0 font-[Be_Vietnam_Pro] text-[14px] text-[#141413] placeholder:text-[#87867F] bg-transparent outline-none border-0"
+                type="search"
                 placeholder="Tìm theo tên, email, số tài khoản..."
                 value={search}
                 onChange={(e) => {
@@ -546,12 +556,17 @@ const AdminWithdrawals: React.FC = () => {
                   setPage(0);
                 }}
               />
-            </div>
-            <div className="wad-filters">
+            </label>
+            <div className="flex items-center gap-1 p-1 bg-[#F5F4ED] rounded-xl flex-wrap lg:flex-shrink-0 lg:max-w-full">
               {FILTER_OPTIONS.map((opt) => (
                 <button
                   key={opt.value}
-                  className={`wad-filter-tab ${statusFilter === opt.value ? 'active' : ''}`}
+                  type="button"
+                  className={`px-3 py-1.5 rounded-lg font-[Be_Vietnam_Pro] text-[12px] font-medium transition-all duration-150 whitespace-nowrap ${
+                    statusFilter === opt.value
+                      ? 'bg-white text-[#141413] shadow-sm'
+                      : 'text-[#87867F] hover:text-[#5E5D59]'
+                  }`}
                   onClick={() => {
                     setStatusFilter(opt.value);
                     setPage(0);
@@ -574,7 +589,11 @@ const AdminWithdrawals: React.FC = () => {
               <div className="wad-empty-state">
                 <AlertTriangle size={32} style={{ color: '#B53333' }} />
                 <p>{error instanceof Error ? error.message : 'Không thể tải dữ liệu.'}</p>
-                <button className="btn-action btn-action--ghost" onClick={() => refetch()}>
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors mt-1"
+                  onClick={() => refetch()}
+                >
                   Thử lại
                 </button>
               </div>
@@ -608,7 +627,9 @@ const AdminWithdrawals: React.FC = () => {
                         </div>
                       </td>
                       <td>
-                        <strong style={{ color: '#C96442' }}>{formatCurrency(req.amount)}</strong>
+                        <strong className="font-[Be_Vietnam_Pro] text-[13px] font-semibold text-[#C96442] tabular-nums">
+                          {formatCurrency(req.amount)}
+                        </strong>
                       </td>
                       <td>{req.bankName}</td>
                       <td>
@@ -665,23 +686,22 @@ const AdminWithdrawals: React.FC = () => {
           {totalPages > 1 && (
             <div className="wad-pagination">
               <span className="wad-pagination__info">{totalElements} yêu cầu</span>
-              <button
-                className="wad-page-btn"
-                disabled={page === 0}
-                onClick={() => setPage((p) => p - 1)}
-              >
-                <ChevronLeft size={16} />
-              </button>
-              <span className="wad-pagination__pages">
-                {page + 1} / {totalPages}
-              </span>
-              <button
-                className="wad-page-btn"
-                disabled={page >= totalPages - 1}
-                onClick={() => setPage((p) => p + 1)}
-              >
-                <ChevronRight size={16} />
-              </button>
+              <div className="wad-pagination__nav">
+                <button type="button" className="wad-page-btn" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>
+                  <ChevronLeft size={16} />
+                </button>
+                <span className="wad-pagination__pages">
+                  {page + 1} / {totalPages}
+                </span>
+                <button
+                  type="button"
+                  className="wad-page-btn"
+                  disabled={page >= totalPages - 1}
+                  onClick={() => setPage((p) => p + 1)}
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
             </div>
           )}
         </div>
