@@ -60,7 +60,8 @@ export const SubscriptionPlanCard: React.FC<SubscriptionPlanCardProps> = ({
 }) => {
   const gi = index % COVER_GRADIENTS.length;
   const accent = COVER_ACCENTS[gi];
-  const period = billingPeriod(plan.billingCycle);
+  const period = plan.price === 0 ? '' : billingPeriod(plan.billingCycle);
+  const priceDisplay = plan.price === 0 ? 'Miễn phí' : formatPrice(plan.price);
 
   return (
     <article
@@ -119,7 +120,7 @@ export const SubscriptionPlanCard: React.FC<SubscriptionPlanCardProps> = ({
               featured ? 'text-[30px] text-[#C96442]' : 'text-[24px] text-[#141413]',
             ].join(' ')}
           >
-            {formatPrice(plan.price)}
+            {priceDisplay}
           </span>
           {period && (
             <span className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F]">{period}</span>

@@ -57,200 +57,6 @@ const faqItems = [
   },
 ];
 
-type PlanTier = 'free' | 'basic' | 'pro' | 'enterprise';
-
-/* Cover gradients (same palette as TeacherCourses) */
-const planCoverGradients = [
-  'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
-  'linear-gradient(135deg, #ecfeff 0%, #cffafe 100%)',
-  'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)',
-  'linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)',
-  'linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%)',
-  'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)',
-] as const;
-const planCoverAccents = [
-  '#1d4ed8',
-  '#0f766e',
-  '#047857',
-  '#c2410c',
-  '#be185d',
-  '#6d28d9',
-] as const;
-
-const getPlanTier = (name: string): PlanTier => {
-  const lower = name.toLowerCase();
-  if (
-    lower.includes('miễn phí') ||
-    lower.includes('free') ||
-    lower.includes('khởi đầu') ||
-    lower.includes('starter')
-  )
-    return 'free';
-  if (
-    lower.includes('pro') ||
-    lower.includes('giáo viên') ||
-    lower.includes('cơ bản') ||
-    lower.includes('basic') ||
-    lower.includes('standard')
-  )
-    return 'pro';
-  if (
-    lower.includes('trường') ||
-    lower.includes('school') ||
-    lower.includes('enterprise') ||
-    lower.includes('cao cấp') ||
-    lower.includes('premium')
-  )
-    return 'enterprise';
-  return 'basic';
-};
-
-const PlanIcon: React.FC<{ tier: PlanTier }> = ({ tier }) => {
-  if (tier === 'free')
-    return (
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-      </svg>
-    );
-  if (tier === 'basic')
-    return (
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-        <path d="M6 12v5c3 3 9 3 12 0v-5" />
-      </svg>
-    );
-  if (tier === 'pro')
-    return (
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M2 20h20" />
-        <polygon points="2 20 5 9 12 14 19 4 22 20" />
-      </svg>
-    );
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <polygon points="12 2 22 9 18 20 6 20 2 9" />
-      <line x1="2" y1="9" x2="22" y2="9" />
-      <line x1="6" y1="20" x2="9" y2="9" />
-      <line x1="18" y1="20" x2="15" y2="9" />
-      <line x1="12" y1="2" x2="12" y2="9" />
-    </svg>
-  );
-};
-
-/* Nổi bật gói cơ bản / Giáo viên — gradient warm, tách với gói phụ */
-const PRICING_SPOTLIGHT_COVER: React.CSSProperties = {
-  background: 'linear-gradient(165deg, #fffcf8 0%, #ffecd8 45%, #e0b38a 100%)',
-  color: '#7a2b0a',
-};
-
-/* ── Plan card: TeacherCourses-style cover + body (module layout) ── */
-type ModulePlanCardProps = {
-  listIndex: number;
-  displayIndex: number;
-  tier: PlanTier;
-  name: string;
-  description: string;
-  priceBlock: React.ReactNode;
-  tokenLine: string | null;
-  featured: boolean;
-  isCurrent: boolean;
-  cta: React.ReactNode;
-  features?: React.ReactNode;
-};
-
-const ModulePlanCard: React.FC<ModulePlanCardProps> = ({
-  listIndex,
-  displayIndex,
-  tier,
-  name,
-  description,
-  priceBlock,
-  tokenLine,
-  featured,
-  isCurrent,
-  cta,
-  features,
-}) => {
-  const gi = listIndex % planCoverGradients.length;
-  const g = planCoverGradients[gi];
-  const a = planCoverAccents[gi];
-  return (
-    <article
-      className={`data-card course-card pricing-m-plan-card ${featured ? 'pricing-m-plan-card--featured' : 'pricing-m-plan-card--rest'} ${isCurrent ? 'pricing-m-plan-card--current' : ''}`}
-    >
-      <div
-        className={`course-cover ${featured ? 'pricing-m-cover--spotlight' : 'pricing-m-cover--standard'}`}
-        style={featured ? PRICING_SPOTLIGHT_COVER : { background: g, color: a }}
-      >
-        <div className={`cover-overlay ${featured ? 'cover-overlay--spotlight' : ''}`} />
-        <div className="cover-index" aria-hidden>
-          #{String(displayIndex + 1).padStart(2, '0')}
-        </div>
-        {isCurrent && <span className="course-badge badge-pricing-current">Đang dùng</span>}
-        {featured && !isCurrent && (
-          <span className="course-badge badge-pricing-popular">Phổ biến</span>
-        )}
-        <div className="pricing-m-plan-icon" aria-hidden>
-          <PlanIcon tier={tier} />
-        </div>
-        <h3 className="cover-title">{name}</h3>
-      </div>
-      <div className="course-body">
-        <p className="course-desc">{description}</p>
-        {priceBlock}
-        {tokenLine && (
-          <div className="metric">
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 8v4l2 2" />
-            </svg>
-            {tokenLine}
-          </div>
-        )}
-        <div className="course-actions pricing-m-plan-actions">{cta}</div>
-        {features}
-      </div>
-    </article>
-  );
-};
 
 /* ── FAQ Accordion Item ── */
 const FaqItem: React.FC<{ q: string; a: string; index: number }> = ({ q, a, index }) => {
@@ -344,13 +150,13 @@ const Pricing: React.FC = () => {
     el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
   };
 
-  const plans = [
+  const publicPlans = [
     {
       name: 'Miễn phí',
-      price: '0đ',
-      period: '/tháng',
-      tokenLine: '50 token / kỳ',
       description: 'Phù hợp để trải nghiệm',
+      price: 0 as number | null,
+      billingCycle: 'FOREVER',
+      tokenQuota: 50,
       features: [
         `Tạo tối đa 10 ${UI_TEXT.COURSE.toLowerCase()}/tháng`,
         'Lưu trữ 100MB',
@@ -363,10 +169,10 @@ const Pricing: React.FC = () => {
     },
     {
       name: 'Giáo viên',
-      price: '199,000đ',
-      period: '/tháng',
-      tokenLine: '150 token / kỳ',
       description: 'Dành cho giáo viên cá nhân',
+      price: 199000 as number | null,
+      billingCycle: 'MONTH',
+      tokenQuota: 150,
       features: [
         `Tạo không giới hạn ${UI_TEXT.COURSE.toLowerCase()}`,
         'Lưu trữ 10GB',
@@ -381,10 +187,10 @@ const Pricing: React.FC = () => {
     },
     {
       name: 'Trường học',
-      price: 'Liên hệ',
-      period: '',
-      tokenLine: '400 token / kỳ',
       description: 'Giải pháp cho tổ chức',
+      price: null as number | null,
+      billingCycle: 'CUSTOM',
+      tokenQuota: 400,
       features: [
         'Tất cả tính năng gói Giáo viên',
         'Không giới hạn tài khoản',
@@ -1002,68 +808,28 @@ const Pricing: React.FC = () => {
           aria-label="Bảng giá các gói"
         >
           <div className="container">
-            <div className="module-layout-container pricing-public-plans">
-              <div className="grid-cards pricing-m-plan-grid">
-                {plans.map((plan, index) => {
-                  const tier = getPlanTier(plan.name);
-                  const spotlight = plan.highlighted;
-                  const ctaPrimary = spotlight;
-                  return (
-                    <ModulePlanCard
-                      key={plan.name}
-                      listIndex={index}
-                      displayIndex={index}
-                      tier={tier}
-                      name={plan.name}
-                      description={plan.description}
-                      priceBlock={
-                        <div className="pricing-m-price-block">
-                          <span className="pricing-m-price">{plan.price}</span>
-                          {plan.period ? (
-                            <span className="pricing-m-period">{plan.period}</span>
-                          ) : null}
-                        </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 items-start">
+              {publicPlans.map((plan, index) => (
+                <SubscriptionPlanCard
+                  key={plan.name}
+                  plan={plan}
+                  featured={plan.highlighted}
+                  isCurrent={false}
+                  index={index}
+                  actions={
+                    <Link
+                      to="/register"
+                      className={
+                        plan.highlighted
+                          ? 'w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#C96442] text-white font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:brightness-95 active:scale-[0.98] transition-all duration-150'
+                          : 'w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#141413] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:bg-[#30302E] active:scale-[0.98] transition-all duration-150'
                       }
-                      tokenLine={plan.tokenLine}
-                      featured={spotlight}
-                      isCurrent={false}
-                      cta={
-                        <Link
-                          to="/register"
-                          className={ctaPrimary ? 'action-primary' : 'action-toggle'}
-                        >
-                          {plan.buttonText}
-                        </Link>
-                      }
-                      features={
-                        <ul className="pricing-m-features">
-                          {plan.features.map((feature, idx) => (
-                            <li key={idx}>
-                              <span
-                                className={`pricing-m-check ${plan.highlighted ? 'pricing-m-check--primary' : ''}`}
-                              >
-                                <svg
-                                  width="14"
-                                  height="14"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="2.5"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                >
-                                  <polyline points="20 6 9 17 4 12" />
-                                </svg>
-                              </span>
-                              {feature}
-                            </li>
-                          ))}
-                        </ul>
-                      }
-                    />
-                  );
-                })}
-              </div>
+                    >
+                      {plan.buttonText}
+                    </Link>
+                  }
+                />
+              ))}
             </div>
           </div>
         </section>

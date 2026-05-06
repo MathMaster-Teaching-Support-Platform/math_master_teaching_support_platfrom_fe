@@ -302,7 +302,7 @@ const SummaryCard = ({
 };
 
 const selectSurfaceCls =
-  'border border-[#E8E6DC] rounded-xl px-3 py-2 font-[Be_Vietnam_Pro] text-[13px] text-[#5E5D59] outline-none bg-white focus:border-[#C96442] focus:ring-1 focus:ring-[#C96442] transition-colors';
+  'border border-[#E8E6DC] rounded-xl px-3 py-2 font-[Be_Vietnam_Pro] text-[13px] text-[#5E5D59] outline-none bg-white focus:border-[#A3B6D4] focus:ring-1 focus:ring-[rgba(163,182,212,0.42)] transition-colors';
 
 const CashFlowDashboard: React.FC = () => {
   // ─── State ─────────────────────────────────────────────────────────────
@@ -480,7 +480,7 @@ const CashFlowDashboard: React.FC = () => {
               <button
                 type="button"
                 onClick={handleExport}
-                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#C96442] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:brightness-95 active:scale-[0.98] transition-all duration-150 shadow-[rgba(201,100,66,0.25)_0px_8px_24px]"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#A3B6D4] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:bg-[#96AAC8] active:scale-[0.98] transition-all duration-150 shadow-[rgba(110,130,165,0.22)_0px_8px_22px]"
               >
                 <Download className="w-4 h-4" strokeWidth={2} />
                 Xuất báo cáo
@@ -618,7 +618,7 @@ const CashFlowDashboard: React.FC = () => {
                         <Bar
                           dataKey="outflow"
                           name="Rút ra"
-                          fill="#C96442"
+                          fill="#92A7C4"
                           radius={[6, 6, 0, 0]}
                           barSize={22}
                         />
@@ -726,7 +726,7 @@ const CashFlowDashboard: React.FC = () => {
                 </div>
 
                 <div className="flex flex-col gap-3 w-full lg:max-w-3xl">
-                  <label className="flex w-full items-center gap-3 bg-white border border-[#E8E6DC] rounded-xl px-4 py-2.5 focus-within:border-[#C96442] focus-within:ring-1 focus-within:ring-[#C96442]/30 transition-all duration-150">
+                  <label className="flex w-full items-center gap-3 bg-white border border-[#E8E6DC] rounded-xl px-4 py-2.5 focus-within:border-[#A3B6D4] focus-within:ring-1 focus-within:ring-[rgba(163,182,212,0.38)] transition-all duration-150">
                     <Search className="text-[#87867F] w-4 h-4 shrink-0" strokeWidth={2} />
                     <input
                       type="text"
@@ -825,7 +825,7 @@ const CashFlowDashboard: React.FC = () => {
                         <td colSpan={5} className="px-6 py-14 text-center">
                           <span className="inline-flex flex-col items-center gap-3 text-[#87867F]">
                             <span
-                              className="w-8 h-8 rounded-full border-2 border-[#E8E6DC] border-t-[#C96442] animate-spin"
+                              className="w-8 h-8 rounded-full border-2 border-[#E8E6DC] border-t-[#A3B6D4] animate-spin"
                               aria-hidden
                             />
                             <span>Đang tải dữ liệu...</span>
