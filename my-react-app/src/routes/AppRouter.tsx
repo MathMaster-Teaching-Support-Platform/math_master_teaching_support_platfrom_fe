@@ -67,6 +67,7 @@ import TokenCostConfigPage from '../pages/admin/TokenCostConfigPage';
 import RevenueBreakdown from '../pages/admin/RevenueBreakdown';
 import ReviewProfiles from '../pages/admin/ReviewProfiles';
 import AssessmentDetail from '../pages/assessments/AssessmentDetailRefactored';
+import AssessmentPreview from '../pages/assessments/AssessmentPreview';
 import TeacherAssessments from '../pages/assessments/TeacherAssessments';
 import TeacherCommissionPage from '../pages/commission/TeacherCommissionPage';
 import { ExamMatrixDashboard } from '../pages/exam-matrices/ExamMatrixDashboard';
@@ -334,6 +335,14 @@ export const router = createBrowserRouter([
     element: (
       <PrivateRoute>
         <AssessmentDetail />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/teacher/assessments/:id/preview',
+    element: (
+      <PrivateRoute>
+        <AssessmentPreview />
       </PrivateRoute>
     ),
   },

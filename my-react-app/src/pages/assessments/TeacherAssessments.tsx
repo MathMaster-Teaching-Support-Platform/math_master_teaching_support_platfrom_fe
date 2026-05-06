@@ -465,6 +465,18 @@ export default function TeacherAssessments() {
                           <button
                             type="button"
                             className="btn"
+                            onClick={() =>
+                              navigate(`/teacher/assessments/${assessment.id}/preview`)
+                            }
+                            title="Làm thử ở giao diện học sinh — không tính lượt và không lưu kết quả"
+                          >
+                            Làm thử
+                          </button>
+                        )}
+                        {assessment.status === 'DRAFT' && (
+                          <button
+                            type="button"
+                            className="btn"
                             onClick={() => {
                               setMode('edit');
                               setSelected(assessment);

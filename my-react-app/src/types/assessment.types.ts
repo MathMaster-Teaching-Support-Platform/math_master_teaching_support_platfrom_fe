@@ -229,6 +229,31 @@ export interface AssessmentSummary {
     validationMessage?: string;
 }
 
+// ─── Teacher preview (stateless grading) ──────────────────────────────────────
+export interface PreviewAnswerResult {
+    questionId: string;
+    orderIndex: number;
+    questionType: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER' | 'ESSAY' | 'CODING';
+    questionText: string;
+    options?: Record<string, unknown>;
+    explanation?: string;
+    tags?: string[];
+    studentAnswer?: string;
+    correctAnswer?: string;
+    isCorrect: boolean;
+    pointsEarned: number;
+    maxPoints: number;
+    scoringDetail?: Record<string, unknown>;
+}
+
+export interface PreviewSubmitResponse {
+    totalScore: number;
+    maxScore: number;
+    totalQuestions: number;
+    correctCount: number;
+    answers: PreviewAnswerResult[];
+}
+
 // ─── Query Params ─────────────────────────────────────────────────────────────
 export interface GetMyAssessmentsParams {
     status?: AssessmentStatus;

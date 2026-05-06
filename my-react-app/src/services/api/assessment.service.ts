@@ -6,6 +6,7 @@ import type {
     AssessmentResponse,
     AssessmentSearchApiResponse,
     PointsOverrideRequest,
+    PreviewSubmitResponse,
     AssessmentSummary,
     GetMyAssessmentsParams,
     AddQuestionToAssessmentRequest,
@@ -132,6 +133,33 @@ export class AssessmentService {
         if (!response.ok) {
             const error = await response.json();
             throw new Error(error.message || 'Failed to fetch assessment preview');
+        }
+        return response.json();
+    }
+
+    /**
+     * POST /assessments/{id}/preview-submit
+     *
+     * Stateless teacher preview grading. Sends the answer map keyed by
+     * questionId, receives a per-question result with score / correctness.
+     * Nothing is persisted on the BE.
+     */
+    static async previewSubmit(
+        id: string,
+        answers: Record<string, unknown>
+    ): Promise<ApiResponse<PreviewSubmitResponse>> {
+        const headers = await this.getHeaders();
+        const response = await fetch(
+            `${API_BASE_URL}${API_ENDPOINTS.ASSESSMENTS_PREVIEW_SUBMIT(id)}`,
+            {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ answers }),
+            }
+        );
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to grade preview submission');
         }
         return response.json();
     }
