@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import React, { useCallback, useEffect, useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { SubscriptionPlanCard } from '../../components/SubscriptionPlanCard';
 import { useToast } from '../../context/ToastContext';
 import { mockAdmin } from '../../data/mockData';
 import {
@@ -404,77 +405,76 @@ const SubscriptionManagement: React.FC = () => {
             )}
 
             {plansLoading ? (
-              <div className="loading-placeholder">Đang tải danh sách gói...</div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-4">
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="bg-[#FAF9F5] rounded-2xl border border-[#F0EEE6] h-72 animate-pulse"
+                  />
+                ))}
+              </div>
             ) : plans.length === 0 && !plansError ? (
-              <div className="empty-state">Chưa có gói đăng ký nào. Hãy tạo gói đầu tiên!</div>
+              <div className="flex flex-col items-center justify-center py-16 gap-2">
+                <p className="font-[Be_Vietnam_Pro] text-[14px] text-[#87867F]">
+                  Chưa có gói đăng ký nào. Hãy tạo gói đầu tiên!
+                </p>
+              </div>
             ) : (
-              <div className="plans-grid">
-                {plans.map((plan) => (
-                  <div key={plan.id} className={`plan-card ${plan.featured ? 'featured' : ''}`}>
-                    {plan.featured && (
-                      <div className="featured-badge">
-                        <Star size={11} className="fill-current" />
-                        Phổ biến nhất
-                      </div>
-                    )}
-
-                    <div className="plan-header">
-                      <h3 className="plan-name">{plan.name}</h3>
-                      <div className="plan-price">
-                        <span className="price-amount">{formatPrice(plan.price)}</span>
-                        {plan.price !== null && (
-                          <span className="price-period">
-                            /{plan.billingCycle === 'YEAR' ? 'năm' : 'tháng'}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-4 items-start">
+                {plans.map((plan, idx) => (
+                  <SubscriptionPlanCard
+                    key={plan.id}
+                    plan={plan}
+                    featured={plan.featured}
+                    index={idx}
+                    meta={
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded-full font-[Be_Vietnam_Pro] text-[11px] font-medium ${
+                            plan.status === 'ACTIVE'
+                              ? 'bg-emerald-50 text-emerald-700'
+                              : 'bg-[#F5F4ED] text-[#87867F]'
+                          }`}
+                        >
+                          {plan.status === 'ACTIVE' ? 'Hoạt động' : 'Vô hiệu'}
+                        </span>
+                        {!plan.isPublic && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#F5F4ED] font-[Be_Vietnam_Pro] text-[11px] font-medium text-[#87867F]">
+                            Ẩn
                           </span>
                         )}
                       </div>
-                      <p className="plan-description">{plan.description}</p>
-                      <p className="plan-description">Token quota: {plan.tokenQuota}</p>
-                    </div>
-
-                    <div className="plan-features">
-                      <h4 className="features-title">Tính năng:</h4>
-                      <ul className="features-list">
-                        {plan.features.slice(0, 5).map((feature, i) => (
-                          <li key={i}>
-                            <CheckCircle2 size={14} className="feature-icon" />
-                            {feature}
-                          </li>
-                        ))}
-                        {plan.features.length > 5 && (
-                          <li className="more-features">
-                            +{plan.features.length - 5} tính năng khác
-                          </li>
-                        )}
-                      </ul>
-                    </div>
-
-                    <div className="plan-actions">
-                      <button className="btn btn-outline" onClick={() => setSelectedPlan(plan)}>
-                        <Eye size={14} />
-                        Chi tiết
-                      </button>
-                      <button className="btn btn-outline" onClick={() => openEditModal(plan)}>
-                        <Pencil size={14} />
-                        Chỉnh sửa
-                      </button>
-                      <button
-                        className="btn btn-outline btn-danger"
-                        onClick={() => handleDeletePlan(plan)}
-                        disabled={deletingPlanId === plan.id}
-                      >
-                        {deletingPlanId === plan.id ? (
-                          <>
-                            <Loader2 size={14} className="animate-spin" /> Đang xóa...
-                          </>
-                        ) : (
-                          <>
-                            <Trash2 size={14} /> Xóa
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
+                    }
+                    actions={
+                      <div className="flex items-center gap-2">
+                        <button
+                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[12px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors"
+                          onClick={() => setSelectedPlan(plan)}
+                        >
+                          <Eye size={13} />
+                          Chi tiết
+                        </button>
+                        <button
+                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[12px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors"
+                          onClick={() => openEditModal(plan)}
+                        >
+                          <Pencil size={13} />
+                          Sửa
+                        </button>
+                        <button
+                          className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-red-200 bg-red-50 font-[Be_Vietnam_Pro] text-[12px] font-medium text-red-600 hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          onClick={() => handleDeletePlan(plan)}
+                          disabled={deletingPlanId === plan.id}
+                        >
+                          {deletingPlanId === plan.id ? (
+                            <Loader2 size={13} className="animate-spin" />
+                          ) : (
+                            <Trash2 size={13} />
+                          )}
+                        </button>
+                      </div>
+                    }
+                  />
                 ))}
               </div>
             )}

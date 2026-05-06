@@ -69,13 +69,15 @@ function generateBreadcrumbs(pathname: string, courseTitle?: string): Breadcrumb
       breadcrumbs.push({ label: UI_TEXT.COURSE, path: '/teacher/courses' });
 
       if (segments[2]) {
-        // Course detail
+        // Course detail (/teacher/courses/:id or .../:id/review)
         breadcrumbs.push({
           label: courseTitle || `Chi tiết ${UI_TEXT.COURSE.toLowerCase()}`,
           path: `/teacher/courses/${segments[2]}`,
         });
 
-        if (segments[3] === 'lessons') {
+        if (segments[3] === 'review') {
+          breadcrumbs.push({ label: 'Quản lý khóa học' });
+        } else if (segments[3] === 'lessons') {
           breadcrumbs.push({ label: 'Bài học' });
         } else if (segments[3] === 'assessments') {
           breadcrumbs.push({ label: UI_TEXT.QUIZ });

@@ -16,6 +16,7 @@ import { CourseService } from '../../../services/api/course.service';
 import { VideoUploadService } from '../../../services/api/videoUpload.service';
 import type { CourseLessonResponse } from '../../../types';
 import { extractChapterNumber, sortCurriculumGroups } from '../../../utils/curriculum';
+import '../tabs/course-detail-tabs.css';
 import './StudentLessonsTab.css';
 
 interface StudentLessonsTabProps {
@@ -281,7 +282,9 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
 
   const handleLessonSelect = (lesson: CourseLessonResponse) => {
     setPlayingLessonId(lesson.id);
-    document.querySelector('.course-tabs')?.scrollIntoView({ behavior: 'smooth' });
+    document
+      .querySelector('[data-student-course-tab-panel]')
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const renderCurriculum = (isSidebar = false) => {
@@ -459,7 +462,8 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
   };
 
   return (
-    <div className="slt-container">
+    <div className="rounded-2xl border border-[#E8E6DC] bg-white shadow-[0_1px_3px_rgba(20,20,19,0.06)] p-4 md:p-6 space-y-5 min-w-0">
+      <div className="slt-container">
       {playingLessonId && currentLesson ? (
         /* Integrated Player Layout */
         <div className="slt-player-container">
@@ -637,6 +641,7 @@ const StudentLessonsTab: React.FC<StudentLessonsTabProps> = ({
           )}
         </>
       )}
+      </div>
     </div>
   );
 };

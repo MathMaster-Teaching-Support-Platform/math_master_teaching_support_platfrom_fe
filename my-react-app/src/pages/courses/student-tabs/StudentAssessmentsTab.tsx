@@ -1,6 +1,21 @@
+import type { LucideIcon } from 'lucide-react';
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertCircle, CheckCircle, Clock, FileText, Lock, Play, Star, HelpCircle } from 'lucide-react';
+import {
+  AlertCircle,
+  CheckCircle,
+  ChevronRight,
+  ClipboardList,
+  Clock,
+  FileText,
+  GraduationCap,
+  HelpCircle,
+  ListChecks,
+  Lock,
+  NotebookPen,
+  Play,
+  Star,
+} from 'lucide-react';
 import { useMyAssessmentsByCourse } from '../../../hooks/useStudentAssessment';
 import type { StudentAssessmentResponse } from '../../../types/studentAssessment.types';
 import './StudentAssessmentsTab.css';
@@ -44,11 +59,11 @@ const StudentAssessmentsTab: React.FC<StudentAssessmentsTabProps> = ({ courseId 
     EXAM: 'summative',
   };
 
-  const typeIcon: Record<string, React.ReactNode> = {
-    QUIZ: '📝',
-    HOMEWORK: '📚',
-    TEST: '📋',
-    EXAM: '🎓',
+  const typeGlyph: Record<string, LucideIcon> = {
+    QUIZ: ListChecks,
+    HOMEWORK: NotebookPen,
+    TEST: ClipboardList,
+    EXAM: GraduationCap,
   };
 
   const fmtDate = (d?: string | null) => {
@@ -59,6 +74,15 @@ const StudentAssessmentsTab: React.FC<StudentAssessmentsTabProps> = ({ courseId 
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
+    });
+  };
+
+  const fmtDateShort = (d?: string | null) => {
+    if (!d) return null;
+    return new Date(d).toLocaleDateString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
     });
   };
 
@@ -80,27 +104,27 @@ const StudentAssessmentsTab: React.FC<StudentAssessmentsTabProps> = ({ courseId 
     <div className="sat-container">
       {/* Stats */}
       <div className="sat-stats-grid">
-        <div className="sat-stat-card sat-stat-blue">
+        <div className="sat-stat-card sat-stat-ink">
           <div className="sat-stat-icon">
-            <FileText size={24} strokeWidth={2.5} />
+            <FileText size={18} strokeWidth={2} />
           </div>
           <div className="sat-stat-content">
             <h3>{stats.total}</h3>
-            <p>Tổng bài kiểm tra</p>
+            <p>Tổng</p>
           </div>
         </div>
-        <div className="sat-stat-card sat-stat-amber">
+        <div className="sat-stat-card sat-stat-warm">
           <div className="sat-stat-icon">
-            <Star size={24} strokeWidth={2.5} />
+            <Star size={18} strokeWidth={2} />
           </div>
           <div className="sat-stat-content">
             <h3>{stats.required}</h3>
             <p>Bắt buộc</p>
           </div>
         </div>
-        <div className="sat-stat-card sat-stat-emerald">
+        <div className="sat-stat-card sat-stat-soft">
           <div className="sat-stat-icon">
-            <CheckCircle size={24} strokeWidth={2.5} />
+            <CheckCircle size={18} strokeWidth={2} />
           </div>
           <div className="sat-stat-content">
             <h3>{stats.optional}</h3>
@@ -111,9 +135,9 @@ const StudentAssessmentsTab: React.FC<StudentAssessmentsTabProps> = ({ courseId 
 
       {/* Info Banner */}
       <div className="sat-banner">
-        <AlertCircle size={20} strokeWidth={2.5} />
+        <AlertCircle size={16} strokeWidth={2} className="sat-banner-icon shrink-0" />
         <span>
-          Hoàn thành các bài kiểm tra thường xuyên và định kỳ để đánh giá mức độ hiểu bài của bạn.
+          Làm bài thường xuyên và định kỳ để theo dõi mức độ nắm kiến thức.
         </span>
       </div>
 
@@ -139,6 +163,7 @@ const StudentAssessmentsTab: React.FC<StudentAssessmentsTabProps> = ({ courseId 
               const canTake = available && !expired;
               const typeCode = assessment.assessmentType ?? 'QUIZ';
               const category = typeCategory[typeCode];
+              const Glyph = typeGlyph[typeCode] ?? ListChecks;
 
               return (
                 <div
@@ -147,117 +172,110 @@ const StudentAssessmentsTab: React.FC<StudentAssessmentsTabProps> = ({ courseId 
                     assessment.isRequired ? 'sat-required' : 'sat-optional'
                   } ${!canTake ? 'sat-disabled' : ''}`}
                 >
-                  <div className="sat-card-head">
-                    <div className="sat-badges">
-                      <span style={{ fontSize: '1.5rem', marginRight: '0.25rem' }}>
-                        {typeIcon[typeCode]}
-                      </span>
-                      <span className={`sat-badge ${category}`}>
-                        {typeLabel[typeCode]}
-                      </span>
-                      {assessment.isRequired && (
-                        <span className="sat-badge required">
-                          ⭐ Bắt buộc
+                  <div className="sat-card-top">
+                    <div className="sat-card-main">
+                      <div className="sat-badges">
+                        <span className="sat-type-icon" aria-hidden>
+                          <Glyph size={14} strokeWidth={2} />
                         </span>
-                      )}
-                    </div>
-                    <span className="sat-order">
-                      #{assessment.courseOrderIndex ?? '—'}
-                    </span>
-                  </div>
-
-                  <div>
-                    <h3 className="sat-title">
-                      {assessment.title ?? 'Không có tiêu đề'}
-                    </h3>
-                    {assessment.description && (
-                      <p className="sat-desc" style={{ marginTop: '0.5rem' }}>
-                        {assessment.description}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="sat-meta">
-                    <div className="sat-meta-item">
-                      <HelpCircle size={16} />
-                      {assessment.totalQuestions ?? 0} câu hỏi
-                    </div>
-                    <div className="sat-meta-item">
-                      <Star size={16} />
-                      {assessment.totalPoints ?? 0} điểm
-                    </div>
-                    {assessment.timeLimitMinutes && (
-                      <div className="sat-meta-item">
-                        <Clock size={16} />
-                        {assessment.timeLimitMinutes} phút
+                        <span className={`sat-badge ${category}`}>{typeLabel[typeCode]}</span>
+                        {assessment.isRequired ? (
+                          <span className="sat-badge required">
+                            <Star size={11} strokeWidth={2} className="sat-badge-star" />
+                            Bắt buộc
+                          </span>
+                        ) : null}
                       </div>
-                    )}
-                    {assessment.passingScore && (
-                      <div className="sat-meta-item" style={{ color: '#059669' }}>
-                        <CheckCircle size={16} color="#059669" />
-                        Điểm đạt: {assessment.passingScore}
+                      <h3 className="sat-title">{assessment.title ?? 'Không có tiêu đề'}</h3>
+                      {assessment.description ? (
+                        <p className="sat-desc">{assessment.description}</p>
+                      ) : null}
+
+                      <div className="sat-chips" aria-label="Thông tin bài kiểm tra">
+                        <span className="sat-chip">
+                          <HelpCircle size={13} strokeWidth={2} aria-hidden />
+                          {assessment.totalQuestions ?? 0} câu
+                        </span>
+                        <span className="sat-chip">
+                          <Star size={13} strokeWidth={2} aria-hidden />
+                          {assessment.totalPoints ?? 0} điểm
+                        </span>
+                        {assessment.timeLimitMinutes ? (
+                          <span className="sat-chip">
+                            <Clock size={13} strokeWidth={2} aria-hidden />
+                            {assessment.timeLimitMinutes} phút
+                          </span>
+                        ) : null}
+                        {assessment.passingScore ? (
+                          <span className="sat-chip sat-chip-pass">
+                            <CheckCircle size={13} strokeWidth={2} aria-hidden />
+                            Đạt {assessment.passingScore}
+                          </span>
+                        ) : null}
+                        {assessment.startDate ? (
+                          <span className="sat-chip sat-chip-muted">
+                            Mở {fmtDateShort(assessment.startDate)}
+                          </span>
+                        ) : null}
+                        {assessment.endDate ? (
+                          <span className="sat-chip sat-chip-muted">
+                            Hạn {fmtDateShort(assessment.endDate)}
+                          </span>
+                        ) : null}
                       </div>
-                    )}
-                  </div>
 
-                  {/* Date Information */}
-                  {(assessment.startDate || assessment.endDate) && (
-                    <div className="sat-dates">
-                      {assessment.startDate && (
-                        <div className="sat-date-row">
-                          <span>Bắt đầu:</span>
-                          <strong>{fmtDate(assessment.startDate)}</strong>
+                      {!available ? (
+                        <div className="sat-status-msg sat-status-locked">
+                          <Lock size={14} strokeWidth={2} />
+                          <span>
+                            Chưa mở
+                            {assessment.startDate ? ` · ${fmtDate(assessment.startDate)}` : ''}
+                          </span>
                         </div>
-                      )}
-                      {assessment.endDate && (
-                        <div className="sat-date-row">
-                          <span>Kết thúc:</span>
-                          <strong>{fmtDate(assessment.endDate)}</strong>
+                      ) : null}
+
+                      {expired ? (
+                        <div className="sat-status-msg sat-status-expired">
+                          <AlertCircle size={14} strokeWidth={2} />
+                          <span>
+                            Đã hết hạn
+                            {assessment.endDate ? ` · ${fmtDate(assessment.endDate)}` : ''}
+                          </span>
                         </div>
-                      )}
+                      ) : null}
                     </div>
-                  )}
 
-                  {/* Status Messages */}
-                  {!available && (
-                    <div className="sat-status-msg sat-status-locked">
-                      <Lock size={16} />
-                      <span>Chưa mở - Có thể làm bài từ {fmtDate(assessment.startDate)}</span>
+                    <div className="sat-card-aside">
+                      <span className="sat-order">#{assessment.courseOrderIndex ?? '—'}</span>
+                      <div className="sat-actions">
+                        <button
+                          type="button"
+                          className="sat-btn primary"
+                          disabled={!canTake}
+                          onClick={() => navigate(`/student/assessments/${assessment.id}/take`)}
+                        >
+                          {canTake ? (
+                            <>
+                              <Play size={14} strokeWidth={2} />
+                              Làm bài
+                            </>
+                          ) : (
+                            <>
+                              <Lock size={14} strokeWidth={2} />
+                              {!available ? 'Chưa mở' : 'Hết hạn'}
+                            </>
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          className="sat-btn secondary"
+                          onClick={() => navigate(`/student/assessments/${assessment.id}`)}
+                        >
+                          Chi tiết
+                          <ChevronRight size={14} strokeWidth={2} aria-hidden />
+                        </button>
+                      </div>
                     </div>
-                  )}
-
-                  {expired && (
-                    <div className="sat-status-msg sat-status-expired">
-                      <AlertCircle size={16} />
-                      <span>Đã hết hạn - Kết thúc vào {fmtDate(assessment.endDate)}</span>
-                    </div>
-                  )}
-
-                  {/* Actions */}
-                  <div className="sat-actions">
-                    <button
-                      className="sat-btn primary"
-                      disabled={!canTake}
-                      onClick={() => navigate(`/student/assessments/${assessment.id}/take`)}
-                    >
-                      {canTake ? (
-                        <>
-                          <Play size={16} />
-                          Làm bài
-                        </>
-                      ) : (
-                        <>
-                          <Lock size={16} />
-                          {!available ? 'Chưa mở' : 'Đã hết hạn'}
-                        </>
-                      )}
-                    </button>
-                    <button
-                      className="sat-btn secondary"
-                      onClick={() => navigate(`/student/assessments/${assessment.id}`)}
-                    >
-                      Xem chi tiết
-                    </button>
                   </div>
                 </div>
               );

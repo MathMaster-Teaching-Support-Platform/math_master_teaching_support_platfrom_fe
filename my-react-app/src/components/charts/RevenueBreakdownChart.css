@@ -6,21 +6,22 @@
 
 /* Custom Tooltip */
 .revenue-chart-tooltip {
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  background: #faf9f5;
+  border: 1px solid #e8e6dc;
+  border-radius: 14px;
   padding: 1rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: rgba(0, 0, 0, 0.08) 0px 12px 32px;
   min-width: 200px;
 }
 
 .tooltip-date {
-  font-size: 0.875rem;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  font-size: 0.8125rem;
   font-weight: 600;
-  color: #1a202c;
+  color: #141413;
   margin: 0 0 0.75rem 0;
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e8e6dc;
 }
 
 .tooltip-items {
@@ -48,8 +49,8 @@
 .tooltip-total {
   margin-top: 0.5rem;
   padding-top: 0.5rem;
-  border-top: 1px solid #e5e7eb;
-  color: #1a202c;
+  border-top: 1px solid #e8e6dc;
+  color: #141413;
 }
 
 /* Responsive */

@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { useRoadmaps } from '../../hooks/useRoadmaps';
 import { StudentDashboardService } from '../../services/api/student-dashboard.service';
-import '../../styles/module-refactor.css';
 import type { RoadmapCatalogItem } from '../../types';
 import './StudentRoadmap.css';
 import EmptyRoadmap from './components/EmptyRoadmap';
@@ -60,27 +59,30 @@ const StudentRoadmap: React.FC = () => {
         role: 'student',
       }}
       notificationCount={dashboardSummary?.notificationCount ?? 0}
+      contentClassName="dashboard-content--flush-bleed"
     >
       <div className="module-layout-container srp">
         <section className="module-page">
-          <RoadmapHeader
-            total={roadmaps.length}
-            inProgress={inProgressCount}
-            completed={completedCount}
-            avgProgress={avgProgress}
-          />
+          <div className="px-4 py-6 sm:px-6 lg:px-8 lg:py-8 space-y-6">
+            <RoadmapHeader
+              total={roadmaps.length}
+              inProgress={inProgressCount}
+              completed={completedCount}
+              avgProgress={avgProgress}
+            />
 
-          <div className="srp__body-full-width">
-            {isLoading && (
-              <div className="srp__skeleton-grid">
-                {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <div key={i} className="srp__skeleton srp__skeleton--grid" />
-                ))}
-              </div>
-            )}
-            {error && <p className="srp__error-text">Đã xảy ra lỗi khi tải lộ trình.</p>}
-            {!isLoading && !error && roadmaps.length === 0 && <EmptyRoadmap />}
-            {!isLoading && !error && roadmaps.length > 0 && <RoadmapGrid roadmaps={roadmaps} />}
+            <div className="srp__body-full-width">
+              {isLoading && (
+                <div className="srp__skeleton-grid">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <div key={i} className="srp__skeleton srp__skeleton--grid" />
+                  ))}
+                </div>
+              )}
+              {error && <p className="srp__error-text">Đã xảy ra lỗi khi tải lộ trình.</p>}
+              {!isLoading && !error && roadmaps.length === 0 && <EmptyRoadmap />}
+              {!isLoading && !error && roadmaps.length > 0 && <RoadmapGrid roadmaps={roadmaps} />}
+            </div>
           </div>
         </section>
       </div>

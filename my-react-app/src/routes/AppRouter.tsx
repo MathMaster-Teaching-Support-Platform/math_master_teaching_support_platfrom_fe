@@ -283,6 +283,14 @@ export const router = createBrowserRouter([
     ),
   },
   {
+    path: '/teacher/courses/:courseId/review',
+    element: (
+      <PrivateRoute>
+        <TeacherCourseDetail />
+      </PrivateRoute>
+    ),
+  },
+  {
     path: '/teacher/courses/:courseId',
     element: (
       <PrivateRoute>
@@ -731,6 +739,14 @@ export const router = createBrowserRouter([
     ),
   },
 
+  {
+    path: '/admin/ai-assistant',
+    element: (
+      <PrivateRoute>
+        <AIAssistant />
+      </PrivateRoute>
+    ),
+  },
   {
     path: '/admin/settings',
     element: (

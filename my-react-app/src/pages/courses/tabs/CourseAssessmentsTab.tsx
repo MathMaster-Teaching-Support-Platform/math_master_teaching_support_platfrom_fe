@@ -263,7 +263,7 @@ function AddAssessmentModal({
                         )}
                       </div>
                       {selectedId === assessment.assessmentId && (
-                        <CheckCircle2 size={20} style={{ color: '#c96442' }} />
+                        <CheckCircle2 size={20} className="text-slate-500" aria-hidden />
                       )}
                     </div>
                     <h4

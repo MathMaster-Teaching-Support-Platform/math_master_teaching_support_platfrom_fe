@@ -135,6 +135,10 @@ const adminGroups: MenuGroup[] = [
     ],
   },
   {
+    label: 'Công cụ AI',
+    items: [{ path: '/admin/ai-assistant', icon: Bot, label: 'Trợ lý Ảo' }],
+  },
+  {
     label: 'Tài chính',
     items: [
       { path: '/admin/revenue-breakdown', icon: BarChart3, label: 'Phân tích Doanh thu' },
@@ -157,7 +161,7 @@ const adminGroups: MenuGroup[] = [
     items: [
       { path: '/admin/cash-flow', icon: Wallet, label: 'Dòng tiền' },
       { path: '/admin/token-config', icon: Coins, label: 'Cấu hình Token' },
-      { path: '/admin/system-config', icon: ShieldCheck, label: 'Cấu hình hệ thống' },
+      { path: '/admin/system-config', icon: ShieldCheck, label: 'Chính sách' },
     ],
   },
   {

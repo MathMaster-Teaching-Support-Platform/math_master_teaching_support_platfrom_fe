@@ -1162,12 +1162,28 @@ export default function AdminAcademicStructurePage() {
       <div className="module-layout-container aas-page">
         <div className="aas-page__bg" aria-hidden="true" />
         <section className="module-page teacher-courses-page aas-page__content">
-          <header className="aas-header">
-            <div>
-              <h1>Quản lý chương trình</h1>
-              <p>Cấu trúc phân cấp Chương trình - Môn học - Chương - Bài học.</p>
+          <div className="flex items-center justify-between gap-4 flex-wrap pb-6">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#E8E6DC] text-[#5E5D59]">
+                <FolderTree className="h-5 w-5" aria-hidden />
+              </div>
+              <div>
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <h1 className="font-[Playfair_Display] text-[22px] font-medium text-[#141413]">
+                    Quản lý chương trình
+                  </h1>
+                  {!gradesQuery.isLoading && (
+                    <span className="inline-flex items-center rounded-full bg-[#E8E6DC] px-2 py-0.5 font-[Be_Vietnam_Pro] text-[12px] font-semibold text-[#5E5D59]">
+                      {grades.length}
+                    </span>
+                  )}
+                </div>
+                <p className="mt-0.5 font-[Be_Vietnam_Pro] text-[13px] text-[#87867F]">
+                  Cấu trúc phân cấp Chương trình • Môn học • Chương • Bài học
+                </p>
+              </div>
             </div>
-          </header>
+          </div>
 
           <div className="aas-layout">
             <article className="aas-tree-shell">

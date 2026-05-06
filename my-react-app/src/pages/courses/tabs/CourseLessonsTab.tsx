@@ -978,6 +978,8 @@ function LessonReorderStrip({
 const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course }) => {
   const { showToast } = useToast();
   const isAdmin = useMemo(() => AuthService.getUserRole() === 'admin', []);
+  /** Admin duyệt khóa học: chỉ xem / xem video — không chỉnh sửa (đồng bộ UX với /admin/courses/.../review). */
+  const readOnly = isAdmin;
   const [playingLessonId, setPlayingLessonId] = useState<string | null>(null);
   const [showResources, setShowResources] = useState<string | null>(null);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
@@ -1148,50 +1150,64 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
       );
     }
 
-    return curriculumHierarchy.map((group, idx) => (
+    return curriculumHierarchy.map((group, idx) => {
+      const sectionLabelText =
+        group.type === 'CHAPTER'
+          ? (() => {
+              const num =
+                group.orderIndex ??
+                extractChapterNumber(group.title) ??
+                extractChapterNumber(group.id);
+              if (num === undefined || num === null) return `Chương ${idx + 1}`;
+              const hasLabel = new RegExp(`chương\\s*${num}`, 'i').test(group.title);
+              return hasLabel ? '' : `Chương ${num}`;
+            })()
+          : group.type === 'SECTION'
+            ? (() => {
+                const num = group.orderIndex ?? idx + 1;
+                const hasLabel = new RegExp(`(mục|phần)\\s*${num}`, 'i').test(group.title);
+                return hasLabel ? '' : `Mục ${num}`;
+              })()
+            : '';
+
+      return (
       <div key={group.id} className="curriculum-group">
         <div
           className="section-header"
           onClick={() => toggleSection(group.id)}
           style={isSidebar ? { padding: '0.65rem 1rem', background: '#f5f4ed' } : {}}
         >
-          <div className="section-title-area">
+          <div className="section-title-area clt-section-title-area">
             <ChevronDown
               size={isSidebar ? 14 : 18}
+              className="clt-section-chevron"
               style={{
                 transform: collapsedSections[group.id] ? 'rotate(-90deg)' : 'none',
                 transition: 'transform 0.2s',
               }}
             />
-            <span className="section-label" style={isSidebar ? { fontSize: '0.65rem' } : {}}>
-              {group.type === 'CHAPTER'
-                ? (() => {
-                  const num = group.orderIndex ?? extractChapterNumber(group.title) ?? extractChapterNumber(group.id);
-                  if (num === undefined || num === null) return `Chương ${idx + 1}`;
-                  const hasLabel = new RegExp(`chương\\s*${num}`, 'i').test(group.title);
-                  return hasLabel ? '' : `Chương ${num}`;
-                })()
-                : group.type === 'SECTION'
-                  ? (() => {
-                    const num = group.orderIndex ?? idx + 1;
-                    const hasLabel = new RegExp(`(mục|phần)\\s*${num}`, 'i').test(group.title);
-                    return hasLabel ? '' : `Mục ${num}`;
-                  })()
-                  : ''}
-            </span>
-            <div className="section-title-wrapper">
-              <span className="section-title" style={isSidebar ? { fontSize: '0.82rem' } : {}}>
-                {group.title}
-              </span>
-              {group.description && (
-                <p className="section-description">{group.description}</p>
-              )}
+            <div className="clt-section-heading-stack">
+              <div
+                className={`clt-section-heading-row${sectionLabelText ? '' : ' clt-section-heading-row--solo'}`}
+              >
+                {sectionLabelText ? (
+                  <span className="section-label clt-chapter-label">
+                    {sectionLabelText}
+                  </span>
+                ) : null}
+                <span className="section-title clt-chapter-title-text" style={isSidebar ? { fontSize: '0.82rem' } : {}}>
+                  {group.title}
+                </span>
+              </div>
+              {group.description ? (
+                <p className="section-description clt-section-description">{group.description}</p>
+              ) : null}
             </div>
           </div>
           {!isSidebar && (
             <div className="section-meta">
               <span>{group.lessons.length} bài học</span>
-              {group.type === 'SECTION' && (
+              {group.type === 'SECTION' && !readOnly && (
                 <div className="row" style={{ gap: '0.5rem', marginLeft: '1rem' }}>
                   <button
                     className="btn secondary"
@@ -1217,15 +1233,10 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
               )}
             </div>
           )}
-          {!isSidebar && isAdmin && (
-            <div className="section-meta">
-              <span>{group.lessons.length} bài học</span>
-            </div>
-          )}
         </div>
         <div className={`lessons-group ${collapsedSections[group.id] ? 'collapsed' : ''}`}>
           <div className="lessons-inner">
-            {!isSidebar && group.lessons.length > 1 && (
+            {!isSidebar && !readOnly && group.lessons.length > 1 && (
               <div style={{ padding: '1rem 1.25rem 0.5rem' }}>
                 <LessonReorderStrip
                   title="Sắp xếp bài học trong phần"
@@ -1239,7 +1250,8 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
           </div>
         </div>
       </div>
-    ));
+      );
+    });
   };
 
   const renderLessonItem = (lesson: CourseLessonResponse, isSidebar = false) => {
@@ -1249,25 +1261,25 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
     return (
       <div key={lesson.id} style={{ marginBottom: 0 }}>
         <div
-          className={isSidebar ? '' : 'clt-list-card'}
+          className={isSidebar ? 'clt-sidebar-lesson-row' : 'clt-list-card'}
           onClick={() => handleLessonSelect(lesson)}
           style={
             isSidebar
               ? {
                 display: 'flex',
-                alignItems: 'center',
+                alignItems: 'flex-start',
                 gap: '0.75rem',
                 padding: '0.75rem 1rem',
-                background: isPlaying ? '#fdf4f0' : '#ffffff',
+                background: isPlaying ? '#f1f5f9' : '#ffffff',
                 cursor: 'pointer',
-                borderLeft: isPlaying ? '3px solid #C96442' : '3px solid transparent',
+                borderLeft: isPlaying ? '3px solid #64748b' : '3px solid transparent',
                 borderBottom: '1px solid #f0eee6',
                 transition: 'all 0.2s ease',
               }
               : {
                 cursor: 'pointer',
-                borderColor: isPlaying ? '#C96442' : undefined,
-                boxShadow: isPlaying ? '0 4px 12px rgba(201, 100, 66, 0.15)' : undefined,
+                borderColor: isPlaying ? '#94a3b8' : undefined,
+                boxShadow: isPlaying ? '0 4px 12px rgba(71, 85, 105, 0.12)' : undefined,
               }
           }
         >
@@ -1280,7 +1292,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              background: isPlaying ? '#C96442' : '#e8e6dc',
+              background: isPlaying ? '#64748b' : '#e8e6dc',
               color: isPlaying ? '#fff' : '#5e5d59',
             }}
           >
@@ -1290,7 +1302,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
           <div className="clt-lesson-info">
             <div
               className="clt-lesson-title"
-              style={{ color: isPlaying ? '#C96442' : isSidebar ? '#141413' : undefined }}
+              style={{ color: isPlaying ? '#475569' : isSidebar ? '#141413' : undefined }}
               title={lesson.lessonTitle ?? 'Bài học'}
             >
               {lesson.lessonTitle ?? 'Bài học'}
@@ -1311,25 +1323,23 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                     {Math.floor(lesson.durationSeconds / 60)} phút
                   </span>
                 )}
-                {true && (
-                  <span
-                    style={{
-                      fontSize: '0.75rem',
-                      color: '#6366f1',
-                      fontWeight: 600,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 4,
-                      cursor: 'pointer',
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowResources(showResources === lesson.id ? null : lesson.id);
-                    }}
-                  >
-                    <Paperclip size={12} /> {materialsList.length} tài liệu
-                  </span>
-                )}
+                <span
+                  style={{
+                    fontSize: '0.75rem',
+                    color: '#6366f1',
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    cursor: 'pointer',
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowResources(showResources === lesson.id ? null : lesson.id);
+                  }}
+                >
+                  <Paperclip size={12} /> {materialsList.length} tài liệu
+                </span>
                 <span
                   className={`badge ${lesson.isFreePreview ? 'published' : 'draft'}`}
                   style={{
@@ -1339,7 +1349,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                     opacity: lesson.isFreePreview ? 1 : 0.6,
                   }}
                   onClick={(e) => {
-                    if (isAdmin) return;
+                    if (readOnly) return;
                     e.stopPropagation();
                     updateMutation.mutate({
                       courseId,
@@ -1348,7 +1358,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                     });
                   }}
                   title={
-                    isAdmin
+                    readOnly
                       ? undefined
                       : lesson.isFreePreview
                         ? 'Click để khóa bài học'
@@ -1361,7 +1371,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
             )}
           </div>
 
-          {!isSidebar && (
+          {!isSidebar && !readOnly && (
             <div className="clt-actions">
               <button
                 className="clt-action-btn"
@@ -1427,7 +1437,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                       ({((m.size || 0) / 1024).toFixed(1)} KB)
                     </span>
                   </button>
-                  {true && (
+                  {!readOnly && (
                     <button
                       className="btn-icon"
                       style={{ color: '#ef4444' }}
@@ -1451,7 +1461,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
                   Chưa có tài liệu đính kèm cho bài học này.
                 </p>
               )}
-              {true && (
+              {!readOnly && (
                 <label
                   className="btn secondary"
                   style={{
@@ -1528,8 +1538,9 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
   return (
     <div className="course-detail-tab lessons-tab">
       {playingLessonId && lessons.find((l) => l.id === playingLessonId) ? (
-        /* Integrated Player Layout */
-        <div className="player-container">
+        /* Integrated Player Layout — white shell aligned with admin course review panels */
+        <div className="rounded-2xl border border-[#E8E6DC] bg-white shadow-[0_1px_3px_rgba(20,20,19,0.06)] p-3 md:p-5">
+          <div className="player-container">
           {/* Main Player Area */}
           <div className="player-main">
             <InlinePlayer
@@ -1555,7 +1566,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
             {/* Resources Tab below video */}
             <div className="data-card" style={{ padding: '1.25rem' }}>
               <h4 style={{ margin: '0 0 1rem', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Paperclip size={18} color="#C96442" /> Tài liệu bài học
+                <Paperclip size={18} className="text-slate-500" aria-hidden /> Tài liệu bài học
               </h4>
               {lessons.find((l) => l.id === playingLessonId)?.materials ? (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
@@ -1604,7 +1615,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
               style={{
                 padding: '1.25rem 1.5rem',
                 borderBottom: '1px solid #e8e6dc',
-                background: 'linear-gradient(to right, #fdfaf6, #ffffff)',
+                background: 'linear-gradient(to right, #f8fafc, #ffffff)',
                 flexShrink: 0,
               }}
             >
@@ -1624,10 +1635,11 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
               {renderCurriculum(true)}
             </div>
           </div>
+          </div>
         </div>
       ) : (
         /* Regular Dashboard List Layout */
-        <>
+        <div className="rounded-2xl border border-[#E8E6DC] bg-white shadow-[0_1px_3px_rgba(20,20,19,0.06)] p-4 md:p-6 space-y-5">
           {/* Stats */}
           <div className="stats-grid">
             <div className="stat-card stat-blue">
@@ -1662,7 +1674,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
             </div>
           </div>
 
-          {true && (
+          {!readOnly && (
             <div className="cdt-toolbar">
               {course.provider === 'CUSTOM' && (
                 <button
@@ -1696,7 +1708,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
             <div className="cdt-empty">
               <Video size={40} strokeWidth={1.5} style={{ marginBottom: 12 }} />
               <p>Chưa có bài học nào.</p>
-              {true && (
+              {!readOnly && (
                 <button
                   type="button"
                   className="btn cdt-btn-primary"
@@ -1712,28 +1724,18 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
 
           {/* Lesson Curriculum */}
           {!isLoading && lessons.length > 0 && (
-            <div className="data-card" style={{ gap: 0, padding: 0, overflow: 'hidden' }}>
-              <div
-                style={{
-                  padding: '1rem 1.2rem',
-                  borderBottom: '1px solid #e8eef8',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}
-              >
-                <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800 }}>
-                  {UI_TEXT.COURSE_CONTENT}
-                </h4>
-                <div className="pill-btn active">
-                  <Layout size={13} style={{ marginRight: 4 }} /> Phân cấp
-                </div>
+            <div className="data-card clt-course-content-shell">
+              <div className="clt-course-content-head">
+                <h4 className="clt-course-content-title">{UI_TEXT.COURSE_CONTENT}</h4>
+                <span className="clt-hierarchy-chip">
+                  <Layout size={13} strokeWidth={2} aria-hidden /> Phân cấp
+                </span>
               </div>
 
               {renderCurriculum()}
             </div>
           )}
-        </>
+        </div>
       )}
 
       {/* Upload Modal */}
@@ -1831,7 +1833,7 @@ const CourseLessonsTab: React.FC<CourseLessonsTabProps> = ({ courseId, course })
         />
       )}
 
-      {true && (
+      {!readOnly && (
         <CltTextSectionModal
           open={addSectionOpen}
           onClose={() => {

@@ -265,26 +265,35 @@ const AdminCommissionProposals: React.FC = () => {
       role="admin"
       user={{ name: currentUser.name, avatar: currentUser.avatar!, role: 'admin' }}
       notificationCount={0}
+      contentClassName="dashboard-content--flush-bleed"
     >
       <AdminFinanceStudioShell>
         <div className="acp-page">
-          {/* Header */}
-          <header className="page-header">
-            <div>
-              <h1 className="page-title">Quản lý Hoa hồng</h1>
-              <p className="page-subtitle">Xét duyệt đề xuất tỷ lệ chia doanh thu của giáo viên</p>
+          {/* Header — aligned with teacher mindmaps / commission */}
+          <header className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div className="flex items-start gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-[#E8E6DC] flex items-center justify-center text-[#5E5D59] shrink-0">
+                <Percent className="w-5 h-5" aria-hidden />
+              </div>
+              <div>
+                <h1 className="font-[Playfair_Display] text-[22px] font-medium text-[#141413] m-0">
+                  Quản lý Hoa hồng
+                </h1>
+                <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-0.5 mb-0">
+                  Xét duyệt đề xuất tỷ lệ chia doanh thu của giáo viên
+                </p>
+              </div>
             </div>
-            <div className="header-actions">
-              <button
-                className="btn-action btn-action--ghost"
-                onClick={load}
-                disabled={isLoading}
-                title="Làm mới"
-              >
-                <RefreshCw size={15} className={isLoading ? 'spin-icon' : ''} />
-                Làm mới
-              </button>
-            </div>
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors disabled:opacity-50 shrink-0 self-start sm:self-auto"
+              onClick={load}
+              disabled={isLoading}
+              title="Làm mới"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} aria-hidden />
+              Làm mới
+            </button>
           </header>
 
           {/* Toast */}
@@ -294,14 +303,22 @@ const AdminCommissionProposals: React.FC = () => {
             </div>
           )}
 
-          {/* Filters */}
-          <div className="acp-toolbar">
-            <div className="acp-filters">
-              {FILTER_OPTIONS.map(opt => (
+          {/* Filters — segmented control like /teacher/mindmaps */}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-1 p-1 bg-[#F5F4ED] rounded-xl flex-wrap">
+              {FILTER_OPTIONS.map((opt) => (
                 <button
                   key={opt.value}
-                  className={`acp-filter-tab ${filter === opt.value ? 'active' : ''}`}
-                  onClick={() => { setFilter(opt.value); setPage(0); }}
+                  type="button"
+                  className={`px-3 py-1.5 rounded-lg font-[Be_Vietnam_Pro] text-[12px] font-medium transition-all duration-150 whitespace-nowrap ${
+                    filter === opt.value
+                      ? 'bg-white text-[#141413] shadow-sm'
+                      : 'text-[#87867F] hover:text-[#5E5D59]'
+                  }`}
+                  onClick={() => {
+                    setFilter(opt.value);
+                    setPage(0);
+                  }}
                 >
                   {opt.label}
                 </button>
@@ -320,7 +337,13 @@ const AdminCommissionProposals: React.FC = () => {
               <div className="acp-empty-state">
                 <AlertTriangle size={32} style={{ color: '#B53333' }} />
                 <p>{error}</p>
-                <button className="btn-action btn-action--ghost" onClick={load}>Thử lại</button>
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors mt-1"
+                  onClick={load}
+                >
+                  Thử lại
+                </button>
               </div>
             ) : proposals.length === 0 ? (
               <div className="acp-empty-state">
@@ -392,13 +415,20 @@ const AdminCommissionProposals: React.FC = () => {
           {totalPages > 1 && (
             <div className="acp-pagination">
               <span className="acp-pagination__info">{totalElements} đề xuất</span>
-              <button className="acp-page-btn" disabled={page === 0} onClick={() => setPage(p => p - 1)}>
-                <ChevronLeft size={16} />
-              </button>
-              <span className="acp-pagination__pages">{page + 1} / {totalPages}</span>
-              <button className="acp-page-btn" disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)}>
-                <ChevronRight size={16} />
-              </button>
+              <div className="acp-pagination__nav">
+                <button type="button" className="acp-page-btn" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>
+                  <ChevronLeft size={16} />
+                </button>
+                <span className="acp-pagination__pages">{page + 1} / {totalPages}</span>
+                <button
+                  type="button"
+                  className="acp-page-btn"
+                  disabled={page >= totalPages - 1}
+                  onClick={() => setPage((p) => p + 1)}
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
             </div>
           )}
         </div>

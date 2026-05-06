@@ -19,6 +19,7 @@ import {
   useSubmitReview,
   useUpdateReview,
 } from '../../../hooks/useCourses';
+import type { CourseReviewResponse } from '../../../types';
 import './StudentReviewsTab.css';
 
 interface StudentReviewsTabProps {
@@ -91,6 +92,10 @@ const StudentReviewsTab: React.FC<StudentReviewsTabProps> = ({ courseId }) => {
     }
   };
 
+  const toggleStarFilter = (star: number) => {
+    setFilterRating((prev) => (prev === star ? undefined : star));
+  };
+
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return '';
     try {
@@ -124,7 +129,7 @@ const StudentReviewsTab: React.FC<StudentReviewsTabProps> = ({ courseId }) => {
               {[1, 2, 3, 4, 5].map((s) => (
                 <Star
                   key={s}
-                  size={20}
+                  size={16}
                   fill={s <= (summary?.averageRating || 0) ? '#FBBF24' : 'none'}
                   color="#FBBF24"
                 />
@@ -137,7 +142,7 @@ const StudentReviewsTab: React.FC<StudentReviewsTabProps> = ({ courseId }) => {
         </div>
 
         <div className="srt-stats-histogram">
-          {[5, 4, 3, 2, 1].map((star) => {
+            {[5, 4, 3, 2, 1].map((star) => {
             const count = summary?.ratingDistribution?.[star] || 0;
             const percent = summary?.totalReviews ? (count / summary.totalReviews) * 100 : 0;
             const isActive = filterRating === star;
@@ -145,8 +150,18 @@ const StudentReviewsTab: React.FC<StudentReviewsTabProps> = ({ courseId }) => {
             return (
               <div
                 key={star}
+                role="button"
+                tabIndex={0}
+                aria-pressed={isActive}
+                aria-label={`Lọc đánh giá ${star} sao, ${percent.toFixed(0)} phần trăm`}
                 className={`srt-stat-row ${isActive ? 'active' : ''}`}
-                onClick={() => setFilterRating(isActive ? undefined : star)}
+                onClick={() => toggleStarFilter(star)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    toggleStarFilter(star);
+                  }
+                }}
               >
                 <div className="srt-progress-bar-wrap">
                   <div
@@ -178,19 +193,16 @@ const StudentReviewsTab: React.FC<StudentReviewsTabProps> = ({ courseId }) => {
         {!myReview || isEditing ? (
           <div className="srt-card srt-write-card">
             <div className="srt-card-header">
-              <MessageSquare size={24} className="srt-icon-accent" />
+              <MessageSquare size={18} strokeWidth={2} className="srt-icon-accent" aria-hidden />
               <h3>{isEditing ? 'Chỉnh sửa đánh giá' : 'Để lại đánh giá của bạn'}</h3>
             </div>
 
-            {error && (
-              <div
-                className="alert-box error"
-                style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}
-              >
-                <AlertCircle size={16} />
+            {error ? (
+              <div className="srt-alert-error" role="alert">
+                <AlertCircle size={15} strokeWidth={2} aria-hidden />
                 <span>{error}</span>
               </div>
-            )}
+            ) : null}
 
             <form onSubmit={handleSubmit}>
               <div className="srt-rating-selector">
@@ -205,9 +217,9 @@ const StudentReviewsTab: React.FC<StudentReviewsTabProps> = ({ courseId }) => {
                       className={`srt-star-btn ${s <= rating ? 'active' : ''}`}
                     >
                       <Star
-                        size={36}
+                        size={26}
                         fill={s <= rating ? 'currentColor' : 'none'}
-                        strokeWidth={s <= rating ? 0 : 1}
+                        strokeWidth={s <= rating ? 0 : 1.25}
                       />
                     </button>
                   ))}
@@ -245,7 +257,7 @@ const StudentReviewsTab: React.FC<StudentReviewsTabProps> = ({ courseId }) => {
                   className="srt-btn-premium"
                   disabled={submitReviewMutation.isPending || updateReviewMutation.isPending}
                 >
-                  <Send size={20} />
+                  <Send size={16} strokeWidth={2} aria-hidden />
                   <span>{isEditing ? 'Cập nhật' : 'Gửi đánh giá'}</span>
                 </button>
               </div>
@@ -259,16 +271,16 @@ const StudentReviewsTab: React.FC<StudentReviewsTabProps> = ({ courseId }) => {
                   <User size={20} />
                 </div>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Đánh giá của bạn</h3>
+                  <h3>Đánh giá của bạn</h3>
                   <span className="srt-date-sub">{formatDate(myReview.updatedAt)}</span>
                 </div>
               </div>
               <div className="srt-actions">
-                <button onClick={startEdit} className="srt-action-btn">
-                  <Edit2 size={18} />
+                <button type="button" onClick={startEdit} className="srt-action-btn" aria-label="Chỉnh sửa đánh giá">
+                  <Edit2 size={17} strokeWidth={2} />
                 </button>
-                <button onClick={handleDelete} className="srt-action-btn danger">
-                  <Trash2 size={18} />
+                <button type="button" onClick={handleDelete} className="srt-action-btn danger" aria-label="Xóa đánh giá">
+                  <Trash2 size={17} strokeWidth={2} />
                 </button>
               </div>
             </div>
@@ -293,21 +305,21 @@ const StudentReviewsTab: React.FC<StudentReviewsTabProps> = ({ courseId }) => {
       <div className="srt-other-reviews">
         <div className="srt-section-header-row">
           <div className="srt-flex-title">
-            <MessageSquare size={28} className="title-icon" color="#4f46e5" />
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <MessageSquare size={18} strokeWidth={2} className="title-icon" aria-hidden />
+            <div className="srt-title-cluster">
               <h3>Nhận xét từ học viên</h3>
-              {filterRating && (
+              {filterRating ? (
                 <div className="srt-active-filter-badge">
-                  <span>Chỉ hiện {filterRating} sao</span>
-                  <button onClick={() => setFilterRating(undefined)}>
-                    <X size={12} />
+                  <span>{filterRating} sao</span>
+                  <button type="button" aria-label="Bỏ lọc" onClick={() => setFilterRating(undefined)}>
+                    <X size={11} strokeWidth={2.5} />
                   </button>
                 </div>
-              )}
+              ) : null}
             </div>
           </div>
           <div className="srt-filter-controls">
-            <Filter size={18} />
+            <Filter size={15} strokeWidth={2} aria-hidden />
             <select
               value={filterRating || ''}
               onChange={(e) => setFilterRating(e.target.value ? Number(e.target.value) : undefined)}
@@ -335,18 +347,20 @@ const StudentReviewsTab: React.FC<StudentReviewsTabProps> = ({ courseId }) => {
           </div>
         ) : (
           <div className="srt-review-list">
-            {reviews.map((review: any) => (
+            {reviews.map((review: CourseReviewResponse) => (
               <div key={review.id} className="srt-card srt-review-item">
                 <div className="srt-review-user-info">
                   <div className="srt-user-avatar-wrap">
                     {review.studentAvatar ? (
                       <img
                         src={review.studentAvatar}
-                        alt={review.studentName}
+                        alt={review.studentName || 'Học viên'}
                         className="srt-user-avatar"
                       />
                     ) : (
-                      <div className="srt-user-avatar">{review.studentName.charAt(0)}</div>
+                      <div className="srt-user-avatar" aria-hidden>
+                        {(review.studentName?.trim().charAt(0) || '?').toUpperCase()}
+                      </div>
                     )}
                   </div>
                   <div className="srt-user-text-meta">

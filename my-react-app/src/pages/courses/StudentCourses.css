@@ -876,9 +876,9 @@
   font-weight: 600;
   color: var(--sc-text-primary);
   margin-bottom: 3px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .sc-lesson-dur {
@@ -1113,7 +1113,7 @@
 .player-sidebar .section-title-area {
   min-width: 0;
   flex: 1;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .player-sidebar .section-title-area .section-label {
@@ -1125,10 +1125,10 @@
 .player-sidebar .section-title-area .section-title {
   color: #141413;
   font-size: 0.85rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   min-width: 0;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .player-sidebar .section-header svg {
@@ -1146,8 +1146,8 @@
 }
 
 .player-sidebar .clt-lesson-title {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   font-size: 0.88rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }

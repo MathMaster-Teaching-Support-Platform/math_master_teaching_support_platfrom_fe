@@ -577,7 +577,7 @@ const AdminSystemConfigPage: React.FC = () => {
               </div>
               <div>
                 <h1 className="font-[Playfair_Display] text-[22px] font-medium text-[#141413]">
-                  Cấu hình hệ thống
+                  Chính sách
                 </h1>
                 <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-0.5">
                   Chính sách bảo mật — hiển thị khi giáo viên đăng ký

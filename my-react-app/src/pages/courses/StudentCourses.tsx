@@ -40,6 +40,12 @@ const coverGradients = [
 const coverAccents = ['#4d4c48', '#5e5d59', '#7a5a4d', '#81644c', '#6e5b7e', '#4a6a5a'] as const;
 const PAGE_SIZE = 9;
 
+const scSelectCls =
+  'w-full sm:w-auto border border-[#E8E6DC] rounded-lg px-3 py-2 font-[Be_Vietnam_Pro] text-[13px] text-[#141413] outline-none focus:border-[#C96442] focus:ring-1 focus:ring-[#C96442] bg-white transition-colors min-h-[42px] flex-shrink-0';
+
+const scSecondaryBtn =
+  'inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[12px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors disabled:opacity-45 disabled:pointer-events-none';
+
 // ─── Animated progress bar ────────────────────────────────────────────────────
 const AnimatedProgressBar: React.FC<{ value: number }> = ({ value }) => {
   const [width, setWidth] = React.useState(0);
@@ -268,7 +274,7 @@ const StudentCourses: React.FC = () => {
   const stats = useMemo(
     () => ({
       active: enrollments.filter((e) => e.status === 'ACTIVE').length,
-      total: enrollments.filter((e) => e.status === 'ACTIVE').length,
+      total: enrollments.length,
       browse: publicCourses.length,
     }),
     [enrollments, publicCourses.length]
@@ -341,177 +347,205 @@ const StudentCourses: React.FC = () => {
         contentClassName="dashboard-content--flush-bleed"
         user={{ name: 'Học sinh', avatar: '', role: 'student' }}
       >
-        <div className="module-layout-container">
-          <section className="module-page teacher-courses-page">
-            <motion.div
-              key="grid-view"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.25 }}
-            >
+        <div className="px-6 py-8 lg:px-8 w-full min-w-0">
+          <div className="module-layout-container">
+            <section className="module-page teacher-courses-page space-y-6 min-w-0">
               {/* ── Header ── */}
-              <header className="page-header courses-header-row">
-                <div className="header-stack">
-                  <div className="row" style={{ gap: '0.6rem' }}>
-                    <h2>{UI_TEXT.MY_COURSES}</h2>
-                    {!loadingEnrollments && (
-                      <span className="count-chip">{enrollments.length}</span>
-                    )}
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-xl bg-[#E8E6DC] flex items-center justify-center text-[#5E5D59] flex-shrink-0">
+                    <BookOpen className="w-5 h-5" aria-hidden />
                   </div>
-                  <p className="header-sub">
-                    {stats.active} đang học • {stats.total} đã đăng ký
-                  </p>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                      <h1 className="font-[Playfair_Display] text-[22px] font-medium text-[#141413]">
+                        {UI_TEXT.MY_COURSES}
+                      </h1>
+                      {!loadingEnrollments && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#E8E6DC] font-[Be_Vietnam_Pro] text-[12px] font-semibold text-[#5E5D59]">
+                          {enrollments.length}
+                        </span>
+                      )}
+                    </div>
+                    <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-0.5">
+                      {stats.active} đang học • {stats.total} ghi danh
+                    </p>
+                  </div>
                 </div>
-              </header>
+              </div>
 
               {/* ── Stats ── */}
-              <div className="stats-grid">
-                <div className="stat-card stat-blue">
-                  <div className="stat-icon-wrap">
-                    <BookOpen size={20} />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {(
+                  [
+                    {
+                      label: 'Đang học',
+                      value: stats.active,
+                      Icon: BookOpen,
+                      bg: 'bg-[#EEF2FF]',
+                      color: 'text-[#4F7EF7]',
+                    },
+                    {
+                      label: 'Tổng ghi danh',
+                      value: stats.total,
+                      Icon: TrendingUp,
+                      bg: 'bg-[#ECFDF5]',
+                      color: 'text-[#2EAD7A]',
+                    },
+                    {
+                      label: 'Trên trang khám phá',
+                      value: stats.browse,
+                      Icon: Award,
+                      bg: 'bg-[#FFF7ED]',
+                      color: 'text-[#E07B39]',
+                    },
+                  ] as const
+                ).map(({ label, value, Icon, bg, color }) => (
+                  <div
+                    key={label}
+                    className="bg-white rounded-2xl border border-[#E8E6DC] p-4 flex items-center gap-3"
+                  >
+                    <div
+                      className={`w-9 h-9 rounded-xl ${bg} flex items-center justify-center flex-shrink-0`}
+                    >
+                      <Icon className={`w-4 h-4 ${color}`} aria-hidden />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-[Playfair_Display] text-[22px] font-medium text-[#141413] leading-none tabular-nums">
+                        {value}
+                      </p>
+                      <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mt-0.5 truncate">
+                        {label}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3>{stats.active}</h3>
-                    <p>Đang học</p>
-                  </div>
-                </div>
-                <div className="stat-card stat-emerald">
-                  <div className="stat-icon-wrap">
-                    <TrendingUp size={20} />
-                  </div>
-                  <div>
-                    <h3>{stats.total}</h3>
-                    <p>Tổng đăng ký</p>
-                  </div>
-                </div>
-                <div className="stat-card stat-amber">
-                  <div className="stat-icon-wrap">
-                    <Award size={20} />
-                  </div>
-                  <div>
-                    <h3>{stats.browse}</h3>
-                    <p>Khóa học mới</p>
-                  </div>
-                </div>
+                ))}
               </div>
 
               {/* ── Toolbar ── */}
-              <div className="toolbar">
-                <label className="search-box">
-                  <span className="search-box__icon" aria-hidden="true">
-                    <Search size={15} />
-                  </span>
-                  <input
-                    placeholder={`Tìm kiếm ${UI_TEXT.COURSE.toLowerCase()}...`}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    aria-label={`Tìm kiếm ${UI_TEXT.COURSE.toLowerCase()}`}
-                  />
-                  {searchQuery && (
+              <div className="flex flex-col gap-3">
+                <div className="flex flex-col sm:flex-row sm:items-start gap-3">
+                  <label className="flex-1 min-w-0 flex items-center gap-3 bg-[#FAF9F5] border border-[#E8E6DC] rounded-xl px-4 py-2.5 focus-within:border-[#3898EC] focus-within:shadow-[0_0_0_3px_rgba(56,152,236,0.12)] transition-all duration-150">
+                    <Search className="text-[#87867F] w-4 h-4 flex-shrink-0" aria-hidden />
+                    <input
+                      className="flex-1 min-w-0 font-[Be_Vietnam_Pro] text-[14px] text-[#141413] placeholder:text-[#87867F] bg-transparent outline-none"
+                      placeholder={`Tìm kiếm ${UI_TEXT.COURSE.toLowerCase()}...`}
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      aria-label={`Tìm kiếm ${UI_TEXT.COURSE.toLowerCase()}`}
+                    />
+                    {searchQuery && (
+                      <button
+                        type="button"
+                        aria-label="Xóa tìm kiếm"
+                        onClick={() => setSearchQuery('')}
+                        className="text-[#87867F] hover:text-[#141413] transition-colors flex-shrink-0"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </label>
+
+                  <div className="flex flex-wrap items-center gap-1 p-1 bg-[#F5F4ED] rounded-xl flex-shrink-0">
                     <button
                       type="button"
-                      className="search-box__clear"
-                      aria-label="Xóa tìm kiếm"
-                      onClick={() => setSearchQuery('')}
+                      onClick={() => {
+                        setActiveTab('enrolled');
+                        setEnrolledPage(1);
+                      }}
+                      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg font-[Be_Vietnam_Pro] text-[12px] font-medium transition-all duration-150 whitespace-nowrap ${
+                        activeTab === 'enrolled'
+                          ? 'bg-white text-[#141413] shadow-sm'
+                          : 'text-[#87867F] hover:text-[#5E5D59]'
+                      }`}
                     >
-                      <X size={14} />
+                      <BookOpen className="w-3.5 h-3.5" strokeWidth={2} aria-hidden />
+                      Đã đăng ký ({stats.active})
                     </button>
-                  )}
-                </label>
-                <div className="pill-group">
-                  <button
-                    className={`pill-btn${activeTab === 'enrolled' ? ' active' : ''}`}
-                    onClick={() => {
-                      setActiveTab('enrolled');
-                      setEnrolledPage(1);
-                    }}
-                  >
-                    <BookOpen size={13} strokeWidth={2} /> Đã đăng ký ({stats.active})
-                  </button>
-                  <button
-                    className={`pill-btn${activeTab === 'browse' ? ' active' : ''}`}
-                    onClick={() => {
-                      setActiveTab('browse');
-                      setBrowsePage(1);
-                    }}
-                  >
-                    <Search size={13} strokeWidth={2} /> Khám phá
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveTab('browse');
+                        setBrowsePage(1);
+                      }}
+                      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg font-[Be_Vietnam_Pro] text-[12px] font-medium transition-all duration-150 whitespace-nowrap ${
+                        activeTab === 'browse'
+                          ? 'bg-white text-[#141413] shadow-sm'
+                          : 'text-[#87867F] hover:text-[#5E5D59]'
+                      }`}
+                    >
+                      <Search className="w-3.5 h-3.5" strokeWidth={2} aria-hidden />
+                      Khám phá
+                    </button>
+                  </div>
                 </div>
-              </div>
 
-              {/* ── Browse filter toolbar ── */}
-              {activeTab === 'browse' && (
-                <div className="toolbar" style={{ gap: '0.5rem' }}>
-                  <select
-                    className="grade-filter-select"
-                    value={filterGradeId}
-                    onChange={(e) => {
-                      setBrowsePage(1);
-                      handleFilterGradeChange(e.target.value);
-                    }}
-                  >
-                    <option value="">Tất cả lớp</option>
-                    {grades.map((g) => (
-                      <option key={g.id} value={g.id}>
-                        Lớp {g.gradeLevel} – {g.name}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    className="grade-filter-select"
-                    value={filterSubjectId}
-                    onChange={(e) => {
-                      setFilterSubjectId(e.target.value);
-                      setBrowsePage(1);
-                    }}
-                    disabled={!filterGradeId}
-                  >
-                    <option value="">Tất cả môn học</option>
-                    {subjects.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
+                {activeTab === 'browse' && (
+                  <div className="flex flex-col sm:flex-row flex-wrap gap-3">
+                    <select
+                      className={scSelectCls}
+                      value={filterGradeId}
+                      onChange={(e) => {
+                        setBrowsePage(1);
+                        handleFilterGradeChange(e.target.value);
+                      }}
+                      aria-label="Lọc theo lớp"
+                    >
+                      <option value="">Tất cả lớp</option>
+                      {grades.map((g) => (
+                        <option key={g.id} value={g.id}>
+                          Lớp {g.gradeLevel} – {g.name}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      className={scSelectCls}
+                      value={filterSubjectId}
+                      onChange={(e) => {
+                        setFilterSubjectId(e.target.value);
+                        setBrowsePage(1);
+                      }}
+                      disabled={!filterGradeId}
+                      aria-label="Lọc theo môn"
+                    >
+                      <option value="">Tất cả môn học</option>
+                      {subjects.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
 
               {/* ── Summary bar ── */}
               {activeTab === 'enrolled' && !loadingEnrollments && enrollments.length > 0 && (
-                <div className="assessment-summary-bar">
-                  <div className="summary-item summary-item--primary">
-                    <span className="summary-label">Hiển thị</span>
-                    <strong className="summary-value">
-                      {paginatedEnrollments.length} / {filteredEnrollments.length}
-                    </strong>
-                  </div>
-                  <div className="summary-item">
-                    <span className="summary-dot summary-dot--progress" />
-                    <span className="summary-label">Đang học</span>
-                    <strong className="summary-value">{stats.active}</strong>
-                  </div>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 rounded-xl bg-[#FAF9F5] border border-[#E8E6DC]">
+                  <span className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] uppercase tracking-wide">
+                    Hiển thị
+                  </span>
+                  <strong className="font-[Be_Vietnam_Pro] text-[13px] font-semibold text-[#141413] tabular-nums">
+                    {paginatedEnrollments.length} / {filteredEnrollments.length}
+                  </strong>
+                  <div className="w-px h-4 bg-[#E8E6DC] hidden sm:block" aria-hidden />
+                  <span className="flex items-center gap-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
+                    Đang học{' '}
+                    <strong className="text-[#141413] font-semibold tabular-nums">{stats.active}</strong>
+                  </span>
                 </div>
               )}
 
               {/* ── Loading skeletons ── */}
               {(activeTab === 'enrolled' ? loadingEnrollments : loadingPublic) && (
-                <div className="rounded-xl border border-[#E8E6DC] bg-[#F5F4ED] p-4">
-                  <div className="mb-2 flex items-center gap-2 text-[14px] text-[#5E5D59]">
-                    <LoaderCircle className="h-4 w-4 animate-spin text-[#C96442]" />
-                    {activeTab === 'enrolled'
-                      ? 'Đang tải khóa học đã đăng ký...'
-                      : 'Đang tải danh sách khóa học...'}
-                  </div>
-                  <div className="h-1.5 overflow-hidden rounded-full bg-[#E8E6DC]">
-                    <motion.div
-                      className="h-full rounded-full bg-[#C96442]"
-                      initial={{ width: '0%' }}
-                      animate={{ width: '100%' }}
-                      transition={{ duration: 1.2, ease: 'easeInOut' }}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" aria-busy="true">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <div
+                      key={i}
+                      className="bg-[#FAF9F5] rounded-2xl border border-[#F0EEE6] h-52 animate-pulse"
                     />
-                  </div>
+                  ))}
                 </div>
               )}
 
@@ -531,9 +565,11 @@ const StudentCourses: React.FC = () => {
                       ))}
                     </div>
                   ) : (
-                    <div className="empty">
-                      <BookOpen size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
-                      <p>
+                    <div className="flex flex-col items-center justify-center py-16 gap-2 px-4">
+                      <div className="w-12 h-12 rounded-2xl bg-[#F5F4ED] flex items-center justify-center text-[#87867F]">
+                        <BookOpen className="w-6 h-6 opacity-60" aria-hidden />
+                      </div>
+                      <p className="font-[Be_Vietnam_Pro] text-[14px] text-[#87867F] text-center max-w-md">
                         {searchQuery
                           ? `Không tìm thấy kết quả cho "${searchQuery}"`
                           : 'Bạn chưa đăng ký khóa học nào'}
@@ -545,25 +581,26 @@ const StudentCourses: React.FC = () => {
               {activeTab === 'enrolled' &&
                 !loadingEnrollments &&
                 filteredEnrollments.length > PAGE_SIZE && (
-                  <div className="courses-pagination">
+                  <div className="flex items-center justify-center gap-3 pt-1 flex-wrap">
                     <button
                       type="button"
-                      className="pagination-btn"
+                      className={scSecondaryBtn}
                       onClick={() => setEnrolledPage((p) => Math.max(1, p - 1))}
                       disabled={safeEnrolledPage === 1}
                     >
-                      <ArrowLeft size={14} /> Trước
+                      <ArrowLeft className="w-3.5 h-3.5" /> Trước
                     </button>
-                    <span className="pagination-info">
-                      Trang <strong>{safeEnrolledPage}</strong> / {enrolledTotalPages}
+                    <span className="font-[Be_Vietnam_Pro] text-[13px] text-[#5E5D59] tabular-nums">
+                      Trang <strong className="text-[#141413]">{safeEnrolledPage}</strong> /{' '}
+                      {enrolledTotalPages}
                     </span>
                     <button
                       type="button"
-                      className="pagination-btn"
+                      className={scSecondaryBtn}
                       onClick={() => setEnrolledPage((p) => Math.min(enrolledTotalPages, p + 1))}
                       disabled={safeEnrolledPage === enrolledTotalPages}
                     >
-                      Sau <ArrowRight size={14} />
+                      Sau <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 )}
@@ -587,38 +624,43 @@ const StudentCourses: React.FC = () => {
                       ))}
                     </div>
                   ) : (
-                    <div className="empty">
-                      <Search size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
-                      <p>Không tìm thấy khóa học nào</p>
+                    <div className="flex flex-col items-center justify-center py-16 gap-2 px-4">
+                      <div className="w-12 h-12 rounded-2xl bg-[#F5F4ED] flex items-center justify-center text-[#87867F]">
+                        <Search className="w-6 h-6 opacity-60" aria-hidden />
+                      </div>
+                      <p className="font-[Be_Vietnam_Pro] text-[14px] text-[#87867F] text-center max-w-md">
+                        Không tìm thấy khóa học nào
+                      </p>
                     </div>
                   )}
                 </>
               )}
               {activeTab === 'browse' && !loadingPublic && publicCourses.length > PAGE_SIZE && (
-                <div className="courses-pagination">
+                <div className="flex items-center justify-center gap-3 pt-1 flex-wrap">
                   <button
                     type="button"
-                    className="pagination-btn"
+                    className={scSecondaryBtn}
                     onClick={() => setBrowsePage((p) => Math.max(1, p - 1))}
                     disabled={safeBrowsePage === 1}
                   >
-                    <ArrowLeft size={14} /> Trước
+                    <ArrowLeft className="w-3.5 h-3.5" /> Trước
                   </button>
-                  <span className="pagination-info">
-                    Trang <strong>{safeBrowsePage}</strong> / {browseTotalPages}
+                  <span className="font-[Be_Vietnam_Pro] text-[13px] text-[#5E5D59] tabular-nums">
+                    Trang <strong className="text-[#141413]">{safeBrowsePage}</strong> /{' '}
+                    {browseTotalPages}
                   </span>
                   <button
                     type="button"
-                    className="pagination-btn"
+                    className={scSecondaryBtn}
                     onClick={() => setBrowsePage((p) => Math.min(browseTotalPages, p + 1))}
                     disabled={safeBrowsePage === browseTotalPages}
                   >
-                    Sau <ArrowRight size={14} />
+                    Sau <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
               )}
-            </motion.div>
-          </section>
+            </section>
+          </div>
         </div>
       </DashboardLayout>
 

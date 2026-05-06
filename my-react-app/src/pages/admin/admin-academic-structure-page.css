@@ -17,42 +17,6 @@
   padding-top: 0;
 }
 
-.aas-header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 2rem;
-  padding: 0 0 1.5rem 0;
-}
-
-.aas-kicker {
-  margin: 0;
-  font-size: 0.625rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #87867f;
-  font-weight: 500;
-}
-
-.aas-header h1 {
-  margin: 0.5rem 0 0;
-  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
-  font-size: 2.25rem;
-  font-weight: 700;
-  color: #141413;
-  letter-spacing: -0.01em;
-  line-height: 1.2;
-}
-
-.aas-header p {
-  margin: 0.5rem 0 0;
-  color: #5e5d59;
-  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
-  font-size: 0.9375rem;
-  font-weight: 400;
-  line-height: 1.6;
-}
-
 .aas-layout {
   display: grid;
   gap: 1.5rem;

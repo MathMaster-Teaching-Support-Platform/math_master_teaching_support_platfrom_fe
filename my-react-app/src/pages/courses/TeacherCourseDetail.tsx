@@ -18,7 +18,8 @@ import {
   X,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import type { ReactNode } from 'react';
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { CourseBreadcrumb } from '../../components/course/CourseBreadcrumb';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { UI_TEXT } from '../../constants/uiText';
@@ -32,9 +33,8 @@ import {
   useUpdateCourse,
 } from '../../hooks/useCourses';
 import '../../styles/module-refactor.css';
-import type { CourseLevel, UpdateCourseRequest } from '../../types';
+import type { CourseLevel, CourseResponse, UpdateCourseRequest } from '../../types';
 import './TeacherCourseDetail.css';
-import './TeacherCourses.css';
 import './tabs/CourseOverviewTab.css';
 import './tabs/course-detail-tabs.css';
 
@@ -47,19 +47,136 @@ import CourseStudentsTab from './tabs/CourseStudentsTab.tsx';
 
 type TabType = 'overview' | 'lessons' | 'assessments' | 'students' | 'reviews';
 
-/** Loading overlay — cùng ngôn ngữ UI với  (kem + terracotta) */
-const CourseDetailLoadingOverlay: React.FC<{ message: string }> = ({ message }) => (
-  <div className="course-math-loading-overlay" role="dialog" aria-modal="true">
-    <div className="course-math-loading-popup" role="status" aria-live="polite">
-      <div className="course-math-loader-ring" aria-hidden="true" />
-      <p className="course-math-loading-kicker"></p>
-      <p className="course-math-loading-text">{message}</p>
+const secondaryBtn =
+  'inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors shadow-sm disabled:opacity-45 disabled:pointer-events-none';
+
+const publishPrimaryBtn =
+  'inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#C96442] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:brightness-95 transition-colors shadow-sm disabled:opacity-45 disabled:pointer-events-none';
+
+const dangerOutlineBtn =
+  'inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:bg-rose-100 transition-colors disabled:opacity-45 disabled:pointer-events-none';
+
+function formatViDateTime(iso: string) {
+  return new Date(iso).toLocaleString('vi-VN', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function StatusBadge({ course }: Readonly<{ course: CourseResponse }>) {
+  const status = course.status;
+
+  let cfg: { label: ReactNode; className: string };
+  if (status === 'PENDING_REVIEW') {
+    cfg = {
+      label: (
+        <>
+          <CheckCircle2 size={12} strokeWidth={2.5} />
+          Chờ duyệt
+        </>
+      ),
+      className: 'bg-amber-50 text-amber-950 border-amber-200',
+    };
+  } else if (status === 'REJECTED') {
+    cfg = {
+      label: (
+        <>
+          <AlertCircle size={12} strokeWidth={2.5} />
+          Bị từ chối
+        </>
+      ),
+      className: 'bg-rose-50 text-rose-950 border-rose-200',
+    };
+  } else if (status === 'ARCHIVED') {
+    cfg = {
+      label: (
+        <>
+          <BookOpen size={12} strokeWidth={2.5} />
+          Đã lưu trữ
+        </>
+      ),
+      className: 'bg-slate-100 text-slate-800 border-slate-200',
+    };
+  } else if (status === 'PUBLISHED') {
+    cfg = {
+      label: (
+        <>
+          <Eye size={12} strokeWidth={2.5} />
+          Công khai
+        </>
+      ),
+      className: 'bg-emerald-50 text-emerald-950 border-emerald-200',
+    };
+  } else if (status === 'DRAFT') {
+    cfg = {
+      label: (
+        <>
+          <EyeOff size={12} strokeWidth={2.5} />
+          Nháp
+        </>
+      ),
+      className: 'bg-[#F5F4ED] text-[#5E5D59] border-[#E8E6DC]',
+    };
+  } else if (course.published) {
+    cfg = {
+      label: (
+        <>
+          <Eye size={12} strokeWidth={2.5} />
+          Công khai
+        </>
+      ),
+      className: 'bg-emerald-50 text-emerald-950 border-emerald-200',
+    };
+  } else {
+    cfg = {
+      label: (
+        <>
+          <EyeOff size={12} strokeWidth={2.5} />
+          Nháp
+        </>
+      ),
+      className: 'bg-[#F5F4ED] text-[#5E5D59] border-[#E8E6DC]',
+    };
+  }
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-[Be_Vietnam_Pro] text-[11px] font-semibold uppercase tracking-wide ${cfg.className}`}
+    >
+      {cfg.label}
+    </span>
+  );
+}
+
+function CourseDetailLoadingOverlay({ message }: Readonly<{ message: string }>) {
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-[#141413]/40 backdrop-blur-sm p-4"
+      aria-busy="true"
+    >
+      <div
+        className="rounded-2xl bg-white border border-[#E8E6DC] shadow-[0_20px_60px_rgba(20,20,19,0.12)] px-8 py-8 flex flex-col items-center gap-5 max-w-sm w-full"
+        role="status"
+        aria-live="polite"
+      >
+        <div
+          className="w-11 h-11 rounded-full border-2 border-[#E8E6DC] border-t-[#C96442] animate-spin"
+          aria-hidden="true"
+        />
+        <p className="font-[Be_Vietnam_Pro] text-[14px] text-[#5E5D59] text-center leading-relaxed">
+          {message}
+        </p>
+      </div>
     </div>
-  </div>
-);
+  );
+}
 
 const TeacherCourseDetail: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>();
+  const location = useLocation();
   const navigate = useNavigate();
   const { showToast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -183,7 +300,7 @@ const TeacherCourseDetail: React.FC = () => {
       <DashboardLayout
         role="teacher"
         user={{ name: 'Giáo viên', avatar: '', role: 'teacher' }}
-        contentClassName="dashboard-content--flush-bleed dashboard-content--course-detail-parchment"
+        contentClassName="dashboard-content--flush-bleed"
       >
         <CourseDetailLoadingOverlay message={loadingMessage} />
       </DashboardLayout>
@@ -195,19 +312,24 @@ const TeacherCourseDetail: React.FC = () => {
       <DashboardLayout
         role="teacher"
         user={{ name: 'Giáo viên', avatar: '', role: 'teacher' }}
-        contentClassName="dashboard-content--flush-bleed dashboard-content--course-detail-parchment"
+        contentClassName="dashboard-content--flush-bleed"
       >
-        <div className="module-layout-container">
-          <section className="module-page module-page--bleed" lang="vi">
-            <div className="empty">
-              <AlertCircle size={32} style={{ marginBottom: 8, color: '#ef4444' }} />
-              <p>Không tìm thấy {UI_TEXT.COURSE.toLowerCase()}</p>
-              <button className="btn secondary" onClick={() => navigate('/teacher/courses')}>
-                <ArrowLeft size={14} />
-                Quay lại danh sách
-              </button>
+        <div className="px-6 py-16 lg:px-8 flex justify-center">
+          <div className="max-w-md w-full rounded-2xl border border-[#E8E6DC] bg-white p-10 text-center shadow-sm">
+            <div className="w-14 h-14 rounded-2xl bg-rose-50 text-rose-400 flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="w-7 h-7" />
             </div>
-          </section>
+            <h2 className="font-[Playfair_Display] text-xl font-medium text-[#141413] mb-2">
+              Không tìm thấy {UI_TEXT.COURSE.toLowerCase()}
+            </h2>
+            <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mb-6">
+              {UI_TEXT.COURSE} có thể đã bị xóa hoặc bạn không có quyền xem.
+            </p>
+            <button type="button" className={secondaryBtn} onClick={() => navigate('/teacher/courses')}>
+              <ArrowLeft size={16} strokeWidth={2} />
+              Quay lại danh sách
+            </button>
+          </div>
         </div>
       </DashboardLayout>
     );
@@ -221,176 +343,252 @@ const TeacherCourseDetail: React.FC = () => {
     { id: 'reviews' as const, label: 'Đánh giá', icon: Star, count: course.ratingCount },
   ];
 
+  const isReviewShellPath = /\/teacher\/courses\/[^/]+\/review\/?$/.test(location.pathname);
+
   return (
     <DashboardLayout
       role="teacher"
       user={{ name: 'Giáo viên', avatar: '', role: 'teacher' }}
-      contentClassName="dashboard-content--flush-bleed dashboard-content--course-detail-parchment"
+      contentClassName="dashboard-content--flush-bleed"
     >
-      <div className="module-layout-container">
-        <section className="module-page module-page--bleed" lang="vi">
-          {/* Breadcrumb */}
-          <CourseBreadcrumb
-            homePath="/teacher/courses"
-            items={[{ label: course.title }]}
-            courseTitle={course.title}
-          />
+      <div className="w-full min-w-0 px-4 py-8 sm:px-6 lg:px-8 pb-12">
+        <div className="w-full min-w-0 max-w-none space-y-6">
+          <div className="rounded-xl bg-[#FAF9F5]/80 border border-[#E8E6DC]/80 px-4 py-3">
+            <CourseBreadcrumb
+              homePath="/teacher/courses"
+              items={
+                isReviewShellPath
+                  ? [
+                      {
+                        label: course.title,
+                        path: `/teacher/courses/${course.id}`,
+                      },
+                      { label: 'Quản lý khóa học' },
+                    ]
+                  : [{ label: course.title }]
+              }
+              courseTitle={course.title}
+            />
+          </div>
 
-          {/* Course Header */}
-          <div className="course-detail-header">
-            <div className="course-header-main">
-              <button className="btn secondary btn-sm" onClick={() => navigate('/teacher/courses')}>
-                <ArrowLeft size={14} />
-                Quay lại
-              </button>
+          <motion.article
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            className="rounded-2xl border border-[#E8E6DC] bg-white shadow-[0_2px_24px_rgba(20,20,19,0.06)] overflow-hidden"
+          >
+            <div
+              className="h-1 w-full bg-gradient-to-r from-[#C96442] via-[#E07B39] to-[#6366F1]"
+              aria-hidden="true"
+            />
 
-              <div className="course-header-info">
-                <div className="course-header-title-row">
-                  <h1 className="course-detail-title" lang="vi">
-                    {course.title}
-                  </h1>
-                  <span
-                    className={`course-badge ${
-                      course.status === 'ARCHIVED'
-                        ? 'badge-archived'
-                        : course.published
-                          ? 'badge-live'
-                          : 'badge-draft'
-                    }`}
+            <div className="p-6 md:p-8">
+              <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+                <div className="space-y-4 min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <button type="button" className={secondaryBtn} onClick={() => navigate('/teacher/courses')}>
+                      <ArrowLeft size={16} strokeWidth={2} />
+                      Quay lại
+                    </button>
+                    <StatusBadge course={course} />
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="w-11 h-11 rounded-xl bg-[#E8E6DC] flex items-center justify-center text-[#5E5D59] shrink-0 mt-0.5">
+                      <BookOpen className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <h1
+                        className="font-[Playfair_Display] text-[clamp(1.35rem,3vw,1.85rem)] font-medium text-[#141413] leading-snug tracking-tight"
+                        lang="vi"
+                      >
+                        {course.title}
+                      </h1>
+                      <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-1">
+                        Quản lý nội dung, bài học và học viên — tab Tổng quan hiển thị hồ sơ và chỉ số
+                        chính.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FAF9F5] border border-[#E8E6DC] px-3 py-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#5E5D59]">
+                      <GraduationCap size={14} className="text-[#87867F]" />
+                      {course.subjectName} · Lớp {course.gradeLevel}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FAF9F5] border border-[#E8E6DC] px-3 py-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#5E5D59]">
+                      <BookOpen size={14} className="text-[#87867F]" />
+                      {course.lessonsCount} bài học
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FAF9F5] border border-[#E8E6DC] px-3 py-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#5E5D59]">
+                      <Users size={14} className="text-[#87867F]" />
+                      {course.studentsCount} học viên
+                    </span>
+                  </div>
+
+                  {course.description && (
+                    <p className="font-[Be_Vietnam_Pro] text-[14px] text-[#5E5D59] leading-relaxed border-l-2 border-[#C96442]/40 pl-4">
+                      {course.description}
+                    </p>
+                  )}
+
+                  {course.status === 'PUBLISHED' && course.approvedBy && (
+                    <div className="rounded-xl border border-emerald-200 bg-emerald-50/90 px-4 py-3 font-[Be_Vietnam_Pro] text-[13px] text-emerald-950">
+                      <p className="font-semibold flex items-center gap-2">
+                        <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+                        Đã duyệt bởi {course.approvedBy}
+                      </p>
+                      {course.approvedAt && (
+                        <p className="text-emerald-800/90 mt-1.5 text-[12px]">
+                          {formatViDateTime(course.approvedAt)}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {course.status === 'REJECTED' && (
+                    <div className="space-y-3">
+                      {course.rejectionReason && (
+                        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 font-[Be_Vietnam_Pro] text-[13px] text-rose-950">
+                          <span className="font-semibold">Lý do từ chối: </span>
+                          {course.rejectionReason}
+                        </div>
+                      )}
+                      {course.rejectedBy && (
+                        <div className="rounded-xl border border-rose-100 bg-rose-50/80 px-4 py-3 font-[Be_Vietnam_Pro] text-[12px] text-rose-900">
+                          <p className="font-semibold">Từ chối bởi {course.rejectedBy}</p>
+                          {course.rejectedAt && (
+                            <p className="text-rose-800/85 mt-1">{formatViDateTime(course.rejectedAt)}</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-3 w-full lg:w-auto lg:min-w-[220px] shrink-0">
+                  {!course.published && course.status !== 'PENDING_REVIEW' && (
+                    <button
+                      type="button"
+                      className={`${secondaryBtn} w-full justify-center`}
+                      onClick={handleSubmitForReview}
+                      disabled={submitReviewMutation.isPending}
+                    >
+                      <CheckCircle2 size={18} strokeWidth={2} />
+                      {submitReviewMutation.isPending ? 'Đang gửi...' : 'Gửi duyệt'}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className={`${secondaryBtn} w-full justify-center`}
+                    onClick={() => setShowEditModal(true)}
+                    title={`Chỉnh sửa thông tin ${UI_TEXT.COURSE.toLowerCase()}`}
                   >
-                    {course.status === 'PENDING_REVIEW' ? (
-                      <>
-                        <CheckCircle2 size={11} /> Chờ duyệt
-                      </>
-                    ) : course.status === 'REJECTED' ? (
-                      <>
-                        <AlertCircle size={11} /> Bị từ chối
-                      </>
-                    ) : course.status === 'ARCHIVED' ? (
-                      <>
-                        <BookOpen size={11} /> Đã lưu trữ
-                      </>
-                    ) : course.published ? (
-                      <>
-                        <Eye size={11} /> Công khai
-                      </>
-                    ) : (
-                      <>
-                        <EyeOff size={11} /> Nháp
-                      </>
-                    )}
-                  </span>
+                    <Pencil size={18} strokeWidth={2} />
+                    Chỉnh sửa
+                  </button>
+                  {course.published ? (
+                    <button
+                      type="button"
+                      className={`${secondaryBtn} w-full justify-center`}
+                      onClick={handleTogglePublish}
+                      disabled={publishMutation.isPending}
+                    >
+                      <EyeOff size={18} strokeWidth={2} />
+                      Ẩn {UI_TEXT.COURSE.toLowerCase()}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className={`${publishPrimaryBtn} w-full justify-center`}
+                      onClick={handleTogglePublish}
+                      disabled={
+                        publishMutation.isPending || (!course.published && course.status !== 'PUBLISHED')
+                      }
+                      title={
+                        !course.published && course.status !== 'PUBLISHED'
+                          ? 'Khóa học cần được admin duyệt trước khi công khai'
+                          : undefined
+                      }
+                    >
+                      <Eye size={18} strokeWidth={2} />
+                      {publishMutation.isPending ? 'Đang cập nhật...' : 'Công khai'}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className={`${dangerOutlineBtn} w-full justify-center`}
+                    onClick={handleDelete}
+                    disabled={deleteMutation.isPending}
+                  >
+                    <Trash2 size={18} strokeWidth={2} />
+                    {deleteMutation.isPending ? 'Đang xóa...' : 'Xóa khóa học'}
+                  </button>
                 </div>
-
-                <div className="course-header-meta">
-                  <span className="meta-item">
-                    <GraduationCap size={14} />
-                    {course.subjectName} • Lớp {course.gradeLevel}
-                  </span>
-                  <span className="meta-separator">•</span>
-                  <span className="meta-item">
-                    <BookOpen size={14} />
-                    {course.lessonsCount} bài học
-                  </span>
-                  <span className="meta-separator">•</span>
-                  <span className="meta-item">
-                    <Users size={14} />
-                    {course.studentsCount} học viên
-                  </span>
-                </div>
-
-                {course.description && (
-                  <p className="course-header-description">{course.description}</p>
-                )}
-
-                {course.status === 'REJECTED' && course.rejectionReason && (
-                  <p className="course-header-description" style={{ color: '#b42318' }}>
-                    Lý do từ chối: {course.rejectionReason}
-                  </p>
-                )}
               </div>
             </div>
+          </motion.article>
 
-            <div className="course-header-actions">
-              {!course.published && course.status !== 'PENDING_REVIEW' && (
-                <button
-                  className="btn secondary"
-                  onClick={handleSubmitForReview}
-                  disabled={submitReviewMutation.isPending}
+          <div className="rounded-2xl border border-[#E8E6DC] bg-white overflow-hidden shadow-sm">
+            <div
+              className="flex flex-wrap gap-1 p-2 bg-[#F5F4ED] border-b border-[#E8E6DC]"
+              role="tablist"
+              aria-label="Nội dung khóa học"
+            >
+              {tabs.map((tab) => {
+                const active = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl font-[Be_Vietnam_Pro] text-[12px] font-medium transition-all duration-150 ${
+                      active
+                        ? 'bg-white text-[#141413] shadow-sm ring-1 ring-black/[0.04]'
+                        : 'text-[#87867F] hover:text-[#5E5D59] hover:bg-white/60'
+                    }`}
+                    onClick={() => handleTabChange(tab.id)}
+                  >
+                    <tab.icon size={15} strokeWidth={2} />
+                    <span>{tab.label}</span>
+                    {tab.count !== undefined && (
+                      <span
+                        className={`min-w-[1.25rem] h-5 px-1.5 inline-flex items-center justify-center rounded-full text-[10px] font-bold ${
+                          active ? 'bg-[#C96442] text-white' : 'bg-[#E8E6DC] text-[#5E5D59]'
+                        }`}
+                      >
+                        {tab.count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="p-5 md:p-7 bg-[#F5F4ED]/90 min-h-[200px]">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeTab}
+                  role="tabpanel"
+                  className="min-w-0 w-full overflow-x-auto"
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.18 }}
                 >
-                  <CheckCircle2 size={14} />
-                  {submitReviewMutation.isPending ? 'Đang gửi...' : 'Gửi duyệt'}
-                </button>
-              )}
-              <button
-                className="btn secondary"
-                onClick={() => setShowEditModal(true)}
-                title={`Chỉnh sửa thông tin ${UI_TEXT.COURSE.toLowerCase()}`}
-              >
-                <Pencil size={14} />
-                Chỉnh sửa
-              </button>
-              <button
-                className={`btn ${course.published ? 'secondary' : ''}`}
-                onClick={handleTogglePublish}
-                disabled={
-                  publishMutation.isPending || (!course.published && course.status !== 'PUBLISHED')
-                }
-                title={
-                  !course.published && course.status !== 'PUBLISHED'
-                    ? 'Khóa học cần được admin duyệt trước khi công khai'
-                    : undefined
-                }
-              >
-                {course.published ? (
-                  <>
-                    <EyeOff size={14} />
-                    Ẩn {UI_TEXT.COURSE.toLowerCase()}
-                  </>
-                ) : (
-                  <>
-                    <Eye size={14} />
-                    Công khai
-                  </>
-                )}
-              </button>
-              <button
-                className="btn danger"
-                onClick={handleDelete}
-                disabled={deleteMutation.isPending}
-              >
-                <Trash2 size={14} />
-                Xóa
-              </button>
+                  {activeTab === 'overview' && <CourseOverviewTab course={course} />}
+                  {activeTab === 'lessons' && <CourseLessonsTab courseId={course.id} course={course} />}
+                  {activeTab === 'assessments' && (
+                    <CourseAssessmentsTab courseId={course.id} course={course} />
+                  )}
+                  {activeTab === 'students' && <CourseStudentsTab courseId={course.id} />}
+                  {activeTab === 'reviews' && <CourseReviewsTab courseId={course.id} />}
+                </motion.div>
+              </AnimatePresence>
             </div>
           </div>
-
-          {/* Tab Navigation */}
-          <div className="course-tabs">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                className={`course-tab ${activeTab === tab.id ? 'active' : ''}`}
-                onClick={() => handleTabChange(tab.id)}
-              >
-                <tab.icon size={16} />
-                <span>{tab.label}</span>
-                {tab.count !== undefined && <span className="tab-count">{tab.count}</span>}
-              </button>
-            ))}
-          </div>
-
-          {/* Tab Content */}
-          <div className="course-tab-content">
-            {activeTab === 'overview' && <CourseOverviewTab course={course} />}
-            {activeTab === 'lessons' && <CourseLessonsTab courseId={course.id} course={course} />}
-            {activeTab === 'assessments' && (
-              <CourseAssessmentsTab courseId={course.id} course={course} />
-            )}
-            {activeTab === 'students' && <CourseStudentsTab courseId={course.id} />}
-            {activeTab === 'reviews' && <CourseReviewsTab courseId={course.id} />}
-          </div>
-        </section>
+        </div>
       </div>
 
       {/* Edit Modal */}
