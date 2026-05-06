@@ -48,14 +48,15 @@ const coverGradients = [
   'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)',
 ] as const;
 
-const coverAccents = ['#1d4ed8', '#0f766e', '#047857', '#c2410c', '#be185d', '#6d28d9'] as const;
-
 const levelMap: Record<string, { label: string; color: string }> = {
   BEGINNER: { label: 'Cơ bản', color: '#10b981' },
   INTERMEDIATE: { label: 'Trung bình', color: '#f59e0b' },
   ADVANCED: { label: 'Nâng cao', color: '#ef4444' },
   ALL_LEVELS: { label: 'Mọi cấp độ', color: '#6366f1' },
 };
+
+const secondaryBtn =
+  'inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors shadow-sm';
 
 const StudentCourseDetail: React.FC = () => {
   const { enrollmentId } = useParams<{ enrollmentId: string }>();
@@ -92,18 +93,27 @@ const StudentCourseDetail: React.FC = () => {
 
   if (!enrollment) {
     return (
-      <DashboardLayout role="student" user={{ name: 'Học sinh', avatar: '', role: 'student' }}>
-        <div className="module-layout-container">
-          <section className="module-page">
-            <div className="empty">
-              <FileText size={32} style={{ marginBottom: 8, color: '#94a3b8' }} />
-              <p>Không tìm thấy thông tin đăng ký</p>
-              <button className="btn secondary" onClick={() => navigate('/student/courses')}>
-                <ArrowLeft size={14} />
-                Quay lại danh sách
-              </button>
+      <DashboardLayout
+        role="student"
+        user={{ name: 'Học sinh', avatar: '', role: 'student' }}
+        contentClassName="dashboard-content--flush-bleed"
+      >
+        <div className="px-6 py-16 lg:px-8 flex justify-center">
+          <div className="max-w-md w-full rounded-2xl border border-[#E8E6DC] bg-white p-10 text-center shadow-sm">
+            <div className="w-14 h-14 rounded-2xl bg-[#F5F4ED] text-[#87867F] flex items-center justify-center mx-auto mb-4">
+              <FileText className="w-7 h-7" />
             </div>
-          </section>
+            <h2 className="font-[Playfair_Display] text-xl font-medium text-[#141413] mb-2">
+              Không tìm thấy thông tin đăng ký
+            </h2>
+            <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mb-6">
+              Khóa học có thể đã bị gỡ hoặc liên kết không hợp lệ.
+            </p>
+            <button type="button" className={secondaryBtn} onClick={() => navigate('/student/courses')}>
+              <ArrowLeft size={16} strokeWidth={2} />
+              Quay lại danh sách
+            </button>
+          </div>
         </div>
       </DashboardLayout>
     );
@@ -116,302 +126,233 @@ const StudentCourseDetail: React.FC = () => {
     { id: 'progress' as const, label: 'Tiến độ', icon: TrendingUp },
   ];
 
+  const coverIdx = enrollmentIndex >= 0 ? enrollmentIndex : 0;
+
   return (
-    <DashboardLayout role="student" user={{ name: 'Học sinh', avatar: '', role: 'student' }}>
-      <div className="module-layout-container">
-        <section className="module-page">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key="detail-view"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-            >
-              {/* Breadcrumb */}
-              <CourseBreadcrumb courseTitle={enrollment.courseTitle ?? UI_TEXT.COURSE} />
+    <DashboardLayout
+      role="student"
+      user={{ name: 'Học sinh', avatar: '', role: 'student' }}
+      contentClassName="dashboard-content--flush-bleed"
+    >
+      <div className="w-full min-w-0 px-4 py-8 sm:px-6 lg:px-8 pb-12">
+        <div className="w-full min-w-0 max-w-none space-y-6">
+          <div className="rounded-xl bg-[#FAF9F5]/80 border border-[#E8E6DC]/80 px-4 py-3">
+            <CourseBreadcrumb
+              homePath="/student/courses"
+              items={[{ label: enrollment.courseTitle ?? UI_TEXT.COURSE }]}
+              courseTitle={enrollment.courseTitle ?? UI_TEXT.COURSE}
+            />
+          </div>
 
-              {/* Course Header */}
-              <div className="course-detail-header">
-                <button
-                  className="btn secondary btn-sm"
-                  style={{ marginBottom: '1rem' }}
-                  onClick={() => navigate('/student/courses')}
-                >
-                  <ArrowLeft size={16} strokeWidth={2} />
-                  Quay lại danh sách
-                </button>
+          <motion.article
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            className="rounded-2xl border border-[#E8E6DC] bg-white shadow-[0_2px_24px_rgba(20,20,19,0.06)] overflow-hidden"
+          >
+            <div
+              className="h-1 w-full bg-gradient-to-r from-[#C96442] via-[#E07B39] to-[#6366F1]"
+              aria-hidden
+            />
+            <div className="p-6 md:p-8 space-y-6">
+              <button
+                type="button"
+                className={secondaryBtn}
+                onClick={() => navigate('/student/courses')}
+              >
+                <ArrowLeft size={16} strokeWidth={2} />
+                Quay lại danh sách
+              </button>
 
-                {/* Course Hero Card */}
-                <div
-                  className="hero-card"
-                  style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', marginBottom: '1rem' }}
-                >
+              <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+                <div className="w-full max-w-[260px] mx-auto lg:mx-0 flex-shrink-0">
                   <div
-                    style={{
-                      width: 200,
-                      minWidth: 160,
-                      borderRadius: 12,
-                      overflow: 'hidden',
-                      background: coverGradients[enrollmentIndex % coverGradients.length],
-                      color: coverAccents[enrollmentIndex % coverAccents.length],
-                      minHeight: 130,
-                      display: 'flex',
-                      alignItems: 'flex-end',
-                      padding: '1rem',
-                      position: 'relative',
-                      flexShrink: 0,
-                    }}
+                    className="relative aspect-[4/3] rounded-2xl overflow-hidden border border-[#E8E6DC] shadow-sm"
+                    style={{ background: coverGradients[coverIdx % coverGradients.length] }}
                   >
-                    {course?.thumbnailUrl && (
+                    {course?.thumbnailUrl ? (
                       <img
                         src={course.thumbnailUrl}
                         alt={enrollment.courseTitle ?? 'Course thumbnail'}
-                        className="cover-thumb"
-                        style={{
-                          position: 'absolute',
-                          inset: 0,
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover',
-                        }}
+                        className="absolute inset-0 w-full h-full object-cover"
                       />
-                    )}
+                    ) : null}
                     <div
-                      style={{
-                        position: 'absolute',
-                        inset: 0,
-                        background:
-                          'radial-gradient(circle at top right, rgba(255,255,255,0.7), transparent 36%), linear-gradient(to top, rgba(255,255,255,0.12), transparent 70%)',
-                      }}
+                      className="absolute inset-0 pointer-events-none bg-gradient-to-t from-[rgba(20,20,19,0.55)] to-transparent"
+                      aria-hidden
                     />
-                    <h3
-                      style={{
-                        position: 'relative',
-                        zIndex: 1,
-                        margin: 0,
-                        fontSize: '0.95rem',
-                        fontWeight: 800,
-                        color: 'var(--mod-ink)',
-                      }}
-                    >
+                    <p className="absolute bottom-3 left-3 right-3 font-[Be_Vietnam_Pro] text-[12px] font-semibold text-white drop-shadow-sm line-clamp-2">
                       {enrollment.courseTitle}
-                    </h3>
-                  </div>
-
-                  <div style={{ flex: 1, minWidth: 240 }}>
-                    <h2
-                      style={{
-                        margin: '0 0 0.5rem',
-                        fontSize: '1.4rem',
-                        fontWeight: 800,
-                        color: 'var(--mod-ink)',
-                      }}
-                    >
-                      {enrollment.courseTitle}
-                    </h2>
-                    {course?.subtitle && (
-                      <p
-                        className="course-hero-subtitle"
-                        style={{ fontSize: '1rem', color: '#475569', marginBottom: '1rem' }}
-                      >
-                        {course.subtitle}
-                      </p>
-                    )}
-                    {teacherProfile && (
-                      <div
-                        className="hero-instructor-link"
-                        style={{ marginBottom: '1rem', fontSize: '0.9rem', color: '#64748b' }}
-                      >
-                        <span>Giảng viên: </span>
-                        <Link
-                          to={`/student/instructors/${teacherProfile.userId}`}
-                          style={{
-                            color: '#4f46e5',
-                            textDecoration: 'none',
-                            fontWeight: 600,
-                            transition: 'all 0.2s',
-                          }}
-                        >
-                          {teacherProfile.fullName}
-                        </Link>
-                      </div>
-                    )}
-                    {course && (
-                      <div
-                        style={{
-                          display: 'flex',
-                          gap: '0.5rem',
-                          marginBottom: '0.75rem',
-                          flexWrap: 'wrap',
-                          alignItems: 'center',
-                        }}
-                      >
-                        {course.provider === 'MINISTRY' ? (
-                          <span
-                            className="course-badge"
-                            style={{
-                              background: '#eff6ff',
-                              color: '#1e40af',
-                              border: '1px solid #bfdbfe',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 4,
-                            }}
-                          >
-                            <BookOpen size={12} /> Chương trình chuẩn Bộ GD&ĐT
-                          </span>
-                        ) : (
-                          <span
-                            className="course-badge"
-                            style={{
-                              background: '#fefce8',
-                              color: '#854d0e',
-                              border: '1px solid #fde047',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 4,
-                            }}
-                          >
-                            <Sparkles size={12} /> Khóa học mở rộng
-                          </span>
-                        )}
-                        <span
-                          className={`course-badge ${enrollment.status === 'ACTIVE' ? 'badge-live' : 'badge-draft'}`}
-                        >
-                          {enrollment.status === 'ACTIVE' ? 'Đang học' : 'Đã hủy'}
-                        </span>
-                        {course.level && (
-                          <span
-                            className="course-badge"
-                            style={{
-                              background: levelMap[course.level]?.color ?? '#6366f1',
-                            }}
-                          >
-                            {levelMap[course.level]?.label ?? 'Mọi cấp độ'}
-                          </span>
-                        )}
-                      </div>
-                    )}
-
-                    {course && (
-                      <div className="course-header-meta" style={{ marginTop: '0.5rem' }}>
-                        {course.provider === 'MINISTRY' && (
-                          <>
-                            <span className="meta-item">
-                              <BookOpen size={14} />
-                              {course.subjectName} • Lớp {course.gradeLevel}
-                            </span>
-                            <span className="meta-separator">•</span>
-                          </>
-                        )}
-                        <span className="meta-item">
-                          <Users size={14} />
-                          {course.studentsCount} học viên
-                        </span>
-                        {course.language && (
-                          <>
-                            <span className="meta-separator">•</span>
-                            <span className="meta-item">
-                              <Globe size={14} />
-                              {course.language}
-                            </span>
-                          </>
-                        )}
-                        <span className="meta-separator">•</span>
-                        <span className="meta-item">
-                          <FileText size={14} />
-                          {course.lessonsCount} bài học
-                        </span>
-                        <span className="meta-separator">•</span>
-                        <span className="meta-item">
-                          <Star size={14} fill="#FBBF24" color="#FBBF24" />
-                          <strong style={{ marginLeft: 4 }}>{course.rating || 0}</strong>
-                          <span style={{ color: 'var(--sc-text-muted)', marginLeft: 4 }}>
-                            ({course.ratingCount || 0} đánh giá)
-                          </span>
-                        </span>
-                      </div>
-                    )}
-
-                    {progress && (
-                      <div style={{ marginTop: '0.75rem' }}>
-                        <div
-                          style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            fontSize: '0.84rem',
-                            color: '#60748f',
-                            marginBottom: '0.4rem',
-                          }}
-                        >
-                          <span>Tiến độ của bạn</span>
-                          <strong style={{ color: '#1f5eff' }}>
-                            {progress.completionRate.toFixed(1)}%
-                          </strong>
-                        </div>
-                        <div
-                          style={{
-                            height: 6,
-                            background: '#e8eef8',
-                            borderRadius: 999,
-                            overflow: 'hidden',
-                          }}
-                        >
-                          <div
-                            style={{
-                              transform: `scaleX(${progress.completionRate / 100})`,
-                              transformOrigin: 'left',
-                              width: '100%',
-                              height: '100%',
-                              background: 'linear-gradient(90deg, #1f5eff, #60a5fa)',
-                              borderRadius: 999,
-                              transition: 'transform 0.7s cubic-bezier(0.22, 1, 0.36, 1)',
-                            }}
-                          />
-                        </div>
-                        <p style={{ fontSize: '0.8rem', color: '#6b7280', marginTop: '0.35rem' }}>
-                          {progress.completedLessons}/{progress.totalLessons} bài học hoàn thành
-                        </p>
-                      </div>
-                    )}
+                    </p>
                   </div>
                 </div>
-              </div>
 
-              {/* Tab Navigation */}
-              <div className="course-tabs">
-                {tabs.map((tab) => (
+                <div className="flex-1 min-w-0 space-y-4">
+                  <h1 className="font-[Playfair_Display] text-[clamp(1.35rem,3vw,1.85rem)] font-medium text-[#141413] leading-snug tracking-tight">
+                    {enrollment.courseTitle}
+                  </h1>
+                  {course?.subtitle ? (
+                    <p className="font-[Be_Vietnam_Pro] text-[14px] text-[#5E5D59] leading-relaxed">
+                      {course.subtitle}
+                    </p>
+                  ) : null}
+                  {teacherProfile ? (
+                    <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F]">
+                      Giảng viên:{' '}
+                      <Link
+                        to={`/student/instructors/${teacherProfile.userId}`}
+                        className="font-semibold text-[#4338CA] hover:text-[#3730A3]"
+                      >
+                        {teacherProfile.fullName}
+                      </Link>
+                    </p>
+                  ) : null}
+
+                  {course ? (
+                    <div className="flex flex-wrap gap-2">
+                      {course.provider === 'MINISTRY' ? (
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-[#EEF2FF] px-3 py-1.5 font-[Be_Vietnam_Pro] text-[11px] font-semibold text-[#1e3a8a]">
+                          <BookOpen size={12} strokeWidth={2} /> Chuẩn Bộ GD&ĐT
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 font-[Be_Vietnam_Pro] text-[11px] font-semibold text-amber-950">
+                          <Sparkles size={12} strokeWidth={2} /> Khóa học mở rộng
+                        </span>
+                      )}
+                      <span
+                        className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 font-[Be_Vietnam_Pro] text-[11px] font-semibold uppercase tracking-wide ${
+                          enrollment.status === 'ACTIVE'
+                            ? 'bg-emerald-50 text-emerald-950 border-emerald-200'
+                            : 'bg-[#F5F4ED] text-[#5E5D59] border-[#E8E6DC]'
+                        }`}
+                      >
+                        {enrollment.status === 'ACTIVE' ? 'Đang học' : 'Đã hủy'}
+                      </span>
+                      {course.level ? (
+                        <span className="inline-flex items-center rounded-full border border-[#E8E6DC] bg-[#FAF9F5] px-3 py-1.5 font-[Be_Vietnam_Pro] text-[11px] font-semibold text-[#5E5D59]">
+                          {levelMap[course.level]?.label ?? 'Mọi cấp độ'}
+                        </span>
+                      ) : null}
+                    </div>
+                  ) : null}
+
+                  {course ? (
+                    <div className="flex flex-wrap gap-2">
+                      {course.provider === 'MINISTRY' ? (
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FAF9F5] border border-[#E8E6DC] px-3 py-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#5E5D59]">
+                          <BookOpen size={14} className="text-[#87867F]" />
+                          {course.subjectName} · Lớp {course.gradeLevel}
+                        </span>
+                      ) : null}
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FAF9F5] border border-[#E8E6DC] px-3 py-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#5E5D59]">
+                        <Users size={14} className="text-[#87867F]" />
+                        {course.studentsCount} học viên
+                      </span>
+                      {course.language ? (
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FAF9F5] border border-[#E8E6DC] px-3 py-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#5E5D59]">
+                          <Globe size={14} className="text-[#87867F]" />
+                          {course.language}
+                        </span>
+                      ) : null}
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FAF9F5] border border-[#E8E6DC] px-3 py-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#5E5D59]">
+                        <FileText size={14} className="text-[#87867F]" />
+                        {course.lessonsCount} bài học
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FFF7ED] border border-[#FDE68A] px-3 py-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#92400E]">
+                        <Star size={14} className="text-amber-500" fill="#FBBF24" color="#FBBF24" />
+                        <strong>{course.rating || 0}</strong>
+                        <span className="text-[#87867F] font-normal">
+                          ({course.ratingCount || 0} đánh giá)
+                        </span>
+                      </span>
+                    </div>
+                  ) : null}
+
+                  {progress ? (
+                    <div className="rounded-xl border border-[#E8E6DC] bg-[#FAF9F5] px-4 py-3">
+                      <div className="flex justify-between font-[Be_Vietnam_Pro] text-[13px] text-[#5E5D59] mb-2">
+                        <span>Tiến độ của bạn</span>
+                        <strong className="text-[#C96442] tabular-nums">
+                          {progress.completionRate.toFixed(1)}%
+                        </strong>
+                      </div>
+                      <div className="h-2 rounded-full bg-[#E8E6DC] overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-[#C96442] to-[#E07B39] transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
+                          style={{
+                            width: `${Math.min(100, Math.max(0, progress.completionRate))}%`,
+                          }}
+                        />
+                      </div>
+                      <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mt-2">
+                        {progress.completedLessons}/{progress.totalLessons} bài học hoàn thành
+                      </p>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          </motion.article>
+
+          <div className="rounded-2xl border border-[#E8E6DC] bg-white overflow-hidden shadow-sm">
+            <div
+              className="flex flex-wrap gap-1 p-2 bg-[#F5F4ED] border-b border-[#E8E6DC]"
+              role="tablist"
+              aria-label="Nội dung khóa học"
+            >
+              {tabs.map((tab) => {
+                const active = activeTab === tab.id;
+                return (
                   <button
                     key={tab.id}
-                    className={`course-tab ${activeTab === tab.id ? 'active' : ''}`}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl font-[Be_Vietnam_Pro] text-[12px] font-medium transition-all duration-150 ${
+                      active
+                        ? 'bg-white text-[#141413] shadow-sm ring-1 ring-black/[0.04]'
+                        : 'text-[#87867F] hover:text-[#5E5D59] hover:bg-white/60'
+                    }`}
                     onClick={() => handleTabChange(tab.id)}
                   >
-                    <tab.icon size={16} />
+                    <tab.icon size={15} strokeWidth={2} />
                     <span>{tab.label}</span>
                   </button>
-                ))}
-              </div>
+                );
+              })}
+            </div>
 
-              {/* Tab Content */}
-              <div className="course-tab-content">
-                {activeTab === 'lessons' && (
-                  <StudentLessonsTab
-                    enrollmentId={enrollmentId!}
-                    courseId={enrollment.courseId}
-                    enrollmentStatus={enrollment.status}
-                  />
-                )}
-                {activeTab === 'assessments' && (
-                  <StudentAssessmentsTab courseId={enrollment.courseId} />
-                )}
-                {activeTab === 'progress' && (
-                  <StudentProgressTab enrollmentId={enrollmentId!} enrollment={enrollment} />
-                )}
-                {activeTab === 'reviews' && <StudentReviewsTab courseId={enrollment.courseId} />}
-              </div>
+            <div className="p-5 md:p-7 bg-[#F5F4ED]/90 min-h-[200px]">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeTab}
+                  role="tabpanel"
+                  className="min-w-0 w-full overflow-x-auto"
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.18 }}
+                >
+                  {activeTab === 'lessons' && (
+                    <StudentLessonsTab
+                      enrollmentId={enrollmentId!}
+                      courseId={enrollment.courseId}
+                      enrollmentStatus={enrollment.status}
+                    />
+                  )}
+                  {activeTab === 'assessments' && (
+                    <StudentAssessmentsTab courseId={enrollment.courseId} />
+                  )}
+                  {activeTab === 'progress' && (
+                    <StudentProgressTab enrollmentId={enrollmentId!} enrollment={enrollment} />
+                  )}
+                  {activeTab === 'reviews' && <StudentReviewsTab courseId={enrollment.courseId} />}
+                </motion.div>
+              </AnimatePresence>
+            </div>
+          </div>
 
-              {/* ── Enhanced Metadata (Udemy Style) ── */}
+          {/* ── Enhanced Metadata (Udemy Style) ── */}
               <div className="course-udemy-metadata">
                 <CourseLearningPanels
                   whatYouWillLearn={course?.whatYouWillLearn}
@@ -667,9 +608,7 @@ const StudentCourseDetail: React.FC = () => {
                   .instructor-stats-row { justify-content: center; }
                 }
               `}</style>
-            </motion.div>
-          </AnimatePresence>
-        </section>
+        </div>
       </div>
     </DashboardLayout>
   );

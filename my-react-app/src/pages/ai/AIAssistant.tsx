@@ -1,12 +1,13 @@
 import 'katex/dist/katex.min.css';
 import {
+  AlertCircle,
   Archive,
+  ArrowUp,
   Bot,
   Menu,
   MessageSquarePlus,
   Pencil,
   Plus,
-  ArrowUp,
   Sparkles,
   SquarePen,
   Trash2,
@@ -198,6 +199,47 @@ const ChatMessageContent: React.FC<{ content: string }> = ({ content }) => {
   return <div className="chat-content-rich">{blocks}</div>;
 };
 
+// ── Confirm modal ─────────────────────────────────────────────────────────────
+type ConfirmConfig = { title: string; message: string; confirmLabel: string; onConfirm: () => void };
+
+function ConfirmModal({ config, onClose }: Readonly<{ config: ConfirmConfig; onClose: () => void }>) {
+  return (
+    <div
+      className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-2xl shadow-[rgba(0,0,0,0.20)_0px_20px_60px] w-full max-w-sm p-6 flex flex-col gap-4"
+        role="dialog"
+        aria-modal="true"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center mx-auto">
+          <AlertCircle className="w-7 h-7" />
+        </div>
+        <div className="text-center">
+          <h3 className="font-[Playfair_Display] text-[18px] font-medium text-[#141413]">{config.title}</h3>
+          <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-2">{config.message}</p>
+        </div>
+        <div className="flex gap-2">
+          <button
+            className="flex-1 px-4 py-2.5 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors"
+            onClick={onClose}
+          >
+            Hủy
+          </button>
+          <button
+            className="flex-1 px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-[Be_Vietnam_Pro] text-[13px] font-semibold transition-colors"
+            onClick={() => { config.onConfirm(); onClose(); }}
+          >
+            {config.confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 const AIAssistant: React.FC = () => {
   const navigate = useNavigate();
@@ -214,6 +256,7 @@ const AIAssistant: React.FC = () => {
   const [editingTitle, setEditingTitle] = useState('');
   const [isSessionPanelOpen, setIsSessionPanelOpen] = useState(false);
   const [tokenModal, setTokenModal] = useState<{ type: 'no-plan' | 'no-token' } | null>(null);
+  const [confirmModal, setConfirmModal] = useState<ConfirmConfig | null>(null);
   const hasBootstrappedSession = useRef(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -359,17 +402,23 @@ const AIAssistant: React.FC = () => {
     }
   };
 
-  const handleDeleteSession = async () => {
+  const handleDeleteSession = () => {
     if (!selectedSessionId) return;
-    if (!window.confirm('Bạn có chắc muốn xóa session này không?')) return;
-    try {
-      setLocalError('');
-      const removedId = selectedSessionId;
-      await deleteSessionMutation.mutateAsync(removedId);
-      setSelectedSessionId(sessions.find((s) => s.id !== removedId)?.id ?? '');
-    } catch (error) {
-      setLocalError(getErrorMessage(error, 'Không thể xóa session.'));
-    }
+    setConfirmModal({
+      title: 'Xóa cuộc trò chuyện',
+      message: 'Bạn có chắc muốn xóa cuộc trò chuyện này? Hành động này không thể hoàn tác.',
+      confirmLabel: 'Xóa',
+      onConfirm: async () => {
+        try {
+          setLocalError('');
+          const removedId = selectedSessionId;
+          await deleteSessionMutation.mutateAsync(removedId);
+          setSelectedSessionId(sessions.find((s) => s.id !== removedId)?.id ?? '');
+        } catch (error) {
+          setLocalError(getErrorMessage(error, 'Không thể xóa session.'));
+        }
+      },
+    });
   };
 
   const quickPrompts = [
@@ -610,6 +659,9 @@ const AIAssistant: React.FC = () => {
           </aside>
         </div>
       </div>
+
+      {/* ── Confirm modal ── */}
+      {confirmModal && <ConfirmModal config={confirmModal} onClose={() => setConfirmModal(null)} />}
 
       {/* ── Token modal ── */}
       {tokenModal && (
