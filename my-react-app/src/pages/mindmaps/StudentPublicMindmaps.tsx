@@ -4,6 +4,7 @@ import {
   BookOpen,
   ChevronLeft,
   ChevronRight,
+  Download,
   Filter,
   GraduationCap,
   Network,
@@ -708,35 +709,54 @@ export default function StudentPublicMindmaps() {
       {/* ── Preview modal ── */}
       {isPreviewOpen && (
         <div
-          className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
           onClick={handleCloseMindmapPreview}
         >
           <div
-            className="bg-white rounded-2xl border border-[#E8E6DC] shadow-[rgba(0,0,0,0.15)_0px_16px_48px] w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden"
+            className="bg-[#FAF9F5] rounded-2xl shadow-[rgba(0,0,0,0.25)_0px_24px_64px] w-full max-w-5xl max-h-[92vh] flex flex-col overflow-hidden"
             role="dialog"
             aria-modal="true"
-            aria-label="Xem trước mindmap PNG"
+            aria-label="Xem trước mindmap"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="flex items-center justify-between px-5 py-4 border-b border-[#F0EEE6]">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-[#E8E6DC] flex items-center justify-center text-[#5E5D59]">
-                  <Workflow className="w-4 h-4" />
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#F0EEE6] bg-white">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-[#E8E6DC] flex items-center justify-center text-[#5E5D59] flex-shrink-0">
+                  <Workflow className="w-5 h-5" />
                 </div>
-                <h3 className="font-[Playfair_Display] text-[18px] font-medium text-[#141413] line-clamp-1">
-                  {selectedPreviewMindmap?.title || 'Xem trước mindmap'}
-                </h3>
+                <div className="min-w-0">
+                  <h3 className="font-[Playfair_Display] text-[20px] font-medium text-[#141413] line-clamp-1 leading-[1.2]">
+                    {selectedPreviewMindmap?.title || 'Xem trước mindmap'}
+                  </h3>
+                  <div className="flex items-center gap-3 mt-0.5">
+                    {selectedPreviewMindmap?.nodeCount != null && (
+                      <span className="flex items-center gap-1 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">
+                        <Network className="w-3 h-3" />
+                        {selectedPreviewMindmap.nodeCount} nút
+                      </span>
+                    )}
+                    {selectedPreviewMindmap?.teacherName && (
+                      <span className="flex items-center gap-1 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">
+                        <User className="w-3 h-3" />
+                        {selectedPreviewMindmap.teacherName}
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
               <button
                 type="button"
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-[#87867F] hover:bg-[#F5F4ED] hover:text-[#141413] transition-colors"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-[#87867F] hover:bg-[#F0EEE6] hover:text-[#141413] transition-colors flex-shrink-0 ml-4"
                 onClick={handleCloseMindmapPreview}
+                aria-label="Đóng"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="flex-1 relative overflow-hidden bg-[#F5F4ED] min-h-[400px]">
+            {/* Content */}
+            <div className="flex-1 relative overflow-hidden bg-[#F5F4ED] min-h-[500px]">
               {previewFrameLoading && (
                 <div
                   className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-[#F5F4ED] z-10"
@@ -752,35 +772,43 @@ export default function StudentPublicMindmaps() {
               {selectedPreviewMindmap && (
                 <iframe
                   ref={previewIframeRef}
-                  className="w-full h-full min-h-[400px] border-0"
+                  className="w-full h-full min-h-[500px] border-0"
                   src={`/mindmaps/public/${selectedPreviewMindmap.id}?embedPreview=1`}
                   title={selectedPreviewMindmap.title || 'Mindmap preview'}
                 />
               )}
             </div>
 
-            <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-[#F0EEE6]">
-              <button
-                type="button"
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                onClick={handleCloseMindmapPreview}
-              >
-                Đóng
-              </button>
-              <button
-                type="button"
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#141413] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:bg-[#30302E] disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all duration-150"
-                disabled={
-                  !selectedPreviewMindmap ||
-                  previewFrameLoading ||
+            {/* Footer */}
+            <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-[#F0EEE6] bg-white">
+              <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#B0AEA5] hidden sm:block">
+                Ảnh PNG sẽ được tải về thiết bị của bạn
+              </p>
+              <div className="flex items-center gap-2 ml-auto">
+                <button
+                  type="button"
+                  className="px-4 py-2 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors"
+                  onClick={handleCloseMindmapPreview}
+                >
+                  Đóng
+                </button>
+                <button
+                  type="button"
+                  className="flex items-center gap-2 px-5 py-2 rounded-xl bg-[#C96442] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:brightness-95 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all duration-150"
+                  disabled={
+                    !selectedPreviewMindmap ||
+                    previewFrameLoading ||
+                    downloadingPreviewMindmapId === selectedPreviewMindmap.id
+                  }
+                  onClick={() => void handleDownloadPreviewMindmap()}
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  {selectedPreviewMindmap &&
                   downloadingPreviewMindmapId === selectedPreviewMindmap.id
-                }
-                onClick={() => void handleDownloadPreviewMindmap()}
-              >
-                {selectedPreviewMindmap && downloadingPreviewMindmapId === selectedPreviewMindmap.id
-                  ? 'Đang tải...'
-                  : 'Tải ảnh PNG'}
-              </button>
+                    ? 'Đang tải...'
+                    : 'Tải ảnh PNG'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
