@@ -1428,8 +1428,8 @@ const AISlideGenerator: React.FC = () => {
                 <Layers className="w-5 h-5" />
               </div>
               <div>
-                <h1 className="font-[Playfair_Display] text-[25px] font-medium text-[#141413] leading-[1.2]">
-                  Tạo Slide
+                <h1 className="font-[Playfair_Display] text-[22px] font-medium text-[#141413]">
+                  Slide
                 </h1>
                 <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-0.5">
                   {generatedFiles.length > 0
