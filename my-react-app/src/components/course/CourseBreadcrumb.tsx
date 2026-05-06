@@ -59,7 +59,7 @@ function generateBreadcrumbs(pathname: string, courseTitle?: string): Breadcrumb
 
   // Teacher routes
   if (segments[0] === 'teacher') {
-    breadcrumbs.push({ label: 'Giáo viên', path: '/teacher/dashboard' });
+    breadcrumbs.push({ label: 'Giáo viên', path: '/teacher/materials' });
 
     if (segments[1] === 'courses') {
       breadcrumbs.push({ label: UI_TEXT.COURSE, path: '/teacher/courses' });

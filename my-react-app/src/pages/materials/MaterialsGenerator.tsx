@@ -1,15 +1,14 @@
 import {
   AlertCircle,
-  BookOpen,
+  ArrowRight,
   BrainCircuit,
-  Clock3,
-  Download,
   Eye,
-  FileSliders,
+  EyeOff,
   Network,
   Presentation,
   Search,
   Sparkles,
+  X,
 } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -54,18 +53,6 @@ function getInitials(name: string): string {
     .slice(0, 2)
     .join('')
     .toUpperCase();
-}
-
-function mindmapStatusLabel(status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'): string {
-  if (status === 'PUBLISHED') return 'Công khai';
-  if (status === 'DRAFT') return 'Nháp';
-  return 'Lưu trữ';
-}
-
-function mindmapStatusClass(status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'): string {
-  if (status === 'PUBLISHED') return 'published';
-  if (status === 'DRAFT') return 'draft';
-  return 'archived';
 }
 
 // ─── User info type from GET /users/my-info ───────────────────────────────────
@@ -307,8 +294,6 @@ const MaterialsGenerator: React.FC = () => {
     title: string;
     desc: string;
     route: string | null;
-    accentClass: string;
-    tag: string;
   };
 
   const cards: ToolCard[] = [
@@ -317,24 +302,12 @@ const MaterialsGenerator: React.FC = () => {
       title: 'Slide Bài Giảng',
       desc: 'Tạo slide PowerPoint chuyên nghiệp từ nội dung bài giảng của bạn chỉ trong vài giây.',
       route: '/teacher/ai-slide-generator',
-      accentClass: 'tool-accent-blue',
-      tag: 'Khả dụng',
     },
     {
       Icon: BrainCircuit,
       title: 'Sơ Đồ Tư Duy',
       desc: 'Tạo mindmap trực quan tự động dựa trên các từ khoá và nội dung bài học.',
       route: '/teacher/mindmaps',
-      accentClass: 'tool-accent-violet',
-      tag: 'Khả dụng',
-    },
-    {
-      Icon: FileSliders,
-      title: 'Phiếu Bài Tập',
-      desc: 'Quản lí phiếu bài tập trong Assignment và đính kèm tài liệu cho học sinh ngay tại đó.',
-      route: '/teacher/assignments',
-      accentClass: 'tool-accent-emerald',
-      tag: 'Khả dụng',
     },
   ];
 
@@ -359,333 +332,432 @@ const MaterialsGenerator: React.FC = () => {
       notificationCount={notificationCount}
       contentClassName="dashboard-content--flush-bleed"
     >
-      <div className="module-layout-container">
-        <section className="module-page teacher-courses-page materials-generator-page" lang="vi">
-          {/* ── Header ── */}
-          <header className="page-header courses-header-row">
-            <div className="header-stack">
-              <div className="row" style={{ gap: '0.6rem' }}>
-                <h2>Quản lí tài liệu</h2>
-                {!loading && <span className="count-chip">{stats.total}</span>}
+      <div className="px-6 py-8 lg:px-8">
+        <div className="space-y-6">
+          {/* ── Page header ── */}
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#E8E6DC] flex items-center justify-center text-[#5E5D59]">
+                <Presentation className="w-5 h-5" />
               </div>
-              <p className="header-sub">Tài liệu của tôi.</p>
+              <div>
+                <div className="flex items-center gap-2.5">
+                  <h1 className="font-[Playfair_Display] text-[22px] font-medium text-[#141413]">
+                    Tài liệu
+                  </h1>
+                  {!loading && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#E8E6DC] font-[Be_Vietnam_Pro] text-[12px] font-semibold text-[#5E5D59]">
+                      {stats.total}
+                    </span>
+                  )}
+                </div>
+                <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-0.5">
+                  {stats.slides} slide • {stats.mindmaps} mindmap
+                </p>
+              </div>
             </div>
-          </header>
+          </div>
 
           {/* ── Stats ── */}
           {!loading && (
-            <div className="stats-grid">
-              <div className="stat-card stat-blue">
-                <div className="stat-icon-wrap">
-                  <Sparkles size={20} />
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              {(
+                [
+                  {
+                    label: 'Tổng tài liệu',
+                    value: stats.total,
+                    Icon: Presentation,
+                    bg: 'bg-[#FFF7ED]',
+                    color: 'text-[#E07B39]',
+                  },
+                  {
+                    label: 'Slide bài giảng',
+                    value: stats.slides,
+                    Icon: Presentation,
+                    bg: 'bg-[#FFF7ED]',
+                    color: 'text-[#E07B39]',
+                  },
+                  {
+                    label: 'Sơ đồ tư duy',
+                    value: stats.mindmaps,
+                    Icon: Network,
+                    bg: 'bg-[#F5F3FF]',
+                    color: 'text-[#9B6FE0]',
+                  },
+                  {
+                    label: 'Công cụ AI',
+                    value: cards.length,
+                    Icon: Sparkles,
+                    bg: 'bg-[#F5F3FF]',
+                    color: 'text-[#9B6FE0]',
+                  },
+                ] as const
+              ).map(({ label, value, Icon, bg, color }) => (
+                <div
+                  key={label}
+                  className="bg-white rounded-2xl border border-[#E8E6DC] p-4 flex items-center gap-3"
+                >
+                  <div
+                    className={`w-9 h-9 rounded-xl ${bg} flex items-center justify-center flex-shrink-0`}
+                  >
+                    <Icon className={color} size={20} />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="font-[Be_Vietnam_Pro] text-[13px] font-semibold text-[#141413]">
+                      {value}
+                    </div>
+                    <div className="font-[Be_Vietnam_Pro] text-[11px] text-[#87867F]">
+                      {label}
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <h3>{stats.total}</h3>
-                  <p>Tổng tài liệu</p>
-                </div>
-              </div>
-              <div className="stat-card stat-amber">
-                <div className="stat-icon-wrap">
-                  <Presentation size={20} />
-                </div>
-                <div>
-                  <h3>{stats.slides}</h3>
-                  <p>Slide bài giảng</p>
-                </div>
-              </div>
-              <div className="stat-card stat-violet">
-                <div className="stat-icon-wrap">
-                  <Network size={20} />
-                </div>
-                <div>
-                  <h3>{stats.mindmaps}</h3>
-                  <p>Sơ đồ tư duy</p>
-                </div>
-              </div>
-              <div className="stat-card stat-emerald">
-                <div className="stat-icon-wrap">
-                  <BookOpen size={20} />
-                </div>
-                <div>
-                  <h3>{cards.length}</h3>
-                  <p>Công cụ AI</p>
-                </div>
-              </div>
+              ))}
             </div>
           )}
 
           {/* ── Tool cards ── */}
-          <div className="materials-section-label">
-            <Sparkles size={15} /> Công cụ tạo tài liệu
-          </div>
-          <div className="materials-tool-grid">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {cards.map((card) => {
               const { Icon } = card;
-              const available = card.route !== null;
-              const ctaVariant = card.accentClass.replace('tool-accent-', '');
               return (
-                <article key={card.title} className={`materials-tool-card ${card.accentClass}`}>
-                  <div className="materials-tool-card__head">
-                    <div className="materials-tool-icon">
-                      <Icon size={22} />
+                <article
+                  key={card.title}
+                  className="bg-[#FAF9F5] rounded-2xl border border-[#F0EEE6] shadow-[rgba(0,0,0,0.05)_0px_4px_24px] overflow-hidden group hover:shadow-[0px_0px_0px_1px_#D1CFC5,rgba(0,0,0,0.08)_0px_8px_30px] hover:-translate-y-0.5 transition-all duration-200"
+                >
+                  <div className="p-6 flex flex-col h-full">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="w-10 h-10 rounded-xl bg-[#E8E6DC] flex items-center justify-center text-[#5E5D59]">
+                        <Icon size={20} />
+                      </div>
+                      <span className="inline-flex items-center px-2 py-1 rounded-lg bg-emerald-50 font-[Be_Vietnam_Pro] text-[11px] font-semibold text-emerald-700">
+                        Khả dụng
+                      </span>
                     </div>
-                    <span
-                      className={`materials-tool-tag ${available ? 'available' : 'coming-soon'}`}
+                    <h3 className="font-[Playfair_Display] text-[18px] font-medium text-[#141413] mb-1">
+                      {card.title}
+                    </h3>
+                    <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mb-auto">
+                      {card.desc}
+                    </p>
+                    <button
+                      type="button"
+                      className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#141413] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:bg-[#30302E] active:scale-[0.98] transition-all duration-150"
+                      onClick={() => navigate(card.route!)}
                     >
-                      {card.tag}
-                    </span>
+                      Bắt đầu <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
                   </div>
-                  <h3>{card.title}</h3>
-                  <p>{card.desc}</p>
-                  <button
-                    type="button"
-                    className={`btn${available ? '' : ' secondary'} materials-tool-cta materials-tool-cta--${ctaVariant}`}
-                    onClick={() => available && navigate(card.route!)}
-                    disabled={!available}
-                    title={available ? undefined : 'Tính năng đang phát triển'}
-                  >
-                    {available ? 'Bắt đầu tạo' : 'Đang phát triển'}
-                  </button>
                 </article>
               );
             })}
           </div>
 
-          {/* ── Recent materials ── */}
-          <div className="toolbar" style={{ marginTop: '0.5rem' }}>
-            <div className="materials-section-label" style={{ margin: 0 }}>
-              <Clock3 size={15} /> Tài liệu đã tạo gần đây
-            </div>
-            <label className="search-box" style={{ marginLeft: 'auto' }}>
-              <span className="search-box__icon">
-                <Search size={15} />
-              </span>
+          {/* ── Toolbar ── */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <label className="flex-1 w-full flex items-center gap-3 bg-[#FAF9F5] border border-[#E8E6DC] rounded-xl px-4 py-2.5 focus-within:border-[#3898EC] focus-within:shadow-[0_0_0_3px_rgba(56,152,236,0.12)] transition-all duration-150">
+              <Search className="text-[#87867F] w-4 h-4 flex-shrink-0" />
               <input
-                type="text"
+                className="flex-1 font-[Be_Vietnam_Pro] text-[14px] text-[#141413] placeholder:text-[#87867F] bg-transparent outline-none"
                 placeholder="Tìm kiếm tài liệu..."
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
               />
+              {searchValue && (
+                <button
+                  type="button"
+                  aria-label="Xóa tìm kiếm"
+                  onClick={() => setSearchValue('')}
+                  className="text-[#87867F] hover:text-[#141413] transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
             </label>
           </div>
 
-          <div className="table-wrap">
-            {loading && (
-              <div className="materials-table-placeholder">
-                <div className="skeleton-card" style={{ height: 180 }} />
+          {/* ── Summary bar ── */}
+          {!loading && !error && allRows.length > 0 && (
+            <div className="flex items-center gap-4 px-4 py-3 rounded-xl bg-[#FAF9F5] border border-[#E8E6DC]">
+              <span className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] uppercase tracking-wide">
+                Hiển thị
+              </span>
+              <strong className="font-[Be_Vietnam_Pro] text-[13px] font-semibold text-[#141413]">
+                {rows.length} / {allRows.length}
+              </strong>
+              <div className="w-px h-4 bg-[#E8E6DC]" />
+              <span className="flex items-center gap-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" />
+                Slide <strong className="text-[#141413] font-semibold">{slides.length}</strong>
+              </span>
+              <span className="flex items-center gap-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">
+                <span className="w-1.5 h-1.5 rounded-full bg-violet-400 inline-block" />
+                Mindmap <strong className="text-[#141413] font-semibold">{mindmaps.length}</strong>
+              </span>
+            </div>
+          )}
+
+          {/* ── Loading skeleton ── */}
+          {loading && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="bg-[#FAF9F5] rounded-2xl border border-[#F0EEE6] h-52 animate-pulse"
+                />
+              ))}
+            </div>
+          )}
+
+          {/* ── Error ── */}
+          {error && (
+            <div className="flex flex-col items-center justify-center py-16 gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center text-red-400">
+                <AlertCircle className="w-6 h-6" />
               </div>
-            )}
-            {!loading && error && (
-              <div className="empty">
-                <AlertCircle size={28} style={{ opacity: 0.5, color: 'var(--mod-danger)' }} />
-                <p>{error}</p>
-              </div>
-            )}
-            {!loading && !error && rows.length === 0 && (
-              <div className="empty">
-                <Network size={32} style={{ opacity: 0.3, marginBottom: 4 }} />
-                <p>Chưa có tài liệu nào được tạo.</p>
-                <p style={{ fontSize: '0.85rem', opacity: 0.7 }}>
-                  Hãy chọn một công cụ AI ở trên để bắt đầu!
-                </p>
-              </div>
-            )}
-            {!loading && !error && rows.length > 0 && (
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Tên tệp</th>
-                    <th>Công cụ</th>
-                    <th>Ngày tạo</th>
-                    <th>Trạng thái</th>
-                    <th>Hành động</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((row) => (
-                    <tr key={`${row.kind}-${row.id}`}>
-                      <td>
-                        <div className="materials-file-cell">
-                          <span className="materials-file-icon">
-                            {row.kind === 'slide' ? (
-                              <Presentation size={14} />
-                            ) : (
-                              <BrainCircuit size={14} />
-                            )}
-                          </span>
-                          <span className="materials-file-name">{row.title}</span>
-                        </div>
-                      </td>
-                      <td>
-                        <span className={`badge materials-kind-badge ${row.kind}`}>
-                          {row.kind === 'slide' ? 'SLIDE AI' : 'MINDMAP AI'}
-                        </span>
-                      </td>
-                      <td style={{ color: 'var(--mod-slate-500)', fontSize: '0.85rem' }}>
-                        {new Date(row.createdAt).toLocaleDateString('vi-VN', {
-                          day: '2-digit',
-                          month: 'short',
-                          year: 'numeric',
-                        })}
-                      </td>
-                      <td>
+              <p className="font-[Be_Vietnam_Pro] text-[14px] text-[#B53333]">
+                {error}
+              </p>
+            </div>
+          )}
+
+          {/* ── Materials Grid ── */}
+          {!loading && !error && rows.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {rows.map((row, idx) => (
+                <article
+                  key={`${row.kind}-${row.id}`}
+                  className="bg-[#FAF9F5] rounded-2xl border border-[#F0EEE6] shadow-[rgba(0,0,0,0.05)_0px_4px_24px] overflow-hidden group hover:shadow-[0px_0px_0px_1px_#D1CFC5,rgba(0,0,0,0.08)_0px_8px_30px] hover:-translate-y-0.5 transition-all duration-200"
+                >
+                  <div className="h-[120px] relative flex items-end p-4 overflow-hidden bg-gradient-to-br from-[#FFF7ED] to-[#FFE8D6]">
+                    <span className="absolute top-3 left-3 font-[Playfair_Display] text-[12px] font-medium opacity-40 text-[#E07B39]">
+                      #{String(idx + 1).padStart(2, '0')}
+                    </span>
+                    <div className="absolute top-3 right-3">
+                      {row.kind === 'slide' ? (
+                        <>
+                          {row.isPublic ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white/90 font-[Be_Vietnam_Pro] text-[11px] font-semibold text-emerald-700">
+                              <Eye className="w-3 h-3" /> Công khai
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white/90 font-[Be_Vietnam_Pro] text-[11px] font-semibold text-[#87867F]">
+                              <EyeOff className="w-3 h-3" /> Nháp
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          {row.status === 'PUBLISHED' ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white/90 font-[Be_Vietnam_Pro] text-[11px] font-semibold text-emerald-700">
+                              <Eye className="w-3 h-3" /> Công khai
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white/90 font-[Be_Vietnam_Pro] text-[11px] font-semibold text-[#87867F]">
+                              <EyeOff className="w-3 h-3" /> Nháp
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </div>
+                    <h3 className="relative font-[Playfair_Display] text-[15px] font-medium leading-[1.3] line-clamp-2 text-[#E07B39]">
+                      {row.title}
+                    </h3>
+                  </div>
+
+                  <div className="p-4 flex flex-col gap-2">
+                    <div className="flex items-center flex-wrap gap-2">
+                      <span className="flex items-center gap-1 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">
                         {row.kind === 'slide' ? (
-                          <span className={`badge ${row.isPublic ? 'published' : 'draft'}`}>
-                            {row.isPublic ? 'Công khai' : 'Nháp'}
-                          </span>
+                          <>
+                            <Presentation className="w-3.5 h-3.5" /> SLIDE
+                          </>
                         ) : (
-                          <span className={`badge ${mindmapStatusClass(row.status)}`}>
-                            {mindmapStatusLabel(row.status)}
-                          </span>
+                          <>
+                            <Network className="w-3.5 h-3.5" /> MINDMAP
+                          </>
                         )}
-                      </td>
-                      <td>
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between pt-2 border-t border-[#F0EEE6] mt-1">
+                      <span className="font-[Be_Vietnam_Pro] text-[12px] text-[#B0AEA5]">
+                        {new Date(row.createdAt).toLocaleDateString('vi-VN', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        })}
+                      </span>
+                      <div className="flex gap-2">
                         {row.kind === 'slide' ? (
-                          <div className="materials-action-group">
+                          <>
                             <button
-                              type="button"
-                              className="btn secondary materials-action-btn materials-action-btn--slide"
-                              onClick={() => void handlePreviewSlide(row.id)}
+                              className="px-3 py-1.5 rounded-lg border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[12px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors"
+                              onClick={() => handlePreviewSlide(row.id)}
                               disabled={loadingPreviewSlideId === row.id}
                             >
-                              <Eye size={13} />
-                              {loadingPreviewSlideId === row.id ? 'Đang tải...' : 'Xem thử'}
+                              {loadingPreviewSlideId === row.id ? 'Tải...' : 'Xem'}
                             </button>
                             <button
-                              type="button"
-                              className="btn secondary materials-action-btn materials-action-btn--slide"
-                              onClick={() => void handleDownloadSlide(row.id)}
+                              className="px-3 py-1.5 rounded-lg border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[12px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors"
+                              onClick={() => handleDownloadSlide(row.id)}
                               disabled={downloadingSlideId === row.id}
                             >
-                              <Download size={13} />
-                              {downloadingSlideId === row.id ? 'Đang tải...' : 'Tải về'}
+                              {downloadingSlideId === row.id ? 'Tải...' : 'Tải'}
                             </button>
-                          </div>
+                          </>
                         ) : (
-                          <div className="materials-action-group">
+                          <>
                             <button
-                              type="button"
-                              className="btn secondary materials-action-btn materials-action-btn--mindmap"
+                              className="px-3 py-1.5 rounded-lg border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[12px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors"
                               onClick={() => handlePreviewMindmap(row.id)}
                             >
-                              <Eye size={13} /> Xem thử
+                              Xem
                             </button>
                             <button
-                              type="button"
-                              className="btn secondary materials-action-btn materials-action-btn--mindmap"
-                              onClick={() => void handleDownloadMindmap(row.id, row.title)}
+                              className="px-3 py-1.5 rounded-lg border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[12px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors"
+                              onClick={() => handleDownloadMindmap(row.id, row.title)}
                               disabled={downloadingMindmapId === row.id}
                             >
-                              <Download size={13} />
-                              {downloadingMindmapId === row.id ? 'Đang tải...' : 'Tải về'}
+                              {downloadingMindmapId === row.id ? 'Tải...' : 'Tải'}
                             </button>
-                          </div>
+                          </>
                         )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-            {!loading && !error && rows.length > 0 && (
-              <div className="materials-table-footer">
-                Hiển thị {rows.length} / {allRows.length} tài liệu AI
-              </div>
-            )}
-          </div>
-
-          {previewSlideId && (
-            <div className="materials-preview-overlay" role="dialog" aria-modal="true">
-              <div className="materials-preview-modal">
-                <div className="materials-preview-header">
-                  <h3>Xem thử slide</h3>
-                  <button className="btn secondary" onClick={closePreviewSlide}>
-                    Đóng
-                  </button>
-                </div>
-                {loadingPreviewSlideId === previewSlideId ? (
-                  <div className="materials-math-loader">
-                    <div className="materials-math-loader-ring" />
-                    <div className="materials-math-loader-symbols" aria-hidden="true">
-                      <span>∑</span>
-                      <span>π</span>
-                      <span>√</span>
-                      <span>∞</span>
-                      <span>Δ</span>
+                      </div>
                     </div>
-                    <p>Đang dựng slide toán học ...</p>
                   </div>
-                ) : previewSlidePdfUrl ? (
-                  <iframe
-                    src={previewSlidePdfUrl}
-                    title="Slide preview"
-                    className="materials-preview-frame"
-                  />
-                ) : (
-                  <div className="empty">Không có dữ liệu xem thử.</div>
-                )}
-              </div>
+                </article>
+              ))}
             </div>
           )}
 
-          {previewMindmapId && (
-            <div className="materials-preview-overlay" role="dialog" aria-modal="true">
-              <div className="materials-preview-modal">
-                <div className="materials-preview-header">
-                  <h3>Xem thử mindmap</h3>
-                  <button className="btn secondary" onClick={closePreviewMindmap}>
-                    Đóng
-                  </button>
-                </div>
+          {/* ── Empty: filtered ── */}
+          {!loading && !error && rows.length === 0 && allRows.length > 0 && (
+            <div className="flex flex-col items-center justify-center py-16 gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-[#E8E6DC] flex items-center justify-center text-[#B0AEA5]">
+                <Search className="w-6 h-6" />
+              </div>
+              <p className="font-[Be_Vietnam_Pro] text-[14px] text-[#87867F]">
+                Không tìm thấy tài liệu nào phù hợp.
+              </p>
+            </div>
+          )}
 
-                {previewMindmapFrameLoading && (
-                  <div className="materials-math-loader">
-                    <div className="materials-math-loader-ring" />
-                    <div className="materials-math-loader-symbols" aria-hidden="true">
-                      <span>∑</span>
-                      <span>π</span>
-                      <span>√</span>
-                      <span>∞</span>
-                      <span>Δ</span>
-                    </div>
-                    <p>Đang dựng mindmap ...</p>
+          {/* ── Empty: no materials ── */}
+          {!loading && !error && allRows.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-16 gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-[#E8E6DC] flex items-center justify-center text-[#B0AEA5]">
+                <Presentation className="w-6 h-6" />
+              </div>
+              <div className="text-center">
+                <p className="font-[Be_Vietnam_Pro] text-[14px] text-[#87867F] mb-2">
+                  Bạn chưa tạo tài liệu nào. Hãy bắt đầu từ các công cụ AI ở trên.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Modals ── */}
+      {previewSlideId && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3">
+          <div
+            className="bg-white rounded-2xl shadow-[rgba(0,0,0,0.25)_0px_24px_80px] w-full max-w-6xl h-[86vh] flex flex-col"
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#E8E6DC] flex-shrink-0">
+              <h3 className="font-[Playfair_Display] text-[18px] font-medium text-[#141413]">
+                Xem thử slide
+              </h3>
+              <button
+                className="px-4 py-2 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors"
+                onClick={closePreviewSlide}
+              >
+                Đóng
+              </button>
+            </div>
+            <div className="flex-1 min-h-0 overflow-hidden">
+              {loadingPreviewSlideId === previewSlideId ? (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <div className="w-12 h-12 rounded-full border-2 border-[#E8E6DC] border-t-[#C96442] animate-spin mx-auto mb-3" />
+                    <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F]">
+                      Đang tải slide...
+                    </p>
                   </div>
-                )}
-
+                </div>
+              ) : previewSlidePdfUrl ? (
                 <iframe
-                  src={`/teacher/mindmaps/${previewMindmapId}?embedPreview=1`}
-                  title="Mindmap preview"
-                  className="materials-preview-frame"
-                  style={{ display: previewMindmapFrameLoading ? 'none' : 'block' }}
-                  onLoad={() => setPreviewMindmapFrameLoading(false)}
+                  src={previewSlidePdfUrl}
+                  title="Slide preview"
+                  className="w-full h-full"
                 />
-              </div>
-            </div>
-          )}
-
-          {isDownloadingAny && (
-            <div className="materials-download-overlay" role="status" aria-live="polite">
-              <div className="materials-download-modal">
-                <div className="materials-math-loader">
-                  <div className="materials-math-loader-ring" />
-                  <div className="materials-math-loader-symbols" aria-hidden="true">
-                    <span>∑</span>
-                    <span>π</span>
-                    <span>√</span>
-                    <span>∞</span>
-                    <span>Δ</span>
-                  </div>
-                  <p>
-                    {downloadingSlideId
-                      ? 'Đang tải slide xuống, chờ chút nhé...'
-                      : 'Đang tải mindmap xuống, chờ chút nhé...'}
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F]">
+                    Không có dữ liệu xem thử.
                   </p>
                 </div>
-              </div>
+              )}
             </div>
-          )}
-        </section>
-      </div>
+          </div>
+        </div>
+      )}
+
+      {previewMindmapId && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3">
+          <div
+            className="bg-white rounded-2xl shadow-[rgba(0,0,0,0.25)_0px_24px_80px] w-full max-w-5xl h-[86vh] flex flex-col"
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#E8E6DC] flex-shrink-0">
+              <h3 className="font-[Playfair_Display] text-[18px] font-medium text-[#141413]">
+                Xem thử mindmap
+              </h3>
+              <button
+                className="px-4 py-2 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors"
+                onClick={closePreviewMindmap}
+              >
+                Đóng
+              </button>
+            </div>
+            <div className="flex-1 min-h-0 overflow-hidden relative">
+              {previewMindmapFrameLoading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-[#FAF9F5] z-10">
+                  <div className="text-center">
+                    <div className="w-12 h-12 rounded-full border-2 border-[#E8E6DC] border-t-[#C96442] animate-spin mx-auto mb-3" />
+                    <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F]">
+                      Đang tải mindmap...
+                    </p>
+                  </div>
+                </div>
+              )}
+              <iframe
+                src={`/teacher/mindmaps/${previewMindmapId}?embedPreview=1`}
+                title="Mindmap preview"
+                className="w-full h-full"
+                onLoad={() => setPreviewMindmapFrameLoading(false)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isDownloadingAny && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div
+            className="bg-white rounded-2xl shadow-[rgba(0,0,0,0.20)_0px_20px_60px] p-8 flex flex-col items-center gap-4 w-full max-w-sm"
+            role="status"
+            aria-live="polite"
+          >
+            <div className="w-12 h-12 rounded-full border-2 border-[#E8E6DC] border-t-[#C96442] animate-spin" />
+            <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F]">
+              {downloadingSlideId ? 'Đang tải slide xuống...' : 'Đang tải mindmap xuống...'}
+            </p>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 };

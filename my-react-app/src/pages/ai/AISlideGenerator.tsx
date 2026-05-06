@@ -1429,12 +1429,12 @@ const AISlideGenerator: React.FC = () => {
               </div>
               <div>
                 <h1 className="font-[Playfair_Display] text-[25px] font-medium text-[#141413] leading-[1.2]">
-                  Tạo Slide AI
+                  Tạo Slide
                 </h1>
                 <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-0.5">
                   {generatedFiles.length > 0
                     ? `${generatedFiles.length} file đã tạo`
-                    : 'Tạo bài giảng bằng AI'}
+                    : 'Tạo bài giảng với AI hỗ trợ'}
                 </p>
               </div>
             </div>
