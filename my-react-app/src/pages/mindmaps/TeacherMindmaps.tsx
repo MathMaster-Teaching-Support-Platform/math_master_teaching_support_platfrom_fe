@@ -204,7 +204,7 @@ export default function TeacherMindmaps() {
 
   const filterTabs = [
     { id: 'ALL' as const, label: `Tất cả (${stats.total})` },
-    { id: 'PUBLISHED' as const, label: `Đã xuất bản (${stats.published})` },
+    { id: 'PUBLISHED' as const, label: `Đã công khai (${stats.published})` },
     { id: 'DRAFT' as const, label: `Nháp (${stats.draft})` },
   ];
 
@@ -327,9 +327,7 @@ export default function TeacherMindmaps() {
   const handleGenerateMindmap = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!lessonId) {
-      setGeneratorError(
-        'Vui lòng chọn đầy đủ Lớp, Môn, Chương và Bài học trước khi tạo mindmap.'
-      );
+      setGeneratorError('Vui lòng chọn đầy đủ Lớp, Môn, Chương và Bài học trước khi tạo mindmap.');
       setActiveGeneratorStep(1);
       return;
     }
@@ -438,7 +436,7 @@ export default function TeacherMindmaps() {
                   )}
                 </div>
                 <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-0.5">
-                  {stats.published} đã xuất bản • {stats.aiGenerated} AI tạo
+                  {stats.published} đã công khai • {stats.aiGenerated} AI tạo
                 </p>
               </div>
             </div>
@@ -464,7 +462,7 @@ export default function TeacherMindmaps() {
                   color: 'text-[#4F7EF7]',
                 },
                 {
-                  label: 'Đã xuất bản',
+                  label: 'Đã công khai',
                   value: stats.published,
                   Icon: CheckCircle2,
                   bg: 'bg-[#ECFDF5]',
@@ -693,7 +691,8 @@ export default function TeacherMindmaps() {
                       <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-[#FAF9F5] border border-[#E8E6DC]">
                         <Network className="w-4 h-4 text-[#87867F] flex-shrink-0" />
                         <span className="font-[Be_Vietnam_Pro] text-[13px] text-[#5E5D59]">
-                          Bài học: <strong className="text-[#141413]">{selectedLesson.title}</strong>
+                          Bài học:{' '}
+                          <strong className="text-[#141413]">{selectedLesson.title}</strong>
                         </span>
                       </div>
                     )}
@@ -856,7 +855,7 @@ export default function TeacherMindmaps() {
               <div className="w-px h-4 bg-[#E8E6DC]" />
               <span className="flex items-center gap-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
-                Đã xuất bản{' '}
+                Đã công khai{' '}
                 <strong className="text-[#141413] font-semibold">{stats.published}</strong>
               </span>
               <span className="flex items-center gap-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">
@@ -911,7 +910,7 @@ export default function TeacherMindmaps() {
                     <div className="absolute top-3 right-3">
                       {mindmap.status === 'PUBLISHED' ? (
                         <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white/90 font-[Be_Vietnam_Pro] text-[11px] font-semibold text-emerald-700">
-                          <Eye className="w-3 h-3" /> Đã xuất bản
+                          <Eye className="w-3 h-3" /> Đã công khai
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white/90 font-[Be_Vietnam_Pro] text-[11px] font-semibold text-[#87867F]">
@@ -997,7 +996,7 @@ export default function TeacherMindmaps() {
                       </h3>
                       {mindmap.status === 'PUBLISHED' ? (
                         <span className="flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 font-[Be_Vietnam_Pro] text-[11px] font-medium text-emerald-700">
-                          <Eye className="w-3 h-3" /> Xuất bản
+                          <Eye className="w-3 h-3" /> Công khai
                         </span>
                       ) : (
                         <span className="flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#F5F4ED] font-[Be_Vietnam_Pro] text-[11px] font-medium text-[#87867F]">

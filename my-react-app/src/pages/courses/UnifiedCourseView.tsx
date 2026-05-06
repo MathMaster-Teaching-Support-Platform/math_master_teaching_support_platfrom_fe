@@ -263,7 +263,7 @@ const UnifiedCourseView: React.FC<UnifiedCourseViewProps> = ({
         <section className="module-page teacher-courses-page">
           <div className="empty">
             <AlertCircle size={32} style={{ marginBottom: 8, color: '#B53333' }} />
-            <p>{UI_TEXT.COURSE} này chưa được xuất bản hoặc đang chờ duyệt.</p>
+            <p>{UI_TEXT.COURSE} này chưa được công khai hoặc đang chờ duyệt.</p>
             <button className="btn secondary" onClick={() => navigate('/student/courses')}>
               <ArrowLeft size={14} />
               Quay lại danh sách

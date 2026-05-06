@@ -161,8 +161,7 @@ export default function TeacherQuestionManagementPage() {
 
       showToast({
         type: 'success',
-        message:
-          formMode === 'create' ? 'Tạo câu hỏi thành công.' : 'Cập nhật câu hỏi thành công.',
+        message: formMode === 'create' ? 'Tạo câu hỏi thành công.' : 'Cập nhật câu hỏi thành công.',
       });
       closeModal();
       await refetch();
@@ -263,7 +262,7 @@ export default function TeacherQuestionManagementPage() {
             </span>
             <span className="tqm-quicknav__text">
               <span className="tqm-quicknav__title">Tạo đề thi</span>
-              <span className="tqm-quicknav__desc">Chỉnh sửa và xuất bản đề thi hoàn chỉnh</span>
+              <span className="tqm-quicknav__desc">Chỉnh sửa và công khai đề thi hoàn chỉnh</span>
             </span>
             <ArrowRight size={14} className="tqm-quicknav__arrow" />
           </button>

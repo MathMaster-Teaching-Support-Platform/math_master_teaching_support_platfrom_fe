@@ -49,18 +49,18 @@ import {
 } from '../../types/questionTemplate';
 import '../courses/TeacherCourses.css';
 import './template-review.css';
-import './TemplateCard.css';
 import { TemplateBulkImportModal } from './TemplateBulkImportModal';
+import './TemplateCard.css';
 import { TemplateFormModal } from './TemplateFormModal';
 
-import { TemplateMethodPicker } from './TemplateMethodPicker';
-import { RealQuestionForm } from './RealQuestionForm';
-import { BlueprintConfirmModal } from './BlueprintConfirmModal';
-import { TemplateGenerateModal } from './TemplateGenerateModal';
 import type {
   BlueprintFromRealQuestionRequest,
   BlueprintFromRealQuestionResponse,
 } from '../../types/questionTemplate';
+import { BlueprintConfirmModal } from './BlueprintConfirmModal';
+import { RealQuestionForm } from './RealQuestionForm';
+import { TemplateGenerateModal } from './TemplateGenerateModal';
+import { TemplateMethodPicker } from './TemplateMethodPicker';
 
 const statusFilters: Array<'ALL' | TemplateStatus> = [
   'ALL',
@@ -95,8 +95,6 @@ const cognitiveLevelLabel: Record<string, string> = {
   EVALUATE: 'Đánh giá',
   CREATE: 'Sáng tạo',
 };
-
-
 
 function extractDiagramLatexStrings(diagramData: unknown): string[] {
   const values: string[] = [];
@@ -165,7 +163,6 @@ function extractPrimaryDiagramLatex(diagramData: unknown): string | null {
 }
 
 export function TemplateDashboard() {
-
   const { showToast } = useToast();
   const navigate = useNavigate();
 
@@ -220,13 +217,13 @@ export function TemplateDashboard() {
   // New flow state: Method picker + Method-1 form + Confirm + Generate
   const [methodPickerOpen, setMethodPickerOpen] = useState(false);
   const [realFormOpen, setRealFormOpen] = useState(false);
-  const [blueprintRequest, setBlueprintRequest] =
-    useState<BlueprintFromRealQuestionRequest | null>(null);
+  const [blueprintRequest, setBlueprintRequest] = useState<BlueprintFromRealQuestionRequest | null>(
+    null
+  );
   const [blueprintResponse, setBlueprintResponse] =
     useState<BlueprintFromRealQuestionResponse | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [generateOpen, setGenerateOpen] = useState(false);
-
 
   const [activeDiagram, setActiveDiagram] = useState<unknown>(null);
   const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
@@ -303,8 +300,6 @@ export function TemplateDashboard() {
   //   setFormOpen(true);
   // }
 
-
-
   return (
     <DashboardLayout
       role="teacher"
@@ -328,13 +323,14 @@ export function TemplateDashboard() {
               }}
             >
               <span>
-                Đang chọn mẫu để bổ sung câu cho{' '}
-                <strong>{targetBankName ?? '(ngân hàng)'}</strong>
+                Đang chọn mẫu để bổ sung câu cho <strong>{targetBankName ?? '(ngân hàng)'}</strong>
                 {targetGradeName ? ` · ${targetGradeName}` : ''}
                 {' · '}
-                <strong>{cognitiveLevelLabel[targetCognitiveLevel!] ?? targetCognitiveLevel}</strong>
-                . Khi sinh câu hỏi từ mẫu, hãy chọn đúng ngân hàng, chương và mức độ này
-                để câu sinh ra rơi vào đúng bucket.
+                <strong>
+                  {cognitiveLevelLabel[targetCognitiveLevel!] ?? targetCognitiveLevel}
+                </strong>
+                . Khi sinh câu hỏi từ mẫu, hãy chọn đúng ngân hàng, chương và mức độ này để câu sinh
+                ra rơi vào đúng bucket.
               </span>
               <button
                 type="button"
@@ -361,7 +357,7 @@ export function TemplateDashboard() {
                 {!isLoading && <span className="count-chip">{templates.length}</span>}
               </div>
               <p className="header-sub">
-                {stats.published} đã xuất bản • {stats.draft} bản nháp
+                {stats.published} đã công khai • {stats.draft} bản nháp
               </p>
             </div>
             <div className="row" style={{ flexWrap: 'wrap' }}>
@@ -531,11 +527,7 @@ export function TemplateDashboard() {
                 };
                 const statusKey = template.status as keyof typeof statusLabelMap;
                 return (
-                  <article
-                    key={template.id}
-                    className="tpl-card"
-                    data-status={template.status}
-                  >
+                  <article key={template.id} className="tpl-card" data-status={template.status}>
                     <div className="tpl-card-header">
                       <h3 className="tpl-card-title" title={template.name}>
                         <MathText text={template.name} />
@@ -577,11 +569,7 @@ export function TemplateDashboard() {
                       {template.tags && template.tags.length > 0 && (
                         <div className="tpl-card-tags">
                           {template.tags.slice(0, 4).map((tag) => (
-                            <span
-                              key={tag}
-                              className="tpl-tag-chip"
-                              title={tag}
-                            >
+                            <span key={tag} className="tpl-tag-chip" title={tag}>
                               {questionTagLabels[tag as QuestionTag] ?? tag}
                             </span>
                           ))}
@@ -597,30 +585,26 @@ export function TemplateDashboard() {
                         <button
                           className="btn btn--feat-emerald tpl-card-primary"
                           disabled={
-                            publishMutation.isPending &&
-                            publishMutation.variables === template.id
+                            publishMutation.isPending && publishMutation.variables === template.id
                           }
                           onClick={() => {
                             publishMutation.mutate(template.id, {
                               onSuccess: () =>
-                                showToast({ type: 'success', message: 'Đã xuất bản mẫu.' }),
+                                showToast({ type: 'success', message: 'Đã công khai mẫu.' }),
                               onError: (err) =>
                                 showToast({
                                   type: 'error',
                                   message:
-                                    err instanceof Error
-                                      ? err.message
-                                      : 'Không thể xuất bản mẫu.',
+                                    err instanceof Error ? err.message : 'Không thể công khai mẫu.',
                                 }),
                             });
                           }}
-                          title="Xuất bản mẫu để có thể sinh câu hỏi"
+                          title="Công khai mẫu để có thể sinh câu hỏi"
                         >
                           <Send size={13} />
-                          {publishMutation.isPending &&
-                          publishMutation.variables === template.id
-                            ? 'Đang xuất bản...'
-                            : 'Xuất bản'}
+                          {publishMutation.isPending && publishMutation.variables === template.id
+                            ? 'Đang công khai...'
+                            : 'Công khai'}
                         </button>
                       ) : (
                         <button
@@ -677,12 +661,12 @@ export function TemplateDashboard() {
                                     message:
                                       err instanceof Error
                                         ? err.message
-                                        : 'Không thể hủy xuất bản mẫu.',
+                                        : 'Không thể hủy công khai mẫu.',
                                   }),
                               });
                             }}
-                            title="Hủy xuất bản — đưa mẫu về trạng thái nháp"
-                            aria-label="Hủy xuất bản"
+                            title="Hủy công khai — đưa mẫu về trạng thái nháp"
+                            aria-label="Hủy công khai"
                           >
                             <EyeOff size={13} />
                           </button>
@@ -742,9 +726,7 @@ export function TemplateDashboard() {
               onGenerated={(message) => {
                 showToast({ type: 'success', message });
                 setGenerateOpen(false);
-                navigate(
-                  `/teacher/question-review?templateId=${encodeURIComponent(selected.id)}`
-                );
+                navigate(`/teacher/question-review?templateId=${encodeURIComponent(selected.id)}`);
               }}
             />
           )}
@@ -796,11 +778,6 @@ export function TemplateDashboard() {
               void refetch();
             }}
           />
-
-
-
-
-
 
           {/* Canonical/Review Modals hidden per ISSUE-11 */}
 

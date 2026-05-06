@@ -787,7 +787,7 @@ export default function MindmapEditor() {
               className="status-select"
             >
               <option value="DRAFT">Nháp</option>
-              <option value="PUBLISHED">Xuất bản</option>
+              <option value="PUBLISHED">Công khai</option>
             </select>
           </div>
         </div>

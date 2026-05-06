@@ -11,10 +11,10 @@ import {
   useBatchAddQuestions,
   useBatchUpdatePoints,
   useGenerateQuestionsForAssessment,
+  usePatchAssessment,
   useRemoveQuestion,
   useSearchQuestions,
   useUpdateAssessment,
-  usePatchAssessment,
 } from '../../hooks/useAssessment';
 import '../../styles/module-refactor.css';
 import type { AssessmentRequest } from '../../types';
@@ -23,7 +23,7 @@ import AssessmentModal from './AssessmentModal';
 
 const assessmentStatusLabel: Record<string, string> = {
   DRAFT: 'Nháp',
-  PUBLISHED: 'Đã xuất bản',
+  PUBLISHED: 'Đã công khai',
   CLOSED: 'Đã đóng',
 };
 
@@ -360,11 +360,7 @@ export default function AssessmentDetail() {
 
     return (
       <section className="module-page">
-        <button
-          type="button"
-          className="ad-back"
-          onClick={() => navigate('/teacher/assessments')}
-        >
+        <button type="button" className="ad-back" onClick={() => navigate('/teacher/assessments')}>
           <ArrowLeft size={14} />
           Quay lại danh sách
         </button>
@@ -378,9 +374,7 @@ export default function AssessmentDetail() {
                   {assessmentStatusLabel[assessment.status] || assessment.status}
                 </span>
               </div>
-              {assessment.description && (
-                <p className="ad-hero__desc">{assessment.description}</p>
-              )}
+              {assessment.description && <p className="ad-hero__desc">{assessment.description}</p>}
               <div className="ad-hero__meta">
                 <span className="ad-hero__meta-chip">
                   {assessmentTypeLabel[assessment.assessmentType] || assessment.assessmentType}
@@ -391,18 +385,12 @@ export default function AssessmentDetail() {
                     'DIRECT'}
                 </span>
                 {assessment.examMatrixName && (
-                  <span className="ad-hero__meta-chip">
-                    Ma trận: {assessment.examMatrixName}
-                  </span>
+                  <span className="ad-hero__meta-chip">Ma trận: {assessment.examMatrixName}</span>
                 )}
               </div>
             </div>
             <div className="ad-hero__actions">
-              <button
-                type="button"
-                className="btn secondary"
-                onClick={() => setOpenEdit(true)}
-              >
+              <button type="button" className="btn secondary" onClick={() => setOpenEdit(true)}>
                 <Pencil size={14} />
                 Chỉnh sửa
               </button>
@@ -425,9 +413,7 @@ export default function AssessmentDetail() {
             <div className="ad-metric">
               <span className="ad-metric__label">Thời gian</span>
               <span className="ad-metric__value">
-                {assessment.timeLimitMinutes != null
-                  ? `${assessment.timeLimitMinutes}'`
-                  : '∞'}
+                {assessment.timeLimitMinutes != null ? `${assessment.timeLimitMinutes}'` : '∞'}
               </span>
             </div>
           </div>
@@ -502,7 +488,9 @@ export default function AssessmentDetail() {
               <div className="ad-settings-row">
                 <dt>Trạng thái</dt>
                 <dd>
-                  <span className={`badge ${assessment.status === 'PUBLISHED' ? 'published' : 'draft'}`}>
+                  <span
+                    className={`badge ${assessment.status === 'PUBLISHED' ? 'published' : 'draft'}`}
+                  >
                     {assessmentStatusLabel[assessment.status] || assessment.status}
                   </span>
                 </dd>
@@ -517,9 +505,7 @@ export default function AssessmentDetail() {
               </div>
               <div className="ad-settings-row">
                 <dt>Ma trận đề</dt>
-                <dd>
-                  {assessment.examMatrixName ?? assessment.examMatrixId ?? 'Không liên kết'}
-                </dd>
+                <dd>{assessment.examMatrixName ?? assessment.examMatrixId ?? 'Không liên kết'}</dd>
               </div>
               <div className="ad-settings-row">
                 <dt>Bài học liên quan</dt>
@@ -571,105 +557,105 @@ export default function AssessmentDetail() {
                   <Plus size={14} />
                   Thêm câu hỏi vào bài kiểm tra
                 </span>
-                <ChevronDown
-                  size={16}
-                  className="add-question-panel__chevron"
-                  aria-hidden="true"
-                />
+                <ChevronDown size={16} className="add-question-panel__chevron" aria-hidden="true" />
               </summary>
               <div className="add-question-panel__body">
-              <div
-                className="row"
-                style={{ flexWrap: 'wrap', justifyContent: 'start', marginBottom: 8 }}
-              >
                 <div
                   className="row"
-                  style={{ alignItems: 'center', gap: 6, flex: 1, minWidth: 280 }}
+                  style={{ flexWrap: 'wrap', justifyContent: 'start', marginBottom: 8 }}
                 >
-                  <Search size={14} style={{ color: '#64748b' }} aria-hidden="true" />
-                  <input
-                    className="input"
-                    style={{ flex: 1 }}
-                    placeholder="Nhập từ khóa (ít nhất 2 ký tự)..."
-                    value={searchKeyword}
-                    onChange={(e) => setSearchKeyword(e.target.value)}
-                  />
-                </div>
-                {searchFetching && <span className="muted">Đang tìm...</span>}
-              </div>
-
-              {searchResults.length > 0 && (
-                <div
-                  style={{
-                    maxHeight: 260,
-                    overflowY: 'auto',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: 6,
-                  }}
-                >
-                  {searchResults.map((q) => {
-                    const alreadyAdded = questions.some((aq) => getQuestionId(aq) === q.questionId);
-                    const checked = selectedIds.has(q.questionId);
-                    return (
-                      <label
-                        key={q.questionId}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'flex-start',
-                          gap: 10,
-                          padding: '8px 12px',
-                          cursor: alreadyAdded ? 'not-allowed' : 'pointer',
-                          background: alreadyAdded ? '#f9fafb' : 'white',
-                          borderBottom: '1px solid #f3f4f6',
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          disabled={alreadyAdded}
-                          checked={checked}
-                          onChange={() => toggleSelectQuestion(q.questionId)}
-                          style={{ marginTop: 3 }}
-                        />
-                        <div>
-                          <MathText text={q.questionText} />
-                          <div style={{ marginTop: 4, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                            {q.cognitiveLevel && (
-                              <span className="badge draft" style={{ fontSize: 11 }}>
-                                {q.cognitiveLevel}
-                              </span>
-                            )}
-                            {q.tags?.map((t) => (
-                              <span key={t} className="badge published" style={{ fontSize: 11 }}>
-                                {t}
-                              </span>
-                            ))}
-                            {alreadyAdded && (
-                              <span className="muted" style={{ fontSize: 11 }}>
-                                Đã có trong đề
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </label>
-                    );
-                  })}
-                </div>
-              )}
-
-              {selectedIds.size > 0 && (
-                <div style={{ marginTop: 10 }}>
-                  <button
-                    className="btn"
-                    onClick={() => void handleBatchAdd()}
-                    disabled={batchAddMutation.isPending}
+                  <div
+                    className="row"
+                    style={{ alignItems: 'center', gap: 6, flex: 1, minWidth: 280 }}
                   >
-                    <Plus size={14} />
-                    {batchAddMutation.isPending
-                      ? 'Đang thêm...'
-                      : `Thêm ${selectedIds.size} câu hỏi đã chọn`}
-                  </button>
+                    <Search size={14} style={{ color: '#64748b' }} aria-hidden="true" />
+                    <input
+                      className="input"
+                      style={{ flex: 1 }}
+                      placeholder="Nhập từ khóa (ít nhất 2 ký tự)..."
+                      value={searchKeyword}
+                      onChange={(e) => setSearchKeyword(e.target.value)}
+                    />
+                  </div>
+                  {searchFetching && <span className="muted">Đang tìm...</span>}
                 </div>
-              )}
+
+                {searchResults.length > 0 && (
+                  <div
+                    style={{
+                      maxHeight: 260,
+                      overflowY: 'auto',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: 6,
+                    }}
+                  >
+                    {searchResults.map((q) => {
+                      const alreadyAdded = questions.some(
+                        (aq) => getQuestionId(aq) === q.questionId
+                      );
+                      const checked = selectedIds.has(q.questionId);
+                      return (
+                        <label
+                          key={q.questionId}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            gap: 10,
+                            padding: '8px 12px',
+                            cursor: alreadyAdded ? 'not-allowed' : 'pointer',
+                            background: alreadyAdded ? '#f9fafb' : 'white',
+                            borderBottom: '1px solid #f3f4f6',
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            disabled={alreadyAdded}
+                            checked={checked}
+                            onChange={() => toggleSelectQuestion(q.questionId)}
+                            style={{ marginTop: 3 }}
+                          />
+                          <div>
+                            <MathText text={q.questionText} />
+                            <div
+                              style={{ marginTop: 4, display: 'flex', gap: 6, flexWrap: 'wrap' }}
+                            >
+                              {q.cognitiveLevel && (
+                                <span className="badge draft" style={{ fontSize: 11 }}>
+                                  {q.cognitiveLevel}
+                                </span>
+                              )}
+                              {q.tags?.map((t) => (
+                                <span key={t} className="badge published" style={{ fontSize: 11 }}>
+                                  {t}
+                                </span>
+                              ))}
+                              {alreadyAdded && (
+                                <span className="muted" style={{ fontSize: 11 }}>
+                                  Đã có trong đề
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {selectedIds.size > 0 && (
+                  <div style={{ marginTop: 10 }}>
+                    <button
+                      className="btn"
+                      onClick={() => void handleBatchAdd()}
+                      disabled={batchAddMutation.isPending}
+                    >
+                      <Plus size={14} />
+                      {batchAddMutation.isPending
+                        ? 'Đang thêm...'
+                        : `Thêm ${selectedIds.size} câu hỏi đã chọn`}
+                    </button>
+                  </div>
+                )}
               </div>
             </details>
           )}
@@ -793,8 +779,7 @@ export default function AssessmentDetail() {
                                           min={0}
                                           step={0.25}
                                           value={
-                                            pointsDraft[questionId] ??
-                                            String(question.points ?? '')
+                                            pointsDraft[questionId] ?? String(question.points ?? '')
                                           }
                                           onChange={(e) =>
                                             setPointsDraft((prev) => ({
@@ -818,9 +803,7 @@ export default function AssessmentDetail() {
                                                   pointsDraft[questionId] ||
                                                     String(question.points || 0)
                                                 );
-                                                const pointPerClause = (
-                                                  totalPoints / 4
-                                                ).toFixed(3);
+                                                const pointPerClause = (totalPoints / 4).toFixed(3);
                                                 return (
                                                   <div
                                                     style={{
@@ -866,77 +849,77 @@ export default function AssessmentDetail() {
                   Points editing is unrestricted — drop the DRAFT-only gate so
                   teachers can rebalance scoring after publishing too. */}
               <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  {/* Batch save points */}
-                  <div>
-                    <button
-                      className="btn"
-                      onClick={() => void handleBatchUpdatePoints()}
-                      disabled={batchUpdatePointsMutation.isPending}
-                    >
-                      {batchUpdatePointsMutation.isPending
-                        ? 'Đang lưu...'
-                        : 'Lưu điểm tất cả câu hỏi'}
-                    </button>
-                  </div>
+                {/* Batch save points */}
+                <div>
+                  <button
+                    className="btn"
+                    onClick={() => void handleBatchUpdatePoints()}
+                    disabled={batchUpdatePointsMutation.isPending}
+                  >
+                    {batchUpdatePointsMutation.isPending
+                      ? 'Đang lưu...'
+                      : 'Lưu điểm tất cả câu hỏi'}
+                  </button>
+                </div>
 
-                  {/* Auto distribute */}
-                  <div className="preview-box">
-                    <p className="muted" style={{ fontWeight: 600, marginBottom: 8 }}>
-                      Tự động phân điểm theo mức độ nhận thức
-                    </p>
-                    <p style={{ fontSize: 12, color: '#6b7280', marginTop: 4, marginBottom: 8 }}>
-                      💡 Câu hỏi Đúng/Sai (TF) có 4 mệnh đề. Điểm sẽ được chia đều cho mỗi mệnh đề.
-                      <br />
-                      Quy tắc chấm điểm (Bộ GD&ĐT 2025): Đúng 1/4 mệnh đề = 0 điểm, Đúng 2/4 = 0.25
-                      × Điểm câu, Đúng 3/4 = 0.5 × Điểm câu, Đúng 4/4 = 100% Điểm câu.
-                    </p>
-                    <div
-                      className="row"
-                      style={{ flexWrap: 'wrap', justifyContent: 'start', gap: 8 }}
-                    >
-                      <div>
-                        <label style={{ fontSize: 12, color: '#6b7280' }}>Tổng điểm</label>
+                {/* Auto distribute */}
+                <div className="preview-box">
+                  <p className="muted" style={{ fontWeight: 600, marginBottom: 8 }}>
+                    Tự động phân điểm theo mức độ nhận thức
+                  </p>
+                  <p style={{ fontSize: 12, color: '#6b7280', marginTop: 4, marginBottom: 8 }}>
+                    💡 Câu hỏi Đúng/Sai (TF) có 4 mệnh đề. Điểm sẽ được chia đều cho mỗi mệnh đề.
+                    <br />
+                    Quy tắc chấm điểm (Bộ GD&ĐT 2025): Đúng 1/4 mệnh đề = 0 điểm, Đúng 2/4 = 0.25 ×
+                    Điểm câu, Đúng 3/4 = 0.5 × Điểm câu, Đúng 4/4 = 100% Điểm câu.
+                  </p>
+                  <div
+                    className="row"
+                    style={{ flexWrap: 'wrap', justifyContent: 'start', gap: 8 }}
+                  >
+                    <div>
+                      <label style={{ fontSize: 12, color: '#6b7280' }}>Tổng điểm</label>
+                      <input
+                        className="input"
+                        type="number"
+                        min={0.01}
+                        step={0.5}
+                        style={{ width: 120 }}
+                        placeholder="VD: 10"
+                        value={totalPointsInput}
+                        onChange={(e) => setTotalPointsInput(e.target.value)}
+                      />
+                    </div>
+                    {COGNITIVE_LEVELS.map(({ key, label }) => (
+                      <div key={key}>
+                        <label style={{ fontSize: 12, color: '#6b7280' }}>{label} (%)</label>
                         <input
                           className="input"
                           type="number"
-                          min={0.01}
-                          step={0.5}
-                          style={{ width: 120 }}
-                          placeholder="VD: 10"
-                          value={totalPointsInput}
-                          onChange={(e) => setTotalPointsInput(e.target.value)}
+                          min={0}
+                          max={100}
+                          style={{ width: 80 }}
+                          placeholder="0"
+                          value={distribution[key] ?? ''}
+                          onChange={(e) =>
+                            setDistribution((prev) => ({ ...prev, [key]: e.target.value }))
+                          }
                         />
                       </div>
-                      {COGNITIVE_LEVELS.map(({ key, label }) => (
-                        <div key={key}>
-                          <label style={{ fontSize: 12, color: '#6b7280' }}>{label} (%)</label>
-                          <input
-                            className="input"
-                            type="number"
-                            min={0}
-                            max={100}
-                            style={{ width: 80 }}
-                            placeholder="0"
-                            value={distribution[key] ?? ''}
-                            onChange={(e) =>
-                              setDistribution((prev) => ({ ...prev, [key]: e.target.value }))
-                            }
-                          />
-                        </div>
-                      ))}
-                    </div>
-                    <button
-                      className="btn secondary"
-                      style={{ marginTop: 10 }}
-                      onClick={() => void handleAutoDistribute()}
-                      disabled={autoDistributeMutation.isPending}
-                    >
-                      {autoDistributeMutation.isPending
-                        ? 'Đang phân điểm...'
-                        : 'Áp dụng phân điểm tự động'}
-                    </button>
+                    ))}
                   </div>
+                  <button
+                    className="btn secondary"
+                    style={{ marginTop: 10 }}
+                    onClick={() => void handleAutoDistribute()}
+                    disabled={autoDistributeMutation.isPending}
+                  >
+                    {autoDistributeMutation.isPending
+                      ? 'Đang phân điểm...'
+                      : 'Áp dụng phân điểm tự động'}
+                  </button>
                 </div>
+              </div>
             </>
           )}
         </article>

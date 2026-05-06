@@ -1,17 +1,17 @@
 import { API_BASE_URL } from '../config/api.config';
-import { AuthService } from './api/auth.service';
-import { translateApiError } from '../utils/errorCodes';
+import type { ApiResponse, PaginatedResponse } from '../types';
 import type {
-  GradingSubmissionResponse,
   CompleteGradingRequest,
   GradeOverrideRequest,
-  ManualAdjustmentRequest,
   GradingAnalyticsResponse,
-  RegradeRequestResponse,
+  GradingSubmissionResponse,
+  ManualAdjustmentRequest,
   RegradeRequestCreationRequest,
+  RegradeRequestResponse,
   RegradeResponseRequest,
 } from '../types/grading.types';
-import type { ApiResponse, PaginatedResponse } from '../types';
+import { translateApiError } from '../utils/errorCodes';
+import { AuthService } from './api/auth.service';
 
 export class GradingService {
   private static async getHeaders() {
@@ -31,14 +31,14 @@ export class GradingService {
   }): Promise<ApiResponse<PaginatedResponse<GradingSubmissionResponse>>> {
     const headers = await this.getHeaders();
     const queryParams = new URLSearchParams();
-    
+
     if (params.page !== undefined) queryParams.append('page', params.page.toString());
     if (params.size !== undefined) queryParams.append('size', params.size.toString());
 
-    const response = await fetch(
-      `${API_BASE_URL}/grading/queue?${queryParams.toString()}`,
-      { method: 'GET', headers }
-    );
+    const response = await fetch(`${API_BASE_URL}/grading/queue?${queryParams.toString()}`, {
+      method: 'GET',
+      headers,
+    });
 
     if (!response.ok) {
       const error = await response.json();
@@ -55,7 +55,7 @@ export class GradingService {
   ): Promise<ApiResponse<PaginatedResponse<GradingSubmissionResponse>>> {
     const headers = await this.getHeaders();
     const queryParams = new URLSearchParams();
-    
+
     if (params.page !== undefined) queryParams.append('page', params.page.toString());
     if (params.size !== undefined) queryParams.append('size', params.size.toString());
 
@@ -77,10 +77,10 @@ export class GradingService {
     submissionId: string
   ): Promise<ApiResponse<GradingSubmissionResponse>> {
     const headers = await this.getHeaders();
-    const response = await fetch(
-      `${API_BASE_URL}/grading/submissions/${submissionId}`,
-      { method: 'GET', headers }
-    );
+    const response = await fetch(`${API_BASE_URL}/grading/submissions/${submissionId}`, {
+      method: 'GET',
+      headers,
+    });
 
     if (!response.ok) {
       const error = await response.json();
@@ -127,9 +127,7 @@ export class GradingService {
   }
 
   // Add manual adjustment
-  static async addManualAdjustment(
-    request: ManualAdjustmentRequest
-  ): Promise<ApiResponse<void>> {
+  static async addManualAdjustment(request: ManualAdjustmentRequest): Promise<ApiResponse<void>> {
     const headers = await this.getHeaders();
     const response = await fetch(`${API_BASE_URL}/grading/adjustment`, {
       method: 'POST',
@@ -150,10 +148,10 @@ export class GradingService {
     assessmentId: string
   ): Promise<ApiResponse<GradingAnalyticsResponse>> {
     const headers = await this.getHeaders();
-    const response = await fetch(
-      `${API_BASE_URL}/grading/analytics/${assessmentId}`,
-      { method: 'GET', headers }
-    );
+    const response = await fetch(`${API_BASE_URL}/grading/analytics/${assessmentId}`, {
+      method: 'GET',
+      headers,
+    });
 
     if (!response.ok) {
       const error = await response.json();
@@ -166,13 +164,13 @@ export class GradingService {
   // Export grades
   static async exportGrades(assessmentId: string): Promise<Blob> {
     const headers = await this.getHeaders();
-    const response = await fetch(
-      `${API_BASE_URL}/grading/export/${assessmentId}`,
-      { method: 'GET', headers }
-    );
+    const response = await fetch(`${API_BASE_URL}/grading/export/${assessmentId}`, {
+      method: 'GET',
+      headers,
+    });
 
     if (!response.ok) {
-      throw new Error('Không thể xuất bảng điểm.');
+      throw new Error('Không thể công khaig điểm.');
     }
 
     return response.blob();
@@ -181,10 +179,10 @@ export class GradingService {
   // Release grades
   static async releaseGrades(assessmentId: string): Promise<ApiResponse<void>> {
     const headers = await this.getHeaders();
-    const response = await fetch(
-      `${API_BASE_URL}/grading/release/${assessmentId}`,
-      { method: 'POST', headers }
-    );
+    const response = await fetch(`${API_BASE_URL}/grading/release/${assessmentId}`, {
+      method: 'POST',
+      headers,
+    });
 
     if (!response.ok) {
       const error = await response.json();
@@ -197,10 +195,10 @@ export class GradingService {
   // Release grades for submission
   static async releaseGradesForSubmission(submissionId: string): Promise<ApiResponse<void>> {
     const headers = await this.getHeaders();
-    const response = await fetch(
-      `${API_BASE_URL}/grading/release/submission/${submissionId}`,
-      { method: 'POST', headers }
-    );
+    const response = await fetch(`${API_BASE_URL}/grading/release/submission/${submissionId}`, {
+      method: 'POST',
+      headers,
+    });
 
     if (!response.ok) {
       const error = await response.json();
@@ -255,7 +253,7 @@ export class GradingService {
   }): Promise<ApiResponse<PaginatedResponse<RegradeRequestResponse>>> {
     const headers = await this.getHeaders();
     const queryParams = new URLSearchParams();
-    
+
     if (params.page !== undefined) queryParams.append('page', params.page.toString());
     if (params.size !== undefined) queryParams.append('size', params.size.toString());
 
@@ -279,7 +277,7 @@ export class GradingService {
   ): Promise<ApiResponse<PaginatedResponse<RegradeRequestResponse>>> {
     const headers = await this.getHeaders();
     const queryParams = new URLSearchParams();
-    
+
     if (params.page !== undefined) queryParams.append('page', params.page.toString());
     if (params.size !== undefined) queryParams.append('size', params.size.toString());
 
@@ -303,7 +301,7 @@ export class GradingService {
   ): Promise<ApiResponse<GradingSubmissionResponse>> {
     const headers = await this.getHeaders();
     const queryParams = reason ? `?reason=${encodeURIComponent(reason)}` : '';
-    
+
     const response = await fetch(
       `${API_BASE_URL}/grading/submissions/${submissionId}/invalidate${queryParams}`,
       { method: 'POST', headers }
@@ -318,14 +316,12 @@ export class GradingService {
   }
 
   // Get my result (student)
-  static async getMyResult(
-    submissionId: string
-  ): Promise<ApiResponse<GradingSubmissionResponse>> {
+  static async getMyResult(submissionId: string): Promise<ApiResponse<GradingSubmissionResponse>> {
     const headers = await this.getHeaders();
-    const response = await fetch(
-      `${API_BASE_URL}/grading/submissions/${submissionId}/my-result`,
-      { method: 'GET', headers }
-    );
+    const response = await fetch(`${API_BASE_URL}/grading/submissions/${submissionId}/my-result`, {
+      method: 'GET',
+      headers,
+    });
 
     if (!response.ok) {
       const error = await response.json();
@@ -338,10 +334,10 @@ export class GradingService {
   // Trigger AI review
   static async triggerAiReview(submissionId: string): Promise<ApiResponse<void>> {
     const headers = await this.getHeaders();
-    const response = await fetch(
-      `${API_BASE_URL}/grading/submissions/${submissionId}/ai-review`,
-      { method: 'POST', headers }
-    );
+    const response = await fetch(`${API_BASE_URL}/grading/submissions/${submissionId}/ai-review`, {
+      method: 'POST',
+      headers,
+    });
 
     if (!response.ok) {
       const error = await response.json();

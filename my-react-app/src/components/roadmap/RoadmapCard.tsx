@@ -8,7 +8,7 @@ interface RoadmapCardProps {
 }
 
 const STATUS_LABELS: Record<string, string> = {
-  PUBLISHED: 'Đã xuất bản',
+  PUBLISHED: 'Đã công khai',
   DRAFT: 'Nháp',
   ARCHIVED: 'Lưu trữ',
   GENERATED: 'Sẵn sàng',
@@ -24,7 +24,6 @@ export default function RoadmapCard({ roadmap, progressPercent = 0 }: Readonly<R
     <article className={`rmc ${hasProgress ? 'rmc--active' : ''}`}>
       <div className="rmc__accent" aria-hidden="true" />
       <div className="rmc__inner">
-
         <div className="rmc__tags">
           <span className="rmc__tag rmc__tag--subject">{roadmap.subject}</span>
           <span className="rmc__tag rmc__tag--grade">Lớp {roadmap.gradeLevel}</span>
@@ -35,9 +34,7 @@ export default function RoadmapCard({ roadmap, progressPercent = 0 }: Readonly<R
 
         <h3 className="rmc__title">{roadmap.name}</h3>
 
-        {roadmap.description && (
-          <p className="rmc__desc">{roadmap.description}</p>
-        )}
+        {roadmap.description && <p className="rmc__desc">{roadmap.description}</p>}
 
         <div className="rmc__stats">
           <div className="rmc__stat">
@@ -70,9 +67,7 @@ export default function RoadmapCard({ roadmap, progressPercent = 0 }: Readonly<R
             {hasProgress ? 'Tiếp tục học →' : 'Bắt đầu học →'}
           </Link>
         </div>
-
       </div>
     </article>
   );
 }
-

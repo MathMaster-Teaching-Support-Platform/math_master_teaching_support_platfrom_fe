@@ -84,7 +84,7 @@ function AddAssessmentModal({
 
   const statusLabel: Record<string, string> = {
     DRAFT: 'Nháp',
-    PUBLISHED: 'Đã xuất bản',
+    PUBLISHED: 'Đã công khai',
     CLOSED: 'Đã đóng',
   };
 
@@ -696,7 +696,7 @@ export default function TeacherCourseLessons() {
                   <span>bài kiểm tra</span>
                 </div>
                 <div className="stat-card">
-                  <p>Đã xuất bản</p>
+                  <p>Đã công khai</p>
                   <h3>{assessments.filter((a) => a.assessmentStatus === 'PUBLISHED').length}</h3>
                   <span>bài kiểm tra</span>
                 </div>

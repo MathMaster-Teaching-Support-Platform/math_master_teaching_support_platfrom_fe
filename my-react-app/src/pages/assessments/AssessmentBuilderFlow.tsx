@@ -116,9 +116,7 @@ export function AssessmentBuilderFlowBody() {
         if (cancelled) return;
         setGaps([]);
         setCoverageOk(false);
-        setCoverageError(
-          err instanceof Error ? err.message : 'Không thể kiểm tra coverage.'
-        );
+        setCoverageError(err instanceof Error ? err.message : 'Không thể kiểm tra coverage.');
       })
       .finally(() => {
         if (!cancelled) setValidating(false);
@@ -141,14 +139,11 @@ export function AssessmentBuilderFlowBody() {
   const generatedAssessment = assessmentQuery.data?.result;
   const generatedQuestions = questionsQuery.data?.result ?? [];
   const publishSummary = summaryQuery.data?.result;
-  let publishButtonLabel = 'Xuất bản đề';
-  if (publishMutation.isPending) publishButtonLabel = 'Đang xuất bản...';
-  else if (generatedAssessment?.status === 'PUBLISHED') publishButtonLabel = 'Đã xuất bản';
+  let publishButtonLabel = 'Công khai đề';
+  if (publishMutation.isPending) publishButtonLabel = 'Đang công khai...';
+  else if (generatedAssessment?.status === 'PUBLISHED') publishButtonLabel = 'Đã công khai';
 
-  const shortageCells = useMemo(
-    () => gaps.filter((g) => g.available < g.required),
-    [gaps]
-  );
+  const shortageCells = useMemo(() => gaps.filter((g) => g.available < g.required), [gaps]);
 
   const canGenerate =
     !!selectedMatrixId &&
@@ -195,7 +190,7 @@ export function AssessmentBuilderFlowBody() {
       setGeneratedAssessmentId(createdId);
       setToast({
         type: 'success',
-        message: 'Đã tạo đề nháp thành công. Tiếp tục bước rà soát cuối và xuất bản.',
+        message: 'Đã tạo đề nháp thành công. Tiếp tục bước rà soát cuối và công khai.',
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Không thể tạo đề nháp.';
@@ -219,13 +214,13 @@ export function AssessmentBuilderFlowBody() {
 
     try {
       await publishMutation.mutateAsync(generatedAssessmentId);
-      setToast({ type: 'success', message: 'Đã xuất bản đề thành công.' });
+      setToast({ type: 'success', message: 'Đã công khai đề thành công.' });
       void assessmentQuery.refetch();
       void summaryQuery.refetch();
     } catch (error) {
       setToast({
         type: 'error',
-        message: error instanceof Error ? error.message : 'Không thể xuất bản đề.',
+        message: error instanceof Error ? error.message : 'Không thể công khai đề.',
       });
     }
   }
@@ -233,10 +228,7 @@ export function AssessmentBuilderFlowBody() {
   return (
     <>
       <nav className="abf-quicknav">
-        <button
-          className="abf-quicknav__item"
-          onClick={() => navigate('/teacher/exam-matrices')}
-        >
+        <button className="abf-quicknav__item" onClick={() => navigate('/teacher/exam-matrices')}>
           <span className="abf-quicknav__icon abf-nav-indigo">
             <Ruler size={14} />
           </span>
@@ -259,10 +251,7 @@ export function AssessmentBuilderFlowBody() {
           <ArrowRight size={14} className="abf-quicknav__arrow" />
         </button>
         <span className="abf-quicknav__divider" />
-        <button
-          className="abf-quicknav__item"
-          onClick={() => navigate('/teacher/question-banks')}
-        >
+        <button className="abf-quicknav__item" onClick={() => navigate('/teacher/question-banks')}>
           <span className="abf-quicknav__icon abf-nav-blue">
             <Library size={14} />
           </span>
@@ -334,8 +323,8 @@ export function AssessmentBuilderFlowBody() {
         <article className="data-card">
           <h3>Bước 1: Tạo đề thi từ ma trận + ngân hàng</h3>
           <p className="muted" style={{ margin: '0 0 0.6rem' }}>
-            Ma trận quyết định cấu trúc (chương, mức độ, số câu). Chọn 1 hoặc nhiều
-            ngân hàng để hệ thống random câu hỏi từ pool gộp lại theo tiêu chí ma trận.
+            Ma trận quyết định cấu trúc (chương, mức độ, số câu). Chọn 1 hoặc nhiều ngân hàng để hệ
+            thống random câu hỏi từ pool gộp lại theo tiêu chí ma trận.
           </p>
 
           <label className="abf-field">
@@ -454,12 +443,10 @@ export function AssessmentBuilderFlowBody() {
                     <li key={idx} className="abf-gap-item">
                       <AlertTriangle size={13} />
                       <span>
-                        Bank thiếu{' '}
-                        <strong>{cell.chapterTitle ?? 'Chương ?'}</strong>
+                        Bank thiếu <strong>{cell.chapterTitle ?? 'Chương ?'}</strong>
                         {' – '}
                         <strong>
-                          {COG_FULL_LABEL[cell.cognitiveLevel ?? ''] ??
-                            cell.cognitiveLevel}
+                          {COG_FULL_LABEL[cell.cognitiveLevel ?? ''] ?? cell.cognitiveLevel}
                         </strong>
                         : cần {cell.required} câu, hiện có {cell.available}.
                       </span>
@@ -507,7 +494,7 @@ export function AssessmentBuilderFlowBody() {
         </article>
 
         <article className="data-card">
-          <h3>Bước 2: Rà soát cuối và xuất bản</h3>
+          <h3>Bước 2: Rà soát cuối và công khai</h3>
           {!generatedAssessmentId && (
             <p className="empty">Hãy tạo đề nháp trước để bật bước rà soát cuối.</p>
           )}
@@ -543,11 +530,9 @@ export function AssessmentBuilderFlowBody() {
                   </p>
                   {(generatedAssessment.generationSummary.warnings || []).length > 0 && (
                     <ul style={{ margin: 0, paddingLeft: 18 }}>
-                      {(generatedAssessment.generationSummary.warnings || []).map(
-                        (warning) => (
-                          <li key={warning}>{warning}</li>
-                        )
-                      )}
+                      {(generatedAssessment.generationSummary.warnings || []).map((warning) => (
+                        <li key={warning}>{warning}</li>
+                      ))}
                     </ul>
                   )}
                 </div>
@@ -557,8 +542,8 @@ export function AssessmentBuilderFlowBody() {
                 <div className="data-card" style={{ minHeight: 0 }}>
                   <h3>Phạm vi bài học</h3>
                   <p className="muted" style={{ marginBottom: 12 }}>
-                    Đề này bao gồm {generatedAssessment.lessons.length} bài học (tự động lấy
-                    từ ma trận)
+                    Đề này bao gồm {generatedAssessment.lessons.length} bài học (tự động lấy từ ma
+                    trận)
                   </p>
                   <div className="lesson-chips">
                     {generatedAssessment.lessons.map((lesson) => (
@@ -582,13 +567,11 @@ export function AssessmentBuilderFlowBody() {
                     )}
                     <strong>
                       {publishSummary.canPublish
-                        ? 'Sẵn sàng xuất bản'
-                        : 'Cần xử lý trước khi xuất bản'}
+                        ? 'Sẵn sàng công khai'
+                        : 'Cần xử lý trước khi công khai'}
                     </strong>
                   </div>
-                  {publishSummary.validationMessage && (
-                    <p>{publishSummary.validationMessage}</p>
-                  )}
+                  {publishSummary.validationMessage && <p>{publishSummary.validationMessage}</p>}
                 </div>
               )}
 

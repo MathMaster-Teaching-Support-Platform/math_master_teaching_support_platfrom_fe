@@ -85,7 +85,7 @@ const AdminCourseReviewDetail: React.FC = () => {
     if (!course) return;
     approveMutation.mutate(course.id, {
       onSuccess: () => {
-        showToast({ type: 'success', message: 'Đã duyệt và xuất bản khóa học.' });
+        showToast({ type: 'success', message: 'Đã duyệt và công khai khóa học.' });
         refetch();
         // Optionally redirect back to review list
         setTimeout(() => {

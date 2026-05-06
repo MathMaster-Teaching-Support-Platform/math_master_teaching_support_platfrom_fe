@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle2, Eye, EyeOff, BookOpen } from 'lucide-react';
+import { AlertCircle, BookOpen, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import type { CourseResponse } from '../types/course.types';
 
 export interface StatusBadge {
@@ -40,7 +40,9 @@ export const canSubmitForReview = (course: CourseResponse): boolean => {
   return (
     (course.status === 'DRAFT' || course.status === 'REJECTED') &&
     course.lessonsCount > 0 &&
-    (!course.discountedPrice || !course.originalPrice || course.discountedPrice < course.originalPrice)
+    (!course.discountedPrice ||
+      !course.originalPrice ||
+      course.discountedPrice < course.originalPrice)
   );
 };
 
@@ -49,7 +51,7 @@ export const canSubmitForReview = (course: CourseResponse): boolean => {
  */
 export const getCourseStatusError = (course: CourseResponse): string | null => {
   if (!course.published) {
-    return 'Khóa học này chưa được xuất bản.';
+    return 'Khóa học này chưa được công khai.';
   }
   if (course.status === 'PENDING_REVIEW') {
     return 'Khóa học đang chờ duyệt.';

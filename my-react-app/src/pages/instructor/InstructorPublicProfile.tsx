@@ -1,19 +1,19 @@
-import React from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { 
-  Users, 
-  Star, 
-  PlayCircle, 
-  MessageSquare, 
-  Globe, 
-  Linkedin, 
-  Youtube, 
+import {
+  ArrowLeft,
   Facebook,
-  ArrowLeft
+  Globe,
+  Linkedin,
+  MessageSquare,
+  PlayCircle,
+  Star,
+  Users,
+  Youtube,
 } from 'lucide-react';
-import { useTeacherProfile, useInstructorCourses } from '../../hooks/useCourses';
-import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import React from 'react';
+import { Link, useParams } from 'react-router-dom';
 import { CourseCard } from '../../components/course/CourseCard';
+import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { useInstructorCourses, useTeacherProfile } from '../../hooks/useCourses';
 import type { CourseResponse } from '../../types';
 
 const InstructorPublicProfile: React.FC = () => {
@@ -40,7 +40,16 @@ const InstructorPublicProfile: React.FC = () => {
       <DashboardLayout role="student" user={{ name: 'Học sinh', avatar: '', role: 'student' }}>
         <div className="error-container" style={{ padding: '4rem', textAlign: 'center' }}>
           <h2>Không tìm thấy giảng viên</h2>
-          <Link to="/student/courses" className="btn secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginTop: '1rem' }}>
+          <Link
+            to="/student/courses"
+            className="btn secondary"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              marginTop: '1rem',
+            }}
+          >
             <ArrowLeft size={18} />
             Quay lại danh sách khóa học
           </Link>
@@ -66,26 +75,52 @@ const InstructorPublicProfile: React.FC = () => {
               <div className="identity-text">
                 <span className="badge-instructor">GIẢNG VIÊN</span>
                 <h1 className="instructor-name-xl">{profile.fullName}</h1>
-                <p className="instructor-position-xl">{profile.position || 'Giảng viên chuyên nghiệp'}</p>
-                
+                <p className="instructor-position-xl">
+                  {profile.position || 'Giảng viên chuyên nghiệp'}
+                </p>
+
                 <div className="instructor-social-links">
                   {profile.websiteUrl && (
-                    <a href={profile.websiteUrl} target="_blank" rel="noopener noreferrer" className="social-link" title="Website">
+                    <a
+                      href={profile.websiteUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="social-link"
+                      title="Website"
+                    >
                       <Globe size={20} />
                     </a>
                   )}
                   {profile.linkedinUrl && (
-                    <a href={profile.linkedinUrl} target="_blank" rel="noopener noreferrer" className="social-link" title="LinkedIn">
+                    <a
+                      href={profile.linkedinUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="social-link"
+                      title="LinkedIn"
+                    >
                       <Linkedin size={20} />
                     </a>
                   )}
                   {profile.youtubeUrl && (
-                    <a href={profile.youtubeUrl} target="_blank" rel="noopener noreferrer" className="social-link" title="YouTube">
+                    <a
+                      href={profile.youtubeUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="social-link"
+                      title="YouTube"
+                    >
                       <Youtube size={20} />
                     </a>
                   )}
                   {profile.facebookUrl && (
-                    <a href={profile.facebookUrl} target="_blank" rel="noopener noreferrer" className="social-link" title="Facebook">
+                    <a
+                      href={profile.facebookUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="social-link"
+                      title="Facebook"
+                    >
                       <Facebook size={20} />
                     </a>
                   )}
@@ -135,7 +170,9 @@ const InstructorPublicProfile: React.FC = () => {
                 {profile.description ? (
                   <p>{profile.description}</p>
                 ) : (
-                  <p className="no-data" style={{ opacity: 0.5, fontStyle: 'italic' }}>Giảng viên này chưa cập nhật tiểu sử.</p>
+                  <p className="no-data" style={{ opacity: 0.5, fontStyle: 'italic' }}>
+                    Giảng viên này chưa cập nhật tiểu sử.
+                  </p>
                 )}
               </div>
             </section>
@@ -143,9 +180,11 @@ const InstructorPublicProfile: React.FC = () => {
             {/* ── Courses ── */}
             <section className="profile-section">
               <div className="section-header-row">
-                <h2 className="section-title-premium">Khóa học của {profile.fullName} ({courses?.length || 0})</h2>
+                <h2 className="section-title-premium">
+                  Khóa học của {profile.fullName} ({courses?.length || 0})
+                </h2>
               </div>
-              
+
               {isCoursesLoading ? (
                 <div className="loading-mini">Đang tải danh sách khóa học...</div>
               ) : courses && courses.length > 0 ? (
@@ -157,7 +196,7 @@ const InstructorPublicProfile: React.FC = () => {
               ) : (
                 <div className="no-courses-card">
                   <PlayCircle size={48} className="empty-icon" />
-                  <p>Giảng viên hiện chưa có khóa học nào được xuất bản.</p>
+                  <p>Giảng viên hiện chưa có khóa học nào được công khai.</p>
                 </div>
               )}
             </section>
