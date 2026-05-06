@@ -157,7 +157,7 @@ const adminGroups: MenuGroup[] = [
     items: [
       { path: '/admin/cash-flow', icon: Wallet, label: 'Dòng tiền' },
       { path: '/admin/token-config', icon: Coins, label: 'Cấu hình Token' },
-      { path: '/admin/system-config', icon: ShieldCheck, label: 'Cấu hình hệ thống' },
+      { path: '/admin/system-config', icon: ShieldCheck, label: 'Chính sách' },
     ],
   },
   {
