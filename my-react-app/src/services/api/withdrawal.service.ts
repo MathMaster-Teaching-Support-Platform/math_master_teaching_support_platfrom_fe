@@ -11,7 +11,7 @@ import { AuthService } from './auth.service';
 
 function authHeaders(json = false): Record<string, string> {
   const token = AuthService.getToken();
-  if (!token) throw new Error('Authentication required');
+  if (!token) throw new Error('Bạn chưa đăng nhập. Vui lòng đăng nhập lại.');
   const h: Record<string, string> = {
     Authorization: `Bearer ${token}`,
     accept: '*/*',
@@ -107,7 +107,7 @@ export const WithdrawalService = {
     adminNote?: string
   ): Promise<ApiResponse<WithdrawalRequestResponse>> {
     const token = AuthService.getToken();
-    if (!token) throw new Error('Authentication required');
+    if (!token) throw new Error('Bạn chưa đăng nhập. Vui lòng đăng nhập lại.');
     const formData = new FormData();
     formData.append('proofImage', proofImage);
     if (adminNote) formData.append('adminNote', adminNote);

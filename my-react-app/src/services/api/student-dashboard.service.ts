@@ -1,4 +1,5 @@
 import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
+import { translateApiError } from '../../utils/errorCodes';
 import type { ApiResponse } from '../../types/auth.types';
 import { AuthService } from './auth.service';
 
@@ -81,7 +82,7 @@ export interface StudentDashboardPayload {
 
 function authHeaders(): Record<string, string> {
   const token = AuthService.getToken();
-  if (!token) throw new Error('Authentication required');
+  if (!token) throw new Error('Bạn chưa đăng nhập. Vui lòng đăng nhập lại.');
   return {
     Authorization: `Bearer ${token}`,
     accept: '*/*',
@@ -97,7 +98,7 @@ export class StudentDashboardService {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
-      throw new Error(error.message || 'Failed to fetch student dashboard');
+      throw new Error(translateApiError(error.message || 'Failed to fetch student dashboard'));
     }
 
     return response.json();

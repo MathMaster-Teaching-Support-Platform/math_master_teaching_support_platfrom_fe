@@ -1,4 +1,5 @@
 import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
+import { translateApiError } from '../../utils/errorCodes';
 import type {
   ChatApiError,
   ChatApiResponse,
@@ -34,7 +35,7 @@ export class ChatSessionService {
 
   private static async getHeaders(): Promise<Record<string, string>> {
     const token = AuthService.getToken();
-    if (!token) throw new Error('Authentication required');
+    if (!token) throw new Error('Bạn chưa đăng nhập. Vui lòng đăng nhập lại.');
 
     return {
       Authorization: `Bearer ${token}`,
@@ -51,7 +52,7 @@ export class ChatSessionService {
         typeof body?.message === 'string' && body.message.trim().length > 0
           ? body.message
           : fallbackMessage;
-      const error = new Error(message) as ChatApiError;
+      const error = new Error(translateApiError(message)) as ChatApiError;
       if (typeof body?.code === 'number') {
         error.code = body.code;
       }

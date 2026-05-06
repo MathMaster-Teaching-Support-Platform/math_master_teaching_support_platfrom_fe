@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '../../config/api.config';
+import { translateApiError } from '../../utils/errorCodes';
 import { AuthService } from './auth.service';
 import type { ApiResponse } from '../../types';
 
@@ -13,7 +14,7 @@ export interface CurriculumItem {
 export class CurriculumService {
   private static async getHeaders() {
     const token = AuthService.getToken();
-    if (!token) throw new Error('Authentication required');
+    if (!token) throw new Error('Bạn chưa đăng nhập. Vui lòng đăng nhập lại.');
     return { Authorization: `Bearer ${token}`, accept: '*/*' };
   }
 
@@ -22,7 +23,7 @@ export class CurriculumService {
     const res = await fetch(`${API_BASE_URL}/curriculums/all`, { method: 'GET', headers });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error((err as { message?: string }).message || 'Failed to fetch curricula');
+      throw new Error(translateApiError((err as { message?: string }).message || 'Failed to fetch curricula'));
     }
     return res.json();
   }

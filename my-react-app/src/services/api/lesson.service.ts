@@ -1,4 +1,5 @@
 import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
+import { translateApiError } from '../../utils/errorCodes';
 import { AuthService } from './auth.service';
 import type { LessonQueryParams, LessonResponse } from '../../types/lesson.types';
 import type { ApiResponse } from '../../types';
@@ -6,7 +7,7 @@ import type { ApiResponse } from '../../types';
 export class LessonService {
   private static async getHeaders() {
     const token = AuthService.getToken();
-    if (!token) throw new Error('Authentication required');
+    if (!token) throw new Error('Bạn chưa đăng nhập. Vui lòng đăng nhập lại.');
     return {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
@@ -28,7 +29,7 @@ export class LessonService {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
-      throw new Error((error as { message?: string }).message || 'Failed to fetch lessons');
+      throw new Error(translateApiError((error as { message?: string }).message || 'Failed to fetch lessons'));
     }
 
     return response.json();
@@ -43,7 +44,7 @@ export class LessonService {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
-      throw new Error((error as { message?: string }).message || 'Failed to fetch all lessons');
+      throw new Error(translateApiError((error as { message?: string }).message || 'Failed to fetch all lessons'));
     }
 
     return response.json();
@@ -58,7 +59,7 @@ export class LessonService {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
-      throw new Error((error as { message?: string }).message || 'Failed to fetch lesson detail');
+      throw new Error(translateApiError((error as { message?: string }).message || 'Failed to fetch lesson detail'));
     }
 
     return response.json();
@@ -86,7 +87,7 @@ export class LessonService {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
-      throw new Error((error as { message?: string }).message || 'Failed to fetch chapter lessons');
+      throw new Error(translateApiError((error as { message?: string }).message || 'Failed to fetch chapter lessons'));
     }
 
     return response.json();

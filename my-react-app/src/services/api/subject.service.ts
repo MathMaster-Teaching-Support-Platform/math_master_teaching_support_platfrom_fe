@@ -1,11 +1,12 @@
 import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
+import { translateApiError } from '../../utils/errorCodes';
 import type { SubjectsApiResponse } from '../../types';
 import { AuthService } from './auth.service';
 
 export class SubjectService {
   private static async getHeaders() {
     const token = AuthService.getToken();
-    if (!token) throw new Error('Authentication required');
+    if (!token) throw new Error('Bạn chưa đăng nhập. Vui lòng đăng nhập lại.');
 
     return {
       Authorization: `Bearer ${token}`,
@@ -17,12 +18,9 @@ export class SubjectService {
   private static parseApiError(payload: unknown, fallback: string): Error {
     const p = payload as { message?: string; code?: number };
     if (typeof p?.message === 'string' && p.message.trim().length > 0) {
-      return new Error(p.message);
+      return new Error(translateApiError(p.message));
     }
-    if (typeof p?.code === 'number' && p.code !== 1000) {
-      return new Error(`${fallback} (code: ${p.code})`);
-    }
-    return new Error(fallback);
+    return new Error(translateApiError(fallback));
   }
 
   static async getSubjects(): Promise<SubjectsApiResponse> {
@@ -52,7 +50,7 @@ export class SubjectService {
       normalizedGradeLevel.toLowerCase() === 'undefined' ||
       normalizedGradeLevel.toLowerCase() === 'null'
     ) {
-      throw new Error('Invalid grade level');
+      throw new Error(translateApiError('Invalid grade level'));
     }
 
     const headers = await this.getHeaders();

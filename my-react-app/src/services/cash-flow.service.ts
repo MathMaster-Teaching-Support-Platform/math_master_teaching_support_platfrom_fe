@@ -1,5 +1,6 @@
 import { API_BASE_URL } from '../config/api.config';
 import { AuthService } from './api/auth.service';
+import { translateApiError } from '../utils/errorCodes';
 import type {
   CashFlowCategory,
   CashFlowChartPoint,
@@ -29,7 +30,7 @@ interface ApiWrapper<T> {
 async function handleResponse<T>(res: Response): Promise<T> {
   const body = (await res.json().catch(() => null)) as ApiWrapper<T> | null;
   if (!res.ok) throw new Error(body?.message ?? `HTTP ${res.status}`);
-  if (body == null) throw new Error('Empty response');
+  if (body == null) throw new Error(translateApiError('Empty response'));
   return body.result;
 }
 

@@ -1,5 +1,6 @@
 import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
 import { AuthService } from './auth.service';
+import { translateApiError } from '../../utils/errorCodes';
 import type { LessonResponse } from '../../types/lesson.types';
 import type {
   ApiEnvelope,
@@ -72,18 +73,18 @@ export class LessonSlideService {
         code?: number;
       };
       return {
-        message: payload.message || payload.error || fallback,
+        message: translateApiError(payload.message || payload.error || fallback),
         code: payload.code,
       };
     }
 
     const text = await response.text().catch(() => '');
-    return { message: text.trim() || fallback };
+    return { message: translateApiError(text.trim() || fallback) };
   }
 
   private static async getAuthHeaders(contentTypeJson = true): Promise<Record<string, string>> {
     const token = AuthService.getToken();
-    if (!token) throw new Error('Authentication required');
+    if (!token) throw new Error('Bạn chưa đăng nhập. Vui lòng đăng nhập lại.');
 
     const headers: Record<string, string> = {
       Authorization: `Bearer ${token}`,
@@ -105,11 +106,11 @@ export class LessonSlideService {
         message?: string;
         error?: string;
       };
-      return payload.message || payload.error || fallback;
+      return translateApiError(payload.message || payload.error || fallback);
     }
 
     const text = await response.text().catch(() => '');
-    return text.trim() || fallback;
+    return translateApiError(text.trim() || fallback);
   }
 
   private static getFilenameFromDisposition(disposition: string | null): string {

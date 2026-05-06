@@ -1,6 +1,7 @@
 import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
 import { AuthService } from './auth.service';
 import type { LessonSlideTemplate, ApiEnvelope } from '../../types/lessonSlide.types';
+import { translateApiError } from '../../utils/errorCodes';
 
 export interface AdminSlideTemplateCreatePayload {
   name: string;
@@ -24,7 +25,7 @@ interface DownloadResult {
 export class AdminSlideTemplateService {
   private static async getAuthHeaders(): Promise<Record<string, string>> {
     const token = AuthService.getToken();
-    if (!token) throw new Error('Authentication required');
+    if (!token) throw new Error('Bạn chưa đăng nhập. Vui lòng đăng nhập lại.');
     return { Authorization: `Bearer ${token}`, accept: '*/*' };
   }
 
@@ -58,7 +59,7 @@ export class AdminSlideTemplateService {
       headers,
     });
     if (!response.ok) {
-      throw new Error(await this.readErrorMessage(response, 'Failed to fetch slide templates'));
+      throw new Error(await this.readErrorMessage(response, translateApiError('Failed to fetch slide templates')));
     }
     return response.json() as Promise<ApiEnvelope<LessonSlideTemplate[]>>;
   }
@@ -71,7 +72,7 @@ export class AdminSlideTemplateService {
       { method: 'GET', headers }
     );
     if (!response.ok) {
-      throw new Error(await this.readErrorMessage(response, 'Failed to fetch template'));
+      throw new Error(await this.readErrorMessage(response, translateApiError('Failed to fetch template')));
     }
     return response.json() as Promise<ApiEnvelope<LessonSlideTemplate>>;
   }
@@ -93,7 +94,7 @@ export class AdminSlideTemplateService {
       body: formData,
     });
     if (!response.ok) {
-      throw new Error(await this.readErrorMessage(response, 'Failed to create slide template'));
+      throw new Error(await this.readErrorMessage(response, translateApiError('Failed to create slide template')));
     }
     return response.json() as Promise<ApiEnvelope<LessonSlideTemplate>>;
   }
@@ -115,7 +116,7 @@ export class AdminSlideTemplateService {
       { method: 'PUT', headers, body: formData }
     );
     if (!response.ok) {
-      throw new Error(await this.readErrorMessage(response, 'Failed to update slide template'));
+      throw new Error(await this.readErrorMessage(response, translateApiError('Failed to update slide template')));
     }
     return response.json() as Promise<ApiEnvelope<LessonSlideTemplate>>;
   }
@@ -128,7 +129,7 @@ export class AdminSlideTemplateService {
       { method: 'PATCH', headers }
     );
     if (!response.ok) {
-      throw new Error(await this.readErrorMessage(response, 'Failed to activate template'));
+      throw new Error(await this.readErrorMessage(response, translateApiError('Failed to activate template')));
     }
     return response.json() as Promise<ApiEnvelope<LessonSlideTemplate>>;
   }
@@ -141,7 +142,7 @@ export class AdminSlideTemplateService {
       { method: 'PATCH', headers }
     );
     if (!response.ok) {
-      throw new Error(await this.readErrorMessage(response, 'Failed to deactivate template'));
+      throw new Error(await this.readErrorMessage(response, translateApiError('Failed to deactivate template')));
     }
     return response.json() as Promise<ApiEnvelope<LessonSlideTemplate>>;
   }
@@ -154,7 +155,7 @@ export class AdminSlideTemplateService {
       { method: 'DELETE', headers }
     );
     if (!response.ok) {
-      throw new Error(await this.readErrorMessage(response, 'Failed to delete template'));
+      throw new Error(await this.readErrorMessage(response, translateApiError('Failed to delete template')));
     }
   }
 
@@ -166,7 +167,7 @@ export class AdminSlideTemplateService {
       { method: 'GET', headers }
     );
     if (!response.ok) {
-      throw new Error(await this.readErrorMessage(response, 'Failed to download template'));
+      throw new Error(await this.readErrorMessage(response, translateApiError('Failed to download template')));
     }
     return {
       blob: await response.blob(),
@@ -187,7 +188,7 @@ export class AdminSlideTemplateService {
       { method: 'PATCH', headers }
     );
     if (!response.ok) {
-      throw new Error(await this.readErrorMessage(response, 'Failed to regenerate preview'));
+      throw new Error(await this.readErrorMessage(response, translateApiError('Failed to regenerate preview')));
     }
     return response.json() as Promise<ApiEnvelope<LessonSlideTemplate>>;
   }

@@ -23,7 +23,7 @@ import type {
 
 function authHeaders(): Record<string, string> {
   const token = AuthService.getToken();
-  if (!token) throw new Error('Authentication required');
+  if (!token) throw new Error('Bạn chưa đăng nhập. Vui lòng đăng nhập lại.');
   return { Authorization: `Bearer ${token}` };
 }
 

@@ -1,4 +1,5 @@
 import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
+import { translateApiError } from '../../utils/errorCodes';
 import type {
   ApiResponse,
   ForgotPasswordRequest,
@@ -213,7 +214,7 @@ export class AuthService {
    */
   static async selectRole(data: RoleSelectionRequest): Promise<ApiResponse<LoginResponse>> {
     const token = this.getToken();
-    if (!token) throw new Error('Authentication required');
+    if (!token) throw new Error('Bạn chưa đăng nhập. Vui lòng đăng nhập lại.');
 
     const response = await fetch(`${API_BASE_URL}/auth/select-role`, {
       method: 'POST',
@@ -227,7 +228,7 @@ export class AuthService {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Role selection failed');
+      throw new Error(translateApiError(error.message || 'Role selection failed'));
     }
 
     return response.json();

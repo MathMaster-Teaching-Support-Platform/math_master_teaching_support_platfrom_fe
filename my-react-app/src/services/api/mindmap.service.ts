@@ -1,5 +1,6 @@
 import { API_BASE_URL, API_ENDPOINTS } from '../../config/api.config';
 import { AuthService } from './auth.service';
+import { translateApiError } from '../../utils/errorCodes';
 import type {
   MindmapGenerateRequest,
   MindmapGenerateResponse,
@@ -20,9 +21,8 @@ interface DownloadMindmapResult {
 export class MindmapService {
   private static async throwApiError(response: Response, fallback: string): Promise<never> {
     const payload = await response.json().catch(() => ({}));
-    const error = new Error(
-      (payload as { message?: string }).message || (payload as { error?: string }).error || fallback
-    ) as Error & { code?: number };
+    const msg = (payload as { message?: string }).message || (payload as { error?: string }).error || fallback;
+    const error = new Error(translateApiError(msg)) as Error & { code?: number };
     if (typeof (payload as { code?: unknown }).code === 'number') {
       error.code = (payload as { code: number }).code;
     }
@@ -39,7 +39,7 @@ export class MindmapService {
 
   private static async getHeaders() {
     const token = AuthService.getToken();
-    if (!token) throw new Error('Authentication required');
+    if (!token) throw new Error('Bạn chưa đăng nhập. Vui lòng đăng nhập lại.');
     return {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
@@ -96,7 +96,7 @@ export class MindmapService {
     });
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Failed to update mindmap');
+      throw new Error(translateApiError(error.message || 'Failed to update mindmap'));
     }
     return response.json();
   }
@@ -136,7 +136,7 @@ export class MindmapService {
     });
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Failed to delete mindmap');
+      throw new Error(translateApiError(error.message || 'Failed to delete mindmap'));
     }
     return response.json();
   }
@@ -165,7 +165,7 @@ export class MindmapService {
     const response = await fetch(url, { method: 'GET', headers });
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Failed to fetch mindmaps');
+      throw new Error(translateApiError(error.message || 'Failed to fetch mindmaps'));
     }
     return response.json();
   }
@@ -179,7 +179,7 @@ export class MindmapService {
     });
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Failed to fetch mindmap');
+      throw new Error(translateApiError(error.message || 'Failed to fetch mindmap'));
     }
     return response.json();
   }
@@ -193,7 +193,7 @@ export class MindmapService {
     });
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Failed to fetch public mindmap');
+      throw new Error(translateApiError(error.message || 'Failed to fetch public mindmap'));
     }
     return response.json();
   }
@@ -203,7 +203,7 @@ export class MindmapService {
     format: 'png' | 'pdf' = 'png'
   ): Promise<DownloadMindmapResult> {
     const token = AuthService.getToken();
-    if (!token) throw new Error('Authentication required');
+    if (!token) throw new Error('Bạn chưa đăng nhập. Vui lòng đăng nhập lại.');
 
     const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.MINDMAPS_EXPORT(id, format)}`, {
       method: 'GET',
@@ -277,7 +277,7 @@ export class MindmapService {
     });
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Failed to fetch public mindmaps');
+      throw new Error(translateApiError(error.message || 'Failed to fetch public mindmaps'));
     }
 
     const payload = (await response.json()) as ApiResponse<
@@ -340,7 +340,7 @@ export class MindmapService {
     });
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Failed to fetch public mindmaps');
+      throw new Error(translateApiError(error.message || 'Failed to fetch public mindmaps'));
     }
     return response.json();
   }
@@ -357,7 +357,7 @@ export class MindmapService {
     });
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Failed to create node');
+      throw new Error(translateApiError(error.message || 'Failed to create node'));
     }
     return response.json();
   }
@@ -379,7 +379,7 @@ export class MindmapService {
     });
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Failed to update node');
+      throw new Error(translateApiError(error.message || 'Failed to update node'));
     }
     return response.json();
   }
@@ -404,7 +404,7 @@ export class MindmapService {
         }
       }
 
-      throw new Error(errorMessage);
+      throw new Error(translateApiError(errorMessage));
     }
 
     const responseText = await response.text();

@@ -40,7 +40,7 @@ interface ApiResponse<T> {
 
 function authHeaders(json = false): Record<string, string> {
   const token = AuthService.getToken();
-  if (!token) throw new Error('Authentication required');
+  if (!token) throw new Error('Bạn chưa đăng nhập. Vui lòng đăng nhập lại.');
   const h: Record<string, string> = { Authorization: `Bearer ${token}`, accept: '*/*' };
   if (json) h['Content-Type'] = 'application/json';
   return h;

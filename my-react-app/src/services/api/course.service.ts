@@ -60,7 +60,7 @@ export class CourseService {
 
   private static async getHeaders() {
     const token = AuthService.getToken();
-    if (!token) throw new Error('Authentication required');
+    if (!token) throw new Error('Bạn chưa đăng nhập. Vui lòng đăng nhập lại.');
     return {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
@@ -70,7 +70,7 @@ export class CourseService {
 
   private static async getAuthHeaders() {
     const token = AuthService.getToken();
-    if (!token) throw new Error('Authentication required');
+    if (!token) throw new Error('Bạn chưa đăng nhập. Vui lòng đăng nhập lại.');
     return {
       Authorization: `Bearer ${token}`,
       accept: '*/*',

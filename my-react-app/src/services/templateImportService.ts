@@ -1,6 +1,7 @@
 // services/templateImportService.ts
 import { API_BASE_URL } from '../config/api.config';
 import { AuthService } from './api/auth.service';
+import { translateApiError } from '../utils/errorCodes';
 import type {
   ExcelPreviewResponse,
   TemplateBatchImportResponse,
@@ -15,7 +16,7 @@ class TemplateImportService {
   async downloadTemplate(): Promise<Blob> {
     const token = AuthService.getToken();
     if (!token) {
-      throw new Error('Authentication required');
+      throw new Error('Bạn chưa đăng nhập. Vui lòng đăng nhập lại.');
     }
 
     const response = await fetch(`${API_BASE_URL}/question-templates/bulk-import/template`, {
@@ -25,7 +26,7 @@ class TemplateImportService {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to download template');
+      throw new Error('Không thể tải file mẫu.');
     }
 
     return await response.blob();
@@ -37,7 +38,7 @@ class TemplateImportService {
   async previewExcel(file: File): Promise<ExcelPreviewResponse> {
     const token = AuthService.getToken();
     if (!token) {
-      throw new Error('Authentication required');
+      throw new Error('Bạn chưa đăng nhập. Vui lòng đăng nhập lại.');
     }
 
     const formData = new FormData();
@@ -52,8 +53,8 @@ class TemplateImportService {
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Failed to preview Excel file' }));
-      throw new Error(error.message || 'Failed to preview Excel file');
+      const error = await response.json().catch(() => ({ message: 'Không thể xem trước file Excel.' }));
+      throw new Error(translateApiError(error.message, error.code));
     }
 
     const data: ApiResponse<ExcelPreviewResponse> = await response.json();
@@ -66,7 +67,7 @@ class TemplateImportService {
   async submitBatch(templates: QuestionTemplateRequest[]): Promise<TemplateBatchImportResponse> {
     const token = AuthService.getToken();
     if (!token) {
-      throw new Error('Authentication required');
+      throw new Error('Bạn chưa đăng nhập. Vui lòng đăng nhập lại.');
     }
 
     const response = await fetch(`${API_BASE_URL}/question-templates/bulk-import/submit`, {
@@ -79,8 +80,8 @@ class TemplateImportService {
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Failed to import templates' }));
-      throw new Error(error.message || 'Failed to import templates');
+      const error = await response.json().catch(() => ({ message: 'Không thể nhập mẫu.' }));
+      throw new Error(translateApiError(error.message, error.code));
     }
 
     const data: ApiResponse<TemplateBatchImportResponse> = await response.json();
