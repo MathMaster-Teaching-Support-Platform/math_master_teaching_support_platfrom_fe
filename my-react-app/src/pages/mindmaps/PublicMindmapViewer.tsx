@@ -63,6 +63,27 @@ const LEAF_FG = [
   '#500724', // mauve dark
 ] as const;
 
+const HEX_COLOR_REGEX = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
+
+const normalizeHexColor = (value?: string): string | null => {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (!HEX_COLOR_REGEX.test(trimmed)) return null;
+  if (trimmed.length === 4) {
+    return `#${trimmed[1]}${trimmed[1]}${trimmed[2]}${trimmed[2]}${trimmed[3]}${trimmed[3]}`;
+  }
+  return trimmed;
+};
+
+const getReadableTextColor = (backgroundHex: string): string => {
+  const hex = backgroundHex.replace('#', '');
+  const r = Number.parseInt(hex.slice(0, 2), 16);
+  const g = Number.parseInt(hex.slice(2, 4), 16);
+  const b = Number.parseInt(hex.slice(4, 6), 16);
+  const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  return luminance > 0.62 ? '#141413' : '#FAF9F5';
+};
+
 interface MindElixirNodeData {
   id: string;
   topic: string;
@@ -335,19 +356,28 @@ export default function PublicMindmapViewer() {
     }
 
     const buildNode = (node: MindmapNode, depth: number, branchIdx: number): MindElixirNodeData => {
-      let style: { color: string; background: string };
+      let fallbackStyle: { color: string; background: string };
       let branchColor: string | undefined;
 
       if (depth === 0) {
-        style = { color: '#FAF9F5', background: '#1C1C1A' };
+        fallbackStyle = { color: '#FAF9F5', background: '#1C1C1A' };
       } else if (depth === 1) {
         const i = branchIdx % BRANCH_COLORS.length;
-        style = { color: '#ffffff', background: BRANCH_COLORS[i] };
+        fallbackStyle = { color: '#ffffff', background: BRANCH_COLORS[i] };
         // branchColor tells Mind Elixir to paint the connecting lines this color
         branchColor = BRANCH_COLORS[i];
       } else {
         const i = branchIdx % LEAF_BG.length;
-        style = { color: LEAF_FG[i], background: LEAF_BG[i] };
+        fallbackStyle = { color: LEAF_FG[i], background: LEAF_BG[i] };
+      }
+
+      const backendColor = normalizeHexColor(node.color);
+      const style = backendColor
+        ? { color: getReadableTextColor(backendColor), background: backendColor }
+        : fallbackStyle;
+
+      if (depth === 1 && backendColor) {
+        branchColor = backendColor;
       }
 
       return {
