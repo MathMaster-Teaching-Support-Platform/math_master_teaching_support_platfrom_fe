@@ -490,7 +490,7 @@ const AdminCourseReviewDetail: React.FC = () => {
       <AnimatePresence>
         {showRejectModal && (
           <motion.div
-            className="fixed inset-0 z-[110] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+            className="fixed inset-0 z-[110] bg-[#141413]/50 backdrop-blur-sm flex items-center justify-center p-4"
             role="presentation"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

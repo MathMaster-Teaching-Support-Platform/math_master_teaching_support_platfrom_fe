@@ -803,7 +803,7 @@ const ReviewProfiles: React.FC = () => {
                               <div className="rpd-ocr-progress-bar">
                                 <div
                                   className="rpd-ocr-progress-fill"
-                                  style={{ width: `${ocrProgress}%` }}
+                                  style={{ transform: `scaleX(${ocrProgress / 100})` }}
                                 />
                               </div>
                               <p className="rpd-ocr-progress-text">{ocrProgress}%</p>

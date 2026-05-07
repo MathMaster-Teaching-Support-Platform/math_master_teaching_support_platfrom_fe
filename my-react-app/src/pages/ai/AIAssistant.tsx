@@ -231,7 +231,7 @@ function ConfirmModal({
 }: Readonly<{ config: ConfirmConfig; onClose: () => void }>) {
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 bg-[#141413]/50 backdrop-blur-sm flex items-center justify-center p-4"
       onClick={onClose}
     >
       <div

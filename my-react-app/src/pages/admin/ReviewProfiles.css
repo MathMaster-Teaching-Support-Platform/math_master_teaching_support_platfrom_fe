@@ -1066,7 +1066,8 @@
   background: #141413;
   width: 100%;
   transform-origin: left;
-  transition: width 0.3s ease;
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
 }
 
 .rpd-ocr-progress-text {

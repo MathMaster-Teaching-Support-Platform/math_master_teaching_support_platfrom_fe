@@ -655,7 +655,7 @@ const MaterialsGenerator: React.FC = () => {
 
       {/* ── Modals ── */}
       {previewSlideId && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3">
+        <div className="fixed inset-0 z-50 bg-[#141413]/60 backdrop-blur-sm flex items-center justify-center p-3">
           <div
             className="bg-white rounded-2xl shadow-[rgba(0,0,0,0.25)_0px_24px_80px] w-full max-w-6xl h-[86vh] flex flex-col"
             role="dialog"
@@ -697,7 +697,7 @@ const MaterialsGenerator: React.FC = () => {
       )}
 
       {previewMindmapId && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3">
+        <div className="fixed inset-0 z-50 bg-[#141413]/60 backdrop-blur-sm flex items-center justify-center p-3">
           <div
             className="bg-white rounded-2xl shadow-[rgba(0,0,0,0.25)_0px_24px_80px] w-full max-w-5xl h-[86vh] flex flex-col"
             role="dialog"
@@ -737,7 +737,7 @@ const MaterialsGenerator: React.FC = () => {
       )}
 
       {isDownloadingAny && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-[#141413]/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div
             className="bg-white rounded-2xl shadow-[rgba(0,0,0,0.20)_0px_20px_60px] p-8 flex flex-col items-center gap-4 w-full max-w-sm"
             role="status"

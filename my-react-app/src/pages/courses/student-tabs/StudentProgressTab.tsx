@@ -142,7 +142,7 @@ const StudentProgressTab: React.FC<StudentProgressTabProps> = ({ enrollmentId, e
               aria-valuemin={0}
               aria-valuemax={100}
             >
-              <div className="spt-bar-fill" style={{ width: `${barPct}%` }} />
+              <div className="spt-bar-fill" style={{ transform: `scaleX(${barPct / 100})` }} />
             </div>
 
             <div className="spt-rows">

@@ -671,7 +671,7 @@ export default function StudentPublicSlides() {
       {/* ── Preview modal ── */}
       {previewSlideId && (
         <div
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-[#141413]/60 backdrop-blur-sm flex items-center justify-center p-4"
           onClick={closePreview}
         >
           <div

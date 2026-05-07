@@ -249,7 +249,7 @@ function PendingTab({
       <AnimatePresence>
         {rejectCourseId && (
           <motion.div
-            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 bg-[#141413]/50 backdrop-blur-sm flex items-center justify-center p-4"
             role="presentation"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

@@ -359,7 +359,7 @@ export default function AssessmentPreview() {
 
       {/* Submit confirmation modal */}
       {showSubmitConfirm && !result && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-[#141413]/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div
             className="bg-white rounded-2xl shadow-[rgba(0,0,0,0.18)_0px_20px_48px] w-full max-w-md overflow-hidden flex flex-col"
             role="dialog"

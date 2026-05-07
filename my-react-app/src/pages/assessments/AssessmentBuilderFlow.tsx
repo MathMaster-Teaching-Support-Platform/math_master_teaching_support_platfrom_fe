@@ -232,7 +232,7 @@ export function AssessmentBuilderFlowBody() {
       subtitle: 'Khung chương · mức độ · số câu',
       Icon: TableProperties,
       iconClass:
-        'bg-gradient-to-br from-violet-100 to-violet-50 text-violet-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] ring-1 ring-violet-200/70',
+        'bg-[#E8E6DC] text-[#5E5D59] shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] ring-1 ring-[#D1CFC5]/70',
     },
     {
       path: '/teacher/question-templates',

@@ -110,7 +110,7 @@ export function ExamMatrixFormModal({
   const submitLabel = isCreate ? 'Tạo draft' : 'Cập nhật';
 
   return (
-    <div className="fixed inset-0 z-[1200] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[1200] bg-[#141413]/50 backdrop-blur-sm flex items-center justify-center p-4">
       <div
         className="bg-white rounded-2xl shadow-[rgba(0,0,0,0.20)_0px_20px_60px] w-full max-h-[90vh] overflow-hidden flex flex-col border border-[#E8E6DC]"
         style={{ width: 'min(560px, 100%)' }}

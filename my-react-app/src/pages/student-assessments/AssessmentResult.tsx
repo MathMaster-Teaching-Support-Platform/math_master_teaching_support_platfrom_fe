@@ -632,7 +632,7 @@ export default function AssessmentResult() {
       </section>
 
       {showRegradeModal ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#141413]/50 p-4 backdrop-blur-sm">
           <div
             className="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-3xl border border-[#F0EEE6] bg-white shadow-[rgba(0,0,0,0.22)_0px_24px_70px]"
             role="dialog"
