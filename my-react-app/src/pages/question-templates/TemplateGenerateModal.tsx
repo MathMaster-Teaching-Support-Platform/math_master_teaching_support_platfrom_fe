@@ -32,6 +32,10 @@ export function TemplateGenerateModal({
       setError('Số lượng câu hỏi phải ≥ 1.');
       return;
     }
+    if (count > 5) {
+      setError('Số lượng câu hỏi tối đa là 5.');
+      return;
+    }
 
     try {
       const response = await generateMutation.mutateAsync({
@@ -71,12 +75,13 @@ export function TemplateGenerateModal({
 
             <label>
               <p className="muted" style={{ marginBottom: 6 }}>
-                Số lượng câu hỏi
+                Số lượng câu hỏi (tối đa 5)
               </p>
               <input
                 className="input"
                 type="number"
                 min={1}
+                max={5}
                 value={count}
                 onChange={(e) => setCount(Number(e.target.value))}
               />

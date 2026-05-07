@@ -63,11 +63,14 @@ export const API_ENDPOINTS = {
   ASSESSMENTS_CAN_DELETE: (id: string) => `/assessments/${id}/can-delete`,
   ASSESSMENTS_CAN_PUBLISH: (id: string) => `/assessments/${id}/can-publish`,
   ASSESSMENTS_CLOSE: (id: string) => `/assessments/${id}/close`,
+  ASSESSMENTS_REOPEN: (id: string) => `/assessments/${id}/reopen`,
   ASSESSMENTS_GENERATE_FROM_MATRIX: '/assessments/generate-from-matrix',
   ASSESSMENTS_GENERATE_BY_PERCENTAGE: '/assessments/generate-by-percentage',
   ASSESSMENTS_VALIDATE_BANK_COVERAGE: '/assessments/validate-bank-coverage',
   ASSESSMENTS_GENERATE: (assessmentId: string) => `/assessments/${assessmentId}/generate`,
   ASSESSMENTS_QUESTIONS: (assessmentId: string) => `/assessments/${assessmentId}/questions`,
+  ASSESSMENTS_QUESTIONS_REORDER: (assessmentId: string) =>
+    `/assessments/${assessmentId}/questions/reorder`,
   ASSESSMENTS_AVAILABLE_QUESTIONS: (assessmentId: string) =>
     `/assessments/${assessmentId}/available-questions`,
   ASSESSMENTS_QUESTIONS_BATCH: (assessmentId: string) =>

@@ -29,6 +29,12 @@ interface QuestionCardProps {
   onClearOverride: (questionId: string) => Promise<void>;
   isUpdating: boolean;
   isDeleting: boolean;
+  /**
+   * When true, hide the inline "Thứ tự" input — order is managed externally
+   * via drag-and-drop and the page-level "Save Order" button. The card only
+   * tracks/saves pointsOverride changes in this mode.
+   */
+  disableOrderEdit?: boolean;
 }
 
 export function QuestionCard({
@@ -40,6 +46,7 @@ export function QuestionCard({
   onClearOverride,
   isUpdating,
   isDeleting,
+  disableOrderEdit = false,
 }: QuestionCardProps) {
   const questionId = question.questionId || question.id || '';
   const { showToast } = useToast();
@@ -55,9 +62,11 @@ export function QuestionCard({
   // UI state
   const [isExpanded, setIsExpanded] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
 
   // Check if there are unsaved changes
-  const hasOrderChanged = orderValue !== String(question.orderIndex);
+  const hasOrderChanged =
+    !disableOrderEdit && orderValue !== String(question.orderIndex);
   const hasPointsChanged =
     pointsValue !==
     (question.pointsOverride !== null && question.pointsOverride !== undefined
@@ -73,10 +82,10 @@ export function QuestionCard({
       : question.questionText;
 
   const handleSave = async () => {
-    const newOrder = Number(orderValue);
+    const newOrder = disableOrderEdit ? question.orderIndex : Number(orderValue);
     const newPoints = pointsValue.trim() === '' ? null : Number(pointsValue);
 
-    if (isNaN(newOrder) || newOrder < 1) {
+    if (!disableOrderEdit && (isNaN(newOrder) || newOrder < 1)) {
       showToast({ type: 'warning', message: 'Order phải là số nguyên dương' });
       return;
     }
@@ -126,6 +135,28 @@ export function QuestionCard({
             )}
           </div>
         )}
+        <button
+          type="button"
+          onClick={() => setIsCollapsed((v) => !v)}
+          aria-label={isCollapsed ? 'Mở rộng' : 'Thu gọn'}
+          aria-expanded={!isCollapsed}
+          style={{
+            marginLeft: 'auto',
+            background: 'transparent',
+            border: '1px solid #E8E6DC',
+            borderRadius: 6,
+            padding: '2px 8px',
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 4,
+            color: '#5E5D59',
+            fontSize: 12,
+          }}
+        >
+          {isCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+          {isCollapsed ? 'Chi tiết' : 'Thu gọn'}
+        </button>
       </div>
 
       {/* Question Content */}
@@ -176,21 +207,45 @@ export function QuestionCard({
         </div>
       )}
 
+      {/* Collapsed compact summary — keeps row short while dragging */}
+      {isCollapsed && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '6px 0',
+            fontSize: 12,
+            color: '#5E5D59',
+          }}
+        >
+          <span>
+            Điểm:{' '}
+            <strong style={{ color: '#141413' }}>
+              {question.pointsOverride ?? question.points ?? 0}
+            </strong>
+          </span>
+        </div>
+      )}
+
       {/* Editable Section */}
+      {!isCollapsed && (
       <div className="question-card__editable">
         <ScoreDisplay currentScore={question.points} overrideScore={question.pointsOverride} />
 
         {isDraft && (
           <div className="question-card__inputs">
-            <EditableField
-              label="Thứ tự"
-              value={orderValue}
-              onChange={setOrderValue}
-              type="number"
-              min={1}
-              placeholder="Order"
-              disabled={!isDraft}
-            />
+            {!disableOrderEdit && (
+              <EditableField
+                label="Thứ tự"
+                value={orderValue}
+                onChange={setOrderValue}
+                type="number"
+                min={1}
+                placeholder="Order"
+                disabled={!isDraft}
+              />
+            )}
             <EditableField
               label="Điểm"
               value={pointsValue}
@@ -204,9 +259,10 @@ export function QuestionCard({
           </div>
         )}
       </div>
+      )}
 
       {/* Actions */}
-      {isDraft && (
+      {!isCollapsed && isDraft && (
         <div className="question-card__actions">
           <div className="question-card__actions-left">
             {isDirty && (

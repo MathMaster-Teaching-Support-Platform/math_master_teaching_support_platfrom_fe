@@ -1,18 +1,35 @@
 import {
+  closestCenter,
+  DndContext,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import {
   AlertCircle,
   ArrowLeft,
   ChevronDown,
   Clock,
   Eye,
   FileText,
+  GripVertical,
   ListChecks,
   Pencil,
   Plus,
   RefreshCw,
+  Save,
   Sparkles,
   Users,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { QuestionCard } from '../../components/assessment';
 import '../../components/assessment/question-card.css';
@@ -30,6 +47,7 @@ import {
   useGenerateQuestionsForAssessment,
   usePatchAssessment,
   useRemoveQuestion,
+  useReorderAssessmentQuestions,
   useSetPointsOverride,
   useUpdateAssessmentQuestionWorkaround,
 } from '../../hooks/useAssessment';
@@ -74,6 +92,53 @@ function assessmentStatusPillClass(status: string): string {
 
 function getQuestionId(question: { questionId: string; id?: string }) {
   return question.questionId || question.id || '';
+}
+
+interface SortableQuestionRowProps {
+  questionId: string;
+  canDrag: boolean;
+  children: React.ReactNode;
+}
+
+function SortableQuestionRow({ questionId, canDrag, children }: SortableQuestionRowProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: questionId,
+    disabled: !canDrag,
+  });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+    display: 'flex',
+    alignItems: 'stretch',
+    gap: 8,
+  };
+  return (
+    <div ref={setNodeRef} style={style}>
+      {canDrag && (
+        <button
+          type="button"
+          {...attributes}
+          {...listeners}
+          aria-label="Kéo để sắp xếp"
+          style={{
+            cursor: 'grab',
+            background: 'transparent',
+            border: '1px solid #E8E6DC',
+            borderRadius: 6,
+            padding: '0 6px',
+            color: '#87867F',
+            display: 'flex',
+            alignItems: 'center',
+            touchAction: 'none',
+          }}
+        >
+          <GripVertical size={16} />
+        </button>
+      )}
+      <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
+    </div>
+  );
 }
 
 export default function AssessmentDetailRefactored() {
@@ -131,6 +196,7 @@ export default function AssessmentDetailRefactored() {
   const addQuestionMutation = useAddQuestion();
   const removeQuestionMutation = useRemoveQuestion();
   const updateAssessmentQuestionMutation = useUpdateAssessmentQuestionWorkaround();
+  const reorderQuestionsMutation = useReorderAssessmentQuestions();
   const pointsOverrideMutation = useSetPointsOverride();
   const distributePointsMutation = useDistributeQuestionPoints();
   const generateMutation = useGenerateQuestionsForAssessment();
@@ -173,6 +239,58 @@ export default function AssessmentDetailRefactored() {
 
   const assessment = data?.result;
   const questions = questionsData?.result ?? [];
+
+  // ── Drag-and-drop reorder state ─────────────────────────────────────────
+  // Local order is the array of question IDs in the order the user has dragged
+  // them into. It's seeded from the server-returned order and reset whenever
+  // the server data changes. "Save Order" persists localOrder to the BE.
+  const [localOrder, setLocalOrder] = useState<string[]>([]);
+  const serverOrder = useMemo(() => questions.map((q) => getQuestionId(q)), [questions]);
+  useEffect(() => {
+    setLocalOrder(serverOrder);
+  }, [serverOrder.join('|')]);
+
+  const orderedQuestions = useMemo(() => {
+    if (localOrder.length === 0) return questions;
+    const byId = new Map(questions.map((q) => [getQuestionId(q), q]));
+    return localOrder.map((qid) => byId.get(qid)).filter((q): q is NonNullable<typeof q> => !!q);
+  }, [localOrder, questions]);
+
+  const isOrderDirty =
+    localOrder.length === serverOrder.length &&
+    localOrder.some((qid, i) => qid !== serverOrder[i]);
+
+  const sortableSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = localOrder.indexOf(String(active.id));
+    const newIndex = localOrder.indexOf(String(over.id));
+    if (oldIndex < 0 || newIndex < 0) return;
+    setLocalOrder((prev) => arrayMove(prev, oldIndex, newIndex));
+  }
+
+  async function handleSaveOrder() {
+    if (!id || !isOrderDirty) return;
+    try {
+      await reorderQuestionsMutation.mutateAsync({
+        assessmentId: id,
+        orders: localOrder.map((qid, idx) => ({ questionId: qid, orderIndex: idx + 1 })),
+      });
+      showToast({ type: 'success', message: 'Đã lưu thứ tự câu hỏi.' });
+      await refetchQuestions();
+    } catch (err) {
+      showToast({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Không thể lưu thứ tự câu hỏi.',
+      });
+    }
+  }
+
+  function handleResetOrder() {
+    setLocalOrder(serverOrder);
+  }
 
   useEffect(() => {
     if (!assessment) return;
@@ -795,22 +913,80 @@ export default function AssessmentDetailRefactored() {
             <div className="question-list__empty">{UI_TEXT.QUIZ} chưa có câu hỏi.</div>
           )}
 
-          {!questionsLoading && !questionsError && questions.length > 0 && (
-            <div className="question-list">
-              {questions.map((question, index) => (
-                <QuestionCard
-                  key={getQuestionId(question)}
-                  question={question}
-                  index={index}
-                  isDraft={assessment.status === 'DRAFT'}
-                  onUpdate={handleUpdateQuestion}
-                  onDelete={handleDeleteQuestion}
-                  onClearOverride={handleClearOverride}
-                  isUpdating={updateAssessmentQuestionMutation.isPending}
-                  isDeleting={removeQuestionMutation.isPending}
-                />
-              ))}
-            </div>
+          {!questionsLoading && !questionsError && orderedQuestions.length > 0 && (
+            <>
+              {assessment.status === 'DRAFT' && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 12,
+                    padding: '8px 12px',
+                    marginBottom: 8,
+                    background: isOrderDirty ? '#FEF3C7' : '#F5F4ED',
+                    border: `1px solid ${isOrderDirty ? '#FCD34D' : '#E8E6DC'}`,
+                    borderRadius: 8,
+                  }}
+                >
+                  <span style={{ fontSize: 13, color: '#5E5D59' }}>
+                    {isOrderDirty
+                      ? 'Có thay đổi thứ tự chưa lưu'
+                      : 'Kéo biểu tượng ⋮⋮ để sắp xếp lại câu hỏi.'}
+                  </span>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    {isOrderDirty && (
+                      <button
+                        type="button"
+                        className="btn btn--ghost"
+                        onClick={handleResetOrder}
+                        disabled={reorderQuestionsMutation.isPending}
+                      >
+                        Hoàn tác
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="btn btn--primary"
+                      onClick={() => void handleSaveOrder()}
+                      disabled={!isOrderDirty || reorderQuestionsMutation.isPending}
+                    >
+                      <Save size={14} />
+                      {reorderQuestionsMutation.isPending ? 'Đang lưu...' : 'Lưu thứ tự'}
+                    </button>
+                  </div>
+                </div>
+              )}
+              <DndContext
+                sensors={sortableSensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext items={localOrder} strategy={verticalListSortingStrategy}>
+                  <div className="question-list">
+                    {orderedQuestions.map((question, index) => (
+                      <SortableQuestionRow
+                        key={getQuestionId(question)}
+                        questionId={getQuestionId(question)}
+                        canDrag={assessment.status === 'DRAFT'}
+                      >
+                        <QuestionCard
+                          question={question}
+                          index={index}
+                          isDraft={assessment.status === 'DRAFT'}
+                          onUpdate={handleUpdateQuestion}
+                          onDelete={handleDeleteQuestion}
+                          onClearOverride={handleClearOverride}
+                          isUpdating={updateAssessmentQuestionMutation.isPending}
+                          isDeleting={removeQuestionMutation.isPending}
+                          disableOrderEdit
+                        />
+                      </SortableQuestionRow>
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
+            </>
           )}
           </div>
         </article>
