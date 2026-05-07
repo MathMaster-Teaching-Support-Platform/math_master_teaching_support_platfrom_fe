@@ -1,6 +1,5 @@
 import {
   AlertCircle,
-  ArrowRight,
   BookOpen,
   CheckCircle2,
   Eye,
@@ -29,7 +28,10 @@ import MathText from '../../components/common/MathText';
 import Pagination from '../../components/common/Pagination';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { useToast } from '../../context/ToastContext';
+import { useChaptersBySubject } from '../../hooks/useChapters';
 import { useDebounce } from '../../hooks/useDebounce';
+import { useGrades } from '../../hooks/useGrades';
+import { useSubjectsByGrade } from '../../hooks/useSubjects';
 
 import { mockTeacher } from '../../data/mockData';
 import {
@@ -44,9 +46,7 @@ import { questionTemplateService } from '../../services/questionTemplateService'
 import '../../styles/module-refactor.css';
 
 import {
-  questionTagLabels,
   TemplateStatus,
-  type QuestionTag,
   type QuestionTemplateRequest,
   type QuestionTemplateResponse,
 } from '../../types/questionTemplate';
@@ -223,6 +223,11 @@ export function TemplateDashboard() {
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [status, setStatus] = useState<'ALL' | TemplateStatus>('ALL');
+  // Cascading academic filter (Lớp -> Môn -> Chương). Only chapterId is sent
+  // to the BE; gradeLevel/subjectId are FE-side helpers to drive the cascade.
+  const [filterGradeLevel, setFilterGradeLevel] = useState('');
+  const [filterSubjectId, setFilterSubjectId] = useState('');
+  const [filterChapterId, setFilterChapterId] = useState('');
   const [page, setPage] = useState(0);
   // Page size is now teacher-controllable via the Pagination footer. Defaults
   // to 9 (clean 3×3 desktop grid). Persists nothing here — the Pagination
@@ -253,7 +258,20 @@ export function TemplateDashboard() {
 
   useEffect(() => {
     setPage(0);
-  }, [debouncedSearch, status]);
+  }, [debouncedSearch, status, filterChapterId, filterGradeLevel]);
+
+  // Cascading filter data — Lớp / Môn / Chương dropdowns above the toolbar.
+  const { data: gradesData } = useGrades(true);
+  const filterGrades = [...(gradesData?.result ?? [])].sort((a, b) => a.level - b.level);
+  const filterGradeId = filterGrades.find((g) => String(g.level) === filterGradeLevel)?.id;
+
+  const { data: filterSubjectsData } = useSubjectsByGrade(filterGradeLevel, !!filterGradeLevel);
+  const filterSubjects = filterSubjectsData?.result ?? [];
+
+  const { data: filterChaptersData } = useChaptersBySubject(filterSubjectId, !!filterSubjectId);
+  const filterChapters = filterChaptersData?.result ?? [];
+
+  const hasAnyFilter = !!(filterGradeLevel || filterSubjectId || filterChapterId);
 
   const { data, isLoading, isError, error, refetch } = useGetMyQuestionTemplates(
     page,
@@ -261,7 +279,9 @@ export function TemplateDashboard() {
     'createdAt',
     'DESC',
     debouncedSearch.trim() || undefined,
-    debouncedStatus === 'ALL' ? undefined : debouncedStatus
+    debouncedStatus === 'ALL' ? undefined : debouncedStatus,
+    filterGradeId,
+    filterChapterId || undefined
   );
 
   const createMutation = useCreateQuestionTemplate();
@@ -273,6 +293,18 @@ export function TemplateDashboard() {
   const templates = useMemo(() => data?.result?.content ?? [], [data]);
   const totalPages = data?.result?.totalPages ?? 0;
   const totalElements = data?.result?.totalElements ?? 0;
+  /** Backend có thể trả content nhưng totalElements = 0 — đồng bộ UI với dữ liệu thực tế */
+  const effectiveTotalElements = Math.max(totalElements, templates.length);
+  /**
+   * BE đôi khi trả `totalPages = 1` dù còn nhiều trang — derive từ
+   * totalElements/size để pagination luôn hiển thị đủ số trang. Nếu trang hiện
+   * tại đầy đủ `size` items thì chắc chắn còn ít nhất một trang nữa.
+   */
+  const computedTotalPages =
+    effectiveTotalElements > 0 ? Math.ceil(effectiveTotalElements / size) : 0;
+  const minPagesFromCurrent =
+    templates.length === size ? page + 2 : page + (templates.length > 0 ? 1 : 0);
+  const effectiveTotalPages = Math.max(totalPages, computedTotalPages, minPagesFromCurrent);
 
   const stats = useMemo(
     () => ({
@@ -326,13 +358,6 @@ export function TemplateDashboard() {
     templates.length === 0 &&
     totalElements === 0 &&
     (debouncedSearch.trim() !== '' || status !== 'ALL');
-
-  const showLibraryEmpty =
-    !isLoading &&
-    !isError &&
-    totalElements === 0 &&
-    debouncedSearch.trim() === '' &&
-    status === 'ALL';
 
   const rangeStart = totalElements === 0 ? 0 : page * size + 1;
   const rangeEnd = Math.min((page + 1) * size, totalElements);
@@ -465,6 +490,71 @@ export function TemplateDashboard() {
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* ── Academic filter (Lớp / Môn / Chương) ── */}
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            <span className="font-[Be_Vietnam_Pro] text-[12px] font-medium text-[#87867F] mr-1">
+              Lọc:
+            </span>
+            <select
+              className="font-[Be_Vietnam_Pro] text-[13px] text-[#141413] bg-[#FAF9F5] border border-[#E8E6DC] rounded-lg px-3 py-1.5 hover:border-[#B0AEA5] focus:border-[#3898EC] focus:shadow-[0_0_0_3px_rgba(56,152,236,0.12)] outline-none transition-all"
+              value={filterGradeLevel}
+              onChange={(e) => {
+                setFilterGradeLevel(e.target.value);
+                setFilterSubjectId('');
+                setFilterChapterId('');
+              }}
+            >
+              <option value="">Tất cả lớp</option>
+              {filterGrades.map((g) => (
+                <option key={g.id} value={String(g.level)}>
+                  Lớp {g.level}
+                </option>
+              ))}
+            </select>
+            <select
+              className="font-[Be_Vietnam_Pro] text-[13px] text-[#141413] bg-[#FAF9F5] border border-[#E8E6DC] rounded-lg px-3 py-1.5 hover:border-[#B0AEA5] focus:border-[#3898EC] focus:shadow-[0_0_0_3px_rgba(56,152,236,0.12)] outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              value={filterSubjectId}
+              onChange={(e) => {
+                setFilterSubjectId(e.target.value);
+                setFilterChapterId('');
+              }}
+              disabled={!filterGradeLevel}
+            >
+              <option value="">Tất cả môn</option>
+              {filterSubjects.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+            <select
+              className="font-[Be_Vietnam_Pro] text-[13px] text-[#141413] bg-[#FAF9F5] border border-[#E8E6DC] rounded-lg px-3 py-1.5 hover:border-[#B0AEA5] focus:border-[#3898EC] focus:shadow-[0_0_0_3px_rgba(56,152,236,0.12)] outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed min-w-[160px]"
+              value={filterChapterId}
+              onChange={(e) => setFilterChapterId(e.target.value)}
+              disabled={!filterSubjectId}
+            >
+              <option value="">Tất cả chương</option>
+              {filterChapters.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.title}
+                </option>
+              ))}
+            </select>
+            {hasAnyFilter && (
+              <button
+                type="button"
+                onClick={() => {
+                  setFilterGradeLevel('');
+                  setFilterSubjectId('');
+                  setFilterChapterId('');
+                }}
+                className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] hover:text-[#141413] underline underline-offset-2 transition-colors"
+              >
+                Xoá lọc
+              </button>
+            )}
           </div>
 
           {/* ── Toolbar ── */}
@@ -607,30 +697,6 @@ export function TemplateDashboard() {
             </div>
           )}
 
-          {/* ── Empty: library ── */}
-          {showLibraryEmpty && (
-            <div className="flex flex-col items-center justify-center py-16 gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-[#E8E6DC] flex items-center justify-center text-[#B0AEA5]">
-                <FileQuestion className="w-6 h-6" />
-              </div>
-              <p className="font-[Be_Vietnam_Pro] text-[14px] text-[#87867F] text-center max-w-sm">
-                Bạn chưa có mẫu câu hỏi nào. Hãy tạo mẫu đầu tiên.
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  setMode('create');
-                  setSelected(null);
-                  setFormOpen(true);
-                }}
-                className="mt-1 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#141413] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:bg-[#30302E] active:scale-[0.98] transition-all duration-150"
-              >
-                Tạo mẫu mới
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          )}
-
           {/* ── Grid view ── */}
           {!isLoading && !isError && templates.length > 0 && viewMode === 'grid' && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -701,25 +767,6 @@ export function TemplateDashboard() {
                       <div className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] leading-[1.5] line-clamp-2">
                         <MathText text={template.description || 'Chưa có mô tả cho mẫu này.'} />
                       </div>
-
-                      {template.tags && template.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5">
-                          {template.tags.slice(0, 4).map((tag) => (
-                            <span
-                              key={tag}
-                              className="px-2 py-0.5 rounded-full bg-violet-50 font-[Be_Vietnam_Pro] text-[11px] font-medium text-violet-600 border border-violet-100"
-                              title={tag}
-                            >
-                              {questionTagLabels[tag as QuestionTag] ?? tag}
-                            </span>
-                          ))}
-                          {template.tags.length > 4 && (
-                            <span className="px-2 py-0.5 rounded-full bg-[#F5F4ED] font-[Be_Vietnam_Pro] text-[11px] font-medium text-[#87867F]">
-                              +{template.tags.length - 4}
-                            </span>
-                          )}
-                        </div>
-                      )}
 
                       <div className="flex flex-col gap-2 pt-3 mt-auto border-t border-[#F0EEE6]">
                         <div className="flex flex-wrap gap-2">
@@ -988,8 +1035,8 @@ export function TemplateDashboard() {
 
           <Pagination
             page={page}
-            totalPages={totalPages}
-            totalElements={totalElements}
+            totalPages={effectiveTotalPages}
+            totalElements={effectiveTotalElements}
             pageSize={size}
             onChange={(p) => setPage(p)}
             onPageSizeChange={(newSize) => {

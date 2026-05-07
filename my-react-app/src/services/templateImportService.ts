@@ -62,9 +62,14 @@ class TemplateImportService {
   }
 
   /**
-   * Submit batch import
+   * Submit batch import. Each template should carry its own `chapterId`; the
+   * optional batch-level `chapterId` acts as a fallback for rows that don't have
+   * one. The backend rejects any row that ends up without a chapter.
    */
-  async submitBatch(templates: QuestionTemplateRequest[]): Promise<TemplateBatchImportResponse> {
+  async submitBatch(
+    templates: QuestionTemplateRequest[],
+    chapterId?: string,
+  ): Promise<TemplateBatchImportResponse> {
     const token = AuthService.getToken();
     if (!token) {
       throw new Error('Bạn chưa đăng nhập. Vui lòng đăng nhập lại.');
@@ -76,7 +81,7 @@ class TemplateImportService {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ templates }),
+      body: JSON.stringify({ templates, ...(chapterId ? { chapterId } : {}) }),
     });
 
     if (!response.ok) {

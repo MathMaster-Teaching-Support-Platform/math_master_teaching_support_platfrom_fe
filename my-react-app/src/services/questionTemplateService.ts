@@ -127,7 +127,9 @@ export const questionTemplateService = {
     sortBy: string = 'createdAt',
     sortDirection: string = 'DESC',
     search?: string,
-    status?: string
+    status?: string,
+    gradeId?: string,
+    chapterId?: string
   ): Promise<ApiResponse<PageResponse<QuestionTemplateResponse>>> => {
     const params = new URLSearchParams({
       page: page.toString(),
@@ -137,6 +139,8 @@ export const questionTemplateService = {
     });
     if (search) params.append('search', search);
     if (status) params.append('status', status);
+    if (gradeId) params.append('gradeId', gradeId);
+    if (chapterId) params.append('chapterId', chapterId);
     const response = await fetch(
       `${API_BASE_URL}${API_ENDPOINTS.QUESTION_TEMPLATES_MY}?${params.toString()}`,
       {
@@ -156,7 +160,8 @@ export const questionTemplateService = {
     cognitiveLevel?: CognitiveLevel;
     isPublic?: boolean;
     searchTerm?: string;
-    tags?: string[];
+    gradeId?: string;
+    chapterId?: string;
     page?: number;
     size?: number;
     sortBy?: string;
@@ -168,9 +173,8 @@ export const questionTemplateService = {
     if (params.cognitiveLevel) queryParams.append('cognitiveLevel', params.cognitiveLevel);
     if (params.isPublic !== undefined) queryParams.append('isPublic', params.isPublic.toString());
     if (params.searchTerm) queryParams.append('searchTerm', params.searchTerm);
-    if (params.tags && params.tags.length > 0) {
-      params.tags.forEach((tag) => queryParams.append('tags', tag));
-    }
+    if (params.gradeId) queryParams.append('gradeId', params.gradeId);
+    if (params.chapterId) queryParams.append('chapterId', params.chapterId);
     queryParams.append('page', (params.page || 0).toString());
     queryParams.append('size', (params.size || 20).toString());
     queryParams.append('sortBy', params.sortBy || 'createdAt');

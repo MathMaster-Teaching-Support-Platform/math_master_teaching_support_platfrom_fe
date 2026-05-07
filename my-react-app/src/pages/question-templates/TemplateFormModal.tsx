@@ -2,7 +2,6 @@ import { HelpCircle, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { AcademicCascade } from '../../components/common/AcademicCascade';
 import { LatexToolbar } from '../../components/common/LatexToolbar';
-import { TagSelector } from '../../components/common/TagSelector';
 import { AIExtractPanel } from '../../components/question-templates/AIExtractPanel';
 import {
   MCQBlueprint,
@@ -14,7 +13,6 @@ import { TypeSelector } from '../../components/question-templates/TypeSelector';
 import { useChaptersBySubject } from '../../hooks/useChapters';
 import {
   CognitiveLevel,
-  QuestionTag,
   QuestionType,
   type QuestionTemplateRequest,
   type QuestionTemplateResponse,
@@ -30,7 +28,6 @@ type Props = {
 
 type ValidationResult = {
   normalizedName: string;
-  normalizedTags: QuestionTag[];
 };
 
 // Local copy of the unified parameter shape — matches ParametersEditor.
@@ -52,7 +49,7 @@ const cognitiveLevelLabels: Record<CognitiveLevel, string> = {
   VAN_DUNG_CAO: '4. Vận dụng cao',
 };
 
-function validateFormInput(input: { name: string; tags: QuestionTag[] }): {
+function validateFormInput(input: { name: string }): {
   error?: string;
   result?: ValidationResult;
 } {
@@ -60,18 +57,9 @@ function validateFormInput(input: { name: string; tags: QuestionTag[] }): {
   if (!normalizedName) return { error: 'Tên mẫu là bắt buộc.' };
   if (normalizedName.length > 255) return { error: 'Tên mẫu không được vượt quá 255 ký tự.' };
 
-  if (input.tags.length === 0) {
-    return { error: 'Bạn cần chọn ít nhất một tag cho template.' };
-  }
-
-  if (input.tags.length > 5) {
-    return { error: 'Bạn chỉ có thể chọn tối đa 5 tags.' };
-  }
-
   return {
     result: {
       normalizedName,
-      normalizedTags: input.tags,
     },
   };
 }
@@ -220,7 +208,6 @@ export function TemplateFormModal({
   const [templateType, setTemplateType] = useState<QuestionType>(QuestionType.MULTIPLE_CHOICE);
   const [cognitiveLevel, setCognitiveLevel] = useState<CognitiveLevel>(CognitiveLevel.THONG_HIEU);
   const [isPublic, setIsPublic] = useState(false);
-  const [tags, setTags] = useState<QuestionTag[]>([]);
   const [saving, setSaving] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
@@ -315,7 +302,6 @@ export function TemplateFormModal({
       setTemplateType(initialData.templateType || QuestionType.MULTIPLE_CHOICE);
       setCognitiveLevel(initialData.cognitiveLevel || CognitiveLevel.THONG_HIEU);
       setIsPublic(initialData.isPublic ?? false);
-      setTags(initialData.tags || []);
       return;
     }
 
@@ -328,7 +314,6 @@ export function TemplateFormModal({
     setTemplateType(QuestionType.MULTIPLE_CHOICE);
     setCognitiveLevel(CognitiveLevel.THONG_HIEU);
     setIsPublic(false);
-    setTags([QuestionTag.LINEAR_EQUATIONS, QuestionTag.PROBLEM_SOLVING]);
   }, [isOpen, initialData, mode]);
 
   if (!isOpen) return null;
@@ -342,7 +327,7 @@ export function TemplateFormModal({
     setSubmitError(null);
 
     // Validate Zone 1 (Metadata)
-    const validation = validateFormInput({ name, tags });
+    const validation = validateFormInput({ name });
     if (validation.error || !validation.result) {
       setSubmitError(validation.error || 'Dữ liệu mẫu chưa hợp lệ.');
       return;
@@ -383,7 +368,6 @@ export function TemplateFormModal({
             optionsGenerator: Object.keys(mappedOptions).length ? mappedOptions : undefined,
             constraints: cleanedGlobals.length ? cleanedGlobals : undefined,
             cognitiveLevel,
-            tags: validation.result.normalizedTags,
             isPublic,
             questionBankId: initialData?.questionBankId ?? null,
             diagramTemplate: mcqData.diagramTemplateRaw.trim() || undefined,
@@ -434,7 +418,6 @@ export function TemplateFormModal({
               })),
             },
             cognitiveLevel: tfData.clauses[0]?.cognitiveLevel || CognitiveLevel.THONG_HIEU,
-            tags: validation.result.normalizedTags,
             isPublic,
             questionBankId: initialData?.questionBankId ?? null,
             diagramTemplate: tfData.diagramTemplateRaw?.trim() || undefined,
@@ -475,7 +458,6 @@ export function TemplateFormModal({
             optionsGenerator: undefined,
             constraints: saGlobals.length ? saGlobals : undefined,
             cognitiveLevel,
-            tags: validation.result.normalizedTags,
             isPublic,
             questionBankId: initialData?.questionBankId ?? null,
             diagramTemplate: saData.diagramTemplateRaw.trim() || undefined,
@@ -572,7 +554,6 @@ export function TemplateFormModal({
                 </label>
               )}
 
-              <TagSelector selectedTags={tags} onChange={setTags} maxTags={5} required />
             </div>
 
             <label>

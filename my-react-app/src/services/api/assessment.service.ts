@@ -315,6 +315,20 @@ export class AssessmentService {
         return response.json();
     }
 
+    /** POST /assessments/{id}/reopen */
+    static async reopenAssessment(id: string): Promise<ApiResponse<AssessmentResponse>> {
+        const headers = await this.getHeaders();
+        const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ASSESSMENTS_REOPEN(id)}`, {
+            method: 'POST',
+            headers,
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(translateApiError(error.message, error.code));
+        }
+        return response.json();
+    }
+
 
     /** POST /assessments/generate-from-matrix */
     static async generateAssessmentFromMatrix(
@@ -385,6 +399,23 @@ export class AssessmentService {
         const response = await fetch(
             `${API_BASE_URL}${API_ENDPOINTS.ASSESSMENTS_QUESTIONS(assessmentId)}`,
             { method: 'GET', headers }
+        );
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error(translateApiError((error as { message?: string }).message, (error as { message?: string; code?: number }).code));
+        }
+        return response.json();
+    }
+
+    /** PATCH /assessments/{assessmentId}/questions/reorder */
+    static async reorderAssessmentQuestions(
+        assessmentId: string,
+        orders: Array<{ questionId: string; orderIndex: number }>
+    ): Promise<ApiResponse<AssessmentQuestionItem[]>> {
+        const headers = await this.getHeaders();
+        const response = await fetch(
+            `${API_BASE_URL}${API_ENDPOINTS.ASSESSMENTS_QUESTIONS_REORDER(assessmentId)}`,
+            { method: 'PATCH', headers, body: JSON.stringify({ orders }) }
         );
         if (!response.ok) {
             const error = await response.json().catch(() => ({}));

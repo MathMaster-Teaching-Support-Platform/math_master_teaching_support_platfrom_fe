@@ -1,4 +1,3 @@
-import { Plus, Trash2 } from 'lucide-react';
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import MathText from '../common/MathText';
 import { ParametersEditor, type ParameterInput } from '../common/ParametersEditor';
@@ -43,12 +42,8 @@ export interface MCQBlueprintRef {
 
 export const MCQBlueprint = forwardRef<MCQBlueprintRef, MCQBlueprintProps>(
   ({ onFocusField, initialData, templateId }, ref) => {
-    const [templateText, setTemplateText] = useState(
-      initialData?.templateText ?? 'Giải phương trình: {{a}}x + {{b}} = 0'
-    );
-    const [answerFormula, setAnswerFormula] = useState(
-      initialData?.answerFormula ?? '(-{{b}})/{{a}}'
-    );
+    const [templateText, setTemplateText] = useState(initialData?.templateText ?? '');
+    const [answerFormula, setAnswerFormula] = useState(initialData?.answerFormula ?? '');
     const [diagramTemplateRaw, setDiagramTemplateRaw] = useState(
       initialData?.diagramTemplateRaw ?? ''
     );
@@ -56,20 +51,17 @@ export const MCQBlueprint = forwardRef<MCQBlueprintRef, MCQBlueprintProps>(
       initialData?.solutionStepsTemplate ?? ''
     );
     const [parameters, setParameters] = useState<ParameterInput[]>(
-      initialData?.parameters ?? [
-        { name: 'a', constraintText: 'số nguyên, 1 ≤ a ≤ 10, a ≠ 0', sampleValue: '2' },
-        { name: 'b', constraintText: 'số nguyên, -10 ≤ b ≤ 10', sampleValue: '-3' },
-      ]
+      initialData?.parameters ?? []
     );
     const [globalConstraints, setGlobalConstraints] = useState<string[]>(
       initialData?.globalConstraints ?? []
     );
     const [options, setOptions] = useState<OptionInput[]>(
       initialData?.options ?? [
-        { key: 'A', formula: '$(-{{b}})/{{a}}$' },
-        { key: 'B', formula: '${{b}}/{{a}}$' },
-        { key: 'C', formula: '$-{{a}}/{{b}}$' },
-        { key: 'D', formula: '${{a}}+{{b}}$' },
+        { key: 'A', formula: '' },
+        { key: 'B', formula: '' },
+        { key: 'C', formula: '' },
+        { key: 'D', formula: '' },
       ]
     );
 
@@ -117,14 +109,6 @@ export const MCQBlueprint = forwardRef<MCQBlueprintRef, MCQBlueprintProps>(
       // Allows AIExtractPanel to push updated template text into this blueprint
       setTemplateText: (text: string) => setTemplateText(text),
     }));
-
-    const addOption = () => {
-      setOptions([...options, { key: '', formula: '' }]);
-    };
-
-    const removeOption = (index: number) => {
-      setOptions(options.filter((_, i) => i !== index));
-    };
 
     const updateOption = (index: number, field: 'key' | 'formula', value: string) => {
       const updated = options.map((opt, i) => (i === index ? { ...opt, [field]: value } : opt));
@@ -219,30 +203,24 @@ export const MCQBlueprint = forwardRef<MCQBlueprintRef, MCQBlueprintProps>(
         </label>
 
         <section className="data-card" style={{ minHeight: 0, border: '1px solid #fef3c7' }}>
-          <div className="row">
-            <div>
-              <h3 style={{ color: '#92400e' }}>Phương án trắc nghiệm (tùy chọn)</h3>
-              <p className="muted" style={{ fontSize: '0.8rem' }}>
-                Viết công thức để máy tính tự tính ra kết quả cho các lựa chọn A, B, C, D.
-              </p>
-            </div>
-            <button type="button" className="btn secondary" onClick={addOption}>
-              <Plus size={14} />
-              Thêm lựa chọn
-            </button>
+          <div>
+            <h3 style={{ color: '#92400e' }}>Phương án trắc nghiệm A, B, C, D</h3>
+            <p className="muted" style={{ fontSize: '0.8rem' }}>
+              Viết công thức để máy tính tự tính ra kết quả cho 4 lựa chọn A, B, C, D.
+            </p>
           </div>
 
           {options.map((item, index) => (
-            <div key={`${item.key}-${index}`} className="form-grid">
+            <div key={item.key} className="form-grid">
               <input
                 ref={(node) => {
                   optionKeyRefs.current[index] = node;
                 }}
                 className="input"
-                placeholder="Mã (A, B...)"
                 value={item.key}
+                readOnly
+                disabled
                 onFocus={() => onFocusField?.('optionKey', index)}
-                onChange={(event) => updateOption(index, 'key', event.target.value)}
               />
               <div className="row" style={{ gridColumn: 'span 3' }}>
                 <div style={{ width: '100%' }}>
@@ -263,9 +241,6 @@ export const MCQBlueprint = forwardRef<MCQBlueprintRef, MCQBlueprintProps>(
                     </div>
                   )}
                 </div>
-                <button type="button" className="btn danger" onClick={() => removeOption(index)}>
-                  <Trash2 size={14} />
-                </button>
               </div>
             </div>
           ))}
