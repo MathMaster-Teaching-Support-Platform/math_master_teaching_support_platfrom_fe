@@ -6,6 +6,7 @@ import {
   ChevronRight,
   FolderTree,
   GraduationCap,
+  Pencil,
   Plus,
   Save,
   Search,
@@ -17,6 +18,8 @@ import { useToast } from '../../context/ToastContext';
 import { mockAdmin } from '../../data/mockData';
 import { useDebounce } from '../../hooks/useDebounce';
 import { AcademicStructureService } from '../../services/api/academic-structure.service';
+import { AcademicNodeModal } from './AcademicNodeModal';
+import type { ModalTarget } from './AcademicNodeModal';
 import type {
   ChapterResponse,
   CreateChapterRequest,
@@ -79,6 +82,7 @@ export default function AdminAcademicStructurePage() {
   const [expandedGradeIds, setExpandedGradeIds] = useState<string[]>([]);
   const [expandedSubjectIds, setExpandedSubjectIds] = useState<string[]>([]);
   const [expandedChapterIds, setExpandedChapterIds] = useState<string[]>([]);
+  const [modalTarget, setModalTarget] = useState<ModalTarget | null>(null);
 
   const debouncedGlobalSearch = useDebounce(globalSearch, 300);
 
@@ -683,6 +687,34 @@ export default function AdminAcademicStructurePage() {
     deleteLessonMutation.mutate(selectedLessonId);
   };
 
+  const openModal = (target: ModalTarget) => {
+    setModalTarget(target);
+  };
+
+  const closeModal = () => {
+    setModalTarget(null);
+  };
+
+  const handleModalSuccess = (type: ModalTarget['type'], id: string) => {
+    switch (type) {
+      case 'grade':
+        setSelectedGradeId(id);
+        setExpandedGradeIds((prev) => Array.from(new Set([...prev, id])));
+        break;
+      case 'subject':
+        setSelectedSubjectId(id);
+        setExpandedSubjectIds((prev) => Array.from(new Set([...prev, id])));
+        break;
+      case 'chapter':
+        setSelectedChapterId(id);
+        setExpandedChapterIds((prev) => Array.from(new Set([...prev, id])));
+        break;
+      case 'lesson':
+        setSelectedLessonId(id);
+        break;
+    }
+  };
+
   const toggleExpanded = (collection: string[], id: string) => {
     if (collection.includes(id)) {
       return collection.filter((item) => item !== id);
@@ -1192,7 +1224,17 @@ export default function AdminAcademicStructurePage() {
                   <FolderTree size={18} />
                   Cây chương trình
                 </h2>
-                <span>{grades.length} chương trình</span>
+                <div className="aas-tree-shell__head-actions">
+                  <span>{grades.length} chương trình</span>
+                  <button
+                    type="button"
+                    className="aas-add-btn"
+                    onClick={() => openModal({ type: 'grade', mode: 'create' })}
+                  >
+                    <Plus size={12} />
+                    Thêm lớp
+                  </button>
+                </div>
               </div>
               <div className="aas-search-wrap">
                 <Search size={15} />
@@ -1262,21 +1304,55 @@ export default function AdminAcademicStructurePage() {
 
                   return (
                     <div key={grade.id} className="aas-tree-node lvl-0">
-                      <button
-                        type="button"
-                        className={`aas-node-btn${gradeActive ? ' is-active' : ''}`}
-                        onClick={() => {
-                          setExpandedGradeIds((prev) => toggleExpanded(prev, grade.id));
-                          setSelectedGradeId(grade.id);
-                          setSelectedSubjectId('');
-                          setSelectedChapterId('');
-                          setSelectedLessonId('');
-                        }}
-                      >
-                        {gradeOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                        <GraduationCap size={14} />
-                        <span>{gradeLabel}</span>
-                      </button>
+                      <div className="aas-node-row">
+                        <button
+                          type="button"
+                          className={`aas-node-btn${gradeActive ? ' is-active' : ''}`}
+                          onClick={() => {
+                            setExpandedGradeIds((prev) => toggleExpanded(prev, grade.id));
+                            setSelectedGradeId(grade.id);
+                            setSelectedSubjectId('');
+                            setSelectedChapterId('');
+                            setSelectedLessonId('');
+                          }}
+                        >
+                          {gradeOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                          <GraduationCap size={14} />
+                          <span>{gradeLabel}</span>
+                        </button>
+                        <div className="aas-node-actions">
+                          <button
+                            type="button"
+                            className="aas-node-action-btn"
+                            title="Chỉnh sửa lớp"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openModal({ type: 'grade', mode: 'edit', data: grade });
+                            }}
+                          >
+                            <Pencil size={12} />
+                          </button>
+                          <button
+                            type="button"
+                            className="aas-node-action-btn aas-node-action-btn--add"
+                            title="Thêm môn học"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedGradeId(grade.id);
+                              setExpandedGradeIds((prev) =>
+                                Array.from(new Set([...prev, grade.id]))
+                              );
+                              openModal({
+                                type: 'subject',
+                                mode: 'create',
+                                parentGradeId: grade.id,
+                              });
+                            }}
+                          >
+                            <Plus size={12} />
+                          </button>
+                        </div>
+                      </div>
 
                       {gradeOpen && (
                         <div className="aas-tree-children">
@@ -1308,26 +1384,65 @@ export default function AdminAcademicStructurePage() {
 
                               return (
                                 <div key={subject.id} className="aas-tree-node lvl-1">
-                                  <button
-                                    type="button"
-                                    className={`aas-node-btn${subjectActive ? ' is-active' : ''}`}
-                                    onClick={() => {
-                                      setExpandedSubjectIds((prev) =>
-                                        toggleExpanded(prev, subject.id)
-                                      );
-                                      setSelectedSubjectId(subject.id);
-                                      setSelectedChapterId('');
-                                      setSelectedLessonId('');
-                                    }}
-                                  >
-                                    {subjectOpen ? (
-                                      <ChevronDown size={14} />
-                                    ) : (
-                                      <ChevronRight size={14} />
-                                    )}
-                                    <BookOpen size={14} />
-                                    <span>{subjectLabel}</span>
-                                  </button>
+                                  <div className="aas-node-row">
+                                    <button
+                                      type="button"
+                                      className={`aas-node-btn${subjectActive ? ' is-active' : ''}`}
+                                      onClick={() => {
+                                        setExpandedSubjectIds((prev) =>
+                                          toggleExpanded(prev, subject.id)
+                                        );
+                                        setSelectedSubjectId(subject.id);
+                                        setSelectedChapterId('');
+                                        setSelectedLessonId('');
+                                      }}
+                                    >
+                                      {subjectOpen ? (
+                                        <ChevronDown size={14} />
+                                      ) : (
+                                        <ChevronRight size={14} />
+                                      )}
+                                      <BookOpen size={14} />
+                                      <span>{subjectLabel}</span>
+                                    </button>
+                                    <div className="aas-node-actions">
+                                      <button
+                                        type="button"
+                                        className="aas-node-action-btn"
+                                        title="Chỉnh sửa môn học"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          openModal({
+                                            type: 'subject',
+                                            mode: 'edit',
+                                            data: subject,
+                                            parentGradeId: subject.schoolGradeId ?? selectedGradeId,
+                                          });
+                                        }}
+                                      >
+                                        <Pencil size={12} />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="aas-node-action-btn aas-node-action-btn--add"
+                                        title="Thêm chương"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setSelectedSubjectId(subject.id);
+                                          setExpandedSubjectIds((prev) =>
+                                            Array.from(new Set([...prev, subject.id]))
+                                          );
+                                          openModal({
+                                            type: 'chapter',
+                                            mode: 'create',
+                                            parentSubjectId: subject.id,
+                                          });
+                                        }}
+                                      >
+                                        <Plus size={12} />
+                                      </button>
+                                    </div>
+                                  </div>
 
                                   {subjectOpen && subjectActive && (
                                     <div className="aas-tree-children">
@@ -1356,25 +1471,64 @@ export default function AdminAcademicStructurePage() {
 
                                         return (
                                           <div key={chapter.id} className="aas-tree-node lvl-2">
-                                            <button
-                                              type="button"
-                                              className={`aas-node-btn${chapterActive ? ' is-active' : ''}`}
-                                              onClick={() => {
-                                                setExpandedChapterIds((prev) =>
-                                                  toggleExpanded(prev, chapter.id)
-                                                );
-                                                setSelectedChapterId(chapter.id);
-                                                setSelectedLessonId('');
-                                              }}
-                                            >
-                                              {chapterOpen ? (
-                                                <ChevronDown size={14} />
-                                              ) : (
-                                                <ChevronRight size={14} />
-                                              )}
-                                              <FolderTree size={14} />
-                                              <span>{chapterLabel}</span>
-                                            </button>
+                                            <div className="aas-node-row">
+                                              <button
+                                                type="button"
+                                                className={`aas-node-btn${chapterActive ? ' is-active' : ''}`}
+                                                onClick={() => {
+                                                  setExpandedChapterIds((prev) =>
+                                                    toggleExpanded(prev, chapter.id)
+                                                  );
+                                                  setSelectedChapterId(chapter.id);
+                                                  setSelectedLessonId('');
+                                                }}
+                                              >
+                                                {chapterOpen ? (
+                                                  <ChevronDown size={14} />
+                                                ) : (
+                                                  <ChevronRight size={14} />
+                                                )}
+                                                <FolderTree size={14} />
+                                                <span>{chapterLabel}</span>
+                                              </button>
+                                              <div className="aas-node-actions">
+                                                <button
+                                                  type="button"
+                                                  className="aas-node-action-btn"
+                                                  title="Chỉnh sửa chương"
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    openModal({
+                                                      type: 'chapter',
+                                                      mode: 'edit',
+                                                      data: chapter,
+                                                      parentSubjectId: chapter.subjectId,
+                                                    });
+                                                  }}
+                                                >
+                                                  <Pencil size={12} />
+                                                </button>
+                                                <button
+                                                  type="button"
+                                                  className="aas-node-action-btn aas-node-action-btn--add"
+                                                  title="Thêm bài học"
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setSelectedChapterId(chapter.id);
+                                                    setExpandedChapterIds((prev) =>
+                                                      Array.from(new Set([...prev, chapter.id]))
+                                                    );
+                                                    openModal({
+                                                      type: 'lesson',
+                                                      mode: 'create',
+                                                      parentChapterId: chapter.id,
+                                                    });
+                                                  }}
+                                                >
+                                                  <Plus size={12} />
+                                                </button>
+                                              </div>
+                                            </div>
 
                                             {chapterOpen && chapterActive && (
                                               <div className="aas-tree-children">
@@ -1398,14 +1552,36 @@ export default function AdminAcademicStructurePage() {
                                                     key={lesson.id}
                                                     className="aas-tree-node lvl-3"
                                                   >
-                                                    <button
-                                                      type="button"
-                                                      className={`aas-node-btn${selectedLessonId === lesson.id ? ' is-active' : ''}`}
-                                                      onClick={() => setSelectedLessonId(lesson.id)}
-                                                    >
-                                                      <BookText size={14} />
-                                                      <span>{getLessonTreeLabel(lesson)}</span>
-                                                    </button>
+                                                    <div className="aas-node-row">
+                                                      <button
+                                                        type="button"
+                                                        className={`aas-node-btn${selectedLessonId === lesson.id ? ' is-active' : ''}`}
+                                                        onClick={() =>
+                                                          setSelectedLessonId(lesson.id)
+                                                        }
+                                                      >
+                                                        <BookText size={14} />
+                                                        <span>{getLessonTreeLabel(lesson)}</span>
+                                                      </button>
+                                                      <div className="aas-node-actions">
+                                                        <button
+                                                          type="button"
+                                                          className="aas-node-action-btn"
+                                                          title="Chỉnh sửa bài học"
+                                                          onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            openModal({
+                                                              type: 'lesson',
+                                                              mode: 'edit',
+                                                              data: lesson,
+                                                              parentChapterId: lesson.chapterId,
+                                                            });
+                                                          }}
+                                                        >
+                                                          <Pencil size={12} />
+                                                        </button>
+                                                      </div>
+                                                    </div>
                                                   </div>
                                                 ))}
                                                 {!lessonsQuery.isLoading &&
@@ -1497,6 +1673,13 @@ export default function AdminAcademicStructurePage() {
           </div>
         </section>
       </div>
+
+      <AcademicNodeModal
+        target={modalTarget}
+        grades={grades}
+        onClose={closeModal}
+        onSuccess={handleModalSuccess}
+      />
     </DashboardLayout>
   );
 }
