@@ -1,4 +1,17 @@
-import { ArrowLeft, ChevronDown, Pencil, Plus, RefreshCw } from 'lucide-react';
+import {
+  AlertCircle,
+  ArrowLeft,
+  ChevronDown,
+  Clock,
+  Eye,
+  FileText,
+  ListChecks,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Sparkles,
+  Users,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { QuestionCard } from '../../components/assessment';
@@ -47,6 +60,17 @@ const scoringPolicyLabel: Record<string, string> = {
   LATEST: 'Lần gần nhất',
   AVERAGE: 'Điểm trung bình',
 };
+
+function assessmentStatusPillClass(status: string): string {
+  switch (status) {
+    case 'PUBLISHED':
+      return 'inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-50 font-[Be_Vietnam_Pro] text-[12px] font-semibold text-emerald-800 border border-emerald-200';
+    case 'CLOSED':
+      return 'inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 font-[Be_Vietnam_Pro] text-[12px] font-semibold text-slate-600 border border-slate-200';
+    default:
+      return 'inline-flex items-center px-2 py-0.5 rounded-full bg-[#E8E6DC] font-[Be_Vietnam_Pro] text-[12px] font-semibold text-[#5E5D59]';
+  }
+}
 
 function getQuestionId(question: { questionId: string; id?: string }) {
   return question.questionId || question.id || '';
@@ -324,113 +348,239 @@ export default function AssessmentDetailRefactored() {
   function renderContent() {
     if (isLoading) {
       return (
-        <section className="module-page">
-          <div className="empty">Đang tải chi tiết {UI_TEXT.QUIZ.toLowerCase()}...</div>
-        </section>
+        <div className="space-y-6" aria-busy="true" aria-label="Đang tải">
+          <div className="h-10 w-56 rounded-xl bg-[#FAF9F5] border border-[#F0EEE6] animate-pulse" />
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {[1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className="h-[88px] rounded-2xl bg-[#FAF9F5] border border-[#F0EEE6] animate-pulse"
+              />
+            ))}
+          </div>
+          <div className="h-32 rounded-2xl bg-[#FAF9F5] border border-[#F0EEE6] animate-pulse" />
+          <div className="h-64 rounded-2xl bg-[#FAF9F5] border border-[#F0EEE6] animate-pulse" />
+        </div>
       );
     }
 
     if (isError) {
       return (
-        <section className="module-page">
-          <div className="empty">
+        <div className="flex flex-col items-center justify-center py-16 gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center text-red-400">
+            <AlertCircle className="w-6 h-6" aria-hidden />
+          </div>
+          <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] text-center max-w-md m-0">
             {error instanceof Error
               ? error.message
               : `Không thể tải chi tiết ${UI_TEXT.QUIZ.toLowerCase()}`}
-          </div>
-        </section>
+          </p>
+          <button
+            type="button"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors"
+            onClick={() => void refetch()}
+          >
+            Thử lại
+          </button>
+        </div>
       );
     }
 
     if (!assessment) {
       return (
-        <section className="module-page">
-          <div className="empty">Không tìm thấy {UI_TEXT.QUIZ.toLowerCase()}.</div>
-        </section>
+        <div className="flex flex-col items-center justify-center py-16 gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-[#FAF9F5] border border-[#E8E6DC] flex items-center justify-center text-[#87867F]">
+            <AlertCircle className="w-6 h-6" aria-hidden />
+          </div>
+          <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] m-0">
+            Không tìm thấy {UI_TEXT.QUIZ.toLowerCase()}.
+          </p>
+        </div>
       );
     }
 
+    const typeLabel =
+      assessmentTypeLabel[assessment.assessmentType] || assessment.assessmentType || '';
+    const modeLabel =
+      assessmentModeLabel[assessment.assessmentMode || 'DIRECT'] ||
+      assessment.assessmentMode ||
+      'DIRECT';
+    const scoringShort =
+      scoringPolicyLabel[assessment.attemptScoringPolicy || 'BEST'] ||
+      assessment.attemptScoringPolicy ||
+      'BEST';
+
     return (
-      <section className="module-page">
-        <button className="btn secondary" onClick={() => navigate('/teacher/assessments')}>
-          <ArrowLeft size={14} />
-          Quay lại danh sách {UI_TEXT.QUIZ.toLowerCase()}
+      <div className="space-y-6">
+        <button
+          type="button"
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors"
+          onClick={() => navigate('/teacher/assessments')}
+        >
+          <ArrowLeft size={15} aria-hidden />
+          Quay lại danh sách
         </button>
 
-        <article className="hero-card">
-          <div className="row" style={{ alignItems: 'start', flexWrap: 'wrap' }}>
-            <div>
-              <p className="hero-kicker">Chi tiết {UI_TEXT.QUIZ.toLowerCase()}</p>
-              <h2>{assessment.title}</h2>
-              <p>{assessment.description || 'Không có mô tả'}</p>
+        {/* Page header — same structure as /teacher/mindmaps */}
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="w-10 h-10 rounded-xl bg-[#E8E6DC] flex items-center justify-center text-[#5E5D59] shrink-0">
+              <Sparkles className="w-5 h-5" aria-hidden />
             </div>
-            {assessment.status === 'DRAFT' && (
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                <button className="btn secondary" onClick={() => setOpenEdit(true)}>
-                  <Pencil size={14} />
-                  Chỉnh sửa thông tin
-                </button>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <h1 className="font-[Playfair_Display] text-[22px] font-medium text-[#141413] break-words">
+                  {assessment.title}
+                </h1>
+                <span className={assessmentStatusPillClass(assessment.status)}>
+                  {assessmentStatusLabel[assessment.status] || assessment.status}
+                </span>
               </div>
-            )}
+              <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-0.5">
+                {typeLabel} · {modeLabel}
+                {assessment.examMatrixName ? ` · Ma trận: ${assessment.examMatrixName}` : ''}
+              </p>
+              <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#5E5D59] mt-1.5 leading-relaxed m-0">
+                {assessment.description?.trim() ? assessment.description : 'Không có mô tả'}
+              </p>
+            </div>
           </div>
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            {assessment.status === 'DRAFT' && (
+              <button
+                type="button"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors active:scale-[0.98]"
+                onClick={() => setOpenEdit(true)}
+              >
+                <Pencil size={15} aria-hidden />
+                Chỉnh sửa thông tin
+              </button>
+            )}
+            {id ? (
+              <button
+                type="button"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#C96442] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:brightness-95 active:scale-[0.98] transition-all duration-150"
+                onClick={() => navigate(`/teacher/assessments/${id}/preview`)}
+              >
+                Xem trước
+                <Eye className="w-3.5 h-3.5" aria-hidden />
+              </button>
+            ) : null}
+          </div>
+        </div>
+
+        {/* Stats — tile grid like /teacher/mindmaps */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {(
+            [
+              {
+                label: 'Trạng thái · Loại đề',
+                value: assessmentStatusLabel[assessment.status] || assessment.status,
+                sub: typeLabel,
+                Icon: FileText,
+                bg: 'bg-[#FFF7ED]',
+                color: 'text-[#E07B39]',
+              },
+              {
+                label: 'Câu hỏi',
+                value: assessment.totalQuestions ?? 0,
+                sub: `Tổng điểm: ${assessment.totalPoints ?? 0}`,
+                Icon: ListChecks,
+                bg: 'bg-[#EEF2FF]',
+                color: 'text-[#4F7EF7]',
+              },
+              {
+                label: 'Lượt nộp · Chấm điểm',
+                value: assessment.submissionCount ?? 0,
+                sub: scoringShort,
+                Icon: Users,
+                bg: 'bg-[#ECFDF5]',
+                color: 'text-[#2EAD7A]',
+              },
+              {
+                label: 'Thời gian làm bài',
+                value:
+                  assessment.timeLimitMinutes != null ? `${assessment.timeLimitMinutes}′` : '∞',
+                sub:
+                  assessment.timeLimitMinutes != null
+                    ? `${assessment.timeLimitMinutes} phút`
+                    : 'Không giới hạn',
+                Icon: Clock,
+                bg: 'bg-[#F5F3FF]',
+                color: 'text-[#9B6FE0]',
+              },
+            ] as const
+          ).map(({ label, value, sub, Icon, bg, color }) => (
+            <div
+              key={label}
+              className="bg-white rounded-2xl border border-[#E8E6DC] p-4 flex items-center gap-3"
+            >
+              <div
+                className={`w-9 h-9 rounded-xl ${bg} flex items-center justify-center shrink-0`}
+              >
+                <Icon className={`w-4 h-4 ${color}`} aria-hidden />
+              </div>
+              <div className="min-w-0">
+                <p className="font-[Playfair_Display] text-[22px] font-medium text-[#141413] leading-none truncate">
+                  {value}
+                </p>
+                <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mt-0.5">{label}</p>
+                <p className="font-[Be_Vietnam_Pro] text-[11px] text-[#5E5D59] mt-0.5 truncate">
+                  {sub}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <article className="bg-white rounded-2xl border border-[#E8E6DC] p-4 lg:p-5">
+          <h3 className="font-[Playfair_Display] text-[15px] font-medium text-[#141413] m-0 mb-3">
+            Thông tin chi tiết
+          </h3>
+          <dl className="m-0 flex flex-col divide-y divide-[#F0EEE6]">
+            <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-4 py-3 first:pt-0">
+              <dt className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] font-semibold m-0 shrink-0 sm:w-40">
+                Bài học
+              </dt>
+              <dd className="font-[Be_Vietnam_Pro] text-[13px] text-[#141413] font-semibold m-0 sm:flex-1">
+                {assessment.lessonTitles?.join(', ') || 'Không có'}
+              </dd>
+            </div>
+            <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-4 py-3">
+              <dt className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] font-semibold m-0 shrink-0 sm:w-40">
+                Thời gian làm bài
+              </dt>
+              <dd className="font-[Be_Vietnam_Pro] text-[13px] text-[#141413] font-semibold m-0 sm:flex-1">
+                {assessment.timeLimitMinutes != null
+                  ? `${assessment.timeLimitMinutes} phút`
+                  : 'Không giới hạn'}
+              </dd>
+            </div>
+            <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-4 py-3">
+              <dt className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] font-semibold m-0 shrink-0 sm:w-40">
+                Chế độ tạo đề
+              </dt>
+              <dd className="font-[Be_Vietnam_Pro] text-[13px] text-[#141413] font-semibold m-0 sm:flex-1">
+                {modeLabel}
+              </dd>
+            </div>
+            <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-4 py-3">
+              <dt className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] font-semibold m-0 shrink-0 sm:w-40">
+                Ma trận đề
+              </dt>
+              <dd className="font-[Be_Vietnam_Pro] text-[13px] text-[#141413] font-semibold m-0 sm:flex-1 break-words">
+                {assessment.examMatrixName ?? assessment.examMatrixId ?? 'Không có'}
+              </dd>
+            </div>
+          </dl>
         </article>
 
-        <div className="stats-grid">
-          <article className="stat-card">
-            <p>Trạng thái</p>
-            <h3>{assessmentStatusLabel[assessment.status] || assessment.status}</h3>
-            <span>
-              {assessmentTypeLabel[assessment.assessmentType] || assessment.assessmentType}
-            </span>
-          </article>
-          <article className="stat-card">
-            <p>Câu hỏi</p>
-            <h3>{assessment.totalQuestions}</h3>
-            <span>Tổng điểm: {assessment.totalPoints}</span>
-          </article>
-          <article className="stat-card">
-            <p>Lượt nộp</p>
-            <h3>{assessment.submissionCount}</h3>
-            <span>
-              Chính sách chấm điểm:{' '}
-              {scoringPolicyLabel[assessment.attemptScoringPolicy || 'BEST'] ||
-                assessment.attemptScoringPolicy ||
-                'BEST'}
-            </span>
-          </article>
-        </div>
-
-        <div className="table-wrap">
-          <table className="table">
-            <tbody>
-              <tr>
-                <th>Bài học</th>
-                <td>{assessment.lessonTitles?.join(', ') || 'Không có'}</td>
-              </tr>
-              <tr>
-                <th>Thời gian làm bài</th>
-                <td>{assessment.timeLimitMinutes || 0} phút</td>
-              </tr>
-              <tr>
-                <th>Chế độ tạo đề</th>
-                <td>
-                  {assessmentModeLabel[assessment.assessmentMode || 'DIRECT'] ||
-                    assessment.assessmentMode ||
-                    'DIRECT'}
-                </td>
-              </tr>
-              <tr>
-                <th>Ma trận đề</th>
-                <td>{assessment.examMatrixName ?? assessment.examMatrixId ?? 'Không có'}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <article className="data-card" style={{ marginTop: 16 }}>
-          <div className="row" style={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
-            <h3>Câu hỏi trong {UI_TEXT.QUIZ.toLowerCase()}</h3>
-            <div className="row" style={{ justifyContent: 'start', flexWrap: 'wrap' }}>
+        <article className="bg-white rounded-2xl border border-[#E8E6DC] overflow-hidden">
+          <div className="px-4 py-4 lg:px-6 lg:py-5 border-b border-[#F0EEE6] bg-[#FAF9F5] flex flex-wrap items-center justify-between gap-3">
+            <h3 className="font-[Playfair_Display] text-[16px] font-medium text-[#141413] m-0">
+              Câu hỏi trong {UI_TEXT.QUIZ.toLowerCase()}
+            </h3>
+            <div className="flex flex-wrap items-center gap-2">
               {assessment.status === 'DRAFT' && (
                 <>
                   <input
@@ -444,6 +594,7 @@ export default function AssessmentDetailRefactored() {
                     placeholder="Tổng điểm"
                   />
                   <button
+                    type="button"
                     className="btn"
                     onClick={() => void handleDistributePoints()}
                     disabled={questions.length === 0 || distributePointsMutation.isPending}
@@ -453,6 +604,7 @@ export default function AssessmentDetailRefactored() {
                       : 'Phân bổ điểm tự động'}
                   </button>
                   <button
+                    type="button"
                     className="btn secondary"
                     onClick={() => void handleDistributePoints()}
                     disabled={questions.length === 0 || distributePointsMutation.isPending}
@@ -464,13 +616,14 @@ export default function AssessmentDetailRefactored() {
             </div>
           </div>
 
+          <div className="p-4 lg:p-6 space-y-4">
           {generateError && (
-            <div className="empty" style={{ color: '#b91c1c' }}>
+            <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3 font-[Be_Vietnam_Pro] text-[13px] text-red-700">
               {generateError}
             </div>
           )}
           {questionCrudError && (
-            <div className="empty" style={{ color: '#b91c1c' }}>
+            <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3 font-[Be_Vietnam_Pro] text-[13px] text-red-700">
               {questionCrudError}
             </div>
           )}
@@ -659,6 +812,7 @@ export default function AssessmentDetailRefactored() {
               ))}
             </div>
           )}
+          </div>
         </article>
 
         <AssessmentModal
@@ -668,7 +822,7 @@ export default function AssessmentDetailRefactored() {
           onClose={() => setOpenEdit(false)}
           onSubmit={save}
         />
-      </section>
+      </div>
     );
   }
 
@@ -677,8 +831,11 @@ export default function AssessmentDetailRefactored() {
       role="teacher"
       user={{ name: 'Teacher', avatar: '', role: 'teacher' }}
       notificationCount={0}
+      contentClassName="dashboard-content--flush-bleed"
     >
-      <div className="module-layout-container">{renderContent()}</div>
+      <div className="px-6 py-8 lg:px-8">
+        <div className="module-layout-container">{renderContent()}</div>
+      </div>
     </DashboardLayout>
   );
 }

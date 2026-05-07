@@ -1,4 +1,4 @@
-import { Trash2, Save, X, Check } from 'lucide-react';
+import { AlertCircle, Trash2, Save, X, Check, Loader2, Pencil } from 'lucide-react';
 import { useMemo, useState, useCallback, useRef, useEffect } from 'react';
 import type {
   ExamMatrixPartConfig,
@@ -66,6 +66,24 @@ function normalizeLevel(level: string): MatrixLevel | null {
   return null;
 }
 
+function buildLocalCellsMap(
+  chapters: ExamMatrixTableChapter[],
+  numberOfParts: number
+): Map<CellId, number> {
+  const map = new Map<CellId, number>();
+  for (const chapter of chapters) {
+    for (const row of chapter.rows) {
+      for (let p = 1; p <= numberOfParts; p++) {
+        for (const level of cognitiveOrder) {
+          const cellId = makeCellId(row.rowId, p, level);
+          map.set(cellId, getLevelCount(row, level, p));
+        }
+      }
+    }
+  }
+  return map;
+}
+
 function getLevelCount(row: ExamMatrixTableRow, level: MatrixLevel, partNumber: number): number {
   // FIX: Only use row.cells array, filtered by BOTH cognitiveLevel AND partNumber.
   // The old fallback to countByCognitive was aggregating across ALL parts,
@@ -74,6 +92,89 @@ function getLevelCount(row: ExamMatrixTableRow, level: MatrixLevel, partNumber: 
     (cell) => normalizeLevel(cell.cognitiveLevel) === level && cell.partNumber === partNumber
   );
   return fromCells?.questionCount ?? 0;
+}
+
+/** Nhãn lớp để gộp ô — ưu tiên grade ma trận, sau đó dữ liệu dòng */
+function displayGradeForRow(row: ExamMatrixTableRow, matrixGrade?: string): string {
+  const g =
+    matrixGrade?.trim() ||
+    row.schoolGradeName?.trim() ||
+    row.gradeLevel?.trim() ||
+    row.schoolGrade?.trim() ||
+    row.school_grade_name?.trim() ||
+    row.grade_level?.trim() ||
+    '';
+  return g || '—';
+}
+
+function chapterSortRank(ch: ExamMatrixTableChapter): number {
+  const id = ch.chapterId?.trim();
+  if (id && /^\d+$/.test(id)) return Number.parseInt(id, 10);
+  const name = ch.chapterName || '';
+  const m = name.match(/(\d+)/);
+  if (m) return Number.parseInt(m[1], 10);
+  return Number.MAX_SAFE_INTEGER;
+}
+
+/** Sắp xếp chương: số trong tên/id trước, sau đó locale */
+function sortChaptersForDisplay(list: ExamMatrixTableChapter[]): ExamMatrixTableChapter[] {
+  return [...list].sort((a, b) => {
+    const ra = chapterSortRank(a);
+    const rb = chapterSortRank(b);
+    if (ra !== rb) return ra - rb;
+    return (a.chapterName || '').localeCompare(b.chapterName || '', 'vi', { numeric: true });
+  });
+}
+
+type MatrixFlatRow = {
+  row: ExamMatrixTableRow;
+  chapter: ExamMatrixTableChapter;
+  chapterLabel: string;
+  displayGrade: string;
+  sortedChapterIndex: number;
+};
+
+function buildFlatTableRows(
+  sortedChapters: ExamMatrixTableChapter[],
+  matrixGrade?: string
+): MatrixFlatRow[] {
+  const out: MatrixFlatRow[] = [];
+  sortedChapters.forEach((chapter, sortedChapterIndex) => {
+    const fallbackChapterName = chapter.chapterName || 'Chủ đề không xác định';
+    for (const row of chapter.rows) {
+      const displayGrade = displayGradeForRow(row, matrixGrade);
+      const chapterLabel =
+        fallbackChapterName === 'Chủ đề không xác định'
+          ? row.chapterName || row.chapter || fallbackChapterName
+          : fallbackChapterName;
+      out.push({
+        row,
+        chapter,
+        chapterLabel,
+        displayGrade,
+        sortedChapterIndex,
+      });
+    }
+  });
+  return out;
+}
+
+/** rowspan cột Lớp: các dòng liên tiếp cùng displayGrade → một ô */
+function computeGradeRowSpans(flat: MatrixFlatRow[]): number[] {
+  const spans = new Array(flat.length).fill(0);
+  let i = 0;
+  while (i < flat.length) {
+    const label = flat[i].displayGrade;
+    let n = 1;
+    let j = i + 1;
+    while (j < flat.length && flat[j].displayGrade === label) {
+      n++;
+      j++;
+    }
+    spans[i] = n;
+    i = j;
+  }
+  return spans;
 }
 
 export function MatrixTable({
@@ -149,10 +250,6 @@ export function MatrixTable({
   const [dirtyCells, setDirtyCells] = useState<Set<CellId>>(new Set());
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  
-  // Debounce timer
-  const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const DEBOUNCE_MS = 500;
 
   const effectiveParts = (parts && parts.length > 0) ? parts : [
     { partNumber: 1, questionType: 'MULTIPLE_CHOICE' as const, name: undefined },
@@ -161,25 +258,20 @@ export function MatrixTable({
   ].slice(0, _numberOfParts || 3);
   const numberOfParts = getNumberOfParts(effectiveParts);
 
+  const sortedChapters = useMemo(() => sortChaptersForDisplay(chapters), [chapters]);
+  const flatRows = useMemo(
+    () => buildFlatTableRows(sortedChapters, gradeLevel),
+    [sortedChapters, gradeLevel]
+  );
+  const gradeRowSpans = useMemo(() => computeGradeRowSpans(flatRows), [flatRows]);
+
   // Initialize local cells from chapters.
   // CRITICAL FIX: Skip reinitialization entirely when user has pending edits.
   // This prevents server data from racing with and overwriting the user's unsaved changes.
   useEffect(() => {
     if (dirtyCellsRef.current.size > 0) return; // Pending edits — don't overwrite
 
-    const newLocalCells = new Map<CellId, number>();
-    for (const chapter of chapters) {
-      for (const row of chapter.rows) {
-        for (let p = 1; p <= numberOfParts; p++) {
-          for (const level of cognitiveOrder) {
-            const cellId = makeCellId(row.rowId, p, level);
-            const count = getLevelCount(row, level, p);
-            newLocalCells.set(cellId, count);
-          }
-        }
-      }
-    }
-    setLocalCells(newLocalCells);
+    setLocalCells(buildLocalCellsMap(chapters, numberOfParts));
   }, [chapters, numberOfParts]);
 
   // Get cell value (local or from chapters)
@@ -240,19 +332,6 @@ export function MatrixTable({
     numberOfPartsRef.current = numberOfParts;
   }, [numberOfParts]);
 
-  // Debounced save
-  const scheduleSave = useCallback(() => {
-    if (saveTimerRef.current) {
-      clearTimeout(saveTimerRef.current);
-    }
-    
-    saveTimerRef.current = setTimeout(() => {
-      void performSave();
-    }, DEBOUNCE_MS);
-  }, []); // [] is now SAFE because performSave reads from refs
-
-  // mapLevelToBackend is now a stable module-level function (defined above MatrixTable)
-
   const performSave = async () => {
     const currentDirty = dirtyCellsRef.current;
     const currentLocal = localCellsRef.current;
@@ -304,61 +383,19 @@ export function MatrixTable({
     }
   };
 
-  // Update cell value
+  // Update cell value (local only — gửi máy chủ khi bấm «Lưu thay đổi»)
   const updateCellValue = useCallback((rowId: string, partNumber: number, level: MatrixLevel, newValue: number) => {
     const cellId = makeCellId(rowId, partNumber, level);
     const clampedValue = Math.max(0, Math.floor(newValue));
-    
-    setLocalCells(prev => {
+
+    setLocalCells((prev) => {
       const next = new Map(prev);
       next.set(cellId, clampedValue);
       return next;
     });
-    
-    setDirtyCells(prev => new Set(prev).add(cellId));
-    
-    // If setting to 0 (delete), bypass debounce and save directly.
-    // We can't rely on performSave (stale closure + ref timing issues).
-    // Instead, call onCellChange directly with just this one cell.
-    if (clampedValue === 0) {
-      // Clear any pending debounce
-      if (saveTimerRef.current) {
-        clearTimeout(saveTimerRef.current);
-      }
-      // Direct save: build request from known data (no refs needed)
-      const currentOnCellChange = onCellChangeRef.current;
-      const currentMatrixId = matrixIdRef.current;
-      if (currentOnCellChange && currentMatrixId) {
-        const [, partStr, levelStr] = cellId.split(':');
-        const pn = parseInt(partStr.substring(1), 10);
-        const request: BatchUpsertMatrixRowCellsRequest = {
-          rows: [{
-            rowId,
-            cells: [{
-              partNumber: pn,
-              cognitiveLevel: mapLevelToBackend(levelStr as MatrixLevel),
-              questionCount: 0, // We know the value is 0
-              pointsPerQuestion: 1,
-            }],
-          }],
-        };
-        currentOnCellChange(currentMatrixId, request)
-          .then(() => {
-            setDirtyCells(prev => {
-              const next = new Set(prev);
-              next.delete(cellId);
-              return next;
-            });
-          })
-          .catch((err) => {
-            console.error('Failed to save zero cell:', err);
-            setSaveError(err instanceof Error ? err.message : 'Failed to save');
-          });
-      }
-    } else {
-      scheduleSave();
-    }
-  }, [scheduleSave]);
+
+    setDirtyCells((prev) => new Set(prev).add(cellId));
+  }, []);
 
   // Start editing a cell
   const startEdit = useCallback((rowId: string, partNumber: number, level: MatrixLevel) => {
@@ -395,6 +432,25 @@ export function MatrixTable({
     setEditValue('');
   }, []);
 
+  const discardPendingChanges = useCallback(() => {
+    if (saving) return;
+    const hasLocalDraft = dirtyCells.size > 0 || editingCell !== null;
+    if (!hasLocalDraft) return;
+
+    if (
+      !globalThis.confirm(
+        'Hủy thao tác chỉnh sửa? Ô đang gõ và các ô đã chỉnh (chưa Lưu) sẽ trở lại như trước.'
+      )
+    ) {
+      return;
+    }
+
+    cancelEdit();
+    setDirtyCells(new Set());
+    setSaveError(null);
+    setLocalCells(buildLocalCellsMap(chapters, numberOfParts));
+  }, [saving, dirtyCells.size, editingCell, chapters, numberOfParts, cancelEdit]);
+
   // Focus input when editing starts
   useEffect(() => {
     if (editingCell && inputRef.current) {
@@ -421,32 +477,102 @@ export function MatrixTable({
     );
   }
 
+  const hasPendingChanges = dirtyCells.size > 0;
+  const isDraftingCell = editingCell !== null;
+  const toolbarBusy = saving || hasPendingChanges || isDraftingCell || !!saveError;
+
   return (
-    <div className="matrix-container">
-      {/* Save status indicator */}
+    <div
+      className={`matrix-container${canEdit && onCellChange && toolbarBusy ? ' matrix-container--edit-mode' : ''}`}
+    >
       {canEdit && onCellChange && (
-        <div className="matrix-save-status">
-          {saving && (
-            <span className="matrix-save-status--saving">
-              <Save size={14} /> Đang lưu...
-            </span>
-          )}
-          {!saving && dirtyCells.size > 0 && (
-            <span className="matrix-save-status--pending">
-              <Save size={14} /> {dirtyCells.size} thay đổi chưa lưu
-            </span>
-          )}
-          {!saving && dirtyCells.size === 0 && !saveError && (
-            <span className="matrix-save-status--saved">
-              <Check size={14} /> Đã lưu
-            </span>
-          )}
-          {saveError && (
-            <span className="matrix-save-status--error">
-              <X size={14} /> Lỗi: {saveError}
-            </span>
-          )}
-        </div>
+        <section className="matrix-edit-toolbar" aria-label="Trạng thái chỉnh sửa ma trận">
+          <div className="matrix-edit-toolbar__row">
+            <div className="matrix-edit-toolbar__status" aria-live="polite">
+              {saving && (
+                <span className="matrix-edit-toolbar__line matrix-edit-toolbar__line--saving">
+                  <Loader2 size={16} className="matrix-edit-toolbar__spin" aria-hidden />
+                  Đang gửi lên máy chủ…
+                </span>
+              )}
+              {!saving && saveError && (
+                <span className="matrix-edit-toolbar__line matrix-edit-toolbar__line--error">
+                  <AlertCircle size={16} aria-hidden />
+                  <span>
+                    Không lưu được: <strong>{saveError}</strong> — thử lại sau khi sửa hoặc kiểm tra kết nối.
+                  </span>
+                </span>
+              )}
+              {!saving && !saveError && isDraftingCell && (
+                <span className="matrix-edit-toolbar__line matrix-edit-toolbar__line--edit">
+                  <Pencil size={16} aria-hidden />
+                  <span>
+                    <strong>Đang sửa ô.</strong> Enter để xác nhận số câu · Esc để bỏ nhập trong ô · Sau đó bấm{' '}
+                    <strong>Lưu thay đổi</strong> để hoàn tất.
+                  </span>
+                </span>
+              )}
+              {!saving &&
+                !saveError &&
+                !isDraftingCell &&
+                hasPendingChanges && (
+                  <span className="matrix-edit-toolbar__line matrix-edit-toolbar__line--pending">
+                    <Save size={16} aria-hidden />
+                    <span>
+                      Có <strong>{dirtyCells.size}</strong> ô đã chỉnh trên màn hình,{' '}
+                      <strong>chưa gửi máy chủ</strong>. Bấm <strong>Lưu thay đổi</strong> để hoàn tất hoặc{' '}
+                      <strong>Hủy</strong> để trở lại dữ liệu đã tải.
+                    </span>
+                  </span>
+                )}
+              {!saving && !saveError && !isDraftingCell && !hasPendingChanges && (
+                <span className="matrix-edit-toolbar__line matrix-edit-toolbar__line--synced">
+                  <Check size={16} aria-hidden />
+                  <span>
+                    Đã đồng bộ với máy chủ. Click vào ô số câu để chỉnh — kết thúc bằng{' '}
+                    <strong>Lưu thay đổi</strong>.
+                  </span>
+                </span>
+              )}
+            </div>
+
+            <div className="matrix-edit-toolbar__actions">
+              <button
+                type="button"
+                className="matrix-toolbar-btn matrix-toolbar-btn--ghost"
+                onClick={() => discardPendingChanges()}
+                disabled={saving || (!hasPendingChanges && !isDraftingCell)}
+                title="Bỏ ô đang nhập và/hoặc các ô đã chỉnh chưa Lưu"
+              >
+                <X size={15} aria-hidden />
+                Hủy
+              </button>
+              <button
+                type="button"
+                className="matrix-toolbar-btn matrix-toolbar-btn--primary"
+                onClick={() => void performSave()}
+                disabled={saving || !hasPendingChanges || isDraftingCell}
+                title={
+                  isDraftingCell
+                    ? 'Hoàn tất ô đang sửa (Enter hoặc click ra ngoài) trước khi lưu'
+                    : undefined
+                }
+              >
+                {saving ? (
+                  <>
+                    <Loader2 size={15} className="matrix-edit-toolbar__spin" aria-hidden />
+                    Đang lưu…
+                  </>
+                ) : (
+                  <>
+                    <Save size={15} aria-hidden />
+                    Lưu thay đổi
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </section>
       )}
 
       <div className="matrix-scroll-wrapper">
@@ -500,45 +626,34 @@ export function MatrixTable({
             </tr>
           </thead>
 
-          {/* Body */}
+          {/* Body — chương đã sort; cột Lớp gộp theo cụm dòng liên tiếp cùng lớp */}
           <tbody className="matrix-body">
-            {chapters.map((chapter, chapterIndex) => {
-              const chapterName = chapter.chapterName || 'Chủ đề không xác định';
-              const rowCount = chapter.rows.length;
+            {flatRows.map((fr, rowIdx) => {
+              const { row, chapter, chapterLabel, displayGrade, sortedChapterIndex } = fr;
+              const rowTotal = rowTotals[row.rowId] ?? 0;
+              const gradeSpan = gradeRowSpans[rowIdx];
+              const showGradeCell = gradeSpan > 0;
 
-              return chapter.rows.map((row, rowIndex) => {
-                const isFirstRowInChapter = rowIndex === 0;
-                const rowTotal = rowTotals[row.rowId] ?? 0;
+              const prevFr = rowIdx > 0 ? flatRows[rowIdx - 1] : null;
+              const isFirstRowInChapter = !prevFr || prevFr.chapter !== chapter;
+              const chapterRowSpan = chapter.rows.length;
 
-                const displayGrade =
-                  gradeLevel || row.schoolGradeName || row.gradeLevel || row.schoolGrade || 'N/A';
+              return (
+                <tr
+                  key={row.rowId}
+                  className={`matrix-row ${sortedChapterIndex % 2 === 0 ? 'matrix-row--even' : 'matrix-row--odd'}`}
+                >
+                  {showGradeCell && (
+                    <td className="matrix-td matrix-td--grade" rowSpan={gradeSpan}>
+                      <div className="matrix-grade-cell">{displayGrade}</div>
+                    </td>
+                  )}
 
-                const displayChapter =
-                  chapterName === 'Chủ đề không xác định'
-                    ? row.chapterName || row.chapter || 'Chủ đề không xác định'
-                    : chapterName;
-
-                return (
-                  <tr
-                    key={row.rowId}
-                    className={`matrix-row ${chapterIndex % 2 === 0 ? 'matrix-row--even' : 'matrix-row--odd'}`}
-                  >
-                    {/* FIX: Render grade cell for EACH chapter's first row, not just the first chapter.
-                        This allows matrices with rows from different grades to display correctly. */}
-                    {isFirstRowInChapter && (
-                      <td
-                        className="matrix-td matrix-td--grade"
-                        rowSpan={rowCount}
-                      >
-                        <div className="matrix-grade-cell">{displayGrade}</div>
-                      </td>
-                    )}
-
-                    {isFirstRowInChapter && (
-                      <td className="matrix-td matrix-td--chapter" rowSpan={rowCount}>
-                        <div className="matrix-chapter-cell">{displayChapter}</div>
-                      </td>
-                    )}
+                  {isFirstRowInChapter && (
+                    <td className="matrix-td matrix-td--chapter" rowSpan={chapterRowSpan}>
+                      <div className="matrix-chapter-cell">{chapterLabel}</div>
+                    </td>
+                  )}
 
                     {/* Editable cells */}
                     {effectiveParts.map((part) =>
@@ -548,7 +663,11 @@ export function MatrixTable({
                         const isEditing = editingCell === cellId;
                         const isDirty = dirtyCells.has(cellId);
                         
-                        const available = getAvailability(row.chapterId || '', part.partNumber, level);
+                        const available = getAvailability(
+                          row.chapterId || chapter.chapterId || '',
+                          part.partNumber,
+                          level
+                        );
                         const isOverLimit = available !== undefined && count > available;
 
                         return (
@@ -624,7 +743,6 @@ export function MatrixTable({
                     )}
                   </tr>
                 );
-              });
             })}
 
             {/* Grand Total Row */}

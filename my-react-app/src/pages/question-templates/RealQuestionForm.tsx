@@ -299,7 +299,10 @@ export function RealQuestionForm({ isOpen, onClose, onBlueprintReady }: Readonly
             <button type="submit" className="btn" disabled={isLoading}>
               {isLoading ? (
                 <>
-                  <span className="spinner" style={{ width: 14, height: 14, marginRight: 6 }} />
+                  <span
+                    className="inline-block w-3.5 h-3.5 rounded-full border-2 border-white/35 border-t-white animate-spin mr-2 align-middle shrink-0"
+                    aria-hidden
+                  />
                   AI đang phân tích…
                 </>
               ) : (
