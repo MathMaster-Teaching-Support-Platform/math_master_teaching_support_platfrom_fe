@@ -349,10 +349,74 @@ const CashFlowDashboard: React.FC = () => {
     };
   });
 
+  // Use positive value for outflow so the bar points up
   const chartSeries = normalizedSeries.map((point) => ({
     ...point,
-    outflow: -Math.abs(point.outflow),
+    outflow: Math.abs(point.outflow),
   }));
+
+  // Smart Y-axis formatter: pick unit based on the largest absolute value in the dataset
+  const chartMaxAbs = chartSeries.reduce(
+    (max, p) => Math.max(max, Math.abs(p.inflow), Math.abs(p.outflow)),
+    0
+  );
+  const yAxisTickFormatter = (val: number): string => {
+    if (chartMaxAbs >= 1_000_000) return `${(val / 1_000_000).toFixed(1)}M`;
+    if (chartMaxAbs >= 1_000) return `${(val / 1_000).toFixed(0)}K`;
+    return `${val}₫`;
+  };
+
+  // Custom tooltip for the cash-flow bar chart
+  const CashFlowTooltip = ({
+    active,
+    payload,
+    label,
+  }: {
+    active?: boolean;
+    payload?: { name: string; value: number; dataKey: string }[];
+    label?: string;
+  }) => {
+    if (!active || !payload?.length) return null;
+    const vnd = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
+    return (
+      <div
+        style={{
+          background: '#fff',
+          border: '1px solid #F0EEE6',
+          borderRadius: 12,
+          boxShadow: '0 10px 25px -10px rgba(0,0,0,0.15)',
+          padding: '10px 14px',
+          fontFamily: 'Be Vietnam Pro, sans-serif',
+          fontSize: 13,
+          minWidth: 180,
+        }}
+      >
+        <div style={{ fontWeight: 600, color: '#374151', marginBottom: 8 }}>{label}</div>
+        {payload.map((entry) => {
+          const isInflow = entry.dataKey === 'inflow';
+          const absVal = Math.abs(entry.value);
+          const formatted = isInflow
+            ? vnd.format(absVal)
+            : `-${vnd.format(absVal)}`;
+          return (
+            <div
+              key={entry.dataKey}
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                gap: 16,
+                marginBottom: 4,
+                color: isInflow ? '#047857' : '#dc2626',
+              }}
+            >
+              <span>{isInflow ? 'Nạp vào' : 'Rút ra'}</span>
+              <span style={{ fontWeight: 600, tabularNums: true } as React.CSSProperties}>{formatted}</span>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
 
   const setQuickDateRange = (range: '1d' | '1w' | '1m' | '1y') => {
     const now = new Date();
@@ -606,17 +670,9 @@ const CashFlowDashboard: React.FC = () => {
                           axisLine={false}
                           tickLine={false}
                           tick={{ fontSize: 12, fill: '#6b7280' }}
-                          tickFormatter={(val) => `${(val / 1000000).toFixed(0)}M`}
+                          tickFormatter={yAxisTickFormatter}
                         />
-                        <RechartsTooltip
-                          formatter={(val) => formatVND(Number(val ?? 0))}
-                          labelStyle={{ color: '#374151', fontWeight: 600, marginBottom: 4 }}
-                          contentStyle={{
-                            borderRadius: 12,
-                            border: '1px solid #F0EEE6',
-                            boxShadow: '0 10px 25px -10px rgba(0,0,0,0.15)',
-                          }}
-                        />
+                        <RechartsTooltip content={<CashFlowTooltip />} />
                         <Bar
                           dataKey="inflow"
                           name="Nạp vào"
@@ -627,7 +683,7 @@ const CashFlowDashboard: React.FC = () => {
                         <Bar
                           dataKey="outflow"
                           name="Rút ra"
-                          fill="#92A7C4"
+                          fill="#dc2626"
                           radius={[6, 6, 0, 0]}
                           barSize={22}
                         />

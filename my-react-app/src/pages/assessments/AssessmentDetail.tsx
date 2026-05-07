@@ -998,10 +998,8 @@ export default function AssessmentDetail() {
                     Tự động phân điểm theo mức độ nhận thức
                   </p>
                   <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] m-0 mb-3 leading-relaxed">
-                    💡 Câu hỏi Đúng/Sai (TF) có 4 mệnh đề. Điểm sẽ được chia đều cho mỗi mệnh đề.
-                    <br />
-                    Quy tắc chấm điểm (Bộ GD&ĐT 2025): Đúng 1/4 mệnh đề = 0 điểm, Đúng 2/4 = 0.25 ×
-                    Điểm câu, Đúng 3/4 = 0.5 × Điểm câu, Đúng 4/4 = 100% Điểm câu.
+                    💡 Câu hỏi Đúng/Sai (TF): mỗi mệnh đề đúng = tổng điểm câu ÷ số mệnh đề.
+                    Tổng điểm = số mệnh đề đúng × điểm/mệnh đề.
                   </p>
                   <div
                     className="row"

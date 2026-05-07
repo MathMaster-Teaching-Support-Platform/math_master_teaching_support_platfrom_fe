@@ -9,6 +9,7 @@ import type {
 } from '../../types/examMatrix';
 import { getPartLabel, getNumberOfParts } from '../../utils/partHelpers';
 import { useGetQuestionBankMatrixStats } from '../../hooks/useQuestionBank';
+import { QbConfirmDialog } from '../question-banks/qb-ui';
 import './matrix-table.css';
 
 interface MatrixTableProps {
@@ -238,6 +239,7 @@ export function MatrixTable({
   }, [availabilityMap]);
 
   const [deletingRowId, setDeletingRowId] = useState<string | null>(null);
+  const [rowPendingDelete, setRowPendingDelete] = useState<string | null>(null);
   
   
   // Inline editing state
@@ -266,10 +268,42 @@ export function MatrixTable({
   const gradeRowSpans = useMemo(() => computeGradeRowSpans(flatRows), [flatRows]);
 
   // Initialize local cells from chapters.
-  // CRITICAL FIX: Skip reinitialization entirely when user has pending edits.
-  // This prevents server data from racing with and overwriting the user's unsaved changes.
+  // When the user has pending edits we don't rebuild from scratch (would
+  // clobber unsaved values), but we must still PRUNE entries whose rowId no
+  // longer exists in `chapters` — otherwise a row deletion leaves orphan
+  // dirty cells that later poison the batch save.
   useEffect(() => {
-    if (dirtyCellsRef.current.size > 0) return; // Pending edits — don't overwrite
+    if (dirtyCellsRef.current.size > 0) {
+      const liveRowIds = new Set<string>();
+      for (const ch of chapters) for (const r of ch.rows) liveRowIds.add(r.rowId);
+
+      setLocalCells((prev) => {
+        let changed = false;
+        const next = new Map(prev);
+        for (const cellId of next.keys()) {
+          const rowId = cellId.split(':')[0];
+          if (!liveRowIds.has(rowId)) {
+            next.delete(cellId);
+            changed = true;
+          }
+        }
+        return changed ? next : prev;
+      });
+
+      setDirtyCells((prev) => {
+        let changed = false;
+        const next = new Set(prev);
+        for (const cellId of next) {
+          const rowId = cellId.split(':')[0];
+          if (!liveRowIds.has(rowId)) {
+            next.delete(cellId);
+            changed = true;
+          }
+        }
+        return changed ? next : prev;
+      });
+      return;
+    }
 
     setLocalCells(buildLocalCellsMap(chapters, numberOfParts));
   }, [chapters, numberOfParts]);
@@ -459,11 +493,38 @@ export function MatrixTable({
     }
   }, [editingCell]);
 
-  const handleRemoveRow = async (rowId: string) => {
-    if (!window.confirm('Bạn có chắc muốn xóa dòng này? Tất cả thiết lập số lượng câu hỏi cho dòng này sẽ bị xóa và không thể khôi phục.')) return;
+  const performRemoveRow = async (rowId: string) => {
+    // If the user is mid-edit on this row, cancel the inline edit *before*
+    // firing the delete so the input's blur-commit doesn't re-add a dirty
+    // entry against the rowId we're about to remove.
+    if (editingCell && editingCell.split(':')[0] === rowId) {
+      cancelEdit();
+    }
+    // Optimistically drop any local/dirty cells for this row up-front so the
+    // toolbar reflects reality immediately and a concurrent batch save (if
+    // any) can't target the deleted row.
+    setLocalCells((prev) => {
+      const next = new Map(prev);
+      for (const cellId of next.keys()) {
+        if (cellId.split(':')[0] === rowId) next.delete(cellId);
+      }
+      return next;
+    });
+    setDirtyCells((prev) => {
+      const next = new Set(prev);
+      for (const cellId of next) {
+        if (cellId.split(':')[0] === rowId) next.delete(cellId);
+      }
+      return next;
+    });
+
     setDeletingRowId(rowId);
     try {
       await onRemoveRow(rowId);
+      setRowPendingDelete(null);
+    } catch (err) {
+      console.error('Failed to remove row:', err);
+      setSaveError(err instanceof Error ? err.message : 'Không thể xóa dòng.');
     } finally {
       setDeletingRowId(null);
     }
@@ -732,8 +793,9 @@ export function MatrixTable({
                     {canEdit && (
                       <td className="matrix-td matrix-td--actions">
                         <button
+                          type="button"
                           className="matrix-delete-btn"
-                          onClick={() => void handleRemoveRow(row.rowId)}
+                          onClick={() => setRowPendingDelete(row.rowId)}
                           disabled={deletingRowId === row.rowId}
                           title="Xóa dòng"
                         >
@@ -806,6 +868,20 @@ export function MatrixTable({
           </tbody>
         </table>
       </div>
+
+      <QbConfirmDialog
+        isOpen={rowPendingDelete !== null}
+        title="Xóa dòng ma trận?"
+        message="Tất cả thiết lập số lượng câu hỏi cho dòng này sẽ bị xóa và không thể khôi phục."
+        tone="danger"
+        confirmLabel="Xóa dòng"
+        cancelLabel="Hủy"
+        busy={deletingRowId !== null}
+        onConfirm={() => {
+          if (rowPendingDelete) void performRemoveRow(rowPendingDelete);
+        }}
+        onCancel={() => setRowPendingDelete(null)}
+      />
     </div>
   );
 }

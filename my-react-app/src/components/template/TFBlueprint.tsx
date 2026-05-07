@@ -279,7 +279,7 @@ export function TFBlueprint({
             fontSize: '0.875rem',
           }}
         >
-          <strong>⚠ Điểm THPT:</strong> 4/4 đúng = 1 điểm, 3/4 đúng = 0.25 điểm, dưới 3/4 = 0 điểm
+          <strong>Cách tính điểm:</strong> Mỗi mệnh đề đúng = tổng điểm câu ÷ số mệnh đề.
         </div>
       </section>
 

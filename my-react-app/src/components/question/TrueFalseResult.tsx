@@ -12,6 +12,8 @@ interface TrueFalseResultProps {
 export function TrueFalseResult({ answer, questionText, options }: TrueFalseResultProps) {
   const detail = answer.scoringDetail as ScoringDetail | undefined;
   const clauses = detail?.clauseResults ?? {};
+  const totalClauses = detail?.totalClauses ?? 4;
+  const pointsPerClause = totalClauses > 0 ? answer.maxPoints / totalClauses : 0;
 
   // Parse student answer from "A,C" format to boolean map
   const studentAnswerStr = answer.answerText || '';
@@ -103,6 +105,16 @@ export function TrueFalseResult({ answer, questionText, options }: TrueFalseResu
               >
                 Kết quả
               </th>
+              <th
+                style={{
+                  padding: '12px 16px',
+                  textAlign: 'center',
+                  fontWeight: 600,
+                  borderBottom: '2px solid #d1d5db',
+                }}
+              >
+                Điểm
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -156,13 +168,23 @@ export function TrueFalseResult({ answer, questionText, options }: TrueFalseResu
                       <ResultVerdictIcon correct={isCorrect} />
                     </div>
                   </td>
+                  <td
+                    style={{
+                      padding: '12px 16px',
+                      textAlign: 'center',
+                      fontWeight: 700,
+                      color: isCorrect ? '#16a34a' : '#9ca3af',
+                    }}
+                  >
+                    {isCorrect ? `+${pointsPerClause.toFixed(2)}` : '0'}
+                  </td>
                 </tr>
               );
             })}
           </tbody>
           <tfoot>
             <tr style={{ backgroundColor: '#f9fafb', fontWeight: 600 }}>
-              <td colSpan={6} style={{ padding: '16px', borderTop: '2px solid #d1d5db' }}>
+              <td colSpan={7} style={{ padding: '16px', borderTop: '2px solid #d1d5db' }}>
                 <div
                   style={{
                     display: 'flex',
@@ -191,64 +213,30 @@ export function TrueFalseResult({ answer, questionText, options }: TrueFalseResu
                     </span>
                   </div>
                 </div>
-                {detail?.scoringRule === 'VIET_THPT' && (
-                  <div
-                    style={{
-                      marginTop: 16,
-                      padding: '12px 16px',
-                      backgroundColor: '#f0f9ff',
-                      borderRadius: 8,
-                      border: '1px solid #bae6fd',
-                      fontSize: '0.9rem',
-                      color: '#0369a1',
-                    }}
-                  >
+                {(() => {
+                  const total = detail?.totalClauses ?? 4;
+                  const perClause = total > 0 ? answer.maxPoints / total : 0;
+                  return (
                     <div
                       style={{
-                        fontWeight: 700,
-                        marginBottom: 6,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 6,
+                        marginTop: 16,
+                        padding: '12px 16px',
+                        backgroundColor: '#f0f9ff',
+                        borderRadius: 8,
+                        border: '1px solid #bae6fd',
+                        fontSize: '0.9rem',
+                        color: '#0369a1',
                       }}
                     >
-                      Giải thích cách tính điểm (Chuẩn Bộ GD&ĐT):
+                      <div style={{ fontWeight: 700, marginBottom: 6 }}>Cách tính điểm:</div>
+                      <div style={{ lineHeight: 1.6 }}>
+                        Mỗi mệnh đề đúng = <strong>{answer.maxPoints} ÷ {total}</strong>
+                        {' '}= <strong>{perClause.toFixed(2)}đ</strong>. Tổng điểm câu = số mệnh đề
+                        đúng × {perClause.toFixed(2)}đ.
+                      </div>
                     </div>
-                    <ul
-                      style={{ margin: 0, paddingLeft: 20, listStyleType: 'disc', lineHeight: 1.6 }}
-                    >
-                      <li>
-                        Đúng <strong>4/4</strong> mệnh đề: Nhận <strong>100%</strong> số điểm câu
-                        hỏi ({answer.maxPoints}đ)
-                      </li>
-                      <li>
-                        Đúng <strong>3/4</strong> mệnh đề: Nhận <strong>25%</strong> số điểm câu hỏi
-                        ({(answer.maxPoints * 0.25).toFixed(2)}đ)
-                      </li>
-                      <li>
-                        Đúng <strong>2/4</strong> mệnh đề: Nhận <strong>0.1đ</strong> (nếu có quy
-                        định riêng) hoặc <strong>0%</strong> điểm
-                      </li>
-                      <li>
-                        Đúng <strong>0-1/4</strong> mệnh đề: Nhận <strong>0%</strong> điểm
-                      </li>
-                    </ul>
-                  </div>
-                )}
-                {detail?.scoringRule && detail.scoringRule !== 'VIET_THPT' && (
-                  <div
-                    style={{
-                      marginTop: 12,
-                      padding: '8px 12px',
-                      backgroundColor: '#eff6ff',
-                      borderRadius: 6,
-                      fontSize: '0.875rem',
-                      color: '#1e40af',
-                    }}
-                  >
-                    💡 Quy tắc chấm: {detail.scoringRule}
-                  </div>
-                )}
+                  );
+                })()}
               </td>
             </tr>
           </tfoot>
