@@ -1,14 +1,20 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
+  BookOpen,
+  ChevronLeft,
+  Database,
   Eye,
   EyeOff,
+  GraduationCap,
   LayoutGrid,
   ListChecks,
   Pencil,
   Plus,
   RefreshCw,
+  Search,
   Trash2,
   User,
+  X,
 } from 'lucide-react';
 import Pagination from '../../components/common/Pagination';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -22,13 +28,10 @@ import {
   QbEmptyState,
   QbErrorState,
   QbInlineNotice,
-  QbPageHeader,
   QbQuestionStatusBadge,
-  QbSearchInput,
   QbSkeletonList,
-  QbToolbar,
-  QbVisibilityBadge,
 } from '../../components/question-banks/qb-ui';
+import { mockTeacher } from '../../data/mockData';
 import { useToast } from '../../context/ToastContext';
 import { questionBankService } from '../../services/questionBankService';
 import { useGetQuestionsByBank } from '../../hooks/useQuestion';
@@ -68,6 +71,9 @@ const QUESTION_TYPE_LABEL: Record<string, string> = {
 };
 
 const PAGE_SIZE_OPTIONS = [10, 20, 30, 50];
+
+const selectCls =
+  'w-full lg:w-auto lg:min-w-[168px] border border-[#E8E6DC] rounded-xl px-3 py-2.5 font-[Be_Vietnam_Pro] text-[13px] text-[#141413] outline-none bg-white transition-colors focus:border-[#C96442] focus:ring-1 focus:ring-[#C96442] disabled:bg-[#F5F4ED] disabled:text-[#87867F]';
 
 export function QuestionBankDetailPage() {
   const { bankId } = useParams<{ bankId: string }>();
@@ -231,10 +237,11 @@ export function QuestionBankDetailPage() {
   return (
     <DashboardLayout
       role="teacher"
-      user={{ name: 'Teacher', avatar: '', role: 'teacher' }}
+      user={{ name: mockTeacher.name, avatar: mockTeacher.avatar ?? '', role: 'teacher' }}
       notificationCount={0}
+      contentClassName="dashboard-content--flush-bleed"
     >
-      <div className="qb-scope qb-page qbd-page">
+      <div className="qb-scope w-full px-4 py-8 sm:px-6 lg:px-8 space-y-6">
         {isLoading && <QbSkeletonList count={3} />}
 
         {isError && (
@@ -262,98 +269,207 @@ export function QuestionBankDetailPage() {
 
         {!isLoading && !isError && bank && (
           <>
-            <QbPageHeader
-              title={bank.name}
-              subtitle={bank.description ?? `Ngân hàng có ${bank.questionCount ?? 0} câu hỏi.`}
-              titleChip={<QbVisibilityBadge isPublic={bank.isPublic} />}
-              onBack={() => navigate('/teacher/question-banks')}
-              backLabel="Tất cả ngân hàng"
-              actions={
-                <>
-                  <button
-                    type="button"
-                    className="qb-btn qb-btn--secondary"
-                    onClick={() => {
-                      void refetch();
-                      void refetchQuestions();
-                    }}
-                  >
-                    <RefreshCw size={14} />
-                    <span className="qb-hide-md">Làm mới</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="qb-btn qb-btn--secondary"
-                    onClick={() => void handleTogglePublic()}
-                    disabled={togglePublicMutation.isPending}
-                  >
-                    {bank.isPublic ? <EyeOff size={14} /> : <Eye size={14} />}
-                    {bank.isPublic ? 'Riêng tư' : 'Công khai'}
-                  </button>
-                  <button
-                    type="button"
-                    className="qb-btn qb-btn--secondary"
-                    onClick={() => setFormOpen(true)}
-                  >
-                    <Pencil size={14} />
-                    Chỉnh sửa
-                  </button>
-                  <button
-                    type="button"
-                    className="qb-btn qb-btn--danger-outline"
-                    onClick={() => setPendingDelete(true)}
-                  >
-                    <Trash2 size={14} />
-                    Xóa
-                  </button>
-                </>
-              }
-            />
+            <button
+              type="button"
+              onClick={() => navigate('/teacher/question-banks')}
+              className="inline-flex items-center gap-1 font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#87867F] hover:text-[#141413] transition-colors -mt-1 mb-1"
+            >
+              <ChevronLeft className="w-4 h-4" aria-hidden />
+              Tất cả ngân hàng
+            </button>
 
-            {/* Compact meta strip */}
-            <div className="qbd-meta">
-              <span className="qbd-meta__item">
-                <strong>{bank.questionCount ?? 0}</strong> câu hỏi
-              </span>
-              {(bank.schoolGradeName || bank.gradeLevel) && (
-                <span className="qbd-meta__item">
-                  Lớp:{' '}
-                  <strong>{bank.schoolGradeName ?? `Lớp ${bank.gradeLevel}`}</strong>
-                </span>
-              )}
-              {bank.subjectName && (
-                <span className="qbd-meta__item">
-                  Môn: <strong>{bank.subjectName}</strong>
-                </span>
-              )}
-              <span className="qbd-meta__item qbd-meta__item--muted">
-                <User size={12} />
-                {bank.teacherName || 'Không xác định'}
-              </span>
+            <div className="rounded-2xl border border-[#E8E6DC] bg-white shadow-[rgba(0,0,0,0.04)_0px_4px_24px] overflow-hidden">
+              <div className="p-5 lg:p-6 flex flex-col gap-5">
+                <div className="flex flex-col xl:flex-row xl:items-start gap-5 xl:justify-between">
+                  <div className="flex gap-3 min-w-0">
+                    <div className="w-11 h-11 lg:w-12 lg:h-12 rounded-xl bg-[#E8E6DC] flex items-center justify-center text-[#5E5D59] flex-shrink-0">
+                      <Database className="w-5 h-5 lg:w-6 lg:h-6" aria-hidden />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h1 className="font-[Playfair_Display] text-xl sm:text-[22px] font-medium text-[#141413] leading-tight">
+                          {bank.name}
+                        </h1>
+                        {bank.isPublic ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-100 font-[Be_Vietnam_Pro] text-[11px] font-semibold text-emerald-700">
+                            <Eye className="w-3 h-3" aria-hidden />
+                            Công khai
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#F5F4ED] border border-[#E8E6DC] font-[Be_Vietnam_Pro] text-[11px] font-semibold text-[#5E5D59]">
+                            <EyeOff className="w-3 h-3" aria-hidden />
+                            Riêng tư
+                          </span>
+                        )}
+                      </div>
+                      <div className="mt-1.5 space-y-1.5 max-w-3xl">
+                        {bank.description?.trim() ? (
+                          <>
+                            <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#5E5D59] leading-relaxed">
+                              {bank.description.trim()}
+                            </p>
+                            <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#B0AEA5]">
+                              {(bank.questionCount ?? 0).toLocaleString('vi-VN')} câu hỏi trong ngân hàng
+                            </p>
+                          </>
+                        ) : (
+                          <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] leading-relaxed">
+                            Ngân hàng có {(bank.questionCount ?? 0).toLocaleString('vi-VN')} câu hỏi.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 xl:justify-end xl:flex-shrink-0">
+                    <button
+                      type="button"
+                      className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors"
+                      onClick={() => {
+                        void refetch();
+                        void refetchQuestions();
+                      }}
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" aria-hidden />
+                      Làm mới
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors disabled:opacity-50"
+                      onClick={() => void handleTogglePublic()}
+                      disabled={togglePublicMutation.isPending}
+                    >
+                      {bank.isPublic ? (
+                        <EyeOff className="w-3.5 h-3.5" aria-hidden />
+                      ) : (
+                        <Eye className="w-3.5 h-3.5" aria-hidden />
+                      )}
+                      {bank.isPublic ? 'Riêng tư' : 'Công khai'}
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors"
+                      onClick={() => setFormOpen(true)}
+                    >
+                      <Pencil className="w-3.5 h-3.5" aria-hidden />
+                      Chỉnh sửa
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl border border-red-200 bg-red-50 font-[Be_Vietnam_Pro] text-[13px] font-medium text-red-600 hover:bg-red-100 transition-colors"
+                      onClick={() => setPendingDelete(true)}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" aria-hidden />
+                      Xóa
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pt-4 border-t border-[#F0EEE6]">
+                  <div className="rounded-xl border border-[#E8E6DC] bg-[#FAF9F5] p-3 flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-[#EEF2FF] flex items-center justify-center flex-shrink-0">
+                      <ListChecks className="w-4 h-4 text-[#4F7EF7]" aria-hidden />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-[Playfair_Display] text-lg font-medium text-[#141413] leading-none tabular-nums">
+                        {(bank.questionCount ?? 0).toLocaleString('vi-VN')}
+                      </p>
+                      <p className="font-[Be_Vietnam_Pro] text-[11px] text-[#87867F] mt-1">
+                        Câu hỏi
+                      </p>
+                    </div>
+                  </div>
+                  <div className="rounded-xl border border-[#E8E6DC] bg-[#FAF9F5] p-3 flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-[#ECFDF5] flex items-center justify-center flex-shrink-0">
+                      <GraduationCap className="w-4 h-4 text-[#2EAD7A]" aria-hidden />
+                    </div>
+                    <div className="min-w-0">
+                      <p
+                        className={`font-[Be_Vietnam_Pro] text-[13px] font-semibold leading-tight truncate ${
+                          bank.schoolGradeName || bank.gradeLevel != null
+                            ? 'text-[#141413]'
+                            : 'text-[#B0AEA5]'
+                        }`}
+                      >
+                        {bank.schoolGradeName ??
+                          (bank.gradeLevel != null ? `Lớp ${bank.gradeLevel}` : 'Chưa gắn lớp')}
+                      </p>
+                      <p className="font-[Be_Vietnam_Pro] text-[11px] text-[#87867F] mt-1">Lớp</p>
+                    </div>
+                  </div>
+                  <div className="rounded-xl border border-[#E8E6DC] bg-[#FAF9F5] p-3 flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-[#FFF7ED] flex items-center justify-center flex-shrink-0">
+                      <BookOpen className="w-4 h-4 text-[#E07B39]" aria-hidden />
+                    </div>
+                    <div className="min-w-0">
+                      <p
+                        className={`font-[Be_Vietnam_Pro] text-[13px] font-semibold leading-tight truncate ${
+                          bank.subjectName ? 'text-[#141413]' : 'text-[#B0AEA5]'
+                        }`}
+                      >
+                        {bank.subjectName ?? 'Chưa gắn môn'}
+                      </p>
+                      <p className="font-[Be_Vietnam_Pro] text-[11px] text-[#87867F] mt-1">
+                        Môn học
+                      </p>
+                    </div>
+                  </div>
+                  <div className="rounded-xl border border-[#E8E6DC] bg-[#FAF9F5] p-3 flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-[#F5F3FF] flex items-center justify-center flex-shrink-0">
+                      <User className="w-4 h-4 text-[#9B6FE0]" aria-hidden />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-[Be_Vietnam_Pro] text-[13px] font-semibold text-[#141413] leading-tight truncate">
+                        {bank.teacherName || 'Không xác định'}
+                      </p>
+                      <p className="font-[Be_Vietnam_Pro] text-[11px] text-[#87867F] mt-1">
+                        Giáo viên
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* Tabs */}
-            <div className="qbd-tabs" role="tablist" aria-label="Chế độ xem">
+            <div
+              className="inline-flex p-1 bg-[#F5F4ED] rounded-xl gap-0.5 flex-wrap"
+              role="tablist"
+              aria-label="Chế độ xem"
+            >
               <button
                 type="button"
                 role="tab"
                 aria-selected={activeTab === 'matrix'}
-                className={`qbd-tab ${activeTab === 'matrix' ? 'qbd-tab--active' : ''}`}
+                className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg font-[Be_Vietnam_Pro] text-[13px] font-medium transition-all duration-150 ${
+                  activeTab === 'matrix'
+                    ? 'bg-white text-[#141413] shadow-sm'
+                    : 'text-[#87867F] hover:text-[#5E5D59]'
+                }`}
                 onClick={() => setActiveTab('matrix')}
               >
-                <LayoutGrid size={14} />
+                <LayoutGrid className="w-4 h-4 flex-shrink-0" aria-hidden />
                 Theo ma trận
               </button>
               <button
                 type="button"
                 role="tab"
                 aria-selected={activeTab === 'all'}
-                className={`qbd-tab ${activeTab === 'all' ? 'qbd-tab--active' : ''}`}
+                className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg font-[Be_Vietnam_Pro] text-[13px] font-medium transition-all duration-150 ${
+                  activeTab === 'all'
+                    ? 'bg-white text-[#141413] shadow-sm'
+                    : 'text-[#87867F] hover:text-[#5E5D59]'
+                }`}
                 onClick={() => setActiveTab('all')}
               >
-                <ListChecks size={14} />
+                <ListChecks className="w-4 h-4 flex-shrink-0" aria-hidden />
                 Tất cả câu hỏi
-                <span className="qbd-tab__count">
+                <span
+                  className={`tabular-nums text-[11px] font-bold px-1.5 py-0.5 rounded-full ${
+                    activeTab === 'all'
+                      ? 'bg-[#EEF2FF] text-[#4F7EF7]'
+                      : 'bg-[#E8E6DC] text-[#5E5D59]'
+                  }`}
+                >
                   {(bank.questionCount ?? 0).toLocaleString('vi-VN')}
                 </span>
               </button>
@@ -387,80 +503,96 @@ export function QuestionBankDetailPage() {
 
             {activeTab === 'all' && (
               <>
-                <QbToolbar
-                  actions={
+                <div className="flex flex-col gap-3">
+                  <div className="flex flex-col lg:flex-row lg:items-center gap-3">
+                    <label className="flex-1 w-full flex items-center gap-3 bg-[#FAF9F5] border border-[#E8E6DC] rounded-xl px-4 py-2.5 focus-within:border-[#C96442] focus-within:shadow-[0_0_0_3px_rgba(201,100,66,0.12)] transition-all duration-150">
+                      <Search className="text-[#87867F] w-4 h-4 flex-shrink-0" aria-hidden />
+                      <input
+                        className="flex-1 font-[Be_Vietnam_Pro] text-[14px] text-[#141413] placeholder:text-[#87867F] bg-transparent outline-none min-w-0"
+                        placeholder="Tìm trong trang hiện tại..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        aria-label="Tìm trong trang hiện tại"
+                      />
+                      {search ? (
+                        <button
+                          type="button"
+                          aria-label="Xóa tìm kiếm"
+                          onClick={() => setSearch('')}
+                          className="text-[#87867F] hover:text-[#141413] transition-colors flex-shrink-0"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      ) : null}
+                    </label>
                     <button
                       type="button"
-                      className="qb-btn qb-btn--primary"
+                      className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#C96442] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:brightness-95 active:scale-[0.98] transition-all duration-150 whitespace-nowrap lg:flex-shrink-0"
                       onClick={() => {
                         setBucketContext(null);
                         setAddModalOpen(true);
                       }}
                     >
-                      <Plus size={14} />
+                      <Plus className="w-4 h-4" aria-hidden />
                       Thêm câu hỏi
                     </button>
-                  }
-                >
-                  <QbSearchInput
-                    value={search}
-                    onChange={setSearch}
-                    placeholder="Tìm trong trang hiện tại..."
-                  />
-                  <select
-                    className="qb-select qbd-filter-select"
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-                    aria-label="Lọc theo trạng thái"
-                  >
-                    {STATUS_OPTIONS.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    className="qb-select qbd-filter-select"
-                    value={chapterFilter}
-                    onChange={(e) => setChapterFilter(e.target.value)}
-                    aria-label="Lọc theo chương"
-                    disabled={chapterOptions.length === 0}
-                  >
-                    <option value="ALL">Tất cả chương</option>
-                    {chapterOptions.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.label}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    className="qb-select qbd-filter-select"
-                    value={cognitiveFilter}
-                    onChange={(e) => setCognitiveFilter(e.target.value)}
-                    aria-label="Lọc theo mức độ"
-                  >
-                    <option value="ALL">Tất cả mức độ</option>
-                    {QB_COGNITIVE_OPTIONS.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                  {hasFilters && (
-                    <button
-                      type="button"
-                      className="qb-btn qb-btn--ghost qb-btn--sm"
-                      onClick={() => {
-                        setSearch('');
-                        setStatusFilter('ALL');
-                        setCognitiveFilter('ALL');
-                        setChapterFilter('ALL');
-                      }}
+                  </div>
+                  <div className="flex flex-col sm:flex-row flex-wrap gap-2 items-stretch sm:items-center">
+                    <select
+                      className={selectCls}
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+                      aria-label="Lọc theo trạng thái"
                     >
-                      Xóa bộ lọc
-                    </button>
-                  )}
-                </QbToolbar>
+                      {STATUS_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      className={selectCls}
+                      value={chapterFilter}
+                      onChange={(e) => setChapterFilter(e.target.value)}
+                      aria-label="Lọc theo chương"
+                      disabled={chapterOptions.length === 0}
+                    >
+                      <option value="ALL">Tất cả chương</option>
+                      {chapterOptions.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.label}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      className={selectCls}
+                      value={cognitiveFilter}
+                      onChange={(e) => setCognitiveFilter(e.target.value)}
+                      aria-label="Lọc theo mức độ"
+                    >
+                      <option value="ALL">Tất cả mức độ</option>
+                      {QB_COGNITIVE_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                    {hasFilters && (
+                      <button
+                        type="button"
+                        className="inline-flex items-center justify-center px-3 py-2.5 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors sm:ml-auto"
+                        onClick={() => {
+                          setSearch('');
+                          setStatusFilter('ALL');
+                          setCognitiveFilter('ALL');
+                          setChapterFilter('ALL');
+                        }}
+                      >
+                        Xóa bộ lọc
+                      </button>
+                    )}
+                  </div>
+                </div>
 
                 {questionsLoading && <QbSkeletonList count={5} />}
 
@@ -517,7 +649,7 @@ export function QuestionBankDetailPage() {
                 {!questionsLoading && !questionsError && filteredQuestions.length > 0 && (
                   <ul className="qbd-question-list">
                     {filteredQuestions.map((question) => (
-                      <li key={question.id} className="qbd-question qb-card">
+                      <li key={question.id} className="qbd-question">
                         <div className="qbd-question__text">
                           <MathText text={question.questionText} />
                         </div>

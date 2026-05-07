@@ -243,7 +243,7 @@ export function QuestionBankDashboard() {
       notificationCount={0}
       contentClassName="dashboard-content--flush-bleed"
     >
-      <div className="qb-scope px-6 py-8 lg:px-8">
+      <div className="qb-scope w-full px-4 py-8 sm:px-6 lg:px-8">
         <div className="space-y-6">
           {/* Header — aligned with /teacher/mindmaps */}
           <div className="flex items-center justify-between gap-4 flex-wrap">
