@@ -89,18 +89,6 @@ function parseRequired(v: NumberInput): number {
   return Number(v);
 }
 
-const DIFFICULTY_OPTIONS: { value: LessonDifficulty; label: string }[] = [
-  { value: 'BEGINNER', label: 'Dễ' },
-  { value: 'INTERMEDIATE', label: 'Trung bình' },
-  { value: 'ADVANCED', label: 'Khó' },
-];
-
-const STATUS_OPTIONS: { value: LessonStatus; label: string }[] = [
-  { value: 'DRAFT', label: 'Bản nháp' },
-  { value: 'PUBLISHED', label: 'Đã xuất bản' },
-  { value: 'ARCHIVED', label: 'Lưu trữ' },
-];
-
 function getTitle(target: ModalTarget): string {
   const verbs = { create: 'Thêm', edit: 'Chỉnh sửa' };
   const nouns: Record<ModalTarget['type'], string> = {
@@ -560,73 +548,20 @@ export function AcademicNodeModal({ target, grades = [], onClose, onSuccess }: R
           onChange={(e) => setLessonForm((f) => ({ ...f, summary: e.target.value }))}
         />
       </div>
-      <div className="anm-row-2">
-        <div className="anm-field">
-          <label className="anm-label">Thứ tự</label>
-          <input
-            type="number"
-            className="anm-input"
-            placeholder="Tự động"
-            value={lessonForm.orderIndex}
-            onChange={(e) =>
-              setLessonForm((f) => ({
-                ...f,
-                orderIndex: e.target.value === '' ? '' : Number(e.target.value),
-              }))
-            }
-          />
-        </div>
-        <div className="anm-field">
-          <label className="anm-label">Thời lượng (phút)</label>
-          <input
-            type="number"
-            className="anm-input"
-            placeholder="VD: 45"
-            value={lessonForm.durationMinutes}
-            onChange={(e) =>
-              setLessonForm((f) => ({
-                ...f,
-                durationMinutes: e.target.value === '' ? '' : Number(e.target.value),
-              }))
-            }
-          />
-        </div>
-      </div>
-      <div className="anm-row-2">
-        <div className="anm-field">
-          <label className="anm-label">Độ khó</label>
-          <select
-            className="anm-input"
-            value={lessonForm.difficulty}
-            onChange={(e) =>
-              setLessonForm((f) => ({ ...f, difficulty: e.target.value as LessonDifficulty }))
-            }
-          >
-            {DIFFICULTY_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        {!isCreate && (
-          <div className="anm-field">
-            <label className="anm-label">Trạng thái</label>
-            <select
-              className="anm-input"
-              value={lessonForm.status}
-              onChange={(e) =>
-                setLessonForm((f) => ({ ...f, status: e.target.value as LessonStatus }))
-              }
-            >
-              {STATUS_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+      <div className="anm-field">
+        <label className="anm-label">Thứ tự</label>
+        <input
+          type="number"
+          className="anm-input"
+          placeholder="Tự động"
+          value={lessonForm.orderIndex}
+          onChange={(e) =>
+            setLessonForm((f) => ({
+              ...f,
+              orderIndex: e.target.value === '' ? '' : Number(e.target.value),
+            }))
+          }
+        />
       </div>
     </>
   );
