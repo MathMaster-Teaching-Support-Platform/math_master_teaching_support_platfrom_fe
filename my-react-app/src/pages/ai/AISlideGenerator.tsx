@@ -135,7 +135,7 @@ const parseSlidesFromLessonContent = (lessonContent?: string | null): LessonSlid
 };
 
 const normalizeOutputFormat = (value?: string): LessonSlideOutputFormat => {
-  if (value === 'LATEX' || value === 'HYBRID') {
+  if (value === 'LATEX') {
     return value;
   }
 
@@ -143,12 +143,11 @@ const normalizeOutputFormat = (value?: string): LessonSlideOutputFormat => {
 };
 
 const supportsMathRendering = (outputFormat: LessonSlideOutputFormat): boolean =>
-  outputFormat === 'LATEX' || outputFormat === 'HYBRID';
+  outputFormat === 'LATEX';
 
-const OUTPUT_FORMAT_LABELS: Record<LessonSlideOutputFormat, string> = {
+const OUTPUT_FORMAT_LABELS: Partial<Record<LessonSlideOutputFormat, string>> = {
   PLAIN_TEXT: 'Text',
   LATEX: 'Latex',
-  HYBRID: 'Hybrid',
 };
 
 const EQUATION_MODE_LABELS: Record<LessonSlideEquationMode, string> = {
@@ -158,7 +157,7 @@ const EQUATION_MODE_LABELS: Record<LessonSlideEquationMode, string> = {
 };
 
 const getOutputFormatLabel = (format: LessonSlideOutputFormat): string =>
-  OUTPUT_FORMAT_LABELS[format];
+  OUTPUT_FORMAT_LABELS[format] || 'Text';
 
 const getEquationModeLabel = (mode: LessonSlideEquationMode): string => EQUATION_MODE_LABELS[mode];
 
@@ -532,7 +531,7 @@ const AISlideGenerator: React.FC = () => {
     'Chọn template',
     'Tạo nội dung',
     'Xác nhận nội dung',
-    'Tải file PPTX',
+    'Tải Slide',
   ];
 
   const clearGeneratedData = () => {
@@ -1408,7 +1407,7 @@ const AISlideGenerator: React.FC = () => {
     link.click();
     link.remove();
     window.URL.revokeObjectURL(blobUrl);
-    setSuccess('Đã tải file PPTX về máy thành công.');
+    setSuccess('Đã tải Slide về máy thành công.');
     void loadGeneratedFiles(lessonId || undefined);
   };
 
@@ -1924,7 +1923,6 @@ const AISlideGenerator: React.FC = () => {
                     >
                       <option value="PLAIN_TEXT">Text</option>
                       <option value="LATEX">Latex</option>
-                      <option value="HYBRID">Hybrid</option>
                     </select>
                   </div>
                 </div>
@@ -2206,10 +2204,10 @@ const AISlideGenerator: React.FC = () => {
                   </div>
                   <div>
                     <h2 className="font-[Playfair_Display] text-[20px] font-medium text-[#141413]">
-                      Tải file PPTX
+                      Tải Slide
                     </h2>
                     <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">
-                      File đã sẵn sàng để tải về
+                      Slide đã sẵn sàng để tải về
                     </p>
                   </div>
                 </div>

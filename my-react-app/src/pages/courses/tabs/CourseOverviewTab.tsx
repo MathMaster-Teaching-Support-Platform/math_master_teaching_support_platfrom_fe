@@ -79,7 +79,7 @@ const CourseOverviewTab: React.FC<CourseOverviewTabProps> = ({ course }) => {
       return {
         Icon: EyeOff,
         value: 'Nháp',
-        sub: 'Chưa xuất bản',
+        sub: 'Chưa Công khai',
       };
     }
     return {
