@@ -697,15 +697,15 @@ export function MatrixTable({
                                     cancelEdit();
                                   }
                                 }}
-                                placeholder={part.questionType === 'TRUE_FALSE' ? 'mệnh đề' : ''}
-                                title={part.questionType === 'TRUE_FALSE' ? '4 mệnh đề = 1 câu Đúng/Sai' : ''}
+                                placeholder=""
+                                title=""
                               />
                             ) : (
                               <div className="matrix-cell-value">
                                 {count}
                                 {available !== undefined && (
                                   <div className={`matrix-cell-availability ${isOverLimit ? 'overlimit' : ''}`} 
-                                       title={`Kho có: ${available} ${part.questionType === 'TRUE_FALSE' ? 'mệnh đề' : 'câu'}`}>
+                                       title={`Kho có: ${available} câu`}>
                                     <span className="availability-label">Kho:</span>
                                     <span className="availability-count">{available}</span>
                                   </div>

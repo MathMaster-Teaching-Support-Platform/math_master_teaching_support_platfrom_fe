@@ -2,8 +2,6 @@
 export interface TfClauseTemplate {
   text: string;
   truthValue: boolean;
-  cognitiveLevel?: string;
-  chapterId?: string;
 }
 
 export interface QuestionTemplateRequest {

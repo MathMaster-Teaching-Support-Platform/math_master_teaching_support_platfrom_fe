@@ -4,8 +4,6 @@ interface TFClause {
   key: string;
   text: string;
   isTrue: boolean;
-  chapterId?: string;
-  cognitiveLevel?: string;
 }
 
 interface TrueFalseEditorProps {
@@ -13,12 +11,6 @@ interface TrueFalseEditorProps {
     questionText?: string;
     options?: Record<string, string>;
     correctAnswer?: string;
-    generationMetadata?: {
-      tfClauses?: Record<string, {
-        chapterId?: string;
-        cognitiveLevel?: string;
-      }>;
-    };
     [key: string]: unknown;
   };
   onChange: (value: Record<string, unknown>) => void;
@@ -29,42 +21,29 @@ export function TrueFalseEditor({ value, onChange, disabled = false }: TrueFalse
   const [clauses, setClauses] = useState<TFClause[]>(() => {
     const options = value.options || {};
     const correctKeys = (value.correctAnswer || '').split(',').filter(Boolean);
-    const metadata = value.generationMetadata?.tfClauses || {};
 
     return ['A', 'B', 'C', 'D'].map(key => ({
       key,
       text: options[key] || '',
       isTrue: correctKeys.includes(key),
-      chapterId: metadata[key]?.chapterId,
-      cognitiveLevel: metadata[key]?.cognitiveLevel,
     }));
   });
 
   useEffect(() => {
-    // Convert clauses back to API format
     const options: Record<string, string> = {};
     const trueKeys: string[] = [];
-    const tfClauses: Record<string, { chapterId?: string; cognitiveLevel?: string }> = {};
 
     clauses.forEach(clause => {
       options[clause.key] = clause.text;
       if (clause.isTrue) {
         trueKeys.push(clause.key);
       }
-      tfClauses[clause.key] = {
-        chapterId: clause.chapterId,
-        cognitiveLevel: clause.cognitiveLevel,
-      };
     });
 
     onChange({
       ...value,
       options,
       correctAnswer: trueKeys.join(','),
-      generationMetadata: {
-        ...value.generationMetadata,
-        tfClauses,
-      },
     });
   }, [clauses]);
 
@@ -155,55 +134,6 @@ export function TrueFalseEditor({ value, onChange, disabled = false }: TrueFalse
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <div>
-                  <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, fontSize: '0.875rem', color: '#6b7280' }}>
-                    Chương:
-                  </label>
-                  <input
-                    type="text"
-                    value={clause.chapterId || ''}
-                    onChange={(e) => updateClause(index, { chapterId: e.target.value })}
-                    disabled={disabled}
-                    placeholder="ID chương"
-                    style={{
-                      width: '100%',
-                      padding: '8px 12px',
-                      border: '2px solid #d1d5db',
-                      borderRadius: 6,
-                      fontSize: '0.875rem',
-                      outline: 'none',
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, fontSize: '0.875rem', color: '#6b7280' }}>
-                    Mức độ:
-                  </label>
-                  <select
-                    value={clause.cognitiveLevel || ''}
-                    onChange={(e) => updateClause(index, { cognitiveLevel: e.target.value })}
-                    disabled={disabled}
-                    style={{
-                      width: '100%',
-                      padding: '8px 12px',
-                      border: '2px solid #d1d5db',
-                      borderRadius: 6,
-                      fontSize: '0.875rem',
-                      outline: 'none',
-                      cursor: disabled ? 'not-allowed' : 'pointer',
-                    }}
-                  >
-                    <option value="">Chọn mức độ</option>
-                    <option value="NHAN_BIET">Nhận biết</option>
-                    <option value="THONG_HIEU">Thông hiểu</option>
-                    <option value="VAN_DUNG">Vận dụng</option>
-                    <option value="VAN_DUNG_CAO">Vận dụng cao</option>
-                  </select>
-                </div>
-              </div>
-
               <div>
                 <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, fontSize: '0.875rem', color: '#6b7280' }}>
                   Đáp án:
@@ -277,7 +207,7 @@ export function TrueFalseEditor({ value, onChange, disabled = false }: TrueFalse
           color: '#1e40af',
         }}
       >
-        💡 Mỗi mệnh đề có thể thuộc chương và mức độ khác nhau. Học sinh chọn Đúng/Sai cho từng mệnh đề.
+        💡 Mức độ và chương được thiết lập ở cấp câu hỏi. Học sinh chọn Đúng/Sai cho từng mệnh đề.
       </div>
     </div>
   );
