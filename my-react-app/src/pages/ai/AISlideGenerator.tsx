@@ -2455,7 +2455,7 @@ const AISlideGenerator: React.FC = () => {
                           }}
                           className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-[#141413] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[12px] font-semibold hover:bg-[#30302E] active:scale-[0.98] transition-all duration-150"
                         >
-                          <Eye className="w-3.5 h-3.5" /> Xem
+                          <Eye className="w-4 h-4 text-[#FAF9F5]" strokeWidth={2.25} /> Xem
                         </button>
                         <button
                           type="button"
@@ -2468,9 +2468,12 @@ const AISlideGenerator: React.FC = () => {
                           className="w-9 h-9 rounded-xl bg-[#E8E6DC] text-[#5E5D59] flex items-center justify-center hover:bg-[#D1CFC5] active:scale-[0.98] transition-all duration-150 disabled:opacity-50"
                         >
                           {downloadingGeneratedFileId === file.id ? (
-                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                            <RefreshCw
+                              className="w-4 h-4 animate-spin text-[#5E5D59]"
+                              strokeWidth={2.25}
+                            />
                           ) : (
-                            <Download className="w-3.5 h-3.5" />
+                            <Download className="w-4 h-4 text-[#5E5D59]" strokeWidth={2.25} />
                           )}
                         </button>
                         <button
@@ -2482,7 +2485,7 @@ const AISlideGenerator: React.FC = () => {
                           }}
                           className="w-9 h-9 rounded-xl bg-[#E8E6DC] text-[#5E5D59] flex items-center justify-center hover:bg-[#D1CFC5] active:scale-[0.98] transition-all duration-150"
                         >
-                          <Pencil className="w-3.5 h-3.5" />
+                          <Pencil className="w-4 h-4 text-[#5E5D59]" strokeWidth={2.25} />
                         </button>
                         <button
                           type="button"
@@ -2494,7 +2497,7 @@ const AISlideGenerator: React.FC = () => {
                           disabled={deletingGeneratedFileId === file.id}
                           className="w-9 h-9 rounded-xl bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100 active:scale-[0.98] transition-all duration-150 disabled:opacity-50"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Trash2 className="w-4 h-4 text-red-500" strokeWidth={2.25} />
                         </button>
                       </div>
                     </div>
