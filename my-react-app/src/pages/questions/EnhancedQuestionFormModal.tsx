@@ -1,5 +1,6 @@
-import { Sparkles } from 'lucide-react';
+import { Sparkles, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { QuestionEditorSwitch } from '../../components/question';
 import QuestionDiagram from '../../components/common/QuestionDiagram';
 import MathText from '../../components/common/MathText';
@@ -7,11 +8,8 @@ import { LatexToolbar } from '../../components/common/LatexToolbar';
 import { questionService } from '../../services/questionService';
 import { useToast } from '../../context/ToastContext';
 import type { QuestionType, QuestionDifficulty } from '../../types/question';
+import './EnhancedQuestionFormModal.css';
 
-// Pull a single editable LaTeX string out of the shapes BE may return for
-// diagramData. Complex non-string shapes that can't be reduced to one latex
-// field are surfaced as "" — we keep the original object on submit only if the
-// teacher edits the field, otherwise the existing structured value is kept.
 function extractEditableLatex(value: unknown): string {
   if (!value) return '';
   if (typeof value === 'string') return value;
@@ -50,6 +48,9 @@ const questionTypeLabels: Record<QuestionType, string> = {
   ESSAY: 'Tự luận',
   CODING: 'Lập trình',
 };
+
+const selectCls =
+  'w-full border border-[#E8E6DC] rounded-xl px-3 py-2.5 font-[Be_Vietnam_Pro] text-[13px] text-[#141413] outline-none focus:border-[#C96442] focus:ring-1 focus:ring-[#C96442] bg-white transition-colors disabled:bg-[#F5F4ED] disabled:text-[#87867F]';
 
 export function EnhancedQuestionFormModal({
   isOpen,
@@ -91,6 +92,11 @@ export function EnhancedQuestionFormModal({
   const hasDiagramPreview = Boolean(
     diagramData.trim() || initialData?.diagramData || initialData?.diagramUrl
   );
+
+  const showAiEnhance =
+    questionType === 'TRUE_FALSE' ||
+    questionType === 'SHORT_ANSWER' ||
+    questionType === 'MULTIPLE_CHOICE';
 
   const copyFallback = (text: string) => {
     const textarea = document.createElement('textarea');
@@ -162,7 +168,6 @@ export function EnhancedQuestionFormModal({
   }, [isOpen, initialData]);
 
   const handleAIEnhance = async () => {
-    // Validation
     if (!editorValue.questionText || String(editorValue.questionText).trim() === '') {
       showToast({ message: 'Vui lòng nhập nội dung câu hỏi trước khi sử dụng AI', type: 'error' });
       return;
@@ -185,10 +190,8 @@ export function EnhancedQuestionFormModal({
 
       const result = response.result;
       if (result && result.enhanced && result.valid) {
-        // Update form with AI-generated content
         setExplanation(result.explanation || '');
 
-        // For TF and SA, also update the question text if enhanced
         if (questionType === 'TRUE_FALSE' || questionType === 'SHORT_ANSWER') {
           setEditorValue({
             ...editorValue,
@@ -214,7 +217,6 @@ export function EnhancedQuestionFormModal({
   const handleSubmit = async () => {
     setError(null);
 
-    // Validation
     if (!editorValue.questionText || String(editorValue.questionText).trim() === '') {
       setError('Nội dung câu hỏi không được trống');
       return;
@@ -251,20 +253,39 @@ export function EnhancedQuestionFormModal({
     }
   };
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
-  return (
-    <div className="modal-layer">
+  const modal = (
+    <div
+      className="fixed inset-0 z-[1400] flex items-center justify-center p-3 sm:p-5 bg-[rgba(20,20,19,0.48)] backdrop-blur-[3px]"
+      role="presentation"
+    >
       <div
-        className="modal-card"
-        style={{ width: 'min(1240px, 96vw)', maxHeight: '92vh', overflow: 'auto' }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="eqfm-title"
+        className="flex flex-col w-full max-w-[min(1240px,calc(100vw-24px))] max-h-[min(92vh,920px)] rounded-2xl bg-white border border-[#E8E6DC] shadow-[0_24px_80px_rgba(0,0,0,0.18)] overflow-hidden min-h-0"
+        onClick={(e) => e.stopPropagation()}
       >
-        <div className="modal-header">
-          <div>
-            <h3 style={{ margin: 0 }}>
+        {/* Header — cố định, không cuộn */}
+        <div className="flex-shrink-0 px-5 py-4 sm:px-6 border-b border-[#F0EEE6] bg-[#FAF9F5] flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h2
+              id="eqfm-title"
+              className="font-[Playfair_Display] text-[19px] sm:text-[21px] font-medium text-[#141413] leading-tight"
+            >
               {mode === 'create' ? 'Tạo câu hỏi mới' : 'Chỉnh sửa câu hỏi'}
-            </h3>
-            <p className="muted" style={{ marginTop: 4, fontSize: '0.875rem' }}>
+            </h2>
+            <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-1">
               {mode === 'create'
                 ? 'Chọn loại câu hỏi và điền thông tin'
                 : 'Cập nhật thông tin câu hỏi'}
@@ -272,256 +293,210 @@ export function EnhancedQuestionFormModal({
           </div>
           <button
             type="button"
-            className="icon-btn"
             onClick={onClose}
             aria-label="Đóng"
-            title="Đóng"
+            className="flex-shrink-0 w-10 h-10 rounded-xl border border-[#E8E6DC] bg-white text-[#5E5D59] hover:bg-[#F5F4ED] hover:text-[#141413] transition-colors inline-flex items-center justify-center"
           >
-            <span aria-hidden="true" style={{ fontSize: 20, lineHeight: 1 }}>
-              ×
-            </span>
+            <X className="w-5 h-5" strokeWidth={2} />
           </button>
         </div>
 
-        <div className="modal-body eqfm-layout">
-          <div className="eqfm-top-controls">
+        {/* Body — chỉ khối này cuộn → scrollbar dính mép phải của modal, không “lệch gap” */}
+        <div className="eqfm-modal-scroll eqfm-modal-bg flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-4 py-4 sm:px-6 sm:py-5">
+          <div className="flex flex-col gap-5 max-w-full">
             {error && (
               <div
-                style={{
-                  padding: '12px 16px',
-                  backgroundColor: '#fee2e2',
-                  border: '1px solid #fecdd3',
-                  borderRadius: 8,
-                  color: '#991b1b',
-                  fontSize: '0.875rem',
-                }}
+                className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 font-[Be_Vietnam_Pro] text-[13px] text-red-800"
+                role="alert"
               >
                 {error}
               </div>
             )}
 
             <div>
-              <label
-                style={{ display: 'block', fontWeight: 600, marginBottom: 8, color: '#374151' }}
-              >
+              <label className="block font-[Be_Vietnam_Pro] text-[12px] font-semibold text-[#5E5D59] mb-2 uppercase tracking-wide">
                 Loại câu hỏi{' '}
                 {mode === 'edit' && (
-                  <span style={{ color: '#6b7280', fontWeight: 400 }}>(không thể thay đổi)</span>
+                  <span className="font-normal normal-case text-[#87867F]">(không thể thay đổi)</span>
                 )}
               </label>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                {(['MULTIPLE_CHOICE', 'TRUE_FALSE', 'SHORT_ANSWER'] as QuestionType[]).map(
-                  (type) => (
+              <div className="flex flex-wrap gap-1.5 p-1 bg-[#F5F4ED] rounded-xl">
+                {(['MULTIPLE_CHOICE', 'TRUE_FALSE', 'SHORT_ANSWER'] as QuestionType[]).map((type) => {
+                  const active = questionType === type;
+                  return (
                     <button
                       key={type}
                       type="button"
                       onClick={() => setQuestionType(type)}
                       disabled={mode === 'edit'}
-                      style={{
-                        flex: '1 1 150px',
-                        padding: '12px 16px',
-                        border: '2px solid',
-                        borderColor: questionType === type ? '#3b82f6' : '#d1d5db',
-                        borderRadius: 8,
-                        backgroundColor: questionType === type ? '#eff6ff' : 'white',
-                        color: questionType === type ? '#1e40af' : '#6b7280',
-                        fontWeight: 600,
-                        fontSize: '0.875rem',
-                        cursor: mode === 'edit' ? 'not-allowed' : 'pointer',
-                        transition: 'all 0.15s',
-                        opacity: mode === 'edit' ? 0.6 : 1,
-                      }}
+                      className={`flex-1 min-w-[140px] px-3 py-2.5 rounded-lg font-[Be_Vietnam_Pro] text-[13px] font-medium transition-all duration-150 ${
+                        active
+                          ? 'bg-white text-[#141413] shadow-sm ring-1 ring-[#E8E6DC]'
+                          : 'text-[#87867F] hover:text-[#5E5D59]'
+                      } ${mode === 'edit' ? 'opacity-55 cursor-not-allowed' : ''}`}
                     >
                       {questionTypeLabels[type]}
                     </button>
-                  )
-                )}
+                  );
+                })}
               </div>
             </div>
 
-            <LatexToolbar onInsert={handleInsertLatex} disabled={saving} />
-          </div>
-
-          <div className="eqfm-row eqfm-row--question">
-            <div
-              className="eqfm-editor-card"
-              style={{
-                padding: 20,
-                backgroundColor: '#f9fafb',
-                borderRadius: 12,
-                border: '2px solid #e5e7eb',
-              }}
-            >
-              <QuestionEditorSwitch
-                type={questionType}
-                value={editorValue}
-                onChange={setEditorValue}
-                disabled={saving}
-              />
+            <div className="rounded-xl border border-[#E8E6DC] bg-white/90 p-3 shadow-[0_1px_0_rgba(0,0,0,0.04)]">
+              <LatexToolbar onInsert={handleInsertLatex} disabled={saving} />
             </div>
 
-            <section className="eqfm-preview-card">
-              <p className="eqfm-preview-heading">Xem trước câu hỏi </p>
-              <span className="badge" style={{ marginBottom: 8 }}>
-                {previewTypeLabel}
-              </span>
-              <div className="eqfm-preview-question">
-                <MathText text={previewQuestionText || 'Chưa có nội dung câu hỏi.'} />
-              </div>
-
-              {previewOptionEntries.length > 0 && (
-                <div className="eqfm-preview-meta">
-                  <p className="eqfm-preview-meta__title">Lựa chọn</p>
-                  <ol className="eqfm-preview-options">
-                    {previewOptionEntries.map(([key, value], index) => (
-                      <li key={`preview-option-${key}`}>
-                        <strong>{(key || String.fromCharCode(65 + index)).toUpperCase()}.</strong>{' '}
-                        <MathText text={String(value)} />
-                      </li>
-                    ))}
-                  </ol>
-                </div>
-              )}
-
-              <p className="eqfm-preview-answer">
-                <span>Đáp án:</span> {previewCorrectAnswer || 'Chưa có đáp án'}
-              </p>
-            </section>
-          </div>
-
-          <div className="eqfm-row eqfm-row--diagram">
-            <div className="eqfm-editor-card">
-              <label
-                style={{ display: 'block', fontWeight: 600, marginBottom: 8, color: '#374151' }}
-              >
-                Hình vẽ <span style={{ color: '#ef4444' }}>*</span>
-              </label>
-              <textarea
-                className="eqfm-textarea-fill"
-                value={diagramData}
-                onChange={(e) => setDiagramData(e.target.value)}
-                disabled={saving}
-                placeholder="Nhập LaTeX cho hình vẽ nếu có... Ví dụ: \frac{-b \pm \sqrt{b^2-4ac}}{2a}"
-                rows={7}
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  border: '2px solid #d1d5db',
-                  borderRadius: 8,
-                  fontSize: '1rem',
-                  resize: 'vertical',
-                }}
-              />
-            </div>
-
-            <section className="eqfm-preview-card">
-              <p className="eqfm-preview-heading">Xem trước hình</p>
-              {hasDiagramPreview ? (
-                <QuestionDiagram
-                  source={{
-                    diagramData: diagramData.trim() ? diagramData.trim() : initialData?.diagramData,
-                    diagramUrl: initialData?.diagramUrl,
-                  }}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
+              <div className="rounded-2xl border-2 border-[#E8E6DC] bg-white p-4 sm:p-5 shadow-[0_8px_30px_rgba(0,0,0,0.06)] ring-1 ring-black/[0.03]">
+                <QuestionEditorSwitch
+                  type={questionType}
+                  value={editorValue}
+                  onChange={setEditorValue}
+                  disabled={saving}
                 />
-              ) : (
-                <p className="muted" style={{ margin: 0 }}>
-                  Chưa có hình minh họa.
-                </p>
-              )}
-            </section>
-          </div>
-
-          <div className="eqfm-row eqfm-row--explanation">
-            <div className="eqfm-editor-card">
-              <label
-                style={{ display: 'block', fontWeight: 600, marginBottom: 8, color: '#374151' }}
-              >
-                Giải thích <span style={{ color: '#ef4444' }}>*</span>
-              </label>
-              <textarea
-                className="eqfm-textarea-fill"
-                value={explanation}
-                onChange={(e) => setExplanation(e.target.value)}
-                disabled={saving}
-                placeholder="Nhập lời giải thích cho câu hỏi..."
-                rows={6}
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  border: '2px solid #d1d5db',
-                  borderRadius: 8,
-                  fontSize: '1rem',
-                  resize: 'vertical',
-                }}
-              />
-            </div>
-
-            <section className="eqfm-preview-card">
-              <p className="eqfm-preview-heading">Xem trước giải thích</p>
-              {previewExplanation ? (
-                <div className="eqfm-preview-explanation">
-                  <MathText text={previewExplanation} />
-                </div>
-              ) : (
-                <p className="muted" style={{ margin: 0 }}>
-                  Chưa có nội dung giải thích.
-                </p>
-              )}
-            </section>
-          </div>
-
-          {(questionType === 'TRUE_FALSE' ||
-            questionType === 'SHORT_ANSWER' ||
-            questionType === 'MULTIPLE_CHOICE') && (
-            <div className="eqfm-top-controls" style={{ paddingTop: 0 }}>
-              <div style={{ display: 'flex', justifyContent: 'center' }}>
-                <button
-                  type="button"
-                  onClick={handleAIEnhance}
-                  disabled={enhancing || saving}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    padding: '12px 24px',
-                    backgroundColor: enhancing ? '#d1d5db' : '#8b5cf6',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: 8,
-                    fontSize: '0.875rem',
-                    fontWeight: 600,
-                    cursor: enhancing || saving ? 'not-allowed' : 'pointer',
-                    transition: 'all 0.15s',
-                    opacity: enhancing || saving ? 0.6 : 1,
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!enhancing && !saving) {
-                      e.currentTarget.style.backgroundColor = '#7c3aed';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!enhancing && !saving) {
-                      e.currentTarget.style.backgroundColor = '#8b5cf6';
-                    }
-                  }}
-                >
-                  <Sparkles size={16} />
-                  {enhancing ? 'Đang tạo lời giải...' : '✨ Tạo lời giải bằng AI'}
-                </button>
               </div>
+
+              <section className="rounded-2xl border border-[#E8E6DC] bg-white p-4 sm:p-5 min-h-[120px] flex flex-col gap-2">
+                <p className="font-[Be_Vietnam_Pro] text-[11px] font-semibold uppercase tracking-wide text-[#87867F]">
+                  Xem trước câu hỏi
+                </p>
+                <span className="inline-flex self-start px-2 py-0.5 rounded-full bg-[#EEF2FF] font-[Be_Vietnam_Pro] text-[11px] font-semibold text-[#4F7EF7]">
+                  {previewTypeLabel}
+                </span>
+                <div className="font-[Be_Vietnam_Pro] text-[14px] text-[#141413] leading-relaxed eqfm-preview-question min-h-[2.5rem]">
+                  <MathText text={previewQuestionText || 'Chưa có nội dung câu hỏi.'} />
+                </div>
+
+                {previewOptionEntries.length > 0 && (
+                  <div className="mt-2 pt-3 border-t border-[#F0EEE6]">
+                    <p className="font-[Be_Vietnam_Pro] text-[12px] font-semibold text-[#5E5D59] mb-2">
+                      Lựa chọn
+                    </p>
+                    <ol className="list-decimal list-inside space-y-1.5 font-[Be_Vietnam_Pro] text-[13px] text-[#374151]">
+                      {previewOptionEntries.map(([key, value], index) => (
+                        <li key={`preview-option-${key}`}>
+                          <strong className="text-[#141413]">
+                            {(key || String.fromCharCode(65 + index)).toUpperCase()}.
+                          </strong>{' '}
+                          <MathText text={String(value)} />
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                )}
+
+                <p className="mt-auto pt-3 border-t border-[#F0EEE6] font-[Be_Vietnam_Pro] text-[13px]">
+                  <span className="text-[#87867F] font-medium">Đáp án:</span>{' '}
+                  <span className="text-[#141413] font-semibold">
+                    {previewCorrectAnswer || 'Chưa có đáp án'}
+                  </span>
+                </p>
+              </section>
             </div>
-          )}
+
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
+              <div className="rounded-2xl border border-[#E8E6DC] bg-white p-4 sm:p-5">
+                <label className="block font-[Be_Vietnam_Pro] text-[13px] font-semibold text-[#141413] mb-2">
+                  Hình vẽ <span className="text-red-500 font-normal">*</span>
+                </label>
+                <textarea
+                  className={`${selectCls} resize-y min-h-[140px] font-mono text-[13px]`}
+                  value={diagramData}
+                  onChange={(e) => setDiagramData(e.target.value)}
+                  disabled={saving}
+                  placeholder="Nhập LaTeX cho hình vẽ nếu có... Ví dụ: \frac{-b \pm \sqrt{b^2-4ac}}{2a}"
+                  rows={6}
+                />
+              </div>
+
+              <section className="rounded-2xl border border-[#E8E6DC] bg-white p-4 sm:p-5 min-h-[140px]">
+                <p className="font-[Be_Vietnam_Pro] text-[11px] font-semibold uppercase tracking-wide text-[#87867F] mb-2">
+                  Xem trước hình
+                </p>
+                {hasDiagramPreview ? (
+                  <QuestionDiagram
+                    source={{
+                      diagramData: diagramData.trim() ? diagramData.trim() : initialData?.diagramData,
+                      diagramUrl: initialData?.diagramUrl,
+                    }}
+                  />
+                ) : (
+                  <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] m-0">Chưa có hình minh họa.</p>
+                )}
+              </section>
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
+              <div className="rounded-2xl border border-[#E8E6DC] bg-white p-4 sm:p-5">
+                <label className="block font-[Be_Vietnam_Pro] text-[13px] font-semibold text-[#141413] mb-2">
+                  Giải thích <span className="text-red-500 font-normal">*</span>
+                </label>
+                <textarea
+                  className={`${selectCls} resize-y min-h-[120px]`}
+                  value={explanation}
+                  onChange={(e) => setExplanation(e.target.value)}
+                  disabled={saving}
+                  placeholder="Nhập lời giải thích cho câu hỏi..."
+                  rows={5}
+                />
+              </div>
+
+              <section className="rounded-2xl border border-[#E8E6DC] bg-white p-4 sm:p-5 min-h-[120px]">
+                <p className="font-[Be_Vietnam_Pro] text-[11px] font-semibold uppercase tracking-wide text-[#87867F] mb-2">
+                  Xem trước giải thích
+                </p>
+                {previewExplanation ? (
+                  <div className="font-[Be_Vietnam_Pro] text-[14px] text-[#374151] leading-relaxed">
+                    <MathText text={previewExplanation} />
+                  </div>
+                ) : (
+                  <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] m-0">
+                    Chưa có nội dung giải thích.
+                  </p>
+                )}
+              </section>
+            </div>
+          </div>
         </div>
 
-        <div className="modal-footer">
-          <button className="btn secondary" onClick={onClose} disabled={saving}>
-            Hủy
-          </button>
-          <button className="btn" onClick={handleSubmit} disabled={saving}>
-            {saving ? 'Đang lưu...' : mode === 'create' ? 'Tạo câu hỏi' : 'Lưu thay đổi'}
-          </button>
+        {/* Footer: AI thấp hơn (tách khối), nút Hủy / Lưu nổi bật */}
+        <div className="flex-shrink-0 border-t border-[#E8E6DC] bg-white">
+          {showAiEnhance && (
+            <div className="px-4 sm:px-6 pt-5 pb-5 bg-gradient-to-b from-[#FAF9F5] to-[#F5F4ED] border-b border-[#E8E6DC]/90 flex justify-center">
+              <button
+                type="button"
+                onClick={handleAIEnhance}
+                disabled={enhancing || saving}
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#7c3aed] text-white font-[Be_Vietnam_Pro] text-[13px] font-semibold shadow-[0_8px_24px_rgba(124,58,237,0.28)] hover:bg-[#6d28d9] hover:brightness-[1.02] disabled:opacity-45 disabled:cursor-not-allowed disabled:shadow-none transition-all duration-150 active:scale-[0.98]"
+              >
+                <Sparkles className="w-4 h-4 shrink-0" />
+                {enhancing ? 'Đang tạo lời giải...' : '✨ Tạo lời giải bằng AI'}
+              </button>
+            </div>
+          )}
+
+          <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-3 px-4 sm:px-6 py-4 sm:py-5 bg-white">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={saving}
+              className="w-full sm:w-auto min-w-[132px] px-5 py-3 rounded-xl border-2 border-[#141413] bg-white font-[Be_Vietnam_Pro] text-[14px] font-semibold text-[#141413] hover:bg-[#FAF9F5] disabled:opacity-45 transition-colors"
+            >
+              Hủy
+            </button>
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={saving}
+              className="w-full sm:w-auto min-w-[156px] px-6 py-3 rounded-xl bg-[#C96442] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[14px] font-bold shadow-[0_6px_22px_rgba(201,100,66,0.38)] hover:brightness-[1.03] active:scale-[0.98] disabled:opacity-45 disabled:shadow-none transition-all duration-150"
+            >
+              {saving ? 'Đang lưu...' : mode === 'create' ? 'Tạo câu hỏi' : 'Lưu thay đổi'}
+            </button>
+          </div>
         </div>
       </div>
     </div>
   );
+
+  return createPortal(modal, document.body);
 }
