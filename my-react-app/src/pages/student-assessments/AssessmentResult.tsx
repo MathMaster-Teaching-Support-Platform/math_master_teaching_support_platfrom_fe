@@ -1,12 +1,21 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Clock, FileText, MessageSquare } from 'lucide-react';
+import {
+  ArrowLeft,
+  BookOpen,
+  ChevronDown,
+  ChevronUp,
+  Clock,
+  FileText,
+  MessageSquare,
+  AlertCircle,
+  X,
+} from 'lucide-react';
 import { UI_TEXT } from '../../constants/uiText';
 import { useMyResult, useCreateRegradeRequest } from '../../hooks/useGrading';
 import { ResultRenderer } from '../../components/question';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import MathText from '../../components/common/MathText';
-import '../../styles/module-refactor.css';
 
 export default function AssessmentResult() {
   const { submissionId } = useParams<{ submissionId: string }>();
@@ -40,260 +49,303 @@ export default function AssessmentResult() {
     );
   };
 
+  const shell = (inner: ReactNode) => (
+    <DashboardLayout
+      role="student"
+      user={{ name: 'Student', avatar: '', role: 'student' }}
+      notificationCount={0}
+      contentClassName="dashboard-content--flush-bleed"
+    >
+      <div className="px-6 py-8 lg:px-8">
+        <div className="space-y-6">{inner}</div>
+      </div>
+    </DashboardLayout>
+  );
+
   if (isLoading) {
-    return (
-      <DashboardLayout role="student" user={{ name: 'Student', avatar: '', role: 'student' }} notificationCount={0}>
-        <div className="module-layout-container">
-          <div className="empty">Đang tải kết quả...</div>
-        </div>
-      </DashboardLayout>
+    return shell(
+      <div className="grid gap-4 animate-pulse">
+        <div className="h-12 w-44 rounded-xl bg-[#E8E6DC]" />
+        <div className="h-48 rounded-2xl bg-[#FAF9F5] border border-[#F0EEE6]" />
+        <div className="h-32 rounded-2xl bg-[#F5F4ED]" />
+      </div>
     );
   }
 
   if (isError || !result) {
-    return (
-      <DashboardLayout role="student" user={{ name: 'Student', avatar: '', role: 'student' }} notificationCount={0}>
-        <div className="module-layout-container">
-          <div className="empty">Không thể tải kết quả</div>
+    return shell(
+      <div className="flex flex-col items-center justify-center py-16 gap-3">
+        <div className="w-12 h-12 rounded-2xl bg-[#E8E6DC] flex items-center justify-center text-[#B0AEA5]">
+          <AlertCircle className="w-6 h-6" aria-hidden />
         </div>
-      </DashboardLayout>
+        <p className="font-[Be_Vietnam_Pro] text-[14px] text-[#87867F]">Không thể tải kết quả</p>
+        <button
+          type="button"
+          onClick={() => navigate('/student/assessments')}
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" aria-hidden />
+          Quay lại
+        </button>
+      </div>
     );
   }
 
-  return (
-    <DashboardLayout role="student" user={{ name: 'Student', avatar: '', role: 'student' }} notificationCount={0}>
-      <div className="module-layout-container">
-        <section className="module-page">
-          <header className="page-header">
-            <div>
-              <button className="btn secondary" onClick={() => navigate('/student/assessments')}>
-                <ArrowLeft size={14} />
-                Quay lại
-              </button>
-              <h2 style={{ marginTop: 12 }}>{result.assessmentTitle}</h2>
-              <p className="muted">Kết quả {UI_TEXT.QUIZ.toLowerCase()}</p>
-            </div>
-          </header>
+  const scoreDisplay = result.finalScore?.toFixed(1) ?? result.score?.toFixed(1) ?? '0';
 
-          {/* Score summary */}
-          <div
-            style={{
-              padding: 24,
-              backgroundColor: 'var(--primary-color-light)',
-              borderRadius: 8,
-              marginBottom: 24,
-            }}
+  const scoreBadgeClass = (() => {
+    const pct = result.percentage ?? 0;
+    if (pct >= 70) return 'bg-emerald-50 text-emerald-800 border-emerald-200';
+    if (pct >= 40) return 'bg-amber-50 text-amber-900 border-amber-200';
+    return 'bg-red-50 text-red-800 border-red-200';
+  })();
+
+  const answerPointsClass = (answer: { isCorrect?: boolean | null }) => {
+    if (answer.isCorrect === true) return 'bg-emerald-50 text-emerald-800 border-emerald-200';
+    if (answer.isCorrect === false) return 'bg-red-50 text-red-800 border-red-200';
+    return 'bg-amber-50 text-amber-900 border-amber-200';
+  };
+
+  return shell(
+    <>
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="space-y-3">
+          <button
+            type="button"
+            onClick={() => navigate('/student/assessments')}
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors"
           >
-            <div className="row" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: 24 }}>
-              <div>
-                <h1 style={{ fontSize: '3rem', marginBottom: 8 }}>
-                  {result.finalScore?.toFixed(1) || result.score?.toFixed(1) || 0} / {result.maxScore}
-                </h1>
-                <p style={{ fontSize: '1.25rem', fontWeight: 600 }}>
-                  {result.percentage?.toFixed(1)}%
-                </p>
-              </div>
+            <ArrowLeft className="w-3.5 h-3.5" aria-hidden />
+            Quay lại
+          </button>
+          <div>
+            <h1 className="font-[Playfair_Display] text-[22px] sm:text-[26px] font-medium text-[#141413] leading-tight">
+              {result.assessmentTitle}
+            </h1>
+            <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-1">
+              Kết quả {UI_TEXT.QUIZ.toLowerCase()}
+            </p>
+          </div>
+        </div>
+      </header>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {result.timeSpentSeconds && (
-                  <div className="row" style={{ gap: 8 }}>
-                    <Clock size={16} />
-                    <span>Thời gian: {Math.floor(result.timeSpentSeconds / 60)} phút</span>
-                  </div>
-                )}
-                {result.attemptNumber && (
-                  <div className="row" style={{ gap: 8 }}>
-                    <FileText size={16} />
-                    <span>Lần làm thứ {result.attemptNumber}</span>
-                  </div>
-                )}
-                {result.submittedAt && (
-                  <div className="row" style={{ gap: 8 }}>
-                    <span className="muted">Nộp lúc: {new Date(result.submittedAt).toLocaleString('vi-VN')}</span>
-                  </div>
-                )}
-              </div>
+      <section className="rounded-2xl border border-[#E8E6DC] bg-[#FAF9F5] p-6 sm:p-8 shadow-[rgba(0,0,0,0.05)_0px_4px_24px]">
+        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-8">
+          <div className="flex flex-wrap items-end gap-4">
+            <div>
+              <p className="font-[Be_Vietnam_Pro] text-[12px] font-semibold uppercase tracking-wide text-[#87867F] mb-2">
+                Điểm số
+              </p>
+              <p className="font-[Playfair_Display] text-[clamp(2.5rem,6vw,3.5rem)] font-medium text-[#141413] leading-none tabular-nums">
+                {scoreDisplay}
+                <span className="font-[Be_Vietnam_Pro] text-[18px] font-semibold text-[#87867F]">
+                  {' '}
+                  / {result.maxScore}
+                </span>
+              </p>
             </div>
-
-            {result.manualAdjustment !== undefined && result.manualAdjustment !== 0 && (
-              <div style={{ marginTop: 16, padding: 12, backgroundColor: 'white', borderRadius: 6 }}>
-                <p>
-                  Điều chỉnh thủ công: {result.manualAdjustment > 0 ? '+' : ''}
-                  {result.manualAdjustment} điểm
-                </p>
-                {result.manualAdjustmentReason && (
-                  <p className="muted" style={{ marginTop: 4, fontSize: '0.875rem' }}>
-                    Lý do: {result.manualAdjustmentReason}
-                  </p>
-                )}
-              </div>
-            )}
-
-            {/* Toggle button for explanations */}
-            <div style={{ marginTop: 16 }}>
-              <button
-                className={`btn ${showExplanations ? '' : 'secondary'}`}
-                onClick={() => setShowExplanations(!showExplanations)}
-                style={{ display: 'flex', alignItems: 'center', gap: 8 }}
-              >
-                {showExplanations ? '🔽 Ẩn lời giải' : '📖 Xem lời giải'}
-              </button>
-            </div>
+            <span
+              className={`inline-flex items-center px-3 py-1.5 rounded-xl border text-[13px] font-semibold font-[Be_Vietnam_Pro] ${scoreBadgeClass}`}
+            >
+              {result.percentage?.toFixed(1)}%
+            </span>
           </div>
 
-          {/* Answers list */}
-          <div>
-            <h3 style={{ marginBottom: 16 }}>Chi tiết câu trả lời</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {result.answers.map((answer, index) => (
-                <div
-                  key={answer.answerId}
-                  style={{
-                    padding: 20,
-                    backgroundColor: 'white',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: 8,
+          <div className="flex flex-col gap-3 min-w-[240px] font-[Be_Vietnam_Pro] text-[13px] text-[#5E5D59]">
+            {result.timeSpentSeconds ? (
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-[#87867F]" aria-hidden />
+                <span>Thời gian: {Math.floor(result.timeSpentSeconds / 60)} phút</span>
+              </div>
+            ) : null}
+            {result.attemptNumber ? (
+              <div className="flex items-center gap-2">
+                <FileText className="w-4 h-4 text-[#87867F]" aria-hidden />
+                <span>Lần làm thứ {result.attemptNumber}</span>
+              </div>
+            ) : null}
+            {result.submittedAt ? (
+              <p className="text-[#87867F] text-[12px]">
+                Nộp lúc: {new Date(result.submittedAt).toLocaleString('vi-VN')}
+              </p>
+            ) : null}
+          </div>
+        </div>
+
+        {result.manualAdjustment !== undefined && result.manualAdjustment !== 0 ? (
+          <div className="mt-6 rounded-xl border border-[#E8E6DC] bg-white px-4 py-3">
+            <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#141413]">
+              Điều chỉnh thủ công: {result.manualAdjustment > 0 ? '+' : ''}
+              {result.manualAdjustment} điểm
+            </p>
+            {result.manualAdjustmentReason ? (
+              <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mt-2 leading-relaxed">
+                Lý do: {result.manualAdjustmentReason}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+
+        <div className="mt-6">
+          <button
+            type="button"
+            onClick={() => setShowExplanations(!showExplanations)}
+            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border font-[Be_Vietnam_Pro] text-[13px] font-medium transition-colors ${
+              showExplanations
+                ? 'border-[#141413] bg-[#141413] text-[#FAF9F5]'
+                : 'border-[#E8E6DC] bg-white text-[#5E5D59] hover:bg-[#F5F4ED]'
+            }`}
+          >
+            <BookOpen className="w-4 h-4" aria-hidden />
+            {showExplanations ? 'Ẩn lời giải' : 'Xem lời giải'}
+            {showExplanations ? (
+              <ChevronUp className="w-4 h-4" aria-hidden />
+            ) : (
+              <ChevronDown className="w-4 h-4" aria-hidden />
+            )}
+          </button>
+        </div>
+      </section>
+
+      <section>
+        <h2 className="font-[Playfair_Display] text-[18px] font-medium text-[#141413] mb-4">
+          Chi tiết câu trả lời
+        </h2>
+        <div className="flex flex-col gap-4">
+          {result.answers.map((answer, index) => (
+            <article
+              key={answer.answerId}
+              className="rounded-2xl border border-[#F0EEE6] bg-white p-5 sm:p-6 shadow-[rgba(0,0,0,0.04)_0px_2px_12px]"
+            >
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-4">
+                <h3 className="font-[Be_Vietnam_Pro] text-[15px] font-semibold text-[#141413]">
+                  Câu {index + 1}
+                </h3>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span
+                    className={`inline-flex items-center px-2.5 py-1 rounded-lg border text-[12px] font-semibold font-[Be_Vietnam_Pro] ${answerPointsClass(answer)}`}
+                  >
+                    {answer.pointsEarned?.toFixed(1) ?? 0} / {answer.maxPoints} điểm
+                  </span>
+                  {answer.needsManualGrading && !answer.pointsEarned ? (
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-lg border border-amber-200 bg-amber-50 text-amber-900 text-[12px] font-medium font-[Be_Vietnam_Pro]">
+                      Đang chấm
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+
+              <div className="font-[Be_Vietnam_Pro] text-[14px] text-[#141413] leading-relaxed mb-4">
+                <MathText text={answer.questionText} />
+              </div>
+
+              <ResultRenderer answer={answer} options={answer.options} />
+
+              {showExplanations && answer.explanation ? (
+                <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50/80 px-4 py-3">
+                  <p className="font-[Be_Vietnam_Pro] text-[12px] font-semibold text-emerald-900 uppercase tracking-wide mb-2">
+                    Lời giải
+                  </p>
+                  <div className="font-[Be_Vietnam_Pro] text-[14px] text-emerald-950 leading-relaxed">
+                    <MathText text={answer.explanation} />
+                  </div>
+                </div>
+              ) : null}
+
+              {answer.feedback ? (
+                <div className="mt-4 rounded-xl border border-[#E8E6DC] bg-[#FAF9F5] px-4 py-3">
+                  <p className="font-[Be_Vietnam_Pro] text-[12px] font-semibold text-[#87867F] mb-2">
+                    Nhận xét từ giáo viên
+                  </p>
+                  <p className="font-[Be_Vietnam_Pro] text-[14px] text-[#141413] leading-relaxed">
+                    {answer.feedback}
+                  </p>
+                </div>
+              ) : null}
+
+              {result.gradesReleased ? (
+                <button
+                  type="button"
+                  className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors"
+                  onClick={() => {
+                    setSelectedQuestionId(answer.questionId);
+                    setShowRegradeModal(true);
                   }}
                 >
-                  <div className="row" style={{ justifyContent: 'space-between', marginBottom: 12 }}>
-                    <h4>Câu {index + 1}</h4>
-                    <div className="row" style={{ gap: 8 }}>
-                      <span
-                        className="badge"
-                        style={{
-                          backgroundColor:
-                            answer.isCorrect === true
-                              ? 'var(--success-color)'
-                              : answer.isCorrect === false
-                              ? 'var(--danger-color)'
-                              : 'var(--warning-color)',
-                        }}
-                      >
-                        {answer.pointsEarned?.toFixed(1) || 0} / {answer.maxPoints} điểm
-                      </span>
-                      {answer.needsManualGrading && !answer.pointsEarned && (
-                        <span className="badge" style={{ backgroundColor: 'var(--warning-color)' }}>
-                          Đang chấm
-                        </span>
-                      )}
-                    </div>
-                  </div>
+                  <MessageSquare className="w-4 h-4" aria-hidden />
+                  Yêu cầu chấm lại
+                </button>
+              ) : null}
+            </article>
+          ))}
+        </div>
+      </section>
 
-                  <p style={{ marginBottom: 12 }}>
-                    <MathText text={answer.questionText} />
-                  </p>
+      {showRegradeModal ? (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div
+            className="bg-white rounded-2xl shadow-[rgba(0,0,0,0.20)_0px_20px_60px] w-full max-w-lg flex flex-col max-h-[90vh]"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="regrade-modal-title"
+          >
+            <div className="flex items-start justify-between gap-3 px-6 pt-6 pb-3 border-b border-[#F0EEE6]">
+              <div>
+                <h3
+                  id="regrade-modal-title"
+                  className="font-[Playfair_Display] text-[18px] font-medium text-[#141413]"
+                >
+                  Yêu cầu chấm lại
+                </h3>
+                <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-1">
+                  Giải thích lý do bạn muốn giáo viên chấm lại câu này
+                </p>
+              </div>
+              <button
+                type="button"
+                aria-label="Đóng"
+                className="p-2 rounded-lg text-[#87867F] hover:bg-[#F5F4ED] hover:text-[#141413] transition-colors"
+                onClick={() => {
+                  setShowRegradeModal(false);
+                  setRegradeReason('');
+                }}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-                  {/* Use new ResultRenderer component */}
-                  <ResultRenderer
-                    answer={answer}
-                    options={answer.options}
-                  />
+            <div className="px-6 py-4 overflow-y-auto">
+              <textarea
+                className="w-full min-h-[140px] rounded-xl border border-[#E8E6DC] px-3 py-2.5 font-[Be_Vietnam_Pro] text-[13px] text-[#141413] placeholder:text-[#87867F] outline-none focus:border-[#3898EC] focus:ring-[0_0_0_3px_rgba(56,152,236,0.12)] resize-y bg-[#FAF9F5]"
+                value={regradeReason}
+                onChange={(e) => setRegradeReason(e.target.value)}
+                placeholder="Nhập lý do yêu cầu chấm lại..."
+              />
+            </div>
 
-                  {showExplanations && answer.explanation && (
-                    <div
-                      style={{
-                        marginTop: 12,
-                        padding: 16,
-                        backgroundColor: '#f0fdf4',
-                        border: '1px solid #bbf7d0',
-                        borderRadius: 8,
-                      }}
-                    >
-                      <p
-                        style={{
-                          fontWeight: 600,
-                          color: '#166534',
-                          marginBottom: 8,
-                          fontSize: '0.9rem',
-                        }}
-                      >
-                        Lời giải
-                      </p>
-                      <MathText text={answer.explanation} />
-                    </div>
-                  )}
-
-                  {answer.feedback && (
-                    <div style={{ marginTop: 12, marginBottom: 12 }}>
-                      <p className="muted" style={{ fontSize: '0.875rem', marginBottom: 4 }}>
-                        Nhận xét từ giáo viên:
-                      </p>
-                      <p
-                        style={{
-                          padding: 12,
-                          backgroundColor: 'var(--primary-color-light)',
-                          borderRadius: 6,
-                        }}
-                      >
-                        {answer.feedback}
-                      </p>
-                    </div>
-                  )}
-
-                  {result.gradesReleased && (
-                    <button
-                      className="btn secondary"
-                      onClick={() => {
-                        setSelectedQuestionId(answer.questionId);
-                        setShowRegradeModal(true);
-                      }}
-                    >
-                      <MessageSquare size={14} />
-                      Yêu cầu chấm lại
-                    </button>
-                  )}
-                </div>
-              ))}
+            <div className="flex flex-wrap justify-end gap-2 px-6 pb-6 pt-2 border-t border-[#F0EEE6]">
+              <button
+                type="button"
+                className="px-4 py-2.5 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors"
+                onClick={() => {
+                  setShowRegradeModal(false);
+                  setRegradeReason('');
+                }}
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                disabled={!regradeReason.trim() || createRegradeRequestMutation.isPending}
+                className="px-5 py-2.5 rounded-xl bg-[#141413] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:bg-[#30302E] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                onClick={handleRegradeRequest}
+              >
+                {createRegradeRequestMutation.isPending ? 'Đang gửi...' : 'Gửi yêu cầu'}
+              </button>
             </div>
           </div>
-
-          {/* Regrade request modal */}
-          {showRegradeModal && (
-            <div className="modal-layer">
-              <div className="modal-card" style={{ width: 'min(520px, 100%)' }}>
-                <div className="modal-header">
-                  <div>
-                    <h3>Yêu cầu chấm lại</h3>
-                    <p className="muted" style={{ marginTop: 4 }}>
-                      Giải thích lý do bạn muốn giáo viên chấm lại câu này
-                    </p>
-                  </div>
-                </div>
-
-                <div className="modal-body">
-                  <textarea
-                    className="input"
-                    value={regradeReason}
-                    onChange={(e) => setRegradeReason(e.target.value)}
-                    placeholder="Nhập lý do yêu cầu chấm lại..."
-                    rows={5}
-                    style={{ width: '100%' }}
-                  />
-                </div>
-
-                <div className="modal-footer">
-                  <button
-                    className="btn secondary"
-                    onClick={() => {
-                      setShowRegradeModal(false);
-                      setRegradeReason('');
-                    }}
-                  >
-                    Hủy
-                  </button>
-                  <button
-                    className="btn"
-                    disabled={!regradeReason.trim() || createRegradeRequestMutation.isPending}
-                    onClick={handleRegradeRequest}
-                  >
-                    {createRegradeRequestMutation.isPending ? 'Đang gửi...' : 'Gửi yêu cầu'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-        </section>
-      </div>
-    </DashboardLayout>
+        </div>
+      ) : null}
+    </>
   );
 }

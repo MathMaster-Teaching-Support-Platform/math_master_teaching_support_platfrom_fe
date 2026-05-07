@@ -10,7 +10,6 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { useAssessmentDetails } from '../../hooks/useStudentAssessment';
-import '../../styles/module-refactor.css';
 import { UI_TEXT } from '../../constants/uiText';
 
 const assessmentTypeLabel: Record<string, string> = {
@@ -20,27 +19,28 @@ const assessmentTypeLabel: Record<string, string> = {
   HOMEWORK: 'Bài tập',
 };
 
-const statusBadgeClass: Record<string, string> = {
-  UPCOMING: 'badge upcoming',
-  IN_PROGRESS: 'badge in-progress',
-  COMPLETED: 'badge completed',
-};
-
 const statusLabel: Record<string, string> = {
   UPCOMING: 'Sắp tới',
   IN_PROGRESS: 'Đang làm',
   COMPLETED: 'Đã hoàn thành',
 };
 
-function Layout({ children }: { readonly children: React.ReactNode }) {
+const statusPillClass: Record<string, string> = {
+  UPCOMING: 'bg-blue-50 text-blue-800 border-blue-200',
+  IN_PROGRESS: 'bg-amber-50 text-amber-900 border-amber-200',
+  COMPLETED: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+};
+
+function Shell({ children }: { readonly children: React.ReactNode }) {
   return (
     <DashboardLayout
       role="student"
       user={{ name: 'Student', avatar: '', role: 'student' }}
       notificationCount={0}
+      contentClassName="dashboard-content--flush-bleed"
     >
-      <div className="module-layout-container">
-        <section className="module-page">{children}</section>
+      <div className="px-6 py-8 lg:px-8">
+        <div className="space-y-6">{children}</div>
       </div>
     </DashboardLayout>
   );
@@ -56,46 +56,44 @@ export default function AssessmentDetail() {
 
   if (isLoading) {
     return (
-      <Layout>
-        <div className="skeleton-detail">
-          {/* Header skeleton */}
-          <div className="skeleton-detail-header">
-            <div className="skeleton-line sk-xs" />
-            <div className="skeleton-line sk-xl" />
-            <div className="skeleton-line sk-lg" />
-          </div>
-
-          {/* Info grid skeleton */}
-          <div className="skeleton-section">
-            <div className="skeleton-line sk-xs" style={{ width: '30%', height: 12 }} />
-            <div className="skeleton-grid">
-              {(['q', 't', 'p', 's', 'd', 'a'] as const).map((k) => (
-                <div key={k} className="skeleton-info-item">
-                  <div className="skeleton-line sk-sm" style={{ height: 11 }} />
-                  <div className="skeleton-line sk-md" style={{ height: 16 }} />
-                </div>
+      <Shell>
+        <div className="space-y-6 animate-pulse">
+          <div className="h-10 w-40 rounded-xl bg-[#E8E6DC]" />
+          <div className="rounded-2xl border border-[#F0EEE6] bg-[#FAF9F5] h-36" />
+          <div className="rounded-2xl border border-[#E8E6DC] bg-white p-6 space-y-4">
+            <div className="h-4 w-48 rounded bg-[#E8E6DC]" />
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {[1, 2, 3, 4, 5, 6].map((k) => (
+                <div key={k} className="h-16 rounded-xl bg-[#F5F4ED]" />
               ))}
             </div>
-            <div className="skeleton-block" />
           </div>
-
-          {/* Action skeleton */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <div className="skeleton-line" style={{ width: 160, height: 38, borderRadius: 10 }} />
-          </div>
+          <div className="h-20 rounded-2xl bg-[#F5F4ED]" />
         </div>
-      </Layout>
+      </Shell>
     );
   }
 
   if (isError || !assessment) {
     return (
-      <Layout>
-        <div className="empty">
-          <AlertCircle size={32} style={{ opacity: 0.45, color: 'var(--mod-danger)' }} />
-          <p>Không thể tải thông tin {UI_TEXT.QUIZ.toLowerCase()}</p>
+      <Shell>
+        <div className="flex flex-col items-center justify-center py-16 gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center text-red-400">
+            <AlertCircle className="w-6 h-6" aria-hidden />
+          </div>
+          <p className="font-[Be_Vietnam_Pro] text-[14px] text-[#B53333] text-center">
+            Không thể tải thông tin {UI_TEXT.QUIZ.toLowerCase()}
+          </p>
+          <button
+            type="button"
+            onClick={() => navigate('/student/assessments')}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" aria-hidden />
+            Quay lại danh sách
+          </button>
         </div>
-      </Layout>
+      </Shell>
     );
   }
 
@@ -103,129 +101,162 @@ export default function AssessmentDetail() {
   const isOverdue = dueDate && dueDate < new Date();
   const attemptCount = assessment.attemptNumber || 0;
 
+  const statusPill =
+    statusPillClass[assessment.studentStatus] ?? 'bg-[#F5F4ED] text-[#5E5D59] border-[#E8E6DC]';
+
   return (
-    <Layout>
-      {/* Page header */}
-      <header className="detail-hero">
-        <div className="detail-hero__topbar">
-          <button className="detail-hero__back" onClick={() => navigate('/student/assessments')}>
-            <ArrowLeft size={14} />
+    <Shell>
+      {/* Hero */}
+      <div className="rounded-2xl border border-[#E8E6DC] bg-[#FAF9F5] p-5 shadow-[rgba(0,0,0,0.05)_0px_4px_24px]">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <button
+            type="button"
+            onClick={() => navigate('/student/assessments')}
+            className="inline-flex self-start items-center gap-2 px-3 py-2 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" aria-hidden />
             Quay lại
           </button>
-          <div className="detail-hero__badges">
-            <span className={statusBadgeClass[assessment.studentStatus] ?? 'badge'}>
+          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+            <span
+              className={`inline-flex items-center px-2.5 py-1 rounded-lg border text-[11px] font-semibold font-[Be_Vietnam_Pro] ${statusPill}`}
+            >
               {statusLabel[assessment.studentStatus] ?? assessment.studentStatus}
             </span>
-            <span className="type-pill">
+            <span className="inline-flex items-center px-2.5 py-1 rounded-lg border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[11px] font-medium text-[#5E5D59]">
               {assessmentTypeLabel[assessment.assessmentType] ?? assessment.assessmentType}
             </span>
           </div>
         </div>
-        <h1 className="detail-hero__title">{assessment.title}</h1>
-      </header>
+        <h1 className="font-[Playfair_Display] text-[22px] sm:text-[26px] font-medium text-[#141413] mt-4 leading-tight">
+          {assessment.title}
+        </h1>
+      </div>
 
-      {/* Info section */}
-      <div className="detail-section">
-        <p className="detail-section__title">Thông tin {UI_TEXT.QUIZ.toLowerCase()}</p>
+      {/* Thông tin */}
+      <section className="rounded-2xl border border-[#E8E6DC] bg-white p-5 sm:p-6 shadow-[rgba(0,0,0,0.04)_0px_2px_12px]">
+        <p className="font-[Be_Vietnam_Pro] text-[11px] font-semibold uppercase tracking-wide text-[#87867F] border-b border-[#F0EEE6] pb-3 mb-4">
+          Thông tin {UI_TEXT.QUIZ.toLowerCase()}
+        </p>
 
-        <div className="detail-info-grid">
-          <div className="detail-info-item">
-            <span className="detail-info-item__label">Số câu hỏi</span>
-            <span className="detail-info-item__value">
-              <FileText size={15} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="rounded-xl border border-[#E8E6DC] bg-[#FAF9F5] p-4">
+            <span className="font-[Be_Vietnam_Pro] text-[11px] font-semibold uppercase tracking-wide text-[#87867F]">
+              Số câu hỏi
+            </span>
+            <span className="mt-1 flex items-center gap-2 font-[Be_Vietnam_Pro] text-[14px] font-semibold text-[#141413]">
+              <FileText className="w-4 h-4 text-[#87867F]" aria-hidden />
               {assessment.totalQuestions} câu
             </span>
           </div>
 
-          {assessment.timeLimitMinutes && (
-            <div className="detail-info-item">
-              <span className="detail-info-item__label">Thời gian</span>
-              <span className="detail-info-item__value">
-                <Clock size={15} />
+          {assessment.timeLimitMinutes ? (
+            <div className="rounded-xl border border-[#E8E6DC] bg-[#FAF9F5] p-4">
+              <span className="font-[Be_Vietnam_Pro] text-[11px] font-semibold uppercase tracking-wide text-[#87867F]">
+                Thời gian
+              </span>
+              <span className="mt-1 flex items-center gap-2 font-[Be_Vietnam_Pro] text-[14px] font-semibold text-[#141413]">
+                <Clock className="w-4 h-4 text-[#87867F]" aria-hidden />
                 {assessment.timeLimitMinutes} phút
               </span>
             </div>
-          )}
+          ) : null}
 
-          <div className="detail-info-item">
-            <span className="detail-info-item__label">Tổng điểm</span>
-            <span className="detail-info-item__value">{assessment.totalPoints} điểm</span>
+          <div className="rounded-xl border border-[#E8E6DC] bg-[#FAF9F5] p-4">
+            <span className="font-[Be_Vietnam_Pro] text-[11px] font-semibold uppercase tracking-wide text-[#87867F]">
+              Tổng điểm
+            </span>
+            <span className="mt-1 block font-[Playfair_Display] text-[20px] font-medium text-[#141413]">
+              {assessment.totalPoints} điểm
+            </span>
           </div>
 
-          {assessment.passingScore != null && (
-            <div className="detail-info-item">
-              <span className="detail-info-item__label">Điểm đạt</span>
-              <span className="detail-info-item__value">
-                <CheckCircle2 size={15} style={{ color: 'var(--mod-success)' }} />
+          {assessment.passingScore != null ? (
+            <div className="rounded-xl border border-[#E8E6DC] bg-[#FAF9F5] p-4">
+              <span className="font-[Be_Vietnam_Pro] text-[11px] font-semibold uppercase tracking-wide text-[#87867F]">
+                Điểm đạt
+              </span>
+              <span className="mt-1 flex items-center gap-2 font-[Be_Vietnam_Pro] text-[14px] font-semibold text-[#141413]">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" aria-hidden />
                 {assessment.passingScore} điểm
               </span>
             </div>
-          )}
+          ) : null}
 
-          {dueDate && (
-            <div className="detail-info-item">
-              <span className="detail-info-item__label">Hạn nộp</span>
+          {dueDate ? (
+            <div className="rounded-xl border border-[#E8E6DC] bg-[#FAF9F5] p-4">
+              <span className="font-[Be_Vietnam_Pro] text-[11px] font-semibold uppercase tracking-wide text-[#87867F]">
+                Hạn nộp
+              </span>
               <span
-                className="detail-info-item__value"
-                style={{ color: isOverdue ? 'var(--mod-danger)' : undefined }}
+                className={`mt-1 flex items-center gap-2 font-[Be_Vietnam_Pro] text-[13px] font-semibold ${isOverdue ? 'text-red-600' : 'text-[#141413]'}`}
               >
-                <Clock size={15} />
+                <Clock className="w-4 h-4 shrink-0 text-[#87867F]" aria-hidden />
                 {dueDate.toLocaleString('vi-VN')}
-                {isOverdue && ' · Quá hạn'}
+                {isOverdue ? ' · Quá hạn' : ''}
               </span>
             </div>
-          )}
+          ) : null}
 
-          {assessment.allowMultipleAttempts && (
-            <div className="detail-info-item">
-              <span className="detail-info-item__label">Số lần làm</span>
-              <span className="detail-info-item__value">
-                <RefreshCw size={15} />
+          {assessment.allowMultipleAttempts ? (
+            <div className="rounded-xl border border-[#E8E6DC] bg-[#FAF9F5] p-4">
+              <span className="font-[Be_Vietnam_Pro] text-[11px] font-semibold uppercase tracking-wide text-[#87867F]">
+                Số lần làm
+              </span>
+              <span className="mt-1 flex items-center gap-2 font-[Be_Vietnam_Pro] text-[14px] font-semibold text-[#141413]">
+                <RefreshCw className="w-4 h-4 text-[#87867F]" aria-hidden />
                 {attemptCount}
                 {assessment.maxAttempts ? ` / ${assessment.maxAttempts}` : ''} lần
               </span>
             </div>
-          )}
+          ) : null}
         </div>
 
-        {assessment.description && (
-          <div className="detail-info-item">
-            <span className="detail-info-item__label">Hướng dẫn</span>
-            <p className="detail-description">{assessment.description}</p>
+        {assessment.description ? (
+          <div className="mt-5 rounded-xl border border-dashed border-[#E8E6DC] bg-[#FAF9F5] p-4">
+            <span className="font-[Be_Vietnam_Pro] text-[11px] font-semibold uppercase tracking-wide text-[#87867F]">
+              Hướng dẫn
+            </span>
+            <p className="mt-2 font-[Be_Vietnam_Pro] text-[14px] text-[#5E5D59] leading-relaxed whitespace-pre-wrap">
+              {assessment.description}
+            </p>
           </div>
-        )}
-      </div>
+        ) : null}
+      </section>
 
-      {/* Warning — only shown when cannot start so action bar still shows the reason */}
-      {!assessment.canStart && assessment.cannotStartReason && (
-        <div className="warning-banner">
-          <AlertCircle size={18} style={{ color: '#92660a', flexShrink: 0, marginTop: 1 }} />
+      {!assessment.canStart && assessment.cannotStartReason ? (
+        <div className="flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4">
+          <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" aria-hidden />
           <div>
-            <p className="warning-banner__title">Không thể bắt đầu</p>
-            <p className="warning-banner__body">{assessment.cannotStartReason}</p>
+            <p className="font-[Be_Vietnam_Pro] text-[13px] font-semibold text-amber-900">
+              Không thể bắt đầu
+            </p>
+            <p className="font-[Be_Vietnam_Pro] text-[13px] text-amber-800/90 mt-1 leading-relaxed">
+              {assessment.cannotStartReason}
+            </p>
           </div>
         </div>
-      )}
+      ) : null}
 
-      {/* Action bar */}
-      <div className="detail-action-bar">
-        <div className="detail-action-bar__text">
-          <p className="detail-action-bar__hint">Bạn đã sẵn sàng?</p>
-          <p className="detail-action-bar__sub">
+      <div className="flex flex-col gap-4 rounded-2xl border border-[#E8E6DC] bg-white p-5 sm:p-6 sm:flex-row sm:items-center sm:justify-between shadow-[rgba(0,0,0,0.04)_0px_2px_12px]">
+        <div>
+          <p className="font-[Be_Vietnam_Pro] text-[15px] font-semibold text-[#141413]">Bạn đã sẵn sàng?</p>
+          <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-1 leading-relaxed">
             {assessment.canStart
               ? 'Đảm bảo kết nối ổn định trước khi bắt đầu làm bài.'
               : (assessment.cannotStartReason ?? `${UI_TEXT.QUIZ} này chưa thể bắt đầu.`)}
           </p>
         </div>
         <button
-          className="btn btn--cta"
+          type="button"
           disabled={!assessment.canStart}
           onClick={() => navigate(`/student/assessments/${assessmentId}/take`)}
+          className="inline-flex items-center justify-center gap-2 min-w-[200px] px-5 py-3 rounded-xl bg-[#141413] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:bg-[#30302E] disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all duration-150"
         >
-          <Play size={15} />
+          <Play className="w-4 h-4" aria-hidden />
           {attemptCount > 0 ? 'Làm lại bài' : 'Bắt đầu làm bài'}
         </button>
       </div>
-    </Layout>
+    </Shell>
   );
 }

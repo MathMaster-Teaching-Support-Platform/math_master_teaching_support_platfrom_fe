@@ -1,4 +1,26 @@
 /* ════════════════════════════════════════════
+   Shell aligned with /teacher/mindmaps (cards + bleed layout)
+   ════════════════════════════════════════════ */
+.module-layout-container.student-assessments-module .data-card.sal-card {
+  border-radius: 1rem;
+  border: 1px solid #f0eee6;
+  background: #faf9f5;
+  box-shadow: rgba(0, 0, 0, 0.05) 0px 4px 24px;
+  min-height: 0;
+}
+
+.module-layout-container.student-assessments-module .data-card.sal-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0px 0px 0px 1px #d1cfc5,
+    rgba(0, 0, 0, 0.08) 0px 8px 30px;
+}
+
+.module-layout-container.student-assessments-module .sal-cover {
+  height: 140px;
+}
+
+/* ════════════════════════════════════════════
    StudentAssessmentList — scoped styles  (sal-*)
    Status gradient theme:
      UPCOMING      → indigo / violet
