@@ -31,7 +31,6 @@ interface EnhancedQuestionFormModalProps {
     points?: number;
     correctAnswer?: string;
     explanation?: string;
-    tags?: string[];
     options?: Record<string, string>;
     generationMetadata?: Record<string, unknown>;
     diagramData?: unknown;
@@ -240,7 +239,6 @@ export function EnhancedQuestionFormModal({
         questionType,
         difficulty,
         points: pointsNum,
-        tags: initialData?.tags || [],
         explanation: explanation.trim() || undefined,
         diagramData: diagramData.trim() ? diagramData.trim() : undefined,
       });

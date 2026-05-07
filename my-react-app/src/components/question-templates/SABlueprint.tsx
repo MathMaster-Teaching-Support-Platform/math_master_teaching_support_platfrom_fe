@@ -41,12 +41,8 @@ export interface SABlueprintRef {
 
 export const SABlueprint = forwardRef<SABlueprintRef, SABlueprintProps>(
   ({ onFocusField, initialData, templateId }, ref) => {
-    const [templateText, setTemplateText] = useState(
-      initialData?.templateText ?? 'Tính ∫₀¹ {{a}}x dx = ?'
-    );
-    const [answerFormula, setAnswerFormula] = useState(
-      initialData?.answerFormula ?? '{{a}}/2'
-    );
+    const [templateText, setTemplateText] = useState(initialData?.templateText ?? '');
+    const [answerFormula, setAnswerFormula] = useState(initialData?.answerFormula ?? '');
     const [diagramTemplateRaw, setDiagramTemplateRaw] = useState(
       initialData?.diagramTemplateRaw ?? ''
     );
@@ -56,13 +52,9 @@ export const SABlueprint = forwardRef<SABlueprintRef, SABlueprintProps>(
     const [validationMode, setValidationMode] = useState<ValidationMode>(
       initialData?.validationMode ?? 'NUMERIC'
     );
-    const [tolerance, setTolerance] = useState(
-      initialData?.tolerance ?? '0.01'
-    );
+    const [tolerance, setTolerance] = useState(initialData?.tolerance ?? '');
     const [parameters, setParameters] = useState<ParameterInput[]>(
-      initialData?.parameters ?? [
-        { name: 'a', constraintText: 'số nguyên, 1 ≤ a ≤ 10', sampleValue: '2' },
-      ]
+      initialData?.parameters ?? []
     );
     const [globalConstraints, setGlobalConstraints] = useState<string[]>(
       initialData?.globalConstraints ?? []

@@ -52,47 +52,41 @@ const cognitiveLevelLabels: Record<CognitiveLevel, string> = {
 
 export const TFBlueprint = forwardRef<TFBlueprintRef, TFBlueprintProps>(
   ({ defaultChapterId, chapters, onFocusField, initialData, templateId }, ref) => {
-    const [stemText, setStemText] = useState(
-      initialData?.stemText ?? 'Cho hàm số $f(x) = {{a}}x^2 + {{b}}x + {{c}}$. Xét các mệnh đề sau:'
-    );
+    const [stemText, setStemText] = useState(initialData?.stemText ?? '');
     const [clauses, setClauses] = useState<TFClauseInput[]>(
       initialData?.clauses ?? [
         {
           key: 'A',
-          text: 'Hàm số đạt cực tiểu tại $x = \\frac{-{{b}}}{2 \\cdot {{a}}}$',
+          text: '',
           chapterId: defaultChapterId,
           cognitiveLevel: CognitiveLevel.NHAN_BIET,
           truthValue: true,
         },
         {
           key: 'B',
-          text: 'Đồ thị hàm số có trục đối xứng là đường thẳng $x = {{b}}$',
+          text: '',
           chapterId: defaultChapterId,
-          cognitiveLevel: CognitiveLevel.THONG_HIEU,
-          truthValue: false,
+          cognitiveLevel: CognitiveLevel.NHAN_BIET,
+          truthValue: true,
         },
         {
           key: 'C',
-          text: '$f(0) = {{c}}$',
+          text: '',
           chapterId: defaultChapterId,
-          cognitiveLevel: CognitiveLevel.VAN_DUNG,
+          cognitiveLevel: CognitiveLevel.NHAN_BIET,
           truthValue: true,
         },
         {
           key: 'D',
-          text: 'Hàm số đồng biến trên khoảng $(-\\infty; +\\infty)$',
+          text: '',
           chapterId: defaultChapterId,
-          cognitiveLevel: CognitiveLevel.VAN_DUNG_CAO,
-          truthValue: false,
+          cognitiveLevel: CognitiveLevel.NHAN_BIET,
+          truthValue: true,
         },
       ]
     );
     const [parameters, setParameters] = useState<ParameterInput[]>(
-      initialData?.parameters ?? [
-        { name: 'a', constraintText: 'số nguyên, 1 ≤ a ≤ 5, a ≠ 0', sampleValue: '2' },
-        { name: 'b', constraintText: 'số nguyên, -6 ≤ b ≤ 6', sampleValue: '4' },
-        { name: 'c', constraintText: 'số nguyên, -10 ≤ c ≤ 10', sampleValue: '-3' },
-      ]
+      initialData?.parameters ?? []
     );
     const [globalConstraints, setGlobalConstraints] = useState<string[]>(
       initialData?.globalConstraints ?? []

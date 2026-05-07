@@ -1,14 +1,12 @@
 import { Check, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import {
-  QuestionTag,
   QuestionType,
   type BlueprintFromRealQuestionRequest,
   type BlueprintFromRealQuestionResponse,
   type BlueprintParameter,
   type QuestionTemplateRequest,
 } from '../../types/questionTemplate';
-import { TagSelector } from '../../components/common/TagSelector';
 
 /**
  * Renders the AI's Blueprint draft for the teacher to review. The teacher can
@@ -39,10 +37,6 @@ export function BlueprintConfirmModal({
   const [solutionSteps, setSolutionSteps] = useState('');
   const [diagram, setDiagram] = useState('');
   const [optionsState, setOptionsState] = useState<Record<string, string>>({});
-  const [tags, setTags] = useState<QuestionTag[]>([
-    QuestionTag.LINEAR_EQUATIONS,
-    QuestionTag.PROBLEM_SOLVING,
-  ]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -95,10 +89,6 @@ export function BlueprintConfirmModal({
       setError('Template text trống — vui lòng kiểm tra.');
       return;
     }
-    if (tags.length === 0) {
-      setError('Chọn ít nhất 1 tag cho template.');
-      return;
-    }
     setSaving(true);
     try {
       const parameters: Record<string, unknown> = {};
@@ -129,7 +119,6 @@ export function BlueprintConfirmModal({
         answerFormula: answerFormula || '',
         constraints: cleanGlobals.length ? cleanGlobals : undefined,
         cognitiveLevel: req.cognitiveLevel,
-        tags,
         isPublic: false,
         questionBankId: req.questionBankId ?? null,
         diagramTemplate: diagram || undefined,
@@ -212,8 +201,6 @@ export function BlueprintConfirmModal({
               required
             />
           </label>
-
-          <TagSelector selectedTags={tags} onChange={setTags} maxTags={5} required />
 
           {/* DIFF table */}
           <section className="data-card" style={{ minHeight: 0 }}>

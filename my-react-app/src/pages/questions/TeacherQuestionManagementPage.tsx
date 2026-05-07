@@ -553,7 +553,6 @@ export default function TeacherQuestionManagementPage() {
                 points: selectedQuestion.points,
                 correctAnswer: selectedQuestion.correctAnswer,
                 explanation: selectedQuestion.explanation,
-                tags: selectedQuestion.tags,
                 options: selectedQuestion.options as Record<string, string> | undefined,
                 generationMetadata: selectedQuestion.generationMetadata || undefined,
                 diagramData: selectedQuestion.diagramData,

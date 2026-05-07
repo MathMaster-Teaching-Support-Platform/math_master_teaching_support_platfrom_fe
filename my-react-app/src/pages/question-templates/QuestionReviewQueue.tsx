@@ -16,6 +16,13 @@ import {
 import { useToast } from '../../context/ToastContext';
 import type { ReviewQuestionResponse } from '../../types/questionTemplate';
 
+const QUESTION_STATUS_VI = {
+  AI_DRAFT: 'Nháp AI',
+  UNDER_REVIEW: 'Chờ duyệt',
+  APPROVED: 'Đã duyệt',
+  ARCHIVED: 'Đã lưu trữ',
+} as const;
+
 // Per-template review screen. Reached only with a `templateId` query param —
 // there is no global pending queue. Without a template the page redirects to
 // the template list so the teacher picks one to review.
@@ -219,7 +226,7 @@ export function QuestionReviewQueue() {
                               {q.questionType}
                             </span>
                             <span className="badge draft" style={{ fontSize: '0.7rem' }}>
-                              {q.questionStatus}
+                              {QUESTION_STATUS_VI[q.questionStatus as keyof typeof QUESTION_STATUS_VI] ?? q.questionStatus}
                             </span>
                             <span className="muted" style={{ fontSize: '0.75rem' }}>
                               {new Date(q.createdAt).toLocaleString()}

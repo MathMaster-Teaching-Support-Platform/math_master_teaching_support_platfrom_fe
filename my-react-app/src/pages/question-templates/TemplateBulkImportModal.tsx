@@ -7,8 +7,10 @@ import {
   X,
   XCircle,
 } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { AcademicCascade } from '../../components/common/AcademicCascade';
 import MathText from '../../components/common/MathText';
+import { useChaptersBySubject } from '../../hooks/useChapters';
 import { templateImportService } from '../../services/templateImportService';
 import type { ExcelPreviewResponse } from '../../types/bulkImport';
 import './template-bulk-import.css';
@@ -50,7 +52,22 @@ export function TemplateBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  const [gradeLevel, setGradeLevel] = useState('');
+  const [subjectId, setSubjectId] = useState('');
+  const [chapterId, setChapterId] = useState('');
+  // Per-row chapter override: rowNumber -> chapterId. Empty/missing means use batch default.
+  const [rowChapters, setRowChapters] = useState<Record<number, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Chapters available for per-row override — comes from the batch-selected subject.
+  const { data: subjectChaptersData } = useChaptersBySubject(subjectId, !!subjectId);
+  const subjectChapters = subjectChaptersData?.result ?? [];
+
+  // When subject changes, drop per-row overrides (they may point to chapters in a
+  // different subject which is no longer valid for this batch).
+  useEffect(() => {
+    setRowChapters({});
+  }, [subjectId]);
 
   const handleDownloadTemplate = async () => {
     try {
@@ -131,12 +148,23 @@ export function TemplateBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
   const handleSubmit = async () => {
     if (!previewData) return;
 
-    const validTemplates = previewData.rows
-      .filter((row) => row.isValid && row.data)
-      .map((row) => row.data!);
-
-    if (validTemplates.length === 0) {
+    const validRows = previewData.rows.filter((row) => row.isValid && row.data);
+    if (validRows.length === 0) {
       setError('Không có mẫu hợp lệ nào để nhập.');
+      return;
+    }
+
+    // Each row needs a chapter — either its per-row override or the batch default.
+    const validTemplates = validRows.map((row) => ({
+      ...row.data!,
+      chapterId: rowChapters[row.rowNumber] || chapterId || undefined,
+    }));
+
+    const missing = validTemplates.filter((t) => !t.chapterId);
+    if (missing.length > 0) {
+      setError(
+        `Còn ${missing.length} mẫu chưa được gán chương. Hãy chọn chương mặc định hoặc gán riêng cho từng dòng.`,
+      );
       return;
     }
 
@@ -144,7 +172,10 @@ export function TemplateBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
     setError(null);
 
     try {
-      const result = await templateImportService.submitBatch(validTemplates);
+      const result = await templateImportService.submitBatch(
+        validTemplates,
+        chapterId || undefined,
+      );
       onSuccess();
       setSuccessMessage(`Đã nhập thành công ${result.successCount} mẫu câu hỏi.`);
     } catch (err) {
@@ -162,6 +193,10 @@ export function TemplateBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
     setSuccessMessage(null);
     setError(null);
     setDragActive(false);
+    setGradeLevel('');
+    setSubjectId('');
+    setChapterId('');
+    setRowChapters({});
     onClose();
   };
 
@@ -262,6 +297,35 @@ export function TemplateBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
 
           {step === 'preview' && previewData && (
             <div className="bulk-import-preview">
+              <div className="alert alert-info" style={{ marginBottom: 12 }}>
+                <AlertCircle size={16} />
+                <div>
+                  <strong>Bước 1: Chọn lớp / môn / chương mặc định</strong>
+                  <p>
+                    Mọi mẫu sẽ dùng chương này trừ khi bạn chọn riêng cho từng dòng ở cột "Chương"
+                    bên dưới.
+                  </p>
+                </div>
+              </div>
+              <div
+                style={{ display: 'grid', gap: 12, gridTemplateColumns: '1fr 1fr 1fr', marginBottom: 16 }}
+              >
+                <AcademicCascade
+                  gradeLevel={gradeLevel}
+                  subjectId={subjectId}
+                  chapterId={chapterId}
+                  onGradeChange={(g) => {
+                    setGradeLevel(g);
+                    setSubjectId('');
+                    setChapterId('');
+                  }}
+                  onSubjectChange={(s) => {
+                    setSubjectId(s);
+                    setChapterId('');
+                  }}
+                  onChapterChange={setChapterId}
+                />
+              </div>
               <div
                 className={`alert ${previewData.invalidRows > 0 ? 'alert-warning' : 'alert-success'}`}
               >
@@ -291,6 +355,7 @@ export function TemplateBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
                       <th>Tên mẫu</th>
                       <th style={{ width: 140 }}>Loại</th>
                       <th style={{ width: 120 }}>Mức độ</th>
+                      <th style={{ width: 200 }}>Chương</th>
                       <th style={{ width: 240 }}>Chi tiết</th>
                       <th>Lỗi phát hiện</th>
                     </tr>
@@ -329,6 +394,38 @@ export function TemplateBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
                             ? cognitiveLevelLabel[row.data.cognitiveLevel] ||
                               row.data.cognitiveLevel
                             : '-'}
+                        </td>
+                        <td>
+                          {row.isValid ? (
+                            <select
+                              className="select"
+                              style={{ width: '100%', fontSize: 12 }}
+                              value={rowChapters[row.rowNumber] || ''}
+                              onChange={(e) =>
+                                setRowChapters((prev) => {
+                                  const next = { ...prev };
+                                  if (e.target.value) {
+                                    next[row.rowNumber] = e.target.value;
+                                  } else {
+                                    delete next[row.rowNumber];
+                                  }
+                                  return next;
+                                })
+                              }
+                              disabled={!subjectId}
+                            >
+                              <option value="">
+                                {chapterId ? '— Dùng mặc định —' : '— Chọn chương —'}
+                              </option>
+                              {subjectChapters.map((c) => (
+                                <option key={c.id} value={c.id}>
+                                  {c.title}
+                                </option>
+                              ))}
+                            </select>
+                          ) : (
+                            <span className="muted">-</span>
+                          )}
                         </td>
                         <td>
                           {row.data ? (
