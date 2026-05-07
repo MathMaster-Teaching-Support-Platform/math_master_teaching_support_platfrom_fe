@@ -449,6 +449,92 @@
   }
 }
 
+/* ── Tree header actions ────────────────── */
+.aas-tree-shell__head-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.aas-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1px dashed #86efac;
+  background: #f0fdf4;
+  color: #16a34a;
+  border-radius: 0.625rem;
+  padding: 0.3125rem 0.625rem;
+  font-size: 0.75rem;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 150ms ease;
+  white-space: nowrap;
+}
+
+.aas-add-btn:hover {
+  background: #dcfce7;
+  border-color: #4ade80;
+  box-shadow: 0 0 0 1px #86efac;
+}
+
+/* ── Node row (button + actions) ────────── */
+.aas-node-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.aas-node-row .aas-node-btn {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+}
+
+.aas-node-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+
+.aas-node-row:hover .aas-node-actions,
+.aas-node-row:focus-within .aas-node-actions {
+  opacity: 1;
+}
+
+.aas-node-action-btn {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e8e6dc;
+  background: #ffffff;
+  color: #87867f;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 150ms ease;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.aas-node-action-btn:hover {
+  border-color: #93c5fd;
+  background: #f0f9ff;
+  color: #0284c7;
+}
+
+.aas-node-action-btn--add:hover {
+  border-color: #86efac;
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
 @media (max-width: 640px) {
   .aas-inline-2 {
     grid-template-columns: 1fr;

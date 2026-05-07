@@ -188,7 +188,6 @@ export interface QuestionTemplateRequest {
     topic?: string;
     constraints?: string[];
     cognitiveLevel: CognitiveLevel;
-    tags: QuestionTag[];
     isPublic?: boolean;
     questionBankId?: string | null;
     canonicalQuestionId?: string | null;
@@ -218,7 +217,6 @@ export interface QuestionTemplateResponse {
     topic?: string;
     constraints?: string[];
     cognitiveLevel: CognitiveLevel;
-    tags: QuestionTag[];
     isPublic?: boolean;
     status: TemplateStatus;
     usageCount?: number;
@@ -273,7 +271,6 @@ export interface TemplateDraft {
     answerFormula?: string;
     optionsGenerator?: Record<string, unknown>;
     cognitiveLevel?: CognitiveLevel;
-    tags?: QuestionTag[];
 }
 
 export interface ImportPreviewResponse {

@@ -108,6 +108,8 @@ export interface GetMyQuestionsParams {
   sortDirection?: 'ASC' | 'DESC';
   searchName?: string;
   searchTag?: string;
+  gradeId?: string;
+  chapterId?: string;
 }
 
 export interface SearchQuestionsParams {

@@ -1,0 +1,302 @@
+/* AcademicNodeModal — popup for creating / editing grade, subject, chapter, lesson */
+
+.anm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  backdrop-filter: blur(2px);
+}
+
+.anm-card {
+  background: #faf9f5;
+  border: 1px solid #e8e6dc;
+  border-radius: 1rem;
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.08),
+    0 20px 60px rgba(0, 0, 0, 0.14);
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Header ─────────────────────────────── */
+.anm-header {
+  padding: 1.125rem 1.5rem;
+  border-bottom: 1px solid #f0eee6;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-shrink: 0;
+  background: #ffffff;
+}
+
+.anm-header__title {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.anm-header__icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 0.625rem;
+  background: #e8e6dc;
+  color: #5e5d59;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.anm-header h2 {
+  margin: 0;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.0625rem;
+  font-weight: 500;
+  color: #141413;
+  line-height: 1.3;
+}
+
+.anm-close {
+  width: 34px;
+  height: 34px;
+  border: 1px solid #e8e6dc;
+  background: transparent;
+  border-radius: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #87867f;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 150ms ease;
+}
+
+.anm-close:hover {
+  border-color: #fca5a5;
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+/* ── Body (scrollable form) ─────────────── */
+.anm-body {
+  padding: 1.375rem 1.5rem 1rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex: 1;
+}
+
+/* ── Field ──────────────────────────────── */
+.anm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.anm-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #5e5d59;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  letter-spacing: 0.02em;
+}
+
+.anm-required {
+  color: #dc2626;
+  margin-left: 0.15rem;
+}
+
+.anm-input {
+  width: 100%;
+  border: 1px solid #e0ddd3;
+  border-radius: 0.625rem;
+  padding: 0.5625rem 0.875rem;
+  font-size: 0.875rem;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  background: #ffffff;
+  color: #141413;
+  box-sizing: border-box;
+  transition: all 150ms ease;
+  appearance: none;
+}
+
+.anm-input::placeholder {
+  color: #b5b3ab;
+}
+
+.anm-input:focus {
+  outline: none;
+  border-color: #3898ec;
+  box-shadow: 0 0 0 3px rgba(56, 152, 236, 0.12);
+}
+
+.anm-input:disabled {
+  background: #f5f4ed;
+  color: #87867f;
+  cursor: not-allowed;
+}
+
+select.anm-input {
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2387867f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  padding-right: 2.25rem;
+}
+
+.anm-textarea {
+  width: 100%;
+  border: 1px solid #e0ddd3;
+  border-radius: 0.625rem;
+  padding: 0.5625rem 0.875rem;
+  font-size: 0.875rem;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  background: #ffffff;
+  color: #141413;
+  box-sizing: border-box;
+  transition: all 150ms ease;
+  min-height: 76px;
+  resize: vertical;
+  line-height: 1.55;
+}
+
+.anm-textarea--tall {
+  min-height: 108px;
+}
+
+.anm-textarea::placeholder {
+  color: #b5b3ab;
+}
+
+.anm-textarea:focus {
+  outline: none;
+  border-color: #3898ec;
+  box-shadow: 0 0 0 3px rgba(56, 152, 236, 0.12);
+}
+
+.anm-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+@media (max-width: 480px) {
+  .anm-row-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.anm-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #5e5d59;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  user-select: none;
+  cursor: pointer;
+}
+
+.anm-check input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #0284c7;
+}
+
+/* ── Error message ──────────────────────── */
+.anm-error {
+  margin: 0;
+  padding: 0.625rem 0.875rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.5rem;
+  font-size: 0.84rem;
+  color: #dc2626;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+}
+
+/* ── Footer ─────────────────────────────── */
+.anm-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.625rem;
+  padding-top: 0.875rem;
+  border-top: 1px solid #f0eee6;
+  margin-top: 0.25rem;
+}
+
+.anm-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border-radius: 0.625rem;
+  padding: 0.5rem 1.125rem;
+  font-size: 0.875rem;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 150ms ease;
+  white-space: nowrap;
+}
+
+.anm-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.anm-btn--ghost {
+  border: 1px solid #d1cfc5;
+  background: #ffffff;
+  color: #5e5d59;
+}
+
+.anm-btn--ghost:hover:not(:disabled) {
+  background: #f5f4ed;
+  border-color: #b5b3ab;
+  color: #141413;
+}
+
+.anm-btn--primary {
+  border: 1px solid #0369a1;
+  background: #0369a1;
+  color: #ffffff;
+  box-shadow: 0 1px 3px rgba(3, 105, 161, 0.25);
+}
+
+.anm-btn--primary:hover:not(:disabled) {
+  background: #025f8a;
+  border-color: #025f8a;
+  box-shadow: 0 2px 6px rgba(3, 105, 161, 0.3);
+  transform: translateY(-1px);
+}
+
+.anm-btn--primary:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+/* ── Spin animation ─────────────────────── */
+@keyframes anm-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.anm-spin {
+  animation: anm-spin 0.7s linear infinite;
+}

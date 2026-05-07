@@ -54,8 +54,12 @@ export const questionService = {
       query.set('name', params.searchName.trim());
     }
 
-    if (params.searchTag?.trim()) {
-      query.set('tag', params.searchTag.trim());
+    if (params.gradeId) {
+      query.set('gradeId', params.gradeId);
+    }
+
+    if (params.chapterId) {
+      query.set('chapterId', params.chapterId);
     }
 
     return fetch(`${API_BASE_URL}${API_ENDPOINTS.QUESTIONS}?${query.toString()}`, {

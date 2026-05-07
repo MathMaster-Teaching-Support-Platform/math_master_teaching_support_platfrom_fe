@@ -32,10 +32,10 @@ export const useGetQuestionTemplate = (id: string, enabled = true) => {
     });
 };
 
-export const useGetMyQuestionTemplates = (page = 0, size = 20, sortBy = 'createdAt', sortDirection = 'DESC', search?: string, status?: string) => {
+export const useGetMyQuestionTemplates = (page = 0, size = 20, sortBy = 'createdAt', sortDirection = 'DESC', search?: string, status?: string, gradeId?: string, chapterId?: string) => {
     return useQuery({
-        queryKey: questionTemplateKeys.myList(`${page}-${size}-${sortBy}-${sortDirection}-${search ?? ''}-${status ?? ''}`),
-        queryFn: () => questionTemplateService.getMyQuestionTemplates(page, size, sortBy, sortDirection, search, status),
+        queryKey: questionTemplateKeys.myList(`${page}-${size}-${sortBy}-${sortDirection}-${search ?? ''}-${status ?? ''}-${gradeId ?? ''}-${chapterId ?? ''}`),
+        queryFn: () => questionTemplateService.getMyQuestionTemplates(page, size, sortBy, sortDirection, search, status, gradeId, chapterId),
     });
 };
 
@@ -44,7 +44,8 @@ export const useSearchQuestionTemplates = (params: {
     cognitiveLevel?: CognitiveLevel;
     isPublic?: boolean;
     searchTerm?: string;
-    tags?: string[];
+    gradeId?: string;
+    chapterId?: string;
     page?: number;
     size?: number;
     sortBy?: string;
