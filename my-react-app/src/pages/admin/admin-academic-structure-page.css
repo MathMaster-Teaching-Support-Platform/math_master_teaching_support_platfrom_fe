@@ -278,6 +278,18 @@
   resize: vertical;
 }
 
+.aas-field-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #5e5d59;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 .aas-search-wrap {
   border: 1px solid #e8e6dc;
   border-radius: 0.75rem;
