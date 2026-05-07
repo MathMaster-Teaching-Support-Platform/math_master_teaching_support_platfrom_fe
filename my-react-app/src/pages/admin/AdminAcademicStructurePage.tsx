@@ -304,11 +304,12 @@ export default function AdminAcademicStructurePage() {
 
   useEffect(() => {
     if (!selectedChapter) {
+      const maxOrder = chapters.reduce((max, c) => Math.max(max, c.orderIndex ?? 0), 0);
       setChapterForm({
         id: '',
         title: '',
         description: '',
-        orderIndex: '',
+        orderIndex: maxOrder + 1,
         subjectId: selectedSubjectId,
       });
       return;
@@ -321,17 +322,18 @@ export default function AdminAcademicStructurePage() {
       orderIndex: selectedChapter.orderIndex ?? '',
       subjectId: selectedChapter.subjectId,
     });
-  }, [selectedChapter, selectedSubjectId]);
+  }, [selectedChapter, selectedSubjectId, chapters]);
 
   useEffect(() => {
     if (!selectedLesson) {
+      const maxOrder = lessons.reduce((max, l) => Math.max(max, l.orderIndex ?? 0), 0);
       setLessonForm({
         id: '',
         title: '',
         learningObjectives: '',
         lessonContent: '',
         summary: '',
-        orderIndex: '',
+        orderIndex: maxOrder + 1,
         durationMinutes: '',
         difficulty: 'BEGINNER',
         status: 'DRAFT',
@@ -352,7 +354,7 @@ export default function AdminAcademicStructurePage() {
       status: selectedLesson.status ?? 'DRAFT',
       chapterId: selectedLesson.chapterId,
     });
-  }, [selectedChapterId, selectedLesson]);
+  }, [selectedChapterId, selectedLesson, lessons]);
 
   const saveGradeMutation = useMutation({
     mutationFn: async () => {
@@ -774,11 +776,12 @@ export default function AdminAcademicStructurePage() {
 
   const draftPreview = (() => {
     if (editorMode === 'program' && !gradeForm.id) {
-      const level = gradeForm.gradeLevel === '' ? 'Lớp ?' : `Lớp ${gradeForm.gradeLevel}`;
+      const level = gradeForm.gradeLevel !== '' ? `Lớp ${gradeForm.gradeLevel}` : '';
       const name = gradeForm.name.trim();
+      const label = [level, name].filter(Boolean).join(' - ') || 'Chương trình mới';
       return {
         icon: GraduationCap,
-        label: name ? `${level} - ${name}` : level,
+        label,
       };
     }
 
@@ -1223,9 +1226,9 @@ export default function AdminAcademicStructurePage() {
                       <span>
                         {(() => {
                           const level =
-                            gradeForm.gradeLevel === '' ? 'Lớp ?' : `Lớp ${gradeForm.gradeLevel}`;
+                            gradeForm.gradeLevel !== '' ? `Lớp ${gradeForm.gradeLevel}` : '';
                           const name = gradeForm.name.trim();
-                          return name ? `${level} - ${name}` : level;
+                          return [level, name].filter(Boolean).join(' - ') || 'Chương trình mới';
                         })()}
                       </span>
                     </button>
