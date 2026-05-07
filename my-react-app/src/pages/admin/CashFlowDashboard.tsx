@@ -191,7 +191,9 @@ const buildTimeBuckets = (fromStr: string, toStr: string, groupBy: GroupBy) => {
   const to = parseUtcDate(toStr);
 
   if (groupBy === 'hour') {
-    const base = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate(), 0, 0, 0));
+    const base = new Date(
+      Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate(), 0, 0, 0)
+    );
     return Array.from({ length: 24 }, (_, idx) => {
       const current = new Date(base);
       current.setUTCHours(base.getUTCHours() + idx);
@@ -220,7 +222,9 @@ const buildTimeBuckets = (fromStr: string, toStr: string, groupBy: GroupBy) => {
 
   if (groupBy === 'week') {
     const buckets = [] as { key: string; label: string }[];
-    const current = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate()));
+    const current = new Date(
+      Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate())
+    );
     const day = current.getUTCDay();
     const diffToMonday = (day + 6) % 7;
     current.setUTCDate(current.getUTCDate() - diffToMonday);
@@ -515,12 +519,14 @@ const CashFlowDashboard: React.FC = () => {
                   />
                 </div>
                 <div className="flex items-center gap-1 p-1 bg-[#F5F4ED] rounded-xl flex-wrap">
-                  {([
-                    { id: '1d', label: '1 ngày' },
-                    { id: '1w', label: '1 tuần' },
-                    { id: '1m', label: '1 tháng' },
-                    { id: '1y', label: '1 năm' },
-                  ] as const).map((item) => (
+                  {(
+                    [
+                      { id: '1d', label: '1 ngày' },
+                      { id: '1w', label: '1 tuần' },
+                      { id: '1m', label: '1 tháng' },
+                      { id: '1y', label: '1 năm' },
+                    ] as const
+                  ).map((item) => (
                     <button
                       key={item.id}
                       type="button"
@@ -584,7 +590,10 @@ const CashFlowDashboard: React.FC = () => {
                 <div className="p-5 sm:p-6">
                   <div className="h-80">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={chartSeries} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                      <BarChart
+                        data={chartSeries}
+                        margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                      >
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
                         <XAxis
                           dataKey="label"
@@ -628,90 +637,95 @@ const CashFlowDashboard: React.FC = () => {
                 </div>
               </div>
 
-            {/* Category breakdown */}
-            <div className="bg-white rounded-2xl border border-[#E8E6DC] shadow-[rgba(0,0,0,0.04)_0px_4px_24px] overflow-hidden flex flex-col">
-              <div className="px-5 py-4 border-b border-[#F0EEE6] bg-[#FAF9F5] shrink-0">
-                <h3 className="font-[Playfair_Display] text-[16px] font-medium text-[#141413]">
-                  Cơ cấu danh mục
-                </h3>
-                <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mt-0.5">
-                  Phân bổ theo danh mục giao dịch
-                </p>
-              </div>
-              <div className="p-5 sm:p-6 flex-1 flex flex-col">
-                {summary?.categoryBreakdown.length ? (
-                  <div className="flex flex-col flex-1">
-                    <div className="h-64 min-h-[14rem]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart
-                          data={summary.categoryBreakdown}
-                          layout="vertical"
-                          margin={{ top: 5, right: 30, left: 40, bottom: 5 }}
-                        >
-                          <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f3f4f6" />
-                          <XAxis type="number" hide />
-                          <YAxis
-                            dataKey="categoryName"
-                            type="category"
-                            axisLine={false}
-                            tickLine={false}
-                            tick={{ fontSize: 12, fill: '#6b7280' }}
-                            width={80}
-                          />
-                          <RechartsTooltip
-                            formatter={(val) => formatVND(Number(val ?? 0))}
-                            contentStyle={{
-                              borderRadius: 12,
-                              border: '1px solid #F0EEE6',
-                              boxShadow: '0 10px 25px -10px rgba(0,0,0,0.15)',
-                            }}
-                          />
-                          <Bar dataKey="total" radius={[0, 6, 6, 0]} barSize={26}>
-                            {summary.categoryBreakdown.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={entry.color} />
-                            ))}
-                          </Bar>
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                    <div className="mt-4 space-y-1">
-                      {summary.categoryBreakdown.map((cat, i) => (
-                        <div
-                          key={i}
-                          className="flex justify-between items-center gap-3 py-2 px-2 rounded-xl hover:bg-[#FAF9F5] transition-colors"
-                        >
-                          <div className="flex items-center gap-2 min-w-0">
-                            <div
-                              className="w-2.5 h-2.5 rounded-full shrink-0 ring-2 ring-white shadow-sm"
-                              style={{ backgroundColor: cat.color }}
+              {/* Category breakdown */}
+              <div className="bg-white rounded-2xl border border-[#E8E6DC] shadow-[rgba(0,0,0,0.04)_0px_4px_24px] overflow-hidden flex flex-col">
+                <div className="px-5 py-4 border-b border-[#F0EEE6] bg-[#FAF9F5] shrink-0">
+                  <h3 className="font-[Playfair_Display] text-[16px] font-medium text-[#141413]">
+                    Cơ cấu danh mục
+                  </h3>
+                  <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mt-0.5">
+                    Phân bổ theo danh mục giao dịch
+                  </p>
+                </div>
+                <div className="p-5 sm:p-6 flex-1 flex flex-col">
+                  {summary?.categoryBreakdown.length ? (
+                    <div className="flex flex-col flex-1">
+                      <div className="h-64 min-h-[14rem]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart
+                            data={summary.categoryBreakdown}
+                            layout="vertical"
+                            margin={{ top: 5, right: 30, left: 40, bottom: 5 }}
+                          >
+                            <CartesianGrid
+                              strokeDasharray="3 3"
+                              horizontal={true}
+                              vertical={false}
+                              stroke="#f3f4f6"
                             />
-                            <span
-                              className="font-[Be_Vietnam_Pro] text-[13px] text-[#5E5D59] truncate"
-                              title={cat.categoryName}
-                            >
-                              {cat.categoryName}
-                            </span>
-                          </div>
-                          <div className="text-right shrink-0">
-                            <div className="font-[Be_Vietnam_Pro] text-[13px] font-semibold text-[#141413] tabular-nums">
-                              {formatVND(cat.total)}
+                            <XAxis type="number" hide />
+                            <YAxis
+                              dataKey="categoryName"
+                              type="category"
+                              axisLine={false}
+                              tickLine={false}
+                              tick={{ fontSize: 12, fill: '#6b7280' }}
+                              width={80}
+                            />
+                            <RechartsTooltip
+                              formatter={(val) => formatVND(Number(val ?? 0))}
+                              contentStyle={{
+                                borderRadius: 12,
+                                border: '1px solid #F0EEE6',
+                                boxShadow: '0 10px 25px -10px rgba(0,0,0,0.15)',
+                              }}
+                            />
+                            <Bar dataKey="total" radius={[0, 6, 6, 0]} barSize={26}>
+                              {summary.categoryBreakdown.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.color} />
+                              ))}
+                            </Bar>
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <div className="mt-4 space-y-1">
+                        {summary.categoryBreakdown.map((cat, i) => (
+                          <div
+                            key={i}
+                            className="flex justify-between items-center gap-3 py-2 px-2 rounded-xl hover:bg-[#FAF9F5] transition-colors"
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <div
+                                className="w-2.5 h-2.5 rounded-full shrink-0 ring-2 ring-white shadow-sm"
+                                style={{ backgroundColor: cat.color }}
+                              />
+                              <span
+                                className="font-[Be_Vietnam_Pro] text-[13px] text-[#5E5D59] truncate"
+                                title={cat.categoryName}
+                              >
+                                {cat.categoryName}
+                              </span>
                             </div>
-                            <div className="font-[Be_Vietnam_Pro] text-[11px] text-[#87867F] tabular-nums">
-                              {cat.percentage}%
+                            <div className="text-right shrink-0">
+                              <div className="font-[Be_Vietnam_Pro] text-[13px] font-semibold text-[#141413] tabular-nums">
+                                {formatVND(cat.total)}
+                              </div>
+                              <div className="font-[Be_Vietnam_Pro] text-[11px] text-[#87867F] tabular-nums">
+                                {cat.percentage}%
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className="min-h-[16rem] flex items-center justify-center font-[Be_Vietnam_Pro] text-[13px] text-[#87867F]">
-                    Không có dữ liệu
-                  </div>
-                )}
+                  ) : (
+                    <div className="min-h-[16rem] flex items-center justify-center font-[Be_Vietnam_Pro] text-[13px] text-[#87867F]">
+                      Không có dữ liệu
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
 
             {/* ─── Transactions Table ─── */}
             <div className="bg-white rounded-2xl border border-[#E8E6DC] shadow-[rgba(0,0,0,0.04)_0px_4px_24px] overflow-hidden">
@@ -786,7 +800,11 @@ const CashFlowDashboard: React.FC = () => {
                       </select>
                     </div>
 
-                    <select className={`${selectSurfaceCls} min-w-[10rem] flex-1 sm:flex-none`} value={filterCat} onChange={(e) => setFilterCat(e.target.value)}>
+                    <select
+                      className={`${selectSurfaceCls} min-w-[10rem] flex-1 sm:flex-none`}
+                      value={filterCat}
+                      onChange={(e) => setFilterCat(e.target.value)}
+                    >
                       <option value="">Tất cả danh mục</option>
                       {categories.map((c) => (
                         <option key={c.id} value={c.id}>
@@ -834,16 +852,16 @@ const CashFlowDashboard: React.FC = () => {
                       </tr>
                     ) : transactions.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="px-6 py-14 text-center font-[Be_Vietnam_Pro] text-[13px] text-[#87867F]">
+                        <td
+                          colSpan={5}
+                          className="px-6 py-14 text-center font-[Be_Vietnam_Pro] text-[13px] text-[#87867F]"
+                        >
                           Không tìm thấy giao dịch nào.
                         </td>
                       </tr>
                     ) : (
                       transactions.map((t) => (
-                        <tr
-                          key={t.id}
-                          className="hover:bg-[#FAF9F5]/80 transition-colors group"
-                        >
+                        <tr key={t.id} className="hover:bg-[#FAF9F5]/80 transition-colors group">
                           <td className="px-4 py-3.5 text-[#5E5D59] whitespace-nowrap tabular-nums">
                             {formatDate(t.transactionDate)}
                           </td>
@@ -894,117 +912,117 @@ const CashFlowDashboard: React.FC = () => {
                 </table>
               </div>
 
-            {/* Pagination */}
-            {(totalElements > 0 || totalPages > 0) && (
-              <div className="p-4 border-t border-[#F0EEE6] flex flex-col md:flex-row md:items-center md:justify-between gap-3 bg-[#FAF9F5]/80">
-                <div className="text-sm text-gray-500">
-                  Showing {totalElements === 0 ? 0 : page * pageSize + 1}-
-                  {Math.min((page + 1) * pageSize, totalElements)} of {totalElements} records
-                </div>
-                <div className="flex items-center gap-3 flex-wrap justify-end">
-                  <div
-                    tabIndex={0}
-                    onBlur={() => setPageSizeOpen(false)}
-                    style={{ position: 'relative' }}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => setPageSizeOpen((prev) => !prev)}
-                      className="px-3 py-1.5 border border-gray-200 rounded-lg bg-white text-sm text-gray-700 inline-flex items-center gap-2"
+              {/* Pagination */}
+              {(totalElements > 0 || totalPages > 0) && (
+                <div className="p-4 border-t border-[#F0EEE6] flex flex-col md:flex-row md:items-center md:justify-between gap-3 bg-[#FAF9F5]/80">
+                  <div className="text-sm text-gray-500">
+                    Showing {totalElements === 0 ? 0 : page * pageSize + 1}-
+                    {Math.min((page + 1) * pageSize, totalElements)} of {totalElements} records
+                  </div>
+                  <div className="flex items-center gap-3 flex-wrap justify-end">
+                    <div
+                      tabIndex={0}
+                      onBlur={() => setPageSizeOpen(false)}
+                      style={{ position: 'relative' }}
                     >
-                      {pageSize} / page
-                      <ChevronDown size={14} />
-                    </button>
-                    {pageSizeOpen && (
-                      <div
-                        style={{
-                          position: 'absolute',
-                          right: 0,
-                          top: 'calc(100% + 6px)',
-                          background: '#ffffff',
-                          border: '1px solid #e8e6dc',
-                          borderRadius: '12px',
-                          boxShadow: '0 10px 25px -10px rgba(0,0,0,0.2)',
-                          overflow: 'hidden',
-                          zIndex: 20,
-                          minWidth: '140px',
-                        }}
+                      <button
+                        type="button"
+                        onClick={() => setPageSizeOpen((prev) => !prev)}
+                        className="px-3 py-1.5 border border-gray-200 rounded-lg bg-white text-sm text-gray-700 inline-flex items-center gap-2"
                       >
-                        {[10, 25, 50, 100].map((size) => (
-                          <button
-                            key={size}
-                            type="button"
-                            onClick={() => {
-                              setPageSize(size);
-                              setPage(0);
-                              setPageSizeOpen(false);
-                            }}
-                            style={{
-                              display: 'flex',
-                              width: '100%',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                              padding: '0.55rem 0.85rem',
-                              background: size === pageSize ? '#f5f4ed' : '#ffffff',
-                              color: '#4b4942',
-                              fontSize: '0.85rem',
-                              border: 'none',
-                              cursor: 'pointer',
-                            }}
-                          >
-                            {size} / page
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                        {pageSize} / page
+                        <ChevronDown size={14} />
+                      </button>
+                      {pageSizeOpen && (
+                        <div
+                          style={{
+                            position: 'absolute',
+                            right: 0,
+                            top: 'calc(100% + 6px)',
+                            background: '#ffffff',
+                            border: '1px solid #e8e6dc',
+                            borderRadius: '12px',
+                            boxShadow: '0 10px 25px -10px rgba(0,0,0,0.2)',
+                            overflow: 'hidden',
+                            zIndex: 20,
+                            minWidth: '140px',
+                          }}
+                        >
+                          {[10, 25, 50, 100].map((size) => (
+                            <button
+                              key={size}
+                              type="button"
+                              onClick={() => {
+                                setPageSize(size);
+                                setPage(0);
+                                setPageSizeOpen(false);
+                              }}
+                              style={{
+                                display: 'flex',
+                                width: '100%',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                padding: '0.55rem 0.85rem',
+                                background: size === pageSize ? '#f5f4ed' : '#ffffff',
+                                color: '#4b4942',
+                                fontSize: '0.85rem',
+                                border: 'none',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              {size} / page
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
 
-                  <span className="text-sm text-gray-500">
-                    Page {totalPages === 0 ? 0 : page + 1} of {totalPages}
-                  </span>
+                    <span className="text-sm text-gray-500">
+                      Page {totalPages === 0 ? 0 : page + 1} of {totalPages}
+                    </span>
 
-                  <div className="flex items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={() => setPage(0)}
-                      disabled={page === 0 || totalPages <= 1}
-                      className="p-2 border border-gray-200 rounded-lg bg-white disabled:opacity-50 hover:bg-gray-50"
-                      aria-label="First page"
-                    >
-                      <ChevronsLeft size={16} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPage((p) => Math.max(0, p - 1))}
-                      disabled={page === 0 || totalPages <= 1}
-                      className="p-2 border border-gray-200 rounded-lg bg-white disabled:opacity-50 hover:bg-gray-50"
-                      aria-label="Previous page"
-                    >
-                      <ChevronLeft size={16} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                      disabled={totalPages === 0 || page + 1 >= totalPages}
-                      className="p-2 border border-gray-200 rounded-lg bg-white disabled:opacity-50 hover:bg-gray-50"
-                      aria-label="Next page"
-                    >
-                      <ChevronRight size={16} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPage(Math.max(0, totalPages - 1))}
-                      disabled={totalPages === 0 || page + 1 >= totalPages}
-                      className="p-2 border border-gray-200 rounded-lg bg-white disabled:opacity-50 hover:bg-gray-50"
-                      aria-label="Last page"
-                    >
-                      <ChevronsRight size={16} />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setPage(0)}
+                        disabled={page === 0 || totalPages <= 1}
+                        className="p-2 border border-gray-200 rounded-lg bg-white disabled:opacity-50 hover:bg-gray-50"
+                        aria-label="First page"
+                      >
+                        <ChevronsLeft size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPage((p) => Math.max(0, p - 1))}
+                        disabled={page === 0 || totalPages <= 1}
+                        className="p-2 border border-gray-200 rounded-lg bg-white disabled:opacity-50 hover:bg-gray-50"
+                        aria-label="Previous page"
+                      >
+                        <ChevronLeft size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                        disabled={totalPages === 0 || page + 1 >= totalPages}
+                        className="p-2 border border-gray-200 rounded-lg bg-white disabled:opacity-50 hover:bg-gray-50"
+                        aria-label="Next page"
+                      >
+                        <ChevronRight size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPage(Math.max(0, totalPages - 1))}
+                        disabled={totalPages === 0 || page + 1 >= totalPages}
+                        className="p-2 border border-gray-200 rounded-lg bg-white disabled:opacity-50 hover:bg-gray-50"
+                        aria-label="Last page"
+                      >
+                        <ChevronsRight size={16} />
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
           </div>
         </AdminFinanceStudioShell>
       </DashboardLayout>

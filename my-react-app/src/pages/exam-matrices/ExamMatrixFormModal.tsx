@@ -1,9 +1,9 @@
 import { FileText, LayoutGrid, Loader2, X } from 'lucide-react';
 import { useEffect, useState, type FormEvent } from 'react';
-import type { ExamMatrixRequest, ExamMatrixResponse } from '../../types/examMatrix';
-import { useSearchQuestionBanks } from '../../hooks/useQuestionBank';
-import type { QuestionBankResponse } from '../../types/questionBank';
 import { PartConfigSection } from '../../components/exam-matrix/PartConfigSection';
+import { useSearchQuestionBanks } from '../../hooks/useQuestionBank';
+import type { ExamMatrixRequest, ExamMatrixResponse } from '../../types/examMatrix';
+import type { QuestionBankResponse } from '../../types/questionBank';
 
 type Props = {
   isOpen: boolean;
@@ -53,10 +53,9 @@ export function ExamMatrixFormModal({
   useEffect(() => {
     if (!isOpen) return;
 
-    const initialParts =
-      (initialData as { parts?: ExamMatrixResponse['parts'] })?.parts ?? [
-        { partNumber: 1, questionType: 'MULTIPLE_CHOICE' as const, name: 'Phần 1: Trắc nghiệm' },
-      ];
+    const initialParts = (initialData as { parts?: ExamMatrixResponse['parts'] })?.parts ?? [
+      { partNumber: 1, questionType: 'MULTIPLE_CHOICE' as const, name: 'Phần 1: Trắc nghiệm' },
+    ];
 
     setFormData({
       name: initialData?.name ?? '',

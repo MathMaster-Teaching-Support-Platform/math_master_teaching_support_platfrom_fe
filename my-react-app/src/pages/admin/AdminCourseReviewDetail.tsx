@@ -260,7 +260,11 @@ const AdminCourseReviewDetail: React.FC = () => {
             <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mb-6">
               Khóa học có thể đã bị xóa hoặc bạn không có quyền xem.
             </p>
-            <button type="button" className={secondaryBtn} onClick={() => navigate('/admin/courses/review')}>
+            <button
+              type="button"
+              className={secondaryBtn}
+              onClick={() => navigate('/admin/courses/review')}
+            >
               <ArrowLeft size={16} strokeWidth={2} />
               Quay lại danh sách
             </button>
@@ -314,7 +318,11 @@ const AdminCourseReviewDetail: React.FC = () => {
               <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
                 <div className="space-y-4 min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-3">
-                    <button type="button" className={secondaryBtn} onClick={() => navigate('/admin/courses/review')}>
+                    <button
+                      type="button"
+                      className={secondaryBtn}
+                      onClick={() => navigate('/admin/courses/review')}
+                    >
                       <ArrowLeft size={16} strokeWidth={2} />
                       Quay lại
                     </button>
@@ -388,7 +396,9 @@ const AdminCourseReviewDetail: React.FC = () => {
                         <div className="rounded-xl border border-rose-100 bg-rose-50/80 px-4 py-3 font-[Be_Vietnam_Pro] text-[12px] text-rose-900">
                           <p className="font-semibold">Từ chối bởi {course.rejectedBy}</p>
                           {course.rejectedAt && (
-                            <p className="text-rose-800/85 mt-1">{formatViDateTime(course.rejectedAt)}</p>
+                            <p className="text-rose-800/85 mt-1">
+                              {formatViDateTime(course.rejectedAt)}
+                            </p>
                           )}
                         </div>
                       )}
@@ -474,7 +484,9 @@ const AdminCourseReviewDetail: React.FC = () => {
                   transition={{ duration: 0.18 }}
                 >
                   {activeTab === 'overview' && <CourseOverviewTab course={course} />}
-                  {activeTab === 'lessons' && <CourseLessonsTab courseId={course.id} course={course} />}
+                  {activeTab === 'lessons' && (
+                    <CourseLessonsTab courseId={course.id} course={course} />
+                  )}
                   {activeTab === 'assessments' && (
                     <CourseAssessmentsTab courseId={course.id} course={course} />
                   )}
@@ -558,7 +570,9 @@ const AdminCourseReviewDetail: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {showLoadingPopup && !loadingCourse && <CourseDetailLoadingOverlay message={loadingMessage} />}
+      {showLoadingPopup && !loadingCourse && (
+        <CourseDetailLoadingOverlay message={loadingMessage} />
+      )}
     </DashboardLayout>
   );
 };

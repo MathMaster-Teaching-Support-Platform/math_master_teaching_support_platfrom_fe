@@ -617,8 +617,7 @@ const AdminCourseReviewsPage: React.FC = () => {
   const statCards = [
     {
       label: 'Chờ duyệt',
-      display:
-        pendingQuery.isPending && !pendingQuery.data ? '…' : String(pendingTotal),
+      display: pendingQuery.isPending && !pendingQuery.data ? '…' : String(pendingTotal),
       Icon: Clock3,
       bg: 'bg-[#FFF7ED]',
       color: 'text-[#E07B39]',
@@ -636,17 +635,14 @@ const AdminCourseReviewsPage: React.FC = () => {
     {
       label: 'Bản nháp (lịch sử)',
       display:
-        statDraft.isPending && !statDraft.data
-          ? '…'
-          : String(pickTotalElements(statDraft.data)),
+        statDraft.isPending && !statDraft.data ? '…' : String(pickTotalElements(statDraft.data)),
       Icon: FileText,
       bg: 'bg-[#F5F4ED]',
       color: 'text-[#9B6FE0]',
     },
     {
       label: 'Tổng lịch sử',
-      display:
-        statAll.isPending && !statAll.data ? '…' : String(pickTotalElements(statAll.data)),
+      display: statAll.isPending && !statAll.data ? '…' : String(pickTotalElements(statAll.data)),
       Icon: Network,
       bg: 'bg-[#EEF2FF]',
       color: 'text-[#4F7EF7]',
@@ -692,7 +688,9 @@ const AdminCourseReviewsPage: React.FC = () => {
                 key={label}
                 className="bg-white rounded-2xl border border-[#E8E6DC] p-4 flex items-center gap-3"
               >
-                <div className={`w-9 h-9 rounded-xl ${bg} flex items-center justify-center shrink-0`}>
+                <div
+                  className={`w-9 h-9 rounded-xl ${bg} flex items-center justify-center shrink-0`}
+                >
                   <Icon className={`w-4 h-4 ${color}`} />
                 </div>
                 <div className="min-w-0">
@@ -745,8 +743,7 @@ const AdminCourseReviewsPage: React.FC = () => {
               <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#5E5D59] leading-relaxed">
                 <span className="text-[#87867F] uppercase tracking-wide font-semibold text-[11px] block mb-0.5">
                   Gợi ý
-                </span>
-                {' '}
+                </span>{' '}
                 Xem nội dung mở tab mới để đối chiếu trước khi phê duyệt.
               </p>
             </div>

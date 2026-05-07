@@ -1,7 +1,6 @@
-import { useMemo, useState, type ReactNode } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
 import type { LucideIcon } from 'lucide-react';
 import {
+  AlertCircle,
   ArrowLeft,
   Award,
   BookOpen,
@@ -10,18 +9,19 @@ import {
   ChevronUp,
   Clock,
   FileText,
+  Hourglass,
   MessageSquare,
-  AlertCircle,
+  Sparkles,
   X,
   XCircle,
-  Hourglass,
-  Sparkles,
 } from 'lucide-react';
-import { UI_TEXT } from '../../constants/uiText';
-import { useMyResult, useCreateRegradeRequest } from '../../hooks/useGrading';
-import { ResultRenderer } from '../../components/question';
-import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { useMemo, useState, type ReactNode } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import MathText from '../../components/common/MathText';
+import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { ResultRenderer } from '../../components/question';
+import { UI_TEXT } from '../../constants/uiText';
+import { useCreateRegradeRequest, useMyResult } from '../../hooks/useGrading';
 import type { GradingSubmissionResponse } from '../../types/grading.types';
 
 function Shell({ children }: { readonly children: ReactNode }) {
@@ -230,7 +230,9 @@ function ResultHero({
                 <span
                   className={`font-[Playfair_Display] text-[34px] font-medium tabular-nums leading-none ${tier.scoreGlow}`}
                 >
-                  {numericScore % 1 === 0 ? String(Math.round(numericScore)) : numericScore.toFixed(1)}
+                  {numericScore % 1 === 0
+                    ? String(Math.round(numericScore))
+                    : numericScore.toFixed(1)}
                 </span>
                 <span className="mt-1 font-[Be_Vietnam_Pro] text-[11px] font-semibold uppercase tracking-wide text-[#87867F]">
                   / {result.maxScore} điểm
@@ -363,8 +365,7 @@ export default function AssessmentResult() {
 
   const numericScore = result.finalScore ?? result.score ?? 0;
   const pct =
-    result.percentage ??
-    (result.maxScore > 0 ? (numericScore / result.maxScore) * 100 : 0);
+    result.percentage ?? (result.maxScore > 0 ? (numericScore / result.maxScore) * 100 : 0);
   const tier = tierFromPct(pct);
 
   return (
@@ -546,7 +547,10 @@ export default function AssessmentResult() {
               key={answer.answerId}
               className="relative overflow-hidden rounded-3xl border border-[#F0EEE6] bg-white p-5 shadow-[0_8px_30px_-10px_rgba(20,20,19,0.06)] transition-shadow duration-300 hover:shadow-[0_16px_48px_-12px_rgba(20,20,19,0.1)] sm:p-7"
             >
-              <div className="pointer-events-none absolute right-0 top-0 h-32 w-32 rounded-full bg-[#C96442]/[0.04] blur-2xl" aria-hidden />
+              <div
+                className="pointer-events-none absolute right-0 top-0 h-32 w-32 rounded-full bg-[#C96442]/[0.04] blur-2xl"
+                aria-hidden
+              />
 
               <div className="relative mb-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div className="flex items-center gap-3">

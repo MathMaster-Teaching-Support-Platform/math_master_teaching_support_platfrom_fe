@@ -85,7 +85,7 @@
 .spt-bar-fill {
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, #C96442 0%, #D97757 100%);
+  background: linear-gradient(90deg, #c96442 0%, #d97757 100%);
   width: 100%;
   transform-origin: left;
   transform: scaleX(0);

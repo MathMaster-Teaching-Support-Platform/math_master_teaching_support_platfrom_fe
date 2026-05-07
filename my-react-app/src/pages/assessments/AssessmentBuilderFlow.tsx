@@ -379,8 +379,8 @@ export function AssessmentBuilderFlowBody() {
               Tạo đề thi từ ma trận + ngân hàng
             </h3>
             <p className="mt-2 font-[Be_Vietnam_Pro] text-[13px] leading-relaxed text-[#87867F]">
-              Ma trận quyết định cấu trúc (chương, mức độ, số câu). Chọn một hoặc nhiều ngân hàng để hệ
-              thống random câu từ pool gộp theo tiêu chí ma trận.
+              Ma trận quyết định cấu trúc (chương, mức độ, số câu). Chọn một hoặc nhiều ngân hàng để
+              hệ thống random câu từ pool gộp theo tiêu chí ma trận.
             </p>
           </div>
 
@@ -560,13 +560,15 @@ export function AssessmentBuilderFlowBody() {
               Rà soát cuối và công khai
             </h3>
             <p className="mt-2 font-[Be_Vietnam_Pro] text-[13px] leading-relaxed text-[#87867F]">
-              Sau khi sinh đề nháp, kiểm tra số câu và điều kiện công khai trước khi học sinh làm bài.
+              Sau khi sinh đề nháp, kiểm tra số câu và điều kiện công khai trước khi học sinh làm
+              bài.
             </p>
           </div>
           {!generatedAssessmentId && (
             <div className="rounded-xl border border-dashed border-[#E8E6DC] bg-[#FAF9F5]/80 px-4 py-8 text-center">
               <p className="m-0 font-[Be_Vietnam_Pro] text-[13px] leading-relaxed text-[#87867F]">
-                Hoàn tất <strong className="text-[#141413]">Bước 1</strong> để mở khối rà soát và công khai.
+                Hoàn tất <strong className="text-[#141413]">Bước 1</strong> để mở khối rà soát và
+                công khai.
               </p>
             </div>
           )}
@@ -646,9 +648,15 @@ export function AssessmentBuilderFlowBody() {
                 >
                   <div className="flex items-start gap-2">
                     {publishSummary.canPublish ? (
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" strokeWidth={2} />
+                      <CheckCircle2
+                        className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600"
+                        strokeWidth={2}
+                      />
                     ) : (
-                      <FileCheck2 className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" strokeWidth={2} />
+                      <FileCheck2
+                        className="mt-0.5 h-4 w-4 shrink-0 text-amber-600"
+                        strokeWidth={2}
+                      />
                     )}
                     <strong className="font-[Be_Vietnam_Pro] text-[13px] font-semibold leading-snug">
                       {publishSummary.canPublish

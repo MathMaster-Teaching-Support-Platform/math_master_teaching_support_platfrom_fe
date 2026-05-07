@@ -10,21 +10,21 @@ import {
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { QuestionRenderer, ResultRenderer } from '../../components/question';
 import QuestionNavigator from '../../components/assessment/QuestionNavigator';
-import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import MathText from '../../components/common/MathText';
+import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { QuestionRenderer, ResultRenderer } from '../../components/question';
+import { UI_TEXT } from '../../constants/uiText';
 import { AssessmentService } from '../../services/api/assessment.service';
 import '../../styles/module-refactor.css';
-import { UI_TEXT } from '../../constants/uiText';
 import type {
-  AssessmentResponse,
   AssessmentQuestionItem,
+  AssessmentResponse,
   PreviewAnswerResult,
   PreviewSubmitResponse,
 } from '../../types';
-import type { AttemptQuestionResponse } from '../../types/studentAssessment.types';
 import type { AnswerGradeResponse } from '../../types/grading.types';
+import type { AttemptQuestionResponse } from '../../types/studentAssessment.types';
 
 /**
  * Teacher "Làm thử đề" (/teacher/assessments/:id/preview).
@@ -106,7 +106,8 @@ export default function AssessmentPreview() {
   const currentQuestion = attemptQuestions[currentIndex];
   const totalQuestions = attemptQuestions.length;
   const answeredCount = useMemo(
-    () => Object.keys(answers).filter((k) => answers[k] !== undefined && answers[k] !== null).length,
+    () =>
+      Object.keys(answers).filter((k) => answers[k] !== undefined && answers[k] !== null).length,
     [answers]
   );
 
@@ -298,8 +299,8 @@ export default function AssessmentPreview() {
           <Eye className="w-4 h-4 text-amber-800" aria-hidden />
         </div>
         <p className="font-[Be_Vietnam_Pro] text-[13px] text-amber-950 m-0 leading-relaxed">
-          <span className="font-semibold">Chế độ xem trước</span> — không tính lượt làm, không lưu bài
-          và không ảnh hưởng học sinh. Bạn có thể nộp bài để xem chấm thử trong phiên này.
+          <span className="font-semibold">Chế độ xem trước</span> — không tính lượt làm, không lưu
+          bài và không ảnh hưởng học sinh. Bạn có thể nộp bài để xem chấm thử trong phiên này.
         </p>
       </div>
 
@@ -374,7 +375,8 @@ export default function AssessmentPreview() {
                 Xác nhận nộp bài (thử)
               </h3>
               <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-2 m-0 leading-relaxed">
-                Chấm thử trên máy chủ — kết quả chỉ hiển thị trong phiên này, không lưu vào hệ thống.
+                Chấm thử trên máy chủ — kết quả chỉ hiển thị trong phiên này, không lưu vào hệ
+                thống.
               </p>
             </div>
             <div className="px-6 py-5">
@@ -518,7 +520,9 @@ export default function AssessmentPreview() {
   function renderReviewLayout() {
     if (!result || !assessment) return null;
     const percent =
-      result.maxScore > 0 ? Math.round((Number(result.totalScore) / Number(result.maxScore)) * 100) : 0;
+      result.maxScore > 0
+        ? Math.round((Number(result.totalScore) / Number(result.maxScore)) * 100)
+        : 0;
     return (
       <div className="space-y-6">
         <div className="rounded-2xl border border-[#E8E6DC] bg-[#141413] text-[#FAF9F5] p-6 sm:p-8 shadow-[0_12px_40px_rgba(0,0,0,0.12)] relative overflow-hidden">
