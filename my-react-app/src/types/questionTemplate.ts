@@ -177,12 +177,10 @@ export interface QuestionTemplateRequest {
     parameters: Record<string, unknown>;
     answerFormula: string;
     optionsGenerator?: Record<string, unknown>;
-    statementMutations?: {  // ✅ NEW: For TRUE_FALSE templates
+    statementMutations?: {
         clauseTemplates: Array<{
             text: string;
             truthValue: boolean;
-            chapterId?: string;
-            cognitiveLevel?: CognitiveLevel;
         }>;
     };
     topic?: string;

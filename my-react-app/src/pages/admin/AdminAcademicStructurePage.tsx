@@ -636,17 +636,6 @@ export default function AdminAcademicStructurePage() {
     });
   };
 
-  const resetChapterForm = () => {
-    setSelectedChapterId('');
-    setChapterForm({
-      id: '',
-      title: '',
-      description: '',
-      orderIndex: '',
-      subjectId: selectedSubjectId,
-    });
-  };
-
   const resetLessonForm = () => {
     setSelectedLessonId('');
     setLessonForm({
@@ -844,6 +833,18 @@ export default function AdminAcademicStructurePage() {
         value={gradeForm.description}
         onChange={(event) => setGradeForm((prev) => ({ ...prev, description: event.target.value }))}
       />
+      {gradeForm.id && (
+        <label className="aas-check">
+          <input
+            type="checkbox"
+            checked={gradeForm.active}
+            onChange={(event) =>
+              setGradeForm((prev) => ({ ...prev, active: event.target.checked }))
+            }
+          />
+          Đang hoạt động
+        </label>
+      )}
       <div className="aas-actions">
         <button type="submit" disabled={saveGradeMutation.isPending}>
           {gradeForm.id ? <Save size={14} /> : <Plus size={14} />}
@@ -946,6 +947,18 @@ export default function AdminAcademicStructurePage() {
           }
         />
       </div>
+      {subjectForm.id && (
+        <label className="aas-check">
+          <input
+            type="checkbox"
+            checked={subjectForm.isActive}
+            onChange={(event) =>
+              setSubjectForm((prev) => ({ ...prev, isActive: event.target.checked }))
+            }
+          />
+          Đang hoạt động
+        </label>
+      )}
       <div className="aas-actions">
         <button type="submit" disabled={saveSubjectMutation.isPending || !selectedGradeId}>
           {subjectForm.id ? <Save size={14} /> : <Plus size={14} />}
@@ -1033,27 +1046,6 @@ export default function AdminAcademicStructurePage() {
           {chapterForm.id ? <Save size={14} /> : <Plus size={14} />}
           {chapterForm.id ? 'Lưu cập nhật' : 'Thêm mới'}
         </button>
-        {chapterForm.id ? (
-          <button type="button" className="ghost" onClick={resetChapterForm}>
-            Tạo chương mới
-          </button>
-        ) : (
-          <button
-            type="button"
-            className="ghost"
-            onClick={() =>
-              setChapterForm({
-                id: '',
-                title: '',
-                description: '',
-                orderIndex: '',
-                subjectId: selectedSubjectId,
-              })
-            }
-          >
-            Xóa trắng form
-          </button>
-        )}
         <button
           type="button"
           className="danger"
@@ -1387,7 +1379,7 @@ export default function AdminAcademicStructurePage() {
                                   <div className="aas-node-row">
                                     <button
                                       type="button"
-                                      className={`aas-node-btn${subjectActive ? ' is-active' : ''}`}
+                                      className={`aas-node-btn${subjectActive ? ' is-active' : ''}${subject.isActive === false ? ' is-inactive' : ''}`}
                                       onClick={() => {
                                         setExpandedSubjectIds((prev) =>
                                           toggleExpanded(prev, subject.id)
@@ -1404,6 +1396,9 @@ export default function AdminAcademicStructurePage() {
                                       )}
                                       <BookOpen size={14} />
                                       <span>{subjectLabel}</span>
+                                      {subject.isActive === false && (
+                                        <span className="aas-inactive-badge">Tắt</span>
+                                      )}
                                     </button>
                                     <div className="aas-node-actions">
                                       <button

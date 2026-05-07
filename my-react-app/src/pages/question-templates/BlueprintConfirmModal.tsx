@@ -138,8 +138,6 @@ export function BlueprintConfirmModal({
           clauseTemplates: bp.clauseTemplates.map((c) => ({
             text: c.text,
             truthValue: c.truthValue,
-            chapterId: req.chapterId,
-            cognitiveLevel: req.cognitiveLevel,
           })),
         };
       }

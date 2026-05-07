@@ -144,6 +144,7 @@ export default function TeacherQuestionManagementPage() {
           questionText: String(data.questionText || ''),
           questionType: data.questionType as CreateQuestionRequest['questionType'],
           difficulty: data.difficulty as CreateQuestionRequest['difficulty'],
+          cognitiveLevel: data.cognitiveLevel as CreateQuestionRequest['cognitiveLevel'],
           points: typeof data.points === 'number' ? data.points : undefined,
           correctAnswer: data.correctAnswer ? String(data.correctAnswer) : undefined,
           explanation: data.explanation ? String(data.explanation) : undefined,
@@ -156,6 +157,7 @@ export default function TeacherQuestionManagementPage() {
         const payload: UpdateQuestionRequest = {
           questionText: String(data.questionText || ''),
           difficulty: data.difficulty as UpdateQuestionRequest['difficulty'],
+          cognitiveLevel: data.cognitiveLevel as UpdateQuestionRequest['cognitiveLevel'],
           points: typeof data.points === 'number' ? data.points : undefined,
           correctAnswer: data.correctAnswer ? String(data.correctAnswer) : undefined,
           explanation: data.explanation ? String(data.explanation) : undefined,
@@ -550,6 +552,7 @@ export default function TeacherQuestionManagementPage() {
                 questionText: selectedQuestion.questionText,
                 questionType: selectedQuestion.questionType,
                 difficulty: selectedQuestion.difficulty,
+                cognitiveLevel: selectedQuestion.cognitiveLevel,
                 points: selectedQuestion.points,
                 correctAnswer: selectedQuestion.correctAnswer,
                 explanation: selectedQuestion.explanation,

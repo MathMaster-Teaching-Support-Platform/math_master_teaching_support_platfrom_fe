@@ -535,6 +535,37 @@
   color: #16a34a;
 }
 
+/* ── Inactive node ──────────────────────── */
+.aas-node-btn.is-inactive {
+  opacity: 0.55;
+  border-style: dashed;
+  border-color: #d1d5db;
+  color: #9ca3af;
+}
+
+.aas-node-btn.is-inactive:hover {
+  opacity: 0.8;
+  border-color: #9ca3af;
+  background: #f9fafb;
+  color: #6b7280;
+}
+
+.aas-inactive-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
 @media (max-width: 640px) {
   .aas-inline-2 {
     grid-template-columns: 1fr;

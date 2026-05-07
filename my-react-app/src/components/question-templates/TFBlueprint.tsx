@@ -2,14 +2,11 @@ import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import MathText from '../common/MathText';
 import { ParametersEditor, type ParameterInput } from '../common/ParametersEditor';
 import { renderTemplateWithSamples } from '../../utils/templatePreview';
-import { CognitiveLevel } from '../../types/questionTemplate';
 import { AIParameterPanel } from './AIParameterPanel';
 
 export type TFClauseInput = {
   key: string;
   text: string;
-  chapterId: string;
-  cognitiveLevel: CognitiveLevel;
   truthValue: boolean;
 };
 
@@ -23,8 +20,6 @@ export interface TFBlueprintData {
 }
 
 interface TFBlueprintProps {
-  defaultChapterId: string;
-  chapters: Array<{ id: string; title?: string; name?: string }>;
   templateId?: string;
   onFocusField?: (field: string, index?: number) => void;
   initialData?: {
@@ -43,46 +38,15 @@ export interface TFBlueprintRef {
   setStemText: (text: string) => void;
 }
 
-const cognitiveLevelLabels: Record<CognitiveLevel, string> = {
-  NHAN_BIET: '1. Nhận biết',
-  THONG_HIEU: '2. Thông hiểu',
-  VAN_DUNG: '3. Vận dụng',
-  VAN_DUNG_CAO: '4. Vận dụng cao',
-};
-
 export const TFBlueprint = forwardRef<TFBlueprintRef, TFBlueprintProps>(
-  ({ defaultChapterId, chapters, onFocusField, initialData, templateId }, ref) => {
+  ({ onFocusField, initialData, templateId }, ref) => {
     const [stemText, setStemText] = useState(initialData?.stemText ?? '');
     const [clauses, setClauses] = useState<TFClauseInput[]>(
       initialData?.clauses ?? [
-        {
-          key: 'A',
-          text: '',
-          chapterId: defaultChapterId,
-          cognitiveLevel: CognitiveLevel.NHAN_BIET,
-          truthValue: true,
-        },
-        {
-          key: 'B',
-          text: '',
-          chapterId: defaultChapterId,
-          cognitiveLevel: CognitiveLevel.NHAN_BIET,
-          truthValue: true,
-        },
-        {
-          key: 'C',
-          text: '',
-          chapterId: defaultChapterId,
-          cognitiveLevel: CognitiveLevel.NHAN_BIET,
-          truthValue: true,
-        },
-        {
-          key: 'D',
-          text: '',
-          chapterId: defaultChapterId,
-          cognitiveLevel: CognitiveLevel.NHAN_BIET,
-          truthValue: true,
-        },
+        { key: 'A', text: '', truthValue: true },
+        { key: 'B', text: '', truthValue: true },
+        { key: 'C', text: '', truthValue: true },
+        { key: 'D', text: '', truthValue: true },
       ]
     );
     const [parameters, setParameters] = useState<ParameterInput[]>(
@@ -220,47 +184,7 @@ export const TFBlueprint = forwardRef<TFBlueprintRef, TFBlueprintProps>(
                 )}
               </label>
 
-              <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr 1fr', marginTop: 8 }}>
-                <label>
-                  <p className="muted" style={{ marginBottom: 6, fontSize: '0.85rem' }}>
-                    Chương
-                  </p>
-                  <select
-                    className="select"
-                    value={clause.chapterId}
-                    onChange={(event) => updateClause(index, 'chapterId', event.target.value)}
-                  >
-                    {chapters.length === 0 ? (
-                      <option value="">Không có chương</option>
-                    ) : (
-                      chapters.map((chapter) => (
-                        <option key={chapter.id} value={chapter.id}>
-                          {chapter.title || chapter.name || chapter.id}
-                        </option>
-                      ))
-                    )}
-                  </select>
-                </label>
-
-                <label>
-                  <p className="muted" style={{ marginBottom: 6, fontSize: '0.85rem' }}>
-                    Mức độ
-                  </p>
-                  <select
-                    className="select"
-                    value={clause.cognitiveLevel}
-                    onChange={(event) =>
-                      updateClause(index, 'cognitiveLevel', event.target.value as CognitiveLevel)
-                    }
-                  >
-                    {Object.entries(cognitiveLevelLabels).map(([key, label]) => (
-                      <option key={key} value={key}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
+              <div className="form-grid" style={{ gridTemplateColumns: '1fr', marginTop: 8 }}>
                 <label>
                   <p className="muted" style={{ marginBottom: 6, fontSize: '0.85rem' }}>
                     Giá trị
