@@ -90,9 +90,9 @@ function parseRequired(v: NumberInput): number {
 }
 
 const DIFFICULTY_OPTIONS: { value: LessonDifficulty; label: string }[] = [
-  { value: 'EASY', label: 'Dễ' },
-  { value: 'MEDIUM', label: 'Trung bình' },
-  { value: 'HARD', label: 'Khó' },
+  { value: 'BEGINNER', label: 'Dễ' },
+  { value: 'INTERMEDIATE', label: 'Trung bình' },
+  { value: 'ADVANCED', label: 'Khó' },
 ];
 
 const STATUS_OPTIONS: { value: LessonStatus; label: string }[] = [
@@ -155,7 +155,7 @@ export function AcademicNodeModal({ target, grades = [], onClose, onSuccess }: R
     summary: '',
     orderIndex: '',
     durationMinutes: '',
-    difficulty: 'EASY',
+    difficulty: 'BEGINNER',
     status: 'DRAFT',
   });
 
@@ -209,7 +209,7 @@ export function AcademicNodeModal({ target, grades = [], onClose, onSuccess }: R
           summary: target.data.summary ?? '',
           orderIndex: target.data.orderIndex ?? '',
           durationMinutes: target.data.durationMinutes ?? '',
-          difficulty: target.data.difficulty ?? 'EASY',
+          difficulty: target.data.difficulty ?? 'BEGINNER',
           status: target.data.status ?? 'DRAFT',
         });
       } else {
@@ -220,7 +220,7 @@ export function AcademicNodeModal({ target, grades = [], onClose, onSuccess }: R
           summary: '',
           orderIndex: '',
           durationMinutes: '',
-          difficulty: 'EASY',
+          difficulty: 'BEGINNER',
           status: 'DRAFT',
         });
       }

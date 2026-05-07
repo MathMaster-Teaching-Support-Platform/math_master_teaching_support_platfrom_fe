@@ -121,6 +121,71 @@ export class AcademicStructureService {
     return this.parseResponse<unknown>(response, 'Failed to delete school grade');
   }
 
+  static async activateSchoolGrade(
+    schoolGradeId: string
+  ): Promise<ApiResponse<SchoolGradeResponse>> {
+    const headers = await this.getHeaders();
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.SCHOOL_GRADE_ACTIVATE(schoolGradeId)}`,
+      { method: 'PATCH', headers }
+    );
+    return this.parseResponse<SchoolGradeResponse>(response, 'Failed to activate school grade');
+  }
+
+  static async getAllSubjectsBySchoolGrade(schoolGradeId: string): Promise<SubjectsApiResponse> {
+    const headers = await this.getHeaders();
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.ALL_SUBJECTS_BY_SCHOOL_GRADE(schoolGradeId)}`,
+      { method: 'GET', headers }
+    );
+    return this.parseResponse<SubjectResponse[]>(response, 'Failed to fetch all subjects');
+  }
+
+  static async activateSubject(subjectId: string): Promise<ApiResponse<SubjectResponse>> {
+    const headers = await this.getHeaders();
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.SUBJECT_ACTIVATE(subjectId)}`, {
+      method: 'PATCH',
+      headers,
+    });
+    return this.parseResponse<SubjectResponse>(response, 'Failed to activate subject');
+  }
+
+  static async getAllChaptersBySubject(subjectId: string): Promise<ChaptersApiResponse> {
+    const headers = await this.getHeaders();
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.ALL_CHAPTERS_BY_SUBJECT(subjectId)}`,
+      { method: 'GET', headers }
+    );
+    return this.parseResponse<ChapterResponse[]>(response, 'Failed to fetch all chapters');
+  }
+
+  static async restoreChapter(chapterId: string): Promise<ApiResponse<ChapterResponse>> {
+    const headers = await this.getHeaders();
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.CHAPTER_RESTORE(chapterId)}`, {
+      method: 'PATCH',
+      headers,
+    });
+    return this.parseResponse<ChapterResponse>(response, 'Failed to restore chapter');
+  }
+
+  static async getAllLessonsByChapter(chapterId: string): Promise<LessonsApiResponse> {
+    const headers = await this.getHeaders();
+    const response = await fetch(
+      `${API_BASE_URL}${API_ENDPOINTS.ALL_LESSONS_BY_CHAPTER(chapterId)}`,
+      { method: 'GET', headers }
+    );
+    return this.parseResponse<LessonResponse[]>(response, 'Failed to fetch all lessons');
+  }
+
+  static async restoreLesson(lessonId: string): Promise<ApiResponse<LessonResponse>> {
+    const headers = await this.getHeaders();
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.LESSON_RESTORE(lessonId)}`, {
+      method: 'PATCH',
+      headers,
+    });
+    return this.parseResponse<LessonResponse>(response, 'Failed to restore lesson');
+  }
+
   static async getSubjectsBySchoolGrade(schoolGradeId: string): Promise<SubjectsApiResponse> {
     const headers = await this.getHeaders();
     const response = await fetch(

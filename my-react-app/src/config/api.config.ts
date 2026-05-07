@@ -208,7 +208,15 @@ export const API_ENDPOINTS = {
   // Lesson slide generator flow
   SCHOOL_GRADES: '/school-grades',
   SCHOOL_GRADE_DETAIL: (schoolGradeId: string) => `/school-grades/${schoolGradeId}`,
+  SCHOOL_GRADE_ACTIVATE: (schoolGradeId: string) => `/school-grades/${schoolGradeId}/activate`,
   SUBJECTS_BY_SCHOOL_GRADE: (schoolGradeId: string) => `/subjects/school-grade/${schoolGradeId}`,
+  ALL_SUBJECTS_BY_SCHOOL_GRADE: (schoolGradeId: string) =>
+    `/subjects/all?schoolGradeId=${schoolGradeId}`,
+  SUBJECT_ACTIVATE: (subjectId: string) => `/subjects/${subjectId}/activate`,
+  ALL_CHAPTERS_BY_SUBJECT: (subjectId: string) => `/chapters/subject/${subjectId}/all`,
+  CHAPTER_RESTORE: (chapterId: string) => `/chapters/${chapterId}/restore`,
+  ALL_LESSONS_BY_CHAPTER: (chapterId: string) => `/lessons/chapter/${chapterId}/all`,
+  LESSON_RESTORE: (lessonId: string) => `/lessons/${lessonId}/restore`,
   LESSONS_BY_CHAPTER: (chapterId: string) => `/lessons/chapters/${chapterId}/lessons`,
   LESSON_SLIDES_TEMPLATES: '/lesson-slides/templates',
   LESSON_SLIDES_TEMPLATE_PREVIEW_IMAGE: (id: string) =>

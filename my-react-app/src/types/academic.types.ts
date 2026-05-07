@@ -1,6 +1,6 @@
 import type { ApiResponse } from './auth.types';
 
-export type LessonDifficulty = 'EASY' | 'MEDIUM' | 'HARD';
+export type LessonDifficulty = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
 export type LessonStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
 
 export interface SchoolGradeResponse {
@@ -58,6 +58,7 @@ export interface ChapterResponse {
   title: string;
   description?: string;
   orderIndex?: number;
+  deleted?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -86,6 +87,7 @@ export interface LessonResponse {
   durationMinutes?: number;
   difficulty?: LessonDifficulty;
   status?: LessonStatus;
+  deleted?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
