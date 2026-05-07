@@ -1,4 +1,19 @@
-import { ArrowLeft, ChevronDown, Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import {
+  AlertCircle,
+  ArrowLeft,
+  ArrowRight,
+  Award,
+  ChevronDown,
+  Clock,
+  Eye,
+  ListChecks,
+  Pencil,
+  Plus,
+  Search,
+  Sparkles,
+  Trash2,
+  Users,
+} from 'lucide-react';
 import { Fragment, useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import MathText from '../../components/common/MathText';
@@ -18,7 +33,6 @@ import {
 } from '../../hooks/useAssessment';
 import '../../styles/module-refactor.css';
 import type { AssessmentRequest } from '../../types';
-import './AssessmentDetail.css';
 import AssessmentModal from './AssessmentModal';
 
 const assessmentStatusLabel: Record<string, string> = {
@@ -57,6 +71,17 @@ const COGNITIVE_LEVELS = [
   { key: 'VAN_DUNG', label: 'Vận dụng' },
   { key: 'VAN_DUNG_CAO', label: 'Vận dụng cao' },
 ];
+
+function assessmentStatusPillClass(status: string): string {
+  switch (status) {
+    case 'PUBLISHED':
+      return 'inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-50 font-[Be_Vietnam_Pro] text-[12px] font-semibold text-emerald-800 border border-emerald-200';
+    case 'CLOSED':
+      return 'inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 font-[Be_Vietnam_Pro] text-[12px] font-semibold text-slate-600 border border-slate-200';
+    default:
+      return 'inline-flex items-center px-2 py-0.5 rounded-full bg-[#E8E6DC] font-[Be_Vietnam_Pro] text-[12px] font-semibold text-[#5E5D59]';
+  }
+}
 
 function getQuestionId(question: { questionId: string; id?: string }) {
   return question.questionId || question.id || '';
@@ -322,136 +347,219 @@ export default function AssessmentDetail() {
   function renderContent() {
     if (isLoading) {
       return (
-        <section className="module-page">
-          <div className="empty">Đang tải chi tiết {UI_TEXT.QUIZ.toLowerCase()}...</div>
-        </section>
+        <div className="space-y-6" aria-busy="true" aria-label="Đang tải">
+          <div className="h-10 w-56 rounded-xl bg-[#FAF9F5] border border-[#F0EEE6] animate-pulse" />
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {[1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className="h-[88px] rounded-2xl bg-[#FAF9F5] border border-[#F0EEE6] animate-pulse"
+              />
+            ))}
+          </div>
+          <div className="h-40 rounded-2xl bg-[#FAF9F5] border border-[#F0EEE6] animate-pulse" />
+          <div className="h-64 rounded-2xl bg-[#FAF9F5] border border-[#F0EEE6] animate-pulse" />
+        </div>
       );
     }
 
     if (isError) {
       return (
-        <section className="module-page">
-          <div className="empty">
+        <div className="flex flex-col items-center justify-center py-16 gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center text-red-400">
+            <AlertCircle className="w-6 h-6" aria-hidden />
+          </div>
+          <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] text-center max-w-md m-0">
             {error instanceof Error
               ? error.message
               : `Không thể tải chi tiết ${UI_TEXT.QUIZ.toLowerCase()}`}
-          </div>
-        </section>
+          </p>
+          <button
+            type="button"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors"
+            onClick={() => void refetch()}
+          >
+            Thử lại
+          </button>
+        </div>
       );
     }
 
     if (!assessment) {
       return (
-        <section className="module-page">
-          <div className="empty">Không tìm thấy {UI_TEXT.QUIZ.toLowerCase()}.</div>
-        </section>
+        <div className="flex flex-col items-center justify-center py-16 gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-[#FAF9F5] border border-[#E8E6DC] flex items-center justify-center text-[#87867F]">
+            <AlertCircle className="w-6 h-6" aria-hidden />
+          </div>
+          <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] m-0">
+            Không tìm thấy {UI_TEXT.QUIZ.toLowerCase()}.
+          </p>
+        </div>
       );
     }
 
     const isDraft = assessment.status === 'DRAFT';
     const isDirect = assessment.assessmentMode !== 'MATRIX_BASED' || !assessment.examMatrixId;
 
-    const statusBadgeClass =
-      assessment.status === 'PUBLISHED'
-        ? 'ad-badge ad-badge--published'
-        : assessment.status === 'CLOSED'
-          ? 'ad-badge ad-badge--closed'
-          : 'ad-badge ad-badge--draft';
+    const typeLabel =
+      assessmentTypeLabel[assessment.assessmentType] || assessment.assessmentType || '';
+    const modeLabel =
+      assessmentModeLabel[assessment.assessmentMode || 'DIRECT'] ||
+      assessment.assessmentMode ||
+      'DIRECT';
 
     return (
-      <section className="module-page">
-        <button type="button" className="ad-back" onClick={() => navigate('/teacher/assessments')}>
-          <ArrowLeft size={14} />
+      <div className="space-y-6">
+        <button
+          type="button"
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors"
+          onClick={() => navigate('/teacher/assessments')}
+        >
+          <ArrowLeft size={15} aria-hidden />
           Quay lại danh sách
         </button>
 
-        <article className="ad-hero">
-          <div className="ad-hero__head">
-            <div className="ad-hero__title-block">
-              <div className="ad-hero__title-row">
-                <h1 className="ad-hero__title">{assessment.title}</h1>
-                <span className={statusBadgeClass}>
+        {/* Page header — same structure & title styles as /teacher/mindmaps */}
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="w-10 h-10 rounded-xl bg-[#E8E6DC] flex items-center justify-center text-[#5E5D59] shrink-0">
+              <Sparkles className="w-5 h-5" aria-hidden />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <h1 className="font-[Playfair_Display] text-[22px] font-medium text-[#141413] break-words">
+                  {assessment.title}
+                </h1>
+                <span className={assessmentStatusPillClass(assessment.status)}>
                   {assessmentStatusLabel[assessment.status] || assessment.status}
                 </span>
               </div>
-              {assessment.description && <p className="ad-hero__desc">{assessment.description}</p>}
-              <div className="ad-hero__meta">
-                <span className="ad-hero__meta-chip">
-                  {assessmentTypeLabel[assessment.assessmentType] || assessment.assessmentType}
-                </span>
-                <span className="ad-hero__meta-chip">
-                  {assessmentModeLabel[assessment.assessmentMode || 'DIRECT'] ||
-                    assessment.assessmentMode ||
-                    'DIRECT'}
-                </span>
-                {assessment.examMatrixName && (
-                  <span className="ad-hero__meta-chip">Ma trận: {assessment.examMatrixName}</span>
-                )}
+              <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-0.5">
+                {typeLabel} · {modeLabel}
+                {assessment.examMatrixName ? ` · Ma trận: ${assessment.examMatrixName}` : ''}
+              </p>
+              {assessment.description ? (
+                <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#5E5D59] mt-1.5 leading-relaxed m-0">
+                  {assessment.description}
+                </p>
+              ) : null}
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors active:scale-[0.98]"
+              onClick={() => setOpenEdit(true)}
+            >
+              <Pencil size={15} aria-hidden />
+              Chỉnh sửa
+            </button>
+            {id ? (
+              <button
+                type="button"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#C96442] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:brightness-95 active:scale-[0.98] transition-all duration-150"
+                onClick={() => navigate(`/teacher/assessments/${id}/preview`)}
+              >
+                Xem trước
+                <Eye className="w-3.5 h-3.5" aria-hidden />
+              </button>
+            ) : null}
+          </div>
+        </div>
+
+        {/* Stats — same tile grid as /teacher/mindmaps */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {(
+            [
+              {
+                label: 'Câu hỏi',
+                value: assessment.totalQuestions ?? 0,
+                Icon: ListChecks,
+                bg: 'bg-[#EEF2FF]',
+                color: 'text-[#4F7EF7]',
+              },
+              {
+                label: 'Tổng điểm',
+                value: assessment.totalPoints ?? 0,
+                Icon: Award,
+                bg: 'bg-[#FFF7ED]',
+                color: 'text-[#E07B39]',
+              },
+              {
+                label: 'Lượt nộp',
+                value: assessment.submissionCount ?? 0,
+                Icon: Users,
+                bg: 'bg-[#ECFDF5]',
+                color: 'text-[#2EAD7A]',
+              },
+              {
+                label: 'Thời gian',
+                value:
+                  assessment.timeLimitMinutes != null ? `${assessment.timeLimitMinutes}′` : '∞',
+                Icon: Clock,
+                bg: 'bg-[#F5F3FF]',
+                color: 'text-[#9B6FE0]',
+              },
+            ] as const
+          ).map(({ label, value, Icon, bg, color }) => (
+            <div
+              key={label}
+              className="bg-white rounded-2xl border border-[#E8E6DC] p-4 flex items-center gap-3"
+            >
+              <div
+                className={`w-9 h-9 rounded-xl ${bg} flex items-center justify-center shrink-0`}
+              >
+                <Icon className={`w-4 h-4 ${color}`} aria-hidden />
+              </div>
+              <div className="min-w-0">
+                <p className="font-[Playfair_Display] text-[22px] font-medium text-[#141413] leading-none truncate">
+                  {value}
+                </p>
+                <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mt-0.5">{label}</p>
               </div>
             </div>
-            <div className="ad-hero__actions">
-              <button type="button" className="btn secondary" onClick={() => setOpenEdit(true)}>
-                <Pencil size={14} />
-                Chỉnh sửa
-              </button>
-            </div>
-          </div>
+          ))}
+        </div>
 
-          <div className="ad-hero__metrics">
-            <div className="ad-metric">
-              <span className="ad-metric__label">Câu hỏi</span>
-              <span className="ad-metric__value">{assessment.totalQuestions ?? 0}</span>
-            </div>
-            <div className="ad-metric">
-              <span className="ad-metric__label">Tổng điểm</span>
-              <span className="ad-metric__value">{assessment.totalPoints ?? 0}</span>
-            </div>
-            <div className="ad-metric">
-              <span className="ad-metric__label">Lượt nộp</span>
-              <span className="ad-metric__value">{assessment.submissionCount ?? 0}</span>
-            </div>
-            <div className="ad-metric">
-              <span className="ad-metric__label">Thời gian</span>
-              <span className="ad-metric__value">
-                {assessment.timeLimitMinutes != null ? `${assessment.timeLimitMinutes}'` : '∞'}
-              </span>
-            </div>
-          </div>
-        </article>
-
-        {/* Settings — grouped clearly so teachers can scan time / config / status
-            without diving into the edit modal. Inline labels mirror the
-            modal's field semantics. */}
-        <div className="ad-settings-grid">
-          <article className="data-card ad-settings-card">
-            <header className="ad-settings-card__head">
-              <h3>Thời gian</h3>
-            </header>
-            <dl className="ad-settings-list">
-              <div className="ad-settings-row">
-                <dt>Thời gian làm bài</dt>
-                <dd>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+          <article className="bg-white rounded-2xl border border-[#E8E6DC] p-4 flex flex-col gap-3">
+            <h3 className="font-[Playfair_Display] text-[15px] font-medium text-[#141413] m-0">
+              Thời gian
+            </h3>
+            <dl className="m-0 flex flex-col divide-y divide-[#F0EEE6]">
+              <div className="flex items-baseline justify-between gap-3 py-3 first:pt-0">
+                <dt className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] font-semibold m-0">
+                  Thời gian làm bài
+                </dt>
+                <dd className="font-[Be_Vietnam_Pro] text-[13px] text-[#141413] font-semibold m-0 text-right">
                   {assessment.timeLimitMinutes != null
                     ? `${assessment.timeLimitMinutes} phút`
                     : 'Không giới hạn'}
                 </dd>
               </div>
-              <div className="ad-settings-row">
-                <dt>Số lần làm tối đa</dt>
-                <dd>
+              <div className="flex items-baseline justify-between gap-3 py-3">
+                <dt className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] font-semibold m-0">
+                  Số lần làm tối đa
+                </dt>
+                <dd className="font-[Be_Vietnam_Pro] text-[13px] text-[#141413] font-semibold m-0 text-right">
                   {Boolean(assessment.allowMultipleAttempts) ? (
                     <>
                       {assessment.maxAttempts ?? '∞'} lần
-                      <span className="ad-settings-row__hint"> · cho phép nhiều lần</span>
+                      <span className="font-medium text-[#87867F] text-[11px]">
+                        {' '}
+                        · cho phép nhiều lần
+                      </span>
                     </>
                   ) : (
                     '1 lần'
                   )}
                 </dd>
               </div>
-              <div className="ad-settings-row">
-                <dt>Cách chấm khi nhiều lần</dt>
-                <dd>
+              <div className="flex items-baseline justify-between gap-3 py-3">
+                <dt className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] font-semibold m-0">
+                  Cách chấm khi nhiều lần
+                </dt>
+                <dd className="font-[Be_Vietnam_Pro] text-[13px] text-[#141413] font-semibold m-0 text-right">
                   {scoringPolicyLabel[assessment.attemptScoringPolicy || 'BEST'] ||
                     assessment.attemptScoringPolicy ||
                     'BEST'}
@@ -460,56 +568,76 @@ export default function AssessmentDetail() {
             </dl>
           </article>
 
-          <article className="data-card ad-settings-card">
-            <header className="ad-settings-card__head">
-              <h3>Hiển thị cho học sinh</h3>
-            </header>
-            <dl className="ad-settings-list">
-              <div className="ad-settings-row">
-                <dt>Trộn câu hỏi</dt>
-                <dd>{assessment.randomizeQuestions ? 'Có' : 'Không'}</dd>
+          <article className="bg-white rounded-2xl border border-[#E8E6DC] p-4 flex flex-col gap-3">
+            <h3 className="font-[Playfair_Display] text-[15px] font-medium text-[#141413] m-0">
+              Hiển thị cho học sinh
+            </h3>
+            <dl className="m-0 flex flex-col divide-y divide-[#F0EEE6]">
+              <div className="flex items-baseline justify-between gap-3 py-3 first:pt-0">
+                <dt className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] font-semibold m-0">
+                  Trộn câu hỏi
+                </dt>
+                <dd className="font-[Be_Vietnam_Pro] text-[13px] text-[#141413] font-semibold m-0">
+                  {assessment.randomizeQuestions ? 'Có' : 'Không'}
+                </dd>
               </div>
-              <div className="ad-settings-row">
-                <dt>Hiện đáp án sau khi nộp</dt>
-                <dd>{assessment.showCorrectAnswers ? 'Có' : 'Không'}</dd>
+              <div className="flex items-baseline justify-between gap-3 py-3">
+                <dt className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] font-semibold m-0">
+                  Hiện đáp án sau khi nộp
+                </dt>
+                <dd className="font-[Be_Vietnam_Pro] text-[13px] text-[#141413] font-semibold m-0">
+                  {assessment.showCorrectAnswers ? 'Có' : 'Không'}
+                </dd>
               </div>
-              <div className="ad-settings-row">
-                <dt>Hiện điểm ngay sau khi nộp</dt>
-                <dd>{assessment.showScoreImmediately ? 'Có' : 'Không'}</dd>
+              <div className="flex items-baseline justify-between gap-3 py-3">
+                <dt className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] font-semibold m-0">
+                  Hiện điểm ngay sau khi nộp
+                </dt>
+                <dd className="font-[Be_Vietnam_Pro] text-[13px] text-[#141413] font-semibold m-0">
+                  {assessment.showScoreImmediately ? 'Có' : 'Không'}
+                </dd>
               </div>
             </dl>
           </article>
 
-          <article className="data-card ad-settings-card">
-            <header className="ad-settings-card__head">
-              <h3>Trạng thái & ma trận</h3>
-            </header>
-            <dl className="ad-settings-list">
-              <div className="ad-settings-row">
-                <dt>Trạng thái</dt>
-                <dd>
-                  <span
-                    className={`badge ${assessment.status === 'PUBLISHED' ? 'published' : 'draft'}`}
-                  >
+          <article className="bg-white rounded-2xl border border-[#E8E6DC] p-4 flex flex-col gap-3 md:col-span-2 xl:col-span-1">
+            <h3 className="font-[Playfair_Display] text-[15px] font-medium text-[#141413] m-0">
+              Trạng thái & ma trận
+            </h3>
+            <dl className="m-0 flex flex-col divide-y divide-[#F0EEE6]">
+              <div className="flex items-baseline justify-between gap-3 py-3 first:pt-0">
+                <dt className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] font-semibold m-0">
+                  Trạng thái
+                </dt>
+                <dd className="m-0">
+                  <span className={assessmentStatusPillClass(assessment.status)}>
                     {assessmentStatusLabel[assessment.status] || assessment.status}
                   </span>
                 </dd>
               </div>
-              <div className="ad-settings-row">
-                <dt>Chế độ tạo đề</dt>
-                <dd>
+              <div className="flex items-baseline justify-between gap-3 py-3">
+                <dt className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] font-semibold m-0">
+                  Chế độ tạo đề
+                </dt>
+                <dd className="font-[Be_Vietnam_Pro] text-[13px] text-[#141413] font-semibold m-0 text-right">
                   {assessmentModeLabel[assessment.assessmentMode || 'DIRECT'] ||
                     assessment.assessmentMode ||
                     'DIRECT'}
                 </dd>
               </div>
-              <div className="ad-settings-row">
-                <dt>Ma trận đề</dt>
-                <dd>{assessment.examMatrixName ?? assessment.examMatrixId ?? 'Không liên kết'}</dd>
+              <div className="flex items-baseline justify-between gap-3 py-3">
+                <dt className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] font-semibold m-0">
+                  Ma trận đề
+                </dt>
+                <dd className="font-[Be_Vietnam_Pro] text-[13px] text-[#141413] font-semibold m-0 text-right break-words max-w-[55%]">
+                  {assessment.examMatrixName ?? assessment.examMatrixId ?? 'Không liên kết'}
+                </dd>
               </div>
-              <div className="ad-settings-row">
-                <dt>Bài học liên quan</dt>
-                <dd>
+              <div className="flex items-baseline justify-between gap-3 py-3">
+                <dt className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] font-semibold m-0 shrink-0">
+                  Bài học liên quan
+                </dt>
+                <dd className="font-[Be_Vietnam_Pro] text-[13px] text-[#141413] font-semibold m-0 text-right">
                   {assessment.lessonTitles && assessment.lessonTitles.length > 0
                     ? assessment.lessonTitles.join(', ')
                     : 'Không có'}
@@ -520,31 +648,36 @@ export default function AssessmentDetail() {
         </div>
 
         {/* ── Question management ── */}
-        <article className="data-card" style={{ marginTop: 16 }}>
-          <div className="row" style={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
-            <h3>Câu hỏi trong {UI_TEXT.QUIZ.toLowerCase()}</h3>
-            <div className="row" style={{ justifyContent: 'start', flexWrap: 'wrap' }}>
+        <article className="bg-white rounded-2xl border border-[#E8E6DC] overflow-hidden">
+          <div className="px-4 py-4 lg:px-6 lg:py-5 border-b border-[#F0EEE6] bg-[#FAF9F5] flex flex-wrap items-center justify-between gap-3">
+            <h3 className="font-[Playfair_Display] text-[16px] font-medium text-[#141413] m-0">
+              Câu hỏi trong {UI_TEXT.QUIZ.toLowerCase()}
+            </h3>
+            <div className="flex flex-wrap gap-2">
               {isDraft &&
                 assessment.assessmentMode === 'MATRIX_BASED' &&
                 assessment.examMatrixId && (
                   <button
-                    className="btn"
+                    type="button"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#141413] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:bg-[#30302E] disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all duration-150"
                     onClick={() => void generateFromMatrix()}
                     disabled={generateMutation.isPending}
                   >
                     {generateMutation.isPending ? 'Đang generate...' : 'Generate from Matrix'}
+                    <ArrowRight className="w-3.5 h-3.5 shrink-0" aria-hidden />
                   </button>
                 )}
             </div>
           </div>
 
+          <div className="p-4 lg:p-6 space-y-4">
           {generateError && (
-            <div className="empty" style={{ color: '#b91c1c' }}>
+            <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3 font-[Be_Vietnam_Pro] text-[13px] text-red-700">
               {generateError}
             </div>
           )}
           {crudError && (
-            <div className="empty" style={{ color: '#b91c1c' }}>
+            <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3 font-[Be_Vietnam_Pro] text-[13px] text-red-700">
               {crudError}
             </div>
           )}
@@ -708,14 +841,10 @@ export default function AssessmentDetail() {
                           const partQuestions = grouped[partNum];
                           return (
                             <Fragment key={partNum}>
-                              <tr style={{ background: '#E8E6DC', borderTop: '1px solid #D1CFC5' }}>
+                              <tr className="bg-[#FAF9F5] border-t border-[#E8E6DC]">
                                 <td
                                   colSpan={isDraft ? 6 : 5}
-                                  style={{
-                                    fontWeight: 600,
-                                    color: '#5E5D59',
-                                    padding: '10px 12px',
-                                  }}
+                                  className="font-[Be_Vietnam_Pro] font-semibold text-[#5E5D59] py-2.5 px-3 text-[13px]"
                                 >
                                   {partLabels[partNum] || `Phần ${partNum}`} ({partQuestions.length}{' '}
                                   câu)
@@ -852,7 +981,8 @@ export default function AssessmentDetail() {
                 {/* Batch save points */}
                 <div>
                   <button
-                    className="btn"
+                    type="button"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#141413] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:bg-[#30302E] disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all duration-150"
                     onClick={() => void handleBatchUpdatePoints()}
                     disabled={batchUpdatePointsMutation.isPending}
                   >
@@ -863,11 +993,11 @@ export default function AssessmentDetail() {
                 </div>
 
                 {/* Auto distribute */}
-                <div className="preview-box">
-                  <p className="muted" style={{ fontWeight: 600, marginBottom: 8 }}>
+                <div className="rounded-xl border border-[#E8E6DC] bg-[#FAF9F5] p-4">
+                  <p className="font-[Be_Vietnam_Pro] text-[13px] font-semibold text-[#5E5D59] m-0 mb-2">
                     Tự động phân điểm theo mức độ nhận thức
                   </p>
-                  <p style={{ fontSize: 12, color: '#6b7280', marginTop: 4, marginBottom: 8 }}>
+                  <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] m-0 mb-3 leading-relaxed">
                     💡 Câu hỏi Đúng/Sai (TF) có 4 mệnh đề. Điểm sẽ được chia đều cho mỗi mệnh đề.
                     <br />
                     Quy tắc chấm điểm (Bộ GD&ĐT 2025): Đúng 1/4 mệnh đề = 0 điểm, Đúng 2/4 = 0.25 ×
@@ -909,8 +1039,8 @@ export default function AssessmentDetail() {
                     ))}
                   </div>
                   <button
-                    className="btn secondary"
-                    style={{ marginTop: 10 }}
+                    type="button"
+                    className="btn secondary mt-3"
                     onClick={() => void handleAutoDistribute()}
                     disabled={autoDistributeMutation.isPending}
                   >
@@ -922,6 +1052,7 @@ export default function AssessmentDetail() {
               </div>
             </>
           )}
+          </div>
         </article>
 
         <AssessmentModal
@@ -931,7 +1062,7 @@ export default function AssessmentDetail() {
           onClose={() => setOpenEdit(false)}
           onSubmit={save}
         />
-      </section>
+      </div>
     );
   }
 
@@ -940,8 +1071,12 @@ export default function AssessmentDetail() {
       role="teacher"
       user={{ name: 'Teacher', avatar: '', role: 'teacher' }}
       notificationCount={0}
+      contentClassName="dashboard-content--flush-bleed"
     >
-      <div className="module-layout-container">{renderContent()}</div>
+      <div className="px-6 py-8 lg:px-8">
+        {/* No module-page here — matches /teacher/mindmaps full-width content; avoids extra side inset + max-width */}
+        <div className="module-layout-container">{renderContent()}</div>
+      </div>
     </DashboardLayout>
   );
 }
