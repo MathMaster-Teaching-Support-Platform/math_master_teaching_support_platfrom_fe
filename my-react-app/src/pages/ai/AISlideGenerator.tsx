@@ -1521,18 +1521,6 @@ const AISlideGenerator: React.FC = () => {
                   );
                 })}
               </ol>
-
-              {activeWizardStep > 1 && (
-                <div className="flex justify-end">
-                  <button
-                    type="button"
-                    onClick={() => setActiveWizardStep((prev) => Math.max(1, prev - 1))}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#E8E6DC] text-[#4D4C48] font-[Be_Vietnam_Pro] text-[13px] font-medium hover:bg-[#D1CFC5] active:scale-[0.98] transition-all duration-150"
-                  >
-                    <ChevronLeft className="w-3.5 h-3.5" /> Quay về bước trước
-                  </button>
-                </div>
-              )}
             </>
           )}
 
