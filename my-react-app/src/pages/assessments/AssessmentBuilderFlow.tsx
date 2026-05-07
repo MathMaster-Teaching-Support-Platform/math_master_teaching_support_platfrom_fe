@@ -1,11 +1,11 @@
 import {
   AlertTriangle,
-  ArrowRight,
   CheckCircle2,
+  ChevronRight,
   FileCheck2,
+  LayoutTemplate,
   Library,
-  Ruler,
-  Sparkles,
+  TableProperties,
   X,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
@@ -225,107 +225,164 @@ export function AssessmentBuilderFlowBody() {
     }
   }
 
+  const quickLinks = [
+    {
+      path: '/teacher/exam-matrices',
+      title: 'Ma trận đề',
+      subtitle: 'Khung chương · mức độ · số câu',
+      Icon: TableProperties,
+      iconClass:
+        'bg-gradient-to-br from-violet-100 to-violet-50 text-violet-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] ring-1 ring-violet-200/70',
+    },
+    {
+      path: '/teacher/question-templates',
+      title: 'Mẫu câu hỏi',
+      subtitle: 'Định dạng & ma trận nhận thức',
+      Icon: LayoutTemplate,
+      iconClass:
+        'bg-gradient-to-br from-amber-100 to-orange-50 text-amber-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] ring-1 ring-amber-200/70',
+    },
+    {
+      path: '/teacher/question-banks',
+      title: 'Ngân hàng câu hỏi',
+      subtitle: 'Pool câu để ghép với ma trận',
+      Icon: Library,
+      iconClass:
+        'bg-gradient-to-br from-teal-100 to-emerald-50 text-teal-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] ring-1 ring-teal-200/70',
+    },
+  ] as const;
+
+  const pipelineSteps = [
+    {
+      n: 1,
+      title: 'Mẫu câu hỏi',
+      hint: 'Chuẩn hoá kiểu câu trước khi nhập ngân hàng',
+      path: '/teacher/question-templates',
+      tint: 'btn--tint-violet',
+    },
+    {
+      n: 2,
+      title: 'Ngân hàng câu hỏi',
+      hint: 'Tập câu đủ lớn để random theo ma trận',
+      path: '/teacher/question-banks',
+      tint: 'btn--tint-emerald',
+    },
+    {
+      n: 3,
+      title: 'Ma trận đề',
+      hint: 'Định nghĩa phân bổ theo chương & COGNITIVE',
+      path: '/teacher/exam-matrices',
+      tint: 'btn--tint-indigo',
+    },
+  ] as const;
+
   return (
     <>
-      <nav className="abf-quicknav">
-        <button className="abf-quicknav__item" onClick={() => navigate('/teacher/exam-matrices')}>
-          <span className="abf-quicknav__icon abf-nav-indigo">
-            <Ruler size={14} />
-          </span>
-          <span className="abf-quicknav__text">
-            <span className="abf-quicknav__title">Ma trận đề</span>
-          </span>
-          <ArrowRight size={14} className="abf-quicknav__arrow" />
-        </button>
-        <span className="abf-quicknav__divider" />
-        <button
-          className="abf-quicknav__item"
-          onClick={() => navigate('/teacher/question-templates')}
-        >
-          <span className="abf-quicknav__icon abf-nav-violet">
-            <Sparkles size={14} />
-          </span>
-          <span className="abf-quicknav__text">
-            <span className="abf-quicknav__title">Mẫu câu hỏi</span>
-          </span>
-          <ArrowRight size={14} className="abf-quicknav__arrow" />
-        </button>
-        <span className="abf-quicknav__divider" />
-        <button className="abf-quicknav__item" onClick={() => navigate('/teacher/question-banks')}>
-          <span className="abf-quicknav__icon abf-nav-blue">
-            <Library size={14} />
-          </span>
-          <span className="abf-quicknav__text">
-            <span className="abf-quicknav__title">Ngân hàng câu hỏi</span>
-          </span>
-          <ArrowRight size={14} className="abf-quicknav__arrow" />
-        </button>
+      <nav
+        className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3"
+        aria-label="Liên kết nhanh chuẩn bị dữ liệu"
+      >
+        {quickLinks.map(({ path, title, subtitle, Icon, iconClass }) => (
+          <button
+            key={path}
+            type="button"
+            onClick={() => navigate(path)}
+            className="group flex w-full items-center gap-4 rounded-2xl border border-[#E8E6DC] bg-[#FAF9F5] p-4 text-left shadow-[rgba(0,0,0,0.03)_0px_2px_12px] transition-all duration-200 hover:border-[#D1CFC5] hover:bg-white hover:shadow-[0px_8px_28px_rgba(0,0,0,0.07)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C96442]/35 focus-visible:ring-offset-2"
+          >
+            <span
+              className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl transition-transform duration-200 group-hover:scale-[1.04] ${iconClass}`}
+            >
+              <Icon className="h-5 w-5" strokeWidth={1.75} aria-hidden />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="font-[Be_Vietnam_Pro] text-[14px] font-semibold text-[#141413]">
+                {title}
+              </span>
+              <span className="mt-0.5 block font-[Be_Vietnam_Pro] text-[12px] leading-snug text-[#87867F]">
+                {subtitle}
+              </span>
+            </span>
+            <ChevronRight
+              className="h-5 w-5 shrink-0 text-[#B0AEA5] transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-[#5E5D59]"
+              strokeWidth={2}
+              aria-hidden
+            />
+          </button>
+        ))}
       </nav>
 
-      <section className="data-card abf-process-card">
-        <div className="abf-process-head">
-          <h3 className="abf-process-title">Quy trình tạo đề 4 bước</h3>
-          <p className="abf-process-subtitle">
-            Làm theo thứ tự để lên đề hoàn chỉnh, đúng dữ liệu và đúng quy trình.
+      <section className="mb-6 rounded-2xl border border-[#E8E6DC] bg-[#FAF9F5] p-5 shadow-[rgba(0,0,0,0.04)_0px_4px_24px] sm:p-6">
+        <div className="border-b border-[#F0EEE6] pb-4">
+          <p className="font-[Be_Vietnam_Pro] text-[11px] font-semibold uppercase tracking-[0.12em] text-[#87867F]">
+            Luồng chuẩn
+          </p>
+          <h3 className="mt-1 font-[Playfair_Display] text-[19px] font-medium leading-snug text-[#141413]">
+            Quy trình tạo đề 4 bước
+          </h3>
+          <p className="mt-2 max-w-[62ch] font-[Be_Vietnam_Pro] text-[13px] leading-relaxed text-[#87867F]">
+            Làm lần lượt để dữ liệu khớp ma trận — tránh thiếu câu hoặc sai cấu trúc khi sinh đề.
           </p>
         </div>
-        <ol className="abf-step-list">
-          <li className="abf-step">
-            <span className="abf-step__num">1</span>
-            <div className="abf-step__body">
-              <strong className="abf-step__title">Mẫu câu hỏi</strong>
-            </div>
-            <button
-              type="button"
-              className="btn secondary btn--tint-violet"
-              onClick={() => navigate('/teacher/question-templates')}
+        <ol className="m-0 mt-4 list-none space-y-3 p-0">
+          {pipelineSteps.map((step) => (
+            <li
+              key={step.n}
+              className="flex flex-wrap items-center gap-3 rounded-xl border border-[#F0EEE6] bg-white p-3.5 shadow-sm sm:flex-nowrap sm:gap-4"
             >
-              Mở <ArrowRight size={13} />
-            </button>
-          </li>
-          <li className="abf-step">
-            <span className="abf-step__num">2</span>
-            <div className="abf-step__body">
-              <strong className="abf-step__title">Ngân hàng câu hỏi</strong>
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-[#E8E6DC] bg-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-bold text-[#5E5D59]">
+                {step.n}
+              </span>
+              <div className="min-w-0 flex-1">
+                <strong className="font-[Be_Vietnam_Pro] text-[14px] font-semibold text-[#141413]">
+                  {step.title}
+                </strong>
+                <p className="mt-0.5 font-[Be_Vietnam_Pro] text-[12px] leading-snug text-[#87867F]">
+                  {step.hint}
+                </p>
+              </div>
+              <button
+                type="button"
+                className={`btn secondary inline-flex shrink-0 items-center gap-1 ${step.tint}`}
+                onClick={() => navigate(step.path)}
+              >
+                Mở
+                <ChevronRight className="h-3.5 w-3.5" strokeWidth={2} aria-hidden />
+              </button>
+            </li>
+          ))}
+          <li className="flex flex-wrap items-center gap-3 rounded-xl border border-[#C96442]/30 bg-gradient-to-br from-[#fffdfb] to-[#FAF9F5] p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] ring-1 ring-[#C96442]/15 sm:flex-nowrap sm:gap-4">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#141413] font-[Be_Vietnam_Pro] text-[13px] font-bold text-[#FAF9F5] shadow-sm">
+              4
+            </span>
+            <div className="min-w-0 flex-1">
+              <strong className="font-[Be_Vietnam_Pro] text-[14px] font-semibold text-[#141413]">
+                {UI_TEXT.QUIZ}
+              </strong>
+              <p className="mt-0.5 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">
+                Ghép ma trận + ngân hàng và sinh đề nháp ngay bên dưới.
+              </p>
             </div>
-            <button
-              type="button"
-              className="btn secondary btn--tint-emerald"
-              onClick={() => navigate('/teacher/question-banks')}
-            >
-              Mở <ArrowRight size={13} />
-            </button>
-          </li>
-          <li className="abf-step">
-            <span className="abf-step__num">3</span>
-            <div className="abf-step__body">
-              <strong className="abf-step__title">Ma trận đề</strong>
-            </div>
-            <button
-              type="button"
-              className="btn secondary btn--tint-indigo"
-              onClick={() => navigate('/teacher/exam-matrices')}
-            >
-              Mở <ArrowRight size={13} />
-            </button>
-          </li>
-          <li className="abf-step abf-step--active">
-            <span className="abf-step__num abf-step__num--active">4</span>
-            <div className="abf-step__body">
-              <strong className="abf-step__title">{UI_TEXT.QUIZ}</strong>
-            </div>
-            <span className="badge draft">Bạn đang ở đây</span>
+            <span className="inline-flex shrink-0 items-center rounded-full bg-[#E8E6DC] px-3 py-1 font-[Be_Vietnam_Pro] text-[11px] font-semibold uppercase tracking-wide text-[#5E5D59]">
+              Bạn đang ở đây
+            </span>
           </li>
         </ol>
       </section>
 
       <section className="assessment-builder-flow__orchestration-grid">
-        <article className="data-card">
-          <h3>Bước 1: Tạo đề thi từ ma trận + ngân hàng</h3>
-          <p className="muted" style={{ margin: '0 0 0.6rem' }}>
-            Ma trận quyết định cấu trúc (chương, mức độ, số câu). Chọn 1 hoặc nhiều ngân hàng để hệ
-            thống random câu hỏi từ pool gộp lại theo tiêu chí ma trận.
-          </p>
+        <article className="data-card abf-orchestration-card-modern">
+          <div className="mb-4 border-b border-[#F0EEE6] pb-4">
+            <span className="inline-flex items-center rounded-full bg-[#E8E6DC] px-2.5 py-0.5 font-[Be_Vietnam_Pro] text-[11px] font-semibold uppercase tracking-wide text-[#5E5D59]">
+              Bước 1
+            </span>
+            <h3 className="mt-2 font-[Playfair_Display] text-[17px] font-medium leading-snug text-[#141413]">
+              Tạo đề thi từ ma trận + ngân hàng
+            </h3>
+            <p className="mt-2 font-[Be_Vietnam_Pro] text-[13px] leading-relaxed text-[#87867F]">
+              Ma trận quyết định cấu trúc (chương, mức độ, số câu). Chọn một hoặc nhiều ngân hàng để hệ
+              thống random câu từ pool gộp theo tiêu chí ma trận.
+            </p>
+          </div>
 
           <label className="abf-field">
             <span className="abf-field__label">Ma trận đề</span>
@@ -459,10 +516,10 @@ export function AssessmentBuilderFlowBody() {
             </div>
           )}
 
-          <div className="row" style={{ flexWrap: 'wrap', marginTop: 12 }}>
+          <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-[#F0EEE6] pt-4">
             <button
               type="button"
-              className="btn btn--feat-indigo"
+              className="btn btn--feat-indigo inline-flex items-center gap-2"
               onClick={() => void handleGenerate()}
               disabled={!canGenerate}
             >
@@ -470,10 +527,11 @@ export function AssessmentBuilderFlowBody() {
             </button>
             <button
               type="button"
-              className="btn secondary btn--tint-indigo"
+              className="btn secondary btn--tint-indigo inline-flex items-center gap-1.5"
               onClick={() => navigate('/teacher/exam-matrices')}
             >
               Quản lý ma trận
+              <ChevronRight className="h-3.5 w-3.5" strokeWidth={2} aria-hidden />
             </button>
           </div>
 
@@ -493,36 +551,63 @@ export function AssessmentBuilderFlowBody() {
           )}
         </article>
 
-        <article className="data-card">
-          <h3>Bước 2: Rà soát cuối và công khai</h3>
+        <article className="data-card abf-orchestration-card-modern">
+          <div className="mb-4 border-b border-[#F0EEE6] pb-4">
+            <span className="inline-flex items-center rounded-full bg-[#E8E6DC] px-2.5 py-0.5 font-[Be_Vietnam_Pro] text-[11px] font-semibold uppercase tracking-wide text-[#5E5D59]">
+              Bước 2
+            </span>
+            <h3 className="mt-2 font-[Playfair_Display] text-[17px] font-medium leading-snug text-[#141413]">
+              Rà soát cuối và công khai
+            </h3>
+            <p className="mt-2 font-[Be_Vietnam_Pro] text-[13px] leading-relaxed text-[#87867F]">
+              Sau khi sinh đề nháp, kiểm tra số câu và điều kiện công khai trước khi học sinh làm bài.
+            </p>
+          </div>
           {!generatedAssessmentId && (
-            <p className="empty">Hãy tạo đề nháp trước để bật bước rà soát cuối.</p>
+            <div className="rounded-xl border border-dashed border-[#E8E6DC] bg-[#FAF9F5]/80 px-4 py-8 text-center">
+              <p className="m-0 font-[Be_Vietnam_Pro] text-[13px] leading-relaxed text-[#87867F]">
+                Hoàn tất <strong className="text-[#141413]">Bước 1</strong> để mở khối rà soát và công khai.
+              </p>
+            </div>
           )}
 
           {generatedAssessmentId && (
             <>
-              <div className="assessment-builder-flow__review-meta">
+              <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[#F0EEE6] bg-[#FAF9F5] px-3 py-2.5">
                 <span
                   className={`badge ${generatedAssessment?.status === 'PUBLISHED' ? 'published' : 'draft'}`}
                 >
                   {generatedAssessment?.status || 'DRAFT'}
                 </span>
-                <span className="muted">Mã đề: {generatedAssessmentId}</span>
+                <span className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">
+                  Mã đề:{' '}
+                  <code className="rounded-md bg-white px-1.5 py-0.5 font-mono text-[11px] text-[#141413] ring-1 ring-[#E8E6DC]">
+                    {generatedAssessmentId}
+                  </code>
+                </span>
               </div>
 
-              <div className="assessment-builder-flow__review-stats">
-                <div className="stat-card">
-                  <p>Tổng số câu hỏi</p>
-                  <h3>{generatedQuestions.length}</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1 rounded-xl border border-[#E8E6DC] bg-white p-4 shadow-[rgba(0,0,0,0.03)_0px_2px_10px]">
+                  <p className="m-0 font-[Be_Vietnam_Pro] text-[11px] font-semibold uppercase tracking-wide text-[#87867F]">
+                    Tổng câu
+                  </p>
+                  <p className="m-0 font-[Playfair_Display] text-[26px] font-medium leading-none text-[#141413]">
+                    {generatedQuestions.length}
+                  </p>
                 </div>
-                <div className="stat-card">
-                  <p>Tổng điểm</p>
-                  <h3>{generatedAssessment?.totalPoints ?? 0}</h3>
+                <div className="flex flex-col gap-1 rounded-xl border border-[#E8E6DC] bg-white p-4 shadow-[rgba(0,0,0,0.03)_0px_2px_10px]">
+                  <p className="m-0 font-[Be_Vietnam_Pro] text-[11px] font-semibold uppercase tracking-wide text-[#87867F]">
+                    Tổng điểm
+                  </p>
+                  <p className="m-0 font-[Playfair_Display] text-[26px] font-medium leading-none text-[#141413]">
+                    {generatedAssessment?.totalPoints ?? 0}
+                  </p>
                 </div>
               </div>
 
               {generatedAssessment?.generationSummary && (
-                <div className="data-card" style={{ minHeight: 0 }}>
+                <div className="data-card abf-nested-card min-h-0 rounded-xl border-[#E8E6DC]">
                   <h3>Tạo đề thi từ ma trận đã chọn</h3>
                   <p className="muted">
                     totalQuestionsGenerated:{' '}
@@ -539,7 +624,7 @@ export function AssessmentBuilderFlowBody() {
               )}
 
               {generatedAssessment?.lessons && generatedAssessment.lessons.length > 0 && (
-                <div className="data-card" style={{ minHeight: 0 }}>
+                <div className="data-card abf-nested-card min-h-0 rounded-xl border-[#E8E6DC]">
                   <h3>Phạm vi bài học</h3>
                   <p className="muted" style={{ marginBottom: 12 }}>
                     Đề này bao gồm {generatedAssessment.lessons.length} bài học (tự động lấy từ ma
@@ -557,25 +642,29 @@ export function AssessmentBuilderFlowBody() {
 
               {publishSummary && (
                 <div
-                  className={`assessment-builder-flow__publish-summary ${publishSummary.canPublish ? 'ok' : 'warn'}`}
+                  className={`assessment-builder-flow__publish-summary rounded-xl ${publishSummary.canPublish ? 'ok' : 'warn'}`}
                 >
-                  <div className="row">
+                  <div className="flex items-start gap-2">
                     {publishSummary.canPublish ? (
-                      <CheckCircle2 size={16} />
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" strokeWidth={2} />
                     ) : (
-                      <FileCheck2 size={16} />
+                      <FileCheck2 className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" strokeWidth={2} />
                     )}
-                    <strong>
+                    <strong className="font-[Be_Vietnam_Pro] text-[13px] font-semibold leading-snug">
                       {publishSummary.canPublish
                         ? 'Sẵn sàng công khai'
                         : 'Cần xử lý trước khi công khai'}
                     </strong>
                   </div>
-                  {publishSummary.validationMessage && <p>{publishSummary.validationMessage}</p>}
+                  {publishSummary.validationMessage && (
+                    <p className="font-[Be_Vietnam_Pro] text-[12px] leading-relaxed">
+                      {publishSummary.validationMessage}
+                    </p>
+                  )}
                 </div>
               )}
 
-              <div className="row" style={{ flexWrap: 'wrap' }}>
+              <div className="flex flex-wrap gap-3 pt-1">
                 <button
                   type="button"
                   className="btn secondary btn--tint-violet"
