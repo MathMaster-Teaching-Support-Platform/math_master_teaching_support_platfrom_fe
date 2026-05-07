@@ -107,6 +107,10 @@ export function QuestionBankDashboard() {
   const banks = useMemo(() => data?.result?.content ?? [], [data]);
   const totalPages = data?.result?.totalPages ?? 0;
   const totalElements = data?.result?.totalElements ?? 0;
+  /** Backend có thể trả content nhưng totalElements = 0 — đồng bộ UI với dữ liệu thực tế */
+  const effectiveTotalElements = Math.max(totalElements, banks.length);
+  const effectiveTotalPages =
+    totalPages > 0 ? totalPages : effectiveTotalElements > 0 ? 1 : 0;
 
   const hasActiveFilters = !!debouncedSearch || visibilityFilter !== 'ALL';
 
@@ -710,19 +714,17 @@ export function QuestionBankDashboard() {
 
           {!isLoading && !isError && banks.length === 0 && emptyListPlaceholder}
 
-          {totalPages > 0 && (
-            <div className="pt-2">
-              <Pagination
-                page={page}
-                totalPages={totalPages}
-                totalElements={totalElements}
-                pageSize={pageSize}
-                onChange={(p) => setPage(p)}
-                onPageSizeChange={(size) => setPageSize(size)}
-                pageSizeOptions={PAGE_SIZE_OPTIONS}
-              />
-            </div>
-          )}
+          <div className="pt-2">
+            <Pagination
+              page={page}
+              totalPages={effectiveTotalPages}
+              totalElements={effectiveTotalElements}
+              pageSize={pageSize}
+              onChange={(p) => setPage(p)}
+              onPageSizeChange={(size) => setPageSize(size)}
+              pageSizeOptions={PAGE_SIZE_OPTIONS}
+            />
+          </div>
 
           <QuestionBankFormModal
             isOpen={formOpen}

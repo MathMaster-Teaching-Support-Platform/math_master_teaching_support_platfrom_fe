@@ -12,7 +12,6 @@ import {
   List,
   Loader2,
   Lock,
-  Plus,
   RefreshCw,
   RotateCcw,
   Ruler,
@@ -41,7 +40,6 @@ import {
   type ExamMatrixResponse,
 } from '../../types/examMatrix';
 import { ExamMatrixFormModal } from './ExamMatrixFormModal';
-import { SimpleExamMatrixModal } from './SimpleExamMatrixModal';
 
 const coverGradients = [
   'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
@@ -86,7 +84,6 @@ export function ExamMatrixDashboard() {
   const [page, setPage] = useState(0);
   const size = 10;
   const [formOpen, setFormOpen] = useState(false);
-  const [simpleFormOpen, setSimpleFormOpen] = useState(false);
   const [mode, setMode] = useState<'create' | 'edit'>('create');
   const [selected, setSelected] = useState<ExamMatrixResponse | null>(null);
 
@@ -263,15 +260,6 @@ export function ExamMatrixDashboard() {
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setSimpleFormOpen(true)}
-                title="Bảng chương × NB/TH/VD/VDC, gọn nhanh nhất"
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors active:scale-[0.98]"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                Tạo nhanh
-              </button>
               <button
                 type="button"
                 onClick={() => {
@@ -573,13 +561,6 @@ export function ExamMatrixDashboard() {
                 Bạn chưa có ma trận đề nào. Tạo ma trận đầu tiên để bắt đầu.
               </p>
               <div className="flex flex-wrap justify-center gap-2 mt-1">
-                <button
-                  type="button"
-                  onClick={() => setSimpleFormOpen(true)}
-                  className="px-4 py-2.5 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors"
-                >
-                  Tạo nhanh
-                </button>
                 <button
                   type="button"
                   onClick={() => {
@@ -971,17 +952,6 @@ export function ExamMatrixDashboard() {
             onSubmit={handleSave}
           />
 
-          <SimpleExamMatrixModal
-            isOpen={simpleFormOpen}
-            onClose={() => setSimpleFormOpen(false)}
-            onCreated={(matrix) => {
-              showToast({ type: 'success', message: 'Tạo ma trận thành công.' });
-              void refetch();
-              if (matrix?.matrixId) {
-                navigate(`/teacher/exam-matrices/${matrix.matrixId}`);
-              }
-            }}
-          />
         </div>
       </div>
     </DashboardLayout>

@@ -273,6 +273,10 @@ export function TemplateDashboard() {
   const templates = useMemo(() => data?.result?.content ?? [], [data]);
   const totalPages = data?.result?.totalPages ?? 0;
   const totalElements = data?.result?.totalElements ?? 0;
+  /** Backend có thể trả content nhưng totalElements = 0 — đồng bộ UI với dữ liệu thực tế */
+  const effectiveTotalElements = Math.max(totalElements, templates.length);
+  const effectiveTotalPages =
+    totalPages > 0 ? totalPages : effectiveTotalElements > 0 ? 1 : 0;
 
   const stats = useMemo(
     () => ({
@@ -988,8 +992,8 @@ export function TemplateDashboard() {
 
           <Pagination
             page={page}
-            totalPages={totalPages}
-            totalElements={totalElements}
+            totalPages={effectiveTotalPages}
+            totalElements={effectiveTotalElements}
             pageSize={size}
             onChange={(p) => setPage(p)}
             onPageSizeChange={(newSize) => {

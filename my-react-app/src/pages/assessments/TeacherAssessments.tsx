@@ -7,7 +7,6 @@ import {
   LayoutGrid,
   List,
   Lock,
-  Pencil,
   RefreshCw,
   Search,
   Send,
@@ -28,6 +27,7 @@ import {
   useMyAssessments,
   usePatchAssessment,
   usePublishAssessment,
+  useReopenAssessment,
   useUnpublishAssessment,
 } from '../../hooks/useAssessment';
 import { useDebounce } from '../../hooks/useDebounce';
@@ -75,8 +75,8 @@ export default function TeacherAssessments() {
   const [page, setPage] = useState(0);
   const size = 10;
   const [openForm, setOpenForm] = useState(false);
-  const [mode, setMode] = useState<'create' | 'edit'>('create');
-  const [selected, setSelected] = useState<AssessmentResponse | null>(null);
+  const [mode] = useState<'create' | 'edit'>('create');
+  const [selected] = useState<AssessmentResponse | null>(null);
   const [view, setView] = useState<'create' | 'manage'>('manage');
   const [cardLayout, setCardLayout] = useState<'grid' | 'list'>('grid');
 
@@ -100,6 +100,7 @@ export default function TeacherAssessments() {
   const publishMutation = usePublishAssessment();
   const unpublishMutation = useUnpublishAssessment();
   const closeMutation = useCloseAssessment();
+  const reopenMutation = useReopenAssessment();
   const deleteMutation = useDeleteAssessment();
 
   const { showToast } = useToast();
@@ -107,6 +108,10 @@ export default function TeacherAssessments() {
   const assessments = data?.result?.content ?? [];
   const totalPages = data?.result?.totalPages ?? 0;
   const totalElements = data?.result?.totalElements ?? 0;
+  /** Backend có thể trả content nhưng totalElements = 0 — đồng bộ UI với dữ liệu thực tế */
+  const effectiveTotalElements = Math.max(totalElements, assessments.length);
+  const effectiveTotalPages =
+    totalPages > 0 ? totalPages : effectiveTotalElements > 0 ? 1 : 0;
   const stats = useMemo(
     () => ({
       total: totalElements,
@@ -185,20 +190,6 @@ export default function TeacherAssessments() {
           title="Làm thử ở giao diện học sinh — không tính lượt và không lưu kết quả"
         >
           Làm thử
-        </button>
-      )}
-      {assessment.status === 'DRAFT' && (
-        <button
-          type="button"
-          className="px-3 py-1.5 rounded-lg border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[12px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors inline-flex items-center gap-1.5"
-          onClick={() => {
-            setMode('edit');
-            setSelected(assessment);
-            setOpenForm(true);
-          }}
-        >
-          <Pencil className="w-3.5 h-3.5 flex-shrink-0" />
-          Chỉnh sửa
         </button>
       )}
       {assessment.status === 'PUBLISHED' && (
@@ -308,6 +299,34 @@ export default function TeacherAssessments() {
         >
           <Lock className="w-3 h-3" />
           Đóng đề
+        </button>
+      );
+    }
+    if (assessment.status === 'CLOSED') {
+      return (
+        <button
+          type="button"
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-[Be_Vietnam_Pro] text-[11px] font-semibold hover:bg-emerald-700 transition-colors"
+          onClick={() =>
+            reopenMutation.mutate(assessment.id, {
+              onSuccess: () =>
+                showToast({
+                  type: 'success',
+                  message: `Đã mở lại ${UI_TEXT.QUIZ.toLowerCase()} “${assessment.title}”.`,
+                }),
+              onError: (err) =>
+                showToast({
+                  type: 'error',
+                  message:
+                    err instanceof Error
+                      ? err.message
+                      : `Không thể mở lại ${UI_TEXT.QUIZ.toLowerCase()}.`,
+                }),
+            })
+          }
+        >
+          <Send className="w-3 h-3" />
+          Mở lại
         </button>
       );
     }
@@ -502,10 +521,10 @@ export default function TeacherAssessments() {
               {!isLoading && !isError && assessments.length > 0 && (
                 <div className="flex flex-wrap items-center gap-4 px-4 py-3 rounded-xl bg-[#FAF9F5] border border-[#E8E6DC]">
                   <span className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] uppercase tracking-wide">
-                    Trang {page + 1}/{Math.max(totalPages, 1)}
+                    Trang {page + 1}/{Math.max(effectiveTotalPages, 1)}
                   </span>
                   <strong className="font-[Be_Vietnam_Pro] text-[13px] font-semibold text-[#141413]">
-                    {assessments.length} / {totalElements} {UI_TEXT.QUIZ.toLowerCase()}
+                    {assessments.length} / {effectiveTotalElements} {UI_TEXT.QUIZ.toLowerCase()}
                   </strong>
                   <div className="w-px h-4 bg-[#E8E6DC] hidden sm:block" />
                   <span className="flex items-center gap-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">
@@ -746,8 +765,8 @@ export default function TeacherAssessments() {
               <div className="pt-2">
                 <Pagination
                   page={page}
-                  totalPages={totalPages}
-                  totalElements={totalElements}
+                  totalPages={effectiveTotalPages}
+                  totalElements={effectiveTotalElements}
                   pageSize={size}
                   onChange={(p) => setPage(p)}
                 />

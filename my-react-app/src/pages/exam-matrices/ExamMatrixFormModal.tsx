@@ -1,9 +1,7 @@
 import { FileText, LayoutGrid, Loader2, X } from 'lucide-react';
 import { useEffect, useState, type FormEvent } from 'react';
 import { PartConfigSection } from '../../components/exam-matrix/PartConfigSection';
-import { useSearchQuestionBanks } from '../../hooks/useQuestionBank';
 import type { ExamMatrixRequest, ExamMatrixResponse } from '../../types/examMatrix';
-import type { QuestionBankResponse } from '../../types/questionBank';
 
 type Props = {
   isOpen: boolean;
@@ -26,29 +24,16 @@ export function ExamMatrixFormModal({
   onSubmit,
 }: Readonly<Props>) {
   const [formData, setFormData] = useState<
-    ExamMatrixRequest & { numberOfParts?: number; questionBankId?: string }
+    ExamMatrixRequest & { numberOfParts?: number }
   >({
     name: '',
     description: '',
     isReusable: false,
     numberOfParts: 1,
     parts: [{ partNumber: 1, questionType: 'MULTIPLE_CHOICE', name: 'Phần 1: Trắc nghiệm' }],
-    questionBankId: undefined,
   });
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-
-  const { data: banksData, isLoading: isLoadingBanks } = useSearchQuestionBanks(
-    {
-      mineOnly: true,
-      page: 0,
-      size: 100,
-      sortBy: 'updatedAt',
-      sortDirection: 'DESC',
-    },
-    isOpen
-  );
-  const banks = banksData?.result?.content ?? [];
 
   useEffect(() => {
     if (!isOpen) return;
@@ -65,7 +50,6 @@ export function ExamMatrixFormModal({
       totalPointsTarget: initialData?.totalPointsTarget,
       numberOfParts: initialParts.length,
       parts: initialParts,
-      questionBankId: (initialData as { questionBankId?: string })?.questionBankId ?? undefined,
     });
     setError(null);
     setSaving(false);
@@ -87,7 +71,6 @@ export function ExamMatrixFormModal({
         await onSubmit({
           name: normalizedName,
           parts: formData.parts,
-          questionBankId: formData.questionBankId || undefined,
         });
       } else {
         await onSubmit({
@@ -106,7 +89,7 @@ export function ExamMatrixFormModal({
   }
 
   const isCreate = mode === 'create';
-  const submitLabel = isCreate ? 'Tạo draft' : 'Cập nhật';
+  const submitLabel = isCreate ? 'Tạo ma trận' : 'Cập nhật';
 
   return (
     <div className="fixed inset-0 z-[1200] bg-[#141413]/50 backdrop-blur-sm flex items-center justify-center p-4">
@@ -132,7 +115,7 @@ export function ExamMatrixFormModal({
                 id="exam-matrix-form-title"
                 className="font-[Playfair_Display] text-[17px] font-medium text-[#141413] m-0"
               >
-                {isCreate ? 'Tạo draft ma trận đề' : 'Chỉnh sửa ma trận đề'}
+                {isCreate ? 'Tạo ma trận đề' : 'Chỉnh sửa ma trận đề'}
               </h3>
               <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] m-0 mt-0.5">
                 {isCreate
@@ -182,33 +165,6 @@ export function ExamMatrixFormModal({
               onChange={(parts) => setFormData({ ...formData, parts, numberOfParts: parts.length })}
               disabled={saving}
             />
-
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="emf-bank" className={labelCls}>
-                Ngân hàng câu hỏi mặc định{' '}
-                <span className="text-[#87867F] font-normal">(tùy chọn)</span>
-              </label>
-              <select
-                id="emf-bank"
-                className={inputCls}
-                value={formData.questionBankId ?? ''}
-                onChange={(e) =>
-                  setFormData({ ...formData, questionBankId: e.target.value || undefined })
-                }
-                disabled={isLoadingBanks}
-              >
-                <option value="">— Không gợi ý ngân hàng nào —</option>
-                {banks.map((bank: QuestionBankResponse) => (
-                  <option key={bank.id} value={bank.id}>
-                    {bank.name} ({bank.questionCount ?? 0} câu)
-                  </option>
-                ))}
-              </select>
-              <p className="font-[Be_Vietnam_Pro] text-[11px] text-[#87867F] m-0 leading-relaxed">
-                Ma trận chỉ là blueprint. Ngân hàng dùng để sinh đề được chọn ở bước &quot;Tạo đề
-                thi&quot;. Trường này chỉ pre-fill picker đó cho thuận tiện.
-              </p>
-            </div>
 
             {mode === 'edit' && (
               <>

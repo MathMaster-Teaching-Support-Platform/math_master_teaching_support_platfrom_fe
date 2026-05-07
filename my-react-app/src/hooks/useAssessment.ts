@@ -232,6 +232,18 @@ export function useCloseAssessment() {
   });
 }
 
+/** Reopen a CLOSED assessment back to PUBLISHED */
+export function useReopenAssessment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => AssessmentService.reopenAssessment(id),
+    onSuccess: (_data, id) => {
+      queryClient.invalidateQueries({ queryKey: assessmentKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: assessmentKeys.detail(id) });
+    },
+  });
+}
+
 /** Soft-delete a DRAFT assessment with no submissions */
 export function useDeleteAssessment() {
   const queryClient = useQueryClient();
@@ -323,6 +335,24 @@ export function useUpdateAssessmentQuestionWorkaround() {
       queryClient.invalidateQueries({ queryKey: assessmentKeys.detail(assessmentId) });
       queryClient.invalidateQueries({ queryKey: assessmentKeys.questions(assessmentId) });
       queryClient.invalidateQueries({ queryKey: assessmentKeys.publishSummary(assessmentId) });
+    },
+  });
+}
+
+/** Batch reorder assessment questions in a single PATCH call */
+export function useReorderAssessmentQuestions() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      assessmentId,
+      orders,
+    }: {
+      assessmentId: string;
+      orders: Array<{ questionId: string; orderIndex: number }>;
+    }) => AssessmentService.reorderAssessmentQuestions(assessmentId, orders),
+    onSuccess: (_data, { assessmentId }) => {
+      queryClient.invalidateQueries({ queryKey: assessmentKeys.detail(assessmentId) });
+      queryClient.invalidateQueries({ queryKey: assessmentKeys.questions(assessmentId) });
     },
   });
 }
