@@ -67,6 +67,27 @@ const LEAF_FG = [
   '#14532D',
   '#500724',
 ] as const;
+
+const HEX_COLOR_REGEX = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
+
+const normalizeHexColor = (value?: string): string | null => {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (!HEX_COLOR_REGEX.test(trimmed)) return null;
+  if (trimmed.length === 4) {
+    return `#${trimmed[1]}${trimmed[1]}${trimmed[2]}${trimmed[2]}${trimmed[3]}${trimmed[3]}`;
+  }
+  return trimmed;
+};
+
+const getReadableTextColor = (backgroundHex: string): string => {
+  const hex = backgroundHex.replace('#', '');
+  const r = Number.parseInt(hex.slice(0, 2), 16);
+  const g = Number.parseInt(hex.slice(2, 4), 16);
+  const b = Number.parseInt(hex.slice(4, 6), 16);
+  const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  return luminance > 0.62 ? '#141413' : '#FAF9F5';
+};
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface MindElixirNodeData {
@@ -275,18 +296,27 @@ export default function MindmapEditor() {
         depth: number,
         branchIdx: number
       ): MindElixirNodeData => {
-        let style: { color: string; background: string };
+        let fallbackStyle: { color: string; background: string };
         let branchColor: string | undefined;
 
         if (depth === 0) {
-          style = { color: '#FAF9F5', background: '#1C1C1A' };
+          fallbackStyle = { color: '#FAF9F5', background: '#1C1C1A' };
         } else if (depth === 1) {
           const i = branchIdx % BRANCH_COLORS.length;
-          style = { color: '#ffffff', background: BRANCH_COLORS[i] };
+          fallbackStyle = { color: '#ffffff', background: BRANCH_COLORS[i] };
           branchColor = BRANCH_COLORS[i];
         } else {
           const i = branchIdx % LEAF_BG.length;
-          style = { color: LEAF_FG[i], background: LEAF_BG[i] };
+          fallbackStyle = { color: LEAF_FG[i], background: LEAF_BG[i] };
+        }
+
+        const backendColor = normalizeHexColor(node.color);
+        const style = backendColor
+          ? { color: getReadableTextColor(backendColor), background: backendColor }
+          : fallbackStyle;
+
+        if (depth === 1 && backendColor) {
+          branchColor = backendColor;
         }
 
         return {
@@ -959,8 +989,8 @@ export default function MindmapEditor() {
                         onChange={(e) => setEditForm({ ...editForm, content: e.target.value })}
                       />
                     </div>
-                    {/* Color + Icon row */}
-                    <div className="grid grid-cols-2 gap-2.5">
+                    {/* Color row */}
+                    <div className="grid grid-cols-1 gap-2.5">
                       <div>
                         <label
                           htmlFor="edit-color"
@@ -975,39 +1005,6 @@ export default function MindmapEditor() {
                           value={editForm.color}
                           onChange={(e) => setEditForm({ ...editForm, color: e.target.value })}
                         />
-                      </div>
-                      <div>
-                        <label
-                          htmlFor="edit-icon"
-                          className="block font-[Be_Vietnam_Pro] text-[11px] font-medium text-[#87867F] uppercase tracking-[0.4px] mb-1.5"
-                        >
-                          Icon
-                        </label>
-                        <select
-                          id="edit-icon"
-                          className="w-full border border-[#E8E6DC] rounded-xl px-2 py-2 font-[Be_Vietnam_Pro] text-[12px] text-[#141413] bg-white outline-none focus:border-[#C96442] focus:ring-1 focus:ring-[#C96442]/20 transition-colors"
-                          value={editForm.icon}
-                          onChange={(e) => setEditForm({ ...editForm, icon: e.target.value })}
-                        >
-                          <option value="lightbulb">💡 Ý tưởng</option>
-                          <option value="brain">🧠 Não bộ</option>
-                          <option value="bookmark">🔖 Đánh dấu</option>
-                          <option value="check-circle">✅ Hoàn thành</option>
-                          <option value="info-circle">ℹ️ Thông tin</option>
-                          <option value="book">📚 Sách</option>
-                          <option value="target">🎯 Mục tiêu</option>
-                          <option value="star">⭐ Nổi bật</option>
-                          <option value="sparkles">✨ Sáng tạo</option>
-                          <option value="fire">🔥 Quan trọng</option>
-                          <option value="rocket">🚀 Tiến lên</option>
-                          <option value="trophy">🏆 Thành tích</option>
-                          <option value="medal">🏅 Giải thưởng</option>
-                          <option value="pencil">✏️ Ghi chú</option>
-                          <option value="chart">📊 Biểu đồ</option>
-                          <option value="flag">🚩 Đánh dấu</option>
-                          <option value="heart">❤️ Yêu thích</option>
-                          <option value="link">🔗 Liên kết</option>
-                        </select>
                       </div>
                     </div>
                     {/* Actions */}
@@ -1065,7 +1062,7 @@ export default function MindmapEditor() {
                         placeholder="Nhập nội dung node con..."
                       />
                     </div>
-                    <div className="grid grid-cols-2 gap-2.5">
+                    <div className="grid grid-cols-1 gap-2.5">
                       <div>
                         <label
                           htmlFor="new-color"
@@ -1082,39 +1079,6 @@ export default function MindmapEditor() {
                             setNewNodeForm({ ...newNodeForm, color: e.target.value })
                           }
                         />
-                      </div>
-                      <div>
-                        <label
-                          htmlFor="new-icon"
-                          className="block font-[Be_Vietnam_Pro] text-[11px] font-medium text-[#87867F] uppercase tracking-[0.4px] mb-1.5"
-                        >
-                          Icon
-                        </label>
-                        <select
-                          id="new-icon"
-                          className="w-full border border-[#E8E6DC] rounded-xl px-2 py-2 font-[Be_Vietnam_Pro] text-[12px] text-[#141413] bg-white outline-none focus:border-[#C96442] focus:ring-1 focus:ring-[#C96442]/20 transition-colors"
-                          value={newNodeForm.icon}
-                          onChange={(e) => setNewNodeForm({ ...newNodeForm, icon: e.target.value })}
-                        >
-                          <option value="lightbulb">💡 Ý tưởng</option>
-                          <option value="brain">🧠 Não bộ</option>
-                          <option value="bookmark">🔖 Đánh dấu</option>
-                          <option value="check-circle">✅ Hoàn thành</option>
-                          <option value="info-circle">ℹ️ Thông tin</option>
-                          <option value="book">📚 Sách</option>
-                          <option value="target">🎯 Mục tiêu</option>
-                          <option value="star">⭐ Nổi bật</option>
-                          <option value="sparkles">✨ Sáng tạo</option>
-                          <option value="fire">🔥 Quan trọng</option>
-                          <option value="rocket">🚀 Tiến lên</option>
-                          <option value="trophy">🏆 Thành tích</option>
-                          <option value="medal">🏅 Giải thưởng</option>
-                          <option value="pencil">✏️ Ghi chú</option>
-                          <option value="chart">📊 Biểu đồ</option>
-                          <option value="flag">🚩 Đánh dấu</option>
-                          <option value="heart">❤️ Yêu thích</option>
-                          <option value="link">🔗 Liên kết</option>
-                        </select>
                       </div>
                     </div>
                     <div className="flex gap-2 pt-1">
