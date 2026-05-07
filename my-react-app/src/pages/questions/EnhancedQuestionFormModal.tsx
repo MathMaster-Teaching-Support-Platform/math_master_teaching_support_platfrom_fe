@@ -7,7 +7,7 @@ import MathText from '../../components/common/MathText';
 import { LatexToolbar } from '../../components/common/LatexToolbar';
 import { questionService } from '../../services/questionService';
 import { useToast } from '../../context/ToastContext';
-import type { QuestionType, QuestionDifficulty } from '../../types/question';
+import type { QuestionType, QuestionDifficulty, QuestionCognitiveLevel } from '../../types/question';
 import './EnhancedQuestionFormModal.css';
 
 function extractEditableLatex(value: unknown): string {
@@ -28,6 +28,7 @@ interface EnhancedQuestionFormModalProps {
     questionText?: string;
     questionType?: QuestionType;
     difficulty?: QuestionDifficulty;
+    cognitiveLevel?: QuestionCognitiveLevel;
     points?: number;
     correctAnswer?: string;
     explanation?: string;
@@ -63,6 +64,9 @@ export function EnhancedQuestionFormModal({
   );
   const [difficulty, setDifficulty] = useState<QuestionDifficulty>(
     initialData?.difficulty || 'MEDIUM'
+  );
+  const [cognitiveLevel, setCognitiveLevel] = useState<QuestionCognitiveLevel>(
+    initialData?.cognitiveLevel || 'THONG_HIEU'
   );
   const [points, setPoints] = useState<string>(String(initialData?.points || 1));
   const [explanation, setExplanation] = useState<string>(initialData?.explanation || '');
@@ -154,6 +158,7 @@ export function EnhancedQuestionFormModal({
     if (isOpen && initialData) {
       setQuestionType(initialData.questionType || 'MULTIPLE_CHOICE');
       setDifficulty(initialData.difficulty || 'MEDIUM');
+      setCognitiveLevel(initialData.cognitiveLevel || 'THONG_HIEU');
       setPoints(String(initialData.points || 1));
       setExplanation(initialData.explanation || '');
       setDiagramData(extractEditableLatex(initialData.diagramData));
@@ -238,6 +243,7 @@ export function EnhancedQuestionFormModal({
         ...editorValue,
         questionType,
         difficulty,
+        cognitiveLevel,
         points: pointsNum,
         explanation: explanation.trim() || undefined,
         diagramData: diagramData.trim() ? diagramData.trim() : undefined,
@@ -337,6 +343,55 @@ export function EnhancedQuestionFormModal({
                     </button>
                   );
                 })}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label className="block font-[Be_Vietnam_Pro] text-[12px] font-semibold text-[#5E5D59] mb-2 uppercase tracking-wide">
+                  Mức độ nhận thức <span className="text-red-500">*</span>
+                </label>
+                <select
+                  className={selectCls}
+                  value={cognitiveLevel}
+                  onChange={(e) => setCognitiveLevel(e.target.value as QuestionCognitiveLevel)}
+                  disabled={saving}
+                  required
+                >
+                  <option value="NHAN_BIET">Nhận biết</option>
+                  <option value="THONG_HIEU">Thông hiểu</option>
+                  <option value="VAN_DUNG">Vận dụng</option>
+                  <option value="VAN_DUNG_CAO">Vận dụng cao</option>
+                </select>
+              </div>
+              <div>
+                <label className="block font-[Be_Vietnam_Pro] text-[12px] font-semibold text-[#5E5D59] mb-2 uppercase tracking-wide">
+                  Độ khó
+                </label>
+                <select
+                  className={selectCls}
+                  value={difficulty}
+                  onChange={(e) => setDifficulty(e.target.value as QuestionDifficulty)}
+                  disabled={saving}
+                >
+                  <option value="EASY">Dễ</option>
+                  <option value="MEDIUM">Trung bình</option>
+                  <option value="HARD">Khó</option>
+                </select>
+              </div>
+              <div>
+                <label className="block font-[Be_Vietnam_Pro] text-[12px] font-semibold text-[#5E5D59] mb-2 uppercase tracking-wide">
+                  Điểm
+                </label>
+                <input
+                  type="number"
+                  step="0.25"
+                  min="0"
+                  className={selectCls}
+                  value={points}
+                  onChange={(e) => setPoints(e.target.value)}
+                  disabled={saving}
+                />
               </div>
             </div>
 

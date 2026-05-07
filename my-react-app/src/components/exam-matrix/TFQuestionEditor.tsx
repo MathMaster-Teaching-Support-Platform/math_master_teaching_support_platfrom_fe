@@ -1,9 +1,5 @@
-import type { MatrixCognitiveLevel } from '../../types/examMatrix';
-
 interface TFClause {
   text: string;
-  chapterId?: string;
-  cognitiveLevel?: MatrixCognitiveLevel;
   truthValue: boolean;
 }
 
@@ -52,29 +48,6 @@ export function TFQuestionEditor({
           />
 
           <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-            {/* Chapter selector */}
-            <select
-              value={clause.chapterId || ''}
-              onChange={(e) => onClauseChange(index, { ...clause, chapterId: e.target.value })}
-              style={{ flex: 1 }}
-            >
-              <option value="">Chọn chương</option>
-              {/* Populate from props */}
-            </select>
-
-            {/* Cognitive level selector */}
-            <select
-              value={clause.cognitiveLevel || ''}
-              onChange={(e) => onClauseChange(index, { ...clause, cognitiveLevel: e.target.value as MatrixCognitiveLevel })}
-              style={{ flex: 1 }}
-            >
-              <option value="">Chọn mức độ</option>
-              <option value="NHAN_BIET">Nhận biết</option>
-              <option value="THONG_HIEU">Thông hiểu</option>
-              <option value="VAN_DUNG">Vận dụng</option>
-              <option value="VAN_DUNG_CAO">Vận dụng cao</option>
-            </select>
-
             {/* True/False toggle */}
             <button
               type="button"

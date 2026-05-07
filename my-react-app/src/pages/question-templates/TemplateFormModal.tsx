@@ -10,7 +10,6 @@ import {
 import { SABlueprint, type SABlueprintRef } from '../../components/question-templates/SABlueprint';
 import { TFBlueprint, type TFBlueprintRef } from '../../components/question-templates/TFBlueprint';
 import { TypeSelector } from '../../components/question-templates/TypeSelector';
-import { useChaptersBySubject } from '../../hooks/useChapters';
 import {
   CognitiveLevel,
   QuestionType,
@@ -157,16 +156,12 @@ function extractBlueprintInitialData(
           clauseTemplates?: Array<{
             text: string;
             truthValue: boolean;
-            chapterId?: string;
-            cognitiveLevel?: string;
           }>;
         }
       | undefined;
     const clauses = sm?.clauseTemplates?.map((c, i) => ({
       key: String.fromCharCode(65 + i),
       text: c.text || '',
-      chapterId: c.chapterId || data.chapterId || '',
-      cognitiveLevel: (c.cognitiveLevel || 'THONG_HIEU') as CognitiveLevel,
       truthValue: c.truthValue ?? true,
     }));
     return {
@@ -232,13 +227,16 @@ export function TemplateFormModal({
       return;
     }
 
+    // Wrap symbol with single $...$ so MathText renders it as inline math.
+    const wrapped = `$${latex}$`;
+
     const start = lastFocusedInput.selectionStart ?? 0;
     const end = lastFocusedInput.selectionEnd ?? 0;
     const text = lastFocusedInput.value;
     const before = text.substring(0, start);
     const after = text.substring(end);
 
-    const newText = before + latex + after;
+    const newText = before + wrapped + after;
 
     const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
       window.HTMLInputElement.prototype,
@@ -259,7 +257,7 @@ export function TemplateFormModal({
 
     setTimeout(() => {
       lastFocusedInput.focus();
-      const newPosition = start + latex.length;
+      const newPosition = start + wrapped.length;
       lastFocusedInput.setSelectionRange(newPosition, newPosition);
     }, 0);
   };
@@ -268,13 +266,6 @@ export function TemplateFormModal({
   const mcqBlueprintRef = useRef<MCQBlueprintRef>(null);
   const tfBlueprintRef = useRef<TFBlueprintRef>(null);
   const saBlueprintRef = useRef<SABlueprintRef>(null);
-
-  // Fetch chapters for TF blueprint
-  const { data: chaptersData } = useChaptersBySubject(
-    selectedSubjectId,
-    !!selectedSubjectId && isOpen
-  );
-  const chapters = chaptersData?.result ?? [];
 
   const nameRef = useRef<HTMLInputElement | null>(null);
   const descriptionRef = useRef<HTMLTextAreaElement | null>(null);
@@ -413,11 +404,9 @@ export function TemplateFormModal({
               clauseTemplates: tfData.clauses.map((c) => ({
                 text: c.text,
                 truthValue: c.truthValue,
-                chapterId: c.chapterId,
-                cognitiveLevel: c.cognitiveLevel,
               })),
             },
-            cognitiveLevel: tfData.clauses[0]?.cognitiveLevel || CognitiveLevel.THONG_HIEU,
+            cognitiveLevel,
             isPublic,
             questionBankId: initialData?.questionBankId ?? null,
             diagramTemplate: tfData.diagramTemplateRaw?.trim() || undefined,
@@ -535,24 +524,22 @@ export function TemplateFormModal({
                 disabled={mode === 'edit'}
               />
 
-              {templateType !== QuestionType.TRUE_FALSE && (
-                <label>
-                  <p className="muted" style={{ marginBottom: 6 }}>
-                    Mức độ nhận thức
-                  </p>
-                  <select
-                    className="select"
-                    value={cognitiveLevel}
-                    onChange={(event) => setCognitiveLevel(event.target.value as CognitiveLevel)}
-                  >
-                    {Object.entries(cognitiveLevelLabels).map(([key, label]) => (
-                      <option key={key} value={key}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              )}
+              <label>
+                <p className="muted" style={{ marginBottom: 6 }}>
+                  Mức độ nhận thức
+                </p>
+                <select
+                  className="select"
+                  value={cognitiveLevel}
+                  onChange={(event) => setCognitiveLevel(event.target.value as CognitiveLevel)}
+                >
+                  {Object.entries(cognitiveLevelLabels).map(([key, label]) => (
+                    <option key={key} value={key}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
             </div>
 
@@ -586,8 +573,6 @@ export function TemplateFormModal({
             {templateType === QuestionType.TRUE_FALSE && (
               <TFBlueprint
                 ref={tfBlueprintRef}
-                defaultChapterId={selectedChapterId}
-                chapters={chapters}
                 templateId={initialData?.id}
                 initialData={
                   mode === 'edit'

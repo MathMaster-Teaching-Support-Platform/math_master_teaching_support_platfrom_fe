@@ -81,16 +81,6 @@ export function TrueFalseResult({ answer, questionText, options }: TrueFalseResu
                   borderBottom: '2px solid #d1d5db',
                 }}
               >
-                Mức độ
-              </th>
-              <th
-                style={{
-                  padding: '12px 16px',
-                  textAlign: 'center',
-                  fontWeight: 600,
-                  borderBottom: '2px solid #d1d5db',
-                }}
-              >
                 Đáp án đúng
               </th>
               <th
@@ -123,20 +113,6 @@ export function TrueFalseResult({ answer, questionText, options }: TrueFalseResu
               const actual = c?.actual ?? studentTrueKeys.has(key);
               const isCorrect = c?.correct ?? expected === actual;
 
-              // Get cognitive level from scoringDetail if available
-              const cognitiveLevel = c?.cognitiveLevel || '';
-              const cognitiveLevelLabel = cognitiveLevel
-                ? cognitiveLevel === 'NHAN_BIET' || cognitiveLevel === 'NB'
-                  ? 'NB'
-                  : cognitiveLevel === 'THONG_HIEU' || cognitiveLevel === 'TH'
-                    ? 'TH'
-                    : cognitiveLevel === 'VAN_DUNG' || cognitiveLevel === 'VD'
-                      ? 'VD'
-                      : cognitiveLevel === 'VAN_DUNG_CAO' || cognitiveLevel === 'VDC'
-                        ? 'VDC'
-                        : ''
-                : '';
-
               return (
                 <tr
                   key={key}
@@ -148,22 +124,6 @@ export function TrueFalseResult({ answer, questionText, options }: TrueFalseResu
                   <td style={{ padding: '12px 16px', fontWeight: 700, fontSize: '1rem' }}>{key}</td>
                   <td style={{ padding: '12px 16px', fontSize: '0.875rem' }}>
                     <MathText text={options?.[key] || ''} />
-                  </td>
-                  <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                    {cognitiveLevelLabel && (
-                      <span
-                        style={{
-                          padding: '2px 8px',
-                          borderRadius: 4,
-                          backgroundColor: '#e0e7ff',
-                          color: '#3730a3',
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                        }}
-                      >
-                        {cognitiveLevelLabel}
-                      </span>
-                    )}
                   </td>
                   <td style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 600 }}>
                     <span

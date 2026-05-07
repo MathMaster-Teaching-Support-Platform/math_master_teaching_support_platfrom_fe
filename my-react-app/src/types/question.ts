@@ -16,10 +16,10 @@ export type QuestionCognitiveLevel =
 
 export type QuestionStatus = 'AI_DRAFT' | 'UNDER_REVIEW' | 'APPROVED' | 'ARCHIVED';
 
-// NEW: TF Clause Metadata
+// TF clause metadata stored in generation_metadata->tfClauses (per-clause
+// truthValue only; cognitiveLevel + chapterId now live at question level).
 export interface TFClauseMetadata {
-  chapterId?: string;
-  cognitiveLevel?: QuestionCognitiveLevel;
+  truthValue?: boolean;
 }
 
 export interface TFClausesMetadata {
@@ -29,12 +29,11 @@ export interface TFClausesMetadata {
   D?: TFClauseMetadata;
 }
 
-// NEW: Scoring Detail for TF questions
+// Scoring Detail for TF questions
 export interface ClauseResult {
   expected: boolean;
   actual: boolean;
   correct: boolean;
-  cognitiveLevel?: string;  // NEW: Cognitive level of this clause (e.g., "NHAN_BIET", "THONG_HIEU")
 }
 
 export interface ScoringDetail {
@@ -71,9 +70,8 @@ export interface QuestionResponse {
   /** Chapter (chương) the question belongs to. Used for bank-tree bucket grouping. */
   chapterId?: string;
   lessonId?: string;
-  // ✅ NEW: Generation metadata for TF clause tracking and SA validation
   generationMetadata?: {
-    tfClauses?: TFClausesMetadata;  // For TRUE_FALSE: tracks chapter/level per clause
+    tfClauses?: TFClausesMetadata;  // For TRUE_FALSE: per-clause truthValue
     answerValidation?: {  // For SHORT_ANSWER: validation mode
       mode: 'EXACT' | 'NUMERIC' | 'REGEX';
       tolerance?: number;
