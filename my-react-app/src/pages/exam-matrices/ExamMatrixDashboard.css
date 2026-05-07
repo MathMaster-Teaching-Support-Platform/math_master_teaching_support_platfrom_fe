@@ -57,3 +57,22 @@
   gap: 0;
   width: 100%;
 }
+
+/* Slim hero: không lặp tiêu đề / badge (đã có ở header trang) */
+.module-layout-container .exam-matrix-detail-hero--slim {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.module-layout-container .exam-matrix-meta-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 650;
+  background: #faf9f5;
+  border: 1px solid #e8e6dc;
+  color: #3f3e3a;
+}

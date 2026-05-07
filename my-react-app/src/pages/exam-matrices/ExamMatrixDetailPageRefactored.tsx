@@ -9,6 +9,7 @@ import {
   Plus,
   RefreshCw,
   RotateCcw,
+  Ruler,
   ShieldCheck,
   Trash2,
 } from 'lucide-react';
@@ -39,6 +40,27 @@ const matrixStatusLabel: Record<string, string> = {
   APPROVED: 'Đã phê duyệt',
   LOCKED: 'Đã khóa',
 };
+
+function matrixStatusPillClass(status: MatrixStatus): string {
+  switch (status) {
+    case MatrixStatus.DRAFT:
+      return 'inline-flex items-center px-2 py-0.5 rounded-full bg-[#E8E6DC] font-[Be_Vietnam_Pro] text-[12px] font-semibold text-[#5E5D59]';
+    case MatrixStatus.APPROVED:
+      return 'inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-50 font-[Be_Vietnam_Pro] text-[12px] font-semibold text-emerald-800 border border-emerald-200';
+    case MatrixStatus.LOCKED:
+      return 'inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 font-[Be_Vietnam_Pro] text-[12px] font-semibold text-slate-600 border border-slate-200';
+    default:
+      return 'inline-flex items-center px-2 py-0.5 rounded-full bg-[#E8E6DC] font-[Be_Vietnam_Pro] text-[12px] font-semibold text-[#5E5D59]';
+  }
+}
+
+function matrixDetailShortSubtitle(matrix: { status: MatrixStatus } | null, loading: boolean): string {
+  if (loading) return 'Đang tải ma trận và bảng…';
+  if (!matrix) return '';
+  if (matrix.status === MatrixStatus.DRAFT) return 'Sửa bảng · Lưu trên bảng · Phê duyệt khi xong.';
+  if (matrix.status === MatrixStatus.APPROVED) return 'Chỉ xem hoặc xuất file.';
+  return 'Chỉ xem.';
+}
 
 export default function ExamMatrixDetailPageRefactored() {
   const { matrixId } = useParams<{ matrixId: string }>();
@@ -192,42 +214,43 @@ export default function ExamMatrixDetailPageRefactored() {
       notificationCount={0}
       contentClassName="dashboard-content--flush-bleed"
     >
-      <div className="module-layout-container">
-        <section className="module-page teacher-courses-page exam-matrix-dashboard-page exam-matrix-detail-page">
-          <div className="exam-matrix-detail-back-row">
+      <div className="px-6 py-8 lg:px-8">
+        <div className="module-layout-container">
+          <section className="module-page teacher-courses-page exam-matrix-dashboard-page exam-matrix-detail-page">
             <button
               type="button"
-              className="btn secondary"
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-[#E8E6DC] bg-white font-[Be_Vietnam_Pro] text-[13px] font-medium text-[#5E5D59] hover:bg-[#F5F4ED] transition-colors mb-5"
               onClick={() => navigate('/teacher/exam-matrices')}
             >
-              <ArrowLeft size={15} />
+              <ArrowLeft size={15} aria-hidden />
               Quay lại danh sách ma trận
             </button>
-          </div>
 
-          <header className="page-header courses-header-row exam-matrix-detail-page-header">
-            <div className="header-stack">
-              <div
-                className="row"
-                style={{ gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap' }}
-              >
-                <h2>{isPageLoading ? 'Chi tiết ma trận đề' : 'Ma trận đề'}</h2>
-                {matrix && !isPageLoading && (
-                  <span
-                    className={`badge ${matrix.status.toLowerCase()}`}
-                    style={{ fontSize: 12, padding: '4px 10px' }}
-                  >
-                    {matrixStatusLabel[matrix.status] || matrix.status}
-                  </span>
-                )}
+            {/* Header — aligned with /teacher/mindmaps */}
+            <header className="flex flex-col gap-2 pb-5 mb-2 border-b border-[#E8E6DC]">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#E8E6DC] flex items-center justify-center text-[#5E5D59] shrink-0">
+                  <Ruler className="w-5 h-5" aria-hidden />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <h1 className="font-[Playfair_Display] text-[22px] font-medium text-[#141413] m-0 leading-snug">
+                      {isPageLoading
+                        ? 'Đang tải…'
+                        : matrix?.name?.trim() || 'Chi tiết ma trận đề'}
+                    </h1>
+                    {matrix && !isPageLoading && (
+                      <span className={matrixStatusPillClass(matrix.status)}>
+                        {matrixStatusLabel[matrix.status] ?? matrix.status}
+                      </span>
+                    )}
+                  </div>
+                  <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-1 m-0 leading-relaxed">
+                    {matrixDetailShortSubtitle(matrix ?? null, isPageLoading)}
+                  </p>
+                </div>
               </div>
-              <p className="header-sub exam-matrix-detail-header-sub">
-                {isPageLoading
-                  ? 'Đang tải thông tin ma trận và bảng phân bố...'
-                  : 'Xem bảng ma trận, điều chỉnh phân bố, kiểm tra và phê duyệt khi sẵn sàng.'}
-              </p>
-            </div>
-          </header>
+            </header>
 
           {isPageLoading && (
             <div className="exam-matrix-detail-skeleton" aria-busy="true" aria-label="Đang tải">
@@ -299,32 +322,41 @@ export default function ExamMatrixDetailPageRefactored() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
             >
-              {/* Header Card */}
-              <article className="hero-card exam-matrix-detail-hero">
-                <div className="row" style={{ alignItems: 'start', flexWrap: 'wrap', gap: 16 }}>
-                  <div style={{ flex: 1, minWidth: 300 }}>
-                    <p className="hero-kicker">Ma trận đề kiểm tra</p>
-                    <h2
-                      className="exam-matrix-detail-hero-title"
-                      style={{ marginTop: 8, marginBottom: 12 }}
-                    >
-                      {matrix.name}
-                    </h2>
-                    <p className="exam-matrix-detail-desc" style={{ marginBottom: 12 }}>
-                      {matrix.description || 'Không có mô tả'}
-                    </p>
+              {/* Meta + actions (tiêu đề & trạng thái chỉ hiển thị một lần ở header trang) */}
+              <article className="hero-card exam-matrix-detail-hero exam-matrix-detail-hero--slim">
+                <div style={{ flex: 1, minWidth: 280 }}>
+                  <p className="exam-matrix-detail-desc" style={{ margin: '0 0 10px', fontSize: 15 }}>
+                    {matrix.description?.trim() ? (
+                      matrix.description.trim()
+                    ) : (
+                      <span className="muted">Chưa có mô tả ngắn cho ma trận này.</span>
+                    )}
+                  </p>
+                  <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                    {matrix.subjectName && (
+                      <span
+                        className="exam-matrix-meta-chip"
+                        title="Môn học"
+                      >
+                        {matrix.subjectName}
+                      </span>
+                    )}
+                    {(matrix.gradeLevel || table?.gradeLevel) && (
+                      <span className="exam-matrix-meta-chip" title="Khối / lớp">
+                        Lớp {matrix.gradeLevel || table?.gradeLevel}
+                      </span>
+                    )}
+                    {typeof matrix.rowCount === 'number' && (
+                      <span className="muted" style={{ fontSize: 13 }}>
+                        {matrix.rowCount} dòng trong ma trận
+                      </span>
+                    )}
                   </div>
-                  <span
-                    className={`badge ${matrix.status.toLowerCase()}`}
-                    style={{ fontSize: 13, padding: '6px 12px' }}
-                  >
-                    {matrixStatusLabel[matrix.status] || matrix.status}
-                  </span>
                 </div>
 
                 <div
                   className="row exam-matrix-detail-actions"
-                  style={{ marginTop: 20, gap: 8, flexWrap: 'wrap' }}
+                  style={{ marginTop: 18, gap: 8, flexWrap: 'wrap' }}
                 >
                   <button
                     type="button"
@@ -343,7 +375,7 @@ export default function ExamMatrixDetailPageRefactored() {
                     className="btn secondary btn--tint-emerald"
                     onClick={() => handleExportExcel()}
                     disabled={!!exportBusy}
-                    title="Công khaig ma trận ra file .xlsx (dữ liệu đã lưu)"
+                    title="Xuất ma trận ra file .xlsx (dữ liệu đã lưu)"
                   >
                     <FileSpreadsheet size={14} />
                     {exportBusy === 'excel' ? 'Đang xuất...' : 'Xuất Excel'}
@@ -353,7 +385,7 @@ export default function ExamMatrixDetailPageRefactored() {
                     className="btn secondary btn--tint-indigo"
                     onClick={() => void handleExportPdf()}
                     disabled={!!exportBusy}
-                    title="Công khaig ma trận ra PDF (ảnh bảng, hỗ trợ tiếng Việt)"
+                    title="Xuất ma trận ra PDF (ảnh bảng, hỗ trợ tiếng Việt)"
                   >
                     <FileDown size={14} />
                     {exportBusy === 'pdf' ? 'Đang xuất...' : 'Xuất PDF'}
@@ -477,10 +509,22 @@ export default function ExamMatrixDetailPageRefactored() {
                   marginBottom: 16,
                 }}
               >
-                <div>
-                  <h3 style={{ marginBottom: 4 }}>Bảng ma trận đề</h3>
-                  <p className="muted" style={{ fontSize: 13 }}>
-                    Ma trận đề theo chuẩn Bộ Giáo dục và Đào tạo
+                <div style={{ flex: '1 1 260px', minWidth: 0 }}>
+                  <div className="row" style={{ alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                    <h3 style={{ marginBottom: 4 }}>Bảng ma trận đề</h3>
+                    {canEdit && (
+                      <span
+                        className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#FFF7ED] font-[Be_Vietnam_Pro] text-[11px] font-semibold text-[#9a3412] border border-[#FDBA74] uppercase tracking-wide"
+                        title="Chỉ lưu khi bấm «Lưu thay đổi» trên bảng"
+                      >
+                        Chỉnh sửa · Lưu tay
+                      </span>
+                    )}
+                  </div>
+                  <p className="muted font-[Be_Vietnam_Pro]" style={{ fontSize: 13, marginTop: 6 }}>
+                    {canEdit
+                      ? 'Click ô · Enter xác nhận · «Lưu thay đổi» / «Hủy» trên bảng.'
+                      : 'Chỉ xem theo chuẩn phân bố đề.'}
                   </p>
                 </div>
                 {canEdit && (
@@ -523,7 +567,8 @@ export default function ExamMatrixDetailPageRefactored() {
               }}
             />
           )}
-        </section>
+          </section>
+        </div>
       </div>
     </DashboardLayout>
   );

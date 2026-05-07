@@ -8,6 +8,7 @@ import { useSubjectsByGrade } from '../../hooks/useSubjects';
 import type { QuestionBankResponse } from '../../types/questionBank';
 import type { BuildSimpleExamMatrixRequest, ExamMatrixTableResponse } from '../../types/examMatrix';
 import type { ChapterResponse } from '../../types/chapter.types';
+import '../../styles/module-refactor.css';
 
 type Props = {
   isOpen: boolean;
@@ -223,7 +224,8 @@ export function SimpleExamMatrixModal({ isOpen, onClose, onCreated }: Readonly<P
   }
 
   return (
-    <div className="modal-layer">
+    <div className="module-layout-container fixed inset-0 z-[1200]">
+      <div className="modal-layer">
       <div className="modal-card" style={{ width: 'min(1080px, 100%)' }}>
         <div className="modal-header">
           <div>
@@ -476,6 +478,7 @@ export function SimpleExamMatrixModal({ isOpen, onClose, onCreated }: Readonly<P
             </button>
           </div>
         </form>
+      </div>
       </div>
     </div>
   );
