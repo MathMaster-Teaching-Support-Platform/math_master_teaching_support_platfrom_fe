@@ -1084,42 +1084,57 @@ export default function AdminAcademicStructurePage() {
       }}
     >
       <h3 className="aas-form__title">Bài học</h3>
-      <input
-        type="text"
-        placeholder="Tên bài học"
-        value={lessonForm.title}
-        onChange={(event) => setLessonForm((prev) => ({ ...prev, title: event.target.value }))}
-      />
-      <textarea
-        placeholder="Mục tiêu học tập"
-        value={lessonForm.learningObjectives}
-        onChange={(event) =>
-          setLessonForm((prev) => ({ ...prev, learningObjectives: event.target.value }))
-        }
-      />
-      <textarea
-        placeholder="Nội dung bài học"
-        value={lessonForm.lessonContent}
-        onChange={(event) =>
-          setLessonForm((prev) => ({ ...prev, lessonContent: event.target.value }))
-        }
-      />
-      <textarea
-        placeholder="Tóm tắt"
-        value={lessonForm.summary}
-        onChange={(event) => setLessonForm((prev) => ({ ...prev, summary: event.target.value }))}
-      />
-      <input
-        type="number"
-        placeholder="orderIndex"
-        value={lessonForm.orderIndex}
-        onChange={(event) =>
-          setLessonForm((prev) => ({
-            ...prev,
-            orderIndex: event.target.value === '' ? '' : Number(event.target.value),
-          }))
-        }
-      />
+      <label className="aas-field-label">
+        Tên bài học
+        <input
+          type="text"
+          placeholder="Tên bài học"
+          value={lessonForm.title}
+          onChange={(event) => setLessonForm((prev) => ({ ...prev, title: event.target.value }))}
+        />
+      </label>
+      <label className="aas-field-label">
+        Mục tiêu học tập
+        <textarea
+          placeholder="Mục tiêu học tập"
+          value={lessonForm.learningObjectives}
+          onChange={(event) =>
+            setLessonForm((prev) => ({ ...prev, learningObjectives: event.target.value }))
+          }
+        />
+      </label>
+      <label className="aas-field-label">
+        Nội dung bài học
+        <textarea
+          placeholder="Nội dung bài học"
+          value={lessonForm.lessonContent}
+          onChange={(event) =>
+            setLessonForm((prev) => ({ ...prev, lessonContent: event.target.value }))
+          }
+        />
+      </label>
+      <label className="aas-field-label">
+        Tóm tắt
+        <textarea
+          placeholder="Tóm tắt"
+          value={lessonForm.summary}
+          onChange={(event) => setLessonForm((prev) => ({ ...prev, summary: event.target.value }))}
+        />
+      </label>
+      <label className="aas-field-label">
+        Thứ tự
+        <input
+          type="number"
+          placeholder="Thứ tự"
+          value={lessonForm.orderIndex}
+          onChange={(event) =>
+            setLessonForm((prev) => ({
+              ...prev,
+              orderIndex: event.target.value === '' ? '' : Number(event.target.value),
+            }))
+          }
+        />
+      </label>
       <div className="aas-actions">
         <button type="submit" disabled={saveLessonMutation.isPending || !selectedChapterId}>
           {lessonForm.id ? <Save size={14} /> : <Plus size={14} />}
@@ -1165,7 +1180,7 @@ export default function AdminAcademicStructurePage() {
     >
       <div className="module-layout-container aas-page">
         <div className="aas-page__bg" aria-hidden="true" />
-        <section className="module-page teacher-courses-page aas-page__content">
+        <section className="module-page aas-page__content">
           <div className="flex items-center justify-between gap-4 flex-wrap pb-6">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#E8E6DC] text-[#5E5D59]">
