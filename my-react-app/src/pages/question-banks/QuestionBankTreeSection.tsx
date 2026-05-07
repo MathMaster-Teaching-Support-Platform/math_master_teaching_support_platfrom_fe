@@ -5,6 +5,7 @@ import {
   QbCognitiveBadge,
   QbEmptyState,
   QbErrorState,
+  QbQuestionStatusBadge,
 } from '../../components/question-banks/qb-ui';
 import { questionBankService } from '../../services/questionBankService';
 import type {
@@ -101,7 +102,7 @@ export function QuestionBankTreeSection({
     <section className="qbts">
       <header className="qbts__header">
         <div className="qbts__header-text">
-          <h3 className="qbts__title">Ma trận theo chương × mức độ</h3>
+          <h3 className="qbts__title">Theo chương và mức độ nhận thức</h3>
           {tree && (
             <p className="qbts__subtitle">
               {tree.schoolGradeName ?? 'Chưa gắn lớp'}
@@ -141,7 +142,7 @@ export function QuestionBankTreeSection({
         <QbErrorState message={error} onRetry={() => void load()} />
       )}
 
-      {!loading && !error && tree && tree.chapters.length === 0 && (
+      {!loading && !error && tree != null && tree.chapters.length === 0 && (
         <QbEmptyState
           title="Lớp này chưa có chương"
           description="Hãy thêm chương trong phần quản lý môn học trước khi nạp câu hỏi vào ma trận."
@@ -196,6 +197,17 @@ function ChapterRow({
   onAddFromTemplate,
   onAddFromMyQuestions,
 }: Readonly<ChapterRowProps>) {
+  const [openLevels, setOpenLevels] = useState<Set<CognitiveLevelVi>>(() => new Set());
+
+  const toggleLevel = (level: CognitiveLevelVi) => {
+    setOpenLevels((prev) => {
+      const next = new Set(prev);
+      if (next.has(level)) next.delete(level);
+      else next.add(level);
+      return next;
+    });
+  };
+
   return (
     <article className="qbts-chapter">
       <header className="qbts-chapter__row">
@@ -205,7 +217,7 @@ function ChapterRow({
           onClick={onToggle}
           aria-expanded={expanded}
         >
-          {expanded ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
+          {!expanded ? <ChevronRight size={15} /> : <ChevronDown size={15} />}
           <span className="qbts-chapter__index">
             {chapter.orderIndex != null ? `Chương ${chapter.orderIndex}` : 'Chương'}
           </span>
@@ -217,85 +229,114 @@ function ChapterRow({
         </span>
       </header>
 
-      <div className="qbts-matrix">
-        {LEVEL_ORDER.map((level) => {
-          const bucket = chapter.buckets[level];
-          const count = bucket?.count ?? 0;
-          const intensity = intensityFromCount(count);
-          return (
-            <div
-              key={level}
-              className={`qbts-cell ${LEVEL_BG_CLASS[level]} qbts-cell--${intensity}`}
-              data-level={level}
-            >
-              <div className="qbts-cell__head">
-                <QbCognitiveBadge level={level} variant="short" />
-                <span className="qbts-cell__count">{count}</span>
-              </div>
-              <div className="qbts-cell__actions">
-                {onAddFromTemplate && (
-                  <button
-                    type="button"
-                    className="qbts-cell__btn"
-                    title="Sinh câu hỏi từ mẫu"
-                    onClick={() => onAddFromTemplate(chapter.chapterId, level, chapter.title)}
-                  >
-                    <Sparkles size={11} />
-                    Mẫu
-                  </button>
-                )}
-                {onAddFromMyQuestions && (
-                  <button
-                    type="button"
-                    className="qbts-cell__btn qbts-cell__btn--primary"
-                    title="Thêm câu hỏi của tôi"
-                    onClick={() =>
-                      onAddFromMyQuestions(chapter.chapterId, level, chapter.title)
-                    }
-                  >
-                    <Plus size={11} />
-                    Thêm
-                  </button>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
       {expanded && (
-        <div className="qbts-chapter__preview">
+        <section className="qbts-levels" aria-label="Mức độ nhận thức theo chương">
           {LEVEL_ORDER.map((level) => {
             const bucket = chapter.buckets[level];
+            const count = bucket?.count ?? 0;
             const questions = bucket?.questions ?? [];
-            if (questions.length === 0) return null;
+            const intensity = intensityFromCount(count);
+            const isLevelOpen = openLevels.has(level);
+
             return (
-              <div key={level} className="qbts-preview-block">
-                <div className="qbts-preview-block__head">
-                  <QbCognitiveBadge level={level} variant="long" />
-                  <span className="qbts-preview-block__count">{questions.length} câu hiển thị</span>
+              <div
+                key={level}
+                className={`qbts-level ${LEVEL_BG_CLASS[level]} qbts-level--${intensity}`}
+                data-level={level}
+              >
+                <div className="qbts-level__bar">
+                  <button
+                    type="button"
+                    className="qbts-level__toggle"
+                    onClick={() => toggleLevel(level)}
+                    aria-expanded={isLevelOpen}
+                    aria-controls={`qbts-level-panel-${chapter.chapterId}-${level}`}
+                    id={`qbts-level-trigger-${chapter.chapterId}-${level}`}
+                  >
+                    {!isLevelOpen ? (
+                      <ChevronRight size={16} className="qbts-level__chev" aria-hidden />
+                    ) : (
+                      <ChevronDown size={16} className="qbts-level__chev" aria-hidden />
+                    )}
+                    <QbCognitiveBadge level={level} variant="short" />
+                    <span className="qbts-level__long">
+                      <QbCognitiveBadge level={level} variant="long" />
+                    </span>
+                    <span className="qbts-level__count">{count}</span>
+                    <span className="qbts-level__hint">
+                      {isLevelOpen ? 'Thu gọn' : 'Xem câu hỏi'}
+                    </span>
+                  </button>
+                  <div className="qbts-level__actions">
+                    {onAddFromTemplate && (
+                      <button
+                        type="button"
+                        className="qbts-cell__btn"
+                        title="Sinh câu hỏi từ mẫu"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onAddFromTemplate(chapter.chapterId, level, chapter.title);
+                        }}
+                      >
+                        <Sparkles size={11} />
+                        Mẫu
+                      </button>
+                    )}
+                    {onAddFromMyQuestions && (
+                      <button
+                        type="button"
+                        className="qbts-cell__btn qbts-cell__btn--primary"
+                        title="Thêm câu hỏi của tôi"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onAddFromMyQuestions(chapter.chapterId, level, chapter.title);
+                        }}
+                      >
+                        <Plus size={11} />
+                        Thêm
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <ul className="qbts-preview-list">
-                  {questions.slice(0, 5).map((q) => (
-                    <li key={q.id} className="qbts-preview-item">
-                      {q.questionType && (
-                        <span className="qbts-preview-type">
-                          {QUESTION_TYPE_LABEL[q.questionType] ?? q.questionType}
-                        </span>
-                      )}
-                      <MathText text={q.questionText.slice(0, 140)} />
-                    </li>
-                  ))}
-                  {questions.length > 5 && (
-                    <li className="qbts-preview-item qbts-preview-item--more">
-                      và {questions.length - 5} câu khác…
-                    </li>
-                  )}
-                </ul>
+
+                {isLevelOpen && (
+                  <section
+                    className="qbts-level__panel"
+                    id={`qbts-level-panel-${chapter.chapterId}-${level}`}
+                    aria-labelledby={`qbts-level-trigger-${chapter.chapterId}-${level}`}
+                  >
+                    {questions.length === 0 ? (
+                      <p className="qbts-level__empty">Chưa có câu hỏi ở mức này.</p>
+                    ) : (
+                      <ul className="qbts-level__questions">
+                        {questions.map((q) => (
+                          <li key={q.id} className="qbts-level__question">
+                            <div className="qbts-level__question-meta">
+                              {q.questionType && (
+                                <span className="qbts-preview-type">
+                                  {QUESTION_TYPE_LABEL[q.questionType] ?? q.questionType}
+                                </span>
+                              )}
+                              {q.questionStatus ? (
+                                <QbQuestionStatusBadge status={q.questionStatus} />
+                              ) : null}
+                              <span className="qbts-level__qid" title={q.id}>
+                                #{q.id.slice(0, 8)}…
+                              </span>
+                            </div>
+                            <div className="qbts-level__question-body">
+                              <MathText text={q.questionText} />
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </section>
+                )}
               </div>
             );
           })}
-        </div>
+        </section>
       )}
     </article>
   );
