@@ -9,10 +9,19 @@
   background: #f5f4ed;
 }
 
+/* Override .module-layout-container .module-page (specificity 0,2,0) to stay full-width */
+.module-layout-container .aas-page__content.module-page {
+  max-width: none;
+  width: 100%;
+  margin: 0;
+  padding: 1.25rem 1.5rem 1.75rem;
+}
+
 .aas-page__content {
   position: relative;
   z-index: 1;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 2rem;
   padding-top: 0;
 }
@@ -20,7 +29,7 @@
 .aas-layout {
   display: grid;
   gap: 1.5rem;
-  grid-template-columns: minmax(340px, 1fr) minmax(420px, 1.2fr);
+  grid-template-columns: minmax(320px, 1fr) minmax(380px, 1.3fr);
 }
 
 .aas-tree-shell,
