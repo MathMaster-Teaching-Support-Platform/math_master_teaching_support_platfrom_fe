@@ -151,38 +151,37 @@ export default function AdminAcademicStructurePage() {
     summary: '',
     orderIndex: '',
     durationMinutes: '',
-    difficulty: 'EASY',
+    difficulty: 'BEGINNER',
     status: 'DRAFT',
     chapterId: '',
   });
 
   const gradesQuery = useQuery({
     queryKey: ['admin-academic', 'grades'],
-    queryFn: () => AcademicStructureService.getSchoolGrades(false),
+    queryFn: () => AcademicStructureService.getSchoolGrades(),
   });
 
   const subjectsQuery = useQuery({
     queryKey: ['admin-academic', 'subjects', selectedGradeId],
-    queryFn: () => AcademicStructureService.getSubjectsBySchoolGrade(selectedGradeId),
+    queryFn: () => AcademicStructureService.getAllSubjectsBySchoolGrade(selectedGradeId),
     enabled: Boolean(selectedGradeId),
   });
 
   const chaptersQuery = useQuery({
     queryKey: ['admin-academic', 'chapters', selectedSubjectId],
-    queryFn: () => AcademicStructureService.getChaptersBySubject(selectedSubjectId),
+    queryFn: () => AcademicStructureService.getAllChaptersBySubject(selectedSubjectId),
     enabled: Boolean(selectedSubjectId),
   });
 
   const lessonsQuery = useQuery({
     queryKey: ['admin-academic', 'lessons', selectedChapterId, debouncedGlobalSearch],
-    queryFn: () =>
-      AcademicStructureService.getLessonsByChapter(selectedChapterId, debouncedGlobalSearch),
+    queryFn: () => AcademicStructureService.getAllLessonsByChapter(selectedChapterId),
     enabled: Boolean(selectedChapterId),
   });
 
   const lessonsForDeleteQuery = useQuery({
     queryKey: ['admin-academic', 'lessons', selectedChapterId, '__all_for_delete__'],
-    queryFn: () => AcademicStructureService.getLessonsByChapter(selectedChapterId),
+    queryFn: () => AcademicStructureService.getAllLessonsByChapter(selectedChapterId),
     enabled: Boolean(selectedChapterId),
   });
 
@@ -193,8 +192,8 @@ export default function AdminAcademicStructurePage() {
   const allChapterLessons = lessonsForDeleteQuery.data?.result ?? [];
 
   const hasActiveSubjects = subjects.some((subject) => subject.isActive !== false);
-  const hasChapters = chapters.length > 0;
-  const hasLessons = allChapterLessons.length > 0;
+  const hasChapters = chapters.some((chapter) => !chapter.deleted);
+  const hasLessons = allChapterLessons.some((lesson) => !lesson.deleted);
 
   const selectedGrade = useMemo(
     () => grades.find((grade) => grade.id === selectedGradeId),
@@ -334,7 +333,7 @@ export default function AdminAcademicStructurePage() {
         summary: '',
         orderIndex: '',
         durationMinutes: '',
-        difficulty: 'EASY',
+        difficulty: 'BEGINNER',
         status: 'DRAFT',
         chapterId: selectedChapterId,
       });
@@ -349,7 +348,7 @@ export default function AdminAcademicStructurePage() {
       summary: selectedLesson.summary ?? '',
       orderIndex: selectedLesson.orderIndex ?? '',
       durationMinutes: selectedLesson.durationMinutes ?? '',
-      difficulty: selectedLesson.difficulty ?? 'EASY',
+      difficulty: selectedLesson.difficulty ?? 'BEGINNER',
       status: selectedLesson.status ?? 'DRAFT',
       chapterId: selectedLesson.chapterId,
     });
@@ -550,16 +549,23 @@ export default function AdminAcademicStructurePage() {
     mutationFn: (gradeId: string) => AcademicStructureService.deleteSchoolGrade(gradeId),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin-academic', 'grades'] });
-      setSelectedGradeId('');
-      setSelectedSubjectId('');
-      setSelectedChapterId('');
-      setSelectedLessonId('');
       showToast({ type: 'success', message: 'Đã vô hiệu hóa chương trình' });
+    },
+    onError: (error) => {
+      showToast({ type: 'error', message: mapDeleteConstraintError(error) });
+    },
+  });
+
+  const activateGradeMutation = useMutation({
+    mutationFn: (gradeId: string) => AcademicStructureService.activateSchoolGrade(gradeId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['admin-academic', 'grades'] });
+      showToast({ type: 'success', message: 'Đã kích hoạt lại chương trình' });
     },
     onError: (error) => {
       showToast({
         type: 'error',
-        message: mapDeleteConstraintError(error),
+        message: error instanceof Error ? error.message : 'Không thể kích hoạt chương trình',
       });
     },
   });
@@ -570,15 +576,25 @@ export default function AdminAcademicStructurePage() {
       void queryClient.invalidateQueries({
         queryKey: ['admin-academic', 'subjects', selectedGradeId],
       });
-      setSelectedSubjectId('');
-      setSelectedChapterId('');
-      setSelectedLessonId('');
       showToast({ type: 'success', message: 'Đã vô hiệu hóa môn học' });
+    },
+    onError: (error) => {
+      showToast({ type: 'error', message: mapDeleteConstraintError(error) });
+    },
+  });
+
+  const activateSubjectMutation = useMutation({
+    mutationFn: (subjectId: string) => AcademicStructureService.activateSubject(subjectId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ['admin-academic', 'subjects', selectedGradeId],
+      });
+      showToast({ type: 'success', message: 'Đã kích hoạt lại môn học' });
     },
     onError: (error) => {
       showToast({
         type: 'error',
-        message: mapDeleteConstraintError(error),
+        message: error instanceof Error ? error.message : 'Không thể kích hoạt môn học',
       });
     },
   });
@@ -589,14 +605,25 @@ export default function AdminAcademicStructurePage() {
       void queryClient.invalidateQueries({
         queryKey: ['admin-academic', 'chapters', selectedSubjectId],
       });
-      setSelectedChapterId('');
-      setSelectedLessonId('');
       showToast({ type: 'success', message: 'Đã vô hiệu hóa chương' });
+    },
+    onError: (error) => {
+      showToast({ type: 'error', message: mapDeleteConstraintError(error) });
+    },
+  });
+
+  const restoreChapterMutation = useMutation({
+    mutationFn: (chapterId: string) => AcademicStructureService.restoreChapter(chapterId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ['admin-academic', 'chapters', selectedSubjectId],
+      });
+      showToast({ type: 'success', message: 'Đã khôi phục chương' });
     },
     onError: (error) => {
       showToast({
         type: 'error',
-        message: mapDeleteConstraintError(error),
+        message: error instanceof Error ? error.message : 'Không thể khôi phục chương',
       });
     },
   });
@@ -605,9 +632,8 @@ export default function AdminAcademicStructurePage() {
     mutationFn: (lessonId: string) => AcademicStructureService.deleteLesson(lessonId),
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: ['admin-academic', 'lessons', selectedChapterId, debouncedGlobalSearch],
+        queryKey: ['admin-academic', 'lessons', selectedChapterId],
       });
-      setSelectedLessonId('');
       showToast({ type: 'success', message: 'Đã vô hiệu hóa bài học' });
     },
     onError: (error) => {
@@ -618,39 +644,21 @@ export default function AdminAcademicStructurePage() {
     },
   });
 
-  const resetGradeForm = () => {
-    setSelectedGradeId('');
-    setGradeForm({ id: '', gradeLevel: '', name: '', description: '', active: true });
-  };
-
-  const resetSubjectForm = () => {
-    setSelectedSubjectId('');
-    setSubjectForm({
-      id: '',
-      name: '',
-      description: '',
-      gradeMin: '',
-      gradeMax: '',
-      isActive: true,
-      schoolGradeId: selectedGradeId,
-    });
-  };
-
-  const resetLessonForm = () => {
-    setSelectedLessonId('');
-    setLessonForm({
-      id: '',
-      title: '',
-      learningObjectives: '',
-      lessonContent: '',
-      summary: '',
-      orderIndex: '',
-      durationMinutes: '',
-      difficulty: 'EASY',
-      status: 'DRAFT',
-      chapterId: selectedChapterId,
-    });
-  };
+  const restoreLessonMutation = useMutation({
+    mutationFn: (lessonId: string) => AcademicStructureService.restoreLesson(lessonId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ['admin-academic', 'lessons', selectedChapterId],
+      });
+      showToast({ type: 'success', message: 'Đã khôi phục bài học' });
+    },
+    onError: (error) => {
+      showToast({
+        type: 'error',
+        message: error instanceof Error ? error.message : 'Không thể khôi phục bài học',
+      });
+    },
+  });
 
   const handleDeleteGrade = () => {
     if (!selectedGradeId) return;
@@ -850,35 +858,32 @@ export default function AdminAcademicStructurePage() {
           {gradeForm.id ? <Save size={14} /> : <Plus size={14} />}
           {gradeForm.id ? 'Lưu cập nhật' : 'Thêm mới'}
         </button>
-        {gradeForm.id ? (
-          <button type="button" className="ghost" onClick={resetGradeForm}>
-            Tạo chương trình mới
-          </button>
-        ) : (
+        {gradeForm.id && !gradeForm.active && (
           <button
             type="button"
             className="ghost"
-            onClick={() =>
-              setGradeForm({ id: '', gradeLevel: '', name: '', description: '', active: true })
-            }
+            disabled={activateGradeMutation.isPending}
+            onClick={() => activateGradeMutation.mutate(selectedGradeId)}
           >
-            Xóa trắng form
+            Kích hoạt lại
           </button>
         )}
-        <button
-          type="button"
-          className="danger"
-          onClick={handleDeleteGrade}
-          disabled={
-            !selectedGradeId ||
-            deleteGradeMutation.isPending ||
-            subjectsQuery.isLoading ||
-            hasActiveSubjects
-          }
-        >
-          <Trash2 size={14} />
-          Vô hiệu hóa
-        </button>
+        {gradeForm.id && gradeForm.active && (
+          <button
+            type="button"
+            className="danger"
+            onClick={handleDeleteGrade}
+            disabled={
+              !selectedGradeId ||
+              deleteGradeMutation.isPending ||
+              subjectsQuery.isLoading ||
+              hasActiveSubjects
+            }
+          >
+            <Trash2 size={14} />
+            Vô hiệu hóa
+          </button>
+        )}
       </div>
       {selectedGradeId && hasActiveSubjects && (
         <p className="aas-helper">
@@ -964,43 +969,32 @@ export default function AdminAcademicStructurePage() {
           {subjectForm.id ? <Save size={14} /> : <Plus size={14} />}
           {subjectForm.id ? 'Lưu cập nhật' : 'Thêm mới'}
         </button>
-        {subjectForm.id ? (
-          <button type="button" className="ghost" onClick={resetSubjectForm}>
-            Tạo môn học mới
-          </button>
-        ) : (
+        {subjectForm.id && !subjectForm.isActive && (
           <button
             type="button"
             className="ghost"
-            onClick={() =>
-              setSubjectForm({
-                id: '',
-                name: '',
-                description: '',
-                gradeMin: '',
-                gradeMax: '',
-                isActive: true,
-                schoolGradeId: selectedGradeId,
-              })
-            }
+            disabled={activateSubjectMutation.isPending}
+            onClick={() => activateSubjectMutation.mutate(selectedSubjectId)}
           >
-            Xóa trắng form
+            Kích hoạt lại
           </button>
         )}
-        <button
-          type="button"
-          className="danger"
-          onClick={handleDeleteSubject}
-          disabled={
-            !selectedSubjectId ||
-            deleteSubjectMutation.isPending ||
-            chaptersQuery.isLoading ||
-            hasChapters
-          }
-        >
-          <Trash2 size={14} />
-          Vô hiệu hóa
-        </button>
+        {subjectForm.id && subjectForm.isActive && (
+          <button
+            type="button"
+            className="danger"
+            onClick={handleDeleteSubject}
+            disabled={
+              !selectedSubjectId ||
+              deleteSubjectMutation.isPending ||
+              chaptersQuery.isLoading ||
+              hasChapters
+            }
+          >
+            <Trash2 size={14} />
+            Vô hiệu hóa
+          </button>
+        )}
       </div>
       {selectedSubjectId && hasChapters && (
         <p className="aas-helper">Không thể vô hiệu hóa vì môn học vẫn còn chương.</p>
@@ -1046,20 +1040,31 @@ export default function AdminAcademicStructurePage() {
           {chapterForm.id ? <Save size={14} /> : <Plus size={14} />}
           {chapterForm.id ? 'Lưu cập nhật' : 'Thêm mới'}
         </button>
-        <button
-          type="button"
-          className="danger"
-          onClick={handleDeleteChapter}
-          disabled={
-            !selectedChapterId ||
-            deleteChapterMutation.isPending ||
-            lessonsForDeleteQuery.isLoading ||
-            hasLessons
-          }
-        >
-          <Trash2 size={14} />
-          Vô hiệu hóa
-        </button>
+        {selectedChapter?.deleted ? (
+          <button
+            type="button"
+            className="ghost"
+            disabled={restoreChapterMutation.isPending}
+            onClick={() => restoreChapterMutation.mutate(selectedChapterId)}
+          >
+            Khôi phục
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="danger"
+            onClick={handleDeleteChapter}
+            disabled={
+              !selectedChapterId ||
+              deleteChapterMutation.isPending ||
+              lessonsForDeleteQuery.isLoading ||
+              hasLessons
+            }
+          >
+            <Trash2 size={14} />
+            Vô hiệu hóa
+          </button>
+        )}
       </div>
       {selectedChapterId && hasLessons && (
         <p className="aas-helper">Không thể vô hiệu hóa chương vì vẫn còn bài học.</p>
@@ -1130,41 +1135,26 @@ export default function AdminAcademicStructurePage() {
           {lessonForm.id ? <Save size={14} /> : <Plus size={14} />}
           {lessonForm.id ? 'Lưu cập nhật' : 'Thêm mới'}
         </button>
-        {lessonForm.id ? (
-          <button type="button" className="ghost" onClick={resetLessonForm}>
-            Tạo bài học mới
+        {selectedLesson?.deleted ? (
+          <button
+            type="button"
+            className="ghost"
+            disabled={restoreLessonMutation.isPending}
+            onClick={() => restoreLessonMutation.mutate(selectedLessonId)}
+          >
+            Khôi phục
           </button>
         ) : (
           <button
             type="button"
-            className="ghost"
-            onClick={() =>
-              setLessonForm({
-                id: '',
-                title: '',
-                learningObjectives: '',
-                lessonContent: '',
-                summary: '',
-                orderIndex: '',
-                durationMinutes: '',
-                difficulty: 'EASY',
-                status: 'DRAFT',
-                chapterId: selectedChapterId,
-              })
-            }
+            className="danger"
+            onClick={handleDeleteLesson}
+            disabled={!selectedLessonId || deleteLessonMutation.isPending}
           >
-            Xóa trắng form
+            <Trash2 size={14} />
+            Vô hiệu hóa
           </button>
         )}
-        <button
-          type="button"
-          className="danger"
-          onClick={handleDeleteLesson}
-          disabled={!selectedLessonId || deleteLessonMutation.isPending}
-        >
-          <Trash2 size={14} />
-          Vô hiệu hóa
-        </button>
       </div>
     </form>
   );
@@ -1299,7 +1289,7 @@ export default function AdminAcademicStructurePage() {
                       <div className="aas-node-row">
                         <button
                           type="button"
-                          className={`aas-node-btn${gradeActive ? ' is-active' : ''}`}
+                          className={`aas-node-btn${gradeActive ? ' is-active' : ''}${grade.active === false ? ' is-inactive' : ''}`}
                           onClick={() => {
                             setExpandedGradeIds((prev) => toggleExpanded(prev, grade.id));
                             setSelectedGradeId(grade.id);
@@ -1311,6 +1301,9 @@ export default function AdminAcademicStructurePage() {
                           {gradeOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                           <GraduationCap size={14} />
                           <span>{gradeLabel}</span>
+                          {grade.active === false && (
+                            <span className="aas-inactive-badge">Tắt</span>
+                          )}
                         </button>
                         <div className="aas-node-actions">
                           <button
@@ -1469,7 +1462,7 @@ export default function AdminAcademicStructurePage() {
                                             <div className="aas-node-row">
                                               <button
                                                 type="button"
-                                                className={`aas-node-btn${chapterActive ? ' is-active' : ''}`}
+                                                className={`aas-node-btn${chapterActive ? ' is-active' : ''}${chapter.deleted ? ' is-inactive' : ''}`}
                                                 onClick={() => {
                                                   setExpandedChapterIds((prev) =>
                                                     toggleExpanded(prev, chapter.id)
@@ -1485,6 +1478,9 @@ export default function AdminAcademicStructurePage() {
                                                 )}
                                                 <FolderTree size={14} />
                                                 <span>{chapterLabel}</span>
+                                                {chapter.deleted && (
+                                                  <span className="aas-inactive-badge">Tắt</span>
+                                                )}
                                               </button>
                                               <div className="aas-node-actions">
                                                 <button
@@ -1550,13 +1546,18 @@ export default function AdminAcademicStructurePage() {
                                                     <div className="aas-node-row">
                                                       <button
                                                         type="button"
-                                                        className={`aas-node-btn${selectedLessonId === lesson.id ? ' is-active' : ''}`}
+                                                        className={`aas-node-btn${selectedLessonId === lesson.id ? ' is-active' : ''}${lesson.deleted ? ' is-inactive' : ''}`}
                                                         onClick={() =>
                                                           setSelectedLessonId(lesson.id)
                                                         }
                                                       >
                                                         <BookText size={14} />
                                                         <span>{getLessonTreeLabel(lesson)}</span>
+                                                        {lesson.deleted && (
+                                                          <span className="aas-inactive-badge">
+                                                            Tắt
+                                                          </span>
+                                                        )}
                                                       </button>
                                                       <div className="aas-node-actions">
                                                         <button
