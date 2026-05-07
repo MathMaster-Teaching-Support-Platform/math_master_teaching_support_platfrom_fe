@@ -1,36 +1,29 @@
 import { useQuery } from '@tanstack/react-query';
 import {
   AlertTriangle,
+  ArrowRight,
   BarChart2,
   BookOpen,
-  CheckCircle2,
   ChevronRight,
   Circle,
-  Clock,
-  CreditCard,
   DollarSign,
   Download,
-  Eye,
   GraduationCap,
   LayoutDashboard,
   TrendingUp,
   Users,
-  XCircle,
 } from 'lucide-react';
 import React from 'react';
+import { Link } from 'react-router-dom';
 import DashboardLayout from '../../../components/layout/DashboardLayout/DashboardLayout';
 import {
   AdminDashboardService,
-  type AdminTransaction,
   type AdminUserInfo,
   type DashboardStats,
-  type MonthlyRevenue,
-  type QuickStats,
   type RecentUser,
   type SystemService,
 } from '../../../services/api/admin-dashboard.service';
 import { TeacherProfileService } from '../../../services/api/teacher-profile.service';
-import './AdminDashboard.css';
 
 function applyApiResult<T>(
   settled: PromiseSettledResult<{ code: number; result: T }>,
@@ -45,18 +38,14 @@ const AdminDashboard: React.FC = () => {
   const dashboardQuery = useQuery({
     queryKey: ['admin-dashboard', 'overview'],
     queryFn: async () => {
-      const [myInfo, unread, stats, users, pending, txns, revenue, quick, sysStatus] =
-        await Promise.allSettled([
-          AdminDashboardService.getMyInfo(),
-          AdminDashboardService.getUnreadNotificationCount(),
-          AdminDashboardService.getDashboardStats(),
-          AdminDashboardService.getRecentUsers(0, 10),
-          TeacherProfileService.countPendingProfiles(),
-          AdminDashboardService.getRecentTransactions(0, 5),
-          AdminDashboardService.getRevenueByMonth(),
-          AdminDashboardService.getQuickStats(),
-          AdminDashboardService.getSystemStatus(),
-        ]);
+      const [myInfo, unread, stats, users, pending, sysStatus] = await Promise.allSettled([
+        AdminDashboardService.getMyInfo(),
+        AdminDashboardService.getUnreadNotificationCount(),
+        AdminDashboardService.getDashboardStats(),
+        AdminDashboardService.getRecentUsers(0, 10),
+        TeacherProfileService.countPendingProfiles(),
+        AdminDashboardService.getSystemStatus(),
+      ]);
 
       const data: {
         adminUser: AdminUserInfo | null;
@@ -64,9 +53,6 @@ const AdminDashboard: React.FC = () => {
         dashboardStats: DashboardStats | null;
         recentUsers: RecentUser[];
         pendingProfiles: number;
-        transactions: AdminTransaction[];
-        revenueMonthly: MonthlyRevenue[];
-        quickStats: QuickStats | null;
         systemServices: SystemService[];
         fetchError: string | null;
       } = {
@@ -75,9 +61,6 @@ const AdminDashboard: React.FC = () => {
         dashboardStats: null,
         recentUsers: [],
         pendingProfiles: 0,
-        transactions: [],
-        revenueMonthly: [],
-        quickStats: null,
         systemServices: [],
         fetchError: null,
       };
@@ -96,15 +79,6 @@ const AdminDashboard: React.FC = () => {
       applyApiResult(pending, (val) => {
         data.pendingProfiles = val;
       });
-      applyApiResult(txns, (page) => {
-        data.transactions = page.content ?? [];
-      });
-      applyApiResult(revenue, (val) => {
-        data.revenueMonthly = val.monthly;
-      });
-      applyApiResult(quick, (val) => {
-        data.quickStats = val;
-      });
       applyApiResult(sysStatus, (val) => {
         data.systemServices = val.services;
       });
@@ -120,9 +94,6 @@ const AdminDashboard: React.FC = () => {
   const dashboardStats = dashboardQuery.data?.dashboardStats ?? null;
   const recentUsers = dashboardQuery.data?.recentUsers ?? [];
   const pendingProfiles = dashboardQuery.data?.pendingProfiles ?? 0;
-  const transactions = dashboardQuery.data?.transactions ?? [];
-  const revenueMonthly = dashboardQuery.data?.revenueMonthly ?? [];
-  const quickStats = dashboardQuery.data?.quickStats ?? null;
   const systemServices = dashboardQuery.data?.systemServices ?? [];
 
   const formatRevenue = (amount: number): string => {
@@ -141,8 +112,8 @@ const AdminDashboard: React.FC = () => {
           value: dashboardStats.totalUsers.toLocaleString('vi-VN'),
           trend: formatGrowth(dashboardStats.totalUsersGrowthPercent),
           trendPositive: dashboardStats.totalUsersGrowthPercent >= 0,
-          iconBg: 'bg-[#FDF1EC]',
-          iconColor: 'text-[#A95536]',
+          bg: 'bg-[#EEF2FF]',
+          color: 'text-[#4F7EF7]',
         },
         {
           Icon: DollarSign,
@@ -150,8 +121,8 @@ const AdminDashboard: React.FC = () => {
           value: formatRevenue(dashboardStats.monthlyRevenue),
           trend: formatGrowth(dashboardStats.monthlyRevenueGrowthPercent),
           trendPositive: dashboardStats.monthlyRevenueGrowthPercent >= 0,
-          iconBg: 'bg-[#F0FDF4]',
-          iconColor: 'text-[#16A34A]',
+          bg: 'bg-[#ECFDF5]',
+          color: 'text-[#2EAD7A]',
         },
         {
           Icon: BookOpen,
@@ -159,8 +130,8 @@ const AdminDashboard: React.FC = () => {
           value: dashboardStats.activeEnrollments.toLocaleString('vi-VN'),
           trend: formatGrowth(dashboardStats.activeEnrollmentsGrowthPercent),
           trendPositive: dashboardStats.activeEnrollmentsGrowthPercent >= 0,
-          iconBg: 'bg-[#FEF3E8]',
-          iconColor: 'text-[#A16207]',
+          bg: 'bg-[#FFF7ED]',
+          color: 'text-[#E07B39]',
         },
         {
           Icon: BarChart2,
@@ -168,14 +139,11 @@ const AdminDashboard: React.FC = () => {
           value: dashboardStats.totalTransactions.toLocaleString('vi-VN'),
           trend: formatGrowth(dashboardStats.totalTransactionsGrowthPercent),
           trendPositive: dashboardStats.totalTransactionsGrowthPercent >= 0,
-          iconBg: 'bg-[#FFFBEB]',
-          iconColor: 'text-[#D97706]',
+          bg: 'bg-[#F5F3FF]',
+          color: 'text-[#9B6FE0]',
         },
       ]
     : [];
-
-  const revenueMax =
-    revenueMonthly.length > 0 ? Math.max(...revenueMonthly.map((m) => m.revenue), 1) : 1;
 
   const getUserStatusLabel = (status: RecentUser['status']): string => {
     if (status === 'ACTIVE') return 'Hoạt động';
@@ -184,34 +152,16 @@ const AdminDashboard: React.FC = () => {
     return 'Đã xóa';
   };
 
-  const getTransactionStatusLabel = (status: AdminTransaction['status']): string => {
-    if (status === 'completed') return 'Thành công';
-    if (status === 'pending') return 'Đang xử lý';
-    return 'Thất bại';
-  };
-
   const getUserStatusClass = (status: RecentUser['status']) => {
-    if (status === 'ACTIVE') return 'bg-[#F0FDF4] text-[#166534]';
-    if (status === 'BANNED') return 'bg-[#FEF2F2] text-[#991B1B]';
-    return 'bg-[#F5F4ED] text-[#6B7280]';
-  };
-
-  const getTransactionStatusClass = (status: AdminTransaction['status']) => {
-    if (status === 'completed') return 'bg-[#F0FDF4] text-[#166534]';
-    if (status === 'pending') return 'bg-[#FFFBEB] text-[#92400E]';
-    return 'bg-[#FEF2F2] text-[#991B1B]';
-  };
-
-  const getTransactionStatusIcon = (status: AdminTransaction['status']) => {
-    if (status === 'completed') return <CheckCircle2 className="w-3 h-3" />;
-    if (status === 'pending') return <Clock className="w-3 h-3" />;
-    return <XCircle className="w-3 h-3" />;
+    if (status === 'ACTIVE') return 'bg-emerald-50 text-emerald-700';
+    if (status === 'BANNED') return 'bg-red-50 text-red-700';
+    return 'bg-[#F5F4ED] text-[#87867F]';
   };
 
   const getServiceClass = (status: SystemService['status']) => {
-    if (status === 'active') return { dot: 'bg-[#16A34A]', badge: 'bg-[#F0FDF4] text-[#166534]' };
-    if (status === 'warning') return { dot: 'bg-[#D97706]', badge: 'bg-[#FFFBEB] text-[#92400E]' };
-    return { dot: 'bg-[#DC2626]', badge: 'bg-[#FEF2F2] text-[#991B1B]' };
+    if (status === 'active') return { dot: 'bg-emerald-500', badge: 'bg-emerald-50 text-emerald-700' };
+    if (status === 'warning') return { dot: 'bg-amber-500', badge: 'bg-amber-50 text-amber-700' };
+    return { dot: 'bg-red-500', badge: 'bg-red-50 text-red-700' };
   };
 
   const getServiceLabel = (status: SystemService['status']) => {
@@ -223,13 +173,13 @@ const AdminDashboard: React.FC = () => {
   const renderUsersTable = () => {
     if (loading)
       return (
-        <div className="flex items-center justify-center py-10 text-[#6B7280] text-[14px]">
+        <div className="flex items-center justify-center py-12 font-[Be_Vietnam_Pro] text-[13px] text-[#87867F]">
           Đang tải...
         </div>
       );
     if (recentUsers.length === 0)
       return (
-        <div className="flex items-center justify-center py-10 text-[#6B7280] text-[14px]">
+        <div className="flex items-center justify-center py-12 font-[Be_Vietnam_Pro] text-[13px] text-[#87867F]">
           Chưa có người dùng nào.
         </div>
       );
@@ -237,17 +187,17 @@ const AdminDashboard: React.FC = () => {
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
           <thead>
-            <tr className="border-b border-[#E8E6DC]">
-              <th className="text-left px-4 py-3 text-[11px] font-semibold tracking-[0.08em] uppercase text-[#6B7280]">
+            <tr className="border-b border-[#F0EEE6] bg-[#FAF9F5]">
+              <th className="text-left px-5 py-3 font-[Be_Vietnam_Pro] text-[11px] font-semibold uppercase tracking-wide text-[#87867F]">
                 Tên
               </th>
-              <th className="text-left px-4 py-3 text-[11px] font-semibold tracking-[0.08em] uppercase text-[#6B7280]">
+              <th className="text-left px-5 py-3 font-[Be_Vietnam_Pro] text-[11px] font-semibold uppercase tracking-wide text-[#87867F]">
                 Vai trò
               </th>
-              <th className="text-left px-4 py-3 text-[11px] font-semibold tracking-[0.08em] uppercase text-[#6B7280]">
+              <th className="text-left px-5 py-3 font-[Be_Vietnam_Pro] text-[11px] font-semibold uppercase tracking-wide text-[#87867F]">
                 Ngày tham gia
               </th>
-              <th className="text-left px-4 py-3 text-[11px] font-semibold tracking-[0.08em] uppercase text-[#6B7280]">
+              <th className="text-left px-5 py-3 font-[Be_Vietnam_Pro] text-[11px] font-semibold uppercase tracking-wide text-[#87867F]">
                 Trạng thái
               </th>
             </tr>
@@ -256,39 +206,39 @@ const AdminDashboard: React.FC = () => {
             {recentUsers.map((user) => (
               <tr
                 key={user.id}
-                className="border-b border-[#F1EFE7] hover:bg-[#FAF9F5] transition-colors duration-150"
+                className="border-b border-[#F0EEE6] hover:bg-[#FAF9F5]/80 transition-colors duration-150"
               >
-                <td className="px-4 py-3">
+                <td className="px-5 py-3.5">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-[#FDF1EC] text-[#A95536] flex items-center justify-center font-bold text-[14px] shrink-0">
+                    <div className="w-9 h-9 rounded-full bg-[#FFF7ED] text-[#C96442] flex items-center justify-center font-[Playfair_Display] font-semibold text-[14px] shrink-0">
                       {(user.fullName ?? user.email).charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <div className="text-[14px] font-semibold text-[#0D0F1A]">
+                      <div className="font-[Be_Vietnam_Pro] text-[14px] font-semibold text-[#141413]">
                         {user.fullName ?? '—'}
                       </div>
-                      <div className="text-[12px] text-[#6B7280]">{user.email}</div>
+                      <div className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">{user.email}</div>
                     </div>
                   </div>
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-5 py-3.5">
                   <span
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-[Be_Vietnam_Pro] text-[11px] font-semibold ${
                       (user.roles[0] ?? '').toUpperCase() === 'TEACHER'
-                        ? 'bg-[#FDF1EC] text-[#A95536]'
-                        : 'bg-[#F0FDF4] text-[#166534]'
+                        ? 'bg-[#FFF7ED] text-[#C96442]'
+                        : 'bg-emerald-50 text-emerald-700'
                     }`}
                   >
                     <Circle className="w-1.5 h-1.5 fill-current" />
                     {(user.roles[0] ?? '').toUpperCase() === 'TEACHER' ? 'Giáo viên' : 'Học sinh'}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-[14px] text-[#6B7280]">
+                <td className="px-5 py-3.5 font-[Be_Vietnam_Pro] text-[13px] text-[#5E5D59]">
                   {new Date(user.createdDate).toLocaleDateString('vi-VN')}
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-5 py-3.5">
                   <span
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${getUserStatusClass(user.status)}`}
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-[Be_Vietnam_Pro] text-[11px] font-semibold ${getUserStatusClass(user.status)}`}
                   >
                     <Circle className="w-1.5 h-1.5 fill-current" />
                     {getUserStatusLabel(user.status)}
@@ -302,119 +252,36 @@ const AdminDashboard: React.FC = () => {
     );
   };
 
-  const renderTransactionsTable = () => {
-    if (loading)
-      return (
-        <div className="flex items-center justify-center py-10 text-[#6B7280] text-[14px]">
-          Đang tải...
-        </div>
-      );
-    if (!transactions || transactions.length === 0)
-      return (
-        <div className="flex items-center justify-center py-10 text-[#6B7280] text-[14px]">
-          Chưa có giao dịch nào.
-        </div>
-      );
-    return (
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="border-b border-[#E8E6DC]">
-              {[
-                'ID',
-                'Người dùng',
-                'Mô tả',
-                'Số tiền',
-                'Phương thức',
-                'Trạng thái',
-                'Thời gian',
-                '',
-              ].map((h) => (
-                <th
-                  key={h}
-                  className="text-left px-4 py-3 text-[11px] font-semibold tracking-[0.08em] uppercase text-[#6B7280]"
-                >
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {transactions.map((transaction) => (
-              <tr
-                key={transaction.id}
-                className="border-b border-[#F1EFE7] hover:bg-[#FAF9F5] transition-colors duration-150"
-              >
-                <td className="px-4 py-3 text-[13px] font-mono text-[#6B7280]">
-                  {transaction.id.slice(0, 8)}…
-                </td>
-                <td className="px-4 py-3 text-[14px] text-[#0D0F1A] font-medium">
-                  {transaction.userName}
-                </td>
-                <td className="px-4 py-3 text-[14px] text-[#6B7280]">{transaction.planName}</td>
-                <td className="px-4 py-3 text-[14px] font-semibold text-[#0D0F1A]">
-                  {transaction.amount.toLocaleString('vi-VN')}đ
-                </td>
-                <td className="px-4 py-3">
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#F5F4ED] text-[#0D0F1A] text-[11px] font-semibold">
-                    <CreditCard className="w-3 h-3" />
-                    {transaction.paymentMethod === 'payos' ? 'PayOS' : transaction.paymentMethod}
-                  </span>
-                </td>
-                <td className="px-4 py-3">
-                  <span
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${getTransactionStatusClass(transaction.status)}`}
-                  >
-                    {getTransactionStatusIcon(transaction.status)}
-                    {getTransactionStatusLabel(transaction.status)}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-[13px] text-[#6B7280]">
-                  {new Date(transaction.createdAt).toLocaleString('vi-VN')}
-                </td>
-                <td className="px-4 py-3">
-                  <button
-                    className="w-8 h-8 rounded-lg flex items-center justify-center text-[#6B7280] hover:bg-[#FDF1EC] hover:text-[#C96442] transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-[#C96442] focus-visible:ring-offset-2"
-                    title="Chi tiết"
-                    aria-label="Xem chi tiết giao dịch"
-                  >
-                    <Eye className="w-4 h-4" />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    );
-  };
-
   const renderSystemStatus = () => {
     if (loading)
       return (
-        <div className="flex items-center justify-center py-10 text-[#6B7280] text-[14px]">
+        <div className="flex items-center justify-center py-12 font-[Be_Vietnam_Pro] text-[13px] text-[#87867F]">
           Đang tải...
         </div>
       );
     if (systemServices.length === 0)
       return (
-        <div className="flex items-center justify-center py-10 text-[#6B7280] text-[14px]">
+        <div className="flex items-center justify-center py-12 font-[Be_Vietnam_Pro] text-[13px] text-[#87867F]">
           Không có dữ liệu trạng thái.
         </div>
       );
     return (
-      <div className="divide-y divide-[#F1F3F8]">
+      <div className="divide-y divide-[#F0EEE6]">
         {systemServices.map((service) => (
           <div key={service.name} className="flex items-center gap-4 px-5 py-3.5">
             <div
               className={`w-2.5 h-2.5 rounded-full shrink-0 ${getServiceClass(service.status).dot}`}
             />
             <div className="flex-1 min-w-0">
-              <div className="text-[14px] font-semibold text-[#0D0F1A]">{service.name}</div>
-              <div className="text-[12px] text-[#6B7280]">{service.description}</div>
+              <div className="font-[Be_Vietnam_Pro] text-[14px] font-semibold text-[#141413]">
+                {service.name}
+              </div>
+              <div className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">
+                {service.description}
+              </div>
             </div>
             <span
-              className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold ${getServiceClass(service.status).badge}`}
+              className={`inline-flex items-center px-2.5 py-1 rounded-full font-[Be_Vietnam_Pro] text-[11px] font-semibold ${getServiceClass(service.status).badge}`}
             >
               {getServiceLabel(service.status)}
             </span>
@@ -435,236 +302,147 @@ const AdminDashboard: React.FC = () => {
       notificationCount={notificationCount}
       contentClassName="dashboard-content--flush-bleed"
     >
-      <div className="module-layout-container admin-dashboard-page space-y-6">
-        {/* Error Banner */}
-        {fetchError && (
-          <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#FEF2F2] border border-[#FECACA] text-[#991B1B] text-[14px] font-medium">
-            <AlertTriangle className="w-4 h-4 shrink-0" />
-            {fetchError}
-          </div>
-        )}
+      <div className="px-6 py-8 lg:px-8">
+        <div className="space-y-6">
+          {fetchError && (
+            <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-red-50 border border-red-100 font-[Be_Vietnam_Pro] text-[13px] font-medium text-red-800">
+              <AlertTriangle className="w-4 h-4 shrink-0 text-red-500" />
+              {fetchError}
+            </div>
+          )}
 
-        {/* Header */}
-        <div className="courses-header-row admin-dashboard-header">
-          <div className="header-stack min-w-0">
-            <h1 className="flex items-center gap-2 text-[28px] font-bold tracking-tight text-[#0D0F1A]">
-              <LayoutDashboard className="h-6 w-6 text-[#C96442]" />
-              <span>Admin Dashboard</span>
-            </h1>
-            <p className="header-sub text-[14px] text-[#6B7280] mt-1 max-w-[72ch]">
-              Tổng quan quản trị hệ thống MathMaster
-            </p>
-          </div>
-          <button className="inline-flex shrink-0 items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E8E6DC] bg-[#0D0F1A] text-white text-[13px] font-semibold shadow-[0_1px_3px_rgba(0,0,0,0.06)] hover:bg-[#1a1d2e] hover:shadow-[0_4px_20px_rgba(0,0,0,0.12)] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 focus-visible:ring-2 focus-visible:ring-[#C96442] focus-visible:ring-offset-2">
-            <Download className="w-3.5 h-3.5" />
-            Xuất báo cáo
-          </button>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-          {loading || statsCards.length === 0
-            ? [0, 1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="bg-white rounded-2xl border border-[#E8E6DC] shadow-[0_2px_8px_rgba(0,0,0,0.08)] p-5 flex items-start gap-4 animate-pulse"
-                  style={{ animationDelay: `${i * 100}ms` }}
-                >
-                  <div className="w-11 h-11 rounded-xl bg-[#F5F4ED]" />
-                  <div className="flex-1 space-y-2 pt-1">
-                    <div className="h-3 w-24 bg-[#F5F4ED] rounded" />
-                    <div className="h-6 w-16 bg-[#F5F4ED] rounded" />
-                  </div>
+          {/* Header — aligned with /teacher/mindmaps */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-[#E8E6DC] flex items-center justify-center text-[#5E5D59] shrink-0">
+                <LayoutDashboard className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <h1 className="font-[Playfair_Display] text-[22px] font-medium text-[#141413]">
+                    Admin Dashboard
+                  </h1>
+                  {!loading && dashboardStats && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#E8E6DC] font-[Be_Vietnam_Pro] text-[12px] font-semibold text-[#5E5D59]">
+                      {dashboardStats.totalUsers.toLocaleString('vi-VN')} người dùng
+                    </span>
+                  )}
                 </div>
-              ))
-            : statsCards.map((stat, index) => (
-                <div
-                  key={stat.label}
-                  className="bg-white rounded-2xl border border-[#E8E6DC] shadow-[0_2px_8px_rgba(0,0,0,0.08)] p-5 flex items-start gap-4 hover:shadow-[0_4px_20px_rgba(0,0,0,0.12)] hover:-translate-y-0.5 transition-all duration-200 animate-[fadeInUp_0.4s_ease_both]"
-                  style={{ animationDelay: `${index * 100}ms` }}
-                >
+                <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-0.5">
+                  Tổng quan quản trị hệ thống MathMaster
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="inline-flex shrink-0 items-center gap-2 px-4 py-2.5 rounded-xl bg-[#C96442] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:brightness-95 active:scale-[0.98] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C96442] focus-visible:ring-offset-2"
+            >
+              <Download className="w-3.5 h-3.5" />
+              Xuất báo cáo
+            </button>
+          </div>
+
+          {/* Stats — same card rhythm as TeacherMindmaps */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {loading || statsCards.length === 0
+              ? [0, 1, 2, 3].map((i) => (
                   <div
-                    className={`w-11 h-11 rounded-xl ${stat.iconBg} ${stat.iconColor} flex items-center justify-center shrink-0`}
+                    key={i}
+                    className="bg-[#FAF9F5] rounded-2xl border border-[#F0EEE6] p-4 flex items-center gap-3 animate-pulse"
                   >
-                    <stat.Icon className="w-5 h-5" />
+                    <div className="w-9 h-9 rounded-xl bg-[#E8E6DC]" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-5 w-16 bg-[#E8E6DC] rounded" />
+                      <div className="h-3 w-24 bg-[#F0EEE6] rounded" />
+                    </div>
                   </div>
-                  <div>
-                    <div className="text-[12px] font-medium text-[#6B7280] uppercase tracking-wide">
-                      {stat.label}
-                    </div>
-                    <div className="text-[28px] font-bold tabular-nums text-[#0D0F1A] leading-tight mt-0.5">
-                      {stat.value}
-                    </div>
+                ))
+              : statsCards.map((stat) => (
+                  <div
+                    key={stat.label}
+                    className="bg-white rounded-2xl border border-[#E8E6DC] p-4 flex items-center gap-3 hover:shadow-[rgba(0,0,0,0.06)_0px_4px_16px] transition-shadow duration-200"
+                  >
                     <div
-                      className={`text-[12px] font-medium mt-1 flex items-center gap-1 ${stat.trendPositive ? 'text-[#16A34A]' : 'text-[#DC2626]'}`}
+                      className={`w-9 h-9 rounded-xl ${stat.bg} flex items-center justify-center shrink-0`}
                     >
-                      <TrendingUp className="w-3 h-3" />
-                      {stat.trend} so với tháng trước
+                      <stat.Icon className={`w-4 h-4 ${stat.color}`} />
                     </div>
-                  </div>
-                </div>
-              ))}
-        </div>
-
-        {/* Recent Users */}
-        <div className="bg-white rounded-2xl border border-[#E8E6DC] shadow-[0_2px_8px_rgba(0,0,0,0.08)] overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-[#E8E6DC]">
-            <h2 className="text-[16px] font-semibold text-[#0D0F1A]">Người dùng mới</h2>
-            <a
-              href="/admin/users"
-              className="inline-flex items-center gap-1 text-[13px] font-semibold text-[#C96442] hover:text-[#A95536] transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-[#C96442] focus-visible:ring-offset-2 rounded"
-            >
-              Xem tất cả <ChevronRight className="w-3.5 h-3.5" />
-            </a>
-          </div>
-          {renderUsersTable()}
-        </div>
-
-        {/* Teacher Profile Review */}
-        <div className="bg-white rounded-2xl border border-[#E8E6DC] shadow-[0_2px_8px_rgba(0,0,0,0.08)] p-5 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="w-11 h-11 rounded-xl bg-[#FDF1EC] text-[#A95536] flex items-center justify-center shrink-0">
-              <GraduationCap className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-[16px] font-semibold text-[#0D0F1A]">Duyệt Profile Giáo Viên</h2>
-              <p className="text-[14px] text-[#6B7280] mt-0.5">
-                Có <span className="font-semibold text-[#0D0F1A]">{pendingProfiles}</span> giáo viên
-                đang chờ xác minh danh tính và bằng cấp.
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 shrink-0">
-            {pendingProfiles > 0 && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FFFBEB] text-[#92400E] text-[11px] font-semibold">
-                <Circle className="w-1.5 h-1.5 fill-current" />
-                {pendingProfiles} chờ duyệt
-              </span>
-            )}
-            <a
-              href="/admin/review-profiles"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0D0F1A] text-white text-[13px] font-semibold hover:bg-[#1a1d2e] active:scale-[0.98] transition-all duration-150 focus-visible:ring-2 focus-visible:ring-[#C96442] focus-visible:ring-offset-2"
-            >
-              Duyệt ngay <ChevronRight className="w-3.5 h-3.5" />
-            </a>
-          </div>
-        </div>
-
-        {/* Recent Transactions */}
-        <div className="bg-white rounded-2xl border border-[#E8E6DC] shadow-[0_2px_8px_rgba(0,0,0,0.08)] overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-[#E8E6DC]">
-            <h2 className="text-[16px] font-semibold text-[#0D0F1A]">Giao dịch gần đây</h2>
-            <a
-              href="/admin/transactions"
-              className="inline-flex items-center gap-1 text-[13px] font-semibold text-[#C96442] hover:text-[#A95536] transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-[#C96442] focus-visible:ring-offset-2 rounded"
-            >
-              Xem tất cả <ChevronRight className="w-3.5 h-3.5" />
-            </a>
-          </div>
-          {renderTransactionsTable()}
-        </div>
-
-        {/* Revenue + Quick Stats */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Revenue Chart */}
-          <div className="bg-white rounded-2xl border border-[#E8E6DC] shadow-[0_2px_8px_rgba(0,0,0,0.08)] p-5">
-            <h2 className="text-[16px] font-semibold text-[#0D0F1A] mb-4">Doanh thu theo tháng</h2>
-            {loading ? (
-              <div className="flex items-center justify-center h-40 text-[#6B7280] text-[14px]">
-                Đang tải...
-              </div>
-            ) : (
-              <div className="flex items-end gap-1.5 h-40">
-                {(revenueMonthly.length === 12
-                  ? revenueMonthly
-                  : Array.from({ length: 12 }, (_, i) => ({ month: i + 1, revenue: 0 }))
-                ).map((item) => (
-                  <div key={item.month} className="flex-1 flex flex-col items-center gap-1">
-                    <div
-                      className="w-full rounded-t-md bg-[#C96442] transition-all duration-500 hover:bg-[#A95536] min-h-[4px]"
-                      style={{ height: `${Math.max((item.revenue / revenueMax) * 100, 4)}%` }}
-                      title={`T${item.month}: ${formatRevenue(item.revenue)}`}
-                    />
-                    <span className="text-[10px] text-[#87867F] font-medium">T{item.month}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Quick Stats */}
-          <div className="bg-white rounded-2xl border border-[#E8E6DC] shadow-[0_2px_8px_rgba(0,0,0,0.08)] p-5">
-            <h2 className="text-[16px] font-semibold text-[#0D0F1A] mb-4">Thống kê nhanh</h2>
-            {loading || !quickStats ? (
-              <div className="flex items-center justify-center h-40 text-[#6B7280] text-[14px]">
-                Đang tải...
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {[
-                  {
-                    label: 'Tỷ lệ chuyển đổi',
-                    value: `${quickStats.conversionRate.toFixed(1)}%`,
-                    pct: Math.min(quickStats.conversionRate, 100),
-                    color: '#C96442',
-                  },
-                  {
-                    label: 'Người dùng hoạt động',
-                    value: quickStats.activeUsers.toLocaleString('vi-VN'),
-                    pct: Math.min(
-                      (quickStats.activeUsers / (dashboardStats?.totalUsers || 1)) * 100,
-                      100
-                    ),
-                    color: '#16A34A',
-                  },
-                  {
-                    label: 'Tài liệu được tạo',
-                    value: quickStats.documentsCreated.toLocaleString('vi-VN'),
-                    pct: 100,
-                    color: '#8B5E3C',
-                  },
-                  ...(quickStats.satisfactionRate === -1
-                    ? [
-                        {
-                          label: 'Tỷ lệ hài lòng',
-                          value: 'Chưa có dữ liệu',
-                          pct: 0,
-                          color: '#D97706',
-                        },
-                      ]
-                    : [
-                        {
-                          label: 'Tỷ lệ hài lòng',
-                          value: `${quickStats.satisfactionRate.toFixed(1)}%`,
-                          pct: Math.min(quickStats.satisfactionRate, 100),
-                          color: '#D97706',
-                        },
-                      ]),
-                ].map((item) => (
-                  <div key={item.label}>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-[13px] text-[#6B7280]">{item.label}</span>
-                      <span className="text-[13px] font-semibold text-[#0D0F1A]">{item.value}</span>
-                    </div>
-                    <div className="h-1.5 bg-[#F5F4ED] rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all duration-500"
-                        style={{ width: `${item.pct}%`, backgroundColor: item.color }}
-                      />
+                    <div className="min-w-0 flex-1">
+                      <p className="font-[Playfair_Display] text-[22px] font-medium text-[#141413] leading-none tabular-nums truncate">
+                        {stat.value}
+                      </p>
+                      <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#87867F] mt-0.5 truncate">
+                        {stat.label}
+                      </p>
+                      <p
+                        className={`font-[Be_Vietnam_Pro] text-[11px] font-medium mt-1 flex items-center gap-1 ${stat.trendPositive ? 'text-emerald-600' : 'text-red-600'}`}
+                      >
+                        <TrendingUp className="w-3 h-3 shrink-0" />
+                        {stat.trend} vs tháng trước
+                      </p>
                     </div>
                   </div>
                 ))}
-              </div>
-            )}
           </div>
-        </div>
 
-        {/* System Status */}
-        <div className="bg-white rounded-2xl border border-[#E8E6DC] shadow-[0_2px_8px_rgba(0,0,0,0.08)] overflow-hidden">
-          <div className="px-5 py-4 border-b border-[#E8E6DC]">
-            <h2 className="text-[16px] font-semibold text-[#0D0F1A]">Trạng thái hệ thống</h2>
+          {/* Recent users */}
+          <div className="bg-white rounded-2xl border border-[#E8E6DC] overflow-hidden shadow-[rgba(0,0,0,0.05)_0px_4px_24px]">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[#F0EEE6] bg-[#FAF9F5]">
+              <h2 className="font-[Playfair_Display] text-[16px] font-medium text-[#141413]">
+                Người dùng mới
+              </h2>
+              <Link
+                to="/admin/users"
+                className="inline-flex items-center gap-1 font-[Be_Vietnam_Pro] text-[13px] font-semibold text-[#C96442] hover:text-[#A95536] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C96442] rounded"
+              >
+                Xem tất cả <ChevronRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+            {renderUsersTable()}
           </div>
-          {renderSystemStatus()}
+
+          {/* Teacher profile review */}
+          <div className="bg-[#FAF9F5] rounded-2xl border border-[#F0EEE6] p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-[rgba(0,0,0,0.05)_0px_4px_24px]">
+            <div className="flex items-center gap-4 min-w-0">
+              <div className="w-11 h-11 rounded-xl bg-[#FFF7ED] text-[#C96442] flex items-center justify-center shrink-0">
+                <GraduationCap className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="font-[Playfair_Display] text-[16px] font-medium text-[#141413]">
+                  Duyệt Profile Giáo Viên
+                </h2>
+                <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-0.5">
+                  Có{' '}
+                  <span className="font-semibold text-[#141413]">{pendingProfiles}</span> giáo viên
+                  đang chờ xác minh danh tính và bằng cấp.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 shrink-0 flex-wrap">
+              {pendingProfiles > 0 && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 font-[Be_Vietnam_Pro] text-[11px] font-semibold">
+                  <Circle className="w-1.5 h-1.5 fill-current" />
+                  {pendingProfiles} chờ duyệt
+                </span>
+              )}
+              <Link
+                to="/admin/review-profiles"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#141413] text-[#FAF9F5] font-[Be_Vietnam_Pro] text-[13px] font-semibold hover:bg-[#30302E] active:scale-[0.98] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C96442] focus-visible:ring-offset-2"
+              >
+                Duyệt ngay <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          </div>
+
+          {/* System status */}
+          <div className="bg-white rounded-2xl border border-[#E8E6DC] overflow-hidden shadow-[rgba(0,0,0,0.05)_0px_4px_24px]">
+            <div className="px-5 py-4 border-b border-[#F0EEE6] bg-[#FAF9F5]">
+              <h2 className="font-[Playfair_Display] text-[16px] font-medium text-[#141413]">
+                Trạng thái hệ thống
+              </h2>
+            </div>
+            {renderSystemStatus()}
+          </div>
         </div>
       </div>
     </DashboardLayout>
