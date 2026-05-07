@@ -31,6 +31,7 @@ import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLa
 import { useToast } from '../../context/ToastContext';
 import { useDebounce } from '../../hooks/useDebounce';
 
+import { mockTeacher } from '../../data/mockData';
 import {
   useCreateQuestionTemplate,
   useDeleteQuestionTemplate,
@@ -40,7 +41,6 @@ import {
   useUpdateQuestionTemplate,
 } from '../../hooks/useQuestionTemplate';
 import { questionTemplateService } from '../../services/questionTemplateService';
-import { mockTeacher } from '../../data/mockData';
 import '../../styles/module-refactor.css';
 
 import {
@@ -560,8 +560,7 @@ export function TemplateDashboard() {
               <div className="w-px h-4 bg-[#E8E6DC] hidden sm:block" />
               <span className="flex items-center gap-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
-                Sẵn sàng{' '}
-                <strong className="text-[#141413] font-semibold">{stats.published}</strong>
+                Sẵn sàng <strong className="text-[#141413] font-semibold">{stats.published}</strong>
                 <span className="text-[#B0AEA5]">trên trang</span>
               </span>
               <span className="flex items-center gap-1.5 font-[Be_Vietnam_Pro] text-[12px] text-[#87867F]">
@@ -684,8 +683,8 @@ export function TemplateDashboard() {
                         </span>
                         {template.gradeLevel && (
                           <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white border border-[#F0EEE6] font-[Be_Vietnam_Pro] text-[11px] font-medium text-[#5E5D59]">
-                            <GraduationCap className="w-3 h-3 flex-shrink-0" />Lớp{' '}
-                            {template.gradeLevel}
+                            <GraduationCap className="w-3 h-3 flex-shrink-0" />
+                            Lớp {template.gradeLevel}
                           </span>
                         )}
                         {template.chapterName && (
@@ -729,7 +728,8 @@ export function TemplateDashboard() {
                               type="button"
                               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-[Be_Vietnam_Pro] text-[12px] font-semibold hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                               disabled={
-                                publishMutation.isPending && publishMutation.variables === template.id
+                                publishMutation.isPending &&
+                                publishMutation.variables === template.id
                               }
                               onClick={() => {
                                 publishMutation.mutate(template.id, {
@@ -877,7 +877,9 @@ export function TemplateDashboard() {
                         )}
                       </div>
                       <div className="flex flex-wrap items-center gap-2 text-[12px] text-[#87867F] font-[Be_Vietnam_Pro]">
-                        <span>{templateTypeLabel[template.templateType] || template.templateType}</span>
+                        <span>
+                          {templateTypeLabel[template.templateType] || template.templateType}
+                        </span>
                         <span className="text-[#E8E6DC]">·</span>
                         <span>
                           {cognitiveLevelLabel[template.cognitiveLevel] || template.cognitiveLevel}
@@ -1026,7 +1028,9 @@ export function TemplateDashboard() {
                 onGenerated={(message) => {
                   showToast({ type: 'success', message });
                   setGenerateOpen(false);
-                  navigate(`/teacher/question-review?templateId=${encodeURIComponent(selected.id)}`);
+                  navigate(
+                    `/teacher/question-review?templateId=${encodeURIComponent(selected.id)}`
+                  );
                 }}
               />
             )}
@@ -1083,7 +1087,7 @@ export function TemplateDashboard() {
           {/* Canonical/Review Modals hidden per ISSUE-11 */}
 
           {activeDiagram != null && (
-            <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="fixed inset-0 z-50 bg-[#141413]/50 backdrop-blur-sm flex items-center justify-center p-4">
               <button
                 type="button"
                 aria-label="Đóng preview"

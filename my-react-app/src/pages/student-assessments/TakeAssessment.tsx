@@ -1,10 +1,11 @@
 import { AlertCircle, ArrowLeft, ChevronLeft, ChevronRight, Flag, Save } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { QuestionRenderer } from '../../components/question';
 import QuestionNavigator from '../../components/assessment/QuestionNavigator';
 import Timer from '../../components/assessment/Timer';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import { QuestionRenderer } from '../../components/question';
+import { UI_TEXT } from '../../constants/uiText';
 import {
   useDraftSnapshot,
   useSaveAndExit,
@@ -13,7 +14,6 @@ import {
   useUpdateAnswer,
   useUpdateFlag,
 } from '../../hooks/useStudentAssessment';
-import { UI_TEXT } from '../../constants/uiText';
 import type { AttemptStartResponse } from '../../types/studentAssessment.types';
 
 export default function TakeAssessment() {
@@ -236,7 +236,7 @@ export default function TakeAssessment() {
 
     const grouped = new Map<number, typeof attemptData.questions>();
 
-    attemptData.questions.forEach(q => {
+    attemptData.questions.forEach((q) => {
       let part = q.partNumber;
       if (part === undefined) {
         if (q.questionType === 'TRUE_FALSE') part = 2;
@@ -269,7 +269,9 @@ export default function TakeAssessment() {
     }
 
     const partQuestions = questionsByPart.get(partNum) || [];
-    const questionIndexInPart = partQuestions.findIndex(q => q.questionId === currentQuestion.questionId);
+    const questionIndexInPart = partQuestions.findIndex(
+      (q) => q.questionId === currentQuestion.questionId
+    );
 
     return {
       partNumber: partNum,
@@ -384,8 +386,8 @@ export default function TakeAssessment() {
                     {currentPartInfo.partLabel}
                   </h2>
                   <p className="font-[Be_Vietnam_Pro] text-[12px] text-[#3b82f6] mt-1 mb-0">
-                    Câu {currentPartInfo.questionIndexInPart} / {currentPartInfo.totalInPart} trong phần
-                    này
+                    Câu {currentPartInfo.questionIndexInPart} / {currentPartInfo.totalInPart} trong
+                    phần này
                   </p>
                 </div>
               ) : null}
@@ -468,7 +470,7 @@ export default function TakeAssessment() {
           </div>
 
           {showSubmitConfirm ? (
-            <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="fixed inset-0 z-50 bg-[#141413]/50 backdrop-blur-sm flex items-center justify-center p-4">
               <div
                 className="bg-white rounded-2xl shadow-[rgba(0,0,0,0.20)_0px_20px_60px] w-full max-w-md flex flex-col"
                 role="dialog"

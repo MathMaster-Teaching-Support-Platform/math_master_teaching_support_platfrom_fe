@@ -1,9 +1,9 @@
 import { FileText, LayoutGrid, Loader2, X } from 'lucide-react';
 import { useEffect, useState, type FormEvent } from 'react';
-import type { ExamMatrixRequest, ExamMatrixResponse } from '../../types/examMatrix';
-import { useSearchQuestionBanks } from '../../hooks/useQuestionBank';
-import type { QuestionBankResponse } from '../../types/questionBank';
 import { PartConfigSection } from '../../components/exam-matrix/PartConfigSection';
+import { useSearchQuestionBanks } from '../../hooks/useQuestionBank';
+import type { ExamMatrixRequest, ExamMatrixResponse } from '../../types/examMatrix';
+import type { QuestionBankResponse } from '../../types/questionBank';
 
 type Props = {
   isOpen: boolean;
@@ -53,10 +53,9 @@ export function ExamMatrixFormModal({
   useEffect(() => {
     if (!isOpen) return;
 
-    const initialParts =
-      (initialData as { parts?: ExamMatrixResponse['parts'] })?.parts ?? [
-        { partNumber: 1, questionType: 'MULTIPLE_CHOICE' as const, name: 'Phần 1: Trắc nghiệm' },
-      ];
+    const initialParts = (initialData as { parts?: ExamMatrixResponse['parts'] })?.parts ?? [
+      { partNumber: 1, questionType: 'MULTIPLE_CHOICE' as const, name: 'Phần 1: Trắc nghiệm' },
+    ];
 
     setFormData({
       name: initialData?.name ?? '',
@@ -110,7 +109,7 @@ export function ExamMatrixFormModal({
   const submitLabel = isCreate ? 'Tạo draft' : 'Cập nhật';
 
   return (
-    <div className="fixed inset-0 z-[1200] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[1200] bg-[#141413]/50 backdrop-blur-sm flex items-center justify-center p-4">
       <div
         className="bg-white rounded-2xl shadow-[rgba(0,0,0,0.20)_0px_20px_60px] w-full max-h-[90vh] overflow-hidden flex flex-col border border-[#E8E6DC]"
         style={{ width: 'min(560px, 100%)' }}

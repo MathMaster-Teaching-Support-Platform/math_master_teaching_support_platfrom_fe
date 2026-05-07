@@ -85,8 +85,11 @@
 .spt-bar-fill {
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, #3730a3 0%, #6366f1 100%);
-  transition: width 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+  background: linear-gradient(90deg, #c96442 0%, #d97757 100%);
+  width: 100%;
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* ── Info rows (compact) ── */

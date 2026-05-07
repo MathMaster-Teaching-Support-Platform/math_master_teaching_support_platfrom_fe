@@ -1,14 +1,10 @@
+import { Award, BookOpen, Calendar, CheckCircle, Clock, Sparkles, TrendingUp } from 'lucide-react';
 import { useMemo } from 'react';
 import {
-  Award,
-  BookOpen,
-  Calendar,
-  CheckCircle,
-  Clock,
-  Sparkles,
-  TrendingUp,
-} from 'lucide-react';
-import { useCourseProgress, useCourseLessons, useCustomCourseSections } from '../../../hooks/useCourses';
+  useCourseLessons,
+  useCourseProgress,
+  useCustomCourseSections,
+} from '../../../hooks/useCourses';
 import type { EnrollmentResponse } from '../../../types';
 import './StudentProgressTab.css';
 
@@ -33,7 +29,12 @@ const StudentProgressTab: React.FC<StudentProgressTabProps> = ({ enrollmentId, e
 
     const groupsMap: Record<
       string,
-      { id: string; type: 'SECTION' | 'CHAPTER' | 'OTHER'; firstSeenIndex: number; lessons: typeof lessons }
+      {
+        id: string;
+        type: 'SECTION' | 'CHAPTER' | 'OTHER';
+        firstSeenIndex: number;
+        lessons: typeof lessons;
+      }
     > = {};
 
     lessons.forEach((lesson, index) => {
@@ -47,8 +48,10 @@ const StudentProgressTab: React.FC<StudentProgressTabProps> = ({ enrollmentId, e
     });
 
     const orderedGroups = Object.values(groupsMap).sort((a, b) => {
-      const orderA = a.type === 'SECTION' ? sectionOrderMap.get(a.id) ?? a.firstSeenIndex : a.firstSeenIndex;
-      const orderB = b.type === 'SECTION' ? sectionOrderMap.get(b.id) ?? b.firstSeenIndex : b.firstSeenIndex;
+      const orderA =
+        a.type === 'SECTION' ? (sectionOrderMap.get(a.id) ?? a.firstSeenIndex) : a.firstSeenIndex;
+      const orderB =
+        b.type === 'SECTION' ? (sectionOrderMap.get(b.id) ?? b.firstSeenIndex) : b.firstSeenIndex;
       if (orderA !== orderB) return orderA - orderB;
       return a.id.localeCompare(b.id);
     });
@@ -110,9 +113,7 @@ const StudentProgressTab: React.FC<StudentProgressTabProps> = ({ enrollmentId, e
 
   return (
     <div className="spt-root">
-      {isLoading ? (
-        <div className="spt-empty">Đang tải thông tin tiến độ...</div>
-      ) : null}
+      {isLoading ? <div className="spt-empty">Đang tải thông tin tiến độ...</div> : null}
 
       {!isLoading && !stats ? (
         <div className="spt-empty">Chưa có dữ liệu tiến độ cho khóa học này.</div>
@@ -142,7 +143,7 @@ const StudentProgressTab: React.FC<StudentProgressTabProps> = ({ enrollmentId, e
               aria-valuemin={0}
               aria-valuemax={100}
             >
-              <div className="spt-bar-fill" style={{ width: `${barPct}%` }} />
+              <div className="spt-bar-fill" style={{ transform: `scaleX(${barPct / 100})` }} />
             </div>
 
             <div className="spt-rows">
