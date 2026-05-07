@@ -22,7 +22,7 @@ import { useMyResult, useCreateRegradeRequest } from '../../hooks/useGrading';
 import { ResultRenderer } from '../../components/question';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import MathText from '../../components/common/MathText';
-import type { AnswerGradeResponse, GradingSubmissionResponse } from '../../types/grading.types';
+import type { GradingSubmissionResponse } from '../../types/grading.types';
 
 function Shell({ children }: { readonly children: ReactNode }) {
   return (
@@ -43,9 +43,9 @@ function tierFromPct(pct: number) {
   if (pct >= 70)
     return {
       key: 'high' as const,
-      gradient: 'from-emerald-100/95 via-[#faf9f5] to-teal-50/90',
-      orbA: 'bg-emerald-400/35',
-      orbB: 'bg-teal-300/20',
+      gradient: 'from-emerald-50 via-white to-teal-50/90',
+      orbA: 'bg-emerald-400/20',
+      orbB: 'bg-teal-300/15',
       headline: 'Bạn làm khá tốt!',
       sub: 'Giữ vững phong độ và ôn lại phần còn thiếu sót.',
       ring: 'stroke-emerald-500',
@@ -54,19 +54,19 @@ function tierFromPct(pct: number) {
   if (pct >= 40)
     return {
       key: 'mid' as const,
-      gradient: 'from-amber-100/90 via-[#faf9f5] to-orange-50/80',
-      orbA: 'bg-amber-400/30',
-      orbB: 'bg-orange-300/15',
+      gradient: 'from-slate-50 via-white to-zinc-50',
+      orbA: 'bg-slate-300/20',
+      orbB: 'bg-zinc-200/15',
       headline: 'Cần cố gắng thêm',
       sub: 'Xem lại các câu sai và đọc lời giải để tiến bộ nhanh hơn.',
-      ring: 'stroke-amber-500',
-      scoreGlow: 'text-amber-950',
+      ring: 'stroke-slate-500',
+      scoreGlow: 'text-[#141413]',
     };
   return {
     key: 'low' as const,
-    gradient: 'from-rose-100/85 via-[#faf9f5] to-[#fef2f2]',
-    orbA: 'bg-rose-400/28',
-    orbB: 'bg-red-300/12',
+    gradient: 'from-red-50/90 via-white to-rose-50',
+    orbA: 'bg-rose-400/18',
+    orbB: 'bg-red-200/10',
     headline: 'Đừng nản lòng',
     sub: 'Mỗi bài làm là cơ hội ôn tập — hãy đọc kỹ phần chi tiết bên dưới.',
     ring: 'stroke-rose-500',
@@ -78,8 +78,8 @@ function statusBadge(status: GradingSubmissionResponse['status']) {
   const map: Record<string, string> = {
     GRADED: 'bg-emerald-50 text-emerald-900 border-emerald-200',
     SUBMITTED: 'bg-sky-50 text-sky-900 border-sky-200',
-    IN_PROGRESS: 'bg-amber-50 text-amber-900 border-amber-200',
-    INVALIDATED: 'bg-[#F5F4ED] text-[#5E5D59] border-[#E8E6DC]',
+    IN_PROGRESS: 'bg-neutral-100 text-neutral-800 border-neutral-200',
+    INVALIDATED: 'bg-neutral-100 text-[#5E5D59] border-[#E8E6DC]',
   };
   const label: Record<string, string> = {
     GRADED: 'Đã chấm',
@@ -177,8 +177,8 @@ function ResultHero({
                 Đã công bố điểm
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200/80 bg-white/80 px-3 py-1 text-[11px] font-semibold text-amber-900 backdrop-blur-sm font-[Be_Vietnam_Pro]">
-                <Hourglass className="h-3.5 w-3.5" aria-hidden />
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white/90 px-3 py-1 text-[11px] font-semibold text-neutral-700 backdrop-blur-sm font-[Be_Vietnam_Pro]">
+                <Hourglass className="h-3.5 w-3.5 text-neutral-500" aria-hidden />
                 Điểm có thể thay đổi
               </span>
             )}
@@ -305,8 +305,8 @@ export default function AssessmentResult() {
     return (
       <Shell>
         <div className="space-y-8">
-          <div className="relative h-[320px] overflow-hidden rounded-3xl border border-[#F0EEE6] bg-[#FAF9F5]">
-            <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-[#f5f4ed] via-[#faf9f5] to-[#ebe8e0]" />
+          <div className="relative h-[320px] overflow-hidden rounded-3xl border border-[#F0EEE6] bg-white">
+            <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-neutral-100 via-white to-neutral-50" />
             <div className="relative flex flex-col gap-6 p-8 lg:flex-row lg:justify-between">
               <div className="space-y-4 flex-1">
                 <div className="h-9 w-48 rounded-xl bg-[#E8E6DC]/90" />
@@ -327,7 +327,7 @@ export default function AssessmentResult() {
           <div className="space-y-4">
             <div className="h-8 w-56 rounded-lg bg-[#E8E6DC]/70" />
             {[1, 2].map((k) => (
-              <div key={k} className="h-40 animate-pulse rounded-2xl bg-[#F5F4ED]" />
+              <div key={k} className="h-40 animate-pulse rounded-2xl bg-neutral-100" />
             ))}
           </div>
         </div>
@@ -338,7 +338,7 @@ export default function AssessmentResult() {
   if (isError || !result) {
     return (
       <Shell>
-        <div className="flex flex-col items-center justify-center rounded-3xl border border-[#F0EEE6] bg-[#FAF9F5] px-6 py-20 text-center shadow-inner">
+        <div className="flex flex-col items-center justify-center rounded-3xl border border-[#F0EEE6] bg-white px-6 py-20 text-center shadow-inner">
           <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-[0_8px_30px_rgba(20,20,19,0.08)] ring-1 ring-[#E8E6DC]">
             <AlertCircle className="h-8 w-8 text-[#87867F]" aria-hidden />
           </div>
@@ -367,14 +367,6 @@ export default function AssessmentResult() {
     (result.maxScore > 0 ? (numericScore / result.maxScore) * 100 : 0);
   const tier = tierFromPct(pct);
 
-  const borderForAnswer = (answer: AnswerGradeResponse) => {
-    if (answer.needsManualGrading && !answer.pointsEarned)
-      return 'border-l-amber-500 bg-gradient-to-r from-amber-50/40 to-white';
-    if (answer.isCorrect === true) return 'border-l-emerald-500 bg-gradient-to-r from-emerald-50/30 to-white';
-    if (answer.isCorrect === false) return 'border-l-red-500 bg-gradient-to-r from-red-50/35 to-white';
-    return 'border-l-[#C96442] bg-gradient-to-r from-[#fff7f5]/80 to-white';
-  };
-
   return (
     <Shell>
       <ResultHero
@@ -388,16 +380,16 @@ export default function AssessmentResult() {
       {result.pendingQuestionsCount > 0 ? (
         <div
           role="status"
-          className="flex gap-4 rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 to-[#fffbeb] px-5 py-4 shadow-[0_8px_30px_-8px_rgba(180,83,9,0.12)]"
+          className="flex gap-4 rounded-2xl border border-[#E8E6DC] bg-white px-5 py-4 shadow-sm"
         >
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-neutral-200 bg-neutral-50 text-neutral-600">
             <Hourglass className="h-5 w-5" aria-hidden />
           </div>
           <div>
-            <p className="font-[Playfair_Display] text-[17px] font-medium text-amber-950">
+            <p className="font-[Playfair_Display] text-[17px] font-medium text-[#141413]">
               Còn {result.pendingQuestionsCount} câu chờ chấm tay
             </p>
-            <p className="mt-1 font-[Be_Vietnam_Pro] text-[13px] leading-relaxed text-amber-900/85">
+            <p className="mt-1 font-[Be_Vietnam_Pro] text-[13px] leading-relaxed text-[#5E5D59]">
               Điểm và nhận xét có thể cập nhật sau khi giáo viên hoàn tất chấm.
             </p>
           </div>
@@ -440,7 +432,7 @@ export default function AssessmentResult() {
           />
           <MiniStat
             icon={FileText}
-            iconBg="bg-[#F5F4ED] text-[#5E5D59]"
+            iconBg="bg-neutral-100 text-neutral-600"
             label="Tổng câu"
             value={result.answers.length}
           />
@@ -492,7 +484,7 @@ export default function AssessmentResult() {
       {result.manualAdjustment !== undefined && result.manualAdjustment !== 0 ? (
         <div className="rounded-3xl border border-[#E8E6DC] bg-white px-6 py-5 shadow-[0_12px_40px_-12px_rgba(20,20,19,0.08)]">
           <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#FFF7ED] text-[#C96442]">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-neutral-200 bg-neutral-50 text-[#C96442]">
               <Award className="h-5 w-5" aria-hidden />
             </div>
             <div>
@@ -513,7 +505,7 @@ export default function AssessmentResult() {
         </div>
       ) : null}
 
-      <div className="flex flex-col gap-4 rounded-3xl border border-[#E8E6DC] bg-[#FAF9F5] px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+      <div className="flex flex-col gap-4 rounded-3xl border border-[#E8E6DC] bg-white px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-8 shadow-sm">
         <div>
           <p className="font-[Be_Vietnam_Pro] text-[13px] font-semibold text-[#141413]">
             Lời giải & đáp án gợi ý
@@ -528,7 +520,7 @@ export default function AssessmentResult() {
           className={`inline-flex shrink-0 items-center gap-2 rounded-2xl border px-5 py-3 text-[13px] font-semibold transition-all active:scale-[0.98] font-[Be_Vietnam_Pro] ${
             showExplanations
               ? 'border-[#C96442] bg-[#C96442] text-[#FAF9F5] shadow-[0_10px_30px_-6px_rgba(201,100,66,0.45)]'
-              : 'border-[#E8E6DC] bg-white text-[#141413] hover:bg-[#F5F4ED]'
+              : 'border-[#E8E6DC] bg-white text-[#141413] hover:bg-neutral-50'
           }`}
         >
           <BookOpen className="h-4 w-4" aria-hidden />
@@ -552,7 +544,7 @@ export default function AssessmentResult() {
           {result.answers.map((answer, index) => (
             <article
               key={answer.answerId}
-              className={`relative overflow-hidden rounded-3xl border border-[#F0EEE6] border-l-[5px] bg-white p-5 shadow-[0_8px_30px_-10px_rgba(20,20,19,0.06)] transition-shadow duration-300 hover:shadow-[0_16px_48px_-12px_rgba(20,20,19,0.1)] sm:p-7 ${borderForAnswer(answer)}`}
+              className="relative overflow-hidden rounded-3xl border border-[#F0EEE6] bg-white p-5 shadow-[0_8px_30px_-10px_rgba(20,20,19,0.06)] transition-shadow duration-300 hover:shadow-[0_16px_48px_-12px_rgba(20,20,19,0.1)] sm:p-7"
             >
               <div className="pointer-events-none absolute right-0 top-0 h-32 w-32 rounded-full bg-[#C96442]/[0.04] blur-2xl" aria-hidden />
 
@@ -572,13 +564,13 @@ export default function AssessmentResult() {
                         ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
                         : answer.isCorrect === false
                           ? 'border-red-200 bg-red-50 text-red-900'
-                          : 'border-amber-200 bg-amber-50 text-amber-950'
+                          : 'border-neutral-200 bg-neutral-50 text-neutral-800'
                     }`}
                   >
                     {answer.pointsEarned?.toFixed(1) ?? 0} / {answer.maxPoints} điểm
                   </span>
                   {answer.needsManualGrading && !answer.pointsEarned ? (
-                    <span className="inline-flex items-center gap-1 rounded-lg border border-amber-300 bg-amber-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-amber-950 font-[Be_Vietnam_Pro]">
+                    <span className="inline-flex items-center gap-1 rounded-lg border border-neutral-200 bg-neutral-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-neutral-700 font-[Be_Vietnam_Pro]">
                       <Hourglass className="h-3.5 w-3.5" aria-hidden />
                       Chờ chấm
                     </span>
@@ -595,7 +587,7 @@ export default function AssessmentResult() {
                 <MathText text={answer.questionText} />
               </div>
 
-              <div className="relative rounded-2xl border border-[#F0EEE6] bg-[#FAF9F5]/80 px-4 py-4">
+              <div className="relative rounded-2xl border border-[#F0EEE6] bg-white px-4 py-4">
                 <ResultRenderer answer={answer} options={answer.options} />
               </div>
 
@@ -624,7 +616,7 @@ export default function AssessmentResult() {
               {result.gradesReleased ? (
                 <button
                   type="button"
-                  className="relative mt-5 inline-flex items-center gap-2 rounded-xl border border-[#E8E6DC] bg-white px-4 py-2.5 text-[13px] font-semibold text-[#141413] shadow-sm transition-all hover:border-[#d1cfc5] hover:bg-[#FAF9F5] active:scale-[0.98] font-[Be_Vietnam_Pro]"
+                  className="relative mt-5 inline-flex items-center gap-2 rounded-xl border border-[#E8E6DC] bg-white px-4 py-2.5 text-[13px] font-semibold text-[#141413] shadow-sm transition-all hover:border-[#d1cfc5] hover:bg-neutral-50 active:scale-[0.98] font-[Be_Vietnam_Pro]"
                   onClick={() => {
                     setSelectedQuestionId(answer.questionId);
                     setShowRegradeModal(true);
@@ -647,12 +639,8 @@ export default function AssessmentResult() {
             aria-modal="true"
             aria-labelledby="regrade-modal-title"
           >
-            <div className="relative border-b border-[#F0EEE6] bg-gradient-to-r from-[#FAF9F5] to-white px-6 pb-4 pt-6">
-              <div
-                className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-[#C96442] to-[#141413]"
-                aria-hidden
-              />
-              <div className="flex items-start justify-between gap-3 pl-3">
+            <div className="relative border-b border-[#F0EEE6] bg-white px-6 pb-4 pt-6">
+              <div className="flex items-start justify-between gap-3">
                 <div>
                   <h3
                     id="regrade-modal-title"
@@ -680,7 +668,7 @@ export default function AssessmentResult() {
 
             <div className="overflow-y-auto px-6 py-5">
               <textarea
-                className="min-h-[150px] w-full resize-y rounded-2xl border border-[#E8E6DC] bg-[#FAF9F5] px-4 py-3 font-[Be_Vietnam_Pro] text-[13px] text-[#141413] placeholder:text-[#87867F] outline-none transition-shadow focus:border-[#3898EC] focus:ring-[0_0_0_3px_rgba(56,152,236,0.12)]"
+                className="min-h-[150px] w-full resize-y rounded-2xl border border-[#E8E6DC] bg-white px-4 py-3 font-[Be_Vietnam_Pro] text-[13px] text-[#141413] placeholder:text-[#87867F] outline-none transition-shadow focus:border-[#3898EC] focus:ring-[0_0_0_3px_rgba(56,152,236,0.12)]"
                 value={regradeReason}
                 onChange={(e) => setRegradeReason(e.target.value)}
                 placeholder="Nhập lý do yêu cầu chấm lại..."

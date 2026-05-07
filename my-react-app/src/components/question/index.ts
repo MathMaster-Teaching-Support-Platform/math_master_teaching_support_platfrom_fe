@@ -6,6 +6,7 @@ export { ShortAnswerRenderer } from './ShortAnswerRenderer';
 
 // Result renderers for grading/review
 export { ResultRenderer } from './ResultRenderer';
+export { ResultVerdictIcon, ResultVerdictLabeled } from './ResultVerdict';
 export { MCQResult } from './MCQResult';
 export { TrueFalseResult } from './TrueFalseResult';
 export { ShortAnswerResult } from './ShortAnswerResult';
