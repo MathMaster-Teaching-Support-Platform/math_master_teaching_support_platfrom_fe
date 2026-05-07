@@ -1106,30 +1106,17 @@ export default function AdminAcademicStructurePage() {
         value={lessonForm.summary}
         onChange={(event) => setLessonForm((prev) => ({ ...prev, summary: event.target.value }))}
       />
-      <div className="aas-inline-2">
-        <input
-          type="number"
-          placeholder="orderIndex"
-          value={lessonForm.orderIndex}
-          onChange={(event) =>
-            setLessonForm((prev) => ({
-              ...prev,
-              orderIndex: event.target.value === '' ? '' : Number(event.target.value),
-            }))
-          }
-        />
-        <input
-          type="number"
-          placeholder="durationMinutes"
-          value={lessonForm.durationMinutes}
-          onChange={(event) =>
-            setLessonForm((prev) => ({
-              ...prev,
-              durationMinutes: event.target.value === '' ? '' : Number(event.target.value),
-            }))
-          }
-        />
-      </div>
+      <input
+        type="number"
+        placeholder="orderIndex"
+        value={lessonForm.orderIndex}
+        onChange={(event) =>
+          setLessonForm((prev) => ({
+            ...prev,
+            orderIndex: event.target.value === '' ? '' : Number(event.target.value),
+          }))
+        }
+      />
       <div className="aas-actions">
         <button type="submit" disabled={saveLessonMutation.isPending || !selectedChapterId}>
           {lessonForm.id ? <Save size={14} /> : <Plus size={14} />}
