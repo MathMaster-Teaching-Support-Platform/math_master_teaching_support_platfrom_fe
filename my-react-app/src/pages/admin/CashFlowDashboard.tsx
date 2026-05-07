@@ -349,10 +349,10 @@ const CashFlowDashboard: React.FC = () => {
     };
   });
 
-  // outflow must be negative so bars render below zero
+  // Use positive value for outflow so the bar points up
   const chartSeries = normalizedSeries.map((point) => ({
     ...point,
-    outflow: point.outflow === 0 ? 0 : -Math.abs(point.outflow),
+    outflow: Math.abs(point.outflow),
   }));
 
   // Smart Y-axis formatter: pick unit based on the largest absolute value in the dataset
@@ -684,7 +684,7 @@ const CashFlowDashboard: React.FC = () => {
                           dataKey="outflow"
                           name="Rút ra"
                           fill="#dc2626"
-                          radius={[0, 0, 6, 6]}
+                          radius={[6, 6, 0, 0]}
                           barSize={22}
                         />
                       </BarChart>
