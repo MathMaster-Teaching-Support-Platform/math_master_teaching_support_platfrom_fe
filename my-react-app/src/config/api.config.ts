@@ -211,7 +211,7 @@ export const API_ENDPOINTS = {
   SCHOOL_GRADE_ACTIVATE: (schoolGradeId: string) => `/school-grades/${schoolGradeId}/activate`,
   SUBJECTS_BY_SCHOOL_GRADE: (schoolGradeId: string) => `/subjects/school-grade/${schoolGradeId}`,
   ALL_SUBJECTS_BY_SCHOOL_GRADE: (schoolGradeId: string) =>
-    `/subjects/all?schoolGradeId=${schoolGradeId}`,
+    `/subjects/school-grade/${schoolGradeId}/all`,
   SUBJECT_ACTIVATE: (subjectId: string) => `/subjects/${subjectId}/activate`,
   ALL_CHAPTERS_BY_SUBJECT: (subjectId: string) => `/chapters/subject/${subjectId}/all`,
   CHAPTER_RESTORE: (chapterId: string) => `/chapters/${chapterId}/restore`,
