@@ -1475,51 +1475,65 @@ const AISlideGenerator: React.FC = () => {
 
           {/* â”€â”€ Stepper â”€â”€ */}
           {activeMainTab === 'GENERATE' && (
-            <ol className="flex items-center gap-0" aria-label="Tiến trình tạo slide">
-              {wizardSteps.map((stepLabel, index) => {
-                const stepNumber = index + 1;
-                const isDone = visualWizardStep > stepNumber;
-                const isActive = visualWizardStep === stepNumber;
+            <>
+              <ol className="flex items-center gap-0" aria-label="Tiến trình tạo slide">
+                {wizardSteps.map((stepLabel, index) => {
+                  const stepNumber = index + 1;
+                  const isDone = visualWizardStep > stepNumber;
+                  const isActive = visualWizardStep === stepNumber;
 
-                return (
-                  <React.Fragment key={stepLabel}>
-                    <li
-                      className="flex items-center gap-2"
-                      aria-current={isActive ? 'step' : undefined}
-                    >
-                      <div
-                        className={`w-6 h-6 rounded-full flex items-center justify-center font-[Be_Vietnam_Pro] text-[11px] font-bold flex-shrink-0 ${
-                          isDone
-                            ? 'bg-[#5E5D59] text-[#FAF9F5]'
-                            : isActive
-                              ? 'bg-[#7C6FAB] text-[#FAF9F5]'
-                              : 'bg-[#E8E6DC] text-[#87867F]'
-                        }`}
+                  return (
+                    <React.Fragment key={stepLabel}>
+                      <li
+                        className="flex items-center gap-2"
+                        aria-current={isActive ? 'step' : undefined}
                       >
-                        {isDone ? <CheckCircle2 className="w-3.5 h-3.5" /> : stepNumber}
-                      </div>
-                      <span
-                        className={`font-[Be_Vietnam_Pro] text-[12px] hidden sm:block ${
-                          isActive
-                            ? 'text-[#141413] font-semibold'
-                            : isDone
-                              ? 'text-[#5E5D59]'
-                              : 'text-[#87867F]'
-                        }`}
-                      >
-                        {stepLabel}
-                      </span>
-                    </li>
-                    {index < wizardSteps.length - 1 && (
-                      <div
-                        className="flex-1 h-px bg-[#E8E6DC] mx-2 min-w-[12px]"
-                        aria-hidden="true"
-                      />
-                    )}
-                  </React.Fragment>
-                );
-              })}
-            </ol>
+                        <div
+                          className={`w-6 h-6 rounded-full flex items-center justify-center font-[Be_Vietnam_Pro] text-[11px] font-bold flex-shrink-0 ${
+                            isDone
+                              ? 'bg-[#5E5D59] text-[#FAF9F5]'
+                              : isActive
+                                ? 'bg-[#7C6FAB] text-[#FAF9F5]'
+                                : 'bg-[#E8E6DC] text-[#87867F]'
+                          }`}
+                        >
+                          {isDone ? <CheckCircle2 className="w-3.5 h-3.5" /> : stepNumber}
+                        </div>
+                        <span
+                          className={`font-[Be_Vietnam_Pro] text-[12px] hidden sm:block ${
+                            isActive
+                              ? 'text-[#141413] font-semibold'
+                              : isDone
+                                ? 'text-[#5E5D59]'
+                                : 'text-[#87867F]'
+                          }`}
+                        >
+                          {stepLabel}
+                        </span>
+                      </li>
+                      {index < wizardSteps.length - 1 && (
+                        <div
+                          className="flex-1 h-px bg-[#E8E6DC] mx-2 min-w-[12px]"
+                          aria-hidden="true"
+                        />
+                      )}
+                    </React.Fragment>
+                  );
+                })}
+              </ol>
+
+              {activeWizardStep > 1 && (
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setActiveWizardStep((prev) => Math.max(1, prev - 1))}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#E8E6DC] text-[#4D4C48] font-[Be_Vietnam_Pro] text-[13px] font-medium hover:bg-[#D1CFC5] active:scale-[0.98] transition-all duration-150"
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" /> Quay về bước trước
+                  </button>
+                </div>
+              )}
+            </>
           )}
 
           {/* â”€â”€ Global status messages â”€â”€ */}
