@@ -59,8 +59,12 @@ const resolveAssetUrl = (value?: string | null): string => {
   if (raw.startsWith('/')) {
     if (!API_BASE_URL) return raw;
     if (API_BASE_URL.startsWith('http://') || API_BASE_URL.startsWith('https://')) {
-      const base = API_BASE_URL.replace(/\/$/, '');
-      return `${base}${raw}`;
+      try {
+        const apiUrl = new URL(API_BASE_URL);
+        return `${apiUrl.origin}${raw}`;
+      } catch {
+        return raw;
+      }
     }
     return raw;
   }
