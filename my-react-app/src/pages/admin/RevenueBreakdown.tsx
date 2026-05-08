@@ -335,7 +335,7 @@ const RevenueBreakdown: React.FC = () => {
             <div className="header-stack">
               <h2 className="breakdown-header__heading">Phân tích doanh thu</h2>
               <p className="header-sub">
-                Nguồn thu theo gói đăng ký và hoa hồng khóa học — đối chiếu biểu đồ và bảng kê
+                Nguồn thu theo gói đăng ký và hoa hồng khóa học
               </p>
             </div>
           </div>
@@ -418,10 +418,6 @@ const RevenueBreakdown: React.FC = () => {
           <div className="card-label-large">Tổng doanh thu trong khoảng đã chọn</div>
           <p className="card-value-large">{formatCurrency(stats.total)}</p>
           <div className="card-meta-row">
-            <span className="card-meta-pill">
-              <Layers size={14} aria-hidden />
-              {groupByVi[groupBy]}
-            </span>
             <span className="card-meta-muted">
               {dateRange.from} → {dateRange.to}
             </span>
