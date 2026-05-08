@@ -2,6 +2,7 @@ import type { LucideIcon } from 'lucide-react';
 import {
   BookOpen,
   Calendar,
+  Clock,
   Download,
   GraduationCap,
   Languages,
