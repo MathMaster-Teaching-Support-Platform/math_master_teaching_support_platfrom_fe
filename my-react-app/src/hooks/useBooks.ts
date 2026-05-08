@@ -10,6 +10,7 @@ import type {
   BookProgressResponse,
   BookSearchParams,
   BulkPageMappingRequest,
+  BulkSeriesPageMappingRequest,
   CreateBookRequest,
   UpdateBookRequest,
   UpdateLessonPageRequest,
@@ -24,6 +25,7 @@ export const bookKeys = {
   detail: (bookId: string) => [...bookKeys.all, 'detail', bookId] as const,
   pdfPreviewUrl: (bookId: string) => [...bookKeys.detail(bookId), 'pdf-preview-url'] as const,
   pageMapping: (bookId: string) => [...bookKeys.all, 'page-mapping', bookId] as const,
+  seriesPageMapping: (bookId: string) => [...bookKeys.all, 'series-page-mapping', bookId] as const,
   progress: (bookId: string) => [...bookKeys.all, 'progress', bookId] as const,
   bookContent: (bookId: string) => [...bookKeys.all, 'content', bookId] as const,
   lessonContent: (bookId: string, lessonId: string) =>
@@ -141,6 +143,28 @@ export function useSavePageMapping(bookId: string) {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: bookKeys.pageMapping(bookId) });
       void qc.invalidateQueries({ queryKey: bookKeys.detail(bookId) });
+    },
+  });
+}
+
+export function useBookSeriesPageMapping(bookId: string | undefined) {
+  return useQuery({
+    queryKey: bookKeys.seriesPageMapping(bookId ?? ''),
+    queryFn: () => BookService.getSeriesPageMapping(bookId as string),
+    enabled: Boolean(bookId),
+  });
+}
+
+export function useSaveSeriesPageMapping(bookId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (req: BulkSeriesPageMappingRequest) =>
+      BookService.bulkUpsertSeriesPageMapping(bookId, req),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: bookKeys.seriesPageMapping(bookId) });
+      void qc.invalidateQueries({ queryKey: bookKeys.pageMapping(bookId) });
+      void qc.invalidateQueries({ queryKey: bookKeys.detail(bookId) });
+      void qc.invalidateQueries({ queryKey: bookKeys.all });
     },
   });
 }

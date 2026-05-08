@@ -7,6 +7,7 @@ import type {
   BookResponse,
   BookSearchParams,
   BulkPageMappingRequest,
+  BulkSeriesPageMappingRequest,
   CreateBookRequest,
   OcrTriggerResponse,
   UpdateBookRequest,
@@ -57,6 +58,7 @@ export class BookService {
     const query = new URLSearchParams();
     if (params.schoolGradeId) query.set('schoolGradeId', params.schoolGradeId);
     if (params.subjectId) query.set('subjectId', params.subjectId);
+    if (params.bookSeriesId) query.set('bookSeriesId', params.bookSeriesId);
     if (params.curriculumId) query.set('curriculumId', params.curriculumId);
     if (params.chapterId) query.set('chapterId', params.chapterId);
     if (params.lessonId) query.set('lessonId', params.lessonId);
@@ -143,6 +145,26 @@ export class BookService {
       headers: jsonHeaders(requireToken()),
     });
     return handle<OcrTriggerResponse>(res, 'Failed to trigger OCR');
+  }
+
+  static async getSeriesPageMapping(bookId: string): Promise<ApiResponse<BookLessonPageResponse[]>> {
+    const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.BOOK_SERIES_PAGE_MAPPING(bookId)}`, {
+      method: 'GET',
+      headers: jsonHeaders(requireToken()),
+    });
+    return handle<BookLessonPageResponse[]>(res, 'Failed to fetch series page mapping');
+  }
+
+  static async bulkUpsertSeriesPageMapping(
+    bookId: string,
+    req: BulkSeriesPageMappingRequest
+  ): Promise<ApiResponse<BookLessonPageResponse[]>> {
+    const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.BOOK_SERIES_PAGE_MAPPING(bookId)}`, {
+      method: 'PUT',
+      headers: jsonHeaders(requireToken()),
+      body: JSON.stringify(req),
+    });
+    return handle<BookLessonPageResponse[]>(res, 'Failed to save series page mapping');
   }
 
   static async cancelOcr(bookId: string): Promise<ApiResponse<BookResponse>> {

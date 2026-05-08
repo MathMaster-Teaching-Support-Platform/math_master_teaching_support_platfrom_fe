@@ -14,6 +14,8 @@ export interface BookResponse {
   schoolGradeName: string;
   subjectId: string;
   subjectName: string;
+  bookSeriesId?: string | null;
+  bookSeriesName?: string | null;
   curriculumId: string | null;
   curriculumName: string | null;
   title: string;
@@ -36,6 +38,7 @@ export interface BookResponse {
 export interface CreateBookRequest {
   schoolGradeId: string;
   subjectId: string;
+  bookSeriesId?: string | null;
   curriculumId?: string | null;
   title: string;
   publisher?: string | null;
@@ -60,13 +63,23 @@ export interface PageMappingItem {
   pageEnd: number;
 }
 
+export interface SeriesPageMappingItem extends PageMappingItem {
+  bookId: string;
+}
+
 export interface BulkPageMappingRequest {
   mappings: PageMappingItem[];
 }
 
+export interface BulkSeriesPageMappingRequest {
+  mappings: SeriesPageMappingItem[];
+}
+
 export interface BookLessonPageResponse {
   id: string;
+  bookSeriesId?: string | null;
   bookId: string;
+  bookTitle?: string | null;
   lessonId: string;
   lessonTitle: string;
   chapterId: string;
@@ -180,6 +193,7 @@ export interface LessonPageHistoryEntryResponse {
 export interface BookSearchParams {
   schoolGradeId?: string;
   subjectId?: string;
+  bookSeriesId?: string;
   curriculumId?: string;
   chapterId?: string;
   lessonId?: string;

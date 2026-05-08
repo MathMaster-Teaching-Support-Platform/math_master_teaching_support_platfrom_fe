@@ -113,6 +113,7 @@ const BookUploadStep: React.FC<Props> = ({
     const payload: CreateBookRequest = {
       schoolGradeId,
       subjectId,
+      bookSeriesId: book?.bookSeriesId ?? null,
       title: title.trim(),
       publisher: publisher.trim() || null,
       academicYear: academicYear.trim() || null,
