@@ -49,6 +49,7 @@ export * from './chat.types';
 export * from './document.types';
 export * from './lessonPlan.types';
 export * from './course.types';
+export * from './book.types';
 export {
   type Mindmap,
   type MindmapNode,
