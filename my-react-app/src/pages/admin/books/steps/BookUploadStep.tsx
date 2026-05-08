@@ -280,9 +280,10 @@ const BookUploadStep: React.FC<Props> = ({
                       type="button"
                       onClick={() => setPendingDeleteBook(item)}
                       title="Xóa sách chưa upload PDF"
-                      className="inline-flex h-6 w-6 items-center justify-center rounded-md text-slate-400 hover:bg-red-50 hover:text-red-600"
+                      className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-50 px-2 py-1 text-[11px] font-medium text-red-600 hover:bg-red-100"
                     >
-                      <Trash2 size={13} />
+                      <Trash2 size={12} />
+                      Xóa
                     </button>
                   )}
                 </div>
