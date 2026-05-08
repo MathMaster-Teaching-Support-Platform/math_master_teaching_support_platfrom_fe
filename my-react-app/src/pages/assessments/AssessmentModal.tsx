@@ -1,5 +1,5 @@
-import { X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import ModalCloseButton from '../../components/common/ModalCloseButton';
 import { UI_TEXT } from '../../constants/uiText';
 import { useGetExamMatrixById, useGetMyExamMatrices } from '../../hooks/useExamMatrix';
 import type {
@@ -181,9 +181,7 @@ export default function AssessmentModal({
                   : `Cấu hình ${UI_TEXT.QUIZ.toLowerCase()} theo ma trận đề.`}
             </p>
           </div>
-          <button className="icon-btn" onClick={onClose}>
-            <X size={16} />
-          </button>
+          <ModalCloseButton onClick={onClose} />
         </div>
 
         <form onSubmit={submit}>

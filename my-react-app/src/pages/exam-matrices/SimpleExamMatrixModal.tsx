@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { X } from 'lucide-react';
+import ModalCloseButton from '../../components/common/ModalCloseButton';
 import { questionBankService } from '../../services/questionBankService';
 import { examMatrixService } from '../../services/examMatrixService';
 import { ChapterService } from '../../services/api/chapter.service';
@@ -239,9 +239,7 @@ export function SimpleExamMatrixModal({ isOpen, onClose, onCreated }: Readonly<P
               để pre-fill picker đó cho thuận tiện.
             </p>
           </div>
-          <button className="icon-btn" onClick={onClose}>
-            <X size={16} />
-          </button>
+          <ModalCloseButton onClick={onClose} />
         </div>
 
         <form onSubmit={submit}>

@@ -1,4 +1,5 @@
-import { Sparkles, Wand2, X } from 'lucide-react';
+import { Sparkles, Wand2 } from 'lucide-react';
+import ModalCloseButton from '../../components/common/ModalCloseButton';
 
 /**
  * Lightweight chooser shown when the teacher clicks "Tạo mẫu mới" on the
@@ -43,9 +44,7 @@ export function TemplateMethodPicker({
               với bạn.
             </p>
           </div>
-          <button className="icon-btn" onClick={onClose}>
-            <X size={16} />
-          </button>
+          <ModalCloseButton onClick={onClose} />
         </div>
 
         <div

@@ -4,10 +4,10 @@ import {
   DownloadCloud,
   FileSpreadsheet,
   Upload,
-  X,
   XCircle,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import ModalCloseButton from '../../components/common/ModalCloseButton';
 import { AcademicCascade } from '../../components/common/AcademicCascade';
 import MathText from '../../components/common/MathText';
 import { useChaptersBySubject } from '../../hooks/useChapters';
@@ -220,9 +220,7 @@ export function TemplateBulkImportModal({ isOpen, onClose, onSuccess }: Readonly
                 : `Xem trước: ${previewData?.validRows ?? 0} hợp lệ, ${previewData?.invalidRows ?? 0} lỗi / ${previewData?.totalRows ?? 0} tổng`}
             </p>
           </div>
-          <button className="icon-btn" onClick={handleClose}>
-            <X size={14} />
-          </button>
+          <ModalCloseButton onClick={handleClose} />
         </div>
 
         <div className="modal-body">

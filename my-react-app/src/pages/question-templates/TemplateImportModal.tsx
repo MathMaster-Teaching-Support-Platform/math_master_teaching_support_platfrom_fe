@@ -1,5 +1,6 @@
-import { AlertCircle, CheckCircle2, FileText, UploadCloud, X } from 'lucide-react';
+import { AlertCircle, CheckCircle2, FileText, UploadCloud } from 'lucide-react';
 import { useRef, useState } from 'react';
+import ModalCloseButton from '../../components/common/ModalCloseButton';
 import { useGetMyQuestionBanks } from '../../hooks/useQuestionBank';
 import { useImportTemplateFromFile } from '../../hooks/useQuestionTemplate';
 import type { TemplateDraft } from '../../types/questionTemplate';
@@ -41,9 +42,7 @@ export function TemplateImportModal({ isOpen, onClose, onUseTemplate }: Props) {
             <h3>Nhập mẫu câu hỏi từ file</h3>
             <p className="muted" style={{ marginTop: 4 }}>Sử dụng AI để phân tích cấu trúc mẫu từ nội dung file.</p>
           </div>
-          <button className="icon-btn" onClick={() => { reset(); onClose(); }}>
-            <X size={16} />
-          </button>
+          <ModalCloseButton onClick={() => { reset(); onClose(); }} />
         </div>
 
         <div className="modal-body">

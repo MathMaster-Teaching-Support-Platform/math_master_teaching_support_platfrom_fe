@@ -1,4 +1,5 @@
-import { HelpCircle, SlidersHorizontal, X } from 'lucide-react';
+import { HelpCircle, SlidersHorizontal } from 'lucide-react';
+import ModalCloseButton from '../../components/common/ModalCloseButton';
 import { useEffect, useRef, useState } from 'react';
 import { AcademicCascade } from '../../components/common/AcademicCascade';
 import { LatexToolbar } from '../../components/common/LatexToolbar';
@@ -685,9 +686,7 @@ export function TemplateFormModal({
               <HelpCircle size={14} />
               Hướng dẫn
             </button>
-            <button className="icon-btn" onClick={onClose}>
-              <X size={16} />
-            </button>
+            <ModalCloseButton onClick={onClose} />
           </div>
         </div>
 
@@ -960,9 +959,7 @@ export function TemplateFormModal({
                   Hướng dẫn tạo mẫu câu hỏi và nhập công thức toán học.
                 </p>
               </div>
-              <button type="button" className="icon-btn" onClick={() => setIsGuideOpen(false)}>
-                <X size={16} />
-              </button>
+              <ModalCloseButton onClick={() => setIsGuideOpen(false)} />
             </div>
 
             <div

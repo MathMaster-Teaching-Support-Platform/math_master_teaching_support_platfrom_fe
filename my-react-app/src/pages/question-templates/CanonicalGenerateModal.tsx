@@ -1,6 +1,6 @@
-import { X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import MathText from '../../components/common/MathText';
+import ModalCloseButton from '../../components/common/ModalCloseButton';
 import {
   useGenerateQuestionsFromCanonical,
   useGetCanonicalQuestionById,
@@ -83,9 +83,7 @@ export function CanonicalGenerateModal({
               Chon template de bind parameter va sinh câu hỏi theo canonical.
             </p>
           </div>
-          <button className="icon-btn" onClick={onClose}>
-            <X size={16} />
-          </button>
+          <ModalCloseButton onClick={onClose} />
         </div>
 
         <form onSubmit={submit}>

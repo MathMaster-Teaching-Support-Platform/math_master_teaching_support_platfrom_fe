@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle, RefreshCw, Search, X, XCircle, MessageSquare } from 'lucide-react';
+import { CheckCircle, RefreshCw, Search, XCircle, MessageSquare } from 'lucide-react';
 import { useRegradeRequests, useRespondToRegradeRequest } from '../../hooks/useGrading';
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
+import ModalCloseButton from '../../components/common/ModalCloseButton';
 import MathText from '../../components/common/MathText';
 import type { RegradeRequestResponse } from '../../types/grading.types';
 import '../../styles/module-refactor.css';
@@ -190,9 +191,7 @@ export default function RegradeRequestList() {
                       Học sinh: {respondingRequest.studentName}
                     </p>
                   </div>
-                  <button className="icon-btn" onClick={() => setRespondingRequest(null)} aria-label="Đóng">
-                    <X size={16} />
-                  </button>
+                  <ModalCloseButton onClick={() => setRespondingRequest(null)} />
                 </div>
 
                 <div className="modal-body">

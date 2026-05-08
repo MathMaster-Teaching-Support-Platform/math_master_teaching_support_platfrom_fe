@@ -1686,3 +1686,49 @@ body.slide-preview-open .sidebar {
     flex-basis: 100%;
   }
 }
+
+/* ── Generating overlay animations ── */
+@keyframes ai-icon-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(124, 111, 171, 0);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow: 0 0 0 10px rgba(124, 111, 171, 0.12);
+  }
+}
+
+@keyframes ai-progress {
+  0% {
+    width: 0%;
+    margin-left: 0%;
+  }
+  30% {
+    width: 55%;
+    margin-left: 0%;
+  }
+  60% {
+    width: 30%;
+    margin-left: 60%;
+  }
+  100% {
+    width: 0%;
+    margin-left: 100%;
+  }
+}
+
+@keyframes ai-step-pulse {
+  0%,
+  80%,
+  100% {
+    opacity: 0.35;
+    transform: translateX(0);
+  }
+  40% {
+    opacity: 1;
+    color: #7c6fab;
+    transform: translateX(4px);
+  }
+}

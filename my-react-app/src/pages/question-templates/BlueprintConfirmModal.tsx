@@ -1,5 +1,6 @@
-import { Check, X } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import ModalCloseButton from '../../components/common/ModalCloseButton';
 import {
   QuestionType,
   type BlueprintFromRealQuestionRequest,
@@ -162,9 +163,7 @@ export function BlueprintConfirmModal({
               <strong>{Math.round((blueprint.confidence ?? 0) * 100)}%</strong>
             </p>
           </div>
-          <button className="icon-btn" onClick={onCancel}>
-            <X size={16} />
-          </button>
+          <ModalCloseButton onClick={onCancel} />
         </div>
 
         <div className="modal-body" style={{ display: 'grid', gap: 14 }}>
