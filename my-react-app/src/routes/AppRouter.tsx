@@ -36,6 +36,7 @@ import StudentRoadmap from '../pages/roadmap/StudentRoadmap';
 import TakeRoadmapEntryTest from '../pages/roadmap/TakeRoadmapEntryTest';
 import SearchResults from '../pages/search/SearchResults';
 import ProfileSettings from '../pages/settings/ProfileSettings';
+import FeedbackSubmitPage from '../pages/reports/FeedbackSubmitPage';
 import TeacherStudents from '../pages/students/TeacherStudents';
 import StudentWallet from '../pages/wallet/StudentWallet';
 // Teacher Profile Routes
@@ -57,6 +58,7 @@ import AdminRoadmapTopicsPage from '../pages/admin/AdminRoadmapTopicsPage';
 import AdminSlideTemplates from '../pages/admin/AdminSlideTemplates';
 
 import AdminCommissionProposals from '../pages/admin/AdminCommissionProposals';
+import AdminFeedbacksPage from '../pages/admin/AdminFeedbacksPage';
 import AdminSystemConfigPage from '../pages/admin/AdminSystemConfigPage';
 import AdminWithdrawals from '../pages/admin/AdminWithdrawals';
 import CashFlowDashboard from '../pages/admin/CashFlowDashboard';
@@ -456,6 +458,14 @@ export const router = createBrowserRouter([
     ),
   },
   {
+    path: '/teacher/reports/feedback',
+    element: (
+      <PrivateRoute>
+        <FeedbackSubmitPage />
+      </PrivateRoute>
+    ),
+  },
+  {
     path: '/teacher/wallet',
     element: (
       <PrivateRoute>
@@ -607,6 +617,14 @@ export const router = createBrowserRouter([
     element: (
       <PrivateRoute>
         <ProfileSettings />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/student/reports/feedback',
+    element: (
+      <PrivateRoute>
+        <FeedbackSubmitPage />
       </PrivateRoute>
     ),
   },
@@ -774,6 +792,14 @@ export const router = createBrowserRouter([
     element: (
       <PrivateRoute>
         <TokenCostConfigPage />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/admin/feedbacks',
+    element: (
+      <PrivateRoute>
+        <AdminFeedbacksPage />
       </PrivateRoute>
     ),
   },

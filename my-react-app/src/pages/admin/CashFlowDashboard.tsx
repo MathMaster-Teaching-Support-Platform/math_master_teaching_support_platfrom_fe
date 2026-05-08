@@ -395,9 +395,7 @@ const CashFlowDashboard: React.FC = () => {
         {payload.map((entry) => {
           const isInflow = entry.dataKey === 'inflow';
           const absVal = Math.abs(entry.value);
-          const formatted = isInflow
-            ? vnd.format(absVal)
-            : `-${vnd.format(absVal)}`;
+          const formatted = vnd.format(absVal);
           return (
             <div
               key={entry.dataKey}
@@ -534,11 +532,11 @@ const CashFlowDashboard: React.FC = () => {
                     <h1 className="font-[Playfair_Display] text-[22px] font-medium text-[#141413]">
                       Dòng tiền
                     </h1>
-                    {summary && (
+                    {/* {summary && (
                       <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#E8E6DC] font-[Be_Vietnam_Pro] text-[12px] font-semibold text-[#5E5D59]">
                         {summary.period}
                       </span>
-                    )}
+                    )} */}
                   </div>
                   <p className="font-[Be_Vietnam_Pro] text-[13px] text-[#87867F] mt-0.5">
                     Theo dõi nạp — rút và cơ cấu danh mục trên nền tảng
@@ -595,11 +593,10 @@ const CashFlowDashboard: React.FC = () => {
                       key={item.id}
                       type="button"
                       onClick={() => setQuickDateRange(item.id)}
-                      className={`px-3 py-1.5 rounded-lg font-[Be_Vietnam_Pro] text-[12px] font-medium transition-all duration-150 whitespace-nowrap ${
-                        quickRange === item.id
-                          ? 'bg-white text-[#141413] shadow-sm'
-                          : 'text-[#87867F] hover:text-[#5E5D59]'
-                      }`}
+                      className={`px-3 py-1.5 rounded-lg font-[Be_Vietnam_Pro] text-[12px] font-medium transition-all duration-150 whitespace-nowrap ${quickRange === item.id
+                        ? 'bg-white text-[#141413] shadow-sm'
+                        : 'text-[#87867F] hover:text-[#5E5D59]'
+                        }`}
                     >
                       {item.label}
                     </button>
@@ -612,7 +609,7 @@ const CashFlowDashboard: React.FC = () => {
             {summary && (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
                 <SummaryCard
-                  title="Tổng nạp (Inflow)"
+                  title="Tổng nạp"
                   amount={summary.totalInflow}
                   trend={summary.inflowTrend}
                   icon={TrendingUp}
@@ -620,8 +617,8 @@ const CashFlowDashboard: React.FC = () => {
                   iconColor="text-[#047857]"
                 />
                 <SummaryCard
-                  title="Tổng rút (Outflow)"
-                  amount={summary.totalOutflow}
+                  title="Tổng rút "
+                  amount={Math.abs(summary.totalOutflow)}
                   trend={summary.outflowTrend}
                   icon={TrendingDown}
                   invertTrend={true}
@@ -629,7 +626,7 @@ const CashFlowDashboard: React.FC = () => {
                   iconColor="text-[#B91C1C]"
                 />
                 <SummaryCard
-                  title="Dòng tiền thuần (Net)"
+                  title="Dòng tiền"
                   amount={summary.netCashFlow}
                   trend={summary.netTrend}
                   icon={Wallet}
@@ -729,7 +726,7 @@ const CashFlowDashboard: React.FC = () => {
                               width={80}
                             />
                             <RechartsTooltip
-                              formatter={(val) => formatVND(Number(val ?? 0))}
+                              formatter={(val) => formatVND(Math.abs(Number(val ?? 0)))}
                               contentStyle={{
                                 borderRadius: 12,
                                 border: '1px solid #F0EEE6',
@@ -764,7 +761,7 @@ const CashFlowDashboard: React.FC = () => {
                             </div>
                             <div className="text-right shrink-0">
                               <div className="font-[Be_Vietnam_Pro] text-[13px] font-semibold text-[#141413] tabular-nums">
-                                {formatVND(cat.total)}
+                                {formatVND(Math.abs(cat.total))}
                               </div>
                               <div className="font-[Be_Vietnam_Pro] text-[11px] text-[#87867F] tabular-nums">
                                 {cat.percentage}%

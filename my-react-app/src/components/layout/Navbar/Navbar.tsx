@@ -118,6 +118,7 @@ const Navbar: React.FC<NavbarProps> = ({ user }) => {
     if (normalizedType === 'assignment') return '📘';
     if (normalizedType === 'grade') return '✅';
     if (normalizedType === 'course') return '📚';
+    if (normalizedType === 'feedback') return '💬';
     if (notificationType === 'PROFILE_VERIFICATION') return '🛡️';
     return '🔔';
   };
