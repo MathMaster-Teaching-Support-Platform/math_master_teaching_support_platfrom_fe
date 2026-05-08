@@ -729,7 +729,7 @@ export function TemplateFormModal({
 
                   <label>
                     <p className="muted" style={{ marginBottom: 6 }}>
-                      Mức độ nhận thức
+                      Mức độ câu hỏi
                     </p>
                     <select
                       className="select"

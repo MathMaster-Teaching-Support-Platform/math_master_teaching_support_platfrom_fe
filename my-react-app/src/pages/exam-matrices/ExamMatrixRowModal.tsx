@@ -259,7 +259,7 @@ export function ExamMatrixRowModal({
               </div>
 
               <p className="muted" style={{ marginTop: 16 }}>
-                Sau khi thêm dòng, bạn có thể chỉnh sửa số câu cho từng mức độ nhận thức trực tiếp
+                Sau khi thêm dòng, bạn có thể chỉnh sửa số câu cho từng mức độ câu hỏi trực tiếp
                 trong bảng ma trận.
               </p>
             </div>

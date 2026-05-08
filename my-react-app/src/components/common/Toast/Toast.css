@@ -1,14 +1,15 @@
 .toast-container {
   position: fixed;
-  bottom: 2rem;
-  right: 2rem;
+  top: 1.25rem;
+  right: 1.25rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  z-index: 9999;
+  /* Above all modals (modal-layer is z-index 1200). */
+  z-index: 99999;
   pointer-events: none;
   max-width: 420px;
-  width: calc(100% - 4rem);
+  width: calc(100% - 2.5rem);
 }
 
 .ud-toast {
@@ -102,9 +103,9 @@
 
 @media (max-width: 640px) {
   .toast-container {
-    bottom: 1rem;
-    right: 1rem;
-    left: 1rem;
+    top: 0.75rem;
+    right: 0.75rem;
+    left: 0.75rem;
     width: auto;
     max-width: none;
   }

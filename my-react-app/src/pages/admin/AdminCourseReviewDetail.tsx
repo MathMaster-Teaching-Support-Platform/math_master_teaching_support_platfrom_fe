@@ -309,10 +309,6 @@ const AdminCourseReviewDetail: React.FC = () => {
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
             className="rounded-2xl border border-[#E8E6DC] bg-white shadow-[0_2px_24px_rgba(20,20,19,0.06)] overflow-hidden"
           >
-            <div
-              className="h-1 w-full bg-gradient-to-r from-[#C96442] via-[#E07B39] to-[#6366F1]"
-              aria-hidden="true"
-            />
 
             <div className="p-6 md:p-8">
               <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
@@ -374,7 +370,7 @@ const AdminCourseReviewDetail: React.FC = () => {
                     <div className="rounded-xl border border-emerald-200 bg-emerald-50/90 px-4 py-3 font-[Be_Vietnam_Pro] text-[13px] text-emerald-950">
                       <p className="font-semibold flex items-center gap-2">
                         <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
-                        Đã duyệt bởi {course.approvedBy}
+                        Đã duyệt bởi <span className="font-bold">Quản trị viên</span>
                       </p>
                       {course.approvedAt && (
                         <p className="text-emerald-800/90 mt-1.5 text-[12px]">
@@ -394,7 +390,7 @@ const AdminCourseReviewDetail: React.FC = () => {
                       )}
                       {course.rejectedBy && (
                         <div className="rounded-xl border border-rose-100 bg-rose-50/80 px-4 py-3 font-[Be_Vietnam_Pro] text-[12px] text-rose-900">
-                          <p className="font-semibold">Từ chối bởi {course.rejectedBy}</p>
+                          <p className="font-semibold">Từ chối bởi <span className="font-bold">Quản trị viên</span></p>
                           {course.rejectedAt && (
                             <p className="text-rose-800/85 mt-1">
                               {formatViDateTime(course.rejectedAt)}

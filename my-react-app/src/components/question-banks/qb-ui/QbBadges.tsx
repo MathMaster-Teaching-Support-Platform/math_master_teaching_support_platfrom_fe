@@ -135,7 +135,7 @@ export function QbCognitiveDistribution({ stats, total }: DistributionProps) {
   }
 
   return (
-    <div className="qb-cog-dist" role="img" aria-label="Phân bố mức độ nhận thức">
+    <div className="qb-cog-dist" role="img" aria-label="Phân bố mức độ câu hỏi">
       <div className="qb-cog-dist__bar">
         {DISTRIBUTION_ORDER.map((key) => {
           const count = merged[key];

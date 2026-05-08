@@ -259,7 +259,7 @@ const BookUploadStep: React.FC<Props> = ({ book, onCreated, onUploaded }) => {
         {book?.pdfPath ? (
           <div className="flex items-center gap-2 px-3 py-2 rounded-md border border-emerald-200 bg-emerald-50 text-sm text-emerald-700">
             <CheckCircle2 size={16} />
-            Đã upload PDF: <code className="text-xs">{book.pdfPath}</code>
+            Đã upload PDF thành công.
           </div>
         ) : (
           <p className="text-xs text-slate-500 mb-2">

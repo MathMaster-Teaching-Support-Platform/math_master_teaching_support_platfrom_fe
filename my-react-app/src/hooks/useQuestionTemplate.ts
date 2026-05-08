@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { questionTemplateService } from '../services/questionTemplateService';
+import { notifySubscriptionUpdated } from '../services/api/subscription-plan.service';
 import {
     type QuestionTemplateRequest,
     type QuestionGenerationMode,
@@ -188,15 +189,25 @@ export const useGenerateQuestions = () => {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['questions'] });
             queryClient.invalidateQueries({ queryKey: ['reviewQueue'] });
+            // Token balance was decremented BE-side — refresh sidebar query and
+            // ping the navbar's manual subscriber.
+            queryClient.invalidateQueries({ queryKey: ['pricing', 'my-subscription'] });
+            notifySubscriptionUpdated();
         },
     });
 };
 
 // Method 1 — convert a real-valued question into a Blueprint draft (one AI call)
 export const useBlueprintFromRealQuestion = () => {
+    const queryClient = useQueryClient();
     return useMutation({
         mutationFn: (request: BlueprintFromRealQuestionRequest) =>
             questionTemplateService.blueprintFromRealQuestion(request),
+        onSuccess: () => {
+            // 1 token deducted BE-side — refresh balance displays.
+            queryClient.invalidateQueries({ queryKey: ['pricing', 'my-subscription'] });
+            notifySubscriptionUpdated();
+        },
     });
 };
 

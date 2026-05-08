@@ -1025,7 +1025,7 @@
 
 /* ─── Curriculum Hierarchy ───────────────────────────────────────────────── */
 .section-header {
-  padding: 1rem 1.25rem;
+  padding: 0.6rem 1.25rem;
   background: #faf9f5;
   border-bottom: 1px solid #f0eee6;
   display: flex;
