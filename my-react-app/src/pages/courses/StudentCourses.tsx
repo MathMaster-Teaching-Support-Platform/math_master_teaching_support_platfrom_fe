@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQueries, useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft,
@@ -21,9 +21,10 @@ import { PurchaseConfirmationModal } from '../../components/course/PurchaseConfi
 import DashboardLayout from '../../components/layout/DashboardLayout/DashboardLayout';
 import { UI_TEXT } from '../../constants/uiText';
 import { useEnroll, useMyEnrollments, usePublicCourses } from '../../hooks/useCourses';
+import { CourseService } from '../../services/api/course.service';
 import { LessonSlideService } from '../../services/api/lesson-slide.service';
 import '../../styles/module-refactor.css';
-import type { CourseResponse, EnrollmentResponse } from '../../types';
+import type { CourseLessonResponse, CourseResponse, EnrollmentResponse } from '../../types';
 import type { SchoolGrade, SubjectByGrade } from '../../types/lessonSlide.types';
 import type { Order } from '../../types/order.types';
 import './StudentCourses.css';
@@ -217,6 +218,8 @@ const StudentCourses: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'enrolled' | 'browse'>('enrolled');
   const [filterGradeId, setFilterGradeId] = useState('');
   const [filterSubjectId, setFilterSubjectId] = useState('');
+  const [filterChapterTitle, setFilterChapterTitle] = useState('');
+  const [filterLessonTitle, setFilterLessonTitle] = useState('');
   const [enrollingCourseId, setEnrollingCourseId] = useState<string | null>(null);
   const [openingEnrollmentId, setOpeningEnrollmentId] = useState<string | null>(null);
   const [showInvoice, setShowInvoice] = useState(false);
@@ -256,6 +259,14 @@ const StudentCourses: React.FC = () => {
   const handleFilterGradeChange = (gradeId: string) => {
     setFilterGradeId(gradeId);
     setFilterSubjectId('');
+    setFilterChapterTitle('');
+    setFilterLessonTitle('');
+  };
+
+  const handleFilterSubjectChange = (subjectId: string) => {
+    setFilterSubjectId(subjectId);
+    setFilterChapterTitle('');
+    setFilterLessonTitle('');
   };
 
   const enrollments = useMemo<EnrollmentResponse[]>(
@@ -272,6 +283,89 @@ const StudentCourses: React.FC = () => {
       }),
     [publicCoursesData]
   );
+
+  const publicCourseLessonQueries = useQueries({
+    queries: publicCourses.map((course) => ({
+      queryKey: ['public-course-lessons', course.id],
+      queryFn: () => CourseService.getLessons(course.id),
+      enabled: activeTab === 'browse',
+      staleTime: 5 * 60 * 1000,
+    })),
+  });
+
+  const publicCourseLessonsById = useMemo(() => {
+    const byId = new Map<string, CourseLessonResponse[]>();
+    publicCourses.forEach((course, index) => {
+      const lessons = publicCourseLessonQueries[index]?.data?.result;
+      byId.set(course.id, Array.isArray(lessons) ? lessons : []);
+    });
+    return byId;
+  }, [publicCourses, publicCourseLessonQueries]);
+
+  const availableChapterTitles = useMemo(() => {
+    const titles = new Set<string>();
+    publicCourses.forEach((course) => {
+      const lessons = publicCourseLessonsById.get(course.id) ?? [];
+      lessons.forEach((lesson) => {
+        const chapterTitle = lesson.chapterTitle?.trim();
+        if (chapterTitle) titles.add(chapterTitle);
+      });
+    });
+    return Array.from(titles).sort((a, b) => a.localeCompare(b, 'vi'));
+  }, [publicCourses, publicCourseLessonsById]);
+
+  const availableLessonTitles = useMemo(() => {
+    const titles = new Set<string>();
+    publicCourses.forEach((course) => {
+      const lessons = publicCourseLessonsById.get(course.id) ?? [];
+      lessons.forEach((lesson) => {
+        const chapterTitle = lesson.chapterTitle?.trim() ?? '';
+        if (filterChapterTitle && chapterTitle !== filterChapterTitle) return;
+        const lessonTitle = lesson.lessonTitle?.trim();
+        if (lessonTitle) titles.add(lessonTitle);
+      });
+    });
+    return Array.from(titles).sort((a, b) => a.localeCompare(b, 'vi'));
+  }, [publicCourses, publicCourseLessonsById, filterChapterTitle]);
+
+  React.useEffect(() => {
+    if (filterLessonTitle && !availableLessonTitles.includes(filterLessonTitle)) {
+      setFilterLessonTitle('');
+    }
+  }, [availableLessonTitles, filterLessonTitle]);
+
+  const filteredPublicCourses = useMemo(() => {
+    if (!filterChapterTitle && !filterLessonTitle) return publicCourses;
+
+    return publicCourses.filter((course, index) => {
+      const lessonQuery = publicCourseLessonQueries[index];
+      const lessons = publicCourseLessonsById.get(course.id) ?? [];
+
+      if (lessonQuery?.isLoading) return true;
+
+      if (filterChapterTitle) {
+        const hasChapter = lessons.some(
+          (lesson) => lesson.chapterTitle?.trim() === filterChapterTitle
+        );
+        if (!hasChapter) return false;
+      }
+
+      if (filterLessonTitle) {
+        const hasLesson = lessons.some(
+          (lesson) => lesson.lessonTitle?.trim() === filterLessonTitle
+        );
+        if (!hasLesson) return false;
+      }
+
+      return true;
+    });
+  }, [
+    filterChapterTitle,
+    filterLessonTitle,
+    publicCourses,
+    publicCourseLessonQueries,
+    publicCourseLessonsById,
+  ]);
 
   const publicCourseMap = useMemo(() => {
     return new Map(publicCourses.map((course) => [course.id, course]));
@@ -540,7 +634,7 @@ const StudentCourses: React.FC = () => {
                       className={scSelectCls}
                       value={filterSubjectId}
                       onChange={(e) => {
-                        setFilterSubjectId(e.target.value);
+                        handleFilterSubjectChange(e.target.value);
                         setBrowsePage(1);
                       }}
                       disabled={!filterGradeId}
@@ -550,6 +644,36 @@ const StudentCourses: React.FC = () => {
                       {subjects.map((s) => (
                         <option key={s.id} value={s.id}>
                           {s.name}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      className={scSelectCls}
+                      value={filterChapterTitle}
+                      onChange={(e) => {
+                        setFilterChapterTitle(e.target.value);
+                        setFilterLessonTitle('');
+                      }}
+                      aria-label="Lọc theo chương"
+                    >
+                      <option value="">Tất cả chương</option>
+                      {availableChapterTitles.map((chapterTitle) => (
+                        <option key={chapterTitle} value={chapterTitle}>
+                          {chapterTitle}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      className={scSelectCls}
+                      value={filterLessonTitle}
+                      onChange={(e) => setFilterLessonTitle(e.target.value)}
+                      disabled={availableLessonTitles.length === 0}
+                      aria-label="Lọc theo bài"
+                    >
+                      <option value="">Tất cả bài</option>
+                      {availableLessonTitles.map((lessonTitle) => (
+                        <option key={lessonTitle} value={lessonTitle}>
+                          {lessonTitle}
                         </option>
                       ))}
                     </select>
@@ -652,9 +776,9 @@ const StudentCourses: React.FC = () => {
               {/* ── Browse grid ── */}
               {activeTab === 'browse' && !loadingPublic && (
                 <>
-                  {publicCourses.length > 0 ? (
+                  {filteredPublicCourses.length > 0 ? (
                     <div className="grid-cards">
-                      {publicCourses.map((course, i) => (
+                      {filteredPublicCourses.map((course, i) => (
                         <CourseCard
                           key={course.id}
                           course={course}
@@ -673,7 +797,9 @@ const StudentCourses: React.FC = () => {
                         <Search className="w-6 h-6 opacity-60" aria-hidden />
                       </div>
                       <p className="font-[Be_Vietnam_Pro] text-[14px] text-[#87867F] text-center max-w-md">
-                        Không tìm thấy khóa học nào
+                        {filterChapterTitle || filterLessonTitle
+                          ? 'Không có khóa học nào khớp với bộ lọc chương/bài.'
+                          : 'Không tìm thấy khóa học nào'}
                       </p>
                     </div>
                   )}
