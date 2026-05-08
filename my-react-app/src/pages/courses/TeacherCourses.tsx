@@ -11,8 +11,6 @@ import {
   EyeOff,
   FileText,
   GraduationCap,
-  Grid2x2,
-  List,
   Plus,
   Search,
   Settings2,
@@ -658,7 +656,7 @@ const CreateCourseModal: React.FC<CreateModalProps> = ({ onClose, onSubmit, isLo
 const TeacherCourses: React.FC = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewMode] = useState<'grid' | 'list'>('grid');
   const [filterStatus, setFilterStatus] = useState<CourseFilterStatus>('all');
   const [filterGrade, setFilterGrade] = useState<string>('all');
   const [search, setSearch] = useState('');
