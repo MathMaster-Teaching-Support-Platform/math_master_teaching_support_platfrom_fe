@@ -1,5 +1,5 @@
 import React from 'react';
-import { CircleCheckBig, X, Download, BookOpen, User, Mail, CreditCard, ShoppingBag } from 'lucide-react';
+import { CircleCheckBig, X, Download, BookOpen, User, ShoppingBag } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import type { Order } from '../../types/order.types';
 import { formatCurrency } from '../../types/order.types';
