@@ -1824,14 +1824,7 @@
 }
 
 .module-layout-container .teacher-courses-page .cover-overlay {
-  background:
-    linear-gradient(
-      to top,
-      rgba(250, 249, 245, 0.62) 0%,
-      rgba(250, 249, 245, 0.2) 42%,
-      transparent 78%
-    ),
-    radial-gradient(circle at top right, rgba(255, 255, 255, 0.35), transparent 48%);
+  background: transparent;
 }
 
 .module-layout-container .teacher-courses-page .course-desc,
